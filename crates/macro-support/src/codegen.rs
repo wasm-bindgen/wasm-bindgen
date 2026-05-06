@@ -304,6 +304,8 @@ impl ToTokens for ast::Struct {
                 }
             }
 
+
+
             #[cfg(target_family = "wasm")]
             #[automatically_derived]
             const _: () = {
@@ -2162,6 +2164,58 @@ impl TryToTokens for ast::ImportFunction {
                 convert_arg = quote! { #var };
             }
 
+            // `slice_to_array`: re-route an `&[T]` (or `Option<&[T]>`)
+            // outgoing argument through `<T as VectorRefIntoWasmAbi>`
+            // instead of the default `&[T]: IntoWasmAbi`. The user-facing
+            // parameter is unchanged; only the ABI / describe path
+            // changes. `VectorRefIntoWasmAbi`'s impls cover the two
+            // genuine ABI shapes (zero-copy primitive borrow,
+            // fresh-`Box<[u32]>` for handle-shaped element types) — no
+            // `T: Clone` bound is introduced.
+            //
+            // Wire format is `WasmSlice` either way; the cli-support
+            // side picks the right JS shim based on the element
+            // `VectorKind` recovered from the descriptor.
+            if arg.slice_to_array {
+                let Some((elem_ty, is_option)) = detect_slice_or_option_slice(ty) else {
+                    bail_span!(
+                        ty,
+                        "`slice_to_array` only applies to `&[T]` or `Option<&[T]>` argument types"
+                    );
+                };
+
+                let abi = quote! { #wasm_bindgen::convert::WasmSlice };
+                let (prim_args, prim_names) = splat(wasm_bindgen, &name, &abi);
+                abi_arguments.extend(prim_args);
+                abi_argument_names.extend(prim_names.iter().cloned());
+
+                let body = if is_option {
+                    quote! {
+                        match #var {
+                            ::core::option::Option::Some(s) =>
+                                <#elem_ty as #wasm_bindgen::convert::VectorRefIntoWasmAbi>
+                                    ::slice_into_abi(s),
+                            ::core::option::Option::None =>
+                                <#elem_ty as #wasm_bindgen::convert::VectorRefIntoWasmAbi>
+                                    ::slice_none(),
+                        }
+                    }
+                } else {
+                    quote! {
+                        <#elem_ty as #wasm_bindgen::convert::VectorRefIntoWasmAbi>
+                            ::slice_into_abi(#var)
+                    }
+                };
+
+                arg_conversions.push(quote! {
+                    let #name: #wasm_bindgen::convert::WasmSlice = #body;
+                    let (#(#prim_names),*) =
+                        <#wasm_bindgen::convert::WasmSlice as #wasm_bindgen::convert::WasmAbi>
+                            ::split(#name);
+                });
+                continue;
+            }
+
             let abi = quote! { <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi };
             let (prim_args, prim_names) = splat(wasm_bindgen, &name, &abi);
             abi_arguments.extend(prim_args);
@@ -2753,11 +2807,32 @@ impl TryToTokens for DescribeImport<'_> {
             .arguments
             .iter()
             .map(|arg| {
-                generics::generic_to_concrete(
+                let ty = generics::generic_to_concrete(
                     (*arg.pat_type.ty).clone(),
                     &fn_class_generics.concrete_defaults,
                     &fn_lifetime_params,
-                )
+                )?;
+                // For `slice_to_array` args, describe through `&Vec<T>` (or
+                // `Option<&Vec<T>>`) to match the ABI rewrite in
+                // `ImportFunction::try_to_tokens` — the descriptor shape is
+                // `Ref(Vector(T))`, which the cli-support side recognises.
+                if arg.slice_to_array {
+                    if let Some((elem_ty, is_option)) = detect_slice_or_option_slice(&ty) {
+                        if is_option {
+                            return Ok(parse_quote! {
+                                ::core::option::Option<&::std::vec::Vec<#elem_ty>>
+                            });
+                        } else {
+                            return Ok(parse_quote! { &::std::vec::Vec<#elem_ty> });
+                        }
+                    } else {
+                        bail_span!(
+                            arg.pat_type.ty,
+                            "`slice_to_array` only applies to `&[T]` or `Option<&[T]>` argument types"
+                        );
+                    }
+                }
+                Ok(ty)
             })
             .collect::<Result<Vec<syn::Type>, Diagnostic>>()?;
         let nargs = f.function.arguments.len() as u32;
@@ -3199,6 +3274,36 @@ fn get_ty(mut ty: &syn::Type) -> &syn::Type {
 ///
 /// This is used by the import function codegen to auto-inject `MaybeUnwindSafe`
 /// bounds for closure arguments, ensuring unwind safety when `panic = "unwind"`.
+/// Recognise `&[T]` and `Option<&[T]>` argument types. Returns the element
+/// type plus a flag indicating whether the outer `Option` was present. Used
+/// by the `slice_to_array` codegen to rewrite the ABI path.
+fn detect_slice_or_option_slice(ty: &syn::Type) -> Option<(syn::Type, bool)> {
+    // Direct `&[T]` (mutability ignored — `&mut [T]` is intentionally
+    // accepted too; the ABI layer treats it the same as `&[T]`).
+    if let syn::Type::Reference(syn::TypeReference { elem, .. }) = ty {
+        if let syn::Type::Slice(syn::TypeSlice { elem: inner, .. }) = &**elem {
+            return Some(((**inner).clone(), false));
+        }
+    }
+    // `Option<&[T]>` — match shape `Option<...>` and recurse once.
+    if let syn::Type::Path(syn::TypePath { qself: None, path }) = ty {
+        if let Some(seg) = path.segments.last() {
+            if seg.ident == "Option" {
+                if let syn::PathArguments::AngleBracketed(args) = &seg.arguments {
+                    if args.args.len() == 1 {
+                        if let syn::GenericArgument::Type(inner) = &args.args[0] {
+                            if let Some((elem, false)) = detect_slice_or_option_slice(inner) {
+                                return Some((elem, true));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
 fn detect_raw_fn_trait_obj(
     ty: &syn::Type,
 ) -> Option<(

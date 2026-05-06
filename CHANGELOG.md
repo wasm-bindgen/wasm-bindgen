@@ -5,6 +5,27 @@
 
 ### Added
 
+* Added the `slice_to_array` attribute for imported JS functions,
+  which makes a `&[T]` (or `Option<&[T]>`) argument arrive on the JS
+  side as a plain `Array` rather than a typed array — without
+  changing the Rust-side `&[T]` signature. Useful when binding JS
+  APIs that take `T[]` rather than `TypedArray<T>`. For primitive
+  element kinds the wire is the same zero-copy borrow used by plain
+  `&[T]`, with the JS-side shim wrapping the view in `Array.from(...)`
+  to materialise the `Array` — no extra allocation. For `String`,
+  `JsValue`, and JS-imported element types the Rust side builds a
+  fresh `[u32]` index buffer that JS reads and frees, with per-element
+  `&T -> JsValue` (refcount bump for handle-shaped types). No `T:
+  Clone` bound is required. The attribute can be set per-fn
+  (`#[wasm_bindgen(slice_to_array)] fn ...`) or per-block on an
+  `extern "C" { ... }` declaration to apply to every imported function
+  in that block. `&[ExportedRustStruct]` remains unsupported (use
+  owned `Vec<T>` for that). Has no effect on exported functions;
+  default `&[T]` (typed-array view / memory borrow) and owned
+  `Vec<T>` semantics are unchanged for callers that didn't opt in.
+  See the
+  [`slice_to_array` guide page](reference/attributes/on-js-imports/slice_to_array.html).
+
 * Added `js_sys::AggregateError` bindings (constructor, `errors` getter, and
   `new_with_message` / `new_with_options` overloads). `AggregateError` represents
   multiple unrelated errors wrapped in a single error, e.g. as thrown by
