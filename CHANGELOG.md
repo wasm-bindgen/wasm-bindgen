@@ -3,6 +3,10 @@
 
 ## Unreleased
 
+--------------------------------------------------------------------------------
+
+## [0.2.121](https://github.com/rustwasm/wasm-bindgen/compare/0.2.120...0.2.121)
+
 ### Added
 
 * Added the `slice_to_array` attribute for imported JS functions,
@@ -25,6 +29,7 @@
   `Vec<T>` semantics are unchanged for callers that didn't opt in.
   See the
   [`slice_to_array` guide page](reference/attributes/on-js-imports/slice_to_array.html).
+  [#5145](https://github.com/wasm-bindgen/wasm-bindgen/pull/5145)
 
 * Added `js_sys::AggregateError` bindings (constructor, `errors` getter, and
   `new_with_message` / `new_with_options` overloads). `AggregateError` represents
@@ -41,6 +46,7 @@
   `new_with_error_options(message, &ErrorOptions)` alongside the existing
   untyped `new_with_options`. `AggregateError::new_with_options` also takes
   `&ErrorOptions`.
+  [#5139](https://github.com/wasm-bindgen/wasm-bindgen/pull/5139)
 
 * Added inheritance for Rust-exported types: an exported struct may
   declare `#[wasm_bindgen(extends = Parent)]` to inherit from another
@@ -62,6 +68,7 @@
   `Closure::new` can be passed using `Function::from_closure` (for owned
   closures retained by JS) or `Function::closure_ref` (for borrowed scoped
   closures). Pairs with the existing `js_sys::WeakRef` bindings.
+  [#5140](https://github.com/wasm-bindgen/wasm-bindgen/pull/5140)
 
 * Added support for well-known symbols in `js_name`, `getter`, and
   `setter` via the explicit bracket-string form
@@ -96,9 +103,6 @@
   conversion now returns `None` for any value that is not a JS number.
   [#4734](https://github.com/wasm-bindgen/wasm-bindgen/pull/4734)
 
-
-### Fixed
-
 * Fix compilation failure with `no_std` + `release`
   [#5134](https://github.com/wasm-bindgen/wasm-bindgen/pull/5134)
 
@@ -110,8 +114,9 @@
   `pub enum r#Enum { r#A }` generates `Enum.A` instead of producing
   syntactically invalid JS.
   [#4323](https://github.com/wasm-bindgen/wasm-bindgen/pull/4323)
+
 * Using the `-C panic=unwind` option when building for the bundler target
-  would produce invalid JS
+  would produce invalid JS.
   [#5142](https://github.com/wasm-bindgen/wasm-bindgen/pull/5142)
 
 ### Changed
@@ -120,6 +125,7 @@
   `FIXME` notes that the trait should be renamed to `ArrayBufferView` in
   the next major release to better reflect the WebIDL spec name covering
   both `DataView` and the typed-array types.
+  [#5135](https://github.com/wasm-bindgen/wasm-bindgen/pull/5135)
 
 --------------------------------------------------------------------------------
 
