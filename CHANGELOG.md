@@ -53,6 +53,9 @@
   `pub enum r#Enum { r#A }` generates `Enum.A` instead of producing
   syntactically invalid JS.
   [#4323](https://github.com/wasm-bindgen/wasm-bindgen/pull/4323)
+* Using the `-C panic=unwind` option when building for the bundler target
+  would produce invalid JS
+  [#5142](https://github.com/wasm-bindgen/wasm-bindgen/pull/5142)
 
 ### Changed
 

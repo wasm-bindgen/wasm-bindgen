@@ -39,7 +39,7 @@ export function __wbindgen_init_externref_table() {
 
 export const __wbindgen_jstag = WebAssembly.JSTag;
 
-export const __wbindgen_wrapped_jstag = __wbindgen_wrapped_jstag;
+export { __wbindgen_wrapped_jstag };
 const __wbindgen_wrapped_jstag = new WebAssembly.Tag({ parameters: ['externref'] });
 
 
