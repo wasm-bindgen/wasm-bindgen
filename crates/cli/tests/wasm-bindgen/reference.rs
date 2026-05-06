@@ -205,7 +205,27 @@ fn runtest(
     #[files("*.rs")]
     test: PathBuf,
 ) -> Result<()> {
+    // panic-unwind.rs requires nightly + `-Zbuild-std=std,panic_unwind`,
+    // so it's exercised by the dedicated `runtest_panic_unwind` test below.
+    if test.file_stem() == Some(std::ffi::OsStr::new("panic-unwind")) {
+        return Ok(());
+    }
     runtest_with_opts(test, None, |_| ())
+}
+
+#[test]
+fn runtest_panic_unwind() -> Result<()> {
+    let mut test = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    test.push("tests");
+    test.push("reference");
+    test.push("panic-unwind.rs");
+
+    runtest_with_opts(test, None, |command| {
+        command
+            .env("RUSTUP_TOOLCHAIN", "nightly")
+            .env("RUSTFLAGS", "-C panic=unwind")
+            .arg("-Zbuild-std=std,panic_unwind");
+    })
 }
 
 #[test]
