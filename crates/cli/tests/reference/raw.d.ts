@@ -1,6 +1,11 @@
 /* tslint:disable */
 /* eslint-disable */
 
+export enum Enum {
+    A = 0,
+    B = 1,
+}
+
 export class Test {
     private constructor();
     free(): void;

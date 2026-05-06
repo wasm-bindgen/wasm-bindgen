@@ -717,9 +717,9 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
                 _ => bail_span!(class_ty, "first argument of method must be a path"),
             };
 
-            let class_name_str = js_class
-                .map(Ok)
-                .unwrap_or_else(|| extract_path_ident(class_name, true).map(|i| i.to_string()))?;
+            let class_name_str = js_class.map(Ok).unwrap_or_else(|| {
+                extract_path_ident(class_name, true).map(|i| i.unraw().to_string())
+            })?;
 
             ast::ImportFunctionKind::Method {
                 class: class_name_str,
@@ -730,7 +730,7 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
             let class = opts
                 .js_class()
                 .map(|p| p.0.into())
-                .unwrap_or_else(|| cls.to_string());
+                .unwrap_or_else(|| cls.unraw().to_string());
 
             let ty = syn::Type::Path(syn::TypePath {
                 qself: None,
@@ -766,7 +766,7 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
             let class_name = opts
                 .js_class()
                 .map(|p| p.0.into())
-                .unwrap_or_else(|| class_name.to_string());
+                .unwrap_or_else(|| class_name.unraw().to_string());
 
             ast::ImportFunctionKind::Method {
                 class: class_name,
@@ -894,14 +894,12 @@ impl ConvertToAst<(&ast::Program, BindgenAttrs)> for syn::ForeignItemType {
     ) -> Result<Self::Target, Diagnostic> {
         let js_name = attrs
             .js_name_no_symbol("extern types with #[wasm_bindgen]")?
-            .map_or_else(|| self.ident.to_string(), |s| s.to_string());
+            .map_or_else(|| self.ident.unraw().to_string(), |s| s.to_string());
         let typescript_type = attrs.typescript_type().map(|s| s.0.to_string());
         let is_type_of = attrs.is_type_of().cloned();
-        let shim = format!(
-            "__wbg_instanceof_{}_{}",
-            self.ident,
-            ShortHash((attrs.js_namespace().map(|(ns, _)| ns.0), &self.ident))
-        );
+        let unraw_ident = self.ident.unraw();
+        let hash = ShortHash((attrs.js_namespace().map(|(ns, _)| ns.0), &unraw_ident));
+        let shim = format!("__wbg_instanceof_{unraw_ident}_{hash}");
         let mut extends = Vec::new();
         let mut vendor_prefixes = Vec::new();
         let no_deref = attrs.no_deref().is_some();
@@ -977,16 +975,14 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
             ));
         }
 
-        let default_name = self.ident.to_string();
+        let default_name = self.ident.unraw().to_string();
         let js_name = opts
             .js_name_no_symbol("statics with #[wasm_bindgen]")?
             .unwrap_or(&default_name)
             .to_string();
-        let shim = format!(
-            "__wbg_static_accessor_{}_{}",
-            self.ident,
-            ShortHash((&js_name, module, &self.ident)),
-        );
+        let unraw_ident = self.ident.unraw();
+        let hash = ShortHash((&js_name, module, &unraw_ident));
+        let shim = format!("__wbg_static_accessor_{unraw_ident}_{hash}");
         let thread_local = opts.get_thread_local()?;
 
         opts.check_used();
@@ -1044,11 +1040,9 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
             )
         };
 
-        let shim = format!(
-            "__wbg_string_{}_{}",
-            self.ident,
-            ShortHash((&module, &self.ident)),
-        );
+        let unraw_ident = self.ident.unraw();
+        let hash = ShortHash((&module, &unraw_ident));
+        let shim = format!("__wbg_string_{unraw_ident}_{hash}");
         opts.check_used();
         Ok(ast::ImportKind::String(ast::ImportString {
             ty: *self.ty,
@@ -1662,7 +1656,7 @@ fn prepare_for_impl_recursion(
     let js_class = impl_opts
         .js_class()
         .map(|s| s.0.to_string())
-        .unwrap_or(ident.to_string());
+        .unwrap_or(ident.unraw().to_string());
 
     let wasm_bindgen = &program.wasm_bindgen;
     let wasm_bindgen_futures = &program.wasm_bindgen_futures;
@@ -1885,7 +1879,7 @@ impl<'a> MacroParse<(&'a mut TokenStream, BindgenAttrs)> for syn::ItemEnum {
         let comments = extract_doc_comments(&self.attrs);
         let js_name = opts
             .js_name_no_symbol("enums with #[wasm_bindgen]")?
-            .map_or_else(|| self.ident.to_string(), |s| s.to_string());
+            .map_or_else(|| self.ident.unraw().to_string(), |s| s.to_string());
         if is_js_keyword(&js_name) && js_name != "default" {
             bail_span!(
                 self.ident,
@@ -2003,7 +1997,8 @@ impl<'a> MacroParse<(&'a mut TokenStream, BindgenAttrs)> for syn::ItemEnum {
 
                 let comments = extract_doc_comments(&v.attrs);
                 Ok(ast::Variant {
-                    name: v.ident.clone(),
+                    rust_name: v.ident.clone(),
+                    js_name: v.ident.unraw().to_string(),
                     // due to the above checks, we know that the value fits
                     // within 32 bits, so this cast doesn't lose any information
                     value: value as u32,

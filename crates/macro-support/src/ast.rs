@@ -544,8 +544,10 @@ pub struct Enum {
 #[cfg_attr(feature = "extra-traits", derive(Debug, PartialEq, Eq))]
 #[derive(Clone)]
 pub struct Variant {
-    /// The name of this variant
-    pub name: Ident,
+    /// The name of this variant in Rust
+    pub rust_name: Ident,
+    /// The name of this variant in JS
+    pub js_name: String,
     /// The backing value of this variant
     pub value: u32,
     /// The doc comments on this variant, if any

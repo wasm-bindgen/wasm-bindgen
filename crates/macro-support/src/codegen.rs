@@ -2422,7 +2422,7 @@ impl ToTokens for ast::Enum {
             quote! { u32 }
         };
         let cast_clauses = self.variants.iter().map(|variant| {
-            let variant_name = &variant.name;
+            let variant_name = &variant.rust_name;
             quote! {
                 if js == #enum_name::#variant_name as #underlying {
                     #enum_name::#variant_name

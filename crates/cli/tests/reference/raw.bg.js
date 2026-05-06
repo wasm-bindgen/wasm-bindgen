@@ -1,3 +1,14 @@
+import { Other } from 'other';
+
+
+/**
+ * @enum {0 | 1}
+ */
+export const Enum = Object.freeze({
+    A: 0, "0": "A",
+    B: 1, "1": "B",
+});
+
 export class Test {
     static __wrap(ptr) {
         const obj = Object.create(Test.prototype);
@@ -42,6 +53,13 @@ export function test1(test) {
 }
 export function __wbg___wbindgen_throw_9c75d47bf9e7731e(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
+}
+export function __wbg_do_a0ba2606225d4465(arg0) {
+    arg0.do();
+}
+export function __wbg_new_37453f8cfbfa31f7() {
+    const ret = new Other();
+    return ret;
 }
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;
