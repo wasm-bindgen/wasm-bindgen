@@ -1,0 +1,47 @@
+crates/macro-support/src/ast.rs
+  d91764b7d6079bfb 395-397,426-427
+crates/cli/tests/reference/dynamic-union.d.ts
+  d91764b7d6079bfb 3,5
+CHANGELOG.md
+  d91764b7d6079bfb 26-28,30
+crates/cli-support/src/wit/mod.rs
+  d91764b7d6079bfb 1123,1178
+crates/shared/src/lib.rs
+  d91764b7d6079bfb 123,139
+crates/macro-support/src/parser.rs
+  d91764b7d6079bfb 1775,1817,1831,1897,1990-1997,2019
+crates/cli/tests/reference/enums.d.ts
+  d91764b7d6079bfb 7
+crates/cli/tests/reference/web-sys.d.ts
+  d91764b7d6079bfb 9
+crates/macro-support/src/encode.rs
+  d91764b7d6079bfb 417,445
+crates/shared/src/schema_hash_approval.rs
+  d91764b7d6079bfb 11
+crates/cli-support/src/wit/nonstandard.rs
+  d91764b7d6079bfb 240-242,262-264
+crates/cli-support/src/js/mod.rs
+  d91764b7d6079bfb 5340-5344,5431-5435
+crates/cli/tests/reference/dynamic-union.rs
+  d91764b7d6079bfb 22-23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "61bb518d711662a8d657fc31a6d2163d149de64e",
+  "prompts": {
+    "d91764b7d6079bfb": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_20b720921ffeg58eyb5eOAvJPi",
+        "model": "anthropic/claude-opus-4-7"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 52,
+      "total_deletions": 11,
+      "accepted_lines": 51,
+      "overriden_lines": 0
+    }
+  }
+}
