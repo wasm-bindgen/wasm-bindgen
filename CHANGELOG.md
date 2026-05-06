@@ -5,6 +5,22 @@
 
 ### Added
 
+* Added `js_sys::AggregateError` bindings (constructor, `errors` getter, and
+  `new_with_message` / `new_with_options` overloads). `AggregateError` represents
+  multiple unrelated errors wrapped in a single error, e.g. as thrown by
+  `Promise.any` when all input promises reject, along with `js_sys::ErrorOptions`,
+  accepted by built-in error constructors. `ErrorOptions::new(cause)`
+  constructs an instance pre-populated with `cause`, and `get_cause` /
+  `set_cause` provide typed access to the property. All standard error
+  constructors that previously took only a `message` (`EvalError`,
+  `RangeError`, `ReferenceError`, `SyntaxError`, `TypeError`, `URIError`,
+  `WebAssembly.CompileError`, `WebAssembly.LinkError`,
+  `WebAssembly.RuntimeError`) now expose a `new_with_options(message,
+  &ErrorOptions)` overload, and `Error` gains
+  `new_with_error_options(message, &ErrorOptions)` alongside the existing
+  untyped `new_with_options`. `AggregateError::new_with_options` also takes
+  `&ErrorOptions`.
+
 * Added `js_sys::FinalizationRegistry` bindings (constructor, `register`,
   `register_with_token`, and `unregister`). The cleanup callback parameter
   is typed as `&Function<fn(JsValue) -> Undefined>`, so closures created via

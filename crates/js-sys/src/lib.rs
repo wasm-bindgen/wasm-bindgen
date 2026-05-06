@@ -438,6 +438,90 @@ extern "C" {
     pub fn unescape(string: &str) -> JsString;
 }
 
+// AggregateError
+#[wasm_bindgen]
+extern "C" {
+    /// The `AggregateError` object represents an error when several errors need
+    /// to be wrapped in a single error. It is thrown when multiple errors need
+    /// to be reported by an operation, for example by [`Promise::any`], when
+    /// all promises passed to it reject.
+    ///
+    /// `AggregateError` is a subclass of [`Error`].
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AggregateError)
+    #[wasm_bindgen(extends = Error, extends = Object, typescript_type = "AggregateError")]
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub type AggregateError;
+
+    /// Creates a new `AggregateError` from the given iterable of errors.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AggregateError/AggregateError)
+    #[wasm_bindgen(constructor)]
+    pub fn new(errors: &[JsValue]) -> AggregateError;
+
+    /// Creates a new `AggregateError` from the given iterable of errors with a
+    /// human-readable description of the aggregate error.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AggregateError/AggregateError)
+    #[wasm_bindgen(constructor)]
+    pub fn new_with_message(errors: &[JsValue], message: &str) -> AggregateError;
+
+    /// Creates a new `AggregateError` from the given iterable of errors, a
+    /// human-readable description of the aggregate error, and an
+    /// [`ErrorOptions`] dictionary whose `cause` property indicates the
+    /// original cause of the error.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AggregateError/AggregateError)
+    #[wasm_bindgen(constructor)]
+    pub fn new_with_options(
+        errors: &[JsValue],
+        message: &str,
+        options: &ErrorOptions,
+    ) -> AggregateError;
+
+    /// The `errors` property of an `AggregateError` instance is an array
+    /// representing the errors that were aggregated.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AggregateError/errors)
+    #[wasm_bindgen(method, getter)]
+    pub fn errors(this: &AggregateError) -> Array;
+}
+
+// ErrorOptions
+#[wasm_bindgen]
+extern "C" {
+    /// The options dictionary accepted as the second argument to the
+    /// [`Error`] constructor (and other built-in error constructors such as
+    /// [`AggregateError`]). Its sole standard property is `cause`, which
+    /// indicates the original cause of the error.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/Error)
+    #[wasm_bindgen(extends = Object, typescript_type = "ErrorOptions")]
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub type ErrorOptions;
+
+    /// The `cause` property indicates the underlying cause of an error.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause)
+    #[wasm_bindgen(method, getter = "cause")]
+    pub fn get_cause(this: &ErrorOptions) -> JsValue;
+
+    /// Sets the `cause` property of this `ErrorOptions` dictionary.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause)
+    #[wasm_bindgen(method, setter = "cause")]
+    pub fn set_cause(this: &ErrorOptions, cause: &JsValue);
+}
+
+impl ErrorOptions {
+    /// Construct a new `ErrorOptions` dictionary with the given `cause`.
+    pub fn new(cause: &JsValue) -> Self {
+        let ret: Self = ::wasm_bindgen::JsCast::unchecked_into(Object::new());
+        ret.set_cause(cause);
+        ret
+    }
+}
+
 // Array
 #[wasm_bindgen]
 extern "C" {
@@ -3576,8 +3660,25 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error)
     #[wasm_bindgen(constructor)]
     pub fn new(message: &str) -> Error;
+
+    /// Creates a new `Error` with the given message and an untyped options
+    /// object whose `cause` property indicates the original cause of the
+    /// error.
+    ///
+    /// New code should prefer [`Error::new_with_error_options`], which takes
+    /// a typed [`ErrorOptions`] dictionary.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/Error)
     #[wasm_bindgen(constructor)]
     pub fn new_with_options(message: &str, options: &Object) -> Error;
+
+    /// Creates a new `Error` with the given message and a typed
+    /// [`ErrorOptions`] dictionary whose `cause` property indicates the
+    /// original cause of the error.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/Error)
+    #[wasm_bindgen(constructor)]
+    pub fn new_with_error_options(message: &str, options: &ErrorOptions) -> Error;
 
     /// The cause property is the underlying cause of the error.
     /// Usually this is used to add context to re-thrown errors.
@@ -3646,6 +3747,14 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/EvalError)
     #[wasm_bindgen(constructor)]
     pub fn new(message: &str) -> EvalError;
+
+    /// Creates a new `EvalError` with the given message and a typed
+    /// [`ErrorOptions`] dictionary whose `cause` property indicates the
+    /// original cause of the error.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/EvalError/EvalError)
+    #[wasm_bindgen(constructor)]
+    pub fn new_with_options(message: &str, options: &ErrorOptions) -> EvalError;
 }
 
 #[wasm_bindgen]
@@ -7372,6 +7481,14 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RangeError)
     #[wasm_bindgen(constructor)]
     pub fn new(message: &str) -> RangeError;
+
+    /// Creates a new `RangeError` with the given message and a typed
+    /// [`ErrorOptions`] dictionary whose `cause` property indicates the
+    /// original cause of the error.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RangeError/RangeError)
+    #[wasm_bindgen(constructor)]
+    pub fn new_with_options(message: &str, options: &ErrorOptions) -> RangeError;
 }
 
 // ReferenceError
@@ -7391,6 +7508,14 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ReferenceError)
     #[wasm_bindgen(constructor)]
     pub fn new(message: &str) -> ReferenceError;
+
+    /// Creates a new `ReferenceError` with the given message and a typed
+    /// [`ErrorOptions`] dictionary whose `cause` property indicates the
+    /// original cause of the error.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ReferenceError/ReferenceError)
+    #[wasm_bindgen(constructor)]
+    pub fn new_with_options(message: &str, options: &ErrorOptions) -> ReferenceError;
 }
 
 #[allow(non_snake_case)]
@@ -8192,6 +8317,14 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SyntaxError)
     #[wasm_bindgen(constructor)]
     pub fn new(message: &str) -> SyntaxError;
+
+    /// Creates a new `SyntaxError` with the given message and a typed
+    /// [`ErrorOptions`] dictionary whose `cause` property indicates the
+    /// original cause of the error.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SyntaxError/SyntaxError)
+    #[wasm_bindgen(constructor)]
+    pub fn new_with_options(message: &str, options: &ErrorOptions) -> SyntaxError;
 }
 
 // TypeError
@@ -8211,6 +8344,14 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypeError)
     #[wasm_bindgen(constructor)]
     pub fn new(message: &str) -> TypeError;
+
+    /// Creates a new `TypeError` with the given message and a typed
+    /// [`ErrorOptions`] dictionary whose `cause` property indicates the
+    /// original cause of the error.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypeError/TypeError)
+    #[wasm_bindgen(constructor)]
+    pub fn new_with_options(message: &str, options: &ErrorOptions) -> TypeError;
 }
 
 // URIError
@@ -8230,6 +8371,14 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/URIError)
     #[wasm_bindgen(constructor, js_class = "URIError")]
     pub fn new(message: &str) -> UriError;
+
+    /// Creates a new `URIError` with the given message and a typed
+    /// [`ErrorOptions`] dictionary whose `cause` property indicates the
+    /// original cause of the error.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/URIError/URIError)
+    #[wasm_bindgen(constructor, js_class = "URIError")]
+    pub fn new_with_options(message: &str, options: &ErrorOptions) -> UriError;
 }
 
 // WeakMap
@@ -8534,6 +8683,14 @@ pub mod WebAssembly {
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/CompileError)
         #[wasm_bindgen(constructor, js_namespace = WebAssembly)]
         pub fn new(message: &str) -> CompileError;
+
+        /// Creates a new `WebAssembly.CompileError` with the given message and
+        /// a typed [`ErrorOptions`] dictionary whose `cause` property
+        /// indicates the original cause of the error.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/CompileError/CompileError)
+        #[wasm_bindgen(constructor, js_namespace = WebAssembly)]
+        pub fn new_with_options(message: &str, options: &ErrorOptions) -> CompileError;
     }
 
     // WebAssembly.Instance
@@ -8587,6 +8744,14 @@ pub mod WebAssembly {
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/LinkError)
         #[wasm_bindgen(constructor, js_namespace = WebAssembly)]
         pub fn new(message: &str) -> LinkError;
+
+        /// Creates a new `WebAssembly.LinkError` with the given message and a
+        /// typed [`ErrorOptions`] dictionary whose `cause` property indicates
+        /// the original cause of the error.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/LinkError/LinkError)
+        #[wasm_bindgen(constructor, js_namespace = WebAssembly)]
+        pub fn new_with_options(message: &str, options: &ErrorOptions) -> LinkError;
     }
 
     // WebAssembly.RuntimeError
@@ -8608,6 +8773,14 @@ pub mod WebAssembly {
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/RuntimeError)
         #[wasm_bindgen(constructor, js_namespace = WebAssembly)]
         pub fn new(message: &str) -> RuntimeError;
+
+        /// Creates a new `WebAssembly.RuntimeError` with the given message
+        /// and a typed [`ErrorOptions`] dictionary whose `cause` property
+        /// indicates the original cause of the error.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/RuntimeError/RuntimeError)
+        #[wasm_bindgen(constructor, js_namespace = WebAssembly)]
+        pub fn new_with_options(message: &str, options: &ErrorOptions) -> RuntimeError;
     }
 
     // WebAssembly.Module
