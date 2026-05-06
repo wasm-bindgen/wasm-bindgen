@@ -8,6 +8,11 @@ exports.Tagged = class Tagged {
     get tag() {
         return this._tag;
     }
+    push_strings(v) {
+        const assert = require('assert');
+        assert.ok(Array.isArray(v));
+        return v.map(s => `${this._tag}-${s}`);
+    }
 };
 
 // Each handler asserts the incoming value is a plain `Array` (not a
