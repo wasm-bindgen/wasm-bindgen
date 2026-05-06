@@ -1,0 +1,23 @@
+guide/src/reference/attributes/on-js-imports/slice_to_array.md
+  b7bd0cac7073c514 46-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "22b6591923f56913b5ffd3a7676753ed3197ebb8",
+  "prompts": {
+    "b7bd0cac7073c514": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_201316640ffe7F2UHoJRH0NeAS",
+        "model": "anthropic/claude-opus-4-7"
+      },
+      "human_author": "Guy Bedford",
+      "messages": [],
+      "total_additions": 6,
+      "total_deletions": 2,
+      "accepted_lines": 6,
+      "overriden_lines": 0
+    }
+  }
+}
