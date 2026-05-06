@@ -32,8 +32,27 @@ use crate::__rt::{Ref, RefMut, WasmRefCell};
 /// inner value. You should not need to construct `Parent<T>` directly
 /// outside the child's constructor; the [`From<T>`] impl is the typical way
 /// to initialize the injected `parent` field.
+///
+/// `Clone` is a cheap `Rc` clone — both copies point at the same parent
+/// data. `Debug` prints the wrapper plus the inner `T` (when `T: Debug`).
 pub struct Parent<T> {
     inner: Rc<WasmRefCell<T>>,
+}
+
+impl<T> Clone for Parent<T> {
+    fn clone(&self) -> Self {
+        Self {
+            inner: Rc::clone(&self.inner),
+        }
+    }
+}
+
+impl<T: core::fmt::Debug> core::fmt::Debug for Parent<T> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_tuple("Parent")
+            .field(&*self.inner.borrow())
+            .finish()
+    }
 }
 
 impl<T> Parent<T> {
