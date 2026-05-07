@@ -1,0 +1,25 @@
+tests/wasm/enums.rs
+  b07f49c7e13c97fa 30-34,349-359
+tests/wasm/enums.js
+  b07f49c7e13c97fa 63-66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "f74ecfd1e07dabdaf6a236d7bdc9f10f78179b69",
+  "prompts": {
+    "b07f49c7e13c97fa": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_2005a8a33ffe8OaSroaGSn2MhG",
+        "model": "cloudflare-workers-ai/@cf/zai-org/glm-5.1"
+      },
+      "human_author": "Guy Bedford",
+      "messages": [],
+      "total_additions": 20,
+      "total_deletions": 0,
+      "accepted_lines": 20,
+      "overriden_lines": 0
+    }
+  }
+}
