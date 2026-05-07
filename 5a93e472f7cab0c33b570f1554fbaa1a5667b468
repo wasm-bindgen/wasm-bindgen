@@ -1,0 +1,27 @@
+src/lib.rs
+  57bcd076b7c3fca2 1158
+.github/workflows/main.yml
+  57bcd076b7c3fca2 142,144,150
+tests/wasm/try_from_js_value.rs
+  57bcd076b7c3fca2 378-381
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "5a93e472f7cab0c33b570f1554fbaa1a5667b468",
+  "prompts": {
+    "57bcd076b7c3fca2": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1fb6baadbffeuqxhClvrmWp7xP",
+        "model": "anthropic/claude-opus-4-7"
+      },
+      "human_author": "Guy Bedford",
+      "messages": [],
+      "total_additions": 6,
+      "total_deletions": 4,
+      "accepted_lines": 8,
+      "overriden_lines": 0
+    }
+  }
+}
