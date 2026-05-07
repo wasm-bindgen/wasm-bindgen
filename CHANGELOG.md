@@ -96,6 +96,10 @@
 
 ### Fixed
 
+* `From<Promise<T>> for JsFuture<T>` and `IntoFuture for Promise<T>` now
+  accept any `T: FromWasmAbi` (rather than `T: JsGeneric`), letting
+  imported `async fn`s return dynamic-union enums.
+
 * `TryFromJsValue` for C-style enums no longer accepts non-numeric values
   via JS unary `+` coercion. Previously calling `dyn_into::<MyEnum>()` on
   a string would silently coerce it via `+"foo"` (yielding `NaN`, then

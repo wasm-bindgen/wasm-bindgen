@@ -23,6 +23,15 @@ extern "C" {
     fn js_nested_union_roundtrip(o: OuterUnion) -> OuterUnion;
     fn js_optional_union_roundtrip(o: Option<OuterUnion>) -> Option<OuterUnion>;
     fn js_fallback_union_roundtrip(u: FallbackUnion) -> FallbackUnion;
+
+    // Async round-trip: imports an `async fn` returning a dynamic union,
+    // exercising `Promise<Union>` resolution across the `JsFuture` seam.
+    async fn js_async_union_roundtrip(o: OuterUnion) -> OuterUnion;
+
+    // Same but with `catch`: the resolved success type is still `Union`,
+    // wrapped in `Result<_, JsValue>` for the rejection path.
+    #[wasm_bindgen(catch)]
+    async fn js_async_union_result(o: OuterUnion) -> Result<OuterUnion, JsValue>;
 }
 
 #[wasm_bindgen]
@@ -315,5 +324,37 @@ fn test_fallback_union_roundtrip() {
     assert!(matches!(
         js_fallback_union_roundtrip(FallbackUnion::Anything(foo)),
         FallbackUnion::Anything(_)
+    ));
+}
+
+// Verifies that an imported `async fn` returning a dynamic union resolves
+// correctly: the JS-side `Promise<Union>` flows through `JsFuture` and the
+// closure-shim's `from_abi` runs the union dispatcher. This case was
+// missed when unions were originally added — the original
+// `From<Promise<T>> for JsFuture<T>` impl required `T: JsGeneric`, which
+// dynamic unions cannot satisfy because they are tagged Rust enums (not
+// `#[repr(transparent)]` wrappers around `JsValue`). The bound has been
+// loosened to `T: FromWasmAbi + 'static`, which is the actual minimum the
+// closure shim needs.
+#[wasm_bindgen]
+pub async fn async_union_roundtrip(o: OuterUnion) -> OuterUnion {
+    o
+}
+
+#[wasm_bindgen_test]
+async fn test_async_union_roundtrip() {
+    let bar = Bar::new(99);
+    let result = js_async_union_roundtrip(OuterUnion::Bare(bar)).await;
+    assert!(matches!(result, OuterUnion::Bare(b) if b.value() == 99));
+}
+
+// `catch` projects to `Result<Union, JsValue>` on the Rust side; the
+// success type still flows through the same `JsFuture` seam.
+#[wasm_bindgen_test]
+async fn test_async_union_result_catch() {
+    let res = js_async_union_result(OuterUnion::Wrapped(InnerUnion::Number(123))).await;
+    assert!(matches!(
+        res,
+        Ok(OuterUnion::Wrapped(InnerUnion::Number(123)))
     ));
 }
