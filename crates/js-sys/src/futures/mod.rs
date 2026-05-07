@@ -127,7 +127,11 @@ impl<T> fmt::Debug for JsFuture<T> {
     }
 }
 
-impl<T: JsGeneric + FromWasmAbi> From<Promise<T>> for JsFuture<T> {
+// `FromWasmAbi` is what the closure shim invokes on the resolved value;
+// no layout equivalence with `JsValue` is required at this seam — the
+// per-type `from_abi` does the conversion (e.g. for dynamic unions it
+// runs the variant dispatcher).
+impl<T: FromWasmAbi + 'static> From<Promise<T>> for JsFuture<T> {
     fn from(js: Promise<T>) -> JsFuture<T> {
         // Use the `then` method to schedule two callbacks, one for the
         // resolved value and one for the rejected value. We're currently
@@ -217,7 +221,7 @@ impl<T> Future for JsFuture<T> {
     }
 }
 
-impl<T: JsGeneric + FromWasmAbi> IntoFuture for Promise<T> {
+impl<T: FromWasmAbi + 'static> IntoFuture for Promise<T> {
     type Output = Result<T, JsValue>;
     type IntoFuture = JsFuture<T>;
 
