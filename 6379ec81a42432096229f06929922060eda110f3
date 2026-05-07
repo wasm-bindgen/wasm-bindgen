@@ -1,0 +1,23 @@
+.github/workflows/main.yml
+  57bcd076b7c3fca2 142,144,150
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "6379ec81a42432096229f06929922060eda110f3",
+  "prompts": {
+    "57bcd076b7c3fca2": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1fb6baadbffeuqxhClvrmWp7xP",
+        "model": "anthropic/claude-opus-4-7"
+      },
+      "human_author": "Guy Bedford",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 2,
+      "accepted_lines": 3,
+      "overriden_lines": 0
+    }
+  }
+}
