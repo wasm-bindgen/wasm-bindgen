@@ -23,6 +23,17 @@
   See [#5151](https://github.com/wasm-bindgen/wasm-bindgen/issues/5151)
   for tracking Node.js 20 support.
 
+### Added
+
+* Implemented `TryFromJsValue` for `Vec<T>` where `T: TryFromJsValue`.
+  A JS value converts when it is a real `Array` (per `Array.isArray`)
+  and every element converts via `T::try_from_js_value`. This composes
+  recursively (`Vec<Vec<String>>`, `Vec<Option<T>>`) and works for any
+  `T` with a `TryFromJsValue` impl, including primitives, `String`,
+  `JsValue`, and `JsCast` types. Array-likes (objects with `length` and
+  numeric indices) are intentionally rejected to mirror the static ABI
+  representation used by `js_value_vector_from_abi`.
+
 --------------------------------------------------------------------------------
 
 ## [0.2.121](https://github.com/rustwasm/wasm-bindgen/compare/0.2.120...0.2.121)

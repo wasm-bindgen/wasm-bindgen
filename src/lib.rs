@@ -1146,6 +1146,25 @@ impl<T: TryFromJsValue> TryFromJsValue for Option<T> {
     }
 }
 
+// Converts a JS `Array` whose elements all convert via `T::try_from_js_value`.
+// Rejects non-array values and arrays containing any element that fails to
+// convert. Mirrors the `Array`-shaped representation used by the static ABI
+// path in `js_value_vector_from_abi`.
+impl<T: TryFromJsValue> TryFromJsValue for Vec<T> {
+    fn try_from_js_value_ref(value: &JsValue) -> Option<Self> {
+        if !__wbindgen_is_array(value) {
+            return None;
+        }
+        let len = __wbindgen_reflect_get(value, &JsValue::from_str("length")).as_f64()? as u32;
+        let mut out = Vec::with_capacity(len as usize);
+        for i in 0..len {
+            let elem = __wbindgen_reflect_get(value, &JsValue::from_f64(i as f64));
+            out.push(T::try_from_js_value(elem).ok()?);
+        }
+        Some(out)
+    }
+}
+
 // `usize` and `isize` use the public pointer-sized JS number ABI, which is
 // `u32`/`i32` on wasm32 and `f64` on wasm64.
 impl PartialEq<usize> for JsValue {
@@ -1197,6 +1216,9 @@ impl TryFromJsValue for usize {
 extern "C" {
     #[wasm_bindgen(js_namespace = Array, js_name = isArray)]
     fn __wbindgen_is_array(v: &JsValue) -> bool;
+
+    #[wasm_bindgen(js_namespace = Reflect, js_name = get)]
+    fn __wbindgen_reflect_get(target: &JsValue, key: &JsValue) -> JsValue;
 
     #[wasm_bindgen(js_name = BigInt)]
     fn __wbindgen_bigint_from_str(s: &str) -> JsValue;
