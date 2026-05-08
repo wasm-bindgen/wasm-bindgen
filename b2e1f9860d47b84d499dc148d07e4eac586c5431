@@ -1,0 +1,33 @@
+CHANGELOG.md
+  57bcd076b7c3fca2 6-16
+examples/raytrace-parallel/package.json
+  57bcd076b7c3fca2 3
+examples/wasm-audio-worklet/package.json
+  57bcd076b7c3fca2 3
+.github/workflows/main.yml
+  57bcd076b7c3fca2 135
+examples/nodejs-threads/package.json
+  57bcd076b7c3fca2 3
+crates/cli/tests/wasm-bindgen/reference.rs
+  57bcd076b7c3fca2 247,275
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "b2e1f9860d47b84d499dc148d07e4eac586c5431",
+  "prompts": {
+    "57bcd076b7c3fca2": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1fb6baadbffeuqxhClvrmWp7xP",
+        "model": "anthropic/claude-opus-4-7"
+      },
+      "human_author": "Guy Bedford",
+      "messages": [],
+      "total_additions": 17,
+      "total_deletions": 4,
+      "accepted_lines": 17,
+      "overriden_lines": 0
+    }
+  }
+}
