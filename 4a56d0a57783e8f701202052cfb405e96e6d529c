@@ -1,0 +1,23 @@
+justfile
+  c10b538af2aa5fc1 22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "4a56d0a57783e8f701202052cfb405e96e6d529c",
+  "prompts": {
+    "c10b538af2aa5fc1": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1e18a949effeAMDZOOx7fb0XkE",
+        "model": "anthropic/claude-opus-4-7"
+      },
+      "human_author": "Guy Bedford",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 1,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
