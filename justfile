@@ -19,7 +19,7 @@ test:
     just test-webidl-tests-compat
 
 test-cli *ARGS="":
-    cargo test -p wasm-bindgen-cli {{ARGS}} > /tmp/test-cli.log 2>&1 || (cat /tmp/test-cli.log && exit 1)
+    cargo test -p wasm-bindgen-cli {{ARGS}}
 
 test-cli-overwrite:
     BLESS=1 cargo test -p wasm-bindgen-cli -- --skip headless_streaming_tests
