@@ -23,6 +23,21 @@
   opt back into legacy EH — wasm-bindgen detects and supports both
   variants. The `catch-unwind` guide has been updated accordingly.
 
+### Fixed
+
+* Fixed namespaced export wiring for a renamed exported class. When a struct
+  was declared with both `js_name` and `js_namespace`
+  (e.g. `#[wasm_bindgen(js_name = "Foo", js_namespace = ns)] struct FooImpl`)
+  and its `impl` block used `js_class = "Foo"` to match the renamed JS name,
+  the generated `namespace.Foo = ...` assignment pointed at a stub class
+  with no methods or constructor. Methods and the constructor were instead
+  written onto a fresh, unreachable JS class entry, so
+  `new wasm.ns.Foo(args)` threw `cannot invoke 'new' directly` and instance
+  methods reported `is not a function`. `require_class` now also resolves an
+  incoming `js_class` value back to the struct's `rust_name`, so the
+  registered exported-class entry receives the methods and the namespace
+  export wires through correctly.
+
 --------------------------------------------------------------------------------
 
 ## [0.2.121](https://github.com/rustwasm/wasm-bindgen/compare/0.2.120...0.2.121)

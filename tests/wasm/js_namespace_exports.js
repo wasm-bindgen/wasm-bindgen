@@ -67,6 +67,42 @@ exports.test_struct_namespace = function() {
   assert.throws(() => new wasm.shapes.Point(), "Point constructor should be private");
 };
 
+// Struct uses `js_name` + `js_namespace`; impl uses `js_class` + `js_namespace`.
+// Constructor and method must be reachable through the namespace export.
+exports.test_renamed_namespaced_class_methods = function() {
+  assert.ok(wasm.renamed_models, "renamed_models namespace should exist");
+  assert.ok(wasm.renamed_models.RenamedCounter, "renamed_models.RenamedCounter class should exist");
+
+  const obj = new wasm.renamed_models.RenamedCounter(7);
+  assert.strictEqual(typeof obj.increment, "function", "instance should expose `increment` method");
+  assert.strictEqual(obj.value, 7, "constructor should set initial value through the namespace export");
+
+  obj.increment();
+  assert.strictEqual(obj.value, 8, "method call through the namespace export should mutate state");
+};
+
+// Struct uses `js_name` + `js_namespace`; impl uses ONLY `js_class` (no
+// `js_namespace`). The struct alone declares the namespace.
+exports.test_renamed_class_namespace_on_struct_only = function() {
+  assert.ok(wasm.struct_only_ns, "struct_only_ns namespace should exist");
+  assert.ok(wasm.struct_only_ns.RenamedOnlyStructNs, "struct_only_ns.RenamedOnlyStructNs class should exist");
+
+  const obj = new wasm.struct_only_ns.RenamedOnlyStructNs(5);
+  assert.strictEqual(typeof obj.double, "function", "instance should expose `double` method");
+  assert.strictEqual(obj.double(), 10, "method through the namespace export should return value");
+};
+
+// No rename; both struct and impl carry the same `js_namespace`. Confirms
+// whether the rename is necessary to trigger the regression.
+exports.test_namespaced_class_methods_same_name = function() {
+  assert.ok(wasm.same_name_ns, "same_name_ns namespace should exist");
+  assert.ok(wasm.same_name_ns.SameNameNs, "same_name_ns.SameNameNs class should exist");
+
+  const obj = new wasm.same_name_ns.SameNameNs(3);
+  assert.strictEqual(typeof obj.triple, "function", "instance should expose `triple` method");
+  assert.strictEqual(obj.triple(), 9, "method through the namespace export should return value");
+};
+
 exports.test_nested_struct_namespace = function() {
   assert.ok(wasm.shapes, "shapes namespace should exist");
   assert.ok(wasm.shapes["3d"], "shapes.3d namespace should exist");

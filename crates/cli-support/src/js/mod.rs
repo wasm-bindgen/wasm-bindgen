@@ -152,6 +152,17 @@ pub struct Context<'a> {
     /// Mapping from qualified name (used in WasmDescribe) to rust_name (used as exported_classes key).
     pub(crate) qualified_to_rust_name: HashMap<String, String>,
 
+    /// Mapping from JS export name to rust_name (used as exported_classes key).
+    /// Lets `require_class` find the registered class by its `js_name` when
+    /// the caller hands in a `js_class = "..."` value from an impl-block
+    /// attribute. Without this, a renamed struct (e.g. `#[wasm_bindgen(js_name
+    /// = "Foo")] struct FooImpl` + `#[wasm_bindgen(js_class = "Foo")] impl
+    /// FooImpl`) would route constructor + methods onto a fresh class entry
+    /// keyed by `"Foo"`, leaving the entry keyed by the rust ident `FooImpl`
+    /// (used by `generate_struct` to write the class declaration + namespace
+    /// export) empty — so `namespace.Foo` would resolve to a stub class.
+    pub(crate) js_name_to_rust_name: HashMap<String, String>,
+
     /// Mapping from qualified name (used in WasmDescribe) to the unique declaration identifier.
     pub(crate) qualified_to_identifier: HashMap<String, String>,
     /// Tracks dependencies (Emscripten imports) for the current adapter being generated.
@@ -324,6 +335,7 @@ impl<'a> Context<'a> {
             table_indices: Default::default(),
             stack_pointer_shim_injected: false,
             qualified_to_rust_name: Default::default(),
+            js_name_to_rust_name: Default::default(),
             qualified_to_identifier: Default::default(),
             emscripten_library: String::new(),
             adapter_deps: Default::default(),
@@ -1753,8 +1765,17 @@ if (require('worker_threads').isMainThread) {{
     }
 
     fn require_class<'b>(&'b mut self, name: &str) -> &'b mut ExportedClass {
-        // Resolve qualified_name to rust_name if needed
+        // Resolve to rust_name (the `exported_classes` key) by trying, in
+        // order: (1) qualified_name → rust_name, (2) js_name → rust_name,
+        // (3) the input as-is. The js_name pass covers callers that hand in
+        // the value of `js_class = "..."` on an impl block — without it, a
+        // struct renamed via `#[wasm_bindgen(js_name = "Foo")]` would have
+        // its constructor + methods written to a fresh class entry keyed by
+        // "Foo" while the entry keyed by the rust ident stays empty, so the
+        // namespace export wires to a stub class with no methods.
         let key = if let Some(rust_name) = self.qualified_to_rust_name.get(name) {
+            rust_name.clone()
+        } else if let Some(rust_name) = self.js_name_to_rust_name.get(name) {
             rust_name.clone()
         } else {
             name.to_string()
@@ -4153,6 +4174,13 @@ if (require('worker_threads').isMainThread) {{
         for s in self.aux.structs.iter() {
             self.qualified_to_rust_name
                 .insert(s.qualified_name.clone(), s.rust_name.clone());
+            // Also key by JS export name so `require_class("FooJsName")` (the
+            // value of `js_class = "..."` on an impl block) routes back to
+            // the same `exported_classes` entry as the rust-name lookup.
+            if s.name != s.rust_name {
+                self.js_name_to_rust_name
+                    .insert(s.name.clone(), s.rust_name.clone());
+            }
             let needs_identifier = self
                 .exported_classes
                 .get(&s.rust_name)
