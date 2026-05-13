@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "build": "wasm-pack build --target web --out-dir ../dist/jspi-fetch-streams",
+    "postbuild": "node build-post.mjs"
+  }
+}

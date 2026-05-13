@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>JSPI (JS Promise Integration) — wasm-bindgen example</title>
+  <style>
+    body { font-family: monospace; max-width: 720px; margin: 2em auto; padding: 0 1em; }
+    h1   { font-size: 1.2em; }
+    pre  { background: #f5f5f5; padding: 1em; border-radius: 4px; white-space: pre-wrap; }
+    .err { color: #c00; }
+  </style>
+</head>
+<body>
+<h1>WebAssembly JSPI Example</h1>
+<p>
+  JSPI lets plain (non-<code>async</code>) Rust functions await JS Promises by
+  suspending the WASM fiber — without blocking the browser's event loop.
+  Open DevTools to follow the timings.
+</p>
+<p>
+  With the fully integrated JSPI support in wasm-bindgen, no manual bridge
+  setup is required:
+  <ul>
+    <li>Imports marked <code>#[wasm_bindgen(suspending)]</code> are automatically wrapped
+        with <code>new WebAssembly.Suspending(...)</code> by the generated glue.</li>
+    <li>Exports marked <code>#[wasm_bindgen(jspi)]</code> are automatically wrapped with
+        <code>WebAssembly.promising</code> via a lazy cache in the generated glue.</li>
+  </ul>
+</p>
+<pre id="log">Loading…</pre>
+
+<script type="module">
+// wasm-pack build --target web output lives in pkg/.
+import init, {
+    do_sleep
+} from "./jspi.js";
+
+const logEl = document.getElementById("log");
+const nl = "\n";
+
+function log(msg) { logEl.textContent += msg + nl; console.log(msg); }
+function err(msg) { logEl.textContent += msg + nl; logEl.classList.add("err"); console.error(msg); }
+
+async function run() {
+    logEl.textContent = "";
+
+    // ── Feature detection ────────────────────────────────────────────────────
+    if (typeof WebAssembly?.Suspending !== "function") {
+        err("❌  WebAssembly.Suspending is not available in this browser.");
+        err("");
+        err("Required browsers (2025):");
+        err("  • Chrome 117+");
+        err("  • Firefox 150+  →  set javascript.options.wasm_js_promise_integration");
+        err("                      to true in about:config");
+        err("  • Safari 18.4+");
+        return;
+    }
+    log("✓  WebAssembly.Suspending available");
+
+    // ── Load WASM module ─────────────────────────────────────────────────────
+    // No patching needed: the generated glue handles WebAssembly.Suspending
+    // for #[wasm_bindgen(suspending)] imports and WebAssembly.promising for
+    // #[wasm_bindgen(jspi)] exports automatically.
+    await init();
+    log("✓  WASM module loaded");
+    log("");
+
+    // ── Demo 1: non-async sleep ──────────────────────────────────────────────
+    // `do_sleep` is marked #[wasm_bindgen(jspi)].  The generated glue wraps it
+    // with WebAssembly.promising, so it returns a Promise automatically.
+    log("Demo: sleeping 300 ms via do_sleep(300) …");
+    const t0 = performance.now();
+    await do_sleep(300);
+    log(`         done in ${(performance.now() - t0).toFixed(0)} ms`);
+    log("");
+}
+
+run().catch(e => err("Fatal: " + e));
+</script>
+</body>
+</html>
