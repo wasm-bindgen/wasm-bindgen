@@ -174,13 +174,13 @@ jobs:
       RUSTFLAGS: -Cpanic=unwind -Cllvm-args=-wasm-use-legacy-eh
     steps:
     - uses: actions/checkout@v6
-    # Pin to nightly-2026-05-12 or earlier: later nightlies emit wasm-gc
+    # Pin to nightly-2026-05-11 or earlier: later nightlies emit wasm-gc
     # value types (e.g. `noexternref`) in the standard library that Node 20's
     # V8 11.3 cannot validate. Dated nightlies remain available on the dist
     # server indefinitely.
     - uses: dtolnay/rust-toolchain@master
       with:
-        toolchain: nightly-2026-05-12
+        toolchain: nightly-2026-05-11
         targets: wasm32-unknown-unknown
         components: rust-src
     - uses: actions/setup-node@v6

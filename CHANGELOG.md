@@ -21,7 +21,7 @@
   22.22.3+ or 24.15.0+, or a recent browser. If older runtime support is
   needed (e.g. Node.js 20), pass `-Cllvm-args=-wasm-use-legacy-eh` to
   opt back into legacy EH — wasm-bindgen detects and supports both
-  variants — **and** pin to `nightly-2026-05-12` or earlier, since later
+  variants — **and** pin to `nightly-2026-05-11` or earlier, since later
   nightlies emit wasm-gc value types (e.g. `noexternref`) in the
   standard library that Node.js 20 cannot validate. The `catch-unwind`
   guide has been updated accordingly.
