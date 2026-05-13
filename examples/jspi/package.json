@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "build": "wasm-pack build --target web --out-dir ../dist/jspi",
+    "postbuild": "node build-post.mjs"
+  }
+}
