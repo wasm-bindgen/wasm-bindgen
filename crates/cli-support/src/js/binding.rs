@@ -92,6 +92,9 @@ pub struct JsFunction {
     pub might_be_optional_field: bool,
     pub catch: bool,
     pub log_error: bool,
+    /// True when the generated JS function body uses `await` (JSPI exports that
+    /// return a value).  The function definition must then be prefixed with `async`.
+    pub jspi_async: bool,
 }
 
 /// A references to an (likely) exported symbol used in TS type expression.
@@ -338,6 +341,11 @@ impl<'a, 'b> Builder<'a, 'b> {
             arg_tys.push(param);
         }
 
+        // JSPI exports that return values use `await` on the promising call so
+        // the resolved WASM return value is available for post-processing.  We
+        // record this before the instruction loop so `JsFunction` can carry it.
+        let jspi_async = js.cx.current_adapter_jspi && !adapter.results.is_empty();
+
         // Translate all instructions, the fun loop!
         //
         // This loop will process all instructions for this adapter function.
@@ -431,12 +439,15 @@ impl<'a, 'b> Builder<'a, 'b> {
         // should start from here. Struct fields(Getter) only have one arg, and
         // this is the clue we can infer if a function might be a field.
         let mut might_be_optional_field = false;
+        // For JSPI exports, the return type should be `Promise<T>` in TypeScript
+        // (just like async functions). We pass the OR of the two flags.
+        let ts_asyncness = asyncness || self.cx.current_adapter_jspi;
         let (ts_sig, ts_arg_tys, ts_ret_ty, ts_refs) = self.typescript_signature(
             &function_args,
             &arg_tys,
             &adapter.inner_results,
             &mut might_be_optional_field,
-            asyncness,
+            ts_asyncness,
             variadic,
             ret_ty_override,
         );
@@ -472,6 +483,7 @@ impl<'a, 'b> Builder<'a, 'b> {
             might_be_optional_field,
             catch: self.catch,
             log_error: self.log_error,
+            jspi_async,
         })
     }
 
@@ -1059,14 +1071,40 @@ fn instruction(
                     js.finally(&maybe_wrap_export_call(&call, guard));
                 }
                 (true, _) => panic!("deferred calls must have no results"),
+                (false, 0) if js.cx.current_adapter_suspending => {
+                    // A `#[wasm_bindgen(suspending)]` import must return the
+                    // Promise to `WebAssembly.Suspending` even when the Rust
+                    // return type is `()`.  Without `return` the fiber never
+                    // suspends and block_on_promise returns immediately with null.
+                    // Emit `return` directly into prelude; don't push to the
+                    // adapter stack (which must stay at len=0 for void).
+                    js.prelude(&format!("return {};", call));
+                }
+                (false, 0) if js.cx.current_adapter_jspi => {
+                    // A `#[wasm_bindgen(jspi)]` export that returns `()` still
+                    // needs to propagate the Promise from `WebAssembly.promising`
+                    // to the JS caller.  Without `return` the caller cannot
+                    // `await` the operation and races with the WASM fiber.
+                    js.prelude(&format!("return {};", call));
+                }
                 (false, 0) => js.prelude(&maybe_wrap_export_call(&call, guard)),
                 (false, n) => {
+                    // For JSPI exports the `call` expression returns a Promise;
+                    // `await` it so the resolved WASM return value
+                    // is available for post-processing.  The outer JS
+                    // wrapper function is marked `async` (via the `jspi_async` flag
+                    // on `JsFunction`) so that `await` is legal here.
+                    let maybe_await = if js.cx.current_adapter_jspi {
+                        "await "
+                    } else {
+                        ""
+                    };
                     let body = if matches!(guard, ExportGuard::None) {
-                        format!("const ret = {call};")
+                        format!("const ret = {maybe_await}{call};")
                     } else {
                         format!(
                             "let ret;\n{}",
-                            &maybe_wrap_export_call(&format!("ret = {call}"), guard)
+                            &maybe_wrap_export_call(&format!("ret = {maybe_await}{call}"), guard)
                         )
                     };
                     js.prelude(&body);
@@ -2057,13 +2095,37 @@ impl Invocation {
         guard: &mut ExportGuard,
     ) -> Result<String, Error> {
         match self {
-            Invocation::Core { id, export_id, .. } => {
+            Invocation::Core {
+                id,
+                export_id,
+                defer,
+            } => {
                 let name = match export_id {
                     Some(eid) => cx.module.exports.get(*eid).name.clone(),
                     None => cx.export_name_of(*id),
                 };
                 let accessor = cx.wasm_export_ref(&name);
-                Ok(format!("{accessor}({})", args.join(", ")))
+                // Only wrap the main export call (non-deferred) with
+                // `WebAssembly.promising`.  Deferred calls like `__wbindgen_free`
+                // must remain plain calls — they are not JSPI exports and
+                // wrapping them causes them to return a discarded Promise instead of
+                // running synchronously as expected.
+                if cx.current_adapter_jspi && !defer {
+                    // Emit a module-level lazy cache variable and wrap the
+                    // call with `WebAssembly.promising` so the fiber can
+                    // suspend via JSPI.
+                    let cache_var = format!(
+                        "__wbg_jspi_{}",
+                        name.replace(|c: char| !c.is_ascii_alphanumeric(), "_")
+                    );
+                    cx.global(&format!("let {cache_var};\n"));
+                    Ok(format!(
+                        "({cache_var} ??= WebAssembly.promising({accessor}))({})",
+                        args.join(", ")
+                    ))
+                } else {
+                    Ok(format!("{accessor}({})", args.join(", ")))
+                }
             }
             Invocation::Adapter(id) => {
                 let adapter = &cx.wit.adapters[id];

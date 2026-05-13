@@ -129,6 +129,10 @@ macro_rules! attrgen {
 
             // For testing purposes only.
             (assert_no_shim, false, AssertNoShim(Span)),
+
+            // JSPI attributes
+            (jspi, false, Jspi(Span)),
+            (suspending, false, Suspending(Span)),
         }
     };
 }
@@ -1090,6 +1094,15 @@ impl<'a>
             }
         }
         let assert_no_shim = opts.assert_no_shim().is_some();
+        let suspending = opts.suspending().is_some();
+        if wasm.jspi {
+            if let Some(span) = opts.jspi() {
+                return Err(Diagnostic::span_error(
+                    *span,
+                    "`jspi` can only be used on exported functions, not imports",
+                ));
+            }
+        }
 
         let mut doc_comment = String::new();
         // Extract the doc comments from our list of attributes.
@@ -1135,6 +1148,7 @@ impl<'a>
         let ret = ast::ImportKind::Function(ast::ImportFunction {
             function: wasm,
             assert_no_shim,
+            suspending,
             kind,
             js_ret,
             catch,
@@ -1558,6 +1572,18 @@ fn function_from_decl(
         (decl_name.unraw().to_string(), decl_name.span())
     };
 
+    let is_async = sig.asyncness.is_some();
+    let is_jspi = opts.jspi().is_some();
+    if is_async && is_jspi {
+        if let Some(span) = opts.jspi() {
+            return Err(Diagnostic::span_error(
+                *span,
+                "`jspi` and `async` are mutually exclusive.\n\
+                use `block_on_promise` from a jspi function to call async code.",
+            ));
+        }
+    }
+
     Ok((
         ast::Function {
             name_span,
@@ -1565,7 +1591,8 @@ fn function_from_decl(
             rust_attrs: attrs,
             rust_vis: vis,
             r#unsafe: sig.unsafety.is_some(),
-            r#async: sig.asyncness.is_some(),
+            r#async: is_async,
+            jspi: is_jspi,
             generate_typescript: opts.skip_typescript().is_none(),
             generate_jsdoc: opts.skip_jsdoc().is_none(),
             variadic: opts.variadic().is_some(),

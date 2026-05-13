@@ -69,6 +69,7 @@ macro_rules! shared_api {
             catch: bool,
             variadic: bool,
             assert_no_shim: bool,
+            suspending: bool,
             method: Option<MethodData<'a>>,
             structural: bool,
             function: Function<'a>,
@@ -170,6 +171,7 @@ macro_rules! shared_api {
         struct Function<'a> {
             args: Vec<FunctionArgumentData<'a>>,
             asyncness: bool,
+            jspi: bool,
             name: &'a str,
             generate_typescript: bool,
             generate_jsdoc: bool,
