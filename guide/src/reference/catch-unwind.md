@@ -18,13 +18,10 @@ is rejected with the `PanicError`.
 - **Rust nightly compiler** - `-Zbuild-std` is only available on nightly
 - **`std` feature** - `std` support is required to use
   `std::panic::catch_unwind`. to catch panics.
-- **Runtime with modern Wasm exception handling** - `-Cpanic=unwind` emits
-  modern (exnref) EH by default, which needs Node.js 22.22.3+ or 24.15.0+, or a
-  recent browser. If Node.js 20 support is required, add
-  `-Cllvm-args=-wasm-use-legacy-eh` to use legacy try/catch EH, which is also
-  supported by wasm-bindgen, **and** pin to `nightly-2026-05-11` or earlier —
-  later nightlies emit wasm-gc value types (e.g. `noexternref`) in the
-  standard library that Node.js 20 cannot validate.
+- **Runtime with Wasm exception handling** - `-Cpanic=unwind` requires
+  Node.js 22.22.3+ / 24.15.0+ or a recent browser. Node.js 20 may be
+  supported with legacy exception handling, with a tracking issue in
+  [#5151](https://github.com/wasm-bindgen/wasm-bindgen/issues/5151).
 
 ## Building
 

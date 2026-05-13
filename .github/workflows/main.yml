@@ -169,23 +169,30 @@ jobs:
     env:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
       # rust-lang/rust#156061 flipped the wasm panic=unwind default to modern
-      # (exnref) EH, so legacy EH now requires an explicit opt-in via the LLVM
-      # flag below. Node 20 only supports legacy EH.
-      RUSTFLAGS: -Cpanic=unwind -Cllvm-args=-wasm-use-legacy-eh
+      # (exnref) EH. To keep legacy EH coverage we pin nightly to before that
+      # change (see toolchain pin below) so plain `-Cpanic=unwind` still
+      # produces legacy EH. `-Cllvm-args=-wasm-use-legacy-eh` cannot override
+      # the new target spec's `-wasm-use-legacy-eh=false` (LLVM is last-wins
+      # and rustc puts target args after user args), so a pinned nightly is
+      # currently the only reliable way to test legacy EH.
+      RUSTFLAGS: -Cpanic=unwind
     steps:
     - uses: actions/checkout@v6
-    # Pin to nightly-2026-05-11 or earlier: later nightlies emit wasm-gc
-    # value types (e.g. `noexternref`) in the standard library that Node 20's
-    # V8 11.3 cannot validate. Dated nightlies remain available on the dist
-    # server indefinitely.
+    # Pin to nightly-2026-05-06 — the last nightly before rust-lang/rust#156061
+    # flipped the wasm target spec to force modern (exnref) EH. With this pin
+    # `-Cpanic=unwind` still produces legacy EH wasm. Dated nightlies remain
+    # available on the dist server indefinitely.
     - uses: dtolnay/rust-toolchain@master
       with:
-        toolchain: nightly-2026-05-11
+        toolchain: nightly-2026-05-06
         targets: wasm32-unknown-unknown
         components: rust-src
+    # Node 22.22.3+ is needed for `WebAssembly.JSTag` (used by wasm-bindgen's
+    # legacy EH catch handlers). Node 20 lacks `WebAssembly.JSTag` even though
+    # it supports the underlying legacy EH instructions.
     - uses: actions/setup-node@v6
       with:
-        node-version: '20'
+        node-version: '22.22.3'
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --lib --bins --tests
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --test wasm --features std,wasm-bindgen-futures/std
   test_wasm_bindgen_unwind_exnref_eh:
