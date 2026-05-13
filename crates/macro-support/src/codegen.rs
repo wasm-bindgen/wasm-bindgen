@@ -484,13 +484,22 @@ impl ToTokens for ast::Struct {
             if let Some(parent_field) = parent_field {
                 let field_name = &parent_field.rust_name;
                 let field_ty = &parent_field.ty;
-                let parent_js_name = parent_path
-                    .segments
-                    .last()
-                    .map(|s| s.ident.to_string())
+                // The upcast shim symbol must encode the parent's JS-side
+                // identity (`extends_js_class` / `extends_js_namespace`),
+                // not its Rust path, so that cli-support (which keys
+                // `exported_classes` by qualified_name) and the macro
+                // agree on the wasm symbol name. Defaults to the last
+                // segment of the `extends` path (matching the no-rename
+                // case).
+                let parent_bare_name = self
+                    .extends_js_class
+                    .clone()
+                    .or_else(|| parent_path.segments.last().map(|s| s.ident.to_string()))
                     .unwrap_or_default();
+                let parent_qualified =
+                    shared::qualified_name(self.extends_js_namespace.as_deref(), &parent_bare_name);
                 let upcast_fn = Ident::new(
-                    &shared::upcast_function(&name_str, &parent_js_name),
+                    &shared::upcast_function(&name_str, &parent_qualified),
                     Span::call_site(),
                 );
                 (quote! {

@@ -23,20 +23,104 @@
   See [#5151](https://github.com/wasm-bindgen/wasm-bindgen/issues/5151)
   for tracking Node.js 20 support.
 
+### Added
+
+* New `extends_js_class` and `extends_js_namespace` attributes on
+  exported structs. These declare the JS-side identity of the parent
+  class for `class Child extends Parent` inheritance codegen and the
+  upcast wasm shim symbol naming. They are required when the parent
+  struct uses `js_name` and/or `js_namespace`, because the child macro
+  cannot see the parent struct's attributes across separate proc-macro
+  invocations. Both default sensibly: `extends_js_class` defaults to
+  the last segment of the `extends` Rust path (matching the no-rename
+  case), and `extends_js_namespace` defaults to `None`. Example:
+
+  ```rust
+  #[wasm_bindgen(js_name = "Animal", js_namespace = zoo)]
+  pub struct AnimalImpl { /* ... */ }
+
+  #[wasm_bindgen(
+      extends = AnimalImpl,
+      extends_js_class = "Animal",
+      extends_js_namespace = zoo,
+  )]
+  pub struct DogImpl { /* ... */ }
+  ```
+
 ### Fixed
 
-* Fixed namespaced export wiring for a renamed exported class. When a struct
-  was declared with both `js_name` and `js_namespace`
-  (e.g. `#[wasm_bindgen(js_name = "Foo", js_namespace = ns)] struct FooImpl`)
-  and its `impl` block used `js_class = "Foo"` to match the renamed JS name,
-  the generated `namespace.Foo = ...` assignment pointed at a stub class
-  with no methods or constructor. Methods and the constructor were instead
-  written onto a fresh, unreachable JS class entry, so
-  `new wasm.ns.Foo(args)` threw `cannot invoke 'new' directly` and instance
-  methods reported `is not a function`. `require_class` now also resolves an
-  incoming `js_class` value back to the struct's `rust_name`, so the
-  registered exported-class entry receives the methods and the namespace
-  export wires through correctly.
+* Fixed namespaced export wiring for renamed and namespaced exported
+  classes. A combination of issues left the codegen confused about
+  which struct an impl block was attached to whenever the struct's JS
+  identity (`js_name` + `js_namespace`) differed from its Rust ident:
+
+  - `new wasm.ns.Foo(args)` threw `cannot invoke 'new' directly`
+    because the namespace export was wired to a stub class.
+  - Methods reported `is not a function` because they had been
+    attached to a fresh, unreachable class entry rather than the
+    registered struct.
+  - Wasm shim symbols for impl methods omitted the namespace prefix,
+    so two structs sharing the same Rust ident but with distinct
+    `js_name`s (a legitimate pattern across modules) could collide
+    at wasm-ld.
+
+  The fix touches three layers:
+
+  1. The impl macro now plumbs `js_namespace` through to the per-
+     method `ClassMarker`, so the emitted wasm shim symbol and the
+     downstream class-identity strings are namespace-aware.
+  2. `cli-support` keys `exported_classes` by `qualified_name` (the
+     struct's JS-side identity) rather than `rust_name`. Two Rust
+     structs with the same identifier in different modules but
+     distinct `js_name`s now coexist as separate JS classes instead
+     of clobbering each other in the map.
+  3. The macro and `cli-support` both derive the wasm upcast symbol
+     for `extends` from the parent's qualified JS name (via the new
+     `extends_js_class` / `extends_js_namespace`), so symbol naming
+     is consistent across the two sides for renamed/namespaced
+     parents.
+
+* Diagnostic messages from `cli-support` now include "did you mean
+  ...?" hints when an impl-block `js_class` or a struct `extends`
+  references a class that doesn't match any registered struct. Hints
+  are ranked by Levenshtein distance against the set of registered
+  qualified class names. Targeted hints additionally fire when the
+  user's `js_name` matches a struct in a different namespace,
+  telling them the exact `js_namespace` value to add to the impl
+  block.
+
+### Changed (potentially breaking)
+
+* When an exported struct uses `js_name` and/or `js_namespace`, the
+  corresponding values must now be repeated on every `impl` block via
+  `js_class` and `js_namespace`. Previously the impl-side defaults
+  (Self ident, no namespace) silently worked when the struct's JS
+  identity matched, but produced incoherent codegen (described above)
+  when it didn't. `cli-support` now errors at build time with a
+  precise hint pointing at the exact attribute to add. Example:
+
+  ```rust
+  // Before:
+  #[wasm_bindgen(js_namespace = "default")]
+  pub struct Counter { /* ... */ }
+
+  #[wasm_bindgen]              // worked, but fragile
+  impl Counter { /* ... */ }
+
+  // After:
+  #[wasm_bindgen(js_namespace = "default")]
+  pub struct Counter { /* ... */ }
+
+  #[wasm_bindgen(js_namespace = "default")]   // now required
+  impl Counter { /* ... */ }
+  ```
+
+* When an exported struct uses `extends = Parent` to inherit from a
+  parent that itself uses `js_name` and/or `js_namespace`, the child
+  must now also declare the parent's JS identity via
+  `extends_js_class` and `extends_js_namespace`. Mechanical migration;
+  the build error contains a "did you mean ...?" hint listing the
+  parent's registered identity.
 
 --------------------------------------------------------------------------------
 

@@ -96,6 +96,8 @@ macro_rules! attrgen {
             (inspectable, false, Inspectable(Span)),
             (is_type_of, false, IsTypeOf(Span, syn::Expr)),
             (extends, false, Extends(Span, syn::Path)),
+            (extends_js_class, false, ExtendsJsClass(Span, String, Span)),
+            (extends_js_namespace, false, ExtendsJsNamespace(Span, JsNamespace, Vec<Span>)),
             (no_deref, false, NoDeref(Span)),
             (no_upcast, false, NoUpcast(Span)),
             (no_promising, false, NoPromising(Span)),
@@ -588,6 +590,39 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
             }
         }
 
+        // `extends_js_class` declares the parent's JS-side `js_name`.
+        // Required when the parent struct uses `js_name`; defaults to the
+        // last segment of the `extends` Rust path (matching the no-rename
+        // case). `extends_js_namespace` is the analogue for the parent's
+        // `js_namespace`. Both are validated against the registered parent
+        // struct's actual identity post-link in cli-support.
+        let extends_js_class: Option<String> = attrs
+            .extends_js_class()
+            .map(|(s, _)| s.to_string())
+            .or_else(|| {
+                extends
+                    .as_ref()
+                    .and_then(|p| p.segments.last().map(|seg| seg.ident.unraw().to_string()))
+            });
+        let extends_js_namespace: Option<Vec<String>> =
+            attrs.extends_js_namespace().map(|(ns, _)| ns.0);
+        if extends_js_class.is_some() && extends.is_none() {
+            return Err(Diagnostic::span_error(
+                self.ident.span(),
+                "`extends_js_class` requires `extends = ...` to be set too \
+                 (extends_js_class declares the parent's JS identity; \
+                 extends declares the parent's Rust type)",
+            ));
+        }
+        if extends_js_namespace.is_some() && extends.is_none() {
+            return Err(Diagnostic::span_error(
+                self.ident.span(),
+                "`extends_js_namespace` requires `extends = ...` to be set too \
+                 (extends_js_namespace declares the parent's JS namespace; \
+                 extends declares the parent's Rust type)",
+            ));
+        }
+
         let mut fields = Vec::new();
         let js_name = attrs
             .js_name_no_symbol("structs with #[wasm_bindgen]")?
@@ -695,6 +730,8 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
             private,
             js_namespace,
             extends,
+            extends_js_class,
+            extends_js_namespace,
             wasm_bindgen: program.wasm_bindgen.clone(),
         })
     }
@@ -1899,10 +1936,52 @@ fn prepare_for_impl_recursion(
 
     let ident = extract_path_ident(class, false)?;
 
+    // Default `js_class` to the impl's `Self` Rust ident when not given.
+    // This is a backwards-compatible quirk: `js_class` is semantically the
+    // JS-side name of the class being implemented (mirror of the struct's
+    // `js_name`), but the macro can't see the struct's attrs cross-
+    // invocation, so it falls back to the Rust ident. The current scheme
+    // works because:
+    //
+    //   * `exported_classes` is keyed by rust_name (always unique because
+    //     wasm-ld enforces shim-symbol uniqueness, which is derived from
+    //     `js_class` lowercased + fn name).
+    //   * When the struct sets `js_name = "Foo"`, the struct registration
+    //     populates `class.identifier` from `qualified_name`, so the JS
+    //     output uses the user-intended name even though the
+    //     `exported_classes` key is the Rust ident.
+    //
+    // In a future major version `js_class` should become MANDATORY when
+    // the struct declares `js_name` (and the matching `extends_js_class` /
+    // `extends_js_namespace` attributes should be introduced for the
+    // inheritance counterpart). Until then the default-to-Self-ident path
+    // is preserved for source-compatibility, and the JS-identity-vs-Rust-
+    // identity split is patched over via wasm-ld's symbol uniqueness
+    // enforcement plus the rust_name keyed `exported_classes` map.
     let js_class = impl_opts
         .js_class()
         .map(|s| s.0.to_string())
         .unwrap_or(ident.unraw().to_string());
+
+    // The impl's `js_namespace` is forwarded to the per-method `ClassMarker`
+    // so the eventual `ast::Export` for each method carries the namespace.
+    // This is what makes the emitted wasm shim symbol (and the
+    // `exported_classes` lookup key in cli-support) namespace-unique — without
+    // it, two classes sharing a `js_class` in different namespaces would emit
+    // colliding shim symbols and route their methods to the same entry.
+    let js_namespace_segments: Vec<String> = impl_opts
+        .js_namespace()
+        .map(|(ns, _)| ns.0)
+        .unwrap_or_default();
+    let js_namespace_lits = js_namespace_segments
+        .iter()
+        .map(|s| syn::LitStr::new(s, proc_macro2::Span::call_site()))
+        .collect::<Vec<_>>();
+    let js_namespace_tokens = if js_namespace_lits.is_empty() {
+        quote::quote! {}
+    } else {
+        quote::quote! { , js_namespace = [ #(#js_namespace_lits),* ] }
+    };
 
     let wasm_bindgen = &program.wasm_bindgen;
     let wasm_bindgen_futures = &program.wasm_bindgen_futures;
@@ -1913,7 +1992,7 @@ fn prepare_for_impl_recursion(
             pound_token: Default::default(),
             style: syn::AttrStyle::Outer,
             bracket_token: Default::default(),
-            meta: syn::parse_quote! { #wasm_bindgen::prelude::__wasm_bindgen_class_marker(#class = #js_class, wasm_bindgen = #wasm_bindgen, wasm_bindgen_futures = #wasm_bindgen_futures, js_sys = #js_sys) },
+            meta: syn::parse_quote! { #wasm_bindgen::prelude::__wasm_bindgen_class_marker(#class = #js_class #js_namespace_tokens, wasm_bindgen = #wasm_bindgen, wasm_bindgen_futures = #wasm_bindgen_futures, js_sys = #js_sys) },
         },
     );
 
@@ -1927,6 +2006,7 @@ impl MacroParse<&ClassMarker> for &mut syn::ImplItemFn {
         ClassMarker {
             class,
             js_class,
+            js_namespace,
             wasm_bindgen,
             wasm_bindgen_futures,
             js_sys,
@@ -1995,7 +2075,12 @@ impl MacroParse<&ClassMarker> for &mut syn::ImplItemFn {
             comments,
             function,
             js_class: Some(js_class.to_string()),
-            js_namespace: None,
+            // Propagate the impl-block `js_namespace` so the wasm shim
+            // symbol and the `exported_classes` key are namespace-aware.
+            // Two classes that share a `js_class` in different namespaces
+            // (e.g. `P.Foo` and `Q.Foo`) would otherwise emit colliding
+            // shim symbols and route their methods to the same entry.
+            js_namespace: js_namespace.clone(),
             method_kind,
             method_self,
             rust_class: Some(class.clone()),

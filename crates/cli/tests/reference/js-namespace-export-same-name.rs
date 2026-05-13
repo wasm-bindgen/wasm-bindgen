@@ -8,7 +8,7 @@ pub struct FooPoint {
     pub x: f64,
 }
 
-#[wasm_bindgen]
+#[wasm_bindgen(js_class = "Point", js_namespace = foo)]
 impl FooPoint {
     #[wasm_bindgen(constructor)]
     pub fn new(x: f64) -> FooPoint {
@@ -23,7 +23,7 @@ pub struct BarPoint {
     pub y: f64,
 }
 
-#[wasm_bindgen]
+#[wasm_bindgen(js_class = "Point", js_namespace = bar)]
 impl BarPoint {
     #[wasm_bindgen(constructor)]
     pub fn new(x: f64, y: f64) -> BarPoint {
@@ -68,7 +68,7 @@ pub struct FooNestedPoint {
     pub z: f64,
 }
 
-#[wasm_bindgen]
+#[wasm_bindgen(js_class = "Point", js_namespace = ["foo", "nested"])]
 impl FooNestedPoint {
     #[wasm_bindgen(constructor)]
     pub fn new(z: f64) -> FooNestedPoint {
@@ -82,7 +82,7 @@ pub struct BarNestedPoint {
     pub magnitude: f64,
 }
 
-#[wasm_bindgen]
+#[wasm_bindgen(js_class = "Point", js_namespace = ["bar", "nested"])]
 impl BarNestedPoint {
     #[wasm_bindgen(constructor)]
     pub fn new(magnitude: f64) -> BarNestedPoint {
@@ -117,7 +117,7 @@ pub struct FooBridge {
     bar_status: BarStatus,
 }
 
-#[wasm_bindgen(js_class = "RefToBar")]
+#[wasm_bindgen(js_class = "RefToBar", js_namespace = foo)]
 impl FooBridge {
     #[wasm_bindgen(constructor)]
     pub fn new(bar_point: BarPoint, bar_status: BarStatus) -> FooBridge {
@@ -162,7 +162,7 @@ pub struct BarBridge {
     foo_status: FooStatus,
 }
 
-#[wasm_bindgen(js_class = "RefToFoo")]
+#[wasm_bindgen(js_class = "RefToFoo", js_namespace = bar)]
 impl BarBridge {
     #[wasm_bindgen(constructor)]
     pub fn new(foo_point: FooPoint, foo_status: FooStatus) -> BarBridge {
@@ -338,7 +338,7 @@ pub struct TopLevelPoint {
     pub value: f64,
 }
 
-#[wasm_bindgen]
+#[wasm_bindgen(js_class = "Point")]
 impl TopLevelPoint {
     #[wasm_bindgen(constructor)]
     pub fn new(value: f64) -> TopLevelPoint {

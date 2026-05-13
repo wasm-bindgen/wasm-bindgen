@@ -172,12 +172,12 @@ export function __wbindgen_init_externref_table() {
 const HiddenStructFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_hiddenstruct_free(ptr, 1));
-const internal__NamespacedHiddenFinalization = (typeof FinalizationRegistry === 'undefined')
-    ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_internal__namespacedhidden_free(ptr, 1));
 const PublicStructFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_publicstruct_free(ptr, 1));
+const internal__NamespacedHiddenFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_internal__namespacedhidden_free(ptr, 1));
 
 function _assertClass(instance, klass) {
     if (!(instance instanceof klass)) {

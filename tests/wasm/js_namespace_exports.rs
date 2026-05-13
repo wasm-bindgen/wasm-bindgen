@@ -26,7 +26,7 @@ pub struct Counter {
     value: i32,
 }
 
-#[wasm_bindgen]
+#[wasm_bindgen(js_namespace = models)]
 impl Counter {
     #[wasm_bindgen(constructor)]
     pub fn new(initial: i32) -> Counter {
@@ -115,16 +115,20 @@ impl RenamedCounterImpl {
     }
 }
 
-// Variant: rename on struct + namespace, but the impl block uses ONLY
-// `js_class` (no `js_namespace` on the impl). Checks whether the regression
-// also surfaces when only the struct carries the namespace attribute.
+// Variant: rename + namespace on the struct, repeated on the impl. The
+// `js_namespace` MUST be repeated on the impl block when `js_class` is set
+// because the impl macro invocation cannot see the struct's attributes. The
+// namespace participates in the emitted wasm shim symbol name and the
+// `exported_classes` lookup key; without it on the impl, the macro emits
+// non-namespaced symbols that fail to wire back to the namespaced struct
+// entry registered by the struct macro.
 
 #[wasm_bindgen(js_name = "RenamedOnlyStructNs", js_namespace = struct_only_ns)]
 pub struct RenamedOnlyStructNsImpl {
     value: i32,
 }
 
-#[wasm_bindgen(js_class = "RenamedOnlyStructNs")]
+#[wasm_bindgen(js_class = "RenamedOnlyStructNs", js_namespace = struct_only_ns)]
 impl RenamedOnlyStructNsImpl {
     #[wasm_bindgen(constructor)]
     pub fn new(initial: i32) -> RenamedOnlyStructNsImpl {
@@ -156,6 +160,87 @@ impl SameNameNs {
     }
 }
 
+// Two structs share the same Rust ident (`Foo`) across different
+// modules with distinct `js_name`s. Today's qualified_name keying makes
+// this pattern work end-to-end: each struct registers under its own
+// qualified JS identity, the wasm shim symbols (`foo1_new` / `foo2_new`)
+// are distinct, and the generated JS produces two distinct classes.
+mod cross_module_a {
+    use wasm_bindgen::prelude::*;
+    #[wasm_bindgen(js_name = "CrossModFooAlpha")]
+    pub struct Foo {
+        pub a: i32,
+    }
+    #[wasm_bindgen(js_class = "CrossModFooAlpha")]
+    impl Foo {
+        #[wasm_bindgen(constructor)]
+        pub fn new(a: i32) -> Foo {
+            Foo { a }
+        }
+        pub fn a_method(&self) -> i32 {
+            self.a
+        }
+    }
+}
+
+mod cross_module_b {
+    use wasm_bindgen::prelude::*;
+    #[wasm_bindgen(js_name = "CrossModFooBeta")]
+    pub struct Foo {
+        pub b: i32,
+    }
+    #[wasm_bindgen(js_class = "CrossModFooBeta")]
+    impl Foo {
+        #[wasm_bindgen(constructor)]
+        pub fn new(b: i32) -> Foo {
+            Foo { b }
+        }
+        pub fn b_method(&self) -> i32 {
+            self.b
+        }
+    }
+}
+
+// Two structs share the same `js_name` ("CrossNs") in distinct namespaces.
+// The impl on each must qualify via its own `js_namespace`, otherwise the
+// emitted wasm shim symbols collide at wasm-ld (both `crossns_value` etc).
+// This exercises the deeper architectural fix: per-impl `js_namespace`
+// participates in symbol naming and class identity.
+
+#[wasm_bindgen(js_name = "CrossNs", js_namespace = ns_p)]
+pub struct CrossNsPImpl {
+    value: i32,
+}
+
+#[wasm_bindgen(js_class = "CrossNs", js_namespace = ns_p)]
+impl CrossNsPImpl {
+    #[wasm_bindgen(constructor)]
+    pub fn new(initial: i32) -> CrossNsPImpl {
+        CrossNsPImpl { value: initial }
+    }
+
+    pub fn p_value(&self) -> i32 {
+        self.value + 100
+    }
+}
+
+#[wasm_bindgen(js_name = "CrossNs", js_namespace = ns_q)]
+pub struct CrossNsQImpl {
+    value: i32,
+}
+
+#[wasm_bindgen(js_class = "CrossNs", js_namespace = ns_q)]
+impl CrossNsQImpl {
+    #[wasm_bindgen(constructor)]
+    pub fn new(initial: i32) -> CrossNsQImpl {
+        CrossNsQImpl { value: initial }
+    }
+
+    pub fn q_value(&self) -> i32 {
+        self.value + 200
+    }
+}
+
 #[wasm_bindgen(module = "tests/wasm/js_namespace_exports.js")]
 extern "C" {
     fn test_api_namespace();
@@ -168,6 +253,8 @@ extern "C" {
     fn test_renamed_namespaced_class_methods();
     fn test_renamed_class_namespace_on_struct_only();
     fn test_namespaced_class_methods_same_name();
+    fn test_cross_namespace_same_js_name();
+    fn test_same_rust_ident_distinct_js_names();
 }
 
 #[wasm_bindgen_test]
@@ -194,4 +281,14 @@ fn renamed_class_namespace_on_struct_only() {
 #[wasm_bindgen_test]
 fn namespaced_class_methods_same_name() {
     test_namespaced_class_methods_same_name();
+}
+
+#[wasm_bindgen_test]
+fn cross_namespace_same_js_name() {
+    test_cross_namespace_same_js_name();
+}
+
+#[wasm_bindgen_test]
+fn same_rust_ident_distinct_js_names() {
+    test_same_rust_ident_distinct_js_names();
 }
