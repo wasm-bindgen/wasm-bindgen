@@ -244,6 +244,7 @@ fn runtest_targets_atomics() -> Result<()> {
                 -Clink-args=--shared-memory \
                 -Clink-args=--max-memory=1073741824 \
                 -Clink-args=--import-memory \
+                -Clink-args=--export=__heap_base \
                 -Clink-args=--export=__wasm_init_tls \
                 -Clink-args=--export=__tls_size \
                 -Clink-args=--export=__tls_align \
@@ -271,6 +272,7 @@ fn no_duplicate_wasm_export_in_node_esm_atomics_debug() -> Result<()> {
             -Clink-args=--shared-memory \
             -Clink-args=--max-memory=1073741824 \
             -Clink-args=--import-memory \
+            -Clink-args=--export=__heap_base \
             -Clink-args=--export=__wasm_init_tls \
             -Clink-args=--export=__tls_size \
             -Clink-args=--export=__tls_align \

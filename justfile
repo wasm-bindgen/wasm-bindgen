@@ -19,7 +19,7 @@ test:
     just test-webidl-tests-compat
 
 test-cli *ARGS="":
-    cargo test -p wasm-bindgen-cli {{ARGS}} > /tmp/test-cli.log 2>&1 || (cat /tmp/test-cli.log && exit 1)
+    cargo test -p wasm-bindgen-cli {{ARGS}}
 
 test-cli-overwrite:
     BLESS=1 cargo test -p wasm-bindgen-cli -- --skip headless_streaming_tests
@@ -53,6 +53,8 @@ test-wasm64 *ARGS="":
         --target wasm64-unknown-unknown \
         {{ARGS}}
 
+# Run wasm-bindgen tests with panic=unwind. Since rust-lang/rust#156061 this
+# uses modern (exnref) EH by default, which requires Node 22.22.3+ or Node 24.15.0+.
 test-wasm-bindgen-unwind *ARGS="":
     RUSTFLAGS="-Cpanic=unwind" \
     RUSTDOCFLAGS="-Cpanic=unwind" \
@@ -65,9 +67,11 @@ test-wasm-bindgen-unwind *ARGS="":
         --target wasm32-unknown-unknown \
         {{ARGS}}
 
-test-wasm-bindgen-unwind-eh *ARGS="":
-    RUSTFLAGS="-Cpanic=unwind -Cllvm-args=-wasm-use-legacy-eh=false" \
-    RUSTDOCFLAGS="-Cpanic=unwind" \
+# Run wasm-bindgen tests with panic=unwind using legacy EH (try/catch). Useful
+# for testing compatibility with older runtimes (Node 20, older browsers).
+test-wasm-bindgen-unwind-legacy-eh *ARGS="":
+    RUSTFLAGS="-Cpanic=unwind -Cllvm-args=-wasm-use-legacy-eh" \
+    RUSTDOCFLAGS="-Cpanic=unwind -Cllvm-args=-wasm-use-legacy-eh" \
     NODE_ARGS="--stack-trace-limit=100" \
     RUST_BACKTRACE=1 \
     WASM_BINDGEN_TEST_ONLY_NODE=1 \
