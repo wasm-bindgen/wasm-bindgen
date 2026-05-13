@@ -18,7 +18,7 @@
   handling by default after
   [rust-lang/rust#156061](https://github.com/rust-lang/rust/pull/156061),
   instead of the legacy try/catch EH. Modern EH requires Node.js
-  22.22.3+ or 24+, or a recent browser. If older runtime support is
+  22.22.3+ or 24.15.0+, or a recent browser. If older runtime support is
   needed (e.g. Node.js 20), pass `-Cllvm-args=-wasm-use-legacy-eh` to
   opt back into legacy EH — wasm-bindgen detects and supports both
   variants. The `catch-unwind` guide has been updated accordingly.

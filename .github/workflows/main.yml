@@ -190,7 +190,7 @@ jobs:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
       # Modern (exnref) EH is the default for panic=unwind on wasm since
       # rust-lang/rust#156061. Modern EH requires Node 22.22.3+ on the 22 LTS
-      # line (or 24+).
+      # line (or 24.15.0+).
       RUSTFLAGS: -Cpanic=unwind
     steps:
     - uses: actions/checkout@v6
@@ -275,7 +275,7 @@ jobs:
         targets: wasm32-unknown-unknown
     # The cli termination tests build with `-Cpanic=unwind` which since
     # rust-lang/rust#156061 produces modern (exnref) EH by default. That needs
-    # Node 22.22.3+ on the 22 LTS line (or 24.15+) to validate.
+    # Node 22.22.3+ on the 22 LTS line (or 24.15.0+) to validate.
     # TODO: drop back to Node 22 LTS once 22.22.3 ships (2026-05-13, modern EH backport).
     - uses: actions/setup-node@v6
       with:

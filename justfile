@@ -54,7 +54,7 @@ test-wasm64 *ARGS="":
         {{ARGS}}
 
 # Run wasm-bindgen tests with panic=unwind. Since rust-lang/rust#156061 this
-# uses modern (exnref) EH by default, which requires Node 22.22.3+ or Node 24+.
+# uses modern (exnref) EH by default, which requires Node 22.22.3+ or Node 24.15.0+.
 test-wasm-bindgen-unwind *ARGS="":
     RUSTFLAGS="-Cpanic=unwind" \
     RUSTDOCFLAGS="-Cpanic=unwind" \
@@ -68,7 +68,7 @@ test-wasm-bindgen-unwind *ARGS="":
         {{ARGS}}
 
 # Run wasm-bindgen tests with panic=unwind using legacy EH (try/catch). Useful
-# for testing compatibility with older runtimes (Node <22.22.3, older browsers).
+# for testing compatibility with older runtimes (Node 20, older browsers).
 test-wasm-bindgen-unwind-legacy-eh *ARGS="":
     RUSTFLAGS="-Cpanic=unwind -Cllvm-args=-wasm-use-legacy-eh" \
     RUSTDOCFLAGS="-Cpanic=unwind -Cllvm-args=-wasm-use-legacy-eh" \

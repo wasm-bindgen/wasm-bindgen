@@ -19,7 +19,7 @@ is rejected with the `PanicError`.
 - **`std` feature** - `std` support is required to use
   `std::panic::catch_unwind`. to catch panics.
 - **Runtime with modern Wasm exception handling** - `-Cpanic=unwind` emits
-  modern (exnref) EH by default, which needs Node.js 22.22.3+ or 24+, or a
+  modern (exnref) EH by default, which needs Node.js 22.22.3+ or 24.15.0+, or a
   recent browser. If Node.js 20 support is required, add
   `-Cllvm-args=-wasm-use-legacy-eh` to use legacy try/catch EH, which is also
   supported by wasm-bindgen.
