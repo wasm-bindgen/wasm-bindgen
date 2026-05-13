@@ -275,11 +275,11 @@ jobs:
         targets: wasm32-unknown-unknown
     # The cli termination tests build with `-Cpanic=unwind` which since
     # rust-lang/rust#156061 produces modern (exnref) EH by default. That needs
-    # Node 22.22.3+ on the 22 LTS line (or 24+) to validate.
+    # Node 22.22.3+ on the 22 LTS line (or 24.15+) to validate.
     # TODO: drop back to Node 22 LTS once 22.22.3 ships (2026-05-13, modern EH backport).
     - uses: actions/setup-node@v6
       with:
-        node-version: '24'
+        node-version: '24.15'
     - run: cargo test
     - run: cargo test -p wasm-bindgen-cli-support
     - run: cargo test -p wasm-bindgen-cli
