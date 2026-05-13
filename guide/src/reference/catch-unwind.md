@@ -22,7 +22,9 @@ is rejected with the `PanicError`.
   modern (exnref) EH by default, which needs Node.js 22.22.3+ or 24.15.0+, or a
   recent browser. If Node.js 20 support is required, add
   `-Cllvm-args=-wasm-use-legacy-eh` to use legacy try/catch EH, which is also
-  supported by wasm-bindgen.
+  supported by wasm-bindgen, **and** pin to `nightly-2026-05-12` or earlier —
+  later nightlies emit wasm-gc value types (e.g. `noexternref`) in the
+  standard library that Node.js 20 cannot validate.
 
 ## Building
 
