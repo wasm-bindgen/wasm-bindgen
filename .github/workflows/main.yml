@@ -177,7 +177,7 @@ jobs:
         components: rust-src
     - uses: actions/setup-node@v6
       with:
-        node-version: '22'
+        node-version: '20'
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --lib --bins --tests
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --test wasm --features std,wasm-bindgen-futures/std
   test_wasm_bindgen_unwind_exnref_eh:
@@ -268,7 +268,7 @@ jobs:
         targets: wasm32-unknown-unknown
     - uses: actions/setup-node@v6
       with:
-        node-version: '22'
+        node-version: '20'
     - run: cargo test
     - run: cargo test -p wasm-bindgen-cli-support
     - run: cargo test -p wasm-bindgen-cli
