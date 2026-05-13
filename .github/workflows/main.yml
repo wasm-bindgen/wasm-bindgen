@@ -168,7 +168,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
-      RUSTFLAGS: -Cpanic=unwind
+      # rust-lang/rust#156061 flipped the wasm panic=unwind default to modern
+      # (exnref) EH, so legacy EH now requires an explicit opt-in via the LLVM
+      # flag below. Node 20 only supports legacy EH.
+      RUSTFLAGS: -Cpanic=unwind -Cllvm-args=-wasm-use-legacy-eh
     steps:
     - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@nightly
@@ -185,13 +188,17 @@ jobs:
     runs-on: ubuntu-latest
     env:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
-      RUSTFLAGS: -Cpanic=unwind -Cllvm-args=-wasm-use-legacy-eh=false
+      # Modern (exnref) EH is the default for panic=unwind on wasm since
+      # rust-lang/rust#156061. Modern EH requires Node 22.22.3+ on the 22 LTS
+      # line (or 24+).
+      RUSTFLAGS: -Cpanic=unwind
     steps:
     - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@nightly
       with:
         targets: wasm32-unknown-unknown
         components: rust-src
+    # TODO: drop back to Node 22 LTS once 22.22.3 ships (2026-05-13, modern EH backport).
     - uses: actions/setup-node@v6
       with:
         node-version: '25'
@@ -266,9 +273,13 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: wasm32-unknown-unknown
+    # The cli termination tests build with `-Cpanic=unwind` which since
+    # rust-lang/rust#156061 produces modern (exnref) EH by default. That needs
+    # Node 22.22.3+ on the 22 LTS line (or 24+) to validate.
+    # TODO: drop back to Node 22 LTS once 22.22.3 ships (2026-05-13, modern EH backport).
     - uses: actions/setup-node@v6
       with:
-        node-version: '20'
+        node-version: '24'
     - run: cargo test
     - run: cargo test -p wasm-bindgen-cli-support
     - run: cargo test -p wasm-bindgen-cli
