@@ -1063,6 +1063,22 @@ fn instruction(
             // Call the function through an export of the underlying module.
             let call = invoc.invoke(js.cx, &args, &mut js.prelude, log_error, &mut guard)?;
 
+            // Per-fiber shadow-stack isolation for concurrent JSPI safety.
+            // Without this, a second fiber starting while the first is
+            // suspended inherits the first fiber's __stack_pointer and
+            // corrupts its shadow-stack locals on resume.
+            // Each fiber gets its own 64 KiB heap region; __stack_pointer is
+            // saved/restored so synchronous WASM calls between fiber events
+            // continue to use the original shadow stack.
+            if js.cx.current_adapter_jspi && !invoc.defer() {
+                js.cx.export_stack_pointer_for_jspi()?;
+                js.cx.expose_jspi_stack_setup();
+                writeln!(js.pre_try, "if (__jspi_sync_sp === undefined) __jspi_sync_sp = wasm.__stack_pointer.value;").unwrap();
+                writeln!(js.pre_try, "else wasm.__stack_pointer.value = __jspi_sync_sp;").unwrap();
+                writeln!(js.pre_try, "const __jspi_stack = __jspi_stack_alloc();").unwrap();
+                writeln!(js.pre_try, "wasm.__stack_pointer.value = __jspi_stack + 65536;").unwrap();
+            }
+
             // And then figure out how to actually handle where the call
             // happens. This is pretty conditional depending on the number of
             // return values of the function.
@@ -1081,11 +1097,17 @@ fn instruction(
                     js.prelude(&format!("return {};", call));
                 }
                 (false, 0) if js.cx.current_adapter_jspi => {
-                    // A `#[wasm_bindgen(jspi)]` export that returns `()` still
-                    // needs to propagate the Promise from `WebAssembly.promising`
-                    // to the JS caller.  Without `return` the caller cannot
-                    // `await` the operation and races with the WASM fiber.
-                    js.prelude(&format!("return {};", call));
+                    // Void JSPI export: propagate the Promise and attach
+                    // .finally() for per-fiber shadow-stack cleanup.
+                    // A try/finally block would run cleanup synchronously on
+                    // `return`, before the fiber completes — .finally() on the
+                    // Promise is the only way to defer cleanup until resolution.
+                    js.prelude(&format!(
+                        "return {call}.finally(() => {{ \
+                            wasm.__stack_pointer.value = __jspi_sync_sp; \
+                            __jspi_stack_free(__jspi_stack); \
+                        }});",
+                    ));
                 }
                 (false, 0) => js.prelude(&maybe_wrap_export_call(&call, guard)),
                 (false, n) => {
@@ -1114,6 +1136,17 @@ fn instruction(
                         for i in 0..n {
                             js.push(format!("ret[{i}]"));
                         }
+                    }
+                    // JSPI: restore the synchronous SP and free the per-fiber
+                    // shadow stack once the fiber has fully completed (i.e. in
+                    // the try/finally that wraps the `await`).  The cleanup
+                    // must be FIRST in the finally block so that subsequent
+                    // deferred frees run with the correct shadow stack pointer.
+                    if js.cx.current_adapter_jspi {
+                        js.finally(
+                            "wasm.__stack_pointer.value = __jspi_sync_sp;\n\
+                             __jspi_stack_free(__jspi_stack);",
+                        );
                     }
                 }
             }

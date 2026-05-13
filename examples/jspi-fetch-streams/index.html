@@ -169,6 +169,7 @@
   <button id="btn-fetch-stream">① Fetch + stream response</button>
   <button id="btn-read-stream">② Read a ReadableStream</button>
   <button id="btn-req-detect">③ Request streaming support?</button>
+  <button id="btn-concurrent">④ Concurrent fibers</button>
   <button id="btn-run-all">▶ Run all</button>
 </div>
 
@@ -300,6 +301,30 @@ document.getElementById('btn-req-detect').onclick = () => guard(async () => {
     }
 });
 
+// ── Demo ④: concurrent fibers ────────────────────────────────────────────────
+// Starts three fetch_stream() calls simultaneously to verify that the
+// per-fiber shadow-stack isolation prevents concurrent fibers from
+// corrupting each other's Rust locals.
+
+document.getElementById('btn-concurrent').onclick = () => guard(async () => {
+    const url = './jspi_fetch_streams_bg.wasm';
+    info('④ Concurrent JSPI fibers (Promise.all)');
+    const t = performance.now();
+    const results = await Promise.all([
+        fetch_stream(url),
+        fetch_stream(url),
+        fetch_stream(url),
+    ]);
+    const elapsed = (performance.now() - t).toFixed(0);
+    // All three fetches must return the same non-zero byte / chunk counts.
+    const [[b0, c0], [b1, c1], [b2, c2]] = results;
+    if (b0 === 0 || c0 === 0) { err('concurrent fiber 0: got 0 bytes or 0 chunks'); return; }
+    if (b1 !== b0 || c1 !== c0) { err(`concurrent fiber 1 mismatch: ${b1}/${c1} vs ${b0}/${c0}`); return; }
+    if (b2 !== b0 || c2 !== c0) { err(`concurrent fiber 2 mismatch: ${b2}/${c2} vs ${b0}/${c0}`); return; }
+    ok(`3 concurrent fetch_stream() calls all returned ${b0} bytes in ${c0} chunk(s) — ${elapsed} ms`);
+    dim('(shadow-stack isolation confirmed: no fiber corrupted another)');
+});
+
 // ── Run all ──────────────────────────────────────────────────────────────────
 
 document.getElementById('btn-run-all').onclick = () => guard(async () => {
@@ -341,6 +366,21 @@ document.getElementById('btn-run-all').onclick = () => guard(async () => {
     } else {
         dim('Not supported on this browser (Firefox / Safari) — use arrayBuffer() fallback');
     }
+
+    // ④ Concurrent JSPI fibers — validates per-fiber shadow-stack isolation.
+    info('④ Concurrent JSPI fibers (Promise.all × 3)');
+    const t4 = performance.now();
+    const concurrent = await Promise.all([
+        fetch_stream(url),
+        fetch_stream(url),
+        fetch_stream(url),
+    ]);
+    const [[cb0, cc0], [cb1, cc1], [cb2, cc2]] = concurrent;
+    if (cb0 === 0 || cc0 === 0) { err('concurrent fiber 0: got 0 bytes or 0 chunks'); return; }
+    if (cb1 !== cb0 || cc1 !== cc0) { err(`concurrent fiber 1 mismatch: ${cb1}/${cc1} vs ${cb0}/${cc0}`); return; }
+    if (cb2 !== cb0 || cc2 !== cc0) { err(`concurrent fiber 2 mismatch: ${cb2}/${cc2} vs ${cb0}/${cc0}`); return; }
+    ok(`3 concurrent fetch_stream() → ${cb0} bytes × ${cc0} chunks each — ${(performance.now()-t4).toFixed(0)} ms`);
+    dim('shadow-stack isolation confirmed — no fiber corrupted another');
 
     info('── All demo steps passed ✓ ─────────────────────');
 });

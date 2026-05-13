@@ -221,6 +221,10 @@ pub struct Context<'a> {
     /// because `WebAssembly.Suspending` must receive the Promise back from
     /// the wrapper function.
     pub(crate) current_adapter_suspending: bool,
+
+    /// Tracks whether `__stack_pointer` has been exported for JSPI per-fiber
+    /// shadow-stack management.  Set once so duplicate exports are avoided.
+    jspi_stack_pointer_exported: bool,
 }
 
 /// Definition of a module export
@@ -380,6 +384,7 @@ impl<'a> Context<'a> {
             super_skip_sentinel_emitted: false,
             current_adapter_jspi: false,
             current_adapter_suspending: false,
+            jspi_stack_pointer_exported: false,
         })
     }
 
@@ -400,6 +405,55 @@ impl<'a> Context<'a> {
                 .push_str("const __wbgSuperSkip = Symbol('wasm-bindgen.super-skip');\n");
         }
         self.super_skip_sentinel_emitted = true;
+    }
+
+    /// Emits the per-fiber shadow-stack helpers at module scope exactly once:
+    ///
+    /// - `__jspi_sync_sp` — captures the synchronous SP so non-fiber WASM
+    ///   calls between suspensions use the correct shadow stack.
+    /// - `__jspi_stack_alloc()` / `__jspi_stack_free()` — allocate/free 64 KiB
+    ///   fiber stacks via `wasm.memory.grow(1)` + a JS free-list.  Using
+    ///   `memory.grow` avoids any dependency on `__wbindgen_malloc`/
+    ///   `__wbindgen_free`, which may not be exported in modules that have no
+    ///   string or heap-allocation JS glue.
+    pub(crate) fn expose_jspi_stack_setup(&mut self) {
+        self.intrinsic(
+            "jspi_sync_sp".into(),
+            None,
+            "let __jspi_sync_sp;\n\
+             const __jspi_stack_pool = [];\n\
+             function __jspi_stack_alloc() {\n    \
+                 if (__jspi_stack_pool.length > 0) return __jspi_stack_pool.pop();\n    \
+                 const ptr = wasm.memory.grow(1);\n    \
+                 if (ptr === -1) throw new RangeError('out of memory allocating JSPI fiber stack');\n    \
+                 return ptr * 65536;\n\
+             }\n\
+             function __jspi_stack_free(ptr) { __jspi_stack_pool.push(ptr); }"
+            .into(),
+        );
+    }
+
+    /// Export the `__stack_pointer` global so that the generated JSPI wrapper
+    /// can set it per-fiber for concurrent shadow-stack isolation.
+    /// Idempotent — safe to call multiple times.
+    pub(crate) fn export_stack_pointer_for_jspi(&mut self) -> Result<(), Error> {
+        if self.jspi_stack_pointer_exported {
+            return Ok(());
+        }
+        self.jspi_stack_pointer_exported = true;
+        let sp_id = self.aux.stack_pointer.ok_or_else(|| {
+            anyhow!(
+                "could not locate `__stack_pointer` global in the WASM module; \
+                 JSPI requires the shadow-stack pointer to be exported so that \
+                 concurrent fibers each get an isolated shadow stack — \
+                 add `cargo:rustc-link-arg=--export=__stack_pointer` to your \
+                 build script or ensure the linker retains the symbol name"
+            )
+        })?;
+        if !self.module.exports.iter().any(|e| e.name == "__stack_pointer") {
+            self.module.exports.add("__stack_pointer", sp_id);
+        }
+        Ok(())
     }
 
     /// Whether the super-skip sentinel has been emitted. Constructor

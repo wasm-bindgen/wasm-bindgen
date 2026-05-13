@@ -300,6 +300,26 @@ document.getElementById('btn-run-all').onclick = () => guard(async () => {
     if (existsAfter) { err('opfs_has returned true after delete'); return; }
     ok('has: false (as expected after delete)');
 
+    // ── Concurrent reads (shadow-stack isolation test) ───────────────────────
+    info('── Concurrent fibers: 3 × opfs_read() via Promise.all ─');
+    const concFiles = [
+        ['jspi-opfs-concurrent/a.txt', 'content-alpha'],
+        ['jspi-opfs-concurrent/b.txt', 'content-beta'],
+        ['jspi-opfs-concurrent/c.txt', 'content-gamma'],
+    ];
+    for (const [p, c] of concFiles) await opfs_write(p, c);
+    dim('wrote 3 files for concurrent read test');
+
+    const tc = performance.now();
+    const [r0, r1, r2] = await Promise.all(concFiles.map(([p]) => opfs_read(p)));
+    const tcElapsed = (performance.now() - tc).toFixed(0);
+
+    if (r0 !== concFiles[0][1]) { err(`concurrent read[0] mismatch: got "${r0}"`); return; }
+    if (r1 !== concFiles[1][1]) { err(`concurrent read[1] mismatch: got "${r1}"`); return; }
+    if (r2 !== concFiles[2][1]) { err(`concurrent read[2] mismatch: got "${r2}"`); return; }
+    ok(`3 concurrent opfs_read() all matched (${tcElapsed} ms)`);
+    dim('shadow-stack isolation confirmed — no fiber corrupted another');
+
     info('── All demo steps passed ✓ ─────────────────────');
 });
 
