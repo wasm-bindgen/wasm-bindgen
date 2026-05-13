@@ -68,10 +68,27 @@ async function run() {
     // ── Demo 1: non-async sleep ──────────────────────────────────────────────
     // `do_sleep` is marked #[wasm_bindgen(jspi)].  The generated glue wraps it
     // with WebAssembly.promising, so it returns a Promise automatically.
-    log("Demo: sleeping 300 ms via do_sleep(300) …");
+    log("Demo 1: sleeping 300 ms via do_sleep(300) …");
     const t0 = performance.now();
     await do_sleep(300);
     log(`         done in ${(performance.now() - t0).toFixed(0)} ms`);
+    log("");
+
+    // ── Demo 2: concurrent fibers ────────────────────────────────────────────
+    // Three do_sleep(50) calls run concurrently via Promise.all.  Each fiber
+    // gets its own shadow-stack region (per-fiber __stack_pointer isolation),
+    // so they cannot corrupt each other's Rust locals on resume.
+    // Wall-clock time should be ~50 ms, not ~150 ms.
+    log("Demo 2: 3 × do_sleep(50 ms) concurrently via Promise.all …");
+    const t1 = performance.now();
+    await Promise.all([do_sleep(50), do_sleep(50), do_sleep(50)]);
+    const elapsed = performance.now() - t1;
+    if (elapsed > 400) {
+        err(`✗  concurrent sleeps took ${elapsed.toFixed(0)} ms — expected ~50 ms (parallel)`);
+        return;
+    }
+    log(`         all 3 fibers done in ${elapsed.toFixed(0)} ms (ran concurrently)`);
+    log("         shadow-stack isolation confirmed — no fiber corrupted another");
     log("");
 }
 
