@@ -204,6 +204,18 @@ pub struct Context<'a> {
     /// from a subclass — avoiding a spurious extra Rust allocation that
     /// would otherwise be leaked.
     super_skip_sentinel_emitted: bool,
+
+    /// Set to `true` while generating code for a JSPI-enabled export adapter.
+    /// Consumed by `binding.rs` `Invocation::Core::generate()` to wrap the
+    /// raw `wasm.fn(args)` call with a `WebAssembly.promising` lazy cache.
+    pub(crate) current_adapter_jspi: bool,
+
+    /// Set to `true` while generating the shim body for a
+    /// `#[wasm_bindgen(suspending)]` import.  Consumed by `binding.rs` to
+    /// ensure void-returning shims still emit `return <call>` — required
+    /// because `WebAssembly.Suspending` must receive the Promise back from
+    /// the wrapper function.
+    pub(crate) current_adapter_suspending: bool,
 }
 
 /// Definition of a module export
@@ -360,6 +372,8 @@ impl<'a> Context<'a> {
             emscripten_import_deps: Default::default(),
             memory64,
             super_skip_sentinel_emitted: false,
+            current_adapter_jspi: false,
+            current_adapter_suspending: false,
         })
     }
 
@@ -5162,6 +5176,10 @@ addToLibrary({
             }
         }
 
+        // Compute before builder borrows self mutably.
+        let is_suspending = matches!(kind, ContextAdapterKind::Import(_))
+            && self.aux.imports_with_suspending.contains(&id);
+
         // Construct a JS shim builder, and configure it based on the kind of
         // export that we're generating.
         let mut builder = binding::Builder::new(self);
@@ -5172,6 +5190,7 @@ addToLibrary({
         builder.catch(catch);
         let mut args = &None;
         let mut asyncness = false;
+        let mut jspi = false;
         let mut variadic = false;
         let mut generate_jsdoc = false;
         let mut ret_ty_override = &None;
@@ -5180,6 +5199,7 @@ addToLibrary({
             ContextAdapterKind::Export(export) => {
                 args = &export.args;
                 asyncness = export.asyncness;
+                jspi = export.jspi;
                 variadic = export.variadic;
                 generate_jsdoc = export.generate_jsdoc;
                 ret_ty_override = &export.fn_ret_ty_override;
@@ -5218,6 +5238,12 @@ addToLibrary({
             ContextAdapterKind::Export(e) => format!("`{}`", e.debug_name),
             ContextAdapterKind::Adapter => format!("adapter {}", id.0),
         };
+        // Set JSPI flag on the context so `Invocation::Core::generate()` can
+        // wrap the raw WASM call with `WebAssembly.promising`.
+        builder.cx.current_adapter_jspi = jspi;
+
+        builder.cx.current_adapter_suspending = is_suspending;
+
         // Process the `binding` and generate a bunch of JS/TypeScript/etc.
         let binding::JsFunction {
             ts_sig,
@@ -5230,6 +5256,7 @@ addToLibrary({
             might_be_optional_field,
             catch,
             log_error,
+            jspi_async,
         } = builder
             .process(
                 adapter,
@@ -5243,6 +5270,10 @@ addToLibrary({
                 ret_desc,
             )
             .with_context(|| "failed to generates bindings for ".to_string() + &debug_name)?;
+
+        // Reset per-adapter flags after processing.
+        self.current_adapter_jspi = false;
+        self.current_adapter_suspending = false;
 
         self.typescript_refs.extend(ts_refs);
 
@@ -5330,7 +5361,8 @@ addToLibrary({
                                 None,
                             )?;
                         } else {
-                            let definition = format!("function {identifier}{code}\n");
+                            let async_kw = if jspi_async { "async " } else { "" };
+                            let definition = format!("{async_kw}function {identifier}{code}\n");
                             define_export(
                                 &mut self.exports,
                                 name,
@@ -5475,8 +5507,18 @@ addToLibrary({
                     }
                 }
 
-                self.wasm_import_definitions
-                    .insert(core, ImportDefinition::Function(code));
+                // If this import is marked `#[wasm_bindgen(suspending)]`, wrap
+                // it with `WebAssembly.Suspending` so that calling it from WASM
+                // suspends the current fiber.
+                let import_def = if self.aux.imports_with_suspending.contains(&id) {
+                    ImportDefinition::Expression(format!(
+                        "new WebAssembly.Suspending(function{code})"
+                    ))
+                } else {
+                    ImportDefinition::Function(code)
+                };
+
+                self.wasm_import_definitions.insert(core, import_def);
             }
             ContextAdapterKind::Adapter => {
                 assert!(!catch);

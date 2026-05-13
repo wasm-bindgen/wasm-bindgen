@@ -32,6 +32,8 @@
 
 extern crate alloc;
 
+pub mod jspi;
+
 use crate::Promise;
 use alloc::rc::Rc;
 use core::cell::RefCell;

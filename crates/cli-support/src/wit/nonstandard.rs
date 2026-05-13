@@ -42,6 +42,7 @@ pub struct WasmBindgenAux {
     pub imports_with_catch: HashSet<AdapterId>,
     pub imports_with_variadic: HashSet<AdapterId>,
     pub imports_with_assert_no_shim: HashSet<AdapterId>,
+    pub imports_with_suspending: HashSet<AdapterId>,
 
     /// Auxiliary information to go into JS/TypeScript bindings describing the
     /// exported enums from Rust.
@@ -110,6 +111,9 @@ pub struct AuxExport {
     pub args: Option<Vec<AuxFunctionArgumentData>>,
     /// Whether this is an async function, to configure the TypeScript return value.
     pub asyncness: bool,
+    /// Whether this export should be wrapped with `WebAssembly.promising` so
+    /// it returns a JS Promise and can suspend via JSPI.
+    pub jspi: bool,
     /// What kind of function this is and where it shows up
     pub kind: AuxExportKind,
     /// The namespace to export the item through, if any
