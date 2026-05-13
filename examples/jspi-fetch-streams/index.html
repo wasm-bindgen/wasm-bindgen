@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>JSPI + Fetch Streaming — wasm-bindgen example</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    :root {
+      --bg: #0d1117; --surface: #161b22; --border: #30363d;
+      --text: #c9d1d9; --muted: #8b949e; --accent: #58a6ff;
+      --green: #3fb950; --red: #f85149; --yellow: #d29922;
+      font-size: 15px;
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 0; padding: 2rem 1rem;
+    }
+    .wrap { max-width: 860px; margin: 0 auto; }
+    h1 { font-size: 1.6rem; margin: 0 0 .25rem; }
+    h2 { font-size: 1.05rem; color: var(--accent); margin: 2rem 0 .75rem; border-bottom: 1px solid var(--border); padding-bottom: .4rem; }
+    p  { color: var(--muted); line-height: 1.6; margin: .5rem 0; }
+    a  { color: var(--accent); }
+    .badge {
+      display: inline-block; font-size: .7rem; font-weight: 600;
+      padding: 2px 8px; border-radius: 999px; margin-left: .4rem;
+      background: #388bfd26; color: var(--accent); vertical-align: middle;
+    }
+    .warn-badge {
+      display: inline-block; font-size: .7rem; font-weight: 600;
+      padding: 2px 8px; border-radius: 999px; margin-left: .4rem;
+      background: #d2992226; color: var(--yellow); vertical-align: middle;
+    }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: .9rem; }
+    th, td { border: 1px solid var(--border); padding: .45rem .75rem; text-align: left; }
+    th { background: var(--surface); color: var(--accent); }
+    td:first-child { color: var(--muted); }
+    pre, code { font-family: 'SFMono-Regular', Consolas, monospace; font-size: .85rem; }
+    .code-block {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 1rem 1.25rem; overflow-x: auto; margin: .75rem 0;
+    }
+    .kw  { color: #ff7b72; }
+    .fn  { color: #d2a8ff; }
+    .at  { color: #79c0ff; }
+    .str { color: #a5d6ff; }
+    .cm  { color: var(--muted); font-style: italic; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0; }
+    button {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); padding: .4rem 1rem;
+      font-size: .85rem; cursor: pointer; transition: border-color .15s;
+    }
+    button:hover { border-color: var(--accent); color: var(--accent); }
+    button:active { opacity: .7; }
+    .log-wrap { position: relative; }
+    #log {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: .75rem 1rem; min-height: 160px;
+      font-family: 'SFMono-Regular', Consolas, monospace; font-size: .82rem;
+      line-height: 1.6; white-space: pre-wrap; overflow-y: auto; max-height: 400px;
+    }
+    .log-ok   { color: var(--green); }
+    .log-err  { color: var(--red); }
+    .log-dim  { color: var(--muted); }
+    .log-info { color: var(--accent); }
+    #clear-btn { position: absolute; top: .5rem; right: .5rem; font-size: .75rem; padding: .2rem .6rem; }
+    .status { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: .4rem; }
+    .status-ok      { background: var(--green); }
+    .status-err     { background: var(--red); }
+    .status-pending { background: var(--yellow); }
+    .feat-row { display: flex; gap: 1rem; flex-wrap: wrap; margin: .75rem 0; font-size: .85rem; }
+    .feat { display: flex; align-items: center; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>WebAssembly JSPI + Fetch Streaming <span class="badge">example</span></h1>
+<p>
+  <a href="https://developer.mozilla.org/en-US/docs/WebAssembly/JavaScript_interface/Suspending" target="_blank">JSPI</a>
+  lets plain (non-<code>async</code>) Rust suspend a WASM fiber while awaiting a JS
+  Promise — without blocking the event loop.  This example applies that to the
+  <a href="https://developer.mozilla.org/en-US/docs/Web/API/Streams_API" target="_blank">Streams API</a>:
+  each <code>reader.read()</code> Promise suspends the fiber until the next chunk arrives.
+</p>
+
+<div class="feat-row">
+  <span class="feat"><span class="status status-pending" id="jspi-dot"></span><code>WebAssembly.Suspending</code></span>
+  <span class="feat"><span class="status status-pending" id="resp-dot"></span>Response streaming</span>
+  <span class="feat"><span class="status status-pending" id="req-dot"></span>Request body streaming</span>
+  <span class="feat"><span class="status status-pending" id="wasm-dot"></span>WASM module</span>
+</div>
+
+<h2>How it works</h2>
+<p>
+  <code>drain_stream</code> is a plain Rust helper (no <code>async</code>, no <code>.await</code>)
+  that loops calling <code>block_on_promise(&amp;reader.read())</code>, suspending the JSPI fiber
+  on each chunk:
+</p>
+
+<div class="code-block"><pre
+><span class="kw">fn</span> <span class="fn">drain_stream</span>(stream: ReadableStream) -&gt; Result&lt;(u32, u32), JsValue&gt; {
+    <span class="kw">let</span> reader: ReadableStreamDefaultReader = stream.<span class="fn">get_reader</span>().<span class="fn">unchecked_into</span>();
+    <span class="kw">let</span> (<span class="kw">mut</span> total, <span class="kw">mut</span> chunks) = (0u32, 0u32);
+
+    <span class="kw">loop</span> {
+        <span class="cm">// Suspends the JSPI fiber until the next chunk (or done) resolves.</span>
+        <span class="kw">let</span> result: ReadableStreamReadResult =
+            <span class="fn">block_on_promise</span>(&amp;reader.<span class="fn">read</span>())?.<span class="fn">unchecked_into</span>();
+
+        <span class="kw">if</span> result.<span class="fn">get_done</span>().<span class="fn">unwrap_or</span>(true) { <span class="kw">break</span>; }
+
+        <span class="kw">let</span> chunk: Uint8Array = result.<span class="fn">get_value</span>().<span class="fn">unchecked_into</span>();
+        total += chunk.<span class="fn">length</span>();
+        chunks += 1;
+    }
+    <span class="fn">Ok</span>((total, chunks))
+}</pre></div>
+
+<p>This helper powers two exports:</p>
+
+<table>
+  <tr><th>export</th><th>description</th><th>browser support</th></tr>
+  <tr>
+    <td><code>read_stream(stream)</code></td>
+    <td>reads any <code>ReadableStream</code> from Rust — request body, synthetic stream, etc.</td>
+    <td>Chrome, Firefox, Safari</td>
+  </tr>
+  <tr>
+    <td><code>fetch_stream(url)</code></td>
+    <td>fetches <code>url</code> and streams the response body</td>
+    <td>Chrome, Firefox, Safari</td>
+  </tr>
+</table>
+
+<h2>Request body streaming <span class="warn-badge">Chrome only</span></h2>
+<p>
+  Sending a <code>ReadableStream</code> as a <code>fetch</code> request body requires
+  <code>duplex: "half"</code> on the <code>RequestInit</code>.  Firefox and Safari do not
+  support this; they throw a <code>TypeError</code> when a <code>ReadableStream</code>
+  is used as the request body.
+</p>
+<p>
+  Detection pattern (works in all browsers without throwing):
+</p>
+<div class="code-block"><pre
+><span class="kw">let</span> supported = <span class="kw">false</span>;
+<span class="kw">try</span> {
+    <span class="kw">new</span> <span class="fn">Request</span>(<span class="str">''</span>, {
+        body: <span class="kw">new</span> <span class="fn">ReadableStream</span>(),
+        method: <span class="str">'POST'</span>,
+        <span class="kw">get</span> <span class="fn">duplex</span>() { supported = <span class="kw">true</span>; <span class="kw">return</span> <span class="str">'half'</span>; },
+    });
+} <span class="kw">catch</span> {}
+<span class="cm">// supported === true  ⟹  Chrome/Chromium</span>
+<span class="cm">// supported === false ⟹  Firefox / Safari</span></pre></div>
+
+<p>
+  On the Service Worker / server side (Rust receiving the request), the fallback is to
+  buffer the body via <code>arrayBuffer()</code> when <code>request.body</code> is
+  <code>null</code> (Firefox), and to use <code>ReadableStream</code> chunk-by-chunk
+  via <code>block_on_promise</code> when it is present (Chrome).
+</p>
+
+<h2>Live demo</h2>
+
+<div class="btn-row">
+  <button id="btn-fetch-stream">① Fetch + stream response</button>
+  <button id="btn-read-stream">② Read a ReadableStream</button>
+  <button id="btn-req-detect">③ Request streaming support?</button>
+  <button id="btn-run-all">▶ Run all</button>
+</div>
+
+<div class="log-wrap">
+  <button id="clear-btn">clear</button>
+  <div id="log"></div>
+</div>
+
+</div><!-- .wrap -->
+
+<script type="module">
+import init, { fetch_stream, read_stream } from './jspi_fetch_streams.js';
+
+const logEl   = document.getElementById('log');
+const jspiDot = document.getElementById('jspi-dot');
+const respDot = document.getElementById('resp-dot');
+const reqDot  = document.getElementById('req-dot');
+const wasmDot = document.getElementById('wasm-dot');
+
+function appendLine(text, cls) {
+    const span = document.createElement('span');
+    if (cls) span.className = cls;
+    span.textContent = text + '\n';
+    logEl.appendChild(span);
+    logEl.scrollTop = logEl.scrollHeight;
+}
+function log(msg)  { appendLine(msg); }
+function ok(msg)   { appendLine('✓  ' + msg, 'log-ok'); }
+function err(msg)  { appendLine('✗  ' + msg, 'log-err'); console.error(msg); }
+function dim(msg)  { appendLine('   ' + msg, 'log-dim'); }
+function info(msg) { appendLine(msg, 'log-info'); }
+
+document.getElementById('clear-btn').onclick = () => { logEl.textContent = ''; };
+
+// ── Feature detection ────────────────────────────────────────────────────────
+
+function setDot(el, state) {  // 'ok' | 'err' | 'dim'
+    el.classList.remove('status-pending', 'status-ok', 'status-err');
+    el.classList.add(state === 'ok' ? 'status-ok' : state === 'err' ? 'status-err' : 'status-pending');
+}
+
+const jspiOk = typeof WebAssembly?.Suspending === 'function';
+setDot(jspiDot, jspiOk ? 'ok' : 'err');
+
+// Response streaming: available in all modern browsers.
+const respOk = typeof ReadableStream !== 'undefined';
+setDot(respDot, respOk ? 'ok' : 'err');
+
+// Request body streaming: Chrome/Chromium only (requires duplex:'half').
+let supportsRequestStreaming = false;
+try {
+    new Request('', {
+        body: new ReadableStream(),
+        method: 'POST',
+        get duplex() { supportsRequestStreaming = true; return 'half'; },
+    });
+} catch {}
+setDot(reqDot, supportsRequestStreaming ? 'ok' : 'dim');
+
+// ── Load WASM ────────────────────────────────────────────────────────────────
+
+let ready = false;
+if (!jspiOk) {
+    err('WebAssembly.Suspending not available — Chrome 117+, Firefox 150+, Safari 18.4+ required.');
+} else {
+    await init();
+    setDot(wasmDot, 'ok');
+    ready = true;
+}
+
+async function guard(fn) {
+    if (!ready) { err('Module not ready.'); return; }
+    try { await fn(); } catch (e) { err(String(e)); }
+}
+
+// ── Demo ①: fetch + response streaming ──────────────────────────────────────
+
+document.getElementById('btn-fetch-stream').onclick = () => guard(async () => {
+    const url = './jspi_fetch_streams_bg.wasm';
+    info(`fetch_stream("${url}")`);
+    const t = performance.now();
+    const [bytes, chunks] = await fetch_stream(url);
+    ok(`${bytes} bytes received in ${chunks} chunk(s) — ${(performance.now()-t).toFixed(0)} ms`);
+    dim('(each chunk suspended the JSPI fiber once via block_on_promise)');
+});
+
+// ── Demo ②: read a JavaScript ReadableStream from Rust ───────────────────────
+
+document.getElementById('btn-read-stream').onclick = () => guard(async () => {
+    // Build a synthetic stream with 3 chunks of known sizes: 5 + 8 + 3 = 16 bytes.
+    const payloads = [
+        new Uint8Array([0x52, 0x75, 0x73, 0x74, 0x20]),       // "Rust "  (5 B)
+        new Uint8Array([0x2b, 0x20, 0x4a, 0x53, 0x50, 0x49, 0x20, 0x3d]), // "+ JSPI =" (8 B)
+        new Uint8Array([0x20, 0xf0, 0x9f, 0xa6, 0x80]),       // " 🦀"    (5 B) — note: UTF-8
+    ];
+    const expected_bytes = payloads.reduce((s, a) => s + a.length, 0);
+    let i = 0;
+    const stream = new ReadableStream({
+        pull(controller) {
+            if (i < payloads.length) controller.enqueue(payloads[i++]);
+            else controller.close();
+        }
+    });
+
+    info(`read_stream(<ReadableStream with ${payloads.length} chunks, ${expected_bytes} bytes>)`);
+    const t = performance.now();
+    const [bytes, chunks] = await read_stream(stream);
+    if (bytes !== expected_bytes) {
+        err(`byte count mismatch: expected ${expected_bytes}, got ${bytes}`);
+        return;
+    }
+    if (chunks !== payloads.length) {
+        err(`chunk count mismatch: expected ${payloads.length}, got ${chunks}`);
+        return;
+    }
+    ok(`${bytes} bytes in ${chunks} chunk(s) — ${(performance.now()-t).toFixed(0)} ms (exact match)`);
+});
+
+// ── Demo ③: request body streaming detection ────────────────────────────────
+
+document.getElementById('btn-req-detect').onclick = () => guard(async () => {
+    if (supportsRequestStreaming) {
+        ok('Request body streaming supported (Chrome / Chromium)');
+        dim('fetch() accepts a ReadableStream body with duplex: "half"');
+        dim('Use read_stream() on the Service Worker side to consume it chunk-by-chunk via JSPI');
+    } else {
+        dim('Request body streaming NOT supported on this browser');
+        dim('Firefox / Safari: request.body is null — fall back to arrayBuffer()');
+    }
+});
+
+// ── Run all ──────────────────────────────────────────────────────────────────
+
+document.getElementById('btn-run-all').onclick = () => guard(async () => {
+    info('── Running full demo sequence ──────────────────');
+
+    // ① Fetch + response stream
+    info('① Fetch + response stream');
+    const url = './jspi_fetch_streams_bg.wasm';
+    const t1 = performance.now();
+    const [bytes1, chunks1] = await fetch_stream(url);
+    if (bytes1 === 0) { err('fetch_stream: got 0 bytes'); return; }
+    if (chunks1 === 0) { err('fetch_stream: got 0 chunks'); return; }
+    ok(`${bytes1} bytes in ${chunks1} chunk(s) — ${(performance.now()-t1).toFixed(0)} ms`);
+
+    // ② ReadableStream reading
+    info('② Read a synthetic ReadableStream');
+    const payloads = [
+        new Uint8Array([0x52, 0x75, 0x73, 0x74, 0x20]),
+        new Uint8Array([0x2b, 0x20, 0x4a, 0x53, 0x50, 0x49, 0x20, 0x3d]),
+        new Uint8Array([0x20, 0xf0, 0x9f, 0xa6, 0x80]),
+    ];
+    const expected = payloads.reduce((s, a) => s + a.length, 0);
+    let i = 0;
+    const stream = new ReadableStream({
+        pull(controller) {
+            if (i < payloads.length) controller.enqueue(payloads[i++]);
+            else controller.close();
+        }
+    });
+    const [bytes2, chunks2] = await read_stream(stream);
+    if (bytes2 !== expected) { err(`read_stream: expected ${expected} bytes, got ${bytes2}`); return; }
+    if (chunks2 !== payloads.length) { err(`read_stream: expected ${payloads.length} chunks, got ${chunks2}`); return; }
+    ok(`${bytes2} bytes in ${chunks2} chunk(s) — exact match`);
+
+    // ③ Request streaming detection (no assertion — browser-dependent)
+    info('③ Request body streaming');
+    if (supportsRequestStreaming) {
+        ok('Supported (Chrome / Chromium) — ReadableStream body with duplex: "half"');
+    } else {
+        dim('Not supported on this browser (Firefox / Safari) — use arrayBuffer() fallback');
+    }
+
+    info('── All demo steps passed ✓ ─────────────────────');
+});
+
+// Auto-run on page load for Playwright.
+if (ready) {
+    document.getElementById('btn-run-all').click();
+}
+</script>
+</body>
+</html>
