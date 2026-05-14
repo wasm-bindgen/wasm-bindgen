@@ -178,6 +178,40 @@ calling `dog.free()` while some other JS reference still holds the parent
 pointer (via the prototype chain or otherwise) frees the `Dog` cell but
 keeps the `Animal` cell alive until that other reference is also released.
 
+## Extending a renamed or namespaced parent
+
+When the parent struct sets [`js_name`](js_name.html) and/or
+[`js_namespace`](js_namespace.html), the child must additionally
+declare the parent's JS identity via `extends_js_class` and
+`extends_js_namespace`. The child's macro is a separate procedural-
+macro invocation from the parent's and cannot see the parent's
+attributes, so the JS-side identity must be redeclared locally:
+
+```rust
+#[wasm_bindgen(js_name = Animal, js_namespace = zoo)]
+pub struct AnimalImpl { /* ... */ }
+
+#[wasm_bindgen(js_class = Animal, js_namespace = zoo)]
+impl AnimalImpl { /* ... */ }
+
+#[wasm_bindgen(
+    extends = AnimalImpl,
+    extends_js_class = "Animal",
+    extends_js_namespace = zoo,
+)]
+pub struct DogImpl { /* ... */ }
+```
+
+Both attributes default sensibly:
+
+* `extends_js_class` defaults to the last segment of the `extends` Rust
+  path. This means the **no-rename** case (parent has no `js_name`)
+  needs no extra ceremony — `extends = Animal` alone resolves correctly
+  when the parent's JS name is also `Animal`.
+* `extends_js_namespace` is only required when the parent uses `js_namespace`.
+
+Diagnostics are provided if the class is not matched at code generation time.
+
 ## Limitations
 
 * **One parent per struct.** Multi-parent inheritance is not supported;

@@ -134,6 +134,7 @@ pub fn expand_class_marker(
 struct ClassMarker {
     class: syn::Ident,
     js_class: String,
+    js_namespace: Option<Vec<String>>,
     wasm_bindgen: syn::Path,
     wasm_bindgen_futures: syn::Path,
     js_sys: syn::Path,
@@ -149,6 +150,7 @@ impl Parse for ClassMarker {
             .map(String::from)
             .unwrap_or(js_class);
 
+        let mut js_namespace: Option<Vec<String>> = None;
         let mut wasm_bindgen = None;
         let mut wasm_bindgen_futures = None;
         let mut js_sys = None;
@@ -157,7 +159,20 @@ impl Parse for ClassMarker {
             if input.parse::<Option<Token![,]>>()?.is_some() {
                 let ident = input.parse::<syn::Ident>()?;
 
-                if ident == "wasm_bindgen" {
+                if ident == "js_namespace" {
+                    if js_namespace.is_some() {
+                        return Err(syn::Error::new(
+                            ident.span(),
+                            "found duplicate `js_namespace`",
+                        ));
+                    }
+                    input.parse::<Token![=]>()?;
+                    let content;
+                    syn::bracketed!(content in input);
+                    let segs: syn::punctuated::Punctuated<syn::LitStr, Token![,]> = content
+                        .parse_terminated(|p: ParseStream| p.parse::<syn::LitStr>(), Token![,])?;
+                    js_namespace = Some(segs.into_iter().map(|s| s.value()).collect());
+                } else if ident == "wasm_bindgen" {
                     if wasm_bindgen.is_some() {
                         return Err(syn::Error::new(
                             ident.span(),
@@ -187,7 +202,7 @@ impl Parse for ClassMarker {
                 } else {
                     return Err(syn::Error::new(
                         ident.span(),
-                        "expected `wasm_bindgen`, `wasm_bindgen_futures`, or `js_sys`",
+                        "expected `js_namespace`, `wasm_bindgen`, `wasm_bindgen_futures`, or `js_sys`",
                     ));
                 }
             } else {
@@ -198,6 +213,7 @@ impl Parse for ClassMarker {
         Ok(ClassMarker {
             class,
             js_class,
+            js_namespace,
             wasm_bindgen: wasm_bindgen.unwrap_or_else(|| syn::parse_quote! { wasm_bindgen }),
             wasm_bindgen_futures: wasm_bindgen_futures
                 .unwrap_or_else(|| syn::parse_quote! { wasm_bindgen_futures }),

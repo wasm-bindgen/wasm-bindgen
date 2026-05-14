@@ -11,6 +11,7 @@
 //! quite expensive, so it's recommended that this test suite doesn't become too
 //! large!
 
+mod diagnostics;
 mod npm;
 mod reference;
 

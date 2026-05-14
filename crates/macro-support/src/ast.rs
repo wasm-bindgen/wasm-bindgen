@@ -523,6 +523,18 @@ pub struct Struct {
     /// head of the struct; that field is used as the upcast projection
     /// target. Users must not declare a `Parent<T>` field themselves.
     pub extends: Option<Path>,
+    /// The JS-side `js_name` of the parent class, declared on the child
+    /// via `extends_js_class = "..."`. Required when the parent struct
+    /// uses `js_name`: the child macro cannot see the parent struct's
+    /// attributes cross-invocation, so the parent's JS-side identity must
+    /// be redeclared here for `exported_classes` lookup to resolve.
+    /// Defaults to the last segment of the `extends` Rust path (matching
+    /// the no-rename case).
+    pub extends_js_class: Option<String>,
+    /// The JS-side `js_namespace` of the parent class, declared on the
+    /// child via `extends_js_namespace = ...`. Required when the parent
+    /// struct uses `js_namespace`. Defaults to `None`.
+    pub extends_js_namespace: Option<Vec<String>>,
     /// Path to wasm_bindgen
     pub wasm_bindgen: Path,
 }

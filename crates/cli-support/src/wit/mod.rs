@@ -576,8 +576,21 @@ impl<'a> Context<'a> {
     }
 
     fn export(&mut self, export: decode::Export<'_>) -> Result<(), Error> {
+        // The wasm shim symbol emitted by the macro (see
+        // `ast::Export::export_name`) prefixes the `js_namespace` for both
+        // class and free-function exports. Mirror that here so we can find
+        // the descriptor; without the prefix for the class case, two classes
+        // sharing a `js_class` across different `js_namespace`s would
+        // produce identical wasm names and collide at wasm-ld.
         let wasm_name = match &export.class {
-            Some(class) => struct_function_export_name(class, export.function.name),
+            Some(class) => {
+                let base = struct_function_export_name(class, export.function.name);
+                if let Some(ref ns) = export.js_namespace {
+                    format!("{}__{base}", ns.join("__"))
+                } else {
+                    base
+                }
+            }
             None => {
                 let base_name = export.function.name.to_string();
                 if let Some(ref ns) = export.js_namespace {
@@ -616,7 +629,15 @@ impl<'a> Context<'a> {
 
         let kind = match export.class {
             Some(class) => {
-                let class = class.to_string();
+                // Carry the namespaced `qualified_name` form (`ns__Foo`) as
+                // the class identity downstream so it matches the key the
+                // struct registered under in `qualified_to_rust_name`. With
+                // just the bare `class` string, an impl whose struct lives
+                // in a `js_namespace` would not resolve back to its
+                // registered `exported_classes` entry and the constructor
+                // + methods would land on a fresh empty entry instead.
+                let class =
+                    wasm_bindgen_shared::qualified_name(export.js_namespace.as_deref(), class);
                 match export.method_kind {
                     decode::MethodKind::Constructor => {
                         verify_constructor_return(&class, &descriptor.ret)?;
@@ -1256,7 +1277,7 @@ impl<'a> Context<'a> {
                     asyncness: false,
                     comments: concatenate_comments(&field.comments),
                     kind: AuxExportKind::Method {
-                        class: rust_name.to_string(),
+                        class: qualified_name.clone(),
                         name: field.name.to_string(),
                         receiver: AuxReceiverKind::Borrowed,
                         kind: AuxExportedMethodKind::Getter,
@@ -1291,7 +1312,7 @@ impl<'a> Context<'a> {
                     asyncness: false,
                     comments: concatenate_comments(&field.comments),
                     kind: AuxExportKind::Method {
-                        class: rust_name.to_string(),
+                        class: qualified_name.clone(),
                         name: field.name.to_string(),
                         receiver: AuxReceiverKind::Borrowed,
                         kind: AuxExportedMethodKind::Setter,
@@ -1318,6 +1339,11 @@ impl<'a> Context<'a> {
                 .map(|ns| ns.iter().map(|s| s.to_string()).collect()),
             private: struct_.private,
             extends: struct_.extends.map(|s| s.to_string()),
+            extends_js_class: struct_.extends_js_class.map(|s| s.to_string()),
+            extends_js_namespace: struct_
+                .extends_js_namespace
+                .as_ref()
+                .map(|ns| ns.iter().map(|s| s.to_string()).collect()),
         };
         self.aux.structs.push(aux);
 

@@ -72,7 +72,11 @@ pub struct Counter {
     value: i32,
 }
 
-#[wasm_bindgen]
+// `js_namespace` is required on the impl block to match the struct: the
+// impl macro cannot see the struct's attributes across invocations, so the
+// JS-side class identity (`<js_namespace>__<js_class>`) must be
+// independently constructible from local attrs on either side.
+#[wasm_bindgen(js_namespace = "default")]
 impl Counter {
     #[wasm_bindgen(constructor)]
     pub fn new(initial: i32) -> Counter {

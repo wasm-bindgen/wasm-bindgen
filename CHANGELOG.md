@@ -5,7 +5,7 @@
 
 ### Notices
 
-* Threading support requires `-Clink-arg=--export=__heap_base` to be set
+* Threading support now requires `-Clink-arg=--export=__heap_base` to be set
   in `RUSTFLAGS` for nightly toolchains from 2026-05-06 onward, after
   [rust-lang/rust#156174](https://github.com/rust-lang/rust/pull/156174)
   removed the implicit `__heap_base`/`__data_end` exports on `wasm*`
@@ -33,6 +33,52 @@
   `JsValue`, and `JsCast` types. Array-likes (objects with `length` and
   numeric indices) are intentionally rejected to mirror the static ABI
   representation used by `js_value_vector_from_abi`.
+
+* New `extends_js_class` and `extends_js_namespace` attributes on
+  exported structs to allow defining the parent `js_class` name when
+  it has been customized by `js_name` and the parent's own `js_namespace`
+  as well in turn. New validation is added at code generation time that
+  will now catch these cases instead of emitting invalid code. Example:
+
+  ```rust
+  #[wasm_bindgen(js_name = "Animal", js_namespace = zoo)]
+  pub struct AnimalImpl { /* ... */ }
+
+  #[wasm_bindgen(
+      extends = AnimalImpl,
+      extends_js_class = "Animal",
+      extends_js_namespace = zoo,
+  )]
+  pub struct DogImpl { /* ... */ }
+  ```
+  [#5154](https://github.com/wasm-bindgen/wasm-bindgen/pull/5154)
+
+### Changed
+
+* When an exported struct uses `js_namespace`, the corresponding value
+  must now be repeated on every `impl` block. Previously the impl-side
+  defaults silently worked resulting in inconsistent emission. Example:
+
+  ```rust
+  // Before:
+  #[wasm_bindgen(js_namespace = "default")]
+  pub struct Counter { /* ... */ }
+
+  #[wasm_bindgen]              // worked, but fragile
+  impl Counter { /* ... */ }
+
+  // After:
+  #[wasm_bindgen(js_namespace = "default")]
+  pub struct Counter { /* ... */ }
+
+  #[wasm_bindgen(js_namespace = "default")]   // now required
+  impl Counter { /* ... */ }
+  ```
+  To ease this transition for `js_namespace` usage, diagnostic
+  messages now include hints for missing namespaces for easier
+  fixing.
+  
+  [#5154](https://github.com/wasm-bindgen/wasm-bindgen/pull/5154)
 
 --------------------------------------------------------------------------------
 

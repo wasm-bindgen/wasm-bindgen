@@ -195,6 +195,8 @@ macro_rules! shared_api {
             js_namespace: Option<Vec<&'a str>>,
             private: bool,
             extends: Option<&'a str>,
+            extends_js_class: Option<&'a str>,
+            extends_js_namespace: Option<Vec<&'a str>>,
         }
 
         struct StructField<'a> {

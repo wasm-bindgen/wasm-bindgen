@@ -76,7 +76,7 @@ pub struct NsParent {
     label: String,
 }
 
-#[wasm_bindgen]
+#[wasm_bindgen(js_namespace = ns)]
 impl NsParent {
     #[wasm_bindgen(constructor)]
     pub fn new(label: String) -> NsParent {
@@ -93,7 +93,7 @@ pub struct NsChild {
     note: String,
 }
 
-#[wasm_bindgen]
+#[wasm_bindgen(js_namespace = ns)]
 impl NsChild {
     #[wasm_bindgen(constructor)]
     pub fn new(label: String, note: String) -> NsChild {
