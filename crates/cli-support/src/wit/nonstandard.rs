@@ -284,7 +284,13 @@ pub enum AuxDynamicUnionVariant {
 pub struct AuxStruct {
     /// The JS name of this struct (used for JS output)
     pub name: String,
-    /// The Rust name of this struct (used as internal key, matches js_class on exports)
+    /// The Rust name of this struct. Historical artefact: was previously
+    /// used as the primary `exported_classes` key; today the key is
+    /// `qualified_name` (JS identity), since two structs can share the
+    /// same Rust ident in different modules. Retained because it's the
+    /// natural display name in diagnostic messages and for backward
+    /// compatibility with any consumer that still reads it.
+    #[allow(dead_code)]
     pub rust_name: String,
     /// The namespace-qualified name (used for wasm symbol generation)
     pub qualified_name: String,
@@ -298,10 +304,19 @@ pub struct AuxStruct {
     pub private: bool,
     /// The namespace to export the struct through, if any
     pub js_namespace: Option<Vec<String>>,
-    /// The JS name of the parent class this struct extends, if any.
-    /// Populated when the source `#[wasm_bindgen(extends = Parent)]`
-    /// attribute was set on the exported struct.
+    /// The Rust ident (last segment) of the parent type this struct
+    /// extends, if any. Populated from `#[wasm_bindgen(extends = Parent)]`
+    /// on the exported struct.
     pub extends: Option<String>,
+    /// The parent class's JS-side `js_name`, declared on the child via
+    /// `extends_js_class = "..."`. Required when the parent struct uses
+    /// `js_name`. Defaults to the last segment of the `extends` Rust path
+    /// at parse time so the no-rename case works without user action.
+    pub extends_js_class: Option<String>,
+    /// The parent class's JS-side `js_namespace`, declared on the child
+    /// via `extends_js_namespace = ...`. Required when the parent struct
+    /// uses `js_namespace`.
+    pub extends_js_namespace: Option<Vec<String>>,
 }
 
 /// All possible types of imports that can be imported by a Wasm module.

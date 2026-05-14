@@ -1,3 +1,55 @@
+export class BarPoint {
+    static __wrap(ptr) {
+        const obj = Object.create(BarPoint.prototype);
+        obj.__wbg_ptr = ptr;
+        BarPointFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+    static __unwrap(jsValue) {
+        if (!(jsValue instanceof BarPoint)) {
+            return 0;
+        }
+        return jsValue.__destroy_into_raw();
+    }
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        BarPointFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_barpoint_free(ptr, 0);
+    }
+}
+if (Symbol.dispose) BarPoint.prototype[Symbol.dispose] = BarPoint.prototype.free;
+
+export class FooPoint {
+    static __wrap(ptr) {
+        const obj = Object.create(FooPoint.prototype);
+        obj.__wbg_ptr = ptr;
+        FooPointFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+    static __unwrap(jsValue) {
+        if (!(jsValue instanceof FooPoint)) {
+            return 0;
+        }
+        return jsValue.__destroy_into_raw();
+    }
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        FooPointFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_foopoint_free(ptr, 0);
+    }
+}
+if (Symbol.dispose) FooPoint.prototype[Symbol.dispose] = FooPoint.prototype.free;
+
 export class NamespaceConsumer {
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
@@ -200,162 +252,22 @@ export class Point {
         return ret;
     }
     /**
+     * @param {number} value
+     */
+    constructor(value) {
+        const ret = wasm.point_new(value);
+        this.__wbg_ptr = ret;
+        PointFinalization.register(this, this.__wbg_ptr, this);
+        return this;
+    }
+    /**
      * @param {number} arg0
      */
     set value(arg0) {
         wasm.__wbg_set_point_value(this.__wbg_ptr, arg0);
     }
-    /**
-     * @param {number} value
-     */
-    constructor(value) {
-        const ret = wasm.toplevelpoint_new(value);
-        this.__wbg_ptr = ret;
-        PointFinalization.register(this, this.__wbg_ptr, this);
-        return this;
-    }
 }
 if (Symbol.dispose) Point.prototype[Symbol.dispose] = Point.prototype.free;
-
-export class RefToBar {
-    __destroy_into_raw() {
-        const ptr = this.__wbg_ptr;
-        this.__wbg_ptr = 0;
-        RefToBarFinalization.unregister(this);
-        return ptr;
-    }
-    free() {
-        const ptr = this.__destroy_into_raw();
-        wasm.__wbg_reftobar_free(ptr, 0);
-    }
-    /**
-     * @returns {bar__Point}
-     */
-    get bar_point() {
-        const ret = wasm.reftobar_bar_point(this.__wbg_ptr);
-        return bar__Point.__wrap(ret);
-    }
-    /**
-     * @returns {bar__Status}
-     */
-    get bar_status() {
-        const ret = wasm.reftobar_bar_status(this.__wbg_ptr);
-        return ret;
-    }
-    /**
-     * @param {bar__Point} bar_point
-     * @param {bar__Status} bar_status
-     */
-    constructor(bar_point, bar_status) {
-        _assertClass(bar_point, bar__Point);
-        var ptr0 = bar_point.__destroy_into_raw();
-        const ret = wasm.reftobar_new(ptr0, bar_status);
-        return foo__RefToBar.__wrap(ret);
-    }
-    /**
-     * @param {bar__Point} point
-     * @returns {bar__Point}
-     */
-    reflect_point(point) {
-        _assertClass(point, bar__Point);
-        var ptr0 = point.__destroy_into_raw();
-        const ret = wasm.reftobar_reflect_point(this.__wbg_ptr, ptr0);
-        return bar__Point.__wrap(ret);
-    }
-    /**
-     * @param {bar__Status} status
-     * @returns {bar__Status}
-     */
-    reflect_status(status) {
-        const ret = wasm.reftobar_reflect_status(this.__wbg_ptr, status);
-        return ret;
-    }
-    /**
-     * @param {bar__Point} bar_point
-     */
-    set bar_point(bar_point) {
-        _assertClass(bar_point, bar__Point);
-        var ptr0 = bar_point.__destroy_into_raw();
-        wasm.reftobar_set_bar_point(this.__wbg_ptr, ptr0);
-    }
-    /**
-     * @param {bar__Status} bar_status
-     */
-    set bar_status(bar_status) {
-        wasm.reftobar_set_bar_status(this.__wbg_ptr, bar_status);
-    }
-}
-if (Symbol.dispose) RefToBar.prototype[Symbol.dispose] = RefToBar.prototype.free;
-
-export class RefToFoo {
-    __destroy_into_raw() {
-        const ptr = this.__wbg_ptr;
-        this.__wbg_ptr = 0;
-        RefToFooFinalization.unregister(this);
-        return ptr;
-    }
-    free() {
-        const ptr = this.__destroy_into_raw();
-        wasm.__wbg_reftofoo_free(ptr, 0);
-    }
-    /**
-     * @returns {foo__Point}
-     */
-    get foo_point() {
-        const ret = wasm.reftofoo_foo_point(this.__wbg_ptr);
-        return foo__Point.__wrap(ret);
-    }
-    /**
-     * @returns {foo__Status}
-     */
-    get foo_status() {
-        const ret = wasm.reftofoo_foo_status(this.__wbg_ptr);
-        return ret;
-    }
-    /**
-     * @param {foo__Point} foo_point
-     * @param {foo__Status} foo_status
-     */
-    constructor(foo_point, foo_status) {
-        _assertClass(foo_point, foo__Point);
-        var ptr0 = foo_point.__destroy_into_raw();
-        const ret = wasm.reftofoo_new(ptr0, foo_status);
-        return bar__RefToFoo.__wrap(ret);
-    }
-    /**
-     * @param {foo__Point} point
-     * @returns {foo__Point}
-     */
-    reflect_point(point) {
-        _assertClass(point, foo__Point);
-        var ptr0 = point.__destroy_into_raw();
-        const ret = wasm.reftofoo_reflect_point(this.__wbg_ptr, ptr0);
-        return foo__Point.__wrap(ret);
-    }
-    /**
-     * @param {foo__Status} status
-     * @returns {foo__Status}
-     */
-    reflect_status(status) {
-        const ret = wasm.reftofoo_reflect_status(this.__wbg_ptr, status);
-        return ret;
-    }
-    /**
-     * @param {foo__Point} foo_point
-     */
-    set foo_point(foo_point) {
-        _assertClass(foo_point, foo__Point);
-        var ptr0 = foo_point.__destroy_into_raw();
-        wasm.reftofoo_set_foo_point(this.__wbg_ptr, ptr0);
-    }
-    /**
-     * @param {foo__Status} foo_status
-     */
-    set foo_status(foo_status) {
-        wasm.reftofoo_set_foo_status(this.__wbg_ptr, foo_status);
-    }
-}
-if (Symbol.dispose) RefToFoo.prototype[Symbol.dispose] = RefToFoo.prototype.free;
 
 /**
  * A top-level enum colliding with an inner namespace export should not collide.
@@ -373,12 +285,6 @@ class bar__Point {
         bar__PointFinalization.register(obj, obj.__wbg_ptr, obj);
         return obj;
     }
-    static __unwrap(jsValue) {
-        if (!(jsValue instanceof bar__Point)) {
-            return 0;
-        }
-        return jsValue.__destroy_into_raw();
-    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -394,7 +300,7 @@ class bar__Point {
      * @param {number} y
      */
     constructor(x, y) {
-        const ret = wasm.barpoint_new(x, y);
+        const ret = wasm.bar__point_new(x, y);
         this.__wbg_ptr = ret;
         bar__PointFinalization.register(this, this.__wbg_ptr, this);
         return this;
@@ -429,12 +335,6 @@ class bar__Point {
 if (Symbol.dispose) bar__Point.prototype[Symbol.dispose] = bar__Point.prototype.free;
 
 class bar__RefToFoo {
-    static __wrap(ptr) {
-        const obj = Object.create(bar__RefToFoo.prototype);
-        obj.__wbg_ptr = ptr;
-        bar__RefToFooFinalization.register(obj, obj.__wbg_ptr, obj);
-        return obj;
-    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -444,6 +344,64 @@ class bar__RefToFoo {
     free() {
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_bar__reftofoo_free(ptr, 0);
+    }
+    /**
+     * @returns {foo__Point}
+     */
+    get foo_point() {
+        const ret = wasm.bar__reftofoo_foo_point(this.__wbg_ptr);
+        return foo__Point.__wrap(ret);
+    }
+    /**
+     * @returns {foo__Status}
+     */
+    get foo_status() {
+        const ret = wasm.bar__reftofoo_foo_status(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {foo__Point} foo_point
+     * @param {foo__Status} foo_status
+     */
+    constructor(foo_point, foo_status) {
+        _assertClass(foo_point, foo__Point);
+        var ptr0 = foo_point.__destroy_into_raw();
+        const ret = wasm.bar__reftofoo_new(ptr0, foo_status);
+        this.__wbg_ptr = ret;
+        bar__RefToFooFinalization.register(this, this.__wbg_ptr, this);
+        return this;
+    }
+    /**
+     * @param {foo__Point} point
+     * @returns {foo__Point}
+     */
+    reflect_point(point) {
+        _assertClass(point, foo__Point);
+        var ptr0 = point.__destroy_into_raw();
+        const ret = wasm.bar__reftofoo_reflect_point(this.__wbg_ptr, ptr0);
+        return foo__Point.__wrap(ret);
+    }
+    /**
+     * @param {foo__Status} status
+     * @returns {foo__Status}
+     */
+    reflect_status(status) {
+        const ret = wasm.bar__reftofoo_reflect_status(this.__wbg_ptr, status);
+        return ret;
+    }
+    /**
+     * @param {foo__Point} foo_point
+     */
+    set foo_point(foo_point) {
+        _assertClass(foo_point, foo__Point);
+        var ptr0 = foo_point.__destroy_into_raw();
+        wasm.bar__reftofoo_set_foo_point(this.__wbg_ptr, ptr0);
+    }
+    /**
+     * @param {foo__Status} foo_status
+     */
+    set foo_status(foo_status) {
+        wasm.bar__reftofoo_set_foo_status(this.__wbg_ptr, foo_status);
     }
 }
 if (Symbol.dispose) bar__RefToFoo.prototype[Symbol.dispose] = bar__RefToFoo.prototype.free;
@@ -488,7 +446,7 @@ class bar__nested__Point {
      * @param {number} magnitude
      */
     constructor(magnitude) {
-        const ret = wasm.barnestedpoint_new(magnitude);
+        const ret = wasm.bar__nested__point_new(magnitude);
         this.__wbg_ptr = ret;
         bar__nested__PointFinalization.register(this, this.__wbg_ptr, this);
         return this;
@@ -527,12 +485,6 @@ class foo__Point {
         foo__PointFinalization.register(obj, obj.__wbg_ptr, obj);
         return obj;
     }
-    static __unwrap(jsValue) {
-        if (!(jsValue instanceof foo__Point)) {
-            return 0;
-        }
-        return jsValue.__destroy_into_raw();
-    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -547,7 +499,7 @@ class foo__Point {
      * @param {number} x
      */
     constructor(x) {
-        const ret = wasm.foopoint_new(x);
+        const ret = wasm.foo__point_new(x);
         this.__wbg_ptr = ret;
         foo__PointFinalization.register(this, this.__wbg_ptr, this);
         return this;
@@ -569,12 +521,6 @@ class foo__Point {
 if (Symbol.dispose) foo__Point.prototype[Symbol.dispose] = foo__Point.prototype.free;
 
 class foo__RefToBar {
-    static __wrap(ptr) {
-        const obj = Object.create(foo__RefToBar.prototype);
-        obj.__wbg_ptr = ptr;
-        foo__RefToBarFinalization.register(obj, obj.__wbg_ptr, obj);
-        return obj;
-    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -584,6 +530,64 @@ class foo__RefToBar {
     free() {
         const ptr = this.__destroy_into_raw();
         wasm.__wbg_foo__reftobar_free(ptr, 0);
+    }
+    /**
+     * @returns {bar__Point}
+     */
+    get bar_point() {
+        const ret = wasm.foo__reftobar_bar_point(this.__wbg_ptr);
+        return bar__Point.__wrap(ret);
+    }
+    /**
+     * @returns {bar__Status}
+     */
+    get bar_status() {
+        const ret = wasm.foo__reftobar_bar_status(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {bar__Point} bar_point
+     * @param {bar__Status} bar_status
+     */
+    constructor(bar_point, bar_status) {
+        _assertClass(bar_point, bar__Point);
+        var ptr0 = bar_point.__destroy_into_raw();
+        const ret = wasm.foo__reftobar_new(ptr0, bar_status);
+        this.__wbg_ptr = ret;
+        foo__RefToBarFinalization.register(this, this.__wbg_ptr, this);
+        return this;
+    }
+    /**
+     * @param {bar__Point} point
+     * @returns {bar__Point}
+     */
+    reflect_point(point) {
+        _assertClass(point, bar__Point);
+        var ptr0 = point.__destroy_into_raw();
+        const ret = wasm.foo__reftobar_reflect_point(this.__wbg_ptr, ptr0);
+        return bar__Point.__wrap(ret);
+    }
+    /**
+     * @param {bar__Status} status
+     * @returns {bar__Status}
+     */
+    reflect_status(status) {
+        const ret = wasm.foo__reftobar_reflect_status(this.__wbg_ptr, status);
+        return ret;
+    }
+    /**
+     * @param {bar__Point} bar_point
+     */
+    set bar_point(bar_point) {
+        _assertClass(bar_point, bar__Point);
+        var ptr0 = bar_point.__destroy_into_raw();
+        wasm.foo__reftobar_set_bar_point(this.__wbg_ptr, ptr0);
+    }
+    /**
+     * @param {bar__Status} bar_status
+     */
+    set bar_status(bar_status) {
+        wasm.foo__reftobar_set_bar_status(this.__wbg_ptr, bar_status);
     }
 }
 if (Symbol.dispose) foo__RefToBar.prototype[Symbol.dispose] = foo__RefToBar.prototype.free;
@@ -632,7 +636,7 @@ class foo__nested__Point {
      * @param {number} z
      */
     constructor(z) {
-        const ret = wasm.foonestedpoint_new(z);
+        const ret = wasm.foo__nested__point_new(z);
         this.__wbg_ptr = ret;
         foo__nested__PointFinalization.register(this, this.__wbg_ptr, this);
         return this;
@@ -734,19 +738,19 @@ export function __wbg___wbindgen_throw_9c31b086c2b26051(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbg_bar__point_new(arg0) {
-    const ret = bar__Point.__wrap(arg0);
+    const ret = BarPoint.__wrap(arg0);
     return ret;
 }
 export function __wbg_bar__point_unwrap(arg0) {
-    const ret = bar__Point.__unwrap(arg0);
+    const ret = BarPoint.__unwrap(arg0);
     return ret;
 }
 export function __wbg_foo__point_new(arg0) {
-    const ret = foo__Point.__wrap(arg0);
+    const ret = FooPoint.__wrap(arg0);
     return ret;
 }
 export function __wbg_foo__point_unwrap(arg0) {
-    const ret = foo__Point.__unwrap(arg0);
+    const ret = FooPoint.__unwrap(arg0);
     return ret;
 }
 export function __wbindgen_init_externref_table() {
@@ -758,36 +762,36 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
 }
+const BarPointFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_barpoint_free(ptr, 1));
+const FooPointFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_foopoint_free(ptr, 1));
+const NamespaceConsumerFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_namespaceconsumer_free(ptr, 1));
+const PointFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_point_free(ptr, 1));
+const bar__PointFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_bar__point_free(ptr, 1));
 const bar__RefToFooFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_bar__reftofoo_free(ptr, 1));
 const bar__nested__PointFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_bar__nested__point_free(ptr, 1));
-const bar__PointFinalization = (typeof FinalizationRegistry === 'undefined')
+const foo__PointFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_bar__point_free(ptr, 1));
+    : new FinalizationRegistry(ptr => wasm.__wbg_foo__point_free(ptr, 1));
 const foo__RefToBarFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_foo__reftobar_free(ptr, 1));
 const foo__nested__PointFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_foo__nested__point_free(ptr, 1));
-const foo__PointFinalization = (typeof FinalizationRegistry === 'undefined')
-    ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_foo__point_free(ptr, 1));
-const NamespaceConsumerFinalization = (typeof FinalizationRegistry === 'undefined')
-    ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_namespaceconsumer_free(ptr, 1));
-const RefToBarFinalization = (typeof FinalizationRegistry === 'undefined')
-    ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_reftobar_free(ptr, 1));
-const RefToFooFinalization = (typeof FinalizationRegistry === 'undefined')
-    ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_reftofoo_free(ptr, 1));
-const PointFinalization = (typeof FinalizationRegistry === 'undefined')
-    ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_point_free(ptr, 1));
 
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();

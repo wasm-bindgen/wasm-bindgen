@@ -120,7 +120,7 @@ pub struct InheritanceAlphaParent {
     label: String,
 }
 
-#[wasm_bindgen]
+#[wasm_bindgen(js_class = "RenamedAnimal")]
 impl InheritanceAlphaParent {
     #[wasm_bindgen(constructor)]
     pub fn new(label: String) -> InheritanceAlphaParent {
@@ -132,7 +132,10 @@ impl InheritanceAlphaParent {
     }
 }
 
-#[wasm_bindgen(extends = InheritanceAlphaParent)]
+#[wasm_bindgen(
+    extends = InheritanceAlphaParent,
+    extends_js_class = "RenamedAnimal",
+)]
 pub struct InheritanceBetaChild {
     extra: String,
 }

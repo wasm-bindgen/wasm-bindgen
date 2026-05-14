@@ -1647,10 +1647,17 @@ fn instruction(
                         let mut from_qualified = own_qualified.clone();
                         let mut token_parts: Vec<String> =
                             vec![format!("__wbg_ptr_{own_ident}: {val} >>> 0")];
-                        for (idx, (anc_id, anc_rust, anc_qualified)) in ancestors.iter().enumerate()
+                        for (idx, (anc_id, _anc_rust, anc_qualified)) in
+                            ancestors.iter().enumerate()
                         {
-                            let sym =
-                                wasm_bindgen_shared::upcast_function(&from_qualified, anc_rust);
+                            // Upcast symbol uses qualified_name on both
+                            // sides; same convention as the macro after
+                            // the `extends_js_class` / `extends_js_namespace`
+                            // unification.
+                            let sym = wasm_bindgen_shared::upcast_function(
+                                &from_qualified,
+                                anc_qualified,
+                            );
                             let tmp = format!("__wbg_anc_{idx}");
                             body.push_str(&format!(
                                 "const {tmp} = wasm.{sym}({prev_ptr_expr}) >>> 0;\n"

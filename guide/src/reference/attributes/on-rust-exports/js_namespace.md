@@ -33,6 +33,25 @@ const sum = math.add(2, 3);
 const product = math.multiply(4, 5);
 ```
 
+## Namespaced structs and `impl` blocks
+
+When a namespaced struct has methods, the `impl` block must repeat the
+`js_namespace` (and any `js_class` from a `js_name` rename):
+
+```rust
+#[wasm_bindgen(js_namespace = math)]
+pub struct Counter { /* ... */ }
+
+#[wasm_bindgen(js_namespace = math)]   // required
+impl Counter { /* ... */ }
+```
+
+The impl macro is a separate procedural-macro invocation from the
+struct macro and cannot read the struct's attributes, so the JS-side
+identity (`js_class` + `js_namespace`) must be redeclared on the impl
+block. If you forget, the build fails with a precise hint pointing at
+the exact attribute to add.
+
 ## Default Export
 
 This feature can be used to define a default export object:
@@ -42,6 +61,9 @@ This feature can be used to define a default export object:
 pub struct Counter {
     value: i32,
 }
+
+#[wasm_bindgen(js_namespace = "default")]   // required (see note above)
+impl Counter { /* ... */ }
 ```
 
 resulting in the output:

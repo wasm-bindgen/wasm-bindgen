@@ -80,7 +80,7 @@ class ns__NsParent {
         let deferred1_0;
         let deferred1_1;
         try {
-            const ret = wasm.nsparent_label(this.__wbg_ptr_ns__NsParent);
+            const ret = wasm.ns__nsparent_label(this.__wbg_ptr_ns__NsParent);
             deferred1_0 = ret[0];
             deferred1_1 = ret[1];
             return getStringFromWasm0(ret[0], ret[1]);
@@ -95,7 +95,7 @@ class ns__NsParent {
         if (arguments[0] === __wbgSuperSkip) return;
         const ptr0 = passStringToWasm0(label, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
-        const ret = wasm.nsparent_new(ptr0, len0);
+        const ret = wasm.ns__nsparent_new(ptr0, len0);
         this.__wbg_ptr = ret >>> 0;
         this.__wbg_ptr_ns__NsParent = ret >>> 0;
         ns__NsParentFinalization.register(this, { __wbg_ptr_ns__NsParent: ret >>> 0 }, this);
@@ -131,10 +131,10 @@ class ns__NsChild extends ns__NsParent {
         const len0 = WASM_VECTOR_LEN;
         const ptr1 = passStringToWasm0(note, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len1 = WASM_VECTOR_LEN;
-        const ret = wasm.nschild_new(ptr0, len0, ptr1, len1);
+        const ret = wasm.ns__nschild_new(ptr0, len0, ptr1, len1);
         this.__wbg_ptr = ret >>> 0;
         this.__wbg_ptr_ns__NsChild = ret >>> 0;
-        const __wbg_anc_0 = wasm.__wbg_upcast_ns__nschild_to_nsparent(ret >>> 0) >>> 0;
+        const __wbg_anc_0 = wasm.__wbg_upcast_ns__nschild_to_ns__nsparent(ret >>> 0) >>> 0;
         this.__wbg_ptr_ns__NsParent = __wbg_anc_0;
         ns__NsChildFinalization.register(this, { __wbg_ptr_ns__NsChild: ret >>> 0, __wbg_ptr_ns__NsParent: __wbg_anc_0 }, this);
         return this;
@@ -146,7 +146,7 @@ class ns__NsChild extends ns__NsParent {
         let deferred1_0;
         let deferred1_1;
         try {
-            const ret = wasm.nschild_note(this.__wbg_ptr_ns__NsChild);
+            const ret = wasm.ns__nschild_note(this.__wbg_ptr_ns__NsChild);
             deferred1_0 = ret[0];
             deferred1_1 = ret[1];
             return getStringFromWasm0(ret[0], ret[1]);

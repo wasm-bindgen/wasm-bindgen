@@ -1753,12 +1753,12 @@ if (require('worker_threads').isMainThread) {{
     }
 
     fn require_class<'b>(&'b mut self, name: &str) -> &'b mut ExportedClass {
-        // Resolve qualified_name to rust_name if needed
-        let key = if let Some(rust_name) = self.qualified_to_rust_name.get(name) {
-            rust_name.clone()
-        } else {
-            name.to_string()
-        };
+        // `name` is the qualified JS identity (`<ns>__<js_name>`). Both
+        // the struct registration and impl-block exports key by
+        // qualified_name; the `qualified_to_rust_name` indirection that
+        // existed here was a workaround for the rust_name keying that is
+        // no longer in use.
+        let key = name.to_string();
         if self
             .exported_classes
             .get(&key)
@@ -1774,6 +1774,83 @@ if (require('worker_threads').isMainThread) {{
             class.identifier = identifier.clone();
         }
         self.exported_classes.get_mut(&key).unwrap()
+    }
+
+    /// Verify that every impl-block class reference resolves to a
+    /// registered struct. The encoded `class` string on each export is
+    /// the qualified JS identity (`<ns>__<js_class>`), built from the
+    /// impl block's own `js_class` + `js_namespace`. The struct
+    /// registration produces the same qualified form from its `js_name`
+    /// + `js_namespace`. Both must agree exactly.
+    ///
+    /// On mismatch we produce a targeted hint:
+    ///
+    ///   1. A struct exists with matching bare `js_name` but in a
+    ///      different `js_namespace` — the user almost certainly forgot
+    ///      to repeat `js_namespace` on the impl (or got it wrong).
+    ///   2. No exact `js_name` match — fall back to fuzzy ranking across
+    ///      all registered class identities. Catches typos in `js_class`
+    ///      and surfaces the closest plausible candidate.
+    ///
+    /// Without this check the failure mode is silent: `require_class`
+    /// would mint a fresh empty entry, the namespace export would
+    /// resolve to a stub class, and the user only discovers the problem
+    /// at runtime when `new wasm.ns.Foo(...)` throws.
+    fn validate_impl_class_references(&self) -> Result<(), Error> {
+        for aux in self.aux.export_map.values() {
+            let class = match &aux.kind {
+                AuxExportKind::Constructor(c) => c,
+                AuxExportKind::Method { class, .. } => class,
+                _ => continue,
+            };
+            if self.exported_classes.contains_key(class) {
+                continue;
+            }
+            // Targeted hint: same `js_name`, different namespace. This is
+            // the most common cause: impl missed `js_namespace` (or set
+            // it to the wrong value), so its qualified identity differs
+            // from the struct's. Strip the leading namespace from the
+            // claimed `class` string before comparing against bare struct
+            // `js_name`s.
+            let bare = class.rsplit_once("__").map(|(_, n)| n).unwrap_or(class);
+            let mismatched: Vec<&AuxStruct> = self
+                .aux
+                .structs
+                .iter()
+                .filter(|s| s.name == bare && s.qualified_name != *class)
+                .collect();
+            if !mismatched.is_empty() {
+                let hints = mismatched
+                    .iter()
+                    .map(|s| match &s.js_namespace {
+                        Some(ns) => format!(
+                            "  - `js_namespace = {}` (matches struct `{}`)",
+                            ns.join(", "),
+                            s.qualified_name
+                        ),
+                        None => format!("  - no `js_namespace` (matches struct `{}`)", s.name),
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n");
+                bail!(
+                    "class `{class}` referenced by an impl block does not \
+                     match any exported struct.\nhelp: a struct with the \
+                     same `js_name` exists in a different namespace. The \
+                     impl block must declare the matching `js_namespace` \
+                     (the impl macro cannot see the struct's attributes \
+                     cross-invocation):\n{hints}"
+                );
+            }
+            // General fuzzy fallback: rank against all registered class
+            // qualified names.
+            let candidates: Vec<&str> = self.exported_classes.keys().map(|s| s.as_str()).collect();
+            let hint = crate::suggest::suggest(class, candidates);
+            bail!(
+                "class `{class}` referenced by an impl block does not \
+                 match any exported struct{hint}"
+            );
+        }
+        Ok(())
     }
 
     fn write_classes(&mut self) -> Result<(), Error> {
@@ -1834,10 +1911,16 @@ if (require('worker_threads').isMainThread) {{
         let parent_meta = match &class.extends {
             Some(parent_name) => {
                 let meta = class_identifiers.get(parent_name).cloned().ok_or_else(|| {
+                    // Fuzzy-rank against the set of registered class
+                    // identifiers so the user gets a "did you mean ...?"
+                    // hint when the parent name is misspelled or absent.
+                    let candidates: Vec<&str> =
+                        class_identifiers.keys().map(|s| s.as_str()).collect();
+                    let hint = crate::suggest::suggest(parent_name, candidates);
                     anyhow::anyhow!(
                         "class `{identifier}` extends `{parent_name}`, but no \
                          exported Rust struct named `{parent_name}` was found \
-                         in this module",
+                         in this module{hint}",
                     )
                 })?;
                 Some(meta)
@@ -1882,11 +1965,14 @@ if (require('worker_threads').isMainThread) {{
                 }
                 let mut prev_expr = String::from("ptr");
                 let mut from_qualified = qualified.to_string();
-                for (idx, (anc_id, anc_rust, anc_qualified)) in ancestors.iter().enumerate() {
+                for (idx, (anc_id, _anc_rust, anc_qualified)) in ancestors.iter().enumerate() {
                     // The macro emits the upcast symbol as
-                    // `upcast_function(child_qualified_name, parent_rust_name)`,
-                    // so use the parent's rust_name (NOT qualified_name) here.
-                    let sym = wasm_bindgen_shared::upcast_function(&from_qualified, anc_rust);
+                    // `upcast_function(child_qualified_name, parent_qualified_name)`,
+                    // matching the qualified_name keying of
+                    // `exported_classes`. Both sides derive the parent
+                    // half from `extends_js_class` + `extends_js_namespace`
+                    // (or the defaulted-from-Rust-path equivalents).
+                    let sym = wasm_bindgen_shared::upcast_function(&from_qualified, anc_qualified);
                     let tmp = format!("__wbg_anc_{idx}");
                     body.push_str(&format!("const {tmp} = wasm.{sym}({prev_expr}) >>> 0;\n"));
                     body.push_str(&format!("obj.__wbg_ptr_{anc_id} = {tmp};\n"));
@@ -4149,13 +4235,25 @@ if (require('worker_threads').isMainThread) {{
         // Set up qualified-name mappings before processing adapters, so that
         // WasmDescribe lookups can resolve to the right exported class and TS
         // declaration identifier.
+        // `exported_classes` is keyed by `qualified_name` — the struct's
+        // JS-side identity (namespace-qualified `js_name`). Both the struct
+        // registration and impl-block exports must agree on this key.
+        // Defaulting `js_name` / `js_class` from the corresponding Rust
+        // ident keeps the no-rename case working uniformly: both sides
+        // produce the same string by independent local inference, no
+        // cross-invocation knowledge required.
+        // `exported_classes` is keyed by `qualified_name` (the struct's
+        // JS-side identity, namespace + name). This is the unique
+        // identifier of a class from the JS perspective and is what
+        // downstream lookups actually need. Keying by `rust_name` would
+        // cause two structs with the same Rust ident but distinct
+        // `js_name`s (a legitimate pattern across modules) to clobber
+        // each other in this map.
         let mut any_class_has_parent = false;
         for s in self.aux.structs.iter() {
-            self.qualified_to_rust_name
-                .insert(s.qualified_name.clone(), s.rust_name.clone());
             let needs_identifier = self
                 .exported_classes
-                .get(&s.rust_name)
+                .get(&s.qualified_name)
                 .is_none_or(|class| class.identifier.is_empty());
             let identifier = if needs_identifier {
                 Some(self.generate_identifier(&s.qualified_name))
@@ -4164,7 +4262,7 @@ if (require('worker_threads').isMainThread) {{
             };
             let class = self
                 .exported_classes
-                .entry(s.rust_name.clone())
+                .entry(s.qualified_name.clone())
                 .or_default();
             class.js_name = Some(s.name.clone());
             class.qualified_name = Some(s.qualified_name.clone());
@@ -4172,8 +4270,10 @@ if (require('worker_threads').isMainThread) {{
             // processing adapters below) can tell whether a class is a
             // subclass and needs `super(__wbgSuperSkip)`. The same field is
             // repopulated later by `generate_struct` for the JS `extends`
-            // clause, but that runs after adapter processing.
-            class.extends = s.extends.clone();
+            // clause, but that runs after adapter processing. Store the
+            // parent's qualified JS identity so downstream lookups against
+            // `exported_classes` (keyed by qualified_name) resolve.
+            class.extends = parent_qualified_name(s);
             if s.extends.is_some() {
                 any_class_has_parent = true;
             }
@@ -4183,6 +4283,24 @@ if (require('worker_threads').isMainThread) {{
             self.qualified_to_identifier
                 .insert(s.qualified_name.clone(), class.identifier.clone());
         }
+        // Validate that every impl-block export references a class that
+        // was registered by a struct macro. The qualified form of `class`
+        // (built from the impl's `js_namespace` + `js_class`) must match a
+        // struct's `qualified_name`. The common ways this fails:
+        //
+        //   * impl block forgets `js_namespace` that the struct declares
+        //     — the symptoms used to be silent (stub class, no methods)
+        //     because `require_class` would mint a fresh empty entry
+        //   * impl block declares a different `js_namespace` than the
+        //     struct — same outcome
+        //   * typo in `js_class` value
+        //
+        // We surface a targeted hint for the namespace-mismatch case
+        // (matching `name` in a different namespace) and fall back to a
+        // fuzzy "did you mean" search across all registered struct
+        // qualified names.
+        self.validate_impl_class_references()?;
+
         // Emit the super-skip sentinel once up front if any class in this
         // module extends another. Every user-defined constructor then checks
         // for the sentinel as the first thing in its body so that a
@@ -5880,7 +5998,8 @@ addToLibrary({
     }
 
     fn generate_struct(&mut self, struct_: &AuxStruct) -> Result<(), Error> {
-        let class = self.require_class(&struct_.rust_name);
+        let parent_qualified = parent_qualified_name(struct_);
+        let class = self.require_class(&struct_.qualified_name);
         class.comments = format_doc_comments(&struct_.comments, None);
         class.is_inspectable = struct_.is_inspectable;
         class.generate_typescript = struct_.generate_typescript;
@@ -5888,7 +6007,7 @@ addToLibrary({
         class.js_namespace = struct_.js_namespace.as_ref().map(|ns| ns.to_vec());
         class.js_name = Some(struct_.name.clone());
         class.qualified_name = Some(struct_.qualified_name.clone());
-        class.extends = struct_.extends.clone();
+        class.extends = parent_qualified;
         Ok(())
     }
 
@@ -6196,6 +6315,34 @@ impl<'a> ContextAdapterKind<'a> {
             }
         }
     }
+}
+
+/// Compute the qualified JS identity (`<ns>__<name>`) of a child
+/// struct's parent class, used as the key into `exported_classes` when
+/// resolving the parent for `class Child extends Parent` codegen.
+///
+/// Sources, in order:
+///   * `extends_js_class` + `extends_js_namespace` if the user declared
+///     them on the child (required when the parent uses `js_name` /
+///     `js_namespace`).
+///   * Otherwise the last segment of the `extends` Rust path as a
+///     fall-back, which matches the no-rename / no-namespace case where
+///     the parent's `js_name` defaults to its Rust ident and
+///     `js_namespace` is `None`.
+///
+/// Returns `None` when the child has no `extends` at all.
+fn parent_qualified_name(struct_: &AuxStruct) -> Option<String> {
+    if struct_.extends.is_none() && struct_.extends_js_class.is_none() {
+        return None;
+    }
+    let bare = struct_
+        .extends_js_class
+        .clone()
+        .or_else(|| struct_.extends.clone())?;
+    Some(wasm_bindgen_shared::qualified_name(
+        struct_.extends_js_namespace.as_deref(),
+        &bare,
+    ))
 }
 
 /// Iterate over the adapters in a deterministic order.
