@@ -18,6 +18,10 @@ is rejected with the `PanicError`.
 - **Rust nightly compiler** - `-Zbuild-std` is only available on nightly
 - **`std` feature** - `std` support is required to use
   `std::panic::catch_unwind`. to catch panics.
+- **Runtime with Wasm exception handling** - `-Cpanic=unwind` requires
+  Node.js 22.22.3+ / 24.15.0+ or a recent browser. Node.js 20 may be
+  supported with legacy exception handling, with a tracking issue in
+  [#5151](https://github.com/wasm-bindgen/wasm-bindgen/issues/5151).
 
 ## Building
 

@@ -3,6 +3,26 @@
 
 ## Unreleased
 
+### Notices
+
+* Threading support requires `-Clink-arg=--export=__heap_base` to be set
+  in `RUSTFLAGS` for nightly toolchains from 2026-05-06 onward, after
+  [rust-lang/rust#156174](https://github.com/rust-lang/rust/pull/156174)
+  removed the implicit `__heap_base`/`__data_end` exports on `wasm*`
+  targets. Atomics CI, CLI reference tests, and the `nodejs-threads`,
+  `raytrace-parallel`, and `wasm-audio-worklet` examples have been
+  updated to pass `--export=__heap_base` explicitly. The flag is
+  backward-compatible with older nightlies.
+
+* `-Cpanic=unwind` on wasm targets now emits modern (exnref) exception
+  handling by default after
+  [rust-lang/rust#156061](https://github.com/rust-lang/rust/pull/156061),
+  and requires Node.js 22.22.3+ (for `WebAssembly.JSTag`). Building
+  legacy EH wasm currently requires pinning to `nightly-2026-05-06` or
+  earlier, since user `-Cllvm-args` cannot override the new target spec.
+  See [#5151](https://github.com/wasm-bindgen/wasm-bindgen/issues/5151)
+  for tracking Node.js 20 support.
+
 --------------------------------------------------------------------------------
 
 ## [0.2.121](https://github.com/rustwasm/wasm-bindgen/compare/0.2.120...0.2.121)

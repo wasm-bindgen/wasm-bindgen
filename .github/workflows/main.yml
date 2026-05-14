@@ -132,7 +132,7 @@ jobs:
           - name: mvp
             rustflags: -Ctarget-cpu=mvp
           - name: atomics
-            rustflags: -Ctarget-feature=+atomics -Clink-args=--shared-memory -Clink-args=--max-memory=1073741824 -Clink-args=--import-memory -Clink-args=--export=__wasm_init_tls -Clink-args=--export=__tls_size -Clink-args=--export=__tls_align -Clink-args=--export=__tls_base
+            rustflags: -Ctarget-feature=+atomics -Clink-args=--shared-memory -Clink-args=--max-memory=1073741824 -Clink-args=--import-memory -Clink-args=--export=__heap_base -Clink-args=--export=__wasm_init_tls -Clink-args=--export=__tls_size -Clink-args=--export=__tls_align -Clink-args=--export=__tls_base
     name: "Run wasm-bindgen crate tests (${{ matrix.envs.name }})"
     runs-on: ubuntu-latest
     env:
@@ -168,16 +168,31 @@ jobs:
     runs-on: ubuntu-latest
     env:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
+      # rust-lang/rust#156061 flipped the wasm panic=unwind default to modern
+      # (exnref) EH. To keep legacy EH coverage we pin nightly to before that
+      # change (see toolchain pin below) so plain `-Cpanic=unwind` still
+      # produces legacy EH. `-Cllvm-args=-wasm-use-legacy-eh` cannot override
+      # the new target spec's `-wasm-use-legacy-eh=false` (LLVM is last-wins
+      # and rustc puts target args after user args), so a pinned nightly is
+      # currently the only reliable way to test legacy EH.
       RUSTFLAGS: -Cpanic=unwind
     steps:
     - uses: actions/checkout@v6
-    - uses: dtolnay/rust-toolchain@nightly
+    # Pin to nightly-2026-05-06 — the last nightly before rust-lang/rust#156061
+    # flipped the wasm target spec to force modern (exnref) EH. With this pin
+    # `-Cpanic=unwind` still produces legacy EH wasm. Dated nightlies remain
+    # available on the dist server indefinitely.
+    - uses: dtolnay/rust-toolchain@master
       with:
+        toolchain: nightly-2026-05-06
         targets: wasm32-unknown-unknown
         components: rust-src
+    # Node 22.22.3+ is needed for `WebAssembly.JSTag` (used by wasm-bindgen's
+    # legacy EH catch handlers). Node 20 lacks `WebAssembly.JSTag` even though
+    # it supports the underlying legacy EH instructions.
     - uses: actions/setup-node@v6
       with:
-        node-version: '22'
+        node-version: '22.22.3'
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --lib --bins --tests
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --test wasm --features std,wasm-bindgen-futures/std
   test_wasm_bindgen_unwind_exnref_eh:
@@ -185,13 +200,17 @@ jobs:
     runs-on: ubuntu-latest
     env:
       WASM_BINDGEN_SPLIT_LINKED_MODULES: 1
-      RUSTFLAGS: -Cpanic=unwind -Cllvm-args=-wasm-use-legacy-eh=false
+      # Modern (exnref) EH is the default for panic=unwind on wasm since
+      # rust-lang/rust#156061. Modern EH requires Node 22.22.3+ on the 22 LTS
+      # line (or 24.15.0+).
+      RUSTFLAGS: -Cpanic=unwind
     steps:
     - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@nightly
       with:
         targets: wasm32-unknown-unknown
         components: rust-src
+    # TODO: drop back to Node 22 LTS once 22.22.3 ships (2026-05-13, modern EH backport).
     - uses: actions/setup-node@v6
       with:
         node-version: '25'
@@ -266,9 +285,13 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: wasm32-unknown-unknown
+    # The cli termination tests build with `-Cpanic=unwind` which since
+    # rust-lang/rust#156061 produces modern (exnref) EH by default. That needs
+    # Node 22.22.3+ on the 22 LTS line (or 24.15.0+) to validate.
+    # TODO: drop back to Node 22 LTS once 22.22.3 ships (2026-05-13, modern EH backport).
     - uses: actions/setup-node@v6
       with:
-        node-version: '22'
+        node-version: '24.15'
     - run: cargo test
     - run: cargo test -p wasm-bindgen-cli-support
     - run: cargo test -p wasm-bindgen-cli
