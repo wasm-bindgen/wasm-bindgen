@@ -208,17 +208,9 @@ Both attributes default sensibly:
   path. This means the **no-rename** case (parent has no `js_name`)
   needs no extra ceremony — `extends = Animal` alone resolves correctly
   when the parent's JS name is also `Animal`.
-* `extends_js_namespace` defaults to `None`. Only required when the
-  parent uses `js_namespace`.
+* `extends_js_namespace` is only required when the parent uses `js_namespace`.
 
-If you forget either when the parent needs it, `wasm-bindgen` errors at
-build time with a hint listing the parent's registered identity:
-
-```
-class `Dog` extends `Animal`, but no exported Rust struct named `Animal`
-was found in this module
-help: did you mean `zoo__Animal`?
-```
+Diagnostics are provided if the class is not matched at code generation time.
 
 ## Limitations
 
