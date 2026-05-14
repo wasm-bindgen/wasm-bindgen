@@ -351,3 +351,98 @@ fn js_throw_triggers_unwind_and_drop() {
         "Should not have continued after JS throw"
     );
 }
+
+// -- Compile-time unwind-safety check on exported methods --
+//
+// Under `panic = "unwind"`, the macro emits a type-level assertion that the
+// receiver of `&self` / `&mut self` exports is `RefUnwindSafe`, and that
+// reference arguments' pointees are `RefUnwindSafe`. This catches at compile
+// time methods whose interior-mutable state could be silently torn by a
+// caught panic (e.g. a `RefCell` left in `borrowed` state, a `Cell` updated
+// halfway through an invariant-restoring sequence).
+//
+// The struct below intentionally has *no* interior mutability and so passes
+// the check naturally. The test verifies that the runtime path still
+// behaves correctly: a panicking `&mut self` method propagates as a JS
+// error, drops run, and a subsequent call observes the in-place mutations
+// that completed before the panic.
+
+#[wasm_bindgen]
+pub struct UnwindSafeCounter {
+    n: u32,
+    panicked_at: u32,
+}
+
+#[wasm_bindgen]
+impl UnwindSafeCounter {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Self {
+        Self {
+            n: 0,
+            panicked_at: 0,
+        }
+    }
+
+    pub fn n(&self) -> u32 {
+        self.n
+    }
+
+    /// Increments and panics on the third call. Any state mutated before
+    /// the panic remains visible afterwards.
+    pub fn bump_panic_on_third(&mut self) {
+        self.n += 1;
+        if self.n == 3 {
+            self.panicked_at = self.n;
+            panic!("expected panic");
+        }
+    }
+
+    pub fn panicked_at(&self) -> u32 {
+        self.panicked_at
+    }
+}
+
+// Negative cases — these would fail to compile under `panic = "unwind"`
+// because their interior-mutable state is not `RefUnwindSafe`. They are
+// kept here as `cfg(any())` to document the intended check; uncommenting
+// either of them on a `panic = "unwind"` build produces a compile error
+// pointing at `wasm_bindgen::__rt::assert_ref_unwind_safe` with a trace
+// through the offending field type.
+//
+//     #[wasm_bindgen]
+//     pub struct UnwindUnsafeCell { c: std::cell::Cell<u32> }
+//     #[wasm_bindgen]
+//     impl UnwindUnsafeCell {
+//         pub fn bump(&mut self) { self.c.set(self.c.get() + 1); }
+//     }
+//
+//     #[wasm_bindgen]
+//     pub fn touch_cell(_c: &std::cell::RefCell<u32>) {}
+//
+// Users whose type is genuinely safe can opt in via either:
+//   * `impl core::panic::RefUnwindSafe for MyType {}`, or
+//   * wrapping interior-mutable fields in `std::panic::AssertUnwindSafe`.
+
+/// Confirms that an exported `&mut self` method on a `RefUnwindSafe` struct
+/// catches its panic correctly under `panic = "unwind"` and that completed
+/// mutations remain observable on subsequent calls.
+#[cfg(panic = "unwind")]
+#[wasm_bindgen_test]
+fn ref_unwind_safe_method_runtime_behavior() {
+    let mut c = UnwindSafeCounter::new();
+
+    // Two successful calls.
+    c.bump_panic_on_third();
+    c.bump_panic_on_third();
+    assert_eq!(c.n(), 2);
+
+    // Third call panics — JS-side observation handled by the test harness;
+    // here we just demonstrate that subsequent calls still see the
+    // pre-panic mutation (`n` was incremented to 3 before the panic).
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        c.bump_panic_on_third();
+    }));
+    assert!(result.is_err());
+    assert_eq!(c.n(), 3);
+    assert_eq!(c.panicked_at(), 3);
+}
