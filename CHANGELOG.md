@@ -71,6 +71,28 @@
   
   [#5154](https://github.com/wasm-bindgen/wasm-bindgen/pull/5154)
 
+### Fixed
+
+* Emscripten output now works against vanilla upstream emscripten without
+  requiring a fork. Library dependency tracking is made explicit and
+  complete: `adapter_deps` accumulates across all adapter generation and
+  drives both per-import `__deps` arrays (via snapshot/diff) and
+  `$initBindgen__deps` (cumulative), so emcc's library tree-shaker keeps
+  every symbol the inlined export bodies reference. `intrinsic()` now
+  takes an explicit `deps: &[&str]` so every helper declares what
+  library symbols its body references. `HEAP_DATA_VIEW` is declared by
+  wasm-bindgen and refreshed via wrapping `updateMemoryViews` (upstream
+  emscripten only emits it under `SUPPORT_BIG_ENDIAN`). Function-decl
+  intrinsics like `passStringToWasm0` are now inlined inside
+  `addToLibrary({...})` rather than being emitted at file scope where
+  library symbol references wouldn't resolve. The catch-wrapper
+  transform is skipped on emscripten output where libcxx/embind may
+  introduce wasm EH instructions unrelated to `#[wasm_bindgen(catch)]`.
+  Imported globals (`__stack_pointer`, `__table_base`, GOT entries) are
+  recognized in the interpreter and wasm-conventions layer so descriptor
+  execution works on emscripten-linked input.
+  [#5156](https://github.com/wasm-bindgen/wasm-bindgen/pull/5156)
+
 --------------------------------------------------------------------------------
 
 ## [0.2.121](https://github.com/rustwasm/wasm-bindgen/compare/0.2.120...0.2.121)
