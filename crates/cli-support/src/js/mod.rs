@@ -154,15 +154,31 @@ pub struct Context<'a> {
 
     /// Mapping from qualified name (used in WasmDescribe) to the unique declaration identifier.
     pub(crate) qualified_to_identifier: HashMap<String, String>,
-    /// Tracks dependencies (Emscripten imports) for the current adapter being generated.
-    /// Must be cleared at the start of `generate_adapter`.
+    /// Cumulative set of every emscripten library symbol that any generated
+    /// adapter (import, export, or standalone) has referenced. Populated by
+    /// `intrinsic()` and by direct `.insert()` calls in `expose_*` helpers.
+    ///
+    /// Used to derive:
+    ///   - per-import `__deps` entries (via snapshot/diff during
+    ///     `generate_adapter` for the `Import` kind, stored in
+    ///     `emscripten_import_deps`).
+    ///   - `$initBindgen__deps` (read directly — every Export/Adapter body is
+    ///     inlined into `$initBindgen`, so the cumulative set is exactly what
+    ///     emcc needs to keep alive).
+    ///
+    /// Effectively only meaningful in `OutputMode::Emscripten`; inserts on
+    /// other modes are harmless but unused.
     adapter_deps: BTreeSet<String>,
 
-    /// Tracks global emscripten dependencies as opposed to adapter-level dependencies.
+    /// Global library symbols that wasm-bindgen unconditionally *creates* in
+    /// the emscripten library file (e.g. `$heap`, `$WASM_VECTOR_LEN`,
+    /// `$HEAP_DATA_VIEW`). Drives the top-of-library `addToLibrary({...})`
+    /// block in `generate_emscripten_imports` and is unioned into
+    /// `extraLibraryFuncs` so emcc keeps them.
     emscripten_global_deps: BTreeSet<String>,
 
-    /// Tracks the specific Emscripten dependencies for each individual Wasm import.
-    /// These are gathered from `adapter_deps` during adapter generation.
+    /// Per-import `__deps` arrays, computed by snapshotting `adapter_deps`
+    /// before generating each import and diffing afterwards.
     emscripten_import_deps: BTreeMap<ImportId, BTreeSet<String>>,
 
     /// `true` when the module's memory is a memory64 (wasm64) memory.
@@ -377,27 +393,83 @@ impl<'a> Context<'a> {
         }
     }
 
-    /// A helper function to add any necessary addToLibrary wrappings for Emscripten
-    fn export_to_emscripten(&mut self, js_name: &str, raw_js: &str) {
-        let content = raw_js.trim().to_string();
-
+    /// Emit a wasm-bindgen-generated JS snippet as an entry in the emscripten
+    /// JS library, with explicit dependency tracking via `__deps`.
+    ///
+    /// Three input shapes are accepted:
+    ///
+    /// 1. **Already an `addToLibrary({...})` call** — passed through verbatim.
+    ///    The caller has full control over the registration shape (multiple
+    ///    keys, postsets, etc.). `deps` is ignored in this case.
+    /// 2. **Function declaration** `function name(args) { body }` — converted
+    ///    to `addToLibrary({ $name: function(args) { body }, $name__deps: [...] })`.
+    ///    This avoids leaving a file-scope copy of the function in the library
+    ///    file that would be evaluated outside of any library symbol scope.
+    /// 3. **Anything else** — wrapped as `addToLibrary({ $name: "expr",
+    ///    $name__deps: [...] })`, treating the snippet as a value initializer.
+    fn export_to_emscripten(&mut self, js_name: &str, raw_js: &str, deps: &[&str]) {
+        let content = raw_js.trim();
         if content.is_empty() {
             return;
         }
 
-        self.emscripten_library(&content);
-
-        if !content.contains("addToLibrary") {
-            self.emscripten_library(&format!("addToLibrary({{ '${js_name}': {js_name} }});"));
+        // Pre-formatted `addToLibrary({...})` block — pass through unchanged.
+        if content.contains("addToLibrary") {
+            self.emscripten_library(content);
+            return;
         }
+
+        let deps_str = if deps.is_empty() {
+            String::new()
+        } else {
+            let formatted: Vec<String> = deps.iter().map(|d| format!("'${d}'")).collect();
+            format!(",\n    ${js_name}__deps: [{}]", formatted.join(", "))
+        };
+
+        // Function declaration of the form `function js_name(args) { body }`.
+        // We strip the leading name so the function body becomes a value
+        // inside the addToLibrary literal.
+        let prefix = format!("function {js_name}");
+        if let Some(after_name) = content.strip_prefix(&prefix) {
+            let after_name = after_name.trim_start();
+            if after_name.starts_with('(') {
+                self.emscripten_library(&format!(
+                    "addToLibrary({{\n    ${js_name}: function{after_name}{deps_str}\n}});"
+                ));
+                return;
+            }
+        }
+
+        // Otherwise treat as a value expression.
+        self.emscripten_library(&format!(
+            "addToLibrary({{\n    ${js_name}: \"{}\"{deps_str}\n}});",
+            content.replace('\\', "\\\\").replace('"', "\\\""),
+        ));
     }
 
+    /// Register a wasm-bindgen-internal helper as an intrinsic.
+    ///
+    /// `deps` lists library symbols the intrinsic body itself references by
+    /// bare name (e.g. `addHeapObject` references `heap` and `heap_next`).
+    /// In emscripten mode these become the `$name__deps` array on the
+    /// emitted library entry; in other modes they're unused. Pass `&[]` for
+    /// helpers that only reference other JS values.
     fn intrinsic(
         &mut self,
         name: Cow<'static, str>,
         js_name: Option<&str>,
         val: Cow<'static, str>,
+        deps: &[&str],
     ) {
+        // On emscripten, always register the dep on the current adapter even
+        // if the intrinsic itself has already been emitted by a previous
+        // adapter. The `__deps` accounting needs every caller -> callee edge,
+        // not just the first-discovered one.
+        if matches!(self.config.mode, OutputMode::Emscripten) && !val.trim().is_empty() {
+            let actual_js_name: &str = js_name.unwrap_or(&name);
+            self.adapter_deps.insert(actual_js_name.to_string());
+        }
+
         if self.intrinsics.as_ref().unwrap().contains_key(&name) {
             return;
         }
@@ -405,13 +477,11 @@ impl<'a> Context<'a> {
         if matches!(self.config.mode, OutputMode::Emscripten) {
             let actual_js_name: &str = js_name.unwrap_or(&name);
 
-            // Only add as a dependency and export if there's actual content.
-            // Empty content means the intrinsic is handled elsewhere (e.g. via
-            // emscripten_global_deps), so registering a dep here would create a
-            // reference to a non-existent library variable.
+            // Only emit the library entry if there's actual content. Empty
+            // content means the intrinsic is handled elsewhere (e.g. via
+            // emscripten_global_deps).
             if !val.trim().is_empty() {
-                self.adapter_deps.insert(actual_js_name.to_string());
-                self.export_to_emscripten(actual_js_name, &val);
+                self.export_to_emscripten(actual_js_name, &val, deps);
             }
 
             // Register empty string so standard generation skips this key
@@ -919,6 +989,17 @@ impl<'a> Context<'a> {
                 imports.push_str("$heap_next: '0',\n");
             } else if global_dep == "stack_pointer" {
                 imports.push_str(&format!("$stack_pointer : \"{INITIAL_HEAP_OFFSET}\",\n"));
+            } else if global_dep == "HEAP_DATA_VIEW" {
+                // wasm-bindgen reads/writes the wasm heap as a `DataView` for
+                // unaligned/typed accesses. Upstream emscripten only declares
+                // `HEAP_DATA_VIEW` when `SUPPORT_BIG_ENDIAN` is enabled, so
+                // for the common little-endian case we declare it ourselves
+                // and wrap `updateMemoryViews` so it is (re)created at module
+                // startup and whenever wasm memory grows.
+                imports.push_str(
+                    "$HEAP_DATA_VIEW: 'undefined',\n\
+                     $HEAP_DATA_VIEW__postset: \"var __wbg_origUpdateMemoryViews = updateMemoryViews; updateMemoryViews = function () { __wbg_origUpdateMemoryViews(); HEAP_DATA_VIEW = new DataView(wasmMemory.buffer); };\",\n",
+                );
             }
         }
         imports.push_str("});\n\n");
@@ -1558,7 +1639,21 @@ if (require('worker_threads').isMainThread) {{
         needs_manual_start: bool,
         classes_and_exports: &str,
     ) -> String {
-        let formatted_deps: Vec<String> = self
+        // `$initBindgen` inlines every Export/Adapter body, so its `__deps`
+        // must list every library symbol any adapter referenced (Imports'
+        // deps are handled separately via per-import `__deps`). Emcc's
+        // library tree-shaker doesn't trace bare-name references inside
+        // function bodies, so we have to enumerate explicitly. We union
+        // `adapter_deps` with `emscripten_global_deps` so symbols that are
+        // *only* declared globally (e.g. `$heap`) are also pulled in.
+        let init_deps: BTreeSet<&str> = std::iter::once("addOnInit")
+            .chain(std::iter::once("wasm"))
+            .chain(self.adapter_deps.iter().map(String::as_str))
+            .chain(self.emscripten_global_deps.iter().map(String::as_str))
+            .collect();
+        let init_dep_refs: Vec<String> = init_deps.iter().map(|d| format!("'${d}'")).collect();
+
+        let global_dep_refs: Vec<String> = self
             .emscripten_global_deps
             .iter()
             .map(|dep| format!("'${dep}'"))
@@ -1573,7 +1668,7 @@ if (require('worker_threads').isMainThread) {{
         format!(
             r#"
             addToLibrary({{
-                $initBindgen__deps: ['$addOnInit'],
+                $initBindgen__deps: [{init_deps}],
                 $initBindgen__postset: 'addOnInit(initBindgen);',
                 $initBindgen: () => {{
                     wasm = wasmExports;
@@ -1587,9 +1682,10 @@ if (require('worker_threads').isMainThread) {{
                 }}
             }});
 
-            extraLibraryFuncs.push('$initBindgen', '$addOnInit', '$wasm', {formatted_deps});
+            extraLibraryFuncs.push('$initBindgen', '$addOnInit', '$wasm', {global_deps});
             "#,
-            formatted_deps = formatted_deps.join(", ")
+            init_deps = init_dep_refs.join(", "),
+            global_deps = global_dep_refs.join(", "),
         )
     }
 
@@ -2517,6 +2613,7 @@ if (require('worker_threads').isMainThread) {{
                 INITIAL_HEAP_OFFSET + INITIAL_HEAP_VALUES.len(),
             )
             .into(),
+            &["heap", "heap_next"],
         );
     }
 
@@ -2537,6 +2634,7 @@ if (require('worker_threads').isMainThread) {{
                 INITIAL_HEAP_VALUES.join(", ")
             )
             .into(),
+            &[],
         );
     }
 
@@ -2550,6 +2648,7 @@ if (require('worker_threads').isMainThread) {{
             "heap_next".into(),
             None,
             "\nlet heap_next = heap.length;\n".into(),
+            &["heap"],
         );
     }
 
@@ -2561,12 +2660,14 @@ if (require('worker_threads').isMainThread) {{
             "get_object".into(),
             "getObject".into(),
             "\nfunction getObject(idx) { return heap[idx]; }\n".into(),
+            &["heap"],
         );
     }
 
     fn expose_not_defined(&mut self) {
         self.intrinsic("not_defined".into(), "notDefined".into(),
-            "\nfunction notDefined(what) { return () => { throw new Error(`${what} is not defined`); }; }\n".into()
+            "\nfunction notDefined(what) { return () => { throw new Error(`${what} is not defined`); }; }\n".into(),
+            &[],
         );
     }
 
@@ -2576,7 +2677,8 @@ if (require('worker_threads').isMainThread) {{
             function _assertNum(n) {
                 if (typeof(n) !== 'number') throw new Error(`expected a number argument, found ${typeof(n)}`);
             }
-            ".into()
+            ".into(),
+            &[],
         );
     }
 
@@ -2586,7 +2688,8 @@ if (require('worker_threads').isMainThread) {{
             function _assertBigInt(n) {
                 if (typeof(n) !== 'bigint') throw new Error(`expected a bigint argument, found ${typeof(n)}`);
             }
-            ".into()
+            ".into(),
+            &[],
         );
     }
 
@@ -2602,6 +2705,7 @@ if (require('worker_threads').isMainThread) {{
             }
             "
             .into(),
+            &[],
         );
     }
 
@@ -2615,12 +2719,14 @@ if (require('worker_threads').isMainThread) {{
                 "wasm_vector_len".into(),
                 "WASM_VECTOR_LEN".into(),
                 "".into(),
+                &[],
             );
         } else {
             self.intrinsic(
                 "wasm_vector_len".into(),
                 None,
                 "\nlet WASM_VECTOR_LEN = 0;\n".into(),
+                &[],
             );
         }
     }
@@ -2637,13 +2743,7 @@ if (require('worker_threads').isMainThread) {{
         // Ensure the encoder and its polyfills are registered
         self.expose_text_encoder(memory);
 
-        self.intrinsic(
-        ret.to_string().into(),
-        None,
-
-        {
         let is_emscripten = matches!(self.config.mode, OutputMode::Emscripten);
-
         let mem_formatted = mem.access(is_emscripten);
 
         let debug = if self.config.debug {
@@ -2693,7 +2793,7 @@ if (require('worker_threads').isMainThread) {{
         );
 
         let func_decl = format!(
-                "
+            "
                 function {ret}(arg, malloc, realloc) {{
                     {debug}{encode_as_ascii}if (offset !== len) {{
                         if (offset !== 0) {{
@@ -2711,22 +2811,14 @@ if (require('worker_threads').isMainThread) {{
                     return ptr;
                 }}
                 ",
-            );
+        );
 
-
-        if is_emscripten {
-            format!(
-                "{func_decl}
-                addToLibrary({{
-                    '${ret}': {ret},
-                    '${ret}__deps': ['$cachedTextEncoder', '$WASM_VECTOR_LEN']
-                }});\n"
-            ).into()
-        } else {
-            func_decl.into()
-        }
-        },
-    );
+        self.intrinsic(
+            ret.to_string().into(),
+            None,
+            func_decl.into(),
+            &["cachedTextEncoder", "WASM_VECTOR_LEN"],
+        );
 
         ret
     }
@@ -2780,7 +2872,10 @@ if (require('worker_threads').isMainThread) {{
                     self.adapter_deps.insert(add.to_string());
                 }
 
-                self.intrinsic(ret.to_string().into(), None, {
+                let add_name = add.to_string();
+                self.intrinsic(
+                    ret.to_string().into(),
+                    None,
                     format!(
                         "
                         function {ret}(array, malloc) {{
@@ -2794,14 +2889,18 @@ if (require('worker_threads').isMainThread) {{
                         }}
                     "
                     )
-                    .into()
-                });
+                    .into(),
+                    &[&add_name, "HEAP_DATA_VIEW", "WASM_VECTOR_LEN"],
+                );
             }
             _ => {
                 self.expose_add_heap_object();
-                self.intrinsic(ret.to_string().into(), None, {
-                    format!(
-                        "
+                self.intrinsic(
+                    ret.to_string().into(),
+                    None,
+                    {
+                        format!(
+                            "
                         function {ret}(array, malloc) {{
                             const ptr = malloc(array.length * 4, 4){ptr_coerce};
                             const mem = {mem_formatted};
@@ -2812,9 +2911,15 @@ if (require('worker_threads').isMainThread) {{
                             return ptr;
                         }}
                     "
-                    )
-                    .into()
-                });
+                        )
+                        .into()
+                    },
+                    if self.config.mode.emscripten() {
+                        &["addHeapObject", "HEAP_DATA_VIEW", "WASM_VECTOR_LEN"]
+                    } else {
+                        &[]
+                    },
+                );
             }
         }
         ret
@@ -2827,19 +2932,27 @@ if (require('worker_threads').isMainThread) {{
         };
         self.expose_wasm_vector_len();
         let ptr_coerce = self.coerce_ptr_suffix();
-        self.intrinsic(ret.to_string().into(), None, {
-            format!(
-                "
+        let is_emscripten = matches!(self.config.mode, OutputMode::Emscripten);
+        // On emscripten, heap views are global identifiers (`HEAP8`, `HEAPF64`,
+        // `HEAP_DATA_VIEW`, …) refreshed by `updateMemoryViews`. On other
+        // targets they're cache-helper functions (`getUint8Memory0()`).
+        let view_access = view.access(is_emscripten);
+        let func_decl = format!(
+            "
                 function {ret}(arg, malloc) {{
                     const ptr = malloc(arg.length * {size}, {size}){ptr_coerce};
-                    {view}().set(arg, ptr / {size});
+                    {view_access}.set(arg, ptr / {size});
                     WASM_VECTOR_LEN = arg.length;
                     return ptr;
                 }}
                 "
-            )
-            .into()
-        });
+        );
+        self.intrinsic(
+            ret.to_string().into(),
+            None,
+            func_decl.into(),
+            &[view.name.as_ref(), "WASM_VECTOR_LEN"],
+        );
         ret
     }
 
@@ -2850,21 +2963,25 @@ if (require('worker_threads').isMainThread) {{
                 .insert("cachedTextEncoder".to_string());
             self.adapter_deps.insert("cachedTextEncoder".to_string());
         }
-        self.intrinsic("text_encoder".into(), "textEncoder".into(), {
-            if is_emscripten {
-                "".into()
-            } else {
-                let mut dst = Self::write_text_processor(
-                    self.module,
-                    memory,
-                    "const",
-                    "TextEncoder",
-                    "()",
-                    None,
-                    self.config.mode.clone(),
-                );
+        self.intrinsic(
+            "text_encoder".into(),
+            "textEncoder".into(),
+            {
+                if is_emscripten {
+                    "".into()
+                } else {
+                    let mut dst = Self::write_text_processor(
+                        self.module,
+                        memory,
+                        "const",
+                        "TextEncoder",
+                        "()",
+                        None,
+                        self.config.mode.clone(),
+                    );
 
-                let polyfill_encode_into = "cachedTextEncoder.encodeInto = function (arg, view) {
+                    let polyfill_encode_into =
+                        "cachedTextEncoder.encodeInto = function (arg, view) {
                 const buf = cachedTextEncoder.encode(arg);
                 view.set(buf);
                 return {
@@ -2873,41 +2990,43 @@ if (require('worker_threads').isMainThread) {{
                 };
             };";
 
-                // `encodeInto` doesn't currently work in any browsers when the memory passed
-                // in is backed by a `SharedArrayBuffer`, so force usage of `encode` if
-                // a `SharedArrayBuffer` is in use.
-                let shared = self.module.memories.get(memory).shared;
+                    // `encodeInto` doesn't currently work in any browsers when the memory passed
+                    // in is backed by a `SharedArrayBuffer`, so force usage of `encode` if
+                    // a `SharedArrayBuffer` is in use.
+                    let shared = self.module.memories.get(memory).shared;
 
-                match self.config.encode_into {
-                    EncodeInto::Always if !shared => {}
-                    EncodeInto::Test if !shared => {
-                        dst.push_str(&format!(
-                            "
+                    match self.config.encode_into {
+                        EncodeInto::Always if !shared => {}
+                        EncodeInto::Test if !shared => {
+                            dst.push_str(&format!(
+                                "
                         if (!('encodeInto' in cachedTextEncoder)) {{
                             {polyfill_encode_into}
                         }}
                         "
-                        ));
-                    }
-                    _ => {
-                        // Support audio worklets when able to spawn them.
-                        if shared {
-                            dst.push_str(&format!(
-                                "
+                            ));
+                        }
+                        _ => {
+                            // Support audio worklets when able to spawn them.
+                            if shared {
+                                dst.push_str(&format!(
+                                    "
                             if (cachedTextEncoder) {{
                                 {polyfill_encode_into}
                             }}
                             "
-                            ));
-                        } else {
-                            dst.push_str(polyfill_encode_into);
+                                ));
+                            } else {
+                                dst.push_str(polyfill_encode_into);
+                            }
                         }
                     }
-                }
 
-                dst.into()
-            }
-        });
+                    dst.into()
+                }
+            },
+            &[],
+        );
     }
 
     fn expose_text_decoder(&mut self, mem: &MemView, memory: MemoryId) {
@@ -2997,7 +3116,7 @@ if (require('worker_threads').isMainThread) {{
             }
 
             dst.into()
-        })
+        }, &["cachedTextDecoder"])
     }
 
     fn write_text_processor(
@@ -3043,16 +3162,21 @@ if (require('worker_threads').isMainThread) {{
             num: mem.num,
         };
         let ptr_coerce = self.coerce_ptr_suffix();
-        self.intrinsic(ret.to_string().into(), None, {
-            format!(
-                "
+        self.intrinsic(
+            ret.to_string().into(),
+            None,
+            {
+                format!(
+                    "
                 function {ret}(ptr, len) {{
                     return decodeText(ptr{ptr_coerce}, len);
                 }}
                 ",
-            )
-            .into()
-        });
+                )
+                .into()
+            },
+            &["decodeText"],
+        );
         ret
     }
 
@@ -3080,9 +3204,12 @@ if (require('worker_threads').isMainThread) {{
         //
         // If `ptr` and `len` are both `0` then that means it's `None`, in that case we rely upon
         // the fact that `getObject(0)` is guaranteed to be `undefined`.
-        self.intrinsic(ret.to_string().into(), None, {
-            format!(
-                "
+        self.intrinsic(
+            ret.to_string().into(),
+            None,
+            {
+                format!(
+                    "
                 function {ret}(ptr, len) {{
                     if (ptr === 0) {{
                         return {get_object}(len);
@@ -3091,9 +3218,11 @@ if (require('worker_threads').isMainThread) {{
                     }}
                 }}
                 "
-            )
-            .into()
-        });
+                )
+                .into()
+            },
+            &[&get_object, &get_string.to_string()],
+        );
         ret
     }
 
@@ -3103,17 +3232,28 @@ if (require('worker_threads').isMainThread) {{
             name: "getArrayJsValueFromWasm".into(),
             num: mem.num,
         };
+        let is_emscripten = self.config.mode.emscripten();
+        // Emscripten exposes the DataView heap as the global `HEAP_DATA_VIEW`;
+        // other targets emit a per-instance cache function (`getDataViewMemory0()`).
+        let mem_access = if is_emscripten {
+            mem.name.to_string()
+        } else {
+            format!("{mem}()")
+        };
         match (self.aux.externref_table, self.aux.externref_drop_slice) {
             (Some(table), Some(drop)) => {
                 let table = self.export_name_of(table);
                 let drop = self.export_name_of(drop);
                 let ptr_fixup = self.coerce_ptr_assign("ptr");
-                self.intrinsic(ret.to_string().into(), None, {
-                    format!(
-                        "
+                self.intrinsic(
+                    ret.to_string().into(),
+                    None,
+                    {
+                        format!(
+                            "
                         function {ret}(ptr, len) {{
                             {ptr_fixup}
-                            const mem = {mem}();
+                            const mem = {mem_access};
                             const result = [];
                             for (let i = ptr; i < ptr + 4 * len; i += 4) {{
                                 result.push(wasm.{table}.get(mem.getUint32(i, true)));
@@ -3122,19 +3262,24 @@ if (require('worker_threads').isMainThread) {{
                             return result;
                         }}
                         ",
-                    )
-                    .into()
-                });
+                        )
+                        .into()
+                    },
+                    &["HEAP_DATA_VIEW"],
+                );
             }
             _ => {
                 self.expose_take_object();
                 let ptr_fixup = self.coerce_ptr_assign("ptr");
-                self.intrinsic(ret.to_string().into(), None, {
-                    format!(
-                        "
+                self.intrinsic(
+                    ret.to_string().into(),
+                    None,
+                    {
+                        format!(
+                            "
                         function {ret}(ptr, len) {{
                             {ptr_fixup}
-                            const mem = {mem}();
+                            const mem = {mem_access};
                             const result = [];
                             for (let i = ptr; i < ptr + 4 * len; i += 4) {{
                                 result.push(takeObject(mem.getUint32(i, true)));
@@ -3142,9 +3287,11 @@ if (require('worker_threads').isMainThread) {{
                             return result;
                         }}
                         ",
-                    )
-                    .into()
-                });
+                        )
+                        .into()
+                    },
+                    &["takeObject", "HEAP_DATA_VIEW"],
+                );
             }
         }
         ret
@@ -3158,16 +3305,25 @@ if (require('worker_threads').isMainThread) {{
             name: "getArrayJsValueViewFromWasm".into(),
             num: mem.num,
         };
+        let is_emscripten = self.config.mode.emscripten();
+        let mem_access = if is_emscripten {
+            mem.name.to_string()
+        } else {
+            format!("{mem}()")
+        };
         match self.aux.externref_table {
             Some(table) => {
                 let table = self.export_name_of(table);
                 let ptr_fixup = self.coerce_ptr_assign("ptr");
-                self.intrinsic(ret.to_string().into(), None, {
-                    format!(
-                        "
+                self.intrinsic(
+                    ret.to_string().into(),
+                    None,
+                    {
+                        format!(
+                            "
                         function {ret}(ptr, len) {{
                             {ptr_fixup}
-                            const mem = {mem}();
+                            const mem = {mem_access};
                             const result = [];
                             for (let i = ptr; i < ptr + 4 * len; i += 4) {{
                                 result.push(wasm.{table}.get(mem.getUint32(i, true)));
@@ -3175,19 +3331,24 @@ if (require('worker_threads').isMainThread) {{
                             return result;
                         }}
                         ",
-                    )
-                    .into()
-                });
+                        )
+                        .into()
+                    },
+                    &["HEAP_DATA_VIEW"],
+                );
             }
             _ => {
                 self.expose_get_object();
                 let ptr_fixup = self.coerce_ptr_assign("ptr");
-                self.intrinsic(ret.to_string().into(), None, {
-                    format!(
-                        "
+                self.intrinsic(
+                    ret.to_string().into(),
+                    None,
+                    {
+                        format!(
+                            "
                         function {ret}(ptr, len) {{
                             {ptr_fixup}
-                            const mem = {mem}();
+                            const mem = {mem_access};
                             const result = [];
                             for (let i = ptr; i < ptr + 4 * len; i += 4) {{
                                 result.push(getObject(mem.getUint32(i, true)));
@@ -3195,9 +3356,11 @@ if (require('worker_threads').isMainThread) {{
                             return result;
                         }}
                         ",
-                    )
-                    .into()
-                });
+                        )
+                        .into()
+                    },
+                    &["getObject", "HEAP_DATA_VIEW"],
+                );
             }
         }
         ret
@@ -3265,7 +3428,10 @@ if (require('worker_threads').isMainThread) {{
         };
         let heap_view = view.access(self.config.mode.emscripten());
         let ptr_fixup = self.coerce_ptr_assign("ptr");
-        self.intrinsic(name.into(), Some(&ret.to_string()), {
+        let view_name = view.name.to_string();
+        self.intrinsic(
+            name.into(),
+            Some(&ret.to_string()),
             format!(
                 "
                 function {ret}(ptr, len) {{
@@ -3274,8 +3440,9 @@ if (require('worker_threads').isMainThread) {{
                 }}
                 ",
             )
-            .into()
-        });
+            .into(),
+            &[&view_name],
+        );
         ret
     }
 
@@ -3345,6 +3512,14 @@ if (require('worker_threads').isMainThread) {{
                 "DataView" => "HEAP_DATA_VIEW",
                 _ => "HEAPU8",
             };
+            // Emscripten only declares `HEAP_DATA_VIEW` when SUPPORT_BIG_ENDIAN
+            // is enabled. For the common (little-endian) case we need to
+            // declare it ourselves and ensure it is (re)created whenever the
+            // memory views are refreshed (i.e. on every wasm memory growth).
+            if emscripten_heap == "HEAP_DATA_VIEW" {
+                self.emscripten_global_deps
+                    .insert("HEAP_DATA_VIEW".to_string());
+            }
             let view = self.memview_memory(emscripten_heap, memory);
             return view;
         }
@@ -3379,7 +3554,7 @@ if (require('worker_threads').isMainThread) {{
                 ",
             )
             .into()
-        });
+        }, &[]);
         view
     }
 
@@ -3413,16 +3588,21 @@ if (require('worker_threads').isMainThread) {{
     }
 
     fn expose_assert_class(&mut self) {
-        self.intrinsic("assert_class".into(), "_assertClass".into(), {
-            "
+        self.intrinsic(
+            "assert_class".into(),
+            "_assertClass".into(),
+            {
+                "
             function _assertClass(instance, klass) {
                 if (!(instance instanceof klass)) {
                     throw new Error(`expected instance of ${klass.name}`);
                 }
             }
             "
-            .into()
-        });
+                .into()
+            },
+            &[],
+        );
     }
 
     fn expose_global_stack_pointer(&mut self) {
@@ -3431,9 +3611,12 @@ if (require('worker_threads').isMainThread) {{
                 .insert("stack_pointer".to_string());
             return;
         }
-        self.intrinsic("stack_pointer".into(), None, {
-            format!("\nlet stack_pointer = {INITIAL_HEAP_OFFSET};\n").into()
-        });
+        self.intrinsic(
+            "stack_pointer".into(),
+            None,
+            format!("\nlet stack_pointer = {INITIAL_HEAP_OFFSET};\n").into(),
+            &[],
+        );
     }
 
     fn expose_borrowed_objects(&mut self) {
@@ -3444,31 +3627,41 @@ if (require('worker_threads').isMainThread) {{
         // after executing this. Once we've reserved stack space we write the
         // value. Eventually underflow will throw an exception, but JS sort of
         // just handles it today...
-        self.intrinsic("borrowed_objects".into(), "addBorrowedObject".into(), {
-            "
+        self.intrinsic(
+            "borrowed_objects".into(),
+            "addBorrowedObject".into(),
+            {
+                "
             function addBorrowedObject(obj) {
                 if (stack_pointer == 1) throw new Error('out of js stack');
                 heap[--stack_pointer] = obj;
                 return stack_pointer;
             }
             "
-            .into()
-        });
+                .into()
+            },
+            &["stack_pointer", "heap"],
+        );
     }
 
     fn expose_take_object(&mut self) {
         self.expose_get_object();
         self.expose_drop_ref();
-        self.intrinsic("take_object".into(), "takeObject".into(), {
-            "
+        self.intrinsic(
+            "take_object".into(),
+            "takeObject".into(),
+            {
+                "
             function takeObject(idx) {
                 const ret = getObject(idx);
                 dropObject(idx);
                 return ret;
             }
             "
-            .into()
-        });
+                .into()
+            },
+            &["getObject", "dropObject"],
+        );
     }
 
     fn expose_add_heap_object(&mut self) {
@@ -3479,9 +3672,12 @@ if (require('worker_threads').isMainThread) {{
         // (starting at `heap_next`). Once that linked list is exhausted we'll
         // be pointing beyond the end of the array, at which point we'll reserve
         // one more slot and use that.
-        self.intrinsic("add_heap_object".into(), "addHeapObject".into(), {
-            format!(
-                "
+        self.intrinsic(
+            "add_heap_object".into(),
+            "addHeapObject".into(),
+            {
+                format!(
+                    "
                 function addHeapObject(obj) {{
                     if (heap_next === heap.length) heap.push(heap.length + 1);
                     const idx = heap_next;
@@ -3491,14 +3687,16 @@ if (require('worker_threads').isMainThread) {{
                     return idx;
                 }}
                 ",
-                if self.config.debug {
-                    "if (typeof(heap_next) !== 'number') throw new Error('corrupt heap');"
-                } else {
-                    ""
-                }
-            )
-            .into()
-        });
+                    if self.config.debug {
+                        "if (typeof(heap_next) !== 'number') throw new Error('corrupt heap');"
+                    } else {
+                        ""
+                    }
+                )
+                .into()
+            },
+            &["heap", "heap_next"],
+        );
     }
 
     fn expose_handle_error(&mut self) -> Result<(), Error> {
@@ -3518,10 +3716,14 @@ if (require('worker_threads').isMainThread) {{
         match (self.aux.externref_table, self.aux.externref_alloc) {
             (Some(table), Some(alloc)) => {
                 let add = self.expose_add_to_externref_table(table, alloc);
+                let add_name = add.to_string();
 
-                self.intrinsic("handle_error".into(), "handleError".into(), {
-                    format!(
-                        "
+                self.intrinsic(
+                    "handle_error".into(),
+                    "handleError".into(),
+                    {
+                        format!(
+                            "
                         function handleError(f, args) {{
                             try {{
                                 return f.apply(this, args);
@@ -3531,18 +3733,23 @@ if (require('worker_threads').isMainThread) {{
                             }}
                         }}
                         "
-                    )
-                    .into()
-                });
+                        )
+                        .into()
+                    },
+                    &[&add_name],
+                );
             }
             _ => {
                 self.expose_add_heap_object();
                 if self.config.mode.emscripten() {
                     self.adapter_deps.insert("addHeapObject".to_string());
                 }
-                self.intrinsic("handle_error".into(), "handleError".into(), {
-                    format!(
-                        "
+                self.intrinsic(
+                    "handle_error".into(),
+                    "handleError".into(),
+                    {
+                        format!(
+                            "
                         function handleError(f, args) {{
                             try {{
                                 return f.apply(this, args);
@@ -3551,17 +3758,22 @@ if (require('worker_threads').isMainThread) {{
                             }}
                         }}
                         "
-                    )
-                    .into()
-                });
+                        )
+                        .into()
+                    },
+                    &["addHeapObject"],
+                );
             }
         }
         Ok(())
     }
 
     fn expose_log_error(&mut self) {
-        self.intrinsic("log_error".into(), "logError".into(), {
-            "
+        self.intrinsic(
+            "log_error".into(),
+            "logError".into(),
+            {
+                "
             function logError(f, args) {
                 try {
                     return f.apply(this, args);
@@ -3582,8 +3794,10 @@ if (require('worker_threads').isMainThread) {{
                 }
             }
             "
-            .into()
-        });
+                .into()
+            },
+            &[],
+        );
     }
 
     fn pass_to_wasm_function(&mut self, t: VectorKind, memory: MemoryId) -> MemView {
@@ -3647,18 +3861,24 @@ if (require('worker_threads').isMainThread) {{
                 "
                 .into()
             },
+            &[],
         );
     }
 
     fn expose_is_like_none(&mut self) {
-        self.intrinsic("is_like_none".into(), "isLikeNone".into(), {
-            "
+        self.intrinsic(
+            "is_like_none".into(),
+            "isLikeNone".into(),
+            {
+                "
             function isLikeNone(x) {
                 return x === undefined || x === null;
             }
             "
-            .into()
-        });
+                .into()
+            },
+            &[],
+        );
     }
 
     fn expose_assert_non_null(&mut self) {
@@ -3668,7 +3888,7 @@ if (require('worker_threads').isMainThread) {{
                 if (typeof(n) !== 'number' || n === 0) throw new Error(`expected a number argument that is not 0, found ${n}`);
             }
             ".into()
-        });
+        }, &[]);
     }
 
     fn expose_assert_char(&mut self) {
@@ -3678,7 +3898,7 @@ if (require('worker_threads').isMainThread) {{
                 if (typeof(c) === 'number' && (c >= 0x110000 || (c >= 0xD800 && c < 0xE000))) throw new Error(`expected a valid Unicode scalar value, found ${c}`);
             }
             ".into()
-        });
+        }, &[]);
     }
 
     fn expose_make_mut_closure(&mut self) {
@@ -3693,21 +3913,24 @@ if (require('worker_threads').isMainThread) {{
         // while we invoke it. If we finish and the closure wasn't
         // destroyed, then we put back the pointer so a future
         // invocation can succeed.
-        self.intrinsic("make_mut_closure".into(), "makeMutClosure".into(), {
-            let (state_init, instance_check) = if self.generate_reinit {
-                (
-                    "const state = { a: arg0, b: arg1, cnt: 1, instance: __wbg_instance_id };",
-                    "
+        self.intrinsic(
+            "make_mut_closure".into(),
+            Some("makeMutClosure"),
+            {
+                let (state_init, instance_check) = if self.generate_reinit {
+                    (
+                        "const state = { a: arg0, b: arg1, cnt: 1, instance: __wbg_instance_id };",
+                        "
                     if (state.instance !== __wbg_instance_id) {
                         throw new Error('Cannot invoke closure from previous WASM instance');
                     }
                     ",
-                )
-            } else {
-                ("const state = { a: arg0, b: arg1, cnt: 1 };", "")
-            };
-            let mut js = format!(
-                "
+                    )
+                } else {
+                    ("const state = { a: arg0, b: arg1, cnt: 1 };", "")
+                };
+                format!(
+                    "
                 function makeMutClosure(arg0, arg1, f) {{
                     {state_init}
                     const real = (...args) => {{
@@ -3736,21 +3959,11 @@ if (require('worker_threads').isMainThread) {{
                     return real;
                 }}
                 "
-            );
-
-            if matches!(self.config.mode, OutputMode::Emscripten) {
-                js.push_str(
-                    r"
-                addToLibrary({
-                    $makeMutClosure: makeMutClosure,
-                    $makeMutClosure__deps: ['$CLOSURE_DTORS']
-                });
-                ",
-                );
-            };
-
-            js.into()
-        });
+                )
+                .into()
+            },
+            &["CLOSURE_DTORS"],
+        );
     }
 
     fn expose_make_closure(&mut self) {
@@ -3765,21 +3978,24 @@ if (require('worker_threads').isMainThread) {{
         // executing the destructor, however, we clear out the
         // `this.a` pointer to prevent it being used again the
         // future.
-        self.intrinsic("make_closure".into(), "makeClosure".into(), {
-            let (state_init, instance_check) = if self.generate_reinit {
-                (
-                    "const state = { a: arg0, b: arg1, cnt: 1, instance: __wbg_instance_id };",
-                    "
+        self.intrinsic(
+            "make_closure".into(),
+            Some("makeClosure"),
+            {
+                let (state_init, instance_check) = if self.generate_reinit {
+                    (
+                        "const state = { a: arg0, b: arg1, cnt: 1, instance: __wbg_instance_id };",
+                        "
                     if (state.instance !== __wbg_instance_id) {
                         throw new Error('Cannot invoke closure from previous WASM instance');
                     }
                     ",
-                )
-            } else {
-                ("const state = { a: arg0, b: arg1, cnt: 1 };", "")
-            };
-            let mut js = format!(
-                "
+                    )
+                } else {
+                    ("const state = { a: arg0, b: arg1, cnt: 1 };", "")
+                };
+                format!(
+                    "
                 function makeClosure(arg0, arg1, f) {{
                     {state_init}
                     const real = (...args) => {{
@@ -3805,21 +4021,11 @@ if (require('worker_threads').isMainThread) {{
                     return real;
                 }}
                 "
-            );
-
-            if matches!(self.config.mode, OutputMode::Emscripten) {
-                js.push_str(
-                    "
-                addToLibrary({
-                    $makeClosure: makeClosure,
-                    $makeClosure__deps: ['$CLOSURE_DTORS']
-                });
-                ",
-                );
-            };
-
-            js.into()
-        });
+                )
+                .into()
+            },
+            &["CLOSURE_DTORS"],
+        );
     }
 
     /// Exposes the `CLOSURE_DTORS` finalization registry and returns a JS
@@ -3852,7 +4058,7 @@ if (require('worker_threads').isMainThread) {{
                         $CLOSURE_DTORS__postset: \"CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined') ? {{ register: () => {{}}, unregister: () => {{}} }} : new FinalizationRegistry({prevent_stale});\"
                     }});\n"
                 )
-            } else {
+            }             else {
                 format!(
                     "
                     const CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined')
@@ -3862,15 +4068,18 @@ if (require('worker_threads').isMainThread) {{
                 )
             }
             .into()
-        });
+        }, &[]);
 
         destroy_state
     }
 
     fn expose_panic_error(&mut self) {
-        self.intrinsic("panic_error".into(), "PanicError".into(), {
-            if matches!(self.config.mode, OutputMode::Emscripten) {
-                "addToLibrary({
+        self.intrinsic(
+            "panic_error".into(),
+            "PanicError".into(),
+            {
+                if matches!(self.config.mode, OutputMode::Emscripten) {
+                    "addToLibrary({
                     $PanicError: function(message) {
                         class PanicError extends Error {}
                         Object.defineProperty(PanicError.prototype, 'name', {
@@ -3879,16 +4088,18 @@ if (require('worker_threads').isMainThread) {{
                         return new PanicError(message);
                     }
                 });\n"
-                    .into()
-            } else {
-                "class PanicError extends Error {}
+                        .into()
+                } else {
+                    "class PanicError extends Error {}
                 Object.defineProperty(PanicError.prototype, 'name', {
                     value: PanicError.name,
                 });
                 "
-                .into()
-            }
-        });
+                    .into()
+                }
+            },
+            &[],
+        );
     }
 
     fn expose_reinit_scheduled(&mut self) {
@@ -3899,6 +4110,7 @@ if (require('worker_threads').isMainThread) {{
             let __wbg_reinit_scheduled = false;
             "
             .into(),
+            &[],
         );
     }
 
@@ -4181,9 +4393,12 @@ if (require('worker_threads').isMainThread) {{
         let view = self.memview_table("getFromExternrefTable", table);
         assert!(self.config.externref);
         let table = self.export_name_of(table);
-        self.intrinsic(view.to_string().into(), None, {
-            format!("\nfunction {view}(idx) {{ return wasm.{table}.get(idx); }}\n").into()
-        });
+        self.intrinsic(
+            view.to_string().into(),
+            None,
+            format!("\nfunction {view}(idx) {{ return wasm.{table}.get(idx); }}\n").into(),
+            &[],
+        );
         view
     }
 
@@ -4192,18 +4407,23 @@ if (require('worker_threads').isMainThread) {{
         assert!(self.config.externref);
         let drop = self.export_name_of(drop);
         let table = self.export_name_of(table);
-        self.intrinsic(view.to_string().into(), None, {
-            format!(
-                "
+        self.intrinsic(
+            view.to_string().into(),
+            None,
+            {
+                format!(
+                    "
                 function {view}(idx) {{
                     const value = wasm.{table}.get(idx);
                     wasm.{drop}(idx);
                     return value;
                 }}
             ",
-            )
-            .into()
-        });
+                )
+                .into()
+            },
+            &[],
+        );
 
         view
     }
@@ -4214,18 +4434,23 @@ if (require('worker_threads').isMainThread) {{
         let alloc = self.export_name_of(alloc);
         let table = self.export_name_of(table);
 
-        self.intrinsic(view.to_string().into(), None, {
-            format!(
-                "
+        self.intrinsic(
+            view.to_string().into(),
+            None,
+            {
+                format!(
+                    "
                 function {view}(obj) {{
                     const idx = wasm.{alloc}();
                     wasm.{table}.set(idx, obj);
                     return idx;
                 }}
                 ",
-            )
-            .into()
-        });
+                )
+                .into()
+            },
+            &[],
+        );
         view
     }
 
@@ -4605,7 +4830,13 @@ addToLibrary({
         instrs: &[InstructionData],
         kind: ContextAdapterKind,
     ) -> Result<(), Error> {
-        self.adapter_deps.clear();
+        // For emscripten output we keep `adapter_deps` as a cumulative
+        // union — every insert is permanent — and snapshot it here so we can
+        // compute the per-adapter delta after generation. The cumulative set
+        // is later read directly for `$initBindgen__deps`. Non-emscripten
+        // modes don't read `adapter_deps`, so the snapshot is just no-op work
+        // (a clone of an empty set).
+        let adapter_deps_before = self.adapter_deps.clone();
         let catch = self.aux.imports_with_catch.contains(&id);
         if let ContextAdapterKind::Import(core) = kind {
             if !catch && self.attempt_direct_import(core, instrs)? {
@@ -4855,11 +5086,15 @@ addToLibrary({
                     code
                 };
 
-                if matches!(self.config.mode, OutputMode::Emscripten)
-                    && !self.adapter_deps.is_empty()
-                {
-                    self.emscripten_import_deps
-                        .insert(core, self.adapter_deps.clone());
+                if matches!(self.config.mode, OutputMode::Emscripten) {
+                    let new_deps: BTreeSet<String> = self
+                        .adapter_deps
+                        .difference(&adapter_deps_before)
+                        .cloned()
+                        .collect();
+                    if !new_deps.is_empty() {
+                        self.emscripten_import_deps.insert(core, new_deps);
+                    }
                 }
 
                 self.wasm_import_definitions
@@ -4870,8 +5105,15 @@ addToLibrary({
                 assert!(!log_error);
 
                 if matches!(self.config.mode, OutputMode::Emscripten) {
-                    let code = format!("function {}{code}", &self.export_adapter_name(id));
-                    self.export_to_emscripten(&self.export_adapter_name(id), &code);
+                    let name = self.export_adapter_name(id);
+                    let code = format!("function {name}{code}");
+                    let new_deps: Vec<String> = self
+                        .adapter_deps
+                        .difference(&adapter_deps_before)
+                        .cloned()
+                        .collect();
+                    let dep_refs: Vec<&str> = new_deps.iter().map(String::as_str).collect();
+                    self.export_to_emscripten(&name, &code, &dep_refs);
                 } else {
                     self.globals.push_str("function ");
                     self.globals.push_str(&self.export_adapter_name(id));
@@ -4880,6 +5122,7 @@ addToLibrary({
                 }
             }
         }
+
         Ok(())
     }
 
@@ -6076,8 +6319,11 @@ addToLibrary({
     }
 
     fn expose_debug_string(&mut self) {
-        self.intrinsic("debug_string".into(), "debugString".into(), {
-            "
+        self.intrinsic(
+            "debug_string".into(),
+            "debugString".into(),
+            {
+                "
             function debugString(val) {
                 // primitive types
                 const type = typeof val;
@@ -6143,8 +6389,10 @@ addToLibrary({
                 return className;
             }
             "
-            .into()
-        });
+                .into()
+            },
+            &[],
+        );
     }
 
     fn export_function_table(&mut self) -> Result<String, Error> {

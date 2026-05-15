@@ -466,7 +466,16 @@ impl Bindgen {
         // Generate Wasm catch wrappers for imports with #[wasm_bindgen(catch)].
         // This runs after externref processing so that we have access to the
         // externref table and allocation function.
-        generate_wasm_catch_wrappers(&mut module)?;
+        //
+        // Emscripten output may contain wasm exception-handling instructions
+        // from linked libc++ / embind that have no relation to wasm-bindgen's
+        // `#[wasm_bindgen(catch)]` machinery, and the wasm-bindgen runtime
+        // intrinsics (`__externref_table`, `__externref_table_alloc`,
+        // `__wbindgen_exn_store`) may be absent. Skip the transform until
+        // proper emscripten-mode catch support lands.
+        if !matches!(self.mode, OutputMode::Emscripten) {
+            generate_wasm_catch_wrappers(&mut module)?;
+        }
 
         // We've done a whole bunch of transformations to the Wasm module, many
         // of which leave "garbage" lying around, so let's prune out all our
