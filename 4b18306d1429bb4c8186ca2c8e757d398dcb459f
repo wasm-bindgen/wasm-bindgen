@@ -1,0 +1,25 @@
+CHANGELOG.md
+  72703bc0a310444a 82-84
+crates/cli-support/src/js/mod.rs
+  72703bc0a310444a 592-616
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "4b18306d1429bb4c8186ca2c8e757d398dcb459f",
+  "prompts": {
+    "72703bc0a310444a": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1d6d88039ffeBLbtvWMpNhC4Dn",
+        "model": "anthropic/claude-opus-4-7"
+      },
+      "human_author": "Guy Bedford",
+      "messages": [],
+      "total_additions": 28,
+      "total_deletions": 3,
+      "accepted_lines": 28,
+      "overriden_lines": 0
+    }
+  }
+}
