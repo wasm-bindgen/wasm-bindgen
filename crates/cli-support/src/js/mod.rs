@@ -587,41 +587,12 @@ impl<'a> Context<'a> {
                     if let Some(c) = comments {
                         self.globals.push_str(c);
                     }
+                    self.globals.push_str(decl);
 
-                    if decl.trim_start().starts_with("const") {
-                        // Namespaced export bundle: `const FOO = {};\n<lines that
-                        // reference FOO.bar.baz = ...>`. emcc's library evaluator
-                        // doesn't accept `export const` (it isn't ESM-shaped), and
-                        // the root needs to land on `Module` so consumers can
-                        // reach the namespace via `m.foo.bar`. Use `||=` so
-                        // multiple top-level exports under the same root segment
-                        // (e.g. `app.x` and `app.y`) share one object, and bind
-                        // a local `const` to the same object so the subsequent
-                        // `app.bar.baz = ...` lines emitted alongside still work.
-                        let trimmed = decl.trim_start();
-                        if let Some(rest) = trimmed.strip_prefix("const ") {
-                            // Expect `const IDENT = {};\n<rest>`. Extract the IDENT.
-                            if let Some((ident, after_eq)) = rest.split_once(" = ") {
-                                let ident = ident.trim();
-                                self.globals.push_str(&format!(
-                                    "Module.{ident} = Module.{ident} || {{}};\nconst {ident} = Module.{ident};\n"
-                                ));
-                                self.globals.push_str(after_eq);
-                            } else {
-                                // Fallback: emit unchanged.
-                                self.globals.push_str(decl);
-                            }
-                        } else {
-                            self.globals.push_str(decl);
-                        }
+                    if export_name == id {
+                        self.global(&format!("Module.{export_name} = {id};\n"));
                     } else {
-                        self.globals.push_str(decl);
-
-                        if export_name == id {
-                            self.global(&format!("Module.{export_name} = {id};\n"));
-                        } else {
-                            self.global(&format!("export {{ {id} as {export_name} }};\n"));
-                        }
+                        self.global(&format!("export {{ {id} as {export_name} }};\n"));
                     }
                 }
             }
@@ -863,6 +834,16 @@ impl<'a> Context<'a> {
                 ts.push('\n');
             }
             ts.push_str("}\n\n");
+            // Make the file an ES module so the preceding `declare class
+            // <mangled>` / `declare enum <mangled>` / `declare function
+            // <mangled>` declarations are module-scoped, not global. In a
+            // script-context .d.ts these would otherwise leak into the
+            // global type namespace, allowing consumers to write
+            // `const x: app__math__Calc = ...` and depend on the mangled
+            // identifier — which is exactly what Bug 1 is about. The
+            // `BindgenModule` interface is exported so the factory's
+            // return type stays nameable from consumer code.
+            ts.push_str("export { BindgenModule };\n");
         } else {
             ts.push_str(&self.typescript);
         }
@@ -2371,12 +2352,25 @@ if (require('worker_threads').isMainThread) {{
         let ts_definition = if class.generate_typescript {
             if matches!(self.config.mode, OutputMode::Emscripten) {
                 self.typescript_emscripten_classes.push_str(&class.comments);
-                self.typescript_emscripten_classes.push_str("export ");
+                // `declare` keeps the mangled identifier module-internal: it
+                // remains reachable for `typeof <mangled>` references inside
+                // the same .d.ts (used by the BindgenModule shape) but isn't
+                // re-exported to consumers, who would otherwise see e.g.
+                // `app__math__Calc` as a public type and depend on an
+                // implementation detail.
+                self.typescript_emscripten_classes.push_str("declare ");
                 self.typescript_emscripten_classes.push_str(&ts_dst);
                 self.typescript_emscripten_classes.push('\n');
 
-                self.typescript
-                    .push_str(&format!("{js_name}: typeof {identifier};\n"));
+                // A namespaced class is reachable only via the namespace
+                // (e.g. `m.app.math.Calc`), so its js_name does NOT belong
+                // as a direct BindgenModule property — that property lies
+                // about the runtime shape (`m.Calc` is undefined) and
+                // duplicates the namespace entry.
+                if class.js_namespace.is_none() {
+                    self.typescript
+                        .push_str(&format!("{js_name}: typeof {identifier};\n"));
+                }
 
                 String::new()
             } else {
@@ -2557,19 +2551,50 @@ if (require('worker_threads').isMainThread) {{
                         Some(id) => (id, true),
                         None => (self.generate_identifier(export_name), false),
                     };
-                    let ns_dst = self.write_namespace(&identifier, &ns.ns, existing)?;
+                    // For emscripten output, the root namespace target is the
+                    // module-wide `Module` object. We always treat it as
+                    // existing so `write_namespace` emits `||=` for every
+                    // nested segment — that way multiple top-level exports
+                    // sharing the same root segment (e.g. `app.x` and `app.y`)
+                    // don't clobber each other.
+                    let emit_existing =
+                        existing || matches!(self.config.mode, OutputMode::Emscripten);
+                    let ns_dst = self.write_namespace(&identifier, &ns.ns, emit_existing)?;
                     let ts_dst = if self.config.typescript {
                         Self::write_namespace_ts(&ns.ns, "")?
                     } else {
                         String::new()
                     };
-                    let definition = if !existing {
+                    let definition = if matches!(self.config.mode, OutputMode::Emscripten) {
+                        // Attach to `Module.<identifier>` and bind a local
+                        // `const` in one expression so the `ns_dst` lines
+                        // below can write unqualified `identifier.foo.bar`.
+                        format!(
+                            "const {identifier} = Module.{identifier} = Module.{identifier} || {{}};\n{ns_dst}"
+                        )
+                    } else if !existing {
                         format!("const {identifier} = {{}};\n{ns_dst}")
                     } else {
                         self.global(&ns_dst);
                         "".to_string()
                     };
-                    let ts_definition = format!("let {identifier}: {ts_dst};\n");
+                    // Emscripten splices `self.typescript` line-by-line into
+                    // `interface BindgenModule { ... }`. The module-scope
+                    // `export let foo: { ... };` form `export_def` would
+                    // produce is invalid inside an interface body (TS1131),
+                    // so push the namespace shape as a plain interface
+                    // member (`foo: { ... };`) directly and hand
+                    // `export_def` an empty `ts_definition` to skip its TS
+                    // emission path.
+                    let ts_definition = if matches!(self.config.mode, OutputMode::Emscripten) {
+                        if self.config.typescript {
+                            self.typescript
+                                .push_str(&format!("{identifier}: {ts_dst};\n"));
+                        }
+                        String::new()
+                    } else {
+                        format!("let {identifier}: {ts_dst};\n")
+                    };
                     self.export_def(
                         Some(export_name),
                         &ExportDefinition {
@@ -5007,13 +5032,34 @@ addToLibrary({
                             name,
                         );
                         let identifier = self.get_or_create_identifier(&qualified_name);
+                        let is_namespaced = export.js_namespace.is_some();
                         let (ts_definition, ts_comments) = if let Some(ts_sig) = ts_sig {
                             if matches!(self.config.mode, OutputMode::Emscripten) {
-                                // Emscripten: Write "name(args): ret;" directly to buffer
-                                self.typescript.push_str(&ts_docs);
-                                self.typescript.push_str(&identifier); // No "function" prefix
-                                self.typescript.push_str(ts_sig);
-                                self.typescript.push_str(";\n");
+                                if is_namespaced {
+                                    // Namespaced function: reachable only via
+                                    // the namespace shape (e.g. `m.app.math.pi`).
+                                    // Emit a module-internal `declare function
+                                    // <mangled>(...): ...;` before BindgenModule
+                                    // so the namespace shape's `typeof <mangled>`
+                                    // reference resolves, and skip the
+                                    // top-level interface-member emission
+                                    // (`<mangled>(...): ...;`) that would
+                                    // duplicate the namespace entry under the
+                                    // mangled name.
+                                    self.typescript_emscripten_classes
+                                        .push_str(&ts_docs);
+                                    self.typescript_emscripten_classes
+                                        .push_str(&format!(
+                                            "declare function {identifier}{ts_sig};\n\n"
+                                        ));
+                                } else {
+                                    // Non-namespaced: write "name(args): ret;"
+                                    // directly to the BindgenModule body.
+                                    self.typescript.push_str(&ts_docs);
+                                    self.typescript.push_str(&identifier); // No "function" prefix
+                                    self.typescript.push_str(ts_sig);
+                                    self.typescript.push_str(";\n");
+                                }
 
                                 (String::new(), None)
                             } else {
@@ -6148,6 +6194,26 @@ addToLibrary({
 
         let definition = format!("const {identifier} = Object.freeze({{\n{variants}}});\n");
 
+        // Emscripten lifts namespaced enums into the pre-BindgenModule
+        // region as `declare enum <mangled>` (module-internal), the same
+        // pattern used for namespaced classes. Without lifting, the enum
+        // declaration body ends up textually spliced into the interface
+        // body — `enum X { ... }` inside an `interface` block is invalid
+        // TS. The namespace shape (`Op: typeof <mangled>`) keeps the
+        // typed access path working.
+        let ts_definition = if matches!(self.config.mode, OutputMode::Emscripten)
+            && enum_.js_namespace.is_some()
+            && enum_.generate_typescript
+        {
+            self.typescript_emscripten_classes.push_str(&ts_comments);
+            self.typescript_emscripten_classes.push_str("declare ");
+            self.typescript_emscripten_classes.push_str(&typescript);
+            self.typescript_emscripten_classes.push('\n');
+            String::new()
+        } else {
+            typescript
+        };
+
         define_export(
             &mut self.exports,
             &enum_.name,
@@ -6156,7 +6222,7 @@ addToLibrary({
                 identifier: identifier.clone(),
                 comments: Some(docs),
                 definition,
-                ts_definition: typescript,
+                ts_definition,
                 ts_comments: Some(ts_comments),
                 private: enum_.private,
                 parent_identifier: None,
