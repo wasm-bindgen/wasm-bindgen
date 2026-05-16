@@ -1,0 +1,25 @@
+crates/cli/tests/wasm-bindgen/main.rs
+  af06803d23831758 1872-1886,1892-1909,1919-1930,1955-2020,2022-2051,2053-2062,2064-2065,2069-2128
+crates/cli-support/src/js/mod.rs
+  af06803d23831758 590,592-593,595,837-846,2355-2361,2365-2373,2554-2562,2568-2575,2581-2596,5035,5038-5062,6197-6216,6225
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "a23beb5b2e028435ad8a61118f47b6cf25a04fb1",
+  "prompts": {
+    "af06803d23831758": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1d180e705ffexoCGc50hivlgCj",
+        "model": "anthropic/claude-opus-4-7"
+      },
+      "human_author": "Guy Bedford",
+      "messages": [],
+      "total_additions": 327,
+      "total_deletions": 48,
+      "accepted_lines": 327,
+      "overriden_lines": 0
+    }
+  }
+}
