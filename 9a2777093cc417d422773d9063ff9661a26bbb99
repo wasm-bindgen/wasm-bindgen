@@ -1,0 +1,23 @@
+crates/cli-support/src/js/mod.rs
+  72703bc0a310444a 647
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "9a2777093cc417d422773d9063ff9661a26bbb99",
+  "prompts": {
+    "72703bc0a310444a": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1d6d88039ffeBLbtvWMpNhC4Dn",
+        "model": "anthropic/claude-opus-4-7"
+      },
+      "human_author": "Guy Bedford",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 4,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    }
+  }
+}
