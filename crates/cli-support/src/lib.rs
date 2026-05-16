@@ -59,6 +59,10 @@ struct Generated {
     local_modules: HashMap<String, String>,
     npm_dependencies: HashMap<String, (PathBuf, String)>,
     typescript: bool,
+    /// For `OutputMode::Emscripten` only: the contents of a sidecar file
+    /// emcc loads via `--extern-pre-js`, containing ESM `import` statements
+    /// that must live at module top-level. Empty for other modes.
+    emscripten_extern_pre_js: String,
 }
 
 #[derive(Clone)]
@@ -495,7 +499,12 @@ impl Bindgen {
             .unwrap();
         let mut cx = js::Context::new(&mut module, self, &adapters, &aux)?;
         cx.generate()?;
-        let (js, ts, start) = cx.finalize(stem)?;
+        let js::FinalizedOutput {
+            js,
+            ts,
+            start,
+            emscripten_extern_pre_js,
+        } = cx.finalize(stem)?;
         let generated = Generated {
             snippets: aux.snippets.clone(),
             local_modules: aux.local_modules.clone(),
@@ -505,6 +514,7 @@ impl Bindgen {
             js,
             ts,
             start,
+            emscripten_extern_pre_js,
         };
 
         Ok(Output {
@@ -778,6 +788,22 @@ impl Output {
         if matches!(self.generated.mode, OutputMode::Emscripten) {
             let emscripten_js_path = out_dir.join("library_bindgen.js");
             write(&emscripten_js_path, reset_indentation(&gen.js))?;
+            // When the user crate imports from an ESM module
+            // (`#[wasm_bindgen(module = "...")]`), we emit those imports to a
+            // sidecar `library_bindgen.extern-pre.js`. Consumers pass it to
+            // emcc with `--extern-pre-js`, which prepends it before emcc's
+            // modularize wrapper — ESM imports can only legally live there.
+            // Skip writing when empty so consumers don't accidentally pick
+            // up a stale file from a previous build.
+            let extern_pre_js_path = out_dir.join("library_bindgen.extern-pre.js");
+            if gen.emscripten_extern_pre_js.is_empty() {
+                let _ = fs::remove_file(&extern_pre_js_path);
+            } else {
+                write(
+                    &extern_pre_js_path,
+                    reset_indentation(&gen.emscripten_extern_pre_js),
+                )?;
+            }
         } else {
             write(&js_path, reset_indentation(&gen.js))?;
         }

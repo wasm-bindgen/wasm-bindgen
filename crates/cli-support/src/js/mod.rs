@@ -71,6 +71,16 @@ impl ImportDefinition {
     }
 }
 
+/// Files produced by `Context::finalize`.
+pub struct FinalizedOutput {
+    pub js: String,
+    pub ts: String,
+    pub start: Option<String>,
+    /// Content to write alongside the main JS as a sidecar that emcc loads
+    /// with `--extern-pre-js`. Empty for non-emscripten output modes.
+    pub emscripten_extern_pre_js: String,
+}
+
 pub struct Context<'a> {
     globals: String,
     /// ES module `import` statements collected during codegen, emitted at the
@@ -79,6 +89,13 @@ pub struct Context<'a> {
     es_module_imports: String,
     intrinsics: Option<BTreeMap<Cow<'static, str>, Cow<'static, str>>>,
     emscripten_library: String,
+    /// ESM `import { ... } from "..."` statements collected for the
+    /// emscripten output mode. Written to a sidecar `library_bindgen.extern-pre.js`
+    /// that emcc loads via `--extern-pre-js` so the imports land at module
+    /// top-level (where ESM imports are legal) instead of inside emcc's
+    /// modularize wrapper. The library functions inlined by `--js-library`
+    /// reference these bindings via lexical closure.
+    emscripten_extern_pre_js: String,
     imports_post: String,
     export_name_list: Vec<String>,
     typescript: String,
@@ -342,6 +359,7 @@ impl<'a> Context<'a> {
             qualified_to_rust_name: Default::default(),
             qualified_to_identifier: Default::default(),
             emscripten_library: String::new(),
+            emscripten_extern_pre_js: String::new(),
             adapter_deps: Default::default(),
             emscripten_global_deps: Default::default(),
             emscripten_import_deps: Default::default(),
@@ -606,7 +624,7 @@ impl<'a> Context<'a> {
     pub fn finalize(
         &mut self,
         module_name: &str,
-    ) -> Result<(String, String, Option<String>), Error> {
+    ) -> Result<FinalizedOutput, Error> {
         // Finalize all bindings for JS classes. This is where we'll generate JS
         // glue for all classes as well as finish up a few final imports like
         // `__wrap` and such.
@@ -850,7 +868,12 @@ impl<'a> Context<'a> {
             ts.push_str(&node_atomics_ts);
         }
 
-        Ok((self.globals.to_owned(), ts, start))
+        Ok(FinalizedOutput {
+            js: self.globals.to_owned(),
+            ts,
+            start,
+            emscripten_extern_pre_js: std::mem::take(&mut self.emscripten_extern_pre_js),
+        })
     }
 
     fn generate_esm_cjs_imports(&mut self, module_name: &str, has_memory: bool) -> String {
@@ -1081,8 +1104,16 @@ impl<'a> Context<'a> {
             }
 
             OutputMode::Emscripten => {
+                // ESM `import` statements must be at module top-level — they
+                // can't live inside emcc's modularize wrapper (which is where
+                // `library_bindgen.js` content gets inlined). Collect them in
+                // a separate buffer that we write to `library_bindgen.extern-pre.js`;
+                // emcc's `--extern-pre-js` prepends that verbatim before the
+                // wrapper. The library functions inside the wrapper close over
+                // these top-level bindings lexically, so `__wbg_foo` can call
+                // an imported `bar()` directly.
                 for (module, items) in crate::sorted_iter(&self.js_imports) {
-                    write_es_import(&mut self.globals, module, items);
+                    write_es_import(&mut self.emscripten_extern_pre_js, module, items);
                 }
             }
 
