@@ -79,7 +79,9 @@
   global handling have all been corrected; ESM imports
   (`#[wasm_bindgen(module = "...")]` and snippets) are emitted to a
   sidecar `library_bindgen.extern-pre.js` consumers pass to emcc via
-  `--extern-pre-js`.
+  `--extern-pre-js`; namespaced exports (`js_namespace = [...]` on a
+  struct/impl) now attach to `Module.<segments>` instead of emitting
+  top-level `export const` (which emcc's library evaluator rejects).
   [#5156](https://github.com/wasm-bindgen/wasm-bindgen/pull/5156)
 
 --------------------------------------------------------------------------------

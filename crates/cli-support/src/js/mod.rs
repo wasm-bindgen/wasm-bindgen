@@ -589,8 +589,31 @@ impl<'a> Context<'a> {
                     }
 
                     if decl.trim_start().starts_with("const") {
-                        self.globals.push_str("export ");
-                        self.globals.push_str(decl);
+                        // Namespaced export bundle: `const FOO = {};\n<lines that
+                        // reference FOO.bar.baz = ...>`. emcc's library evaluator
+                        // doesn't accept `export const` (it isn't ESM-shaped), and
+                        // the root needs to land on `Module` so consumers can
+                        // reach the namespace via `m.foo.bar`. Use `||=` so
+                        // multiple top-level exports under the same root segment
+                        // (e.g. `app.x` and `app.y`) share one object, and bind
+                        // a local `const` to the same object so the subsequent
+                        // `app.bar.baz = ...` lines emitted alongside still work.
+                        let trimmed = decl.trim_start();
+                        if let Some(rest) = trimmed.strip_prefix("const ") {
+                            // Expect `const IDENT = {};\n<rest>`. Extract the IDENT.
+                            if let Some((ident, after_eq)) = rest.split_once(" = ") {
+                                let ident = ident.trim();
+                                self.globals.push_str(&format!(
+                                    "Module.{ident} = Module.{ident} || {{}};\nconst {ident} = Module.{ident};\n"
+                                ));
+                                self.globals.push_str(after_eq);
+                            } else {
+                                // Fallback: emit unchanged.
+                                self.globals.push_str(decl);
+                            }
+                        } else {
+                            self.globals.push_str(decl);
+                        }
                     } else {
                         self.globals.push_str(decl);
 
