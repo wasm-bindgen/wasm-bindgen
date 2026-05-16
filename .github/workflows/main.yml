@@ -292,6 +292,10 @@ jobs:
     - uses: actions/setup-node@v6
       with:
         node-version: '24.15'
+    # `cargo test -p wasm-bindgen-cli` includes the emscripten namespaced
+    # .d.ts validity test, which type-checks the generated .d.ts with
+    # `tsc --noEmit --strict`. Install tsc globally so it's on PATH.
+    - run: npm i -g typescript
     - run: cargo test
     - run: cargo test -p wasm-bindgen-cli-support
     - run: cargo test -p wasm-bindgen-cli

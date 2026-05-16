@@ -2069,39 +2069,21 @@ fn emscripten_namespaced_exports_valid_ts() {
 
     // --- End-to-end TS validity: parse the .d.ts with `tsc --noEmit
     // --strict`. Substring assertions can't catch every shape of
-    // TS-invalid emission; this is the canonical check. Prefer a `tsc`
-    // already on PATH; otherwise fall back to `npx --yes -p typescript
-    // tsc` so CI installs (or `npx`-fetches) it on demand. Skip only
-    // when neither is available (e.g. air-gapped local runs without
-    // node). ---
-    let tsc_args = [
-        "--noEmit",
-        "--strict",
-        "--skipLibCheck",
-        "--lib",
-        "esnext,dom",
-    ];
-    let tsc_status = if let Some(tsc) = which("tsc") {
-        Some(
-            std::process::Command::new(tsc)
-                .args(tsc_args)
-                .arg(&d_ts_path)
-                .status()
-                .expect("failed to invoke tsc"),
-        )
-    } else if let Some(npx) = which("npx") {
-        Some(
-            std::process::Command::new(npx)
-                .args(["--yes", "-p", "typescript", "tsc"])
-                .args(tsc_args)
-                .arg(&d_ts_path)
-                .status()
-                .expect("failed to invoke `npx tsc`"),
-        )
-    } else {
-        None
-    };
-    if let Some(status) = tsc_status {
+    // TS-invalid emission; this is the canonical check. CI installs
+    // `typescript` globally before `cargo test` runs; locally the test
+    // skips gracefully when tsc isn't on PATH. ---
+    if let Some(tsc) = which("tsc") {
+        let status = std::process::Command::new(tsc)
+            .args([
+                "--noEmit",
+                "--strict",
+                "--skipLibCheck",
+                "--lib",
+                "esnext,dom",
+            ])
+            .arg(&d_ts_path)
+            .status()
+            .expect("failed to invoke tsc");
         assert!(
             status.success(),
             "`tsc --noEmit --strict` rejected the generated .d.ts at {}",
@@ -2109,7 +2091,7 @@ fn emscripten_namespaced_exports_valid_ts() {
         );
     } else {
         eprintln!(
-            "skipping tsc validation of {} (no tsc / npx on PATH)",
+            "skipping tsc validation of {} (tsc not on PATH)",
             d_ts_path.display()
         );
     }

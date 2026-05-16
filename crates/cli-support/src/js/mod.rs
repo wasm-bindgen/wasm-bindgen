@@ -5046,12 +5046,10 @@ addToLibrary({
                                     // (`<mangled>(...): ...;`) that would
                                     // duplicate the namespace entry under the
                                     // mangled name.
-                                    self.typescript_emscripten_classes
-                                        .push_str(&ts_docs);
-                                    self.typescript_emscripten_classes
-                                        .push_str(&format!(
-                                            "declare function {identifier}{ts_sig};\n\n"
-                                        ));
+                                    self.typescript_emscripten_classes.push_str(&ts_docs);
+                                    self.typescript_emscripten_classes.push_str(&format!(
+                                        "declare function {identifier}{ts_sig};\n\n"
+                                    ));
                                 } else {
                                     // Non-namespaced: write "name(args): ret;"
                                     // directly to the BindgenModule body.
