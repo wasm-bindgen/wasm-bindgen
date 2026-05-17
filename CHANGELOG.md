@@ -44,6 +44,13 @@
   ```
   [#5154](https://github.com/wasm-bindgen/wasm-bindgen/pull/5154)
 
+### Fixed
+
+* Fixed the descriptor interpreter panicking on `Br` and `BrIf`
+  instructions emitted by recent nightly compilers when building with
+  `panic=unwind`.
+  [#5158](https://github.com/wasm-bindgen/wasm-bindgen/pull/5158)
+
 ### Changed
 
 * When an exported struct uses `js_namespace`, the corresponding value
