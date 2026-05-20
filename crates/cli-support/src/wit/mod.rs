@@ -631,11 +631,11 @@ impl<'a> Context<'a> {
             Some(class) => {
                 // Carry the namespaced `qualified_name` form (`ns__Foo`) as
                 // the class identity downstream so it matches the key the
-                // struct registered under in `qualified_to_rust_name`. With
-                // just the bare `class` string, an impl whose struct lives
-                // in a `js_namespace` would not resolve back to its
-                // registered `exported_classes` entry and the constructor
-                // + methods would land on a fresh empty entry instead.
+                // struct registered under in `exported_classes`. With just
+                // the bare `class` string, an impl whose struct lives in a
+                // `js_namespace` would not resolve back to its registered
+                // `exported_classes` entry and the constructor + methods
+                // would land on a fresh empty entry instead.
                 let class =
                     wasm_bindgen_shared::qualified_name(export.js_namespace.as_deref(), class);
                 match export.method_kind {

@@ -149,9 +149,6 @@ pub struct Context<'a> {
     /// `__wbg_reset_state` function.
     generate_reinit: bool,
 
-    /// Mapping from qualified name (used in WasmDescribe) to rust_name (used as exported_classes key).
-    pub(crate) qualified_to_rust_name: HashMap<String, String>,
-
     /// Mapping from qualified name (used in WasmDescribe) to the unique declaration identifier.
     pub(crate) qualified_to_identifier: HashMap<String, String>,
     /// Tracks dependencies (Emscripten imports) for the current adapter being generated.
@@ -323,7 +320,6 @@ impl<'a> Context<'a> {
             memories: Default::default(),
             table_indices: Default::default(),
             stack_pointer_shim_injected: false,
-            qualified_to_rust_name: Default::default(),
             qualified_to_identifier: Default::default(),
             emscripten_library: String::new(),
             adapter_deps: Default::default(),
@@ -1645,16 +1641,12 @@ if (require('worker_threads').isMainThread) {{
         }
     }
 
-    /// Resolve a class name to the key used in `exported_classes`.
-    /// The name could be a `rust_name` (direct key) or a `qualified_name`
-    /// (from WasmDescribe), which needs to be mapped to the `rust_name`.
+    /// Resolve a class name to the key used in `exported_classes`. Classes are
+    /// keyed by their qualified JS identity, which is exactly what callers
+    /// already hold (from WasmDescribe / `js_class`), so this is a direct
+    /// passthrough. Kept as a single named choke point in case key
+    /// normalization is needed again.
     pub(crate) fn resolve_class_name<'b>(&'b self, name: &'b str) -> &'b str {
-        if self.exported_classes.contains_key(name) {
-            return name;
-        }
-        if let Some(rust_name) = self.qualified_to_rust_name.get(name) {
-            return rust_name;
-        }
         name
     }
 
@@ -1753,11 +1745,9 @@ if (require('worker_threads').isMainThread) {{
     }
 
     fn require_class<'b>(&'b mut self, name: &str) -> &'b mut ExportedClass {
-        // `name` is the qualified JS identity (`<ns>__<js_name>`). Both
-        // the struct registration and impl-block exports key by
-        // qualified_name; the `qualified_to_rust_name` indirection that
-        // existed here was a workaround for the rust_name keying that is
-        // no longer in use.
+        // `name` is the qualified JS identity (`<ns>__<js_name>`). Both the
+        // struct registration and impl-block exports key `exported_classes`
+        // by qualified_name, so the name is used directly as the key.
         let key = name.to_string();
         if self
             .exported_classes
