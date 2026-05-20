@@ -210,10 +210,10 @@ impl AuxReceiverKind {
 
 #[derive(Debug)]
 pub struct AuxEnum {
-    /// The name of this enum
+    /// The JS name of this enum. The flat namespace-qualified form used
+    /// for wasm-symbol generation is computed on demand from
+    /// `(js_namespace, name)` via [`wasm_bindgen_shared::qualified_name`].
     pub name: String,
-    /// The namespace-qualified name (used for wasm symbol generation)
-    pub qualified_name: String,
     /// The copied Rust comments to forward to JS
     pub comments: String,
     /// A list of variants with their name, value and comments
@@ -282,18 +282,11 @@ pub enum AuxDynamicUnionVariant {
 
 #[derive(Debug)]
 pub struct AuxStruct {
-    /// The JS name of this struct (used for JS output)
+    /// The JS name of this struct (used for JS output).
+    /// The flat namespace-qualified form used for wasm-symbol generation
+    /// and as the `exported_classes` key is computed on demand from
+    /// `(js_namespace, name)` via [`wasm_bindgen_shared::qualified_name`].
     pub name: String,
-    /// The Rust name of this struct. Historical artefact: was previously
-    /// used as the primary `exported_classes` key; today the key is
-    /// `qualified_name` (JS identity), since two structs can share the
-    /// same Rust ident in different modules. Retained because it's the
-    /// natural display name in diagnostic messages and for backward
-    /// compatibility with any consumer that still reads it.
-    #[allow(dead_code)]
-    pub rust_name: String,
-    /// The namespace-qualified name (used for wasm symbol generation)
-    pub qualified_name: String,
     /// The copied Rust comments to forward to JS
     pub comments: String,
     /// Whether to generate helper methods for inspecting the class

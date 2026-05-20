@@ -238,8 +238,6 @@ struct ExportedClass {
     js_namespace: Option<Vec<String>>,
     /// The JS-facing name of this class (used for JS output)
     js_name: Option<String>,
-    /// The namespace-qualified name (used for wasm symbol references)
-    qualified_name: Option<String>,
     /// The JS name of the parent class this class extends, if any.
     /// Sourced from `AuxStruct.extends` via the `#[wasm_bindgen(extends)]`
     /// attribute on an exported Rust struct. The parent class is expected
@@ -250,10 +248,11 @@ struct ExportedClass {
     /// `populate_inheritance_chains` before any JS emission so that
     /// constructor, `__wrap`, `free`, and method-body emitters all see a
     /// consistent per-class view of the chain. Each entry is
-    /// `(js_name, qualified_name)` — js_name is used for the JS instance
-    /// field (`this.__wbg_ptr_<JsName>`), qualified_name keys the wasm
-    /// symbol names for `upcast_function` / `free_function`.
-    ancestors: Vec<(String, String, String)>,
+    /// `(identifier, qualified_name)` — `identifier` is the class's
+    /// auto-sanitized JS ident (used as the `__wbg_ptr_<Ident>` field
+    /// suffix), `qualified_name` is the `exported_classes` key (used for
+    /// `upcast_function` / `free_function` symbol names).
+    ancestors: Vec<(String, String)>,
     /// True if this class either declares `extends` or is extended by some
     /// other class. Non-participating classes keep the single-pointer
     /// `this.__wbg_ptr` representation for backward compatibility.
@@ -1656,8 +1655,9 @@ if (require('worker_threads').isMainThread) {{
     /// chain is truncated there (the missing-parent error is reported later
     /// during `write_class` with better span info).
     fn populate_inheritance_chains(&mut self) {
-        // Resolve a chain of rust_name keys first (so cycle detection works),
-        // then translate to (js_name, qualified_name) pairs for emission.
+        // Resolve a chain of `exported_classes` keys first (so cycle
+        // detection works), then translate to `(identifier, qualified_name)`
+        // pairs for emission in `resolved_chain` below.
         let mut updates: Vec<(String, Vec<String>)> = Vec::new();
         let keys: Vec<String> = self.exported_classes.keys().cloned().collect();
         for key in &keys {
@@ -1671,9 +1671,11 @@ if (require('worker_threads').isMainThread) {{
                 None => continue,
             };
             loop {
-                // Resolve via the same rules `write_class` uses: key may be
-                // either the parent's rust_name or its js_name. Fall back to
-                // scanning by js_name if the direct key lookup fails.
+                // `extends` is stored as the parent's qualified JS identity
+                // (the `exported_classes` key). Direct lookup hits the
+                // parent's entry. The `js_name` fallback covers the edge
+                // case where a parent was registered under a key that
+                // differs from its current `js_name` (rare, defensive).
                 let resolved_key = if self.exported_classes.contains_key(&cursor) {
                     cursor.clone()
                 } else {
@@ -1708,28 +1710,20 @@ if (require('worker_threads').isMainThread) {{
         // Mark every subclass with its chain and flag participation on both
         // sides of every edge.
         for (child, chain) in &updates {
-            // For each ancestor we keep three names:
+            // For each ancestor we keep two names:
             //   0. `identifier`: the class's auto-sanitized JS identifier,
             //      used as a `__wbg_ptr_<Ident>` property suffix and as a
             //      JS-side reference (always a valid JS ident).
-            //   1. `rust_name`: the parent's Rust struct identifier (== the
-            //      key in `exported_classes`). Used to derive the upcast
-            //      wasm symbol so the name matches what the macro emits —
-            //      the macro derives the parent half of `upcast_function`
-            //      from `parent_path.segments.last().ident`, which is the
-            //      Rust identifier, NOT the (potentially renamed/namespaced)
-            //      qualified name.
-            //   2. `qualified_name`: used for `__wbg_<...>_free` etc., where
-            //      the macro itself emits the symbol from qualified_name.
-            let resolved_chain: Vec<(String, String, String)> = chain
+            //   1. `qualified_name`: the `exported_classes` key, used for
+            //      `__wbg_<...>_free` and `upcast_function` symbol names.
+            //      Post-keying refactor (#5154) the map key *is* the
+            //      qualified name, so `k` is used directly.
+            let resolved_chain: Vec<(String, String)> = chain
                 .iter()
                 .map(|k| {
                     let c = self.exported_classes.get(k);
                     let id = c.map(|c| c.identifier.clone()).unwrap_or_else(|| k.clone());
-                    let q = c
-                        .and_then(|c| c.qualified_name.clone())
-                        .unwrap_or_else(|| id.clone());
-                    (id, k.clone(), q)
+                    (id, k.clone())
                 })
                 .collect();
             if let Some(c) = self.exported_classes.get_mut(child) {
@@ -1754,14 +1748,11 @@ if (require('worker_threads').isMainThread) {{
             .get(&key)
             .is_none_or(|cls| cls.identifier.is_empty())
         {
-            let identifier_name = self
-                .exported_classes
-                .get(&key)
-                .and_then(|cls| cls.qualified_name.clone().or_else(|| cls.js_name.clone()))
-                .unwrap_or_else(|| key.clone());
-            let identifier = self.generate_identifier(&identifier_name);
+            // The key is the qualified JS identity; use it directly to
+            // seed the class's JS-side identifier.
+            let identifier = self.generate_identifier(&key);
             let class = self.exported_classes.entry(key.clone()).or_default();
-            class.identifier = identifier.clone();
+            class.identifier = identifier;
         }
         self.exported_classes.get_mut(&key).unwrap()
     }
@@ -1803,21 +1794,26 @@ if (require('worker_threads').isMainThread) {{
             // claimed `class` string before comparing against bare struct
             // `js_name`s.
             let bare = class.rsplit_once("__").map(|(_, n)| n).unwrap_or(class);
-            let mismatched: Vec<&AuxStruct> = self
+            let mismatched: Vec<(&AuxStruct, String)> = self
                 .aux
                 .structs
                 .iter()
-                .filter(|s| s.name == bare && s.qualified_name != *class)
+                .filter_map(|s| {
+                    if s.name != bare {
+                        return None;
+                    }
+                    let q = wasm_bindgen_shared::qualified_name(s.js_namespace.as_deref(), &s.name);
+                    (q != *class).then_some((s, q))
+                })
                 .collect();
             if !mismatched.is_empty() {
                 let hints = mismatched
                     .iter()
-                    .map(|s| match &s.js_namespace {
-                        Some(ns) => format!(
-                            "  - `js_namespace = {}` (matches struct `{}`)",
-                            ns.join(", "),
-                            s.qualified_name
-                        ),
+                    .map(|(s, q)| match &s.js_namespace {
+                        Some(ns) => {
+                            let ns = ns.join(", ");
+                            format!("  - `js_namespace = {ns}` (matches struct `{q}`)")
+                        }
                         None => format!("  - no `js_namespace` (matches struct `{}`)", s.name),
                     })
                     .collect::<Vec<_>>()
@@ -1850,9 +1846,10 @@ if (require('worker_threads').isMainThread) {{
         // also tell whether the parent's `.d.ts` declaration was suppressed
         // via `skip_typescript` (in which case the child's `.d.ts` must NOT
         // emit `extends Parent` — that would dangle on an undeclared base).
-        // Both the map key (rust_name) and the js_name are indexed, since
-        // `#[wasm_bindgen(extends = Path)]` stores the last segment of the
-        // Rust path, which matches the js_name when no rename is in play.
+        // Both the map key (qualified name) and the js_name are indexed,
+        // since `#[wasm_bindgen(extends = Path)]` stores the last segment
+        // of the Rust path, which matches the js_name when no rename is
+        // in play.
         let class_identifiers: HashMap<String, (String, bool)> = exported_classes
             .iter()
             .flat_map(|(key, cls)| {
@@ -1879,17 +1876,19 @@ if (require('worker_threads').isMainThread) {{
         class_identifiers: &HashMap<String, (String, bool)>,
     ) -> Result<(), Error> {
         let identifier = &class.identifier;
-        // Use js_name for JS output, falling back to the key name
+        // Use js_name for JS output, falling back to the key name.
         let js_name = class.js_name.as_deref().unwrap_or(name);
-        // Use qualified_name for wasm symbol references, falling back to js_name
-        let qualified = class.qualified_name.as_deref().unwrap_or(js_name);
+        // `exported_classes` is keyed by the qualified JS identity, so the
+        // map key (`name`) is the qualified name used for wasm symbol
+        // references.
+        let qualified = name;
         // For every class in an `extends` chain we emit per-class
         // `__wbg_ptr_<Class>` fields alongside the unqualified `__wbg_ptr`
         // alias, so parent-method prototype dispatch can route through
         // the correct ancestor pointer. Resolve the ancestors' js_names
         // (field name) and qualified_names (wasm symbol base) once here.
         let participates = class.participates_in_inheritance;
-        let ancestors: Vec<(String, String, String)> = class.ancestors.clone();
+        let ancestors: Vec<(String, String)> = class.ancestors.clone();
         // Resolve the parent class identifier for `extends`, if any. Also
         // capture whether the parent emits TypeScript: a parent with
         // `skip_typescript` has no `.d.ts` declaration, so the child's TS
@@ -1955,7 +1954,7 @@ if (require('worker_threads').isMainThread) {{
                 }
                 let mut prev_expr = String::from("ptr");
                 let mut from_qualified = qualified.to_string();
-                for (idx, (anc_id, _anc_rust, anc_qualified)) in ancestors.iter().enumerate() {
+                for (idx, (anc_id, anc_qualified)) in ancestors.iter().enumerate() {
                     // The macro emits the upcast symbol as
                     // `upcast_function(child_qualified_name, parent_qualified_name)`,
                     // matching the qualified_name keying of
@@ -1981,7 +1980,7 @@ if (require('worker_threads').isMainThread) {{
                 parts.push(format!(
                     "__wbg_ptr_{identifier}: obj.__wbg_ptr_{identifier}"
                 ));
-                for (anc_id, _, _) in ancestors.iter() {
+                for (anc_id, _) in ancestors.iter() {
                     parts.push(format!("__wbg_ptr_{anc_id}: obj.__wbg_ptr_{anc_id}"));
                 }
                 if self.generate_reinit {
@@ -2040,7 +2039,7 @@ if (require('worker_threads').isMainThread) {{
                 "wasm.{}(tok.__wbg_ptr_{identifier} >>> 0, 1);\n",
                 wasm_bindgen_shared::free_function(qualified)
             ));
-            for (anc_id, _, anc_q) in ancestors.iter() {
+            for (anc_id, anc_q) in ancestors.iter() {
                 body.push_str(&format!(
                     "wasm.{}(tok.__wbg_ptr_{anc_id} >>> 0, 1);\n",
                     wasm_bindgen_shared::free_function(anc_q)
@@ -2149,7 +2148,7 @@ if (require('worker_threads').isMainThread) {{
             // Release JS-held ancestor Rc clones (allow_delayed=1 — the
             // child's Rc<Parent> field may still be alive). Order doesn't
             // matter because refcounts commute.
-            for (anc_id, _, anc_q) in ancestors.iter() {
+            for (anc_id, anc_q) in ancestors.iter() {
                 let anc_free = wasm_bindgen_shared::free_function(anc_q);
                 body.push_str(&format!(
                     "const __anc_{anc_id} = this.__wbg_ptr_{anc_id};\n"
@@ -4226,36 +4225,32 @@ if (require('worker_threads').isMainThread) {{
         // WasmDescribe lookups can resolve to the right exported class and TS
         // declaration identifier.
         // `exported_classes` is keyed by `qualified_name` — the struct's
-        // JS-side identity (namespace-qualified `js_name`). Both the struct
-        // registration and impl-block exports must agree on this key.
-        // Defaulting `js_name` / `js_class` from the corresponding Rust
-        // ident keeps the no-rename case working uniformly: both sides
-        // produce the same string by independent local inference, no
-        // cross-invocation knowledge required.
-        // `exported_classes` is keyed by `qualified_name` (the struct's
-        // JS-side identity, namespace + name). This is the unique
-        // identifier of a class from the JS perspective and is what
-        // downstream lookups actually need. Keying by `rust_name` would
-        // cause two structs with the same Rust ident but distinct
-        // `js_name`s (a legitimate pattern across modules) to clobber
-        // each other in this map.
+        // JS-side identity (namespace-qualified `js_name`). Both struct
+        // registration and impl-block exports must agree on this key, and
+        // both derive it locally from `(js_namespace, js_name)` /
+        // `(js_namespace, js_class)`, defaulting to the Rust ident when
+        // unset so the no-rename case lines up without cross-invocation
+        // knowledge. Keying by `rust_name` would let two structs sharing
+        // a Rust ident in different modules (with distinct `js_name`s)
+        // clobber each other.
         let mut any_class_has_parent = false;
         for s in self.aux.structs.iter() {
+            let qualified_name =
+                wasm_bindgen_shared::qualified_name(s.js_namespace.as_deref(), &s.name);
             let needs_identifier = self
                 .exported_classes
-                .get(&s.qualified_name)
+                .get(&qualified_name)
                 .is_none_or(|class| class.identifier.is_empty());
             let identifier = if needs_identifier {
-                Some(self.generate_identifier(&s.qualified_name))
+                Some(self.generate_identifier(&qualified_name))
             } else {
                 None
             };
             let class = self
                 .exported_classes
-                .entry(s.qualified_name.clone())
+                .entry(qualified_name.clone())
                 .or_default();
             class.js_name = Some(s.name.clone());
-            class.qualified_name = Some(s.qualified_name.clone());
             // Pre-populate extends so the constructor binding (emitted while
             // processing adapters below) can tell whether a class is a
             // subclass and needs `super(__wbgSuperSkip)`. The same field is
@@ -4271,7 +4266,7 @@ if (require('worker_threads').isMainThread) {{
                 class.identifier = identifier;
             }
             self.qualified_to_identifier
-                .insert(s.qualified_name.clone(), class.identifier.clone());
+                .insert(qualified_name, class.identifier.clone());
         }
         // Validate that every impl-block export references a class that
         // was registered by a struct macro. The qualified form of `class`
@@ -4306,7 +4301,9 @@ if (require('worker_threads').isMainThread) {{
         // (direct parent at index 0).
         self.populate_inheritance_chains();
         for e in self.aux.enums.values() {
-            self.get_or_create_identifier(&e.qualified_name);
+            let qualified_name =
+                wasm_bindgen_shared::qualified_name(e.js_namespace.as_deref(), &e.name);
+            self.get_or_create_identifier(&qualified_name);
         }
 
         self.generate_jstag_import();
@@ -5798,7 +5795,9 @@ addToLibrary({
     }
 
     fn generate_enum(&mut self, enum_: &AuxEnum) -> Result<(), Error> {
-        let identifier = self.get_or_create_identifier(&enum_.qualified_name);
+        let qualified_name =
+            wasm_bindgen_shared::qualified_name(enum_.js_namespace.as_deref(), &enum_.name);
+        let identifier = self.get_or_create_identifier(&qualified_name);
         let ts_comments = format_doc_comments(&enum_.comments, None);
         let mut typescript = String::new();
         if enum_.generate_typescript {
@@ -5988,15 +5987,16 @@ addToLibrary({
     }
 
     fn generate_struct(&mut self, struct_: &AuxStruct) -> Result<(), Error> {
+        let qualified_name =
+            wasm_bindgen_shared::qualified_name(struct_.js_namespace.as_deref(), &struct_.name);
         let parent_qualified = parent_qualified_name(struct_);
-        let class = self.require_class(&struct_.qualified_name);
+        let class = self.require_class(&qualified_name);
         class.comments = format_doc_comments(&struct_.comments, None);
         class.is_inspectable = struct_.is_inspectable;
         class.generate_typescript = struct_.generate_typescript;
         class.private = struct_.private;
         class.js_namespace = struct_.js_namespace.as_ref().map(|ns| ns.to_vec());
         class.js_name = Some(struct_.name.clone());
-        class.qualified_name = Some(struct_.qualified_name.clone());
         class.extends = parent_qualified;
         Ok(())
     }

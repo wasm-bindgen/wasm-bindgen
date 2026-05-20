@@ -453,7 +453,6 @@ fn shared_import_dynamic_union<'a>(
 fn shared_struct<'a>(s: &'a ast::Struct, intern: &'a Interner) -> Struct<'a> {
     Struct {
         name: &s.js_name,
-        rust_name: intern.intern(&s.rust_name),
         fields: s
             .fields
             .iter()
