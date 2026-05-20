@@ -9,3 +9,5 @@ export class Renamed {
 }
 
 export function makeRenamed(value: number): any;
+
+export function readRenameds(renameds: Renamed[]): number;

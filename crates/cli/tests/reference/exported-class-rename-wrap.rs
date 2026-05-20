@@ -13,7 +13,10 @@ use wasm_bindgen::prelude::*;
 // nonexistent `__wbg_rustrenamed_free` wasm export).
 //
 // Correct output has a single `class Renamed`; the `__wbg_renamed_new` wrap
-// import calls `Renamed.__wrap(...)`.
+// import calls `Renamed.__wrap(...)` and the `__wbg_renamed_unwrap` import
+// calls `Renamed.__unwrap(...)` (a plain `instanceof Renamed` check, since
+// this class has no subclass). Both must reference the qualified JS identity
+// `Renamed`, not the Rust ident `RustRenamed`.
 
 #[wasm_bindgen(js_name = "Renamed")]
 pub struct RustRenamed {
@@ -34,10 +37,17 @@ impl RustRenamed {
 }
 
 // Returning the renamed struct as a `JsValue` exercises the
-// `WrapInExportedClass` import path that the regression mis-keyed. The
-// sibling `UnwrapExportedClass` path (JsValue -> struct) is keyed the same
-// way and fixed alongside it.
+// `WrapInExportedClass` import path that the regression mis-keyed.
 #[wasm_bindgen(js_name = "makeRenamed")]
 pub fn make_renamed(value: i32) -> JsValue {
     RustRenamed::new(value).into()
+}
+
+// A `Vec<RustRenamed>` argument exercises the sibling `UnwrapExportedClass`
+// path: each element is unwrapped inside wasm via `Renamed.__unwrap`, which
+// the regression keyed by the Rust ident the same way as the wrap import.
+// (A single by-value argument would instead lower through `_assertClass`.)
+#[wasm_bindgen(js_name = "readRenameds")]
+pub fn read_renameds(renameds: Vec<RustRenamed>) -> usize {
+    renameds.len()
 }
