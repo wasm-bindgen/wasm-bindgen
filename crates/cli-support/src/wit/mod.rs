@@ -1358,7 +1358,11 @@ impl<'a> Context<'a> {
             &wrap_constructor,
             vec![ptr_desc.clone()],
             Descriptor::Externref,
-            AuxImport::WrapInExportedClass(rust_name.to_string()),
+            // `exported_classes` is keyed by `qualified_name`, so the wrap
+            // import must reference the class by that key — not `rust_name`,
+            // which would mint a duplicate phantom class entry for a struct
+            // renamed via `js_name` and/or placed in a `js_namespace`.
+            AuxImport::WrapInExportedClass(qualified_name.to_string()),
         )?;
 
         let unwrap_fn = wasm_bindgen_shared::unwrap_function(&qualified_name);
@@ -1366,7 +1370,7 @@ impl<'a> Context<'a> {
             &unwrap_fn,
             vec![Descriptor::Ref(Box::new(Descriptor::Externref))],
             ptr_desc,
-            AuxImport::UnwrapExportedClass(rust_name.to_string()),
+            AuxImport::UnwrapExportedClass(qualified_name.to_string()),
         )?;
 
         Ok(())

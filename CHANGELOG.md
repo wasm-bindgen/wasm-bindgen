@@ -78,6 +78,19 @@
   
   [#5154](https://github.com/wasm-bindgen/wasm-bindgen/pull/5154)
 
+### Fixed
+
+* Fixed a duplicate phantom class being emitted for an exported struct
+  renamed via `js_name` (Rust ident != JS class name) and/or placed in a
+  `js_namespace`, when the struct crosses the boundary as a `JsValue`
+  (e.g. via `.into()`). The `WrapInExportedClass` / `UnwrapExportedClass`
+  imports were keyed by the Rust ident rather than the qualified JS name
+  that `exported_classes` is keyed by (a regression from #5154), so a
+  fresh empty class entry was minted and emitted alongside the real one,
+  with a `free()` referencing a nonexistent wasm export.
+
+  [#5160](https://github.com/wasm-bindgen/wasm-bindgen/pull/5160)
+
 --------------------------------------------------------------------------------
 
 ## [0.2.121](https://github.com/rustwasm/wasm-bindgen/compare/0.2.120...0.2.121)

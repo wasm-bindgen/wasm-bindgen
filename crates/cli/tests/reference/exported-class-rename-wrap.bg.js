@@ -1,4 +1,10 @@
 export class Renamed {
+    static __wrap(ptr) {
+        const obj = Object.create(Renamed.prototype);
+        obj.__wbg_ptr = ptr;
+        RenamedFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -28,26 +34,6 @@ export class Renamed {
 }
 if (Symbol.dispose) Renamed.prototype[Symbol.dispose] = Renamed.prototype.free;
 
-export class RustRenamed {
-    static __wrap(ptr) {
-        const obj = Object.create(RustRenamed.prototype);
-        obj.__wbg_ptr = ptr;
-        RustRenamedFinalization.register(obj, obj.__wbg_ptr, obj);
-        return obj;
-    }
-    __destroy_into_raw() {
-        const ptr = this.__wbg_ptr;
-        this.__wbg_ptr = 0;
-        RustRenamedFinalization.unregister(this);
-        return ptr;
-    }
-    free() {
-        const ptr = this.__destroy_into_raw();
-        wasm.__wbg_rustrenamed_free(ptr, 0);
-    }
-}
-if (Symbol.dispose) RustRenamed.prototype[Symbol.dispose] = RustRenamed.prototype.free;
-
 /**
  * @param {number} value
  * @returns {any}
@@ -60,7 +46,7 @@ export function __wbg___wbindgen_throw_9c31b086c2b26051(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbg_renamed_new(arg0) {
-    const ret = RustRenamed.__wrap(arg0);
+    const ret = Renamed.__wrap(arg0);
     return ret;
 }
 export function __wbindgen_init_externref_table() {
@@ -75,9 +61,6 @@ export function __wbindgen_init_externref_table() {
 const RenamedFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_renamed_free(ptr, 1));
-const RustRenamedFinalization = (typeof FinalizationRegistry === 'undefined')
-    ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_rustrenamed_free(ptr, 1));
 
 function getStringFromWasm0(ptr, len) {
     return decodeText(ptr >>> 0, len);

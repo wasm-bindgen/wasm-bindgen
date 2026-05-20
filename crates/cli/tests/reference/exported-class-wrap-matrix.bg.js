@@ -1,4 +1,12 @@
 export class Animal {
+    static __wrap(ptr) {
+        const obj = Object.create(Animal.prototype);
+        obj.__wbg_ptr = ptr;
+        obj.__wbg_ptr_Animal = ptr;
+
+        AnimalFinalization.register(obj, { __wbg_ptr_Animal: obj.__wbg_ptr_Animal }, obj);
+        return obj;
+    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -83,26 +91,6 @@ export class Dog extends Animal {
 }
 if (Symbol.dispose) Dog.prototype[Symbol.dispose] = Dog.prototype.free;
 
-export class Habitat {
-    static __wrap(ptr) {
-        const obj = Object.create(Habitat.prototype);
-        obj.__wbg_ptr = ptr;
-        HabitatFinalization.register(obj, obj.__wbg_ptr, obj);
-        return obj;
-    }
-    __destroy_into_raw() {
-        const ptr = this.__wbg_ptr;
-        this.__wbg_ptr = 0;
-        HabitatFinalization.unregister(this);
-        return ptr;
-    }
-    free() {
-        const ptr = this.__destroy_into_raw();
-        wasm.__wbg_habitat_free(ptr, 0);
-    }
-}
-if (Symbol.dispose) Habitat.prototype[Symbol.dispose] = Habitat.prototype.free;
-
 export class Reserve extends wild__Habitat {
     static __wrap(ptr) {
         const obj = Object.create(Reserve.prototype);
@@ -154,86 +142,6 @@ export class Reserve extends wild__Habitat {
 }
 if (Symbol.dispose) Reserve.prototype[Symbol.dispose] = Reserve.prototype.free;
 
-export class RustAnimal {
-    static __wrap(ptr) {
-        const obj = Object.create(RustAnimal.prototype);
-        obj.__wbg_ptr = ptr;
-        RustAnimalFinalization.register(obj, obj.__wbg_ptr, obj);
-        return obj;
-    }
-    __destroy_into_raw() {
-        const ptr = this.__wbg_ptr;
-        this.__wbg_ptr = 0;
-        RustAnimalFinalization.unregister(this);
-        return ptr;
-    }
-    free() {
-        const ptr = this.__destroy_into_raw();
-        wasm.__wbg_rustanimal_free(ptr, 0);
-    }
-}
-if (Symbol.dispose) RustAnimal.prototype[Symbol.dispose] = RustAnimal.prototype.free;
-
-export class RustBase {
-    static __wrap(ptr) {
-        const obj = Object.create(RustBase.prototype);
-        obj.__wbg_ptr = ptr;
-        RustBaseFinalization.register(obj, obj.__wbg_ptr, obj);
-        return obj;
-    }
-    __destroy_into_raw() {
-        const ptr = this.__wbg_ptr;
-        this.__wbg_ptr = 0;
-        RustBaseFinalization.unregister(this);
-        return ptr;
-    }
-    free() {
-        const ptr = this.__destroy_into_raw();
-        wasm.__wbg_rustbase_free(ptr, 0);
-    }
-}
-if (Symbol.dispose) RustBase.prototype[Symbol.dispose] = RustBase.prototype.free;
-
-export class RustCar {
-    static __wrap(ptr) {
-        const obj = Object.create(RustCar.prototype);
-        obj.__wbg_ptr = ptr;
-        RustCarFinalization.register(obj, obj.__wbg_ptr, obj);
-        return obj;
-    }
-    __destroy_into_raw() {
-        const ptr = this.__wbg_ptr;
-        this.__wbg_ptr = 0;
-        RustCarFinalization.unregister(this);
-        return ptr;
-    }
-    free() {
-        const ptr = this.__destroy_into_raw();
-        wasm.__wbg_rustcar_free(ptr, 0);
-    }
-}
-if (Symbol.dispose) RustCar.prototype[Symbol.dispose] = RustCar.prototype.free;
-
-export class RustDerived {
-    static __wrap(ptr) {
-        const obj = Object.create(RustDerived.prototype);
-        obj.__wbg_ptr = ptr;
-        RustDerivedFinalization.register(obj, obj.__wbg_ptr, obj);
-        return obj;
-    }
-    __destroy_into_raw() {
-        const ptr = this.__wbg_ptr;
-        this.__wbg_ptr = 0;
-        RustDerivedFinalization.unregister(this);
-        return ptr;
-    }
-    free() {
-        const ptr = this.__destroy_into_raw();
-        wasm.__wbg_rustderived_free(ptr, 0);
-    }
-}
-if (Symbol.dispose) RustDerived.prototype[Symbol.dispose] = RustDerived.prototype.free;
-
 export class Vehicle {
     static __wrap(ptr) {
         const obj = Object.create(Vehicle.prototype);
@@ -276,27 +184,17 @@ export class Vehicle {
 }
 if (Symbol.dispose) Vehicle.prototype[Symbol.dispose] = Vehicle.prototype.free;
 
-export class Widget {
+class garden__Derived extends zoo__Base {
     static __wrap(ptr) {
-        const obj = Object.create(Widget.prototype);
+        const obj = Object.create(garden__Derived.prototype);
         obj.__wbg_ptr = ptr;
-        WidgetFinalization.register(obj, obj.__wbg_ptr, obj);
+        obj.__wbg_ptr_garden__Derived = ptr;
+        const __wbg_anc_0 = wasm.__wbg_upcast_garden__derived_to_zoo__base(ptr) >>> 0;
+        obj.__wbg_ptr_zoo__Base = __wbg_anc_0;
+
+        garden__DerivedFinalization.register(obj, { __wbg_ptr_garden__Derived: obj.__wbg_ptr_garden__Derived, __wbg_ptr_zoo__Base: obj.__wbg_ptr_zoo__Base }, obj);
         return obj;
     }
-    __destroy_into_raw() {
-        const ptr = this.__wbg_ptr;
-        this.__wbg_ptr = 0;
-        WidgetFinalization.unregister(this);
-        return ptr;
-    }
-    free() {
-        const ptr = this.__destroy_into_raw();
-        wasm.__wbg_widget_free(ptr, 0);
-    }
-}
-if (Symbol.dispose) Widget.prototype[Symbol.dispose] = Widget.prototype.free;
-
-class garden__Derived extends zoo__Base {
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -426,6 +324,12 @@ export function makeWidget(v) {
 }
 
 class nsa__Widget {
+    static __wrap(ptr) {
+        const obj = Object.create(nsa__Widget.prototype);
+        obj.__wbg_ptr = ptr;
+        nsa__WidgetFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -483,6 +387,14 @@ export function readWidget(w) {
 }
 
 class wild__Habitat {
+    static __wrap(ptr) {
+        const obj = Object.create(wild__Habitat.prototype);
+        obj.__wbg_ptr = ptr;
+        obj.__wbg_ptr_wild__Habitat = ptr;
+
+        wild__HabitatFinalization.register(obj, { __wbg_ptr_wild__Habitat: obj.__wbg_ptr_wild__Habitat }, obj);
+        return obj;
+    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -520,6 +432,14 @@ export const wild = {};
 wild.Habitat = wild__Habitat;
 
 class zoo__Base {
+    static __wrap(ptr) {
+        const obj = Object.create(zoo__Base.prototype);
+        obj.__wbg_ptr = ptr;
+        obj.__wbg_ptr_zoo__Base = ptr;
+
+        zoo__BaseFinalization.register(obj, { __wbg_ptr_zoo__Base: obj.__wbg_ptr_zoo__Base }, obj);
+        return obj;
+    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -557,6 +477,16 @@ export const zoo = {};
 zoo.Base = zoo__Base;
 
 export class Car extends Vehicle {
+    static __wrap(ptr) {
+        const obj = Object.create(Car.prototype);
+        obj.__wbg_ptr = ptr;
+        obj.__wbg_ptr_Car = ptr;
+        const __wbg_anc_0 = wasm.__wbg_upcast_car_to_vehicle(ptr) >>> 0;
+        obj.__wbg_ptr_Vehicle = __wbg_anc_0;
+
+        CarFinalization.register(obj, { __wbg_ptr_Car: obj.__wbg_ptr_Car, __wbg_ptr_Vehicle: obj.__wbg_ptr_Vehicle }, obj);
+        return obj;
+    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -600,11 +530,11 @@ export function __wbg___wbindgen_throw_9c31b086c2b26051(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbg_animal_new(arg0) {
-    const ret = RustAnimal.__wrap(arg0);
+    const ret = Animal.__wrap(arg0);
     return ret;
 }
 export function __wbg_car_new(arg0) {
-    const ret = RustCar.__wrap(arg0);
+    const ret = Car.__wrap(arg0);
     return ret;
 }
 export function __wbg_dog_new(arg0) {
@@ -612,11 +542,11 @@ export function __wbg_dog_new(arg0) {
     return ret;
 }
 export function __wbg_garden__derived_new(arg0) {
-    const ret = RustDerived.__wrap(arg0);
+    const ret = garden__Derived.__wrap(arg0);
     return ret;
 }
 export function __wbg_nsa__widget_new(arg0) {
-    const ret = Widget.__wrap(arg0);
+    const ret = nsa__Widget.__wrap(arg0);
     return ret;
 }
 export function __wbg_reserve_new(arg0) {
@@ -628,11 +558,11 @@ export function __wbg_vehicle_new(arg0) {
     return ret;
 }
 export function __wbg_wild__habitat_new(arg0) {
-    const ret = Habitat.__wrap(arg0);
+    const ret = wild__Habitat.__wrap(arg0);
     return ret;
 }
 export function __wbg_zoo__base_new(arg0) {
-    const ret = RustBase.__wrap(arg0);
+    const ret = zoo__Base.__wrap(arg0);
     return ret;
 }
 export function __wbindgen_init_externref_table() {
@@ -659,33 +589,15 @@ const DogFinalization = (typeof FinalizationRegistry === 'undefined')
     : new FinalizationRegistry((tok) => { wasm.__wbg_dog_free(tok.__wbg_ptr_Dog >>> 0, 1);
 wasm.__wbg_animal_free(tok.__wbg_ptr_Animal >>> 0, 1);
 });
-const HabitatFinalization = (typeof FinalizationRegistry === 'undefined')
-    ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_habitat_free(ptr, 1));
 const ReserveFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry((tok) => { wasm.__wbg_reserve_free(tok.__wbg_ptr_Reserve >>> 0, 1);
 wasm.__wbg_wild__habitat_free(tok.__wbg_ptr_wild__Habitat >>> 0, 1);
 });
-const RustAnimalFinalization = (typeof FinalizationRegistry === 'undefined')
-    ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_rustanimal_free(ptr, 1));
-const RustBaseFinalization = (typeof FinalizationRegistry === 'undefined')
-    ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_rustbase_free(ptr, 1));
-const RustCarFinalization = (typeof FinalizationRegistry === 'undefined')
-    ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_rustcar_free(ptr, 1));
-const RustDerivedFinalization = (typeof FinalizationRegistry === 'undefined')
-    ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_rustderived_free(ptr, 1));
 const VehicleFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry((tok) => { wasm.__wbg_vehicle_free(tok.__wbg_ptr_Vehicle >>> 0, 1);
 });
-const WidgetFinalization = (typeof FinalizationRegistry === 'undefined')
-    ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_widget_free(ptr, 1));
 const garden__DerivedFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry((tok) => { wasm.__wbg_garden__derived_free(tok.__wbg_ptr_garden__Derived >>> 0, 1);
