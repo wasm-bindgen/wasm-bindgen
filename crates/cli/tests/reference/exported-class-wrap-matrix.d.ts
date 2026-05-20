@@ -69,9 +69,27 @@ export let nsa: {
     Widget: typeof nsa__Widget,
 };
 
+export function readAnimals(animals: Animal[]): number;
+
+export function readBases(bases: zoo__Base[]): number;
+
+export function readCars(cars: Car[]): number;
+
+export function readDeriveds(deriveds: garden__Derived[]): number;
+
 export function readDog(d: Dog): number;
 
+export function readDogs(dogs: Dog[]): number;
+
+export function readHabitats(habitats: wild__Habitat[]): number;
+
+export function readReserves(reserves: Reserve[]): number;
+
+export function readVehicles(vehicles: Vehicle[]): number;
+
 export function readWidget(w: nsa__Widget): number;
+
+export function readWidgets(widgets: nsa__Widget[]): number;
 
 declare class wild__Habitat {
     free(): void;

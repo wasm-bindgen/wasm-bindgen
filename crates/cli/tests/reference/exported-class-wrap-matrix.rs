@@ -1,15 +1,26 @@
 use wasm_bindgen::prelude::*;
 
 // Coverage matrix for the qualified-name keying of `WrapInExportedClass` /
-// `UnwrapExportedClass`. Every struct here crosses the boundary via `JsValue`:
+// `UnwrapExportedClass`. Each struct here crosses the boundary via `JsValue`
+// in both directions:
 //
-//   make_*  returns `Rust::new(..).into()`  -> WrapInExportedClass
-//   read_*  takes the struct by value       -> UnwrapExportedClass
+//   make_*   returns `Rust::new(..).into()`   -> WrapInExportedClass (`Class.__wrap`)
+//   read_*   takes a single struct by value    -> `_assertClass` + flat pointer ABI
+//   read_*s  takes a `Vec<Struct>` by value     -> UnwrapExportedClass (`Class.__unwrap`)
 //
-// Both imports must reference the struct's qualified JS identity (the
-// `exported_classes` key). A struct whose `rust_name` differs from its
-// `qualified_name` (renamed via `js_name` and/or placed in a `js_namespace`)
-// is where keying by `rust_name` used to mint a duplicate phantom class.
+// Note which argument shape drives the unwrap import: a *single* exported
+// struct argument lowers through `_assertClass` and the flat i32 pointer and
+// never touches the unwrap import. A `Vec<Struct>` argument is marshaled as a
+// JS array of class instances and unwrapped element-wise inside wasm via
+// `Class.__unwrap` — that is the `UnwrapExportedClass` path. So the `read_*s`
+// functions are the ones that exercise the keying fix on the unwrap side; the
+// single-argument `read_*` functions only cover `_assertClass`.
+//
+// Both `Class.__wrap` and `Class.__unwrap` must reference the struct's
+// qualified JS identity (the `exported_classes` key). A struct whose
+// `rust_name` differs from its `qualified_name` (renamed via `js_name` and/or
+// placed in a `js_namespace`) is where keying by `rust_name` used to mint a
+// duplicate phantom class.
 //
 // The plain rename / no-namespace case lives in `exported-class-rename-wrap`;
 // the rename + namespace case in `js-namespace-export-same-name`. This fixture
@@ -250,4 +261,60 @@ pub fn make_base(id: i32) -> JsValue {
 #[wasm_bindgen(js_name = "makeDerived")]
 pub fn make_derived(id: i32, tag: i32) -> JsValue {
     RustDerived::new(id, tag).into()
+}
+
+// `Vec<Struct>` arguments drive the `UnwrapExportedClass` path: each element
+// is unwrapped inside wasm via `Class.__unwrap`, which must resolve to the
+// qualified-name `exported_classes` key. One `read_*s` per struct in the
+// matrix so the unwrap import is exercised for every rename / namespace /
+// inheritance combination above (base and child alike).
+
+// (A) namespace only.
+#[wasm_bindgen(js_name = "readWidgets")]
+pub fn read_widgets(widgets: Vec<Widget>) -> usize {
+    widgets.len()
+}
+
+// (B) renamed base + non-renamed child.
+#[wasm_bindgen(js_name = "readAnimals")]
+pub fn read_animals(animals: Vec<RustAnimal>) -> usize {
+    animals.len()
+}
+
+#[wasm_bindgen(js_name = "readDogs")]
+pub fn read_dogs(dogs: Vec<Dog>) -> usize {
+    dogs.len()
+}
+
+// (C) non-renamed base + renamed child.
+#[wasm_bindgen(js_name = "readVehicles")]
+pub fn read_vehicles(vehicles: Vec<Vehicle>) -> usize {
+    vehicles.len()
+}
+
+#[wasm_bindgen(js_name = "readCars")]
+pub fn read_cars(cars: Vec<RustCar>) -> usize {
+    cars.len()
+}
+
+// (D) namespaced base + child inheriting the namespace.
+#[wasm_bindgen(js_name = "readHabitats")]
+pub fn read_habitats(habitats: Vec<Habitat>) -> usize {
+    habitats.len()
+}
+
+#[wasm_bindgen(js_name = "readReserves")]
+pub fn read_reserves(reserves: Vec<Reserve>) -> usize {
+    reserves.len()
+}
+
+// (E) base and child renamed in two different namespaces.
+#[wasm_bindgen(js_name = "readBases")]
+pub fn read_bases(bases: Vec<RustBase>) -> usize {
+    bases.len()
+}
+
+#[wasm_bindgen(js_name = "readDeriveds")]
+pub fn read_deriveds(deriveds: Vec<RustDerived>) -> usize {
+    deriveds.len()
 }
