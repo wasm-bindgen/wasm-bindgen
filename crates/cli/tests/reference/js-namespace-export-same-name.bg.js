@@ -1,55 +1,3 @@
-export class BarPoint {
-    static __wrap(ptr) {
-        const obj = Object.create(BarPoint.prototype);
-        obj.__wbg_ptr = ptr;
-        BarPointFinalization.register(obj, obj.__wbg_ptr, obj);
-        return obj;
-    }
-    static __unwrap(jsValue) {
-        if (!(jsValue instanceof BarPoint)) {
-            return 0;
-        }
-        return jsValue.__destroy_into_raw();
-    }
-    __destroy_into_raw() {
-        const ptr = this.__wbg_ptr;
-        this.__wbg_ptr = 0;
-        BarPointFinalization.unregister(this);
-        return ptr;
-    }
-    free() {
-        const ptr = this.__destroy_into_raw();
-        wasm.__wbg_barpoint_free(ptr, 0);
-    }
-}
-if (Symbol.dispose) BarPoint.prototype[Symbol.dispose] = BarPoint.prototype.free;
-
-export class FooPoint {
-    static __wrap(ptr) {
-        const obj = Object.create(FooPoint.prototype);
-        obj.__wbg_ptr = ptr;
-        FooPointFinalization.register(obj, obj.__wbg_ptr, obj);
-        return obj;
-    }
-    static __unwrap(jsValue) {
-        if (!(jsValue instanceof FooPoint)) {
-            return 0;
-        }
-        return jsValue.__destroy_into_raw();
-    }
-    __destroy_into_raw() {
-        const ptr = this.__wbg_ptr;
-        this.__wbg_ptr = 0;
-        FooPointFinalization.unregister(this);
-        return ptr;
-    }
-    free() {
-        const ptr = this.__destroy_into_raw();
-        wasm.__wbg_foopoint_free(ptr, 0);
-    }
-}
-if (Symbol.dispose) FooPoint.prototype[Symbol.dispose] = FooPoint.prototype.free;
-
 export class NamespaceConsumer {
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
@@ -285,6 +233,12 @@ class bar__Point {
         bar__PointFinalization.register(obj, obj.__wbg_ptr, obj);
         return obj;
     }
+    static __unwrap(jsValue) {
+        if (!(jsValue instanceof bar__Point)) {
+            return 0;
+        }
+        return jsValue.__destroy_into_raw();
+    }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
         this.__wbg_ptr = 0;
@@ -484,6 +438,12 @@ class foo__Point {
         obj.__wbg_ptr = ptr;
         foo__PointFinalization.register(obj, obj.__wbg_ptr, obj);
         return obj;
+    }
+    static __unwrap(jsValue) {
+        if (!(jsValue instanceof foo__Point)) {
+            return 0;
+        }
+        return jsValue.__destroy_into_raw();
     }
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
@@ -738,19 +698,19 @@ export function __wbg___wbindgen_throw_9c31b086c2b26051(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbg_bar__point_new(arg0) {
-    const ret = BarPoint.__wrap(arg0);
+    const ret = bar__Point.__wrap(arg0);
     return ret;
 }
 export function __wbg_bar__point_unwrap(arg0) {
-    const ret = BarPoint.__unwrap(arg0);
+    const ret = bar__Point.__unwrap(arg0);
     return ret;
 }
 export function __wbg_foo__point_new(arg0) {
-    const ret = FooPoint.__wrap(arg0);
+    const ret = foo__Point.__wrap(arg0);
     return ret;
 }
 export function __wbg_foo__point_unwrap(arg0) {
-    const ret = FooPoint.__unwrap(arg0);
+    const ret = foo__Point.__unwrap(arg0);
     return ret;
 }
 export function __wbindgen_init_externref_table() {
@@ -762,12 +722,6 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
 }
-const BarPointFinalization = (typeof FinalizationRegistry === 'undefined')
-    ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_barpoint_free(ptr, 1));
-const FooPointFinalization = (typeof FinalizationRegistry === 'undefined')
-    ? { register: () => {}, unregister: () => {} }
-    : new FinalizationRegistry(ptr => wasm.__wbg_foopoint_free(ptr, 1));
 const NamespaceConsumerFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_namespaceconsumer_free(ptr, 1));
