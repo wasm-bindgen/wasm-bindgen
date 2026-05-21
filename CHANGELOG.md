@@ -29,11 +29,11 @@
 * `-Cpanic=unwind` on wasm targets now emits modern (exnref) exception
   handling by default after
   [rust-lang/rust#156061](https://github.com/rust-lang/rust/pull/156061),
-  and requires Node.js 22.22.3+ (for `WebAssembly.JSTag`). Building
-  legacy EH wasm currently requires pinning to `nightly-2026-05-06` or
-  earlier, since user `-Cllvm-args` cannot override the new target spec.
-  See [#5151](https://github.com/wasm-bindgen/wasm-bindgen/issues/5151)
-  for tracking Node.js 20 support.
+  and requires Node.js 22.22.3+ (for `WebAssembly.JSTag`). Legacy EH wasm
+  can still be produced on current nightlies by adding
+  `-Cllvm-args=-wasm-use-legacy-eh` to `RUSTFLAGS`; Node.js 20 may be
+  supported with legacy exception handling, with a tracking issue in
+  [#5151](https://github.com/wasm-bindgen/wasm-bindgen/issues/5151).
 
 ### Added
 
