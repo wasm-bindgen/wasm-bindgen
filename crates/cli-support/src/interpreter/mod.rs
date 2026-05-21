@@ -70,6 +70,12 @@ pub struct Interpreter {
     /// and `__wasm_call_dtors`.
     skip_calls: HashSet<FunctionId>,
     stopped: bool,
+
+    // When a `Br` or `BrIf` (taken) instruction is executed, this holds the
+    // target InstrSeqId. Evaluation breaks out of nested blocks until the
+    // block whose seq matches this target is reached, at which point it is
+    // cleared and normal execution resumes after that block.
+    branch_target: Option<InstrSeqId>,
 }
 
 fn skip_calls(module: &Module, id: FunctionId) -> HashSet<FunctionId> {
@@ -200,6 +206,7 @@ impl Interpreter {
     pub fn interpret_descriptor(&mut self, id: FunctionId, module: &Module) -> &[u32] {
         self.descriptor.truncate(0);
         self.stopped = false;
+        self.branch_target = None;
 
         if let Some(sp) = self.stack_pointer {
             self.stack_pointer_initial = self.globals[&sp];
@@ -267,6 +274,20 @@ struct Frame<'a> {
 }
 
 impl Frame<'_> {
+    fn should_break_after_block(&mut self, seq: InstrSeqId) -> bool {
+        if self.interp.stopped {
+            return true;
+        }
+        if let Some(target) = self.interp.branch_target {
+            if target == seq {
+                self.interp.branch_target = None;
+            } else {
+                return true;
+            }
+        }
+        false
+    }
+
     fn eval(&mut self, seq: InstrSeqId) -> anyhow::Result<()> {
         use walrus::ir::*;
 
@@ -478,23 +499,38 @@ impl Frame<'_> {
                     }
                 }
 
+                Instr::Br(Br { block }) => {
+                    log::trace!("br {block:?}");
+                    self.interp.branch_target = Some(*block);
+                    break;
+                }
+
+                Instr::BrIf(BrIf { block }) => {
+                    let cond = stack.pop().unwrap();
+                    log::trace!("br_if {block:?} (cond={cond})");
+                    if cond != 0 {
+                        self.interp.branch_target = Some(*block);
+                        break;
+                    }
+                }
+
                 Instr::Block(block) => {
                     self.eval(block.seq)?;
-                    if self.interp.stopped {
+                    if self.should_break_after_block(block.seq) {
                         break;
                     }
                 }
 
                 Instr::Try(block) => {
                     self.eval(block.seq)?;
-                    if self.interp.stopped {
+                    if self.should_break_after_block(block.seq) {
                         break;
                     }
                 }
 
                 Instr::TryTable(block) => {
                     self.eval(block.seq)?;
-                    if self.interp.stopped {
+                    if self.should_break_after_block(block.seq) {
                         break;
                     }
                 }

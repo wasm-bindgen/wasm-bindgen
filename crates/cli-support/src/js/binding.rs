@@ -1599,9 +1599,8 @@ fn instruction(
 
         Instruction::RustFromI32 { class } => {
             let val = js.pop();
-            // Resolve both the descriptor class and the constructor class to
-            // rust_name for comparison, since they may use different naming
-            // (qualified_name vs js_class vs rust_name).
+            // `exported_classes` is keyed by the qualified JS identity, so
+            // the resolved class string is the qualified name directly.
             let resolved_class = js.cx.resolve_class_name(class).to_string();
             match constructor {
                 Some(name) if js.cx.resolve_class_name(name) == resolved_class => {
@@ -1612,10 +1611,8 @@ fn instruction(
                     // before any mutable borrow for prelude emission.
                     let cls = js.cx.exported_classes.get(&resolved_class);
                     let participates = cls.is_some_and(|c| c.participates_in_inheritance);
-                    let own_qualified = cls
-                        .and_then(|c| c.qualified_name.clone())
-                        .or_else(|| cls.and_then(|c| c.js_name.clone()))
-                        .unwrap_or_else(|| resolved_class.clone());
+                    // The map key *is* the qualified name post-#5154.
+                    let own_qualified = resolved_class.clone();
                     // Per-class pointer suffix uses the class's auto-sanitized
                     // JS identifier (always a valid JS ident) rather than the
                     // user-facing js_name, which may contain hyphens or other
@@ -1623,12 +1620,11 @@ fn instruction(
                     let own_ident = cls
                         .map(|c| c.identifier.clone())
                         .unwrap_or_else(|| resolved_class.clone());
-                    // For each ancestor: (identifier, rust_name, qualified_name).
+                    // For each ancestor: (identifier, qualified_name).
                     // Nearest-first: ancestors[0] is the direct parent.
                     // identifier   -> per-class pointer field suffix
-                    // rust_name    -> upcast symbol parent half (matches macro)
-                    // qualified    -> free symbol etc. (also matches macro)
-                    let ancestors: Vec<(String, String, String)> =
+                    // qualified    -> upcast / free symbol names (match macro)
+                    let ancestors: Vec<(String, String)> =
                         cls.map(|c| c.ancestors.clone()).unwrap_or_default();
                     // When reinit is enabled, define __wbg_inst as non-enumerable
                     // and non-configurable so it doesn't appear in serialization
@@ -1647,9 +1643,7 @@ fn instruction(
                         let mut from_qualified = own_qualified.clone();
                         let mut token_parts: Vec<String> =
                             vec![format!("__wbg_ptr_{own_ident}: {val} >>> 0")];
-                        for (idx, (anc_id, _anc_rust, anc_qualified)) in
-                            ancestors.iter().enumerate()
-                        {
+                        for (idx, (anc_id, anc_qualified)) in ancestors.iter().enumerate() {
                             // Upcast symbol uses qualified_name on both
                             // sides; same convention as the macro after
                             // the `extends_js_class` / `extends_js_namespace`
