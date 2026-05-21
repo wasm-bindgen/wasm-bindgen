@@ -12,6 +12,13 @@ extern "C" {
 
     fn make_custom_type() -> JsValue;
     fn make_plain_object() -> JsValue;
+    fn make_string_array() -> JsValue;
+    fn make_mixed_array() -> JsValue;
+    fn make_number_array() -> JsValue;
+    fn make_nested_array() -> JsValue;
+    fn make_empty_array() -> JsValue;
+    fn make_array_with_undefined() -> JsValue;
+    fn make_array_like_object() -> JsValue;
 }
 
 #[wasm_bindgen_test]
@@ -363,6 +370,73 @@ fn numeric_types_reject_invalid_js_values() {
     assert!(u128::try_from_js_value(JsValue::from_str("25")).is_err());
     assert!(f32::try_from_js_value(JsValue::from_str("0")).is_err());
     assert!(f32::try_from_js_value(JsValue::from_str("25")).is_err());
+}
+
+#[wasm_bindgen_test]
+fn vec_string_try_from_js_value() {
+    let v = <Vec<String>>::try_from_js_value(make_string_array()).unwrap();
+    assert_eq!(
+        v,
+        vec!["hello".to_string(), "world".to_string(), "".to_string()]
+    );
+
+    let v = <Vec<String>>::try_from_js_value(make_empty_array()).unwrap();
+    assert!(v.is_empty());
+
+    // Wrong element type rejects.
+    assert!(<Vec<String>>::try_from_js_value(make_mixed_array()).is_err());
+
+    // Non-array rejects (including array-like objects).
+    assert!(<Vec<String>>::try_from_js_value(make_plain_object()).is_err());
+    assert!(<Vec<String>>::try_from_js_value(make_array_like_object()).is_err());
+    assert!(<Vec<String>>::try_from_js_value(JsValue::NULL).is_err());
+    assert!(<Vec<String>>::try_from_js_value(JsValue::UNDEFINED).is_err());
+    assert!(<Vec<String>>::try_from_js_value(JsValue::from_str("hello")).is_err());
+}
+
+#[wasm_bindgen_test]
+fn vec_numeric_try_from_js_value() {
+    let v = <Vec<i32>>::try_from_js_value(make_number_array()).unwrap();
+    assert_eq!(v, vec![1, 2, 3, 4, 5]);
+
+    let v = <Vec<f64>>::try_from_js_value(make_number_array()).unwrap();
+    assert_eq!(v, vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+
+    // Strings can't convert to numbers under TryFromJsValue's strict semantics.
+    assert!(<Vec<i32>>::try_from_js_value(make_string_array()).is_err());
+}
+
+#[wasm_bindgen_test]
+fn vec_jsvalue_try_from_js_value() {
+    // Heterogeneous arrays roundtrip via JsValue.
+    let v = <Vec<JsValue>>::try_from_js_value(make_mixed_array()).unwrap();
+    assert_eq!(v.len(), 3);
+    assert_eq!(v[0].as_string(), Some("hello".to_string()));
+    assert_eq!(v[1].as_f64(), Some(42.0));
+    assert_eq!(v[2].as_string(), Some("world".to_string()));
+}
+
+#[wasm_bindgen_test]
+fn vec_nested_try_from_js_value() {
+    let v = <Vec<Vec<String>>>::try_from_js_value(make_nested_array()).unwrap();
+    assert_eq!(
+        v,
+        vec![
+            vec!["a".to_string(), "b".to_string()],
+            vec!["c".to_string()],
+            vec![],
+        ]
+    );
+}
+
+#[wasm_bindgen_test]
+fn vec_option_try_from_js_value() {
+    // `undefined` elements convert to `None` via the existing `Option<T>` impl.
+    let v = <Vec<Option<String>>>::try_from_js_value(make_array_with_undefined()).unwrap();
+    assert_eq!(
+        v,
+        vec![Some("hello".to_string()), None, Some("world".to_string())]
+    );
 }
 
 // https://github.com/wasm-bindgen/wasm-bindgen/issues/4289
