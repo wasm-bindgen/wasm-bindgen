@@ -87,6 +87,28 @@
   
   [#5154](https://github.com/wasm-bindgen/wasm-bindgen/pull/5154)
 
+### Fixed
+
+* Emscripten output now works against vanilla upstream emscripten without
+  requiring a fork. Dependency tracking, `HEAP_DATA_VIEW` setup,
+  function-decl intrinsic inlining, catch-wrapper gating, and imported
+  global handling have all been corrected; ESM imports
+  (`#[wasm_bindgen(module = "...")]` and snippets) are emitted to a
+  sidecar `library_bindgen.extern-pre.js` consumers pass to emcc via
+  `--extern-pre-js`; namespaced exports (`js_namespace = [...]` on a
+  struct/impl) now attach to `Module.<segments>` instead of emitting
+  top-level `export const` (which emcc's library evaluator rejects);
+  the generated `.d.ts` for namespaced exports is now valid TypeScript
+  (mangled identifiers stay module-internal via `declare class` /
+  `declare enum` / `declare function` plus `export { BindgenModule };`
+  to mark the file as a module; no spurious unqualified `Calc:`
+  property on `BindgenModule` for namespaced items; namespace shapes
+  land as plain interface members (`app: { math: { Calc: typeof
+  app__math__Calc } };`) instead of the previously-emitted `export
+  let app: { ... };` which was invalid TS1131 syntax inside an
+  interface body).
+  [#5156](https://github.com/wasm-bindgen/wasm-bindgen/pull/5156)
+
 * Fixed a duplicate phantom class being emitted for an exported struct
   renamed via `js_name` (Rust ident != JS class name) and/or placed in a
   `js_namespace`, when the struct crosses the boundary as a `JsValue`

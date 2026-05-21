@@ -1869,13 +1869,44 @@ fn private_namespaced_classes_export_actual_ts_identifier() {
 }
 
 #[test]
-fn emscripten_namespaced_classes_use_actual_ts_identifier() {
-    let mut project = Project::new("emscripten_namespaced_classes_use_actual_ts_identifier");
+fn emscripten_namespaced_exports_valid_ts() {
+    // Covers all three TS-emission bugs for namespaced (`js_namespace`)
+    // exports in emscripten output:
+    //   * mangled identifier (`app__math__Calc`) leaking as a public type,
+    //   * spurious unqualified `Calc:` property on BindgenModule,
+    //   * `export let app: { ... }` ending up inside the interface body
+    //     (TS1131 — invalid syntax).
+    //
+    // Includes the original repro shape (deep `["app", "math"]`
+    // namespace with a struct + impl carrying a constructor and a
+    // method), plus same-`js_name` collisions across namespaces (which
+    // require the mangled identifier as the disambiguator inside the
+    // namespace shape), plus a namespaced enum and free function (same
+    // emission path).
+    let mut project = Project::new("emscripten_namespaced_exports_valid_ts");
     project.file(
         "src/lib.rs",
         r#"
             use wasm_bindgen::prelude::*;
 
+            // Original repro: deep namespace, struct + impl, constructor + method.
+            #[wasm_bindgen(js_namespace = ["app", "math"])]
+            pub struct Calc {
+                value: i32,
+            }
+
+            #[wasm_bindgen(js_namespace = ["app", "math"])]
+            impl Calc {
+                #[wasm_bindgen(constructor)]
+                pub fn new(initial: i32) -> Calc {
+                    Calc { value: initial }
+                }
+                pub fn double(&self) -> i32 {
+                    self.value * 2
+                }
+            }
+
+            // Same-`js_name` across namespaces must not collide.
             #[wasm_bindgen(js_namespace = foo, js_name = "Point")]
             pub struct FooPoint {
                 pub x: i32,
@@ -1884,6 +1915,19 @@ fn emscripten_namespaced_classes_use_actual_ts_identifier() {
             #[wasm_bindgen(js_namespace = bar, js_name = "Point")]
             pub struct BarPoint {
                 pub y: i32,
+            }
+
+            // Namespaced enum + free function share the namespaced-export
+            // emission path; cover them in the same fixture.
+            #[wasm_bindgen(js_namespace = ["app", "math"])]
+            pub enum Op {
+                Add = 0,
+                Sub = 1,
+            }
+
+            #[wasm_bindgen(js_namespace = ["app", "math"])]
+            pub fn pi() -> f64 {
+                3.14
             }
         "#,
     );
@@ -1908,9 +1952,160 @@ fn emscripten_namespaced_classes_use_actual_ts_identifier() {
     ])
     .unwrap();
 
-    let d_ts = fs::read_to_string(out_dir.join("emscripten_input.d.ts")).unwrap();
+    let d_ts_path = out_dir.join("emscripten_input.d.ts");
+    let d_ts = fs::read_to_string(&d_ts_path).unwrap();
 
+    // --- Bug 1: mangled identifier must stay module-internal. ---
+    // `declare class` keeps the type reachable inside the .d.ts (so the
+    // namespace shape can write `typeof app__math__Calc`) without
+    // exporting the mangled name to consumers.
+    for mangled in [
+        "app__math__Calc",
+        "foo__Point",
+        "bar__Point",
+        "app__math__Op",
+    ] {
+        let declare_class = format!("declare class {mangled}");
+        let declare_enum = format!("declare enum {mangled}");
+        assert!(
+            d_ts.contains(&declare_class) || d_ts.contains(&declare_enum),
+            "expected `declare class|enum {mangled}` in .d.ts, got:\n{d_ts}"
+        );
+        let export_class = format!("export class {mangled}");
+        let export_enum = format!("export enum {mangled}");
+        assert!(
+            !d_ts.contains(&export_class),
+            "mangled identifier `{mangled}` must not be `export`-ed"
+        );
+        assert!(
+            !d_ts.contains(&export_enum),
+            "mangled identifier `{mangled}` must not be `export`-ed"
+        );
+    }
+
+    // --- Bug 2a: no direct unqualified entries on BindgenModule for
+    // namespaced items. They are only reachable via the namespace.
+    // Check the *top-level* of the interface body (4-space indent only)
+    // — nested occurrences inside `app: { math: { ... } }` are fine
+    // and required. ---
+    let interface_body = d_ts
+        .split_once("interface BindgenModule {")
+        .and_then(|(_, rest)| rest.split_once("\n}"))
+        .map(|(body, _)| body)
+        .expect("BindgenModule interface body");
+    let top_level: String = interface_body
+        .lines()
+        .filter(|line| {
+            // Top-level entries inside the interface are indented by
+            // exactly 4 spaces (the `for line in self.typescript.lines()`
+            // splicer adds 2 spaces, on top of any indent the line
+            // already carried). Nested-namespace entries indent deeper.
+            line.starts_with("    ") && !line.starts_with("        ")
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    for forbidden in [
+        "Calc: typeof",
+        "Point: typeof",
+        "Op: typeof",
+        "pi: typeof",
+        "pi(): number",
+    ] {
+        assert!(
+            !top_level.contains(forbidden),
+            "BindgenModule top-level must not carry `{forbidden}`; \
+             namespaced items belong inside the namespace shape.\n\
+             top-level lines:\n{top_level}\n\nfull body:\n{interface_body}"
+        );
+    }
+
+    // --- Bug 2b: namespace shape must be an interface member, not an
+    // `export let` statement (TS1131: Property or signature expected). ---
+    assert!(
+        !interface_body.contains("export let"),
+        "`export let` inside an interface body is invalid TS:\n{interface_body}"
+    );
+    assert!(
+        !interface_body.contains(" let "),
+        "`let` declarations are invalid inside an interface body:\n{interface_body}"
+    );
+    // The top-level namespaces must appear as interface members.
+    assert!(interface_body.contains("app: {"));
+    assert!(interface_body.contains("foo: {"));
+    assert!(interface_body.contains("bar: {"));
+
+    // The nested namespace shape must preserve depth: `app: { math: { Calc, Op, pi } }`.
+    // Use the mangled identifier in the `typeof` reference (the
+    // disambiguator that survives namespace collisions).
+    assert!(
+        d_ts.contains("Calc: typeof app__math__Calc"),
+        ".d.ts is missing nested `Calc: typeof app__math__Calc`:\n{d_ts}"
+    );
+    assert!(
+        d_ts.contains("Op: typeof app__math__Op"),
+        ".d.ts is missing nested `Op: typeof app__math__Op`:\n{d_ts}"
+    );
+    assert!(
+        d_ts.contains("pi: typeof app__math__pi"),
+        ".d.ts is missing nested `pi: typeof app__math__pi`:\n{d_ts}"
+    );
+
+    // The constructor + method on the namespaced class must reach the
+    // mangled `declare class` body unchanged.
+    assert!(
+        d_ts.contains("constructor(initial: number)"),
+        ".d.ts is missing constructor signature:\n{d_ts}"
+    );
+    assert!(
+        d_ts.contains("double(): number"),
+        ".d.ts is missing method signature:\n{d_ts}"
+    );
+
+    // Same-`js_name` classes in different namespaces must coexist via
+    // their mangled identifiers under each namespace shape.
     assert!(d_ts.contains("Point: typeof foo__Point"));
     assert!(d_ts.contains("Point: typeof bar__Point"));
     assert!(!d_ts.contains("Point: typeof Point"));
+
+    // --- End-to-end TS validity: parse the .d.ts with `tsc --noEmit
+    // --strict`. Substring assertions can't catch every shape of
+    // TS-invalid emission; this is the canonical check. CI installs
+    // `typescript` globally before `cargo test` runs; locally the test
+    // skips gracefully when tsc isn't on PATH. ---
+    if let Some(tsc) = which("tsc") {
+        let status = std::process::Command::new(tsc)
+            .args([
+                "--noEmit",
+                "--strict",
+                "--skipLibCheck",
+                "--lib",
+                "esnext,dom",
+            ])
+            .arg(&d_ts_path)
+            .status()
+            .expect("failed to invoke tsc");
+        assert!(
+            status.success(),
+            "`tsc --noEmit --strict` rejected the generated .d.ts at {}",
+            d_ts_path.display()
+        );
+    } else {
+        eprintln!(
+            "skipping tsc validation of {} (tsc not on PATH)",
+            d_ts_path.display()
+        );
+    }
+}
+
+/// Look up an executable on `PATH`. Used so the test can opportunistically
+/// validate the generated .d.ts with `tsc` without hard-requiring it.
+fn which(name: &str) -> Option<PathBuf> {
+    let path = env::var_os("PATH")?;
+    for dir in env::split_paths(&path) {
+        let candidate = dir.join(name);
+        if candidate.is_file() {
+            return Some(candidate);
+        }
+    }
+    None
 }

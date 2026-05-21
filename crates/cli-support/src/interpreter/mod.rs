@@ -22,7 +22,7 @@ use crate::wasm_conventions;
 use anyhow::{bail, ensure};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use walrus::ir::InstrSeqId;
-use walrus::{ExportId, FunctionId, GlobalId, GlobalKind, LocalFunction, LocalId, Module};
+use walrus::{ExportId, FunctionId, GlobalId, GlobalKind, LocalFunction, LocalId, Module, ValType};
 
 /// A ready-to-go interpreter of a Wasm module.
 ///
@@ -130,7 +130,12 @@ impl Interpreter {
         };
 
         // Snapshot all locally-defined integer globals so the interpreter can
-        // read/write them during descriptor execution.
+        // read/write them during descriptor execution. Imported globals
+        // (common in PIC/dynamic-linked modules such as those produced by
+        // emscripten) have no compile-time value, so we initialize them to a
+        // safe placeholder. Descriptor functions don't depend on the actual
+        // value of PIC base globals (`__memory_base`, `__table_base`,
+        // `GOT.mem.*`, `GOT.func.*`); they only need consistent reads/writes.
         for global in module.globals.iter() {
             match global.kind {
                 GlobalKind::Local(walrus::ConstExpr::Value(walrus::ir::Value::I32(n))) => {
@@ -139,12 +144,24 @@ impl Interpreter {
                 GlobalKind::Local(walrus::ConstExpr::Value(walrus::ir::Value::I64(n))) => {
                     ret.globals.insert(global.id(), n as i32);
                 }
+                GlobalKind::Import(_) if global.ty == ValType::I32 || global.ty == ValType::I64 => {
+                    ret.globals.insert(global.id(), 0);
+                }
                 _ => {}
             }
         }
 
         if let Some(sp) = wasm_conventions::get_stack_pointer(module) {
             ret.stack_pointer = Some(sp);
+            // For an imported stack pointer (PIC builds), the runtime sets it
+            // at instantiation. We can't know the real value, but descriptors
+            // only need sp to land inside our `mem` buffer for any
+            // load/store. Seed it with a sentinel near the top of mem so that
+            // typical small `sp -= N` adjustments stay in-range and non-zero.
+            if matches!(module.globals.get(sp).kind, GlobalKind::Import(_)) {
+                let top = (ret.mem.len() as i32).saturating_mul(4);
+                ret.globals.insert(sp, top);
+            }
         }
 
         // Figure out where the `__wbindgen_describe` imported function is, if

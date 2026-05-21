@@ -43,6 +43,18 @@ pub fn get_stack_pointer(module: &Module) -> Option<GlobalId> {
         return Some(g.id());
     }
 
+    // PIC/dynamic-linked modules (e.g. emscripten) import the stack pointer
+    // from `env.__stack_pointer` instead of defining it locally. Imported
+    // globals don't carry their name in the `name` custom section, so look it
+    // up via the import section.
+    for import in module.imports.iter() {
+        if import.module == "env" && import.name == "__stack_pointer" {
+            if let walrus::ImportKind::Global(id) = import.kind {
+                return Some(id);
+            }
+        }
+    }
+
     let candidates = module
         .globals
         .iter()
@@ -195,6 +207,21 @@ pub fn get_function_table_entry(module: &Module, idx: u32) -> Result<FunctionId>
                     // Cannot represent this segment's offset as a table index; skip it.
                     Err(_) => continue,
                 },
+                // For PIC/dynamic-linked modules (e.g. emscripten output),
+                // the segment offset is `global.get __table_base`, an imported
+                // global that resolves at instantiation. The Rust-side
+                // descriptor encodes the absolute table index assuming a base
+                // of 0, so treat an imported base offset as 0 here.
+                None if matches!(
+                    offset,
+                    ConstExpr::Global(g) if matches!(
+                        module.globals.get(*g).kind,
+                        GlobalKind::Import(_)
+                    )
+                ) =>
+                {
+                    0
+                }
                 // Cannot statically evaluate this segment's offset; skip it.
                 _ => continue,
             },
