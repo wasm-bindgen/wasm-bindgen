@@ -1,0 +1,27 @@
+.github/workflows/main.yml
+  aeb3cd3e5ff9d709 172-174,177
+CHANGELOG.md
+  aeb3cd3e5ff9d709 32-36
+guide/src/reference/catch-unwind.md
+  aeb3cd3e5ff9d709 21-24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "f4789aae9e6dccf981a66910633a60ff4854e3cb",
+  "prompts": {
+    "aeb3cd3e5ff9d709": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1b4a7cbbcffeUxb6vcWLRk1Fa2",
+        "model": "anthropic/claude-opus-4-7"
+      },
+      "human_author": "Guy Bedford",
+      "messages": [],
+      "total_additions": 13,
+      "total_deletions": 20,
+      "accepted_lines": 13,
+      "overriden_lines": 0
+    }
+  }
+}
