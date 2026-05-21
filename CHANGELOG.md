@@ -44,6 +44,13 @@
   ```
   [#5154](https://github.com/wasm-bindgen/wasm-bindgen/pull/5154)
 
+### Fixed
+
+* Fixed the descriptor interpreter panicking on `Br` and `BrIf`
+  instructions emitted by recent nightly compilers when building with
+  `panic=unwind`.
+  [#5158](https://github.com/wasm-bindgen/wasm-bindgen/pull/5158)
+
 ### Changed
 
 * When an exported struct uses `js_namespace`, the corresponding value
@@ -92,6 +99,22 @@
   let app: { ... };` which was invalid TS1131 syntax inside an
   interface body).
   [#5156](https://github.com/wasm-bindgen/wasm-bindgen/pull/5156)
+
+* Fixed a duplicate phantom class being emitted for an exported struct
+  renamed via `js_name` (Rust ident != JS class name) and/or placed in a
+  `js_namespace`, when the struct crosses the boundary as a `JsValue`
+  (e.g. via `.into()`). The `WrapInExportedClass` / `UnwrapExportedClass`
+  imports were keyed by the Rust ident rather than the qualified JS name
+  that `exported_classes` is keyed by (a regression from #5154), so a
+  fresh empty class entry was minted and emitted alongside the real one,
+  with a `free()` referencing a nonexistent wasm export. Riding the
+  same release's #5154 wire-format bump, the now-vestigial `rust_name`
+  field is dropped from the schema and the namespace-qualified name is
+  no longer cached on `AuxStruct`, `AuxEnum`, or `ExportedClass`
+  (derived on demand from `(name, js_namespace)`), collapsing three
+  fallback chains that only papered over the pre-#5154 keying.
+
+  [#5160](https://github.com/wasm-bindgen/wasm-bindgen/pull/5160)
 
 --------------------------------------------------------------------------------
 

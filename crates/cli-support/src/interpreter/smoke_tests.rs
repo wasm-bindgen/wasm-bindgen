@@ -318,6 +318,92 @@ fn try_table_block() {
 }
 
 #[test]
+fn br_out_of_try_table() {
+    let wat = r#"
+        (module
+            (import "__wbindgen_placeholder__" "__wbindgen_describe"
+              (func $__wbindgen_describe (param i32)))
+            (global $__stack_pointer (mut i32) (i32.const 0))
+
+            (func $foo
+                (local i32)
+
+                global.get $__stack_pointer
+                i32.const 16
+                i32.sub
+                local.set 0
+                local.get 0
+                global.set $__stack_pointer
+
+                (block $outer
+                    (try_table (catch_all $outer)
+                        i32.const 42
+                        call $__wbindgen_describe
+                        br $outer
+                    )
+                )
+
+                local.get 0
+                i32.const 16
+                i32.add
+                global.set $__stack_pointer
+            )
+
+            (export "foo" (func $foo))
+        )
+    "#;
+    interpret(wat, "foo", &[42]);
+}
+
+#[test]
+fn br_if_taken() {
+    let wat = r#"
+        (module
+            (import "__wbindgen_placeholder__" "__wbindgen_describe"
+              (func $__wbindgen_describe (param i32)))
+
+            (func $foo
+                (block $skip
+                    i32.const 1
+                    br_if $skip
+                    i32.const 99
+                    call $__wbindgen_describe
+                )
+                i32.const 7
+                call $__wbindgen_describe
+            )
+
+            (export "foo" (func $foo))
+        )
+    "#;
+    interpret(wat, "foo", &[7]);
+}
+
+#[test]
+fn br_if_not_taken() {
+    let wat = r#"
+        (module
+            (import "__wbindgen_placeholder__" "__wbindgen_describe"
+              (func $__wbindgen_describe (param i32)))
+
+            (func $foo
+                (block $skip
+                    i32.const 0
+                    br_if $skip
+                    i32.const 5
+                    call $__wbindgen_describe
+                )
+                i32.const 10
+                call $__wbindgen_describe
+            )
+
+            (export "foo" (func $foo))
+        )
+    "#;
+    interpret(wat, "foo", &[5, 10]);
+}
+
+#[test]
 fn calling_functions_with_args() {
     let wat = r#"
         (module

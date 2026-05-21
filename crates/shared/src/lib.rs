@@ -187,7 +187,6 @@ macro_rules! shared_api {
 
         struct Struct<'a> {
             name: &'a str,
-            rust_name: &'a str,
             fields: Vec<StructField<'a>>,
             comments: Vec<&'a str>,
             is_inspectable: bool,
