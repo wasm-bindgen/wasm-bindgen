@@ -3,6 +3,18 @@
 
 ## Unreleased
 
+### Added
+
+### Changed
+
+### Fixed
+
+### Removed
+
+--------------------------------------------------------------------------------
+
+## [0.2.122](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.121...0.2.122)
+
 ### Notices
 
 * Threading support now requires `-Clink-arg=--export=__heap_base` to be set
@@ -53,13 +65,6 @@
   ```
   [#5154](https://github.com/wasm-bindgen/wasm-bindgen/pull/5154)
 
-### Fixed
-
-* Fixed the descriptor interpreter panicking on `Br` and `BrIf`
-  instructions emitted by recent nightly compilers when building with
-  `panic=unwind`.
-  [#5158](https://github.com/wasm-bindgen/wasm-bindgen/pull/5158)
-
 ### Changed
 
 * When an exported struct uses `js_namespace`, the corresponding value
@@ -88,6 +93,11 @@
   [#5154](https://github.com/wasm-bindgen/wasm-bindgen/pull/5154)
 
 ### Fixed
+
+* Fixed the descriptor interpreter panicking on `Br` and `BrIf`
+  instructions emitted by recent nightly compilers when building with
+  `panic=unwind`.
+  [#5158](https://github.com/wasm-bindgen/wasm-bindgen/pull/5158)
 
 * Emscripten output now works against vanilla upstream emscripten without
   requiring a fork. Dependency tracking, `HEAP_DATA_VIEW` setup,

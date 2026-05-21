@@ -13,7 +13,7 @@ export function slice(a) {
     const len0 = WASM_VECTOR_LEN;
     wasm.slice(ptr0, len0);
 }
-export function __wbg___wbindgen_throw_9c31b086c2b26051(arg0, arg1) {
+export function __wbg___wbindgen_throw_1506f2235d1bdba0(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbindgen_init_externref_table() {
