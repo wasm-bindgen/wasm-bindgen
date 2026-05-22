@@ -9,7 +9,13 @@ use syn::Path;
 use wasm_bindgen_shared as shared;
 
 pub fn use_js_sys_futures() -> bool {
-    cfg!(wasm_bindgen_use_js_sys)
+    // Honor either the build-time cfg or an expansion-time environment variable.
+    // The env-var form is necessary because `cfg!(...)` is resolved when this
+    // proc-macro crate is itself compiled (on the host), and Cargo does not pass
+    // `--cfg`/`RUSTFLAGS` to host proc-macros when `--target` is used. Reading
+    // an env var at expansion time provides a stable workflow that works
+    // regardless of how the consumer configures Cargo.
+    cfg!(wasm_bindgen_use_js_sys) || std::env::var_os("WASM_BINDGEN_USE_JS_SYS").is_some()
 }
 
 /// Whether a function is a start function, and if so, whether it
