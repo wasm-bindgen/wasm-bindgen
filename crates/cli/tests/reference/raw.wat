@@ -4,7 +4,7 @@
   (type (;2;) (func (param i32) (result i32)))
   (type (;3;) (func (result externref)))
   (type (;4;) (func))
-  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_9c31b086c2b26051" (func (;0;) (type 1)))
+  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_1506f2235d1bdba0" (func (;0;) (type 1)))
   (import "./reference_test_bg.js" "__wbg_do_a0ba2606225d4465" (func (;1;) (type 0)))
   (import "./reference_test_bg.js" "__wbg_new_37453f8cfbfa31f7" (func (;2;) (type 3)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;3;) (type 4)))

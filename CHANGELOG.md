@@ -3,6 +3,18 @@
 
 ## Unreleased
 
+### Added
+
+### Changed
+
+### Fixed
+
+### Removed
+
+--------------------------------------------------------------------------------
+
+## [0.2.122](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.121...0.2.122)
+
 ### Notices
 
 * Threading support now requires `-Clink-arg=--export=__heap_base` to be set
@@ -17,11 +29,11 @@
 * `-Cpanic=unwind` on wasm targets now emits modern (exnref) exception
   handling by default after
   [rust-lang/rust#156061](https://github.com/rust-lang/rust/pull/156061),
-  and requires Node.js 22.22.3+ (for `WebAssembly.JSTag`). Building
-  legacy EH wasm currently requires pinning to `nightly-2026-05-06` or
-  earlier, since user `-Cllvm-args` cannot override the new target spec.
-  See [#5151](https://github.com/wasm-bindgen/wasm-bindgen/issues/5151)
-  for tracking Node.js 20 support.
+  and requires Node.js 22.22.3+ (for `WebAssembly.JSTag`). Legacy EH wasm
+  can still be produced on current nightlies by adding
+  `-Cllvm-args=-wasm-use-legacy-eh` to `RUSTFLAGS`; Node.js 20 may be
+  supported with legacy exception handling, with a tracking issue in
+  [#5151](https://github.com/wasm-bindgen/wasm-bindgen/issues/5151).
 
 ### Added
 
@@ -53,13 +65,6 @@
   ```
   [#5154](https://github.com/wasm-bindgen/wasm-bindgen/pull/5154)
 
-### Fixed
-
-* Fixed the descriptor interpreter panicking on `Br` and `BrIf`
-  instructions emitted by recent nightly compilers when building with
-  `panic=unwind`.
-  [#5158](https://github.com/wasm-bindgen/wasm-bindgen/pull/5158)
-
 ### Changed
 
 * When an exported struct uses `js_namespace`, the corresponding value
@@ -88,6 +93,11 @@
   [#5154](https://github.com/wasm-bindgen/wasm-bindgen/pull/5154)
 
 ### Fixed
+
+* Fixed the descriptor interpreter panicking on `Br` and `BrIf`
+  instructions emitted by recent nightly compilers when building with
+  `panic=unwind`.
+  [#5158](https://github.com/wasm-bindgen/wasm-bindgen/pull/5158)
 
 * Emscripten output now works against vanilla upstream emscripten without
   requiring a fork. Dependency tracking, `HEAP_DATA_VIEW` setup,
