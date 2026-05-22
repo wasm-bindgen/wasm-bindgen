@@ -215,8 +215,7 @@ impl Parse for ClassMarker {
             js_class,
             js_namespace,
             wasm_bindgen: wasm_bindgen.unwrap_or_else(|| syn::parse_quote! { wasm_bindgen }),
-            wasm_bindgen_futures: wasm_bindgen_futures
-                .unwrap_or_else(|| syn::parse_quote! { wasm_bindgen_futures }),
+            wasm_bindgen_futures: wasm_bindgen_futures.unwrap_or_else(|| syn::parse_quote! { js_sys::futures }),
             js_sys: js_sys.unwrap_or_else(|| syn::parse_quote! { js_sys }),
         })
     }
