@@ -269,7 +269,9 @@ where
 /// public API; treat as `doc(hidden)` even though we don't slap that on
 /// every item.
 pub mod schema {
-    use wasm_bindgen_shared::{DESCRIPTOR_KIND_REGULAR, DESCRIPTOR_KIND_CAST};
+    use wasm_bindgen_shared::{
+        DESCRIPTOR_FORMAT_VERSION, DESCRIPTOR_KIND_CAST, DESCRIPTOR_KIND_REGULAR,
+    };
 
     /// Total length, in `u32` words, of a list of opcode slices when
     /// concatenated. Used by the macro to size the static array storing
@@ -305,25 +307,45 @@ pub mod schema {
         out
     }
 
-    /// Total byte length of a packed descriptor section entry for a shim
-    /// of the given name and schema word count. Layout matches the format
-    /// documented next to [`wasm_bindgen_shared::DESCRIPTORS_SECTION_NAME`].
+    /// Length in bytes of the body half of one descriptor section entry,
+    /// i.e. everything that follows the outer `format_version` byte and
+    /// `entry_body_byte_len` u32. Matches the format documented next to
+    /// [`wasm_bindgen_shared::DESCRIPTORS_SECTION_NAME`]:
     ///
     /// ```text
-    /// 1 (name_len) + name.len() + 1 (kind) + 4 (word_count) + 4 * word_count
+    /// body bytes:
+    ///   1 (shim_name_len)
+    ///   + name_len            // shim_name UTF-8 bytes
+    ///   + 1 (kind)
+    ///   + 4 (schema_word_count u32 LE)
+    ///   + word_count * 4      // schema (u32 LE per word)
     /// ```
-    pub const fn entry_byte_len(name_len: usize, word_count: usize) -> usize {
+    pub const fn entry_body_byte_len(name_len: usize, word_count: usize) -> usize {
         1 + name_len + 1 + 4 + word_count * 4
     }
 
-    /// Pack one descriptor entry (without the outer section `total_len`
-    /// header) into a fixed-size byte array. The outer `total_len` is
-    /// computed by `wasm-bindgen-cli` when it assembles the section, not
-    /// here.
+    /// Total length in bytes of a packed descriptor section entry,
+    /// including the outer per-entry framing (version + body length).
+    /// This is the size of the `[u8; N]` static the macro emits.
+    pub const fn entry_byte_len(name_len: usize, word_count: usize) -> usize {
+        // 1 byte format_version + 4 bytes body_byte_len + body
+        1 + 4 + entry_body_byte_len(name_len, word_count)
+    }
+
+    /// Pack one full descriptor entry (including its per-entry framing)
+    /// into a fixed-size byte array.
     ///
     /// `B` must equal [`entry_byte_len`] for the given `name` and
     /// `schema_words.len()`. The macro picks the right value at
     /// expansion time.
+    ///
+    /// Layout:
+    ///
+    /// ```text
+    /// out[0]                       = DESCRIPTOR_FORMAT_VERSION
+    /// out[1..5]                    = body_byte_len (u32 LE)
+    /// out[5..5 + body_byte_len]    = body (see entry_body_byte_len)
+    /// ```
     pub const fn pack_entry<const B: usize>(
         name: &[u8],
         kind: u8,
@@ -332,10 +354,27 @@ pub mod schema {
         let mut out = [0u8; B];
         let mut i = 0;
 
+        // ----- per-entry framing -----
+        out[i] = DESCRIPTOR_FORMAT_VERSION;
+        i += 1;
+
+        let body_len = entry_body_byte_len(name.len(), schema_words.len()) as u32;
+        let body_len_bytes = body_len.to_le_bytes();
+        out[i] = body_len_bytes[0];
+        out[i + 1] = body_len_bytes[1];
+        out[i + 2] = body_len_bytes[2];
+        out[i + 3] = body_len_bytes[3];
+        i += 4;
+
+        // ----- body -----
+
         // shim_name_len (u8). `name.len()` is bounded by 255 because the
         // wire format only allots one byte for it; this assert catches
         // accidental over-long names at compile time.
-        assert!(name.len() <= 255, "descriptor shim name longer than 255 bytes");
+        assert!(
+            name.len() <= 255,
+            "descriptor shim name longer than 255 bytes"
+        );
         out[i] = name.len() as u8;
         i += 1;
 
@@ -377,7 +416,10 @@ pub mod schema {
         }
 
         // We must have used every byte of the array.
-        assert!(i == B, "entry size mismatch: B is wrong for this name/schema");
+        assert!(
+            i == B,
+            "entry size mismatch: B is wrong for this name/schema"
+        );
         out
     }
 }

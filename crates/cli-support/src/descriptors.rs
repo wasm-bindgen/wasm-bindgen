@@ -95,7 +95,21 @@ impl WasmBindgenDescriptorsSection {
             None => return Ok(HashSet::new()),
         };
 
-        let entries = descriptors_section::parse(&raw.data)?;
+        let (entries, stats) = descriptors_section::parse(&raw.data)?;
+        if stats.skipped_total() > 0 {
+            // Per-entry version mismatches are not fatal — the affected
+            // shims fall back to the legacy interpreter pathway — but
+            // they are noteworthy. Log at `info` so they surface in
+            // a normal CLI run without needing RUST_LOG=debug.
+            for (version, count) in &stats.skipped_unknown_version {
+                log::info!(
+                    "wasm-bindgen-cli does not recognise format_version {version} \
+                     for {count} __wasm_bindgen_descriptors entries; falling back \
+                     to the legacy interpreter for those shims. This usually means \
+                     the binary was produced by a newer wasm-bindgen than this CLI."
+                );
+            }
+        }
         let resolved_symbols = build_symbol_table(module);
 
         let mut regular_names = HashSet::new();

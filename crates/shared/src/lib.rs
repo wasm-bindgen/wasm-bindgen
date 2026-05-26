@@ -27,11 +27,17 @@ pub const SCHEMA_VERSION: &str = "0.2.122";
 /// ```text
 /// section bytes:
 ///   entry repeated until the section ends:
-///     u8        shim_name_len     // 1..=255
-///     [u8; n]   shim_name         // UTF-8, not null-terminated
-///     u8        kind              // 0 = regular, 1 = cast
-///     u32 LE    schema_word_count // number of u32 words below
-///     [u32 LE]  schema            // opcode stream, fed to Descriptor::decode
+///     u8        format_version       // see DESCRIPTOR_FORMAT_VERSION
+///     u32 LE    entry_body_byte_len  // size in bytes of everything that
+///                                    // follows in this entry, exclusive
+///                                    // of format_version and this field
+///     ----- entry body (entry_body_byte_len bytes) -----
+///     u8        shim_name_len        // 1..=255
+///     [u8; n]   shim_name            // UTF-8, not null-terminated
+///     u8        kind                 // see DESCRIPTOR_KIND_* constants
+///     u32 LE    schema_word_count    // number of u32 words below
+///     [u32 LE]  schema               // opcode stream, fed to Descriptor::decode
+///     ----- end of entry body -----
 /// ```
 ///
 /// There is no outer length header: the wasm custom-section framing
@@ -41,6 +47,33 @@ pub const SCHEMA_VERSION: &str = "0.2.122";
 /// can't write a single total_len anyway. The consumer reads entries
 /// until the section bytes are exhausted.
 ///
+/// ## Per-entry versioning
+///
+/// Every entry begins with two framing fields: a `format_version` byte
+/// and an `entry_body_byte_len` u32. These two fields are part of the
+/// stable framing contract and **must never change layout** even if
+/// `format_version` itself changes. The body length lets a CLI that
+/// does not recognise the version skip past the entry and continue
+/// parsing the next one.
+///
+/// The current format is [`DESCRIPTOR_FORMAT_VERSION`]. CLIs are
+/// expected to:
+///
+/// 1. Decode any entry whose `format_version` they recognise.
+/// 2. Skip (and log) any entry whose `format_version` they do not
+///    recognise, falling back to the legacy `__wbindgen_describe_*`
+///    interpreter pathway for that shim.
+///
+/// This per-entry framing is deliberately independent of
+/// [`SCHEMA_VERSION`]. `SCHEMA_VERSION` gates the older
+/// `__wasm_bindgen_unstable` metadata section, whose binary layout has
+/// no built-in versioning of its own. The descriptors section is
+/// allowed to evolve on its own timeline; mixing producers/consumers of
+/// different versions degrades gracefully (some entries fall back)
+/// rather than failing the whole build.
+///
+/// ## Schema stream
+///
 /// The `schema` stream uses the same opcodes as the legacy interpreter
 /// output (`crates/shared/src/tys.rs`), with one addition: [`tys::SYMBOL_REF`]
 /// which signals that the next conceptual u32 must be resolved by symbol
@@ -49,6 +82,19 @@ pub const SCHEMA_VERSION: &str = "0.2.122";
 /// points, matching the legacy format exactly so `Descriptor::decode`
 /// requires no changes.
 pub const DESCRIPTORS_SECTION_NAME: &str = "__wasm_bindgen_descriptors";
+
+/// Current per-entry format version emitted into
+/// [`DESCRIPTORS_SECTION_NAME`].
+///
+/// See the documentation on [`DESCRIPTORS_SECTION_NAME`] for the meaning
+/// of this byte and the contract between producers and consumers.
+///
+/// Bump this when the encoding of a descriptor entry changes in a way
+/// that older CLIs cannot decode safely. Adding a new opcode the
+/// existing decoder happens to ignore does *not* require a bump; only
+/// changes to the entry framing, the kind byte semantics, the
+/// schema-word width, or the SYMBOL_REF resolution rules do.
+pub const DESCRIPTOR_FORMAT_VERSION: u8 = 1;
 
 /// Entry kind byte for a regular function/import descriptor.
 pub const DESCRIPTOR_KIND_REGULAR: u8 = 0;
