@@ -178,12 +178,12 @@ jobs:
       with:
         targets: wasm32-unknown-unknown
         components: rust-src
-    # Node 22.22.3+ is needed for `WebAssembly.JSTag` (used by wasm-bindgen's
-    # legacy EH catch handlers). Node 20 lacks `WebAssembly.JSTag` even though
-    # it supports the underlying legacy EH instructions.
+    # Legacy EH is the path that buys back Node 18+ support: wasm-bindgen
+    # polyfills `WebAssembly.JSTag` on the JS side, so the legacy `try`/`catch`
+    # instructions (supported since Node 18) are sufficient.
     - uses: actions/setup-node@v6
       with:
-        node-version: '22.22.3'
+        node-version: '18'
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --lib --bins --tests
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --test wasm --features std,wasm-bindgen-futures/std
   test_wasm_bindgen_unwind_exnref_eh:
