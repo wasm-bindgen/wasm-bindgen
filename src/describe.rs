@@ -263,6 +263,10 @@ impl<T: WasmDescribe, E: Into<JsValue>> WasmDescribe for Result<T, E> {
 }
 
 impl<T: WasmDescribe> WasmDescribe for MaybeUninit<T> {
+    // MaybeUninit<T> is transparent for descriptor purposes: it
+    // crosses the boundary as exactly the same shape as T. Mirror
+    // that in both transports.
+    const SCHEMA: &'static [u32] = T::SCHEMA;
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
         T::describe();

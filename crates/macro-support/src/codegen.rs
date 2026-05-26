@@ -1527,14 +1527,14 @@ fn detect_closure_arg(ty: &syn::Type) -> Option<(bool, Vec<syn::Type>, syn::Type
             continue;
         };
         let args: Vec<syn::Type> = paren.inputs.iter().cloned().collect();
-        // Reference-typed closure args use the runtime's
-        // `RefFromWasmAbi` variant of the `closures!` macro instead of
-        // `FromWasmAbi`. Our wrapper currently only emits the
-        // `FromWasmAbi` form. Bail out so these flow through the
-        // interpreter; the runtime's special single-arg `(&A)` impl
-        // still handles them correctly. A future commit can add
-        // `RefFromWasmAbi` support here.
-        if args.iter().any(|t| matches!(get_ty(t), syn::Type::Reference(_))) {
+        // The runtime only has impls for the specific 1-arg `(&A)`
+        // shape on `dyn Fn`/`dyn FnMut`, not for multi-arg shapes
+        // mixing ref + owned. If we see anything other than exactly
+        // one `&T` arg (and no other args), bail out and let the
+        // interpreter handle that closure. Single owned-arg and
+        // multi-arg-all-owned cases are handled below.
+        let has_ref = args.iter().any(|t| matches!(get_ty(t), syn::Type::Reference(_)));
+        if has_ref && args.len() != 1 {
             return None;
         }
         let ret_ty: syn::Type = match &paren.output {
@@ -1704,15 +1704,50 @@ fn emit_closure_wrapper(
     // for exports/imports but inlined here because we also need to
     // reassemble the primitives back into the original ABI type in
     // the wrapper body.
+    //
+    // Each arg is one of two shapes:
+    //   - owned `T`:  uses `<T as FromWasmAbi>::Abi`, reassembled via
+    //                 `from_abi(join(...))`.
+    //   - reference `&T`: uses `<T as RefFromWasmAbi>::Abi`, reassembled
+    //                     via `&*ref_from_abi(join(...))`.
+    // Matches the runtime closure invoke shim's `closures!` macro
+    // dispatch on `$FromWasmAbi` (FromWasmAbi vs RefFromWasmAbi).
     let mut sig_args: Vec<TokenStream> = Vec::new();
     let mut reassemble_args: Vec<TokenStream> = Vec::new();
-    let mut call_args: Vec<Ident> = Vec::new();
+    let mut call_args: Vec<TokenStream> = Vec::new();
+    let mut keepalive_arg_tys: Vec<TokenStream> = Vec::new();
     for (i, ty) in arg_tys.iter().enumerate() {
         let prim1 = format_ident!("arg{i}_1");
         let prim2 = format_ident!("arg{i}_2");
         let prim3 = format_ident!("arg{i}_3");
         let prim4 = format_ident!("arg{i}_4");
-        let abi = quote! { <#ty as #wasm_bindgen::convert::FromWasmAbi>::Abi };
+        let (abi, reassemble) = if let syn::Type::Reference(reference) = get_ty(ty) {
+            let inner = &reference.elem;
+            let abi = quote! { <#inner as #wasm_bindgen::convert::RefFromWasmAbi>::Abi };
+            let local = format_ident!("arg{i}");
+            let reassemble = quote! {
+                let #local = <#inner as #wasm_bindgen::convert::RefFromWasmAbi>::ref_from_abi(
+                    <#abi as #wasm_bindgen::convert::WasmAbi>::join(
+                        #prim1, #prim2, #prim3, #prim4,
+                    )
+                );
+                let #local = &*#local;
+            };
+            call_args.push(quote! { #local });
+            (abi, reassemble)
+        } else {
+            let abi = quote! { <#ty as #wasm_bindgen::convert::FromWasmAbi>::Abi };
+            let local = format_ident!("arg{i}");
+            let reassemble = quote! {
+                let #local = <#ty as #wasm_bindgen::convert::FromWasmAbi>::from_abi(
+                    <#abi as #wasm_bindgen::convert::WasmAbi>::join(
+                        #prim1, #prim2, #prim3, #prim4,
+                    )
+                );
+            };
+            call_args.push(quote! { #local });
+            (abi, reassemble)
+        };
         sig_args.push(quote! {
             #prim1: <#abi as #wasm_bindgen::convert::WasmAbi>::Prim1
         });
@@ -1725,15 +1760,11 @@ fn emit_closure_wrapper(
         sig_args.push(quote! {
             #prim4: <#abi as #wasm_bindgen::convert::WasmAbi>::Prim4
         });
-        let local = format_ident!("arg{i}");
-        reassemble_args.push(quote! {
-            let #local = <#ty as #wasm_bindgen::convert::FromWasmAbi>::from_abi(
-                <#abi as #wasm_bindgen::convert::WasmAbi>::join(
-                    #prim1, #prim2, #prim3, #prim4,
-                )
-            );
-        });
-        call_args.push(local);
+        reassemble_args.push(reassemble);
+        keepalive_arg_tys.push(quote! { <#abi as #wasm_bindgen::convert::WasmAbi>::Prim1 });
+        keepalive_arg_tys.push(quote! { <#abi as #wasm_bindgen::convert::WasmAbi>::Prim2 });
+        keepalive_arg_tys.push(quote! { <#abi as #wasm_bindgen::convert::WasmAbi>::Prim3 });
+        keepalive_arg_tys.push(quote! { <#abi as #wasm_bindgen::convert::WasmAbi>::Prim4 });
     }
 
     let mut_kw = if is_mut { quote!(mut) } else { quote!() };
@@ -1741,21 +1772,6 @@ fn emit_closure_wrapper(
     let arg_ty_list = arg_tys.iter().map(|t| quote! { #t });
 
     let abi_ret = quote! { <#ret_ty as #wasm_bindgen::convert::ReturnWasmAbi>::Abi };
-
-    // Build the wrapper's function-pointer type for the keep-alive
-    // static. Reuses the same per-arg splat as the wrapper's signature.
-    let keepalive_arg_tys: Vec<TokenStream> = arg_tys
-        .iter()
-        .flat_map(|ty| {
-            let abi = quote! { <#ty as #wasm_bindgen::convert::FromWasmAbi>::Abi };
-            [
-                quote! { <#abi as #wasm_bindgen::convert::WasmAbi>::Prim1 },
-                quote! { <#abi as #wasm_bindgen::convert::WasmAbi>::Prim2 },
-                quote! { <#abi as #wasm_bindgen::convert::WasmAbi>::Prim3 },
-                quote! { <#abi as #wasm_bindgen::convert::WasmAbi>::Prim4 },
-            ]
-        })
-        .collect();
 
     quote! {
         // The wrapper itself: signature matches the legacy `invoke`
