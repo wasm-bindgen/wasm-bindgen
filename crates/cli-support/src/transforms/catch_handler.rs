@@ -94,11 +94,6 @@ pub fn run(
         aux.function_table = module.tables.main_function_table().ok().flatten();
     }
 
-    // Legacy EH support gap: `WebAssembly.JSTag` only exists on Node 22.22.3+,
-    // but the underlying `try`/`catch` instructions work on Node 18/20. When
-    // we're emitting legacy EH wrappers we polyfill JSTag on the JS side with
-    // a custom `WebAssembly.Tag` plus a JS-side try/catch around every import,
-    // so the resulting module runs on engines without `WebAssembly.JSTag`.
     aux.legacy_exception_handling = matches!(eh_version, ExceptionHandlingVersion::Legacy);
 
     // Import the JSTag
