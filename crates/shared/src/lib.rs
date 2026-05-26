@@ -103,6 +103,12 @@ pub const DESCRIPTOR_KIND_REGULAR: u8 = 0;
 /// `wbg_cast::<From, To>` monomorphization).
 pub const DESCRIPTOR_KIND_CAST: u8 = 1;
 
+/// Entry kind byte for an imported `static`. The schema is the bare type
+/// schema (e.g. `[EXTERNREF]` or `[F64]`), NOT wrapped in a `FUNCTION`
+/// header. The cli decodes it directly into a `Descriptor` and uses it
+/// as the ImportStatic's return type.
+pub const DESCRIPTOR_KIND_STATIC: u8 = 2;
+
 #[macro_export]
 macro_rules! shared_api {
     ($mac:ident) => {

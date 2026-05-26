@@ -573,7 +573,9 @@ where
     }
 }
 
-impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> VectorFromWasmAbi for T {
+impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe + WasmDescribeVector> VectorFromWasmAbi
+    for T
+{
     type Abi = WasmSlice;
 
     #[inline]
@@ -584,7 +586,9 @@ impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> VectorFromWasmAbi for T 
     }
 }
 
-impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> VectorIntoWasmAbi for T {
+impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe + WasmDescribeVector> VectorIntoWasmAbi
+    for T
+{
     type Abi = WasmSlice;
 
     #[inline]

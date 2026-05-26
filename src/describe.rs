@@ -9,7 +9,7 @@ use alloc::vec::Vec;
 use core::panic::AssertUnwindSafe;
 use core::{mem::MaybeUninit, ptr::NonNull};
 
-use crate::{__rt::marker::ErasableGeneric, Clamped, JsError, JsValue};
+use crate::{Clamped, JsError, JsValue};
 use cfg_if::cfg_if;
 
 pub use wasm_bindgen_shared::tys::*;
@@ -192,11 +192,32 @@ cfg_if! {
     }
 }
 
-impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> WasmDescribeVector for T {
+// Concrete `WasmDescribeVector` impls for the JsValue-erased types
+// previously covered by a blanket `impl<T: ErasableGeneric<Repr=JsValue>>
+// WasmDescribeVector for T`. Removed because the blanket impl could
+// not set `VECTOR_SCHEMA` (the const length depends on `T::SCHEMA`,
+// which is the `generic_const_exprs` wall on stable Rust). Each
+// `ErasableGeneric<Repr=JsValue>` type now provides its own impl
+// with a concrete `VECTOR_SCHEMA` so the section transport never
+// needs to fall back to the interpreter for `Vec<Self>` arguments.
+//
+// Macro-generated ImportTypes get a matching impl from the macro
+// (`crates/macro-support/src/codegen.rs`'s ImportType emission).
+impl WasmDescribeVector for JsValue {
+    const VECTOR_SCHEMA: &'static [u32] = &[VECTOR, EXTERNREF];
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe_vector() {
         inform(VECTOR);
-        T::describe();
+        JsValue::describe();
+    }
+}
+
+impl WasmDescribeVector for JsError {
+    const VECTOR_SCHEMA: &'static [u32] = &[VECTOR, EXTERNREF];
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe_vector() {
+        inform(VECTOR);
+        JsError::describe();
     }
 }
 
@@ -285,6 +306,7 @@ where
 pub mod schema {
     use wasm_bindgen_shared::{
         DESCRIPTOR_FORMAT_VERSION, DESCRIPTOR_KIND_CAST, DESCRIPTOR_KIND_REGULAR,
+        DESCRIPTOR_KIND_STATIC,
     };
 
     /// Total length, in `u32` words, of a list of opcode slices when
@@ -402,7 +424,9 @@ pub mod schema {
 
         // kind byte (sanity: must be one of the known constants).
         assert!(
-            kind == DESCRIPTOR_KIND_REGULAR || kind == DESCRIPTOR_KIND_CAST,
+            kind == DESCRIPTOR_KIND_REGULAR
+                || kind == DESCRIPTOR_KIND_CAST
+                || kind == DESCRIPTOR_KIND_STATIC,
             "unknown descriptor entry kind"
         );
         out[i] = kind;

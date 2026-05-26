@@ -24,6 +24,7 @@ use anyhow::{anyhow, bail, Result};
 use std::collections::HashMap;
 use wasm_bindgen_shared::{
     tys::SYMBOL_REF, DESCRIPTOR_FORMAT_VERSION, DESCRIPTOR_KIND_CAST, DESCRIPTOR_KIND_REGULAR,
+    DESCRIPTOR_KIND_STATIC,
 };
 
 /// One descriptor entry recovered from the section. Only entries with a
@@ -141,7 +142,10 @@ pub fn parse(section: &[u8]) -> Result<(Vec<Entry>, ParseStats)> {
             .map_err(|e| anyhow!("descriptor entry shim name is not UTF-8: {e}"))?
             .to_owned();
         let kind = r.u8()?;
-        if kind != DESCRIPTOR_KIND_REGULAR && kind != DESCRIPTOR_KIND_CAST {
+        if kind != DESCRIPTOR_KIND_REGULAR
+            && kind != DESCRIPTOR_KIND_CAST
+            && kind != DESCRIPTOR_KIND_STATIC
+        {
             bail!("descriptor entry for {name:?} has unknown kind byte {kind}");
         }
         let word_count = r.u32()? as usize;

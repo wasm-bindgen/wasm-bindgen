@@ -40,6 +40,7 @@ use std::collections::hash_map::HashMap;
 use walrus::{CustomSection, ExportItem, FunctionId, Module, TypedCustomSectionId};
 use wasm_bindgen_shared::{
     DESCRIPTORS_SECTION_NAME, DESCRIPTOR_KIND_CAST, DESCRIPTOR_KIND_REGULAR,
+    DESCRIPTOR_KIND_STATIC,
 };
 
 #[derive(Default, Debug)]
@@ -176,7 +177,12 @@ impl WasmBindgenDescriptorsSection {
                 }
             };
             match entry.kind {
-                DESCRIPTOR_KIND_REGULAR => {
+                DESCRIPTOR_KIND_REGULAR | DESCRIPTOR_KIND_STATIC => {
+                    // STATIC entries decode the same way (Descriptor::decode
+                    // accepts either a FUNCTION-wrapped or a bare type
+                    // schema); the difference is purely how the macro emits
+                    // it. ImportStatic consumes the resulting Descriptor as
+                    // the static's type directly.
                     regular_names.insert(entry.name.clone());
                     self.descriptors.insert(entry.name, descriptor);
                 }
@@ -232,7 +238,7 @@ impl WasmBindgenDescriptorsSection {
                 to_remove.push(export.id());
                 continue;
             }
-            // Interpret descriptor with 0 args (export descriptors shouldn't take any).
+            log::debug!("[interpreter-fallback] {name:?}");
             let d = interpreter.interpret_descriptor(id, module);
             let descriptor = Descriptor::decode(d);
             self.descriptors.insert(name.to_string(), descriptor);
