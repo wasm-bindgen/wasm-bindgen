@@ -10,8 +10,7 @@ exports.return_number = () => 42;
 exports.return_string = () => "hello";
 
 exports.take_nullable_null = (val) => {
-    assert.ok(val === null || val === undefined, 
-        `expected null or undefined, got ${val}`);
+    assert.strictEqual(val, undefined, `expected undefined, got ${val}`);
 };
 
 exports.take_nullable_value = (val) => {
@@ -33,10 +32,10 @@ exports.take_nullable_string = (val) => {
 };
 
 exports.test_nullable_exports = () => {
-    // Test rust functions that return JsOption
+    // Test rust functions that return JsOption — strict: empty == undefined only.
     const nullVal = wasm.rust_return_nullable_null();
-    assert.ok(nullVal === null || nullVal === undefined,
-        `expected null or undefined from rust_return_nullable_null, got ${nullVal}`);
+    assert.strictEqual(nullVal, undefined,
+        `expected undefined from rust_return_nullable_null, got ${nullVal}`);
 
     const numVal = wasm.rust_return_nullable_value();
     assert.ok(numVal !== null && numVal !== undefined,
@@ -44,7 +43,6 @@ exports.test_nullable_exports = () => {
     assert.strictEqual(numVal, 456);
 
     // Test rust functions that take JsOption
-    wasm.rust_take_nullable_null(null);
     wasm.rust_take_nullable_null(undefined);
     wasm.rust_take_nullable_value(789);
 };
