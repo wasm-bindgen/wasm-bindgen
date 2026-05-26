@@ -5,7 +5,25 @@
 
 ### Added
 
+* Type schemas for `#[wasm_bindgen]`-exported functions are now also
+  emitted into a new `__wasm_bindgen_descriptors` custom wasm section
+  at compile time, in addition to the legacy `__wbindgen_describe_*`
+  synthetic export functions. `wasm-bindgen-cli` prefers the section
+  when present, short-circuiting the wasm interpreter for that shim.
+  The interpreter remains in place as a fallback for any
+  type/wrapper/import path the macro hasn't migrated yet. JS output
+  is byte-identical for migrated functions. First step toward
+  removing the `crates/cli-support/src/interpreter/` directory.
+* `WasmDescribe::SCHEMA: &'static [u32]` associated const, populated
+  for every concrete leaf impl shipped with `wasm-bindgen`. This is
+  the producer-side surface the macro composes section schemas from.
+
 ### Changed
+
+* MSRV bumped from 1.77 to 1.79 for library and macro crates (the cli
+  crates were already at 1.86). The new minimum is required by the
+  const-expression composition the macro uses to lay out descriptor
+  section bytes.
 
 ### Fixed
 
