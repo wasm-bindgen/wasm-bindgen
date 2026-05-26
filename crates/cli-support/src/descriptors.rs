@@ -9,13 +9,38 @@
 //! a new custom section, defined in this module, is inserted into the
 //! `walrus::Module` which contains all the results of all the descriptor
 //! functions.
+//!
+//! ## Transport
+//!
+//! Two transports coexist during the migration away from the interpreter:
+//!
+//! 1. The `__wasm_bindgen_descriptors` custom section
+//!    ([`wasm_bindgen_shared::DESCRIPTORS_SECTION_NAME`]). When the
+//!    `#[wasm_bindgen]` macro can produce a descriptor's bytes purely
+//!    from compile-time information, it does so and writes the bytes into
+//!    this section directly. Entries here are decoded by
+//!    [`crate::descriptors_section`] and turn directly into [`Descriptor`]s.
+//! 2. The historical `__wbindgen_describe_<name>` synthetic export
+//!    functions plus the wasm interpreter in [`crate::interpreter`]. Used
+//!    as a fallback for any shim whose descriptor is not present in the
+//!    new section. The medium-term goal of the descriptors-via-custom-
+//!    section work is to remove this fallback entirely.
+//!
+//! The section wins whenever both are present: an entry recovered from
+//! `__wasm_bindgen_descriptors` shadows the interpreter result for the
+//! same shim. This lets the migration land function-by-function rather
+//! than as an atomic swap.
 
 use crate::descriptor::Descriptor;
+use crate::descriptors_section;
 use crate::interpreter::Interpreter;
-use anyhow::Error;
+use anyhow::{Context, Error};
 use std::borrow::Cow;
 use std::collections::hash_map::HashMap;
-use walrus::{CustomSection, FunctionId, Module, TypedCustomSectionId};
+use walrus::{CustomSection, ExportItem, FunctionId, Module, TypedCustomSectionId};
+use wasm_bindgen_shared::{
+    DESCRIPTORS_SECTION_NAME, DESCRIPTOR_KIND_CAST, DESCRIPTOR_KIND_REGULAR,
+};
 
 #[derive(Default, Debug)]
 pub struct WasmBindgenDescriptorsSection {
@@ -31,19 +56,90 @@ pub type WasmBindgenDescriptorsSectionId = TypedCustomSectionId<WasmBindgenDescr
 /// Afterwards this will delete all descriptor functions from the module.
 pub fn execute(module: &mut Module) -> Result<WasmBindgenDescriptorsSectionId, Error> {
     let mut section = WasmBindgenDescriptorsSection::default();
-    let mut interpreter = Interpreter::new(module)?;
 
-    section.execute_exports(module, &mut interpreter)?;
+    // Phase 1: harvest anything present in the new __wasm_bindgen_descriptors
+    // section. Names that show up here will be skipped by the interpreter
+    // pass below.
+    let regular_from_section = section
+        .ingest_section(module)
+        .context("failed to read __wasm_bindgen_descriptors section")?;
+
+    // Phase 2: legacy interpreter for everything not already covered.
+    let mut interpreter = Interpreter::new(module)?;
+    section.execute_exports(module, &mut interpreter, &regular_from_section)?;
     section.execute_casts(module, &mut interpreter)?;
 
     Ok(module.customs.add(section))
 }
 
 impl WasmBindgenDescriptorsSection {
+    /// Pull the `__wasm_bindgen_descriptors` custom section out of `module`
+    /// (if present), parse it, and populate `self` with the entries it
+    /// contains. Returns the set of regular shim names that came from the
+    /// section so that [`Self::execute_exports`] can avoid interpreting
+    /// the matching `__wbindgen_describe_<name>` functions a second time.
+    ///
+    /// Cast entries from the section are not yet stored on `self` (we
+    /// still need a way to back-resolve their `breaks_if_inlined` symbol
+    /// name to a `FunctionId`). They are ignored here and left to the
+    /// interpreter pathway until a follow-up commit. The plumbing is
+    /// intentionally separated so that piece can land independently.
+    fn ingest_section(
+        &mut self,
+        module: &mut Module,
+    ) -> Result<std::collections::HashSet<String>, Error> {
+        use std::collections::HashSet;
+
+        let raw = match module.customs.remove_raw(DESCRIPTORS_SECTION_NAME) {
+            Some(raw) => raw,
+            None => return Ok(HashSet::new()),
+        };
+
+        let entries = descriptors_section::parse(&raw.data)?;
+        let resolved_symbols = build_symbol_table(module);
+
+        let mut regular_names = HashSet::new();
+        for entry in entries {
+            let stream = descriptors_section::resolve_symbols(
+                &entry.schema_bytes,
+                &resolved_symbols,
+            )
+            .with_context(|| {
+                format!(
+                    "failed to resolve symbol references in descriptor for {:?}",
+                    entry.name
+                )
+            })?;
+            let descriptor = Descriptor::decode(&stream);
+            match entry.kind {
+                DESCRIPTOR_KIND_REGULAR => {
+                    regular_names.insert(entry.name.clone());
+                    self.descriptors.insert(entry.name, descriptor);
+                }
+                DESCRIPTOR_KIND_CAST => {
+                    // Cast entries need their `breaks_if_inlined<From,To>`
+                    // symbol resolved into a FunctionId. That lookup is
+                    // delegated to a follow-up commit; until then casts
+                    // continue to flow through the interpreter pathway,
+                    // which scans for direct calls to
+                    // __wbindgen_describe_cast.
+                    log::debug!(
+                        "ignoring cast descriptor for {:?} in section (still \
+                         handled by interpreter for now)",
+                        entry.name
+                    );
+                }
+                _ => unreachable!("parser already validated kind byte"),
+            }
+        }
+        Ok(regular_names)
+    }
+
     fn execute_exports(
         &mut self,
         module: &mut Module,
         interpreter: &mut Interpreter,
+        already_from_section: &std::collections::HashSet<String>,
     ) -> Result<(), Error> {
         let mut to_remove = Vec::new();
 
@@ -60,9 +156,20 @@ impl WasmBindgenDescriptorsSection {
                 walrus::ExportItem::Function(id) => id,
                 _ => panic!("{} export not a function", export.name),
             };
+            let name = &export.name[prefix.len()..];
+            if already_from_section.contains(name) {
+                // The new transport already produced this descriptor; just
+                // delete the now-redundant synthetic export so the rest of
+                // the pipeline behaves as if the interpreter had handled it.
+                log::debug!(
+                    "skipping interpreter for {name:?}; already produced \
+                     by __wasm_bindgen_descriptors section"
+                );
+                to_remove.push(export.id());
+                continue;
+            }
             // Interpret descriptor with 0 args (export descriptors shouldn't take any).
             let d = interpreter.interpret_descriptor(id, module);
-            let name = &export.name[prefix.len()..];
             let descriptor = Descriptor::decode(d);
             self.descriptors.insert(name.to_string(), descriptor);
             to_remove.push(export.id());
@@ -137,4 +244,30 @@ impl CustomSection for WasmBindgenDescriptorsSection {
     fn data(&self, _: &walrus::IdsToIndices) -> Cow<'_, [u8]> {
         panic!("shouldn't emit custom sections just yet");
     }
+}
+
+/// Build a `name -> u32` lookup of every function the wasm module exposes
+/// by symbolic name, for [`descriptors_section::resolve_symbols`].
+///
+/// Strategy: collect each function's export name and its `FunctionId`
+/// index. We expose the *table index* lookup at the API boundary as a
+/// `u32`, but at this stage we don't yet have a function table to refer
+/// into — that's a later-pass concern (closure invoke shims will need it).
+/// For step 3 we only need to support regular descriptor entries, which do
+/// not carry any `SYMBOL_REF` opcodes yet, so the resolved values here are
+/// effectively never consulted. Producing the table anyway keeps the
+/// interface stable for the closure/cast follow-ups.
+///
+/// The map keys are export names; when SYMBOL_REF is exercised in earnest
+/// the macro will choose names that the compiler emits via
+/// `#[unsafe(export_name = ...)]` so the lookup is robust against Rust
+/// symbol mangling.
+fn build_symbol_table(module: &Module) -> HashMap<String, u32> {
+    let mut out = HashMap::new();
+    for export in module.exports.iter() {
+        if let ExportItem::Function(id) = export.item {
+            out.insert(export.name.clone(), id.index() as u32);
+        }
+    }
+    out
 }
