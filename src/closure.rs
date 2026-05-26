@@ -769,6 +769,21 @@ pub unsafe extern "C" fn __wbindgen_destroy_closure(a: WasmWord, b: WasmWord) {
     ));
 }
 
+// `WasmDescribe::SCHEMA` is intentionally left at the default
+// (`&[]`) for `OwnedClosure` / `BorrowedClosure`. The closure's full
+// schema (`[CLOSURE, owned, IS_MUT, FUNCTION, invoke_addr, nargs,
+// args..., ret, ret]`) has a variable-length tail dependent on `T`,
+// and assembling that into a `const &'static [u32]` needs generic-
+// length const arrays. That's blocked on
+// `feature(generic_const_exprs)` (rust-lang/rust#76560) on stable.
+//
+// As a result, `wbg_cast::<OwnedClosure<T, UW>, JsValue>` and the
+// `BorrowedClosure` variants are the one descriptor pathway that
+// still runs through the wasm interpreter in
+// `crates/cli-support/src/interpreter`. When that feature stabilises,
+// give these impls a real `SCHEMA` and the interpreter directory
+// deletes. See the module-level docs in
+// `crates/cli-support/src/descriptors.rs` for the migration plan.
 impl<T, const UNWIND_SAFE: bool> WasmDescribe for OwnedClosure<T, UNWIND_SAFE>
 where
     T: WasmClosure + ?Sized,
