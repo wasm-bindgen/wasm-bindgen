@@ -278,27 +278,31 @@ impl CustomSection for WasmBindgenDescriptorsSection {
     }
 }
 
-/// Build a `name -> u32` lookup of every function the wasm module exposes
-/// by symbolic name, for [`descriptors_section::resolve_symbols`].
+/// Build a `name -> u32` lookup for [`descriptors_section::resolve_symbols`].
 ///
-/// Strategy: collect each function's export name and its `FunctionId`
-/// index. We expose the *table index* lookup at the API boundary as a
-/// `u32`, but at this stage we don't yet have a function table to refer
-/// into — that's a later-pass concern (closure invoke shims will need it).
-/// For step 3 we only need to support regular descriptor entries, which do
-/// not carry any `SYMBOL_REF` opcodes yet, so the resolved values here are
-/// effectively never consulted. Producing the table anyway keeps the
-/// interface stable for the closure/cast follow-ups.
+/// For each exported function present in the main function table, the
+/// map records the function-table slot index — the value the legacy
+/// interpreter would have observed via `invoke as *const () as u32`.
+/// This is what makes the closure SYMBOL_REF path work: the macro
+/// emits a non-generic wrapper around `invoke` whose `#[export_name]`
+/// is a stable content hash of the closure signature, wasm-ld places
+/// it in the table, and we surface its slot here.
 ///
-/// The map keys are export names; when SYMBOL_REF is exercised in earnest
-/// the macro will choose names that the compiler emits via
-/// `#[unsafe(export_name = ...)]` so the lookup is robust against Rust
-/// symbol mangling.
+/// Functions that are exported but not present in any element segment
+/// are omitted from the map. If the macro ever emits a SYMBOL_REF
+/// naming such a function, the resolver reports a "not found" error,
+/// the affected entry is dropped, and the legacy interpreter pathway
+/// handles that shim. Same fallback posture as every other section
+/// degradation mode.
 fn build_symbol_table(module: &Module) -> HashMap<String, u32> {
     let mut out = HashMap::new();
     for export in module.exports.iter() {
-        if let ExportItem::Function(id) = export.item {
-            out.insert(export.name.clone(), id.index() as u32);
+        let func_id = match export.item {
+            ExportItem::Function(id) => id,
+            _ => continue,
+        };
+        if let Ok(slot) = crate::wasm_conventions::function_table_slot_of(module, func_id) {
+            out.insert(export.name.clone(), slot);
         }
     }
     out
