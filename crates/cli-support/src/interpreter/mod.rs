@@ -1,20 +1,47 @@
-//! A tiny and incomplete Wasm interpreter
+//! Tiny wasm interpreter, scoped to closure-cast descriptor recovery.
 //!
-//! This module contains a tiny and incomplete Wasm interpreter built on top of
-//! `walrus`'s module structure. Each `Interpreter` contains some state
-//! about the execution of a Wasm instance. The "incomplete" part here is
-//! related to the fact that this is *only* used to execute the various
-//! descriptor functions for wasm-bindgen.
+//! # Scope
 //!
-//! As a recap, the wasm-bindgen macro generate "descriptor functions" which
-//! basically as a mapping of rustc's trait resolution in executable code. This
-//! allows us to detect, after the macro is invoke, what trait selection did and
-//! what types of functions look like. By executing descriptor functions they'll
-//! each invoke a known import (with only one argument) some number of times,
-//! which gives us a list of `u32` values to then decode.
+//! Every other descriptor wasm-bindgen produces is carried in the
+//! `__wasm_bindgen_descriptors` custom section (see
+//! [`crate::descriptors`] and [`crate::descriptors_section`]) and read
+//! structurally from bytes by the cli. This interpreter exists for
+//! **exactly one** remaining case: the `wbg_cast::<From, To>`
+//! monomorphisations where `From` is a closure trait object
+//! (`OwnedClosure<T, UW>` / `BorrowedClosure<T, UW>`).
 //!
-//! The interpreter here is only geared towards this one exact use case, so it's
-//! quite small and likely not extra-efficient.
+//! Those casts can't go through the static section transport because
+//! the cast descriptor's payload includes the closure's full schema
+//! (`nargs`, per-arg schemas, ret schema) — a variable-length tail
+//! that depends on `T` post-monomorphisation. Building that as a
+//! `#[link_section]` const requires `[u32; <T as Trait>::N]` style
+//! array lengths, which depend on `feature(generic_const_exprs)`
+//! (rust-lang/rust#76560). That feature is nightly-only with no stable
+//! timeline, so closure-cast descriptors stay on the legacy
+//! describe-via-execution mechanism for now: the runtime emits an
+//! `inform()` stream into a stack of `u32` values, and this
+//! interpreter walks the relevant function body to collect those
+//! values.
+//!
+//! # Migration path
+//!
+//! When `generic_const_exprs` (or a sufficient subset, e.g.
+//! `min_generic_const_args`) stabilises, closure-cast descriptors
+//! become ordinary `DESCRIPTOR_KIND_CAST` section entries. At that
+//! point [`crate::descriptors::execute_casts`] no longer needs an
+//! interpreter, and this entire directory deletes.
+//!
+//! # Implementation notes
+//!
+//! The interpreter is intentionally small. It handles only the
+//! instructions wasm-ld and rustc emit inside `breaks_if_inlined`
+//! bodies: `i32.const`, `local.get/set/tee`, `global.get/set` (for
+//! stack pointer), `i32.add/sub/and`, `i32.wrap_i64` /
+//! `i64.extend_i32` (for memory64), narrow loads/stores into the
+//! linear-memory stack, and `call` (recognising the
+//! `__wbindgen_describe` and `__wbindgen_describe_cast` imports).
+//! Branches and loops are handled but never expected on the
+//! descriptor-emission path.
 
 #![deny(missing_docs)]
 

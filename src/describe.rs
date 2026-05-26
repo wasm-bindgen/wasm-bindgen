@@ -22,56 +22,59 @@ pub fn inform(a: u32) {
 
 /// Describes the wasm-bindgen type schema for a type.
 ///
-/// Two parallel descriptions live on this trait during the migration away
-/// from the wasm interpreter (`crates/cli-support/src/interpreter/`):
+/// Two parallel descriptions exist on this trait:
 ///
-/// 1. [`Self::describe`]: the historical mechanism. Calls
-///    [`inform`] for each opcode, which the interpreter recovers by
-///    executing a synthetic `__wbindgen_describe_<name>` export function.
-/// 2. [`Self::SCHEMA`]: the new mechanism. A `&'static [u32]` slice of the
-///    same opcodes that `describe` would have emitted, available at
-///    `const` time and used by the `#[wasm_bindgen]` macro to write
-///    descriptors directly into the `__wasm_bindgen_descriptors` custom
-///    section. See [`wasm_bindgen_shared::DESCRIPTORS_SECTION_NAME`].
+/// 1. [`Self::SCHEMA`]: the primary mechanism. A `&'static [u32]`
+///    slice of opcodes, available at `const` time and used by the
+///    `#[wasm_bindgen]` macro to write descriptors directly into the
+///    `__wasm_bindgen_descriptors` custom section
+///    ([`wasm_bindgen_shared::DESCRIPTORS_SECTION_NAME`]).
+/// 2. [`Self::describe`]: the legacy mechanism. Calls [`inform`] for
+///    each opcode, which would historically be recovered by a wasm
+///    interpreter executing a synthetic `__wbindgen_describe_<name>`
+///    export function. The macro no longer emits those exports;
+///    `describe()` remains live only for closure-cast descriptor
+///    recovery (see `crates/cli-support/src/interpreter/`).
 ///
-/// Implementing types should provide `SCHEMA` whenever it can be expressed
-/// as a non-generic-length const. Generic wrapper impls (e.g. `&T`,
-/// `Option<T>`) currently can't have a generic-dependent length without
-/// `feature(generic_const_exprs)`, so they leave `SCHEMA` at the default
-/// empty slice. The macro pattern-matches those wrapper shapes
-/// syntactically and synthesises the schema from the inner type's
-/// `SCHEMA` at the call site, where the lengths are concrete.
+/// Implementing types should provide `SCHEMA` whenever it can be
+/// expressed as a non-generic-length const. Generic wrapper impls
+/// (`&T`, `Option<T>`, `Vec<T>`, `Result<T, E>`, etc.) cannot — their
+/// schema length depends on `T::SCHEMA.len()`, which requires
+/// `feature(generic_const_exprs)` (rust-lang/rust#76560, nightly
+/// only) in array-length position. Those impls leave `SCHEMA` at the
+/// default empty slice. The macro pattern-matches those wrapper
+/// shapes syntactically and synthesises the schema from the inner
+/// type's `SCHEMA` at each call site, where the lengths are concrete.
+///
+/// When `generic_const_exprs` stabilises, the wrapper impls below
+/// gain proper `SCHEMA` consts and the macro's syntactic dispatch in
+/// `schema_parts_for_type` simplifies.
 pub trait WasmDescribe {
     fn describe();
 
-    /// Schema opcode stream for this type, in the same encoding the
-    /// interpreter recovers from [`describe`](Self::describe). See the
-    /// trait docs for how `SCHEMA` and `describe` relate.
-    ///
-    /// Defaults to an empty slice for backwards compatibility with
-    /// downstream `WasmDescribe` impls that haven't been ported yet.
-    /// The macro treats `SCHEMA = &[]` as "fall back to the interpreter
-    /// for any function that references this type".
+    /// Schema opcode stream for this type. Defaults to an empty
+    /// slice; see the trait docs for how `SCHEMA` and `describe`
+    /// relate and why some impls leave it empty.
     const SCHEMA: &'static [u32] = &[];
 }
 
-/// Trait for element types to implement WasmDescribe for vectors of
-/// themselves.
+/// Trait for element types to implement `WasmDescribe` for vectors
+/// of themselves.
 pub trait WasmDescribeVector {
     fn describe_vector();
 
-    /// Section-transport equivalent of [`describe_vector`]: the schema
-    /// stream a `Vec<T>` / `Box<[T]>` of this element type should emit.
-    /// Default is `&[]`, which the macro treats as "fall back to the
-    /// interpreter for any function using `Vec<T>` over this element".
+    /// Section-transport schema for `Vec<Self>` / `Box<[Self]>`:
+    /// `[VECTOR, ...Self::SCHEMA]` for most element types,
+    /// `[VECTOR, NAMED_EXTERNREF, name_len, ...name chars]` for
+    /// user-defined types that cross the boundary as JS handles.
     ///
-    /// The blanket impl below sets this to `[VECTOR, <T's SCHEMA>...]`
-    /// for elements whose representation is `JsValue`. Macro-generated
-    /// impls for user-defined Rust structs override it to
-    /// `[VECTOR, NAMED_EXTERNREF, name_len, ...name chars]` because
-    /// a `Vec<UserStruct>` crosses the boundary as a JS array of
-    /// named-externref handles, not as a sequence of `RUST_STRUCT`
-    /// descriptors.
+    /// Default is `&[]`. Concrete impls set this per element type
+    /// (see explicit impls for `JsValue` / `JsError` /
+    /// `MaybeUninit<T>` etc. below, plus macro-emitted impls for user
+    /// structs and ImportTypes). The repetition is a workaround for
+    /// the `generic_const_exprs` wall — a single blanket impl would
+    /// suffice if `[u32; T::SCHEMA.len() + 1]` were expressible on
+    /// stable.
     const VECTOR_SCHEMA: &'static [u32] = &[];
 }
 
@@ -193,16 +196,22 @@ cfg_if! {
 }
 
 // Concrete `WasmDescribeVector` impls for the JsValue-erased types
-// previously covered by a blanket `impl<T: ErasableGeneric<Repr=JsValue>>
-// WasmDescribeVector for T`. Removed because the blanket impl could
-// not set `VECTOR_SCHEMA` (the const length depends on `T::SCHEMA`,
-// which is the `generic_const_exprs` wall on stable Rust). Each
-// `ErasableGeneric<Repr=JsValue>` type now provides its own impl
-// with a concrete `VECTOR_SCHEMA` so the section transport never
-// needs to fall back to the interpreter for `Vec<Self>` arguments.
+// previously covered by a blanket
+// `impl<T: ErasableGeneric<Repr=JsValue>> WasmDescribeVector for T`.
 //
-// Macro-generated ImportTypes get a matching impl from the macro
-// (`crates/macro-support/src/codegen.rs`'s ImportType emission).
+// The blanket impl was removed because it could not populate
+// `VECTOR_SCHEMA = &[VECTOR, T::SCHEMA...]` at const time — the
+// length depends on `T::SCHEMA.len()`, an associated-const-derived
+// array length that requires `feature(generic_const_exprs)`
+// (rust-lang/rust#76560, nightly-only, no stable timeline). Each
+// `ErasableGeneric<Repr=JsValue>` type now provides its own impl
+// with a concrete `VECTOR_SCHEMA` so the section transport carries
+// `Vec<Self>` arguments without falling back to the interpreter.
+//
+// When `generic_const_exprs` stabilises, the blanket impl can return
+// and the per-type repetition below can collapse to a single
+// generic line. The macro-emitted ImportType impls
+// (`crates/macro-support/src/codegen.rs`) would also collapse.
 impl WasmDescribeVector for JsValue {
     const VECTOR_SCHEMA: &'static [u32] = &[VECTOR, EXTERNREF];
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]

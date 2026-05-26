@@ -2028,9 +2028,14 @@ impl TryToTokens for ast::ImportType {
                 }
 
                 // `Vec<Self>` / `Box<[Self]>` schema for the section
-                // transport. Mirrors `WasmDescribe::SCHEMA` above with a
-                // VECTOR prefix so `Vec<#rust_name>` args don't fall
-                // back to the interpreter.
+                // transport: `[VECTOR, ...Self::SCHEMA]`. The repeated
+                // per-type emission is the workaround for the
+                // generic-length-const wall — see the comment on the
+                // explicit `JsValue` / `JsError` `WasmDescribeVector`
+                // impls in `src/describe.rs`. When
+                // `feature(generic_const_exprs)` stabilises
+                // (rust-lang/rust#76560), these impls collapse into a
+                // single blanket impl over `ErasableGeneric<Repr=JsValue>`.
                 #[automatically_derived]
                 impl #impl_generics #wasm_bindgen::describe::WasmDescribeVector
                     for #rust_name #ty_generics #where_clause

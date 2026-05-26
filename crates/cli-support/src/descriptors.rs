@@ -1,40 +1,42 @@
 //! Management of wasm-bindgen descriptor functions.
 //!
-//! The purpose of this module is to basically execute a pass on a raw wasm
-//! module that just came out of the compiler. The pass will execute all
-//! relevant descriptor functions contained in the module which wasm-bindgen
-//! uses to convey type information here, to the CLI.
+//! Each `#[wasm_bindgen]` shim has an accompanying descriptor that
+//! encodes its type signature for the cli. The cli reads those
+//! descriptors here and converts them into [`Descriptor`] values,
+//! which the rest of the pipeline consumes when synthesising JS shims.
 //!
-//! All descriptor functions are removed after this pass runs and in their stead
-//! a new custom section, defined in this module, is inserted into the
-//! `walrus::Module` which contains all the results of all the descriptor
-//! functions.
+//! # Transport
 //!
-//! ## Transport
-//!
-//! The `__wasm_bindgen_descriptors` custom section
-//! ([`wasm_bindgen_shared::DESCRIPTORS_SECTION_NAME`]) is the primary
-//! descriptor transport. The `#[wasm_bindgen]` macro produces each
-//! descriptor's bytes purely from compile-time information and writes
-//! them into this section. Entries are decoded by
+//! The **primary** transport is the `__wasm_bindgen_descriptors`
+//! custom section ([`wasm_bindgen_shared::DESCRIPTORS_SECTION_NAME`]).
+//! The `#[wasm_bindgen]` macro builds each descriptor's bytes purely
+//! from compile-time information and writes them into this section as
+//! `#[link_section]` statics. Entries are decoded by
 //! [`crate::descriptors_section`] and turn directly into [`Descriptor`]s.
 //!
-//! The legacy `__wbindgen_describe_<name>` synthetic export functions
-//! plus the wasm interpreter in [`crate::interpreter`] remain only to
-//! recover **closure-cast** descriptors (see
-//! [`WasmBindgenDescriptorsSection::execute_casts`]). The interpreter is
-//! never invoked on `__wbindgen_describe_<name>` exports — every shim
-//! the macro emits is required to come through the section. We hard-fail
-//! if one slips through, rather than fall back silently, so coverage
-//! gaps surface immediately.
+//! [`assert_no_legacy_describe_exports`] enforces that the macro has
+//! actually populated the section for every shim it emits: any
+//! leftover `__wbindgen_describe_<name>` export (the historical
+//! "describe-by-execution" mechanism) is a hard error, not a silent
+//! fallback to the interpreter.
 //!
-//! Closure-cast descriptor recovery is the one remaining interpreter
-//! use because the descriptor's schema contains a per-monomorphisation
-//! variable-length tail (`OwnedClosure<T, UW>` etc.). Building that as
-//! a `#[link_section]` static needs generic-length const arrays, which
-//! require [`generic_const_exprs`] (nightly-only, no stable timeline).
-//! When that feature stabilises, closure-cast descriptors become
-//! ordinary section entries and the interpreter directory deletes.
+//! # The one remaining interpreter use
+//!
+//! Closure-cast descriptors —
+//! `wbg_cast::<OwnedClosure<T, UW>, JsValue>` and similar — still go
+//! through [`crate::interpreter`] from [`Self::execute_casts`]. The
+//! cast's descriptor payload includes the closure's full schema
+//! (`nargs`, per-arg schemas, ret schema) — a variable-length tail
+//! that depends on `T` post-monomorphisation. Building that as a
+//! `#[link_section]` static needs generic-length const arrays
+//! (`[u32; <T as Trait>::N]`), which require
+//! [`generic_const_exprs`] (nightly-only, no stable timeline).
+//!
+//! When `generic_const_exprs` stabilises, closure-cast descriptors
+//! become ordinary `DESCRIPTOR_KIND_CAST` section entries and the
+//! [`crate::interpreter`] directory deletes entirely. The migration
+//! is one localised change to `breaks_if_inlined` in `src/rt/mod.rs`
+//! plus the matching `Descriptor::decode` invocation here.
 //!
 //! [`generic_const_exprs`]: https://github.com/rust-lang/rust/issues/76560
 
