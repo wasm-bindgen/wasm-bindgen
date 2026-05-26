@@ -178,12 +178,15 @@ jobs:
       with:
         targets: wasm32-unknown-unknown
         components: rust-src
-    # Legacy EH is the path that buys back Node 18+ support: wasm-bindgen
+    # Legacy EH is the path that buys back Node 20+ support: wasm-bindgen
     # polyfills `WebAssembly.JSTag` on the JS side, so the legacy `try`/`catch`
-    # instructions (supported since Node 18) are sufficient.
+    # instructions (supported since Node 18) are sufficient — no host
+    # `WebAssembly.JSTag` required. Node 18 is excluded because its V8 10.2
+    # has unrelated funcref / WASM_INTERNAL_FUNCTION_TYPE bugs that crash the
+    # wasm-bindgen-test runtime.
     - uses: actions/setup-node@v6
       with:
-        node-version: '18'
+        node-version: '20'
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --lib --bins --tests
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --test wasm --features std,wasm-bindgen-futures/std
   test_wasm_bindgen_unwind_exnref_eh:

@@ -20,12 +20,13 @@ is rejected with the `PanicError`.
   `std::panic::catch_unwind`. to catch panics.
 - **Runtime with Wasm exception handling** - `-Cpanic=unwind` emits modern
   (exnref) EH by default and requires Node.js 22.22.3+ / 24.15.0+ or a
-  recent browser. For Node.js 18+ support, select legacy EH by adding
+  recent browser. For Node.js 20+ support, select legacy EH by adding
   `-Cllvm-args=-wasm-use-legacy-eh` to `RUSTFLAGS`. Legacy EH is still
   supported in modern Node.js, and on this path wasm-bindgen polyfills
   `WebAssembly.JSTag` on the JS side so the legacy `try`/`catch`
-  instructions are sufficient — no `WebAssembly.JSTag` host support
-  required.
+  instructions are sufficient — no host `WebAssembly.JSTag` required.
+  Node.js 18 is not supported on this path because its V8 10.2 has
+  unrelated funcref interop bugs that affect the wasm-bindgen runtime.
 
 ## Building
 
