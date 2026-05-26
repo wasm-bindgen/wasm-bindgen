@@ -59,6 +59,20 @@ pub trait WasmDescribe {
 /// themselves.
 pub trait WasmDescribeVector {
     fn describe_vector();
+
+    /// Section-transport equivalent of [`describe_vector`]: the schema
+    /// stream a `Vec<T>` / `Box<[T]>` of this element type should emit.
+    /// Default is `&[]`, which the macro treats as "fall back to the
+    /// interpreter for any function using `Vec<T>` over this element".
+    ///
+    /// The blanket impl below sets this to `[VECTOR, <T's SCHEMA>...]`
+    /// for elements whose representation is `JsValue`. Macro-generated
+    /// impls for user-defined Rust structs override it to
+    /// `[VECTOR, NAMED_EXTERNREF, name_len, ...name chars]` because
+    /// a `Vec<UserStruct>` crosses the boundary as a JS array of
+    /// named-externref handles, not as a sequence of `RUST_STRUCT`
+    /// descriptors.
+    const VECTOR_SCHEMA: &'static [u32] = &[];
 }
 
 macro_rules! simple {
