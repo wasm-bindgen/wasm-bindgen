@@ -26,14 +26,20 @@ pub const SCHEMA_VERSION: &str = "0.2.122";
 ///
 /// ```text
 /// section bytes:
-///   u32 LE  total_len       // size in bytes of all following entries
-///   entry repeated until total_len consumed:
+///   entry repeated until the section ends:
 ///     u8        shim_name_len     // 1..=255
 ///     [u8; n]   shim_name         // UTF-8, not null-terminated
 ///     u8        kind              // 0 = regular, 1 = cast
 ///     u32 LE    schema_word_count // number of u32 words below
 ///     [u32 LE]  schema            // opcode stream, fed to Descriptor::decode
 /// ```
+///
+/// There is no outer length header: the wasm custom-section framing
+/// already carries the payload size. Each `#[wasm_bindgen]`-expanded
+/// function emits one entry as a `#[link_section]` static, and the
+/// linker concatenates them into the section, so the producer side
+/// can't write a single total_len anyway. The consumer reads entries
+/// until the section bytes are exhausted.
 ///
 /// The `schema` stream uses the same opcodes as the legacy interpreter
 /// output (`crates/shared/src/tys.rs`), with one addition: [`tys::SYMBOL_REF`]

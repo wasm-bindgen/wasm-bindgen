@@ -1066,13 +1066,147 @@ impl TryToTokens for ast::Export {
                 #describe_args
                 #describe_ret
             },
-            attrs,
+            attrs: attrs.clone(),
             wasm_bindgen: &self.wasm_bindgen,
         }
         .to_tokens(into);
 
+        // Also emit the same descriptor stream as a static byte array
+        // linked into the __wasm_bindgen_descriptors custom section.
+        // This is the new transport that will replace the legacy
+        // synthetic __wbindgen_describe_* export executed by the
+        // wasm-bindgen-cli wasm interpreter.
+        //
+        // The legacy descriptor function above is still emitted. Both
+        // coexist during the migration: cli-support prefers the section
+        // entry when it can decode it, and falls back to running the
+        // interpreter against the legacy export when it can't (for
+        // instance when the macro hasn't taken over a wrapper type's
+        // schema yet and the section's bytes would be malformed).
+        //
+        // The set of schema parts mirrors `inner` above exactly: a
+        // 3-word header, one entry per argument (with LONGREF inserted
+        // for async-shared-ref args, matching describe_args), then
+        // ret_ty and inner_ret_ty.
+        emit_static_descriptor_entry(
+            &self.wasm_bindgen,
+            &export_name,
+            &argtys,
+            self.function.r#async,
+            &ret_ty,
+            &inner_ret_ty,
+            nargs,
+            into,
+        );
+
         Ok(())
     }
+}
+
+/// Emit a `static` linked into the `__wasm_bindgen_descriptors` custom
+/// section whose bytes encode the same descriptor stream the legacy
+/// `__wbindgen_describe_<name>` function would have produced.
+///
+/// The layout of the static matches the section format documented next
+/// to [`wasm_bindgen_shared::DESCRIPTORS_SECTION_NAME`].
+///
+/// The composition relies on every involved `<Ty as WasmDescribe>::SCHEMA`
+/// being a non-empty slice. If any type's `SCHEMA` is still the trait
+/// default (`&[]`), the resulting bytes are malformed; `cli-support`
+/// detects this on decode and falls back to the interpreter for that
+/// shim, so emitting the static is always safe. The macro will expand
+/// the set of recognised wrapper types in follow-up commits, eventually
+/// covering everything the interpreter handles today.
+#[allow(clippy::too_many_arguments)]
+fn emit_static_descriptor_entry(
+    wasm_bindgen: &syn::Path,
+    export_name: &str,
+    argtys: &[&syn::Type],
+    is_async: bool,
+    ret_ty: &TokenStream,
+    inner_ret_ty: &TokenStream,
+    nargs: u32,
+    into: &mut TokenStream,
+) {
+    // Per-arg schema part: matches the structure of `describe_args`
+    // upstream. Async non-mut references get a LONGREF prefix; everything
+    // else delegates straight to `<Ty as WasmDescribe>::SCHEMA`.
+    let arg_parts = argtys.iter().map(|ty| match ty {
+        syn::Type::Reference(reference) if is_async && reference.mutability.is_none() => {
+            let inner = &reference.elem;
+            quote! {
+                &[#wasm_bindgen::describe::LONGREF],
+                <#inner as #wasm_bindgen::describe::WasmDescribe>::SCHEMA,
+            }
+        }
+        _ => quote! {
+            <#ty as #wasm_bindgen::describe::WasmDescribe>::SCHEMA,
+        },
+    });
+
+    // The static's identifier is derived from the export name so each
+    // descriptor entry has a unique symbol within its crate. The name
+    // is also written into the entry's body verbatim.
+    let static_ident = Ident::new(
+        &format!("__WBG_DESCRIPTOR_{}", mangle_export_name_for_ident(export_name)),
+        Span::call_site(),
+    );
+    let export_name_bytes = syn::LitByteStr::new(export_name.as_bytes(), Span::call_site());
+    let export_name_len = export_name.len();
+
+    (quote! {
+        #[cfg(target_family = "wasm")]
+        #[automatically_derived]
+        const _: () = {
+            const __PARTS: &[&[u32]] = &[
+                &[
+                    #wasm_bindgen::describe::FUNCTION,
+                    0u32,
+                    #nargs,
+                ],
+                #(#arg_parts)*
+                <#ret_ty as #wasm_bindgen::describe::WasmDescribe>::SCHEMA,
+                <#inner_ret_ty as #wasm_bindgen::describe::WasmDescribe>::SCHEMA,
+            ];
+            const __WORDS: usize =
+                #wasm_bindgen::describe::schema::word_total(__PARTS);
+            const __SCHEMA: [u32; __WORDS] =
+                #wasm_bindgen::describe::schema::concat_words::<__WORDS>(__PARTS);
+            const __ENTRY_LEN: usize =
+                #wasm_bindgen::describe::schema::entry_byte_len(#export_name_len, __WORDS);
+            // The `link_section` attribute places this byte array in the
+            // shared __wasm_bindgen_descriptors custom section, which
+            // wasm-bindgen-cli parses. `#[used]` keeps the linker from
+            // discarding it as dead code (nothing else references it).
+            #[link_section = "__wasm_bindgen_descriptors"]
+            #[used]
+            #[doc(hidden)]
+            static #static_ident: [u8; __ENTRY_LEN] =
+                #wasm_bindgen::describe::schema::pack_entry::<__ENTRY_LEN>(
+                    #export_name_bytes,
+                    #wasm_bindgen::__rt::DESCRIPTOR_KIND_REGULAR,
+                    &__SCHEMA,
+                );
+        };
+    })
+    .to_tokens(into);
+}
+
+/// Mangle an export name into something usable as a Rust identifier. Export
+/// names are arbitrary UTF-8 strings, but identifiers must be alphanumeric +
+/// underscores. Non-conforming bytes become `_<hex>`.
+fn mangle_export_name_for_ident(name: &str) -> String {
+    let mut out = String::with_capacity(name.len());
+    for b in name.bytes() {
+        match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'_' => out.push(b as char),
+            _ => {
+                out.push('_');
+                out.push_str(&format!("{:02x}", b));
+            }
+        }
+    }
+    out
 }
 
 impl TryToTokens for ast::ImportKind {

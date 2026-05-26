@@ -51,27 +51,22 @@ pub struct Entry {
 ///
 /// ```text
 /// section bytes:
-///   u32 LE  total_len
-///   entry repeated until total_len bytes consumed:
+///   entry repeated until the section ends:
 ///     u8        shim_name_len
 ///     [u8; n]   shim_name
 ///     u8        kind
 ///     u32 LE    schema_word_count
 ///     [u32 LE]  schema (schema_word_count * 4 bytes)
 /// ```
+///
+/// There is no outer length header: the wasm custom-section framing
+/// already supplies the slice length. Each `#[wasm_bindgen]`-expanded
+/// function emits one entry as a `#[link_section]` static, and the
+/// linker concatenates them, so the producer side has no opportunity
+/// to write a single total_len anyway.
 pub fn parse(section: &[u8]) -> Result<Vec<Entry>> {
     let mut r = Reader::new(section);
-    let total_len = r.u32()? as usize;
-    let body_start = r.pos;
-    let body_end = body_start
-        .checked_add(total_len)
-        .ok_or_else(|| anyhow!("descriptor section total_len overflows"))?;
-    if body_end > section.len() {
-        bail!(
-            "descriptor section total_len ({total_len}) exceeds section size ({})",
-            section.len() - body_start
-        );
-    }
+    let body_end = section.len();
 
     let mut entries = Vec::new();
     while r.pos < body_end {
@@ -224,10 +219,7 @@ mod tests {
     }
 
     fn section(entries: &[Vec<u8>]) -> Vec<u8> {
-        let body: Vec<u8> = entries.iter().flatten().copied().collect();
-        let mut out = (body.len() as u32).to_le_bytes().to_vec();
-        out.extend(body);
-        out
+        entries.iter().flatten().copied().collect()
     }
 
     #[test]
@@ -327,27 +319,6 @@ mod tests {
             &[tys::I32, tys::I32],
         )]);
         let err = parse(&bytes[..bytes.len() - 1]).unwrap_err();
-        let msg = err.to_string();
-        assert!(
-            msg.contains("exceeds section size") || msg.contains("unexpected end"),
-            "unexpected truncation error message: {msg}"
-        );
-    }
-
-    #[test]
-    fn truncated_mid_entry_is_rejected() {
-        // Build a section whose total_len is honest but whose entry body is
-        // cut short mid-schema (5 bytes lopped off the tail), so the inner
-        // reader hits "unexpected end" rather than the section-size check.
-        let entry = entry_bytes(
-            "x",
-            DESCRIPTOR_KIND_REGULAR,
-            &[tys::I32, tys::I32],
-        );
-        let truncated_entry = &entry[..entry.len() - 5];
-        let mut bytes = (truncated_entry.len() as u32).to_le_bytes().to_vec();
-        bytes.extend_from_slice(truncated_entry);
-        let err = parse(&bytes).unwrap_err();
         assert!(
             err.to_string().contains("unexpected end"),
             "got: {err}"
