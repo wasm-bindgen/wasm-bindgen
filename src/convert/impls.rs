@@ -1,4 +1,5 @@
 use alloc::boxed::Box;
+use alloc::string::String;
 use alloc::vec::Vec;
 use core::char;
 use core::mem::{self, ManuallyDrop};
@@ -8,12 +9,13 @@ use crate::__rt::marker::ErasableGeneric;
 use crate::__rt::{WasmSignedWordRepr, WasmWordRepr};
 use crate::convert::traits::{WasmAbi, WasmPrimitive};
 use crate::convert::{
-    FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, OptionFromWasmAbi, OptionIntoWasmAbi,
-    RefFromWasmAbi, ReturnWasmAbi, TryFromJsValue, UpcastFrom,
+    FromJsGeneric, FromWasmAbi, IntoJsGeneric, IntoWasmAbi, LongRefFromWasmAbi, OptionFromWasmAbi,
+    OptionIntoWasmAbi, RefFromWasmAbi, ReturnWasmAbi, TryFromJsValue, UpcastFrom,
 };
 use crate::sys::Promising;
 use crate::sys::{JsOption, Undefined};
 use crate::{Clamped, JsError, JsValue, UnwrapThrowExt};
+use crate::{JsCast, JsGeneric};
 
 // Primitive types can always be passed over the ABI.
 impl<T: WasmPrimitive> WasmAbi for T {
@@ -472,8 +474,122 @@ unsafe impl<T: ErasableGeneric> ErasableGeneric for Option<T> {
     type Repr = Option<<T as ErasableGeneric>::Repr>;
 }
 
+// `Option<T>::JsCanon = JsOption<T::JsCanon>` — single-externref wire for
+// the trait-driven path (`fn f<U>(v: U)` with `U = Option<T>`). For the
+// syntactic path (`fn f<T>() -> Option<T>` literal in extern), codegen
+// unfolds element-wise through `T`'s trait and doesn't consult this impl.
+impl<T: IntoJsGeneric> IntoJsGeneric for Option<T>
+where
+    T::JsCanon: JsGeneric,
+{
+    type JsCanon = JsOption<<T as IntoJsGeneric>::JsCanon>;
+    #[inline]
+    fn to_js(self) -> Self::JsCanon {
+        JsOption::from_option(self.map(<T as IntoJsGeneric>::to_js))
+    }
+    #[inline]
+    fn ref_to_js(&self) -> Self::JsCanon {
+        JsOption::from_option(self.as_ref().map(<T as IntoJsGeneric>::ref_to_js))
+    }
+}
+
+impl<T: FromJsGeneric> FromJsGeneric for Option<T>
+where
+    T::JsCanon: JsGeneric + JsCast,
+{
+    #[inline]
+    fn unchecked_from_js(canon: Self::JsCanon) -> Self {
+        canon
+            .into_option()
+            .map(<T as FromJsGeneric>::unchecked_from_js)
+    }
+}
+
 impl<T, Target> UpcastFrom<Option<T>> for Option<Target> where Target: UpcastFrom<T> {}
 impl<T, Target> UpcastFrom<Option<T>> for JsOption<Option<Target>> where Target: UpcastFrom<T> {}
+
+// `FromJsGeneric` is implemented only for primitives in the IEEE-754 safe-
+// integer range (lossless round-trip via `as_f64`). `i64` / `u64` / `i128` /
+// `u128` / `isize` / `usize` await a BigInt canon. Canon is `JsValue` for
+// now; refinement to `JsString` / `Number` / `Boolean` is blocked by the
+// orphan rule and waits on a future js-sys-into-core consolidation.
+macro_rules! primitive_into_js_generic_via_jsvalue {
+    ($($x:ty)*) => ($(
+        impl IntoJsGeneric for $x {
+            type JsCanon = JsValue;
+            #[inline]
+            fn to_js(self) -> JsValue {
+                JsValue::from(self)
+            }
+            #[inline]
+            fn ref_to_js(&self) -> JsValue {
+                JsValue::from(*self)
+            }
+        }
+
+        impl FromJsGeneric for $x {
+            #[inline]
+            fn unchecked_from_js(canon: JsValue) -> $x {
+                // Lossless for our IEEE-754 safe-integer set: round-trips via `as_f64`.
+                canon.as_f64().expect("JS value is not a number") as $x
+            }
+        }
+    )*)
+}
+primitive_into_js_generic_via_jsvalue!(i8 u8 i16 u16 i32 u32 f32 f64);
+
+impl IntoJsGeneric for bool {
+    type JsCanon = JsValue;
+    #[inline]
+    fn to_js(self) -> JsValue {
+        JsValue::from(self)
+    }
+    #[inline]
+    fn ref_to_js(&self) -> JsValue {
+        JsValue::from(*self)
+    }
+}
+
+impl FromJsGeneric for bool {
+    #[inline]
+    fn unchecked_from_js(canon: JsValue) -> bool {
+        canon.as_bool().expect("JS value is not a boolean")
+    }
+}
+
+impl IntoJsGeneric for String {
+    type JsCanon = JsValue;
+    #[inline]
+    fn to_js(self) -> JsValue {
+        JsValue::from_str(&self)
+    }
+    #[inline]
+    fn ref_to_js(&self) -> JsValue {
+        JsValue::from_str(self)
+    }
+}
+
+impl FromJsGeneric for String {
+    #[inline]
+    fn unchecked_from_js(canon: JsValue) -> String {
+        canon.as_string().expect("JS value is not a string")
+    }
+}
+
+// `&str` participates in `IntoJsGeneric` (outgoing only — there's no
+// `JsGeneric` impl because you can't reconstruct a `&str` from an owned
+// JS handle). This enables `set_value(s: &str)` patterns.
+impl IntoJsGeneric for &str {
+    type JsCanon = JsValue;
+    #[inline]
+    fn to_js(self) -> JsValue {
+        JsValue::from_str(self)
+    }
+    #[inline]
+    fn ref_to_js(&self) -> JsValue {
+        JsValue::from_str(self)
+    }
+}
 
 impl<T> FromWasmAbi for Option<*const T> {
     type Abi = f64;
@@ -704,6 +820,26 @@ impl UpcastFrom<()> for () {}
 
 unsafe impl ErasableGeneric for () {
     type Repr = ();
+}
+
+// `()` canonicalises to JS `undefined`. This lets `Fn(...) -> ()` closures
+// participate in the canon-upcasting path: their JS-side counterpart returns
+// `undefined`, and Rust-side `()::from_js` discards the `Undefined` wrapper.
+impl IntoJsGeneric for () {
+    type JsCanon = crate::sys::Undefined;
+    #[inline]
+    fn to_js(self) -> crate::sys::Undefined {
+        crate::sys::Undefined::UNDEFINED
+    }
+    #[inline]
+    fn ref_to_js(&self) -> crate::sys::Undefined {
+        crate::sys::Undefined::UNDEFINED
+    }
+}
+
+impl FromJsGeneric for () {
+    #[inline]
+    fn unchecked_from_js(_canon: crate::sys::Undefined) {}
 }
 
 impl<T: WasmAbi<Prim3 = (), Prim4 = ()>> WasmAbi for Result<T, u32> {

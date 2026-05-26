@@ -501,86 +501,75 @@ impl_tuple_upcast!([T1 T2 T3 T4 T5 T6] [Target1 Target2 Target3 Target4 Target5 
 impl_tuple_upcast!([T1 T2 T3 T4 T5 T6 T7] [Target1 Target2 Target3 Target4 Target5 Target6 Target7]);
 impl_tuple_upcast!([T1 T2 T3 T4 T5 T6 T7 T8] [Target1 Target2 Target3 Target4 Target5 Target6 Target7 Target8]);
 
-/// A convenience trait for types that erase to [`JsValue`].
+/// A round-trip JS-compatible type — has a canonical erasable form that
+/// erases to [`JsValue`] at the FFI boundary, and can be reconstructed from
+/// that canonical form.
 ///
-/// This is a shorthand for `ErasableGeneric<Repr = JsValue>`, used as a bound
-/// on generic parameters that must be representable as JavaScript values.
-///
-/// # When to Use
-///
-/// Use `JsGeneric` as a trait bound when you need a generic type that:
-/// - Can be passed to/from JavaScript
-/// - Is type-erased to `JsValue` at the FFI boundary
-///
-/// # Examples
-///
-/// ```ignore
-/// use wasm_bindgen::JsGeneric;
-///
-/// fn process_js_values<T: JsGeneric>(items: &[T]) {
-///     // T can be any JS-compatible type
-/// }
-/// ```
+/// Types that only flow outward (e.g. `&str`) implement just
+/// [`IntoJsGeneric`] without this stronger bound.
 ///
 /// # Implementors
 ///
-/// This trait is automatically implemented for all types that implement
-/// `ErasableGeneric<Repr = JsValue>`, including:
-/// - All `js_sys` types (`Object`, `Array`, `Function`, etc.)
-/// - `JsValue` itself
-/// - Custom types imported via `#[wasm_bindgen]`
+/// - All `js_sys` types (`Object`, `Array`, `Function`, …) — identity canon
+/// - `JsValue` — identity canon
+/// - Custom types imported via `#[wasm_bindgen]` — identity canon
+/// - `String`, numeric primitives in the lossless f64 range, `bool` —
+///   non-identity canon (`= JsValue`), materialising a JS handle on conversion
 pub trait JsGeneric:
-    ErasableGeneric<Repr = JsValue>
-    + UpcastFrom<Self>
-    + Upcast<Self>
-    + Upcast<JsValue>
-    + JsCast
-    + 'static
+    IntoJsGeneric<JsCanon = <Self as JsGeneric>::Canon> + FromJsGeneric + 'static
 {
+    /// The canonical erasable form. Re-stating `IntoJsGeneric::JsCanon` here
+    /// pins the JS-erasure invariant so codegen-emitted bounds discharge at
+    /// use sites without explicit `where` clauses.
+    type Canon: ErasableGeneric<Repr = JsValue> + Upcast<JsValue> + JsCast + 'static;
 }
 
-impl<T: ErasableGeneric<Repr = JsValue> + UpcastFrom<T> + Upcast<JsValue> + JsCast + 'static>
-    JsGeneric for T
+impl<T> JsGeneric for T
+where
+    T: IntoJsGeneric + FromJsGeneric + 'static,
+    T::JsCanon: ErasableGeneric<Repr = JsValue> + Upcast<JsValue> + JsCast + 'static,
 {
+    type Canon = <T as IntoJsGeneric>::JsCanon;
 }
 
 /// Value conversion from a type into its canonical [`JsGeneric`] form.
 ///
-/// This trait allows types to be converted into JsGeneric supported types, which
-/// are required to be erasably generic with JsValue.
-///
-/// The single associated type — rather than a free type parameter bounded by
-/// `AsRef<T>` — is what makes collection-style APIs infer annotation-free.
-/// Given an input `A`, there is exactly one `A::JsCanon`, so rustc never has
-/// to search across multiple `AsRef` impls to pick a target element type.
-///
-/// # Implementations
-///
-/// Provided impls:
-/// - [`JsValue`] in this crate.
-/// - Every `#[wasm_bindgen]`-imported type (identity — emitted by the macro).
-/// - Every generic `js_sys` container (`Array<T>`, `Promise<T>`, `Set<T>`, …)
-///   provides its own identity impl owned by `js_sys`.
-/// - References to cloneable implementors, so borrowed iteration can still
-///   produce owned JS-generic values.
-///
-/// This trait is deliberately *not* blanket-implemented over all [`JsGeneric`]
-/// types: each implementor explicitly opts in, which leaves room for future
-/// wrapper types to pick a non-identity [`Self::JsCanon`].
-///
-/// # Example
-///
-/// ```ignore
-/// use js_sys::{Array, Number};
-///
-/// let arr: Array<Number> = (0..10).map(Number::from).collect();
-/// ```
+/// Provided impls: [`JsValue`], every `#[wasm_bindgen]`-imported type
+/// (identity — emitted by the macro), every generic `js_sys` container,
+/// `String` / `&str` / numeric primitives / `bool`, and references to
+/// cloneable implementors.
 pub trait IntoJsGeneric {
-    /// The canonical [`JsGeneric`] form of this type.
-    type JsCanon: JsGeneric;
+    /// The canonical erasable form of this type. Bounded by
+    /// [`ErasableGeneric`] (not [`JsGeneric`]) so containers like
+    /// `Option<T>` / `Vec<T>` can have non-leaf canons.
+    type JsCanon: ErasableGeneric;
 
-    /// Produce the canonical [`JsGeneric`] value for `self`.
+    /// Produce the canonical value for `self`.
     fn to_js(self) -> Self::JsCanon;
+
+    /// Produce the canonical value from a borrow. Used by codegen for
+    /// root-level `&T` extern arguments.
+    fn ref_to_js(&self) -> Self::JsCanon;
+}
+
+/// Inverse of [`IntoJsGeneric`]. Containers like `Option<T>` / `Vec<T>` can
+/// implement this without satisfying the stricter [`JsGeneric`] bound.
+///
+/// Generalises [`JsCast::unchecked_from_js`](crate::JsCast::unchecked_from_js)
+/// to Rust types whose canon is `JsValue`-shaped (e.g. `String`, numeric
+/// primitives, `bool`) in addition to `repr(transparent)` JS handles. For
+/// `T: JsCast`, both methods produce identical results on identity canons.
+///
+/// `unchecked_from_js` is type-system-unchecked at the FFI seam — the
+/// codegen pairs it with the matching outgoing direction. Misuse produces
+/// wrong-typed values or a panic on extraction, not UB; this matches the
+/// safety convention of [`JsCast::unchecked_from_js`].
+pub trait FromJsGeneric: IntoJsGeneric {
+    /// Reconstruct `Self` from its canonical erasable form.
+    ///
+    /// Type-system-unchecked: assumes `canon` originates from a matching
+    /// outgoing conversion. See trait docs for the safety convention.
+    fn unchecked_from_js(canon: Self::JsCanon) -> Self;
 }
 
 impl IntoJsGeneric for JsValue {
@@ -588,6 +577,17 @@ impl IntoJsGeneric for JsValue {
     #[inline]
     fn to_js(self) -> JsValue {
         self
+    }
+    #[inline]
+    fn ref_to_js(&self) -> JsValue {
+        self.clone()
+    }
+}
+
+impl FromJsGeneric for JsValue {
+    #[inline]
+    fn unchecked_from_js(canon: JsValue) -> JsValue {
+        canon
     }
 }
 
@@ -598,6 +598,10 @@ impl<T: IntoJsGeneric + Clone> IntoJsGeneric for &T {
     #[inline]
     fn to_js(self) -> T::JsCanon {
         self.clone().to_js()
+    }
+    #[inline]
+    fn ref_to_js(&self) -> T::JsCanon {
+        (**self).ref_to_js()
     }
 }
 

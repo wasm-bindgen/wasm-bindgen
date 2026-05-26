@@ -2,12 +2,10 @@
 //!
 //! These types represent fundamental JavaScript values and are designed to be
 //! used as generic type parameters in typed JavaScript collections and APIs.
-use crate::convert::UpcastFrom;
-use crate::JsCast;
-use crate::JsGeneric;
+use crate::convert::{FromJsGeneric, IntoJsGeneric, Upcast, UpcastFrom};
 use crate::JsValue;
+use crate::{JsCast, JsGeneric};
 use core::fmt;
-use core::ops::Deref;
 use wasm_bindgen_macro::wasm_bindgen;
 
 /// Marker trait for types which represent `Resolution` or `Promise<Resolution>`.
@@ -114,17 +112,18 @@ extern "C" {
     /// A nullable JS value of type `T`.
     ///
     /// Unlike `Option<T>`, which is a Rust-side construct, `JsOption<T>` represents
-    /// a JS value that may be `T`, `null`, or `undefined`, where the null status is
-    /// not yet known in Rust. The value remains in JS until inspected via methods
+    /// a JS value that may be `T`, `null`, or `undefined`, where the absence status
+    /// is not yet known in Rust. The value remains in JS until inspected via methods
     /// like [`is_empty`](Self::is_empty), [`as_option`](Self::as_option), or
-    /// [`into_option`](Self::into_option).
+    /// [`into_option`](Self::into_option). Both `null` and `undefined` are treated
+    /// as absent.
     ///
     /// `T` must implement [`JsGeneric`], meaning it is any type that can be
     /// represented as a `JsValue` (e.g., `JsString`, `Number`, `Object`, etc.).
     /// `JsOption<T>` itself implements `JsGeneric`, so it can be used in all
     /// generic positions that accept JS types.
     #[wasm_bindgen(typescript_type = "any", no_upcast)]
-    #[derive(Clone, PartialEq)]
+    #[derive(PartialEq)]
     pub type JsOption<T>;
 }
 
@@ -132,13 +131,13 @@ impl<T: JsGeneric> JsOption<T> {
     /// Creates an empty `JsOption<T>` representing `undefined`.
     #[inline]
     pub fn new() -> Self {
-        Undefined::UNDEFINED.unchecked_into()
+        <Self as JsCast>::unchecked_from_js(JsValue::UNDEFINED)
     }
 
     /// Wraps a value in a `JsOption<T>`.
     #[inline]
     pub fn wrap(val: T) -> Self {
-        val.unchecked_into()
+        <Self as JsCast>::unchecked_from_js(IntoJsGeneric::to_js(val).upcast_into())
     }
 
     /// Creates a `JsOption<T>` from an `Option<T>`.
@@ -167,8 +166,7 @@ impl<T: JsGeneric> JsOption<T> {
         if JsValue::is_null_or_undefined(self) {
             None
         } else {
-            let cloned = self.deref().clone();
-            Some(cloned.unchecked_into())
+            self.clone().into_option()
         }
     }
 
@@ -181,7 +179,7 @@ impl<T: JsGeneric> JsOption<T> {
         if JsValue::is_null_or_undefined(&self) {
             None
         } else {
-            Some(self.unchecked_into())
+            Some(FromJsGeneric::unchecked_from_js(self.unchecked_into()))
         }
     }
 
@@ -234,13 +232,22 @@ impl<T: JsGeneric> JsOption<T> {
     }
 }
 
-impl<T: JsGeneric> Default for JsOption<T> {
+impl<T> Clone for JsOption<T> {
+    fn clone(&self) -> Self {
+        Self {
+            obj: self.obj.clone(),
+            generics: self.generics,
+        }
+    }
+}
+
+impl<T: JsGeneric + JsCast> Default for JsOption<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T: JsGeneric + fmt::Debug> fmt::Debug for JsOption<T> {
+impl<T: JsGeneric + JsCast + fmt::Debug> fmt::Debug for JsOption<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}?(", core::any::type_name::<T>())?;
         match self.as_option() {
@@ -251,7 +258,7 @@ impl<T: JsGeneric + fmt::Debug> fmt::Debug for JsOption<T> {
     }
 }
 
-impl<T: JsGeneric + fmt::Display> fmt::Display for JsOption<T> {
+impl<T: JsGeneric + JsCast + fmt::Display> fmt::Display for JsOption<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}?(", core::any::type_name::<T>())?;
         match self.as_option() {

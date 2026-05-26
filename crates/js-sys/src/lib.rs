@@ -50,10 +50,10 @@ use wasm_bindgen::closure::{ScopedClosure, WasmClosure};
 use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, Upcast, UpcastFrom};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsError;
+use wasm_bindgen::{ErasableGeneric, IntoJsGeneric, JsGeneric};
 
 // Re-export sys types as js-sys types
 pub use wasm_bindgen::sys::{JsOption, Null, Promising, Undefined};
-pub use wasm_bindgen::{IntoJsGeneric, JsGeneric};
 
 // When adding new imports:
 //
@@ -577,7 +577,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at)
     #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method)]
-    pub fn at<T>(this: &Array<T>, index: i32) -> T;
+    pub fn at<T: JsGeneric>(this: &Array<T>, index: i32) -> T;
 
     /// Retrieves the element at the index, counting from the end if negative
     /// (returns `None` if the index is out of range).
@@ -585,38 +585,38 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method)]
-    pub fn at<T>(this: &Array<T>, index: i32) -> Option<T>;
+    pub fn at<T: JsGeneric>(this: &Array<T>, index: i32) -> Option<T>;
 
     /// Retrieves the element at the index (returns `undefined` if the index is out of range).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at)
     #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, indexing_getter)]
-    pub fn get<T>(this: &Array<T>, index: u32) -> T;
+    pub fn get<T: JsGeneric>(this: &Array<T>, index: u32) -> T;
 
     /// Retrieves the element at the index (returns `None` if the index is out of range).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, indexing_getter)]
-    pub fn get<T>(this: &Array<T>, index: u32) -> Option<T>;
+    pub fn get<T: JsGeneric>(this: &Array<T>, index: u32) -> Option<T>;
 
     /// Retrieves the element at the index (returns `undefined` if the index is out of range).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at)
     #[wasm_bindgen(method, indexing_getter)]
-    pub fn get_unchecked<T>(this: &Array<T>, index: u32) -> T;
+    pub fn get_unchecked<T: JsGeneric>(this: &Array<T>, index: u32) -> T;
 
     // Next major: deprecate
     /// Retrieves the element at the index (returns `None` if the index is out of range,
     /// or if the element is explicitly `undefined`).
     #[wasm_bindgen(method, indexing_getter)]
-    pub fn get_checked<T>(this: &Array<T>, index: u32) -> Option<T>;
+    pub fn get_checked<T: JsGeneric>(this: &Array<T>, index: u32) -> Option<T>;
 
     /// Sets the element at the index (auto-enlarges the array if the index is out of range).
     #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, indexing_setter)]
-    pub fn set<T>(this: &Array<T>, index: u32, value: T);
+    pub fn set<T: JsGeneric>(this: &Array<T>, index: u32, value: T);
 
     /// Sets the element at the index (auto-enlarges the array if the index is out of range).
     #[cfg(js_sys_unstable_apis)]
@@ -899,7 +899,10 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach)
     #[wasm_bindgen(method, js_name = forEach)]
-    pub fn for_each<T: JsGeneric>(this: &Array<T>, callback: &mut dyn FnMut(T, u32, Array<T>));
+    pub fn for_each<T: JsGeneric>(
+        this: &Array<T>,
+        callback: &mut dyn FnMut(<T as JsGeneric>::Canon, u32, Array<T>),
+    );
 
     /// The `forEach()` method executes a provided function once for each array element. _(Fallible variation)_
     ///
@@ -1737,7 +1740,11 @@ macro_rules! impl_tuple {
 
         impl<$($T: JsGeneric),+> From<($($T,)+)> for ArrayTuple<($($T),+,)> {
             fn from(($($vars,)+): ($($T,)+)) -> Self {
-                $(let $vars: JsValue = $vars.upcast_into();)+
+                // Route each element through its canonical erasable form,
+                // then upcast that canon to `JsValue`. `T::JsCanon:
+                // ErasableGeneric<Repr = JsValue>` (guaranteed by `JsGeneric`)
+                // is exactly the bound that satisfies `Upcast<JsValue>`.
+                $(let $vars: JsValue = $vars.to_js().upcast_into();)+
                 Array::of(&[$($vars),+]).unchecked_into()
             }
         }
@@ -1886,7 +1893,7 @@ impl<T: JsGeneric> core::iter::Iterator for ArrayIntoIter<T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let index = self.range.next()?;
-        self.array.get(index)
+        Some(self.array.get_unchecked(index))
     }
 
     #[inline]
@@ -1908,12 +1915,16 @@ impl<T: JsGeneric> core::iter::Iterator for ArrayIntoIter<T> {
         Self: Sized,
     {
         let Self { range, array } = self;
-        range.last().and_then(|index| array.get(index))
+        range
+            .last()
+            .and_then(|index| Some(array.get_unchecked(index)))
     }
 
     #[inline]
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
-        self.range.nth(n).and_then(|index| self.array.get(index))
+        self.range
+            .nth(n)
+            .and_then(|index| Some(self.array.get_unchecked(index)))
     }
 }
 
@@ -1933,13 +1944,13 @@ impl<T: JsGeneric> core::iter::DoubleEndedIterator for ArrayIntoIter<T> {
 impl<T: JsGeneric> core::iter::DoubleEndedIterator for ArrayIntoIter<T> {
     fn next_back(&mut self) -> Option<Self::Item> {
         let index = self.range.next_back()?;
-        self.array.get(index)
+        Some(self.array.get_unchecked(index))
     }
 
     fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
         self.range
             .nth_back(n)
-            .and_then(|index| self.array.get(index))
+            .and_then(|index| Some(self.array.get_unchecked(index)))
     }
 }
 
@@ -5038,8 +5049,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/next)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, catch, js_name = next)]
-    pub fn next<T: FromWasmAbi>(this: &Generator<T>, value: &T)
-        -> Result<IteratorNext<T>, JsValue>;
+    pub fn next<T: JsGeneric>(this: &Generator<T>, value: &T) -> Result<IteratorNext<T>, JsValue>;
 
     // Next major: deprecate
     /// The `next()` method returns an object with two properties done and value.
@@ -5047,7 +5057,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/next)
     #[wasm_bindgen(method, catch)]
-    pub fn next_iterator<T: FromWasmAbi>(
+    pub fn next_iterator<T: JsGeneric>(
         this: &Generator<T>,
         value: &T,
     ) -> Result<IteratorNext<T>, JsValue>;
@@ -5064,7 +5074,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/return)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, catch, js_name = "return")]
-    pub fn return_<T: FromWasmAbi>(
+    pub fn return_<T: JsGeneric>(
         this: &Generator<T>,
         value: &T,
     ) -> Result<IteratorNext<T>, JsValue>;
@@ -5074,7 +5084,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/return)
     #[wasm_bindgen(method, catch, js_name = "return")]
-    pub fn try_return<T: FromWasmAbi>(
+    pub fn try_return<T: JsGeneric>(
         this: &Generator<T>,
         value: &T,
     ) -> Result<IteratorNext<T>, JsValue>;
@@ -5093,7 +5103,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/throw)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, catch, js_name = throw)]
-    pub fn throw<T: FromWasmAbi>(
+    pub fn throw<T: JsGeneric>(
         this: &Generator<T>,
         error: &JsValue,
     ) -> Result<IteratorNext<T>, JsValue>;
@@ -5104,13 +5114,13 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/throw)
     #[wasm_bindgen(method, catch, js_name = throw)]
-    pub fn throw_value<T: FromWasmAbi>(
+    pub fn throw_value<T: JsGeneric>(
         this: &Generator<T>,
         error: &JsValue,
     ) -> Result<IteratorNext<T>, JsValue>;
 }
 
-impl<T: FromWasmAbi> Iterable for Generator<T> {
+impl<T: JsGeneric> Iterable for Generator<T> {
     type Item = T;
 }
 
@@ -5151,7 +5161,7 @@ extern "C" {
     ) -> Result<Promise<IteratorNext<T>>, JsValue>;
 }
 
-impl<T: FromWasmAbi> AsyncIterable for AsyncGenerator<T> {
+impl<T: JsGeneric> AsyncIterable for AsyncGenerator<T> {
     type Item = T;
 }
 
@@ -5306,7 +5316,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/entries)
     #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method)]
-    pub fn entries<K, V: FromWasmAbi>(this: &Map<K, V>) -> Iterator;
+    pub fn entries<K, V: JsGeneric>(this: &Map<K, V>) -> Iterator;
 
     /// The `entries()` method returns a new Iterator object that contains
     /// the [key, value] pairs for each element in the Map object in
@@ -5315,9 +5325,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/entries)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, js_name = entries)]
-    pub fn entries<K: JsGeneric, V: FromWasmAbi + JsGeneric>(
-        this: &Map<K, V>,
-    ) -> Iterator<ArrayTuple<(K, V)>>;
+    pub fn entries<K: JsGeneric, V: JsGeneric>(this: &Map<K, V>) -> Iterator<ArrayTuple<(K, V)>>;
 
     // Next major: deprecate
     /// The `entries()` method returns a new Iterator object that contains
@@ -5326,7 +5334,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/entries)
     #[wasm_bindgen(method, js_name = entries)]
-    pub fn entries_typed<K: JsGeneric, V: FromWasmAbi + JsGeneric>(
+    pub fn entries_typed<K: JsGeneric, V: JsGeneric>(
         this: &Map<K, V>,
     ) -> Iterator<ArrayTuple<(K, V)>>;
 
@@ -5335,14 +5343,14 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/keys)
     #[wasm_bindgen(method)]
-    pub fn keys<K: FromWasmAbi, V: FromWasmAbi>(this: &Map<K, V>) -> Iterator<K>;
+    pub fn keys<K: JsGeneric, V: JsGeneric>(this: &Map<K, V>) -> Iterator<K>;
 
     /// The `values()` method returns a new Iterator object that contains the
     /// values for each element in the Map object in insertion order.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/values)
     #[wasm_bindgen(method)]
-    pub fn values<K, V: FromWasmAbi>(this: &Map<K, V>) -> Iterator<V>;
+    pub fn values<K, V: JsGeneric>(this: &Map<K, V>) -> Iterator<V>;
 }
 
 impl<K, V> Iterable for Map<K, V> {
@@ -5365,7 +5373,7 @@ extern "C" {
     /// (such as false or undefined), a TypeError ("iterator.next() returned a
     /// non-object value") will be thrown.
     #[wasm_bindgen(catch, method)]
-    pub fn next<T: FromWasmAbi>(this: &Iterator<T>) -> Result<IteratorNext<T>, JsValue>;
+    pub fn next<T: JsGeneric>(this: &Iterator<T>) -> Result<IteratorNext<T>, JsValue>;
 }
 
 impl<T> UpcastFrom<Iterator<T>> for Object {}
@@ -5421,9 +5429,8 @@ extern "C" {
     /// returned a non-object value") will be thrown.
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(catch, method, js_name = next)]
-    pub fn next<T: FromWasmAbi>(
-        this: &AsyncIterator<T>,
-    ) -> Result<Promise<IteratorNext<T>>, JsValue>;
+    pub fn next<T: JsGeneric>(this: &AsyncIterator<T>)
+        -> Result<Promise<IteratorNext<T>>, JsValue>;
 
     // Next major: deprecate
     /// The `next()` method always has to return a Promise which resolves to an object
@@ -5431,7 +5438,7 @@ extern "C" {
     /// gets returned (such as false or undefined), a TypeError ("iterator.next()
     /// returned a non-object value") will be thrown.
     #[wasm_bindgen(catch, method, js_name = next)]
-    pub fn next_iterator<T: FromWasmAbi>(
+    pub fn next_iterator<T: JsGeneric>(
         this: &AsyncIterator<T>,
     ) -> Result<Promise<IteratorNext<T>>, JsValue>;
 }
@@ -5463,7 +5470,7 @@ struct IterState {
     done: bool,
 }
 
-impl<'a, T: FromWasmAbi + JsGeneric> IntoIterator for &'a Iterator<T> {
+impl<'a, T: JsGeneric> IntoIterator for &'a Iterator<T> {
     type Item = Result<T, JsValue>;
     type IntoIter = Iter<'a, T>;
 
@@ -5475,7 +5482,7 @@ impl<'a, T: FromWasmAbi + JsGeneric> IntoIterator for &'a Iterator<T> {
     }
 }
 
-impl<T: FromWasmAbi + JsGeneric> core::iter::Iterator for Iter<'_, T> {
+impl<T: JsGeneric> core::iter::Iterator for Iter<'_, T> {
     type Item = Result<T, JsValue>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -5483,7 +5490,7 @@ impl<T: FromWasmAbi + JsGeneric> core::iter::Iterator for Iter<'_, T> {
     }
 }
 
-impl<T: FromWasmAbi + JsGeneric> IntoIterator for Iterator<T> {
+impl<T: JsGeneric> IntoIterator for Iterator<T> {
     type Item = Result<T, JsValue>;
     type IntoIter = IntoIter<T>;
 
@@ -5495,7 +5502,7 @@ impl<T: FromWasmAbi + JsGeneric> IntoIterator for Iterator<T> {
     }
 }
 
-impl<T: FromWasmAbi + JsGeneric> core::iter::Iterator for IntoIter<T> {
+impl<T: JsGeneric> core::iter::Iterator for IntoIter<T> {
     type Item = Result<T, JsValue>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -5508,7 +5515,7 @@ impl IterState {
         IterState { done: false }
     }
 
-    fn next<T: FromWasmAbi + JsGeneric>(&mut self, js: &Iterator<T>) -> Option<Result<T, JsValue>> {
+    fn next<T: JsGeneric>(&mut self, js: &Iterator<T>) -> Option<Result<T, JsValue>> {
         if self.done {
             return None;
         }
@@ -13086,7 +13093,7 @@ impl<T> PromiseState<T> {
 /// Converts a `PromiseState<T>` into a `Result<T, JsValue>`, matching the
 /// spec invariant that exactly one of the fulfilled value or the rejection
 /// reason is populated per slot.
-impl<T: JsGeneric + FromWasmAbi> From<PromiseState<T>> for Result<T, JsValue> {
+impl<T: JsGeneric + ErasableGeneric<Repr = JsValue>> From<PromiseState<T>> for Result<T, JsValue> {
     fn from(state: PromiseState<T>) -> Result<T, JsValue> {
         if state.is_fulfilled() {
             Ok(state.get_value().unwrap())
