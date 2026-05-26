@@ -247,11 +247,6 @@ impl Interpreter {
         self.describe_cast_id
     }
 
-    /// Returns the export id of the `__wbindgen_skip_interpret_calls`.
-    pub fn skip_interpret(&self) -> Option<ExportId> {
-        self.skip_interpret
-    }
-
     fn call(&mut self, id: FunctionId, module: &Module, args: &[i32]) {
         let func = module.funcs.get(id);
         log::trace!("starting a call of {id:?} {:?}", func.name);
