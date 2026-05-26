@@ -69,7 +69,39 @@ pub fn execute(module: &mut Module) -> Result<WasmBindgenDescriptorsSectionId, E
     section.execute_exports(module, &mut interpreter, &regular_from_section)?;
     section.execute_casts(module, &mut interpreter)?;
 
+    // Phase 3: strip __wbg_invoke_* exports.
+    //
+    // The macro emits these to give per-closure-monomorphisation
+    // forwarding wrappers a stable name we can look up. Now that
+    // every SYMBOL_REF has been resolved to a function-table slot
+    // we no longer need the export. Deleting it lets the walrus GC
+    // pass run later (see `gc_module_and_adapters`) drop wrappers
+    // whose only remaining liveness root was this export; wrappers
+    // that JS will call retain liveness through the function table.
+    strip_closure_invoke_exports(module);
+
     Ok(module.customs.add(section))
+}
+
+/// Remove every `__wbg_invoke_*` export from the module. Their job
+/// (giving the macro-emitted closure wrappers a stable name for
+/// `function_table_slot_of` to find) is done by the time this runs.
+///
+/// Mirrors the strip pattern already used for `__wbindgen_describe_*`
+/// in [`WasmBindgenDescriptorsSection::execute_exports`]. The actual
+/// removal of unreferenced wrapper *functions* happens later via the
+/// existing walrus GC pass.
+fn strip_closure_invoke_exports(module: &mut Module) {
+    const PREFIX: &str = "__wbg_invoke_";
+    let to_remove: Vec<_> = module
+        .exports
+        .iter()
+        .filter(|e| e.name.starts_with(PREFIX))
+        .map(|e| e.id())
+        .collect();
+    for id in to_remove {
+        module.exports.delete(id);
+    }
 }
 
 impl WasmBindgenDescriptorsSection {
