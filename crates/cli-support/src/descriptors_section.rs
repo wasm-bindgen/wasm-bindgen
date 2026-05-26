@@ -122,7 +122,7 @@ pub fn resolve_symbols(
     schema_bytes: &[u8],
     resolved: &HashMap<String, u32>,
 ) -> Result<Vec<u32>> {
-    if !schema_bytes.len().is_multiple_of(4) {
+    if schema_bytes.len() % 4 != 0 {
         bail!(
             "schema byte length {} is not a multiple of 4",
             schema_bytes.len()
