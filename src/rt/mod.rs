@@ -20,6 +20,7 @@ use core::sync::atomic::{AtomicU8, Ordering};
 use wasm_bindgen_shared::tys::FUNCTION;
 
 use alloc::alloc::{alloc, dealloc, realloc, Layout};
+use alloc::boxed::Box;
 use alloc::rc::Rc;
 use once_cell::unsync::Lazy;
 
@@ -1120,3 +1121,40 @@ pub fn ensure_unwind_safe<T: ?Sized + std::panic::UnwindSafe>() {}
 )))]
 #[inline(always)]
 pub fn ensure_unwind_safe<T: ?Sized>() {}
+
+/// Trait for element types to implement `Into<JsValue>` for vectors of
+/// themselves, which isn't possible directly thanks to the orphan rule.
+///
+/// This trait is restored from the pre-wbg_cast world: each element
+/// type provides its own per-monomorphisation conversion to a JS
+/// array, calling the appropriate descriptor-section intrinsic
+/// (`__wbindgen_array_new` + `__wbindgen_array_push` for the
+/// JsValue-element case, typed-array constructors for primitives).
+///
+/// Implementations are provided by the `#[wasm_bindgen]` macro for
+/// user structs / enums, and by this crate directly for `JsValue`,
+/// `String`, and the primitive numeric types.
+pub trait VectorIntoJsValue: Sized {
+    fn vector_into_jsvalue(vector: Box<[Self]>) -> JsValue;
+}
+
+impl<T: VectorIntoJsValue> From<Box<[T]>> for JsValue {
+    fn from(vector: Box<[T]>) -> Self {
+        T::vector_into_jsvalue(vector)
+    }
+}
+
+/// Default implementation strategy for `Vec<T>` where `T: Into<JsValue>`:
+/// build an empty JS Array and push each value. Used by the
+/// `VectorIntoJsValue` impls for `JsValue`, `String`, and macro-emitted
+/// impls for user struct vectors.
+pub fn js_value_vector_into_jsvalue<T: Into<JsValue>>(vector: Box<[T]>) -> JsValue {
+    let result = unsafe { JsValue::_new(super::__wbindgen_array_new()) };
+    for value in vector.into_vec() {
+        let js: JsValue = value.into();
+        unsafe { super::__wbindgen_array_push(result.idx, js.idx) }
+        // `__wbindgen_array_push` takes ownership of `js` already.
+        core::mem::forget(js);
+    }
+    result
+}
