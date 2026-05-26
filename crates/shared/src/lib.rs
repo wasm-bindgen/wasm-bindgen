@@ -15,6 +15,42 @@ pub mod tys;
 // SCHEMA_VERSION in order to work together.
 pub const SCHEMA_VERSION: &str = "0.2.122";
 
+/// Name of the wasm custom section into which `#[wasm_bindgen]`-annotated
+/// items emit their compile-time-known type schema as raw bytes.
+///
+/// `wasm-bindgen-cli-support` reads this section to recover the same schema
+/// stream that the legacy `__wbindgen_describe_*` synthetic export functions
+/// previously provided via the wasm interpreter.
+///
+/// ## On-wire format
+///
+/// ```text
+/// section bytes:
+///   u32 LE  total_len       // size in bytes of all following entries
+///   entry repeated until total_len consumed:
+///     u8        shim_name_len     // 1..=255
+///     [u8; n]   shim_name         // UTF-8, not null-terminated
+///     u8        kind              // 0 = regular, 1 = cast
+///     u32 LE    schema_word_count // number of u32 words below
+///     [u32 LE]  schema            // opcode stream, fed to Descriptor::decode
+/// ```
+///
+/// The `schema` stream uses the same opcodes as the legacy interpreter
+/// output (`crates/shared/src/tys.rs`), with one addition: [`tys::SYMBOL_REF`]
+/// which signals that the next conceptual u32 must be resolved by symbol
+/// name (see that constant for details). Strings (function names, struct
+/// names, etc.) are encoded as a length-prefixed sequence of `u32` code
+/// points, matching the legacy format exactly so `Descriptor::decode`
+/// requires no changes.
+pub const DESCRIPTORS_SECTION_NAME: &str = "__wasm_bindgen_descriptors";
+
+/// Entry kind byte for a regular function/import descriptor.
+pub const DESCRIPTOR_KIND_REGULAR: u8 = 0;
+
+/// Entry kind byte for a cast descriptor (records source/target types of a
+/// `wbg_cast::<From, To>` monomorphization).
+pub const DESCRIPTOR_KIND_CAST: u8 = 1;
+
 #[macro_export]
 macro_rules! shared_api {
     ($mac:ident) => {
