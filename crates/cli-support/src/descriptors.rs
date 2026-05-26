@@ -335,7 +335,55 @@ fn build_symbol_table(module: &Module) -> HashMap<String, u32> {
         };
         if let Ok(slot) = crate::wasm_conventions::function_table_slot_of(module, func_id) {
             out.insert(export.name.clone(), slot);
+            continue;
+        }
+        // Fallback: some test-runner / transformation layers wrap an
+        // exported function (`__wbg_invoke_X`) with a thin shim
+        // (`__wbg_invoke_X.command_export`). The export now points at
+        // the shim, but the original function still sits in the
+        // function table under its original symbol name. Look it up
+        // by name and use that slot if found.
+        if let Some(slot) = lookup_table_slot_by_name(module, &export.name) {
+            out.insert(export.name.clone(), slot);
         }
     }
     out
+}
+
+/// Walk the main function table's element segments and find any
+/// function whose own `name` matches `wanted_name`. Returns the
+/// absolute slot index in that case. Used as a fallback when an
+/// export points to a wrapping shim function instead of the table-
+/// registered original.
+fn lookup_table_slot_by_name(module: &Module, wanted_name: &str) -> Option<u32> {
+    use walrus::{ConstExpr, ElementItems, ElementKind};
+
+    let table_id = module.tables.main_function_table().ok().flatten()?;
+    let table = module.tables.get(table_id);
+    for &segment_id in &table.elem_segments {
+        let segment = module.elements.get(segment_id);
+        let base = match &segment.kind {
+            ElementKind::Active { offset, .. } => match offset {
+                ConstExpr::Value(walrus::ir::Value::I32(n)) => *n as u32,
+                _ => continue,
+            },
+            _ => continue,
+        };
+        let funcs: Vec<walrus::FunctionId> = match &segment.items {
+            ElementItems::Functions(items) => items.clone(),
+            ElementItems::Expressions(_, items) => items
+                .iter()
+                .filter_map(|e| match e {
+                    ConstExpr::RefFunc(f) => Some(*f),
+                    _ => None,
+                })
+                .collect(),
+        };
+        for (i, fid) in funcs.iter().enumerate() {
+            if module.funcs.get(*fid).name.as_deref() == Some(wanted_name) {
+                return Some(base + i as u32);
+            }
+        }
+    }
+    None
 }
