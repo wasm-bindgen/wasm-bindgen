@@ -12,24 +12,31 @@
 //!
 //! ## Transport
 //!
-//! Two transports coexist during the migration away from the interpreter:
+//! The `__wasm_bindgen_descriptors` custom section
+//! ([`wasm_bindgen_shared::DESCRIPTORS_SECTION_NAME`]) is the primary
+//! descriptor transport. The `#[wasm_bindgen]` macro produces each
+//! descriptor's bytes purely from compile-time information and writes
+//! them into this section. Entries are decoded by
+//! [`crate::descriptors_section`] and turn directly into [`Descriptor`]s.
 //!
-//! 1. The `__wasm_bindgen_descriptors` custom section
-//!    ([`wasm_bindgen_shared::DESCRIPTORS_SECTION_NAME`]). When the
-//!    `#[wasm_bindgen]` macro can produce a descriptor's bytes purely
-//!    from compile-time information, it does so and writes the bytes into
-//!    this section directly. Entries here are decoded by
-//!    [`crate::descriptors_section`] and turn directly into [`Descriptor`]s.
-//! 2. The historical `__wbindgen_describe_<name>` synthetic export
-//!    functions plus the wasm interpreter in [`crate::interpreter`]. Used
-//!    as a fallback for any shim whose descriptor is not present in the
-//!    new section. The medium-term goal of the descriptors-via-custom-
-//!    section work is to remove this fallback entirely.
+//! The legacy `__wbindgen_describe_<name>` synthetic export functions
+//! plus the wasm interpreter in [`crate::interpreter`] remain only to
+//! recover **closure-cast** descriptors (see
+//! [`WasmBindgenDescriptorsSection::execute_casts`]). The interpreter is
+//! never invoked on `__wbindgen_describe_<name>` exports — every shim
+//! the macro emits is required to come through the section. We hard-fail
+//! if one slips through, rather than fall back silently, so coverage
+//! gaps surface immediately.
 //!
-//! The section wins whenever both are present: an entry recovered from
-//! `__wasm_bindgen_descriptors` shadows the interpreter result for the
-//! same shim. This lets the migration land function-by-function rather
-//! than as an atomic swap.
+//! Closure-cast descriptor recovery is the one remaining interpreter
+//! use because the descriptor's schema contains a per-monomorphisation
+//! variable-length tail (`OwnedClosure<T, UW>` etc.). Building that as
+//! a `#[link_section]` static needs generic-length const arrays, which
+//! require [`generic_const_exprs`] (nightly-only, no stable timeline).
+//! When that feature stabilises, closure-cast descriptors become
+//! ordinary section entries and the interpreter directory deletes.
+//!
+//! [`generic_const_exprs`]: https://github.com/rust-lang/rust/issues/76560
 
 use crate::descriptor::Descriptor;
 use crate::descriptors_section;
@@ -58,17 +65,24 @@ pub type WasmBindgenDescriptorsSectionId = TypedCustomSectionId<WasmBindgenDescr
 pub fn execute(module: &mut Module) -> Result<WasmBindgenDescriptorsSectionId, Error> {
     let mut section = WasmBindgenDescriptorsSection::default();
 
-    // Phase 1: harvest anything present in the new __wasm_bindgen_descriptors
-    // section. Names that show up here will be skipped by the interpreter
-    // pass below.
-    let regular_from_section = section
+    // Phase 1: ingest the `__wasm_bindgen_descriptors` custom section.
+    // This is the primary descriptor transport; every shim except
+    // closure casts has its descriptor here.
+    section
         .ingest_section(module)
         .context("failed to read __wasm_bindgen_descriptors section")?;
 
-    // Phase 2: legacy interpreter for everything not already covered.
+    // Phase 2: cross-check that the macro did not emit any legacy
+    // `__wbindgen_describe_<name>` exports. The cli no longer reads
+    // them; leftovers indicate a stale macro paired with this cli.
+    assert_no_legacy_describe_exports(module)?;
+
+    // Phase 3: invoke the interpreter — scoped to closure-cast
+    // descriptor recovery only. See module-level docs for why this
+    // single path still requires interpretation.
     let mut interpreter = Interpreter::new(module)?;
-    section.execute_exports(module, &mut interpreter, &regular_from_section)?;
     section.execute_casts(module, &mut interpreter)?;
+    strip_skip_interpret_export(module);
 
     // Phase 3: strip __wbg_invoke_* exports.
     //
@@ -87,11 +101,8 @@ pub fn execute(module: &mut Module) -> Result<WasmBindgenDescriptorsSectionId, E
 /// Remove every `__wbg_invoke_*` export from the module. Their job
 /// (giving the macro-emitted closure wrappers a stable name for
 /// `function_table_slot_of` to find) is done by the time this runs.
-///
-/// Mirrors the strip pattern already used for `__wbindgen_describe_*`
-/// in [`WasmBindgenDescriptorsSection::execute_exports`]. The actual
-/// removal of unreferenced wrapper *functions* happens later via the
-/// existing walrus GC pass.
+/// The actual removal of unreferenced wrapper *functions* happens
+/// later via the existing walrus GC pass.
 fn strip_closure_invoke_exports(module: &mut Module) {
     const PREFIX: &str = "__wbg_invoke_";
     let to_remove: Vec<_> = module
@@ -105,47 +116,99 @@ fn strip_closure_invoke_exports(module: &mut Module) {
     }
 }
 
-impl WasmBindgenDescriptorsSection {
-    /// Pull the `__wasm_bindgen_descriptors` custom section out of `module`
-    /// (if present), parse it, and populate `self` with the entries it
-    /// contains. Returns the set of regular shim names that came from the
-    /// section so that [`Self::execute_exports`] can avoid interpreting
-    /// the matching `__wbindgen_describe_<name>` functions a second time.
-    ///
-    /// Cast entries from the section are not yet stored on `self` (we
-    /// still need a way to back-resolve their `breaks_if_inlined` symbol
-    /// name to a `FunctionId`). They are ignored here and left to the
-    /// interpreter pathway until a follow-up commit. The plumbing is
-    /// intentionally separated so that piece can land independently.
-    fn ingest_section(
-        &mut self,
-        module: &mut Module,
-    ) -> Result<std::collections::HashSet<String>, Error> {
-        use std::collections::HashSet;
+/// Remove the `__wbindgen_skip_interpret_calls` export from the
+/// module. This export's only purpose is to give the closure-cast
+/// interpreter a place to find wasm-ld-injected ctor calls to skip
+/// (see [`crate::interpreter::skip_calls`]). Once the interpreter
+/// pass has consumed it, it's dead weight.
+fn strip_skip_interpret_export(module: &mut Module) {
+    let to_remove: Vec<_> = module
+        .exports
+        .iter()
+        .filter(|e| e.name == "__wbindgen_skip_interpret_calls")
+        .map(|e| e.id())
+        .collect();
+    for id in to_remove {
+        module.exports.delete(id);
+    }
+}
 
+/// Assert that every shim's descriptor came through the
+/// `__wasm_bindgen_descriptors` section: the macro must not be
+/// emitting any legacy `__wbindgen_describe_<name>` exports. The
+/// interpreter is no longer wired to read them, so leftovers indicate
+/// a macro-version mismatch (a binary produced by an older macro
+/// paired with this newer cli).
+///
+/// Returns an error rather than silently invoking the interpreter so
+/// any regression in macro coverage surfaces immediately.
+fn assert_no_legacy_describe_exports(module: &Module) -> Result<(), Error> {
+    use anyhow::bail;
+    const PREFIX: &str = "__wbindgen_describe_";
+    // Allow `__wbindgen_describe` itself (the inform-stream marker
+    // import; not an export). We're only looking at exports with
+    // a `_<name>` suffix.
+    let leftovers: Vec<&str> = module
+        .exports
+        .iter()
+        .filter_map(|e| {
+            let name = e.name.as_str();
+            if !name.starts_with(PREFIX) {
+                return None;
+            }
+            // Exact name `__wbindgen_describe_cast` happens only if a
+            // module re-exports the marker import for some reason —
+            // not produced by the macro, but guard anyway.
+            if name == "__wbindgen_describe_cast" {
+                return None;
+            }
+            Some(name)
+        })
+        .collect();
+    if !leftovers.is_empty() {
+        bail!(
+            "wasm-bindgen-cli no longer reads legacy `__wbindgen_describe_<name>` \
+             exports; every shim's descriptor must come from the \
+             `__wasm_bindgen_descriptors` custom section. The following exports \
+             were emitted by an older `#[wasm_bindgen]` macro and would have \
+             been read by the legacy wasm interpreter: {leftovers:?}"
+        );
+    }
+    Ok(())
+}
+
+impl WasmBindgenDescriptorsSection {
+    /// Pull the `__wasm_bindgen_descriptors` custom section out of
+    /// `module` (if present), parse it, and populate `self` with the
+    /// REGULAR and STATIC entries it contains.
+    ///
+    /// CAST entries are ignored here: their `breaks_if_inlined<From,
+    /// To>` symbol needs to be back-resolved into a `FunctionId`,
+    /// which the closure-cast interpreter pathway in
+    /// [`Self::execute_casts`] does by walking calls to
+    /// `__wbindgen_describe_cast`. Section-side cast entries remain
+    /// for a future commit that lands the variable-length per-
+    /// monomorphisation tail (blocked on `generic_const_exprs`; see
+    /// module-level docs).
+    fn ingest_section(&mut self, module: &mut Module) -> Result<(), Error> {
         let raw = match module.customs.remove_raw(DESCRIPTORS_SECTION_NAME) {
             Some(raw) => raw,
-            None => return Ok(HashSet::new()),
+            None => return Ok(()),
         };
 
         let (entries, stats) = descriptors_section::parse(&raw.data)?;
         if stats.skipped_total() > 0 {
-            // Per-entry version mismatches are not fatal — the affected
-            // shims fall back to the legacy interpreter pathway — but
-            // they are noteworthy. Log at `info` so they surface in
-            // a normal CLI run without needing RUST_LOG=debug.
             for (version, count) in &stats.skipped_unknown_version {
                 log::info!(
                     "wasm-bindgen-cli does not recognise format_version {version} \
-                     for {count} __wasm_bindgen_descriptors entries; falling back \
-                     to the legacy interpreter for those shims. This usually means \
-                     the binary was produced by a newer wasm-bindgen than this CLI."
+                     for {count} __wasm_bindgen_descriptors entries; these are \
+                     ignored. This usually means the binary was produced by a \
+                     newer wasm-bindgen than this CLI."
                 );
             }
         }
         let resolved_symbols = build_symbol_table(module);
 
-        let mut regular_names = HashSet::new();
         for entry in entries {
             let stream = descriptors_section::resolve_symbols(
                 &entry.schema_bytes,
@@ -157,96 +220,25 @@ impl WasmBindgenDescriptorsSection {
                     entry.name
                 )
             })?;
-            // Defensively decode: an entry whose schema is malformed (for
-            // instance because the macro emitted a function that mentions
-            // a type with no SCHEMA const set) should not poison the
-            // whole pipeline. Drop the bad entry and let the legacy
-            // interpreter handle that shim instead. This is what makes
-            // it safe for the macro to emit the section optimistically.
-            let descriptor = match std::panic::catch_unwind(
-                std::panic::AssertUnwindSafe(|| Descriptor::decode(&stream)),
-            ) {
-                Ok(d) => d,
-                Err(_) => {
-                    log::debug!(
-                        "ignoring malformed __wasm_bindgen_descriptors entry for {:?}; \
-                         falling back to interpreter",
-                        entry.name
-                    );
-                    continue;
-                }
-            };
+            let descriptor = Descriptor::decode(&stream);
             match entry.kind {
                 DESCRIPTOR_KIND_REGULAR | DESCRIPTOR_KIND_STATIC => {
-                    // STATIC entries decode the same way (Descriptor::decode
+                    // STATIC entries decode the same way (`Descriptor::decode`
                     // accepts either a FUNCTION-wrapped or a bare type
-                    // schema); the difference is purely how the macro emits
-                    // it. ImportStatic consumes the resulting Descriptor as
-                    // the static's type directly.
-                    regular_names.insert(entry.name.clone());
+                    // schema); the difference is purely how the macro
+                    // emits it. ImportStatic consumes the resulting
+                    // `Descriptor` as the static's type directly.
                     self.descriptors.insert(entry.name, descriptor);
                 }
                 DESCRIPTOR_KIND_CAST => {
-                    // Cast entries need their `breaks_if_inlined<From,To>`
-                    // symbol resolved into a FunctionId. That lookup is
-                    // delegated to a follow-up commit; until then casts
-                    // continue to flow through the interpreter pathway,
-                    // which scans for direct calls to
-                    // __wbindgen_describe_cast.
                     log::debug!(
-                        "ignoring cast descriptor for {:?} in section (still \
-                         handled by interpreter for now)",
+                        "ignoring cast descriptor for {:?} in section \
+                         (still handled by interpreter; see module docs)",
                         entry.name
                     );
                 }
                 _ => unreachable!("parser already validated kind byte"),
             }
-        }
-        Ok(regular_names)
-    }
-
-    fn execute_exports(
-        &mut self,
-        module: &mut Module,
-        interpreter: &mut Interpreter,
-        already_from_section: &std::collections::HashSet<String>,
-    ) -> Result<(), Error> {
-        let mut to_remove = Vec::new();
-
-        if let Some(id) = interpreter.skip_interpret() {
-            to_remove.push(id);
-        }
-
-        for export in module.exports.iter() {
-            let prefix = "__wbindgen_describe_";
-            if !export.name.starts_with(prefix) {
-                continue;
-            }
-            let id = match export.item {
-                walrus::ExportItem::Function(id) => id,
-                _ => panic!("{} export not a function", export.name),
-            };
-            let name = &export.name[prefix.len()..];
-            if already_from_section.contains(name) {
-                // The new transport already produced this descriptor; just
-                // delete the now-redundant synthetic export so the rest of
-                // the pipeline behaves as if the interpreter had handled it.
-                log::debug!(
-                    "skipping interpreter for {name:?}; already produced \
-                     by __wasm_bindgen_descriptors section"
-                );
-                to_remove.push(export.id());
-                continue;
-            }
-            log::debug!("[interpreter-fallback] {name:?}");
-            let d = interpreter.interpret_descriptor(id, module);
-            let descriptor = Descriptor::decode(d);
-            self.descriptors.insert(name.to_string(), descriptor);
-            to_remove.push(export.id());
-        }
-
-        for id in to_remove {
-            module.exports.delete(id);
         }
         Ok(())
     }

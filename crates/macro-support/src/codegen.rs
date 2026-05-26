@@ -635,20 +635,10 @@ impl ToTokens for ast::StructField {
         })
         .to_tokens(tokens);
 
-        Descriptor {
-            ident: getter,
-            inner: quote! {
-                <#ty as WasmDescribe>::describe();
-            },
-            attrs: vec![],
-            wasm_bindgen: &self.wasm_bindgen,
-        }
-        .to_tokens(tokens);
-
-        // Section transport: getter's descriptor is the bare field
-        // type schema, same shape as ImportStatic. The cli's struct
-        // field processor reads it from `self.descriptors` keyed by
-        // the getter shim name.
+        // Getter's descriptor is the bare field type schema (no
+        // FUNCTION header). Cli's struct field processor reads it
+        // from the section keyed by the getter shim name. Same shape
+        // as ImportStatic.
         emit_static_descriptor_entry_static(
             &self.wasm_bindgen,
             &getter.to_string(),
@@ -975,10 +965,6 @@ impl TryToTokens for ast::Export {
 
         let projection = quote! { <#ret_ty as #wasm_bindgen::convert::ReturnWasmAbi> };
         let convert_ret = quote! { #projection::return_abi(#ret).into() };
-        let describe_ret = quote! {
-            <#ret_ty as WasmDescribe>::describe();
-            <#inner_ret_ty as WasmDescribe>::describe();
-        };
         let nargs = self.function.arguments.len() as u32;
         let attrs = self
             .function
@@ -1068,70 +1054,16 @@ impl TryToTokens for ast::Export {
         })
         .to_tokens(into);
 
-        let describe_args: TokenStream = argtys
-            .iter()
-            .map(|ty| match ty {
-                syn::Type::Reference(reference)
-                    if self.function.r#async && reference.mutability.is_none() =>
-                {
-                    let inner = &reference.elem;
-                    quote! {
-                        inform(LONGREF);
-                        <#inner as WasmDescribe>::describe();
-                    }
-                }
-                _ => quote! { <#ty as WasmDescribe>::describe(); },
-            })
-            .collect();
-
-        // In addition to generating the shim function above which is what
-        // our generated JS will invoke, we *also* generate a "descriptor"
-        // shim. This descriptor shim uses the `WasmDescribe` trait to
-        // programmatically describe the type signature of the generated
-        // shim above. This in turn is then used to inform the
-        // `wasm-bindgen` CLI tool exactly what types and such it should be
-        // using in JS.
+        // Section transport: emit the descriptor bytes for this
+        // export directly into `__wasm_bindgen_descriptors`. The
+        // legacy synthetic `__wbindgen_describe_<export_name>`
+        // function (executed by the cli's wasm interpreter) is no
+        // longer emitted — the section is the sole transport.
         //
-        // Note that this descriptor function is a purely an internal detail
-        // of `#[wasm_bindgen]` and isn't intended to be exported to anyone
-        // or actually part of the final was binary. Additionally, this is
-        // literally executed when the `wasm-bindgen` tool executes.
-        //
-        // In any case, there's complications in `wasm-bindgen` to handle
-        // this, but the tl;dr; is that this is stripped from the final wasm
-        // binary along with anything it references.
-        let export = Ident::new(&export_name, Span::call_site());
-        Descriptor {
-            ident: &export,
-            inner: quote! {
-                inform(FUNCTION);
-                inform(0);
-                inform(#nargs);
-                #describe_args
-                #describe_ret
-            },
-            attrs: attrs.clone(),
-            wasm_bindgen: &self.wasm_bindgen,
-        }
-        .to_tokens(into);
-
-        // Also emit the same descriptor stream as a static byte array
-        // linked into the __wasm_bindgen_descriptors custom section.
-        // This is the new transport that will replace the legacy
-        // synthetic __wbindgen_describe_* export executed by the
-        // wasm-bindgen-cli wasm interpreter.
-        //
-        // The legacy descriptor function above is still emitted. Both
-        // coexist during the migration: cli-support prefers the section
-        // entry when it can decode it, and falls back to running the
-        // interpreter against the legacy export when it can't (for
-        // instance when the macro hasn't taken over a wrapper type's
-        // schema yet and the section's bytes would be malformed).
-        //
-        // The set of schema parts mirrors `inner` above exactly: a
-        // 3-word header, one entry per argument (with LONGREF inserted
-        // for async-shared-ref args, matching describe_args), then
-        // ret_ty and inner_ret_ty.
+        // The set of schema parts is a 3-word header, one entry per
+        // argument (with LONGREF inserted for async-shared-ref args,
+        // matching the legacy describe-stream shape), then ret_ty and
+        // inner_ret_ty.
         let arg_parts = build_arg_parts(&self.wasm_bindgen, &argtys, self.function.r#async);
         let ret_parts = schema_parts_for_type_tokens(&self.wasm_bindgen, &ret_ty);
         let inner_ret_parts = schema_parts_for_type_tokens(&self.wasm_bindgen, &inner_ret_ty);
@@ -2923,25 +2855,14 @@ impl ToTokens for ast::DynamicUnion {
         })
         .to_tokens(tokens);
 
-        // Generate descriptor exports for each type variant so cli-support can look them up
+        // Per-variant descriptors so cli-support can look them up.
+        // Each is the bare variant type schema (no FUNCTION header),
+        // same shape as ImportStatic / struct getters.
         for (idx, ty) in type_variants.iter().enumerate() {
             let descriptor_name = Ident::new(
                 &shared::dynamic_union_variant(name_str, idx as u32),
                 Span::call_site(),
             );
-            Descriptor {
-                ident: &descriptor_name,
-                inner: quote! {
-                    <#ty as WasmDescribe>::describe();
-                },
-                attrs: vec![],
-                wasm_bindgen: &self.wasm_bindgen,
-            }
-            .to_tokens(tokens);
-
-            // Section transport: each variant descriptor is the bare
-            // variant type schema (no FUNCTION header), same shape as
-            // ImportStatic / struct getters.
             emit_static_descriptor_entry_static(
                 &self.wasm_bindgen,
                 &descriptor_name.to_string(),
@@ -3796,53 +3717,25 @@ impl TryToTokens for DescribeImport<'_> {
             .collect::<Result<Vec<syn::Type>, Diagnostic>>()?;
         let nargs = f.function.arguments.len() as u32;
         let wasm_bindgen = self.wasm_bindgen;
-        // Compute both the legacy describe() stream and the equivalent
-        // concrete return type that the new section-emission helper will
-        // pattern-match for schema parts. They are kept in lockstep so
-        // the two transports never disagree on shape.
-        let (inform_ret, ret_schema_ty) = match &f.js_ret {
+        // Compute the concrete return type that the section-emission
+        // helper will pattern-match for schema parts.
+        let ret_schema_ty = match &f.js_ret {
             Some(ref t) => {
                 let t = generics::generic_to_concrete(
                     t.clone(),
                     &fn_class_generics.concrete_defaults,
                     &fn_lifetime_params,
                 )?;
-                (
-                    quote! { <#t as WasmDescribe>::describe(); },
-                    quote! { #t },
-                )
+                quote! { #t }
             }
             // async functions always return a JsValue, even if they say to return ()
-            None if f.function.r#async => (
-                quote! { <JsValue as WasmDescribe>::describe(); },
-                quote! { #wasm_bindgen::JsValue },
-            ),
-            None => (
-                quote! { <() as WasmDescribe>::describe(); },
-                quote! { () },
-            ),
+            None if f.function.r#async => quote! { #wasm_bindgen::JsValue },
+            None => quote! { () },
         };
 
-        Descriptor {
-            ident: &f.shim,
-            inner: quote! {
-                inform(FUNCTION);
-                inform(0);
-                inform(#nargs);
-                #(<#argtys as WasmDescribe>::describe();)*
-                #inform_ret
-                #inform_ret
-            },
-            attrs: f.function.rust_attrs.clone(),
-            wasm_bindgen: self.wasm_bindgen,
-        }
-        .to_tokens(tokens);
-
-        // Also emit the same descriptor stream into the
-        // __wasm_bindgen_descriptors custom section. Mirrors the
-        // legacy describe() body exactly: a 3-word header, one entry
-        // per argument with no async-LONGREF transform (imports'
-        // args aren't held across awaits), then `inform_ret` twice.
+        // Section transport: 3-word header, one entry per argument
+        // (no async-LONGREF transform — imports' args aren't held
+        // across awaits), then the ret schema twice.
         let argty_refs: Vec<&syn::Type> = argtys.iter().collect();
         let arg_parts = build_arg_parts(self.wasm_bindgen, &argty_refs, false);
         let ret_parts = schema_parts_for_type_tokens(self.wasm_bindgen, &ret_schema_ty);
@@ -4063,20 +3956,10 @@ impl ToTokens for ast::ImportStatic {
             );
         }
 
-        Descriptor {
-            ident: &self.shim,
-            inner: quote! {
-                <#ty as WasmDescribe>::describe();
-            },
-            attrs: vec![],
-            wasm_bindgen: &self.wasm_bindgen,
-        }
-        .to_tokens(into);
-
-        // Section transport: emit the static's bare type schema as a
-        // `DESCRIPTOR_KIND_STATIC` entry. ImportStatic's descriptor is
-        // not function-shaped (no FUNCTION header, no nargs, no
-        // ret/inner_ret duplication), it's just the type's own SCHEMA.
+        // ImportStatic's descriptor is not function-shaped (no
+        // FUNCTION header, no nargs, no ret/inner_ret duplication) —
+        // just the type's own SCHEMA. Carried as a
+        // `DESCRIPTOR_KIND_STATIC` section entry.
         emit_static_descriptor_entry_static(
             &self.wasm_bindgen,
             &self.shim.to_string(),
@@ -4159,61 +4042,6 @@ fn static_init(wasm_bindgen: &syn::Path, ty: &syn::Type, shim_name: &Ident) -> T
         }
     }
 }
-
-/// Emits the necessary glue tokens for "descriptor", generating an appropriate
-/// symbol name as well as attributes around the descriptor function itself.
-struct Descriptor<'a, T> {
-    ident: &'a Ident,
-    inner: T,
-    attrs: Vec<syn::Attribute>,
-    wasm_bindgen: &'a syn::Path,
-}
-
-impl<T: ToTokens> ToTokens for Descriptor<'_, T> {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        // It's possible for the same descriptor to be emitted in two different
-        // modules (aka a value imported twice in a crate, each in a separate
-        // module). In this case no need to emit duplicate descriptors (which
-        // leads to duplicate symbol errors), instead just emit one.
-        //
-        // It's up to the descriptors themselves to ensure they have unique
-        // names for unique items imported, currently done via `ShortHash` and
-        // hashing appropriate data into the symbol name.
-        thread_local! {
-            static DESCRIPTORS_EMITTED: RefCell<HashSet<String>> = RefCell::default();
-        }
-
-        let ident = self.ident;
-
-        if !DESCRIPTORS_EMITTED.with(|list| list.borrow_mut().insert(ident.to_string())) {
-            return;
-        }
-
-        let name = Ident::new(&format!("__wbindgen_describe_{ident}"), ident.span());
-        let inner = &self.inner;
-        let attrs = &self.attrs;
-        let wasm_bindgen = &self.wasm_bindgen;
-        (quote! {
-            #[cfg(target_family = "wasm")]
-            #[automatically_derived]
-            const _: () = {
-                #wasm_bindgen::__wbindgen_coverage! {
-                #(#attrs)*
-                #[no_mangle]
-                #[doc(hidden)]
-                pub extern "C-unwind" fn #name() {
-                    use #wasm_bindgen::describe::*;
-                    // See definition of `link_mem_intrinsics` for what this is doing
-                    #wasm_bindgen::__rt::link_mem_intrinsics();
-                    #inner
-                }
-                }
-            };
-        })
-        .to_tokens(tokens);
-    }
-}
-
 fn extern_fn(
     import_name: &Ident,
     attrs: &[syn::Attribute],
