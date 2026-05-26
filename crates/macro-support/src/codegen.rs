@@ -477,6 +477,19 @@ impl ToTokens for ast::Struct {
                     #wasm_bindgen::convert::js_value_vector_from_abi(js)
                 }
             }
+
+            // VectorIntoJsValue dispatch: lets `From<Box<[#name]>> for JsValue`
+            // pick up the right per-type conversion (array_new + push loop).
+            // This replaces the generic `impl<T: VectorIntoWasmAbi> From<Box<[T]>> for JsValue`
+            // that used to route through wbg_cast.
+            #[automatically_derived]
+            impl #wasm_bindgen::__rt::VectorIntoJsValue for #name {
+                fn vector_into_jsvalue(
+                    vector: #wasm_bindgen::__rt::alloc::boxed::Box<[#name]>,
+                ) -> #wasm_bindgen::JsValue {
+                    #wasm_bindgen::__rt::js_value_vector_into_jsvalue(vector)
+                }
+            }
         })
         .to_tokens(tokens);
 
@@ -2108,6 +2121,20 @@ impl TryToTokens for ast::ImportType {
                     #[inline]
                     fn from(obj: #rust_name #ty_generics) -> JsValue {
                         obj.obj.into()
+                    }
+                }
+
+                // `VectorIntoJsValue` enables `Vec<#rust_name>` and
+                // `Box<[#rust_name]>` to convert to JsValue via the
+                // generic-array push loop. Without this impl the
+                // generic blanket `impl<T: VectorIntoJsValue> From<Box<[T]>>`
+                // wouldn't apply to `Vec<#rust_name>`.
+                #[automatically_derived]
+                impl #impl_generics #wasm_bindgen::__rt::VectorIntoJsValue for #rust_name #ty_generics #where_clause {
+                    fn vector_into_jsvalue(
+                        vector: #wasm_bindgen::__rt::alloc::boxed::Box<[#rust_name #ty_generics]>,
+                    ) -> #wasm_bindgen::JsValue {
+                        #wasm_bindgen::__rt::js_value_vector_into_jsvalue(vector)
                     }
                 }
 
@@ -3819,6 +3846,20 @@ impl ToTokens for ast::Enum {
                     js: Self::Abi
                 ) -> #wasm_bindgen::__rt::alloc::boxed::Box<[#enum_name]> {
                     #wasm_bindgen::convert::js_value_vector_from_abi(js)
+                }
+            }
+
+            // VectorIntoJsValue: provides per-monomorphisation
+            // `From<Box<[#enum_name]>> for JsValue`. The generic
+            // `impl<T: VectorIntoWasmAbi> From<Box<[T]>>` used to
+            // route through wbg_cast; now each user type carries
+            // its own conversion.
+            #[automatically_derived]
+            impl #wasm_bindgen::__rt::VectorIntoJsValue for #enum_name {
+                fn vector_into_jsvalue(
+                    vector: #wasm_bindgen::__rt::alloc::boxed::Box<[#enum_name]>,
+                ) -> #wasm_bindgen::JsValue {
+                    #wasm_bindgen::__rt::js_value_vector_into_jsvalue(vector)
                 }
             }
         })
