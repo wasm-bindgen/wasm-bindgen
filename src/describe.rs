@@ -20,8 +20,39 @@ pub fn inform(a: u32) {
     unsafe { super::__wbindgen_describe(a) }
 }
 
+/// Describes the wasm-bindgen type schema for a type.
+///
+/// Two parallel descriptions live on this trait during the migration away
+/// from the wasm interpreter (`crates/cli-support/src/interpreter/`):
+///
+/// 1. [`Self::describe`]: the historical mechanism. Calls
+///    [`inform`] for each opcode, which the interpreter recovers by
+///    executing a synthetic `__wbindgen_describe_<name>` export function.
+/// 2. [`Self::SCHEMA`]: the new mechanism. A `&'static [u32]` slice of the
+///    same opcodes that `describe` would have emitted, available at
+///    `const` time and used by the `#[wasm_bindgen]` macro to write
+///    descriptors directly into the `__wasm_bindgen_descriptors` custom
+///    section. See [`wasm_bindgen_shared::DESCRIPTORS_SECTION_NAME`].
+///
+/// Implementing types should provide `SCHEMA` whenever it can be expressed
+/// as a non-generic-length const. Generic wrapper impls (e.g. `&T`,
+/// `Option<T>`) currently can't have a generic-dependent length without
+/// `feature(generic_const_exprs)`, so they leave `SCHEMA` at the default
+/// empty slice. The macro pattern-matches those wrapper shapes
+/// syntactically and synthesises the schema from the inner type's
+/// `SCHEMA` at the call site, where the lengths are concrete.
 pub trait WasmDescribe {
     fn describe();
+
+    /// Schema opcode stream for this type, in the same encoding the
+    /// interpreter recovers from [`describe`](Self::describe). See the
+    /// trait docs for how `SCHEMA` and `describe` relate.
+    ///
+    /// Defaults to an empty slice for backwards compatibility with
+    /// downstream `WasmDescribe` impls that haven't been ported yet.
+    /// The macro treats `SCHEMA = &[]` as "fall back to the interpreter
+    /// for any function that references this type".
+    const SCHEMA: &'static [u32] = &[];
 }
 
 /// Trait for element types to implement WasmDescribe for vectors of
@@ -33,6 +64,7 @@ pub trait WasmDescribeVector {
 macro_rules! simple {
     ($($t:ident => $d:ident)*) => ($(
         impl WasmDescribe for $t {
+            const SCHEMA: &'static [u32] = &[$d];
             #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
             fn describe() { inform($d) }
         }
@@ -86,6 +118,7 @@ cfg_if! {
 }
 
 impl<T> WasmDescribe for *const T {
+    const SCHEMA: &'static [u32] = &[RAW_POINTER];
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
         inform(RAW_POINTER)
@@ -93,6 +126,7 @@ impl<T> WasmDescribe for *const T {
 }
 
 impl<T> WasmDescribe for *mut T {
+    const SCHEMA: &'static [u32] = &[RAW_POINTER];
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
         inform(RAW_POINTER)
@@ -100,6 +134,7 @@ impl<T> WasmDescribe for *mut T {
 }
 
 impl<T> WasmDescribe for NonNull<T> {
+    const SCHEMA: &'static [u32] = &[NONNULL];
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
         inform(NONNULL)
@@ -177,6 +212,7 @@ impl<T: WasmDescribe> WasmDescribe for Option<T> {
 }
 
 impl WasmDescribe for () {
+    const SCHEMA: &'static [u32] = &[UNIT];
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
         inform(UNIT)
@@ -207,6 +243,8 @@ impl<T: WasmDescribe> WasmDescribe for Clamped<T> {
 }
 
 impl WasmDescribe for JsError {
+    // JsError's schema is the same as JsValue's: a single EXTERNREF.
+    const SCHEMA: &'static [u32] = <JsValue as WasmDescribe>::SCHEMA;
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
         JsValue::describe();
@@ -219,5 +257,127 @@ where
 {
     fn describe() {
         T::describe();
+    }
+}
+
+/// Const-eval helpers used by the `#[wasm_bindgen]` macro when it emits
+/// static descriptor entries into the `__wasm_bindgen_descriptors` custom
+/// section.
+///
+/// All items here are `pub` because the macro expands code into the user's
+/// crate that refers to them by absolute path. They are not part of the
+/// public API; treat as `doc(hidden)` even though we don't slap that on
+/// every item.
+pub mod schema {
+    use wasm_bindgen_shared::{DESCRIPTOR_KIND_REGULAR, DESCRIPTOR_KIND_CAST};
+
+    /// Total length, in `u32` words, of a list of opcode slices when
+    /// concatenated. Used by the macro to size the static array storing
+    /// the final schema stream for one descriptor entry.
+    pub const fn word_total(parts: &[&[u32]]) -> usize {
+        let mut total = 0;
+        let mut i = 0;
+        while i < parts.len() {
+            total += parts[i].len();
+            i += 1;
+        }
+        total
+    }
+
+    /// Concatenate a list of opcode slices into a single fixed-size `u32`
+    /// array. `N` must equal [`word_total`] of `parts` (the macro picks
+    /// the right value because at expansion time the lengths are
+    /// concrete).
+    pub const fn concat_words<const N: usize>(parts: &[&[u32]]) -> [u32; N] {
+        let mut out = [0u32; N];
+        let mut idx = 0;
+        let mut p = 0;
+        while p < parts.len() {
+            let part = parts[p];
+            let mut j = 0;
+            while j < part.len() {
+                out[idx] = part[j];
+                idx += 1;
+                j += 1;
+            }
+            p += 1;
+        }
+        out
+    }
+
+    /// Total byte length of a packed descriptor section entry for a shim
+    /// of the given name and schema word count. Layout matches the format
+    /// documented next to [`wasm_bindgen_shared::DESCRIPTORS_SECTION_NAME`].
+    ///
+    /// ```text
+    /// 1 (name_len) + name.len() + 1 (kind) + 4 (word_count) + 4 * word_count
+    /// ```
+    pub const fn entry_byte_len(name_len: usize, word_count: usize) -> usize {
+        1 + name_len + 1 + 4 + word_count * 4
+    }
+
+    /// Pack one descriptor entry (without the outer section `total_len`
+    /// header) into a fixed-size byte array. The outer `total_len` is
+    /// computed by `wasm-bindgen-cli` when it assembles the section, not
+    /// here.
+    ///
+    /// `B` must equal [`entry_byte_len`] for the given `name` and
+    /// `schema_words.len()`. The macro picks the right value at
+    /// expansion time.
+    pub const fn pack_entry<const B: usize>(
+        name: &[u8],
+        kind: u8,
+        schema_words: &[u32],
+    ) -> [u8; B] {
+        let mut out = [0u8; B];
+        let mut i = 0;
+
+        // shim_name_len (u8). `name.len()` is bounded by 255 because the
+        // wire format only allots one byte for it; this assert catches
+        // accidental over-long names at compile time.
+        assert!(name.len() <= 255, "descriptor shim name longer than 255 bytes");
+        out[i] = name.len() as u8;
+        i += 1;
+
+        // shim name bytes
+        let mut j = 0;
+        while j < name.len() {
+            out[i] = name[j];
+            i += 1;
+            j += 1;
+        }
+
+        // kind byte (sanity: must be one of the known constants).
+        assert!(
+            kind == DESCRIPTOR_KIND_REGULAR || kind == DESCRIPTOR_KIND_CAST,
+            "unknown descriptor entry kind"
+        );
+        out[i] = kind;
+        i += 1;
+
+        // schema word count (u32 LE)
+        let wc = schema_words.len() as u32;
+        let wc_bytes = wc.to_le_bytes();
+        out[i] = wc_bytes[0];
+        out[i + 1] = wc_bytes[1];
+        out[i + 2] = wc_bytes[2];
+        out[i + 3] = wc_bytes[3];
+        i += 4;
+
+        // schema words (each u32 LE)
+        let mut k = 0;
+        while k < schema_words.len() {
+            let b = schema_words[k].to_le_bytes();
+            out[i] = b[0];
+            out[i + 1] = b[1];
+            out[i + 2] = b[2];
+            out[i + 3] = b[3];
+            i += 4;
+            k += 1;
+        }
+
+        // We must have used every byte of the array.
+        assert!(i == B, "entry size mismatch: B is wrong for this name/schema");
+        out
     }
 }
