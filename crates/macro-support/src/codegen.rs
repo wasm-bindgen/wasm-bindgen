@@ -1088,14 +1088,17 @@ impl TryToTokens for ast::Export {
         // 3-word header, one entry per argument (with LONGREF inserted
         // for async-shared-ref args, matching describe_args), then
         // ret_ty and inner_ret_ty.
+        let arg_parts = build_arg_parts(&self.wasm_bindgen, &argtys, self.function.r#async);
+        let ret_parts = schema_parts_for_type_tokens(&self.wasm_bindgen, &ret_ty);
+        let inner_ret_parts = schema_parts_for_type_tokens(&self.wasm_bindgen, &inner_ret_ty);
         emit_static_descriptor_entry(
             &self.wasm_bindgen,
             &export_name,
-            &argtys,
-            self.function.r#async,
-            &ret_ty,
-            &inner_ret_ty,
+            &arg_parts,
+            ret_parts,
+            inner_ret_parts,
             nargs,
+            &attrs,
             into,
         );
 
@@ -1117,22 +1120,15 @@ impl TryToTokens for ast::Export {
 /// shim, so emitting the static is always safe. The macro will expand
 /// the set of recognised wrapper types in follow-up commits, eventually
 /// covering everything the interpreter handles today.
-#[allow(clippy::too_many_arguments)]
-fn emit_static_descriptor_entry(
+/// Build per-argument schema-parts streams shared between the export
+/// and import codegen paths. Async-shared-ref args get LONGREF instead
+/// of REF; everything else flows through `schema_parts_for_type`.
+fn build_arg_parts(
     wasm_bindgen: &syn::Path,
-    export_name: &str,
     argtys: &[&syn::Type],
     is_async: bool,
-    ret_ty: &TokenStream,
-    inner_ret_ty: &TokenStream,
-    nargs: u32,
-    into: &mut TokenStream,
-) {
-    // Per-arg schema parts: matches the structure of `describe_args`
-    // upstream. Async non-mut references get a LONGREF prefix instead
-    // of REF; everything else flows through `schema_parts_for_type`,
-    // which structurally recognises common wrapper types and recurses.
-    let arg_parts = argtys
+) -> Vec<TokenStream> {
+    argtys
         .iter()
         .map(|ty| match ty {
             syn::Type::Reference(reference) if is_async && reference.mutability.is_none() => {
@@ -1145,22 +1141,40 @@ fn emit_static_descriptor_entry(
             }
             _ => schema_parts_for_type(wasm_bindgen, ty),
         })
-        .collect::<Vec<_>>();
-    let ret_parts = schema_parts_for_type_tokens(wasm_bindgen, ret_ty);
-    let inner_ret_parts = schema_parts_for_type_tokens(wasm_bindgen, inner_ret_ty);
+        .collect()
+}
 
-    // The static's identifier is derived from the export name so each
+#[allow(clippy::too_many_arguments)]
+fn emit_static_descriptor_entry(
+    wasm_bindgen: &syn::Path,
+    shim_name: &str,
+    arg_parts: &[TokenStream],
+    ret_parts: TokenStream,
+    inner_ret_parts: TokenStream,
+    nargs: u32,
+    // Same #[cfg(...)] / #[doc(...)] attrs that wrap the legacy
+    // __wbindgen_describe_<name> function. They must be replicated
+    // on the new section static so the two transports turn on and
+    // off in lockstep; otherwise a cfg-gated extern function (e.g.
+    // js-sys's #[cfg(js_sys_unstable_apis)] items) would have its
+    // descriptor emitted unconditionally and reference types whose
+    // declarations are gated out.
+    attrs: &[syn::Attribute],
+    into: &mut TokenStream,
+) {
+    // The static's identifier is derived from the shim name so each
     // descriptor entry has a unique symbol within its crate. The name
     // is also written into the entry's body verbatim.
     let static_ident = Ident::new(
-        &format!("__WBG_DESCRIPTOR_{}", mangle_export_name_for_ident(export_name)),
+        &format!("__WBG_DESCRIPTOR_{}", mangle_export_name_for_ident(shim_name)),
         Span::call_site(),
     );
-    let export_name_bytes = syn::LitByteStr::new(export_name.as_bytes(), Span::call_site());
-    let export_name_len = export_name.len();
+    let shim_name_bytes = syn::LitByteStr::new(shim_name.as_bytes(), Span::call_site());
+    let shim_name_len = shim_name.len();
 
     (quote! {
         #[cfg(target_family = "wasm")]
+        #(#attrs)*
         #[automatically_derived]
         const _: () = {
             const __PARTS: &[&[u32]] = &[
@@ -1178,17 +1192,23 @@ fn emit_static_descriptor_entry(
             const __SCHEMA: [u32; __WORDS] =
                 #wasm_bindgen::describe::schema::concat_words::<__WORDS>(__PARTS);
             const __ENTRY_LEN: usize =
-                #wasm_bindgen::describe::schema::entry_byte_len(#export_name_len, __WORDS);
-            // The `link_section` attribute places this byte array in the
-            // shared __wasm_bindgen_descriptors custom section, which
-            // wasm-bindgen-cli parses. `#[used]` keeps the linker from
-            // discarding it as dead code (nothing else references it).
+                #wasm_bindgen::describe::schema::entry_byte_len(#shim_name_len, __WORDS);
+            // The `link_section` attribute places this byte array in
+            // the shared __wasm_bindgen_descriptors custom section
+            // that wasm-bindgen-cli parses.
+            //
+            // No `#[used]` here: the legacy __wasm_bindgen_unstable
+            // section emission (see line ~181 of this file) is the
+            // template. With `#[used]`, LLVM also materialises the
+            // bytes in linear memory (the data section), which on
+            // wasm doubles the storage cost for every descriptor. The
+            // `pub` visibility plus the static name being unique
+            // keeps the symbol live through linking without `#[used]`.
             #[link_section = "__wasm_bindgen_descriptors"]
-            #[used]
             #[doc(hidden)]
-            static #static_ident: [u8; __ENTRY_LEN] =
+            pub static #static_ident: [u8; __ENTRY_LEN] =
                 #wasm_bindgen::describe::schema::pack_entry::<__ENTRY_LEN>(
-                    #export_name_bytes,
+                    #shim_name_bytes,
                     #wasm_bindgen::__rt::DESCRIPTOR_KIND_REGULAR,
                     &__SCHEMA,
                 );
@@ -1375,19 +1395,37 @@ impl TryToTokens for ast::ImportType {
             }
         };
 
-        let description = if let Some(typescript_type) = &self.typescript_type {
+        let (description, schema_literal) = if let Some(typescript_type) = &self.typescript_type {
             let typescript_type_len = typescript_type.len() as u32;
-            let typescript_type_chars = typescript_type.chars().map(|c| c as u32);
-            quote! {
-                use #wasm_bindgen::describe::*;
-                inform(NAMED_EXTERNREF);
-                inform(#typescript_type_len);
-                #(inform(#typescript_type_chars);)*
-            }
+            let typescript_type_chars: Vec<u32> =
+                typescript_type.chars().map(|c| c as u32).collect();
+            (
+                quote! {
+                    use #wasm_bindgen::describe::*;
+                    inform(NAMED_EXTERNREF);
+                    inform(#typescript_type_len);
+                    #(inform(#typescript_type_chars);)*
+                },
+                // Schema parts for the section transport: a literal
+                // NAMED_EXTERNREF opcode, the name length, and one u32
+                // per UTF-32 char. Kept in lockstep with the describe()
+                // emission above so the two transports never disagree
+                // on shape.
+                quote! {
+                    &[
+                        #wasm_bindgen::describe::NAMED_EXTERNREF,
+                        #typescript_type_len,
+                        #(#typescript_type_chars,)*
+                    ]
+                },
+            )
         } else {
-            quote! {
-                JsValue::describe()
-            }
+            (
+                quote! {
+                    JsValue::describe()
+                },
+                quote! { <#wasm_bindgen::JsValue as #wasm_bindgen::describe::WasmDescribe>::SCHEMA },
+            )
         };
 
         let is_type_of = self.is_type_of.as_ref().map(|is_type_of| {
@@ -1525,6 +1563,7 @@ impl TryToTokens for ast::ImportType {
 
                 #[automatically_derived]
                 impl #impl_generics WasmDescribe for #rust_name #ty_generics #where_clause {
+                    const SCHEMA: &'static [u32] = #schema_literal;
                     fn describe() {
                         #description
                     }
@@ -3144,18 +3183,32 @@ impl TryToTokens for DescribeImport<'_> {
             })
             .collect::<Result<Vec<syn::Type>, Diagnostic>>()?;
         let nargs = f.function.arguments.len() as u32;
-        let inform_ret = match &f.js_ret {
+        let wasm_bindgen = self.wasm_bindgen;
+        // Compute both the legacy describe() stream and the equivalent
+        // concrete return type that the new section-emission helper will
+        // pattern-match for schema parts. They are kept in lockstep so
+        // the two transports never disagree on shape.
+        let (inform_ret, ret_schema_ty) = match &f.js_ret {
             Some(ref t) => {
                 let t = generics::generic_to_concrete(
                     t.clone(),
                     &fn_class_generics.concrete_defaults,
                     &fn_lifetime_params,
                 )?;
-                quote! { <#t as WasmDescribe>::describe(); }
+                (
+                    quote! { <#t as WasmDescribe>::describe(); },
+                    quote! { #t },
+                )
             }
             // async functions always return a JsValue, even if they say to return ()
-            None if f.function.r#async => quote! { <JsValue as WasmDescribe>::describe(); },
-            None => quote! { <() as WasmDescribe>::describe(); },
+            None if f.function.r#async => (
+                quote! { <JsValue as WasmDescribe>::describe(); },
+                quote! { #wasm_bindgen::JsValue },
+            ),
+            None => (
+                quote! { <() as WasmDescribe>::describe(); },
+                quote! { () },
+            ),
         };
 
         Descriptor {
@@ -3172,6 +3225,27 @@ impl TryToTokens for DescribeImport<'_> {
             wasm_bindgen: self.wasm_bindgen,
         }
         .to_tokens(tokens);
+
+        // Also emit the same descriptor stream into the
+        // __wasm_bindgen_descriptors custom section. Mirrors the
+        // legacy describe() body exactly: a 3-word header, one entry
+        // per argument with no async-LONGREF transform (imports'
+        // args aren't held across awaits), then `inform_ret` twice.
+        let argty_refs: Vec<&syn::Type> = argtys.iter().collect();
+        let arg_parts = build_arg_parts(self.wasm_bindgen, &argty_refs, false);
+        let ret_parts = schema_parts_for_type_tokens(self.wasm_bindgen, &ret_schema_ty);
+        let inner_ret_parts = ret_parts.clone();
+        emit_static_descriptor_entry(
+            self.wasm_bindgen,
+            &f.shim.to_string(),
+            &arg_parts,
+            ret_parts,
+            inner_ret_parts,
+            nargs,
+            &f.function.rust_attrs,
+            tokens,
+        );
+
         Ok(())
     }
 }
