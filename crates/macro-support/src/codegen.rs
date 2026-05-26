@@ -1213,7 +1213,7 @@ fn emit_static_descriptor_entry(
 /// * `Box<[T]>`   -> `VECTOR, <T schema...>`
 /// * `[T]`        -> `SLICE, <T schema...>`
 /// * `Result<T, E>` -> `RESULT, <T schema...>`  (E is discarded; matches
-///                                              the runtime impl)
+///   the runtime impl)
 /// * `Clamped<T>` -> `CLAMPED, <T schema...>`
 ///
 /// For everything else, falls back to the type's own
@@ -1332,7 +1332,7 @@ fn mangle_export_name_for_ident(name: &str) -> String {
             b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'_' => out.push(b as char),
             _ => {
                 out.push('_');
-                out.push_str(&format!("{:02x}", b));
+                out.push_str(&format!("{b:02x}"));
             }
         }
     }
