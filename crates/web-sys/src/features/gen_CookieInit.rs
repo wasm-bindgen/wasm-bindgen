@@ -30,6 +30,26 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
     #[wasm_bindgen(method, setter = "expires")]
     pub fn set_expires(this: &CookieInit, val: Option<f64>);
+    #[doc = "Get the `maxAge` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
+    #[wasm_bindgen(method, getter = "maxAge")]
+    pub fn get_max_age(this: &CookieInit) -> Option<f64>;
+    #[doc = "Change the `maxAge` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
+    #[wasm_bindgen(method, setter = "maxAge")]
+    pub fn set_max_age(this: &CookieInit, val: Option<f64>);
+    #[doc = "Change the `maxAge` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
+    #[wasm_bindgen(method, setter = "maxAge")]
+    pub fn set_max_age_opt_i32(this: &CookieInit, val: Option<i32>);
+    #[doc = "Change the `maxAge` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
+    #[wasm_bindgen(method, setter = "maxAge")]
+    pub fn set_max_age_opt_f64(this: &CookieInit, val: Option<f64>);
     #[doc = "Get the `name` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
@@ -102,6 +122,11 @@ impl CookieInit {
     #[deprecated = "Use `set_expires()` instead."]
     pub fn expires(&mut self, val: Option<f64>) -> &mut Self {
         self.set_expires(val);
+        self
+    }
+    #[deprecated = "Use `set_max_age()` instead."]
+    pub fn max_age(&mut self, val: Option<f64>) -> &mut Self {
+        self.set_max_age(val);
         self
     }
     #[deprecated = "Use `set_name()` instead."]
