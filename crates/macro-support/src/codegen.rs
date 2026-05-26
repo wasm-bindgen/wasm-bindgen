@@ -1323,20 +1323,22 @@ fn schema_parts_for_type(wasm_bindgen: &syn::Path, ty: &syn::Type) -> TokenStrea
                             };
                         }
                         if ident == "Vec" {
-                            // `Vec<T>` -> `Box<[T]>::describe()` ->
-                            // `T::describe_vector()`. For most element
-                            // types this yields `[VECTOR, <T schema>]`,
-                            // which is what the recursive case below
-                            // produces. For Rust structs / string enums
-                            // the macro override emits a different
-                            // shape via WasmDescribeVector::VECTOR_SCHEMA;
-                            // those cases currently fall back to the
-                            // interpreter because we don't yet generate
-                            // a per-call-site dispatch on
-                            // `WasmDescribeVector::VECTOR_SCHEMA`.
-                            let inner = schema_parts_for_type(wasm_bindgen, inner_ty);
+                            // `Vec<T>` schema flows through
+                            // `<T as WasmDescribeVector>::VECTOR_SCHEMA`,
+                            // the same trait + const path that the
+                            // runtime `Box<[T]>::describe -> T::describe_vector`
+                            // chain uses. This is critical because the
+                            // shape varies per element type:
+                            //
+                            //   primitives:    [VECTOR, <T's SCHEMA>]
+                            //   String:        [VECTOR, NAMED_EXTERNREF, "string"]
+                            //   user struct:   [VECTOR, NAMED_EXTERNREF, <name>]
+                            //   string enum:   [VECTOR, EXTERNREF]
+                            //
+                            // The trait const is set per-impl to the
+                            // right value; we just defer to it here.
                             return quote! {
-                                &[#wasm_bindgen::describe::VECTOR], #inner
+                                <#inner_ty as #wasm_bindgen::describe::WasmDescribeVector>::VECTOR_SCHEMA,
                             };
                         }
                         if ident == "Result" {
@@ -1354,11 +1356,12 @@ fn schema_parts_for_type(wasm_bindgen: &syn::Path, ty: &syn::Type) -> TokenStrea
                             };
                         }
                         if ident == "Box" {
-                            // Recognise `Box<[T]>` specifically.
+                            // Recognise `Box<[T]>` specifically; same
+                            // shape as `Vec<T>`.
                             if let syn::Type::Slice(s) = get_ty(inner_ty) {
-                                let inner = schema_parts_for_type(wasm_bindgen, &s.elem);
+                                let elem = &s.elem;
                                 return quote! {
-                                    &[#wasm_bindgen::describe::VECTOR], #inner
+                                    <#elem as #wasm_bindgen::describe::WasmDescribeVector>::VECTOR_SCHEMA,
                                 };
                             }
                         }
@@ -1467,6 +1470,16 @@ fn detect_closure_arg(ty: &syn::Type) -> Option<(bool, Vec<syn::Type>, syn::Type
             continue;
         };
         let args: Vec<syn::Type> = paren.inputs.iter().cloned().collect();
+        // Reference-typed closure args use the runtime's
+        // `RefFromWasmAbi` variant of the `closures!` macro instead of
+        // `FromWasmAbi`. Our wrapper currently only emits the
+        // `FromWasmAbi` form. Bail out so these flow through the
+        // interpreter; the runtime's special single-arg `(&A)` impl
+        // still handles them correctly. A future commit can add
+        // `RefFromWasmAbi` support here.
+        if args.iter().any(|t| matches!(get_ty(t), syn::Type::Reference(_))) {
+            return None;
+        }
         let ret_ty: syn::Type = match &paren.output {
             syn::ReturnType::Default => syn::parse_quote!(()),
             syn::ReturnType::Type(_, t) => (**t).clone(),
