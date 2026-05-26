@@ -32,6 +32,12 @@ pub mod marker;
 
 pub use wasm_bindgen_macro::BindgenedStruct;
 
+// Re-export the descriptor section entry-kind discriminator bytes for the
+// `#[wasm_bindgen]` macro expansion. The macro refers to these by absolute
+// path (`::wasm_bindgen::__rt::DESCRIPTOR_KIND_REGULAR`) so they need to
+// live somewhere reachable from user crates that depend on this one.
+pub use wasm_bindgen_shared::{DESCRIPTOR_KIND_CAST, DESCRIPTOR_KIND_REGULAR};
+
 /// Wrapper implementation for JsValue errors, with atomics and std handling
 pub fn js_panic(err: JsValue) {
     #[cfg(all(feature = "std", not(target_feature = "atomics")))]

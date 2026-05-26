@@ -110,7 +110,25 @@ impl WasmBindgenDescriptorsSection {
                     entry.name
                 )
             })?;
-            let descriptor = Descriptor::decode(&stream);
+            // Defensively decode: an entry whose schema is malformed (for
+            // instance because the macro emitted a function that mentions
+            // a type with no SCHEMA const set) should not poison the
+            // whole pipeline. Drop the bad entry and let the legacy
+            // interpreter handle that shim instead. This is what makes
+            // it safe for the macro to emit the section optimistically.
+            let descriptor = match std::panic::catch_unwind(
+                std::panic::AssertUnwindSafe(|| Descriptor::decode(&stream)),
+            ) {
+                Ok(d) => d,
+                Err(_) => {
+                    log::debug!(
+                        "ignoring malformed __wasm_bindgen_descriptors entry for {:?}; \
+                         falling back to interpreter",
+                        entry.name
+                    );
+                    continue;
+                }
+            };
             match entry.kind {
                 DESCRIPTOR_KIND_REGULAR => {
                     regular_names.insert(entry.name.clone());
