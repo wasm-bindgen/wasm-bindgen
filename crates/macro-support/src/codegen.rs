@@ -2,6 +2,7 @@ use crate::ast;
 use crate::encode;
 use crate::encode::EncodeChunk;
 use crate::generics::{self, generic_to_concrete};
+use crate::hash::ShortHash;
 use crate::Diagnostic;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::format_ident;
@@ -1172,6 +1173,13 @@ fn emit_static_descriptor_entry(
     let shim_name_bytes = syn::LitByteStr::new(shim_name.as_bytes(), Span::call_site());
     let shim_name_len = shim_name.len();
 
+    // Drain any closure-wrapper emissions queued by recursive
+    // `schema_parts_for_type` calls during `arg_parts` / `ret_parts`
+    // building. These appear next to the descriptor entry static so
+    // the wrappers and the section entries live or die together at
+    // compile-time cfg evaluation.
+    let pending_closure_wrappers = take_pending_closure_wrappers();
+
     (quote! {
         #[cfg(target_family = "wasm")]
         #(#attrs)*
@@ -1213,6 +1221,13 @@ fn emit_static_descriptor_entry(
                     &__SCHEMA,
                 );
         };
+
+        // Per-monomorphisation closure-invoke wrappers required by
+        // any SYMBOL_REFs in the schema above. Each wrapper is its
+        // own top-level item; they all share their `#[cfg]` posture
+        // with the descriptor entry by being emitted into the same
+        // module scope from the same expansion.
+        #(#pending_closure_wrappers)*
     })
     .to_tokens(into);
 }
@@ -1249,6 +1264,14 @@ fn emit_static_descriptor_entry(
 /// interpreter handles that shim instead. This keeps the migration safe
 /// at every stage.
 fn schema_parts_for_type(wasm_bindgen: &syn::Path, ty: &syn::Type) -> TokenStream {
+    // Closure-shaped args (`&dyn Fn(...)`, `&mut dyn FnMut(...)`)
+    // need SYMBOL_REF handling because the function-table slot the
+    // legacy descriptor would have carried is only knowable post-link.
+    // Hand off to schema_parts_for_raw_closure, which also queues a
+    // wrapper-emission side-effect.
+    if let Some((is_mut, arg_tys, ret_ty)) = detect_closure_arg(ty) {
+        return schema_parts_for_raw_closure(wasm_bindgen, is_mut, &arg_tys, &ret_ty);
+    }
     let unwrapped = get_ty(ty);
     match unwrapped {
         syn::Type::Reference(r) => {
@@ -1339,6 +1362,364 @@ fn schema_parts_for_type_tokens(
     match syn::parse2::<syn::Type>(ty_tokens.clone()) {
         Ok(ty) => schema_parts_for_type(wasm_bindgen, &ty),
         Err(_) => quote! { <#ty_tokens as #wasm_bindgen::describe::WasmDescribe>::SCHEMA, },
+    }
+}
+
+thread_local! {
+    /// Module-scope items emitted as side effects of `schema_parts_for_type`.
+    /// Specifically: the closure-invoke wrappers that back closure
+    /// SYMBOL_REF entries. Drained at the end of each
+    /// `emit_static_descriptor_entry` so the wrappers appear next to
+    /// the descriptor they support.
+    ///
+    /// Per-thread because proc-macros run on whatever thread cargo
+    /// dispatches. Per-crate dedup is handled by [`CLOSURE_WRAPPERS_EMITTED`].
+    static CLOSURE_WRAPPER_EMISSIONS: RefCell<Vec<TokenStream>> =
+        const { RefCell::new(Vec::new()) };
+
+    /// Stable per-crate dedup: a closure signature plus unwind flavour
+    /// should only emit a wrapper once even if mentioned in many
+    /// `#[wasm_bindgen]` functions in the same crate. Keyed by the
+    /// content hash that names the wrapper.
+    static CLOSURE_WRAPPERS_EMITTED: RefCell<HashSet<String>> =
+        RefCell::default();
+}
+
+/// Drain the thread-local closure-wrapper emission queue. Called once
+/// at the end of each `emit_static_descriptor_entry` so the wrappers
+/// land in the same `TokenStream` as the descriptor entry they support,
+/// keeping cargo's incremental-recompile boundaries tight.
+fn take_pending_closure_wrappers() -> Vec<TokenStream> {
+    CLOSURE_WRAPPER_EMISSIONS.with(|cell| std::mem::take(&mut *cell.borrow_mut()))
+}
+
+/// Recognise a closure-shaped argument type. Returns parsed pieces
+/// usable for both wrapper emission and schema-parts synthesis:
+///
+/// * `is_mut`: `true` for `&mut dyn FnMut(...)`, `false` for `&dyn Fn(...)`.
+/// * `arg_tys`: parsed argument types `(A1, A2, ...)`.
+/// * `ret_ty`: parsed return type. `()` if the signature has no `-> R`.
+///
+/// Only matches the **raw `&dyn Fn` / `&mut dyn FnMut`** form right now.
+/// `Closure<T>` and friends are intentionally not detected here — those
+/// flow through the legacy interpreter pathway for now and will be
+/// migrated in a follow-up commit. The fallback is safe because
+/// emitting a malformed section entry causes cli-support to drop it
+/// and use the interpreter for that shim.
+fn detect_closure_arg(ty: &syn::Type) -> Option<(bool, Vec<syn::Type>, syn::Type)> {
+    let unwrapped = get_ty(ty);
+    let syn::Type::Reference(syn::TypeReference {
+        mutability, elem, ..
+    }) = unwrapped
+    else {
+        return None;
+    };
+    let inner = get_ty(elem);
+    let syn::Type::TraitObject(trait_obj) = inner else {
+        return None;
+    };
+    let is_mut = mutability.is_some();
+    for bound in &trait_obj.bounds {
+        let syn::TypeParamBound::Trait(tb) = bound else {
+            continue;
+        };
+        let Some(last) = tb.path.segments.last() else {
+            continue;
+        };
+        let name = last.ident.to_string();
+        let want_mut = match name.as_str() {
+            "Fn" => false,
+            "FnMut" => true,
+            _ => continue,
+        };
+        if want_mut != is_mut {
+            continue;
+        }
+        // Pull arg list + return type out of `Fn(A, B) -> R` shape.
+        let syn::PathArguments::Parenthesized(paren) = &last.arguments else {
+            continue;
+        };
+        let args: Vec<syn::Type> = paren.inputs.iter().cloned().collect();
+        let ret_ty: syn::Type = match &paren.output {
+            syn::ReturnType::Default => syn::parse_quote!(()),
+            syn::ReturnType::Type(_, t) => (**t).clone(),
+        };
+        return Some((is_mut, args, ret_ty));
+    }
+    None
+}
+
+/// Emit the schema parts for a `&dyn Fn(...) -> R` or `&mut dyn FnMut(...) -> R`
+/// argument: `REF/REFMUT, FUNCTION, SYMBOL_REF, <name_payload>, nargs, ...args..., ret, ret`.
+/// Side-effect: queues a wrapper-function emission into
+/// `CLOSURE_WRAPPER_EMISSIONS` so the next call to
+/// `take_pending_closure_wrappers` returns it.
+///
+/// Per the runtime's `WasmDescribe for dyn Fn(...)` impl, `UNWIND_SAFE`
+/// is always `true` for raw `&dyn Fn` / `&mut dyn FnMut` args — the
+/// panic-catching invoke shim is selected. We emit only the matching
+/// wrapper here. If a future closure form needs `false`, we'll emit
+/// both variants and let post-link cleanup strip whichever wasn't
+/// referenced.
+fn schema_parts_for_raw_closure(
+    wasm_bindgen: &syn::Path,
+    is_mut: bool,
+    arg_tys: &[syn::Type],
+    ret_ty: &syn::Type,
+) -> TokenStream {
+    const UNWIND_SAFE: bool = true;
+    let nargs = arg_tys.len() as u32;
+
+    // Content hash of the closure signature, used to name the wrapper
+    // and the SYMBOL_REF target identically. `ShortHash` mixes in
+    // CARGO_PKG_NAME / VERSION already, so the same signature in two
+    // crates gets distinct names — fine, each crate emits its own
+    // wrapper.
+    let sig_repr = format!(
+        "closure|is_mut={is_mut}|unwind_safe={UNWIND_SAFE}|args=[{}]|ret={}",
+        arg_tys
+            .iter()
+            .map(|t| t.to_token_stream().to_string())
+            .collect::<Vec<_>>()
+            .join(","),
+        ret_ty.to_token_stream().to_string(),
+    );
+    let hash = ShortHash(&sig_repr).to_string();
+    let export_name = format!("__wbg_invoke_{hash}");
+
+    // Recurse into each arg type / return type to build their schema.
+    let arg_parts: Vec<TokenStream> = arg_tys
+        .iter()
+        .map(|t| schema_parts_for_type(wasm_bindgen, t))
+        .collect();
+    let ret_parts = schema_parts_for_type(wasm_bindgen, ret_ty);
+
+    // SYMBOL_REF payload: in the schema stream, we need
+    // `[SYMBOL_REF, name_len_u32, name_chars_padded_to_4bytes]` as a
+    // sequence of u32 words. Each char of the name is one byte; we
+    // pack 4 chars per u32 in LE order. Padding bytes are zero.
+    //
+    // Doing the packing at proc-macro time keeps the schema's
+    // `concat_words` step trivially const-evaluable: we emit a
+    // literal `&[u32]` slice for the SYMBOL_REF payload, just like we
+    // do for plain opcode runs.
+    let name_bytes = export_name.as_bytes();
+    let name_len_u32 = name_bytes.len() as u32;
+    let mut packed_words: Vec<u32> = Vec::with_capacity(name_bytes.len().div_ceil(4) + 1);
+    packed_words.push(name_len_u32);
+    let mut i = 0;
+    while i < name_bytes.len() {
+        let b0 = name_bytes[i];
+        let b1 = name_bytes.get(i + 1).copied().unwrap_or(0);
+        let b2 = name_bytes.get(i + 2).copied().unwrap_or(0);
+        let b3 = name_bytes.get(i + 3).copied().unwrap_or(0);
+        packed_words.push(
+            u32::from(b0)
+                | (u32::from(b1) << 8)
+                | (u32::from(b2) << 16)
+                | (u32::from(b3) << 24),
+        );
+        i += 4;
+    }
+
+    // Queue the wrapper emission, deduplicating by export name.
+    let already_emitted = CLOSURE_WRAPPERS_EMITTED
+        .with(|set| !set.borrow_mut().insert(export_name.clone()));
+    if !already_emitted {
+        let wrapper = emit_closure_wrapper(
+            wasm_bindgen,
+            &export_name,
+            is_mut,
+            arg_tys,
+            ret_ty,
+        );
+        CLOSURE_WRAPPER_EMISSIONS.with(|cell| cell.borrow_mut().push(wrapper));
+    }
+
+    // Schema parts: REF (or REFMUT) + FUNCTION + SYMBOL_REF + name
+    // payload + 3-word header that the legacy `describe_invoke`
+    // would have emitted next (shim_idx slot now lives in SYMBOL_REF;
+    // we still need the nargs word, plus the arg/ret schemas).
+    //
+    // Layout matches:
+    //   REF/REFMUT,
+    //   FUNCTION,
+    //   SYMBOL_REF, name_len, <packed name>,
+    //   nargs,
+    //   <arg schemas...>,
+    //   <ret schema>,
+    //   <ret schema>          (legacy stream emits ret twice)
+    let ref_opcode = if is_mut {
+        quote! { #wasm_bindgen::describe::REFMUT }
+    } else {
+        quote! { #wasm_bindgen::describe::REF }
+    };
+    quote! {
+        &[
+            #ref_opcode,
+            #wasm_bindgen::describe::FUNCTION,
+            #wasm_bindgen::describe::SYMBOL_REF,
+            #(#packed_words),*
+        ],
+        &[#nargs],
+        #(#arg_parts)*
+        #ret_parts
+        #ret_parts
+    }
+}
+
+/// Emit the closure invoke wrapper at module scope:
+///
+/// ```rust,ignore
+/// #[cfg(target_family = "wasm")]
+/// #[export_name = "__wbg_invoke_<hash>"]
+/// pub unsafe extern "C-unwind" fn __wbg_invoke_<hash>(
+///     a: WasmWord, b: WasmWord,
+///     /* per-arg splatted primitives... */
+/// ) -> WasmRet<<R as ReturnWasmAbi>::Abi> {
+///     /* transmute (a, b) into &dyn Fn(...), reassemble args, call,
+///        wrap the result via maybe_catch_unwind (UNWIND_SAFE=true). */
+/// }
+/// ```
+///
+/// The wrapper is exported by name so cli-support can find it via
+/// `module.exports`, and is placed in the function table because
+/// wasm-ld puts functions that have their address taken into element
+/// segments. We force that by following the wrapper definition with
+/// a `#[used] static` of the wrapper's function-pointer type.
+fn emit_closure_wrapper(
+    wasm_bindgen: &syn::Path,
+    export_name: &str,
+    is_mut: bool,
+    arg_tys: &[syn::Type],
+    ret_ty: &syn::Type,
+) -> TokenStream {
+    let wrapper_ident = Ident::new(
+        &format!("__wbg_invoke_wrap_{}", mangle_export_name_for_ident(export_name)),
+        Span::call_site(),
+    );
+    let static_ident = Ident::new(
+        &format!("__wbg_invoke_keepalive_{}", mangle_export_name_for_ident(export_name)),
+        Span::call_site(),
+    );
+
+    // Per-arg splatted primitives. Mirrors the `splat()` helper used
+    // for exports/imports but inlined here because we also need to
+    // reassemble the primitives back into the original ABI type in
+    // the wrapper body.
+    let mut sig_args: Vec<TokenStream> = Vec::new();
+    let mut reassemble_args: Vec<TokenStream> = Vec::new();
+    let mut call_args: Vec<Ident> = Vec::new();
+    for (i, ty) in arg_tys.iter().enumerate() {
+        let prim1 = format_ident!("arg{i}_1");
+        let prim2 = format_ident!("arg{i}_2");
+        let prim3 = format_ident!("arg{i}_3");
+        let prim4 = format_ident!("arg{i}_4");
+        let abi = quote! { <#ty as #wasm_bindgen::convert::FromWasmAbi>::Abi };
+        sig_args.push(quote! {
+            #prim1: <#abi as #wasm_bindgen::convert::WasmAbi>::Prim1
+        });
+        sig_args.push(quote! {
+            #prim2: <#abi as #wasm_bindgen::convert::WasmAbi>::Prim2
+        });
+        sig_args.push(quote! {
+            #prim3: <#abi as #wasm_bindgen::convert::WasmAbi>::Prim3
+        });
+        sig_args.push(quote! {
+            #prim4: <#abi as #wasm_bindgen::convert::WasmAbi>::Prim4
+        });
+        let local = format_ident!("arg{i}");
+        reassemble_args.push(quote! {
+            let #local = <#ty as #wasm_bindgen::convert::FromWasmAbi>::from_abi(
+                <#abi as #wasm_bindgen::convert::WasmAbi>::join(
+                    #prim1, #prim2, #prim3, #prim4,
+                )
+            );
+        });
+        call_args.push(local);
+    }
+
+    let mut_kw = if is_mut { quote!(mut) } else { quote!() };
+    let fn_kw = if is_mut { quote!(FnMut) } else { quote!(Fn) };
+    let arg_ty_list = arg_tys.iter().map(|t| quote! { #t });
+
+    let abi_ret = quote! { <#ret_ty as #wasm_bindgen::convert::ReturnWasmAbi>::Abi };
+
+    // Build the wrapper's function-pointer type for the keep-alive
+    // static. Reuses the same per-arg splat as the wrapper's signature.
+    let keepalive_arg_tys: Vec<TokenStream> = arg_tys
+        .iter()
+        .flat_map(|ty| {
+            let abi = quote! { <#ty as #wasm_bindgen::convert::FromWasmAbi>::Abi };
+            [
+                quote! { <#abi as #wasm_bindgen::convert::WasmAbi>::Prim1 },
+                quote! { <#abi as #wasm_bindgen::convert::WasmAbi>::Prim2 },
+                quote! { <#abi as #wasm_bindgen::convert::WasmAbi>::Prim3 },
+                quote! { <#abi as #wasm_bindgen::convert::WasmAbi>::Prim4 },
+            ]
+        })
+        .collect();
+
+    quote! {
+        // The wrapper itself: signature matches the legacy `invoke`
+        // shim for this closure monomorphisation. Body transmutes
+        // (a, b) into the closure trait object and forwards args.
+        // panic=unwind is opt-in for the runtime; we always use the
+        // catching variant (`maybe_catch_unwind`) since that matches
+        // the runtime's `WasmDescribe for dyn Fn(...)` choice.
+        #[cfg(target_family = "wasm")]
+        #[automatically_derived]
+        #[doc(hidden)]
+        #[allow(non_snake_case)]
+        #[allow(clippy::too_many_arguments)]
+        #[export_name = #export_name]
+        pub unsafe extern "C-unwind" fn #wrapper_ident(
+            a: #wasm_bindgen::__rt::WasmWord,
+            b: #wasm_bindgen::__rt::WasmWord,
+            #(#sig_args),*
+        ) -> #wasm_bindgen::convert::WasmRet<#abi_ret> {
+            use #wasm_bindgen::convert::{FromWasmAbi, ReturnWasmAbi, WasmAbi};
+            if a.is_zero() {
+                #wasm_bindgen::throw_str(
+                    "closure invoked recursively or after being dropped",
+                );
+            }
+            let f: & #mut_kw dyn #fn_kw(#(#arg_ty_list),*) -> #ret_ty =
+                ::core::mem::transmute((a.into_usize(), b.into_usize()));
+            #(#reassemble_args)*
+            let ret = #wasm_bindgen::__rt::maybe_catch_unwind(
+                ::core::panic::AssertUnwindSafe(|| f(#(#call_args),*)),
+            );
+            <#ret_ty as ReturnWasmAbi>::return_abi(ret).into()
+        }
+
+        // Keep-alive: wasm-ld only places a function in the function
+        // table when its address is taken in code it can see. The
+        // wrapper is exported by name, which keeps it from DCE, but
+        // by itself doesn't force a table entry. Taking its address
+        // through a `#[used] static` does.
+        //
+        // Type-erased: we store the wrapper's address as a raw
+        // pointer so the static's type doesn't have to mirror the
+        // wrapper's (per-monomorphisation) signature. wasm-ld treats
+        // the address-of as a function-pointer relocation regardless.
+        //
+        // After cli-support harvests the wrapper's table slot via
+        // `function_table_slot_of`, it strips this export and the
+        // walrus GC pass drops the wrapper if the slot is now
+        // unreferenced. Common case: the slot is referenced from the
+        // exported function table (via a JS-callable adapter
+        // generated by cli-support) and the wrapper stays live, just
+        // without its descriptor-emission-related export name.
+        #[cfg(target_family = "wasm")]
+        #[automatically_derived]
+        #[doc(hidden)]
+        #[used]
+        static #static_ident: unsafe extern "C-unwind" fn(
+            #wasm_bindgen::__rt::WasmWord,
+            #wasm_bindgen::__rt::WasmWord,
+            #(#keepalive_arg_tys),*
+        ) -> #wasm_bindgen::convert::WasmRet<#abi_ret> = #wrapper_ident;
     }
 }
 
