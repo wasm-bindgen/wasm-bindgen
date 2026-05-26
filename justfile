@@ -70,8 +70,8 @@ test-wasm-bindgen-unwind *ARGS="":
 # Run wasm-bindgen tests with panic=unwind using legacy EH (try/catch). Useful
 # for testing compatibility with older runtimes (Node 20, older browsers).
 test-wasm-bindgen-unwind-legacy-eh *ARGS="":
-    RUSTFLAGS="-Cpanic=unwind -Cllvm-args=-wasm-use-legacy-eh" \
-    RUSTDOCFLAGS="-Cpanic=unwind -Cllvm-args=-wasm-use-legacy-eh" \
+    RUSTFLAGS="-Cpanic=unwind -Cllvm-args=-wasm-use-legacy-eh --cfg=legacy_eh" \
+    RUSTDOCFLAGS="-Cpanic=unwind -Cllvm-args=-wasm-use-legacy-eh --cfg=legacy_eh" \
     NODE_ARGS="--stack-trace-limit=100" \
     RUST_BACKTRACE=1 \
     WASM_BINDGEN_TEST_ONLY_NODE=1 \

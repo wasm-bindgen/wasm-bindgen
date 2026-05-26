@@ -81,13 +81,8 @@ pub struct WasmBindgenAux {
     /// distinguished from other JS exceptions.
     pub wrapped_js_tag: Option<walrus::TagId>,
 
-    /// When true, `WebAssembly.JSTag` is polyfilled on the JS side with a
-    /// `new WebAssembly.Tag({ parameters: ['externref'] })`, and every import
-    /// is wrapped in a JS try/catch that re-throws caught exceptions through
-    /// that polyfilled tag. Set automatically when legacy EH (`try`/`catch`)
-    /// is detected so that toolchains targeting Node 20/older engines (no
-    /// `WebAssembly.JSTag`) keep working with `panic=unwind`.
-    pub jstag_polyfill: bool,
+    /// When building with legacy exception handling
+    pub legacy_exception_handling: bool,
 
     /// Whether the `__wbindgen_reinit` intrinsic is used. When true, the
     /// reinit machinery (`__wbg_reset_state` as a private function + the

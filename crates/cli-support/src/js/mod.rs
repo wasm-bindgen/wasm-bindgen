@@ -3842,17 +3842,17 @@ if (require('worker_threads').isMainThread) {{
     /// `__wbindgen_rethrow` against `__wbindgen_wrapped_jstag`) are passed
     /// through untouched so the recoverable-vs-abort discrimination in
     /// `__wbg_handle_catch` keeps working.
-    fn expose_jstag_wrap(&mut self) {
+    fn expose_wrap_error(&mut self) {
         self.intrinsic(
-            "jstag_wrap".into(),
-            "__wbg_jstag_wrap".into(),
+            "wrapError".into(),
+            "wrapError".into(),
             "
-            function __wbg_jstag_wrap(f, args) {
+            function wrapError(f, args) {
                 try {
                     return f.apply(this, args);
                 } catch (e) {
                     if (e instanceof WebAssembly.Exception) throw e;
-                    throw new WebAssembly.Exception(__wbindgen_jstag, [e], { traceStack: true });
+                    throw new WebAssembly.Exception(__wbindgen_jstag_polyfill, [e], { traceStack: true });
                 }
             }
             "
@@ -4731,7 +4731,7 @@ if (require('worker_threads').isMainThread) {{
         };
 
         if matches!(self.config.mode, OutputMode::Emscripten) {
-            if self.aux.jstag_polyfill {
+            if self.aux.legacy_exception_handling {
                 self.emscripten_library.push_str(
                     "addToLibrary({\n  __wbindgen_jstag: \"(globalThis.__wbindgen_jstag = new WebAssembly.Tag({ parameters: ['externref'] }))\",\n});\n",
                 );
@@ -4739,13 +4739,13 @@ if (require('worker_threads').isMainThread) {{
                 self.emscripten_library
                     .push_str("addToLibrary({\n  __wbindgen_jstag: \"WebAssembly.JSTag\",\n});\n");
             }
-        } else if self.aux.jstag_polyfill {
+        } else if self.aux.legacy_exception_handling {
             self.global(
-                "const __wbindgen_jstag = new WebAssembly.Tag({ parameters: ['externref'] });",
+                "const __wbindgen_jstag_polyfill = new WebAssembly.Tag({ parameters: ['externref'] });",
             );
             self.wasm_import_definitions.insert(
                 id,
-                ImportDefinition::GlobalRef("__wbindgen_jstag".to_string()),
+                ImportDefinition::GlobalRef("__wbindgen_jstag_polyfill".to_string()),
             );
         } else {
             self.wasm_import_definitions.insert(
@@ -4943,8 +4943,10 @@ addToLibrary({
         // (a clone of an empty set).
         let adapter_deps_before = self.adapter_deps.clone();
         let catch = self.aux.imports_with_catch.contains(&id);
+        let needs_jstag_wrap =
+            self.aux.legacy_exception_handling && matches!(kind, ContextAdapterKind::Import(_));
         if let ContextAdapterKind::Import(core) = kind {
-            if !catch && self.attempt_direct_import(core, instrs)? {
+            if !catch && !needs_jstag_wrap && self.attempt_direct_import(core, instrs)? {
                 return Ok(());
             }
         }
@@ -5218,9 +5220,9 @@ addToLibrary({
                 // `new WebAssembly.Exception(__wbindgen_jstag, [e])` against
                 // the polyfilled tag, restoring the engine semantics that
                 // JSTag would otherwise provide.
-                let code = if self.aux.jstag_polyfill {
-                    self.expose_jstag_wrap();
-                    format!("() {{ return __wbg_jstag_wrap(function {code}, arguments); }}")
+                let code = if self.aux.legacy_exception_handling {
+                    self.expose_wrap_error();
+                    format!("() {{ return wrapError(function {code}, arguments); }}")
                 } else {
                     code
                 };

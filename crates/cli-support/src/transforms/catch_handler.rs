@@ -94,9 +94,16 @@ pub fn run(
         aux.function_table = module.tables.main_function_table().ok().flatten();
     }
 
+    // Legacy EH support gap: `WebAssembly.JSTag` only exists on Node 22.22.3+,
+    // but the underlying `try`/`catch` instructions work on Node 18/20. When
+    // we're emitting legacy EH wrappers we polyfill JSTag on the JS side with
+    // a custom `WebAssembly.Tag` plus a JS-side try/catch around every import,
+    // so the resulting module runs on engines without `WebAssembly.JSTag`.
+    aux.legacy_exception_handling = matches!(eh_version, ExceptionHandlingVersion::Legacy);
+
     // Import the JSTag
     let js_tag = import_js_tag(module);
-    let wrapped_js_tag = Some(import_externref_tag(module, "__wbindgen_wrapped_jstag"));
+    let wrapped_js_tag = import_externref_tag(module, "__wbindgen_wrapped_jstag");
 
     let mut wrappers = HashMap::new();
 
@@ -104,10 +111,8 @@ pub fn run(
     for (_import_id, func_id, adapter_id) in wit.implements.iter() {
         let wrapper_kind = if aux.imports_with_catch.contains(adapter_id) {
             WrapperKind::CatchWrapper
-        } else if let Some(wrapped_js_tag) = wrapped_js_tag {
-            WrapperKind::NonAbortingWrapper { wrapped_js_tag }
         } else {
-            continue;
+            WrapperKind::NonAbortingWrapper { wrapped_js_tag }
         };
 
         let wrapper_id = generate_catch_wrapper(
@@ -131,13 +136,7 @@ pub fn run(
 
     log::debug!("Catch handler created {} wrappers", wrappers.len());
     aux.js_tag = Some(js_tag);
-    aux.wrapped_js_tag = wrapped_js_tag;
-    // Legacy EH support gap: `WebAssembly.JSTag` only exists on Node 22.22.3+,
-    // but the underlying `try`/`catch` instructions work on Node 18/20. When
-    // we're emitting legacy EH wrappers we polyfill JSTag on the JS side with
-    // a custom `WebAssembly.Tag` plus a JS-side try/catch around every import,
-    // so the resulting module runs on engines without `WebAssembly.JSTag`.
-    aux.jstag_polyfill = matches!(eh_version, ExceptionHandlingVersion::Legacy);
+    aux.wrapped_js_tag = Some(wrapped_js_tag);
 
     Ok(())
 }
