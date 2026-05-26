@@ -645,6 +645,17 @@ impl ToTokens for ast::StructField {
         }
         .to_tokens(tokens);
 
+        // Section transport: getter's descriptor is the bare field
+        // type schema, same shape as ImportStatic. The cli's struct
+        // field processor reads it from `self.descriptors` keyed by
+        // the getter shim name.
+        emit_static_descriptor_entry_static(
+            &self.wasm_bindgen,
+            &getter.to_string(),
+            schema_parts_for_type(&self.wasm_bindgen, ty),
+            tokens,
+        );
+
         if self.readonly {
             return;
         }
