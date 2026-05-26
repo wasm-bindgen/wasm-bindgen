@@ -23,10 +23,13 @@
 use anyhow::{anyhow, bail, Result};
 use std::collections::HashMap;
 use wasm_bindgen_shared::{
-    tys::SYMBOL_REF, DESCRIPTOR_KIND_CAST, DESCRIPTOR_KIND_REGULAR,
+    tys::SYMBOL_REF, DESCRIPTOR_FORMAT_VERSION, DESCRIPTOR_KIND_CAST, DESCRIPTOR_KIND_REGULAR,
 };
 
-/// One descriptor entry recovered from the section.
+/// One descriptor entry recovered from the section. Only entries with a
+/// recognised `format_version` are decoded into this struct; entries with
+/// unknown versions are skipped by the parser (after logging) and never
+/// reach the rest of cli-support.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Entry {
     /// Name of the shim this descriptor describes. For regular entries
@@ -44,32 +47,91 @@ pub struct Entry {
     pub schema_bytes: Vec<u8>,
 }
 
+/// Statistics about a parse, useful for the caller's log output when
+/// some entries had to be skipped due to unrecognised versions.
+#[derive(Debug, Default, Clone)]
+pub struct ParseStats {
+    /// Number of entries successfully decoded.
+    pub decoded: usize,
+    /// Number of entries skipped because their `format_version` byte was
+    /// not [`DESCRIPTOR_FORMAT_VERSION`]. The keys of the map are the
+    /// unrecognised version numbers; values are how many entries had
+    /// that version. Empty in the common case.
+    pub skipped_unknown_version: std::collections::BTreeMap<u8, usize>,
+}
+
+impl ParseStats {
+    /// Total number of skipped entries across all unknown versions.
+    pub fn skipped_total(&self) -> usize {
+        self.skipped_unknown_version.values().copied().sum()
+    }
+}
+
 /// Parse the raw bytes of a `__wasm_bindgen_descriptors` custom section
-/// into a list of [`Entry`] records.
+/// into a list of [`Entry`] records, plus statistics about anything
+/// that had to be skipped due to version mismatches.
 ///
 /// Format (also documented on `DESCRIPTORS_SECTION_NAME`):
 ///
 /// ```text
 /// section bytes:
 ///   entry repeated until the section ends:
+///     u8        format_version
+///     u32 LE    entry_body_byte_len
+///     ----- entry body (entry_body_byte_len bytes) -----
 ///     u8        shim_name_len
 ///     [u8; n]   shim_name
 ///     u8        kind
 ///     u32 LE    schema_word_count
 ///     [u32 LE]  schema (schema_word_count * 4 bytes)
+///     ----- end of entry body -----
 /// ```
 ///
-/// There is no outer length header: the wasm custom-section framing
-/// already supplies the slice length. Each `#[wasm_bindgen]`-expanded
-/// function emits one entry as a `#[link_section]` static, and the
-/// linker concatenates them, so the producer side has no opportunity
-/// to write a single total_len anyway.
-pub fn parse(section: &[u8]) -> Result<Vec<Entry>> {
+/// The outer `format_version` + `entry_body_byte_len` framing is part
+/// of the stable contract and must remain identical across versions so
+/// that a CLI which does not recognise the `format_version` can still
+/// skip the body byte-accurately and continue parsing later entries.
+pub fn parse(section: &[u8]) -> Result<(Vec<Entry>, ParseStats)> {
     let mut r = Reader::new(section);
     let body_end = section.len();
 
     let mut entries = Vec::new();
+    let mut stats = ParseStats::default();
     while r.pos < body_end {
+        let format_version = r.u8()?;
+        let body_len = r.u32()? as usize;
+        let body_start = r.pos;
+        let body_finish = body_start
+            .checked_add(body_len)
+            .ok_or_else(|| anyhow!("descriptor entry body_len overflows section"))?;
+        if body_finish > body_end {
+            // The most likely cause of a body_len that vastly overshoots
+            // the section is a wasm binary produced by a pre-versioning
+            // build of wasm-bindgen — the parser misinterprets the
+            // legacy shim_name_len byte as a version byte and the next
+            // few bytes as a wildly large body_len. Help the user
+            // diagnose this rather than producing an opaque size error.
+            bail!(
+                "descriptor entry declares body_byte_len = {body_len}, which extends \
+                 past the section end ({body_end} bytes). This usually means the \
+                 wasm was produced by a wasm-bindgen older than this CLI and uses \
+                 an incompatible __wasm_bindgen_descriptors layout. Rebuild the \
+                 wasm with a matching wasm-bindgen version."
+            );
+        }
+
+        if format_version != DESCRIPTOR_FORMAT_VERSION {
+            // Forward-compat: skip this entry whole. We can do this safely
+            // because the framing fields (format_version + body_len) are
+            // part of the stable contract.
+            *stats
+                .skipped_unknown_version
+                .entry(format_version)
+                .or_insert(0) += 1;
+            r.pos = body_finish;
+            continue;
+        }
+
         let name_len = r.u8()? as usize;
         if name_len == 0 {
             bail!("descriptor entry has empty shim name");
@@ -87,11 +149,19 @@ pub fn parse(section: &[u8]) -> Result<Vec<Entry>> {
             .checked_mul(4)
             .ok_or_else(|| anyhow!("descriptor schema_word_count overflows"))?;
         let schema_bytes = r.bytes(byte_count)?.to_vec();
+        if r.pos != body_finish {
+            bail!(
+                "descriptor entry {name:?}: declared body length {body_len} \
+                 does not match decoded body length {}",
+                r.pos - body_start
+            );
+        }
         entries.push(Entry {
             name,
             kind,
             schema_bytes,
         });
+        stats.decoded += 1;
     }
     if r.pos != body_end {
         bail!(
@@ -99,7 +169,7 @@ pub fn parse(section: &[u8]) -> Result<Vec<Entry>> {
             r.pos
         );
     }
-    Ok(entries)
+    Ok((entries, stats))
 }
 
 /// Walk a schema byte stream and replace any `SYMBOL_REF` opcode plus its
@@ -205,8 +275,9 @@ mod tests {
     use super::*;
     use wasm_bindgen_shared::tys;
 
-    /// Pack a single regular entry's body (without the outer total_len).
-    fn entry_bytes(name: &str, kind: u8, schema_words: &[u32]) -> Vec<u8> {
+    /// Pack the *body* of a single entry (everything after the outer
+    /// `format_version` + `body_len` framing fields).
+    fn entry_body(name: &str, kind: u8, schema_words: &[u32]) -> Vec<u8> {
         let mut b = Vec::new();
         b.push(name.len() as u8);
         b.extend_from_slice(name.as_bytes());
@@ -218,25 +289,40 @@ mod tests {
         b
     }
 
-    fn section(entries: &[Vec<u8>]) -> Vec<u8> {
-        entries.iter().flatten().copied().collect()
+    /// Wrap a body with the outer framing (version + body_len). Defaults
+    /// to the current [`DESCRIPTOR_FORMAT_VERSION`].
+    fn frame(body: Vec<u8>) -> Vec<u8> {
+        frame_with_version(DESCRIPTOR_FORMAT_VERSION, body)
+    }
+
+    fn frame_with_version(version: u8, body: Vec<u8>) -> Vec<u8> {
+        let mut out = Vec::with_capacity(1 + 4 + body.len());
+        out.push(version);
+        out.extend_from_slice(&(body.len() as u32).to_le_bytes());
+        out.extend_from_slice(&body);
+        out
+    }
+
+    fn section(framed_entries: &[Vec<u8>]) -> Vec<u8> {
+        framed_entries.iter().flatten().copied().collect()
     }
 
     #[test]
     fn parses_empty_section() {
         let bytes = section(&[]);
-        let entries = parse(&bytes).unwrap();
+        let (entries, stats) = parse(&bytes).unwrap();
         assert!(entries.is_empty());
+        assert_eq!(stats.decoded, 0);
+        assert_eq!(stats.skipped_total(), 0);
     }
 
     #[test]
     fn parses_single_regular_entry() {
-        // Equivalent to: a `pub fn foo(x: i32) -> i32` schema.
-        //   FUNCTION, shim_idx=0, nargs=1, I32 (arg), I32 (ret)
         let words = [tys::FUNCTION, 0, 1, tys::I32, tys::I32];
-        let bytes = section(&[entry_bytes("foo", DESCRIPTOR_KIND_REGULAR, &words)]);
-        let entries = parse(&bytes).unwrap();
+        let bytes = section(&[frame(entry_body("foo", DESCRIPTOR_KIND_REGULAR, &words))]);
+        let (entries, stats) = parse(&bytes).unwrap();
         assert_eq!(entries.len(), 1);
+        assert_eq!(stats.decoded, 1);
         assert_eq!(entries[0].name, "foo");
         assert_eq!(entries[0].kind, DESCRIPTOR_KIND_REGULAR);
         let resolved =
@@ -246,15 +332,57 @@ mod tests {
 
     #[test]
     fn parses_multiple_entries() {
-        let a = entry_bytes("a", DESCRIPTOR_KIND_REGULAR, &[tys::I32]);
-        let b = entry_bytes("bb", DESCRIPTOR_KIND_CAST, &[tys::U32, tys::U32]);
+        let a = frame(entry_body("a", DESCRIPTOR_KIND_REGULAR, &[tys::I32]));
+        let b = frame(entry_body("bb", DESCRIPTOR_KIND_CAST, &[tys::U32, tys::U32]));
         let bytes = section(&[a, b]);
-        let entries = parse(&bytes).unwrap();
+        let (entries, stats) = parse(&bytes).unwrap();
         assert_eq!(entries.len(), 2);
+        assert_eq!(stats.decoded, 2);
         assert_eq!(entries[0].name, "a");
         assert_eq!(entries[0].kind, DESCRIPTOR_KIND_REGULAR);
         assert_eq!(entries[1].name, "bb");
         assert_eq!(entries[1].kind, DESCRIPTOR_KIND_CAST);
+    }
+
+    #[test]
+    fn skips_unknown_version() {
+        // A v1 entry followed by a "v99" entry followed by another v1.
+        // The middle entry must be skipped cleanly without disturbing
+        // the trailing one.
+        let body_a = entry_body("a", DESCRIPTOR_KIND_REGULAR, &[tys::I32]);
+        let body_b = entry_body("future", DESCRIPTOR_KIND_REGULAR, &[1, 2, 3, 4]);
+        let body_c = entry_body("c", DESCRIPTOR_KIND_REGULAR, &[tys::U32]);
+        let bytes = section(&[
+            frame(body_a),
+            frame_with_version(99, body_b),
+            frame(body_c),
+        ]);
+        let (entries, stats) = parse(&bytes).unwrap();
+        assert_eq!(entries.len(), 2);
+        assert_eq!(stats.decoded, 2);
+        assert_eq!(stats.skipped_total(), 1);
+        assert_eq!(stats.skipped_unknown_version.get(&99), Some(&1));
+        assert_eq!(entries[0].name, "a");
+        assert_eq!(entries[1].name, "c");
+    }
+
+    #[test]
+    fn skipping_unknown_version_does_not_decode_garbage() {
+        // The "future" body is deliberately not a valid v1 entry; if the
+        // parser were to attempt to decode it anyway it would either
+        // panic or yield bogus data.
+        let mut garbage = Vec::new();
+        garbage.extend_from_slice(&[0xff, 0xff, 0xff, 0xff, 0xff, 0xff]);
+        garbage.extend_from_slice(b"this is not a v1 entry");
+        let bytes = section(&[
+            frame_with_version(7, garbage),
+            frame(entry_body("after", DESCRIPTOR_KIND_REGULAR, &[tys::U32])),
+        ]);
+        let (entries, stats) = parse(&bytes).unwrap();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].name, "after");
+        assert_eq!(stats.skipped_total(), 1);
+        assert_eq!(stats.skipped_unknown_version.get(&7), Some(&1));
     }
 
     #[test]
@@ -303,25 +431,46 @@ mod tests {
 
     #[test]
     fn unknown_kind_is_rejected() {
-        let mut body = entry_bytes("x", DESCRIPTOR_KIND_REGULAR, &[]);
-        // Overwrite the kind byte (immediately after name).
-        body[1 + "x".len()] = 99;
-        let bytes = section(&[body]);
+        let body = entry_body("x", DESCRIPTOR_KIND_REGULAR, &[]);
+        let mut framed = frame(body);
+        // Find the kind byte: after [version(1) | body_len(4) | name_len(1) | "x"]
+        let kind_pos = 1 + 4 + 1 + 1;
+        framed[kind_pos] = 99;
+        let bytes = section(&[framed]);
         let err = parse(&bytes).unwrap_err();
         assert!(err.to_string().contains("unknown kind"));
     }
 
     #[test]
+    fn declared_body_length_mismatch_is_rejected() {
+        // Pretend the body is longer than it actually is.
+        let body = entry_body("x", DESCRIPTOR_KIND_REGULAR, &[tys::I32]);
+        let mut framed = vec![DESCRIPTOR_FORMAT_VERSION];
+        framed.extend_from_slice(&((body.len() + 4) as u32).to_le_bytes());
+        framed.extend_from_slice(&body);
+        framed.extend_from_slice(&[0, 0, 0, 0]); // padding bytes that look like a stray word
+        let bytes = section(&[framed]);
+        let err = parse(&bytes).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("declared body length")
+                || msg.contains("extends past section end"),
+            "unexpected error: {msg}"
+        );
+    }
+
+    #[test]
     fn truncated_section_is_rejected() {
-        let bytes = section(&[entry_bytes(
+        let bytes = section(&[frame(entry_body(
             "x",
             DESCRIPTOR_KIND_REGULAR,
             &[tys::I32, tys::I32],
-        )]);
+        ))]);
         let err = parse(&bytes[..bytes.len() - 1]).unwrap_err();
+        let msg = err.to_string();
         assert!(
-            err.to_string().contains("unexpected end"),
-            "got: {err}"
+            msg.contains("unexpected end") || msg.contains("extends past"),
+            "unexpected truncation error message: {msg}"
         );
     }
 
