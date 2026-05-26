@@ -821,6 +821,12 @@ impl<T> WasmDescribe for ScopedClosure<'_, T>
 where
     T: WasmClosure + ?Sized,
 {
+    // ScopedClosure (and `Closure<T>` via the type alias) crosses
+    // the JS boundary as a single JsValue handle — the closure body
+    // and its captured environment live behind the scenes via
+    // wbg_cast. From the descriptor's perspective it is just an
+    // externref, regardless of `T`. Mirror that in both transports.
+    const SCHEMA: &'static [u32] = &[crate::describe::EXTERNREF];
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
         inform(EXTERNREF);
