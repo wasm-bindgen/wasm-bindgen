@@ -1264,6 +1264,50 @@ fn emit_static_descriptor_entry(
     .to_tokens(into);
 }
 
+/// Emit a `DESCRIPTOR_KIND_STATIC` entry. Unlike the regular variant,
+/// the schema is just the static's type schema (no FUNCTION header).
+/// Used by `ToTokens for ast::ImportStatic` so `#[wasm_bindgen]`
+/// `static`s flow through the section transport instead of relying on
+/// the legacy interpreter.
+fn emit_static_descriptor_entry_static(
+    wasm_bindgen: &syn::Path,
+    shim_name: &str,
+    schema_parts: TokenStream,
+    into: &mut TokenStream,
+) {
+    let static_ident = Ident::new(
+        &format!("__WBG_DESCRIPTOR_{}", mangle_export_name_for_ident(shim_name)),
+        Span::call_site(),
+    );
+    let shim_name_bytes = syn::LitByteStr::new(shim_name.as_bytes(), Span::call_site());
+    let shim_name_len = shim_name.len();
+
+    (quote! {
+        #[cfg(target_family = "wasm")]
+        #[automatically_derived]
+        const _: () = {
+            const __PARTS: &[&[u32]] = &[
+                #schema_parts
+            ];
+            const __WORDS: usize =
+                #wasm_bindgen::describe::schema::word_total(__PARTS);
+            const __SCHEMA: [u32; __WORDS] =
+                #wasm_bindgen::describe::schema::concat_words::<__WORDS>(__PARTS);
+            const __ENTRY_LEN: usize =
+                #wasm_bindgen::describe::schema::entry_byte_len(#shim_name_len, __WORDS);
+            #[link_section = "__wasm_bindgen_descriptors"]
+            #[doc(hidden)]
+            pub static #static_ident: [u8; __ENTRY_LEN] =
+                #wasm_bindgen::describe::schema::pack_entry::<__ENTRY_LEN>(
+                    #shim_name_bytes,
+                    #wasm_bindgen::__rt::DESCRIPTOR_KIND_STATIC,
+                    &__SCHEMA,
+                );
+        };
+    })
+    .to_tokens(into);
+}
+
 /// Convert a syntactic type into a sequence of `&[u32]` schema-part
 /// expressions, ready to be spliced into a `&[ ... ]` parts array.
 ///
@@ -1829,38 +1873,59 @@ impl TryToTokens for ast::ImportType {
             }
         };
 
-        let (description, schema_literal) = if let Some(typescript_type) = &self.typescript_type {
-            let typescript_type_len = typescript_type.len() as u32;
-            let typescript_type_chars: Vec<u32> =
-                typescript_type.chars().map(|c| c as u32).collect();
-            (
-                quote! {
-                    use #wasm_bindgen::describe::*;
-                    inform(NAMED_EXTERNREF);
-                    inform(#typescript_type_len);
-                    #(inform(#typescript_type_chars);)*
-                },
-                // Schema parts for the section transport: a literal
-                // NAMED_EXTERNREF opcode, the name length, and one u32
-                // per UTF-32 char. Kept in lockstep with the describe()
-                // emission above so the two transports never disagree
-                // on shape.
-                quote! {
-                    &[
-                        #wasm_bindgen::describe::NAMED_EXTERNREF,
-                        #typescript_type_len,
-                        #(#typescript_type_chars,)*
-                    ]
-                },
-            )
-        } else {
-            (
-                quote! {
-                    JsValue::describe()
-                },
-                quote! { <#wasm_bindgen::JsValue as #wasm_bindgen::describe::WasmDescribe>::SCHEMA },
-            )
-        };
+        let (description, schema_literal, vector_schema_literal) =
+            if let Some(typescript_type) = &self.typescript_type {
+                let typescript_type_len = typescript_type.len() as u32;
+                let typescript_type_chars: Vec<u32> =
+                    typescript_type.chars().map(|c| c as u32).collect();
+                (
+                    quote! {
+                        use #wasm_bindgen::describe::*;
+                        inform(NAMED_EXTERNREF);
+                        inform(#typescript_type_len);
+                        #(inform(#typescript_type_chars);)*
+                    },
+                    // Schema parts for the section transport: a literal
+                    // NAMED_EXTERNREF opcode, the name length, and one u32
+                    // per UTF-32 char. Kept in lockstep with the describe()
+                    // emission above so the two transports never disagree
+                    // on shape.
+                    quote! {
+                        &[
+                            #wasm_bindgen::describe::NAMED_EXTERNREF,
+                            #typescript_type_len,
+                            #(#typescript_type_chars,)*
+                        ]
+                    },
+                    // VECTOR_SCHEMA prefix is VECTOR + this type's own
+                    // schema. Needed so `Vec<Self>` and `Box<[Self]>`
+                    // args render correctly via the section transport
+                    // without falling back to the runtime describe stream.
+                    quote! {
+                        &[
+                            #wasm_bindgen::describe::VECTOR,
+                            #wasm_bindgen::describe::NAMED_EXTERNREF,
+                            #typescript_type_len,
+                            #(#typescript_type_chars,)*
+                        ]
+                    },
+                )
+            } else {
+                (
+                    quote! {
+                        JsValue::describe()
+                    },
+                    quote! {
+                        <#wasm_bindgen::JsValue as #wasm_bindgen::describe::WasmDescribe>::SCHEMA
+                    },
+                    quote! {
+                        &[
+                            #wasm_bindgen::describe::VECTOR,
+                            #wasm_bindgen::describe::EXTERNREF,
+                        ]
+                    },
+                )
+            };
 
         let is_type_of = self.is_type_of.as_ref().map(|is_type_of| {
             quote! {
@@ -2000,6 +2065,22 @@ impl TryToTokens for ast::ImportType {
                     const SCHEMA: &'static [u32] = #schema_literal;
                     fn describe() {
                         #description
+                    }
+                }
+
+                // `Vec<Self>` / `Box<[Self]>` schema for the section
+                // transport. Mirrors `WasmDescribe::SCHEMA` above with a
+                // VECTOR prefix so `Vec<#rust_name>` args don't fall
+                // back to the interpreter.
+                #[automatically_derived]
+                impl #impl_generics #wasm_bindgen::describe::WasmDescribeVector
+                    for #rust_name #ty_generics #where_clause
+                {
+                    const VECTOR_SCHEMA: &'static [u32] = #vector_schema_literal;
+                    fn describe_vector() {
+                        use #wasm_bindgen::describe::*;
+                        inform(VECTOR);
+                        <Self as WasmDescribe>::describe();
                     }
                 }
 
@@ -3917,6 +3998,17 @@ impl ToTokens for ast::ImportStatic {
             wasm_bindgen: &self.wasm_bindgen,
         }
         .to_tokens(into);
+
+        // Section transport: emit the static's bare type schema as a
+        // `DESCRIPTOR_KIND_STATIC` entry. ImportStatic's descriptor is
+        // not function-shaped (no FUNCTION header, no nargs, no
+        // ret/inner_ret duplication), it's just the type's own SCHEMA.
+        emit_static_descriptor_entry_static(
+            &self.wasm_bindgen,
+            &self.shim.to_string(),
+            schema_parts_for_type(&self.wasm_bindgen, &self.ty),
+            into,
+        );
     }
 }
 
