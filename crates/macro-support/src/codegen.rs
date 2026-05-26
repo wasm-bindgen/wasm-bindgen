@@ -2767,7 +2767,7 @@ impl ToTokens for ast::DynamicUnion {
 
         let name_str = &self.js_name;
         let name_len = name_str.len() as u32;
-        let name_chars = name_str.chars().map(u32::from);
+        let name_chars: Vec<u32> = name_str.chars().map(u32::from).collect();
 
         let mut string_variants = Vec::new();
         let mut type_variants = Vec::new();
@@ -2779,6 +2779,15 @@ impl ToTokens for ast::DynamicUnion {
             }
         }
         let type_count = type_variants.len() as u32;
+        // Variant schema parts for the section transport. Uses
+        // `schema_parts_for_type` so wrapper types (`Option<T>`,
+        // `Vec<T>`, `Result<T, E>`, etc.) resolve their schema via the
+        // macro's recursive dispatch rather than via the wrapper's
+        // empty trait-level `SCHEMA` const.
+        let variant_schema_parts: Vec<TokenStream> = type_variants
+            .iter()
+            .map(|ty| schema_parts_for_type(wasm_bindgen, ty))
+            .collect();
 
         (quote! {
             #(#attrs)*
@@ -2816,6 +2825,34 @@ impl ToTokens for ast::DynamicUnion {
             // Despite the generic implementation, we still encode the type information for TypeScript output
             #[automatically_derived]
             impl #wasm_bindgen::describe::WasmDescribe for #enum_name {
+                // Section-transport schema: same structure as the
+                // runtime `describe()` stream, concatenated through
+                // the `schema::concat_words` const-fn so each variant
+                // type's schema parts get spliced in at their concrete
+                // lengths. The variant parts come from
+                // `schema_parts_for_type` (the same macro helper used
+                // for argument/return-type schemas) so wrapper shapes
+                // like `Option<T>` / `Vec<T>` resolve to the correct
+                // section bytes rather than relying on the wrapper's
+                // own `SCHEMA` const (which is empty for `Option<T>`
+                // because of the generic-const-expr wall).
+                const SCHEMA: &'static [u32] = {
+                    const __HEADER: &[u32] = &[
+                        #wasm_bindgen::describe::DYNAMIC_UNION,
+                        #name_len,
+                        #(#name_chars,)*
+                        #type_count,
+                    ];
+                    const __PARTS: &[&[u32]] = &[
+                        __HEADER,
+                        #(#variant_schema_parts)*
+                    ];
+                    const __WORDS: usize =
+                        #wasm_bindgen::describe::schema::word_total(__PARTS);
+                    const __BUILT: [u32; __WORDS] =
+                        #wasm_bindgen::describe::schema::concat_words::<__WORDS>(__PARTS);
+                    &__BUILT
+                };
                 fn describe() {
                     use #wasm_bindgen::describe::*;
                     inform(DYNAMIC_UNION);
@@ -2901,6 +2938,16 @@ impl ToTokens for ast::DynamicUnion {
                 wasm_bindgen: &self.wasm_bindgen,
             }
             .to_tokens(tokens);
+
+            // Section transport: each variant descriptor is the bare
+            // variant type schema (no FUNCTION header), same shape as
+            // ImportStatic / struct getters.
+            emit_static_descriptor_entry_static(
+                &self.wasm_bindgen,
+                &descriptor_name.to_string(),
+                schema_parts_for_type(&self.wasm_bindgen, ty),
+                tokens,
+            );
         }
     }
 }
