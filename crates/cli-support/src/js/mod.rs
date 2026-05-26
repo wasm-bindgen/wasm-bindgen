@@ -5212,14 +5212,9 @@ addToLibrary({
                     code
                 };
 
-                // JSTag polyfill: when running on engines without
-                // `WebAssembly.JSTag` (e.g. Node 20), JS exceptions thrown
-                // out of imports never tag themselves with the JSTag, so the
-                // Wasm catch wrappers' `catch $jstag` arms never trigger.
-                // Wrap each import in a JS try/catch that re-throws via a
+                // JSTag polyfill: when running on Node 20, wrap each import in a JS try/catch that re-throws via a
                 // `new WebAssembly.Exception(__wbindgen_jstag, [e])` against
-                // the polyfilled tag, restoring the engine semantics that
-                // JSTag would otherwise provide.
+                // the polyfilled tag
                 let code = if self.aux.legacy_exception_handling {
                     self.expose_wrap_error();
                     format!("() {{ return wrapError(function {code}, arguments); }}")
