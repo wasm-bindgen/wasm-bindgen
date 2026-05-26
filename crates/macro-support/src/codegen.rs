@@ -240,6 +240,13 @@ impl ToTokens for ast::Struct {
 
             #[automatically_derived]
             impl #wasm_bindgen::describe::WasmDescribe for #name {
+                // Rust-side struct schema: RUST_STRUCT, name_len,
+                // ...name chars. Lockstep with describe().
+                const SCHEMA: &'static [u32] = &[
+                    #wasm_bindgen::describe::RUST_STRUCT,
+                    #name_len,
+                    #(#name_chars,)*
+                ];
                 fn describe() {
                     use #wasm_bindgen::describe::*;
                     inform(RUST_STRUCT);
@@ -422,6 +429,18 @@ impl ToTokens for ast::Struct {
 
             #[automatically_derived]
             impl #wasm_bindgen::describe::WasmDescribeVector for #name {
+                // `Vec<UserStruct>` schema: VECTOR, NAMED_EXTERNREF,
+                // name_len, ...name chars. The struct'\''s own
+                // WasmDescribe::SCHEMA is RUST_STRUCT (a single value
+                // descriptor); this overrides the blanket impl so the
+                // section transport produces the right shape for
+                // Vec<UserStruct> args.
+                const VECTOR_SCHEMA: &'static [u32] = &[
+                    #wasm_bindgen::describe::VECTOR,
+                    #wasm_bindgen::describe::NAMED_EXTERNREF,
+                    #name_len,
+                    #(#name_chars,)*
+                ];
                 fn describe_vector() {
                     use #wasm_bindgen::describe::*;
                     inform(VECTOR);
@@ -1304,9 +1323,17 @@ fn schema_parts_for_type(wasm_bindgen: &syn::Path, ty: &syn::Type) -> TokenStrea
                             };
                         }
                         if ident == "Vec" {
-                            // Mirrors `impl WasmDescribe for Vec<T>` which
-                            // delegates to `Box<[T]>::describe`, which in
-                            // turn calls `T::describe_vector` -> VECTOR + T.
+                            // `Vec<T>` -> `Box<[T]>::describe()` ->
+                            // `T::describe_vector()`. For most element
+                            // types this yields `[VECTOR, <T schema>]`,
+                            // which is what the recursive case below
+                            // produces. For Rust structs / string enums
+                            // the macro override emits a different
+                            // shape via WasmDescribeVector::VECTOR_SCHEMA;
+                            // those cases currently fall back to the
+                            // interpreter because we don't yet generate
+                            // a per-call-site dispatch on
+                            // `WasmDescribeVector::VECTOR_SCHEMA`.
                             let inner = schema_parts_for_type(wasm_bindgen, inner_ty);
                             return quote! {
                                 &[#wasm_bindgen::describe::VECTOR], #inner
@@ -2313,7 +2340,7 @@ impl ToTokens for ast::StringEnum {
         let enum_name = &self.name;
         let name_str = &self.export_name;
         let name_len = name_str.len() as u32;
-        let name_chars = name_str.chars().map(u32::from);
+        let name_chars: Vec<u32> = name_str.chars().map(u32::from).collect();
         let variants = &self.variants;
         let variant_count = self.variant_values.len() as u32;
         let variant_values = &self.variant_values;
@@ -2407,6 +2434,15 @@ impl ToTokens for ast::StringEnum {
 
             #[automatically_derived]
             impl #wasm_bindgen::describe::WasmDescribe for #enum_name {
+                // String-enum schema: STRING_ENUM, name_len, ...name chars
+                // (one u32 per char), variant_count. Kept in lockstep
+                // with the describe() body below.
+                const SCHEMA: &'static [u32] = &[
+                    #wasm_bindgen::describe::STRING_ENUM,
+                    #name_len,
+                    #(#name_chars,)*
+                    #variant_count,
+                ];
                 fn describe() {
                     use #wasm_bindgen::describe::*;
                     inform(STRING_ENUM);
@@ -3636,7 +3672,7 @@ impl ToTokens for ast::Enum {
         let enum_name = &self.rust_name;
         let name_str = shared::qualified_name(self.js_namespace.as_deref(), &self.js_name);
         let name_len = name_str.len() as u32;
-        let name_chars = name_str.chars().map(|c| c as u32);
+        let name_chars: Vec<u32> = name_str.chars().map(|c| c as u32).collect();
         let hole = &self.hole;
         let underlying = if self.signed {
             quote! { i32 }
@@ -3690,6 +3726,14 @@ impl ToTokens for ast::Enum {
 
             #[automatically_derived]
             impl #wasm_bindgen::describe::WasmDescribe for #enum_name {
+                // Regular enum schema: ENUM, name_len, ...name chars,
+                // hole. Lockstep with describe() below.
+                const SCHEMA: &'static [u32] = &[
+                    #wasm_bindgen::describe::ENUM,
+                    #name_len,
+                    #(#name_chars,)*
+                    #hole,
+                ];
                 fn describe() {
                     use #wasm_bindgen::describe::*;
                     inform(ENUM);
@@ -3723,6 +3767,13 @@ impl ToTokens for ast::Enum {
 
             #[automatically_derived]
             impl #wasm_bindgen::describe::WasmDescribeVector for #enum_name {
+                // `Vec<StringEnum>` crosses the boundary as a JS array
+                // of JsValues. Equivalent to `Vec<JsValue>` —
+                // VECTOR followed by JsValue's SCHEMA (EXTERNREF).
+                const VECTOR_SCHEMA: &'static [u32] = &[
+                    #wasm_bindgen::describe::VECTOR,
+                    #wasm_bindgen::describe::EXTERNREF,
+                ];
                 fn describe_vector() {
                     use #wasm_bindgen::describe::*;
                     inform(VECTOR);
