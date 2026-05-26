@@ -1,8 +1,3 @@
-// The producer side (#[wasm_bindgen] macro) and the wiring into
-// `descriptors::execute` land in later commits. Until then this module is
-// reachable only from its unit tests, so silence the unused warnings.
-#![allow(dead_code)]
-
 //! Parser for the `__wasm_bindgen_descriptors` custom section.
 //!
 //! This is the consumer side of the new descriptor transport that is
