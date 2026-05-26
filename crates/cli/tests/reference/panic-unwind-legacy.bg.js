@@ -12,22 +12,22 @@ export function maybe_panic(x) {
     }
     return ret >>> 0;
 }
-export function __wbg___wbindgen_panic_error_c684b5bb231f71fe() { return __wbg_jstag_wrap(function (arg0) {
+export function __wbg___wbindgen_panic_error_c684b5bb231f71fe() { return wrapError(function (arg0) {
     const ret = new PanicError(arg0);
     return ret;
 }, arguments); }
-export function __wbg___wbindgen_rethrow_c4d99b4b53265290() { return __wbg_jstag_wrap(function (arg0) {
+export function __wbg___wbindgen_rethrow_c4d99b4b53265290() { return wrapError(function (arg0) {
     throw new WebAssembly.Exception(__wbindgen_wrapped_jstag, [arg0]);
 }, arguments); }
-export function __wbg___wbindgen_throw_1506f2235d1bdba0() { return __wbg_jstag_wrap(function (arg0, arg1) {
+export function __wbg___wbindgen_throw_1506f2235d1bdba0() { return wrapError(function (arg0, arg1) {
     throw new WebAssembly.Exception(__wbindgen_wrapped_jstag, [new Error(getStringFromWasm0(arg0, arg1))]);
 }, arguments); }
-export function __wbindgen_cast_0000000000000000() { return __wbg_jstag_wrap(function (arg0, arg1) {
+export function __wbindgen_cast_0000000000000000() { return wrapError(function (arg0, arg1) {
     // Cast intrinsic for `Ref(String) -> Externref`.
     const ret = getStringFromWasm0(arg0, arg1);
     return ret;
 }, arguments); }
-export function __wbindgen_init_externref_table() { return __wbg_jstag_wrap(function () {
+export function __wbindgen_init_externref_table() { return wrapError(function () {
     const table = wasm.__wbindgen_externrefs;
     const offset = table.grow(4);
     table.set(0, undefined);
@@ -37,10 +37,10 @@ export function __wbindgen_init_externref_table() { return __wbg_jstag_wrap(func
     table.set(offset + 3, false);
 }, arguments); }
 
-export { __wbindgen_jstag };
+export { __wbindgen_jstag_polyfill as __wbindgen_jstag };
 
 export { __wbindgen_wrapped_jstag };
-const __wbindgen_jstag = new WebAssembly.Tag({ parameters: ['externref'] });
+const __wbindgen_jstag_polyfill = new WebAssembly.Tag({ parameters: ['externref'] });
 
 
 const __wbindgen_wrapped_jstag = new WebAssembly.Tag({ parameters: ['externref'] });
@@ -96,15 +96,6 @@ function getUint8ArrayMemory0() {
     return cachedUint8ArrayMemory0;
 }
 
-function __wbg_jstag_wrap(f, args) {
-    try {
-        return f.apply(this, args);
-    } catch (e) {
-        if (e instanceof WebAssembly.Exception) throw e;
-        throw new WebAssembly.Exception(__wbindgen_jstag, [e], { traceStack: true });
-    }
-}
-
 class PanicError extends Error {}
 Object.defineProperty(PanicError.prototype, 'name', {
     value: PanicError.name,
@@ -122,6 +113,15 @@ function decodeText(ptr, len) {
         numBytesDecoded = len;
     }
     return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
+}
+
+function wrapError(f, args) {
+    try {
+        return f.apply(this, args);
+    } catch (e) {
+        if (e instanceof WebAssembly.Exception) throw e;
+        throw new WebAssembly.Exception(__wbindgen_jstag_polyfill, [e], { traceStack: true });
+    }
 }
 
 

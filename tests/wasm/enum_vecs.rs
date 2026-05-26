@@ -30,7 +30,10 @@ fn test_valid() {
     pass_enum_vec();
 }
 
+// Legacy EH polyfill wraps the JS-side throw in a `WebAssembly.Exception`,
+// which loses the `consume_enum_vec` frame from the rethrown error's stack.
 #[wasm_bindgen_test]
+#[cfg(not(legacy_eh))]
 fn test_invalid() {
     pass_invalid_enum_vec();
 }
