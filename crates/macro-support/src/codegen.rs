@@ -1128,21 +1128,26 @@ fn emit_static_descriptor_entry(
     nargs: u32,
     into: &mut TokenStream,
 ) {
-    // Per-arg schema part: matches the structure of `describe_args`
-    // upstream. Async non-mut references get a LONGREF prefix; everything
-    // else delegates straight to `<Ty as WasmDescribe>::SCHEMA`.
-    let arg_parts = argtys.iter().map(|ty| match ty {
-        syn::Type::Reference(reference) if is_async && reference.mutability.is_none() => {
-            let inner = &reference.elem;
-            quote! {
-                &[#wasm_bindgen::describe::LONGREF],
-                <#inner as #wasm_bindgen::describe::WasmDescribe>::SCHEMA,
+    // Per-arg schema parts: matches the structure of `describe_args`
+    // upstream. Async non-mut references get a LONGREF prefix instead
+    // of REF; everything else flows through `schema_parts_for_type`,
+    // which structurally recognises common wrapper types and recurses.
+    let arg_parts = argtys
+        .iter()
+        .map(|ty| match ty {
+            syn::Type::Reference(reference) if is_async && reference.mutability.is_none() => {
+                let inner = &reference.elem;
+                let inner_parts = schema_parts_for_type(wasm_bindgen, inner);
+                quote! {
+                    &[#wasm_bindgen::describe::LONGREF],
+                    #inner_parts
+                }
             }
-        }
-        _ => quote! {
-            <#ty as #wasm_bindgen::describe::WasmDescribe>::SCHEMA,
-        },
-    });
+            _ => schema_parts_for_type(wasm_bindgen, ty),
+        })
+        .collect::<Vec<_>>();
+    let ret_parts = schema_parts_for_type_tokens(wasm_bindgen, ret_ty);
+    let inner_ret_parts = schema_parts_for_type_tokens(wasm_bindgen, inner_ret_ty);
 
     // The static's identifier is derived from the export name so each
     // descriptor entry has a unique symbol within its crate. The name
@@ -1165,8 +1170,8 @@ fn emit_static_descriptor_entry(
                     #nargs,
                 ],
                 #(#arg_parts)*
-                <#ret_ty as #wasm_bindgen::describe::WasmDescribe>::SCHEMA,
-                <#inner_ret_ty as #wasm_bindgen::describe::WasmDescribe>::SCHEMA,
+                #ret_parts
+                #inner_ret_parts
             ];
             const __WORDS: usize =
                 #wasm_bindgen::describe::schema::word_total(__PARTS);
@@ -1190,6 +1195,131 @@ fn emit_static_descriptor_entry(
         };
     })
     .to_tokens(into);
+}
+
+/// Convert a syntactic type into a sequence of `&[u32]` schema-part
+/// expressions, ready to be spliced into a `&[ ... ]` parts array.
+///
+/// The returned `TokenStream` always ends with a trailing comma so the
+/// caller can splat several together without worrying about separators.
+///
+/// Recognised structural shapes (matching the runtime `impl WasmDescribe`
+/// blocks in `src/describe.rs`):
+///
+/// * `&T`         -> `REF, <T schema...>`
+/// * `&mut T`     -> `REFMUT, <T schema...>`
+/// * `Option<T>`  -> `OPTIONAL, <T schema...>`
+/// * `Vec<T>`     -> `VECTOR, <T schema...>`
+/// * `Box<[T]>`   -> `VECTOR, <T schema...>`
+/// * `[T]`        -> `SLICE, <T schema...>`
+/// * `Result<T, E>` -> `RESULT, <T schema...>`  (E is discarded; matches
+///                                              the runtime impl)
+/// * `Clamped<T>` -> `CLAMPED, <T schema...>`
+///
+/// For everything else, falls back to the type's own
+/// `<Ty as WasmDescribe>::SCHEMA` slice. Leaf user types (struct/enum
+/// impls produced by `#[wasm_bindgen]` itself, plus all the primitives
+/// and JsValue) populate that slice, so the fallback yields a non-empty
+/// schema for any type the macro has taken over.
+///
+/// If a function references a type whose `SCHEMA` is still the default
+/// empty slice (a wrapper shape the macro hasn't taught itself yet, or
+/// an external `impl WasmDescribe` that hasn't been ported), the
+/// resulting bytes will fail to decode in cli-support and the legacy
+/// interpreter handles that shim instead. This keeps the migration safe
+/// at every stage.
+fn schema_parts_for_type(wasm_bindgen: &syn::Path, ty: &syn::Type) -> TokenStream {
+    let unwrapped = get_ty(ty);
+    match unwrapped {
+        syn::Type::Reference(r) => {
+            let inner = schema_parts_for_type(wasm_bindgen, &r.elem);
+            let opcode = if r.mutability.is_some() {
+                quote! { #wasm_bindgen::describe::REFMUT }
+            } else {
+                quote! { #wasm_bindgen::describe::REF }
+            };
+            quote! { &[#opcode], #inner }
+        }
+        syn::Type::Slice(s) => {
+            let inner = schema_parts_for_type(wasm_bindgen, &s.elem);
+            quote! { &[#wasm_bindgen::describe::SLICE], #inner }
+        }
+        syn::Type::Path(p) if p.qself.is_none() => {
+            if let Some(last) = p.path.segments.last() {
+                let ident = &last.ident;
+                if let syn::PathArguments::AngleBracketed(args) = &last.arguments {
+                    // Pull out single-parameter type generics.
+                    let first_type_arg = args.args.iter().find_map(|a| match a {
+                        syn::GenericArgument::Type(t) => Some(t),
+                        _ => None,
+                    });
+                    if let Some(inner_ty) = first_type_arg {
+                        if ident == "Option" {
+                            let inner = schema_parts_for_type(wasm_bindgen, inner_ty);
+                            return quote! {
+                                &[#wasm_bindgen::describe::OPTIONAL], #inner
+                            };
+                        }
+                        if ident == "Vec" {
+                            // Mirrors `impl WasmDescribe for Vec<T>` which
+                            // delegates to `Box<[T]>::describe`, which in
+                            // turn calls `T::describe_vector` -> VECTOR + T.
+                            let inner = schema_parts_for_type(wasm_bindgen, inner_ty);
+                            return quote! {
+                                &[#wasm_bindgen::describe::VECTOR], #inner
+                            };
+                        }
+                        if ident == "Result" {
+                            // `impl WasmDescribe for Result<T, E>` only
+                            // describes the Ok-arm's type.
+                            let inner = schema_parts_for_type(wasm_bindgen, inner_ty);
+                            return quote! {
+                                &[#wasm_bindgen::describe::RESULT], #inner
+                            };
+                        }
+                        if ident == "Clamped" {
+                            let inner = schema_parts_for_type(wasm_bindgen, inner_ty);
+                            return quote! {
+                                &[#wasm_bindgen::describe::CLAMPED], #inner
+                            };
+                        }
+                        if ident == "Box" {
+                            // Recognise `Box<[T]>` specifically.
+                            if let syn::Type::Slice(s) = get_ty(inner_ty) {
+                                let inner = schema_parts_for_type(wasm_bindgen, &s.elem);
+                                return quote! {
+                                    &[#wasm_bindgen::describe::VECTOR], #inner
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+            // Plain path with no recognised wrapper: defer to the trait const.
+            quote! { <#ty as #wasm_bindgen::describe::WasmDescribe>::SCHEMA, }
+        }
+        // Anything we don't recognise (tuples, fn pointers, trait objects)
+        // is handed off to the type's own SCHEMA. If it's `&[]` the
+        // resulting section entry will be malformed and cli-support will
+        // fall back to the interpreter for that shim.
+        _ => quote! { <#ty as #wasm_bindgen::describe::WasmDescribe>::SCHEMA, },
+    }
+}
+
+/// Variant of [`schema_parts_for_type`] that accepts a pre-built
+/// `TokenStream` for the type. Used by the export-site code where
+/// `ret_ty` and `inner_ret_ty` have already been synthesised as
+/// `quote!{ ... }` rather than parsed as `syn::Type`. We do a quick
+/// re-parse so the same structural recognition applies; if the parse
+/// fails, fall back to the trait const, which is always safe.
+fn schema_parts_for_type_tokens(
+    wasm_bindgen: &syn::Path,
+    ty_tokens: &TokenStream,
+) -> TokenStream {
+    match syn::parse2::<syn::Type>(ty_tokens.clone()) {
+        Ok(ty) => schema_parts_for_type(wasm_bindgen, &ty),
+        Err(_) => quote! { <#ty_tokens as #wasm_bindgen::describe::WasmDescribe>::SCHEMA, },
+    }
 }
 
 /// Mangle an export name into something usable as a Rust identifier. Export
