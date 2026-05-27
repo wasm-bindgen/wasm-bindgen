@@ -380,13 +380,12 @@ impl DataSegmentView {
         for segment in module.data.iter() {
             match &segment.kind {
                 DataKind::Active { offset, .. } => {
-                    let offset_val = match crate::wasm_conventions::evaluate_const_expr(
-                        offset, module,
-                    ) {
-                        Some(walrus::ir::Value::I32(n)) => n as u32,
-                        Some(walrus::ir::Value::I64(n)) => n as u32,
-                        _ => continue,
-                    };
+                    let offset_val =
+                        match crate::wasm_conventions::evaluate_const_expr(offset, module) {
+                            Some(walrus::ir::Value::I32(n)) => n as u32,
+                            Some(walrus::ir::Value::I64(n)) => n as u32,
+                            _ => continue,
+                        };
                     segments.push((offset_val, segment.value.clone()));
                 }
                 DataKind::Passive => {
