@@ -240,19 +240,14 @@ impl ToTokens for ast::Struct {
 
             #[automatically_derived]
             impl #wasm_bindgen::describe::WasmDescribe for #name {
-                // Rust-side struct schema: RUST_STRUCT, name_len,
-                // ...name chars. Lockstep with describe().
-                const SCHEMA: &'static [u32] = &[
-                    #wasm_bindgen::describe::RUST_STRUCT,
-                    #name_len,
-                    #(#name_chars,)*
-                ];
-                fn describe() {
-                    use #wasm_bindgen::describe::*;
-                    inform(RUST_STRUCT);
-                    inform(#name_len);
-                    #(inform(#name_chars);)*
-                }
+                // Rust-side struct schema: [RUST_STRUCT, name_len, ...name chars]
+                const SCHEMA_LEN: usize = 2 + (#name_len as usize);
+                const SCHEMA_BUF: [u32; #wasm_bindgen::describe::SCHEMA_MAX] =
+                    #wasm_bindgen::describe::schema_from_slice(&[
+                        #wasm_bindgen::describe::RUST_STRUCT,
+                        #name_len,
+                        #(#name_chars,)*
+                    ]);
             }
 
             #[automatically_derived]
@@ -429,25 +424,22 @@ impl ToTokens for ast::Struct {
 
             #[automatically_derived]
             impl #wasm_bindgen::describe::WasmDescribeVector for #name {
-                // `Vec<UserStruct>` schema: VECTOR, NAMED_EXTERNREF,
-                // name_len, ...name chars. The struct'\''s own
-                // WasmDescribe::SCHEMA is RUST_STRUCT (a single value
-                // descriptor); this overrides the blanket impl so the
-                // section transport produces the right shape for
-                // Vec<UserStruct> args.
-                const VECTOR_SCHEMA: &'static [u32] = &[
-                    #wasm_bindgen::describe::VECTOR,
-                    #wasm_bindgen::describe::NAMED_EXTERNREF,
-                    #name_len,
-                    #(#name_chars,)*
-                ];
-                fn describe_vector() {
-                    use #wasm_bindgen::describe::*;
-                    inform(VECTOR);
-                    inform(NAMED_EXTERNREF);
-                    inform(#name_len);
-                    #(inform(#name_chars);)*
-                }
+                // `Vec<UserStruct>` schema:
+                // [VECTOR, NAMED_EXTERNREF, name_len, ...name chars].
+                // The struct's own `SCHEMA_BUF` is `[RUST_STRUCT,
+                // name_len, ...]`; this override produces the right
+                // shape for `Vec<UserStruct>` arguments, since
+                // user structs cross the JS boundary as named-
+                // externref handles rather than as
+                // RUST_STRUCT-tagged values.
+                const VECTOR_SCHEMA_LEN: usize = 3 + (#name_len as usize);
+                const VECTOR_SCHEMA_BUF: [u32; #wasm_bindgen::describe::SCHEMA_MAX] =
+                    #wasm_bindgen::describe::schema_from_slice(&[
+                        #wasm_bindgen::describe::VECTOR,
+                        #wasm_bindgen::describe::NAMED_EXTERNREF,
+                        #name_len,
+                        #(#name_chars,)*
+                    ]);
             }
 
             #[automatically_derived]
@@ -639,10 +631,12 @@ impl ToTokens for ast::StructField {
         // FUNCTION header). Cli's struct field processor reads it
         // from the section keyed by the getter shim name. Same shape
         // as ImportStatic.
+        let (gs_len, gs_buf) = schema_parts_for_type(&self.wasm_bindgen, ty);
         emit_static_descriptor_entry_static(
             &self.wasm_bindgen,
             &getter.to_string(),
-            schema_parts_for_type(&self.wasm_bindgen, ty),
+            gs_len,
+            gs_buf,
             tokens,
         );
 
@@ -1065,14 +1059,17 @@ impl TryToTokens for ast::Export {
         // matching the legacy describe-stream shape), then ret_ty and
         // inner_ret_ty.
         let arg_parts = build_arg_parts(&self.wasm_bindgen, &argtys, self.function.r#async);
-        let ret_parts = schema_parts_for_type_tokens(&self.wasm_bindgen, &ret_ty);
-        let inner_ret_parts = schema_parts_for_type_tokens(&self.wasm_bindgen, &inner_ret_ty);
+        let (ret_len, ret_buf) = schema_parts_for_type_tokens(&self.wasm_bindgen, &ret_ty);
+        let (inner_ret_len, inner_ret_buf) =
+            schema_parts_for_type_tokens(&self.wasm_bindgen, &inner_ret_ty);
         emit_static_descriptor_entry(
             &self.wasm_bindgen,
             &export_name,
             &arg_parts,
-            ret_parts,
-            inner_ret_parts,
+            ret_len,
+            ret_buf,
+            inner_ret_len,
+            inner_ret_buf,
             nargs,
             &attrs,
             into,
@@ -1096,24 +1093,32 @@ impl TryToTokens for ast::Export {
 /// shim, so emitting the static is always safe. The macro will expand
 /// the set of recognised wrapper types in follow-up commits, eventually
 /// covering everything the interpreter handles today.
-/// Build per-argument schema-parts streams shared between the export
-/// and import codegen paths. Async-shared-ref args get LONGREF instead
-/// of REF; everything else flows through `schema_parts_for_type`.
+/// Build per-argument `(SCHEMA_LEN, SCHEMA_BUF)` pair expressions
+/// shared between the export and import codegen paths. Async-shared-
+/// ref args get a `LONGREF`-headed wrapper composed inline;
+/// everything else flows through `schema_parts_for_type`.
 fn build_arg_parts(
     wasm_bindgen: &syn::Path,
     argtys: &[&syn::Type],
     is_async: bool,
-) -> Vec<TokenStream> {
+) -> Vec<(TokenStream, TokenStream)> {
     argtys
         .iter()
         .map(|ty| match ty {
             syn::Type::Reference(reference) if is_async && reference.mutability.is_none() => {
+                // `LONGREF`-wrapped variant: prepend a single LONGREF
+                // opcode in front of the inner type's schema.
                 let inner = &reference.elem;
-                let inner_parts = schema_parts_for_type(wasm_bindgen, inner);
-                quote! {
-                    &[#wasm_bindgen::describe::LONGREF],
-                    #inner_parts
-                }
+                let (inner_len, inner_buf) = schema_parts_for_type(wasm_bindgen, inner);
+                let len = quote! { 1 + (#inner_len) };
+                let buf = quote! {
+                    #wasm_bindgen::describe::wrap_schema(
+                        &[#wasm_bindgen::describe::LONGREF],
+                        &#inner_buf,
+                        #inner_len,
+                    )
+                };
+                (len, buf)
             }
             _ => schema_parts_for_type(wasm_bindgen, ty),
         })
@@ -1124,25 +1129,20 @@ fn build_arg_parts(
 fn emit_static_descriptor_entry(
     wasm_bindgen: &syn::Path,
     shim_name: &str,
-    arg_parts: &[TokenStream],
-    ret_parts: TokenStream,
-    inner_ret_parts: TokenStream,
+    arg_parts: &[(TokenStream, TokenStream)],
+    ret_len: TokenStream,
+    ret_buf: TokenStream,
+    inner_ret_len: TokenStream,
+    inner_ret_buf: TokenStream,
     nargs: u32,
-    // Same #[cfg(...)] / #[doc(...)] attrs that wrap the legacy
-    // __wbindgen_describe_<name> function. They must be replicated
-    // on the new section static so the two transports turn on and
-    // off in lockstep; otherwise a cfg-gated extern function (e.g.
-    // js-sys's #[cfg(js_sys_unstable_apis)] items) would have its
-    // descriptor emitted unconditionally and reference types whose
-    // declarations are gated out.
     attrs: &[syn::Attribute],
     into: &mut TokenStream,
 ) {
-    // The static's identifier is derived from the shim name so each
-    // descriptor entry has a unique symbol within its crate. The name
-    // is also written into the entry's body verbatim.
     let static_ident = Ident::new(
-        &format!("__WBG_DESCRIPTOR_{}", mangle_export_name_for_ident(shim_name)),
+        &format!(
+            "__WBG_DESCRIPTOR_{}",
+            mangle_export_name_for_ident(shim_name)
+        ),
         Span::call_site(),
     );
     let shim_name_bytes = syn::LitByteStr::new(shim_name.as_bytes(), Span::call_site());
@@ -1155,71 +1155,72 @@ fn emit_static_descriptor_entry(
     // compile-time cfg evaluation.
     let pending_closure_wrappers = take_pending_closure_wrappers();
 
+    let arg_pair_exprs: Vec<TokenStream> = arg_parts
+        .iter()
+        .map(|(l, b)| quote! { (&#b, #l) })
+        .collect();
+    let arg_len_exprs = arg_parts.iter().map(|(l, _)| l);
+
     (quote! {
         #[cfg(target_family = "wasm")]
         #(#attrs)*
         #[automatically_derived]
         const _: () = {
-            const __PARTS: &[&[u32]] = &[
-                &[
+            const __HEADER: [u32; #wasm_bindgen::describe::SCHEMA_MAX] =
+                #wasm_bindgen::describe::schema_from_slice(&[
                     #wasm_bindgen::describe::FUNCTION,
                     0u32,
                     #nargs,
-                ],
-                #(#arg_parts)*
-                #ret_parts
-                #inner_ret_parts
-            ];
-            const __WORDS: usize =
-                #wasm_bindgen::describe::schema::word_total(__PARTS);
-            const __SCHEMA: [u32; __WORDS] =
-                #wasm_bindgen::describe::schema::concat_words::<__WORDS>(__PARTS);
+                ]);
+            const __SCHEMA: [u32; #wasm_bindgen::describe::SCHEMA_MAX] =
+                #wasm_bindgen::describe::cat_schema(&[
+                    (&__HEADER, 3),
+                    #(#arg_pair_exprs,)*
+                    (&#ret_buf, #ret_len),
+                    (&#inner_ret_buf, #inner_ret_len),
+                ]);
+            const __WORDS: usize = 3 #( + #arg_len_exprs )* + (#ret_len) + (#inner_ret_len);
             const __ENTRY_LEN: usize =
                 #wasm_bindgen::describe::schema::entry_byte_len(#shim_name_len, __WORDS);
             // The `link_section` attribute places this byte array in
             // the shared __wasm_bindgen_descriptors custom section
             // that wasm-bindgen-cli parses.
-            //
-            // No `#[used]` here: the legacy __wasm_bindgen_unstable
-            // section emission (see line ~181 of this file) is the
-            // template. With `#[used]`, LLVM also materialises the
-            // bytes in linear memory (the data section), which on
-            // wasm doubles the storage cost for every descriptor. The
-            // `pub` visibility plus the static name being unique
-            // keeps the symbol live through linking without `#[used]`.
             #[link_section = "__wasm_bindgen_descriptors"]
             #[doc(hidden)]
             pub static #static_ident: [u8; __ENTRY_LEN] =
                 #wasm_bindgen::describe::schema::pack_entry::<__ENTRY_LEN>(
                     #shim_name_bytes,
                     #wasm_bindgen::__rt::DESCRIPTOR_KIND_REGULAR,
-                    &__SCHEMA,
+                    // Pass the meaningful prefix only.
+                    {
+                        // We need a `&[u32]` slice of length __WORDS. Build it
+                        // via `as_slice()` + `split_at`.
+                        const __PREFIX: &[u32] = __SCHEMA.as_slice().split_at(__WORDS).0;
+                        __PREFIX
+                    },
                 );
         };
 
-        // Per-monomorphisation closure-invoke wrappers required by
-        // any SYMBOL_REFs in the schema above. Each wrapper is its
-        // own top-level item; they all share their `#[cfg]` posture
-        // with the descriptor entry by being emitted into the same
-        // module scope from the same expansion.
         #(#pending_closure_wrappers)*
     })
     .to_tokens(into);
 }
 
-/// Emit a `DESCRIPTOR_KIND_STATIC` entry. Unlike the regular variant,
-/// the schema is just the static's type schema (no FUNCTION header).
-/// Used by `ToTokens for ast::ImportStatic` so `#[wasm_bindgen]`
-/// `static`s flow through the section transport instead of relying on
-/// the legacy interpreter.
+/// Emit a `DESCRIPTOR_KIND_STATIC` entry. Schema is the bare type
+/// schema (no FUNCTION header). Used for ImportStatic, struct field
+/// getters, and DynamicUnion variant descriptors.
 fn emit_static_descriptor_entry_static(
     wasm_bindgen: &syn::Path,
     shim_name: &str,
-    schema_parts: TokenStream,
+    schema_len: TokenStream,
+    schema_buf: TokenStream,
     into: &mut TokenStream,
 ) {
     let static_ident = Ident::new(
-        &format!("__WBG_DESCRIPTOR_{}", mangle_export_name_for_ident(shim_name)),
+        &format!(
+            "__WBG_DESCRIPTOR_{}",
+            mangle_export_name_for_ident(shim_name)
+        ),
         Span::call_site(),
     );
     let shim_name_bytes = syn::LitByteStr::new(shim_name.as_bytes(), Span::call_site());
@@ -1229,13 +1230,8 @@ fn emit_static_descriptor_entry_static(
         #[cfg(target_family = "wasm")]
         #[automatically_derived]
         const _: () = {
-            const __PARTS: &[&[u32]] = &[
-                #schema_parts
-            ];
-            const __WORDS: usize =
-                #wasm_bindgen::describe::schema::word_total(__PARTS);
-            const __SCHEMA: [u32; __WORDS] =
-                #wasm_bindgen::describe::schema::concat_words::<__WORDS>(__PARTS);
+            const __SCHEMA: [u32; #wasm_bindgen::describe::SCHEMA_MAX] = #schema_buf;
+            const __WORDS: usize = #schema_len;
             const __ENTRY_LEN: usize =
                 #wasm_bindgen::describe::schema::entry_byte_len(#shim_name_len, __WORDS);
             #[link_section = "__wasm_bindgen_descriptors"]
@@ -1244,154 +1240,54 @@ fn emit_static_descriptor_entry_static(
                 #wasm_bindgen::describe::schema::pack_entry::<__ENTRY_LEN>(
                     #shim_name_bytes,
                     #wasm_bindgen::__rt::DESCRIPTOR_KIND_STATIC,
-                    &__SCHEMA,
+                    {
+                        const __PREFIX: &[u32] = __SCHEMA.as_slice().split_at(__WORDS).0;
+                        __PREFIX
+                    },
                 );
         };
     })
     .to_tokens(into);
 }
 
-/// Convert a syntactic type into a sequence of `&[u32]` schema-part
-/// expressions, ready to be spliced into a `&[ ... ]` parts array.
+/// Get the `(SCHEMA_LEN, SCHEMA_BUF)` pair token expressions for a
+/// type. Returns a `(len_expr, buf_expr)` pair of token streams that
+/// the caller splices into a `cat_schema` parts list.
 ///
-/// The returned `TokenStream` always ends with a trailing comma so the
-/// caller can splat several together without worrying about separators.
+/// The macro no longer needs to pattern-match on wrapper shapes here
+/// because every wrapper type (`Option<T>`, `Vec<T>`, `Result<T,
+/// E>`, `&T`, `&mut T`, `Clamped<T>`, `Box<[T]>`, `MaybeUninit<T>`)
+/// now provides a proper `SCHEMA_LEN`/`SCHEMA_BUF` const that
+/// composes the inner type's schema correctly. We just defer to the
+/// type's own `WasmDescribe` impl.
 ///
-/// Recognised structural shapes (matching the runtime `impl WasmDescribe`
-/// blocks in `src/describe.rs`):
-///
-/// * `&T`         -> `REF, <T schema...>`
-/// * `&mut T`     -> `REFMUT, <T schema...>`
-/// * `Option<T>`  -> `OPTIONAL, <T schema...>`
-/// * `Vec<T>`     -> `VECTOR, <T schema...>`
-/// * `Box<[T]>`   -> `VECTOR, <T schema...>`
-/// * `[T]`        -> `SLICE, <T schema...>`
-/// * `Result<T, E>` -> `RESULT, <T schema...>`  (E is discarded; matches
-///   the runtime impl)
-/// * `Clamped<T>` -> `CLAMPED, <T schema...>`
-///
-/// For everything else, falls back to the type's own
-/// `<Ty as WasmDescribe>::SCHEMA` slice. Leaf user types (struct/enum
-/// impls produced by `#[wasm_bindgen]` itself, plus all the primitives
-/// and JsValue) populate that slice, so the fallback yields a non-empty
-/// schema for any type the macro has taken over.
-///
-/// If a function references a type whose `SCHEMA` is still the default
-/// empty slice (a wrapper shape the macro hasn't taught itself yet, or
-/// an external `impl WasmDescribe` that hasn't been ported), the
-/// resulting bytes will fail to decode in cli-support and the legacy
-/// interpreter handles that shim instead. This keeps the migration safe
-/// at every stage.
-fn schema_parts_for_type(wasm_bindgen: &syn::Path, ty: &syn::Type) -> TokenStream {
-    // Closure-shaped args (`&dyn Fn(...)`, `&mut dyn FnMut(...)`)
-    // need SYMBOL_REF handling because the function-table slot the
-    // legacy descriptor would have carried is only knowable post-link.
-    // Hand off to schema_parts_for_raw_closure, which also queues a
-    // wrapper-emission side-effect.
+/// Special case: raw `&dyn Fn` / `&mut dyn FnMut` arg shapes still
+/// need bespoke handling because their schema embeds a `SYMBOL_REF`
+/// pointing at a per-monomorphisation invoke wrapper that's only
+/// resolved post-link. See [`schema_parts_for_raw_closure`].
+fn schema_parts_for_type(wasm_bindgen: &syn::Path, ty: &syn::Type) -> (TokenStream, TokenStream) {
     if let Some((is_mut, arg_tys, ret_ty)) = detect_closure_arg(ty) {
         return schema_parts_for_raw_closure(wasm_bindgen, is_mut, &arg_tys, &ret_ty);
     }
-    let unwrapped = get_ty(ty);
-    match unwrapped {
-        syn::Type::Reference(r) => {
-            let inner = schema_parts_for_type(wasm_bindgen, &r.elem);
-            let opcode = if r.mutability.is_some() {
-                quote! { #wasm_bindgen::describe::REFMUT }
-            } else {
-                quote! { #wasm_bindgen::describe::REF }
-            };
-            quote! { &[#opcode], #inner }
-        }
-        syn::Type::Slice(s) => {
-            let inner = schema_parts_for_type(wasm_bindgen, &s.elem);
-            quote! { &[#wasm_bindgen::describe::SLICE], #inner }
-        }
-        syn::Type::Path(p) if p.qself.is_none() => {
-            if let Some(last) = p.path.segments.last() {
-                let ident = &last.ident;
-                if let syn::PathArguments::AngleBracketed(args) = &last.arguments {
-                    // Pull out single-parameter type generics.
-                    let first_type_arg = args.args.iter().find_map(|a| match a {
-                        syn::GenericArgument::Type(t) => Some(t),
-                        _ => None,
-                    });
-                    if let Some(inner_ty) = first_type_arg {
-                        if ident == "Option" {
-                            let inner = schema_parts_for_type(wasm_bindgen, inner_ty);
-                            return quote! {
-                                &[#wasm_bindgen::describe::OPTIONAL], #inner
-                            };
-                        }
-                        if ident == "Vec" {
-                            // `Vec<T>` schema flows through
-                            // `<T as WasmDescribeVector>::VECTOR_SCHEMA`,
-                            // the same trait + const path that the
-                            // runtime `Box<[T]>::describe -> T::describe_vector`
-                            // chain uses. This is critical because the
-                            // shape varies per element type:
-                            //
-                            //   primitives:    [VECTOR, <T's SCHEMA>]
-                            //   String:        [VECTOR, NAMED_EXTERNREF, "string"]
-                            //   user struct:   [VECTOR, NAMED_EXTERNREF, <name>]
-                            //   string enum:   [VECTOR, EXTERNREF]
-                            //
-                            // The trait const is set per-impl to the
-                            // right value; we just defer to it here.
-                            return quote! {
-                                <#inner_ty as #wasm_bindgen::describe::WasmDescribeVector>::VECTOR_SCHEMA,
-                            };
-                        }
-                        if ident == "Result" {
-                            // `impl WasmDescribe for Result<T, E>` only
-                            // describes the Ok-arm's type.
-                            let inner = schema_parts_for_type(wasm_bindgen, inner_ty);
-                            return quote! {
-                                &[#wasm_bindgen::describe::RESULT], #inner
-                            };
-                        }
-                        if ident == "Clamped" {
-                            let inner = schema_parts_for_type(wasm_bindgen, inner_ty);
-                            return quote! {
-                                &[#wasm_bindgen::describe::CLAMPED], #inner
-                            };
-                        }
-                        if ident == "Box" {
-                            // Recognise `Box<[T]>` specifically; same
-                            // shape as `Vec<T>`.
-                            if let syn::Type::Slice(s) = get_ty(inner_ty) {
-                                let elem = &s.elem;
-                                return quote! {
-                                    <#elem as #wasm_bindgen::describe::WasmDescribeVector>::VECTOR_SCHEMA,
-                                };
-                            }
-                        }
-                    }
-                }
-            }
-            // Plain path with no recognised wrapper: defer to the trait const.
-            quote! { <#ty as #wasm_bindgen::describe::WasmDescribe>::SCHEMA, }
-        }
-        // Anything we don't recognise (tuples, fn pointers, trait objects)
-        // is handed off to the type's own SCHEMA. If it's `&[]` the
-        // resulting section entry will be malformed and cli-support will
-        // fall back to the interpreter for that shim.
-        _ => quote! { <#ty as #wasm_bindgen::describe::WasmDescribe>::SCHEMA, },
-    }
+    (
+        quote! { <#ty as #wasm_bindgen::describe::WasmDescribe>::SCHEMA_LEN },
+        quote! { <#ty as #wasm_bindgen::describe::WasmDescribe>::SCHEMA_BUF },
+    )
 }
 
 /// Variant of [`schema_parts_for_type`] that accepts a pre-built
-/// `TokenStream` for the type. Used by the export-site code where
-/// `ret_ty` and `inner_ret_ty` have already been synthesised as
-/// `quote!{ ... }` rather than parsed as `syn::Type`. We do a quick
-/// re-parse so the same structural recognition applies; if the parse
-/// fails, fall back to the trait const, which is always safe.
+/// `TokenStream` for the type. Re-parses then dispatches; falls back
+/// to the trait pair if parsing fails.
 fn schema_parts_for_type_tokens(
     wasm_bindgen: &syn::Path,
     ty_tokens: &TokenStream,
-) -> TokenStream {
+) -> (TokenStream, TokenStream) {
     match syn::parse2::<syn::Type>(ty_tokens.clone()) {
         Ok(ty) => schema_parts_for_type(wasm_bindgen, &ty),
-        Err(_) => quote! { <#ty_tokens as #wasm_bindgen::describe::WasmDescribe>::SCHEMA, },
+        Err(_) => (
+            quote! { <#ty_tokens as #wasm_bindgen::describe::WasmDescribe>::SCHEMA_LEN },
+            quote! { <#ty_tokens as #wasm_bindgen::describe::WasmDescribe>::SCHEMA_BUF },
+        ),
     }
 }
 
@@ -1476,7 +1372,9 @@ fn detect_closure_arg(ty: &syn::Type) -> Option<(bool, Vec<syn::Type>, syn::Type
         // one `&T` arg (and no other args), bail out and let the
         // interpreter handle that closure. Single owned-arg and
         // multi-arg-all-owned cases are handled below.
-        let has_ref = args.iter().any(|t| matches!(get_ty(t), syn::Type::Reference(_)));
+        let has_ref = args
+            .iter()
+            .any(|t| matches!(get_ty(t), syn::Type::Reference(_)));
         if has_ref && args.len() != 1 {
             return None;
         }
@@ -1506,15 +1404,10 @@ fn schema_parts_for_raw_closure(
     is_mut: bool,
     arg_tys: &[syn::Type],
     ret_ty: &syn::Type,
-) -> TokenStream {
+) -> (TokenStream, TokenStream) {
     const UNWIND_SAFE: bool = true;
     let nargs = arg_tys.len() as u32;
 
-    // Content hash of the closure signature, used to name the wrapper
-    // and the SYMBOL_REF target identically. `ShortHash` mixes in
-    // CARGO_PKG_NAME / VERSION already, so the same signature in two
-    // crates gets distinct names — fine, each crate emits its own
-    // wrapper.
     let sig_repr = format!(
         "closure|is_mut={is_mut}|unwind_safe={UNWIND_SAFE}|args=[{}]|ret={}",
         arg_tys
@@ -1527,22 +1420,13 @@ fn schema_parts_for_raw_closure(
     let hash = ShortHash(&sig_repr).to_string();
     let export_name = format!("__wbg_invoke_{hash}");
 
-    // Recurse into each arg type / return type to build their schema.
-    let arg_parts: Vec<TokenStream> = arg_tys
+    let arg_parts: Vec<(TokenStream, TokenStream)> = arg_tys
         .iter()
         .map(|t| schema_parts_for_type(wasm_bindgen, t))
         .collect();
-    let ret_parts = schema_parts_for_type(wasm_bindgen, ret_ty);
+    let (ret_len, ret_buf) = schema_parts_for_type(wasm_bindgen, ret_ty);
 
-    // SYMBOL_REF payload: in the schema stream, we need
-    // `[SYMBOL_REF, name_len_u32, name_chars_padded_to_4bytes]` as a
-    // sequence of u32 words. Each char of the name is one byte; we
-    // pack 4 chars per u32 in LE order. Padding bytes are zero.
-    //
-    // Doing the packing at proc-macro time keeps the schema's
-    // `concat_words` step trivially const-evaluable: we emit a
-    // literal `&[u32]` slice for the SYMBOL_REF payload, just like we
-    // do for plain opcode runs.
+    // SYMBOL_REF payload (u32 words): name_len + ceil(name_len / 4) packed words.
     let name_bytes = export_name.as_bytes();
     let name_len_u32 = name_bytes.len() as u32;
     let mut packed_words: Vec<u32> = Vec::with_capacity(name_bytes.len().div_ceil(4) + 1);
@@ -1554,58 +1438,55 @@ fn schema_parts_for_raw_closure(
         let b2 = name_bytes.get(i + 2).copied().unwrap_or(0);
         let b3 = name_bytes.get(i + 3).copied().unwrap_or(0);
         packed_words.push(
-            u32::from(b0)
-                | (u32::from(b1) << 8)
-                | (u32::from(b2) << 16)
-                | (u32::from(b3) << 24),
+            u32::from(b0) | (u32::from(b1) << 8) | (u32::from(b2) << 16) | (u32::from(b3) << 24),
         );
         i += 4;
     }
+    let header_word_count = 3 + packed_words.len() + 1; // REF, FUNCTION, SYMBOL_REF, name_len + packed, nargs
 
     // Queue the wrapper emission, deduplicating by export name.
-    let already_emitted = CLOSURE_WRAPPERS_EMITTED
-        .with(|set| !set.borrow_mut().insert(export_name.clone()));
+    let already_emitted =
+        CLOSURE_WRAPPERS_EMITTED.with(|set| !set.borrow_mut().insert(export_name.clone()));
     if !already_emitted {
-        let wrapper = emit_closure_wrapper(
-            wasm_bindgen,
-            &export_name,
-            is_mut,
-            arg_tys,
-            ret_ty,
-        );
+        let wrapper = emit_closure_wrapper(wasm_bindgen, &export_name, is_mut, arg_tys, ret_ty);
         CLOSURE_WRAPPER_EMISSIONS.with(|cell| cell.borrow_mut().push(wrapper));
     }
 
-    // Schema parts: REF (or REFMUT) + FUNCTION + SYMBOL_REF + name
-    // payload + 3-word header that the legacy `describe_invoke`
-    // would have emitted next (shim_idx slot now lives in SYMBOL_REF;
-    // we still need the nargs word, plus the arg/ret schemas).
-    //
-    // Layout matches:
-    //   REF/REFMUT,
-    //   FUNCTION,
-    //   SYMBOL_REF, name_len, <packed name>,
-    //   nargs,
-    //   <arg schemas...>,
-    //   <ret schema>,
-    //   <ret schema>          (legacy stream emits ret twice)
     let ref_opcode = if is_mut {
         quote! { #wasm_bindgen::describe::REFMUT }
     } else {
         quote! { #wasm_bindgen::describe::REF }
     };
-    quote! {
-        &[
-            #ref_opcode,
-            #wasm_bindgen::describe::FUNCTION,
-            #wasm_bindgen::describe::SYMBOL_REF,
-            #(#packed_words),*
-        ],
-        &[#nargs],
-        #(#arg_parts)*
-        #ret_parts
-        #ret_parts
-    }
+
+    // Final layout:
+    //   header: [REF/REFMUT, FUNCTION, SYMBOL_REF, name_len, ...packed_name, nargs]
+    //   then each arg's SCHEMA, then ret SCHEMA twice
+    let arg_len_exprs: Vec<&TokenStream> = arg_parts.iter().map(|(l, _)| l).collect();
+    let arg_pair_exprs: Vec<TokenStream> = arg_parts
+        .iter()
+        .map(|(l, b)| quote! { (&#b, #l) })
+        .collect();
+    let len_expr = quote! {
+        (#header_word_count #( + #arg_len_exprs )* + 2 * (#ret_len))
+    };
+    let buf_expr = quote! {
+        #wasm_bindgen::describe::cat_schema(&[
+            (
+                &#wasm_bindgen::describe::schema_from_slice(&[
+                    #ref_opcode,
+                    #wasm_bindgen::describe::FUNCTION,
+                    #wasm_bindgen::describe::SYMBOL_REF,
+                    #(#packed_words,)*
+                    #nargs,
+                ]),
+                #header_word_count,
+            ),
+            #(#arg_pair_exprs,)*
+            (&#ret_buf, #ret_len),
+            (&#ret_buf, #ret_len),
+        ])
+    };
+    (len_expr, buf_expr)
 }
 
 /// Emit the closure invoke wrapper at module scope:
@@ -1635,11 +1516,17 @@ fn emit_closure_wrapper(
     ret_ty: &syn::Type,
 ) -> TokenStream {
     let wrapper_ident = Ident::new(
-        &format!("__wbg_invoke_wrap_{}", mangle_export_name_for_ident(export_name)),
+        &format!(
+            "__wbg_invoke_wrap_{}",
+            mangle_export_name_for_ident(export_name)
+        ),
         Span::call_site(),
     );
     let static_ident = Ident::new(
-        &format!("__wbg_invoke_keepalive_{}", mangle_export_name_for_ident(export_name)),
+        &format!(
+            "__wbg_invoke_keepalive_{}",
+            mangle_export_name_for_ident(export_name)
+        ),
         Span::call_site(),
     );
 
@@ -1832,56 +1719,47 @@ impl TryToTokens for ast::ImportType {
             }
         };
 
-        let (description, schema_literal, vector_schema_literal) =
+        // Schema is provided as a pair of consts: `SCHEMA_LEN: usize`
+        // and `SCHEMA_BUF: [u32; SCHEMA_MAX]`. `vector_*` is the
+        // matching pair for `Vec<Self>` / `Box<[Self]>`.
+        let (schema_len, schema_buf, vector_schema_len, vector_schema_buf) =
             if let Some(typescript_type) = &self.typescript_type {
                 let typescript_type_len = typescript_type.len() as u32;
                 let typescript_type_chars: Vec<u32> =
                     typescript_type.chars().map(|c| c as u32).collect();
+                let n_chars = typescript_type_chars.len();
                 (
+                    // [NAMED_EXTERNREF, name_len, ...name chars]
+                    quote! { 2 + #n_chars },
                     quote! {
-                        use #wasm_bindgen::describe::*;
-                        inform(NAMED_EXTERNREF);
-                        inform(#typescript_type_len);
-                        #(inform(#typescript_type_chars);)*
-                    },
-                    // Schema parts for the section transport: a literal
-                    // NAMED_EXTERNREF opcode, the name length, and one u32
-                    // per UTF-32 char. Kept in lockstep with the describe()
-                    // emission above so the two transports never disagree
-                    // on shape.
-                    quote! {
-                        &[
+                        #wasm_bindgen::describe::schema_from_slice(&[
                             #wasm_bindgen::describe::NAMED_EXTERNREF,
                             #typescript_type_len,
                             #(#typescript_type_chars,)*
-                        ]
+                        ])
                     },
-                    // VECTOR_SCHEMA prefix is VECTOR + this type's own
-                    // schema. Needed so `Vec<Self>` and `Box<[Self]>`
-                    // args render correctly via the section transport
-                    // without falling back to the runtime describe stream.
+                    // [VECTOR, NAMED_EXTERNREF, name_len, ...name chars]
+                    quote! { 3 + #n_chars },
                     quote! {
-                        &[
+                        #wasm_bindgen::describe::schema_from_slice(&[
                             #wasm_bindgen::describe::VECTOR,
                             #wasm_bindgen::describe::NAMED_EXTERNREF,
                             #typescript_type_len,
                             #(#typescript_type_chars,)*
-                        ]
+                        ])
                     },
                 )
             } else {
                 (
+                    // Forward to JsValue's schema.
+                    quote! { <#wasm_bindgen::JsValue as #wasm_bindgen::describe::WasmDescribe>::SCHEMA_LEN },
+                    quote! { <#wasm_bindgen::JsValue as #wasm_bindgen::describe::WasmDescribe>::SCHEMA_BUF },
+                    quote! { 2 },
                     quote! {
-                        JsValue::describe()
-                    },
-                    quote! {
-                        <#wasm_bindgen::JsValue as #wasm_bindgen::describe::WasmDescribe>::SCHEMA
-                    },
-                    quote! {
-                        &[
+                        #wasm_bindgen::describe::schema_from_slice(&[
                             #wasm_bindgen::describe::VECTOR,
                             #wasm_bindgen::describe::EXTERNREF,
-                        ]
+                        ])
                     },
                 )
             };
@@ -2021,31 +1899,18 @@ impl TryToTokens for ast::ImportType {
 
                 #[automatically_derived]
                 impl #impl_generics WasmDescribe for #rust_name #ty_generics #where_clause {
-                    const SCHEMA: &'static [u32] = #schema_literal;
-                    fn describe() {
-                        #description
-                    }
+                    const SCHEMA_LEN: usize = #schema_len;
+                    const SCHEMA_BUF: [u32; #wasm_bindgen::describe::SCHEMA_MAX] =
+                        #schema_buf;
                 }
 
-                // `Vec<Self>` / `Box<[Self]>` schema for the section
-                // transport: `[VECTOR, ...Self::SCHEMA]`. The repeated
-                // per-type emission is the workaround for the
-                // generic-length-const wall — see the comment on the
-                // explicit `JsValue` / `JsError` `WasmDescribeVector`
-                // impls in `src/describe.rs`. When
-                // `feature(generic_const_exprs)` stabilises
-                // (rust-lang/rust#76560), these impls collapse into a
-                // single blanket impl over `ErasableGeneric<Repr=JsValue>`.
                 #[automatically_derived]
                 impl #impl_generics #wasm_bindgen::describe::WasmDescribeVector
                     for #rust_name #ty_generics #where_clause
                 {
-                    const VECTOR_SCHEMA: &'static [u32] = #vector_schema_literal;
-                    fn describe_vector() {
-                        use #wasm_bindgen::describe::*;
-                        inform(VECTOR);
-                        <Self as WasmDescribe>::describe();
-                    }
+                    const VECTOR_SCHEMA_LEN: usize = #vector_schema_len;
+                    const VECTOR_SCHEMA_BUF: [u32; #wasm_bindgen::describe::SCHEMA_MAX] =
+                        #vector_schema_buf;
                 }
 
                 #[automatically_derived]
@@ -2519,22 +2384,15 @@ impl ToTokens for ast::StringEnum {
 
             #[automatically_derived]
             impl #wasm_bindgen::describe::WasmDescribe for #enum_name {
-                // String-enum schema: STRING_ENUM, name_len, ...name chars
-                // (one u32 per char), variant_count. Kept in lockstep
-                // with the describe() body below.
-                const SCHEMA: &'static [u32] = &[
-                    #wasm_bindgen::describe::STRING_ENUM,
-                    #name_len,
-                    #(#name_chars,)*
-                    #variant_count,
-                ];
-                fn describe() {
-                    use #wasm_bindgen::describe::*;
-                    inform(STRING_ENUM);
-                    inform(#name_len);
-                    #(inform(#name_chars);)*
-                    inform(#variant_count);
-                }
+                // String-enum schema: [STRING_ENUM, name_len, ...name chars, variant_count]
+                const SCHEMA_LEN: usize = 3 + (#name_len as usize);
+                const SCHEMA_BUF: [u32; #wasm_bindgen::describe::SCHEMA_MAX] =
+                    #wasm_bindgen::describe::schema_from_slice(&[
+                        #wasm_bindgen::describe::STRING_ENUM,
+                        #name_len,
+                        #(#name_chars,)*
+                        #variant_count,
+                    ]);
             }
 
             #[automatically_derived]
@@ -2716,15 +2574,17 @@ impl ToTokens for ast::DynamicUnion {
             }
         }
         let type_count = type_variants.len() as u32;
-        // Variant schema parts for the section transport. Uses
-        // `schema_parts_for_type` so wrapper types (`Option<T>`,
-        // `Vec<T>`, `Result<T, E>`, etc.) resolve their schema via the
-        // macro's recursive dispatch rather than via the wrapper's
-        // empty trait-level `SCHEMA` const.
-        let variant_schema_parts: Vec<TokenStream> = type_variants
+        // Each variant's schema parts as a (len, buf) pair.
+        let variant_schema_parts: Vec<(TokenStream, TokenStream)> = type_variants
             .iter()
             .map(|ty| schema_parts_for_type(wasm_bindgen, ty))
             .collect();
+        let variant_len_exprs = variant_schema_parts.iter().map(|(l, _)| l);
+        let variant_pair_exprs: Vec<TokenStream> = variant_schema_parts
+            .iter()
+            .map(|(l, b)| quote! { (&#b, #l) })
+            .collect();
+        let header_len = 3 + (name_chars.len() as usize);
 
         (quote! {
             #(#attrs)*
@@ -2759,45 +2619,25 @@ impl ToTokens for ast::DynamicUnion {
                 }
             }
 
-            // Despite the generic implementation, we still encode the type information for TypeScript output
+            // DynamicUnion schema: [DYNAMIC_UNION, name_len, ...name chars,
+            // type_count, <variant1 schema>, <variant2 schema>, ...]
             #[automatically_derived]
             impl #wasm_bindgen::describe::WasmDescribe for #enum_name {
-                // Section-transport schema: same structure as the
-                // runtime `describe()` stream, concatenated through
-                // the `schema::concat_words` const-fn so each variant
-                // type's schema parts get spliced in at their concrete
-                // lengths. The variant parts come from
-                // `schema_parts_for_type` (the same macro helper used
-                // for argument/return-type schemas) so wrapper shapes
-                // like `Option<T>` / `Vec<T>` resolve to the correct
-                // section bytes rather than relying on the wrapper's
-                // own `SCHEMA` const (which is empty for `Option<T>`
-                // because of the generic-const-expr wall).
-                const SCHEMA: &'static [u32] = {
-                    const __HEADER: &[u32] = &[
-                        #wasm_bindgen::describe::DYNAMIC_UNION,
-                        #name_len,
-                        #(#name_chars,)*
-                        #type_count,
-                    ];
-                    const __PARTS: &[&[u32]] = &[
-                        __HEADER,
-                        #(#variant_schema_parts)*
-                    ];
-                    const __WORDS: usize =
-                        #wasm_bindgen::describe::schema::word_total(__PARTS);
-                    const __BUILT: [u32; __WORDS] =
-                        #wasm_bindgen::describe::schema::concat_words::<__WORDS>(__PARTS);
-                    &__BUILT
+                const SCHEMA_LEN: usize = #header_len #( + #variant_len_exprs )*;
+                const SCHEMA_BUF: [u32; #wasm_bindgen::describe::SCHEMA_MAX] = {
+                    const fn __header() -> [u32; #wasm_bindgen::describe::SCHEMA_MAX] {
+                        #wasm_bindgen::describe::schema_from_slice(&[
+                            #wasm_bindgen::describe::DYNAMIC_UNION,
+                            #name_len,
+                            #(#name_chars,)*
+                            #type_count,
+                        ])
+                    }
+                    #wasm_bindgen::describe::cat_schema(&[
+                        (&__header(), #header_len),
+                        #(#variant_pair_exprs,)*
+                    ])
                 };
-                fn describe() {
-                    use #wasm_bindgen::describe::*;
-                    inform(DYNAMIC_UNION);
-                    inform(#name_len);
-                    #(inform(#name_chars);)*
-                    inform(#type_count);
-                    #(<#type_variants as WasmDescribe>::describe();)*
-                }
             }
 
             #[automatically_derived]
@@ -2868,10 +2708,12 @@ impl ToTokens for ast::DynamicUnion {
                 &shared::dynamic_union_variant(name_str, idx as u32),
                 Span::call_site(),
             );
+            let (vs_len, vs_buf) = schema_parts_for_type(&self.wasm_bindgen, ty);
             emit_static_descriptor_entry_static(
                 &self.wasm_bindgen,
                 &descriptor_name.to_string(),
-                schema_parts_for_type(&self.wasm_bindgen, ty),
+                vs_len,
+                vs_buf,
                 tokens,
             );
         }
@@ -3743,14 +3585,18 @@ impl TryToTokens for DescribeImport<'_> {
         // across awaits), then the ret schema twice.
         let argty_refs: Vec<&syn::Type> = argtys.iter().collect();
         let arg_parts = build_arg_parts(self.wasm_bindgen, &argty_refs, false);
-        let ret_parts = schema_parts_for_type_tokens(self.wasm_bindgen, &ret_schema_ty);
-        let inner_ret_parts = ret_parts.clone();
+        let (ret_len, ret_buf) =
+            schema_parts_for_type_tokens(self.wasm_bindgen, &ret_schema_ty);
+        let inner_ret_len = ret_len.clone();
+        let inner_ret_buf = ret_buf.clone();
         emit_static_descriptor_entry(
             self.wasm_bindgen,
             &f.shim.to_string(),
             &arg_parts,
-            ret_parts,
-            inner_ret_parts,
+            ret_len,
+            ret_buf,
+            inner_ret_len,
+            inner_ret_buf,
             nargs,
             &f.function.rust_attrs,
             tokens,
@@ -3819,21 +3665,15 @@ impl ToTokens for ast::Enum {
 
             #[automatically_derived]
             impl #wasm_bindgen::describe::WasmDescribe for #enum_name {
-                // Regular enum schema: ENUM, name_len, ...name chars,
-                // hole. Lockstep with describe() below.
-                const SCHEMA: &'static [u32] = &[
-                    #wasm_bindgen::describe::ENUM,
-                    #name_len,
-                    #(#name_chars,)*
-                    #hole,
-                ];
-                fn describe() {
-                    use #wasm_bindgen::describe::*;
-                    inform(ENUM);
-                    inform(#name_len);
-                    #(inform(#name_chars);)*
-                    inform(#hole);
-                }
+                // Regular enum schema: [ENUM, name_len, ...name chars, hole]
+                const SCHEMA_LEN: usize = 3 + (#name_len as usize);
+                const SCHEMA_BUF: [u32; #wasm_bindgen::describe::SCHEMA_MAX] =
+                    #wasm_bindgen::describe::schema_from_slice(&[
+                        #wasm_bindgen::describe::ENUM,
+                        #name_len,
+                        #(#name_chars,)*
+                        #hole,
+                    ]);
             }
 
             #[automatically_derived]
@@ -3861,17 +3701,13 @@ impl ToTokens for ast::Enum {
             #[automatically_derived]
             impl #wasm_bindgen::describe::WasmDescribeVector for #enum_name {
                 // `Vec<StringEnum>` crosses the boundary as a JS array
-                // of JsValues. Equivalent to `Vec<JsValue>` —
-                // VECTOR followed by JsValue's SCHEMA (EXTERNREF).
-                const VECTOR_SCHEMA: &'static [u32] = &[
-                    #wasm_bindgen::describe::VECTOR,
-                    #wasm_bindgen::describe::EXTERNREF,
-                ];
-                fn describe_vector() {
-                    use #wasm_bindgen::describe::*;
-                    inform(VECTOR);
-                    <#wasm_bindgen::JsValue as #wasm_bindgen::describe::WasmDescribe>::describe();
-                }
+                // of JsValues — VECTOR + EXTERNREF.
+                const VECTOR_SCHEMA_LEN: usize = 2;
+                const VECTOR_SCHEMA_BUF: [u32; #wasm_bindgen::describe::SCHEMA_MAX] =
+                    #wasm_bindgen::describe::schema_from_slice(&[
+                        #wasm_bindgen::describe::VECTOR,
+                        #wasm_bindgen::describe::EXTERNREF,
+                    ]);
             }
 
             #[automatically_derived]
@@ -3965,10 +3801,12 @@ impl ToTokens for ast::ImportStatic {
         // FUNCTION header, no nargs, no ret/inner_ret duplication) —
         // just the type's own SCHEMA. Carried as a
         // `DESCRIPTOR_KIND_STATIC` section entry.
+        let (is_len, is_buf) = schema_parts_for_type(&self.wasm_bindgen, &self.ty);
         emit_static_descriptor_entry_static(
             &self.wasm_bindgen,
             &self.shim.to_string(),
-            schema_parts_for_type(&self.wasm_bindgen, &self.ty),
+            is_len,
+            is_buf,
             into,
         );
     }

@@ -68,28 +68,6 @@ use core::ops::{
 };
 use core::ptr::NonNull;
 
-const _: () = {
-    /// Dummy empty function provided in order to detect linker-injected functions like `__wasm_call_ctors` and others that should be skipped by the wasm-bindgen interpreter.
-    ///
-    /// ## About `__wasm_call_ctors`
-    ///
-    /// There are several ways `__wasm_call_ctors` is introduced by the linker:
-    ///
-    /// * Using `#[link_section = ".init_array"]`;
-    /// * Linking with a C library that uses `__attribute__((constructor))`.
-    ///
-    /// The Wasm linker will insert a call to the `__wasm_call_ctors` function at the beginning of every
-    /// function that your module exports if it regards a module as having "command-style linkage".
-    /// Specifically, it regards a module as having "command-style linkage" if:
-    ///
-    /// * it is not relocatable;
-    /// * it is not a position-independent executable;
-    /// * and it does not call `__wasm_call_ctors`, directly or indirectly, from any
-    ///   exported function.
-    #[no_mangle]
-    pub extern "C" fn __wbindgen_skip_interpret_calls() {}
-};
-
 macro_rules! externs {
     ($(#[$attr:meta])* extern "C" { $(fn $name:ident($($args:tt)*) -> $ret:ty;)* }) => (
         #[cfg(all(target_family = "wasm", not(target_os = "wasi")))]
@@ -1319,8 +1297,31 @@ externs! {
         fn __wbindgen_object_clone_ref(idx: u32) -> u32;
         fn __wbindgen_object_drop_ref(idx: u32) -> ();
 
-        fn __wbindgen_describe(v: u32) -> ();
-        fn __wbindgen_describe_cast(func: *const (), prims: *const ()) -> *const ();
+        // Marker import called by `breaks_if_inlined` once per
+        // `wbg_cast::<From, To>` monomorphisation. The five arguments
+        // are all `i32.const` immediates in the linked wasm body
+        // (no runtime computation), and the `wasm-bindgen-cli`
+        // scanner reads them back to recover the cast descriptor:
+        //
+        //   from_schema_ptr / from_schema_len:
+        //     pointer + length of `<From as WasmDescribe>::SCHEMA_BUF[..SCHEMA_LEN]`.
+        //   to_schema_ptr / to_schema_len:
+        //     pointer + length of `<To as WasmDescribe>::SCHEMA_BUF[..SCHEMA_LEN]`.
+        //   invoke_addr:
+        //     for closure casts, `T::invoke_addr::<UNWIND_SAFE>()`, which folds to
+        //     the function-table slot of the per-monomorphisation invoke shim.
+        //     For non-closure casts, `null`.
+        //
+        // The cli never actually executes this call; the entire
+        // `breaks_if_inlined` function is replaced by a synthesised
+        // JS-adapter import once the descriptor is recovered.
+        fn __wbindgen_describe_cast(
+            from_schema_ptr: *const u32,
+            from_schema_len: usize,
+            to_schema_ptr: *const u32,
+            to_schema_len: usize,
+            invoke_addr: *const (),
+        ) -> ();
 
         // Type-specific JS-value constructors. Recognized by
         // cli-support as intrinsics; the JS adapter generated for each

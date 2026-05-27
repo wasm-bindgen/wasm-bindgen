@@ -142,38 +142,15 @@ macro_rules! vectors {
 macro_rules! vectors_internal {
     ($t:ty) => {
         impl WasmDescribeVector for $t {
-            // For primitive element types the schema is just VECTOR
-            // followed by the element type's SCHEMA. The element types
-            // all have non-empty SCHEMA consts populated in describe.rs.
-            //
-            // Const-concat trick: we can't write
-            //   const VECTOR_SCHEMA: &[u32] = &[&[VECTOR], <$t>::SCHEMA].concat()
-            // because slice concat at const time needs a generic-aware
-            // helper, so we use a small const fn that copies VECTOR
-            // plus the inner schema into a fixed-length array at
-            // monomorphisation. This works because $t is concrete here.
-            const VECTOR_SCHEMA: &'static [u32] = {
-                const fn build<const N: usize>(inner: &[u32]) -> [u32; N] {
-                    let mut out = [0u32; N];
-                    out[0] = VECTOR;
-                    let mut i = 0;
-                    while i < inner.len() {
-                        out[i + 1] = inner[i];
-                        i += 1;
-                    }
-                    out
-                }
-                const INNER: &[u32] = <$t as crate::describe::WasmDescribe>::SCHEMA;
-                const LEN: usize = 1 + INNER.len();
-                const BUILT: [u32; LEN] = build::<LEN>(INNER);
-                &BUILT
-            };
-
-            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-            fn describe_vector() {
-                inform(VECTOR);
-                <$t>::describe();
-            }
+            // `Vec<primitive>` schema: [VECTOR, ...primitive's SCHEMA]
+            const VECTOR_SCHEMA_LEN: usize =
+                1 + <$t as crate::describe::WasmDescribe>::SCHEMA_LEN;
+            const VECTOR_SCHEMA_BUF: [u32; crate::describe::SCHEMA_MAX] =
+                crate::describe::wrap_schema(
+                    &[crate::describe::VECTOR],
+                    &<$t as crate::describe::WasmDescribe>::SCHEMA_BUF,
+                    <$t as crate::describe::WasmDescribe>::SCHEMA_LEN,
+                );
         }
 
         impl VectorIntoWasmAbi for $t {
@@ -270,33 +247,22 @@ vectors! {
 }
 
 impl WasmDescribeVector for String {
-    // Vec<String> crosses the boundary as a JS array of named-externref
-    // ("string") handles, not as a flat sequence of STRING descriptors.
-    // Keep the SCHEMA in lockstep with describe_vector() below.
-    const VECTOR_SCHEMA: &'static [u32] = &[
-        VECTOR,
-        NAMED_EXTERNREF,
-        6,
-        's' as u32,
-        't' as u32,
-        'r' as u32,
-        'i' as u32,
-        'n' as u32,
-        'g' as u32,
-    ];
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe_vector() {
-        inform(VECTOR);
-        inform(NAMED_EXTERNREF);
-        // Trying to use an actual loop for this breaks the Wasm interpreter.
-        inform(6);
-        inform('s' as u32);
-        inform('t' as u32);
-        inform('r' as u32);
-        inform('i' as u32);
-        inform('n' as u32);
-        inform('g' as u32);
-    }
+    // Vec<String> crosses the boundary as a JS array of
+    // named-externref ("string") handles, not as a flat sequence
+    // of STRING descriptors.
+    const VECTOR_SCHEMA_LEN: usize = 9;
+    const VECTOR_SCHEMA_BUF: [u32; crate::describe::SCHEMA_MAX] =
+        crate::describe::schema_from_slice(&[
+            VECTOR,
+            NAMED_EXTERNREF,
+            6,
+            's' as u32,
+            't' as u32,
+            'r' as u32,
+            'i' as u32,
+            'n' as u32,
+            'g' as u32,
+        ]);
 }
 
 impl VectorIntoWasmAbi for String {

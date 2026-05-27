@@ -192,10 +192,7 @@ pub fn parse(section: &[u8]) -> Result<(Vec<Entry>, ParseStats)> {
 /// matching the layout the legacy interpreter would have produced (a raw
 /// function-table index in place of the original `i32.const N; call
 /// $__wbindgen_describe` pair).
-pub fn resolve_symbols(
-    schema_bytes: &[u8],
-    resolved: &HashMap<String, u32>,
-) -> Result<Vec<u32>> {
+pub fn resolve_symbols(schema_bytes: &[u8], resolved: &HashMap<String, u32>) -> Result<Vec<u32>> {
     if schema_bytes.len() % 4 != 0 {
         bail!(
             "schema byte length {} is not a multiple of 4",
@@ -329,15 +326,18 @@ mod tests {
         assert_eq!(stats.decoded, 1);
         assert_eq!(entries[0].name, "foo");
         assert_eq!(entries[0].kind, DESCRIPTOR_KIND_REGULAR);
-        let resolved =
-            resolve_symbols(&entries[0].schema_bytes, &HashMap::new()).unwrap();
+        let resolved = resolve_symbols(&entries[0].schema_bytes, &HashMap::new()).unwrap();
         assert_eq!(resolved, words);
     }
 
     #[test]
     fn parses_multiple_entries() {
         let a = frame(entry_body("a", DESCRIPTOR_KIND_REGULAR, &[tys::I32]));
-        let b = frame(entry_body("bb", DESCRIPTOR_KIND_CAST, &[tys::U32, tys::U32]));
+        let b = frame(entry_body(
+            "bb",
+            DESCRIPTOR_KIND_CAST,
+            &[tys::U32, tys::U32],
+        ));
         let bytes = section(&[a, b]);
         let (entries, stats) = parse(&bytes).unwrap();
         assert_eq!(entries.len(), 2);
@@ -356,11 +356,7 @@ mod tests {
         let body_a = entry_body("a", DESCRIPTOR_KIND_REGULAR, &[tys::I32]);
         let body_b = entry_body("future", DESCRIPTOR_KIND_REGULAR, &[1, 2, 3, 4]);
         let body_c = entry_body("c", DESCRIPTOR_KIND_REGULAR, &[tys::U32]);
-        let bytes = section(&[
-            frame(body_a),
-            frame_with_version(99, body_b),
-            frame(body_c),
-        ]);
+        let bytes = section(&[frame(body_a), frame_with_version(99, body_b), frame(body_c)]);
         let (entries, stats) = parse(&bytes).unwrap();
         assert_eq!(entries.len(), 2);
         assert_eq!(stats.decoded, 2);
@@ -457,8 +453,7 @@ mod tests {
         let err = parse(&bytes).unwrap_err();
         let msg = err.to_string();
         assert!(
-            msg.contains("declared body length")
-                || msg.contains("extends past section end"),
+            msg.contains("declared body length") || msg.contains("extends past section end"),
             "unexpected error: {msg}"
         );
     }

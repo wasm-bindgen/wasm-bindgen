@@ -236,9 +236,9 @@ pub fn function_table_slot_of(module: &Module, target: FunctionId) -> Result<u32
         };
         let position = match &segment.items {
             ElementItems::Functions(items) => items.iter().position(|f| *f == target),
-            ElementItems::Expressions(_, items) => items.iter().position(|expr| {
-                matches!(expr, ConstExpr::RefFunc(f) if *f == target)
-            }),
+            ElementItems::Expressions(_, items) => items
+                .iter()
+                .position(|expr| matches!(expr, ConstExpr::RefFunc(f) if *f == target)),
         };
         if let Some(local_idx) = position {
             return Ok(base + local_idx as u32);

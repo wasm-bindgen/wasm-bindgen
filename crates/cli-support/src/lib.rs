@@ -14,7 +14,7 @@ mod descriptor;
 mod descriptors;
 mod descriptors_section;
 mod externref;
-mod interpreter;
+
 mod intrinsic;
 mod js;
 mod multivalue;
