@@ -5,29 +5,60 @@
 
 ### Added
 
-* Type schemas for `#[wasm_bindgen]`-exported functions are now also
-  emitted into a new `__wasm_bindgen_descriptors` custom wasm section
-  at compile time, in addition to the legacy `__wbindgen_describe_*`
-  synthetic export functions. `wasm-bindgen-cli` prefers the section
-  when present, short-circuiting the wasm interpreter for that shim.
-  The interpreter remains in place as a fallback for any
-  type/wrapper/import path the macro hasn't migrated yet. JS output
-  is byte-identical for migrated functions. First step toward
-  removing the `crates/cli-support/src/interpreter/` directory.
 * `WasmDescribe::SCHEMA: &'static [u32]` associated const, populated
-  for every concrete leaf impl shipped with `wasm-bindgen`. This is
-  the producer-side surface the macro composes section schemas from.
+  for every concrete leaf impl shipped with `wasm-bindgen` and for
+  every type the `#[wasm_bindgen]` macro generates (struct, enum,
+  string-enum, dynamic union, import type). This is the producer-side
+  surface the macro composes section schemas from.
+* `WasmDescribeVector::VECTOR_SCHEMA: &'static [u32]` associated
+  const for `Vec<T>` / `Box<[T]>` schemas.
 
 ### Changed
 
-* MSRV bumped from 1.77 to 1.79 for library and macro crates (the cli
-  crates were already at 1.86). The new minimum is required by the
-  const-expression composition the macro uses to lay out descriptor
-  section bytes.
+* **Descriptors are now carried by a custom wasm section rather than
+  recovered by interpreting wasm.** Every `#[wasm_bindgen]` shim
+  (exports, imports, ImportStatic, struct field getters, dynamic
+  unions, closure-arg wrappers) emits its descriptor as a
+  `#[link_section = "__wasm_bindgen_descriptors"]` static produced
+  from compile-time information. `wasm-bindgen-cli` reads those
+  bytes structurally.
+
+  Concretely:
+  - The legacy `__wbindgen_describe_<name>` synthetic export
+    functions are no longer emitted by the macro. `wasm-bindgen-cli`
+    hard-fails if it encounters one, rather than silently invoking
+    the wasm interpreter.
+  - The `crates/cli-support/src/interpreter/` directory survives in
+    this release for the single remaining case it covers — closure-
+    cast descriptor recovery. Its scope is now strictly limited to
+    that one pathway. See the module-level docs on
+    `crates/cli-support/src/descriptors.rs` for the migration plan
+    that deletes the directory when
+    [`generic_const_exprs`](https://github.com/rust-lang/rust/issues/76560)
+    stabilises.
+  - The `__wbindgen_skip_interpret_calls` export is stripped after
+    the closure-cast interpreter pass consumes it.
+
+  JS output is byte-identical for every shim that previously went
+  through the interpreter.
+
+* MSRV bumped from 1.77 to 1.79 for library and macro crates (the
+  cli crates were already at 1.86). Required by the const-expression
+  composition the macro uses to lay out descriptor section bytes.
 
 ### Fixed
 
 ### Removed
+
+* The macro no longer emits the `__wbindgen_describe_<name>` family
+  of synthetic exports. These existed solely to be executed by the
+  cli's wasm interpreter and are dead code now that the section
+  transport is universal. Removes ~190 lines net across the macro
+  and cli; further reduces wasm binary size by however many
+  descriptors a given module previously emitted.
+* The cli's `execute_exports` pass and the `Interpreter::skip_interpret`
+  accessor are gone; the cli no longer reads any
+  `__wbindgen_describe_<name>` exports.
 
 --------------------------------------------------------------------------------
 
