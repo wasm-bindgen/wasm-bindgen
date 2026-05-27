@@ -227,8 +227,6 @@ impl WasmBindgenDescriptorsSection {
     }
 
     fn execute_casts(&mut self, module: &mut Module) -> Result<(), Error> {
-        use walrus::ir::*;
-
         // Locate the `__wbindgen_describe_cast` import. If it isn't
         // present nothing in this module performs a `wbg_cast`.
         let describe_cast_id = module.imports.iter().find_map(|import| {
@@ -366,15 +364,13 @@ fn compose_cast_descriptor(from: &[u32], to: &[u32], invoke_addr: u32) -> Vec<u3
     let mut from = from.to_vec();
     if invoke_addr != 0 {
         // Find FUNCTION inside the From schema and patch the next
-        // word (shim_idx placeholder) with the invoke address. We
-        // look for the first FUNCTION opcode after the initial
-        // CLOSURE / owned / IS_MUT triple, which is where every
-        // closure cast's inner function descriptor starts.
-        use crate::descriptor;
+        // word (shim_idx placeholder) with the invoke address.
+        // Closure schema layout:
+        //   [CLOSURE, owned, IS_MUT, FUNCTION, 0, nargs, ...args, ret, ret]
+        // We look for the first FUNCTION opcode (the inner function
+        // descriptor) and confirm the next word is the placeholder 0
+        // before patching.
         let function_op = wasm_bindgen_shared::tys::FUNCTION;
-        // Closure schema layout: [CLOSURE, owned, IS_MUT, FUNCTION, 0, nargs, ...]
-        // Find FUNCTION and confirm the next word is the placeholder 0.
-        let _ = descriptor::Descriptor::String; // suppress unused-import warnings if any
         if let Some(idx) = from.iter().position(|w| *w == function_op) {
             if idx + 1 < from.len() && from[idx + 1] == 0 {
                 from[idx + 1] = invoke_addr;
