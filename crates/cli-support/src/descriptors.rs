@@ -278,8 +278,7 @@ impl WasmBindgenDescriptorsSection {
                 let invoke_addr = args[4] as u32;
                 let from_schema = data_view.read_u32_slice(from_ptr, from_len)?;
                 let to_schema = data_view.read_u32_slice(to_ptr, to_len)?;
-                let descriptor =
-                    compose_cast_descriptor(&from_schema, &to_schema, invoke_addr);
+                let descriptor = compose_cast_descriptor(&from_schema, &to_schema, invoke_addr);
                 let descriptor = Descriptor::decode(&descriptor);
                 self.cast_imports
                     .entry(descriptor)
@@ -334,10 +333,10 @@ impl DataSegmentView {
 
     fn read_bytes(&self, addr: u32, count: usize) -> Result<Vec<u8>, Error> {
         for (start, bytes) in &self.segments {
-            let end = start.checked_add(bytes.len() as u32).ok_or_else(|| {
-                anyhow::anyhow!("data segment address overflow")
-            })?;
-            if addr >= *start && addr.checked_add(count as u32).unwrap_or(u32::MAX) <= end {
+            let end = start
+                .checked_add(bytes.len() as u32)
+                .ok_or_else(|| anyhow::anyhow!("data segment address overflow"))?;
+            if addr >= *start && addr.saturating_add(count as u32) <= end {
                 let offset = (addr - start) as usize;
                 return Ok(bytes[offset..offset + count].to_vec());
             }
@@ -595,10 +594,10 @@ fn lookup_table_slot_by_name(module: &Module, wanted_name: &str) -> Option<u32> 
     for &segment_id in &table.elem_segments {
         let segment = module.elements.get(segment_id);
         let base = match &segment.kind {
-            ElementKind::Active { offset, .. } => match offset {
-                ConstExpr::Value(walrus::ir::Value::I32(n)) => *n as u32,
-                _ => continue,
-            },
+            ElementKind::Active {
+                offset: ConstExpr::Value(walrus::ir::Value::I32(n)),
+                ..
+            } => *n as u32,
             _ => continue,
         };
         let funcs: Vec<walrus::FunctionId> = match &segment.items {

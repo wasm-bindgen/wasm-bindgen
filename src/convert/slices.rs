@@ -143,8 +143,7 @@ macro_rules! vectors_internal {
     ($t:ty) => {
         impl WasmDescribeVector for $t {
             // `Vec<primitive>` schema: [VECTOR, ...primitive's SCHEMA]
-            const VECTOR_SCHEMA_LEN: usize =
-                1 + <$t as crate::describe::WasmDescribe>::SCHEMA_LEN;
+            const VECTOR_SCHEMA_LEN: usize = 1 + <$t as crate::describe::WasmDescribe>::SCHEMA_LEN;
             const VECTOR_SCHEMA_BUF: [u32; crate::describe::SCHEMA_MAX] =
                 crate::describe::wrap_schema(
                     &[crate::describe::VECTOR],

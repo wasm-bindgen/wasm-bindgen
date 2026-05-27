@@ -460,12 +460,13 @@ where
         let t: &T = t.unsize_closure_ref();
         let (ptr, len): (usize, usize) = unsafe { mem::transmute_copy(&t) };
         ScopedClosure {
-            js: crate::__rt::wbg_cast_closure::<_, _, T, UNWIND_SAFE>(
-                BorrowedClosure::<T, UNWIND_SAFE> {
-                    data: WasmSlice::from_usize(ptr, len),
-                    _marker: PhantomData,
-                },
-            ),
+            js: crate::__rt::wbg_cast_closure::<_, _, T, UNWIND_SAFE>(BorrowedClosure::<
+                T,
+                UNWIND_SAFE,
+            > {
+                data: WasmSlice::from_usize(ptr, len),
+                _marker: PhantomData,
+            }),
             _marker: PhantomData,
             _lifetime: PhantomData,
         }
@@ -541,12 +542,13 @@ where
         let t: &mut T = t.unsize_closure_ref();
         let (ptr, len): (usize, usize) = unsafe { mem::transmute_copy(&t) };
         ScopedClosure {
-            js: crate::__rt::wbg_cast_closure::<_, _, T, UNWIND_SAFE>(
-                BorrowedClosure::<T, UNWIND_SAFE> {
-                    data: WasmSlice::from_usize(ptr, len),
-                    _marker: PhantomData,
-                },
-            ),
+            js: crate::__rt::wbg_cast_closure::<_, _, T, UNWIND_SAFE>(BorrowedClosure::<
+                T,
+                UNWIND_SAFE,
+            > {
+                data: WasmSlice::from_usize(ptr, len),
+                _marker: PhantomData,
+            }),
             _marker: PhantomData,
             _lifetime: PhantomData,
         }

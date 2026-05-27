@@ -1,3 +1,5 @@
+#![allow(deprecated)] // assert_cmd::Command::cargo_bin is deprecated upstream
+
 //! A small test suite for the `wasm-bindgen` CLI command itself
 //!
 //! This test suite is intended to exercise functionality of the CLI in terms of
