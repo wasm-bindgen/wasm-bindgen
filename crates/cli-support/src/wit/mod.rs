@@ -1616,11 +1616,11 @@ impl<'a> Context<'a> {
                 _ => bail!("import from `{PLACEHOLDER_MODULE}` was not a function"),
             }
 
-            // These are special intrinsics which were handled in the descriptor
-            // phase, but we don't have an implementation for them. We don't
-            // need to error about them in this verification pass though,
-            // having them lingering in the module is normal.
-            if import.name == "__wbindgen_describe" || import.name == "__wbindgen_describe_cast" {
+            // `__wbindgen_describe_cast` is a marker intrinsic the
+            // cli reads structurally for closure-cast scanning; it
+            // has no JS implementation and lingers in the module
+            // until the post-processing pass drops it. Skip it here.
+            if import.name == "__wbindgen_describe_cast" {
                 continue;
             }
             if implemented.remove(&import.id()).is_none() {

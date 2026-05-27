@@ -13,7 +13,7 @@ use crate::convert::slices::WasmSlice;
 use crate::convert::traits::UpcastFrom;
 use crate::convert::RefFromWasmAbi;
 use crate::convert::{FromWasmAbi, IntoWasmAbi, ReturnWasmAbi, WasmAbi, WasmRet};
-use crate::describe::{inform, WasmDescribe, FUNCTION};
+use crate::describe::{cat_schema, WasmDescribe, FUNCTION, SCHEMA_MAX};
 use crate::sys::Undefined;
 use crate::throw_str;
 use crate::JsValue;
@@ -36,14 +36,6 @@ macro_rules! closures {
 
     // A counter helper to count number of arguments.
     (@count_one $ty:ty) => (1);
-
-    (@describe ( $($ty:ty),* )) => {
-        // Needs to be a constant so that interpreter doesn't crash on
-        // unsupported operations in debug mode.
-        const ARG_COUNT: u32 = 0 $(+ closures!(@count_one $ty))*;
-        inform(ARG_COUNT);
-        $(<$ty>::describe();)*
-    };
 
     // This silly helper is because by default Rust infers `|var_with_ref_type| ...` closure
     // as `impl Fn(&'outer_lifetime A)` instead of `impl for<'temp_lifetime> Fn(&'temp_lifetime A)`
@@ -106,18 +98,50 @@ macro_rules! closures {
             ret.return_abi().into()
         }
 
-        #[allow(clippy::fn_to_numeric_cast)]
         impl<$($var,)* R> WasmDescribe for dyn $Fn $FnArgs -> R + '_
         where
             $($var: $FromWasmAbi,)*
             R: ReturnWasmAbi,
         {
-            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-            fn describe() {
-                // Raw &dyn Fn/&dyn FnMut passed as arguments use the catching
-                // invoke shim by default, matching the previous runtime behavior.
-                <Self as WasmClosure>::describe_invoke::<true>();
-            }
+            // Schema for the closure trait object itself (the inner
+            // half of a closure-cast descriptor).
+            //
+            // Layout: [FUNCTION, 0 /* shim_idx placeholder */, nargs,
+            //          <each arg's SCHEMA>, <ret SCHEMA>, <ret SCHEMA>].
+            //
+            // The `0` slot is a placeholder for the function-table
+            // index of the invoke shim. `wasm-bindgen-cli` substitutes
+            // the real index in when processing each cast site: the
+            // cast call passes `T::invoke_shim_addr::<UNWIND_SAFE>()`
+            // as an `i32.const` immediate alongside the schema, and
+            // the cli's closure-cast scanner reads that immediate and
+            // overwrites this slot before feeding the stream to
+            // `Closure::decode`. Function-pointer-to-integer casts
+            // can't be const-evaluated on stable Rust, so the slot is
+            // kept zero in the static.
+            //
+            // The duplicated ret matches the legacy descriptor stream
+            // shape; `Function::decode` consumes both as `ret` and
+            // `inner_ret`.
+            const SCHEMA_LEN: usize =
+                3
+                $( + <$var as WasmDescribe>::SCHEMA_LEN )*
+                + 2 * <R as WasmDescribe>::SCHEMA_LEN;
+            const SCHEMA_BUF: [u32; SCHEMA_MAX] = {
+                const fn header() -> [u32; SCHEMA_MAX] {
+                    let mut b = [0u32; SCHEMA_MAX];
+                    b[0] = FUNCTION;
+                    b[1] = 0; // shim_idx placeholder, filled by the cli
+                    b[2] = 0 $(+ closures!(@count_one $var))*;
+                    b
+                }
+                cat_schema(&[
+                    (&header(), 3),
+                    $( (&<$var as WasmDescribe>::SCHEMA_BUF, <$var as WasmDescribe>::SCHEMA_LEN), )*
+                    (&<R as WasmDescribe>::SCHEMA_BUF, <R as WasmDescribe>::SCHEMA_LEN),
+                    (&<R as WasmDescribe>::SCHEMA_BUF, <R as WasmDescribe>::SCHEMA_LEN),
+                ])
+            };
         }
 
         unsafe impl<'__closure, $($var,)* R> WasmClosure for dyn $Fn $FnArgs -> R + '__closure
@@ -128,13 +152,9 @@ macro_rules! closures {
             const IS_MUT: bool = $is_mut;
             type Static = dyn $Fn $FnArgs -> R;
             type AsMut = dyn FnMut $FnArgs -> R + '__closure;
-            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-            fn describe_invoke<const UNWIND_SAFE: bool>() {
-                inform(FUNCTION);
-                inform(invoke::<$($var,)* R, UNWIND_SAFE> as *const () as usize as u32);
-                closures!(@describe $FnArgs);
-                R::describe();
-                R::describe();
+            #[inline(always)]
+            fn invoke_shim_addr<const UNWIND_SAFE: bool>() -> *const () {
+                invoke::<$($var,)* R, UNWIND_SAFE> as *const ()
             }
         }
 
