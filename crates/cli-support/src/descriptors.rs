@@ -291,6 +291,76 @@ impl WasmBindgenDescriptorsSection {
     }
 }
 
+/// Walk a function body looking for `memory.init data_id` patterns
+/// with a constant destination address. For `+bulk-memory` builds
+/// (atomics, wasm-shared, etc.) wasm-ld emits passive data segments
+/// and a `__wasm_init_memory` ctor function that copies each one into
+/// linear memory at startup; this scanner extracts those destination
+/// addresses so closure-cast `SCHEMA_BUF` pointers can still be
+/// resolved.
+fn scan_memory_init(
+    func: &walrus::LocalFunction,
+    passive: &HashMap<walrus::DataId, Vec<u8>>,
+    out: &mut Vec<(u32, Vec<u8>)>,
+) {
+    let mut stack: Vec<Option<i32>> = Vec::new();
+    scan_memory_init_seq(func, func.entry_block(), passive, out, &mut stack);
+}
+
+fn scan_memory_init_seq(
+    func: &walrus::LocalFunction,
+    seq: walrus::ir::InstrSeqId,
+    passive: &HashMap<walrus::DataId, Vec<u8>>,
+    out: &mut Vec<(u32, Vec<u8>)>,
+    stack: &mut Vec<Option<i32>>,
+) {
+    use walrus::ir::*;
+    for (instr, _) in func.block(seq).iter() {
+        match instr {
+            Instr::Const(c) => stack.push(match c.value {
+                Value::I32(n) => Some(n),
+                Value::I64(n) => Some(n as i32),
+                _ => None,
+            }),
+            Instr::MemoryInit(m) => {
+                // Stack: [dest, src, len], top is len.
+                let _len = stack.pop().unwrap_or(None);
+                let _src = stack.pop().unwrap_or(None);
+                let dest = stack.pop().unwrap_or(None);
+                if let (Some(dest), Some(bytes)) = (dest, passive.get(&m.data)) {
+                    out.push((dest as u32, bytes.clone()));
+                }
+            }
+            // Recurse into nested blocks: `__wasm_init_memory` wraps
+            // its `memory.init` calls in a few levels of `block` for
+            // the once-per-thread cmpxchg guard.
+            Instr::Block(b) => scan_memory_init_seq(func, b.seq, passive, out, stack),
+            Instr::Loop(l) => scan_memory_init_seq(func, l.seq, passive, out, stack),
+            Instr::IfElse(ifelse) => {
+                let saved = stack.clone();
+                scan_memory_init_seq(func, ifelse.consequent, passive, out, stack);
+                *stack = saved.clone();
+                scan_memory_init_seq(func, ifelse.alternative, passive, out, stack);
+                *stack = saved;
+            }
+            Instr::Drop(_) => {
+                stack.pop();
+            }
+            Instr::LocalGet(_) | Instr::GlobalGet(_) => stack.push(None),
+            Instr::LocalSet(_) | Instr::GlobalSet(_) => {
+                stack.pop();
+            }
+            Instr::LocalTee(_) => { /* stack unchanged */ }
+            Instr::Br(_) | Instr::BrIf(_) | Instr::BrTable(_) | Instr::Return(_) => {
+                stack.clear();
+            }
+            _ => {
+                stack.clear();
+            }
+        }
+    }
+}
+
 /// Snapshot of the module's active data segments. Lets us resolve a
 /// linear-memory address to the bytes that wasm-ld wrote into the
 /// data section at link time. Used by the closure-cast scanner to
@@ -302,17 +372,40 @@ struct DataSegmentView {
 
 impl DataSegmentView {
     fn new(module: &Module) -> Self {
-        let mut segments = Vec::new();
+        use walrus::DataKind;
+
+        let mut segments: Vec<(u32, Vec<u8>)> = Vec::new();
+        let mut passive_bytes: HashMap<walrus::DataId, Vec<u8>> = HashMap::new();
+
         for segment in module.data.iter() {
-            if let walrus::DataKind::Active { offset, .. } = &segment.kind {
-                let offset_val = match offset {
-                    walrus::ConstExpr::Value(walrus::ir::Value::I32(n)) => *n as u32,
-                    walrus::ConstExpr::Value(walrus::ir::Value::I64(n)) => *n as u32,
-                    _ => continue, // PIC / unknown offset, skip
-                };
-                segments.push((offset_val, segment.value.clone()));
+            match &segment.kind {
+                DataKind::Active { offset, .. } => {
+                    let offset_val = match crate::wasm_conventions::evaluate_const_expr(
+                        offset, module,
+                    ) {
+                        Some(walrus::ir::Value::I32(n)) => n as u32,
+                        Some(walrus::ir::Value::I64(n)) => n as u32,
+                        _ => continue,
+                    };
+                    segments.push((offset_val, segment.value.clone()));
+                }
+                DataKind::Passive => {
+                    passive_bytes.insert(segment.id(), segment.value.clone());
+                }
             }
         }
+
+        // For Passive segments (produced by `+bulk-memory` builds,
+        // including atomics), look for `memory.init` instructions in
+        // `__wasm_init_memory` to learn where wasm-ld will copy each
+        // segment at module-init time. Record those as effectively
+        // active so the scanner can resolve schema pointers.
+        if !passive_bytes.is_empty() {
+            for (_func_id, local) in module.funcs.iter_local() {
+                scan_memory_init(local, &passive_bytes, &mut segments);
+            }
+        }
+
         DataSegmentView { segments }
     }
 

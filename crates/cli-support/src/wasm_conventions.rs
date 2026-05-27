@@ -115,7 +115,7 @@ pub fn get_tls_base(module: &Module) -> Option<GlobalId> {
 /// `global.get $__table_base` (`ConstExpr::Global`) or even
 /// `global.get $__table_base; i32.const K; i32.add` (`ConstExpr::Extended`)
 /// for large WASM modules, rather than a plain `i32.const N`.
-fn evaluate_const_expr(expr: &ConstExpr, module: &Module) -> Option<Value> {
+pub(crate) fn evaluate_const_expr(expr: &ConstExpr, module: &Module) -> Option<Value> {
     match expr {
         ConstExpr::Value(v) => Some(*v),
         ConstExpr::Global(g) => {
