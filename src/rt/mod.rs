@@ -343,6 +343,34 @@ pub type WasmSignedWordRepr = f64;
 #[cfg(not(target_arch = "wasm64"))]
 pub type WasmSignedWordRepr = i32;
 
+/// Coerce a raw `*const T` into the `WasmWordRepr` ABI value expected by
+/// the named ptr-bearing intrinsics (`__wbindgen_string_new`, the typed
+/// array constructors, etc).
+#[inline]
+pub fn ptr_to_word<T>(p: *const T) -> WasmWordRepr {
+    #[cfg(target_arch = "wasm64")]
+    {
+        p as usize as f64
+    }
+    #[cfg(not(target_arch = "wasm64"))]
+    {
+        p as usize as u32
+    }
+}
+
+/// Coerce a `usize` length into `WasmWordRepr`.
+#[inline]
+pub fn len_to_word(len: usize) -> WasmWordRepr {
+    #[cfg(target_arch = "wasm64")]
+    {
+        len as f64
+    }
+    #[cfg(not(target_arch = "wasm64"))]
+    {
+        len as u32
+    }
+}
+
 /// A single pointer-sized machine word using the JS-number ABI on wasm64.
 #[repr(transparent)]
 #[derive(Copy, Clone, Default)]

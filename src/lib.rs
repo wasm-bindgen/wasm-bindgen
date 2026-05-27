@@ -188,7 +188,12 @@ impl JsValue {
     #[allow(clippy::should_implement_trait)] // cannot fix without breaking change
     #[inline]
     pub fn from_str(s: &str) -> JsValue {
-        unsafe { JsValue::_new(__wbindgen_string_new(s.as_ptr(), s.len())) }
+        unsafe {
+            JsValue::_new(__wbindgen_string_new(
+                __rt::ptr_to_word(s.as_ptr()),
+                __rt::len_to_word(s.len()),
+            ))
+        }
     }
 
     /// Creates a new JS value which is a number.
@@ -1329,7 +1334,12 @@ externs! {
         // per-call-site wbg_cast usage so that casts route through
         // the regular descriptor section pathway instead of through
         // the wasm interpreter.
-        fn __wbindgen_string_new(ptr: *const u8, len: usize) -> u32;
+        // ptr/len arguments use `WasmWordRepr` so the wasm-level
+        // signature lowers to `(param f64 f64)` on wasm64 (matching the
+        // JS-Number ABI the cast-import path used before these became
+        // named intrinsics). `WasmWordRepr` is `u32` on wasm32, so
+        // wasm32 output is unchanged.
+        fn __wbindgen_string_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
         fn __wbindgen_number_new(f: f64) -> u32;
         fn __wbindgen_bigint_from_i64(n: i64) -> u32;
         fn __wbindgen_bigint_from_u64(n: u64) -> u32;
@@ -1339,17 +1349,17 @@ externs! {
         // Typed-array constructors: take a (ptr, len) pair from a
         // forgotten Box<[T]> and return a fresh JS typed-array handle.
         // The JS adapter for each is a trivial identity.
-        fn __wbindgen_uint8_array_new(ptr: *mut u8, len: usize) -> u32;
-        fn __wbindgen_uint8_clamped_array_new(ptr: *mut u8, len: usize) -> u32;
-        fn __wbindgen_uint16_array_new(ptr: *mut u16, len: usize) -> u32;
-        fn __wbindgen_uint32_array_new(ptr: *mut u32, len: usize) -> u32;
-        fn __wbindgen_biguint64_array_new(ptr: *mut u64, len: usize) -> u32;
-        fn __wbindgen_int8_array_new(ptr: *mut i8, len: usize) -> u32;
-        fn __wbindgen_int16_array_new(ptr: *mut i16, len: usize) -> u32;
-        fn __wbindgen_int32_array_new(ptr: *mut i32, len: usize) -> u32;
-        fn __wbindgen_bigint64_array_new(ptr: *mut i64, len: usize) -> u32;
-        fn __wbindgen_float32_array_new(ptr: *mut f32, len: usize) -> u32;
-        fn __wbindgen_float64_array_new(ptr: *mut f64, len: usize) -> u32;
+        fn __wbindgen_uint8_array_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
+        fn __wbindgen_uint8_clamped_array_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
+        fn __wbindgen_uint16_array_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
+        fn __wbindgen_uint32_array_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
+        fn __wbindgen_biguint64_array_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
+        fn __wbindgen_int8_array_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
+        fn __wbindgen_int16_array_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
+        fn __wbindgen_int32_array_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
+        fn __wbindgen_bigint64_array_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
+        fn __wbindgen_float32_array_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
+        fn __wbindgen_float64_array_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
 
         // Array construction primitives for the Vec<T>/Box<[T]>
         // generic case where T is a non-primitive convertible-to-JsValue.
@@ -1888,7 +1898,12 @@ macro_rules! typed_arrays {
     ($($ty:ident $ctor:ident $clamped_ctor:ident,)*) => {$(
         impl From<Box<[$ty]>> for JsValue {
             fn from(mut vector: Box<[$ty]>) -> Self {
-                let result = unsafe { JsValue::_new($ctor(vector.as_mut_ptr(), vector.len())) };
+                let result = unsafe {
+                    JsValue::_new($ctor(
+                        __rt::ptr_to_word(vector.as_mut_ptr()),
+                        __rt::len_to_word(vector.len()),
+                    ))
+                };
                 core::mem::forget(vector);
                 result
             }
@@ -1896,7 +1911,12 @@ macro_rules! typed_arrays {
 
         impl From<Clamped<Box<[$ty]>>> for JsValue {
             fn from(mut vector: Clamped<Box<[$ty]>>) -> Self {
-                let result = unsafe { JsValue::_new($clamped_ctor(vector.as_mut_ptr(), vector.len())) };
+                let result = unsafe {
+                    JsValue::_new($clamped_ctor(
+                        __rt::ptr_to_word(vector.as_mut_ptr()),
+                        __rt::len_to_word(vector.len()),
+                    ))
+                };
                 core::mem::forget(vector);
                 result
             }
