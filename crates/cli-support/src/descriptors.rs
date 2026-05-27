@@ -192,7 +192,7 @@ impl WasmBindgenDescriptorsSection {
                 );
             }
         }
-        let resolved_symbols = build_symbol_table(module);
+        let resolved_symbols = build_symbol_table(module)?;
 
         for entry in entries {
             let stream =
@@ -640,37 +640,96 @@ impl CustomSection for WasmBindgenDescriptorsSection {
 /// interpreter would have observed via `invoke as *const () as u32`.
 /// This is what makes the closure SYMBOL_REF path work: the macro
 /// emits a non-generic wrapper around `invoke` whose `#[export_name]`
-/// is a stable content hash of the closure signature, wasm-ld places
-/// it in the table, and we surface its slot here.
+/// is a stable content hash of the closure signature, and the cli
+/// surfaces its slot here.
 ///
-/// Functions that are exported but not present in any element segment
-/// are omitted from the map. If the macro ever emits a SYMBOL_REF
-/// naming such a function, the resolver reports a "not found" error,
-/// the affected entry is dropped, and the legacy interpreter pathway
-/// handles that shim. Same fallback posture as every other section
-/// degradation mode.
-fn build_symbol_table(module: &Module) -> HashMap<String, u32> {
+/// The macro-emitted `#[used] static FOO: fn-ptr = wrapper;` keepalive
+/// causes wasm-ld to place the wrapper in an element segment on
+/// `wasm32`, but on `wasm64` that keepalive does not trigger the
+/// address-taken treatment (rustc/wasm-ld limitation). For exported
+/// functions named `__wbg_invoke_*` that are missing from any element
+/// segment, this function appends them to the main function table by
+/// adding a fresh active element segment at the current table tail
+/// (growing the table by one) so the SYMBOL_REF resolver can address
+/// them. This keeps the runtime-side macro simple and works uniformly
+/// across wasm32 and wasm64.
+fn build_symbol_table(module: &mut Module) -> Result<HashMap<String, u32>, Error> {
+    use walrus::{ConstExpr, ElementItems, ElementKind};
+
     let mut out = HashMap::new();
-    for export in module.exports.iter() {
-        let func_id = match export.item {
-            ExportItem::Function(id) => id,
-            _ => continue,
-        };
+
+    // Snapshot exports first; we may mutate the module below.
+    let exports: Vec<(String, walrus::FunctionId)> = module
+        .exports
+        .iter()
+        .filter_map(|e| match e.item {
+            ExportItem::Function(id) => Some((e.name.clone(), id)),
+            _ => None,
+        })
+        .collect();
+
+    let main_table_id = module.tables.main_function_table().ok().flatten();
+
+    for (name, func_id) in exports {
         if let Ok(slot) = crate::wasm_conventions::function_table_slot_of(module, func_id) {
-            out.insert(export.name.clone(), slot);
+            out.insert(name, slot);
             continue;
         }
-        // Fallback: some test-runner / transformation layers wrap an
+        // Fallback A: some test-runner / transformation layers wrap an
         // exported function (`__wbg_invoke_X`) with a thin shim
         // (`__wbg_invoke_X.command_export`). The export now points at
         // the shim, but the original function still sits in the
-        // function table under its original symbol name. Look it up
-        // by name and use that slot if found.
-        if let Some(slot) = lookup_table_slot_by_name(module, &export.name) {
-            out.insert(export.name.clone(), slot);
+        // function table under its original symbol name.
+        if let Some(slot) = lookup_table_slot_by_name(module, &name) {
+            out.insert(name, slot);
+            continue;
         }
+        // Fallback B: the macro-emitted keepalive didn't make wasm-ld
+        // place the wrapper in the function table (notably on wasm64).
+        // Append it to the table ourselves. Limit this to closure
+        // invoke wrappers to avoid touching unrelated exports.
+        if !name.starts_with("__wbg_invoke_") {
+            continue;
+        }
+        let table_id = match main_table_id {
+            Some(id) => id,
+            None => continue,
+        };
+        let (slot, table64) = {
+            let table = module.tables.get_mut(table_id);
+            let slot = u32::try_from(table.initial)
+                .map_err(|_| anyhow::anyhow!("function table initial size does not fit in u32"))?;
+            // Grow the table by one to make room for the new slot.
+            table.initial = table.initial.saturating_add(1);
+            if let Some(max) = table.maximum.as_mut() {
+                if *max < table.initial {
+                    *max = table.initial;
+                }
+            }
+            (slot, table.table64)
+        };
+        // Active element segment offset uses the table's index type:
+        // i64 for table64 (wasm64), i32 otherwise.
+        let offset_val = if table64 {
+            walrus::ir::Value::I64(slot as i64)
+        } else {
+            walrus::ir::Value::I32(slot as i32)
+        };
+        let elem_id = module.elements.add(
+            ElementKind::Active {
+                table: table_id,
+                offset: ConstExpr::Value(offset_val),
+            },
+            ElementItems::Functions(vec![func_id]),
+        );
+        module
+            .tables
+            .get_mut(table_id)
+            .elem_segments
+            .insert(elem_id);
+        out.insert(name, slot);
     }
-    out
+    Ok(out)
 }
 
 /// Walk the main function table's element segments and find any
