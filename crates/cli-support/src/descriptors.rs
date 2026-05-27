@@ -461,6 +461,41 @@ impl CastCallScanner {
                 Instr::Drop(_) => {
                     self.operand_stack.pop();
                 }
+                // Store: consumes two operands (addr + value). We
+                // don't track its effect on linear memory; the
+                // body's stack-pointer dance writes intermediate
+                // values to the stack frame without affecting the
+                // immediates that ultimately flow into the cast
+                // marker call.
+                Instr::Store(_) => {
+                    self.operand_stack.pop(); // value
+                    self.operand_stack.pop(); // addr
+                }
+                // Load: consumes one (addr) and pushes one
+                // (untracked).
+                Instr::Load(_) => {
+                    self.operand_stack.pop();
+                    self.operand_stack.push(None);
+                }
+                // Global get/set: track stack effect but not value.
+                Instr::GlobalGet(_) => {
+                    self.operand_stack.push(None);
+                }
+                Instr::GlobalSet(_) => {
+                    self.operand_stack.pop();
+                }
+                // Arithmetic operations on the stack pointer / local
+                // ABI plumbing. Treat as opaque: consume operands,
+                // produce untracked value.
+                Instr::Binop(_) => {
+                    self.operand_stack.pop();
+                    self.operand_stack.pop();
+                    self.operand_stack.push(None);
+                }
+                Instr::Unop(_) => {
+                    self.operand_stack.pop();
+                    self.operand_stack.push(None);
+                }
                 Instr::Call(Call { func: callee })
                 | Instr::ReturnCall(ReturnCall { func: callee }) => {
                     if *callee == self.target {
@@ -468,33 +503,31 @@ impl CastCallScanner {
                         let n = self.operand_stack.len();
                         if n >= 5 {
                             let mut args = [0i32; 5];
-                            for (i, slot) in
-                                self.operand_stack[n - 5..n].iter().enumerate()
-                            {
+                            for (i, slot) in self.operand_stack[n - 5..n].iter().enumerate() {
                                 args[i] = slot.unwrap_or(0);
                             }
                             self.found_calls.push(args);
                         }
-                        // Consume the args, push nothing (return is unit).
                         for _ in 0..5 {
                             self.operand_stack.pop();
                         }
                     } else {
-                        // Unknown function call: consume nothing tracked.
-                        // We can't model its arity precisely, but the
-                        // body shape between `breaks_if_inlined` and
-                        // `__wbindgen_describe_cast` doesn't usually
-                        // have intervening calls beyond optimisation
-                        // helpers. Bail out conservatively: reset.
+                        // Unknown call: consume the right number of
+                        // args and push the right number of results
+                        // so the stack accounting stays right. We
+                        // don't know exact arity at this level; the
+                        // safest move is to skip past it by resetting
+                        // when we can't reason about it. Cast bodies
+                        // don't have intervening calls between the
+                        // const setup and the marker.
                         self.operand_stack.clear();
                         self.locals.clear();
                     }
                 }
                 _ => {
-                    // Anything we don't handle resets the tracked
-                    // state. `breaks_if_inlined` bodies are simple
-                    // enough that this path shouldn't fire between
-                    // the const setup and the marker call.
+                    // Branches, loops, etc. — none of these appear
+                    // in `breaks_if_inlined` bodies. Reset to be
+                    // safe.
                     self.operand_stack.clear();
                     self.locals.clear();
                 }

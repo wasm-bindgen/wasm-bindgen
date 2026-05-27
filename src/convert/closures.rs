@@ -25,9 +25,11 @@ macro_rules! closures {
         closures!(@process [$($maybe_unwind_safe)*] $($rest)*);
     };
 
-    // One-arity recurse
+    // One-arity recurse. For owned args the "schema type" is the
+    // same as `$FnArgs`'s arg type (the closure signature is `Fn(A,
+    // B)` so each arg's schema is `<A as WasmDescribe>::SCHEMA` etc).
     (@process [$($unwind_safe:tt)*] ($($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) $($rest:tt)*) => {
-        closures!(@impl_for_args ($($var),*) FromWasmAbi [$($unwind_safe)*] $($var::from_abi($var) => $var $arg1 $arg2 $arg3 $arg4)*);
+        closures!(@impl_for_args ($($var),*) ($($var),*) FromWasmAbi [$($unwind_safe)*] $($var::from_abi($var) => $var $arg1 $arg2 $arg3 $arg4)*);
         closures!(@process [$($unwind_safe)*] $($rest)*);
     };
 
@@ -42,7 +44,7 @@ macro_rules! closures {
     // while `|var_with_ref_type: &A|` makes it use the higher-order generic as expected.
     (@closure ($($ty:ty),*) $($var:ident)* $body:block) => (move |$($var: $ty),*| $body);
 
-    (@impl_for_fn $is_mut:literal [$($mut:ident)?] $Fn:ident $FnArgs:tt $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => (const _: () = {
+    (@impl_for_fn $is_mut:literal [$($mut:ident)?] $Fn:ident $FnArgs:tt ($($SchemaArgTy:ty),*) $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => (const _: () = {
         impl<$($var,)* R> IntoWasmAbi for &'_ $($mut)? (dyn $Fn $FnArgs -> R + '_)
         where
             Self: WasmDescribe,
@@ -125,19 +127,19 @@ macro_rules! closures {
             // `inner_ret`.
             const SCHEMA_LEN: usize =
                 3
-                $( + <$var as WasmDescribe>::SCHEMA_LEN )*
+                $( + <$SchemaArgTy as WasmDescribe>::SCHEMA_LEN )*
                 + 2 * <R as WasmDescribe>::SCHEMA_LEN;
             const SCHEMA_BUF: [u32; SCHEMA_MAX] = {
                 const fn header() -> [u32; SCHEMA_MAX] {
                     let mut b = [0u32; SCHEMA_MAX];
                     b[0] = FUNCTION;
                     b[1] = 0; // shim_idx placeholder, filled by the cli
-                    b[2] = 0 $(+ closures!(@count_one $var))*;
+                    b[2] = 0 $( + closures!(@count_one $SchemaArgTy) )*;
                     b
                 }
                 cat_schema(&[
                     (&header(), 3),
-                    $( (&<$var as WasmDescribe>::SCHEMA_BUF, <$var as WasmDescribe>::SCHEMA_LEN), )*
+                    $( (&<$SchemaArgTy as WasmDescribe>::SCHEMA_BUF, <$SchemaArgTy as WasmDescribe>::SCHEMA_LEN), )*
                     (&<R as WasmDescribe>::SCHEMA_BUF, <R as WasmDescribe>::SCHEMA_LEN),
                     (&<R as WasmDescribe>::SCHEMA_BUF, <R as WasmDescribe>::SCHEMA_LEN),
                 ])
@@ -185,9 +187,9 @@ macro_rules! closures {
         }
     );
 
-    (@impl_for_args $FnArgs:tt $FromWasmAbi:ident [$($maybe_unwind_safe:tt)*] $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => {
-        closures!(@impl_for_fn false [] Fn $FnArgs $FromWasmAbi $($var_expr => $var $arg1 $arg2 $arg3 $arg4)*);
-        closures!(@impl_for_fn true [mut] FnMut $FnArgs $FromWasmAbi $($var_expr => $var $arg1 $arg2 $arg3 $arg4)*);
+    (@impl_for_args $FnArgs:tt ($($SchemaArgTy:ty),*) $FromWasmAbi:ident [$($maybe_unwind_safe:tt)*] $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => {
+        closures!(@impl_for_fn false [] Fn $FnArgs ($($SchemaArgTy),*) $FromWasmAbi $($var_expr => $var $arg1 $arg2 $arg3 $arg4)*);
+        closures!(@impl_for_fn true [mut] FnMut $FnArgs ($($SchemaArgTy),*) $FromWasmAbi $($var_expr => $var $arg1 $arg2 $arg3 $arg4)*);
         closures!(@impl_unsize_closure_ref $FnArgs $FromWasmAbi $($var_expr => $var $arg1 $arg2 $arg3 $arg4)*);
 
         // The memory safety here in these implementations below is a bit tricky. We
@@ -298,7 +300,7 @@ macro_rules! closures {
     };
 
     ([$($unwind_safe:tt)*] $( ($($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) )*) => ($(
-        closures!(@impl_for_args ($($var),*) FromWasmAbi [$($maybe_unwind_safe)*] $($var::from_abi($var) => $var $arg1 $arg2 $arg3 $arg4)*);
+        closures!(@impl_for_args ($($var),*) ($($var),*) FromWasmAbi [$($maybe_unwind_safe)*] $($var::from_abi($var) => $var $arg1 $arg2 $arg3 $arg4)*);
     )*);
 }
 
@@ -505,10 +507,10 @@ impl_fn_upcasts!();
 #[allow(coherence_leak_check)]
 const _: () = {
     #[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
-    closures!(@impl_for_args (&A) RefFromWasmAbi [T: core::panic::UnwindSafe,] &*A::ref_from_abi(A) => A a1 a2 a3 a4);
+    closures!(@impl_for_args (&A) (&A) RefFromWasmAbi [T: core::panic::UnwindSafe,] &*A::ref_from_abi(A) => A a1 a2 a3 a4);
 
     #[cfg(not(all(feature = "std", target_arch = "wasm32", panic = "unwind")))]
-    closures!(@impl_for_args (&A) RefFromWasmAbi [] &*A::ref_from_abi(A) => A a1 a2 a3 a4);
+    closures!(@impl_for_args (&A) (&A) RefFromWasmAbi [] &*A::ref_from_abi(A) => A a1 a2 a3 a4);
 };
 
 // UpcastFrom impl for ScopedClosure.
