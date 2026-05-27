@@ -13,7 +13,7 @@ use core::ops::{Deref, DerefMut};
 use core::panic::{RefUnwindSafe, UnwindSafe};
 #[cfg(target_feature = "atomics")]
 use core::sync::atomic::{AtomicU8, Ordering};
-use wasm_bindgen_shared::tys::FUNCTION;
+
 
 use alloc::alloc::{alloc, dealloc, realloc, Layout};
 use alloc::boxed::Box;

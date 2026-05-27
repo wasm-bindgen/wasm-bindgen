@@ -56,7 +56,7 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
-use crate::convert::{TryFromJsValue, UpcastFrom, VectorIntoWasmAbi};
+use crate::convert::{TryFromJsValue, UpcastFrom};
 use crate::sys::Promising;
 use alloc::boxed::Box;
 use alloc::string::String;
@@ -135,7 +135,7 @@ pub use cache::intern::{intern, unintern};
 #[doc(hidden)]
 #[path = "rt/mod.rs"]
 pub mod __rt;
-use __rt::wbg_cast;
+
 
 /// Representation of an object owned by JS.
 ///
