@@ -18,7 +18,6 @@ use core::panic::{RefUnwindSafe, UnwindSafe};
 #[cfg(target_feature = "atomics")]
 use core::sync::atomic::{AtomicU8, Ordering};
 
-
 use alloc::alloc::{alloc, dealloc, realloc, Layout};
 use alloc::boxed::Box;
 use alloc::rc::Rc;
@@ -94,9 +93,8 @@ where
 {
     let (prim1, prim2, prim3, prim4) = value.into_abi().split();
     unsafe {
-        let result = breaks_if_inlined_closure::<From, To, T, UNWIND_SAFE>(
-            prim1, prim2, prim3, prim4,
-        );
+        let result =
+            breaks_if_inlined_closure::<From, To, T, UNWIND_SAFE>(prim1, prim2, prim3, prim4);
         To::from_abi(result.join())
     }
 }

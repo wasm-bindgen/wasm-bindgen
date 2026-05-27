@@ -136,7 +136,6 @@ pub use cache::intern::{intern, unintern};
 #[path = "rt/mod.rs"]
 pub mod __rt;
 
-
 /// Representation of an object owned by JS.
 ///
 /// A `JsValue` doesn't actually live in Rust right now but actually in a table

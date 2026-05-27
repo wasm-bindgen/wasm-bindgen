@@ -244,10 +244,7 @@ pub fn function_table_slot_of(module: &Module, target: FunctionId) -> Result<u32
             return Ok(base + local_idx as u32);
         }
     }
-    bail!(
-        "function {:?} is not present in any function-table element segment",
-        target
-    );
+    bail!("function {target:?} is not present in any function-table element segment");
 }
 
 /// Looks up a function table entry by index in the main function table.

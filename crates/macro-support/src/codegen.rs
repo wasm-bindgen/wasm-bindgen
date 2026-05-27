@@ -1415,7 +1415,7 @@ fn schema_parts_for_raw_closure(
             .map(|t| t.to_token_stream().to_string())
             .collect::<Vec<_>>()
             .join(","),
-        ret_ty.to_token_stream().to_string(),
+        ret_ty.to_token_stream(),
     );
     let hash = ShortHash(&sig_repr).to_string();
     let export_name = format!("__wbg_invoke_{hash}");
@@ -1722,47 +1722,50 @@ impl TryToTokens for ast::ImportType {
         // Schema is provided as a pair of consts: `SCHEMA_LEN: usize`
         // and `SCHEMA_BUF: [u32; SCHEMA_MAX]`. `vector_*` is the
         // matching pair for `Vec<Self>` / `Box<[Self]>`.
-        let (schema_len, schema_buf, vector_schema_len, vector_schema_buf) =
-            if let Some(typescript_type) = &self.typescript_type {
-                let typescript_type_len = typescript_type.len() as u32;
-                let typescript_type_chars: Vec<u32> =
-                    typescript_type.chars().map(|c| c as u32).collect();
-                let n_chars = typescript_type_chars.len();
-                (
-                    // [NAMED_EXTERNREF, name_len, ...name chars]
-                    quote! { 2 + #n_chars },
-                    quote! {
-                        #wasm_bindgen::describe::schema_from_slice(&[
-                            #wasm_bindgen::describe::NAMED_EXTERNREF,
-                            #typescript_type_len,
-                            #(#typescript_type_chars,)*
-                        ])
-                    },
-                    // [VECTOR, NAMED_EXTERNREF, name_len, ...name chars]
-                    quote! { 3 + #n_chars },
-                    quote! {
-                        #wasm_bindgen::describe::schema_from_slice(&[
-                            #wasm_bindgen::describe::VECTOR,
-                            #wasm_bindgen::describe::NAMED_EXTERNREF,
-                            #typescript_type_len,
-                            #(#typescript_type_chars,)*
-                        ])
-                    },
-                )
-            } else {
-                (
-                    // Forward to JsValue's schema.
-                    quote! { <#wasm_bindgen::JsValue as #wasm_bindgen::describe::WasmDescribe>::SCHEMA_LEN },
-                    quote! { <#wasm_bindgen::JsValue as #wasm_bindgen::describe::WasmDescribe>::SCHEMA_BUF },
-                    quote! { 2 },
-                    quote! {
-                        #wasm_bindgen::describe::schema_from_slice(&[
-                            #wasm_bindgen::describe::VECTOR,
-                            #wasm_bindgen::describe::EXTERNREF,
-                        ])
-                    },
-                )
-            };
+        let (schema_len, schema_buf, vector_schema_len, vector_schema_buf) = if let Some(
+            typescript_type,
+        ) =
+            &self.typescript_type
+        {
+            let typescript_type_len = typescript_type.len() as u32;
+            let typescript_type_chars: Vec<u32> =
+                typescript_type.chars().map(|c| c as u32).collect();
+            let n_chars = typescript_type_chars.len();
+            (
+                // [NAMED_EXTERNREF, name_len, ...name chars]
+                quote! { 2 + #n_chars },
+                quote! {
+                    #wasm_bindgen::describe::schema_from_slice(&[
+                        #wasm_bindgen::describe::NAMED_EXTERNREF,
+                        #typescript_type_len,
+                        #(#typescript_type_chars,)*
+                    ])
+                },
+                // [VECTOR, NAMED_EXTERNREF, name_len, ...name chars]
+                quote! { 3 + #n_chars },
+                quote! {
+                    #wasm_bindgen::describe::schema_from_slice(&[
+                        #wasm_bindgen::describe::VECTOR,
+                        #wasm_bindgen::describe::NAMED_EXTERNREF,
+                        #typescript_type_len,
+                        #(#typescript_type_chars,)*
+                    ])
+                },
+            )
+        } else {
+            (
+                // Forward to JsValue's schema.
+                quote! { <#wasm_bindgen::JsValue as #wasm_bindgen::describe::WasmDescribe>::SCHEMA_LEN },
+                quote! { <#wasm_bindgen::JsValue as #wasm_bindgen::describe::WasmDescribe>::SCHEMA_BUF },
+                quote! { 2 },
+                quote! {
+                    #wasm_bindgen::describe::schema_from_slice(&[
+                        #wasm_bindgen::describe::VECTOR,
+                        #wasm_bindgen::describe::EXTERNREF,
+                    ])
+                },
+            )
+        };
 
         let is_type_of = self.is_type_of.as_ref().map(|is_type_of| {
             quote! {
@@ -2584,7 +2587,7 @@ impl ToTokens for ast::DynamicUnion {
             .iter()
             .map(|(l, b)| quote! { (&#b, #l) })
             .collect();
-        let header_len = 3 + (name_chars.len() as usize);
+        let header_len = 3 + name_chars.len();
 
         (quote! {
             #(#attrs)*
@@ -3585,8 +3588,7 @@ impl TryToTokens for DescribeImport<'_> {
         // across awaits), then the ret schema twice.
         let argty_refs: Vec<&syn::Type> = argtys.iter().collect();
         let arg_parts = build_arg_parts(self.wasm_bindgen, &argty_refs, false);
-        let (ret_len, ret_buf) =
-            schema_parts_for_type_tokens(self.wasm_bindgen, &ret_schema_ty);
+        let (ret_len, ret_buf) = schema_parts_for_type_tokens(self.wasm_bindgen, &ret_schema_ty);
         let inner_ret_len = ret_len.clone();
         let inner_ret_buf = ret_buf.clone();
         emit_static_descriptor_entry(
