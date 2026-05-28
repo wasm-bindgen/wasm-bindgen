@@ -131,10 +131,14 @@ where
         <To as crate::describe::WasmDescribe>::SCHEMA_LEN,
         core::ptr::null(),
     );
-    // Pass the input prims through the opaque return so the optimiser
-    // doesn't dead-code-strip them; the cli rewrites the whole
-    // function to a JS adapter import before this code ever runs.
-    core::ptr::read(&(prim1, prim2, prim3, prim4) as *const _ as *const WasmRet<To::Abi>)
+    // The cli rewrites this whole function to a JS adapter import
+    // before it ever runs. Force each prim and the return slot to
+    // be observably used via volatile reads/writes so the optimiser
+    // can't dead-eliminate them from the wasm-level signature, even
+    // when individual prims or `WasmRet<To::Abi>` are zero-sized
+    // (e.g. `To = ()`).
+    keep_prims_alive(prim1, prim2, prim3, prim4);
+    make_ret::<To>()
 }
 
 #[inline(never)]
@@ -161,7 +165,40 @@ where
         <To as crate::describe::WasmDescribe>::SCHEMA_LEN,
         T::invoke_shim_addr::<UNWIND_SAFE>(),
     );
-    core::ptr::read(&(prim1, prim2, prim3, prim4) as *const _ as *const WasmRet<To::Abi>)
+    keep_prims_alive(prim1, prim2, prim3, prim4);
+    make_ret::<To>()
+}
+
+/// Force each `prim` argument to be observably consumed via volatile
+/// writes so the optimiser preserves them in the wasm-level signature
+/// of the caller. Without this, when `WasmRet<To::Abi>` is zero-sized
+/// (e.g. `To = ()`), the parameters look unused after dead-store
+/// elimination and the function's wasm signature collapses to
+/// `() -> ()`, breaking the cli-support assumption that the helper's
+/// signature carries the cast ABI.
+///
+/// The function body is never executed at runtime: the cli rewrites
+/// the containing `breaks_if_inlined*` into a JS adapter import.
+#[inline(always)]
+#[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+unsafe fn keep_prims_alive<P1, P2, P3, P4>(p1: P1, p2: P2, p3: P3, p4: P4) {
+    let mut scratch = core::mem::MaybeUninit::<(P1, P2, P3, P4)>::uninit();
+    core::ptr::write_volatile(scratch.as_mut_ptr(), (p1, p2, p3, p4));
+}
+
+/// Manufacture a return value of type `WasmRet<To::Abi>` whose bytes
+/// are sourced through a volatile read so the optimiser cannot
+/// statically prove the value is uninit, dead, or zero-sized-and-
+/// thus-empty. This preserves the wasm-level return signature of the
+/// containing `breaks_if_inlined*` function across all `To`s.
+#[inline(always)]
+#[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+unsafe fn make_ret<To>() -> WasmRet<To::Abi>
+where
+    To: FromWasmAbi + crate::describe::WasmDescribe,
+{
+    let scratch = core::mem::MaybeUninit::<WasmRet<To::Abi>>::uninit();
+    core::ptr::read_volatile(scratch.as_ptr())
 }
 
 pub(crate) const JSIDX_OFFSET: u32 = 1024; // keep in sync with js/mod.rs
