@@ -68,6 +68,12 @@ where
     From: IntoWasmAbi + crate::describe::WasmDescribe,
     To: FromWasmAbi + crate::describe::WasmDescribe,
 {
+    // Keep the helper's address-of present in the module so LLVM
+    // treats it as escaping and cannot run interprocedural argument
+    // elimination on it (which would strip unused prims from the
+    // wasm-level signature the cli scanner inspects).
+    let _keepalive: unsafe extern "C" fn(_, _, _, _) -> _ = breaks_if_inlined::<From, To>;
+    core::hint::black_box(_keepalive);
     let (prim1, prim2, prim3, prim4) = value.into_abi().split();
     unsafe {
         let result = breaks_if_inlined::<From, To>(prim1, prim2, prim3, prim4);
@@ -87,6 +93,9 @@ where
     To: FromWasmAbi + crate::describe::WasmDescribe,
     T: crate::closure::WasmClosure + ?Sized,
 {
+    let _keepalive: unsafe extern "C" fn(_, _, _, _) -> _ =
+        breaks_if_inlined_closure::<From, To, T, UNWIND_SAFE>;
+    core::hint::black_box(_keepalive);
     let (prim1, prim2, prim3, prim4) = value.into_abi().split();
     unsafe {
         let result =
@@ -186,7 +195,9 @@ unsafe fn keep_prims_alive<P1, P2, P3, P4>(p1: P1, p2: P2, p3: P3, p4: P4) {
 /// are sourced through a volatile read so the optimiser cannot
 /// statically prove the value is uninit, dead, or zero-sized-and-
 /// thus-empty. This preserves the wasm-level return signature of the
-/// containing `breaks_if_inlined*` function across all `To`s.
+/// containing `breaks_if_inlined*` function across all `To`s. The
+/// containing function is never executed at runtime — the cli rewrites
+/// it into a JS adapter import.
 #[inline(always)]
 #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
 unsafe fn make_ret<To>() -> WasmRet<To::Abi>
