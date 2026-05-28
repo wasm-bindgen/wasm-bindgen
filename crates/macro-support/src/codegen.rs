@@ -3835,6 +3835,7 @@ impl ToTokens for ast::ImportStatic {
                 ty,
                 &self.shim,
                 thread_local,
+                true,
             )
             .to_tokens(into)
         } else {
@@ -3843,7 +3844,7 @@ impl ToTokens for ast::ImportStatic {
             let wasm_bindgen = &self.wasm_bindgen;
             let ty = &self.ty;
             let shim_name = &self.shim;
-            let init = static_init(wasm_bindgen, ty, shim_name);
+            let init = static_init(wasm_bindgen, ty, shim_name, true);
 
             into.extend(quote! {
                 #[automatically_derived]
@@ -3883,6 +3884,8 @@ impl ToTokens for ast::ImportString {
         let js_sys = &self.js_sys;
         let actual_ty: syn::Type = parse_quote!(#js_sys::JsString);
 
+        // `ImportString` does not emit a `__WBG_DESCRIPTOR_<shim>`
+        // static, so the body must not reference one.
         thread_local_import(
             &self.vis,
             &self.rust_name,
@@ -3891,6 +3894,7 @@ impl ToTokens for ast::ImportString {
             &self.ty,
             &self.shim,
             self.thread_local,
+            false,
         )
         .to_tokens(into);
     }
@@ -3904,8 +3908,9 @@ fn thread_local_import(
     ty: &syn::Type,
     shim_name: &Ident,
     thread_local: ast::ThreadLocal,
+    anchor_descriptor: bool,
 ) -> TokenStream {
-    let init = static_init(wasm_bindgen, ty, shim_name);
+    let init = static_init(wasm_bindgen, ty, shim_name, anchor_descriptor);
 
     match thread_local {
         ast::ThreadLocal::V1 => quote! {
@@ -3930,11 +3935,28 @@ fn thread_local_import(
     }
 }
 
-fn static_init(wasm_bindgen: &syn::Path, ty: &syn::Type, shim_name: &Ident) -> TokenStream {
+/// Body of an imported static / thread-local initializer.
+///
+/// `anchor_descriptor` controls whether the body should additionally
+/// emit a `descriptor_anchor` reference. ImportStatic emits a matching
+/// descriptor via `emit_static_descriptor_entry_static` and so anchors;
+/// ImportString reuses this helper through `thread_local_import` but
+/// does NOT emit a descriptor, so it must skip the anchor (otherwise
+/// the reference would be unresolved at expansion time).
+fn static_init(
+    wasm_bindgen: &syn::Path,
+    ty: &syn::Type,
+    shim_name: &Ident,
+    anchor_descriptor: bool,
+) -> TokenStream {
     let abi_ret = quote! {
         #wasm_bindgen::convert::WasmRet<<#ty as #wasm_bindgen::convert::FromWasmAbi>::Abi>
     };
-    let anchor = descriptor_anchor(&shim_name.to_string());
+    let anchor = if anchor_descriptor {
+        descriptor_anchor(&shim_name.to_string())
+    } else {
+        TokenStream::new()
+    };
     quote! {
         #[link(wasm_import_module = "__wbindgen_placeholder__")]
         #[cfg(target_family = "wasm")]
