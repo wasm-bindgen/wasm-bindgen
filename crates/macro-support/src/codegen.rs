@@ -602,6 +602,8 @@ impl ToTokens for ast::StructField {
             #wasm_bindgen::__rt::WasmPtr<#wasm_bindgen::__rt::WasmRefCell<#struct_name>>
         };
 
+        let getter_anchor = descriptor_anchor(&getter.to_string());
+
         (quote! {
             #[automatically_derived]
             const _: () = {
@@ -617,6 +619,7 @@ impl ToTokens for ast::StructField {
                     fn assert_copy<T: Copy>(){}
                     #maybe_assert_copy;
 
+                    #getter_anchor
                     let js = js.into_ptr();
                     assert_not_null(js);
                     let val = #val;
@@ -1026,6 +1029,8 @@ impl TryToTokens for ast::Export {
             }
         }
 
+        let export_anchor = descriptor_anchor(&export_name);
+
         (quote! {
             #[automatically_derived]
             const _: () = {
@@ -1040,6 +1045,7 @@ impl TryToTokens for ast::Export {
                         #(#checks)*
                     };
 
+                    #export_anchor
                     let #ret = #call;
                     #convert_ret
                 }
@@ -1159,13 +1165,28 @@ fn emit_static_descriptor_entry(
         .iter()
         .map(|(l, b)| quote! { (&#b, #l) })
         .collect();
-    let arg_len_exprs = arg_parts.iter().map(|(l, _)| l);
+    let arg_len_exprs: Vec<&TokenStream> = arg_parts.iter().map(|(l, _)| l).collect();
 
+    // The descriptor static is hoisted to module scope (not inside
+    // an anonymous `const _: () = { ... }`) so the matching wrapper
+    // body can reference it by Rust path — `&#static_ident`. That
+    // reference makes any CGU that inlines the wrapper undef-ref the
+    // descriptor symbol, forcing wasm-lld to pull the archive `.o`
+    // member that defines it. Without that, lazy archive resolution
+    // can drop the `.o` containing the descriptor when the wrapper
+    // body inlines into every caller and nothing else in that `.o`
+    // is referenced, taking the custom-section bytes with it.
     (quote! {
         #[cfg(target_family = "wasm")]
         #(#attrs)*
         #[automatically_derived]
-        const _: () = {
+        #[doc(hidden)]
+        #[allow(non_upper_case_globals)]
+        #[link_section = "__wasm_bindgen_descriptors"]
+        pub static #static_ident: [u8; {
+            const __WORDS: usize = 3 #( + #arg_len_exprs )* + (#ret_len) + (#inner_ret_len);
+            #wasm_bindgen::describe::schema::entry_byte_len(#shim_name_len, __WORDS)
+        }] = {
             const __HEADER: [u32; #wasm_bindgen::describe::SCHEMA_MAX] =
                 #wasm_bindgen::describe::schema_from_slice(&[
                     #wasm_bindgen::describe::FUNCTION,
@@ -1182,23 +1203,14 @@ fn emit_static_descriptor_entry(
             const __WORDS: usize = 3 #( + #arg_len_exprs )* + (#ret_len) + (#inner_ret_len);
             const __ENTRY_LEN: usize =
                 #wasm_bindgen::describe::schema::entry_byte_len(#shim_name_len, __WORDS);
-            // The `link_section` attribute places this byte array in
-            // the shared __wasm_bindgen_descriptors custom section
-            // that wasm-bindgen-cli parses.
-            #[link_section = "__wasm_bindgen_descriptors"]
-            #[doc(hidden)]
-            pub static #static_ident: [u8; __ENTRY_LEN] =
-                #wasm_bindgen::describe::schema::pack_entry::<__ENTRY_LEN>(
-                    #shim_name_bytes,
-                    #wasm_bindgen::__rt::DESCRIPTOR_KIND_REGULAR,
-                    // Pass the meaningful prefix only.
-                    {
-                        // We need a `&[u32]` slice of length __WORDS. Build it
-                        // via `as_slice()` + `split_at`.
-                        const __PREFIX: &[u32] = __SCHEMA.as_slice().split_at(__WORDS).0;
-                        __PREFIX
-                    },
-                );
+            #wasm_bindgen::describe::schema::pack_entry::<__ENTRY_LEN>(
+                #shim_name_bytes,
+                #wasm_bindgen::__rt::DESCRIPTOR_KIND_REGULAR,
+                {
+                    const __PREFIX: &[u32] = __SCHEMA.as_slice().split_at(__WORDS).0;
+                    __PREFIX
+                },
+            )
         };
 
         #(#pending_closure_wrappers)*
@@ -1226,25 +1238,30 @@ fn emit_static_descriptor_entry_static(
     let shim_name_bytes = syn::LitByteStr::new(shim_name.as_bytes(), Span::call_site());
     let shim_name_len = shim_name.len();
 
+    // See the comment in `emit_static_descriptor_entry` for why the
+    // descriptor static is hoisted to module scope rather than buried
+    // inside an anonymous `const _: () = { ... }` block.
     (quote! {
         #[cfg(target_family = "wasm")]
         #[automatically_derived]
-        const _: () = {
+        #[doc(hidden)]
+        #[allow(non_upper_case_globals)]
+        #[link_section = "__wasm_bindgen_descriptors"]
+        pub static #static_ident: [u8; {
+            #wasm_bindgen::describe::schema::entry_byte_len(#shim_name_len, #schema_len)
+        }] = {
             const __SCHEMA: [u32; #wasm_bindgen::describe::SCHEMA_MAX] = #schema_buf;
             const __WORDS: usize = #schema_len;
             const __ENTRY_LEN: usize =
                 #wasm_bindgen::describe::schema::entry_byte_len(#shim_name_len, __WORDS);
-            #[link_section = "__wasm_bindgen_descriptors"]
-            #[doc(hidden)]
-            pub static #static_ident: [u8; __ENTRY_LEN] =
-                #wasm_bindgen::describe::schema::pack_entry::<__ENTRY_LEN>(
-                    #shim_name_bytes,
-                    #wasm_bindgen::__rt::DESCRIPTOR_KIND_STATIC,
-                    {
-                        const __PREFIX: &[u32] = __SCHEMA.as_slice().split_at(__WORDS).0;
-                        __PREFIX
-                    },
-                );
+            #wasm_bindgen::describe::schema::pack_entry::<__ENTRY_LEN>(
+                #shim_name_bytes,
+                #wasm_bindgen::__rt::DESCRIPTOR_KIND_STATIC,
+                {
+                    const __PREFIX: &[u32] = __SCHEMA.as_slice().split_at(__WORDS).0;
+                    __PREFIX
+                },
+            )
         };
     })
     .to_tokens(into);
@@ -1681,6 +1698,37 @@ fn mangle_export_name_for_ident(name: &str) -> String {
         }
     }
     out
+}
+
+/// Emit an expression that materialises the address of the descriptor
+/// static for `shim_name` so the surrounding CGU undef-references it.
+///
+/// Used inside every macro-generated body whose codegen might be
+/// inlined into (or otherwise emitted in) a CGU different from the
+/// one that holds the matching `__WBG_DESCRIPTOR_<mangled>` static.
+/// Without this anchor, lazy archive resolution can drop the `.o`
+/// member that contributes the descriptor's `__wasm_bindgen_descriptors`
+/// custom-section bytes — the wrapper body inlines into every caller
+/// and nothing else in that `.o` is referenced.
+///
+/// `core::hint::black_box` is the right tool here: it's an opaque
+/// inline-asm wrapper LLVM cannot see through, so the symbol reference
+/// survives all the way to the wasm encoding as a relocation, not
+/// just at the IR level.
+fn descriptor_anchor(shim_name: &str) -> TokenStream {
+    let descriptor_ident = Ident::new(
+        &format!(
+            "__WBG_DESCRIPTOR_{}",
+            mangle_export_name_for_ident(shim_name)
+        ),
+        Span::call_site(),
+    );
+    quote! {
+        #[cfg(target_family = "wasm")]
+        {
+            ::core::hint::black_box(&#descriptor_ident);
+        }
+    }
 }
 
 impl TryToTokens for ast::ImportKind {
@@ -2576,6 +2624,14 @@ impl ToTokens for ast::DynamicUnion {
                 type_variants.push(&fields[0]);
             }
         }
+        // Anchor each variant descriptor from inside
+        // `FromWasmAbi::from_abi`, which is `#[inline]` and so gets
+        // inlined into consumer CGUs — anchoring it there forces every
+        // variant descriptor's archive `.o` to be pulled wherever the
+        // union is used.
+        let variant_anchor_stmts: TokenStream = (0..type_variants.len() as u32)
+            .map(|i| descriptor_anchor(&shared::dynamic_union_variant(name_str, i)))
+            .collect();
         let type_count = type_variants.len() as u32;
         // Each variant's schema parts as a (len, buf) pair.
         let variant_schema_parts: Vec<(TokenStream, TokenStream)> = type_variants
@@ -2615,6 +2671,11 @@ impl ToTokens for ast::DynamicUnion {
 
                 #[inline]
                 unsafe fn from_abi(js: u32) -> Self {
+                    // Anchor every variant descriptor so any CGU that
+                    // inlines this `from_abi` undef-references each
+                    // variant descriptor symbol. See `descriptor_anchor`
+                    // for the archive-pull rationale.
+                    #variant_anchor_stmts
                     let js_value = <#wasm_bindgen::JsValue as #wasm_bindgen::convert::FromWasmAbi>::from_abi(js);
                     #known_from_block
                     #(#fallback_from_arms)*
@@ -3149,6 +3210,8 @@ impl TryToTokens for ast::ImportFunction {
             quote! { where #(#fn_bounds),* }
         };
 
+        let descriptor_anchor = descriptor_anchor(&import_name.to_string());
+
         let invocation = quote! {
             // This is due to `#[automatically_derived]` attribute cannot be
             // placed onto bare functions.
@@ -3160,6 +3223,7 @@ impl TryToTokens for ast::ImportFunction {
                 #extern_fn
 
                 unsafe {
+                    #descriptor_anchor
                     let #ret_ident = {
                         #(#arg_conversions)*
                         #import_name(#(#abi_argument_names),*)
@@ -3870,6 +3934,7 @@ fn static_init(wasm_bindgen: &syn::Path, ty: &syn::Type, shim_name: &Ident) -> T
     let abi_ret = quote! {
         #wasm_bindgen::convert::WasmRet<<#ty as #wasm_bindgen::convert::FromWasmAbi>::Abi>
     };
+    let anchor = descriptor_anchor(&shim_name.to_string());
     quote! {
         #[link(wasm_import_module = "__wbindgen_placeholder__")]
         #[cfg(all(target_family = "wasm", not(target_os = "wasi")))]
@@ -3883,6 +3948,7 @@ fn static_init(wasm_bindgen: &syn::Path, ty: &syn::Type, shim_name: &Ident) -> T
         }
 
         unsafe {
+            #anchor
             <#ty as #wasm_bindgen::convert::FromWasmAbi>::from_abi(#shim_name().join())
         }
     }
