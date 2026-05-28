@@ -13,7 +13,7 @@ use crate::convert::slices::WasmSlice;
 use crate::convert::traits::UpcastFrom;
 use crate::convert::RefFromWasmAbi;
 use crate::convert::{FromWasmAbi, IntoWasmAbi, ReturnWasmAbi, WasmAbi, WasmRet};
-use crate::describe::{inform, WasmDescribe, FUNCTION};
+use crate::describe::{cat_schema, WasmDescribe, FUNCTION, SCHEMA_MAX};
 use crate::sys::Undefined;
 use crate::throw_str;
 use crate::JsValue;
@@ -25,9 +25,11 @@ macro_rules! closures {
         closures!(@process [$($maybe_unwind_safe)*] $($rest)*);
     };
 
-    // One-arity recurse
+    // One-arity recurse. For owned args the "schema type" is the
+    // same as `$FnArgs`'s arg type (the closure signature is `Fn(A,
+    // B)` so each arg's schema is `<A as WasmDescribe>::SCHEMA` etc).
     (@process [$($unwind_safe:tt)*] ($($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) $($rest:tt)*) => {
-        closures!(@impl_for_args ($($var),*) FromWasmAbi [$($unwind_safe)*] $($var::from_abi($var) => $var $arg1 $arg2 $arg3 $arg4)*);
+        closures!(@impl_for_args ($($var),*) ($($var),*) FromWasmAbi [$($unwind_safe)*] $($var::from_abi($var) => $var $arg1 $arg2 $arg3 $arg4)*);
         closures!(@process [$($unwind_safe)*] $($rest)*);
     };
 
@@ -37,20 +39,12 @@ macro_rules! closures {
     // A counter helper to count number of arguments.
     (@count_one $ty:ty) => (1);
 
-    (@describe ( $($ty:ty),* )) => {
-        // Needs to be a constant so that interpreter doesn't crash on
-        // unsupported operations in debug mode.
-        const ARG_COUNT: u32 = 0 $(+ closures!(@count_one $ty))*;
-        inform(ARG_COUNT);
-        $(<$ty>::describe();)*
-    };
-
     // This silly helper is because by default Rust infers `|var_with_ref_type| ...` closure
     // as `impl Fn(&'outer_lifetime A)` instead of `impl for<'temp_lifetime> Fn(&'temp_lifetime A)`
     // while `|var_with_ref_type: &A|` makes it use the higher-order generic as expected.
     (@closure ($($ty:ty),*) $($var:ident)* $body:block) => (move |$($var: $ty),*| $body);
 
-    (@impl_for_fn $is_mut:literal [$($mut:ident)?] $Fn:ident $FnArgs:tt $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => (const _: () = {
+    (@impl_for_fn $is_mut:literal [$($mut:ident)?] $Fn:ident $FnArgs:tt ($($SchemaArgTy:ty),*) $FromWasmAbi:ident $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => (const _: () = {
         impl<$($var,)* R> IntoWasmAbi for &'_ $($mut)? (dyn $Fn $FnArgs -> R + '_)
         where
             Self: WasmDescribe,
@@ -106,18 +100,50 @@ macro_rules! closures {
             ret.return_abi().into()
         }
 
-        #[allow(clippy::fn_to_numeric_cast)]
         impl<$($var,)* R> WasmDescribe for dyn $Fn $FnArgs -> R + '_
         where
             $($var: $FromWasmAbi,)*
             R: ReturnWasmAbi,
         {
-            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-            fn describe() {
-                // Raw &dyn Fn/&dyn FnMut passed as arguments use the catching
-                // invoke shim by default, matching the previous runtime behavior.
-                <Self as WasmClosure>::describe_invoke::<true>();
-            }
+            // Schema for the closure trait object itself (the inner
+            // half of a closure-cast descriptor).
+            //
+            // Layout: [FUNCTION, 0 /* shim_idx placeholder */, nargs,
+            //          <each arg's SCHEMA>, <ret SCHEMA>, <ret SCHEMA>].
+            //
+            // The `0` slot is a placeholder for the function-table
+            // index of the invoke shim. `wasm-bindgen-cli` substitutes
+            // the real index in when processing each cast site: the
+            // cast call passes `T::invoke_shim_addr::<UNWIND_SAFE>()`
+            // as an `i32.const` immediate alongside the schema, and
+            // the cli's closure-cast scanner reads that immediate and
+            // overwrites this slot before feeding the stream to
+            // `Closure::decode`. Function-pointer-to-integer casts
+            // can't be const-evaluated on stable Rust, so the slot is
+            // kept zero in the static.
+            //
+            // The duplicated ret matches the legacy descriptor stream
+            // shape; `Function::decode` consumes both as `ret` and
+            // `inner_ret`.
+            const SCHEMA_LEN: usize =
+                3
+                $( + <$SchemaArgTy as WasmDescribe>::SCHEMA_LEN )*
+                + 2 * <R as WasmDescribe>::SCHEMA_LEN;
+            const SCHEMA_BUF: [u32; SCHEMA_MAX] = {
+                const fn header() -> [u32; SCHEMA_MAX] {
+                    let mut b = [0u32; SCHEMA_MAX];
+                    b[0] = FUNCTION;
+                    b[1] = 0; // shim_idx placeholder, filled by the cli
+                    b[2] = 0 $( + closures!(@count_one $SchemaArgTy) )*;
+                    b
+                }
+                cat_schema(&[
+                    (&header(), 3),
+                    $( (&<$SchemaArgTy as WasmDescribe>::SCHEMA_BUF, <$SchemaArgTy as WasmDescribe>::SCHEMA_LEN), )*
+                    (&<R as WasmDescribe>::SCHEMA_BUF, <R as WasmDescribe>::SCHEMA_LEN),
+                    (&<R as WasmDescribe>::SCHEMA_BUF, <R as WasmDescribe>::SCHEMA_LEN),
+                ])
+            };
         }
 
         unsafe impl<'__closure, $($var,)* R> WasmClosure for dyn $Fn $FnArgs -> R + '__closure
@@ -128,13 +154,9 @@ macro_rules! closures {
             const IS_MUT: bool = $is_mut;
             type Static = dyn $Fn $FnArgs -> R;
             type AsMut = dyn FnMut $FnArgs -> R + '__closure;
-            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-            fn describe_invoke<const UNWIND_SAFE: bool>() {
-                inform(FUNCTION);
-                inform(invoke::<$($var,)* R, UNWIND_SAFE> as *const () as usize as u32);
-                closures!(@describe $FnArgs);
-                R::describe();
-                R::describe();
+            #[inline(always)]
+            fn invoke_shim_addr<const UNWIND_SAFE: bool>() -> *const () {
+                invoke::<$($var,)* R, UNWIND_SAFE> as *const ()
             }
         }
 
@@ -165,9 +187,9 @@ macro_rules! closures {
         }
     );
 
-    (@impl_for_args $FnArgs:tt $FromWasmAbi:ident [$($maybe_unwind_safe:tt)*] $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => {
-        closures!(@impl_for_fn false [] Fn $FnArgs $FromWasmAbi $($var_expr => $var $arg1 $arg2 $arg3 $arg4)*);
-        closures!(@impl_for_fn true [mut] FnMut $FnArgs $FromWasmAbi $($var_expr => $var $arg1 $arg2 $arg3 $arg4)*);
+    (@impl_for_args $FnArgs:tt ($($SchemaArgTy:ty),*) $FromWasmAbi:ident [$($maybe_unwind_safe:tt)*] $($var_expr:expr => $var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) => {
+        closures!(@impl_for_fn false [] Fn $FnArgs ($($SchemaArgTy),*) $FromWasmAbi $($var_expr => $var $arg1 $arg2 $arg3 $arg4)*);
+        closures!(@impl_for_fn true [mut] FnMut $FnArgs ($($SchemaArgTy),*) $FromWasmAbi $($var_expr => $var $arg1 $arg2 $arg3 $arg4)*);
         closures!(@impl_unsize_closure_ref $FnArgs $FromWasmAbi $($var_expr => $var $arg1 $arg2 $arg3 $arg4)*);
 
         // The memory safety here in these implementations below is a bit tricky. We
@@ -278,7 +300,7 @@ macro_rules! closures {
     };
 
     ([$($unwind_safe:tt)*] $( ($($var:ident $arg1:ident $arg2:ident $arg3:ident $arg4:ident)*) )*) => ($(
-        closures!(@impl_for_args ($($var),*) FromWasmAbi [$($maybe_unwind_safe)*] $($var::from_abi($var) => $var $arg1 $arg2 $arg3 $arg4)*);
+        closures!(@impl_for_args ($($var),*) ($($var),*) FromWasmAbi [$($maybe_unwind_safe)*] $($var::from_abi($var) => $var $arg1 $arg2 $arg3 $arg4)*);
     )*);
 }
 
@@ -485,10 +507,10 @@ impl_fn_upcasts!();
 #[allow(coherence_leak_check)]
 const _: () = {
     #[cfg(all(feature = "std", target_arch = "wasm32", panic = "unwind"))]
-    closures!(@impl_for_args (&A) RefFromWasmAbi [T: core::panic::UnwindSafe,] &*A::ref_from_abi(A) => A a1 a2 a3 a4);
+    closures!(@impl_for_args (&A) (&A) RefFromWasmAbi [T: core::panic::UnwindSafe,] &*A::ref_from_abi(A) => A a1 a2 a3 a4);
 
     #[cfg(not(all(feature = "std", target_arch = "wasm32", panic = "unwind")))]
-    closures!(@impl_for_args (&A) RefFromWasmAbi [] &*A::ref_from_abi(A) => A a1 a2 a3 a4);
+    closures!(@impl_for_args (&A) (&A) RefFromWasmAbi [] &*A::ref_from_abi(A) => A a1 a2 a3 a4);
 };
 
 // UpcastFrom impl for ScopedClosure.

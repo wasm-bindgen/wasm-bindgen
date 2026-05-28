@@ -5,11 +5,64 @@
 
 ### Added
 
+* `WasmDescribe::SCHEMA_LEN: usize` and
+  `WasmDescribe::SCHEMA_BUF: [u32; 256]` associated consts, populated
+  for every concrete impl shipped with `wasm-bindgen` and emitted by
+  the `#[wasm_bindgen]` macro for every user type. This is the
+  producer-side surface for the new section transport: every type's
+  descriptor bytes are knowable at `const` time.
+* `WasmDescribeVector::VECTOR_SCHEMA_LEN: usize` and
+  `WasmDescribeVector::VECTOR_SCHEMA_BUF: [u32; 256]` for `Vec<T>` /
+  `Box<[T]>` schemas.
+* `wasm_bindgen::describe::SCHEMA_MAX = 256` words = 1 KB max per
+  schema buffer (overflow is a `const_panic!` at compile time).
+
 ### Changed
 
-### Fixed
+* **The wasm-bindgen-cli descriptor interpreter is gone.** Every
+  `#[wasm_bindgen]` shim — exports, imports, `ImportStatic`, struct
+  field getters, dynamic unions, closure-arg wrappers, **and
+  closure-cast monomorphisations** — emits its descriptor at compile
+  time as bytes in the `__wasm_bindgen_descriptors` custom section.
+  `wasm-bindgen-cli` reads those bytes structurally without executing
+  any wasm. The `crates/cli-support/src/interpreter/` directory has
+  been deleted entirely.
+
+  Closure-cast descriptors (`wbg_cast::<OwnedClosure<T, UW>,
+  JsValue>` and `BorrowedClosure` variants) ship their schema via
+  the same const machinery as everything else; the per-
+  monomorphisation invoke shim's function-table slot is emitted
+  alongside as a single `i32.const` immediate before the marker
+  call, recovered by a narrow scanner (~120 lines, no general wasm
+  interpretation).
+
+  The construction sidesteps the `generic_const_exprs` wall
+  (rust-lang/rust#76560) by carrying every schema in a fixed-size
+  256-word buffer paired with a length. Wrapper types (`Option<T>`,
+  `Vec<T>`, `Result<T, E>`, `&T`, `&mut T`, `Clamped<T>`,
+  `MaybeUninit<T>`, closure trait objects) compose their schemas at
+  const time via `const fn`s that read the inner type's
+  `(SCHEMA_LEN, SCHEMA_BUF)` pair.
+
+* MSRV bumped from 1.77 to 1.79 for library and macro crates (the
+  cli crates were already at 1.86). Required by the const-expression
+  composition that backs the schema-buffer system.
 
 ### Removed
+
+* The wasm interpreter (`crates/cli-support/src/interpreter/`) and
+  every associated piece of machinery:
+  - `WasmDescribe::describe()` method
+  - `wasm_bindgen::describe::inform()`
+  - The `__wbindgen_describe` extern import
+  - The `__wbindgen_skip_interpret_calls` export
+  - The legacy `__wbindgen_describe_<name>` synthetic export
+    functions (the macro no longer emits them)
+  - `Interpreter`, `Frame`, `skip_calls`, and the entire interpreter
+    test suite
+
+  Net diff: roughly 2200 lines deleted across the runtime, macro,
+  and cli.
 
 --------------------------------------------------------------------------------
 

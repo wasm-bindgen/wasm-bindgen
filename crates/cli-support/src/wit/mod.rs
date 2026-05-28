@@ -233,6 +233,133 @@ impl<'a> Context<'a> {
             AuxImport::Intrinsic(Intrinsic::ObjectDropRef),
         )?;
 
+        // Type-specific JS-value constructors. Restored to give
+        // wbg_cast a way out: each cast now routes through the
+        // appropriate named intrinsic via a regular `#[wasm_bindgen]`
+        // import or the runtime's `externs!` block, instead of going
+        // through `wbg_cast`'s interpreter-recognised descriptor.
+        let string_ref = Descriptor::Ref(Box::new(Descriptor::String));
+        self.add_aux_import_to_import_map(
+            "__wbindgen_string_new",
+            vec![string_ref],
+            Descriptor::Externref,
+            AuxImport::Intrinsic(Intrinsic::StringNew),
+        )?;
+        self.add_aux_import_to_import_map(
+            "__wbindgen_number_new",
+            vec![Descriptor::F64],
+            Descriptor::Externref,
+            AuxImport::Intrinsic(Intrinsic::NumberNew),
+        )?;
+        self.add_aux_import_to_import_map(
+            "__wbindgen_bigint_from_i64",
+            vec![Descriptor::I64],
+            Descriptor::Externref,
+            AuxImport::Intrinsic(Intrinsic::BigIntFromI64),
+        )?;
+        self.add_aux_import_to_import_map(
+            "__wbindgen_bigint_from_u64",
+            vec![Descriptor::U64],
+            Descriptor::Externref,
+            AuxImport::Intrinsic(Intrinsic::BigIntFromU64),
+        )?;
+        self.add_aux_import_to_import_map(
+            "__wbindgen_bigint_from_i128",
+            vec![Descriptor::I64, Descriptor::U64],
+            Descriptor::Externref,
+            AuxImport::Intrinsic(Intrinsic::BigIntFromI128),
+        )?;
+        self.add_aux_import_to_import_map(
+            "__wbindgen_bigint_from_u128",
+            vec![Descriptor::U64, Descriptor::U64],
+            Descriptor::Externref,
+            AuxImport::Intrinsic(Intrinsic::BigIntFromU128),
+        )?;
+
+        // Typed-array constructors. Each takes a `(ptr, len)` pair
+        // (i.e. a `Slice(T)`) and returns an externref.
+        let typed_array_intrinsics: [(&str, Descriptor, Intrinsic); 11] = [
+            (
+                "__wbindgen_uint8_array_new",
+                Descriptor::U8,
+                Intrinsic::Uint8ArrayNew,
+            ),
+            (
+                "__wbindgen_uint8_clamped_array_new",
+                Descriptor::ClampedU8,
+                Intrinsic::Uint8ClampedArrayNew,
+            ),
+            (
+                "__wbindgen_uint16_array_new",
+                Descriptor::U16,
+                Intrinsic::Uint16ArrayNew,
+            ),
+            (
+                "__wbindgen_uint32_array_new",
+                Descriptor::U32,
+                Intrinsic::Uint32ArrayNew,
+            ),
+            (
+                "__wbindgen_biguint64_array_new",
+                Descriptor::U64,
+                Intrinsic::BigUint64ArrayNew,
+            ),
+            (
+                "__wbindgen_int8_array_new",
+                Descriptor::I8,
+                Intrinsic::Int8ArrayNew,
+            ),
+            (
+                "__wbindgen_int16_array_new",
+                Descriptor::I16,
+                Intrinsic::Int16ArrayNew,
+            ),
+            (
+                "__wbindgen_int32_array_new",
+                Descriptor::I32,
+                Intrinsic::Int32ArrayNew,
+            ),
+            (
+                "__wbindgen_bigint64_array_new",
+                Descriptor::I64,
+                Intrinsic::BigInt64ArrayNew,
+            ),
+            (
+                "__wbindgen_float32_array_new",
+                Descriptor::F32,
+                Intrinsic::Float32ArrayNew,
+            ),
+            (
+                "__wbindgen_float64_array_new",
+                Descriptor::F64,
+                Intrinsic::Float64ArrayNew,
+            ),
+        ];
+        for (name, elem, intrinsic) in typed_array_intrinsics {
+            self.add_aux_import_to_import_map(
+                name,
+                vec![Descriptor::Vector(Box::new(elem))],
+                Descriptor::Externref,
+                AuxImport::Intrinsic(intrinsic),
+            )?;
+        }
+
+        self.add_aux_import_to_import_map(
+            "__wbindgen_array_new",
+            vec![],
+            Descriptor::Externref,
+            AuxImport::Intrinsic(Intrinsic::ArrayNew),
+        )?;
+        self.add_aux_import_to_import_map(
+            "__wbindgen_array_push",
+            vec![
+                Descriptor::Ref(Box::new(Descriptor::Externref)),
+                Descriptor::Externref,
+            ],
+            Descriptor::Unit,
+            AuxImport::Intrinsic(Intrinsic::ArrayPush),
+        )?;
+
         for import in imports_to_delete {
             self.module.imports.delete(import);
         }
@@ -1489,11 +1616,11 @@ impl<'a> Context<'a> {
                 _ => bail!("import from `{PLACEHOLDER_MODULE}` was not a function"),
             }
 
-            // These are special intrinsics which were handled in the descriptor
-            // phase, but we don't have an implementation for them. We don't
-            // need to error about them in this verification pass though,
-            // having them lingering in the module is normal.
-            if import.name == "__wbindgen_describe" || import.name == "__wbindgen_describe_cast" {
+            // `__wbindgen_describe_cast` is a marker intrinsic the
+            // cli reads structurally for closure-cast scanning; it
+            // has no JS implementation and lingers in the module
+            // until the post-processing pass drops it. Skip it here.
+            if import.name == "__wbindgen_describe_cast" {
                 continue;
             }
             if implemented.remove(&import.id()).is_none() {

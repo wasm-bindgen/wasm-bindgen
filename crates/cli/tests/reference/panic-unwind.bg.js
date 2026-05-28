@@ -22,11 +22,6 @@ export function __wbg___wbindgen_rethrow_c4d99b4b53265290(arg0) {
 export function __wbg___wbindgen_throw_1506f2235d1bdba0(arg0, arg1) {
     throw new WebAssembly.Exception(__wbindgen_wrapped_jstag, [new Error(getStringFromWasm0(arg0, arg1))]);
 }
-export function __wbindgen_cast_0000000000000000(arg0, arg1) {
-    // Cast intrinsic for `Ref(String) -> Externref`.
-    const ret = getStringFromWasm0(arg0, arg1);
-    return ret;
-}
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;
     const offset = table.grow(4);
@@ -38,6 +33,10 @@ export function __wbindgen_init_externref_table() {
 }
 
 export const __wbindgen_jstag = WebAssembly.JSTag;
+export function __wbindgen_string_new(arg0, arg1) {
+    const ret = getStringFromWasm0(arg0, arg1);
+    return ret;
+}
 
 export { __wbindgen_wrapped_jstag };
 const __wbindgen_wrapped_jstag = new WebAssembly.Tag({ parameters: ['externref'] });
