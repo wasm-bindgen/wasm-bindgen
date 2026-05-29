@@ -120,6 +120,14 @@ pub trait GenericImportName {
     const MODULE: &'static str = "";
     /// Byte length of `MODULE` (see `NAME_LEN`).
     const MODULE_LEN: usize = 0;
+    /// The shared signature *template* for this import: a full function
+    /// descriptor stream `[FUNCTION, 0, nargs, slots.., ret, inner_ret]`
+    /// where each generic-parameter position is a `TYPE_PARAM(i)` hole.
+    /// Emitted once per import (same address for every monomorphisation)
+    /// and spliced with the per-`T` fills by the cli.
+    const TEMPLATE: [u32; crate::describe::SCHEMA_MAX];
+    /// Meaningful prefix length of `TEMPLATE`.
+    const TEMPLATE_LEN: usize;
 }
 
 // Bare-minimal call-site courier for a single owned-argument, unit-return
@@ -161,6 +169,8 @@ unsafe extern "C" fn breaks_if_inlined_generic_import<N, T>(
         N::NAME_LEN,
         N::MODULE.as_ptr(),
         N::MODULE_LEN,
+        N::TEMPLATE.as_ptr(),
+        N::TEMPLATE_LEN,
         FromBuf::<T>::BUF.as_ptr(),
         <T as crate::describe::WasmDescribe>::SCHEMA_LEN,
     );

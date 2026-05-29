@@ -333,17 +333,19 @@ impl WasmBindgenDescriptorsSection {
                 _ => continue,
             };
             let entry = local.entry_block();
-            // Six immediates: name_ptr, name_len, module_ptr, module_len,
-            // arg_schema_ptr, arg_schema_len.
-            let mut scanner = CastCallScanner::new(describe_id, 6);
+            // Eight immediates: name_ptr, name_len, module_ptr, module_len,
+            // template_ptr, template_len, fill_ptr, fill_len.
+            let mut scanner = CastCallScanner::new(describe_id, 8);
             scanner.walk(local, entry);
             for args in scanner.found_calls {
                 let name_ptr = args[0] as u32;
                 let name_len = args[1] as u32;
                 let module_ptr = args[2] as u32;
                 let module_len = args[3] as u32;
-                let schema_ptr = args[4] as u32;
-                let schema_len = args[5] as u32;
+                let template_ptr = args[4] as u32;
+                let template_len = args[5] as u32;
+                let fill_ptr = args[6] as u32;
+                let fill_len = args[7] as u32;
                 let name_bytes = data_view.read_bytes(name_ptr, name_len as usize)?;
                 let name = String::from_utf8(name_bytes)
                     .context("generic import name was not valid UTF-8")?;
@@ -354,8 +356,9 @@ impl WasmBindgenDescriptorsSection {
                     String::from_utf8(module_bytes)
                         .context("generic import module was not valid UTF-8")?
                 };
-                let arg_schema = data_view.read_u32_slice(schema_ptr, schema_len)?;
-                let descriptor = compose_generic_import_descriptor(&arg_schema);
+                let template = data_view.read_u32_slice(template_ptr, template_len)?;
+                let fill = data_view.read_u32_slice(fill_ptr, fill_len)?;
+                let descriptor = splice_template(&template, &[fill])?;
                 let descriptor = Descriptor::decode(&descriptor);
                 self.generic_imports
                     .entry((name, module, descriptor))
@@ -368,19 +371,38 @@ impl WasmBindgenDescriptorsSection {
     }
 }
 
-/// Compose the function descriptor stream for a generic import with a
-/// single owned argument and unit return:
-///   [FUNCTION, shim_idx=0, nargs=1, <arg schema>, UNIT, UNIT]
-/// (ret + inner_ret, mirroring `compose_cast_descriptor`).
-fn compose_generic_import_descriptor(arg: &[u32]) -> Vec<u32> {
-    let mut out = Vec::with_capacity(5 + arg.len());
-    out.push(wasm_bindgen_shared::tys::FUNCTION);
-    out.push(0); // shim_idx, unused
-    out.push(1); // nargs
-    out.extend_from_slice(arg);
-    out.push(wasm_bindgen_shared::tys::UNIT); // ret
-    out.push(wasm_bindgen_shared::tys::UNIT); // inner_ret
-    out
+/// Splice a generic import's signature template with the per-`T` fills,
+/// producing the concrete function descriptor stream. Each
+/// `[TYPE_PARAM, idx]` pair in the template is replaced by `fills[idx]`.
+///
+/// NOTE: this is a flat scan, valid while templates contain only holes
+/// and simple opcodes (no embedded names whose packed bytes could
+/// collide with `TYPE_PARAM`). When concrete-typed arguments — whose
+/// schemas can embed arbitrary name bytes — are added to templates, this
+/// must become grammar-aware (walk the descriptor structure rather than
+/// scanning words). The fills themselves are spliced verbatim and never
+/// re-scanned, so their internal bytes are unaffected.
+fn splice_template(template: &[u32], fills: &[Vec<u32>]) -> Result<Vec<u32>, Error> {
+    use wasm_bindgen_shared::tys::TYPE_PARAM;
+    let mut out = Vec::with_capacity(template.len());
+    let mut i = 0;
+    while i < template.len() {
+        if template[i] == TYPE_PARAM {
+            let idx = *template
+                .get(i + 1)
+                .ok_or_else(|| anyhow::anyhow!("TYPE_PARAM at end of generic import template"))?
+                as usize;
+            let fill = fills.get(idx).ok_or_else(|| {
+                anyhow::anyhow!("generic import template references missing type-param fill {idx}")
+            })?;
+            out.extend_from_slice(fill);
+            i += 2;
+        } else {
+            out.push(template[i]);
+            i += 1;
+        }
+    }
+    Ok(out)
 }
 
 /// Walk a function body looking for `memory.init data_id` patterns

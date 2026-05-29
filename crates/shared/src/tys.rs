@@ -69,3 +69,25 @@ tys! {
 /// Chosen as `0xFF` to leave plenty of headroom above the existing dense
 /// opcode range (currently `0..=36`) for future low-numbered additions.
 pub const SYMBOL_REF: u32 = 0xFF;
+
+/// Special opcode used in a `#[wasm_bindgen(generic)]` import's signature
+/// *template* to mark a generic-parameter hole. The next `u32` in the
+/// stream is the zero-based index of the type parameter occupying this
+/// position.
+///
+/// Stream encoding:
+///
+/// ```text
+/// TYPE_PARAM (u32)
+/// param_idx  (u32)        // zero-based generic type-parameter index
+/// ```
+///
+/// At link time `wasm-bindgen-cli-support` recovers, per monomorphisation,
+/// the concrete `WasmDescribe` schema ("fill") of each type parameter from
+/// the call-site courier, and splices `fill[param_idx]` in place of the
+/// `TYPE_PARAM param_idx` pair, producing the concrete function descriptor.
+/// A parameter may appear in multiple positions (multiple args and/or the
+/// return); every occurrence with the same index is filled from the same
+/// fill, so the per-monomorphisation courier carries each type's schema
+/// only once.
+pub const TYPE_PARAM: u32 = 0xFE;

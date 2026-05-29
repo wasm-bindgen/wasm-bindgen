@@ -3400,6 +3400,21 @@ impl ast::ImportFunction {
                 const NAME_LEN: usize = #js_name_len;
                 const MODULE: &'static str = #js_module;
                 const MODULE_LEN: usize = #js_module_len;
+                // Signature template for `fn(T) -> ()`: a full function
+                // descriptor with a single `TYPE_PARAM(0)` hole for the
+                // owned generic argument. The cli splices the per-`T`
+                // fill into the hole.
+                const TEMPLATE: [u32; #wasm_bindgen::describe::SCHEMA_MAX] =
+                    #wasm_bindgen::describe::schema_from_slice(&[
+                        #wasm_bindgen::describe::FUNCTION,
+                        0,
+                        1,
+                        #wasm_bindgen::describe::TYPE_PARAM,
+                        0,
+                        #wasm_bindgen::describe::UNIT,
+                        #wasm_bindgen::describe::UNIT,
+                    ]);
+                const TEMPLATE_LEN: usize = 7;
             }
 
             #[automatically_derived]
