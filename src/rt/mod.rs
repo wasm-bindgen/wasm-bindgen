@@ -33,7 +33,7 @@ pub fn js_panic(err: JsValue) {
     #[cfg(all(feature = "std", not(target_feature = "atomics")))]
     ::std::panic::panic_any(err);
     #[cfg(not(all(feature = "std", not(target_feature = "atomics"))))]
-    ::core::panic!("{:?}", err);
+    ::core::panic!("{err:?}");
 }
 
 // Cast between arbitrary types supported by wasm-bindgen by going via JS.

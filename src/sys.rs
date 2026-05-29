@@ -111,13 +111,16 @@ impl UpcastFrom<Null> for JsValue {}
 // JsOption
 #[wasm_bindgen(wasm_bindgen = crate)]
 extern "C" {
-    /// A nullable JS value of type `T`.
+    /// An optional JS value of type `T`.
     ///
     /// Unlike `Option<T>`, which is a Rust-side construct, `JsOption<T>` represents
-    /// a JS value that may be `T`, `null`, or `undefined`, where the null status is
+    /// a JS value that may be `T` or `undefined`, where the presence status is
     /// not yet known in Rust. The value remains in JS until inspected via methods
     /// like [`is_empty`](Self::is_empty), [`as_option`](Self::as_option), or
     /// [`into_option`](Self::into_option).
+    ///
+    /// Only `undefined` is treated as absent, matching TypeScript's `T | undefined`.
+    /// JavaScript `null` is a distinct present value.
     ///
     /// `T` must implement [`JsGeneric`], meaning it is any type that can be
     /// represented as a `JsValue` (e.g., `JsString`, `Number`, `Object`, etc.).
@@ -152,19 +155,19 @@ impl<T: JsGeneric> JsOption<T> {
         }
     }
 
-    /// Tests whether this `JsOption<T>` is empty (`null` or `undefined`).
+    /// Tests whether this `JsOption<T>` is empty (`undefined`).
     #[inline]
     pub fn is_empty(&self) -> bool {
-        JsValue::is_null_or_undefined(self)
+        JsValue::is_undefined(self)
     }
 
     /// Converts this `JsOption<T>` to an `Option<T>` by cloning the inner value.
     ///
-    /// Returns `None` if the value is `null` or `undefined`, otherwise returns
+    /// Returns `None` if the value is `undefined`, otherwise returns
     /// `Some(T)` with a clone of the contained value.
     #[inline]
     pub fn as_option(&self) -> Option<T> {
-        if JsValue::is_null_or_undefined(self) {
+        if JsValue::is_undefined(self) {
             None
         } else {
             let cloned = self.deref().clone();
@@ -174,11 +177,11 @@ impl<T: JsGeneric> JsOption<T> {
 
     /// Converts this `JsOption<T>` into an `Option<T>`, consuming `self`.
     ///
-    /// Returns `None` if the value is `null` or `undefined`, otherwise returns
+    /// Returns `None` if the value is `undefined`, otherwise returns
     /// `Some(T)` with the contained value.
     #[inline]
     pub fn into_option(self) -> Option<T> {
-        if JsValue::is_null_or_undefined(&self) {
+        if JsValue::is_undefined(&self) {
             None
         } else {
             Some(self.unchecked_into())
@@ -189,7 +192,7 @@ impl<T: JsGeneric> JsOption<T> {
     ///
     /// # Panics
     ///
-    /// Panics if the value is `null` or `undefined`.
+    /// Panics if the value is `undefined`.
     #[inline]
     pub fn unwrap(self) -> T {
         self.expect("called `JsOption::unwrap()` on an empty value")
@@ -199,7 +202,7 @@ impl<T: JsGeneric> JsOption<T> {
     ///
     /// # Panics
     ///
-    /// Panics if the value is `null` or `undefined`, with a panic message
+    /// Panics if the value is `undefined`, with a panic message
     /// including the passed message.
     #[inline]
     pub fn expect(self, msg: &str) -> T {
@@ -211,7 +214,7 @@ impl<T: JsGeneric> JsOption<T> {
 
     /// Returns the contained value or a default.
     ///
-    /// Returns the contained value if not `null` or `undefined`, otherwise
+    /// Returns the contained value if not `undefined`, otherwise
     /// returns the default value of `T`.
     #[inline]
     pub fn unwrap_or_default(self) -> T
@@ -223,7 +226,7 @@ impl<T: JsGeneric> JsOption<T> {
 
     /// Returns the contained value or computes it from a closure.
     ///
-    /// Returns the contained value if not `null` or `undefined`, otherwise
+    /// Returns the contained value if not `undefined`, otherwise
     /// calls `f` and returns the result.
     #[inline]
     pub fn unwrap_or_else<F>(self, f: F) -> T
@@ -245,7 +248,7 @@ impl<T: JsGeneric + fmt::Debug> fmt::Debug for JsOption<T> {
         write!(f, "{}?(", core::any::type_name::<T>())?;
         match self.as_option() {
             Some(v) => write!(f, "{v:?}")?,
-            None => f.write_str("null")?,
+            None => f.write_str("undefined")?,
         }
         f.write_str(")")
     }
@@ -256,7 +259,7 @@ impl<T: JsGeneric + fmt::Display> fmt::Display for JsOption<T> {
         write!(f, "{}?(", core::any::type_name::<T>())?;
         match self.as_option() {
             Some(v) => write!(f, "{v}")?,
-            None => f.write_str("null")?,
+            None => f.write_str("undefined")?,
         }
         f.write_str(")")
     }
@@ -264,7 +267,6 @@ impl<T: JsGeneric + fmt::Display> fmt::Display for JsOption<T> {
 
 impl UpcastFrom<JsValue> for JsOption<JsValue> {}
 impl<T> UpcastFrom<Undefined> for JsOption<T> {}
-impl<T> UpcastFrom<Null> for JsOption<T> {}
 impl<T> UpcastFrom<()> for JsOption<T> {}
 impl<T> UpcastFrom<JsOption<T>> for JsValue {}
 impl<T, U> UpcastFrom<JsOption<U>> for JsOption<T> where T: UpcastFrom<U> {}
