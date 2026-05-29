@@ -104,6 +104,57 @@ where
     }
 }
 
+// Per-import name carrier for `#[wasm_bindgen(generic)]` imported
+// functions. The macro emits one zero-sized type per imported function
+// implementing this trait so the JS import name folds to a stable
+// rodata address inside the per-`(import, T)` courier monomorphisation.
+pub trait GenericImportName {
+    const NAME: &'static str;
+}
+
+// Bare-minimal call-site courier for a single owned-argument, unit-return
+// `#[wasm_bindgen(generic)]` imported function. Mirrors `wbg_cast`: the
+// public wrapper splits the argument's ABI into prims and calls the
+// `#[inline(never)]` courier, whose body deposits the import name and the
+// concrete argument schema as `i32.const` immediates for the cli scanner.
+//
+// `N` keys the JS import name (fixed per imported function); `T` keys the
+// concrete argument type (varies per monomorphisation). The courier's wasm
+// signature equals the named JS import's signature, so the cli can rewrite
+// the call site directly to the synthesised import.
+pub fn wbg_generic_import_1<N, T>(value: T)
+where
+    N: GenericImportName,
+    T: IntoWasmAbi + crate::describe::WasmDescribe,
+{
+    let _keepalive: unsafe extern "C" fn(_, _, _, _) = breaks_if_inlined_generic_import::<N, T>;
+    core::hint::black_box(_keepalive);
+    let (prim1, prim2, prim3, prim4) = value.into_abi().split();
+    unsafe {
+        breaks_if_inlined_generic_import::<N, T>(prim1, prim2, prim3, prim4);
+    }
+}
+
+#[inline(never)]
+#[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+unsafe extern "C" fn breaks_if_inlined_generic_import<N, T>(
+    prim1: <T::Abi as WasmAbi>::Prim1,
+    prim2: <T::Abi as WasmAbi>::Prim2,
+    prim3: <T::Abi as WasmAbi>::Prim3,
+    prim4: <T::Abi as WasmAbi>::Prim4,
+) where
+    N: GenericImportName,
+    T: IntoWasmAbi + crate::describe::WasmDescribe,
+{
+    super::__wbindgen_describe_generic_import(
+        N::NAME.as_ptr(),
+        N::NAME.len(),
+        FromBuf::<T>::BUF.as_ptr(),
+        <T as crate::describe::WasmDescribe>::SCHEMA_LEN,
+    );
+    keep_prims_alive(prim1, prim2, prim3, prim4);
+}
+
 // Schema-buffer forwarders: re-expose a generic type's `SCHEMA_BUF`
 // associated const through a non-generic static so we can hand a
 // stable address to the cli. Wasm-ld resolves `&FromBuf::<F>::BUF` to

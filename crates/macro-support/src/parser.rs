@@ -104,6 +104,7 @@ macro_rules! attrgen {
             (no_into_js_generic, false, NoIntoJsGeneric(Span)),
             (vendor_prefix, false, VendorPrefix(Span, Ident)),
             (variadic, false, Variadic(Span)),
+            (generic, false, Generic(Span)),
             (typescript_custom_section, false, TypescriptCustomSection(Span)),
             (skip_typescript, false, SkipTypescript(Span)),
             (skip_jsdoc, false, SkipJsDoc(Span)),
@@ -941,6 +942,7 @@ impl<'a>
         )?;
         let catch = opts.catch().is_some();
         let variadic = opts.variadic().is_some();
+        let generic = opts.generic().is_some();
         let js_ret = if catch {
             // TODO: this assumes a whole bunch:
             //
@@ -1139,6 +1141,7 @@ impl<'a>
             js_ret,
             catch,
             variadic,
+            generic,
             structural: opts.structural().is_some() || opts.r#final().is_none(),
             rust_name: self.sig.ident,
             shim: Ident::new(&shim, Span::call_site()),

@@ -1327,6 +1327,25 @@ externs! {
             invoke_addr: *const (),
         ) -> ();
 
+        // Marker import called by `breaks_if_inlined_generic_import` once
+        // per `(import, T)` monomorphisation of a `#[wasm_bindgen(generic)]`
+        // imported function. All four arguments are `i32.const` immediates
+        // in the linked wasm body; the cli scanner reads them to recover
+        // the JS import name and the concrete argument schema, then
+        // synthesises a per-monomorphisation JS adapter bound to the named
+        // import and rewrites the courier call site to it.
+        //
+        //   name_ptr / name_len:
+        //     pointer + length of the JS import name (UTF-8, in rodata).
+        //   arg_schema_ptr / arg_schema_len:
+        //     pointer + length of `<T as WasmDescribe>::SCHEMA_BUF[..SCHEMA_LEN]`.
+        fn __wbindgen_describe_generic_import(
+            name_ptr: *const u8,
+            name_len: usize,
+            arg_schema_ptr: *const u32,
+            arg_schema_len: usize,
+        ) -> ();
+
         // Type-specific JS-value constructors. Recognized by
         // cli-support as intrinsics; the JS adapter generated for each
         // is a trivial pass-through (or, for the bigint i128/u128

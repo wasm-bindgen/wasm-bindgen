@@ -2786,6 +2786,9 @@ impl ToTokens for ast::DynamicUnion {
 
 impl TryToTokens for ast::ImportFunction {
     fn try_to_tokens(&self, tokens: &mut TokenStream) -> Result<(), Diagnostic> {
+        if self.generic {
+            return self.try_to_tokens_generic(tokens);
+        }
         let mut class = None;
         let mut is_constructor = false;
         let mut is_method = false;
@@ -3289,6 +3292,110 @@ impl<'a> FnClassGenerics<'a> {
 }
 
 impl ast::ImportFunction {
+    /// Bare-minimal call-site-emission codegen for `#[wasm_bindgen(generic)]`
+    /// imported functions. Supported shape (everything else bails):
+    ///   - free function (no method/constructor),
+    ///   - exactly one type parameter, no lifetimes, no const generics,
+    ///   - exactly one argument, owned, whose type is that type parameter,
+    ///   - no return value.
+    ///
+    /// Emits a per-import name carrier ZST plus a thin generic wrapper that
+    /// forwards to the runtime courier `wbg_generic_import_1`, which deposits
+    /// the JS import name and the concrete argument schema at each
+    /// monomorphisation's call site for the cli scanner to recover.
+    fn try_to_tokens_generic(&self, tokens: &mut TokenStream) -> Result<(), Diagnostic> {
+        let wasm_bindgen = &self.wasm_bindgen;
+        let vis = &self.function.rust_vis;
+        let rust_name = &self.rust_name;
+        let js_name = &self.function.name;
+
+        if let ast::ImportFunctionKind::Method { .. } = &self.kind {
+            bail_span!(
+                rust_name,
+                "#[wasm_bindgen(generic)] does not yet support methods or constructors",
+            );
+        }
+
+        if self.generics.lifetimes().next().is_some() {
+            bail_span!(
+                rust_name,
+                "#[wasm_bindgen(generic)] does not yet support lifetime parameters",
+            );
+        }
+        if self.generics.const_params().next().is_some() {
+            bail_span!(
+                rust_name,
+                "#[wasm_bindgen(generic)] does not support const generic parameters",
+            );
+        }
+        let type_params: Vec<_> = self.generics.type_params().collect();
+        if type_params.len() != 1 {
+            bail_span!(
+                rust_name,
+                "#[wasm_bindgen(generic)] currently supports exactly one type parameter",
+            );
+        }
+        let tp = &type_params[0].ident;
+
+        if self.function.ret.is_some() {
+            bail_span!(
+                rust_name,
+                "#[wasm_bindgen(generic)] currently supports only unit-returning functions",
+            );
+        }
+
+        if self.function.arguments.len() != 1 {
+            bail_span!(
+                rust_name,
+                "#[wasm_bindgen(generic)] currently supports exactly one argument",
+            );
+        }
+        let arg = &self.function.arguments[0];
+        let arg_ty = &*arg.pat_type.ty;
+        // The single argument must be the bare type parameter `T` (owned).
+        match arg_ty {
+            syn::Type::Path(p) if p.qself.is_none() && p.path.is_ident(tp) => {}
+            _ => bail_span!(
+                arg_ty,
+                "#[wasm_bindgen(generic)] currently requires the argument to be the bare \
+                 owned type parameter",
+            ),
+        }
+        let arg_name = match &*arg.pat_type.pat {
+            syn::Pat::Ident(syn::PatIdent { ident, .. }) => ident.clone(),
+            _ => Ident::new("__wbg_genarg0", Span::call_site()),
+        };
+
+        // Unique per-import name carrier; reuse the (already unique) shim ident.
+        let name_ty = Ident::new(
+            &format!("__WbgGenericName_{}", self.shim),
+            Span::call_site(),
+        );
+
+        (quote! {
+            #[doc(hidden)]
+            #[automatically_derived]
+            #[allow(non_camel_case_types)]
+            pub struct #name_ty;
+
+            #[automatically_derived]
+            impl #wasm_bindgen::__rt::GenericImportName for #name_ty {
+                const NAME: &'static str = #js_name;
+            }
+
+            #[automatically_derived]
+            #vis fn #rust_name<#tp>(#arg_name: #tp)
+            where
+                #tp: #wasm_bindgen::convert::IntoWasmAbi + #wasm_bindgen::describe::WasmDescribe,
+            {
+                #wasm_bindgen::__rt::wbg_generic_import_1::<#name_ty, #tp>(#arg_name)
+            }
+        })
+        .to_tokens(tokens);
+
+        Ok(())
+    }
+
     fn get_fn_generics<'a>(&'a self) -> Result<FnClassGenerics<'a>, Diagnostic> {
         let original_fn_generics = generics::generic_params(&self.generics);
         let mut fn_generic_params: Vec<&syn::Ident> =
