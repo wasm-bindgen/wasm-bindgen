@@ -57,9 +57,10 @@ pub struct WasmBindgenDescriptorsSection {
     pub cast_imports: HashMap<Descriptor, Vec<FunctionId>>,
     /// Per-monomorphisation generic imports recovered from
     /// `__wbindgen_describe_generic_import` marker calls. Keyed by
-    /// `(js_import_name, function descriptor)` so call sites sharing an
-    /// `(import, T)` collapse to one synthesised import.
-    pub generic_imports: HashMap<(String, Descriptor), Vec<FunctionId>>,
+    /// `(js_import_name, js_module, function descriptor)` so call sites
+    /// sharing an `(import, module, T)` collapse to one synthesised
+    /// import. An empty `js_module` means the default module / global.
+    pub generic_imports: HashMap<(String, String, Descriptor), Vec<FunctionId>>,
 }
 
 pub type WasmBindgenDescriptorsSectionId = TypedCustomSectionId<WasmBindgenDescriptorsSection>;
@@ -332,22 +333,32 @@ impl WasmBindgenDescriptorsSection {
                 _ => continue,
             };
             let entry = local.entry_block();
-            // Four immediates: name_ptr, name_len, arg_schema_ptr, arg_schema_len.
-            let mut scanner = CastCallScanner::new(describe_id, 4);
+            // Six immediates: name_ptr, name_len, module_ptr, module_len,
+            // arg_schema_ptr, arg_schema_len.
+            let mut scanner = CastCallScanner::new(describe_id, 6);
             scanner.walk(local, entry);
             for args in scanner.found_calls {
                 let name_ptr = args[0] as u32;
                 let name_len = args[1] as u32;
-                let schema_ptr = args[2] as u32;
-                let schema_len = args[3] as u32;
+                let module_ptr = args[2] as u32;
+                let module_len = args[3] as u32;
+                let schema_ptr = args[4] as u32;
+                let schema_len = args[5] as u32;
                 let name_bytes = data_view.read_bytes(name_ptr, name_len as usize)?;
                 let name = String::from_utf8(name_bytes)
                     .context("generic import name was not valid UTF-8")?;
+                let module = if module_len == 0 {
+                    String::new()
+                } else {
+                    let module_bytes = data_view.read_bytes(module_ptr, module_len as usize)?;
+                    String::from_utf8(module_bytes)
+                        .context("generic import module was not valid UTF-8")?
+                };
                 let arg_schema = data_view.read_u32_slice(schema_ptr, schema_len)?;
                 let descriptor = compose_generic_import_descriptor(&arg_schema);
                 let descriptor = Descriptor::decode(&descriptor);
                 self.generic_imports
-                    .entry((name, descriptor))
+                    .entry((name, module, descriptor))
                     .or_default()
                     .push(func_id);
             }

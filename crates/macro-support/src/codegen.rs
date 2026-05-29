@@ -3372,6 +3372,22 @@ impl ast::ImportFunction {
             Span::call_site(),
         );
 
+        // Module path the import resolves from ("" = default/global).
+        // Only string modules (Named/RawNamed) are supported for now;
+        // inline JS snippets bail.
+        let js_module = match &self.js_module {
+            None => String::new(),
+            Some(ast::ImportModule::Named(s, _)) | Some(ast::ImportModule::RawNamed(s, _)) => {
+                s.clone()
+            }
+            Some(ast::ImportModule::Inline(_)) => bail_span!(
+                rust_name,
+                "#[wasm_bindgen(generic)] does not yet support inline JS module snippets",
+            ),
+        };
+        let js_name_len = js_name.len();
+        let js_module_len = js_module.len();
+
         (quote! {
             #[doc(hidden)]
             #[automatically_derived]
@@ -3381,6 +3397,9 @@ impl ast::ImportFunction {
             #[automatically_derived]
             impl #wasm_bindgen::__rt::GenericImportName for #name_ty {
                 const NAME: &'static str = #js_name;
+                const NAME_LEN: usize = #js_name_len;
+                const MODULE: &'static str = #js_module;
+                const MODULE_LEN: usize = #js_module_len;
             }
 
             #[automatically_derived]

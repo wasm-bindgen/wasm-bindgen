@@ -1142,6 +1142,7 @@ impl<'a>
             catch,
             variadic,
             generic,
+            js_module: module.clone(),
             structural: opts.structural().is_some() || opts.r#final().is_none(),
             rust_name: self.sig.ident,
             shim: Ident::new(&shim, Span::call_site()),

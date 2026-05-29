@@ -421,17 +421,20 @@ impl<'a> Context<'a> {
             // *calls* the named JS function rather than being identity.
             let mut sorted_generics: Vec<_> = generic_imports
                 .into_iter()
-                .map(|((name, descriptor), orig_func_ids)| {
+                .map(|((name, module, descriptor), orig_func_ids)| {
                     let signature = descriptor.unwrap_function();
-                    (name, signature, orig_func_ids)
+                    (name, module, signature, orig_func_ids)
                 })
                 .collect();
             sorted_generics.sort_by(|a, b| {
                 a.0.cmp(&b.0)
-                    .then_with(|| format!("{:?}", a.1).cmp(&format!("{:?}", b.1)))
+                    .then_with(|| a.1.cmp(&b.1))
+                    .then_with(|| format!("{:?}", a.2).cmp(&format!("{:?}", b.2)))
             });
 
-            for (idx, (name, signature, orig_func_ids)) in sorted_generics.into_iter().enumerate() {
+            for (idx, (name, module, signature, orig_func_ids)) in
+                sorted_generics.into_iter().enumerate()
+            {
                 let import_name = format!("__wbindgen_generic_import_{:016x}", idx + 1);
                 let ty = self.module.funcs.get(orig_func_ids[0]).ty();
                 let (import_func_id, import_id) =
@@ -439,9 +442,27 @@ impl<'a> Context<'a> {
                         .add_import_func(PLACEHOLDER_MODULE, &import_name, ty);
                 self.module.funcs.get_mut(import_func_id).name = Some(name.clone());
 
-                // Bind the import to the real JS function named `name`
-                // (default module, no namespace) and build its adapter.
-                let js_import = self.determine_import(&None, &None, &name)?;
+                // Bind the import to the real JS function `name`, resolved
+                // from `module` (empty = default module / global scope),
+                // and build its adapter.
+                //
+                // NOTE: we use `RawNamed` (plain module specifier) rather
+                // than `Named` (relative local module). `Named` would route
+                // through the linked-module / snippet machinery, but the
+                // generic call-site path does not yet register a linked
+                // module for the file, so `Named` resolves to a missing
+                // `./snippets/<module>` entry. Proper linked-module
+                // registration (so relative paths embed/split correctly) is
+                // a follow-up; `RawNamed` resolves as a plain import of the
+                // module specifier, which is correct for bare/package
+                // specifiers and for runtime test modules resolved from the
+                // project root.
+                let import_module = if module.is_empty() {
+                    None
+                } else {
+                    Some(decode::ImportModule::RawNamed(&module))
+                };
+                let js_import = self.determine_import(&import_module, &None, &name)?;
                 let adapter_id =
                     self.import_adapter(import_id, signature, AdapterJsImportKind::Normal)?;
                 self.aux

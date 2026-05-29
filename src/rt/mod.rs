@@ -110,6 +110,16 @@ where
 // rodata address inside the per-`(import, T)` courier monomorphisation.
 pub trait GenericImportName {
     const NAME: &'static str;
+    /// Byte length of `NAME`, supplied as a const so it folds to an
+    /// `i32.const` immediate rather than a runtime `str::len` call —
+    /// the latter would break the cli's structural scanner in debug
+    /// builds (a non-marker call resets its operand tracking).
+    const NAME_LEN: usize;
+    /// JS module path the import resolves from; empty means the default
+    /// module / global scope.
+    const MODULE: &'static str = "";
+    /// Byte length of `MODULE` (see `NAME_LEN`).
+    const MODULE_LEN: usize = 0;
 }
 
 // Bare-minimal call-site courier for a single owned-argument, unit-return
@@ -148,7 +158,9 @@ unsafe extern "C" fn breaks_if_inlined_generic_import<N, T>(
 {
     super::__wbindgen_describe_generic_import(
         N::NAME.as_ptr(),
-        N::NAME.len(),
+        N::NAME_LEN,
+        N::MODULE.as_ptr(),
+        N::MODULE_LEN,
         FromBuf::<T>::BUF.as_ptr(),
         <T as crate::describe::WasmDescribe>::SCHEMA_LEN,
     );

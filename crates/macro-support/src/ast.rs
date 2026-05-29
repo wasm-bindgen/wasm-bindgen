@@ -206,6 +206,11 @@ pub struct ImportFunction {
     /// Opt-in: emit per-monomorphisation call-site couriers for generic
     /// params instead of the type-erased single-shim marshalling.
     pub generic: bool,
+    /// The JS module this import resolves from, if any. Captured for the
+    /// `generic` call-site-emission path so the courier can carry the
+    /// module to the cli (the normal path threads it via the encoded
+    /// program instead).
+    pub js_module: Option<ImportModule>,
     /// Whether the function should use structural type checking
     pub structural: bool,
     /// Causes the Builder (See cli-support::js::binding::Builder) to error out if

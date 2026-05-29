@@ -1337,11 +1337,17 @@ externs! {
         //
         //   name_ptr / name_len:
         //     pointer + length of the JS import name (UTF-8, in rodata).
+        //   module_ptr / module_len:
+        //     pointer + length of the JS module path the import resolves
+        //     from (UTF-8, in rodata); `module_len == 0` means the import
+        //     resolves from the default module / global scope.
         //   arg_schema_ptr / arg_schema_len:
         //     pointer + length of `<T as WasmDescribe>::SCHEMA_BUF[..SCHEMA_LEN]`.
         fn __wbindgen_describe_generic_import(
             name_ptr: *const u8,
             name_len: usize,
+            module_ptr: *const u8,
+            module_len: usize,
             arg_schema_ptr: *const u32,
             arg_schema_len: usize,
         ) -> ();
