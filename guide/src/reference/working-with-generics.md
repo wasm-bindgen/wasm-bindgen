@@ -141,27 +141,51 @@ For the common case, it is recommended to use the `JsGeneric` trait bound when n
 - All web-sys generated types
 - Custom types imported via `#[wasm_bindgen]` automatically generate this trait on the `JsValue` repr.
 
-**Types that do NOT implement `JsGeneric`:**
+**Non-handle types as generic arguments:**
 
-- Rust primitives: `u32`, `i32`, `f64`, `bool`, `char`, `String`, etc.
-
-This means you cannot use Rust primitives directly as generic parameters where `JsGeneric` is required. For example, `Array<u32>` is not valid—use `Array<Number>` instead.
+Rust primitives (`u32`, `i32`, `f64`, `bool`, `String`, …) and a few container shapes (`Vec<T>`, `Box<[T]>`, `Option<T>`) implement the wider [`IntoJsGeneric`] / [`FromJsGeneric`] traits. These let imported functions take or return Rust-native types in generic position — `to_js` / `from_js` materialise a fresh JS handle on the boundary. The macro injects the appropriate bound automatically based on argument/return position, so user-facing extern signatures stay clean:
 
 ```rust
-use wasm_bindgen::convert::JsGeneric;
-use js_sys::{Array, Number};
+use wasm_bindgen::prelude::*;
 
-fn process_js_values<T: JsGeneric>(items: &Array<T>) {
-    // T can be Number, JsString, Object, etc. — but not u32 or String
+#[wasm_bindgen]
+extern "C" {
+    pub type Cell;
+
+    #[wasm_bindgen(method)]
+    fn get_value<T>(this: &Cell) -> T;          // T: FromJsGeneric (return)
+
+    #[wasm_bindgen(method)]
+    fn set_value<T>(this: &Cell, value: T);     // T: IntoJsGeneric (arg)
 }
 
-// ✓ Works
-let numbers: Array<Number> = Array::new_typed();
-process_js_values(&numbers);
-
-// ✗ Won't compile — u32 is not JsGeneric
-// let numbers: Array<u32> = ...;
+// All of these work — the handle is materialised on the wire.
+cell.set_value::<u32>(42);
+cell.set_value::<String>("hello".into());
+let s: String = cell.get_value();
+let n: u32 = cell.get_value();
 ```
+
+`JsGeneric` remains the bound for **JS-handle** types (every `js-sys` / `web-sys` / `#[wasm_bindgen]` import). It is now defined as `IntoJsGeneric<JsCanon = Self::Canon> + FromJsGeneric + 'static` where `Canon` is constrained to erase to `JsValue` — only leaf handle types satisfy it.
+
+```rust
+use wasm_bindgen::{IntoJsGeneric, JsGeneric};
+use js_sys::{Array, Number};
+
+// JsGeneric-bounded: callers must pass a handle type (Number, JsString, …)
+fn process_handles<T: JsGeneric>(items: &Array<T>) { /* … */ }
+
+// IntoJsGeneric-bounded: callers may pass String, u32, etc.
+fn into_js<T: IntoJsGeneric>(v: T) -> T::JsCanon { v.to_js() }
+```
+
+### Trait roles at a glance
+
+| Trait              | Direction        | Used for                                              |
+|--------------------|------------------|-------------------------------------------------------|
+| `IntoJsGeneric`    | Rust → JS        | Outgoing args, return-from-Rust. `&str` qualifies.    |
+| `FromJsGeneric`    | JS → Rust        | Incoming args, return-to-Rust. `&str` does **not**.   |
+| `JsGeneric`        | Both, leaf-shape | Generic-parameter bound for JS-handle types only.     |
 
 ## Upcasting Types
 

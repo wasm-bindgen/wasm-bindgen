@@ -76,27 +76,6 @@ unsafe impl<T: ErasableGeneric> ErasableGeneric for &T {
     type Repr = &'static T::Repr;
 }
 
-/// Trait bound marker for types that are passed as an own generic type.
-/// Encapsulating the ErasableGeneric invariant that must be maintained, that
-/// the repr of the type is the type of the concrete target type repr.
-/// This is useful to provide simple debuggable trait bounds for codegen.
-#[cfg_attr(
-    wbg_diagnostic,
-    diagnostic::on_unimplemented(
-        message = "Unable to call function, since the concrete generic argument or return value cannot be type-erased into the expected generic repr type for the function",
-        label = "passed concrete generic type does not match the expected generic repr type",
-        note = "Make sure that all erasable generic parameters satisfy the trait bound `ErasableGeneric` with the correct repr. Wasm Bindgen generic parameters and return values for functions are defined to work for specific type-erasable generic repr types only.",
-    )
-)]
-pub trait ErasableGenericOwn<ConcreteTarget>: ErasableGeneric {}
-
-impl<T, ConcreteTarget> ErasableGenericOwn<ConcreteTarget> for T
-where
-    ConcreteTarget: ErasableGeneric,
-    T: ErasableGeneric<Repr = <ConcreteTarget as ErasableGeneric>::Repr>,
-{
-}
-
 /// Trait bound marker for types that are passed as a borrowed generic type.
 /// Encapsulating the ErasableGeneric invariant that must be maintained, that
 /// the repr of the type is the type of the concrete target type repr.

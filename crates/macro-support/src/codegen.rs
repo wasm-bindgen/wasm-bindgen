@@ -1190,54 +1190,69 @@ impl TryToTokens for ast::ImportType {
             phantom_init = quote! {};
         }
 
-        // Identity implementation of `IntoJsGeneric`. Declaring this per-type,
-        // rather than via a blanket over `T: JsGeneric`, preserves the option
-        // for future wrapper types to pick a non-identity `JsCanon`.
+        // Identity implementations of `IntoJsGeneric` and `JsGeneric`.
+        // Declared per-type rather than via blankets over `T: JsGeneric` to
+        // preserve the option for future wrapper types to pick a non-identity
+        // `JsCanon` and a non-trivial conversion.
         //
-        // The body takes `self` by value and reinterprets the transparent JS
-        // handle wrapper into its canonical type. This lets the impl apply
-        // uniformly to types that do not implement Rust-level `Clone` (e.g.
-        // generic types whose parameters aren't `Clone`, or plain handle
-        // wrappers that simply don't derive `Clone`).
+        // Both bodies reinterpret the transparent JS handle wrapper through
+        // `transmute_copy` so the impl applies uniformly to types that do not
+        // implement Rust-level `Clone` (e.g. generic types whose parameters
+        // aren't `Clone`, or plain handle wrappers that simply don't derive
+        // `Clone`).
         //
         // Types whose Rust wrapper enforces owned-once destruction semantics
         // (currently just `JsClosure`) opt out via the
         // `#[wasm_bindgen(no_into_js_generic)]` attribute — producing a
         // duplicate wrapper over the same handle would violate those semantics.
+        // The same gate covers `JsGeneric` since they form a pair.
         //
-        // The extra `Self: JsGeneric` predicate propagates any generic
-        // type-parameter requirements the `JsGeneric` blanket imposes
-        // through `ErasableGeneric<Repr = JsValue>` etc.
-        let into_js_generic_impl = if no_into_js_generic {
-            quote! {}
+        // Soundness: every `#[wasm_bindgen]` imported type is `#[repr(transparent)]`
+        // over a JsValue handle by construction, so the identity `transmute_copy`
+        // round-trip is trivially valid without any extra predicate. We
+        // deliberately do *not* add a `Self: JsGeneric` predicate here, because
+        // `JsGeneric: IntoJsGeneric` would otherwise create a supertrait
+        // cycle in trait resolution.
+        let (into_js_generic_impl, from_js_generic_impl) = if no_into_js_generic {
+            (quote! {}, quote! {})
         } else {
-            let mut clause =
-                self.generics
-                    .where_clause
-                    .clone()
-                    .unwrap_or_else(|| syn::WhereClause {
-                        where_token: Default::default(),
-                        predicates: Default::default(),
-                    });
-            let self_ty_generics = &ty_generics;
-            let self_ty: syn::Type = syn::parse_quote!(#rust_name #self_ty_generics);
-            let wasm_bindgen_path: syn::Path = syn::parse_quote!(#wasm_bindgen);
-            clause.predicates.push(syn::parse_quote!(
-                #self_ty: #wasm_bindgen_path::JsGeneric
-            ));
-            quote! {
+            let into_impl = quote! {
                 #[automatically_derived]
                 impl #impl_generics #wasm_bindgen::IntoJsGeneric
                     for #rust_name #ty_generics
-                #clause
+                #where_clause
                 {
                     type JsCanon = #rust_name #ty_generics;
                     #[inline]
                     fn to_js(self) -> #rust_name #ty_generics {
-            unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(self)) }
+                        unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(self)) }
+                    }
+                    #[inline]
+                    fn ref_to_js(&self) -> #rust_name #ty_generics {
+                        // Self is `#[repr(transparent)]` over a JsValue handle;
+                        // produce a fresh wrapper by cloning the underlying JS
+                        // handle.
+                        let jv: #wasm_bindgen::JsValue =
+                            ::core::convert::AsRef::<#wasm_bindgen::JsValue>::as_ref(self).clone();
+                        unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(jv)) }
                     }
                 }
-            }
+            };
+            // `FromJsGeneric` for imported types: identity — canon is
+            // `Self`, no conversion needed.
+            let from_impl = quote! {
+                #[automatically_derived]
+                impl #impl_generics #wasm_bindgen::FromJsGeneric
+                    for #rust_name #ty_generics
+                #where_clause
+                {
+                    #[inline]
+                    fn unchecked_from_js(canon: #rust_name #ty_generics) -> #rust_name #ty_generics {
+                        canon
+                    }
+                }
+            };
+            (into_impl, from_impl)
         };
 
         (quote! {
@@ -1364,6 +1379,8 @@ impl TryToTokens for ast::ImportType {
                 }
 
                 #into_js_generic_impl
+
+                #from_js_generic_impl
 
                 // TODO: remove this on the next major version
                 // Only include lifetime params here; type params use their
@@ -2144,27 +2161,110 @@ impl TryToTokens for ast::ImportFunction {
                     &fn_class_generics.concrete_defaults,
                     &fn_lifetime_param_names,
                 )?;
+                // Direct vs indirect generic position. See the matching
+                // explanation on the return-path branch and the docs on
+                // `generics::is_direct_fn_generic`.
+                //
+                // For `&T`: a direct ref (`&T` where `T` is a bare
+                // fn-generic ident) routes through `IntoJsGeneric::ref_to_js`
+                // to materialise a fresh canon on the way out — JS never
+                // sees the borrow, it's just a Rust-side ownership
+                // convention. Indirect refs (`&Foo<T>`, `&[T]`,
+                // `&dyn Fn(...)`) keep the existing
+                // `ErasableGenericBorrow*` path because they carry legitimate
+                // borrow semantics across the FFI (live wasm-memory buffers,
+                // closure shells, etc.).
+                let direct = generics::is_direct_fn_generic(&inner_ty, &fn_generic_param_names);
+                let is_root_fn_generic_ref = ref_mut == Some(&None) && direct;
+
+                // Owned generic args route through `IntoJsGeneric::to_js`
+                // (direct) or a layout-identity transmute through
+                // `ErasableGeneric` (indirect — the canon's `Repr` already
+                // matches the concrete wire type, no `to_js` needed).
+                //
+                // `&mut T` and container references continue to use the
+                // `ErasableGenericBorrow*` marker traits.
                 if i > 0 || !is_method {
-                    fn_class_generics.add_fn_bound(if let Some(mut_) = ref_mut {
+                    if is_root_fn_generic_ref {
+                        arguments.push(quote! { #name: & #ref_lifetime #inner_ty });
+                        // T must be IntoJsGeneric; we'll call ref_to_js on the
+                        // borrow to materialise the canon.
+                        fn_class_generics.add_fn_bound(parse_quote! {
+                            #inner_ty: #wasm_bindgen::IntoJsGeneric
+                        });
+                        fn_class_generics.add_fn_bound(parse_quote! {
+                            <#inner_ty as #wasm_bindgen::IntoJsGeneric>::JsCanon:
+                                #wasm_bindgen::__rt::marker::ErasableGeneric<
+                                    Repr = <#concrete_ty as #wasm_bindgen::__rt::marker::ErasableGeneric>::Repr
+                                >
+                        });
+                    } else if let Some(mut_) = ref_mut {
                         arguments.push(quote! { #name: & #ref_lifetime #mut_ #inner_ty });
-                        if mut_.is_some() {
+                        fn_class_generics.add_fn_bound(if mut_.is_some() {
                             parse_quote! { #inner_ty: #wasm_bindgen::__rt::marker::ErasableGenericBorrowMut<#concrete_ty> }
                         } else {
                             parse_quote! { #inner_ty: #wasm_bindgen::__rt::marker::ErasableGenericBorrow<#concrete_ty> }
-                        }
-                    } else {
+                        });
+                    } else if direct {
                         arguments.push(quote! { #name: #ty });
-                        parse_quote! { #inner_ty: #wasm_bindgen::__rt::marker::ErasableGenericOwn<#concrete_ty> }
-                    });
+                        fn_class_generics.add_fn_bound(parse_quote! {
+                            #inner_ty: #wasm_bindgen::IntoJsGeneric
+                        });
+                        fn_class_generics.add_fn_bound(parse_quote! {
+                            <#inner_ty as #wasm_bindgen::IntoJsGeneric>::JsCanon:
+                                #wasm_bindgen::__rt::marker::ErasableGeneric<
+                                    Repr = <#concrete_ty as #wasm_bindgen::__rt::marker::ErasableGeneric>::Repr
+                                >
+                        });
+                    } else {
+                        // Indirect owned: no top-level generic, no `to_js`.
+                        // Bound is a layout-identity Repr match through
+                        // `ErasableGeneric`.
+                        arguments.push(quote! { #name: #ty });
+                        fn_class_generics.add_fn_bound(parse_quote! {
+                            #inner_ty: #wasm_bindgen::__rt::marker::ErasableGeneric<
+                                Repr = <#concrete_ty as #wasm_bindgen::__rt::marker::ErasableGeneric>::Repr
+                            >
+                        });
+                    }
                 }
-                // abi_ty is fully concrete with 'static lifetimes (used for both extern block and transmute)
-                abi_ty = if let Some(mut_) = ref_mut {
+                // abi_ty: for the root-`&T` path the wire value is an owned
+                // canon (concrete repr type, same as the owned path); for
+                // everything else, fall back to the existing shape.
+                abi_ty = if is_root_fn_generic_ref {
+                    quote! { #concrete_ty }
+                } else if let Some(mut_) = ref_mut {
                     quote! { &'static #mut_ #concrete_ty }
                 } else {
                     quote! { #concrete_ty }
                 };
 
-                convert_arg = quote! { unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(#var)) } };
+                convert_arg = if is_root_fn_generic_ref {
+                    // Root `&T` path: call `ref_to_js(&self)` to materialise a
+                    // fresh canon, then transmute to the concrete repr.
+                    quote! {
+                        unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(
+                            <#inner_ty as #wasm_bindgen::IntoJsGeneric>::ref_to_js(#var)
+                        )) }
+                    }
+                } else if ref_mut.is_some() {
+                    // Reference path (container ref or `&mut T`): existing
+                    // direct transmute.
+                    quote! { unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(#var)) } }
+                } else if direct {
+                    // Direct owned: route through `IntoJsGeneric::to_js`,
+                    // then transmute the canon to the concrete repr. The
+                    // bound `<T::JsCanon as ErasableGeneric>::Repr =
+                    // concrete_ty` makes the second leg sound.
+                    quote! {
+                        unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(
+                            <#inner_ty as #wasm_bindgen::IntoJsGeneric>::to_js(#var)
+                        )) }
+                    }
+                } else {
+                    // Indirect owned: direct layout transmute, no to_js.
+                    quote! { unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(#var)) } }
+                };
             } else if let Some((is_mut, fn_bounds)) = detect_raw_fn_trait_obj(ty) {
                 // Raw `&dyn Fn(...)` or `&mut dyn FnMut(...)` argument.
                 //
@@ -2297,10 +2397,44 @@ impl TryToTokens for ast::ImportFunction {
                         &fn_class_generics.concrete_defaults,
                         &fn_lifetime_param_names,
                     )?;
-                    fn_class_generics.add_fn_bound(
-                        parse_quote! { #ty: #wasm_bindgen::__rt::marker::ErasableGenericOwn<#concrete_ty> },
-                    );
-                    convert_ret = quote! { unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(<#concrete_ty as #wasm_bindgen::convert::FromWasmAbi>::from_abi(#ret_ident.join()))) } };
+                    // Direct (bare fn-generic ident): route through
+                    // `FromJsGeneric::from_js`. Indirect (structural):
+                    // layout-identity transmute through `ErasableGeneric`.
+                    if generics::is_direct_fn_generic(ty, &fn_generic_param_names) {
+                        fn_class_generics.add_fn_bound(parse_quote! {
+                            #ty: #wasm_bindgen::FromJsGeneric
+                        });
+                        fn_class_generics.add_fn_bound(parse_quote! {
+                            <#ty as #wasm_bindgen::IntoJsGeneric>::JsCanon:
+                                #wasm_bindgen::__rt::marker::ErasableGeneric<
+                                    Repr = <#concrete_ty as #wasm_bindgen::__rt::marker::ErasableGeneric>::Repr
+                                >
+                        });
+                        convert_ret = quote! {
+                            <#ty as #wasm_bindgen::FromJsGeneric>::unchecked_from_js(
+                                unsafe {
+                                    core::mem::transmute_copy(&core::mem::ManuallyDrop::new(
+                                        <#concrete_ty as #wasm_bindgen::convert::FromWasmAbi>
+                                            ::from_abi(#ret_ident.join())
+                                    ))
+                                }
+                            )
+                        };
+                    } else {
+                        fn_class_generics.add_fn_bound(parse_quote! {
+                            #ty: #wasm_bindgen::__rt::marker::ErasableGeneric<
+                                Repr = <#concrete_ty as #wasm_bindgen::__rt::marker::ErasableGeneric>::Repr
+                            >
+                        });
+                        convert_ret = quote! {
+                            unsafe {
+                                core::mem::transmute_copy(&core::mem::ManuallyDrop::new(
+                                    <#concrete_ty as #wasm_bindgen::convert::FromWasmAbi>
+                                        ::from_abi(#ret_ident.join())
+                                ))
+                            }
+                        };
+                    }
                     abi_ret = quote! { #wasm_bindgen::convert::WasmRet<<#concrete_ty as #wasm_bindgen::convert::FromWasmAbi>::Abi> };
                 } else {
                     convert_ret = quote! { <#ty as #wasm_bindgen::convert::FromWasmAbi>::from_abi(#ret_ident.join()) };

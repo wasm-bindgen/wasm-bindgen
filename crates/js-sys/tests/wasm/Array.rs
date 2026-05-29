@@ -1,6 +1,6 @@
 use js_sys::*;
 use std::iter::FromIterator;
-use wasm_bindgen::{convert::FromWasmAbi, prelude::*, JsGeneric};
+use wasm_bindgen::{prelude::*, JsGeneric};
 use wasm_bindgen_futures::JsFuture;
 use wasm_bindgen_test::*;
 
@@ -18,7 +18,7 @@ macro_rules! array {
     })
 }
 
-fn to_rust<T: JsGeneric + FromWasmAbi>(arr: &Array<T>) -> Vec<T> {
+fn to_rust<T: JsGeneric>(arr: &Array<T>) -> Vec<T::Canon> {
     let mut result = Vec::with_capacity(arr.length() as usize);
     arr.for_each(&mut |x, _, _| result.push(x));
     result

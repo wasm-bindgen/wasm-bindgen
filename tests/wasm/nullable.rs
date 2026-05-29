@@ -246,7 +246,9 @@ fn test_default() {
 
 #[wasm_bindgen_test]
 fn test_nullable_in_generic_context() {
-    fn process<T: wasm_bindgen::convert::JsGeneric>(nullable: JsOption<T>) -> bool {
+    fn process<T: wasm_bindgen::convert::JsGeneric + wasm_bindgen::JsCast>(
+        nullable: JsOption<T>,
+    ) -> bool {
         nullable.is_empty()
     }
 

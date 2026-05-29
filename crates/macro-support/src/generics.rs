@@ -461,6 +461,46 @@ pub(crate) fn generics_predicate_uses(
     !found_set.is_empty()
 }
 
+/// Detect whether `ty` is a "direct" reference to a fn-generic parameter — a
+/// bare ident matching one of `fn_generic_param_names` (e.g. `T`), or an
+/// associated-type projection rooted on such an ident (e.g. `<T as Trait>::U`
+/// or `T::U`). Returns `false` for structural types that *contain* a
+/// fn-generic param but aren't themselves the parameter (e.g. `Option<T>`,
+/// `Vec<T>`, `&Foo<T>`).
+///
+/// The two are codegened differently for owned generic returns:
+/// * Direct: wire is a single externref (JsValue), conversion goes through
+///   `FromJsGeneric::unchecked_from_js`.
+/// * Indirect (structural): wire is the syntactic substitution
+///   (`Option<JsValue>`, `Vec<JsValue>`, …), conversion is a layout-identity
+///   transmute via `ErasableGeneric`.
+pub(crate) fn is_direct_fn_generic(ty: &syn::Type, fn_generic_param_names: &[&Ident]) -> bool {
+    let path = match ty {
+        syn::Type::Path(p) => p,
+        _ => return false,
+    };
+    // `<T as Trait>::U` — qself rooted on a fn-generic ident counts as direct.
+    if let Some(qself) = &path.qself {
+        if let syn::Type::Path(qself_path) = &*qself.ty {
+            if qself_path.qself.is_none() && qself_path.path.segments.len() == 1 {
+                let ident = &qself_path.path.segments[0].ident;
+                return fn_generic_param_names.contains(&ident);
+            }
+        }
+        return false;
+    }
+    // `T` (bare ident) or `T::U` (associated-type chain) — first segment is
+    // the fn-generic ident and carries no angle-bracketed args.
+    if path.path.segments.is_empty() {
+        return false;
+    }
+    let first = &path.path.segments[0];
+    if !first.arguments.is_empty() {
+        return false;
+    }
+    fn_generic_param_names.contains(&&first.ident)
+}
+
 /// Concrete type replacement visitor application.
 /// Replaces generic type parameters with their concrete types (or JsValue if no default),
 /// and replaces specified lifetime parameters with 'static (since extern blocks cannot have

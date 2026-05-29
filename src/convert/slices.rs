@@ -8,9 +8,9 @@ use core::str;
 use crate::__rt::{marker::ErasableGeneric, WasmWord};
 use crate::__wbindgen_copy_to_typed_array;
 use crate::convert::{
-    js_value_vector_from_abi, js_value_vector_into_abi, FromWasmAbi, IntoWasmAbi,
-    LongRefFromWasmAbi, OptionFromWasmAbi, OptionIntoWasmAbi, RefFromWasmAbi, RefMutFromWasmAbi,
-    UpcastFrom, VectorFromWasmAbi, VectorIntoWasmAbi, WasmAbi,
+    js_value_vector_from_abi, js_value_vector_into_abi, FromJsGeneric, FromWasmAbi, IntoJsGeneric,
+    IntoWasmAbi, LongRefFromWasmAbi, OptionFromWasmAbi, OptionIntoWasmAbi, RefFromWasmAbi,
+    RefMutFromWasmAbi, UpcastFrom, VectorFromWasmAbi, VectorIntoWasmAbi, WasmAbi,
 };
 use crate::describe::*;
 use crate::JsValue;
@@ -489,11 +489,69 @@ unsafe impl<T: ErasableGeneric> ErasableGeneric for Box<[T]> {
 }
 
 impl UpcastFrom<&str> for &str {}
+impl UpcastFrom<&str> for JsValue {}
+impl UpcastFrom<String> for JsValue {}
+impl UpcastFrom<String> for String {}
 
 impl<T, Target> UpcastFrom<Box<[T]>> for Box<[Target]> where Target: UpcastFrom<T> {}
 
 unsafe impl<T: ErasableGeneric> ErasableGeneric for Vec<T> {
     type Repr = Vec<T::Repr>;
+}
+
+// `Vec<T>::JsCanon = Vec<T::JsCanon>` (recursive) works in indirect
+// positions like `-> Vec<T>` literal in extern. Refinement to
+// `Array<T::JsCanon>` (so `Vec<T>` participates as a direct fn-generic
+// argument like `Option<T>` does via `JsOption<T::JsCanon>`) is blocked
+// by the orphan rule — `Array` lives in `js-sys`, this impl must live in
+// `wasm-bindgen` core — and waits on a future js-sys-into-core merge.
+impl<T: IntoJsGeneric> IntoJsGeneric for Vec<T> {
+    type JsCanon = Vec<<T as IntoJsGeneric>::JsCanon>;
+    #[inline]
+    fn to_js(self) -> Self::JsCanon {
+        self.into_iter().map(<T as IntoJsGeneric>::to_js).collect()
+    }
+    #[inline]
+    fn ref_to_js(&self) -> Self::JsCanon {
+        self.iter().map(<T as IntoJsGeneric>::ref_to_js).collect()
+    }
+}
+
+// `Vec<T>` implements `FromJsGeneric` (recursive) but not `JsGeneric` —
+// its canon `Vec<T::JsCanon>` erases to `Vec<JsValue>`, not `JsValue`.
+impl<T: FromJsGeneric> FromJsGeneric for Vec<T> {
+    #[inline]
+    fn unchecked_from_js(canon: Self::JsCanon) -> Self {
+        canon
+            .into_iter()
+            .map(<T as FromJsGeneric>::unchecked_from_js)
+            .collect()
+    }
+}
+
+impl<T: IntoJsGeneric> IntoJsGeneric for Box<[T]> {
+    type JsCanon = Box<[<T as IntoJsGeneric>::JsCanon]>;
+    #[inline]
+    fn to_js(self) -> Self::JsCanon {
+        Vec::from(self)
+            .into_iter()
+            .map(<T as IntoJsGeneric>::to_js)
+            .collect()
+    }
+    #[inline]
+    fn ref_to_js(&self) -> Self::JsCanon {
+        self.iter().map(<T as IntoJsGeneric>::ref_to_js).collect()
+    }
+}
+
+impl<T: FromJsGeneric> FromJsGeneric for Box<[T]> {
+    #[inline]
+    fn unchecked_from_js(canon: Self::JsCanon) -> Self {
+        Vec::from(canon)
+            .into_iter()
+            .map(<T as FromJsGeneric>::unchecked_from_js)
+            .collect()
+    }
 }
 
 impl<T, Target> UpcastFrom<Vec<T>> for Vec<Target> where Target: UpcastFrom<T> {}

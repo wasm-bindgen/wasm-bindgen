@@ -339,8 +339,8 @@ where
 pub fn future_to_promise_typed<T, F>(future: F) -> Promise<<T as Promising>::Resolution>
 where
     F: Future<Output = Result<T, JsValue>> + 'static,
-    T: Promising + FromWasmAbi + JsGeneric,
-    <T as Promising>::Resolution: JsGeneric,
+    T: Promising + JsGeneric + 'static,
+    <T as Promising>::Resolution: JsGeneric + 'static,
 {
     let mut future = Some(future);
 

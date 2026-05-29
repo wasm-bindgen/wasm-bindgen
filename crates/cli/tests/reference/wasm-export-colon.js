@@ -258,7 +258,7 @@ function __wbg_get_imports() {
         __wbg_error_6dfa145e31018b13: function(arg0, arg1) {
             console.error(getStringFromWasm0(arg0, arg1));
         },
-        __wbg_forEach_768a075d31fa39b5: function(arg0, arg1, arg2) {
+        __wbg_forEach_83a745fd63972f9c: function(arg0, arg1, arg2) {
             try {
                 var state0 = {a: arg1, b: arg2};
                 var cb0 = (arg0, arg1, arg2) => {
