@@ -5,6 +5,10 @@
 
 ### Added
 
+* Added the `maxAge` attribute to the `CookieInit` dictionary in `web-sys`,
+  matching the current Cookie Store API specification.
+  [#5169](https://github.com/wasm-bindgen/wasm-bindgen/pull/5169)
+
 ### Changed
 
 ### Fixed

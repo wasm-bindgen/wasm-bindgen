@@ -39,6 +39,7 @@ dictionary CookieInit {
   USVString path = "/";
   CookieSameSite sameSite = "strict";
   boolean partitioned = false;
+  long long? maxAge = null;
 };
 
 dictionary CookieStoreDeleteOptions {
