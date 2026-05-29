@@ -9,6 +9,12 @@
   matching the current Cookie Store API specification.
   [#5169](https://github.com/wasm-bindgen/wasm-bindgen/pull/5169)
 
+* The js-sys futures codegen opt-in can now also be enabled via the
+  `WASM_BINDGEN_USE_JS_SYS=1` environment variable, in addition to
+  `--cfg=wasm_bindgen_use_js_sys`. This works on stable when `--target`
+  is in use, where Cargo does not propagate the cfg to host proc-macros.
+  [#5164](https://github.com/wasm-bindgen/wasm-bindgen/pull/5164)
+
 ### Changed
 
 * `JsOption<T>` now treats only `undefined` as empty, aligning it with
