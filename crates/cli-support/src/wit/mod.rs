@@ -374,6 +374,7 @@ impl<'a> Context<'a> {
             let WasmBindgenDescriptorsSection {
                 descriptors,
                 cast_imports,
+                generic_imports,
             } = *custom;
             // Store all the executed descriptors in our own field so we have
             // access to them while processing programs.
@@ -412,6 +413,41 @@ impl<'a> Context<'a> {
                     .insert(adapter_id, AuxImport::Cast { sig_comment });
 
                 // Mark all original functions for replacement with the new import.
+                duplicate_import_map
+                    .extend(orig_func_ids.into_iter().map(|id| (id, import_func_id)));
+            }
+
+            // Generic imports: like casts, but the synthesised import
+            // *calls* the named JS function rather than being identity.
+            let mut sorted_generics: Vec<_> = generic_imports
+                .into_iter()
+                .map(|((name, descriptor), orig_func_ids)| {
+                    let signature = descriptor.unwrap_function();
+                    (name, signature, orig_func_ids)
+                })
+                .collect();
+            sorted_generics.sort_by(|a, b| {
+                a.0.cmp(&b.0)
+                    .then_with(|| format!("{:?}", a.1).cmp(&format!("{:?}", b.1)))
+            });
+
+            for (idx, (name, signature, orig_func_ids)) in sorted_generics.into_iter().enumerate() {
+                let import_name = format!("__wbindgen_generic_import_{:016x}", idx + 1);
+                let ty = self.module.funcs.get(orig_func_ids[0]).ty();
+                let (import_func_id, import_id) =
+                    self.module
+                        .add_import_func(PLACEHOLDER_MODULE, &import_name, ty);
+                self.module.funcs.get_mut(import_func_id).name = Some(name.clone());
+
+                // Bind the import to the real JS function named `name`
+                // (default module, no namespace) and build its adapter.
+                let js_import = self.determine_import(&None, &None, &name)?;
+                let adapter_id =
+                    self.import_adapter(import_id, signature, AdapterJsImportKind::Normal)?;
+                self.aux
+                    .import_map
+                    .insert(adapter_id, AuxImport::Value(AuxValue::Bare(js_import)));
+
                 duplicate_import_map
                     .extend(orig_func_ids.into_iter().map(|id| (id, import_func_id)));
             }
@@ -1620,7 +1656,9 @@ impl<'a> Context<'a> {
             // cli reads structurally for closure-cast scanning; it
             // has no JS implementation and lingers in the module
             // until the post-processing pass drops it. Skip it here.
-            if import.name == "__wbindgen_describe_cast" {
+            if import.name == "__wbindgen_describe_cast"
+                || import.name == "__wbindgen_describe_generic_import"
+            {
                 continue;
             }
             if implemented.remove(&import.id()).is_none() {
