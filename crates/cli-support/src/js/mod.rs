@@ -3833,6 +3833,34 @@ if (require('worker_threads').isMainThread) {{
         Ok(())
     }
 
+    /// JSTag polyfill helper. Wraps a JS import call so that any caught
+    /// exception is re-thrown as a `WebAssembly.Exception` against the
+    /// polyfilled `__wbindgen_jstag`, restoring the engine behaviour that
+    /// `WebAssembly.JSTag` provides natively on Node 22+.
+    ///
+    /// Already-wrapped exceptions (e.g. those thrown via `__wbindgen_throw` /
+    /// `__wbindgen_rethrow` against `__wbindgen_wrapped_jstag`) are passed
+    /// through untouched so the recoverable-vs-abort discrimination in
+    /// `__wbg_handle_catch` keeps working.
+    fn expose_wrap_error(&mut self) {
+        self.intrinsic(
+            "wrapError".into(),
+            "wrapError".into(),
+            "
+            function wrapError(f, args) {
+                try {
+                    return f.apply(this, args);
+                } catch (e) {
+                    if (e instanceof WebAssembly.Exception) throw e;
+                    throw new WebAssembly.Exception(__wbindgen_jstag_polyfill, [e], { traceStack: true });
+                }
+            }
+            "
+            .into(),
+            &[],
+        );
+    }
+
     fn expose_log_error(&mut self) {
         self.intrinsic(
             "log_error".into(),
@@ -4703,8 +4731,22 @@ if (require('worker_threads').isMainThread) {{
         };
 
         if matches!(self.config.mode, OutputMode::Emscripten) {
-            self.emscripten_library
-                .push_str("addToLibrary({\n  __wbindgen_jstag: \"WebAssembly.JSTag\",\n});\n");
+            if self.aux.legacy_exception_handling {
+                self.emscripten_library.push_str(
+                    "addToLibrary({\n  __wbindgen_jstag: \"(globalThis.__wbindgen_jstag = new WebAssembly.Tag({ parameters: ['externref'] }))\",\n});\n",
+                );
+            } else {
+                self.emscripten_library
+                    .push_str("addToLibrary({\n  __wbindgen_jstag: \"WebAssembly.JSTag\",\n});\n");
+            }
+        } else if self.aux.legacy_exception_handling {
+            self.global(
+                "const __wbindgen_jstag_polyfill = new WebAssembly.Tag({ parameters: ['externref'] });",
+            );
+            self.wasm_import_definitions.insert(
+                id,
+                ImportDefinition::GlobalRef("__wbindgen_jstag_polyfill".to_string()),
+            );
         } else {
             self.wasm_import_definitions.insert(
                 id,
@@ -4901,8 +4943,10 @@ addToLibrary({
         // (a clone of an empty set).
         let adapter_deps_before = self.adapter_deps.clone();
         let catch = self.aux.imports_with_catch.contains(&id);
+        let needs_jstag_wrap =
+            self.aux.legacy_exception_handling && matches!(kind, ContextAdapterKind::Import(_));
         if let ContextAdapterKind::Import(core) = kind {
-            if !catch && self.attempt_direct_import(core, instrs)? {
+            if !catch && !needs_jstag_wrap && self.attempt_direct_import(core, instrs)? {
                 return Ok(());
             }
         }
@@ -5164,6 +5208,16 @@ addToLibrary({
                     format!("() {{ return handleError(function {code}, arguments); }}")
                 } else if log_error {
                     format!("() {{ return logError(function {code}, arguments); }}")
+                } else {
+                    code
+                };
+
+                // JSTag polyfill: when running on Node 20, wrap each import in a JS try/catch that re-throws via a
+                // `new WebAssembly.Exception(__wbindgen_jstag, [e])` against
+                // the polyfilled tag
+                let code = if self.aux.legacy_exception_handling {
+                    self.expose_wrap_error();
+                    format!("() {{ return wrapError(function {code}, arguments); }}")
                 } else {
                     code
                 };

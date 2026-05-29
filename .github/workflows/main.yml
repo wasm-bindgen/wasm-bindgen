@@ -171,19 +171,22 @@ jobs:
       # rust-lang/rust#156061 flipped the wasm panic=unwind default to modern
       # (exnref) EH. `-Cllvm-args=-wasm-use-legacy-eh` opts back into legacy
       # EH on a plain nightly.
-      RUSTFLAGS: -Cpanic=unwind -Cllvm-args=-wasm-use-legacy-eh
+      RUSTFLAGS: -Cpanic=unwind -Cllvm-args=-wasm-use-legacy-eh --cfg=legacy_eh
     steps:
     - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@nightly
       with:
         targets: wasm32-unknown-unknown
         components: rust-src
-    # Node 22.22.3+ is needed for `WebAssembly.JSTag` (used by wasm-bindgen's
-    # legacy EH catch handlers). Node 20 lacks `WebAssembly.JSTag` even though
-    # it supports the underlying legacy EH instructions.
+    # Legacy EH is the path that buys back Node 20+ support: wasm-bindgen
+    # polyfills `WebAssembly.JSTag` on the JS side, so the legacy `try`/`catch`
+    # instructions (supported since Node 18) are sufficient — no host
+    # `WebAssembly.JSTag` required. Node 18 is excluded because its V8 10.2
+    # has unrelated funcref / WASM_INTERNAL_FUNCTION_TYPE bugs that crash the
+    # wasm-bindgen-test runtime.
     - uses: actions/setup-node@v6
       with:
-        node-version: '22.22.3'
+        node-version: '20'
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --lib --bins --tests
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --test wasm --features std,wasm-bindgen-futures/std
   test_wasm_bindgen_unwind_exnref_eh:

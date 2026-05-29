@@ -81,6 +81,9 @@ pub struct WasmBindgenAux {
     /// distinguished from other JS exceptions.
     pub wrapped_js_tag: Option<walrus::TagId>,
 
+    /// When building with legacy exception handling
+    pub legacy_exception_handling: bool,
+
     /// Whether the `__wbindgen_reinit` intrinsic is used. When true, the
     /// reinit machinery (`__wbg_reset_state` as a private function + the
     /// reinit flag check in `__wbg_termination_guard`) is emitted regardless
