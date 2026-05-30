@@ -333,32 +333,23 @@ impl WasmBindgenDescriptorsSection {
                 _ => continue,
             };
             let entry = local.entry_block();
-            // Eight immediates: name_ptr, name_len, module_ptr, module_len,
-            // template_ptr, template_len, fill_ptr, fill_len.
-            let mut scanner = CastCallScanner::new(describe_id, 8);
+            // Four immediates: template_ptr, template_len, fill_ptr, fill_len.
+            let mut scanner = CastCallScanner::new(describe_id, 4);
             scanner.walk(local, entry);
             for args in scanner.found_calls {
-                let name_ptr = args[0] as u32;
-                let name_len = args[1] as u32;
-                let module_ptr = args[2] as u32;
-                let module_len = args[3] as u32;
-                let template_ptr = args[4] as u32;
-                let template_len = args[5] as u32;
-                let fill_ptr = args[6] as u32;
-                let fill_len = args[7] as u32;
-                let name_bytes = data_view.read_bytes(name_ptr, name_len as usize)?;
-                let name = String::from_utf8(name_bytes)
-                    .context("generic import name was not valid UTF-8")?;
-                let module = if module_len == 0 {
-                    String::new()
-                } else {
-                    let module_bytes = data_view.read_bytes(module_ptr, module_len as usize)?;
-                    String::from_utf8(module_bytes)
-                        .context("generic import module was not valid UTF-8")?
-                };
+                let template_ptr = args[0] as u32;
+                let template_len = args[1] as u32;
+                let fill_ptr = args[2] as u32;
+                let fill_len = args[3] as u32;
                 let template = data_view.read_u32_slice(template_ptr, template_len)?;
                 let fill = data_view.read_u32_slice(fill_ptr, fill_len)?;
-                let descriptor = splice_template(&template, &[fill])?;
+                let GenericImportTemplate {
+                    name,
+                    module,
+                    signature,
+                    ..
+                } = parse_generic_import_template(&template)?;
+                let descriptor = splice_template(&signature, &[fill])?;
                 let descriptor = Descriptor::decode(&descriptor);
                 self.generic_imports
                     .entry((name, module, descriptor))
@@ -369,6 +360,52 @@ impl WasmBindgenDescriptorsSection {
 
         Ok(())
     }
+}
+
+/// Decoded metadata header + holed signature of a generic import's
+/// shared template. See the macro-side layout in `try_to_tokens_generic`.
+struct GenericImportTemplate {
+    #[allow(dead_code)]
+    flags: u32,
+    name: String,
+    module: String,
+    /// The holed function descriptor stream (`FUNCTION, 0, nargs, …`).
+    signature: Vec<u32>,
+}
+
+/// Parse a generic import template: `[flags, name(str), module(str),
+/// <holed signature>]`, where strings use the `[count, chars…]`
+/// one-scalar-per-word convention shared with the descriptor decoder.
+fn parse_generic_import_template(template: &[u32]) -> Result<GenericImportTemplate, Error> {
+    let mut cur = template;
+    fn get(cur: &mut &[u32]) -> Result<u32, Error> {
+        let (first, rest) = cur
+            .split_first()
+            .ok_or_else(|| anyhow::anyhow!("generic import template truncated"))?;
+        *cur = rest;
+        Ok(*first)
+    }
+    fn get_string(cur: &mut &[u32]) -> Result<String, Error> {
+        let count = get(cur)? as usize;
+        let mut s = String::with_capacity(count);
+        for _ in 0..count {
+            let scalar = get(cur)?;
+            s.push(
+                char::from_u32(scalar)
+                    .ok_or_else(|| anyhow::anyhow!("invalid char in generic import template"))?,
+            );
+        }
+        Ok(s)
+    }
+    let flags = get(&mut cur)?;
+    let name = get_string(&mut cur)?;
+    let module = get_string(&mut cur)?;
+    Ok(GenericImportTemplate {
+        flags,
+        name,
+        module,
+        signature: cur.to_vec(),
+    })
 }
 
 /// Splice a generic import's signature template with the per-`T` fills,

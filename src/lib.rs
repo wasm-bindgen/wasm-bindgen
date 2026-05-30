@@ -1335,25 +1335,16 @@ externs! {
         // synthesises a per-monomorphisation JS adapter bound to the named
         // import and rewrites the courier call site to it.
         //
-        //   name_ptr / name_len:
-        //     pointer + length of the JS import name (UTF-8, in rodata).
-        //   module_ptr / module_len:
-        //     pointer + length of the JS module path the import resolves
-        //     from (UTF-8, in rodata); `module_len == 0` means the import
-        //     resolves from the default module / global scope.
         //   template_ptr / template_len:
-        //     pointer + length of the shared signature template (a full
-        //     function descriptor with `TYPE_PARAM(i)` holes). Same
-        //     address for every monomorphisation of one import, so the
-        //     cli also uses it as the dedup key.
+        //     pointer + length of the shared, self-contained signature
+        //     template — a metadata header (flags, JS name, JS module)
+        //     followed by a full function descriptor with `TYPE_PARAM(i)`
+        //     holes. Same address for every monomorphisation of one
+        //     import, so the cli also uses it as the dedup key.
         //   fill_schema_ptr / fill_schema_len:
         //     pointer + length of this monomorphisation's concrete type
         //     fill `<T as WasmDescribe>::SCHEMA_BUF[..SCHEMA_LEN]`.
         fn __wbindgen_describe_generic_import(
-            name_ptr: *const u8,
-            name_len: usize,
-            module_ptr: *const u8,
-            module_len: usize,
             template_ptr: *const u32,
             template_len: usize,
             fill_schema_ptr: *const u32,

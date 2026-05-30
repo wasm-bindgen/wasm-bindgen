@@ -3385,8 +3385,23 @@ impl ast::ImportFunction {
                 "#[wasm_bindgen(generic)] does not yet support inline JS module snippets",
             ),
         };
-        let js_name_len = js_name.len();
-        let js_module_len = js_module.len();
+        // Self-contained signature template carrying the import metadata
+        // (a small char-per-word header) followed by the holed function
+        // descriptor. Layout (all `u32` words, macro-literal):
+        //
+        //   flags                          (reserved; 0 for now)
+        //   name_count,   name chars...     JS import name
+        //   module_count, module chars...   JS module ("" = default)
+        //   FUNCTION, 0, nargs, <slots>, ret, inner_ret   holed signature
+        //
+        // Strings use the same `[count, chars...]` (one Unicode scalar per
+        // word) convention as `get_string` in the cli descriptor decoder.
+        let name_chars: Vec<u32> = js_name.chars().map(|c| c as u32).collect();
+        let name_count = name_chars.len() as u32;
+        let module_chars: Vec<u32> = js_module.chars().map(|c| c as u32).collect();
+        let module_count = module_chars.len() as u32;
+        // header words + [FUNCTION,0,1,TYPE_PARAM,0,UNIT,UNIT]
+        let template_len = 1 + (1 + name_chars.len()) + (1 + module_chars.len()) + 7;
 
         (quote! {
             #[doc(hidden)]
@@ -3396,16 +3411,15 @@ impl ast::ImportFunction {
 
             #[automatically_derived]
             impl #wasm_bindgen::__rt::GenericImportName for #name_ty {
-                const NAME: &'static str = #js_name;
-                const NAME_LEN: usize = #js_name_len;
-                const MODULE: &'static str = #js_module;
-                const MODULE_LEN: usize = #js_module_len;
-                // Signature template for `fn(T) -> ()`: a full function
-                // descriptor with a single `TYPE_PARAM(0)` hole for the
-                // owned generic argument. The cli splices the per-`T`
-                // fill into the hole.
                 const TEMPLATE: [u32; #wasm_bindgen::describe::SCHEMA_MAX] =
                     #wasm_bindgen::describe::schema_from_slice(&[
+                        // metadata header
+                        0,
+                        #name_count,
+                        #(#name_chars,)*
+                        #module_count,
+                        #(#module_chars,)*
+                        // holed signature: fn(TYPE_PARAM(0)) -> ()
                         #wasm_bindgen::describe::FUNCTION,
                         0,
                         1,
@@ -3414,7 +3428,7 @@ impl ast::ImportFunction {
                         #wasm_bindgen::describe::UNIT,
                         #wasm_bindgen::describe::UNIT,
                     ]);
-                const TEMPLATE_LEN: usize = 7;
+                const TEMPLATE_LEN: usize = #template_len;
             }
 
             #[automatically_derived]
