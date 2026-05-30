@@ -1335,16 +1335,20 @@ externs! {
         // synthesises a per-monomorphisation JS adapter bound to the named
         // import and rewrites the courier call site to it.
         //
+        //   shim_ptr / shim_len:
+        //     pointer + length of the import's shim name (UTF-8, rodata),
+        //     the key the cli uses to recover this import's metadata from
+        //     the normal AST custom section.
         //   template_ptr / template_len:
-        //     pointer + length of the shared, self-contained signature
-        //     template — a metadata header (flags, JS name, JS module)
-        //     followed by a full function descriptor with `TYPE_PARAM(i)`
-        //     holes. Same address for every monomorphisation of one
-        //     import, so the cli also uses it as the dedup key.
+        //     pointer + length of the shared signature template — a full
+        //     function descriptor with `TYPE_PARAM(i)` holes. Same address
+        //     for every monomorphisation of one import.
         //   fill_schema_ptr / fill_schema_len:
         //     pointer + length of this monomorphisation's concrete type
         //     fill `<T as WasmDescribe>::SCHEMA_BUF[..SCHEMA_LEN]`.
         fn __wbindgen_describe_generic_import(
+            shim_ptr: *const u8,
+            shim_len: usize,
             template_ptr: *const u32,
             template_len: usize,
             fill_schema_ptr: *const u32,

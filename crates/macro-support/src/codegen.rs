@@ -3307,7 +3307,6 @@ impl ast::ImportFunction {
         let wasm_bindgen = &self.wasm_bindgen;
         let vis = &self.function.rust_vis;
         let rust_name = &self.rust_name;
-        let js_name = &self.function.name;
 
         if let ast::ImportFunctionKind::Method { .. } = &self.kind {
             bail_span!(
@@ -3372,36 +3371,18 @@ impl ast::ImportFunction {
             Span::call_site(),
         );
 
-        // Module path the import resolves from ("" = default/global).
-        // Only string modules (Named/RawNamed) are supported for now;
-        // inline JS snippets bail.
-        let js_module = match &self.js_module {
-            None => String::new(),
-            Some(ast::ImportModule::Named(s, _)) | Some(ast::ImportModule::RawNamed(s, _)) => {
-                s.clone()
-            }
-            Some(ast::ImportModule::Inline(_)) => bail_span!(
-                rust_name,
-                "#[wasm_bindgen(generic)] does not yet support inline JS module snippets",
-            ),
-        };
-        // Self-contained signature template carrying the import metadata
-        // (a small char-per-word header) followed by the holed function
-        // descriptor. Layout (all `u32` words, macro-literal):
-        //
-        //   flags                          (reserved; 0 for now)
-        //   name_count,   name chars...     JS import name
-        //   module_count, module chars...   JS module ("" = default)
-        //   FUNCTION, 0, nargs, <slots>, ret, inner_ret   holed signature
-        //
-        // Strings use the same `[count, chars...]` (one Unicode scalar per
-        // word) convention as `get_string` in the cli descriptor decoder.
-        let name_chars: Vec<u32> = js_name.chars().map(|c| c as u32).collect();
-        let name_count = name_chars.len() as u32;
-        let module_chars: Vec<u32> = js_module.chars().map(|c| c as u32).collect();
-        let module_count = module_chars.len() as u32;
-        // header words + [FUNCTION,0,1,TYPE_PARAM,0,UNIT,UNIT]
-        let template_len = 1 + (1 + name_chars.len()) + (1 + module_chars.len()) + 7;
+        // The import's metadata (js_name, module, js_namespace, catch,
+        // variadic, …) is NOT re-encoded here: it flows through the normal
+        // AST custom section like any other import and the cli recovers it
+        // by shim name. The carrier only needs to provide that shim key
+        // plus the holed signature template (the "descriptor"), which the
+        // per-monomorphisation fills splice into.
+        let shim_str = self.shim.to_string();
+        let shim_len = shim_str.len();
+        // Holed signature template for `fn(T) -> ()`: a full function
+        // descriptor with a single `TYPE_PARAM(0)` hole for the owned
+        // generic argument. The cli splices the per-`T` fill into the hole.
+        let template_len = 7usize;
 
         (quote! {
             #[doc(hidden)]
@@ -3411,15 +3392,10 @@ impl ast::ImportFunction {
 
             #[automatically_derived]
             impl #wasm_bindgen::__rt::GenericImportName for #name_ty {
+                const SHIM: &'static str = #shim_str;
+                const SHIM_LEN: usize = #shim_len;
                 const TEMPLATE: [u32; #wasm_bindgen::describe::SCHEMA_MAX] =
                     #wasm_bindgen::describe::schema_from_slice(&[
-                        // metadata header
-                        0,
-                        #name_count,
-                        #(#name_chars,)*
-                        #module_count,
-                        #(#module_chars,)*
-                        // holed signature: fn(TYPE_PARAM(0)) -> ()
                         #wasm_bindgen::describe::FUNCTION,
                         0,
                         1,
@@ -3750,6 +3726,14 @@ impl TryToTokens for DescribeImport<'_> {
             ast::ImportKind::Enum(_) => return Ok(()),
             ast::ImportKind::DynamicUnion(_) => return Ok(()),
         };
+        // `#[wasm_bindgen(generic)]` imports do not emit a static
+        // descriptor: their (holed) descriptor is provided per call site
+        // via the courier template + fills, and their metadata flows
+        // through the normal AST custom section. Skip descriptor emission
+        // so we don't produce a stray type-erased descriptor.
+        if f.generic {
+            return Ok(());
+        }
         let fn_class_generics = f.get_fn_generics()?;
         let fn_lifetime_params = generics::lifetime_params(&f.generics);
         let argtys = f

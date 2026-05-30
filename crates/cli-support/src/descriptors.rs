@@ -56,11 +56,12 @@ pub struct WasmBindgenDescriptorsSection {
     pub descriptors: HashMap<String, Descriptor>,
     pub cast_imports: HashMap<Descriptor, Vec<FunctionId>>,
     /// Per-monomorphisation generic imports recovered from
-    /// `__wbindgen_describe_generic_import` marker calls. Keyed by
-    /// `(js_import_name, js_module, function descriptor)` so call sites
-    /// sharing an `(import, module, T)` collapse to one synthesised
-    /// import. An empty `js_module` means the default module / global.
-    pub generic_imports: HashMap<(String, String, Descriptor), Vec<FunctionId>>,
+    /// `__wbindgen_describe_generic_import` marker calls, keyed by the
+    /// import's shim name. Each entry pairs the courier function with the
+    /// concrete (spliced) descriptor for its monomorphisation. The shim
+    /// is the key into the normal AST custom section, from which the cli
+    /// recovers the import's metadata (js_name, module, namespace, …).
+    pub generic_imports: HashMap<String, Vec<(FunctionId, Descriptor)>>,
 }
 
 pub type WasmBindgenDescriptorsSectionId = TypedCustomSectionId<WasmBindgenDescriptorsSection>;
@@ -333,79 +334,33 @@ impl WasmBindgenDescriptorsSection {
                 _ => continue,
             };
             let entry = local.entry_block();
-            // Four immediates: template_ptr, template_len, fill_ptr, fill_len.
-            let mut scanner = CastCallScanner::new(describe_id, 4);
+            // Six immediates: shim_ptr, shim_len, template_ptr, template_len,
+            // fill_ptr, fill_len.
+            let mut scanner = CastCallScanner::new(describe_id, 6);
             scanner.walk(local, entry);
             for args in scanner.found_calls {
-                let template_ptr = args[0] as u32;
-                let template_len = args[1] as u32;
-                let fill_ptr = args[2] as u32;
-                let fill_len = args[3] as u32;
+                let shim_ptr = args[0] as u32;
+                let shim_len = args[1] as u32;
+                let template_ptr = args[2] as u32;
+                let template_len = args[3] as u32;
+                let fill_ptr = args[4] as u32;
+                let fill_len = args[5] as u32;
+                let shim_bytes = data_view.read_bytes(shim_ptr, shim_len as usize)?;
+                let shim = String::from_utf8(shim_bytes)
+                    .context("generic import shim name was not valid UTF-8")?;
                 let template = data_view.read_u32_slice(template_ptr, template_len)?;
                 let fill = data_view.read_u32_slice(fill_ptr, fill_len)?;
-                let GenericImportTemplate {
-                    name,
-                    module,
-                    signature,
-                    ..
-                } = parse_generic_import_template(&template)?;
-                let descriptor = splice_template(&signature, &[fill])?;
+                let descriptor = splice_template(&template, &[fill])?;
                 let descriptor = Descriptor::decode(&descriptor);
                 self.generic_imports
-                    .entry((name, module, descriptor))
+                    .entry(shim)
                     .or_default()
-                    .push(func_id);
+                    .push((func_id, descriptor));
             }
         }
 
         Ok(())
     }
-}
-
-/// Decoded metadata header + holed signature of a generic import's
-/// shared template. See the macro-side layout in `try_to_tokens_generic`.
-struct GenericImportTemplate {
-    #[allow(dead_code)]
-    flags: u32,
-    name: String,
-    module: String,
-    /// The holed function descriptor stream (`FUNCTION, 0, nargs, …`).
-    signature: Vec<u32>,
-}
-
-/// Parse a generic import template: `[flags, name(str), module(str),
-/// <holed signature>]`, where strings use the `[count, chars…]`
-/// one-scalar-per-word convention shared with the descriptor decoder.
-fn parse_generic_import_template(template: &[u32]) -> Result<GenericImportTemplate, Error> {
-    let mut cur = template;
-    fn get(cur: &mut &[u32]) -> Result<u32, Error> {
-        let (first, rest) = cur
-            .split_first()
-            .ok_or_else(|| anyhow::anyhow!("generic import template truncated"))?;
-        *cur = rest;
-        Ok(*first)
-    }
-    fn get_string(cur: &mut &[u32]) -> Result<String, Error> {
-        let count = get(cur)? as usize;
-        let mut s = String::with_capacity(count);
-        for _ in 0..count {
-            let scalar = get(cur)?;
-            s.push(
-                char::from_u32(scalar)
-                    .ok_or_else(|| anyhow::anyhow!("invalid char in generic import template"))?,
-            );
-        }
-        Ok(s)
-    }
-    let flags = get(&mut cur)?;
-    let name = get_string(&mut cur)?;
-    let module = get_string(&mut cur)?;
-    Ok(GenericImportTemplate {
-        flags,
-        name,
-        module,
-        signature: cur.to_vec(),
-    })
 }
 
 /// Splice a generic import's signature template with the per-`T` fills,

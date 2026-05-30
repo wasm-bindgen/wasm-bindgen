@@ -109,13 +109,17 @@ where
 // implementing this trait so the JS import name folds to a stable
 // rodata address inside the per-`(import, T)` courier monomorphisation.
 pub trait GenericImportName {
-    /// The shared, self-contained *template* for this import: a small
-    /// metadata header (flags, JS name, JS module) followed by a full
-    /// function descriptor stream `[FUNCTION, 0, nargs, slots.., ret,
-    /// inner_ret]` where each generic-parameter position is a
-    /// `TYPE_PARAM(i)` hole. Emitted once per import (same address for
-    /// every monomorphisation, so the cli also uses the address as the
-    /// dedup key) and spliced with the per-`T` fills by the cli.
+    /// The import's shim name — the key the cli uses to recover this
+    /// import's metadata (js_name, module, namespace, catch, variadic, …)
+    /// from the normal AST custom section. Not re-encoded here.
+    const SHIM: &'static str;
+    /// Byte length of `SHIM` (const so it folds to an `i32.const`).
+    const SHIM_LEN: usize;
+    /// The shared signature *template* (the "descriptor"): a full function
+    /// descriptor stream `[FUNCTION, 0, nargs, slots.., ret, inner_ret]`
+    /// where each generic-parameter position is a `TYPE_PARAM(i)` hole.
+    /// Emitted once per import (same address for every monomorphisation)
+    /// and spliced with the per-`T` fills by the cli.
     const TEMPLATE: [u32; crate::describe::SCHEMA_MAX];
     /// Meaningful prefix length of `TEMPLATE`.
     const TEMPLATE_LEN: usize;
@@ -156,6 +160,8 @@ unsafe extern "C" fn breaks_if_inlined_generic_import<N, T>(
     T: IntoWasmAbi + crate::describe::WasmDescribe,
 {
     super::__wbindgen_describe_generic_import(
+        N::SHIM.as_ptr(),
+        N::SHIM_LEN,
         N::TEMPLATE.as_ptr(),
         N::TEMPLATE_LEN,
         FromBuf::<T>::BUF.as_ptr(),

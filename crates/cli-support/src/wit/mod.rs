@@ -31,6 +31,17 @@ struct Context<'a> {
     vendor_prefixes: HashMap<String, Vec<String>>,
     unique_crate_identifier: &'a str,
     descriptors: HashMap<String, Descriptor>,
+    /// Per-monomorphisation generic imports, keyed by shim name: the
+    /// courier function + its concrete spliced descriptor. Recovered from
+    /// the descriptor section; bound after the program loop using the AST
+    /// metadata stashed in `generic_import_meta`.
+    generic_imports: HashMap<String, Vec<(FunctionId, Descriptor)>>,
+    /// AST metadata for each generic import shim, captured from the
+    /// `decode::Import` during the program loop.
+    generic_import_meta: HashMap<String, GenericImportMeta>,
+    /// Courier-function → synthesised-import rewrites for generic imports,
+    /// applied after the program loop.
+    generic_import_rewrites: HashMap<FunctionId, FunctionId>,
     externref_enabled: bool,
     thread_count: Option<ThreadCount>,
     support_start: bool,
@@ -40,6 +51,24 @@ struct Context<'a> {
     /// when wasm-ld ICF merges invoke functions for different closure types
     /// into the same export.
     export_adapter_sigs: HashMap<AdapterId, (Vec<Descriptor>, Descriptor, Option<Descriptor>)>,
+}
+
+/// AST metadata for a `#[wasm_bindgen(generic)]` import, captured from
+/// its `decode::Import` so generic monomorphisations can be bound (after
+/// the program loop) with the same metadata a normal import would get.
+struct GenericImportMeta {
+    module: Option<OwnedImportModule>,
+    js_namespace: Option<Vec<String>>,
+    name: String,
+    catch: bool,
+    variadic: bool,
+}
+
+/// Owned form of `decode::ImportModule` (which borrows the program bytes).
+enum OwnedImportModule {
+    Named(String),
+    RawNamed(String),
+    Inline(u32),
 }
 
 struct InstructionBuilder<'a, 'b> {
@@ -74,6 +103,9 @@ pub fn process(
         function_imports: Default::default(),
         vendor_prefixes: Default::default(),
         descriptors: Default::default(),
+        generic_imports: Default::default(),
+        generic_import_meta: Default::default(),
+        generic_import_rewrites: Default::default(),
         unique_crate_identifier: "",
         memory: wasm_conventions::get_memory(module).ok(),
         module,
@@ -89,6 +121,8 @@ pub fn process(
     for program in programs {
         cx.program(program)?;
     }
+
+    cx.bind_generic_imports()?;
 
     if !cx.start_found {
         cx.discover_main()?;
@@ -417,61 +451,10 @@ impl<'a> Context<'a> {
                     .extend(orig_func_ids.into_iter().map(|id| (id, import_func_id)));
             }
 
-            // Generic imports: like casts, but the synthesised import
-            // *calls* the named JS function rather than being identity.
-            let mut sorted_generics: Vec<_> = generic_imports
-                .into_iter()
-                .map(|((name, module, descriptor), orig_func_ids)| {
-                    let signature = descriptor.unwrap_function();
-                    (name, module, signature, orig_func_ids)
-                })
-                .collect();
-            sorted_generics.sort_by(|a, b| {
-                a.0.cmp(&b.0)
-                    .then_with(|| a.1.cmp(&b.1))
-                    .then_with(|| format!("{:?}", a.2).cmp(&format!("{:?}", b.2)))
-            });
-
-            for (idx, (name, module, signature, orig_func_ids)) in
-                sorted_generics.into_iter().enumerate()
-            {
-                let import_name = format!("__wbindgen_generic_import_{:016x}", idx + 1);
-                let ty = self.module.funcs.get(orig_func_ids[0]).ty();
-                let (import_func_id, import_id) =
-                    self.module
-                        .add_import_func(PLACEHOLDER_MODULE, &import_name, ty);
-                self.module.funcs.get_mut(import_func_id).name = Some(name.clone());
-
-                // Bind the import to the real JS function `name`, resolved
-                // from `module` (empty = default module / global scope),
-                // and build its adapter.
-                //
-                // NOTE: we use `RawNamed` (plain module specifier) rather
-                // than `Named` (relative local module). `Named` would route
-                // through the linked-module / snippet machinery, but the
-                // generic call-site path does not yet register a linked
-                // module for the file, so `Named` resolves to a missing
-                // `./snippets/<module>` entry. Proper linked-module
-                // registration (so relative paths embed/split correctly) is
-                // a follow-up; `RawNamed` resolves as a plain import of the
-                // module specifier, which is correct for bare/package
-                // specifiers and for runtime test modules resolved from the
-                // project root.
-                let import_module = if module.is_empty() {
-                    None
-                } else {
-                    Some(decode::ImportModule::RawNamed(&module))
-                };
-                let js_import = self.determine_import(&import_module, &None, &name)?;
-                let adapter_id =
-                    self.import_adapter(import_id, signature, AdapterJsImportKind::Normal)?;
-                self.aux
-                    .import_map
-                    .insert(adapter_id, AuxImport::Value(AuxValue::Bare(js_import)));
-
-                duplicate_import_map
-                    .extend(orig_func_ids.into_iter().map(|id| (id, import_func_id)));
-            }
+            // Generic imports are bound after the program loop, once their
+            // AST metadata has been captured. Just stash the recovered
+            // (shim → [(courier, concrete descriptor)]) here.
+            self.generic_imports.extend(generic_imports);
         }
 
         self.handle_duplicate_imports(&duplicate_import_map);
@@ -527,6 +510,80 @@ impl<'a> Context<'a> {
                 }
             }
         }
+    }
+
+    /// Bind the `#[wasm_bindgen(generic)]` imports collected during the
+    /// program loop. Each shim's monomorphisations are grouped by their
+    /// concrete (spliced) descriptor; per distinct descriptor we
+    /// synthesise one import bound to the real JS function via the AST
+    /// metadata (module, namespace, name, catch, variadic) — the same
+    /// machinery a normal import uses — and rewrite the courier call sites
+    /// to it.
+    fn bind_generic_imports(&mut self) -> Result<(), Error> {
+        let generic_imports = std::mem::take(&mut self.generic_imports);
+        let mut shims: Vec<_> = generic_imports.into_iter().collect();
+        shims.sort_by(|a, b| a.0.cmp(&b.0));
+
+        let mut counter = 0usize;
+        for (shim, variants) in shims {
+            let meta = self.generic_import_meta.remove(&shim).ok_or_else(|| {
+                anyhow::anyhow!("generic import `{shim}` has no AST metadata record")
+            })?;
+
+            // Group monomorphisations by concrete descriptor so call sites
+            // whose `T` resolves to the same schema collapse to one import.
+            let mut by_desc: HashMap<Descriptor, Vec<FunctionId>> = HashMap::new();
+            for (func_id, descriptor) in variants {
+                by_desc.entry(descriptor).or_default().push(func_id);
+            }
+            let mut by_desc: Vec<_> = by_desc.into_iter().collect();
+            by_desc.sort_by(|a, b| format!("{:?}", a.0).cmp(&format!("{:?}", b.0)));
+
+            let module_opt = meta.module.as_ref().map(|m| match m {
+                OwnedImportModule::Named(s) => decode::ImportModule::Named(s),
+                OwnedImportModule::RawNamed(s) => decode::ImportModule::RawNamed(s),
+                OwnedImportModule::Inline(i) => decode::ImportModule::Inline(*i),
+            });
+
+            for (descriptor, func_ids) in by_desc {
+                counter += 1;
+                let import_name = format!("__wbindgen_generic_import_{counter:016x}");
+                let ty = self.module.funcs.get(func_ids[0]).ty();
+                let (import_func_id, import_id) =
+                    self.module
+                        .add_import_func(PLACEHOLDER_MODULE, &import_name, ty);
+                self.module.funcs.get_mut(import_func_id).name = Some(meta.name.clone());
+
+                let signature = descriptor.unwrap_function();
+                let js_import =
+                    self.determine_import(&module_opt, &meta.js_namespace, &meta.name)?;
+                let adapter_id =
+                    self.import_adapter(import_id, signature, AdapterJsImportKind::Normal)?;
+                self.aux
+                    .import_map
+                    .insert(adapter_id, AuxImport::Value(AuxValue::Bare(js_import)));
+
+                // Apply catch/variadic exactly as `import_function` does.
+                if meta.variadic {
+                    self.aux.imports_with_variadic.insert(adapter_id);
+                }
+                if meta.catch {
+                    let adapter = self.adapters.implements.last().unwrap().2;
+                    self.aux.imports_with_catch.insert(adapter);
+                    if self.aux.exn_store.is_none() {
+                        self.find_exn_store();
+                    }
+                }
+
+                for id in func_ids {
+                    self.generic_import_rewrites.insert(id, import_func_id);
+                }
+            }
+        }
+
+        let rewrites = std::mem::take(&mut self.generic_import_rewrites);
+        self.handle_duplicate_imports(&rewrites);
+        Ok(())
     }
 
     // Discover a function `main(i32, i32) -> i32` and, if it exists, make that function run at module start.
@@ -944,6 +1001,29 @@ impl<'a> Context<'a> {
             assert_no_shim,
         } = function;
         let generate_typescript = import.generate_typescript;
+        // `#[wasm_bindgen(generic)]` imports have no single shim import
+        // function (each monomorphisation has its own courier). They reach
+        // here via the normal AST record, which carries exactly the
+        // metadata we need to bind each variant. Capture it; the actual
+        // binding happens after the program loop in `bind_generic_imports`.
+        if self.generic_imports.contains_key(shim) {
+            let module = import.module.as_ref().map(|m| match m {
+                decode::ImportModule::Named(n) => OwnedImportModule::Named(n.to_string()),
+                decode::ImportModule::RawNamed(n) => OwnedImportModule::RawNamed(n.to_string()),
+                decode::ImportModule::Inline(idx) => OwnedImportModule::Inline(*idx),
+            });
+            self.generic_import_meta.insert(
+                shim.to_string(),
+                GenericImportMeta {
+                    module,
+                    js_namespace: import.js_namespace.clone(),
+                    name: function.name.to_string(),
+                    catch,
+                    variadic,
+                },
+            );
+            return Ok(());
+        }
         let (import_id, _id) = match self.function_imports.get(shim) {
             Some(pair) => *pair,
             None => {
