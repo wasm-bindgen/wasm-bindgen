@@ -3,6 +3,8 @@
 
 ## Unreleased
 
+* Added logic to the `no-modules` JavaScript boilerplate in order to support usage within WebWorkers. [#4943](https://github.com/wasm-bindgen/wasm-bindgen/issues/4943)
+
 ### Added
 
 * Added the `maxAge` attribute to the `CookieInit` dictionary in `web-sys`,
