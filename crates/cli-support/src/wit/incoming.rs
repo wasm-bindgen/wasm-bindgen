@@ -42,6 +42,9 @@ impl InstructionBuilder<'_, '_> {
 
     fn _incoming(&mut self, arg: &Descriptor) -> Result<(), Error> {
         match arg {
+            Descriptor::TypeParam(_) => {
+                unreachable!("generic-import type-param hole survived substitution")
+            }
             Descriptor::Boolean => {
                 self.instruction(
                     &[AdapterType::Bool],

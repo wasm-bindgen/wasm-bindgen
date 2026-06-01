@@ -350,8 +350,8 @@ impl WasmBindgenDescriptorsSection {
                     .context("generic import shim name was not valid UTF-8")?;
                 let template = data_view.read_u32_slice(template_ptr, template_len)?;
                 let fill = data_view.read_u32_slice(fill_ptr, fill_len)?;
-                let descriptor = splice_template(&template, &[fill])?;
-                let descriptor = Descriptor::decode(&descriptor);
+                let fill = Descriptor::decode(&fill);
+                let descriptor = Descriptor::decode(&template).substitute(&[fill]);
                 self.generic_imports
                     .entry(shim)
                     .or_default()
@@ -361,40 +361,6 @@ impl WasmBindgenDescriptorsSection {
 
         Ok(())
     }
-}
-
-/// Splice a generic import's signature template with the per-`T` fills,
-/// producing the concrete function descriptor stream. Each
-/// `[TYPE_PARAM, idx]` pair in the template is replaced by `fills[idx]`.
-///
-/// NOTE: this is a flat scan, valid while templates contain only holes
-/// and simple opcodes (no embedded names whose packed bytes could
-/// collide with `TYPE_PARAM`). When concrete-typed arguments — whose
-/// schemas can embed arbitrary name bytes — are added to templates, this
-/// must become grammar-aware (walk the descriptor structure rather than
-/// scanning words). The fills themselves are spliced verbatim and never
-/// re-scanned, so their internal bytes are unaffected.
-fn splice_template(template: &[u32], fills: &[Vec<u32>]) -> Result<Vec<u32>, Error> {
-    use wasm_bindgen_shared::tys::TYPE_PARAM;
-    let mut out = Vec::with_capacity(template.len());
-    let mut i = 0;
-    while i < template.len() {
-        if template[i] == TYPE_PARAM {
-            let idx = *template
-                .get(i + 1)
-                .ok_or_else(|| anyhow::anyhow!("TYPE_PARAM at end of generic import template"))?
-                as usize;
-            let fill = fills.get(idx).ok_or_else(|| {
-                anyhow::anyhow!("generic import template references missing type-param fill {idx}")
-            })?;
-            out.extend_from_slice(fill);
-            i += 2;
-        } else {
-            out.push(template[i]);
-            i += 1;
-        }
-    }
-    Ok(out)
 }
 
 /// Walk a function body looking for `memory.init data_id` patterns

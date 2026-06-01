@@ -51,6 +51,11 @@ pub enum Descriptor {
     Unit,
     NonNull,
     RawPointer,
+    /// A `#[wasm_bindgen]` generic-import type-parameter hole. Only ever
+    /// present in a holed signature *template* decoded from a generic
+    /// import's carrier; substituted away (via [`Descriptor::substitute`])
+    /// with the per-monomorphisation fill before the descriptor is used.
+    TypeParam(u32),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -172,6 +177,7 @@ impl Descriptor {
             CLAMPED => Descriptor::_decode(data, true),
             NONNULL => Descriptor::NonNull,
             RAW_POINTER => Descriptor::RawPointer,
+            TYPE_PARAM => Descriptor::TypeParam(get(data)),
             other => panic!("unknown descriptor: {other}"),
         }
     }
@@ -180,6 +186,45 @@ impl Descriptor {
         match self {
             Descriptor::Function(f) => *f,
             _ => panic!("not a function"),
+        }
+    }
+
+    /// Replace every [`Descriptor::TypeParam(i)`] hole in this (template)
+    /// descriptor with `fills[i]`, recursively. This is the grammar-aware
+    /// splice for generic imports: substitution walks the decoded
+    /// descriptor tree, so a concrete argument type whose schema embeds a
+    /// word equal to the `TYPE_PARAM` opcode can never be misread as a hole.
+    pub fn substitute(self, fills: &[Descriptor]) -> Descriptor {
+        match self {
+            Descriptor::TypeParam(idx) => fills
+                .get(idx as usize)
+                .unwrap_or_else(|| {
+                    panic!("generic import template references missing type-param fill {idx}")
+                })
+                .clone(),
+            Descriptor::Function(f) => Descriptor::Function(Box::new(f.substitute(fills))),
+            Descriptor::Closure(c) => Descriptor::Closure(Box::new(Closure {
+                owned: c.owned,
+                mutable: c.mutable,
+                function: c.function.substitute(fills),
+            })),
+            Descriptor::Ref(d) => Descriptor::Ref(Box::new(d.substitute(fills))),
+            Descriptor::RefMut(d) => Descriptor::RefMut(Box::new(d.substitute(fills))),
+            Descriptor::Slice(d) => Descriptor::Slice(Box::new(d.substitute(fills))),
+            Descriptor::Vector(d) => Descriptor::Vector(Box::new(d.substitute(fills))),
+            Descriptor::Option(d) => Descriptor::Option(Box::new(d.substitute(fills))),
+            Descriptor::Result(d) => Descriptor::Result(Box::new(d.substitute(fills))),
+            Descriptor::DynamicUnion {
+                name,
+                variant_types,
+            } => Descriptor::DynamicUnion {
+                name,
+                variant_types: variant_types
+                    .into_iter()
+                    .map(|d| d.substitute(fills))
+                    .collect(),
+            },
+            other => other,
         }
     }
 
@@ -269,6 +314,19 @@ impl Function {
             shim_idx,
             ret: Descriptor::_decode(data, false),
             inner_ret: Some(Descriptor::_decode(data, false)),
+        }
+    }
+
+    fn substitute(self, fills: &[Descriptor]) -> Function {
+        Function {
+            arguments: self
+                .arguments
+                .into_iter()
+                .map(|d| d.substitute(fills))
+                .collect(),
+            shim_idx: self.shim_idx,
+            ret: self.ret.substitute(fills),
+            inner_ret: self.inner_ret.map(|d| d.substitute(fills)),
         }
     }
 }
