@@ -41,3 +41,15 @@ exports.try_maybe = function(x) {
   if (x === 13) throw new Error("unlucky");
   return x;
 };
+
+exports.Recorder = class Recorder {
+  constructor() {
+    this.items = [];
+  }
+  pushVal(x) {
+    this.items.push(x);
+  }
+  get last() {
+    return this.items[this.items.length - 1];
+  }
+};

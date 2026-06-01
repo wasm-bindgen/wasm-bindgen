@@ -40,6 +40,16 @@ extern "C" {
     fn try_maybe<T>(x: T) -> Result<T, JsValue>;
 
     fn take_generic_log() -> Vec<JsValue>;
+
+    type Recorder;
+    #[wasm_bindgen(constructor)]
+    fn new() -> Recorder;
+    // Generic instance method on a concrete class: each `T` binds to the
+    // same JS `pushVal` with `T`-specific marshalling.
+    #[wasm_bindgen(method, generic, js_name = "pushVal")]
+    fn push_val<T>(this: &Recorder, x: T);
+    #[wasm_bindgen(method, getter)]
+    fn last(this: &Recorder) -> JsValue;
 }
 
 #[wasm_bindgen_test]
@@ -117,6 +127,42 @@ fn generic_import_ref_arg() {
     let log = take_generic_log();
     assert_eq!(log.len(), 1);
     assert_eq!(log[0].as_f64(), Some(99.0));
+}
+
+mod dobj {
+    pub trait DurableObject {
+        type Stub;
+    }
+}
+
+// Generic method on a *generic* class with an associated-type return:
+// exercises class-generic hoisting (`impl<T> DoNamespace<T>`) and a hole
+// that is a projection (`<T as DurableObject>::Stub`), not a bare param.
+// Compile-only: never instantiated, so no courier is monomorphised.
+#[wasm_bindgen]
+extern "C" {
+    type MyDo;
+    type MyDoStub;
+    type DoNamespace<T: dobj::DurableObject = MyDo>;
+
+    #[wasm_bindgen(method, generic, js_name = "getByName")]
+    fn get_by_name<T: dobj::DurableObject = MyDo>(
+        this: &DoNamespace<T>,
+        name: &str,
+    ) -> <T as dobj::DurableObject>::Stub;
+}
+
+impl dobj::DurableObject for MyDo {
+    type Stub = MyDoStub;
+}
+
+#[wasm_bindgen_test]
+fn generic_import_method() {
+    let r = Recorder::new();
+    r.push_val(7u32);
+    assert_eq!(r.last().as_f64(), Some(7.0));
+    r.push_val("hi");
+    assert_eq!(r.last().as_string(), Some("hi".to_string()));
 }
 
 #[wasm_bindgen_test]

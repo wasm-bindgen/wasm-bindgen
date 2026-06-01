@@ -3357,28 +3357,20 @@ impl<'a> FnClassGenerics<'a> {
 }
 
 impl ast::ImportFunction {
-    /// Bare-minimal call-site-emission codegen for `#[wasm_bindgen(generic)]`
-    /// imported functions. Supported shape (everything else bails):
-    ///   - free function (no method/constructor),
-    ///   - exactly one type parameter, no lifetimes, no const generics,
-    ///   - exactly one argument, owned, whose type is that type parameter,
-    ///   - no return value.
+    /// Call-site-emission codegen for `#[wasm_bindgen(generic)]` imported
+    /// functions and methods. Each monomorphisation emits a courier call
+    /// depositing the import shim name, a holed signature template, and the
+    /// per-`T` fills for the cli scanner to recover; the cli synthesises one
+    /// JS adapter per distinct concrete descriptor.
     ///
-    /// Emits a per-import name carrier ZST plus a thin generic wrapper that
-    /// forwards to the runtime courier `wbg_generic_import_1`, which deposits
-    /// the JS import name and the concrete argument schema at each
-    /// monomorphisation's call site for the cli scanner to recover.
+    /// Methods reuse `get_fn_generics` for class-generic hoisting and are
+    /// emitted inside the class `impl`, with the receiver carried as the
+    /// courier's first argument.
     fn try_to_tokens_generic(&self, tokens: &mut TokenStream) -> Result<(), Diagnostic> {
         let wasm_bindgen = &self.wasm_bindgen;
         let vis = &self.function.rust_vis;
         let rust_name = &self.rust_name;
 
-        if let ast::ImportFunctionKind::Method { .. } = &self.kind {
-            bail_span!(
-                rust_name,
-                "#[wasm_bindgen(generic)] does not yet support methods or constructors",
-            );
-        }
         if self.function.r#async {
             bail_span!(
                 rust_name,
@@ -3388,7 +3380,7 @@ impl ast::ImportFunction {
         if self.generics.lifetimes().next().is_some() {
             bail_span!(
                 rust_name,
-                "#[wasm_bindgen(generic)] does not yet support lifetime parameters",
+                "#[wasm_bindgen(generic)] does not yet support explicit lifetime parameters",
             );
         }
         if self.generics.const_params().next().is_some() {
@@ -3409,6 +3401,36 @@ impl ast::ImportFunction {
         }
         let param_names = type_params.clone();
 
+        // Method / constructor / static detection (mirrors the normal import
+        // path), and class-generic hoisting via `get_fn_generics`.
+        let mut class = None;
+        let mut is_constructor = false;
+        let mut is_method = false;
+        let mut is_self_returning_static = false;
+        if let ast::ImportFunctionKind::Method {
+            class: class_name,
+            ty,
+            kind,
+            ..
+        } = &self.kind
+        {
+            class = Some((class_name, get_ty(ty)));
+            match kind {
+                ast::MethodKind::Constructor => is_constructor = true,
+                ast::MethodKind::Operation(ast::Operation {
+                    is_static: false, ..
+                }) => is_method = true,
+                _ => {}
+            }
+            if self.class_return_path().is_some() {
+                class = Some((class_name, get_ty(self.js_ret.as_ref().unwrap())));
+                if !is_constructor {
+                    is_self_returning_static = true;
+                }
+            }
+        }
+        let fn_class_generics = self.get_fn_generics()?;
+
         let nargs = self.function.arguments.len();
         if nargs > 8 {
             bail_span!(
@@ -3424,20 +3446,21 @@ impl ast::ImportFunction {
         // per-monomorphisation by that whole type's schema. Distinct holes
         // dedup by type so a parameter repeated across positions collapses.
         let wbg_lt = syn::Lifetime::new("'wbg_a", Span::call_site());
-        let mut needs_lifetime = false;
+        let mut needs_lifetime = is_method;
         let mut hole_types: Vec<syn::Type> = Vec::new();
         let mut hole_index: BTreeMap<String, usize> = BTreeMap::new();
 
-        let mut arg_names = Vec::new();
-        let mut arg_tys = Vec::new();
+        // `arg_names` are the values passed to the courier (the receiver
+        // `self` plus each user argument); `arg_tys` are the courier's
+        // monomorphised ABI types; `user_arguments` is the wrapper's
+        // user-facing parameter list (receiver excluded — supplied by `me`).
+        let mut arg_names: Vec<TokenStream> = Vec::new();
+        let mut arg_tys: Vec<syn::Type> = Vec::new();
+        let mut user_arguments: Vec<TokenStream> = Vec::new();
         let mut arg_template_pairs = Vec::new();
         let mut arg_template_lens = Vec::new();
         for (i, arg) in self.function.arguments.iter().enumerate() {
             let ty = (*arg.pat_type.ty).clone();
-            let name = match &*arg.pat_type.pat {
-                syn::Pat::Ident(syn::PatIdent { ident, .. }) => ident.clone(),
-                _ => Ident::new(&format!("__wbg_genarg{i}"), Span::call_site()),
-            };
             let (sig_ty, changed) = relifetime(&ty, &wbg_lt);
             needs_lifetime |= changed;
             let is_hole = generics::uses_generic_params(&ty, &param_names);
@@ -3451,9 +3474,23 @@ impl ast::ImportFunction {
             );
             arg_template_pairs.push(pair);
             arg_template_lens.push(len);
-            arg_names.push(name);
+            if i == 0 && is_method {
+                arg_names.push(quote! { self });
+            } else {
+                let name = match &*arg.pat_type.pat {
+                    syn::Pat::Ident(syn::PatIdent { ident, .. }) => ident.clone(),
+                    _ => Ident::new(&format!("__wbg_genarg{i}"), Span::call_site()),
+                };
+                arg_names.push(quote! { #name });
+                user_arguments.push(quote! { #name: #sig_ty });
+            }
             arg_tys.push(sig_ty);
         }
+        let me = if is_method {
+            quote! { & #wbg_lt self, }
+        } else {
+            quote!()
+        };
 
         // The courier's return type `R` is the success/value type that
         // crosses the ABI: `js_ret` (already the inner `Ok` type when
@@ -3514,32 +3551,79 @@ impl ast::ImportFunction {
         let fills_ty = Ident::new(&format!("GenericFills{nholes}"), Span::call_site());
         let courier = Ident::new(&format!("wbg_generic_import_{nargs}"), Span::call_site());
 
-        // Wrapper generics: preserve the user's parameters/bounds, then add
-        // the bounds the courier and fills carrier require.
-        let mut generics = self.generics.clone();
-        if needs_lifetime {
-            generics.params.insert(
-                0,
-                syn::GenericParam::Lifetime(syn::LifetimeParam::new(wbg_lt.clone())),
-            );
+        // Wrapper generics come from `get_fn_generics` (class generics
+        // hoisted onto the `impl`), plus the synthetic `'wbg_a` lifetime and
+        // the bounds the courier / fills carrier require. Bounds that mention
+        // class-hoisted generics are still valid here because those generics
+        // are in scope inside the class `impl`.
+        let fn_lifetime_params = &fn_class_generics.fn_lifetime_params;
+        let fn_generic_params = &fn_class_generics.fn_generic_params;
+        let wbg_lt_tok = if needs_lifetime {
+            quote! { #wbg_lt, }
+        } else {
+            quote!()
+        };
+        let has_impl_generics =
+            needs_lifetime || !fn_lifetime_params.is_empty() || !fn_generic_params.is_empty();
+        let impl_generics = if has_impl_generics {
+            quote! { < #(#fn_lifetime_params,)* #wbg_lt_tok #(#fn_generic_params),* > }
+        } else {
+            quote!()
+        };
+
+        let fn_bounds = &fn_class_generics.fn_bounds;
+        let mut added_bounds: Vec<TokenStream> = Vec::new();
+        for ht in &hole_types {
+            added_bounds.push(quote! { #ht: #wasm_bindgen::describe::WasmDescribe });
         }
-        {
-            let where_clause = generics.make_where_clause();
-            for ht in &hole_types {
-                where_clause
-                    .predicates
-                    .push(syn::parse_quote!(#ht: #wasm_bindgen::describe::WasmDescribe));
-            }
-            for ty in &arg_tys {
-                where_clause.predicates.push(syn::parse_quote!(
-                    #ty: #wasm_bindgen::convert::IntoWasmAbi + #wasm_bindgen::describe::WasmDescribe
-                ));
-            }
-            where_clause.predicates.push(syn::parse_quote!(
-                #ret_ty: #wasm_bindgen::convert::FromWasmAbi + #wasm_bindgen::describe::WasmDescribe
-            ));
+        for ty in &arg_tys {
+            added_bounds.push(quote! {
+                #ty: #wasm_bindgen::convert::IntoWasmAbi + #wasm_bindgen::describe::WasmDescribe
+            });
         }
-        let (impl_generics, _ty_generics, where_clause) = generics.split_for_impl();
+        added_bounds.push(quote! {
+            #ret_ty: #wasm_bindgen::convert::FromWasmAbi + #wasm_bindgen::describe::WasmDescribe
+        });
+        let where_clause = if fn_bounds.is_empty() && added_bounds.is_empty() {
+            quote!()
+        } else {
+            quote! { where #(#fn_bounds,)* #(#added_bounds),* }
+        };
+
+        // Class `impl` wrapper (mirrors the normal import path).
+        let mut class_impl_def = None;
+        if let Some((_, class)) = class {
+            let mut class = class.clone();
+            if let syn::Type::Path(syn::TypePath {
+                qself: None,
+                ref mut path,
+            }) = class
+            {
+                if let Some(segment) = path.segments.last_mut() {
+                    segment.arguments = syn::PathArguments::None;
+                }
+            }
+            let has_class_generics = !fn_class_generics.class_generic_params.is_empty()
+                || !fn_class_generics.class_lifetime_params.is_empty()
+                || !fn_class_generics.class_bound_lifetime_params.is_empty();
+            if (!is_method && !is_constructor && !is_self_returning_static) || !has_class_generics {
+                class_impl_def = Some(quote! { impl #class });
+            } else {
+                let class_lifetime_params = &fn_class_generics.class_lifetime_params;
+                let class_bound_lifetime_params = &fn_class_generics.class_bound_lifetime_params;
+                let class_generic_params = &fn_class_generics.class_generic_params;
+                let class_generic_exprs = &fn_class_generics.class_generic_exprs;
+                let impl_where_clause = if !fn_class_generics.class_bounds.is_empty() {
+                    let class_bounds = fn_class_generics.class_bounds.iter();
+                    quote! { where #(#class_bounds),* }
+                } else {
+                    quote! {}
+                };
+                class_impl_def = Some(
+                    quote! { impl<#(#class_lifetime_params,)* #(#class_bound_lifetime_params,)* #(#class_generic_params),*> #class <#(#class_lifetime_params,)* #(#class_generic_exprs),*> #impl_where_clause },
+                );
+            }
+        }
 
         // Under `catch`, the wasm import has already run; check for a
         // pending JS exception and wrap the value in `Ok`.
@@ -3552,7 +3636,9 @@ impl ast::ImportFunction {
             quote! { __wbg_ret }
         };
 
-        (quote! {
+        // The name carrier (with the holed template) lives at module scope;
+        // the wrapper goes inside the class `impl` when there is one.
+        let carrier = quote! {
             #[doc(hidden)]
             #[automatically_derived]
             #[allow(non_camel_case_types)]
@@ -3579,9 +3665,13 @@ impl ast::ImportFunction {
                 const TEMPLATE_LEN: usize =
                     3 #( + #arg_template_lens )* + (#ret_len) + (#ret_len);
             }
+        };
 
+        let fn_def = quote! {
             #[automatically_derived]
-            #vis fn #rust_name #impl_generics (#(#arg_names: #arg_tys),*) #ret_sig #where_clause {
+            #[allow(nonstandard_style)]
+            #[allow(clippy::all, clippy::nursery, clippy::pedantic, clippy::restriction)]
+            #vis fn #rust_name #impl_generics (#me #(#user_arguments),*) #ret_sig #where_clause {
                 let __wbg_ret = #wasm_bindgen::__rt::#courier::<
                     #name_ty,
                     #wasm_bindgen::__rt::#fills_ty<#(#hole_types),*>,
@@ -3590,7 +3680,23 @@ impl ast::ImportFunction {
                 >(#(#arg_names),*);
                 #catch_handling
             }
-        })
+        };
+
+        let wrapped = if let Some(class_impl_def) = class_impl_def {
+            quote! {
+                #[automatically_derived]
+                #class_impl_def {
+                    #fn_def
+                }
+            }
+        } else {
+            fn_def
+        };
+
+        quote! {
+            #carrier
+            #wrapped
+        }
         .to_tokens(tokens);
 
         Ok(())
