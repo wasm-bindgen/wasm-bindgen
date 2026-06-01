@@ -1,7 +1,7 @@
 use crate::ast;
 use crate::encode;
 use crate::encode::EncodeChunk;
-use crate::generics::{self, generic_to_concrete};
+use crate::generics;
 use crate::hash::ShortHash;
 use crate::Diagnostic;
 use proc_macro2::{Ident, Span, TokenStream};
@@ -2920,9 +2920,8 @@ impl TryToTokens for ast::ImportFunction {
         let mut arg_conversions = Vec::new();
         let mut arguments = Vec::new();
 
-        let mut fn_class_generics = self.get_fn_generics()?;
-        let (fn_lifetime_param_names, fn_generic_param_names) =
-            generics::all_param_names(&self.generics);
+        let fn_class_generics = self.get_fn_generics()?;
+        let fn_lifetime_param_names = generics::lifetime_params(&self.generics);
 
         let ret_ident = Ident::new("_ret", Span::call_site());
         let wasm_bindgen = &self.wasm_bindgen;
@@ -2964,9 +2963,12 @@ impl TryToTokens for ast::ImportFunction {
             let abi_ty;
             let convert_arg;
 
-            if generics::uses_generic_params(ty, &fn_generic_param_names)
-                || generics::uses_lifetime_params(ty, &fn_lifetime_param_names)
-            {
+            if generics::uses_lifetime_params(ty, &fn_lifetime_param_names) {
+                // Lifetime-only argument (no type parameters — those route
+                // through the per-monomorphisation path). An `extern` block
+                // can't reference the wrapper's lifetime parameters, so pin
+                // them to `'static` for the ABI type and transmute the
+                // borrow's lifetime through.
                 let (inner_ty, ref_mut, ref_lifetime) =
                     if let syn::Type::Reference(syn::TypeReference {
                         elem,
@@ -2979,32 +2981,23 @@ impl TryToTokens for ast::ImportFunction {
                     } else {
                         (ty.clone(), None, None)
                     };
-                let concrete_ty = generic_to_concrete(
-                    inner_ty.clone(),
-                    &fn_class_generics.concrete_defaults,
-                    &fn_lifetime_param_names,
-                )?;
+                let static_inner =
+                    generics::staticize_lifetimes(inner_ty.clone(), &fn_lifetime_param_names);
                 if i > 0 || !is_method {
-                    fn_class_generics.add_fn_bound(if let Some(mut_) = ref_mut {
+                    if let Some(mut_) = ref_mut {
                         arguments.push(quote! { #name: & #ref_lifetime #mut_ #inner_ty });
-                        if mut_.is_some() {
-                            parse_quote! { #inner_ty: #wasm_bindgen::__rt::marker::ErasableGenericBorrowMut<#concrete_ty> }
-                        } else {
-                            parse_quote! { #inner_ty: #wasm_bindgen::__rt::marker::ErasableGenericBorrow<#concrete_ty> }
-                        }
                     } else {
                         arguments.push(quote! { #name: #ty });
-                        parse_quote! { #inner_ty: #wasm_bindgen::__rt::marker::ErasableGenericOwn<#concrete_ty> }
-                    });
+                    }
                 }
-                // abi_ty is fully concrete with 'static lifetimes (used for both extern block and transmute)
                 abi_ty = if let Some(mut_) = ref_mut {
-                    quote! { &'static #mut_ #concrete_ty }
+                    quote! { &'static #mut_ #static_inner }
                 } else {
-                    quote! { #concrete_ty }
+                    quote! { #static_inner }
                 };
-
-                convert_arg = quote! { unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(#var)) } };
+                convert_arg = quote! {
+                    unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(#var)) }
+                };
             } else if let Some((is_mut, fn_bounds)) = detect_raw_fn_trait_obj(ty) {
                 // Raw `&dyn Fn(...)` or `&mut dyn FnMut(...)` argument.
                 //
@@ -3129,23 +3122,8 @@ impl TryToTokens for ast::ImportFunction {
                 } else {
                     original_ty
                 };
-                if generics::uses_generic_params(ty, &fn_generic_param_names)
-                    || generics::uses_lifetime_params(ty, &fn_lifetime_param_names)
-                {
-                    let concrete_ty = generic_to_concrete(
-                        ty.clone(),
-                        &fn_class_generics.concrete_defaults,
-                        &fn_lifetime_param_names,
-                    )?;
-                    fn_class_generics.add_fn_bound(
-                        parse_quote! { #ty: #wasm_bindgen::__rt::marker::ErasableGenericOwn<#concrete_ty> },
-                    );
-                    convert_ret = quote! { unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(<#concrete_ty as #wasm_bindgen::convert::FromWasmAbi>::from_abi(#ret_ident.join()))) } };
-                    abi_ret = quote! { #wasm_bindgen::convert::WasmRet<<#concrete_ty as #wasm_bindgen::convert::FromWasmAbi>::Abi> };
-                } else {
-                    convert_ret = quote! { <#ty as #wasm_bindgen::convert::FromWasmAbi>::from_abi(#ret_ident.join()) };
-                    abi_ret = quote! { #wasm_bindgen::convert::WasmRet<<#ty as #wasm_bindgen::convert::FromWasmAbi>::Abi> };
-                }
+                convert_ret = quote! { <#ty as #wasm_bindgen::convert::FromWasmAbi>::from_abi(#ret_ident.join()) };
+                abi_ret = quote! { #wasm_bindgen::convert::WasmRet<<#ty as #wasm_bindgen::convert::FromWasmAbi>::Abi> };
                 if self.function.r#async {
                     convert_ret = quote! {
                         #futures::JsFuture::from(
@@ -3361,24 +3339,12 @@ struct FnClassGenerics<'a> {
     fn_generic_params: Vec<&'a syn::Ident>,
     // function bounds on params which are only specific to the function not hoisted as class bounds
     fn_bounds: Vec<Cow<'a, syn::WherePredicate>>,
-    // the union of class-level defaults (for identifier generics) and function defaults
-    // this is used to form the concrete type via replacement (using JsValue otherwise)
-    concrete_defaults: BTreeMap<&'a syn::Ident, Option<Cow<'a, syn::Type>>>,
     // hoisted class-level lifetime params passed to the type
     class_lifetime_params: Vec<&'a syn::Lifetime>,
     // hoisted class-level lifetime params only used in bounds (not passed to type)
     class_bound_lifetime_params: Vec<syn::Lifetime>,
     // the remaining non-hoisted function-level lifetime params
     fn_lifetime_params: Vec<&'a syn::Lifetime>,
-}
-
-impl<'a> FnClassGenerics<'a> {
-    /// Adds a new function bound, checking it is not already a bound
-    fn add_fn_bound(&mut self, bound: syn::WherePredicate) {
-        if !self.fn_bounds.iter().any(|existing| **existing == bound) {
-            self.fn_bounds.push(Cow::Owned(bound));
-        }
-    }
 }
 
 impl ast::ImportFunction {
@@ -3878,12 +3844,9 @@ impl ast::ImportFunction {
     }
 
     fn get_fn_generics<'a>(&'a self) -> Result<FnClassGenerics<'a>, Diagnostic> {
-        let original_fn_generics = generics::generic_params(&self.generics);
-        let mut fn_generic_params: Vec<&syn::Ident> =
-            original_fn_generics.iter().map(|p| p.0).collect();
-        let concrete_defaults: BTreeMap<_, _> = original_fn_generics
+        let mut fn_generic_params: Vec<&syn::Ident> = generics::generic_params(&self.generics)
             .into_iter()
-            .map(|(i, d)| (i, d.map(Cow::Borrowed)))
+            .map(|p| p.0)
             .collect();
 
         // Extract lifetime parameters
@@ -4086,7 +4049,6 @@ impl ast::ImportFunction {
             class_bounds,
             fn_generic_params,
             fn_bounds,
-            concrete_defaults,
             class_lifetime_params,
             class_bound_lifetime_params,
             fn_lifetime_params,
@@ -4191,18 +4153,18 @@ impl TryToTokens for DescribeImport<'_> {
         if f.generic || f.generic_eligible() {
             return Ok(());
         }
-        let fn_class_generics = f.get_fn_generics()?;
         let fn_lifetime_params = generics::lifetime_params(&f.generics);
         let argtys = f
             .function
             .arguments
             .iter()
             .map(|arg| {
-                let ty = generics::generic_to_concrete(
+                // Non-generic (incl. lifetime-only) imports only need their
+                // fn lifetimes pinned to `'static` for the descriptor const.
+                let ty: syn::Type = Ok::<_, Diagnostic>(generics::staticize_lifetimes(
                     (*arg.pat_type.ty).clone(),
-                    &fn_class_generics.concrete_defaults,
                     &fn_lifetime_params,
-                )?;
+                ))?;
                 // For `slice_to_array` args, describe through `&Vec<T>` (or
                 // `Option<&Vec<T>>`) to match the ABI rewrite in
                 // `ImportFunction::try_to_tokens` — the descriptor shape is
@@ -4231,11 +4193,7 @@ impl TryToTokens for DescribeImport<'_> {
         // helper will pattern-match for schema parts.
         let ret_schema_ty = match &f.js_ret {
             Some(ref t) => {
-                let t = generics::generic_to_concrete(
-                    t.clone(),
-                    &fn_class_generics.concrete_defaults,
-                    &fn_lifetime_params,
-                )?;
+                let t = generics::staticize_lifetimes(t.clone(), &fn_lifetime_params);
                 quote! { #t }
             }
             // async functions always return a JsValue, even if they say to return ()
