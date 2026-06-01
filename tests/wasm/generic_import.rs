@@ -61,7 +61,35 @@ extern "C" {
     #[wasm_bindgen()]
     async fn async_echo<T>(x: T) -> T;
 
+    // High arity: nine generic arguments sharing one hole, exercising the
+    // `wbg_generic_import_9` courier and the wider `GenericFills` carriers.
+    #[wasm_bindgen()]
+    #[allow(clippy::too_many_arguments)]
+    fn record_many<T>(a: T, b: T, c: T, d: T, e: T, f: T, g: T, h: T, i: T);
+
+    // Generic parameter nested two levels deep: `Vec<Option<T>>` crosses
+    // as a `(T | undefined)[]` externref array.
+    #[wasm_bindgen()]
+    fn record_vec_opt<T>(xs: Vec<Option<T>>);
+
+    // Generic closure with two distinct type parameters.
+    #[wasm_bindgen()]
+    fn call_pair<A, B>(f: &mut dyn FnMut(A, B));
+
     fn take_generic_log() -> Vec<JsValue>;
+
+    type Stats;
+    // Generic static method: each `T` binds to the same JS static.
+    #[wasm_bindgen(static_method_of = Stats, js_name = "combine")]
+    fn combine<T>(a: T, b: T) -> T;
+
+    // Generic constructor on a generic class, plus a generic getter-style
+    // method, both actually instantiated (not compile-only).
+    type Boxed<T>;
+    #[wasm_bindgen(constructor)]
+    fn new_boxed<T>(v: T) -> Boxed<T>;
+    #[wasm_bindgen(method)]
+    fn unwrap<T>(this: &Boxed<T>) -> T;
 
     type Recorder;
     #[wasm_bindgen(constructor)]
@@ -72,6 +100,11 @@ extern "C" {
     fn push_val<T>(this: &Recorder, x: T);
     #[wasm_bindgen(method, getter)]
     fn last(this: &Recorder) -> JsValue;
+    // Generic setter on a concrete class.
+    #[wasm_bindgen(method, setter = tag)]
+    fn set_tag<T>(this: &Recorder, x: T);
+    #[wasm_bindgen(method, getter)]
+    fn tag(this: &Recorder) -> JsValue;
 }
 
 #[wasm_bindgen_test]
@@ -244,4 +277,93 @@ fn generic_import_catch() {
 
     let err: Result<u32, JsValue> = try_maybe(13u32);
     assert!(err.is_err());
+}
+
+#[wasm_bindgen_test]
+fn generic_import_primitive_abis() {
+    // Distinct ABIs each force a fresh monomorphisation: bool (i32),
+    // i64 (two-word / bigint), char (u32 scalar).
+    record_generic(true);
+    record_generic(-9i64);
+    record_generic('z');
+
+    let log = take_generic_log();
+    assert_eq!(log.len(), 3);
+    assert_eq!(log[0].as_bool(), Some(true));
+    assert_eq!(log[1].clone().try_into(), Ok(-9i64));
+    assert_eq!(log[2].as_string(), Some("z".to_string()));
+}
+
+#[wasm_bindgen_test]
+fn generic_import_high_arity() {
+    record_many(1u32, 2, 3, 4, 5, 6, 7, 8, 9);
+
+    let log = take_generic_log();
+    assert_eq!(log.len(), 9);
+    assert_eq!(log[0].as_f64(), Some(1.0));
+    assert_eq!(log[8].as_f64(), Some(9.0));
+}
+
+#[wasm_bindgen_test]
+fn generic_import_vec_handle() {
+    // `Vec<T>` where `T` is a JS-handle type exercises the zero-copy
+    // `ErasableGeneric<Repr = JsValue>` slice path, distinct from the
+    // native typed-array path used by `Vec<u32>` above.
+    record_vec(vec![JsValue::from("a"), JsValue::from(2u32)]);
+
+    let log = take_generic_log();
+    assert_eq!(log.len(), 1);
+    let arr = js_sys::Array::from(&log[0]);
+    assert_eq!(arr.length(), 2);
+    assert_eq!(arr.get(0).as_string(), Some("a".to_string()));
+    assert_eq!(arr.get(1).as_f64(), Some(2.0));
+}
+
+#[wasm_bindgen_test]
+fn generic_import_nested_vec_option() {
+    record_vec_opt(vec![Some(1u32), None, Some(3u32)]);
+
+    let log = take_generic_log();
+    assert_eq!(log.len(), 1);
+    let arr = js_sys::Array::from(&log[0]);
+    assert_eq!(arr.length(), 3);
+    assert_eq!(arr.get(0).as_f64(), Some(1.0));
+    assert!(arr.get(1).is_undefined() || arr.get(1).is_null());
+    assert_eq!(arr.get(2).as_f64(), Some(3.0));
+}
+
+#[wasm_bindgen_test]
+fn generic_import_closure_two_params() {
+    let mut nums = 0u32;
+    let mut strs = String::new();
+    call_pair(&mut |n: u32, s: String| {
+        nums += n;
+        strs.push_str(&s);
+    });
+    assert_eq!(nums, 3);
+    assert_eq!(strs, "ab");
+}
+
+#[wasm_bindgen_test]
+fn generic_import_static_method() {
+    assert_eq!(Stats::combine(3u32, 4u32), 7);
+    assert_eq!(Stats::combine("a".to_string(), "b".to_string()), "ab");
+}
+
+#[wasm_bindgen_test]
+fn generic_import_generic_constructor() {
+    let b = Boxed::new_boxed(55u32);
+    assert_eq!(b.unwrap(), 55u32);
+
+    let s = Boxed::new_boxed("boxed".to_string());
+    assert_eq!(s.unwrap(), "boxed");
+}
+
+#[wasm_bindgen_test]
+fn generic_import_setter() {
+    let r = Recorder::new();
+    r.set_tag(5u32);
+    assert_eq!(r.tag().as_f64(), Some(5.0));
+    r.set_tag("hi");
+    assert_eq!(r.tag().as_string(), Some("hi".to_string()));
 }

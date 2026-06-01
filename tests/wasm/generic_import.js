@@ -68,14 +68,53 @@ exports.call_each_return = function(f) {
   return a + b;
 };
 
+exports.record_ref_mut = function(x) {
+  GENERIC_LOG.push(x);
+};
+
+exports.record_many = function(...args) {
+  for (const a of args) GENERIC_LOG.push(a);
+};
+
+exports.record_vec_opt = function(xs) {
+  GENERIC_LOG.push(xs);
+};
+
+exports.call_pair = function(f) {
+  f(1, "a");
+  f(2, "b");
+};
+
+exports.Stats = class Stats {
+  static combine(a, b) {
+    return a + b;
+  }
+};
+
+exports.Boxed = class Boxed {
+  constructor(v) {
+    this.v = v;
+  }
+  unwrap() {
+    return this.v;
+  }
+};
+
 exports.Recorder = class Recorder {
   constructor() {
     this.items = [];
+    this._tag = null;
   }
   pushVal(x) {
     this.items.push(x);
   }
   get last() {
     return this.items[this.items.length - 1];
+  }
+  set tag(x) {
+    this._tag = x;
+  }
+  get tag() {
+    return this._tag;
   }
 };
