@@ -5366,7 +5366,7 @@ extern "C" {
     /// properties including done and value. If a non-object value gets returned
     /// (such as false or undefined), a TypeError ("iterator.next() returned a
     /// non-object value") will be thrown.
-    #[wasm_bindgen(catch, method)]
+    #[wasm_bindgen(catch, method, generic)]
     pub fn next<T: FromWasmAbi>(this: &Iterator<T>) -> Result<IteratorNext<T>, JsValue>;
 }
 
@@ -5414,7 +5414,7 @@ extern "C" {
     /// gets returned (such as false or undefined), a TypeError ("iterator.next()
     /// returned a non-object value") will be thrown.
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(catch, method)]
+    #[wasm_bindgen(catch, method, generic)]
     pub fn next<T>(this: &AsyncIterator<T>) -> Result<Promise, JsValue>;
 
     /// The `next()` method always has to return a Promise which resolves to an object
@@ -5422,7 +5422,7 @@ extern "C" {
     /// gets returned (such as false or undefined), a TypeError ("iterator.next()
     /// returned a non-object value") will be thrown.
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(catch, method, js_name = next)]
+    #[wasm_bindgen(catch, method, js_name = next, generic)]
     pub fn next<T: FromWasmAbi>(
         this: &AsyncIterator<T>,
     ) -> Result<Promise<IteratorNext<T>>, JsValue>;
@@ -5432,7 +5432,7 @@ extern "C" {
     /// with appropriate properties including done and value. If a non-object value
     /// gets returned (such as false or undefined), a TypeError ("iterator.next()
     /// returned a non-object value") will be thrown.
-    #[wasm_bindgen(catch, method, js_name = next)]
+    #[wasm_bindgen(catch, method, js_name = next, generic)]
     pub fn next_iterator<T: FromWasmAbi>(
         this: &AsyncIterator<T>,
     ) -> Result<Promise<IteratorNext<T>>, JsValue>;
