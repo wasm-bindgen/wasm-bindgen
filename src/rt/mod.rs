@@ -125,28 +125,77 @@ pub trait GenericImportName {
     const TEMPLATE_LEN: usize;
 }
 
+// One hole's contribution to a generic import's fills: its schema plus,
+// for closure holes, the per-monomorphisation invoke-shim address that the
+// cli patches into the closure descriptor's `shim_idx` placeholder.
+//
+// A blanket impl covers every describable hole type (owned, `&T`,
+// `Option<T>`, `<T as Trait>::Assoc`, …) with a null invoke address. The
+// macro wraps closure holes in `ClosureFill<C, MUT>` to supply the real
+// address — a distinct type, so it doesn't collide with the blanket.
+pub trait GenericFill {
+    const SCHEMA_LEN: usize;
+    const SCHEMA_BUF: [u32; crate::describe::SCHEMA_MAX];
+    #[inline(always)]
+    fn invoke_addr() -> u32 {
+        0
+    }
+}
+
+impl<T: crate::describe::WasmDescribe + ?Sized> GenericFill for T {
+    const SCHEMA_LEN: usize = <T as crate::describe::WasmDescribe>::SCHEMA_LEN;
+    const SCHEMA_BUF: [u32; crate::describe::SCHEMA_MAX] =
+        <T as crate::describe::WasmDescribe>::SCHEMA_BUF;
+}
+
+pub struct ClosureFill<C: ?Sized, const MUT: bool>(PhantomData<*const C>);
+impl<C: crate::closure::WasmClosure + crate::describe::WasmDescribe + ?Sized, const MUT: bool>
+    GenericFill for ClosureFill<C, MUT>
+{
+    const SCHEMA_LEN: usize = 1 + <C as crate::describe::WasmDescribe>::SCHEMA_LEN;
+    const SCHEMA_BUF: [u32; crate::describe::SCHEMA_MAX] = crate::describe::wrap_schema(
+        &[if MUT {
+            crate::describe::REFMUT
+        } else {
+            crate::describe::REF
+        }],
+        &<C as crate::describe::WasmDescribe>::SCHEMA_BUF,
+        <C as crate::describe::WasmDescribe>::SCHEMA_LEN,
+    );
+    #[inline(always)]
+    fn invoke_addr() -> u32 {
+        <C as crate::closure::WasmClosure>::invoke_shim_addr::<true>() as u32
+    }
+}
+
 // Per-monomorphisation fills blob for a generic import: the concatenation
-// of each distinct type parameter's `SCHEMA_BUF[..SCHEMA_LEN]`, indexed by
-// declaration order. The cli decodes it as a sequence and splices the holes
-// of the import's template. One carrier per type-parameter arity.
+// of each distinct hole type's `SCHEMA_BUF[..SCHEMA_LEN]`, indexed by hole
+// position. The cli decodes it as a sequence and splices the template's
+// holes. `invoke_addr` carries the single closure hole's invoke-shim
+// address (0 when there is no closure). One carrier per hole arity.
 pub trait GenericFills {
     const BUF: [u32; crate::describe::SCHEMA_MAX];
     const LEN: usize;
+    fn invoke_addr() -> u32;
 }
 
 macro_rules! generic_fills {
     ($name:ident, $($P:ident),+) => {
-        pub struct $name<$($P: crate::describe::WasmDescribe + ?Sized),+>(
+        pub struct $name<$($P: GenericFill + ?Sized),+>(
             PhantomData<($(*const $P,)+)>,
         );
-        impl<$($P: crate::describe::WasmDescribe + ?Sized),+> GenericFills for $name<$($P),+> {
+        impl<$($P: GenericFill + ?Sized),+> GenericFills for $name<$($P),+> {
             const BUF: [u32; crate::describe::SCHEMA_MAX] = crate::describe::cat_schema(&[
                 $((
-                    &<$P as crate::describe::WasmDescribe>::SCHEMA_BUF,
-                    <$P as crate::describe::WasmDescribe>::SCHEMA_LEN,
+                    &<$P as GenericFill>::SCHEMA_BUF,
+                    <$P as GenericFill>::SCHEMA_LEN,
                 ),)+
             ]);
-            const LEN: usize = 0 $(+ <$P as crate::describe::WasmDescribe>::SCHEMA_LEN)+;
+            const LEN: usize = 0 $(+ <$P as GenericFill>::SCHEMA_LEN)+;
+            #[inline(always)]
+            fn invoke_addr() -> u32 {
+                0 $(+ <$P as GenericFill>::invoke_addr())+
+            }
         }
     };
 }
@@ -221,6 +270,7 @@ macro_rules! generic_import_courier {
                 N::TEMPLATE_LEN,
                 F::BUF.as_ptr(),
                 F::LEN,
+                F::invoke_addr(),
             );
             $( keep_prims_alive($p1, $p2, $p3, $p4); )*
             make_ret::<R>()

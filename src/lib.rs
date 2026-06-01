@@ -1353,6 +1353,7 @@ externs! {
             template_len: usize,
             fill_schema_ptr: *const u32,
             fill_schema_len: usize,
+            closure_invoke_addr: u32,
         ) -> ();
 
         // Type-specific JS-value constructors. Recognized by

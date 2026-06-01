@@ -42,6 +42,24 @@ exports.try_maybe = function(x) {
   return x;
 };
 
+exports.call_each = function(f) {
+  f(1);
+  f(2);
+  f(3);
+};
+
+exports.call_each_option = function(f) {
+  f(5);
+  f(undefined);
+  f(7);
+};
+
+exports.call_each_return = function(f) {
+  const a = f();
+  const b = f();
+  return a + b;
+};
+
 exports.Recorder = class Recorder {
   constructor() {
     this.items = [];

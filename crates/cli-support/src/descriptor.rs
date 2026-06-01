@@ -201,6 +201,41 @@ impl Descriptor {
         }
     }
 
+    /// Patch the single closure argument's invoke-shim placeholder. A
+    /// generic closure argument's fill carries the closure's schema with a
+    /// `shim_idx` of `0` (the function-table-index placeholder); the courier
+    /// supplies the real index as a runtime immediate, which we splice into
+    /// the first argument that is (or wraps) a `Function` whose `shim_idx`
+    /// is still `0`. Mirrors the closure-cast `compose_cast_descriptor`.
+    pub fn patch_closure_shim(&mut self, addr: u32) {
+        if let Descriptor::Function(f) = self {
+            for arg in &mut f.arguments {
+                if arg.set_first_closure_shim(addr) {
+                    return;
+                }
+            }
+        }
+    }
+
+    fn set_first_closure_shim(&mut self, addr: u32) -> bool {
+        match self {
+            Descriptor::Function(f) if f.shim_idx == 0 => {
+                f.shim_idx = addr;
+                true
+            }
+            Descriptor::Closure(c) if c.function.shim_idx == 0 => {
+                c.function.shim_idx = addr;
+                true
+            }
+            Descriptor::Ref(d)
+            | Descriptor::RefMut(d)
+            | Descriptor::Slice(d)
+            | Descriptor::Vector(d)
+            | Descriptor::Option(d) => d.set_first_closure_shim(addr),
+            _ => false,
+        }
+    }
+
     /// Replace every [`Descriptor::TypeParam(i)`] hole in this (template)
     /// descriptor with `fills[i]`, recursively. This is the grammar-aware
     /// splice for generic imports: substitution walks the decoded

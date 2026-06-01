@@ -35,6 +35,19 @@ extern "C" {
     #[wasm_bindgen(generic)]
     fn record_ref<T>(x: &T);
 
+    // Generic closure argument: the JS side invokes the callback with
+    // each value, marshalled per `T` via a per-monomorphisation invoke shim.
+    #[wasm_bindgen(generic)]
+    fn call_each<T>(f: &mut dyn FnMut(T));
+
+    // Generic closure taking `Option<T>`.
+    #[wasm_bindgen(generic)]
+    fn call_each_option<T>(f: &mut dyn FnMut(Option<T>));
+
+    // Generic closure returning `T`.
+    #[wasm_bindgen(generic)]
+    fn call_each_return<T>(f: &mut dyn FnMut() -> T);
+
     // `catch` with a generic argument and generic `Ok` return.
     #[wasm_bindgen(generic, catch)]
     fn try_maybe<T>(x: T) -> Result<T, JsValue>;
@@ -163,6 +176,35 @@ fn generic_import_method() {
     assert_eq!(r.last().as_f64(), Some(7.0));
     r.push_val("hi");
     assert_eq!(r.last().as_string(), Some("hi".to_string()));
+}
+
+#[wasm_bindgen_test]
+fn generic_import_closure() {
+    let mut sum = 0u32;
+    call_each(&mut |x: u32| sum += x);
+    assert_eq!(sum, 6);
+
+    let mut acc = String::new();
+    call_each(&mut |x: f64| acc.push_str(&x.to_string()));
+    assert_eq!(acc, "123");
+}
+
+#[wasm_bindgen_test]
+fn generic_import_closure_option() {
+    let mut got: Vec<Option<u32>> = Vec::new();
+    call_each_option(&mut |x: Option<u32>| got.push(x));
+    assert_eq!(got, vec![Some(5), None, Some(7)]);
+}
+
+#[wasm_bindgen_test]
+fn generic_import_closure_return() {
+    let mut next = 10u32;
+    call_each_return(&mut || {
+        let v = next;
+        next += 1;
+        v
+    });
+    assert_eq!(next, 12);
 }
 
 #[wasm_bindgen_test]

@@ -3459,19 +3459,51 @@ impl ast::ImportFunction {
         let mut user_arguments: Vec<TokenStream> = Vec::new();
         let mut arg_template_pairs = Vec::new();
         let mut arg_template_lens = Vec::new();
+        let mut closure_bounds: Vec<TokenStream> = Vec::new();
         for (i, arg) in self.function.arguments.iter().enumerate() {
             let ty = (*arg.pat_type.ty).clone();
             let (sig_ty, changed) = relifetime(&ty, &wbg_lt);
             needs_lifetime |= changed;
-            let is_hole = generics::uses_generic_params(&ty, &param_names);
-            let (pair, len) = template_part(
-                wasm_bindgen,
-                &ty,
-                &sig_ty,
-                is_hole,
-                &mut hole_types,
-                &mut hole_index,
-            );
+            let mentions = generics::uses_generic_params(&ty, &param_names);
+            let (pair, len) = match detect_closure_arg(&ty) {
+                // A generic closure argument (`&mut dyn FnMut(T, …)`): the
+                // hole's fill is the closure schema (with a `shim_idx`
+                // placeholder) supplied by `ClosureFill<C, MUT>`, which also
+                // hands the per-`T` invoke-shim address to the courier.
+                Some((is_mut, c_args, c_ret)) if mentions => {
+                    let fn_trait = if is_mut { quote!(FnMut) } else { quote!(Fn) };
+                    let c_ty: syn::Type = syn::parse_quote!(dyn #fn_trait(#(#c_args),*) -> #c_ret);
+                    let hole_ty: syn::Type =
+                        syn::parse_quote!(#wasm_bindgen::__rt::ClosureFill<#c_ty, #is_mut>);
+                    closure_bounds.push(quote! {
+                        #c_ty: #wasm_bindgen::closure::WasmClosure
+                            + #wasm_bindgen::describe::WasmDescribe
+                    });
+                    let key = quote!(#ty).to_string();
+                    let idx = *hole_index.entry(key).or_insert_with(|| {
+                        let n = hole_types.len();
+                        hole_types.push(hole_ty);
+                        n
+                    });
+                    let idx_u32 = idx as u32;
+                    (
+                        quote! {
+                            (&#wasm_bindgen::describe::schema_from_slice(
+                                &[#wasm_bindgen::describe::TYPE_PARAM, #idx_u32]
+                            ), 2usize)
+                        },
+                        quote! { 2usize },
+                    )
+                }
+                _ => template_part(
+                    wasm_bindgen,
+                    &ty,
+                    &sig_ty,
+                    mentions,
+                    &mut hole_types,
+                    &mut hole_index,
+                ),
+            };
             arg_template_pairs.push(pair);
             arg_template_lens.push(len);
             if i == 0 && is_method {
@@ -3574,8 +3606,9 @@ impl ast::ImportFunction {
         let fn_bounds = &fn_class_generics.fn_bounds;
         let mut added_bounds: Vec<TokenStream> = Vec::new();
         for ht in &hole_types {
-            added_bounds.push(quote! { #ht: #wasm_bindgen::describe::WasmDescribe });
+            added_bounds.push(quote! { #ht: #wasm_bindgen::__rt::GenericFill });
         }
+        added_bounds.extend(closure_bounds);
         for ty in &arg_tys {
             added_bounds.push(quote! {
                 #ty: #wasm_bindgen::convert::IntoWasmAbi + #wasm_bindgen::describe::WasmDescribe
@@ -3693,8 +3726,13 @@ impl ast::ImportFunction {
             fn_def
         };
 
+        // Drain any non-generic closure-arg invoke wrappers queued by
+        // `schema_parts_for_type` while building the template.
+        let pending_closure_wrappers = take_pending_closure_wrappers();
+
         quote! {
             #carrier
+            #(#pending_closure_wrappers)*
             #wrapped
         }
         .to_tokens(tokens);
