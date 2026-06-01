@@ -1,4 +1,4 @@
-use js_sys::{JsOption, Null, Undefined};
+use js_sys::{JsOption, Undefined};
 use js_sys::{JsString, Number, Object};
 use wasm_bindgen::convert::Upcast;
 use wasm_bindgen::prelude::*;
@@ -62,8 +62,9 @@ fn test_from_option_none() {
 
 #[wasm_bindgen_test]
 fn test_is_empty_null() {
+    // Strict semantics: `null` is a present value, not empty.
     let val = return_null();
-    assert!(val.is_empty());
+    assert!(!val.is_empty());
 }
 
 #[wasm_bindgen_test]
@@ -88,7 +89,7 @@ fn test_as_option_some() {
 
 #[wasm_bindgen_test]
 fn test_as_option_none() {
-    let val = return_null();
+    let val = return_undefined();
     let opt = val.as_option();
     assert!(opt.is_none());
 }
@@ -103,7 +104,7 @@ fn test_into_option_some() {
 
 #[wasm_bindgen_test]
 fn test_into_option_none() {
-    let val = return_null();
+    let val = return_undefined();
     let opt = val.into_option();
     assert!(opt.is_none());
 }
@@ -118,7 +119,7 @@ fn test_unwrap_success() {
 #[wasm_bindgen_test]
 #[should_panic(expected = "called `JsOption::unwrap()` on an empty value")]
 fn test_unwrap_panic() {
-    let val = return_null();
+    let val = return_undefined();
     val.unwrap();
 }
 
@@ -132,13 +133,13 @@ fn test_expect_success() {
 #[wasm_bindgen_test]
 #[should_panic(expected = "custom error message")]
 fn test_expect_panic() {
-    let val = return_null();
+    let val = return_undefined();
     val.expect("custom error message");
 }
 
 #[wasm_bindgen_test]
 fn test_unwrap_or_default() {
-    let val = return_null();
+    let val = return_undefined();
     let num = val.unwrap_or_default();
     // Number::default() is Number::from(0)
     assert_eq!(num.value_of(), 0.0);
@@ -150,7 +151,7 @@ fn test_unwrap_or_default() {
 
 #[wasm_bindgen_test]
 fn test_unwrap_or_else() {
-    let val = return_null();
+    let val = return_undefined();
     let num = val.unwrap_or_else(|| Number::from(99));
     assert_eq!(num.value_of(), 99.0);
 
@@ -161,8 +162,9 @@ fn test_unwrap_or_else() {
 
 #[wasm_bindgen_test]
 fn test_import_null() {
+    // Strict semantics: JS `null` is a present value, not empty.
     let val = return_null();
-    assert!(val.is_empty());
+    assert!(!val.is_empty());
 }
 
 #[wasm_bindgen_test]
@@ -235,7 +237,7 @@ fn test_debug_null() {
     let val: JsOption<Number> = JsOption::new();
     let debug_str = format!("{:?}", val);
     assert!(debug_str.contains("Number"));
-    assert!(debug_str.contains("null"));
+    assert!(debug_str.contains("undefined"));
 }
 
 #[wasm_bindgen_test]
@@ -280,14 +282,6 @@ fn test_upcast_string_to_nullable() {
 }
 
 #[wasm_bindgen_test]
-fn test_upcast_null_to_nullable() {
-    // Null can upcast to JsOption<T> for any T
-    let null = Null::NULL;
-    let nullable: JsOption<Number> = null.upcast_into();
-    assert!(nullable.is_empty());
-}
-
-#[wasm_bindgen_test]
 fn test_upcast_undefined_to_nullable() {
     // Undefined can upcast to JsOption<T> for any T
     let undef = Undefined::UNDEFINED;
@@ -296,19 +290,15 @@ fn test_upcast_undefined_to_nullable() {
 }
 
 #[wasm_bindgen_test]
-fn test_upcast_null_to_different_nullable_types() {
-    // Null upcasts to JsOption of any type
-    let null = Null::NULL;
-
-    let nullable_num: JsOption<Number> = null.upcast_into();
+fn test_upcast_undefined_to_different_nullable_types() {
+    // Undefined upcasts to JsOption of any type
+    let nullable_num: JsOption<Number> = Undefined::UNDEFINED.upcast_into();
     assert!(nullable_num.is_empty());
 
-    let null = Null::NULL;
-    let nullable_str: JsOption<JsString> = null.upcast_into();
+    let nullable_str: JsOption<JsString> = Undefined::UNDEFINED.upcast_into();
     assert!(nullable_str.is_empty());
 
-    let null = Null::NULL;
-    let nullable_obj: JsOption<Object> = null.upcast_into();
+    let nullable_obj: JsOption<Object> = Undefined::UNDEFINED.upcast_into();
     assert!(nullable_obj.is_empty());
 }
 
@@ -320,12 +310,6 @@ fn test_upcast_in_function_call() {
 
     let s = JsString::from("test");
     take_nullable_string(s.upcast_into());
-}
-
-#[wasm_bindgen_test]
-fn test_upcast_null_in_function_call() {
-    // Test using upcast to pass Null to a function expecting JsOption
-    take_nullable_null(Null::NULL.upcast_into());
 }
 
 #[wasm_bindgen_test]
@@ -344,10 +328,6 @@ fn test_upcast_with_helper_function() {
     // Pass a Number directly via upcast
     let result = accepts_nullable_number(Number::from(99).upcast_into());
     assert_eq!(result, Some(99.0));
-
-    // Pass Null via upcast
-    let result = accepts_nullable_number(Null::NULL.upcast_into());
-    assert_eq!(result, None);
 
     // Pass Undefined via upcast
     let result = accepts_nullable_number(Undefined::UNDEFINED.upcast_into());

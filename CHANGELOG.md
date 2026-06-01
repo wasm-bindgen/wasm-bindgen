@@ -5,7 +5,24 @@
 
 ### Added
 
+* Added the `maxAge` attribute to the `CookieInit` dictionary in `web-sys`,
+  matching the current Cookie Store API specification.
+  [#5169](https://github.com/wasm-bindgen/wasm-bindgen/pull/5169)
+
 ### Changed
+
+* `JsOption<T>` now treats only `undefined` as empty, aligning it with
+  TypeScript's strict `T | undefined` semantics and with `Option<T>`'s wire
+  shape (`None` ↔ `undefined`). Previously `is_empty`, `as_option`,
+  `into_option`, `unwrap`, `expect`, `unwrap_or_default`, and
+  `unwrap_or_else` treated both `null` and `undefined` as absent; JS `null`
+  is now a distinct present value. The `impl<T> UpcastFrom<Null> for
+  JsOption<T>` is removed (`Undefined` still models absence), and the
+  `Debug`/`Display` absent placeholder changed from `"null"` to
+  `"undefined"`. Code relying on `null → None` should return `undefined`
+  from the JS side, or check explicitly with
+  `val.as_option().filter(|v| !v.is_null())`.
+  [#5170](https://github.com/wasm-bindgen/wasm-bindgen/pull/5170)
 
 ### Fixed
 
