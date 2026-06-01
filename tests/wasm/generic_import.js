@@ -9,3 +9,26 @@ exports.take_generic_log = function() {
   GENERIC_LOG = [];
   return v;
 };
+
+exports.record_mixed = function(a, b, c) {
+  GENERIC_LOG.push(a);
+  GENERIC_LOG.push(b);
+  GENERIC_LOG.push(c);
+};
+
+exports.record_two = function(a, b) {
+  GENERIC_LOG.push(a);
+  GENERIC_LOG.push(b);
+};
+
+exports.groundtrip = function(x) {
+  return x;
+};
+
+exports.gget = function() {
+  return 7;
+};
+
+exports.record_opt = function(x) {
+  GENERIC_LOG.push(x);
+};

@@ -1308,6 +1308,48 @@ fn schema_parts_for_type_tokens(
     }
 }
 
+/// Substitute each generic type parameter in `ty` with the
+/// `__WbgTypeParam<i>` hole marker, where `i` is the parameter's
+/// declaration index. The result is a fully concrete type whose
+/// `WasmDescribe` schema is the holed signature fragment for that
+/// argument/return — `TYPE_PARAM(i)` nested correctly inside `&_`,
+/// `Option<_>`, etc. by the existing wrapper `WasmDescribe` impls.
+fn hole_type(
+    ty: &syn::Type,
+    params: &BTreeMap<String, usize>,
+    wasm_bindgen: &syn::Path,
+) -> syn::Type {
+    struct Holer<'a> {
+        params: &'a BTreeMap<String, usize>,
+        wasm_bindgen: &'a syn::Path,
+    }
+    impl syn::visit_mut::VisitMut for Holer<'_> {
+        fn visit_type_mut(&mut self, node: &mut syn::Type) {
+            if let syn::Type::Path(tp) = node {
+                if tp.qself.is_none() {
+                    if let Some(ident) = tp.path.get_ident() {
+                        if let Some(&idx) = self.params.get(&ident.to_string()) {
+                            let wb = self.wasm_bindgen;
+                            *node = syn::parse_quote!(#wb::__rt::__WbgTypeParam<#idx>);
+                            return;
+                        }
+                    }
+                }
+            }
+            syn::visit_mut::visit_type_mut(self, node);
+        }
+    }
+    let mut ty = ty.clone();
+    syn::visit_mut::VisitMut::visit_type_mut(
+        &mut Holer {
+            params,
+            wasm_bindgen,
+        },
+        &mut ty,
+    );
+    ty
+}
+
 thread_local! {
     /// Module-scope items emitted as side effects of `schema_parts_for_type`.
     /// Specifically: the closure-invoke wrappers that back closure
@@ -3314,7 +3356,12 @@ impl ast::ImportFunction {
                 "#[wasm_bindgen(generic)] does not yet support methods or constructors",
             );
         }
-
+        if self.function.r#async || self.catch || self.variadic {
+            bail_span!(
+                rust_name,
+                "#[wasm_bindgen(generic)] does not yet support async, catch, or variadic",
+            );
+        }
         if self.generics.lifetimes().next().is_some() {
             bail_span!(
                 rust_name,
@@ -3327,62 +3374,105 @@ impl ast::ImportFunction {
                 "#[wasm_bindgen(generic)] does not support const generic parameters",
             );
         }
-        let type_params: Vec<_> = self.generics.type_params().collect();
-        if type_params.len() != 1 {
-            bail_span!(
-                rust_name,
-                "#[wasm_bindgen(generic)] currently supports exactly one type parameter",
-            );
-        }
-        let tp = &type_params[0].ident;
 
-        if self.function.ret.is_some() {
+        // Type parameters, in declaration order. Each one's index is the
+        // `TYPE_PARAM(i)` hole it fills in the signature template.
+        let type_params: Vec<&syn::Ident> =
+            self.generics.type_params().map(|tp| &tp.ident).collect();
+        let nparams = type_params.len();
+        if nparams == 0 || nparams > 8 {
             bail_span!(
                 rust_name,
-                "#[wasm_bindgen(generic)] currently supports only unit-returning functions",
+                "#[wasm_bindgen(generic)] supports between 1 and 8 type parameters",
+            );
+        }
+        let param_index: BTreeMap<String, usize> = type_params
+            .iter()
+            .enumerate()
+            .map(|(i, id)| (id.to_string(), i))
+            .collect();
+
+        let nargs = self.function.arguments.len();
+        if nargs > 8 {
+            bail_span!(
+                rust_name,
+                "#[wasm_bindgen(generic)] supports at most 8 arguments",
             );
         }
 
-        if self.function.arguments.len() != 1 {
-            bail_span!(
-                rust_name,
-                "#[wasm_bindgen(generic)] currently supports exactly one argument",
-            );
+        // Per-argument: the user-facing binding name, the argument type
+        // (used directly as the courier's monomorphised ABI type), and the
+        // holed type (parameters replaced by `__WbgTypeParam<i>`) used to
+        // build the signature template.
+        let mut arg_names = Vec::new();
+        let mut arg_tys = Vec::new();
+        let mut holed_arg_tys = Vec::new();
+        for (i, arg) in self.function.arguments.iter().enumerate() {
+            let ty = (*arg.pat_type.ty).clone();
+            let name = match &*arg.pat_type.pat {
+                syn::Pat::Ident(syn::PatIdent { ident, .. }) => ident.clone(),
+                _ => Ident::new(&format!("__wbg_genarg{i}"), Span::call_site()),
+            };
+            holed_arg_tys.push(hole_type(&ty, &param_index, wasm_bindgen));
+            arg_names.push(name);
+            arg_tys.push(ty);
         }
-        let arg = &self.function.arguments[0];
-        let arg_ty = &*arg.pat_type.ty;
-        // The single argument must be the bare type parameter `T` (owned).
-        match arg_ty {
-            syn::Type::Path(p) if p.qself.is_none() && p.path.is_ident(tp) => {}
-            _ => bail_span!(
-                arg_ty,
-                "#[wasm_bindgen(generic)] currently requires the argument to be the bare \
-                 owned type parameter",
-            ),
-        }
-        let arg_name = match &*arg.pat_type.pat {
-            syn::Pat::Ident(syn::PatIdent { ident, .. }) => ident.clone(),
-            _ => Ident::new("__wbg_genarg0", Span::call_site()),
+
+        // Return type. `None` => unit (the courier's `R = ()`).
+        let (ret_ty, ret_sig) = match self.js_ret.as_ref() {
+            Some(ty) => (ty.clone(), quote! { -> #ty }),
+            None => (syn::parse_quote!(()), quote! {}),
         };
+        let holed_ret_ty = hole_type(&ret_ty, &param_index, wasm_bindgen);
+
+        // Build the holed signature template `[FUNCTION, 0, nargs, args.., ret, inner_ret]`
+        // entirely from concrete (`__WbgTypeParam`-holed) types via the
+        // normal `WasmDescribe`-based schema construction.
+        let nargs_u32 = nargs as u32;
+        let arg_parts: Vec<(TokenStream, TokenStream)> = holed_arg_tys
+            .iter()
+            .map(|ty| schema_parts_for_type(wasm_bindgen, ty))
+            .collect();
+        let (ret_len, ret_buf) = schema_parts_for_type(wasm_bindgen, &holed_ret_ty);
+        let arg_pair_exprs: Vec<TokenStream> = arg_parts
+            .iter()
+            .map(|(l, b)| quote! { (&#b, #l) })
+            .collect();
+        let arg_len_exprs: Vec<&TokenStream> = arg_parts.iter().map(|(l, _)| l).collect();
 
         // Unique per-import name carrier; reuse the (already unique) shim ident.
         let name_ty = Ident::new(
             &format!("__WbgGenericName_{}", self.shim),
             Span::call_site(),
         );
-
-        // The import's metadata (js_name, module, js_namespace, catch,
-        // variadic, …) is NOT re-encoded here: it flows through the normal
-        // AST custom section like any other import and the cli recovers it
-        // by shim name. The carrier only needs to provide that shim key
-        // plus the holed signature template (the "descriptor"), which the
-        // per-monomorphisation fills splice into.
         let shim_str = self.shim.to_string();
         let shim_len = shim_str.len();
-        // Holed signature template for `fn(T) -> ()`: a full function
-        // descriptor with a single `TYPE_PARAM(0)` hole for the owned
-        // generic argument. The cli splices the per-`T` fill into the hole.
-        let template_len = 7usize;
+
+        // The fills carrier and courier are chosen by type-parameter count
+        // and argument count respectively.
+        let fills_ty = Ident::new(&format!("GenericFills{nparams}"), Span::call_site());
+        let courier = Ident::new(&format!("wbg_generic_import_{nargs}"), Span::call_site());
+
+        // Wrapper generics: preserve the user's parameters/bounds, then add
+        // the bounds the courier and fills carrier require.
+        let mut generics = self.generics.clone();
+        {
+            let where_clause = generics.make_where_clause();
+            for tp in &type_params {
+                where_clause
+                    .predicates
+                    .push(syn::parse_quote!(#tp: #wasm_bindgen::describe::WasmDescribe));
+            }
+            for ty in &arg_tys {
+                where_clause.predicates.push(syn::parse_quote!(
+                    #ty: #wasm_bindgen::convert::IntoWasmAbi + #wasm_bindgen::describe::WasmDescribe
+                ));
+            }
+            where_clause.predicates.push(syn::parse_quote!(
+                #ret_ty: #wasm_bindgen::convert::FromWasmAbi + #wasm_bindgen::describe::WasmDescribe
+            ));
+        }
+        let (impl_generics, _ty_generics, where_clause) = generics.split_for_impl();
 
         (quote! {
             #[doc(hidden)]
@@ -3394,25 +3484,32 @@ impl ast::ImportFunction {
             impl #wasm_bindgen::__rt::GenericImportName for #name_ty {
                 const SHIM: &'static str = #shim_str;
                 const SHIM_LEN: usize = #shim_len;
-                const TEMPLATE: [u32; #wasm_bindgen::describe::SCHEMA_MAX] =
-                    #wasm_bindgen::describe::schema_from_slice(&[
-                        #wasm_bindgen::describe::FUNCTION,
-                        0,
-                        1,
-                        #wasm_bindgen::describe::TYPE_PARAM,
-                        0,
-                        #wasm_bindgen::describe::UNIT,
-                        #wasm_bindgen::describe::UNIT,
-                    ]);
-                const TEMPLATE_LEN: usize = #template_len;
+                const TEMPLATE: [u32; #wasm_bindgen::describe::SCHEMA_MAX] = {
+                    const __HEADER: [u32; #wasm_bindgen::describe::SCHEMA_MAX] =
+                        #wasm_bindgen::describe::schema_from_slice(&[
+                            #wasm_bindgen::describe::FUNCTION,
+                            0u32,
+                            #nargs_u32,
+                        ]);
+                    #wasm_bindgen::describe::cat_schema(&[
+                        (&__HEADER, 3),
+                        #(#arg_pair_exprs,)*
+                        (&#ret_buf, #ret_len),
+                        (&#ret_buf, #ret_len),
+                    ])
+                };
+                const TEMPLATE_LEN: usize =
+                    3 #( + #arg_len_exprs )* + (#ret_len) + (#ret_len);
             }
 
             #[automatically_derived]
-            #vis fn #rust_name<#tp>(#arg_name: #tp)
-            where
-                #tp: #wasm_bindgen::convert::IntoWasmAbi + #wasm_bindgen::describe::WasmDescribe,
-            {
-                #wasm_bindgen::__rt::wbg_generic_import_1::<#name_ty, #tp>(#arg_name)
+            #vis fn #rust_name #impl_generics (#(#arg_names: #arg_tys),*) #ret_sig #where_clause {
+                #wasm_bindgen::__rt::#courier::<
+                    #name_ty,
+                    #wasm_bindgen::__rt::#fills_ty<#(#type_params),*>,
+                    #ret_ty,
+                    #(#arg_tys),*
+                >(#(#arg_names),*)
             }
         })
         .to_tokens(tokens);

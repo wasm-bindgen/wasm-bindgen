@@ -98,6 +98,18 @@ impl Descriptor {
         descriptor
     }
 
+    /// Decode a concatenation of self-delimiting descriptors. Used for a
+    /// generic import's per-monomorphisation fills blob: the courier
+    /// concatenates each distinct type parameter's `SCHEMA_BUF[..len]`, and
+    /// the result is indexed by type-parameter position for [`Self::substitute`].
+    pub fn decode_sequence(mut data: &[u32]) -> Vec<Descriptor> {
+        let mut out = Vec::new();
+        while !data.is_empty() {
+            out.push(Descriptor::_decode(&mut data, false));
+        }
+        out
+    }
+
     fn _decode(data: &mut &[u32], clamped: bool) -> Descriptor {
         match get(data) {
             I8 => Descriptor::I8,

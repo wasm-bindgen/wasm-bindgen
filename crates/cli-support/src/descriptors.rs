@@ -335,7 +335,8 @@ impl WasmBindgenDescriptorsSection {
             };
             let entry = local.entry_block();
             // Six immediates: shim_ptr, shim_len, template_ptr, template_len,
-            // fill_ptr, fill_len.
+            // fills_ptr, fills_len (the fills blob is a concatenation of the
+            // per-type-parameter schemas).
             let mut scanner = CastCallScanner::new(describe_id, 6);
             scanner.walk(local, entry);
             for args in scanner.found_calls {
@@ -343,15 +344,15 @@ impl WasmBindgenDescriptorsSection {
                 let shim_len = args[1] as u32;
                 let template_ptr = args[2] as u32;
                 let template_len = args[3] as u32;
-                let fill_ptr = args[4] as u32;
-                let fill_len = args[5] as u32;
+                let fills_ptr = args[4] as u32;
+                let fills_len = args[5] as u32;
                 let shim_bytes = data_view.read_bytes(shim_ptr, shim_len as usize)?;
                 let shim = String::from_utf8(shim_bytes)
                     .context("generic import shim name was not valid UTF-8")?;
                 let template = data_view.read_u32_slice(template_ptr, template_len)?;
-                let fill = data_view.read_u32_slice(fill_ptr, fill_len)?;
-                let fill = Descriptor::decode(&fill);
-                let descriptor = Descriptor::decode(&template).substitute(&[fill]);
+                let fills = data_view.read_u32_slice(fills_ptr, fills_len)?;
+                let fills = Descriptor::decode_sequence(&fills);
+                let descriptor = Descriptor::decode(&template).substitute(&fills);
                 self.generic_imports
                     .entry(shim)
                     .or_default()
