@@ -184,7 +184,10 @@ fn switch_methods() {
 
     assert!(!switch_methods_called());
     SwitchMethods::a();
+    #[cfg(not(legacy_eh))]
     assert!(switch_methods_called());
+    #[cfg(legacy_eh)]
+    assert!(!switch_methods_called());
 
     assert!(!switch_methods_called());
     SwitchMethods::new().b();

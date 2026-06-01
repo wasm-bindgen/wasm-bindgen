@@ -81,6 +81,7 @@ unexpected_cfgs = { level = "warn", check-cfg = [
   'cfg(wasm_bindgen_unstable_test_coverage)',
   'cfg(wasm_bindgen_use_js_sys)',
   'cfg(xxx_debug_only_print_generated_code)',
+  'cfg(legacy_eh)',
 ] }
 unused_lifetimes = "warn"
 

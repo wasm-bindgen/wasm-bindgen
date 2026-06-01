@@ -330,6 +330,7 @@ fn js_throw_triggers_unwind_and_drop() {
 
     // JS will call rust_call_throwing_js(), which calls js_throw_error()
     // The throw should unwind, run Drop, and propagate as an error
+
     let result = js_trigger_unwind_test();
     assert!(result.is_err(), "JS throw should propagate as error");
 

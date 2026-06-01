@@ -205,9 +205,13 @@ fn runtest(
     #[files("*.rs")]
     test: PathBuf,
 ) -> Result<()> {
-    // panic-unwind.rs requires nightly + `-Zbuild-std=std,panic_unwind`,
-    // so it's exercised by the dedicated `runtest_panic_unwind` test below.
-    if test.file_stem() == Some(std::ffi::OsStr::new("panic-unwind")) {
+    // panic-unwind.rs and panic-unwind-legacy.rs require nightly +
+    // `-Zbuild-std=std,panic_unwind`, so they are exercised by the dedicated
+    // `runtest_panic_unwind` / `runtest_panic_unwind_legacy` tests below.
+    if matches!(
+        test.file_stem().and_then(|s| s.to_str()),
+        Some("panic-unwind") | Some("panic-unwind-legacy")
+    ) {
         return Ok(());
     }
     runtest_with_opts(test, None, |_| ())
@@ -224,6 +228,24 @@ fn runtest_panic_unwind() -> Result<()> {
         command
             .env("RUSTUP_TOOLCHAIN", "nightly")
             .env("RUSTFLAGS", "-C panic=unwind")
+            .arg("-Zbuild-std=std,panic_unwind");
+    })
+}
+
+#[test]
+fn runtest_panic_unwind_legacy() -> Result<()> {
+    let mut test = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    test.push("tests");
+    test.push("reference");
+    test.push("panic-unwind-legacy.rs");
+
+    runtest_with_opts(test, None, |command| {
+        command
+            .env("RUSTUP_TOOLCHAIN", "nightly")
+            .env(
+                "RUSTFLAGS",
+                "-C panic=unwind -Cllvm-args=-wasm-use-legacy-eh",
+            )
             .arg("-Zbuild-std=std,panic_unwind");
     })
 }
