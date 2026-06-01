@@ -15,3 +15,15 @@ exports.foo = function(a) {
   assert.strictEqual(a, next);
   next = null;
 };
+
+let GENERIC_CROSS = [];
+
+exports.generic_record = function(x) {
+  GENERIC_CROSS.push(x);
+};
+
+exports.take_generic_cross = function() {
+  const v = GENERIC_CROSS;
+  GENERIC_CROSS = [];
+  return v;
+};
