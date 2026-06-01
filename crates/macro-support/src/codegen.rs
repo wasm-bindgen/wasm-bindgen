@@ -1309,32 +1309,57 @@ fn schema_parts_for_type_tokens(
 }
 
 /// Compute a generic import's signature-template part for one argument or
-/// return position. A parameter-dependent type becomes a `TYPE_PARAM(idx)`
-/// hole (deduped by type via `hole_index`, its `sig` form recorded in
-/// `hole_types` for the fills carrier); a parameter-free type contributes
-/// its own `WasmDescribe` schema inline. Returns the `(buf, len)` pair to
-/// splice into the template's `cat_schema`.
+/// return position, returning the `(buf, len)` pair for the template's
+/// `cat_schema`.
+///
+/// A *parameter-dependent reference* (`&T`, `&mut DoNamespace<T>`, …) is
+/// decomposed structurally: the `REF`/`REFMUT` opcode is emitted inline and
+/// the (owned) referent is handled recursively. This keeps every hole's
+/// fill type **owned** — so the fills carrier `GenericFills<…>` is
+/// lifetime-free and can be named without a synthetic lifetime. Any other
+/// parameter-dependent type becomes a `TYPE_PARAM(idx)` hole (deduped by
+/// type); a parameter-free type (including concrete references like `&str`)
+/// contributes its own `WasmDescribe` schema inline.
 fn template_part(
     wasm_bindgen: &syn::Path,
-    orig: &syn::Type,
-    sig: &syn::Type,
-    is_hole: bool,
+    ty: &syn::Type,
+    param_names: &Vec<&syn::Ident>,
     hole_types: &mut Vec<syn::Type>,
     hole_index: &mut BTreeMap<String, usize>,
 ) -> (TokenStream, TokenStream) {
-    if is_hole {
-        let key = quote!(#orig).to_string();
+    // Parameter-dependent reference: emit REF/REFMUT and recurse on the
+    // referent, so the hole leaf stays owned (lifetime-free).
+    if let syn::Type::Reference(r) = ty {
+        if generics::uses_generic_params(&r.elem, param_names) {
+            let op = if r.mutability.is_some() {
+                quote! { #wasm_bindgen::describe::REFMUT }
+            } else {
+                quote! { #wasm_bindgen::describe::REF }
+            };
+            let (inner_buf, inner_len) =
+                template_part(wasm_bindgen, &r.elem, param_names, hole_types, hole_index);
+            return (
+                quote! {
+                    #wasm_bindgen::describe::wrap_schema(&[#op], &#inner_buf, #inner_len)
+                },
+                quote! { (1 + (#inner_len)) },
+            );
+        }
+    }
+
+    if generics::uses_generic_params(ty, param_names) {
+        let key = quote!(#ty).to_string();
         let idx = *hole_index.entry(key).or_insert_with(|| {
             let i = hole_types.len();
-            hole_types.push(sig.clone());
+            hole_types.push(ty.clone());
             i
         });
         let idx_u32 = idx as u32;
         (
             quote! {
-                (&#wasm_bindgen::describe::schema_from_slice(
+                #wasm_bindgen::describe::schema_from_slice(
                     &[#wasm_bindgen::describe::TYPE_PARAM, #idx_u32]
-                ), 2usize)
+                )
             },
             quote! { 2usize },
         )
@@ -1342,9 +1367,9 @@ fn template_part(
         // Parameter-free type: pin references to `'static` so the type is
         // valid in the lifetime-free carrier const, then take its schema.
         let static_lt = syn::Lifetime::new("'static", Span::call_site());
-        let (ct, _) = relifetime(orig, &static_lt);
+        let (ct, _) = relifetime(ty, &static_lt);
         let (l, b) = schema_parts_for_type(wasm_bindgen, &ct);
-        (quote! { (&#b, #l) }, l)
+        (b, l)
     }
 }
 
@@ -3445,28 +3470,42 @@ impl ast::ImportFunction {
         // `Option<T>`, `<T as Trait>::Assoc`, …) becomes one hole, filled
         // per-monomorphisation by that whole type's schema. Distinct holes
         // dedup by type so a parameter repeated across positions collapses.
-        let wbg_lt = syn::Lifetime::new("'wbg_a", Span::call_site());
-        let mut needs_lifetime = is_method;
         let mut hole_types: Vec<syn::Type> = Vec::new();
         let mut hole_index: BTreeMap<String, usize> = BTreeMap::new();
 
         // `arg_names` are the values passed to the courier (the receiver
-        // `self` plus each user argument); `arg_tys` are the courier's
-        // monomorphised ABI types; `user_arguments` is the wrapper's
-        // user-facing parameter list (receiver excluded — supplied by `me`).
+        // `self` plus each user argument); `user_arguments` is the wrapper's
+        // user-facing parameter list (receiver excluded — supplied by `me`);
+        // `arg_bounds` are the per-argument ABI bounds the courier requires.
+        // Argument types are kept verbatim (elided lifetimes intact) and the
+        // courier infers its ABI type parameters from the call values, so no
+        // synthetic lifetime is introduced.
         let mut arg_names: Vec<TokenStream> = Vec::new();
-        let mut arg_tys: Vec<syn::Type> = Vec::new();
         let mut user_arguments: Vec<TokenStream> = Vec::new();
         let mut arg_template_pairs = Vec::new();
         let mut arg_template_lens = Vec::new();
+        let mut arg_bounds: Vec<TokenStream> = Vec::new();
         let mut closure_bounds: Vec<TokenStream> = Vec::new();
         let mut closure_invoke_ty: Option<syn::Type> = None;
         for (i, arg) in self.function.arguments.iter().enumerate() {
             let ty = (*arg.pat_type.ty).clone();
-            let (sig_ty, changed) = relifetime(&ty, &wbg_lt);
-            needs_lifetime |= changed;
             let mentions = generics::uses_generic_params(&ty, &param_names);
-            let (pair, len) = match detect_closure_arg(&ty) {
+            // Per-argument ABI bound: references are higher-ranked over the
+            // call lifetime the courier infers; owned types bound directly.
+            match &ty {
+                syn::Type::Reference(r) => {
+                    let m = &r.mutability;
+                    let elem = &r.elem;
+                    arg_bounds.push(quote! {
+                        for<'__wbg> &'__wbg #m #elem: #wasm_bindgen::convert::IntoWasmAbi
+                            + #wasm_bindgen::describe::WasmDescribe
+                    });
+                }
+                _ => arg_bounds.push(quote! {
+                    #ty: #wasm_bindgen::convert::IntoWasmAbi + #wasm_bindgen::describe::WasmDescribe
+                }),
+            }
+            let (buf, len) = match detect_closure_arg(&ty) {
                 // A generic closure argument (`&mut dyn FnMut(T, …)`): the
                 // hole's fill is the closure schema (with a `shim_idx`
                 // placeholder) supplied by `ClosureFill<C, MUT>`, which also
@@ -3501,9 +3540,9 @@ impl ast::ImportFunction {
                     let idx_u32 = idx as u32;
                     (
                         quote! {
-                            (&#wasm_bindgen::describe::schema_from_slice(
+                            #wasm_bindgen::describe::schema_from_slice(
                                 &[#wasm_bindgen::describe::TYPE_PARAM, #idx_u32]
-                            ), 2usize)
+                            )
                         },
                         quote! { 2usize },
                     )
@@ -3511,13 +3550,12 @@ impl ast::ImportFunction {
                 _ => template_part(
                     wasm_bindgen,
                     &ty,
-                    &sig_ty,
-                    mentions,
+                    &param_names,
                     &mut hole_types,
                     &mut hole_index,
                 ),
             };
-            arg_template_pairs.push(pair);
+            arg_template_pairs.push(quote! { (&#buf, #len) });
             arg_template_lens.push(len);
             if i == 0 && is_method {
                 arg_names.push(quote! { self });
@@ -3527,12 +3565,11 @@ impl ast::ImportFunction {
                     _ => Ident::new(&format!("__wbg_genarg{i}"), Span::call_site()),
                 };
                 arg_names.push(quote! { #name });
-                user_arguments.push(quote! { #name: #sig_ty });
+                user_arguments.push(quote! { #name: #ty });
             }
-            arg_tys.push(sig_ty);
         }
         let me = if is_method {
-            quote! { & #wbg_lt self, }
+            quote! { &self, }
         } else {
             quote!()
         };
@@ -3553,17 +3590,14 @@ impl ast::ImportFunction {
             }
             None => quote! {},
         };
-        let ret_is_hole = generics::uses_generic_params(&ret_ty, &param_names);
-        let (ret_sig_ty, ret_changed) = relifetime(&ret_ty, &wbg_lt);
-        needs_lifetime |= ret_changed;
-        let (ret_pair, ret_len) = template_part(
+        let (ret_buf, ret_len) = template_part(
             wasm_bindgen,
             &ret_ty,
-            &ret_sig_ty,
-            ret_is_hole,
+            &param_names,
             &mut hole_types,
             &mut hole_index,
         );
+        let ret_pair = quote! { (&#ret_buf, #ret_len) };
 
         let nholes = hole_types.len();
         if nholes == 0 {
@@ -3603,15 +3637,9 @@ impl ast::ImportFunction {
         // are in scope inside the class `impl`.
         let fn_lifetime_params = &fn_class_generics.fn_lifetime_params;
         let fn_generic_params = &fn_class_generics.fn_generic_params;
-        let wbg_lt_tok = if needs_lifetime {
-            quote! { #wbg_lt, }
-        } else {
-            quote!()
-        };
-        let has_impl_generics =
-            needs_lifetime || !fn_lifetime_params.is_empty() || !fn_generic_params.is_empty();
+        let has_impl_generics = !fn_lifetime_params.is_empty() || !fn_generic_params.is_empty();
         let impl_generics = if has_impl_generics {
-            quote! { < #(#fn_lifetime_params,)* #wbg_lt_tok #(#fn_generic_params),* > }
+            quote! { < #(#fn_lifetime_params,)* #(#fn_generic_params),* > }
         } else {
             quote!()
         };
@@ -3622,11 +3650,7 @@ impl ast::ImportFunction {
             added_bounds.push(quote! { #ht: #wasm_bindgen::__rt::GenericFill });
         }
         added_bounds.extend(closure_bounds);
-        for ty in &arg_tys {
-            added_bounds.push(quote! {
-                #ty: #wasm_bindgen::convert::IntoWasmAbi + #wasm_bindgen::describe::WasmDescribe
-            });
-        }
+        added_bounds.extend(arg_bounds);
         added_bounds.push(quote! {
             #ret_ty: #wasm_bindgen::convert::FromWasmAbi + #wasm_bindgen::describe::WasmDescribe
         });
@@ -3729,13 +3753,13 @@ impl ast::ImportFunction {
             #[allow(nonstandard_style)]
             #[allow(clippy::all, clippy::nursery, clippy::pedantic, clippy::restriction)]
             #vis fn #rust_name #impl_generics (#me #(#user_arguments),*) #ret_sig #where_clause {
-                let __wbg_ret = #wasm_bindgen::__rt::#courier::<
-                    #name_ty,
-                    #wasm_bindgen::__rt::#fills_ty<#(#hole_types),*>,
-                    #ic_ty,
-                    #ret_ty,
-                    #(#arg_tys),*
-                >(#(#arg_names),*);
+                let __wbg_ret = #wasm_bindgen::__rt::#courier(
+                    #wasm_bindgen::__rt::Tag::<#name_ty>::new(),
+                    #wasm_bindgen::__rt::Tag::<#wasm_bindgen::__rt::#fills_ty<#(#hole_types),*>>::new(),
+                    #wasm_bindgen::__rt::Tag::<#ic_ty>::new(),
+                    #wasm_bindgen::__rt::Tag::<#ret_ty>::new(),
+                    #(#arg_names),*
+                );
                 #catch_handling
             }
         };

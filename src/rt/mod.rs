@@ -220,6 +220,20 @@ generic_fills!(GenericFills6, P0, P1, P2, P3, P4, P5);
 generic_fills!(GenericFills7, P0, P1, P2, P3, P4, P5, P6);
 generic_fills!(GenericFills8, P0, P1, P2, P3, P4, P5, P6, P7);
 
+// Zero-sized type carrier. Passing the courier's `N`/`F`/`IC`/`R` type
+// parameters as `Tag` *values* lets the macro call the courier with no
+// turbofish: every type parameter (including the argument types `A…`) is
+// inferred from the call's values, so argument references keep their
+// elided, higher-ranked lifetimes — generic getters stay usable as `fn`
+// items. `Tag` is zero-sized, so it never appears in the wasm ABI.
+pub struct Tag<T: ?Sized>(PhantomData<*const T>);
+impl<T: ?Sized> Tag<T> {
+    #[inline(always)]
+    pub const fn new() -> Self {
+        Self(PhantomData)
+    }
+}
+
 // Call-site courier family for `#[wasm_bindgen]` generic imported
 // functions, one per argument arity. Mirrors `wbg_cast`: the public
 // wrapper splits each argument's ABI into prims and calls the
@@ -230,12 +244,20 @@ generic_fills!(GenericFills8, P0, P1, P2, P3, P4, P5, P6, P7);
 // call site directly to that import.
 //
 // `N` keys the import (shim name + holed template, fixed per import); `F`
-// keys the fills blob (the distinct type parameters' schemas, varying per
-// monomorphisation); `R` is the return type; `A…` are the argument types.
+// keys the fills blob (the distinct hole types' schemas, varying per
+// monomorphisation); `IC` carries the closure invoke address; `R` is the
+// return type; `A…` are the argument types. The first four are passed as
+// `Tag` values (see above) rather than turbofish type arguments.
 macro_rules! generic_import_courier {
     ($pub:ident, $brk:ident, $(($A:ident, $a:ident, $p1:ident, $p2:ident, $p3:ident, $p4:ident),)*) => {
         #[allow(clippy::too_many_arguments)]
-        pub fn $pub<N, F, IC, R, $($A,)*>($($a: $A,)*) -> R
+        pub fn $pub<N, F, IC, R, $($A,)*>(
+            _n: Tag<N>,
+            _f: Tag<F>,
+            _ic: Tag<IC>,
+            _r: Tag<R>,
+            $($a: $A,)*
+        ) -> R
         where
             N: GenericImportName,
             F: GenericFills,
