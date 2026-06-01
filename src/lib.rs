@@ -1570,9 +1570,18 @@ pub fn anyref_heap_live_count() -> u32 {
 pub trait UnwrapThrowExt<T>: Sized {
     /// Unwrap this `Option` or `Result`, but instead of panicking on failure,
     /// throw an exception to JavaScript.
-    #[cfg_attr(any(debug_assertions, not(all(target_family = "wasm", not(target_os = "wasi")))), track_caller)]
+    #[cfg_attr(
+        any(
+            debug_assertions,
+            not(all(target_family = "wasm", not(target_os = "wasi")))
+        ),
+        track_caller
+    )]
     fn unwrap_throw(self) -> T {
-        if cfg!(all(debug_assertions, all(target_family = "wasm", not(target_os = "wasi")))) {
+        if cfg!(all(
+            debug_assertions,
+            all(target_family = "wasm", not(target_os = "wasi"))
+        )) {
             let loc = core::panic::Location::caller();
             let msg = alloc::format!(
                 "called `{}::unwrap_throw()` ({}:{}:{})",
@@ -1590,7 +1599,13 @@ pub trait UnwrapThrowExt<T>: Sized {
     /// Unwrap this container's `T` value, or throw an error to JS with the
     /// given message if the `T` value is unavailable (e.g. an `Option<T>` is
     /// `None`).
-    #[cfg_attr(any(debug_assertions, not(all(target_family = "wasm", not(target_os = "wasi")))), track_caller)]
+    #[cfg_attr(
+        any(
+            debug_assertions,
+            not(all(target_family = "wasm", not(target_os = "wasi")))
+        ),
+        track_caller
+    )]
     fn expect_throw(self, message: &str) -> T;
 }
 
