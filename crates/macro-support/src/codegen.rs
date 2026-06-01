@@ -1308,55 +1308,44 @@ fn schema_parts_for_type_tokens(
     }
 }
 
-/// Substitute each generic type parameter in `ty` with the
-/// `__WbgTypeParam<i>` hole marker, where `i` is the parameter's
-/// declaration index. The result is a fully concrete type whose
-/// `WasmDescribe` schema is the holed signature fragment for that
-/// argument/return — `TYPE_PARAM(i)` nested correctly inside `&_`,
-/// `Option<_>`, etc. by the existing wrapper `WasmDescribe` impls.
-fn hole_type(
-    ty: &syn::Type,
-    params: &BTreeMap<String, usize>,
+/// Compute a generic import's signature-template part for one argument or
+/// return position. A parameter-dependent type becomes a `TYPE_PARAM(idx)`
+/// hole (deduped by type via `hole_index`, its `sig` form recorded in
+/// `hole_types` for the fills carrier); a parameter-free type contributes
+/// its own `WasmDescribe` schema inline. Returns the `(buf, len)` pair to
+/// splice into the template's `cat_schema`.
+fn template_part(
     wasm_bindgen: &syn::Path,
-) -> syn::Type {
-    struct Holer<'a> {
-        params: &'a BTreeMap<String, usize>,
-        wasm_bindgen: &'a syn::Path,
+    orig: &syn::Type,
+    sig: &syn::Type,
+    is_hole: bool,
+    hole_types: &mut Vec<syn::Type>,
+    hole_index: &mut BTreeMap<String, usize>,
+) -> (TokenStream, TokenStream) {
+    if is_hole {
+        let key = quote!(#orig).to_string();
+        let idx = *hole_index.entry(key).or_insert_with(|| {
+            let i = hole_types.len();
+            hole_types.push(sig.clone());
+            i
+        });
+        let idx_u32 = idx as u32;
+        (
+            quote! {
+                (&#wasm_bindgen::describe::schema_from_slice(
+                    &[#wasm_bindgen::describe::TYPE_PARAM, #idx_u32]
+                ), 2usize)
+            },
+            quote! { 2usize },
+        )
+    } else {
+        // Parameter-free type: pin references to `'static` so the type is
+        // valid in the lifetime-free carrier const, then take its schema.
+        let static_lt = syn::Lifetime::new("'static", Span::call_site());
+        let (ct, _) = relifetime(orig, &static_lt);
+        let (l, b) = schema_parts_for_type(wasm_bindgen, &ct);
+        (quote! { (&#b, #l) }, l)
     }
-    impl syn::visit_mut::VisitMut for Holer<'_> {
-        fn visit_type_mut(&mut self, node: &mut syn::Type) {
-            if let syn::Type::Path(tp) = node {
-                if tp.qself.is_none() {
-                    if let Some(ident) = tp.path.get_ident() {
-                        if let Some(&idx) = self.params.get(&ident.to_string()) {
-                            let wb = self.wasm_bindgen;
-                            *node = syn::parse_quote!(#wb::__rt::__WbgTypeParam<#idx>);
-                            return;
-                        }
-                    }
-                }
-            }
-            syn::visit_mut::visit_type_mut(self, node);
-        }
-        fn visit_type_reference_mut(&mut self, node: &mut syn::TypeReference) {
-            // The holed type is used in the (lifetime-free) carrier const,
-            // so pin every reference to `'static`. References' schemas are
-            // lifetime-independent, so this is purely to satisfy the const.
-            if node.lifetime.is_none() {
-                node.lifetime = Some(syn::Lifetime::new("'static", Span::call_site()));
-            }
-            syn::visit_mut::visit_type_reference_mut(self, node);
-        }
-    }
-    let mut ty = ty.clone();
-    syn::visit_mut::VisitMut::visit_type_mut(
-        &mut Holer {
-            params,
-            wasm_bindgen,
-        },
-        &mut ty,
-    );
-    ty
 }
 
 /// Give every elided reference in `ty` the explicit lifetime `lt`,
@@ -3409,22 +3398,16 @@ impl ast::ImportFunction {
             );
         }
 
-        // Type parameters, in declaration order. Each one's index is the
-        // `TYPE_PARAM(i)` hole it fills in the signature template.
+        // Type parameters, in declaration order.
         let type_params: Vec<&syn::Ident> =
             self.generics.type_params().map(|tp| &tp.ident).collect();
-        let nparams = type_params.len();
-        if nparams == 0 || nparams > 8 {
+        if type_params.is_empty() {
             bail_span!(
                 rust_name,
-                "#[wasm_bindgen(generic)] supports between 1 and 8 type parameters",
+                "#[wasm_bindgen(generic)] requires at least one type parameter",
             );
         }
-        let param_index: BTreeMap<String, usize> = type_params
-            .iter()
-            .enumerate()
-            .map(|(i, id)| (id.to_string(), i))
-            .collect();
+        let param_names = type_params.clone();
 
         let nargs = self.function.arguments.len();
         if nargs > 8 {
@@ -3434,24 +3417,40 @@ impl ast::ImportFunction {
             );
         }
 
-        // Per-argument: the user-facing binding name, the argument type
-        // (used directly as the courier's monomorphised ABI type), and the
-        // holed type (parameters replaced by `__WbgTypeParam<i>`) used to
-        // build the signature template.
+        // The signature template's `TYPE_PARAM(i)` holes are keyed by
+        // *parameter-dependent type*, not by bare parameter: an argument or
+        // return type that mentions any type parameter (`T`, `&T`,
+        // `Option<T>`, `<T as Trait>::Assoc`, …) becomes one hole, filled
+        // per-monomorphisation by that whole type's schema. Distinct holes
+        // dedup by type so a parameter repeated across positions collapses.
         let wbg_lt = syn::Lifetime::new("'wbg_a", Span::call_site());
         let mut needs_lifetime = false;
+        let mut hole_types: Vec<syn::Type> = Vec::new();
+        let mut hole_index: BTreeMap<String, usize> = BTreeMap::new();
+
         let mut arg_names = Vec::new();
         let mut arg_tys = Vec::new();
-        let mut holed_arg_tys = Vec::new();
+        let mut arg_template_pairs = Vec::new();
+        let mut arg_template_lens = Vec::new();
         for (i, arg) in self.function.arguments.iter().enumerate() {
             let ty = (*arg.pat_type.ty).clone();
             let name = match &*arg.pat_type.pat {
                 syn::Pat::Ident(syn::PatIdent { ident, .. }) => ident.clone(),
                 _ => Ident::new(&format!("__wbg_genarg{i}"), Span::call_site()),
             };
-            holed_arg_tys.push(hole_type(&ty, &param_index, wasm_bindgen));
             let (sig_ty, changed) = relifetime(&ty, &wbg_lt);
             needs_lifetime |= changed;
+            let is_hole = generics::uses_generic_params(&ty, &param_names);
+            let (pair, len) = template_part(
+                wasm_bindgen,
+                &ty,
+                &sig_ty,
+                is_hole,
+                &mut hole_types,
+                &mut hole_index,
+            );
+            arg_template_pairs.push(pair);
+            arg_template_lens.push(len);
             arg_names.push(name);
             arg_tys.push(sig_ty);
         }
@@ -3472,22 +3471,35 @@ impl ast::ImportFunction {
             }
             None => quote! {},
         };
-        let holed_ret_ty = hole_type(&ret_ty, &param_index, wasm_bindgen);
+        let ret_is_hole = generics::uses_generic_params(&ret_ty, &param_names);
+        let (ret_sig_ty, ret_changed) = relifetime(&ret_ty, &wbg_lt);
+        needs_lifetime |= ret_changed;
+        let (ret_pair, ret_len) = template_part(
+            wasm_bindgen,
+            &ret_ty,
+            &ret_sig_ty,
+            ret_is_hole,
+            &mut hole_types,
+            &mut hole_index,
+        );
 
-        // Build the holed signature template `[FUNCTION, 0, nargs, args.., ret, inner_ret]`
-        // entirely from concrete (`__WbgTypeParam`-holed) types via the
-        // normal `WasmDescribe`-based schema construction.
+        let nholes = hole_types.len();
+        if nholes == 0 {
+            bail_span!(
+                rust_name,
+                "#[wasm_bindgen(generic)] requires the type parameter(s) to appear in the \
+                 argument or return types",
+            );
+        }
+        if nholes > 8 {
+            bail_span!(
+                rust_name,
+                "#[wasm_bindgen(generic)] supports at most 8 distinct generic types in the \
+                 signature",
+            );
+        }
+
         let nargs_u32 = nargs as u32;
-        let arg_parts: Vec<(TokenStream, TokenStream)> = holed_arg_tys
-            .iter()
-            .map(|ty| schema_parts_for_type(wasm_bindgen, ty))
-            .collect();
-        let (ret_len, ret_buf) = schema_parts_for_type(wasm_bindgen, &holed_ret_ty);
-        let arg_pair_exprs: Vec<TokenStream> = arg_parts
-            .iter()
-            .map(|(l, b)| quote! { (&#b, #l) })
-            .collect();
-        let arg_len_exprs: Vec<&TokenStream> = arg_parts.iter().map(|(l, _)| l).collect();
 
         // Unique per-import name carrier; reuse the (already unique) shim ident.
         let name_ty = Ident::new(
@@ -3497,9 +3509,9 @@ impl ast::ImportFunction {
         let shim_str = self.shim.to_string();
         let shim_len = shim_str.len();
 
-        // The fills carrier and courier are chosen by type-parameter count
-        // and argument count respectively.
-        let fills_ty = Ident::new(&format!("GenericFills{nparams}"), Span::call_site());
+        // The fills carrier holds the distinct hole types' schemas; the
+        // courier is chosen by argument arity.
+        let fills_ty = Ident::new(&format!("GenericFills{nholes}"), Span::call_site());
         let courier = Ident::new(&format!("wbg_generic_import_{nargs}"), Span::call_site());
 
         // Wrapper generics: preserve the user's parameters/bounds, then add
@@ -3513,10 +3525,10 @@ impl ast::ImportFunction {
         }
         {
             let where_clause = generics.make_where_clause();
-            for tp in &type_params {
+            for ht in &hole_types {
                 where_clause
                     .predicates
-                    .push(syn::parse_quote!(#tp: #wasm_bindgen::describe::WasmDescribe));
+                    .push(syn::parse_quote!(#ht: #wasm_bindgen::describe::WasmDescribe));
             }
             for ty in &arg_tys {
                 where_clause.predicates.push(syn::parse_quote!(
@@ -3559,20 +3571,20 @@ impl ast::ImportFunction {
                         ]);
                     #wasm_bindgen::describe::cat_schema(&[
                         (&__HEADER, 3),
-                        #(#arg_pair_exprs,)*
-                        (&#ret_buf, #ret_len),
-                        (&#ret_buf, #ret_len),
+                        #(#arg_template_pairs,)*
+                        #ret_pair,
+                        #ret_pair,
                     ])
                 };
                 const TEMPLATE_LEN: usize =
-                    3 #( + #arg_len_exprs )* + (#ret_len) + (#ret_len);
+                    3 #( + #arg_template_lens )* + (#ret_len) + (#ret_len);
             }
 
             #[automatically_derived]
             #vis fn #rust_name #impl_generics (#(#arg_names: #arg_tys),*) #ret_sig #where_clause {
                 let __wbg_ret = #wasm_bindgen::__rt::#courier::<
                     #name_ty,
-                    #wasm_bindgen::__rt::#fills_ty<#(#type_params),*>,
+                    #wasm_bindgen::__rt::#fills_ty<#(#hole_types),*>,
                     #ret_ty,
                     #(#arg_tys),*
                 >(#(#arg_names),*);

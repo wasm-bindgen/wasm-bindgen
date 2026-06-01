@@ -125,20 +125,6 @@ pub trait GenericImportName {
     const TEMPLATE_LEN: usize;
 }
 
-// Schema hole for a generic import's signature *template*. The macro
-// substitutes each generic type parameter `Tᵢ` in an import's argument /
-// return types with `__WbgTypeParam<i>` before building the template
-// schema, so the existing `WasmDescribe`-based schema construction yields
-// a holed descriptor (`[TYPE_PARAM, i]` in the param's leaf position,
-// nested correctly inside `&_`, `Option<_>`, …). The cli splices each hole
-// with the per-monomorphisation fill.
-pub struct __WbgTypeParam<const I: usize>;
-impl<const I: usize> crate::describe::WasmDescribe for __WbgTypeParam<I> {
-    const SCHEMA_LEN: usize = 2;
-    const SCHEMA_BUF: [u32; crate::describe::SCHEMA_MAX] =
-        crate::describe::schema_from_slice(&[crate::describe::TYPE_PARAM, I as u32]);
-}
-
 // Per-monomorphisation fills blob for a generic import: the concatenation
 // of each distinct type parameter's `SCHEMA_BUF[..SCHEMA_LEN]`, indexed by
 // declaration order. The cli decodes it as a sequence and splices the holes
