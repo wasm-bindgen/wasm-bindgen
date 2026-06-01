@@ -3393,10 +3393,7 @@ impl ast::ImportFunction {
         if self.generics.type_params().next().is_none() {
             return false;
         }
-        if self.generics.lifetimes().next().is_some()
-            || self.generics.const_params().next().is_some()
-            || self.function.arguments.len() > 11
-        {
+        if self.generics.const_params().next().is_some() || self.function.arguments.len() > 11 {
             return false;
         }
         let param_names: Vec<&syn::Ident> =
@@ -3404,11 +3401,6 @@ impl ast::ImportFunction {
         let mut closures = 0usize;
         for a in &self.function.arguments {
             let ty = &a.pat_type.ty;
-            // `ScopedClosure<…>` carries an elided lifetime parameter the
-            // per-mono path can't yet reconstruct; leave on the erasure path.
-            if quote! { #ty }.to_string().contains("ScopedClosure") {
-                return false;
-            }
             if detect_closure_arg(ty).is_some() && generics::uses_generic_params(ty, &param_names) {
                 closures += 1;
             }
@@ -3445,12 +3437,6 @@ impl ast::ImportFunction {
         let vis = &self.function.rust_vis;
         let rust_name = &self.rust_name;
 
-        if self.generics.lifetimes().next().is_some() {
-            bail_span!(
-                rust_name,
-                "#[wasm_bindgen(generic)] does not yet support explicit lifetime parameters",
-            );
-        }
         if self.generics.const_params().next().is_some() {
             bail_span!(
                 rust_name,
@@ -3533,20 +3519,27 @@ impl ast::ImportFunction {
         for (i, arg) in self.function.arguments.iter().enumerate() {
             let ty = (*arg.pat_type.ty).clone();
             let mentions = generics::uses_generic_params(&ty, &param_names);
-            // Per-argument ABI bound: references are higher-ranked over the
-            // call lifetime the courier infers; owned types bound directly.
-            match &ty {
-                syn::Type::Reference(r) => {
-                    let m = &r.mutability;
-                    let elem = &r.elem;
-                    arg_bounds.push(quote! {
-                        for<'__wbg> &'__wbg #m #elem: #wasm_bindgen::convert::IntoWasmAbi
+            // Per-argument ABI bound, only for parameter-dependent args (the
+            // courier proves it for concrete args from their type directly,
+            // and a concrete reference may carry an elided lifetime parameter
+            // — e.g. `&ScopedClosure<…>` — that can't be named in a bound).
+            // References are higher-ranked over the call lifetime the courier
+            // infers; owned types bound directly.
+            if mentions {
+                match &ty {
+                    syn::Type::Reference(r) => {
+                        let m = &r.mutability;
+                        let elem = &r.elem;
+                        arg_bounds.push(quote! {
+                            for<'__wbg> &'__wbg #m #elem: #wasm_bindgen::convert::IntoWasmAbi
+                                + #wasm_bindgen::describe::WasmDescribe
+                        });
+                    }
+                    _ => arg_bounds.push(quote! {
+                        #ty: #wasm_bindgen::convert::IntoWasmAbi
                             + #wasm_bindgen::describe::WasmDescribe
-                    });
+                    }),
                 }
-                _ => arg_bounds.push(quote! {
-                    #ty: #wasm_bindgen::convert::IntoWasmAbi + #wasm_bindgen::describe::WasmDescribe
-                }),
             }
             let (buf, len) = match detect_closure_arg(&ty) {
                 // A generic closure argument (`&mut dyn FnMut(T, …)`): the
