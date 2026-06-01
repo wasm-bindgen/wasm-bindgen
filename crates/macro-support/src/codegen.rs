@@ -3669,14 +3669,21 @@ impl ast::ImportFunction {
             quote! { __wbg_ret }
         };
 
+        // The function's `rust_attrs` (notably `#[cfg(...)]`) must gate the
+        // carrier, courier wrapper, and any closure invoke wrappers together,
+        // so a cfg'd-out generic import emits nothing.
+        let attrs = &self.function.rust_attrs;
+
         // The name carrier (with the holed template) lives at module scope;
         // the wrapper goes inside the class `impl` when there is one.
         let carrier = quote! {
+            #(#attrs)*
             #[doc(hidden)]
             #[automatically_derived]
             #[allow(non_camel_case_types)]
             pub struct #name_ty;
 
+            #(#attrs)*
             #[automatically_derived]
             impl #wasm_bindgen::__rt::GenericImportName for #name_ty {
                 const SHIM: &'static str = #shim_str;
@@ -3701,6 +3708,7 @@ impl ast::ImportFunction {
         };
 
         let fn_def = quote! {
+            #(#attrs)*
             #[automatically_derived]
             #[allow(nonstandard_style)]
             #[allow(clippy::all, clippy::nursery, clippy::pedantic, clippy::restriction)]

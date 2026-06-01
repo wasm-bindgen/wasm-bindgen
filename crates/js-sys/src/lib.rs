@@ -540,14 +540,14 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Array)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, generic)]
     pub fn new<T>() -> Array<T>;
 
     // Next major: deprecate
     /// Creates a new empty array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Array)
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, generic)]
     pub fn new_typed<T>() -> Array<T>;
 
     /// Creates a new array with the specified length (elements are initialized to `undefined`).
@@ -561,14 +561,14 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Array)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, generic)]
     pub fn new_with_length<T>(len: u32) -> Array<T>;
 
     // Next major: deprecate
     /// Creates a new array with the specified length (elements are initialized to `undefined`).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Array)
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, generic)]
     pub fn new_with_length_typed<T>(len: u32) -> Array<T>;
 
     /// Retrieves the element at the index, counting from the end if negative
@@ -576,7 +576,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic)]
     pub fn at<T>(this: &Array<T>, index: i32) -> T;
 
     /// Retrieves the element at the index, counting from the end if negative
@@ -584,48 +584,48 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic)]
     pub fn at<T>(this: &Array<T>, index: i32) -> Option<T>;
 
     /// Retrieves the element at the index (returns `undefined` if the index is out of range).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method, indexing_getter)]
+    #[wasm_bindgen(method, indexing_getter, generic)]
     pub fn get<T>(this: &Array<T>, index: u32) -> T;
 
     /// Retrieves the element at the index (returns `None` if the index is out of range).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, indexing_getter)]
+    #[wasm_bindgen(method, indexing_getter, generic)]
     pub fn get<T>(this: &Array<T>, index: u32) -> Option<T>;
 
     /// Retrieves the element at the index (returns `undefined` if the index is out of range).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at)
-    #[wasm_bindgen(method, indexing_getter)]
+    #[wasm_bindgen(method, indexing_getter, generic)]
     pub fn get_unchecked<T>(this: &Array<T>, index: u32) -> T;
 
     // Next major: deprecate
     /// Retrieves the element at the index (returns `None` if the index is out of range,
     /// or if the element is explicitly `undefined`).
-    #[wasm_bindgen(method, indexing_getter)]
+    #[wasm_bindgen(method, indexing_getter, generic)]
     pub fn get_checked<T>(this: &Array<T>, index: u32) -> Option<T>;
 
     /// Sets the element at the index (auto-enlarges the array if the index is out of range).
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method, indexing_setter)]
+    #[wasm_bindgen(method, indexing_setter, generic)]
     pub fn set<T>(this: &Array<T>, index: u32, value: T);
 
     /// Sets the element at the index (auto-enlarges the array if the index is out of range).
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, indexing_setter)]
+    #[wasm_bindgen(method, indexing_setter, generic)]
     pub fn set<T>(this: &Array<T>, index: u32, value: &T);
 
     // Next major: deprecate
     /// Sets the element at the index (auto-enlarges the array if the index is out of range).
-    #[wasm_bindgen(method, indexing_setter)]
+    #[wasm_bindgen(method, indexing_setter, generic)]
     pub fn set_ref<T>(this: &Array<T>, index: u32, value: &T);
 
     /// Deletes the element at the index (does nothing if the index is out of range).
@@ -633,7 +633,7 @@ extern "C" {
     /// The element at the index is set to `undefined`.
     ///
     /// This does not resize the array, the array will still be the same length.
-    #[wasm_bindgen(method, indexing_deleter)]
+    #[wasm_bindgen(method, indexing_deleter, generic)]
     pub fn delete<T>(this: &Array<T>, index: u32);
 
     /// The `Array.from()` static method creates a new, shallow-copied `Array` instance
