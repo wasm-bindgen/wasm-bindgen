@@ -395,7 +395,7 @@ impl<T: FromWasmAbi> FromWasmAbi for AssertUnwindSafe<T> {
 ///
 /// This means implementing `UpcastFrom<Source> for Target` automatically gives you
 /// `Upcast<Target> for Source`, enabling `source.upcast()` to produce `Target`.
-pub trait UpcastFrom<S: ?Sized> {}
+pub unsafe trait UpcastFrom<S: ?Sized> {}
 
 /// A trait for type-safe generic upcasting.
 ///
@@ -471,20 +471,20 @@ where
 }
 
 // Reference impls using UpcastFrom
-impl<'a, T, Target> UpcastFrom<&'a mut T> for &'a mut Target where Target: UpcastFrom<T> {}
-impl<'a, T, Target> UpcastFrom<&'a T> for &'a Target where Target: UpcastFrom<T> {}
+unsafe impl<'a, T, Target> UpcastFrom<&'a mut T> for &'a mut Target where Target: UpcastFrom<T> {}
+unsafe impl<'a, T, Target> UpcastFrom<&'a T> for &'a Target where Target: UpcastFrom<T> {}
 
 // Tuple upcasts with structural covariance
 macro_rules! impl_tuple_upcast {
     ([$($T:ident)+] [$($Target:ident)+]) => {
         // Structural covariance: (T...) -> (Target...)
-        impl<$($T,)+ $($Target,)+> UpcastFrom<($($T,)+)> for ($($Target,)+)
+        unsafe impl<$($T,)+ $($Target,)+> UpcastFrom<($($T,)+)> for ($($Target,)+)
         where
             $($Target: JsGeneric + UpcastFrom<$T>,)+
             $($T: JsGeneric,)+
         {
         }
-        impl<$($T: JsGeneric,)+ $($Target: JsGeneric,)+> UpcastFrom<($($T,)+)> for JsOption<($($Target,)+)>
+        unsafe impl<$($T: JsGeneric,)+ $($Target: JsGeneric,)+> UpcastFrom<($($T,)+)> for JsOption<($($Target,)+)>
         where
             $($Target: JsGeneric + UpcastFrom<$T>,)+
             $($T: JsGeneric,)+

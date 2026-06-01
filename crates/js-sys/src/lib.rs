@@ -1807,18 +1807,18 @@ macro_rules! impl_tuple_covariance {
         // ArrayTuple -> Array
         // Allows (T1, T2, ...) to be used where (Target) is expected
         // when all T1, T2, ... are covariant to Target
-        impl<$($T,)+ Target> UpcastFrom<ArrayTuple<($($T,)+)>> for Array<Target>
+        unsafe impl<$($T,)+ Target> UpcastFrom<ArrayTuple<($($T,)+)>> for Array<Target>
         where
             $(Target: UpcastFrom<$T>,)+
         {
         }
-        impl<$($T,)+ Target> UpcastFrom<ArrayTuple<($($T,)+)>> for JsOption<Array<Target>>
+        unsafe impl<$($T,)+ Target> UpcastFrom<ArrayTuple<($($T,)+)>> for JsOption<Array<Target>>
         where
             $(Target: UpcastFrom<$T>,)+
         {}
         // Array<T> -> ArrayTuple<T, ...>
-        impl<T> UpcastFrom<Array<T>> for ArrayTuple<($($Ts,)+)> {}
-        impl<T: JsGeneric> UpcastFrom<Array<T>> for ArrayTuple<($(JsOption<$Ts>,)+)> {}
+        unsafe impl<T> UpcastFrom<Array<T>> for ArrayTuple<($($Ts,)+)> {}
+        unsafe impl<T: JsGeneric> UpcastFrom<Array<T>> for ArrayTuple<($(JsOption<$Ts>,)+)> {}
     };
 }
 
@@ -1832,9 +1832,12 @@ impl_tuple_covariance!([T1 T2 T3 T4 T5 T6 T7] [Target1 Target2 Target3 Target4 T
 impl_tuple_covariance!([T1 T2 T3 T4 T5 T6 T7 T8] [Target1 Target2 Target3 Target4 Target5 Target6 Target7 Target8] [T T T T T T T T]);
 
 // Tuple casting is implemented in core
-impl<T: JsTuple, U: JsTuple> UpcastFrom<ArrayTuple<T>> for ArrayTuple<U> where U: UpcastFrom<T> {}
-impl<T: JsTuple> UpcastFrom<ArrayTuple<T>> for JsValue {}
-impl<T: JsTuple> UpcastFrom<ArrayTuple<T>> for JsOption<JsValue> {}
+unsafe impl<T: JsTuple, U: JsTuple> UpcastFrom<ArrayTuple<T>> for ArrayTuple<U> where
+    U: UpcastFrom<T>
+{
+}
+unsafe impl<T: JsTuple> UpcastFrom<ArrayTuple<T>> for JsValue {}
+unsafe impl<T: JsTuple> UpcastFrom<ArrayTuple<T>> for JsOption<JsValue> {}
 
 /// Iterator returned by `Array::into_iter`
 #[derive(Debug, Clone)]
@@ -2346,7 +2349,7 @@ extern "C" {
     ) -> Result<ArrayBuffer, JsValue>;
 }
 
-impl UpcastFrom<&[u8]> for ArrayBuffer {}
+unsafe impl UpcastFrom<&[u8]> for ArrayBuffer {}
 
 // SharedArrayBuffer
 #[wasm_bindgen]
@@ -3279,8 +3282,8 @@ extern "C" {
     pub fn value_of(this: &Boolean) -> bool;
 }
 
-impl UpcastFrom<bool> for Boolean {}
-impl UpcastFrom<Boolean> for bool {}
+unsafe impl UpcastFrom<bool> for Boolean {}
+unsafe impl UpcastFrom<Boolean> for bool {}
 
 impl Boolean {
     /// Typed Boolean true constant.
@@ -4579,15 +4582,18 @@ extern "C" {
 }
 
 // Basic UpcastFrom impls for Function<T>
-impl<T: JsFunction> UpcastFrom<Function<T>> for JsValue {}
-impl<T: JsFunction> UpcastFrom<Function<T>> for JsOption<JsValue> {}
-impl<T: JsFunction> UpcastFrom<Function<T>> for Object {}
-impl<T: JsFunction> UpcastFrom<Function<T>> for JsOption<Object> {}
+unsafe impl<T: JsFunction> UpcastFrom<Function<T>> for JsValue {}
+unsafe impl<T: JsFunction> UpcastFrom<Function<T>> for JsOption<JsValue> {}
+unsafe impl<T: JsFunction> UpcastFrom<Function<T>> for Object {}
+unsafe impl<T: JsFunction> UpcastFrom<Function<T>> for JsOption<Object> {}
 
 // Blanket trait for Function upcast
 // Function<T> upcasts to Function<U> when the underlying fn type T upcasts to U.
 // The fn signature UpcastFrom impls already encode correct variance (covariant return, contravariant args).
-impl<T: JsFunction, U: JsFunction> UpcastFrom<Function<T>> for Function<U> where U: UpcastFrom<T> {}
+unsafe impl<T: JsFunction, U: JsFunction> UpcastFrom<Function<T>> for Function<U> where
+    U: UpcastFrom<T>
+{
+}
 
 // len() method for Function<T> using JsFunction::ARITY
 impl<T: JsFunction> Function<T> {
@@ -5368,7 +5374,7 @@ extern "C" {
     pub fn next<T: FromWasmAbi>(this: &Iterator<T>) -> Result<IteratorNext<T>, JsValue>;
 }
 
-impl<T> UpcastFrom<Iterator<T>> for Object {}
+unsafe impl<T> UpcastFrom<Iterator<T>> for Object {}
 
 impl Iterator {
     fn looks_like_iterator(it: &JsValue) -> bool {
@@ -5436,7 +5442,7 @@ extern "C" {
     ) -> Result<Promise<IteratorNext<T>>, JsValue>;
 }
 
-impl<T> UpcastFrom<AsyncIterator<T>> for Object {}
+unsafe impl<T> UpcastFrom<AsyncIterator<T>> for Object {}
 
 // iterators in JS are themselves iterable
 impl<T> AsyncIterable for AsyncIterator<T> {
@@ -6130,13 +6136,13 @@ macro_rules! number_from {
             }
         }
 
-        impl UpcastFrom<$x> for Number {}
+        unsafe impl UpcastFrom<$x> for Number {}
     )*)
 }
 number_from!(i8 u8 i16 u16 i32 u32 f32 f64);
 
 // The only guarantee for a JS number
-impl UpcastFrom<Number> for f64 {}
+unsafe impl UpcastFrom<Number> for f64 {}
 
 /// The error type returned when a checked integral type conversion fails.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -9813,14 +9819,14 @@ extern "C" {
 // These upcasts are non-castable due to the constraints on the function
 // but the UpcastFrom covariance must still extend through closure types.
 // (impl UpcastFrom really just means CovariantGeneric relation)
-impl UpcastFrom<String> for JsString {}
-impl UpcastFrom<JsString> for String {}
+unsafe impl UpcastFrom<String> for JsString {}
+unsafe impl UpcastFrom<JsString> for String {}
 
-impl UpcastFrom<&str> for JsString {}
-impl UpcastFrom<JsString> for &str {}
+unsafe impl UpcastFrom<&str> for JsString {}
+unsafe impl UpcastFrom<JsString> for &str {}
 
-impl UpcastFrom<char> for JsString {}
-impl UpcastFrom<JsString> for char {}
+unsafe impl UpcastFrom<char> for JsString {}
+unsafe impl UpcastFrom<JsString> for char {}
 
 impl JsString {
     /// Returns the `JsString` value of this JS value if it's an instance of a

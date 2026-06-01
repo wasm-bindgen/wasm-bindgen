@@ -335,17 +335,17 @@ macro_rules! impl_fn_upcasts {
     };
 
     (@same []) => {
-        impl<R1, R2> UpcastFrom<fn() -> R1> for fn() -> R2
+        unsafe impl<R1, R2> UpcastFrom<fn() -> R1> for fn() -> R2
         where
             R2: UpcastFrom<R1>
         {}
 
-        impl<'a, R1, R2> UpcastFrom<dyn Fn() -> R1 + 'a> for dyn Fn() -> R2 + 'a
+        unsafe impl<'a, R1, R2> UpcastFrom<dyn Fn() -> R1 + 'a> for dyn Fn() -> R2 + 'a
         where
             R2: UpcastFrom<R1>
         {}
 
-        impl<'a, R1, R2> UpcastFrom<dyn FnMut() -> R1 + 'a> for dyn FnMut() -> R2 + 'a
+        unsafe impl<'a, R1, R2> UpcastFrom<dyn FnMut() -> R1 + 'a> for dyn FnMut() -> R2 + 'a
         where
             R2: UpcastFrom<R1>
         {}
@@ -353,19 +353,19 @@ macro_rules! impl_fn_upcasts {
 
     // Arguments implemented with contravariance
     (@same [$($A1:ident $A2:ident)+]) => {
-        impl<R1, R2, $($A1, $A2),+> UpcastFrom<fn($($A1),+) -> R1> for fn($($A2),+) -> R2
+        unsafe impl<R1, R2, $($A1, $A2),+> UpcastFrom<fn($($A1),+) -> R1> for fn($($A2),+) -> R2
         where
             R2: UpcastFrom<R1>,
             $($A1: UpcastFrom<$A2>,)+
         {}
 
-        impl<'a, R1, R2, $($A1, $A2),+> UpcastFrom<dyn Fn($($A1),+) -> R1 + 'a> for dyn Fn($($A2),+) -> R2 + 'a
+        unsafe impl<'a, R1, R2, $($A1, $A2),+> UpcastFrom<dyn Fn($($A1),+) -> R1 + 'a> for dyn Fn($($A2),+) -> R2 + 'a
         where
             R2: UpcastFrom<R1>,
             $($A1: UpcastFrom<$A2>,)+
         {}
 
-        impl<'a, R1, R2, $($A1, $A2),+> UpcastFrom<dyn FnMut($($A1),+) -> R1 + 'a> for dyn FnMut($($A2),+) -> R2 + 'a
+        unsafe impl<'a, R1, R2, $($A1, $A2),+> UpcastFrom<dyn FnMut($($A1),+) -> R1 + 'a> for dyn FnMut($($A2),+) -> R2 + 'a
         where
             R2: UpcastFrom<R1>,
             $($A1: UpcastFrom<$A2>,)+
@@ -384,19 +384,19 @@ macro_rules! impl_fn_upcasts {
 
     // Extend: 0 -> N
     (@extend [] [$($O:ident)+]) => {
-        impl<R1, R2, $($O),+> UpcastFrom<fn() -> R1> for fn($($O),+) -> R2
+        unsafe impl<R1, R2, $($O),+> UpcastFrom<fn() -> R1> for fn($($O),+) -> R2
         where
             R2: UpcastFrom<R1>,
             $($O: UpcastFrom<Undefined>,)+
         {}
 
-        impl<'a, R1, R2, $($O),+> UpcastFrom<dyn Fn() -> R1 + 'a> for dyn Fn($($O),+) -> R2 + 'a
+        unsafe impl<'a, R1, R2, $($O),+> UpcastFrom<dyn Fn() -> R1 + 'a> for dyn Fn($($O),+) -> R2 + 'a
         where
             R2: UpcastFrom<R1>,
             $($O: UpcastFrom<Undefined>,)+
         {}
 
-        impl<'a, R1, R2, $($O),+> UpcastFrom<dyn FnMut() -> R1 + 'a> for dyn FnMut($($O),+) -> R2 + 'a
+        unsafe impl<'a, R1, R2, $($O),+> UpcastFrom<dyn FnMut() -> R1 + 'a> for dyn FnMut($($O),+) -> R2 + 'a
         where
             R2: UpcastFrom<R1>,
             $($O: UpcastFrom<Undefined>,)+
@@ -405,21 +405,21 @@ macro_rules! impl_fn_upcasts {
 
     // Extend: N -> M
     (@extend [$($A1:ident $A2:ident)+] [$($O:ident)+]) => {
-        impl<R1, R2, $($A1, $A2,)+ $($O),+> UpcastFrom<fn($($A1),+) -> R1> for fn($($A2,)+ $($O),+) -> R2
+        unsafe impl<R1, R2, $($A1, $A2,)+ $($O),+> UpcastFrom<fn($($A1),+) -> R1> for fn($($A2,)+ $($O),+) -> R2
         where
             R2: UpcastFrom<R1>,
             $($A1: UpcastFrom<$A2>,)+  // Contravariant
             $($O: UpcastFrom<Undefined>,)+
         {}
 
-        impl<'a, R1, R2, $($A1, $A2,)+ $($O),+> UpcastFrom<dyn Fn($($A1),+) -> R1 + 'a> for dyn Fn($($A2,)+ $($O),+) -> R2 + 'a
+        unsafe impl<'a, R1, R2, $($A1, $A2,)+ $($O),+> UpcastFrom<dyn Fn($($A1),+) -> R1 + 'a> for dyn Fn($($A2,)+ $($O),+) -> R2 + 'a
         where
             R2: UpcastFrom<R1>,
             $($A1: UpcastFrom<$A2>,)+  // Contravariant
             $($O: UpcastFrom<Undefined>,)+
         {}
 
-        impl<'a, R1, R2, $($A1, $A2,)+ $($O),+> UpcastFrom<dyn FnMut($($A1),+) -> R1 + 'a> for dyn FnMut($($A2,)+ $($O),+) -> R2 + 'a
+        unsafe impl<'a, R1, R2, $($A1, $A2,)+ $($O),+> UpcastFrom<dyn FnMut($($A1),+) -> R1 + 'a> for dyn FnMut($($A2,)+ $($O),+) -> R2 + 'a
         where
             R2: UpcastFrom<R1>,
             $($A1: UpcastFrom<$A2>,)+  // Contravariant
@@ -429,19 +429,19 @@ macro_rules! impl_fn_upcasts {
 
     // Shrink: N -> 0
     (@shrink [] [$($O:ident)+]) => {
-        impl<R1, R2, $($O),+> UpcastFrom<fn($($O),+) -> R1> for fn() -> R2
+        unsafe impl<R1, R2, $($O),+> UpcastFrom<fn($($O),+) -> R1> for fn() -> R2
         where
             R2: UpcastFrom<R1>,
             $($O: UpcastFrom<Undefined>,)+
         {}
 
-        impl<'a, R1, R2, $($O),+> UpcastFrom<dyn Fn($($O),+) -> R1 + 'a> for dyn Fn() -> R2 + 'a
+        unsafe impl<'a, R1, R2, $($O),+> UpcastFrom<dyn Fn($($O),+) -> R1 + 'a> for dyn Fn() -> R2 + 'a
         where
             R2: UpcastFrom<R1>,
             $($O: UpcastFrom<Undefined>,)+
         {}
 
-        impl<'a, R1, R2, $($O),+> UpcastFrom<dyn FnMut($($O),+) -> R1 + 'a> for dyn FnMut() -> R2 + 'a
+        unsafe impl<'a, R1, R2, $($O),+> UpcastFrom<dyn FnMut($($O),+) -> R1 + 'a> for dyn FnMut() -> R2 + 'a
         where
             R2: UpcastFrom<R1>,
             $($O: UpcastFrom<Undefined>,)+
@@ -450,21 +450,21 @@ macro_rules! impl_fn_upcasts {
 
     // Shrink: M -> N
     (@shrink [$($A1:ident $A2:ident)+] [$($O:ident)+]) => {
-        impl<R1, R2, $($A1, $A2,)+ $($O),+> UpcastFrom<fn($($A1,)+ $($O),+) -> R1> for fn($($A2),+) -> R2
+        unsafe impl<R1, R2, $($A1, $A2,)+ $($O),+> UpcastFrom<fn($($A1,)+ $($O),+) -> R1> for fn($($A2),+) -> R2
         where
             R2: UpcastFrom<R1>,
             $($A1: UpcastFrom<$A2>,)+  // Contravariant
             $($O: UpcastFrom<Undefined>,)+
         {}
 
-        impl<'a, R1, R2, $($A1, $A2,)+ $($O),+> UpcastFrom<dyn Fn($($A1,)+ $($O),+) -> R1 + 'a> for dyn Fn($($A2),+) -> R2 + 'a
+        unsafe impl<'a, R1, R2, $($A1, $A2,)+ $($O),+> UpcastFrom<dyn Fn($($A1,)+ $($O),+) -> R1 + 'a> for dyn Fn($($A2),+) -> R2 + 'a
         where
             R2: UpcastFrom<R1>,
             $($A1: UpcastFrom<$A2>,)+  // Contravariant
             $($O: UpcastFrom<Undefined>,)+
         {}
 
-        impl<'a, R1, R2, $($A1, $A2,)+ $($O),+> UpcastFrom<dyn FnMut($($A1,)+ $($O),+) -> R1 + 'a> for dyn FnMut($($A2),+) -> R2 + 'a
+        unsafe impl<'a, R1, R2, $($A1, $A2,)+ $($O),+> UpcastFrom<dyn FnMut($($A1,)+ $($O),+) -> R1 + 'a> for dyn FnMut($($A2),+) -> R2 + 'a
         where
             R2: UpcastFrom<R1>,
             $($A1: UpcastFrom<$A2>,)+  // Contravariant
@@ -498,7 +498,7 @@ const _: () = {
 // The 'a: 'b bound is critical for soundness: it ensures the target lifetime 'b does not
 // exceed the source lifetime 'a. Without it, upcast_into could fabricate a
 // ScopedClosure<'static, _> from a short-lived ScopedClosure, enabling use-after-free.
-impl<'a: 'b, 'b, T1, T2> UpcastFrom<ScopedClosure<'a, T1>> for ScopedClosure<'b, T2>
+unsafe impl<'a: 'b, 'b, T1, T2> UpcastFrom<ScopedClosure<'a, T1>> for ScopedClosure<'b, T2>
 where
     T1: ?Sized + WasmClosure,
     T2: ?Sized + WasmClosure + UpcastFrom<T1>,

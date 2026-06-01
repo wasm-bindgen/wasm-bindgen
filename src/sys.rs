@@ -63,10 +63,10 @@ impl fmt::Display for Undefined {
     }
 }
 
-impl UpcastFrom<Undefined> for Undefined {}
-impl UpcastFrom<()> for Undefined {}
-impl UpcastFrom<Undefined> for () {}
-impl UpcastFrom<Undefined> for JsValue {}
+unsafe impl UpcastFrom<Undefined> for Undefined {}
+unsafe impl UpcastFrom<()> for Undefined {}
+unsafe impl UpcastFrom<Undefined> for () {}
+unsafe impl UpcastFrom<Undefined> for JsValue {}
 
 // Null
 #[wasm_bindgen(wasm_bindgen = crate)]
@@ -105,8 +105,8 @@ impl fmt::Display for Null {
     }
 }
 
-impl UpcastFrom<Null> for Null {}
-impl UpcastFrom<Null> for JsValue {}
+unsafe impl UpcastFrom<Null> for Null {}
+unsafe impl UpcastFrom<Null> for JsValue {}
 
 // JsOption
 #[wasm_bindgen(wasm_bindgen = crate)]
@@ -265,8 +265,8 @@ impl<T: JsGeneric + fmt::Display> fmt::Display for JsOption<T> {
     }
 }
 
-impl UpcastFrom<JsValue> for JsOption<JsValue> {}
-impl<T> UpcastFrom<Undefined> for JsOption<T> {}
-impl<T> UpcastFrom<()> for JsOption<T> {}
-impl<T> UpcastFrom<JsOption<T>> for JsValue {}
-impl<T, U> UpcastFrom<JsOption<U>> for JsOption<T> where T: UpcastFrom<U> {}
+unsafe impl UpcastFrom<JsValue> for JsOption<JsValue> {}
+unsafe impl<T> UpcastFrom<Undefined> for JsOption<T> {}
+unsafe impl<T> UpcastFrom<()> for JsOption<T> {}
+unsafe impl<T> UpcastFrom<JsOption<T>> for JsValue {}
+unsafe impl<T, U> UpcastFrom<JsOption<U>> for JsOption<T> where T: UpcastFrom<U> {}

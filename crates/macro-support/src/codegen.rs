@@ -1483,7 +1483,7 @@ impl TryToTokens for ast::ImportType {
             // 1. Always generate UpcastFrom<Self> for JsValue
             (quote! {
                 #[automatically_derived]
-                impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
+                unsafe impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
                     for #wasm_bindgen::JsValue
                 #where_clause
                 {
@@ -1499,13 +1499,13 @@ impl TryToTokens for ast::ImportType {
                 // Always use #ty_generics so that lifetime params are included.
                 (quote! {
                     #[automatically_derived]
-                    impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
+                    unsafe impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
                         for #rust_name #ty_generics
                     #where_clause
                     {
                     }
                     #[automatically_derived]
-                    impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
+                    unsafe impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
                         for #wasm_bindgen::sys::JsOption<#rust_name #ty_generics>
                     #where_clause
                     {
@@ -1564,13 +1564,13 @@ impl TryToTokens for ast::ImportType {
                 // Structural covariance - Type<Target0, Target1, ...> can be upcast from Type<T1, T2, ...>
                 (quote! {
                     #[automatically_derived]
-                    impl #impl_generics_split #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
+                    unsafe impl #impl_generics_split #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
                         for #rust_name #target_ty_generics
                     #where_clause_extended
                     {
                     }
                     #[automatically_derived]
-                    impl #impl_generics_split #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
+                    unsafe impl #impl_generics_split #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
                         for #wasm_bindgen::sys::JsOption<#rust_name #target_ty_generics>
                     #where_clause_extended
                     {
@@ -1583,13 +1583,13 @@ impl TryToTokens for ast::ImportType {
             for superclass in self.extends.iter() {
                 (quote! {
                     #[automatically_derived]
-                    impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
+                    unsafe impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
                         for #superclass
                     #where_clause
                     {
                     }
                     #[automatically_derived]
-                    impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
+                    unsafe impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
                         for #wasm_bindgen::sys::JsOption<#superclass>
                     #where_clause
                     {

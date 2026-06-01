@@ -488,15 +488,15 @@ unsafe impl<T: ErasableGeneric> ErasableGeneric for Box<[T]> {
     type Repr = Box<[T::Repr]>;
 }
 
-impl UpcastFrom<&str> for &str {}
+unsafe impl UpcastFrom<&str> for &str {}
 
-impl<T, Target> UpcastFrom<Box<[T]>> for Box<[Target]> where Target: UpcastFrom<T> {}
+unsafe impl<T, Target> UpcastFrom<Box<[T]>> for Box<[Target]> where Target: UpcastFrom<T> {}
 
 unsafe impl<T: ErasableGeneric> ErasableGeneric for Vec<T> {
     type Repr = Vec<T::Repr>;
 }
 
-impl<T, Target> UpcastFrom<Vec<T>> for Vec<Target> where Target: UpcastFrom<T> {}
+unsafe impl<T, Target> UpcastFrom<Vec<T>> for Vec<Target> where Target: UpcastFrom<T> {}
 
 impl<T: VectorIntoWasmAbi> IntoWasmAbi for Box<[T]> {
     type Abi = <T as VectorIntoWasmAbi>::Abi;
@@ -562,7 +562,7 @@ unsafe impl<T: ErasableGeneric> ErasableGeneric for &[T] {
     type Repr = &'static [T::Repr];
 }
 
-impl<'a, T, Target> UpcastFrom<&'a [T]> for &'a [Target] where Target: UpcastFrom<T> {}
+unsafe impl<'a, T, Target> UpcastFrom<&'a [T]> for &'a [Target] where Target: UpcastFrom<T> {}
 
 impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> IntoWasmAbi for &[T] {
     type Abi = WasmSlice;
