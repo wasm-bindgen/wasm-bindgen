@@ -56,6 +56,11 @@ extern "C" {
     #[wasm_bindgen(generic, catch)]
     fn try_maybe<T>(x: T) -> Result<T, JsValue>;
 
+    // Async generic import: the JS side returns a Promise that resolves to
+    // the per-`T` value; the wrapper awaits it via a typed `JsFuture<T>`.
+    #[wasm_bindgen(generic)]
+    async fn async_echo<T>(x: T) -> T;
+
     fn take_generic_log() -> Vec<JsValue>;
 
     type Recorder;
@@ -221,6 +226,15 @@ fn generic_import_closure_return() {
         v
     });
     assert_eq!(next, 12);
+}
+
+#[wasm_bindgen_test]
+async fn generic_import_async() {
+    let n: u32 = async_echo(42u32).await;
+    assert_eq!(n, 42);
+
+    let s: String = async_echo("hello".to_string()).await;
+    assert_eq!(s, "hello");
 }
 
 #[wasm_bindgen_test]

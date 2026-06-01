@@ -3393,8 +3393,7 @@ impl ast::ImportFunction {
         if self.generics.type_params().next().is_none() {
             return false;
         }
-        if self.function.r#async
-            || self.generics.lifetimes().next().is_some()
+        if self.generics.lifetimes().next().is_some()
             || self.generics.const_params().next().is_some()
             || self.function.arguments.len() > 8
         {
@@ -3444,12 +3443,6 @@ impl ast::ImportFunction {
         let vis = &self.function.rust_vis;
         let rust_name = &self.rust_name;
 
-        if self.function.r#async {
-            bail_span!(
-                rust_name,
-                "#[wasm_bindgen(generic)] does not yet support async",
-            );
-        }
         if self.generics.lifetimes().next().is_some() {
             bail_span!(
                 rust_name,
@@ -3622,12 +3615,29 @@ impl ast::ImportFunction {
             quote!()
         };
 
-        // The courier's return type `R` is the success/value type that
-        // crosses the ABI: `js_ret` (already the inner `Ok` type when
-        // `catch` is set), or `()` for a unit return.
-        let ret_ty = match self.js_ret.as_ref() {
-            Some(ty) => ty.clone(),
-            None => syn::parse_quote!(()),
+        let is_async = self.function.r#async;
+        let js_sys = &self.js_sys;
+        let wasm_bindgen_futures = &self.wasm_bindgen_futures;
+        let futures = if ast::use_js_sys_futures() {
+            quote! { #js_sys::futures }
+        } else {
+            quote! { #wasm_bindgen_futures }
+        };
+        let promise = if ast::use_js_sys_futures() {
+            quote! { #js_sys::Promise }
+        } else {
+            quote! { #wasm_bindgen_futures::js_sys::Promise }
+        };
+
+        // The courier's return type `R` is the value that actually crosses
+        // the ABI. For `async`, the import returns a `Promise<inner>`
+        // (externref) that the wrapper awaits; otherwise it's `js_ret`
+        // (already the inner `Ok` type under `catch`), or `()` for unit.
+        let ret_ty: syn::Type = match (is_async, self.js_ret.as_ref()) {
+            (true, Some(inner)) => syn::parse_quote!(#promise<#inner>),
+            (true, None) => syn::parse_quote!(#promise),
+            (false, Some(ty)) => ty.clone(),
+            (false, None) => syn::parse_quote!(()),
         };
         // The wrapper's declared Rust return signature is the original
         // declared return (e.g. `Result<T, JsValue>` under `catch`).
@@ -3702,6 +3712,15 @@ impl ast::ImportFunction {
         added_bounds.push(quote! {
             #ret_ty: #wasm_bindgen::convert::FromWasmAbi + #wasm_bindgen::describe::WasmDescribe
         });
+        // Async resolves the returned `Promise<inner>` via `JsFuture<inner>`,
+        // which needs the inner success type to be `FromWasmAbi + 'static`.
+        if is_async {
+            if let Some(inner) = self.js_ret.as_ref() {
+                added_bounds.push(quote! {
+                    #inner: #wasm_bindgen::convert::FromWasmAbi + 'static
+                });
+            }
+        }
         let where_clause = if fn_bounds.is_empty() && added_bounds.is_empty() {
             quote!()
         } else {
@@ -3743,15 +3762,35 @@ impl ast::ImportFunction {
             }
         }
 
-        // Under `catch`, the wasm import has already run; check for a
-        // pending JS exception and wrap the value in `Ok`.
-        let catch_handling = if self.catch {
-            quote! {
+        // Post-call handling. For `async`, `__wbg_ret` is the returned
+        // `Promise`; await it via `JsFuture` and surface the result. Under
+        // `catch`, propagate the rejection as `Err`; otherwise the sync path
+        // checks the pending exception and the async path expects success.
+        let has_inner = self.js_ret.is_some();
+        let catch_handling = match (is_async, self.catch, has_inner) {
+            (true, true, true) => quote! {
+                ::core::result::Result::Ok(#futures::JsFuture::from(__wbg_ret).await?)
+            },
+            (true, true, false) => quote! {
+                #futures::JsFuture::from(__wbg_ret).await?;
+                ::core::result::Result::Ok(())
+            },
+            (true, false, true) => quote! {
+                #futures::JsFuture::from(__wbg_ret).await.expect("uncaught exception")
+            },
+            (true, false, false) => quote! {
+                #futures::JsFuture::from(__wbg_ret).await.expect("uncaught exception");
+            },
+            (false, true, _) => quote! {
                 #wasm_bindgen::__rt::take_last_exception()?;
                 ::core::result::Result::Ok(__wbg_ret)
-            }
+            },
+            (false, false, _) => quote! { __wbg_ret },
+        };
+        let maybe_async = if is_async {
+            quote! { async }
         } else {
-            quote! { __wbg_ret }
+            quote!()
         };
 
         let ic_ty: syn::Type =
@@ -3806,7 +3845,7 @@ impl ast::ImportFunction {
             #[automatically_derived]
             #[allow(nonstandard_style)]
             #[allow(clippy::all, clippy::nursery, clippy::pedantic, clippy::restriction)]
-            #vis fn #rust_name #impl_generics (#me #(#user_arguments),*) #ret_sig #where_clause {
+            #vis #maybe_async fn #rust_name #impl_generics (#me #(#user_arguments),*) #ret_sig #where_clause {
                 let __wbg_ret = #wasm_bindgen::__rt::#courier(
                     #wasm_bindgen::__rt::Tag::<#name_ty>::new(),
                     #wasm_bindgen::__rt::Tag::<#wasm_bindgen::__rt::#fills_ty<#(#hole_types),*>>::new(),

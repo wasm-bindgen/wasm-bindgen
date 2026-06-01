@@ -42,6 +42,10 @@ exports.try_maybe = function(x) {
   return x;
 };
 
+exports.async_echo = function(x) {
+  return Promise.resolve(x);
+};
+
 exports.record_vec = function(xs) {
   GENERIC_LOG.push(xs);
 };
