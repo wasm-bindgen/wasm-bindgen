@@ -11,6 +11,10 @@
 
 ### Changed
 
+* Made `wasm_bindgen::convert::UpcastFrom` an unsafe trait, requiring manual
+  implementations to use `unsafe impl`.
+  [#5177](https://github.com/wasm-bindgen/wasm-bindgen/pull/5177)
+
 * `JsOption<T>` now treats only `undefined` as empty, aligning it with
   TypeScript's strict `T | undefined` semantics and with `Option<T>`'s wire
   shape (`None` ↔ `undefined`). Previously `is_empty`, `as_option`,
