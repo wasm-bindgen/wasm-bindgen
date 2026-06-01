@@ -1,0 +1,25 @@
+error[E0597]: `foo` does not live long enough
+  --> ui-tests/upcast-unsound.rs:21:20
+   |
+20 | fn launder_into(foo: &Foo) -> &'static &'static Bar {
+   |                 --- binding `foo` declared here
+21 |     let r: &&Foo = &foo;
+   |                    ^^^^ borrowed value does not live long enough
+22 |     r.upcast_into()
+   |     --------------- argument requires that `foo` is borrowed for `'static`
+23 | }
+   |  - `foo` dropped here while still borrowed
+
+error[E0521]: borrowed data escapes outside of function
+  --> ui-tests/upcast-unsound.rs:22:5
+   |
+20 | fn launder_into(foo: &Foo) -> &'static &'static Bar {
+   |                 ---  - let's call the lifetime of this reference `'1`
+   |                 |
+   |                 `foo` is a reference that is only valid in the function body
+21 |     let r: &&Foo = &foo;
+22 |     r.upcast_into()
+   |     ^^^^^^^^^^^^^^^
+   |     |
+   |     `foo` escapes the function body here
+   |     argument requires that `'1` must outlive `'static`
