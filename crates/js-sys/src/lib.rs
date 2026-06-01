@@ -1061,7 +1061,7 @@ extern "C" {
     /// returns the new length of the array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/push)
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic)]
     pub fn push<T>(this: &Array<T>, value: &T) -> u32;
 
     /// The `push()` method adds one or more elements to the end of an array and
@@ -2101,6 +2101,7 @@ impl<T: JsGeneric> Array<T> {
     where
         A: IntoJsGeneric<JsCanon = T>,
         I: IntoIterator<Item = A>,
+        for<'a> &'a T: wasm_bindgen::convert::IntoWasmAbi,
     {
         let mut out = Array::<T>::new_typed();
         out.extend_typed(iter);
@@ -2116,6 +2117,7 @@ impl<T: JsGeneric> Array<T> {
     where
         A: IntoJsGeneric<JsCanon = T>,
         I: IntoIterator<Item = A>,
+        for<'a> &'a T: wasm_bindgen::convert::IntoWasmAbi,
     {
         for value in iter {
             self.push(&value.to_js());
