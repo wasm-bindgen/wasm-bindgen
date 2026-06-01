@@ -40,6 +40,10 @@ extern "C" {
     #[wasm_bindgen(generic)]
     fn call_each<T>(f: &mut dyn FnMut(T));
 
+    // Generic parameter nested inside `Vec<_>`.
+    #[wasm_bindgen(generic)]
+    fn record_vec<T>(xs: Vec<T>);
+
     // Generic closure taking `Option<T>`.
     #[wasm_bindgen(generic)]
     fn call_each_option<T>(f: &mut dyn FnMut(Option<T>));
@@ -187,6 +191,18 @@ fn generic_import_closure() {
     let mut acc = String::new();
     call_each(&mut |x: f64| acc.push_str(&x.to_string()));
     assert_eq!(acc, "123");
+}
+
+#[wasm_bindgen_test]
+fn generic_import_vec_arg() {
+    record_vec(vec![1u32, 2, 3]);
+
+    let log = take_generic_log();
+    assert_eq!(log.len(), 1);
+    let arr = js_sys::Array::from(&log[0]);
+    assert_eq!(arr.length(), 3);
+    assert_eq!(arr.get(0).as_f64(), Some(1.0));
+    assert_eq!(arr.get(2).as_f64(), Some(3.0));
 }
 
 #[wasm_bindgen_test]

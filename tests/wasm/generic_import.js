@@ -42,6 +42,10 @@ exports.try_maybe = function(x) {
   return x;
 };
 
+exports.record_vec = function(xs) {
+  GENERIC_LOG.push(xs);
+};
+
 exports.call_each = function(f) {
   f(1);
   f(2);
