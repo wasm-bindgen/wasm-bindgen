@@ -31,6 +31,14 @@ extern "C" {
     #[wasm_bindgen(generic)]
     fn record_opt<T>(x: Option<T>);
 
+    // Generic parameter behind a shared reference.
+    #[wasm_bindgen(generic)]
+    fn record_ref<T>(x: &T);
+
+    // `catch` with a generic argument and generic `Ok` return.
+    #[wasm_bindgen(generic, catch)]
+    fn try_maybe<T>(x: T) -> Result<T, JsValue>;
+
     fn take_generic_log() -> Vec<JsValue>;
 }
 
@@ -99,4 +107,23 @@ fn generic_import_option_arg() {
     assert_eq!(log.len(), 2);
     assert_eq!(log[0].as_f64(), Some(5.0));
     assert!(log[1].is_undefined() || log[1].is_null());
+}
+
+#[wasm_bindgen_test]
+fn generic_import_ref_arg() {
+    let v = JsValue::from(99u32);
+    record_ref(&v);
+
+    let log = take_generic_log();
+    assert_eq!(log.len(), 1);
+    assert_eq!(log[0].as_f64(), Some(99.0));
+}
+
+#[wasm_bindgen_test]
+fn generic_import_catch() {
+    let ok: Result<u32, JsValue> = try_maybe(5u32);
+    assert_eq!(ok.unwrap(), 5);
+
+    let err: Result<u32, JsValue> = try_maybe(13u32);
+    assert!(err.is_err());
 }

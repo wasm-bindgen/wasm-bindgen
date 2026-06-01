@@ -32,3 +32,12 @@ exports.gget = function() {
 exports.record_opt = function(x) {
   GENERIC_LOG.push(x);
 };
+
+exports.record_ref = function(x) {
+  GENERIC_LOG.push(x);
+};
+
+exports.try_maybe = function(x) {
+  if (x === 13) throw new Error("unlucky");
+  return x;
+};

@@ -1338,6 +1338,15 @@ fn hole_type(
             }
             syn::visit_mut::visit_type_mut(self, node);
         }
+        fn visit_type_reference_mut(&mut self, node: &mut syn::TypeReference) {
+            // The holed type is used in the (lifetime-free) carrier const,
+            // so pin every reference to `'static`. References' schemas are
+            // lifetime-independent, so this is purely to satisfy the const.
+            if node.lifetime.is_none() {
+                node.lifetime = Some(syn::Lifetime::new("'static", Span::call_site()));
+            }
+            syn::visit_mut::visit_type_reference_mut(self, node);
+        }
     }
     let mut ty = ty.clone();
     syn::visit_mut::VisitMut::visit_type_mut(
@@ -1348,6 +1357,31 @@ fn hole_type(
         &mut ty,
     );
     ty
+}
+
+/// Give every elided reference in `ty` the explicit lifetime `lt`,
+/// returning the rewritten type and whether any reference was touched.
+/// Generic-import wrapper signatures place argument types in positions
+/// (type-parameter turbofish, where-bounds) where an elided `&` lifetime
+/// is rejected, so they need a concrete wrapper lifetime.
+fn relifetime(ty: &syn::Type, lt: &syn::Lifetime) -> (syn::Type, bool) {
+    struct Relifetime<'a> {
+        lt: &'a syn::Lifetime,
+        changed: bool,
+    }
+    impl syn::visit_mut::VisitMut for Relifetime<'_> {
+        fn visit_type_reference_mut(&mut self, node: &mut syn::TypeReference) {
+            if node.lifetime.is_none() {
+                node.lifetime = Some(self.lt.clone());
+                self.changed = true;
+            }
+            syn::visit_mut::visit_type_reference_mut(self, node);
+        }
+    }
+    let mut ty = ty.clone();
+    let mut v = Relifetime { lt, changed: false };
+    syn::visit_mut::VisitMut::visit_type_mut(&mut v, &mut ty);
+    (ty, v.changed)
 }
 
 thread_local! {
@@ -3356,10 +3390,10 @@ impl ast::ImportFunction {
                 "#[wasm_bindgen(generic)] does not yet support methods or constructors",
             );
         }
-        if self.function.r#async || self.catch || self.variadic {
+        if self.function.r#async {
             bail_span!(
                 rust_name,
-                "#[wasm_bindgen(generic)] does not yet support async, catch, or variadic",
+                "#[wasm_bindgen(generic)] does not yet support async",
             );
         }
         if self.generics.lifetimes().next().is_some() {
@@ -3404,6 +3438,8 @@ impl ast::ImportFunction {
         // (used directly as the courier's monomorphised ABI type), and the
         // holed type (parameters replaced by `__WbgTypeParam<i>`) used to
         // build the signature template.
+        let wbg_lt = syn::Lifetime::new("'wbg_a", Span::call_site());
+        let mut needs_lifetime = false;
         let mut arg_names = Vec::new();
         let mut arg_tys = Vec::new();
         let mut holed_arg_tys = Vec::new();
@@ -3414,14 +3450,27 @@ impl ast::ImportFunction {
                 _ => Ident::new(&format!("__wbg_genarg{i}"), Span::call_site()),
             };
             holed_arg_tys.push(hole_type(&ty, &param_index, wasm_bindgen));
+            let (sig_ty, changed) = relifetime(&ty, &wbg_lt);
+            needs_lifetime |= changed;
             arg_names.push(name);
-            arg_tys.push(ty);
+            arg_tys.push(sig_ty);
         }
 
-        // Return type. `None` => unit (the courier's `R = ()`).
-        let (ret_ty, ret_sig) = match self.js_ret.as_ref() {
-            Some(ty) => (ty.clone(), quote! { -> #ty }),
-            None => (syn::parse_quote!(()), quote! {}),
+        // The courier's return type `R` is the success/value type that
+        // crosses the ABI: `js_ret` (already the inner `Ok` type when
+        // `catch` is set), or `()` for a unit return.
+        let ret_ty = match self.js_ret.as_ref() {
+            Some(ty) => ty.clone(),
+            None => syn::parse_quote!(()),
+        };
+        // The wrapper's declared Rust return signature is the original
+        // declared return (e.g. `Result<T, JsValue>` under `catch`).
+        let ret_sig = match self.function.ret.as_ref() {
+            Some(ret) => {
+                let ty = &ret.r#type;
+                quote! { -> #ty }
+            }
+            None => quote! {},
         };
         let holed_ret_ty = hole_type(&ret_ty, &param_index, wasm_bindgen);
 
@@ -3456,6 +3505,12 @@ impl ast::ImportFunction {
         // Wrapper generics: preserve the user's parameters/bounds, then add
         // the bounds the courier and fills carrier require.
         let mut generics = self.generics.clone();
+        if needs_lifetime {
+            generics.params.insert(
+                0,
+                syn::GenericParam::Lifetime(syn::LifetimeParam::new(wbg_lt.clone())),
+            );
+        }
         {
             let where_clause = generics.make_where_clause();
             for tp in &type_params {
@@ -3473,6 +3528,17 @@ impl ast::ImportFunction {
             ));
         }
         let (impl_generics, _ty_generics, where_clause) = generics.split_for_impl();
+
+        // Under `catch`, the wasm import has already run; check for a
+        // pending JS exception and wrap the value in `Ok`.
+        let catch_handling = if self.catch {
+            quote! {
+                #wasm_bindgen::__rt::take_last_exception()?;
+                ::core::result::Result::Ok(__wbg_ret)
+            }
+        } else {
+            quote! { __wbg_ret }
+        };
 
         (quote! {
             #[doc(hidden)]
@@ -3504,12 +3570,13 @@ impl ast::ImportFunction {
 
             #[automatically_derived]
             #vis fn #rust_name #impl_generics (#(#arg_names: #arg_tys),*) #ret_sig #where_clause {
-                #wasm_bindgen::__rt::#courier::<
+                let __wbg_ret = #wasm_bindgen::__rt::#courier::<
                     #name_ty,
                     #wasm_bindgen::__rt::#fills_ty<#(#type_params),*>,
                     #ret_ty,
                     #(#arg_tys),*
-                >(#(#arg_names),*)
+                >(#(#arg_names),*);
+                #catch_handling
             }
         })
         .to_tokens(tokens);
