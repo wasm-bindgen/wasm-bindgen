@@ -7,58 +7,58 @@ extern "C" {
     // gets its own JS adapter with `T`-specific marshalling, all bound
     // to the same JS `record_generic` function. The `IntoWasmAbi +
     // WasmDescribe` bounds are supplied by the macro expansion.
-    #[wasm_bindgen(generic)]
+    #[wasm_bindgen()]
     fn record_generic<T>(x: T);
 
     // Multiple arguments, mixed concrete + generic, with the generic
     // parameter repeated across two argument positions.
-    #[wasm_bindgen(generic)]
+    #[wasm_bindgen()]
     fn record_mixed<T>(a: T, b: u32, c: T);
 
     // Multiple distinct type parameters.
-    #[wasm_bindgen(generic)]
+    #[wasm_bindgen()]
     fn record_two<A, B>(a: A, b: B);
 
     // Generic argument and generic return (round-trip).
-    #[wasm_bindgen(generic)]
+    #[wasm_bindgen()]
     fn groundtrip<T>(x: T) -> T;
 
     // Zero arguments, generic return position only.
-    #[wasm_bindgen(generic)]
+    #[wasm_bindgen()]
     fn gget<T>() -> T;
 
     // Generic parameter nested inside `Option<_>`.
-    #[wasm_bindgen(generic)]
+    #[wasm_bindgen()]
     fn record_opt<T>(x: Option<T>);
 
     // Generic parameter behind a shared reference.
-    #[wasm_bindgen(generic)]
+    #[wasm_bindgen()]
     fn record_ref<T>(x: &T);
 
     // Generic closure argument: the JS side invokes the callback with
     // each value, marshalled per `T` via a per-monomorphisation invoke shim.
-    #[wasm_bindgen(generic)]
+    #[wasm_bindgen()]
     fn call_each<T>(f: &mut dyn FnMut(T));
 
     // Generic parameter nested inside `Vec<_>`.
-    #[wasm_bindgen(generic)]
+    #[wasm_bindgen()]
     fn record_vec<T>(xs: Vec<T>);
 
     // Generic closure taking `Option<T>`.
-    #[wasm_bindgen(generic)]
+    #[wasm_bindgen()]
     fn call_each_option<T>(f: &mut dyn FnMut(Option<T>));
 
     // Generic closure returning `T`.
-    #[wasm_bindgen(generic)]
+    #[wasm_bindgen()]
     fn call_each_return<T>(f: &mut dyn FnMut() -> T);
 
     // `catch` with a generic argument and generic `Ok` return.
-    #[wasm_bindgen(generic, catch)]
+    #[wasm_bindgen(catch)]
     fn try_maybe<T>(x: T) -> Result<T, JsValue>;
 
     // Async generic import: the JS side returns a Promise that resolves to
     // the per-`T` value; the wrapper awaits it via a typed `JsFuture<T>`.
-    #[wasm_bindgen(generic)]
+    #[wasm_bindgen()]
     async fn async_echo<T>(x: T) -> T;
 
     fn take_generic_log() -> Vec<JsValue>;
@@ -68,7 +68,7 @@ extern "C" {
     fn new() -> Recorder;
     // Generic instance method on a concrete class: each `T` binds to the
     // same JS `pushVal` with `T`-specific marshalling.
-    #[wasm_bindgen(method, generic, js_name = "pushVal")]
+    #[wasm_bindgen(method, js_name = "pushVal")]
     fn push_val<T>(this: &Recorder, x: T);
     #[wasm_bindgen(method, getter)]
     fn last(this: &Recorder) -> JsValue;
@@ -167,7 +167,7 @@ extern "C" {
     type MyDoStub;
     type DoNamespace<T: dobj::DurableObject = MyDo>;
 
-    #[wasm_bindgen(method, generic, js_name = "getByName")]
+    #[wasm_bindgen(method, js_name = "getByName")]
     fn get_by_name<T: dobj::DurableObject = MyDo>(
         this: &DoNamespace<T>,
         name: &str,

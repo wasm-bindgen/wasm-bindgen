@@ -2876,7 +2876,7 @@ impl ToTokens for ast::DynamicUnion {
 
 impl TryToTokens for ast::ImportFunction {
     fn try_to_tokens(&self, tokens: &mut TokenStream) -> Result<(), Diagnostic> {
-        if self.generic || self.generic_eligible() {
+        if self.generic_eligible() {
             return self.try_to_tokens_generic(tokens);
         }
         let mut class = None;
@@ -4150,7 +4150,7 @@ impl TryToTokens for DescribeImport<'_> {
         // via the courier template + fills, and their metadata flows
         // through the normal AST custom section. Skip descriptor emission
         // so we don't produce a stray type-erased descriptor.
-        if f.generic || f.generic_eligible() {
+        if f.generic_eligible() {
             return Ok(());
         }
         let fn_lifetime_params = generics::lifetime_params(&f.generics);

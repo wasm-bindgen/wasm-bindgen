@@ -9,7 +9,7 @@ extern "C" {
     // A generic import declared and monomorphised only in this dependency
     // crate, to verify the per-monomorphisation courier + holed-template
     // rodata survive the archive pull into the final artifact.
-    #[wasm_bindgen(generic)]
+    #[wasm_bindgen()]
     fn generic_record<T>(x: T);
 }
 

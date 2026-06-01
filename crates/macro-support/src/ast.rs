@@ -203,9 +203,6 @@ pub struct ImportFunction {
     pub catch: bool,
     /// Whether the function is variadic on the JS side
     pub variadic: bool,
-    /// Opt-in: emit per-monomorphisation call-site couriers for generic
-    /// params instead of the type-erased single-shim marshalling.
-    pub generic: bool,
     /// Whether the function should use structural type checking
     pub structural: bool,
     /// Causes the Builder (See cli-support::js::binding::Builder) to error out if

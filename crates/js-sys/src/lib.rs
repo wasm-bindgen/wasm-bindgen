@@ -540,14 +540,14 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Array)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(constructor, generic)]
+    #[wasm_bindgen(constructor)]
     pub fn new<T>() -> Array<T>;
 
     // Next major: deprecate
     /// Creates a new empty array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Array)
-    #[wasm_bindgen(constructor, generic)]
+    #[wasm_bindgen(constructor)]
     pub fn new_typed<T>() -> Array<T>;
 
     /// Creates a new array with the specified length (elements are initialized to `undefined`).
@@ -561,14 +561,14 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Array)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(constructor, generic)]
+    #[wasm_bindgen(constructor)]
     pub fn new_with_length<T>(len: u32) -> Array<T>;
 
     // Next major: deprecate
     /// Creates a new array with the specified length (elements are initialized to `undefined`).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Array)
-    #[wasm_bindgen(constructor, generic)]
+    #[wasm_bindgen(constructor)]
     pub fn new_with_length_typed<T>(len: u32) -> Array<T>;
 
     /// Retrieves the element at the index, counting from the end if negative
@@ -576,7 +576,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn at<T>(this: &Array<T>, index: i32) -> T;
 
     /// Retrieves the element at the index, counting from the end if negative
@@ -584,48 +584,48 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn at<T>(this: &Array<T>, index: i32) -> Option<T>;
 
     /// Retrieves the element at the index (returns `undefined` if the index is out of range).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method, indexing_getter, generic)]
+    #[wasm_bindgen(method, indexing_getter)]
     pub fn get<T>(this: &Array<T>, index: u32) -> T;
 
     /// Retrieves the element at the index (returns `None` if the index is out of range).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, indexing_getter, generic)]
+    #[wasm_bindgen(method, indexing_getter)]
     pub fn get<T>(this: &Array<T>, index: u32) -> Option<T>;
 
     /// Retrieves the element at the index (returns `undefined` if the index is out of range).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at)
-    #[wasm_bindgen(method, indexing_getter, generic)]
+    #[wasm_bindgen(method, indexing_getter)]
     pub fn get_unchecked<T>(this: &Array<T>, index: u32) -> T;
 
     // Next major: deprecate
     /// Retrieves the element at the index (returns `None` if the index is out of range,
     /// or if the element is explicitly `undefined`).
-    #[wasm_bindgen(method, indexing_getter, generic)]
+    #[wasm_bindgen(method, indexing_getter)]
     pub fn get_checked<T>(this: &Array<T>, index: u32) -> Option<T>;
 
     /// Sets the element at the index (auto-enlarges the array if the index is out of range).
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method, indexing_setter, generic)]
+    #[wasm_bindgen(method, indexing_setter)]
     pub fn set<T>(this: &Array<T>, index: u32, value: T);
 
     /// Sets the element at the index (auto-enlarges the array if the index is out of range).
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, indexing_setter, generic)]
+    #[wasm_bindgen(method, indexing_setter)]
     pub fn set<T>(this: &Array<T>, index: u32, value: &T);
 
     // Next major: deprecate
     /// Sets the element at the index (auto-enlarges the array if the index is out of range).
-    #[wasm_bindgen(method, indexing_setter, generic)]
+    #[wasm_bindgen(method, indexing_setter)]
     pub fn set_ref<T>(this: &Array<T>, index: u32, value: &T);
 
     /// Deletes the element at the index (does nothing if the index is out of range).
@@ -633,7 +633,7 @@ extern "C" {
     /// The element at the index is set to `undefined`.
     ///
     /// This does not resize the array, the array will still be the same length.
-    #[wasm_bindgen(method, indexing_deleter, generic)]
+    #[wasm_bindgen(method, indexing_deleter)]
     pub fn delete<T>(this: &Array<T>, index: u32);
 
     /// The `Array.from()` static method creates a new, shallow-copied `Array` instance
@@ -693,21 +693,21 @@ extern "C" {
     /// location in the same array and returns it, without modifying its size.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/copyWithin)
-    #[wasm_bindgen(method, js_name = copyWithin, generic)]
+    #[wasm_bindgen(method, js_name = copyWithin)]
     pub fn copy_within<T>(this: &Array<T>, target: i32, start: i32, end: i32) -> Array<T>;
 
     /// The `concat()` method is used to merge two or more arrays. This method
     /// does not change the existing arrays, but instead returns a new array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat)
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn concat<T, U: Upcast<T>>(this: &Array<T>, array: &Array<U>) -> Array<T>;
 
     /// The `concat()` method is used to merge two or more arrays. This method
     /// does not change the existing arrays, but instead returns a new array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat)
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn concat_many<T, U: Upcast<T>>(this: &Array<T>, array: &[Array<U>]) -> Array<T>;
 
     /// The `every()` method tests whether all elements in the array pass the test
@@ -716,14 +716,14 @@ extern "C" {
     /// **Note:** Consider using [`Array::try_every`] if the predicate might throw an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/every)
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn every<T>(this: &Array<T>, predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool) -> bool;
 
     /// The `every()` method tests whether all elements in the array pass the test
     /// implemented by the provided function. _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/every)
-    #[wasm_bindgen(method, js_name = every, catch, generic)]
+    #[wasm_bindgen(method, js_name = every, catch)]
     pub fn try_every<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsError>,
@@ -733,7 +733,7 @@ extern "C" {
     /// to an end index with a static value. The end index is not included.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/fill)
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn fill<T>(this: &Array<T>, value: &T, start: u32, end: u32) -> Array<T>;
 
     /// The `filter()` method creates a new array with all elements that pass the
@@ -742,7 +742,7 @@ extern "C" {
     /// **Note:** Consider using [`Array::try_filter`] if the predicate might throw an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn filter<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool,
@@ -752,7 +752,7 @@ extern "C" {
     /// test implemented by the provided function. _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)
-    #[wasm_bindgen(method, js_name = filter, catch, generic)]
+    #[wasm_bindgen(method, js_name = filter, catch)]
     pub fn try_filter<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsError>,
@@ -763,7 +763,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn find<T>(this: &Array<T>, predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool) -> T;
 
     /// The `find()` method returns the value of the first element in the array that satisfies
@@ -771,7 +771,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn find<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool,
@@ -781,7 +781,7 @@ extern "C" {
     ///  the provided testing function. Otherwise `undefined` is returned. _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find)
-    #[wasm_bindgen(method, js_name = find, catch, generic)]
+    #[wasm_bindgen(method, js_name = find, catch)]
     pub fn try_find<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsError>,
@@ -793,7 +793,7 @@ extern "C" {
     /// **Note:** Consider using [`Array::try_find_index`] if the predicate might throw an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findIndex)
-    #[wasm_bindgen(method, js_name = findIndex, generic)]
+    #[wasm_bindgen(method, js_name = findIndex)]
     pub fn find_index<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool,
@@ -803,7 +803,7 @@ extern "C" {
     /// satisfies the provided testing function. Otherwise -1 is returned. _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findIndex)
-    #[wasm_bindgen(method, js_name = findIndex, catch, generic)]
+    #[wasm_bindgen(method, js_name = findIndex, catch)]
     pub fn try_find_index<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsError>,
@@ -815,7 +815,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findLast)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method, js_name = findLast, generic)]
+    #[wasm_bindgen(method, js_name = findLast)]
     pub fn find_last<T>(this: &Array<T>, predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool) -> T;
 
     /// The `findLast()` method of Array instances iterates the array in reverse order
@@ -826,7 +826,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findLast)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, js_name = findLast, generic)]
+    #[wasm_bindgen(method, js_name = findLast)]
     pub fn find_last<T>(this: &Array<T>, predicate: &mut dyn FnMut(T, u32) -> bool) -> Option<T>;
 
     /// The `findLast()` method of Array instances iterates the array in reverse order
@@ -834,7 +834,7 @@ extern "C" {
     /// If no elements satisfy the testing function, undefined is returned. _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findLast)
-    #[wasm_bindgen(method, js_name = findLast, catch, generic)]
+    #[wasm_bindgen(method, js_name = findLast, catch)]
     pub fn try_find_last<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsError>,
@@ -847,7 +847,7 @@ extern "C" {
     /// **Note:** Consider using [`Array::try_find_last_index`] if the predicate might throw an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findLastIndex)
-    #[wasm_bindgen(method, js_name = findLastIndex, generic)]
+    #[wasm_bindgen(method, js_name = findLastIndex)]
     pub fn find_last_index<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool,
@@ -858,7 +858,7 @@ extern "C" {
     /// If no elements satisfy the testing function, -1 is returned. _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findLastIndex)
-    #[wasm_bindgen(method, js_name = findLastIndex, catch, generic)]
+    #[wasm_bindgen(method, js_name = findLastIndex, catch)]
     pub fn try_find_last_index<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsError>,
@@ -868,7 +868,7 @@ extern "C" {
     /// recursively up to the specified depth.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flat)
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn flat<T>(this: &Array<T>, depth: i32) -> Array<JsValue>;
 
     /// The `flatMap()` method first maps each element using a mapping function, then flattens
@@ -877,7 +877,7 @@ extern "C" {
     /// **Note:** Consider using [`Array::try_flat_map`] for safer fallible handling.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flatMap)
-    #[wasm_bindgen(method, js_name = flatMap, generic)]
+    #[wasm_bindgen(method, js_name = flatMap)]
     pub fn flat_map<T, U>(
         this: &Array<T>,
         callback: &mut dyn FnMut(T, u32, Array<T>) -> Vec<U>,
@@ -887,7 +887,7 @@ extern "C" {
     /// the result into a new array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flatMap)
-    #[wasm_bindgen(method, js_name = flatMap, catch, generic)]
+    #[wasm_bindgen(method, js_name = flatMap, catch)]
     pub fn try_flat_map<T, U>(
         this: &Array<T>,
         callback: &mut dyn FnMut(T, u32) -> Vec<U>,
@@ -898,13 +898,13 @@ extern "C" {
     /// **Note:** Consider using [`Array::try_for_each`] if the callback might throw an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach)
-    #[wasm_bindgen(method, js_name = forEach, generic)]
+    #[wasm_bindgen(method, js_name = forEach)]
     pub fn for_each<T>(this: &Array<T>, callback: &mut dyn FnMut(T, u32, Array<T>));
 
     /// The `forEach()` method executes a provided function once for each array element. _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach)
-    #[wasm_bindgen(method, js_name = forEach, catch, generic)]
+    #[wasm_bindgen(method, js_name = forEach, catch)]
     pub fn try_for_each<T>(
         this: &Array<T>,
         callback: &mut dyn FnMut(T, u32) -> Result<(), JsError>,
@@ -914,14 +914,14 @@ extern "C" {
     /// element, returning true or false as appropriate.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes)
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn includes<T>(this: &Array<T>, value: &T, from_index: i32) -> bool;
 
     /// The `indexOf()` method returns the first index at which a given element
     /// can be found in the array, or -1 if it is not present.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/indexOf)
-    #[wasm_bindgen(method, js_name = indexOf, generic)]
+    #[wasm_bindgen(method, js_name = indexOf)]
     pub fn index_of<T>(this: &Array<T>, value: &T, from_index: i32) -> i32;
 
     /// The `Array.isArray()` method determines whether the passed value is an Array.
@@ -934,7 +934,7 @@ extern "C" {
     /// into a string and returns this string.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/join)
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn join<T>(this: &Array<T>, delimiter: &str) -> JsString;
 
     /// The `lastIndexOf()` method returns the last index at which a given element
@@ -942,7 +942,7 @@ extern "C" {
     /// searched backwards, starting at fromIndex.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/lastIndexOf)
-    #[wasm_bindgen(method, js_name = lastIndexOf, generic)]
+    #[wasm_bindgen(method, js_name = lastIndexOf)]
     pub fn last_index_of<T>(this: &Array<T>, value: &T, from_index: i32) -> i32;
 
     /// The length property of an object which is an instance of type Array
@@ -951,7 +951,7 @@ extern "C" {
     /// highest index in the array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/length)
-    #[wasm_bindgen(method, getter, generic)]
+    #[wasm_bindgen(method, getter)]
     pub fn length<T>(this: &Array<T>) -> u32;
 
     /// Sets the length of the array.
@@ -964,7 +964,7 @@ extern "C" {
     /// slots.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/length)
-    #[wasm_bindgen(method, setter, generic)]
+    #[wasm_bindgen(method, setter)]
     pub fn set_length<T>(this: &Array<T>, value: u32);
 
     /// `map()` calls a provided callback function once for each element in an array,
@@ -976,7 +976,7 @@ extern "C" {
     /// **Note:** Consider using [`Array::try_map`] for safer fallible handling.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn map<T, U>(this: &Array<T>, predicate: &mut dyn FnMut(T, u32, Array<T>) -> U)
         -> Array<U>;
 
@@ -988,7 +988,7 @@ extern "C" {
     /// _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
-    #[wasm_bindgen(method, js_name = map, catch, generic)]
+    #[wasm_bindgen(method, js_name = map, catch)]
     pub fn try_map<T, U>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T, u32) -> Result<U, JsError>,
@@ -1006,7 +1006,7 @@ extern "C" {
     /// with actual undefined values).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of)
-    #[wasm_bindgen(static_method_of = Array, js_name = of, variadic, generic)]
+    #[wasm_bindgen(static_method_of = Array, js_name = of, variadic)]
     pub fn of<T>(values: &[T]) -> Array<T>;
 
     // Next major: deprecate these
@@ -1037,7 +1037,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/pop)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn pop<T>(this: &Array<T>) -> T;
 
     /// The `pop()` method removes the last element from an array and returns that
@@ -1046,7 +1046,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/pop)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn pop<T>(this: &Array<T>) -> Option<T>;
 
     // Next major: deprecate
@@ -1054,21 +1054,21 @@ extern "C" {
     /// element. This method changes the length of the array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/pop)
-    #[wasm_bindgen(method, js_name = pop, generic)]
+    #[wasm_bindgen(method, js_name = pop)]
     pub fn pop_checked<T>(this: &Array<T>) -> Option<T>;
 
     /// The `push()` method adds one element to the end of an array and
     /// returns the new length of the array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/push)
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn push<T>(this: &Array<T>, value: &T) -> u32;
 
     /// The `push()` method adds one or more elements to the end of an array and
     /// returns the new length of the array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/push)
-    #[wasm_bindgen(method, js_name = push, variadic, generic)]
+    #[wasm_bindgen(method, js_name = push, variadic)]
     pub fn push_many<T>(this: &Array<T>, values: &[T]) -> u32;
 
     /// The `reduce()` method applies a function against an accumulator and each element in
@@ -1076,7 +1076,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn reduce<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(JsValue, T, u32, Array<T>) -> JsValue,
@@ -1088,7 +1088,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn reduce<T, A>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(A, T, u32, Array<T>) -> A,
@@ -1099,7 +1099,7 @@ extern "C" {
     /// the array (from left to right) to reduce it to a single value. _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce)
-    #[wasm_bindgen(method, js_name = reduce, catch, generic)]
+    #[wasm_bindgen(method, js_name = reduce, catch)]
     pub fn try_reduce<T, A>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(A, T, u32) -> Result<A, JsError>,
@@ -1111,7 +1111,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/ReduceRight)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method, js_name = reduceRight, generic)]
+    #[wasm_bindgen(method, js_name = reduceRight)]
     pub fn reduce_right<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(JsValue, T, u32, Array<T>) -> JsValue,
@@ -1123,7 +1123,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/ReduceRight)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, js_name = reduceRight, generic)]
+    #[wasm_bindgen(method, js_name = reduceRight)]
     pub fn reduce_right<T, A>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(A, T, u32, Array<T>) -> A,
@@ -1134,7 +1134,7 @@ extern "C" {
     /// of the array (from right-to-left) to reduce it to a single value. _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/ReduceRight)
-    #[wasm_bindgen(method, js_name = reduceRight, catch, generic)]
+    #[wasm_bindgen(method, js_name = reduceRight, catch)]
     pub fn try_reduce_right<T, A>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(JsValue, T, u32) -> Result<A, JsError>,
@@ -1145,7 +1145,7 @@ extern "C" {
     /// element becomes the last, and the last array element becomes the first.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reverse)
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn reverse<T>(this: &Array<T>) -> Array<T>;
 
     /// The `shift()` method removes the first element from an array and returns
@@ -1155,7 +1155,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/shift)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn shift<T>(this: &Array<T>) -> T;
 
     /// The `shift()` method removes the first element from an array and returns
@@ -1164,7 +1164,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/shift)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn shift<T>(this: &Array<T>) -> Option<T>;
 
     // Next major: deprecate
@@ -1172,7 +1172,7 @@ extern "C" {
     /// that removed element. This method changes the length of the array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/shift)
-    #[wasm_bindgen(method, js_name = shift, generic)]
+    #[wasm_bindgen(method, js_name = shift)]
     pub fn shift_checked<T>(this: &Array<T>) -> Option<T>;
 
     /// The `slice()` method returns a shallow copy of a portion of an array into
@@ -1181,7 +1181,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn slice<T>(this: &Array<T>, start: u32, end: u32) -> Array<T>;
 
     /// The `slice()` method returns a shallow copy of a portion of an array into
@@ -1190,7 +1190,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn slice<T>(this: &Array<T>, start: i32, end: i32) -> Array<T>;
 
     /// The `slice()` method returns a shallow copy of a portion of an array into
@@ -1199,7 +1199,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method, js_name = slice, generic)]
+    #[wasm_bindgen(method, js_name = slice)]
     pub fn slice_from<T>(this: &Array<T>, start: u32) -> Array<T>;
 
     /// The `slice()` method returns a shallow copy of a portion of an array into
@@ -1208,7 +1208,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, js_name = slice, generic)]
+    #[wasm_bindgen(method, js_name = slice)]
     pub fn slice_from<T>(this: &Array<T>, start: i32) -> Array<T>;
 
     /// The `some()` method tests whether at least one element in the array passes the test implemented
@@ -1218,14 +1218,14 @@ extern "C" {
     /// **Note:** Consider using [`Array::try_some`] if the predicate might throw an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some)
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn some<T>(this: &Array<T>, predicate: &mut dyn FnMut(T) -> bool) -> bool;
 
     /// The `some()` method tests whether at least one element in the array passes the test implemented
     /// by the provided function. _(Fallible variation)_
     /// Note: This method returns false for any condition put on an empty array.
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some)
-    #[wasm_bindgen(method, js_name = some, catch, generic)]
+    #[wasm_bindgen(method, js_name = some, catch)]
     pub fn try_some<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T) -> Result<bool, JsError>,
@@ -1239,7 +1239,7 @@ extern "C" {
     /// is implementation dependent.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort)
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn sort<T>(this: &Array<T>) -> Array<T>;
 
     /// The `sort()` method with a custom compare function.
@@ -1247,13 +1247,13 @@ extern "C" {
     /// **Note:** Consider using [`Array::try_sort_by`] if the predicate might throw an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort)
-    #[wasm_bindgen(method, js_name = sort, generic)]
+    #[wasm_bindgen(method, js_name = sort)]
     pub fn sort_by<T>(this: &Array<T>, compare_fn: &mut dyn FnMut(T, T) -> i32) -> Array<T>;
 
     /// The `sort()` method with a custom compare function. _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort)
-    #[wasm_bindgen(method, js_name = sort, catch, generic)]
+    #[wasm_bindgen(method, js_name = sort, catch)]
     pub fn try_sort_by<T>(
         this: &Array<T>,
         compare_fn: &mut dyn FnMut(T, T) -> Result<i32, JsError>,
@@ -1263,14 +1263,14 @@ extern "C" {
     /// adding new elements.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice)
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn splice<T>(this: &Array<T>, start: u32, delete_count: u32, item: &T) -> Array<T>;
 
     /// The `splice()` method changes the contents of an array by removing existing elements and/or
     /// adding new elements.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice)
-    #[wasm_bindgen(method, js_name = splice, variadic, generic)]
+    #[wasm_bindgen(method, js_name = splice, variadic)]
     pub fn splice_many<T>(this: &Array<T>, start: u32, delete_count: u32, items: &[T]) -> Array<T>;
 
     /// The `toLocaleString()` method returns a string representing the elements of the array.
@@ -1279,7 +1279,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toLocaleString)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method, js_name = toLocaleString, generic)]
+    #[wasm_bindgen(method, js_name = toLocaleString)]
     pub fn to_locale_string<T>(this: &Array<T>, locales: &JsValue, options: &JsValue) -> JsString;
 
     /// The `toLocaleString()` method returns a string representing the elements of the array.
@@ -1288,7 +1288,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toLocaleString)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, js_name = toLocaleString, generic)]
+    #[wasm_bindgen(method, js_name = toLocaleString)]
     pub fn to_locale_string<T>(
         this: &Array<T>,
         locales: &[JsString],
@@ -1299,14 +1299,14 @@ extern "C" {
     /// without modifying the original array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toReversed)
-    #[wasm_bindgen(method, js_name = toReversed, generic)]
+    #[wasm_bindgen(method, js_name = toReversed)]
     pub fn to_reversed<T>(this: &Array<T>) -> Array<T>;
 
     /// The `toSorted()` method returns a new array with the elements sorted in ascending order,
     /// without modifying the original array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSorted)
-    #[wasm_bindgen(method, js_name = toSorted, generic)]
+    #[wasm_bindgen(method, js_name = toSorted)]
     pub fn to_sorted<T>(this: &Array<T>) -> Array<T>;
 
     /// The `toSorted()` method with a custom compare function.
@@ -1314,13 +1314,13 @@ extern "C" {
     /// **Note:** Consider using [`Array::try_to_sorted_by`] if the predicate might throw an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSorted)
-    #[wasm_bindgen(method, js_name = toSorted, generic)]
+    #[wasm_bindgen(method, js_name = toSorted)]
     pub fn to_sorted_by<T>(this: &Array<T>, compare_fn: &mut dyn FnMut(T, T) -> i32) -> Array<T>;
 
     /// The `toSorted()` method with a custom compare function. _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSorted)
-    #[wasm_bindgen(method, js_name = toSorted, catch, generic)]
+    #[wasm_bindgen(method, js_name = toSorted, catch)]
     pub fn try_to_sorted_by<T>(
         this: &Array<T>,
         compare_fn: &mut dyn FnMut(T, T) -> Result<i32, JsError>,
@@ -1330,7 +1330,7 @@ extern "C" {
     /// replaced at a given index, without modifying the original array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSpliced)
-    #[wasm_bindgen(method, js_name = toSpliced, variadic, generic)]
+    #[wasm_bindgen(method, js_name = toSpliced, variadic)]
     pub fn to_spliced<T>(this: &Array<T>, start: u32, delete_count: u32, items: &[T]) -> Array<T>;
 
     /// The `toString()` method returns a string representing the specified array
@@ -1338,32 +1338,32 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toString)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method, js_name = toString, generic)]
+    #[wasm_bindgen(method, js_name = toString)]
     pub fn to_string<T>(this: &Array<T>) -> JsString;
 
     /// Converts the Array into a Vector.
-    #[wasm_bindgen(method, js_name = slice, generic)]
+    #[wasm_bindgen(method, js_name = slice)]
     pub fn to_vec<T>(this: &Array<T>) -> Vec<T>;
 
     /// The `unshift()` method adds one element to the beginning of an
     /// array and returns the new length of the array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/unshift)
-    #[wasm_bindgen(method, generic)]
+    #[wasm_bindgen(method)]
     pub fn unshift<T>(this: &Array<T>, value: &T) -> u32;
 
     /// The `unshift()` method adds one or more elements to the beginning of an
     /// array and returns the new length of the array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/unshift)
-    #[wasm_bindgen(method, js_name = unshift, variadic, generic)]
+    #[wasm_bindgen(method, js_name = unshift, variadic)]
     pub fn unshift_many<T>(this: &Array<T>, values: &[T]) -> u32;
 
     /// The `with()` method returns a new array with the element at the given index
     /// replaced with the given value, without modifying the original array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/with)
-    #[wasm_bindgen(method, js_name = with, generic)]
+    #[wasm_bindgen(method, js_name = with)]
     pub fn with<T>(this: &Array<T>, index: u32, value: &T) -> Array<T>;
 }
 
@@ -5371,7 +5371,7 @@ extern "C" {
     /// properties including done and value. If a non-object value gets returned
     /// (such as false or undefined), a TypeError ("iterator.next() returned a
     /// non-object value") will be thrown.
-    #[wasm_bindgen(catch, method, generic)]
+    #[wasm_bindgen(catch, method)]
     pub fn next<T: FromWasmAbi>(this: &Iterator<T>) -> Result<IteratorNext<T>, JsValue>;
 }
 
@@ -5419,7 +5419,7 @@ extern "C" {
     /// gets returned (such as false or undefined), a TypeError ("iterator.next()
     /// returned a non-object value") will be thrown.
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(catch, method, generic)]
+    #[wasm_bindgen(catch, method)]
     pub fn next<T>(this: &AsyncIterator<T>) -> Result<Promise, JsValue>;
 
     /// The `next()` method always has to return a Promise which resolves to an object
@@ -5427,7 +5427,7 @@ extern "C" {
     /// gets returned (such as false or undefined), a TypeError ("iterator.next()
     /// returned a non-object value") will be thrown.
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(catch, method, js_name = next, generic)]
+    #[wasm_bindgen(catch, method, js_name = next)]
     pub fn next<T: FromWasmAbi>(
         this: &AsyncIterator<T>,
     ) -> Result<Promise<IteratorNext<T>>, JsValue>;
@@ -5437,7 +5437,7 @@ extern "C" {
     /// with appropriate properties including done and value. If a non-object value
     /// gets returned (such as false or undefined), a TypeError ("iterator.next()
     /// returned a non-object value") will be thrown.
-    #[wasm_bindgen(catch, method, js_name = next, generic)]
+    #[wasm_bindgen(catch, method, js_name = next)]
     pub fn next_iterator<T: FromWasmAbi>(
         this: &AsyncIterator<T>,
     ) -> Result<Promise<IteratorNext<T>>, JsValue>;
