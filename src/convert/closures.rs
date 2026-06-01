@@ -70,7 +70,7 @@ macro_rules! closures {
             $($var: ErasableGeneric,)*
             R: ErasableGeneric
         {
-            type Repr = &'static (dyn $Fn ($(<$var as ErasableGeneric>::Repr,)*) -> <R as ErasableGeneric>::Repr + 'static);
+            type Repr = &'a (dyn $Fn ($(<$var as ErasableGeneric>::Repr,)*) -> <R as ErasableGeneric>::Repr + 'a);
         }
 
         // Invoke shim for closures. The const generic `UNWIND_SAFE` controls

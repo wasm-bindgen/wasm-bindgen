@@ -480,8 +480,8 @@ impl LongRefFromWasmAbi for str {
     }
 }
 
-unsafe impl ErasableGeneric for &str {
-    type Repr = &'static str;
+unsafe impl<'a> ErasableGeneric for &'a str {
+    type Repr = &'a str;
 }
 
 unsafe impl<T: ErasableGeneric> ErasableGeneric for Box<[T]> {
@@ -558,8 +558,11 @@ impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> VectorIntoWasmAbi for T 
 // JsValue-like slice support (Rust-to-JS only)
 // JsValue-like are repr(transparent) over u32, so &[JsValue] is a contiguous array of heap indices
 
-unsafe impl<T: ErasableGeneric> ErasableGeneric for &[T] {
-    type Repr = &'static [T::Repr];
+unsafe impl<'a, T: ErasableGeneric> ErasableGeneric for &'a [T]
+where
+    <T as ErasableGeneric>::Repr: 'a,
+{
+    type Repr = &'a [T::Repr];
 }
 
 impl<'a, T, Target> UpcastFrom<&'a [T]> for &'a [Target] where Target: UpcastFrom<T> {}
