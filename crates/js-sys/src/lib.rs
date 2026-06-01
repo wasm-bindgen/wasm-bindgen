@@ -1784,7 +1784,10 @@ macro_rules! impl_tuple {
             ///
             /// Note: You must specify the T using `::<...>` syntax on `ArrayTuple`.
             /// Alternatively, use `new1`, `new2`, etc. for type inference from the left-hand side.
-            pub fn new($($vars: &$T),+) -> ArrayTuple<($($T),+,)> {
+            pub fn new($($vars: &$T),+) -> ArrayTuple<($($T),+,)>
+            where
+                $(for<'a> &'a $T: wasm_bindgen::convert::IntoWasmAbi,)+
+            {
                 ArrayTuple::$new($($vars),+)
             }
         }
@@ -4754,6 +4757,8 @@ impl<Ret: JsGeneric, F: JsFunction<Ret = Ret>> JsArgs<F> for () {
 macro_rules! impl_js_args {
     ($arity:literal $trait:ident $bind_output:ident [$($A:ident)+] [$($idx:tt)+] $call:ident $bind:ident) => {
         impl<Ret: JsGeneric, $($A: JsGeneric,)+ F: $trait<Ret = Ret, $($A = $A,)*>> JsArgs<F> for ($(&$A,)+)
+        where
+            $(for<'a> &'a $A: wasm_bindgen::convert::IntoWasmAbi,)+
         {
             type BindOutput = Function<<F as $trait>::$bind_output>;
 
@@ -6842,14 +6847,20 @@ impl PropertyDescriptor {
     }
 
     #[cfg(not(js_sys_unstable_apis))]
-    pub fn new_value<T: JsGeneric>(value: &T) -> PropertyDescriptor<T> {
+    pub fn new_value<T: JsGeneric>(value: &T) -> PropertyDescriptor<T>
+    where
+        for<'a> &'a T: wasm_bindgen::convert::IntoWasmAbi,
+    {
         let desc: PropertyDescriptor<T> = JsCast::unchecked_into(Object::new());
         desc.set_value(value);
         desc
     }
 
     #[cfg(js_sys_unstable_apis)]
-    pub fn new_value<T: JsGeneric>(value: &T) -> PropertyDescriptor<T> {
+    pub fn new_value<T: JsGeneric>(value: &T) -> PropertyDescriptor<T>
+    where
+        for<'a> &'a T: wasm_bindgen::convert::IntoWasmAbi,
+    {
         let desc: PropertyDescriptor<T> = JsCast::unchecked_into(Object::<JsValue>::new());
         desc.set_value(value);
         desc
@@ -13088,7 +13099,9 @@ impl<T> PromiseState<T> {
 /// Converts a `PromiseState<T>` into a `Result<T, JsValue>`, matching the
 /// spec invariant that exactly one of the fulfilled value or the rejection
 /// reason is populated per slot.
-impl<T: JsGeneric + FromWasmAbi> From<PromiseState<T>> for Result<T, JsValue> {
+impl<T: JsGeneric + FromWasmAbi + wasm_bindgen::convert::OptionFromWasmAbi> From<PromiseState<T>>
+    for Result<T, JsValue>
+{
     fn from(state: PromiseState<T>) -> Result<T, JsValue> {
         if state.is_fulfilled() {
             Ok(state.get_value().unwrap())

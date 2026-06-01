@@ -67,10 +67,20 @@ struct GenericImportMeta {
 }
 
 /// Owned form of `decode::ImportModule` (which borrows the program bytes).
+///
+/// Inline (local-JS snippet) modules are resolved to their `(crate, snippet
+/// index)` identity **at capture time**: the snippet index is program-local
+/// and depends on `self.unique_crate_identifier`, which is only correct
+/// during the owning program's pass. `bind_generic_imports` runs after the
+/// program loop, so it must use the captured identity rather than
+/// re-resolving a bare index against whatever crate was processed last.
 enum OwnedImportModule {
     Named(String),
     RawNamed(String),
-    Inline(u32),
+    InlineResolved {
+        unique_crate_identifier: String,
+        snippet_idx_in_crate: usize,
+    },
 }
 
 /// Owned form of `decode::MethodData` / `MethodKind` / `Operation`.
@@ -589,12 +599,6 @@ impl<'a> Context<'a> {
             let mut by_desc: Vec<_> = by_desc.into_iter().collect();
             by_desc.sort_by(|a, b| format!("{:?}", a.0).cmp(&format!("{:?}", b.0)));
 
-            let module_opt = meta.module.as_ref().map(|m| match m {
-                OwnedImportModule::Named(s) => decode::ImportModule::Named(s),
-                OwnedImportModule::RawNamed(s) => decode::ImportModule::RawNamed(s),
-                OwnedImportModule::Inline(i) => decode::ImportModule::Inline(*i),
-            });
-
             for (descriptor, func_ids) in by_desc {
                 counter += 1;
                 let import_name = format!("__wbindgen_generic_import_{counter:016x}");
@@ -611,8 +615,11 @@ impl<'a> Context<'a> {
                 // adapter kind and JS-import shape from the AST metadata.
                 let (adapter_id, aux_import) = match &meta.method {
                     Some(m) => {
-                        let class =
-                            self.determine_import(&module_opt, &meta.js_namespace, &m.class)?;
+                        let class = self.determine_generic_import(
+                            &meta.module,
+                            &meta.js_namespace,
+                            &m.class,
+                        )?;
                         match &m.kind {
                             OwnedMethodKind::Constructor => {
                                 let id = self.import_adapter(
@@ -665,8 +672,11 @@ impl<'a> Context<'a> {
                         }
                     }
                     None => {
-                        let js_import =
-                            self.determine_import(&module_opt, &meta.js_namespace, &meta.name)?;
+                        let js_import = self.determine_generic_import(
+                            &meta.module,
+                            &meta.js_namespace,
+                            &meta.name,
+                        )?;
                         let id =
                             self.import_adapter(import_id, signature, AdapterJsImportKind::Normal)?;
                         (id, AuxImport::Value(AuxValue::Bare(js_import)))
@@ -1121,7 +1131,21 @@ impl<'a> Context<'a> {
             let module = import.module.as_ref().map(|m| match m {
                 decode::ImportModule::Named(n) => OwnedImportModule::Named(n.to_string()),
                 decode::ImportModule::RawNamed(n) => OwnedImportModule::RawNamed(n.to_string()),
-                decode::ImportModule::Inline(idx) => OwnedImportModule::Inline(*idx),
+                // Resolve the program-local snippet index now, while
+                // `unique_crate_identifier` and the snippet offset are this
+                // import's own program's.
+                decode::ImportModule::Inline(idx) => {
+                    let offset = self
+                        .aux
+                        .snippets
+                        .get(self.unique_crate_identifier)
+                        .map(|s| s.len())
+                        .unwrap_or(0);
+                    OwnedImportModule::InlineResolved {
+                        unique_crate_identifier: self.unique_crate_identifier.to_string(),
+                        snippet_idx_in_crate: *idx as usize + offset,
+                    }
+                }
             });
             self.generic_import_meta.insert(
                 shim.to_string(),
@@ -1760,6 +1784,46 @@ impl<'a> Context<'a> {
         }
 
         Ok(())
+    }
+
+    /// Resolve a generic import's JS import from its captured (owned) module.
+    /// Inline snippet modules are resolved from the identity captured during
+    /// the owning program's pass (see `OwnedImportModule`); everything else
+    /// delegates to `determine_import`.
+    fn determine_generic_import(
+        &self,
+        module: &Option<OwnedImportModule>,
+        js_namespace: &Option<Vec<String>>,
+        item: &str,
+    ) -> Result<JsImport, Error> {
+        if let Some(OwnedImportModule::InlineResolved {
+            unique_crate_identifier,
+            snippet_idx_in_crate,
+        }) = module
+        {
+            let (name, fields) = match js_namespace {
+                Some(ns) => {
+                    let mut tail = ns[1..].to_owned();
+                    tail.push(item.to_string());
+                    (ns[0].clone(), tail)
+                }
+                None => (item.to_string(), Vec::new()),
+            };
+            return Ok(JsImport {
+                name: JsImportName::InlineJs {
+                    unique_crate_identifier: unique_crate_identifier.clone(),
+                    snippet_idx_in_crate: *snippet_idx_in_crate,
+                    name,
+                },
+                fields,
+            });
+        }
+        let module = module.as_ref().map(|m| match m {
+            OwnedImportModule::Named(s) => decode::ImportModule::Named(s),
+            OwnedImportModule::RawNamed(s) => decode::ImportModule::RawNamed(s),
+            OwnedImportModule::InlineResolved { .. } => unreachable!(),
+        });
+        self.determine_import(&module, js_namespace, item)
     }
 
     fn determine_import(

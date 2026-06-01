@@ -2876,7 +2876,7 @@ impl ToTokens for ast::DynamicUnion {
 
 impl TryToTokens for ast::ImportFunction {
     fn try_to_tokens(&self, tokens: &mut TokenStream) -> Result<(), Diagnostic> {
-        if self.generic {
+        if self.generic || self.generic_eligible() {
             return self.try_to_tokens_generic(tokens);
         }
         let mut class = None;
@@ -3382,6 +3382,54 @@ impl<'a> FnClassGenerics<'a> {
 }
 
 impl ast::ImportFunction {
+    /// Whether this generic import routes through the per-monomorphisation
+    /// path automatically (the global default). Conservative: anything the
+    /// per-mono path can't yet express (async, explicit lifetimes, const
+    /// generics, >8 args, >8 distinct generic holes, >1 generic closure, a
+    /// `ScopedClosure` argument, or a type parameter that never appears in
+    /// the signature) falls back to the legacy erasure path. The explicit
+    /// `#[wasm_bindgen(generic)]` opt-in bypasses this.
+    fn generic_eligible(&self) -> bool {
+        if self.generics.type_params().next().is_none() {
+            return false;
+        }
+        if self.function.r#async
+            || self.generics.lifetimes().next().is_some()
+            || self.generics.const_params().next().is_some()
+            || self.function.arguments.len() > 8
+        {
+            return false;
+        }
+        let param_names: Vec<&syn::Ident> =
+            self.generics.type_params().map(|tp| &tp.ident).collect();
+        let mut closures = 0usize;
+        for a in &self.function.arguments {
+            let ty = &a.pat_type.ty;
+            if quote! { #ty }.to_string().contains("ScopedClosure") {
+                return false;
+            }
+            if detect_closure_arg(ty).is_some() && generics::uses_generic_params(ty, &param_names) {
+                closures += 1;
+            }
+        }
+        if closures > 1 {
+            return false;
+        }
+        let mut holes = std::collections::BTreeSet::new();
+        for a in &self.function.arguments {
+            let ty = &a.pat_type.ty;
+            if generics::uses_generic_params(ty, &param_names) {
+                holes.insert(quote! { #ty }.to_string());
+            }
+        }
+        if let Some(t) = self.js_ret.as_ref() {
+            if generics::uses_generic_params(t, &param_names) {
+                holes.insert(quote! { #t }.to_string());
+            }
+        }
+        !holes.is_empty() && holes.len() <= 8
+    }
+
     /// Call-site-emission codegen for `#[wasm_bindgen(generic)]` imported
     /// functions and methods. Each monomorphisation emits a courier call
     /// depositing the import shim name, a holed signature template, and the
@@ -3711,19 +3759,25 @@ impl ast::ImportFunction {
 
         // The function's `rust_attrs` (notably `#[cfg(...)]`) must gate the
         // carrier, courier wrapper, and any closure invoke wrappers together,
-        // so a cfg'd-out generic import emits nothing.
+        // so a cfg'd-out generic import emits nothing. The carrier struct +
+        // trait impl take only the cfg gating; non-cfg attrs (`#[deprecated]`,
+        // `#[doc]`, …) belong on the user-facing function, not an impl block.
         let attrs = &self.function.rust_attrs;
+        let cfg_attrs: Vec<&syn::Attribute> = attrs
+            .iter()
+            .filter(|a| a.path().is_ident("cfg") || a.path().is_ident("cfg_attr"))
+            .collect();
 
         // The name carrier (with the holed template) lives at module scope;
         // the wrapper goes inside the class `impl` when there is one.
         let carrier = quote! {
-            #(#attrs)*
+            #(#cfg_attrs)*
             #[doc(hidden)]
             #[automatically_derived]
             #[allow(non_camel_case_types)]
             pub struct #name_ty;
 
-            #(#attrs)*
+            #(#cfg_attrs)*
             #[automatically_derived]
             impl #wasm_bindgen::__rt::GenericImportName for #name_ty {
                 const SHIM: &'static str = #shim_str;
@@ -4100,7 +4154,7 @@ impl TryToTokens for DescribeImport<'_> {
         // via the courier template + fills, and their metadata flows
         // through the normal AST custom section. Skip descriptor emission
         // so we don't produce a stray type-erased descriptor.
-        if f.generic {
+        if f.generic || f.generic_eligible() {
             return Ok(());
         }
         let fn_class_generics = f.get_fn_generics()?;
