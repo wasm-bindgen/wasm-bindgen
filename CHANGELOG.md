@@ -5,6 +5,17 @@
 
 ### Added
 
+* **Generic `#[wasm_bindgen]` imports via per-monomorphisation.**
+  Imported functions, methods, constructors, getters, setters and
+  static methods may be generic over type parameters, and each
+  concrete instantiation emits its own binding at the call site
+  rather than erasing the parameter to `JsValue`. This means generic
+  imports now accept the full range of `wasm-bindgen` ABI types —
+  Rust primitives, references and lifetimes, `Option<T>`, `Vec<T>`,
+  generic closures, `async` returns and `catch` — not just
+  `JsValue`-erasable JS types. The previous `#[wasm_bindgen(generic)]`
+  opt-in attribute has been removed; eligible generic imports are
+  routed through the per-monomorphisation path automatically.
 * `WasmDescribe::SCHEMA_LEN: usize` and
   `WasmDescribe::SCHEMA_BUF: [u32; 256]` associated consts, populated
   for every concrete impl shipped with `wasm-bindgen` and emitted by
