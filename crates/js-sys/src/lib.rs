@@ -898,7 +898,7 @@ extern "C" {
     /// **Note:** Consider using [`Array::try_for_each`] if the callback might throw an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach)
-    #[wasm_bindgen(method, js_name = forEach)]
+    #[wasm_bindgen(method, js_name = forEach, generic)]
     pub fn for_each<T>(this: &Array<T>, callback: &mut dyn FnMut(T, u32, Array<T>));
 
     /// The `forEach()` method executes a provided function once for each array element. _(Fallible variation)_

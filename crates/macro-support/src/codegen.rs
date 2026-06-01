@@ -3460,6 +3460,7 @@ impl ast::ImportFunction {
         let mut arg_template_pairs = Vec::new();
         let mut arg_template_lens = Vec::new();
         let mut closure_bounds: Vec<TokenStream> = Vec::new();
+        let mut closure_invoke_ty: Option<syn::Type> = None;
         for (i, arg) in self.function.arguments.iter().enumerate() {
             let ty = (*arg.pat_type.ty).clone();
             let (sig_ty, changed) = relifetime(&ty, &wbg_lt);
@@ -3479,6 +3480,18 @@ impl ast::ImportFunction {
                         #c_ty: #wasm_bindgen::closure::WasmClosure
                             + #wasm_bindgen::describe::WasmDescribe
                     });
+                    match &closure_invoke_ty {
+                        Some(existing)
+                            if quote!(#existing).to_string() != quote!(#hole_ty).to_string() =>
+                        {
+                            bail_span!(
+                                rust_name,
+                                "#[wasm_bindgen(generic)] supports at most one closure argument",
+                            );
+                        }
+                        None => closure_invoke_ty = Some(hole_ty.clone()),
+                        _ => {}
+                    }
                     let key = quote!(#ty).to_string();
                     let idx = *hole_index.entry(key).or_insert_with(|| {
                         let n = hole_types.len();
@@ -3669,6 +3682,9 @@ impl ast::ImportFunction {
             quote! { __wbg_ret }
         };
 
+        let ic_ty: syn::Type =
+            closure_invoke_ty.unwrap_or_else(|| syn::parse_quote!(#wasm_bindgen::__rt::NoClosure));
+
         // The function's `rust_attrs` (notably `#[cfg(...)]`) must gate the
         // carrier, courier wrapper, and any closure invoke wrappers together,
         // so a cfg'd-out generic import emits nothing.
@@ -3716,6 +3732,7 @@ impl ast::ImportFunction {
                 let __wbg_ret = #wasm_bindgen::__rt::#courier::<
                     #name_ty,
                     #wasm_bindgen::__rt::#fills_ty<#(#hole_types),*>,
+                    #ic_ty,
                     #ret_ty,
                     #(#arg_tys),*
                 >(#(#arg_names),*);

@@ -136,10 +136,6 @@ pub trait GenericImportName {
 pub trait GenericFill {
     const SCHEMA_LEN: usize;
     const SCHEMA_BUF: [u32; crate::describe::SCHEMA_MAX];
-    #[inline(always)]
-    fn invoke_addr() -> u32 {
-        0
-    }
 }
 
 impl<T: crate::describe::WasmDescribe + ?Sized> GenericFill for T {
@@ -162,8 +158,28 @@ impl<C: crate::closure::WasmClosure + crate::describe::WasmDescribe + ?Sized, co
         &<C as crate::describe::WasmDescribe>::SCHEMA_BUF,
         <C as crate::describe::WasmDescribe>::SCHEMA_LEN,
     );
+}
+
+// The single closure hole's invoke-shim address (a function-table index),
+// passed to the courier as one immediate. Kept separate from the fills so
+// it stays a lone `i32.const` the cli scanner can read — summing addresses
+// across holes would lower to an `i32.add` it cannot fold. `NoClosure` is
+// used when an import has no closure argument.
+pub trait ClosureInvoke {
+    fn addr() -> u32;
+}
+pub struct NoClosure;
+impl ClosureInvoke for NoClosure {
     #[inline(always)]
-    fn invoke_addr() -> u32 {
+    fn addr() -> u32 {
+        0
+    }
+}
+impl<C: crate::closure::WasmClosure + ?Sized, const MUT: bool> ClosureInvoke
+    for ClosureFill<C, MUT>
+{
+    #[inline(always)]
+    fn addr() -> u32 {
         <C as crate::closure::WasmClosure>::invoke_shim_addr::<true>() as u32
     }
 }
@@ -176,7 +192,6 @@ impl<C: crate::closure::WasmClosure + crate::describe::WasmDescribe + ?Sized, co
 pub trait GenericFills {
     const BUF: [u32; crate::describe::SCHEMA_MAX];
     const LEN: usize;
-    fn invoke_addr() -> u32;
 }
 
 macro_rules! generic_fills {
@@ -192,10 +207,6 @@ macro_rules! generic_fills {
                 ),)+
             ]);
             const LEN: usize = 0 $(+ <$P as GenericFill>::SCHEMA_LEN)+;
-            #[inline(always)]
-            fn invoke_addr() -> u32 {
-                0 $(+ <$P as GenericFill>::invoke_addr())+
-            }
         }
     };
 }
@@ -224,10 +235,11 @@ generic_fills!(GenericFills8, P0, P1, P2, P3, P4, P5, P6, P7);
 macro_rules! generic_import_courier {
     ($pub:ident, $brk:ident, $(($A:ident, $a:ident, $p1:ident, $p2:ident, $p3:ident, $p4:ident),)*) => {
         #[allow(clippy::too_many_arguments)]
-        pub fn $pub<N, F, R, $($A,)*>($($a: $A,)*) -> R
+        pub fn $pub<N, F, IC, R, $($A,)*>($($a: $A,)*) -> R
         where
             N: GenericImportName,
             F: GenericFills,
+            IC: ClosureInvoke,
             R: FromWasmAbi + crate::describe::WasmDescribe,
             $($A: IntoWasmAbi + crate::describe::WasmDescribe,)*
         {
@@ -238,18 +250,18 @@ macro_rules! generic_import_courier {
                     <<$A as IntoWasmAbi>::Abi as WasmAbi>::Prim3,
                     <<$A as IntoWasmAbi>::Abi as WasmAbi>::Prim4,
                 )*
-            ) -> WasmRet<<R as FromWasmAbi>::Abi> = $brk::<N, F, R, $($A,)*>;
+            ) -> WasmRet<<R as FromWasmAbi>::Abi> = $brk::<N, F, IC, R, $($A,)*>;
             core::hint::black_box(_keepalive);
             unsafe {
                 $( let ($p1, $p2, $p3, $p4) = $a.into_abi().split(); )*
-                let _ret = $brk::<N, F, R, $($A,)*>($($p1, $p2, $p3, $p4,)*);
+                let _ret = $brk::<N, F, IC, R, $($A,)*>($($p1, $p2, $p3, $p4,)*);
                 R::from_abi(_ret.join())
             }
         }
 
         #[inline(never)]
         #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-        unsafe extern "C" fn $brk<N, F, R, $($A,)*>(
+        unsafe extern "C" fn $brk<N, F, IC, R, $($A,)*>(
             $(
                 $p1: <<$A as IntoWasmAbi>::Abi as WasmAbi>::Prim1,
                 $p2: <<$A as IntoWasmAbi>::Abi as WasmAbi>::Prim2,
@@ -260,6 +272,7 @@ macro_rules! generic_import_courier {
         where
             N: GenericImportName,
             F: GenericFills,
+            IC: ClosureInvoke,
             R: FromWasmAbi + crate::describe::WasmDescribe,
             $($A: IntoWasmAbi + crate::describe::WasmDescribe,)*
         {
@@ -270,7 +283,7 @@ macro_rules! generic_import_courier {
                 N::TEMPLATE_LEN,
                 F::BUF.as_ptr(),
                 F::LEN,
-                F::invoke_addr(),
+                IC::addr(),
             );
             $( keep_prims_alive($p1, $p2, $p3, $p4); )*
             make_ret::<R>()
