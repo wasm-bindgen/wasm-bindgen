@@ -219,6 +219,24 @@ generic_fills!(GenericFills5, P0, P1, P2, P3, P4);
 generic_fills!(GenericFills6, P0, P1, P2, P3, P4, P5);
 generic_fills!(GenericFills7, P0, P1, P2, P3, P4, P5, P6);
 generic_fills!(GenericFills8, P0, P1, P2, P3, P4, P5, P6, P7);
+generic_fills!(GenericFills9, P0, P1, P2, P3, P4, P5, P6, P7, P8);
+generic_fills!(GenericFills10, P0, P1, P2, P3, P4, P5, P6, P7, P8, P9);
+generic_fills!(GenericFills11, P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10);
+generic_fills!(
+    GenericFills12,
+    P0,
+    P1,
+    P2,
+    P3,
+    P4,
+    P5,
+    P6,
+    P7,
+    P8,
+    P9,
+    P10,
+    P11
+);
 
 // Zero-sized type carrier. Passing the courier's `N`/`F`/`IC`/`R` type
 // parameters as `Tag` *values* lets the macro call the courier with no
@@ -381,6 +399,48 @@ generic_import_courier!(
     (A5, a5, a5p1, a5p2, a5p3, a5p4),
     (A6, a6, a6p1, a6p2, a6p3, a6p4),
     (A7, a7, a7p1, a7p2, a7p3, a7p4),
+);
+generic_import_courier!(
+    wbg_generic_import_9,
+    breaks_if_inlined_generic_import_9,
+    (A0, a0, a0p1, a0p2, a0p3, a0p4),
+    (A1, a1, a1p1, a1p2, a1p3, a1p4),
+    (A2, a2, a2p1, a2p2, a2p3, a2p4),
+    (A3, a3, a3p1, a3p2, a3p3, a3p4),
+    (A4, a4, a4p1, a4p2, a4p3, a4p4),
+    (A5, a5, a5p1, a5p2, a5p3, a5p4),
+    (A6, a6, a6p1, a6p2, a6p3, a6p4),
+    (A7, a7, a7p1, a7p2, a7p3, a7p4),
+    (A8, a8, a8p1, a8p2, a8p3, a8p4),
+);
+generic_import_courier!(
+    wbg_generic_import_10,
+    breaks_if_inlined_generic_import_10,
+    (A0, a0, a0p1, a0p2, a0p3, a0p4),
+    (A1, a1, a1p1, a1p2, a1p3, a1p4),
+    (A2, a2, a2p1, a2p2, a2p3, a2p4),
+    (A3, a3, a3p1, a3p2, a3p3, a3p4),
+    (A4, a4, a4p1, a4p2, a4p3, a4p4),
+    (A5, a5, a5p1, a5p2, a5p3, a5p4),
+    (A6, a6, a6p1, a6p2, a6p3, a6p4),
+    (A7, a7, a7p1, a7p2, a7p3, a7p4),
+    (A8, a8, a8p1, a8p2, a8p3, a8p4),
+    (A9, a9, a9p1, a9p2, a9p3, a9p4),
+);
+generic_import_courier!(
+    wbg_generic_import_11,
+    breaks_if_inlined_generic_import_11,
+    (A0, a0, a0p1, a0p2, a0p3, a0p4),
+    (A1, a1, a1p1, a1p2, a1p3, a1p4),
+    (A2, a2, a2p1, a2p2, a2p3, a2p4),
+    (A3, a3, a3p1, a3p2, a3p3, a3p4),
+    (A4, a4, a4p1, a4p2, a4p3, a4p4),
+    (A5, a5, a5p1, a5p2, a5p3, a5p4),
+    (A6, a6, a6p1, a6p2, a6p3, a6p4),
+    (A7, a7, a7p1, a7p2, a7p3, a7p4),
+    (A8, a8, a8p1, a8p2, a8p3, a8p4),
+    (A9, a9, a9p1, a9p2, a9p3, a9p4),
+    (A10, a10, a10p1, a10p2, a10p3, a10p4),
 );
 
 // Schema-buffer forwarders: re-expose a generic type's `SCHEMA_BUF`

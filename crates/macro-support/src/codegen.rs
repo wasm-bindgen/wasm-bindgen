@@ -3395,7 +3395,7 @@ impl ast::ImportFunction {
         }
         if self.generics.lifetimes().next().is_some()
             || self.generics.const_params().next().is_some()
-            || self.function.arguments.len() > 8
+            || self.function.arguments.len() > 11
         {
             return false;
         }
@@ -3404,6 +3404,8 @@ impl ast::ImportFunction {
         let mut closures = 0usize;
         for a in &self.function.arguments {
             let ty = &a.pat_type.ty;
+            // `ScopedClosure<…>` carries an elided lifetime parameter the
+            // per-mono path can't yet reconstruct; leave on the erasure path.
             if quote! { #ty }.to_string().contains("ScopedClosure") {
                 return false;
             }
@@ -3426,7 +3428,7 @@ impl ast::ImportFunction {
                 holes.insert(quote! { #t }.to_string());
             }
         }
-        !holes.is_empty() && holes.len() <= 8
+        !holes.is_empty() && holes.len() <= 12
     }
 
     /// Call-site-emission codegen for `#[wasm_bindgen(generic)]` imported
@@ -3498,10 +3500,10 @@ impl ast::ImportFunction {
         let fn_class_generics = self.get_fn_generics()?;
 
         let nargs = self.function.arguments.len();
-        if nargs > 8 {
+        if nargs > 11 {
             bail_span!(
                 rust_name,
-                "#[wasm_bindgen(generic)] supports at most 8 arguments",
+                "#[wasm_bindgen(generic)] supports at most 11 arguments",
             );
         }
 
@@ -3665,10 +3667,10 @@ impl ast::ImportFunction {
                  argument or return types",
             );
         }
-        if nholes > 8 {
+        if nholes > 12 {
             bail_span!(
                 rust_name,
-                "#[wasm_bindgen(generic)] supports at most 8 distinct generic types in the \
+                "#[wasm_bindgen(generic)] supports at most 12 distinct generic types in the \
                  signature",
             );
         }
