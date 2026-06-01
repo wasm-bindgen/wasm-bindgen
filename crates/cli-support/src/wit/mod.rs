@@ -62,6 +62,8 @@ struct GenericImportMeta {
     name: String,
     catch: bool,
     variadic: bool,
+    structural: bool,
+    method: Option<OwnedMethodData>,
 }
 
 /// Owned form of `decode::ImportModule` (which borrows the program bytes).
@@ -69,6 +71,54 @@ enum OwnedImportModule {
     Named(String),
     RawNamed(String),
     Inline(u32),
+}
+
+/// Owned form of `decode::MethodData` / `MethodKind` / `Operation`.
+struct OwnedMethodData {
+    class: String,
+    kind: OwnedMethodKind,
+}
+
+enum OwnedMethodKind {
+    Constructor,
+    Operation {
+        is_static: bool,
+        kind: OwnedOperationKind,
+    },
+}
+
+enum OwnedOperationKind {
+    Regular,
+    RegularThis,
+    Getter(String),
+    Setter(String),
+    IndexingGetter,
+    IndexingSetter,
+    IndexingDeleter,
+}
+
+impl OwnedMethodData {
+    fn from_decode(data: &decode::MethodData<'_>) -> Self {
+        let kind = match &data.kind {
+            decode::MethodKind::Constructor => OwnedMethodKind::Constructor,
+            decode::MethodKind::Operation(op) => OwnedMethodKind::Operation {
+                is_static: op.is_static,
+                kind: match &op.kind {
+                    decode::OperationKind::Regular => OwnedOperationKind::Regular,
+                    decode::OperationKind::RegularThis => OwnedOperationKind::RegularThis,
+                    decode::OperationKind::Getter(f) => OwnedOperationKind::Getter(f.to_string()),
+                    decode::OperationKind::Setter(f) => OwnedOperationKind::Setter(f.to_string()),
+                    decode::OperationKind::IndexingGetter => OwnedOperationKind::IndexingGetter,
+                    decode::OperationKind::IndexingSetter => OwnedOperationKind::IndexingSetter,
+                    decode::OperationKind::IndexingDeleter => OwnedOperationKind::IndexingDeleter,
+                },
+            },
+        };
+        OwnedMethodData {
+            class: data.class.to_string(),
+            kind,
+        }
+    }
 }
 
 struct InstructionBuilder<'a, 'b> {
@@ -555,13 +605,74 @@ impl<'a> Context<'a> {
                 self.module.funcs.get_mut(import_func_id).name = Some(meta.name.clone());
 
                 let signature = descriptor.unwrap_function();
-                let js_import =
-                    self.determine_import(&module_opt, &meta.js_namespace, &meta.name)?;
-                let adapter_id =
-                    self.import_adapter(import_id, signature, AdapterJsImportKind::Normal)?;
-                self.aux
-                    .import_map
-                    .insert(adapter_id, AuxImport::Value(AuxValue::Bare(js_import)));
+
+                // Mirror `import_function`'s binding: free function, method,
+                // constructor, getter/setter, or static, selecting the right
+                // adapter kind and JS-import shape from the AST metadata.
+                let (adapter_id, aux_import) = match &meta.method {
+                    Some(m) => {
+                        let class =
+                            self.determine_import(&module_opt, &meta.js_namespace, &m.class)?;
+                        match &m.kind {
+                            OwnedMethodKind::Constructor => {
+                                let id = self.import_adapter(
+                                    import_id,
+                                    signature,
+                                    AdapterJsImportKind::Constructor,
+                                )?;
+                                (id, AuxImport::Value(AuxValue::Bare(class)))
+                            }
+                            OwnedMethodKind::Operation { is_static, kind } => {
+                                let op = decode::Operation {
+                                    is_static: *is_static,
+                                    kind: match kind {
+                                        OwnedOperationKind::Regular => {
+                                            decode::OperationKind::Regular
+                                        }
+                                        OwnedOperationKind::RegularThis => {
+                                            decode::OperationKind::RegularThis
+                                        }
+                                        OwnedOperationKind::Getter(f) => {
+                                            decode::OperationKind::Getter(f)
+                                        }
+                                        OwnedOperationKind::Setter(f) => {
+                                            decode::OperationKind::Setter(f)
+                                        }
+                                        OwnedOperationKind::IndexingGetter => {
+                                            decode::OperationKind::IndexingGetter
+                                        }
+                                        OwnedOperationKind::IndexingSetter => {
+                                            decode::OperationKind::IndexingSetter
+                                        }
+                                        OwnedOperationKind::IndexingDeleter => {
+                                            decode::OperationKind::IndexingDeleter
+                                        }
+                                    },
+                                };
+                                let (import, method) = self.determine_import_op(
+                                    class,
+                                    &meta.name,
+                                    meta.structural,
+                                    op,
+                                )?;
+                                let kind = if method {
+                                    AdapterJsImportKind::Method
+                                } else {
+                                    AdapterJsImportKind::Normal
+                                };
+                                (self.import_adapter(import_id, signature, kind)?, import)
+                            }
+                        }
+                    }
+                    None => {
+                        let js_import =
+                            self.determine_import(&module_opt, &meta.js_namespace, &meta.name)?;
+                        let id =
+                            self.import_adapter(import_id, signature, AdapterJsImportKind::Normal)?;
+                        (id, AuxImport::Value(AuxValue::Bare(js_import)))
+                    }
+                };
+                self.aux.import_map.insert(adapter_id, aux_import);
 
                 // Apply catch/variadic exactly as `import_function` does.
                 if meta.variadic {
@@ -1020,6 +1131,8 @@ impl<'a> Context<'a> {
                     name: function.name.to_string(),
                     catch,
                     variadic,
+                    structural,
+                    method: method.as_ref().map(OwnedMethodData::from_decode),
                 },
             );
             return Ok(());
@@ -1073,7 +1186,7 @@ impl<'a> Context<'a> {
                     }
                     decode::MethodKind::Operation(op) => {
                         let (import, method) =
-                            self.determine_import_op(class, &function, structural, op)?;
+                            self.determine_import_op(class, function.name, structural, op)?;
                         let kind = if method {
                             AdapterJsImportKind::Method
                         } else {
@@ -1154,25 +1267,19 @@ impl<'a> Context<'a> {
     fn determine_import_op(
         &mut self,
         mut class: JsImport,
-        function: &decode::Function<'_>,
+        name: &str,
         structural: bool,
         op: decode::Operation<'_>,
     ) -> Result<(AuxImport, bool), Error> {
         match op.kind {
             decode::OperationKind::Regular => {
                 if op.is_static {
-                    Ok((
-                        AuxImport::ValueWithThis(class, function.name.to_string()),
-                        false,
-                    ))
+                    Ok((AuxImport::ValueWithThis(class, name.to_string()), false))
                 } else if structural {
-                    Ok((
-                        AuxImport::StructuralMethod(function.name.to_string()),
-                        false,
-                    ))
+                    Ok((AuxImport::StructuralMethod(name.to_string()), false))
                 } else {
                     class.fields.push("prototype".to_string());
-                    class.fields.push(function.name.to_string());
+                    class.fields.push(name.to_string());
                     Ok((AuxImport::Value(AuxValue::Bare(class)), true))
                 }
             }
