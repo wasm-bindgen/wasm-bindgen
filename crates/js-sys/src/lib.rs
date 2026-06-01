@@ -1750,7 +1750,7 @@ macro_rules! impl_tuple {
             }
         }
 
-        impl<$($T: JsGeneric),+> ArrayTuple<($($T),+,)> {
+        impl<$($T: JsGeneric + wasm_bindgen::convert::FromWasmAbi),+> ArrayTuple<($($T),+,)> {
             /// Get the first element of the ArrayTuple
             pub fn first(&self) -> T1 {
                 self.get0()
@@ -1787,6 +1787,7 @@ macro_rules! impl_tuple {
             pub fn new($($vars: &$T),+) -> ArrayTuple<($($T),+,)>
             where
                 $(for<'a> &'a $T: wasm_bindgen::convert::IntoWasmAbi,)+
+                $($T: wasm_bindgen::describe::WasmDescribe,)+
             {
                 ArrayTuple::$new($($vars),+)
             }
@@ -1847,7 +1848,7 @@ pub struct ArrayIntoIter<T: JsGeneric = JsValue> {
 }
 
 #[cfg(not(js_sys_unstable_apis))]
-impl<T: JsGeneric> core::iter::Iterator for ArrayIntoIter<T> {
+impl<T: JsGeneric + wasm_bindgen::convert::FromWasmAbi> core::iter::Iterator for ArrayIntoIter<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -1884,7 +1885,7 @@ impl<T: JsGeneric> core::iter::Iterator for ArrayIntoIter<T> {
 }
 
 #[cfg(js_sys_unstable_apis)]
-impl<T: JsGeneric> core::iter::Iterator for ArrayIntoIter<T> {
+impl<T: JsGeneric + wasm_bindgen::convert::FromWasmAbi> core::iter::Iterator for ArrayIntoIter<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -1921,7 +1922,9 @@ impl<T: JsGeneric> core::iter::Iterator for ArrayIntoIter<T> {
 }
 
 #[cfg(not(js_sys_unstable_apis))]
-impl<T: JsGeneric> core::iter::DoubleEndedIterator for ArrayIntoIter<T> {
+impl<T: JsGeneric + wasm_bindgen::convert::FromWasmAbi> core::iter::DoubleEndedIterator
+    for ArrayIntoIter<T>
+{
     fn next_back(&mut self) -> Option<Self::Item> {
         let index = self.range.next_back()?;
         Some(self.array.get(index))
@@ -1933,7 +1936,9 @@ impl<T: JsGeneric> core::iter::DoubleEndedIterator for ArrayIntoIter<T> {
 }
 
 #[cfg(js_sys_unstable_apis)]
-impl<T: JsGeneric> core::iter::DoubleEndedIterator for ArrayIntoIter<T> {
+impl<T: JsGeneric + wasm_bindgen::convert::FromWasmAbi> core::iter::DoubleEndedIterator
+    for ArrayIntoIter<T>
+{
     fn next_back(&mut self) -> Option<Self::Item> {
         let index = self.range.next_back()?;
         self.array.get(index)
@@ -1946,9 +1951,15 @@ impl<T: JsGeneric> core::iter::DoubleEndedIterator for ArrayIntoIter<T> {
     }
 }
 
-impl<T: JsGeneric> core::iter::FusedIterator for ArrayIntoIter<T> {}
+impl<T: JsGeneric + wasm_bindgen::convert::FromWasmAbi> core::iter::FusedIterator
+    for ArrayIntoIter<T>
+{
+}
 
-impl<T: JsGeneric> core::iter::ExactSizeIterator for ArrayIntoIter<T> {}
+impl<T: JsGeneric + wasm_bindgen::convert::FromWasmAbi> core::iter::ExactSizeIterator
+    for ArrayIntoIter<T>
+{
+}
 
 /// Iterator returned by `Array::iter`
 #[derive(Debug, Clone)]
@@ -1957,7 +1968,7 @@ pub struct ArrayIter<'a, T: JsGeneric = JsValue> {
     array: &'a Array<T>,
 }
 
-impl<T: JsGeneric> core::iter::Iterator for ArrayIter<'_, T> {
+impl<T: JsGeneric + wasm_bindgen::convert::FromWasmAbi> core::iter::Iterator for ArrayIter<'_, T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -1995,7 +2006,9 @@ impl<T: JsGeneric> core::iter::Iterator for ArrayIter<'_, T> {
     }
 }
 
-impl<T: JsGeneric> core::iter::DoubleEndedIterator for ArrayIter<'_, T> {
+impl<T: JsGeneric + wasm_bindgen::convert::FromWasmAbi> core::iter::DoubleEndedIterator
+    for ArrayIter<'_, T>
+{
     fn next_back(&mut self) -> Option<Self::Item> {
         let index = self.range.next_back()?;
         Some(self.array.get_unchecked(index))
@@ -2008,9 +2021,15 @@ impl<T: JsGeneric> core::iter::DoubleEndedIterator for ArrayIter<'_, T> {
     }
 }
 
-impl<T: JsGeneric> core::iter::FusedIterator for ArrayIter<'_, T> {}
+impl<T: JsGeneric + wasm_bindgen::convert::FromWasmAbi> core::iter::FusedIterator
+    for ArrayIter<'_, T>
+{
+}
 
-impl<T: JsGeneric> core::iter::ExactSizeIterator for ArrayIter<'_, T> {}
+impl<T: JsGeneric + wasm_bindgen::convert::FromWasmAbi> core::iter::ExactSizeIterator
+    for ArrayIter<'_, T>
+{
+}
 
 impl<T: JsGeneric> Array<T> {
     /// Returns an iterator over the values of the JS array.
@@ -2022,7 +2041,7 @@ impl<T: JsGeneric> Array<T> {
     }
 }
 
-impl<T: JsGeneric> core::iter::IntoIterator for Array<T> {
+impl<T: JsGeneric + wasm_bindgen::convert::FromWasmAbi> core::iter::IntoIterator for Array<T> {
     type Item = T;
     type IntoIter = ArrayIntoIter<T>;
 
@@ -2079,7 +2098,7 @@ where
     }
 }
 
-impl<T: JsGeneric> Array<T> {
+impl<T: JsGeneric + wasm_bindgen::describe::WasmDescribe> Array<T> {
     /// Collect an iterator into a typed `Array<T>`, projecting each item
     /// through its canonical [`JsGeneric`] via [`IntoJsGeneric`].
     ///
@@ -4740,7 +4759,9 @@ pub trait JsArgs<T: JsFunction> {
 }
 
 // Manual impl for 0-arg
-impl<Ret: JsGeneric, F: JsFunction<Ret = Ret>> JsArgs<F> for () {
+impl<Ret: JsGeneric + wasm_bindgen::convert::FromWasmAbi, F: JsFunction<Ret = Ret>> JsArgs<F>
+    for ()
+{
     type BindOutput = Function<F>;
 
     #[inline]
@@ -4758,7 +4779,9 @@ macro_rules! impl_js_args {
     ($arity:literal $trait:ident $bind_output:ident [$($A:ident)+] [$($idx:tt)+] $call:ident $bind:ident) => {
         impl<Ret: JsGeneric, $($A: JsGeneric,)+ F: $trait<Ret = Ret, $($A = $A,)*>> JsArgs<F> for ($(&$A,)+)
         where
+            Ret: wasm_bindgen::convert::FromWasmAbi,
             $(for<'a> &'a $A: wasm_bindgen::convert::IntoWasmAbi,)+
+            $($A: wasm_bindgen::describe::WasmDescribe,)+
         {
             type BindOutput = Function<<F as $trait>::$bind_output>;
 
@@ -6847,7 +6870,9 @@ impl PropertyDescriptor {
     }
 
     #[cfg(not(js_sys_unstable_apis))]
-    pub fn new_value<T: JsGeneric>(value: &T) -> PropertyDescriptor<T>
+    pub fn new_value<T: JsGeneric + wasm_bindgen::describe::WasmDescribe>(
+        value: &T,
+    ) -> PropertyDescriptor<T>
     where
         for<'a> &'a T: wasm_bindgen::convert::IntoWasmAbi,
     {
@@ -6857,7 +6882,9 @@ impl PropertyDescriptor {
     }
 
     #[cfg(js_sys_unstable_apis)]
-    pub fn new_value<T: JsGeneric>(value: &T) -> PropertyDescriptor<T>
+    pub fn new_value<T: JsGeneric + wasm_bindgen::describe::WasmDescribe>(
+        value: &T,
+    ) -> PropertyDescriptor<T>
     where
         for<'a> &'a T: wasm_bindgen::convert::IntoWasmAbi,
     {

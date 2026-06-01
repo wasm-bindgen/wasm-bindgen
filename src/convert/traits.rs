@@ -531,9 +531,6 @@ impl_tuple_upcast!([T1 T2 T3 T4 T5 T6 T7 T8] [Target1 Target2 Target3 Target4 Ta
 /// - Custom types imported via `#[wasm_bindgen]`
 pub trait JsGeneric:
     ErasableGeneric<Repr = JsValue>
-    + IntoWasmAbi
-    + FromWasmAbi
-    + WasmDescribe
     + UpcastFrom<Self>
     + Upcast<Self>
     + Upcast<JsValue>
@@ -542,16 +539,8 @@ pub trait JsGeneric:
 {
 }
 
-impl<
-        T: ErasableGeneric<Repr = JsValue>
-            + IntoWasmAbi
-            + FromWasmAbi
-            + WasmDescribe
-            + UpcastFrom<T>
-            + Upcast<JsValue>
-            + JsCast
-            + 'static,
-    > JsGeneric for T
+impl<T: ErasableGeneric<Repr = JsValue> + UpcastFrom<T> + Upcast<JsValue> + JsCast + 'static>
+    JsGeneric for T
 {
 }
 
