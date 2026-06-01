@@ -280,6 +280,42 @@ impl VectorFromWasmAbi for String {
     }
 }
 
+// `Vec<Option<T>>` crosses the boundary as a JS array of `T | undefined`
+// externref handles (one heap slot per element), exactly like `Vec<JsValue>`
+// and `Vec<String>`. `None` maps to `undefined` via `JsValue: From<Option<T>>`.
+// This is the only sensible flat layout: `Option<T>` has no fixed scalar ABI,
+// so it cannot be packed into a typed-array buffer.
+impl<T> WasmDescribeVector for Option<T> {
+    const VECTOR_SCHEMA_LEN: usize = 2;
+    const VECTOR_SCHEMA_BUF: [u32; SCHEMA_MAX] = {
+        let mut b = leaf_schema(VECTOR);
+        b[1] = EXTERNREF;
+        b
+    };
+}
+
+impl<T> VectorIntoWasmAbi for Option<T>
+where
+    JsValue: From<T>,
+{
+    type Abi = <Box<[JsValue]> as IntoWasmAbi>::Abi;
+
+    fn vector_into_abi(vector: Box<[Self]>) -> Self::Abi {
+        js_value_vector_into_abi(vector)
+    }
+}
+
+impl<T> VectorFromWasmAbi for Option<T>
+where
+    T: crate::convert::TryFromJsValue,
+{
+    type Abi = <Box<[JsValue]> as FromWasmAbi>::Abi;
+
+    unsafe fn vector_from_abi(js: Self::Abi) -> Box<[Self]> {
+        js_value_vector_from_abi(js)
+    }
+}
+
 cfg_if! {
     if #[cfg(feature = "enable-interning")] {
         #[inline]
