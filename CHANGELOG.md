@@ -32,6 +32,12 @@
 
 ### Fixed
 
+* Fixed a panic ("Unhandled load width 8") in the descriptor interpreter when
+  processing `-Cinstrument-coverage`-instrumented modules, unblocking
+  `cargo llvm-cov --target wasm32-unknown-unknown` for crates whose describe
+  helpers get instrumented.
+  [#5179](https://github.com/wasm-bindgen/wasm-bindgen/pull/5179)
+
 ### Removed
 
 --------------------------------------------------------------------------------

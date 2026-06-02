@@ -398,6 +398,15 @@ impl Frame<'_> {
                                 stack.push(result as i32);
                             }
                         };
+                    } else if width == 8 {
+                        // i64 load. Our stack/memory model is i32-based (mirroring
+                        // the width-8 store below, which keeps only the low 4
+                        // bytes). `-Cinstrument-coverage` emits i64 profiler
+                        // counter loads inside the `__wbindgen_describe_*` helper
+                        // functions; the loaded values never influence the
+                        // descriptor protocol, so pushing the low word is
+                        // sufficient for the interpreter to run to completion.
+                        stack.push(val);
                     } else {
                         panic!("Unhandled load width {width}");
                     }
