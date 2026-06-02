@@ -17,10 +17,8 @@
   JS types. `&T` arguments additionally work for copyable value types
   (via `impl<T: Copy + IntoWasmAbi> IntoWasmAbi for &T`), so generic
   `fn(&U)` imports such as `Promise::resolve` accept `Promise<u32>`.
-  The previous `#[wasm_bindgen(generic)]` opt-in attribute has been
-  removed; eligible generic imports route through per-monomorphisation
-  automatically, and `JsGeneric` no longer carries the now-redundant
-  `IntoWasmAbi`/`FromWasmAbi`/`WasmDescribe` supertraits.
+  Any eligible generic import routes through per-monomorphisation
+  automatically — no opt-in attribute is required.
 * `WasmDescribe::SCHEMA_LEN: usize` and
   `WasmDescribe::SCHEMA_BUF: [u32; 256]` associated consts, populated
   for every concrete impl shipped with `wasm-bindgen` and emitted by
