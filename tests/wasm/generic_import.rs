@@ -367,3 +367,10 @@ fn generic_import_setter() {
     r.set_tag("hi");
     assert_eq!(r.tag().as_string(), Some("hi".to_string()));
 }
+
+#[wasm_bindgen_test]
+async fn promise_resolve_primitive() {
+    let p: js_sys::Promise<u32> = js_sys::Promise::resolve(&5u32);
+    let v = wasm_bindgen_futures::JsFuture::from(p).await.unwrap();
+    assert_eq!(v, 5u32);
+}

@@ -313,6 +313,32 @@ impl InstructionBuilder<'_, '_> {
                 ),
             },
 
+            // `&T` where `T` is a copyable value type. The Rust side passes
+            // the value by copy (`impl<T: Copy + IntoWasmAbi> IntoWasmAbi for
+            // &T`), so the wire is identical to passing `T` by value — JS just
+            // receives the primitive. Only the shared-ref form participates;
+            // `&mut primitive` has no such ABI.
+            Descriptor::I8
+            | Descriptor::U8
+            | Descriptor::I16
+            | Descriptor::U16
+            | Descriptor::I32
+            | Descriptor::U32
+            | Descriptor::I64
+            | Descriptor::U64
+            | Descriptor::I64AsF64
+            | Descriptor::U64AsF64
+            | Descriptor::I128
+            | Descriptor::U128
+            | Descriptor::F32
+            | Descriptor::F64
+            | Descriptor::Boolean
+            | Descriptor::Char
+                if !mutable =>
+            {
+                self.outgoing(arg)?;
+            }
+
             _ => bail!(
                 "unsupported reference argument type for calling JS function from Rust: {arg:?}"
             ),
