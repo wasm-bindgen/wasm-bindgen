@@ -26,6 +26,13 @@
 
 ### Fixed
 
+* Fixed WASI targets (`wasm32-wasip1`/`wasm32-wasip2`) emitting unresolved
+  `__wbindgen_placeholder__` imports, which broke component linking. The
+  codegen and runtime gates now exclude `target_os = "wasi"` (restoring the
+  pre-0.2.115 stub behavior), including the `panic = "unwind"` paths in
+  `wasm-bindgen-futures`.
+  [#5175](https://github.com/wasm-bindgen/wasm-bindgen/pull/5175)
+
 ### Removed
 
 --------------------------------------------------------------------------------
