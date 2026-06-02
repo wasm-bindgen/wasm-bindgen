@@ -104,6 +104,345 @@ where
     }
 }
 
+// Per-import name carrier for `#[wasm_bindgen(generic)]` imported
+// functions. The macro emits one zero-sized type per imported function
+// implementing this trait so the JS import name folds to a stable
+// rodata address inside the per-`(import, T)` courier monomorphisation.
+pub trait GenericImportName {
+    /// The import's shim name — the key the cli uses to recover this
+    /// import's metadata (js_name, module, namespace, catch, variadic, …)
+    /// from the normal AST custom section. Not re-encoded here.
+    const SHIM: &'static str;
+    /// Byte length of `SHIM` (const so it folds to an `i32.const`).
+    const SHIM_LEN: usize;
+    /// The shared signature *template* (the "descriptor"): a full function
+    /// descriptor stream `[FUNCTION, 0, nargs, slots.., ret, inner_ret]`
+    /// where each generic-parameter position is a `TYPE_PARAM(i)` hole.
+    /// Emitted once per import (same address for every monomorphisation)
+    /// and spliced with the per-`T` fills by the cli.
+    const TEMPLATE: [u32; crate::describe::SCHEMA_MAX];
+    /// Meaningful prefix length of `TEMPLATE`.
+    const TEMPLATE_LEN: usize;
+}
+
+// One hole's contribution to a generic import's fills: its schema plus,
+// for closure holes, the per-monomorphisation invoke-shim address that the
+// cli patches into the closure descriptor's `shim_idx` placeholder.
+//
+// A blanket impl covers every describable hole type (owned, `&T`,
+// `Option<T>`, `<T as Trait>::Assoc`, …) with a null invoke address. The
+// macro wraps closure holes in `ClosureFill<C, MUT>` to supply the real
+// address — a distinct type, so it doesn't collide with the blanket.
+pub trait GenericFill {
+    const SCHEMA_LEN: usize;
+    const SCHEMA_BUF: [u32; crate::describe::SCHEMA_MAX];
+}
+
+impl<T: crate::describe::WasmDescribe + ?Sized> GenericFill for T {
+    const SCHEMA_LEN: usize = <T as crate::describe::WasmDescribe>::SCHEMA_LEN;
+    const SCHEMA_BUF: [u32; crate::describe::SCHEMA_MAX] =
+        <T as crate::describe::WasmDescribe>::SCHEMA_BUF;
+}
+
+pub struct ClosureFill<C: ?Sized, const MUT: bool>(PhantomData<*const C>);
+impl<C: crate::closure::WasmClosure + crate::describe::WasmDescribe + ?Sized, const MUT: bool>
+    GenericFill for ClosureFill<C, MUT>
+{
+    const SCHEMA_LEN: usize = 1 + <C as crate::describe::WasmDescribe>::SCHEMA_LEN;
+    const SCHEMA_BUF: [u32; crate::describe::SCHEMA_MAX] = crate::describe::wrap_schema(
+        &[if MUT {
+            crate::describe::REFMUT
+        } else {
+            crate::describe::REF
+        }],
+        &<C as crate::describe::WasmDescribe>::SCHEMA_BUF,
+        <C as crate::describe::WasmDescribe>::SCHEMA_LEN,
+    );
+}
+
+// The single closure hole's invoke-shim address (a function-table index),
+// passed to the courier as one immediate. Kept separate from the fills so
+// it stays a lone `i32.const` the cli scanner can read — summing addresses
+// across holes would lower to an `i32.add` it cannot fold. `NoClosure` is
+// used when an import has no closure argument.
+pub trait ClosureInvoke {
+    fn addr() -> u32;
+}
+pub struct NoClosure;
+impl ClosureInvoke for NoClosure {
+    #[inline(always)]
+    fn addr() -> u32 {
+        0
+    }
+}
+impl<C: crate::closure::WasmClosure + ?Sized, const MUT: bool> ClosureInvoke
+    for ClosureFill<C, MUT>
+{
+    #[inline(always)]
+    fn addr() -> u32 {
+        <C as crate::closure::WasmClosure>::invoke_shim_addr::<true>() as u32
+    }
+}
+
+// Per-monomorphisation fills blob for a generic import: the concatenation
+// of each distinct hole type's `SCHEMA_BUF[..SCHEMA_LEN]`, indexed by hole
+// position. The cli decodes it as a sequence and splices the template's
+// holes. `invoke_addr` carries the single closure hole's invoke-shim
+// address (0 when there is no closure). One carrier per hole arity.
+pub trait GenericFills {
+    const BUF: [u32; crate::describe::SCHEMA_MAX];
+    const LEN: usize;
+}
+
+macro_rules! generic_fills {
+    ($name:ident, $($P:ident),+) => {
+        pub struct $name<$($P: GenericFill + ?Sized),+>(
+            PhantomData<($(*const $P,)+)>,
+        );
+        impl<$($P: GenericFill + ?Sized),+> GenericFills for $name<$($P),+> {
+            const BUF: [u32; crate::describe::SCHEMA_MAX] = crate::describe::cat_schema(&[
+                $((
+                    &<$P as GenericFill>::SCHEMA_BUF,
+                    <$P as GenericFill>::SCHEMA_LEN,
+                ),)+
+            ]);
+            const LEN: usize = 0 $(+ <$P as GenericFill>::SCHEMA_LEN)+;
+        }
+    };
+}
+
+generic_fills!(GenericFills1, P0);
+generic_fills!(GenericFills2, P0, P1);
+generic_fills!(GenericFills3, P0, P1, P2);
+generic_fills!(GenericFills4, P0, P1, P2, P3);
+generic_fills!(GenericFills5, P0, P1, P2, P3, P4);
+generic_fills!(GenericFills6, P0, P1, P2, P3, P4, P5);
+generic_fills!(GenericFills7, P0, P1, P2, P3, P4, P5, P6);
+generic_fills!(GenericFills8, P0, P1, P2, P3, P4, P5, P6, P7);
+generic_fills!(GenericFills9, P0, P1, P2, P3, P4, P5, P6, P7, P8);
+generic_fills!(GenericFills10, P0, P1, P2, P3, P4, P5, P6, P7, P8, P9);
+generic_fills!(GenericFills11, P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10);
+generic_fills!(
+    GenericFills12,
+    P0,
+    P1,
+    P2,
+    P3,
+    P4,
+    P5,
+    P6,
+    P7,
+    P8,
+    P9,
+    P10,
+    P11
+);
+
+// Zero-sized type carrier. Passing the courier's `N`/`F`/`IC`/`R` type
+// parameters as `Tag` *values* lets the macro call the courier with no
+// turbofish: every type parameter (including the argument types `A…`) is
+// inferred from the call's values, so argument references keep their
+// elided, higher-ranked lifetimes — generic getters stay usable as `fn`
+// items. `Tag` is zero-sized, so it never appears in the wasm ABI.
+pub struct Tag<T: ?Sized>(PhantomData<*const T>);
+impl<T: ?Sized> Tag<T> {
+    #[inline(always)]
+    pub const fn new() -> Self {
+        Self(PhantomData)
+    }
+}
+
+// Call-site courier family for `#[wasm_bindgen]` generic imported
+// functions, one per argument arity. Mirrors `wbg_cast`: the public
+// wrapper splits each argument's ABI into prims and calls the
+// `#[inline(never)]` courier, whose body deposits the import shim name,
+// the holed signature template, and the per-monomorphisation fills blob as
+// `i32.const` immediates for the cli scanner. The courier's wasm signature
+// equals the synthesised JS import's signature, so the cli rewrites the
+// call site directly to that import.
+//
+// `N` keys the import (shim name + holed template, fixed per import); `F`
+// keys the fills blob (the distinct hole types' schemas, varying per
+// monomorphisation); `IC` carries the closure invoke address; `R` is the
+// return type; `A…` are the argument types. The first four are passed as
+// `Tag` values (see above) rather than turbofish type arguments.
+macro_rules! generic_import_courier {
+    ($pub:ident, $brk:ident, $(($A:ident, $a:ident, $p1:ident, $p2:ident, $p3:ident, $p4:ident),)*) => {
+        #[allow(clippy::too_many_arguments)]
+        pub fn $pub<N, F, IC, R, $($A,)*>(
+            _n: Tag<N>,
+            _f: Tag<F>,
+            _ic: Tag<IC>,
+            _r: Tag<R>,
+            $($a: $A,)*
+        ) -> R
+        where
+            N: GenericImportName,
+            F: GenericFills,
+            IC: ClosureInvoke,
+            R: FromWasmAbi + crate::describe::WasmDescribe,
+            $($A: IntoWasmAbi + crate::describe::WasmDescribe,)*
+        {
+            let _keepalive: unsafe extern "C" fn(
+                $(
+                    <<$A as IntoWasmAbi>::Abi as WasmAbi>::Prim1,
+                    <<$A as IntoWasmAbi>::Abi as WasmAbi>::Prim2,
+                    <<$A as IntoWasmAbi>::Abi as WasmAbi>::Prim3,
+                    <<$A as IntoWasmAbi>::Abi as WasmAbi>::Prim4,
+                )*
+            ) -> WasmRet<<R as FromWasmAbi>::Abi> = $brk::<N, F, IC, R, $($A,)*>;
+            core::hint::black_box(_keepalive);
+            unsafe {
+                $( let ($p1, $p2, $p3, $p4) = $a.into_abi().split(); )*
+                let _ret = $brk::<N, F, IC, R, $($A,)*>($($p1, $p2, $p3, $p4,)*);
+                R::from_abi(_ret.join())
+            }
+        }
+
+        #[inline(never)]
+        #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+        unsafe extern "C" fn $brk<N, F, IC, R, $($A,)*>(
+            $(
+                $p1: <<$A as IntoWasmAbi>::Abi as WasmAbi>::Prim1,
+                $p2: <<$A as IntoWasmAbi>::Abi as WasmAbi>::Prim2,
+                $p3: <<$A as IntoWasmAbi>::Abi as WasmAbi>::Prim3,
+                $p4: <<$A as IntoWasmAbi>::Abi as WasmAbi>::Prim4,
+            )*
+        ) -> WasmRet<<R as FromWasmAbi>::Abi>
+        where
+            N: GenericImportName,
+            F: GenericFills,
+            IC: ClosureInvoke,
+            R: FromWasmAbi + crate::describe::WasmDescribe,
+            $($A: IntoWasmAbi + crate::describe::WasmDescribe,)*
+        {
+            super::__wbindgen_describe_generic_import(
+                N::SHIM.as_ptr(),
+                N::SHIM_LEN,
+                N::TEMPLATE.as_ptr(),
+                N::TEMPLATE_LEN,
+                F::BUF.as_ptr(),
+                F::LEN,
+                IC::addr(),
+            );
+            $( keep_prims_alive($p1, $p2, $p3, $p4); )*
+            make_ret::<R>()
+        }
+    };
+}
+
+generic_import_courier!(wbg_generic_import_0, breaks_if_inlined_generic_import_0,);
+generic_import_courier!(
+    wbg_generic_import_1,
+    breaks_if_inlined_generic_import_1,
+    (A0, a0, a0p1, a0p2, a0p3, a0p4),
+);
+generic_import_courier!(
+    wbg_generic_import_2,
+    breaks_if_inlined_generic_import_2,
+    (A0, a0, a0p1, a0p2, a0p3, a0p4),
+    (A1, a1, a1p1, a1p2, a1p3, a1p4),
+);
+generic_import_courier!(
+    wbg_generic_import_3,
+    breaks_if_inlined_generic_import_3,
+    (A0, a0, a0p1, a0p2, a0p3, a0p4),
+    (A1, a1, a1p1, a1p2, a1p3, a1p4),
+    (A2, a2, a2p1, a2p2, a2p3, a2p4),
+);
+generic_import_courier!(
+    wbg_generic_import_4,
+    breaks_if_inlined_generic_import_4,
+    (A0, a0, a0p1, a0p2, a0p3, a0p4),
+    (A1, a1, a1p1, a1p2, a1p3, a1p4),
+    (A2, a2, a2p1, a2p2, a2p3, a2p4),
+    (A3, a3, a3p1, a3p2, a3p3, a3p4),
+);
+generic_import_courier!(
+    wbg_generic_import_5,
+    breaks_if_inlined_generic_import_5,
+    (A0, a0, a0p1, a0p2, a0p3, a0p4),
+    (A1, a1, a1p1, a1p2, a1p3, a1p4),
+    (A2, a2, a2p1, a2p2, a2p3, a2p4),
+    (A3, a3, a3p1, a3p2, a3p3, a3p4),
+    (A4, a4, a4p1, a4p2, a4p3, a4p4),
+);
+generic_import_courier!(
+    wbg_generic_import_6,
+    breaks_if_inlined_generic_import_6,
+    (A0, a0, a0p1, a0p2, a0p3, a0p4),
+    (A1, a1, a1p1, a1p2, a1p3, a1p4),
+    (A2, a2, a2p1, a2p2, a2p3, a2p4),
+    (A3, a3, a3p1, a3p2, a3p3, a3p4),
+    (A4, a4, a4p1, a4p2, a4p3, a4p4),
+    (A5, a5, a5p1, a5p2, a5p3, a5p4),
+);
+generic_import_courier!(
+    wbg_generic_import_7,
+    breaks_if_inlined_generic_import_7,
+    (A0, a0, a0p1, a0p2, a0p3, a0p4),
+    (A1, a1, a1p1, a1p2, a1p3, a1p4),
+    (A2, a2, a2p1, a2p2, a2p3, a2p4),
+    (A3, a3, a3p1, a3p2, a3p3, a3p4),
+    (A4, a4, a4p1, a4p2, a4p3, a4p4),
+    (A5, a5, a5p1, a5p2, a5p3, a5p4),
+    (A6, a6, a6p1, a6p2, a6p3, a6p4),
+);
+generic_import_courier!(
+    wbg_generic_import_8,
+    breaks_if_inlined_generic_import_8,
+    (A0, a0, a0p1, a0p2, a0p3, a0p4),
+    (A1, a1, a1p1, a1p2, a1p3, a1p4),
+    (A2, a2, a2p1, a2p2, a2p3, a2p4),
+    (A3, a3, a3p1, a3p2, a3p3, a3p4),
+    (A4, a4, a4p1, a4p2, a4p3, a4p4),
+    (A5, a5, a5p1, a5p2, a5p3, a5p4),
+    (A6, a6, a6p1, a6p2, a6p3, a6p4),
+    (A7, a7, a7p1, a7p2, a7p3, a7p4),
+);
+generic_import_courier!(
+    wbg_generic_import_9,
+    breaks_if_inlined_generic_import_9,
+    (A0, a0, a0p1, a0p2, a0p3, a0p4),
+    (A1, a1, a1p1, a1p2, a1p3, a1p4),
+    (A2, a2, a2p1, a2p2, a2p3, a2p4),
+    (A3, a3, a3p1, a3p2, a3p3, a3p4),
+    (A4, a4, a4p1, a4p2, a4p3, a4p4),
+    (A5, a5, a5p1, a5p2, a5p3, a5p4),
+    (A6, a6, a6p1, a6p2, a6p3, a6p4),
+    (A7, a7, a7p1, a7p2, a7p3, a7p4),
+    (A8, a8, a8p1, a8p2, a8p3, a8p4),
+);
+generic_import_courier!(
+    wbg_generic_import_10,
+    breaks_if_inlined_generic_import_10,
+    (A0, a0, a0p1, a0p2, a0p3, a0p4),
+    (A1, a1, a1p1, a1p2, a1p3, a1p4),
+    (A2, a2, a2p1, a2p2, a2p3, a2p4),
+    (A3, a3, a3p1, a3p2, a3p3, a3p4),
+    (A4, a4, a4p1, a4p2, a4p3, a4p4),
+    (A5, a5, a5p1, a5p2, a5p3, a5p4),
+    (A6, a6, a6p1, a6p2, a6p3, a6p4),
+    (A7, a7, a7p1, a7p2, a7p3, a7p4),
+    (A8, a8, a8p1, a8p2, a8p3, a8p4),
+    (A9, a9, a9p1, a9p2, a9p3, a9p4),
+);
+generic_import_courier!(
+    wbg_generic_import_11,
+    breaks_if_inlined_generic_import_11,
+    (A0, a0, a0p1, a0p2, a0p3, a0p4),
+    (A1, a1, a1p1, a1p2, a1p3, a1p4),
+    (A2, a2, a2p1, a2p2, a2p3, a2p4),
+    (A3, a3, a3p1, a3p2, a3p3, a3p4),
+    (A4, a4, a4p1, a4p2, a4p3, a4p4),
+    (A5, a5, a5p1, a5p2, a5p3, a5p4),
+    (A6, a6, a6p1, a6p2, a6p3, a6p4),
+    (A7, a7, a7p1, a7p2, a7p3, a7p4),
+    (A8, a8, a8p1, a8p2, a8p3, a8p4),
+    (A9, a9, a9p1, a9p2, a9p3, a9p4),
+    (A10, a10, a10p1, a10p2, a10p3, a10p4),
+);
+
 // Schema-buffer forwarders: re-expose a generic type's `SCHEMA_BUF`
 // associated const through a non-generic static so we can hand a
 // stable address to the cli. Wasm-ld resolves `&FromBuf::<F>::BUF` to

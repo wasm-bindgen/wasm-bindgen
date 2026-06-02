@@ -899,7 +899,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach)
     #[wasm_bindgen(method, js_name = forEach)]
-    pub fn for_each<T: JsGeneric>(this: &Array<T>, callback: &mut dyn FnMut(T, u32, Array<T>));
+    pub fn for_each<T>(this: &Array<T>, callback: &mut dyn FnMut(T, u32, Array<T>));
 
     /// The `forEach()` method executes a provided function once for each array element. _(Fallible variation)_
     ///
@@ -1750,7 +1750,7 @@ macro_rules! impl_tuple {
             }
         }
 
-        impl<$($T: JsGeneric),+> ArrayTuple<($($T),+,)> {
+        impl<$($T: JsGeneric + wasm_bindgen::convert::FromWasmAbi),+> ArrayTuple<($($T),+,)> {
             /// Get the first element of the ArrayTuple
             pub fn first(&self) -> T1 {
                 self.get0()
@@ -1784,7 +1784,11 @@ macro_rules! impl_tuple {
             ///
             /// Note: You must specify the T using `::<...>` syntax on `ArrayTuple`.
             /// Alternatively, use `new1`, `new2`, etc. for type inference from the left-hand side.
-            pub fn new($($vars: &$T),+) -> ArrayTuple<($($T),+,)> {
+            pub fn new($($vars: &$T),+) -> ArrayTuple<($($T),+,)>
+            where
+                $(for<'a> &'a $T: wasm_bindgen::convert::IntoWasmAbi,)+
+                $($T: wasm_bindgen::describe::WasmDescribe,)+
+            {
                 ArrayTuple::$new($($vars),+)
             }
         }
@@ -1844,7 +1848,7 @@ pub struct ArrayIntoIter<T: JsGeneric = JsValue> {
 }
 
 #[cfg(not(js_sys_unstable_apis))]
-impl<T: JsGeneric> core::iter::Iterator for ArrayIntoIter<T> {
+impl<T: JsGeneric + wasm_bindgen::convert::FromWasmAbi> core::iter::Iterator for ArrayIntoIter<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -1881,7 +1885,7 @@ impl<T: JsGeneric> core::iter::Iterator for ArrayIntoIter<T> {
 }
 
 #[cfg(js_sys_unstable_apis)]
-impl<T: JsGeneric> core::iter::Iterator for ArrayIntoIter<T> {
+impl<T: JsGeneric + wasm_bindgen::convert::FromWasmAbi> core::iter::Iterator for ArrayIntoIter<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -1918,7 +1922,9 @@ impl<T: JsGeneric> core::iter::Iterator for ArrayIntoIter<T> {
 }
 
 #[cfg(not(js_sys_unstable_apis))]
-impl<T: JsGeneric> core::iter::DoubleEndedIterator for ArrayIntoIter<T> {
+impl<T: JsGeneric + wasm_bindgen::convert::FromWasmAbi> core::iter::DoubleEndedIterator
+    for ArrayIntoIter<T>
+{
     fn next_back(&mut self) -> Option<Self::Item> {
         let index = self.range.next_back()?;
         Some(self.array.get(index))
@@ -1930,7 +1936,9 @@ impl<T: JsGeneric> core::iter::DoubleEndedIterator for ArrayIntoIter<T> {
 }
 
 #[cfg(js_sys_unstable_apis)]
-impl<T: JsGeneric> core::iter::DoubleEndedIterator for ArrayIntoIter<T> {
+impl<T: JsGeneric + wasm_bindgen::convert::FromWasmAbi> core::iter::DoubleEndedIterator
+    for ArrayIntoIter<T>
+{
     fn next_back(&mut self) -> Option<Self::Item> {
         let index = self.range.next_back()?;
         self.array.get(index)
@@ -1943,9 +1951,15 @@ impl<T: JsGeneric> core::iter::DoubleEndedIterator for ArrayIntoIter<T> {
     }
 }
 
-impl<T: JsGeneric> core::iter::FusedIterator for ArrayIntoIter<T> {}
+impl<T: JsGeneric + wasm_bindgen::convert::FromWasmAbi> core::iter::FusedIterator
+    for ArrayIntoIter<T>
+{
+}
 
-impl<T: JsGeneric> core::iter::ExactSizeIterator for ArrayIntoIter<T> {}
+impl<T: JsGeneric + wasm_bindgen::convert::FromWasmAbi> core::iter::ExactSizeIterator
+    for ArrayIntoIter<T>
+{
+}
 
 /// Iterator returned by `Array::iter`
 #[derive(Debug, Clone)]
@@ -1954,7 +1968,7 @@ pub struct ArrayIter<'a, T: JsGeneric = JsValue> {
     array: &'a Array<T>,
 }
 
-impl<T: JsGeneric> core::iter::Iterator for ArrayIter<'_, T> {
+impl<T: JsGeneric + wasm_bindgen::convert::FromWasmAbi> core::iter::Iterator for ArrayIter<'_, T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -1992,7 +2006,9 @@ impl<T: JsGeneric> core::iter::Iterator for ArrayIter<'_, T> {
     }
 }
 
-impl<T: JsGeneric> core::iter::DoubleEndedIterator for ArrayIter<'_, T> {
+impl<T: JsGeneric + wasm_bindgen::convert::FromWasmAbi> core::iter::DoubleEndedIterator
+    for ArrayIter<'_, T>
+{
     fn next_back(&mut self) -> Option<Self::Item> {
         let index = self.range.next_back()?;
         Some(self.array.get_unchecked(index))
@@ -2005,9 +2021,15 @@ impl<T: JsGeneric> core::iter::DoubleEndedIterator for ArrayIter<'_, T> {
     }
 }
 
-impl<T: JsGeneric> core::iter::FusedIterator for ArrayIter<'_, T> {}
+impl<T: JsGeneric + wasm_bindgen::convert::FromWasmAbi> core::iter::FusedIterator
+    for ArrayIter<'_, T>
+{
+}
 
-impl<T: JsGeneric> core::iter::ExactSizeIterator for ArrayIter<'_, T> {}
+impl<T: JsGeneric + wasm_bindgen::convert::FromWasmAbi> core::iter::ExactSizeIterator
+    for ArrayIter<'_, T>
+{
+}
 
 impl<T: JsGeneric> Array<T> {
     /// Returns an iterator over the values of the JS array.
@@ -2019,7 +2041,7 @@ impl<T: JsGeneric> Array<T> {
     }
 }
 
-impl<T: JsGeneric> core::iter::IntoIterator for Array<T> {
+impl<T: JsGeneric + wasm_bindgen::convert::FromWasmAbi> core::iter::IntoIterator for Array<T> {
     type Item = T;
     type IntoIter = ArrayIntoIter<T>;
 
@@ -2076,7 +2098,7 @@ where
     }
 }
 
-impl<T: JsGeneric> Array<T> {
+impl<T: JsGeneric + wasm_bindgen::describe::WasmDescribe> Array<T> {
     /// Collect an iterator into a typed `Array<T>`, projecting each item
     /// through its canonical [`JsGeneric`] via [`IntoJsGeneric`].
     ///
@@ -2101,6 +2123,7 @@ impl<T: JsGeneric> Array<T> {
     where
         A: IntoJsGeneric<JsCanon = T>,
         I: IntoIterator<Item = A>,
+        for<'a> &'a T: wasm_bindgen::convert::IntoWasmAbi,
     {
         let mut out = Array::<T>::new_typed();
         out.extend_typed(iter);
@@ -2116,6 +2139,7 @@ impl<T: JsGeneric> Array<T> {
     where
         A: IntoJsGeneric<JsCanon = T>,
         I: IntoIterator<Item = A>,
+        for<'a> &'a T: wasm_bindgen::convert::IntoWasmAbi,
     {
         for value in iter {
             self.push(&value.to_js());
@@ -4735,7 +4759,9 @@ pub trait JsArgs<T: JsFunction> {
 }
 
 // Manual impl for 0-arg
-impl<Ret: JsGeneric, F: JsFunction<Ret = Ret>> JsArgs<F> for () {
+impl<Ret: JsGeneric + wasm_bindgen::convert::FromWasmAbi, F: JsFunction<Ret = Ret>> JsArgs<F>
+    for ()
+{
     type BindOutput = Function<F>;
 
     #[inline]
@@ -4752,6 +4778,10 @@ impl<Ret: JsGeneric, F: JsFunction<Ret = Ret>> JsArgs<F> for () {
 macro_rules! impl_js_args {
     ($arity:literal $trait:ident $bind_output:ident [$($A:ident)+] [$($idx:tt)+] $call:ident $bind:ident) => {
         impl<Ret: JsGeneric, $($A: JsGeneric,)+ F: $trait<Ret = Ret, $($A = $A,)*>> JsArgs<F> for ($(&$A,)+)
+        where
+            Ret: wasm_bindgen::convert::FromWasmAbi,
+            $(for<'a> &'a $A: wasm_bindgen::convert::IntoWasmAbi,)+
+            $($A: wasm_bindgen::describe::WasmDescribe,)+
         {
             type BindOutput = Function<<F as $trait>::$bind_output>;
 
@@ -6840,14 +6870,24 @@ impl PropertyDescriptor {
     }
 
     #[cfg(not(js_sys_unstable_apis))]
-    pub fn new_value<T: JsGeneric>(value: &T) -> PropertyDescriptor<T> {
+    pub fn new_value<T: JsGeneric + wasm_bindgen::describe::WasmDescribe>(
+        value: &T,
+    ) -> PropertyDescriptor<T>
+    where
+        for<'a> &'a T: wasm_bindgen::convert::IntoWasmAbi,
+    {
         let desc: PropertyDescriptor<T> = JsCast::unchecked_into(Object::new());
         desc.set_value(value);
         desc
     }
 
     #[cfg(js_sys_unstable_apis)]
-    pub fn new_value<T: JsGeneric>(value: &T) -> PropertyDescriptor<T> {
+    pub fn new_value<T: JsGeneric + wasm_bindgen::describe::WasmDescribe>(
+        value: &T,
+    ) -> PropertyDescriptor<T>
+    where
+        for<'a> &'a T: wasm_bindgen::convert::IntoWasmAbi,
+    {
         let desc: PropertyDescriptor<T> = JsCast::unchecked_into(Object::<JsValue>::new());
         desc.set_value(value);
         desc
@@ -13086,7 +13126,9 @@ impl<T> PromiseState<T> {
 /// Converts a `PromiseState<T>` into a `Result<T, JsValue>`, matching the
 /// spec invariant that exactly one of the fulfilled value or the rejection
 /// reason is populated per slot.
-impl<T: JsGeneric + FromWasmAbi> From<PromiseState<T>> for Result<T, JsValue> {
+impl<T: JsGeneric + FromWasmAbi + wasm_bindgen::convert::OptionFromWasmAbi> From<PromiseState<T>>
+    for Result<T, JsValue>
+{
     fn from(state: PromiseState<T>) -> Result<T, JsValue> {
         if state.is_fulfilled() {
             Ok(state.get_value().unwrap())

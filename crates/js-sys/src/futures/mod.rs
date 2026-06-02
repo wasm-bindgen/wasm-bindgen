@@ -42,7 +42,6 @@ use core::pin::Pin;
 use core::task::{Context, Poll, Waker};
 #[cfg(all(target_family = "wasm", feature = "std", panic = "unwind"))]
 use futures_util::FutureExt;
-use wasm_bindgen::__rt::marker::ErasableGeneric;
 #[cfg(all(target_family = "wasm", feature = "std", panic = "unwind"))]
 use wasm_bindgen::__rt::panic_to_panic_error;
 use wasm_bindgen::convert::{FromWasmAbi, Upcast};
@@ -112,10 +111,6 @@ pub struct JsFuture<T = JsValue> {
 }
 
 impl core::panic::UnwindSafe for JsFuture {}
-
-unsafe impl<T> ErasableGeneric for JsFuture<T> {
-    type Repr = JsFuture<JsValue>;
-}
 
 // Upcast for JsFuture is covariant in T (the success type)
 // JsFuture<T> can upcast to JsFuture<Target> if T: Upcast<Target>
@@ -341,6 +336,7 @@ where
     F: Future<Output = Result<T, JsValue>> + 'static,
     T: Promising + FromWasmAbi + JsGeneric,
     <T as Promising>::Resolution: JsGeneric,
+    for<'a> &'a T: wasm_bindgen::convert::IntoWasmAbi,
 {
     let mut future = Some(future);
 

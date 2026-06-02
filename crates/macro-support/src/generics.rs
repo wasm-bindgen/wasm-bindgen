@@ -1,64 +1,7 @@
 use std::borrow::Cow;
-use std::collections::{BTreeMap, BTreeSet};
-use syn::parse_quote;
-use syn::visit_mut::{self, VisitMut};
-use syn::{visit::Visit, Ident, Type};
-
-use crate::error::Diagnostic;
-
-/// Visitor to replace wasm bindgen generics with their concrete types
-/// The concrete type is the default type on the import if specified when it was defined.
-struct GenericRenameVisitor<'a> {
-    renames: &'a BTreeMap<&'a Ident, Option<Cow<'a, syn::Type>>>,
-    err: Option<Diagnostic>,
-}
-
-impl<'a> VisitMut for GenericRenameVisitor<'a> {
-    fn visit_type_mut(&mut self, ty: &mut Type) {
-        if self.err.is_some() {
-            return;
-        }
-        if let Type::Path(type_path) = ty {
-            // Handle <T as Trait>::AssocType
-            if let Some(qself) = &mut type_path.qself {
-                if let Type::Path(qself_path) = &mut *qself.ty {
-                    if qself_path.qself.is_none() && qself_path.path.segments.len() == 1 {
-                        let ident = &qself_path.path.segments[0].ident;
-                        if let Some((_, concrete)) = self.renames.get_key_value(ident) {
-                            *qself.ty = if let Some(concrete) = concrete {
-                                concrete.clone().into_owned()
-                            } else {
-                                parse_quote! { JsValue }
-                            };
-                            return;
-                        }
-                    }
-                }
-            }
-            // Normal T::...
-            if type_path.qself.is_none() && !type_path.path.segments.is_empty() {
-                let first_seg = &type_path.path.segments[0];
-
-                if let Some((_, concrete)) = self.renames.get_key_value(&first_seg.ident) {
-                    if let Some(concrete) = concrete {
-                        if type_path.path.segments.len() == 1 {
-                            *ty = concrete.clone().into_owned();
-                        } else if let Type::Path(concrete_path) = concrete.as_ref() {
-                            let remaining: Vec<_> =
-                                type_path.path.segments.iter().skip(1).cloned().collect();
-                            type_path.path.segments = concrete_path.path.segments.clone();
-                            type_path.path.segments.extend(remaining);
-                        }
-                    } else {
-                        *ty = parse_quote! { JsValue };
-                    }
-                    return;
-                }
-            }
-        }
-        visit_mut::visit_type_mut(self, ty);
-    }
-}
+use std::collections::BTreeSet;
+use syn::visit_mut::VisitMut;
+use syn::{visit::Visit, Ident};
 
 /// Helper visitor for generic parameter usage
 #[derive(Debug)]
@@ -231,19 +174,9 @@ pub(crate) fn staticize_lifetimes(
     ty
 }
 
-/// Obtain the generic type parameter names
-pub(crate) fn generic_param_names(generics: &syn::Generics) -> Vec<&Ident> {
-    generics.type_params().map(|tp| &tp.ident).collect()
-}
-
 /// Obtain all lifetime parameters from generics
 pub(crate) fn lifetime_params(generics: &syn::Generics) -> Vec<&syn::Lifetime> {
     generics.lifetimes().map(|lp| &lp.lifetime).collect()
-}
-
-/// Obtain both lifetime and type parameter names from generics
-pub(crate) fn all_param_names(generics: &syn::Generics) -> (Vec<&syn::Lifetime>, Vec<&Ident>) {
-    (lifetime_params(generics), generic_param_names(generics))
 }
 
 /// Helper visitor for lifetime usage detection in types
@@ -461,30 +394,6 @@ pub(crate) fn generics_predicate_uses(
     !found_set.is_empty()
 }
 
-/// Concrete type replacement visitor application.
-/// Replaces generic type parameters with their concrete types (or JsValue if no default),
-/// and replaces specified lifetime parameters with 'static (since extern blocks cannot have
-/// lifetime parameters from the outer scope).
-pub(crate) fn generic_to_concrete<'a>(
-    mut ty: syn::Type,
-    generic_names: &BTreeMap<&'a Ident, Option<Cow<'a, syn::Type>>>,
-    lifetimes_to_staticize: &[&syn::Lifetime],
-) -> Result<syn::Type, Diagnostic> {
-    // First, replace type parameters with their concrete types
-    if !generic_names.is_empty() {
-        let mut visitor = GenericRenameVisitor {
-            renames: generic_names,
-            err: None,
-        };
-        visitor.visit_type_mut(&mut ty);
-        if let Some(err) = visitor.err {
-            return Err(err);
-        }
-    }
-    // Then, replace specified lifetimes with 'static for ABI compatibility
-    Ok(staticize_lifetimes(ty, lifetimes_to_staticize))
-}
-
 #[cfg(test)]
 mod tests {
     #[test]
@@ -645,134 +554,6 @@ mod tests {
     }
 
     #[test]
-    fn test_generic_args_to_concrete() {
-        use std::borrow::Cow;
-        use std::collections::BTreeMap;
-
-        // T -> String replacement
-        let t = syn::parse_quote!(T);
-        let str: syn::Type = syn::parse_quote!(String);
-        let generic_names: BTreeMap<&syn::Ident, Option<Cow<syn::Type>>> = {
-            let mut map = BTreeMap::new();
-            map.insert(&t, Some(Cow::Borrowed(&str)));
-            map
-        };
-
-        // T gets replaced with String
-        let generic_type: syn::Type = syn::parse_quote!(Promise<T>);
-        let result =
-            crate::generics::generic_to_concrete(generic_type, &generic_names, &[]).unwrap();
-        let expected: syn::Type = syn::parse_quote!(Promise<String>);
-        assert_eq!(
-            quote::quote!(#result).to_string(),
-            quote::quote!(#expected).to_string()
-        );
-
-        // Mixed: i32 stays, T becomes String
-        let mixed_type: syn::Type = syn::parse_quote!(Promise<i32, T>);
-        let result = crate::generics::generic_to_concrete(mixed_type, &generic_names, &[]).unwrap();
-        let expected: syn::Type = syn::parse_quote!(Promise<i32, String>);
-        assert_eq!(
-            quote::quote!(#result).to_string(),
-            quote::quote!(#expected).to_string()
-        );
-
-        // No generics to replace - unchanged
-        let concrete_type: syn::Type = syn::parse_quote!(Promise<i32, bool>);
-        let result =
-            crate::generics::generic_to_concrete(concrete_type, &generic_names, &[]).unwrap();
-        let expected: syn::Type = syn::parse_quote!(Promise<i32, bool>);
-        assert_eq!(
-            quote::quote!(#result).to_string(),
-            quote::quote!(#expected).to_string()
-        );
-    }
-
-    #[test]
-    fn test_generic_associated_type_replacement() {
-        use std::borrow::Cow;
-        use std::collections::BTreeMap;
-
-        let t: syn::Ident = syn::parse_quote!(T);
-        let concrete: syn::Type = syn::parse_quote!(MyConcreteType);
-        let generic_names: BTreeMap<&syn::Ident, Option<Cow<syn::Type>>> = {
-            let mut map = BTreeMap::new();
-            map.insert(&t, Some(Cow::Borrowed(&concrete)));
-            map
-        };
-
-        // T::DurableObjectStub -> MyConcreteType::DurableObjectStub
-        let assoc_type: syn::Type = syn::parse_quote!(T::DurableObjectStub);
-        let result = crate::generics::generic_to_concrete(assoc_type, &generic_names, &[]).unwrap();
-        let expected: syn::Type = syn::parse_quote!(MyConcreteType::DurableObjectStub);
-        assert_eq!(
-            quote::quote!(#result).to_string(),
-            quote::quote!(#expected).to_string()
-        );
-
-        // Nested: Vec<T::Item> -> Vec<MyConcreteType::Item>
-        let nested: syn::Type = syn::parse_quote!(Vec<T::Item>);
-        let result = crate::generics::generic_to_concrete(nested, &generic_names, &[]).unwrap();
-        let expected: syn::Type = syn::parse_quote!(Vec<MyConcreteType::Item>);
-        assert_eq!(
-            quote::quote!(#result).to_string(),
-            quote::quote!(#expected).to_string()
-        );
-
-        // Complex: WasmRet<<T::Stub as FromWasmAbi>::Abi>
-        let complex: syn::Type = syn::parse_quote!(WasmRet<<T::Stub as FromWasmAbi>::Abi>);
-        let result = crate::generics::generic_to_concrete(complex, &generic_names, &[]).unwrap();
-        let expected: syn::Type =
-            syn::parse_quote!(WasmRet<<MyConcreteType::Stub as FromWasmAbi>::Abi>);
-        assert_eq!(
-            quote::quote!(#result).to_string(),
-            quote::quote!(#expected).to_string()
-        );
-
-        // T<Foo> gets fully replaced, args discarded
-        let with_args: syn::Type = syn::parse_quote!(T<SomeArg>);
-        let result = crate::generics::generic_to_concrete(with_args, &generic_names, &[]).unwrap();
-        let expected: syn::Type = syn::parse_quote!(MyConcreteType);
-        assert_eq!(
-            quote::quote!(#result).to_string(),
-            quote::quote!(#expected).to_string()
-        );
-
-        // QSelf: <T::DurableObjectStub as FromWasmAbi>::Abi
-        let qself_type: syn::Type = syn::parse_quote!(<T::DurableObjectStub as FromWasmAbi>::Abi);
-        let result = crate::generics::generic_to_concrete(qself_type, &generic_names, &[]).unwrap();
-        let expected: syn::Type =
-            syn::parse_quote!(<MyConcreteType::DurableObjectStub as FromWasmAbi>::Abi);
-        assert_eq!(
-            quote::quote!(#result).to_string(),
-            quote::quote!(#expected).to_string()
-        );
-
-        // QSelf with trait: <T as DurableObject>::DurableObjectStub
-        let qself_trait: syn::Type = syn::parse_quote!(<T as DurableObject>::DurableObjectStub);
-        let result =
-            crate::generics::generic_to_concrete(qself_trait, &generic_names, &[]).unwrap();
-        let expected: syn::Type =
-            syn::parse_quote!(<MyConcreteType as DurableObject>::DurableObjectStub);
-        assert_eq!(
-            quote::quote!(#result).to_string(),
-            quote::quote!(#expected).to_string()
-        );
-
-        // Reference to QSelf with trait: &<T as DurableObject>::DurableObjectStub
-        let ref_qself_trait: syn::Type =
-            syn::parse_quote!(&<T as DurableObject>::DurableObjectStub);
-        let result =
-            crate::generics::generic_to_concrete(ref_qself_trait, &generic_names, &[]).unwrap();
-        let expected: syn::Type =
-            syn::parse_quote!(&<MyConcreteType as DurableObject>::DurableObjectStub);
-        assert_eq!(
-            quote::quote!(#result).to_string(),
-            quote::quote!(#expected).to_string()
-        );
-    }
-
-    #[test]
     fn test_where_predicate_assoc_type_binding() {
         // Test that generics_predicate_uses finds generic params in associated type bindings
         // This is the pattern: F: JsFunction<Ret = Ret>
@@ -889,48 +670,6 @@ mod tests {
         let ty: syn::Type = syn::parse_quote!(Vec<T>);
         let result = crate::generics::staticize_lifetimes(ty, &[]);
         let expected: syn::Type = syn::parse_quote!(Vec<T>);
-        assert_eq!(
-            quote::quote!(#result).to_string(),
-            quote::quote!(#expected).to_string()
-        );
-    }
-
-    #[test]
-    fn test_generic_to_concrete_with_lifetimes() {
-        use std::borrow::Cow;
-        use std::collections::BTreeMap;
-
-        // Test that generic_to_concrete replaces both type params AND specified lifetimes
-        let t: syn::Ident = syn::parse_quote!(T);
-        let concrete: syn::Type = syn::parse_quote!(JsValue);
-        let generic_names: BTreeMap<&syn::Ident, Option<Cow<syn::Type>>> = {
-            let mut map = BTreeMap::new();
-            map.insert(&t, Some(Cow::Borrowed(&concrete)));
-            map
-        };
-
-        // Create the lifetime 'a that we want to staticize
-        let lifetime_a: syn::Lifetime = syn::parse_quote!('a);
-        let lifetimes_to_staticize = [&lifetime_a];
-
-        // ScopedClosure<'a, dyn FnMut(T)> -> ScopedClosure<'static, dyn FnMut(JsValue)>
-        let ty: syn::Type = syn::parse_quote!(ScopedClosure<'a, dyn FnMut(T)>);
-        let result =
-            crate::generics::generic_to_concrete(ty, &generic_names, &lifetimes_to_staticize)
-                .unwrap();
-        let expected: syn::Type = syn::parse_quote!(ScopedClosure<'static, dyn FnMut(JsValue)>);
-        assert_eq!(
-            quote::quote!(#result).to_string(),
-            quote::quote!(#expected).to_string()
-        );
-
-        // Test that lifetimes NOT in the list are preserved
-        let _lifetime_b: syn::Lifetime = syn::parse_quote!('b);
-        let lifetimes_only_a = [&lifetime_a];
-        let ty: syn::Type = syn::parse_quote!(Foo<'a, 'b>);
-        let result =
-            crate::generics::generic_to_concrete(ty, &BTreeMap::new(), &lifetimes_only_a).unwrap();
-        let expected: syn::Type = syn::parse_quote!(Foo<'static, 'b>);
         assert_eq!(
             quote::quote!(#result).to_string(),
             quote::quote!(#expected).to_string()

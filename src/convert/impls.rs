@@ -854,3 +854,10 @@ pub unsafe fn js_value_vector_from_abi<T: TryFromJsValue>(
     }
     result.into_boxed_slice()
 }
+
+impl<T: Copy + IntoWasmAbi> IntoWasmAbi for &T {
+    type Abi = <T as IntoWasmAbi>::Abi;
+    fn into_abi(self) -> Self::Abi {
+        (*self).into_abi()
+    }
+}

@@ -55,6 +55,13 @@ use wasm_bindgen_shared::{
 pub struct WasmBindgenDescriptorsSection {
     pub descriptors: HashMap<String, Descriptor>,
     pub cast_imports: HashMap<Descriptor, Vec<FunctionId>>,
+    /// Per-monomorphisation generic imports recovered from
+    /// `__wbindgen_describe_generic_import` marker calls, keyed by the
+    /// import's shim name. Each entry pairs the courier function with the
+    /// concrete (spliced) descriptor for its monomorphisation. The shim
+    /// is the key into the normal AST custom section, from which the cli
+    /// recovers the import's metadata (js_name, module, namespace, …).
+    pub generic_imports: HashMap<String, Vec<(FunctionId, Descriptor)>>,
 }
 
 pub type WasmBindgenDescriptorsSectionId = TypedCustomSectionId<WasmBindgenDescriptorsSection>;
@@ -85,6 +92,14 @@ pub fn execute(module: &mut Module) -> Result<WasmBindgenDescriptorsSectionId, E
     // here reads those immediates and composes the descriptor. No
     // wasm interpretation involved.
     section.execute_casts(module)?;
+
+    // Phase 3b: recover per-monomorphisation generic imports. Each
+    // `wbg_generic_import_*` monomorphisation emits a courier whose
+    // body calls `__wbindgen_describe_generic_import` with four
+    // `i32.const` immediates (JS import name ptr/len + arg schema
+    // ptr/len); the scanner reads those and composes a function
+    // descriptor bound to the named JS import.
+    section.execute_generic_imports(module)?;
 
     // Phase 4: strip __wbg_invoke_* exports.
     //
@@ -268,7 +283,7 @@ impl WasmBindgenDescriptorsSection {
             // resolve the most recent five values on the operand
             // stack.
             let entry = local.entry_block();
-            let mut scanner = CastCallScanner::new(describe_cast_id);
+            let mut scanner = CastCallScanner::new(describe_cast_id, 5);
             scanner.walk(local, entry);
             for args in scanner.found_calls {
                 let from_ptr = args[0] as u32;
@@ -284,6 +299,69 @@ impl WasmBindgenDescriptorsSection {
                     .entry(descriptor)
                     .or_default()
                     .push(func_id);
+            }
+        }
+
+        Ok(())
+    }
+
+    fn execute_generic_imports(&mut self, module: &mut Module) -> Result<(), Error> {
+        // Locate the `__wbindgen_describe_generic_import` marker import.
+        let describe_id = module.imports.iter().find_map(|import| {
+            if import.module == "__wbindgen_placeholder__"
+                && import.name == "__wbindgen_describe_generic_import"
+            {
+                if let walrus::ImportKind::Function(id) = import.kind {
+                    return Some(id);
+                }
+            }
+            None
+        });
+        let describe_id = match describe_id {
+            Some(id) => id,
+            None => return Ok(()),
+        };
+
+        let data_view = DataSegmentView::new(module);
+
+        let mut local_funcs = Vec::new();
+        for (func_id, _local) in module.funcs.iter_local() {
+            local_funcs.push(func_id);
+        }
+        for func_id in local_funcs {
+            let local = match &module.funcs.get(func_id).kind {
+                walrus::FunctionKind::Local(l) => l,
+                _ => continue,
+            };
+            let entry = local.entry_block();
+            // Seven immediates: shim_ptr, shim_len, template_ptr,
+            // template_len, fills_ptr, fills_len (the fills blob is a
+            // concatenation of the per-hole schemas), and closure_invoke_addr
+            // (the single closure hole's invoke-shim table index, or 0).
+            let mut scanner = CastCallScanner::new(describe_id, 7);
+            scanner.walk(local, entry);
+            for args in scanner.found_calls {
+                let shim_ptr = args[0] as u32;
+                let shim_len = args[1] as u32;
+                let template_ptr = args[2] as u32;
+                let template_len = args[3] as u32;
+                let fills_ptr = args[4] as u32;
+                let fills_len = args[5] as u32;
+                let closure_invoke_addr = args[6] as u32;
+                let shim_bytes = data_view.read_bytes(shim_ptr, shim_len as usize)?;
+                let shim = String::from_utf8(shim_bytes)
+                    .context("generic import shim name was not valid UTF-8")?;
+                let template = data_view.read_u32_slice(template_ptr, template_len)?;
+                let fills = data_view.read_u32_slice(fills_ptr, fills_len)?;
+                let fills = Descriptor::decode_sequence(&fills);
+                let mut descriptor = Descriptor::decode(&template).substitute(&fills);
+                if closure_invoke_addr != 0 {
+                    descriptor.patch_closure_shim(closure_invoke_addr);
+                }
+                self.generic_imports
+                    .entry(shim)
+                    .or_default()
+                    .push((func_id, descriptor));
             }
         }
 
@@ -491,6 +569,8 @@ fn compose_cast_descriptor(from: &[u32], to: &[u32], invoke_addr: u32) -> Vec<u3
 /// don't appear in a `breaks_if_inlined` body.
 struct CastCallScanner {
     target: walrus::FunctionId,
+    /// Number of `i32.const` immediates the marker call consumes.
+    arity: usize,
     /// Pending list: i32.const values pushed onto the operand stack
     /// since the most recent stack reset. The top of the stack is at
     /// the end. `None` means "value at this stack slot is not a known
@@ -499,15 +579,16 @@ struct CastCallScanner {
     operand_stack: Vec<Option<i32>>,
     /// Locals -> last i32.const written via `local.set`/`local.tee`.
     locals: std::collections::BTreeMap<walrus::LocalId, i32>,
-    /// All cast calls we've found in this function (each with its 5
-    /// resolved immediates).
-    found_calls: Vec<[i32; 5]>,
+    /// All marker calls we've found in this function (each with its
+    /// `arity` resolved immediates).
+    found_calls: Vec<Vec<i32>>,
 }
 
 impl CastCallScanner {
-    fn new(target: walrus::FunctionId) -> Self {
+    fn new(target: walrus::FunctionId, arity: usize) -> Self {
         Self {
             target,
+            arity,
             operand_stack: Vec::new(),
             locals: std::collections::BTreeMap::new(),
             found_calls: Vec::new(),
@@ -586,16 +667,16 @@ impl CastCallScanner {
                 Instr::Call(Call { func: callee })
                 | Instr::ReturnCall(ReturnCall { func: callee }) => {
                     if *callee == self.target {
-                        // The call consumes the top 5 stack values.
+                        // The call consumes the top `arity` stack values.
                         let n = self.operand_stack.len();
-                        if n >= 5 {
-                            let mut args = [0i32; 5];
-                            for (i, slot) in self.operand_stack[n - 5..n].iter().enumerate() {
-                                args[i] = slot.unwrap_or(0);
-                            }
+                        if n >= self.arity {
+                            let args = self.operand_stack[n - self.arity..n]
+                                .iter()
+                                .map(|slot| slot.unwrap_or(0))
+                                .collect();
                             self.found_calls.push(args);
                         }
-                        for _ in 0..5 {
+                        for _ in 0..self.arity {
                             self.operand_stack.pop();
                         }
                     } else {
