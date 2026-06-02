@@ -361,12 +361,28 @@ async fn process_numbers() -> Result<f64, JsValue> {
 ## Using `js_sys` directly without `wasm-bindgen-futures`
 
 To make `#[wasm_bindgen]` emit `js_sys::futures` directly and drop the
-`wasm-bindgen-futures` dependency, depend on `js-sys` and build with
-`--cfg=wasm_bindgen_use_js_sys` (e.g. via `RUSTFLAGS` or `.cargo/config.toml`).
+`wasm-bindgen-futures` dependency, depend on `js-sys` and enable the opt-in
+in one of two equivalent ways:
 
-A cfg is used rather than a Cargo feature so the choice stays scoped to the
-crate that opts in — Cargo features union across the dep graph, which would
-flip codegen for every `#[wasm_bindgen]` user in the build.
+* Set the `WASM_BINDGEN_USE_JS_SYS=1` environment variable when invoking
+  Cargo, or
+* Build with `--cfg=wasm_bindgen_use_js_sys` (e.g. via `RUSTFLAGS` or
+  `.cargo/config.toml`).
+
+The environment-variable form is read at macro expansion time and therefore
+works on stable Rust even when `--target` is used. The `--cfg` form is
+resolved when `wasm-bindgen-macro-support` itself is compiled on the host;
+Cargo does not propagate `RUSTFLAGS` or `target.*.rustflags` to host
+proc-macros when `--target` is set (see
+[rust-lang/cargo#3349](https://github.com/rust-lang/cargo/issues/3349)),
+so the cfg-only path requires nightly with
+`-Z host-config -Z target-applies-to-host` or a host build that does not
+use `--target`.
+
+A cfg/env opt-in is used rather than a Cargo feature so the choice stays
+scoped to the crate that opts in — Cargo features union across the dep
+graph, which would flip codegen for every `#[wasm_bindgen]` user in the
+build.
 
 ## Compatibility note
 

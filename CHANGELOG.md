@@ -9,6 +9,12 @@
   matching the current Cookie Store API specification.
   [#5169](https://github.com/wasm-bindgen/wasm-bindgen/pull/5169)
 
+* The js-sys futures codegen opt-in can now also be enabled via the
+  `WASM_BINDGEN_USE_JS_SYS=1` environment variable, in addition to
+  `--cfg=wasm_bindgen_use_js_sys`. This works on stable when `--target`
+  is in use, where Cargo does not propagate the cfg to host proc-macros.
+  [#5164](https://github.com/wasm-bindgen/wasm-bindgen/pull/5164)
+
 ### Changed
 
 * `JsOption<T>` now treats only `undefined` as empty, aligning it with
@@ -32,6 +38,12 @@
   pre-0.2.115 stub behavior), including the `panic = "unwind"` paths in
   `wasm-bindgen-futures`.
   [#5175](https://github.com/wasm-bindgen/wasm-bindgen/pull/5175)
+
+* Fixed a panic ("Unhandled load width 8") in the descriptor interpreter when
+  processing `-Cinstrument-coverage`-instrumented modules, unblocking
+  `cargo llvm-cov --target wasm32-unknown-unknown` for crates whose describe
+  helpers get instrumented.
+  [#5179](https://github.com/wasm-bindgen/wasm-bindgen/pull/5179)
 
 ### Removed
 

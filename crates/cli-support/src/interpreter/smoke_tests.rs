@@ -213,6 +213,54 @@ fn loads_and_stores() {
     interpret(wat, "foo", &[1, 50331650, 3]);
 }
 
+// Regression test: `-Cinstrument-coverage` injects i64 profiler-counter
+// load/store/add into the `__wbindgen_describe_*` helper functions. The
+// descriptor interpreter must tolerate width-8 (i64) loads (it already handled
+// width-8 stores) so coverage-instrumented modules can still be processed.
+// Without the i64-load handling this panics with "Unhandled load width 8".
+#[test]
+fn i64_loads_and_stores() {
+    let wat = r#"
+        (module
+            (import "__wbindgen_placeholder__" "__wbindgen_describe"
+              (func $__wbindgen_describe (param i32)))
+
+            (global $__stack_pointer (mut i32) (i32.const 65536))
+            (memory 1)
+
+            (func $foo
+                (local i32)
+
+                global.get $__stack_pointer
+                i32.const 16
+                i32.sub
+                local.set 0
+                local.get 0
+                global.set $__stack_pointer
+
+                ;; i64.store 42 at fp+0 (width 8)
+                local.get 0
+                i64.const 42
+                i64.store offset=0
+
+                ;; i64.load fp+0 (width 8), wrap to i32, and describe it
+                local.get 0
+                i64.load offset=0
+                i32.wrap_i64
+                call $__wbindgen_describe
+
+                local.get 0
+                i32.const 16
+                i32.add
+                global.set $__stack_pointer
+            )
+
+            (export "foo" (func $foo))
+        )
+    "#;
+    interpret(wat, "foo", &[42]);
+}
+
 #[test]
 fn calling_functions() {
     let wat = r#"
