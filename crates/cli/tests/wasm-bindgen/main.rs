@@ -50,6 +50,7 @@ struct Project {
     name: String,
     deps: String,
     cargo_cmd: Command,
+    target: String,
     built: bool,
 }
 
@@ -63,16 +64,21 @@ impl Project {
         cargo_cmd
             .current_dir(&root)
             .arg("build")
-            .arg("--target")
-            .arg("wasm32-unknown-unknown")
             .env("CARGO_TARGET_DIR", &*TARGET_DIR);
         Project {
             root,
             name,
             deps: "wasm-bindgen = { path = '{root}' }\n".to_owned(),
             cargo_cmd,
+            target: "wasm32-unknown-unknown".to_owned(),
             built: false,
         }
+    }
+
+    /// Override the build target (defaults to `wasm32-unknown-unknown`).
+    fn target(&mut self, target: impl Into<String>) -> &mut Project {
+        self.target = target.into();
+        self
     }
 
     fn file(&mut self, name: &str, contents: &str) -> &mut Project {
@@ -148,13 +154,14 @@ impl Project {
                 );
             }
 
+            self.cargo_cmd.arg("--target").arg(&self.target);
             self.cargo_cmd.assert().success();
 
             self.built = true;
         }
 
         let mut built = TARGET_DIR.to_path_buf();
-        built.push("wasm32-unknown-unknown");
+        built.push(&self.target);
         built.push("debug");
         built.push(&self.name);
         built.set_extension("wasm");
@@ -227,6 +234,86 @@ fn one_export_works() {
         )
         .wasm_bindgen("")
         .unwrap();
+}
+
+fn assert_no_placeholder_imports(wasm: &Path) {
+    let module = ModuleConfig::new().parse_file(wasm).unwrap();
+    let placeholder_imports: Vec<_> = module
+        .imports
+        .iter()
+        .filter(|i| i.module == "__wbindgen_placeholder__")
+        .map(|i| i.name.clone())
+        .collect();
+    assert!(
+        placeholder_imports.is_empty(),
+        "wasm32-wasip1 module has unresolved __wbindgen_placeholder__ imports: {placeholder_imports:?}"
+    );
+}
+
+/// On WASI targets `wasm-bindgen` must emit panicking stubs rather than
+/// `__wbindgen_placeholder__` imports, otherwise the resulting module cannot be
+/// linked into a component. Build a crate exercising the codegen paths that
+/// would emit those imports (an imported function, an exported function, and
+/// `JsValue` traffic) and assert the module is free of any
+/// `__wbindgen_placeholder__` imports.
+#[test]
+fn wasi_target_has_no_placeholder_imports() {
+    let mut project = Project::new("wasi_target_has_no_placeholder_imports");
+    let wasm = project
+        .target("wasm32-wasip1")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+                #[wasm_bindgen]
+                extern "C" {
+                    fn alert(s: &str);
+                    #[wasm_bindgen(js_namespace = console)]
+                    fn log(v: &JsValue);
+                }
+                #[wasm_bindgen]
+                pub fn greet(name: &str) {
+                    alert(name);
+                    log(&JsValue::from_str(name));
+                }
+            "#,
+        )
+        .build()
+        .to_owned();
+
+    assert_no_placeholder_imports(&wasm);
+}
+
+/// Same as above but for `panic = "unwind"`, which is supported on WASI and
+/// pulls in `wasm-bindgen-futures`' unwinding `future_to_promise` and the
+/// `__wbindgen_panic_error` placeholder import. These gates must also stub out
+/// on WASI, otherwise the module either fails to link or fails to compile.
+#[test]
+fn wasi_target_has_no_placeholder_imports_panic_unwind() {
+    let mut project = Project::new("wasi_target_has_no_placeholder_imports_panic_unwind");
+    project
+        .target("wasm32-wasip1")
+        .dep("js-sys = { path = '{root}/crates/js-sys' }")
+        .dep("wasm-bindgen-futures = { path = '{root}/crates/futures' }")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+                use js_sys::Promise;
+                #[wasm_bindgen]
+                pub fn make_promise() -> Promise {
+                    wasm_bindgen_futures::future_to_promise(async { Ok(JsValue::UNDEFINED) })
+                }
+            "#,
+        );
+    project
+        .cargo_cmd
+        .env("RUSTUP_TOOLCHAIN", "nightly")
+        .env("RUSTFLAGS", "-Cpanic=unwind")
+        .arg("-Zbuild-std=std,panic_unwind");
+    let wasm = project.build().to_owned();
+
+    assert_no_placeholder_imports(&wasm);
 }
 
 #[test]

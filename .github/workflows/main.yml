@@ -274,11 +274,11 @@ jobs:
     - uses: actions/checkout@v6
     - uses: dtolnay/rust-toolchain@nightly
       with:
-        targets: wasm32-unknown-unknown
+        targets: wasm32-unknown-unknown,wasm32-wasip1
         components: rust-src
     - uses: dtolnay/rust-toolchain@stable
       with:
-        targets: wasm32-unknown-unknown
+        targets: wasm32-unknown-unknown,wasm32-wasip1
     # The cli termination tests build with `-Cpanic=unwind` which since
     # rust-lang/rust#156061 produces modern (exnref) EH by default. That needs
     # Node 22.22.3+ on the 22 LTS line (or 24.15.0+) to validate.

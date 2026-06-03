@@ -1,7 +1,11 @@
 use crate::convert::{FromWasmAbi, IntoWasmAbi, WasmAbi, WasmRet};
 use crate::describe::inform;
 use crate::JsValue;
-#[cfg(all(target_family = "wasm", feature = "std", panic = "unwind"))]
+#[cfg(all(
+    all(target_family = "wasm", not(target_os = "wasi")),
+    feature = "std",
+    panic = "unwind"
+))]
 use core::any::Any;
 use core::borrow::{Borrow, BorrowMut};
 #[cfg(target_feature = "atomics")]
@@ -998,13 +1002,21 @@ pub const fn encode_u32_to_fixed_len_bytes(value: u32) -> [u8; 5] {
     result
 }
 
-#[cfg(all(target_family = "wasm", feature = "std", panic = "unwind"))]
+#[cfg(all(
+    all(target_family = "wasm", not(target_os = "wasi")),
+    feature = "std",
+    panic = "unwind"
+))]
 #[wasm_bindgen_macro::wasm_bindgen(wasm_bindgen = crate, raw_module = "__wbindgen_placeholder__")]
 extern "C" {
     fn __wbindgen_panic_error(msg: &JsValue) -> JsValue;
 }
 
-#[cfg(all(target_family = "wasm", feature = "std", panic = "unwind"))]
+#[cfg(all(
+    all(target_family = "wasm", not(target_os = "wasi")),
+    feature = "std",
+    panic = "unwind"
+))]
 pub fn panic_to_panic_error(val: std::boxed::Box<dyn Any + Send>) -> JsValue {
     #[cfg(not(target_feature = "atomics"))]
     {
@@ -1025,7 +1037,11 @@ pub fn panic_to_panic_error(val: std::boxed::Box<dyn Any + Send>) -> JsValue {
     err
 }
 
-#[cfg(all(target_family = "wasm", feature = "std", panic = "unwind"))]
+#[cfg(all(
+    all(target_family = "wasm", not(target_os = "wasi")),
+    feature = "std",
+    panic = "unwind"
+))]
 pub fn maybe_catch_unwind<F: FnOnce() -> R + std::panic::UnwindSafe, R>(f: F) -> R {
     let result = std::panic::catch_unwind(f);
     match result {
@@ -1036,7 +1052,11 @@ pub fn maybe_catch_unwind<F: FnOnce() -> R + std::panic::UnwindSafe, R>(f: F) ->
     }
 }
 
-#[cfg(not(all(target_family = "wasm", feature = "std", panic = "unwind")))]
+#[cfg(not(all(
+    all(target_family = "wasm", not(target_os = "wasi")),
+    feature = "std",
+    panic = "unwind"
+)))]
 pub fn maybe_catch_unwind<F: FnOnce() -> R, R>(f: F) -> R {
     f()
 }
@@ -1060,11 +1080,19 @@ pub fn maybe_catch_unwind<F: FnOnce() -> R, R>(f: F) -> R {
 /// mutable fields in `std::panic::AssertUnwindSafe`.
 ///
 /// No-op outside `panic = "unwind"` builds (where panics abort instead).
-#[cfg(all(target_family = "wasm", feature = "std", panic = "unwind"))]
+#[cfg(all(
+    all(target_family = "wasm", not(target_os = "wasi")),
+    feature = "std",
+    panic = "unwind"
+))]
 #[inline(always)]
 pub fn ensure_ref_unwind_safe<T: ?Sized + std::panic::RefUnwindSafe>() {}
 
-#[cfg(not(all(target_family = "wasm", feature = "std", panic = "unwind")))]
+#[cfg(not(all(
+    all(target_family = "wasm", not(target_os = "wasi")),
+    feature = "std",
+    panic = "unwind"
+)))]
 #[inline(always)]
 pub fn ensure_ref_unwind_safe<T: ?Sized>() {}
 
@@ -1076,10 +1104,18 @@ pub fn ensure_ref_unwind_safe<T: ?Sized>() {}
 /// is the relevant property.
 ///
 /// No-op outside `panic = "unwind"` builds.
-#[cfg(all(target_family = "wasm", feature = "std", panic = "unwind"))]
+#[cfg(all(
+    all(target_family = "wasm", not(target_os = "wasi")),
+    feature = "std",
+    panic = "unwind"
+))]
 #[inline(always)]
 pub fn ensure_unwind_safe<T: ?Sized + std::panic::UnwindSafe>() {}
 
-#[cfg(not(all(target_family = "wasm", feature = "std", panic = "unwind")))]
+#[cfg(not(all(
+    all(target_family = "wasm", not(target_os = "wasi")),
+    feature = "std",
+    panic = "unwind"
+)))]
 #[inline(always)]
 pub fn ensure_unwind_safe<T: ?Sized>() {}
