@@ -345,9 +345,17 @@ impl<'a> Context<'a> {
         }
     }
 
-    // Discover a function `main(i32, i32) -> i32` and, if it exists, make that function run at module start.
+    // Discover the C `main(i32, argv) -> i32` shim and, if it exists, make it
+    // run at module start. Argv is the size of a pointer.
     fn discover_main(&mut self) -> Result<(), Error> {
-        // find a `main(i32, i32) -> i32`
+        let memory64 = self.memory64();
+        let argv_ty = if memory64 {
+            walrus::ValType::I64
+        } else {
+            walrus::ValType::I32
+        };
+
+        // find a `main(i32, argv) -> i32`
         let main_id = self
             .module
             .exports
@@ -357,13 +365,12 @@ impl<'a> Context<'a> {
                 _ => None,
             })
             .find(|(export, func)| {
-                use walrus::ValType::I32;
-
                 // name has to be `main`
                 let name_matches = export.name == "main";
-                // type has to be `(i32, i32) -> i32`
+                // type has to be `(i32, argv) -> i32`
                 let ty = self.module.types.get(func.ty());
-                let type_matches = ty.params() == [I32, I32] && ty.results() == [I32];
+                let type_matches = ty.params() == [walrus::ValType::I32, argv_ty]
+                    && ty.results() == [walrus::ValType::I32];
                 // Having the correct name and signature doesn't necessarily mean that it's
                 // actually a `main` function. Unfortunately, there doesn't seem to be any 100%
                 // reliable way to make sure that it is, but we can at least rule out any
@@ -384,13 +391,14 @@ impl<'a> Context<'a> {
 
         // build a wrapper to zero out the arguments and ignore the return value
         let mut wrapper = walrus::FunctionBuilder::new(&mut self.module.types, &[], &[]);
-        wrapper
-            .func_body()
-            .i32_const(0)
-            .i32_const(0)
-            .call(main_id)
-            .drop()
-            .return_();
+        let mut body = wrapper.func_body();
+        body.i32_const(0); // argc
+        if memory64 {
+            body.i64_const(0);
+        } else {
+            body.i32_const(0);
+        }
+        body.call(main_id).drop().return_();
         let wrapper = wrapper.finish(vec![], &mut self.module.funcs);
 
         // call that wrapper when the module starts
@@ -2115,4 +2123,118 @@ fn normalize_memory64_descriptor_only_rewrites_explicit_number_abi_options() {
     let mut exact_option = Descriptor::Option(Box::new(Descriptor::I64));
     Context::normalize_memory64_descriptor(&mut exact_option, walrus::ValType::I64);
     assert_eq!(exact_option, Descriptor::Option(Box::new(Descriptor::I64)));
+}
+
+/// Build a minimal module containing a 32-bit or 64-bit memory and an exported
+/// C `main` shim with the given signature `(i32 argc, argv) -> i32`.
+#[cfg(test)]
+fn make_main_module(memory64: bool, argv_ty: walrus::ValType) -> (Module, MemoryId) {
+    let mut config = walrus::ModuleConfig::new();
+    config.generate_producers_section(false);
+    let mut module = walrus::Module::with_config(config);
+
+    let mem = module.memories.add_local(false, memory64, 1, None, None);
+
+    // Build `main(i32 argc, argv) -> i32`.
+    let argc = module.locals.add(walrus::ValType::I32);
+    let argv = module.locals.add(argv_ty);
+    let mut builder = walrus::FunctionBuilder::new(
+        &mut module.types,
+        &[walrus::ValType::I32, argv_ty],
+        &[walrus::ValType::I32],
+    );
+    builder.func_body().i32_const(0);
+    let main_id = builder.finish(vec![argc, argv], &mut module.funcs);
+    module.exports.add("main", main_id);
+
+    (module, mem)
+}
+
+#[cfg(test)]
+fn run_discover_main(module: &mut Module, memory: MemoryId) -> bool {
+    let mut cx = Context {
+        start_found: false,
+        module,
+        adapters: Default::default(),
+        aux: Default::default(),
+        function_exports: Default::default(),
+        function_imports: Default::default(),
+        memory: Some(memory),
+        vendor_prefixes: Default::default(),
+        unique_crate_identifier: "",
+        descriptors: Default::default(),
+        externref_enabled: false,
+        thread_count: None,
+        support_start: true,
+        linked_modules: false,
+        export_adapter_sigs: Default::default(),
+    };
+    cx.discover_main().unwrap();
+    cx.start_found
+}
+
+/// Collect argv and argc constants.
+#[cfg(test)]
+fn start_fn_consts(module: &Module) -> Vec<walrus::ir::Value> {
+    let start = module
+        .start
+        .expect("discover_main should register a start function");
+    let func = module.funcs.get(start);
+    let walrus::FunctionKind::Local(local) = &func.kind else {
+        panic!("start wrapper should be a local function");
+    };
+    local
+        .block(local.entry_block())
+        .instrs
+        .iter()
+        .filter_map(|(instr, _)| match instr {
+            walrus::ir::Instr::Const(c) => Some(c.value),
+            _ => None,
+        })
+        .collect()
+}
+
+/// On wasm64 the C `main` shim is `main(i32 argc, i64 argv) -> i32`
+#[test]
+fn discover_main_handles_wasm64_argv_pointer() {
+    let (mut module, mem) = make_main_module(true, walrus::ValType::I64);
+    assert!(
+        run_discover_main(&mut module, mem),
+        "wasm64 `main(i32, i64) -> i32` should be discovered as the entry point"
+    );
+
+    assert!(
+        matches!(
+            start_fn_consts(&module).as_slice(),
+            [walrus::ir::Value::I32(0), walrus::ir::Value::I64(0)]
+        ),
+        "wasm64 start wrapper should pass (i32 argc, i64 argv) = (0, 0)"
+    );
+}
+
+/// On wasm32 the C `main` shim is `main(i32 argc, i32 argv) -> i32`
+#[test]
+fn discover_main_handles_wasm32_argv_pointer() {
+    let (mut module, mem) = make_main_module(false, walrus::ValType::I32);
+    assert!(
+        run_discover_main(&mut module, mem),
+        "wasm32 `main(i32, i32) -> i32` should be discovered as the entry point"
+    );
+    assert!(
+        matches!(
+            start_fn_consts(&module).as_slice(),
+            [walrus::ir::Value::I32(0), walrus::ir::Value::I32(0)]
+        ),
+        "wasm32 start wrapper should pass (i32 argc, i32 argv) = (0, 0)"
+    );
+}
+
+/// Don't mistake a `main(i32, i32) -> i32` as the entrypoint on wasm64
+#[test]
+fn discover_main_ignores_wrong_argv_width_on_wasm64() {
+    let (mut module, mem) = make_main_module(true, walrus::ValType::I32);
+    assert!(
+        !run_discover_main(&mut module, mem),
+        "on wasm64 a 32-bit-argv `main` must not be treated as the entry point"
+    );
 }

@@ -45,6 +45,8 @@
   helpers get instrumented.
   [#5179](https://github.com/wasm-bindgen/wasm-bindgen/pull/5179)
 
+* Fixed `main` silently never running on wasm64 for bin crates.
+
 ### Removed
 
 --------------------------------------------------------------------------------
