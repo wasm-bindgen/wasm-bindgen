@@ -476,17 +476,15 @@ where
 // and write back a different type the caller could see.
 // Eg. this is not valid:
 // ```ignore
-// fn with_string() {
-//    let mut string = JsString::from("valid");
-//    let string_ref: &mut JsString = &mut string;
-//    // If &mut T was modeled as just covariant, we could upcast this to
-//    // &mut JsValue.
-//    let js_value_ref: &mut JsValue = string_ref.upcast_into();
-//    *js_value_ref = Object::new().into();
-//    // string is still typed as JsString, but it now wraps a plain object.
-//    // Converting it to a Rust String throws because the value is not a string.
-//    let _ = String::from(&string);
-// }
+// let mut string = JsString::from("valid");
+// let string_ref: &mut JsString = &mut string;
+// // If &mut T was modeled as just covariant, we could upcast this to
+// // &mut JsValue.
+// let js_value_ref: &mut JsValue = string_ref.upcast_into();
+// *js_value_ref = Object::new().into();
+// // string is still typed as JsString, but it now wraps a plain object.
+// // Converting it to a Rust String throws because the value is not a string.
+// let _ = String::from(&string);
 // ```
 //
 // Requiring `UpcastFrom` in *both* directions means `T` and `Target` have to be
