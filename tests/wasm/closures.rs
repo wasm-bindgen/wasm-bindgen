@@ -1243,4 +1243,23 @@ mod closure_variance {
             Closure::new(|_: JsValue, _: Undefined| 42i32);
         let _upcast: &Closure<dyn Fn(Number) -> JsValue> = closure.upcast();
     }
+
+    // `Undefined` and `()` are a genuine equivalence (mutually upcastable), so a
+    // cast between them is valid in BOTH directions. Because they are mutually
+    // upcastable, the now-invariant `&mut` reference impl allows upcasting a
+    // `&mut Closure<dyn Fn(Undefined)>` to a `&mut Closure<dyn Fn(())>` (and
+    // back) by calling `upcast_into` on the mutable reference itself. A widening
+    // such as `&mut Vec<Number>` to `&mut Vec<JsValue>` would be rejected, since
+    // `Number` and `JsValue` are not mutually upcastable.
+    #[wasm_bindgen_test]
+    fn arg_equivalence_undefined_to_unit() {
+        let mut closure: Closure<dyn Fn(Undefined)> = Closure::new(|_: Undefined| {});
+        let _equiv: &mut Closure<dyn Fn(())> = (&mut closure).upcast_into();
+    }
+
+    #[wasm_bindgen_test]
+    fn arg_equivalence_unit_to_undefined() {
+        let mut closure: Closure<dyn Fn(())> = Closure::new(|_: ()| {});
+        let _equiv: &mut Closure<dyn Fn(Undefined)> = (&mut closure).upcast_into();
+    }
 }

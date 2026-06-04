@@ -470,8 +470,42 @@ where
 {
 }
 
-// Reference impls using UpcastFrom
-impl<'a, T, Target> UpcastFrom<&'a mut T> for &'a mut Target where Target: UpcastFrom<T> {}
+// Reference impls using UpcastFrom.
+//
+// &mut T references are invariant. If you accept &mut T, you cannot upcast it
+// and write back a different type the caller could see.
+// Eg. this is not valid:
+// ```ignore
+// fn with_string() {
+//    let mut string = JsString::from("valid");
+//    let string_ref: &mut JsString = &mut string;
+//    // If &mut T was modeled as just covariant, we could upcast this to
+//    // &mut JsValue.
+//    let js_value_ref: &mut JsValue = string_ref.upcast_into();
+//    *js_value_ref = Object::new().into();
+//    // string is still typed as JsString, but it now wraps a plain object.
+//    // Converting it to a Rust String throws because the value is not a string.
+//    let _ = String::from(&string);
+// }
+// ```
+//
+// Requiring `UpcastFrom` in *both* directions means `T` and `Target` have to be
+// mutually upcastable -- i.e. equivalent, with the same set of valid values.
+// That is exactly what makes a `&mut` cast sound: anything written back through
+// the wider `&mut Target` view is still a valid `T`. So this rejects every
+// widening (the `JsString` -> `JsValue` case above, where `JsValue` does not
+// upcast back to `JsString`), while still allowing casts between genuinely
+// equivalent types in either direction. For example `()` and `Undefined` both
+// model "nothing" and upcast to each other, so a
+// `&mut Closure<dyn Fn(Undefined)>` can be upcast to a `&mut Closure<dyn Fn(())>`
+// and back.
+impl<'a, T: ?Sized, Target: ?Sized> UpcastFrom<&'a mut T> for &'a mut Target
+where
+    Target: UpcastFrom<T>,
+    T: UpcastFrom<Target>,
+{
+}
+// &T references are covariant, so we can allow from a specific type to a more general type
 impl<'a, T, Target> UpcastFrom<&'a T> for &'a Target where Target: UpcastFrom<T> {}
 
 // Tuple upcasts with structural covariance
