@@ -32,6 +32,10 @@
 
 ### Fixed
 
+* Removed invalid `js_sys::Array<T>` to `js_sys::ArrayTuple<(...)>` upcasts.
+  `ArrayTuple` encodes a fixed tuple arity, while a plain JavaScript array does
+  not prove that arity statically.
+
 * Fixed WASI targets (`wasm32-wasip1`/`wasm32-wasip2`) emitting unresolved
   `__wbindgen_placeholder__` imports, which broke component linking. The
   codegen and runtime gates now exclude `target_os = "wasi"` (restoring the
