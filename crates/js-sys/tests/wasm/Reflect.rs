@@ -63,7 +63,7 @@ fn construct() {
     #[cfg(not(js_sys_unstable_apis))]
     let instance = Reflect::construct(&RECTANGLE_CLASS, &args).unwrap();
     #[cfg(js_sys_unstable_apis)]
-    let instance = Reflect::construct(&RECTANGLE_CLASS, args.upcast()).unwrap();
+    let instance = Reflect::construct(&RECTANGLE_CLASS, args.unchecked_ref()).unwrap();
     assert_eq!(Rectangle::from(instance).x(), 10);
 }
 
