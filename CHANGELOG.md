@@ -32,6 +32,10 @@
 
 ### Fixed
 
+* Removed invalid `js_sys::Array<T>` to `js_sys::ArrayTuple<(...)>` upcasts.
+  `ArrayTuple` encodes a fixed tuple arity, while a plain JavaScript array does
+  not prove that arity statically.
+
 * Fixed incorrect variance in `&mut` reference upcasting. `&mut T` upcasts
   were covariant in the pointee, so a `&mut T` could be widened to a `&mut`
   of a supertype and used to write back a value the original type would not

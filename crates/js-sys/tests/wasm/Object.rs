@@ -484,7 +484,7 @@ fn value_of() {
 fn entries_typed() {
     let arr: Array = Array::new();
     let func: Function = Function::new_no_args("");
-    let obj: Object<JsString> = Reflect::construct(&func, arr.upcast())
+    let obj: Object<JsString> = Reflect::construct(&func, arr.unchecked_ref())
         .unwrap()
         .unchecked_into();
     Reflect::set(&obj, &"a".into(), &JsString::from("1").into()).unwrap();

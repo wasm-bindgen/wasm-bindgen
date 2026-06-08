@@ -1803,7 +1803,7 @@ impl_tuple!(8 [JsTuple1 JsTuple2 JsTuple3 JsTuple4 JsTuple5 JsTuple6 JsTuple7 Js
 
 // Macro to generate structural covariance impls for each arity
 macro_rules! impl_tuple_covariance {
-    ([$($T:ident)+] [$($Target:ident)+] [$($Ts:ident)+]) => {
+    ([$($T:ident)+] [$($Target:ident)+]) => {
         // ArrayTuple -> Array
         // Allows (T1, T2, ...) to be used where (Target) is expected
         // when all T1, T2, ... are covariant to Target
@@ -1816,20 +1816,17 @@ macro_rules! impl_tuple_covariance {
         where
             $(Target: UpcastFrom<$T>,)+
         {}
-        // Array<T> -> ArrayTuple<T, ...>
-        impl<T> UpcastFrom<Array<T>> for ArrayTuple<($($Ts,)+)> {}
-        impl<T: JsGeneric> UpcastFrom<Array<T>> for ArrayTuple<($(JsOption<$Ts>,)+)> {}
     };
 }
 
-impl_tuple_covariance!([T1][Target1][T]);
-impl_tuple_covariance!([T1 T2] [Target1 Target2] [T T]);
-impl_tuple_covariance!([T1 T2 T3] [Target1 Target2 Target3] [T T T]);
-impl_tuple_covariance!([T1 T2 T3 T4] [Target1 Target2 Target3 Target4] [T T T T]);
-impl_tuple_covariance!([T1 T2 T3 T4 T5] [Target1 Target2 Target3 Target4 Target5] [T T T T T]);
-impl_tuple_covariance!([T1 T2 T3 T4 T5 T6] [Target1 Target2 Target3 Target4 Target5 Target6] [T T T T T T]);
-impl_tuple_covariance!([T1 T2 T3 T4 T5 T6 T7] [Target1 Target2 Target3 Target4 Target5 Target6 Target7] [T T T T T T T]);
-impl_tuple_covariance!([T1 T2 T3 T4 T5 T6 T7 T8] [Target1 Target2 Target3 Target4 Target5 Target6 Target7 Target8] [T T T T T T T T]);
+impl_tuple_covariance!([T1][Target1]);
+impl_tuple_covariance!([T1 T2] [Target1 Target2]);
+impl_tuple_covariance!([T1 T2 T3] [Target1 Target2 Target3]);
+impl_tuple_covariance!([T1 T2 T3 T4] [Target1 Target2 Target3 Target4]);
+impl_tuple_covariance!([T1 T2 T3 T4 T5] [Target1 Target2 Target3 Target4 Target5]);
+impl_tuple_covariance!([T1 T2 T3 T4 T5 T6] [Target1 Target2 Target3 Target4 Target5 Target6]);
+impl_tuple_covariance!([T1 T2 T3 T4 T5 T6 T7] [Target1 Target2 Target3 Target4 Target5 Target6 Target7]);
+impl_tuple_covariance!([T1 T2 T3 T4 T5 T6 T7 T8] [Target1 Target2 Target3 Target4 Target5 Target6 Target7 Target8]);
 
 // Tuple casting is implemented in core
 impl<T: JsTuple, U: JsTuple> UpcastFrom<ArrayTuple<T>> for ArrayTuple<U> where U: UpcastFrom<T> {}
