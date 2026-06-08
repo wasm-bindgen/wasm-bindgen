@@ -5,6 +5,16 @@
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Removed
+
+## [0.2.123](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.122...0.2.123)
+
+### Added
+
 * Added the `maxAge` attribute to the `CookieInit` dictionary in `web-sys`,
   matching the current Cookie Store API specification.
   [#5169](https://github.com/wasm-bindgen/wasm-bindgen/pull/5169)
@@ -61,10 +71,6 @@
 
 * Fixed `main` silently never running on wasm64 for bin crates.
   [#5181](https://github.com/wasm-bindgen/wasm-bindgen/pull/5181)
-
-### Removed
-
---------------------------------------------------------------------------------
 
 ## [0.2.122](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.121...0.2.122)
 
@@ -187,8 +193,6 @@
   fallback chains that only papered over the pre-#5154 keying.
 
   [#5160](https://github.com/wasm-bindgen/wasm-bindgen/pull/5160)
-
---------------------------------------------------------------------------------
 
 ## [0.2.121](https://github.com/rustwasm/wasm-bindgen/compare/0.2.120...0.2.121)
 
@@ -315,8 +319,6 @@
   the next major release to better reflect the WebIDL spec name covering
   both `DataView` and the typed-array types.
   [#5135](https://github.com/wasm-bindgen/wasm-bindgen/pull/5135)
-
---------------------------------------------------------------------------------
 
 ## [0.2.119](https://github.com/rustwasm/wasm-bindgen/compare/0.2.118...0.2.119)
 

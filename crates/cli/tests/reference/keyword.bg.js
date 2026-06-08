@@ -20,7 +20,7 @@ export function exported() {
 export function weird_arguments(_new, _var, _switch, _default, _arguments) {
     wasm.weird_arguments(_new, _var, _switch, _default, _arguments);
 }
-export function __wbg___wbindgen_throw_1506f2235d1bdba0(arg0, arg1) {
+export function __wbg___wbindgen_throw_bbadd78c1bac3a77(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbg_await_4ea226770dbb5814() {
