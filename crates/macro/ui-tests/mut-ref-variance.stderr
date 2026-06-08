@@ -1,0 +1,20 @@
+error[E0277]: the trait bound `Number: UpcastFrom<JsValue>` is not satisfied
+  --> ui-tests/mut-ref-variance.rs:12:49
+   |
+12 |     let _widened: &mut Vec<JsValue> = (&mut xs).upcast_into();
+   |                                                 ^^^^^^^^^^^ the trait `UpcastFrom<JsValue>` is not implemented for `Number`
+   |
+   = help: the following other types implement trait `UpcastFrom<S>`:
+             `Number` implements `UpcastFrom<Number>`
+             `Number` implements `UpcastFrom<f32>`
+             `Number` implements `UpcastFrom<f64>`
+             `Number` implements `UpcastFrom<i16>`
+             `Number` implements `UpcastFrom<i32>`
+             `Number` implements `UpcastFrom<i8>`
+             `Number` implements `UpcastFrom<u16>`
+             `Number` implements `UpcastFrom<u32>`
+             `Number` implements `UpcastFrom<u8>`
+   = note: required for `Vec<Number>` to implement `UpcastFrom<Vec<JsValue>>`
+   = note: 1 redundant requirement hidden
+   = note: required for `&mut Vec<JsValue>` to implement `UpcastFrom<&mut Vec<Number>>`
+   = note: required for `&mut Vec<Number>` to implement `wasm_bindgen::prelude::Upcast<&mut Vec<JsValue>>`
