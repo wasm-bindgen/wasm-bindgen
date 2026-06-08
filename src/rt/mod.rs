@@ -797,11 +797,17 @@ static GLOBAL_EXNDATA: ThreadLocalWrapper<Cell<[u32; 2]>> = ThreadLocalWrapper(C
 #[no_mangle]
 pub static mut __instance_terminated: u32 = 0;
 
+#[cfg(panic = "unwind")]
+fn no_op() {}
+
+#[cfg(panic = "unwind")]
+pub static NO_OP_PTR: fn() = no_op;
+
 /// Stores the Wasm indirect-function-table index of the registered hard-abort
 /// callback.  Zero means no callback is registered.
 #[cfg(panic = "unwind")]
 #[no_mangle]
-pub static mut __abort_handler: u32 = 0;
+pub static mut __abort_handler: fn() = NO_OP_PTR;
 
 /// Register a callback invoked when a hard abort (instance termination) occurs.
 ///
@@ -818,20 +824,16 @@ pub static mut __abort_handler: u32 = 0;
 /// callback will never fire.
 #[cfg(panic = "unwind")]
 pub fn set_on_abort(f: fn()) -> Option<fn()> {
-    // On wasm32, function pointers are indices into the Wasm
-    // __indirect_function_table. Casting fn() -> usize -> u32 extracts
-    // that index without touching linear memory.
+    let prev = unsafe { __abort_handler };
     unsafe {
-        let prev = __abort_handler;
-        __abort_handler = f as usize as u32;
-        if prev != 0 {
-            Some(core::mem::transmute::<usize, fn()>(prev as usize))
-        } else {
-            None
-        }
+        __abort_handler = f;
+    }
+    if !(prev as usize) == (NO_OP_PTR as usize) {
+        Some(prev)
+    } else {
+        None
     }
 }
-
 /// No-op stub for `panic=abort` builds — handler will never fire.
 #[cfg(not(panic = "unwind"))]
 pub fn set_on_abort(_f: fn()) -> Option<fn()> {
