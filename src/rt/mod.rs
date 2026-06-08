@@ -793,19 +793,15 @@ pub fn link_mem_intrinsics() {
 #[cfg_attr(target_feature = "atomics", thread_local)]
 static GLOBAL_EXNDATA: ThreadLocalWrapper<Cell<[u32; 2]>> = ThreadLocalWrapper(Cell::new([0; 2]));
 
-#[cfg(panic = "unwind")]
 #[no_mangle]
 pub static mut __instance_terminated: u32 = 0;
 
-#[cfg(panic = "unwind")]
 fn no_op() {}
 
-#[cfg(panic = "unwind")]
 pub static NO_OP_PTR: fn() = no_op;
 
 /// Stores the Wasm indirect-function-table index of the registered hard-abort
 /// callback.  Zero means no callback is registered.
-#[cfg(panic = "unwind")]
 #[no_mangle]
 pub static mut __abort_handler: fn() = NO_OP_PTR;
 
@@ -822,7 +818,6 @@ pub static mut __abort_handler: fn() = NO_OP_PTR;
 /// **Experimental — only available when built with `panic=unwind`.**
 /// On `panic=abort` builds the no-op stub always returns `None` and the
 /// callback will never fire.
-#[cfg(panic = "unwind")]
 pub fn set_on_abort(f: fn()) -> Option<fn()> {
     let prev = unsafe { __abort_handler };
     unsafe {
@@ -835,11 +830,6 @@ pub fn set_on_abort(f: fn()) -> Option<fn()> {
     } else {
         None
     }
-}
-/// No-op stub for `panic=abort` builds — handler will never fire.
-#[cfg(not(panic = "unwind"))]
-pub fn set_on_abort(_f: fn()) -> Option<fn()> {
-    None
 }
 
 /// Schedule the instance for reinitialization before the next export call.

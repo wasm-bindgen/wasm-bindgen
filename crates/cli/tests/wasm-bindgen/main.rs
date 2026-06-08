@@ -1259,6 +1259,7 @@ const HANDLER_LIB_RS: &str = r#"
     #[wasm_bindgen(inline_js = "
         export function js_throw_error() { throw new Error('JS import threw'); }
         export function set_was_dropped(val) { globalThis.was_dropped = val; }
+        export function get_js_error() { return new Error('A JS error!'); }
         let _callback = null;
         export function register_callback(f) { _callback = f; }
         export function js_call_callback_with_catch() {
@@ -1270,6 +1271,12 @@ const HANDLER_LIB_RS: &str = r#"
         fn set_was_dropped(val: bool);
         fn register_callback(f: &JsValue);
         fn js_call_callback_with_catch();
+        fn get_js_error() -> JsValue;
+    }
+
+    #[wasm_bindgen(js_namespace = console)]
+    extern "C" {
+        fn log(data: &str);
     }
 
     struct DropGuard;
@@ -1301,6 +1308,18 @@ const HANDLER_LIB_RS: &str = r#"
     }
 
     #[wasm_bindgen]
+    pub fn trigger_nested_unreachable() {
+        let closure: Closure<dyn Fn()> = Closure::own_assert_unwind_safe(|| {
+            trigger_unreachable();
+        });
+        register_callback(closure.as_ref());
+        closure.forget();
+        // log("This should  happen");
+        js_call_callback_with_catch();
+        // log("This shouldn't happen");
+    }
+
+    #[wasm_bindgen]
     pub fn trigger_panic() {
         let _guard = DropGuard::new();
         panic!("deliberate panic");
@@ -1312,19 +1331,22 @@ const HANDLER_LIB_RS: &str = r#"
         js_throw_error();
     }
 
+    #[wasm_bindgen]
+    pub fn call_throw_val() {
+        let val = get_js_error();
+        wasm_bindgen::throw_val(val);
+    }
+
     // --- abort handler ---
 
-    #[cfg(panic = "unwind")]
     #[no_mangle]
     pub static mut __abort_called: u32 = 0;
 
     fn on_abort() {
-        #[cfg(panic = "unwind")]
         unsafe { __abort_called = 1; }
     }
 
     fn on_abort_with_reinit() {
-        #[cfg(panic = "unwind")]
         unsafe { __abort_called = 1; }
         wasm_bindgen::handler::schedule_reinit();
     }
@@ -1349,7 +1371,7 @@ const HANDLER_LIB_RS: &str = r#"
 "#;
 
 #[test]
-fn termination_abort_handler() {
+fn termination_abort_handler_unwind_panic() {
     let mut project = Project::new("termination_abort_handler");
     project.file("src/lib.rs", HANDLER_LIB_RS).file(
         "Cargo.toml",
@@ -1436,6 +1458,281 @@ describe('abort handler', () => {
             assert.ok(e instanceof WebAssembly.RuntimeError);
             return true;
         });
+        assert.strictEqual(abortCalled(), true);
+        assert.strictEqual(isTerminated(), true);
+    });
+
+    it('all exports blocked after termination', () => {
+        assert.throws(() => wasm.simple_add(1, 2), /Module terminated/);
+    });
+});
+"#,
+    )
+    .unwrap();
+
+    Command::new("node")
+        .arg("--test")
+        .arg("test_abort_handler.js")
+        .current_dir(&out_dir)
+        .assert()
+        .success();
+}
+
+#[test]
+fn termination_abort_handler_unwind_abort1() {
+    let mut project = Project::new("termination_abort_handler");
+    project.file("src/lib.rs", HANDLER_LIB_RS).file(
+        "Cargo.toml",
+        &format!(
+            "
+                [package]
+                name = \"termination_abort_handler\"
+                authors = []
+                version = \"1.0.0\"
+                edition = '2021'
+
+                [dependencies]
+                wasm-bindgen = {{ path = '{}' }}
+
+                [lib]
+                crate-type = ['cdylib']
+
+                [workspace]
+
+                [profile.dev]
+                codegen-units = 1
+            ",
+            REPO_ROOT.display(),
+        ),
+    );
+
+    let out_dir = project
+        .wasm_bindgen("--target nodejs --force-enable-abort-handler")
+        .unwrap();
+
+    // Read __abort_called flag directly from linear memory after termination —
+    // JS-level exports are blocked but the buffer is still readable.
+    fs::write(
+        out_dir.join("test_abort_handler.js"),
+        r#"
+const { describe, it } = require('node:test');
+const assert = require('node:assert/strict');
+
+let wasmExports = null;
+const OrigInstance = WebAssembly.Instance;
+WebAssembly.Instance = function(module, imports) {
+    const instance = new OrigInstance(module, imports);
+    wasmExports = instance.exports;
+    return instance;
+};
+const wasm = require('./termination_abort_handler.js');
+WebAssembly.Instance = OrigInstance;
+
+function abortCalled() {
+    const addr = wasmExports.__abort_called.value;
+    return new Int32Array(wasmExports.memory.buffer)[addr / 4] !== 0;
+}
+function isTerminated() {
+    const addr = wasmExports.__instance_terminated.value;
+    return new Int32Array(wasmExports.memory.buffer)[addr / 4] !== 0;
+}
+
+describe('abort handler', () => {
+    it('set_on_abort returns true with panic=unwind', () => {
+        assert.strictEqual(wasm.setup_abort_handler(), true);
+    });
+
+    it('handler not called before any fatal error', () => {
+        assert.strictEqual(abortCalled(), false);
+    });
+
+    it('throw_val doesnt fire the handler', () => {
+        assert.throws(() => wasm.call_throw_val(), /A JS error/);
+        assert.strictEqual(abortCalled(), false);
+        assert.strictEqual(isTerminated(), false);
+    });
+
+    it('unreachable fires the handler and terminates the instance', () => {
+        assert.throws(() => wasm.trigger_unreachable(), (e) => {
+            assert.ok(e instanceof WebAssembly.RuntimeError);
+            return true;
+        });
+        assert.strictEqual(abortCalled(), true);
+        assert.strictEqual(isTerminated(), true);
+    });
+
+    it('all exports blocked after termination', () => {
+        assert.throws(() => wasm.simple_add(1, 2), /Module terminated/);
+    });
+});
+"#,
+    )
+    .unwrap();
+
+    Command::new("node")
+        .arg("--test")
+        .arg("test_abort_handler.js")
+        .current_dir(&out_dir)
+        .assert()
+        .success();
+}
+
+#[test]
+fn termination_abort_handler_unwind_abort2() {
+    let mut project = Project::new("termination_abort_handler");
+    project.file("src/lib.rs", HANDLER_LIB_RS).file(
+        "Cargo.toml",
+        &format!(
+            "
+                [package]
+                name = \"termination_abort_handler\"
+                authors = []
+                version = \"1.0.0\"
+                edition = '2021'
+
+                [dependencies]
+                wasm-bindgen = {{ path = '{}' }}
+
+                [lib]
+                crate-type = ['cdylib']
+
+                [workspace]
+
+                [profile.dev]
+                codegen-units = 1
+            ",
+            REPO_ROOT.display(),
+        ),
+    );
+
+    let out_dir = project
+        .wasm_bindgen("--target nodejs --force-enable-abort-handler")
+        .unwrap();
+
+    // Read __abort_called flag directly from linear memory after termination —
+    // JS-level exports are blocked but the buffer is still readable.
+    fs::write(
+        out_dir.join("test_abort_handler.js"),
+        r#"
+const { describe, it } = require('node:test');
+const assert = require('node:assert/strict');
+
+let wasmExports = null;
+const OrigInstance = WebAssembly.Instance;
+WebAssembly.Instance = function(module, imports) {
+    const instance = new OrigInstance(module, imports);
+    wasmExports = instance.exports;
+    return instance;
+};
+const wasm = require('./termination_abort_handler.js');
+WebAssembly.Instance = OrigInstance;
+
+function abortCalled() {
+    const addr = wasmExports.__abort_called.value;
+    return new Int32Array(wasmExports.memory.buffer)[addr / 4] !== 0;
+}
+function isTerminated() {
+    const addr = wasmExports.__instance_terminated.value;
+    return new Int32Array(wasmExports.memory.buffer)[addr / 4] !== 0;
+}
+
+describe('abort handler', () => {
+    it('set_on_abort returns true with panic=unwind', () => {
+        assert.strictEqual(wasm.setup_abort_handler(), true);
+    });
+
+    it('handler not called before any fatal error', () => {
+        assert.strictEqual(abortCalled(), false);
+    });
+
+    it('JS import throw fires the handler and terminates the instance', () => {
+        assert.throws(() => wasm.call_throwing_import(), /JS import threw/);
+        assert.strictEqual(abortCalled(), true);
+        assert.strictEqual(isTerminated(), true);
+    });
+
+    it('all exports blocked after termination', () => {
+        assert.throws(() => wasm.simple_add(1, 2), /Module terminated/);
+    });
+});
+"#,
+    )
+    .unwrap();
+
+    Command::new("node")
+        .arg("--test")
+        .arg("test_abort_handler.js")
+        .current_dir(&out_dir)
+        .assert()
+        .success();
+}
+
+#[test]
+fn termination_abort_handler_unwind_abort3() {
+    let mut project = Project::new("termination_abort_handler");
+    project.file("src/lib.rs", HANDLER_LIB_RS).file(
+        "Cargo.toml",
+        &format!(
+            "
+                [package]
+                name = \"termination_abort_handler\"
+                authors = []
+                version = \"1.0.0\"
+                edition = '2021'
+
+                [dependencies]
+                wasm-bindgen = {{ path = '{}' }}
+
+                [lib]
+                crate-type = ['cdylib']
+
+                [workspace]
+
+                [profile.dev]
+                codegen-units = 1
+            ",
+            REPO_ROOT.display(),
+        ),
+    );
+
+    let out_dir = project
+        .wasm_bindgen("--target nodejs --force-enable-abort-handler")
+        .unwrap();
+
+    // Read __abort_called flag directly from linear memory after termination —
+    // JS-level exports are blocked but the buffer is still readable.
+    fs::write(
+        out_dir.join("test_abort_handler.js"),
+        r#"
+const { describe, it } = require('node:test');
+const assert = require('node:assert/strict');
+
+let wasmExports = null;
+const OrigInstance = WebAssembly.Instance;
+WebAssembly.Instance = function(module, imports) {
+    const instance = new OrigInstance(module, imports);
+    wasmExports = instance.exports;
+    return instance;
+};
+const wasm = require('./termination_abort_handler.js');
+WebAssembly.Instance = OrigInstance;
+
+function abortCalled() {
+    const addr = wasmExports.__abort_called.value;
+    return new Int32Array(wasmExports.memory.buffer)[addr / 4] !== 0;
+}
+function isTerminated() {
+    const addr = wasmExports.__instance_terminated.value;
+    return new Int32Array(wasmExports.memory.buffer)[addr / 4] !== 0;
+}
+
+describe('abort handler', () => {
+    it('set_on_abort returns true with panic=unwind', () => {
+        assert.strictEqual(wasm.setup_abort_handler(), true);
+    });
+
+    it('Trigger nested unreachable', () => {
+        assert.throws(() => wasm.trigger_nested_unreachable(), /unreachable/);
         assert.strictEqual(abortCalled(), true);
         assert.strictEqual(isTerminated(), true);
     });
