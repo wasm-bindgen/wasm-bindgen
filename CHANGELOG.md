@@ -32,6 +32,16 @@
 
 ### Fixed
 
+* Fixed incorrect variance in `&mut` reference upcasting. `&mut T` upcasts
+  were covariant in the pointee, so a `&mut T` could be widened to a `&mut`
+  of a supertype and used to write back a value the original type would not
+  accept, leaving a reference whose static type no longer matches the value
+  it points to. Mutable references are now *invariant* in their pointee:
+  `&mut T` only upcasts to `&mut Target` when both `Target: UpcastFrom<T>`
+  and `T: UpcastFrom<Target>` hold. This rejects the invalid widening but is
+  a breaking change for callers that relied on widening `&mut` references.
+  [#5176](https://github.com/wasm-bindgen/wasm-bindgen/issues/5176)
+
 * Fixed WASI targets (`wasm32-wasip1`/`wasm32-wasip2`) emitting unresolved
   `__wbindgen_placeholder__` imports, which broke component linking. The
   codegen and runtime gates now exclude `target_os = "wasi"` (restoring the
