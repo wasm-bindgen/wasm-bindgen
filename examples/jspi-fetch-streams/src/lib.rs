@@ -32,8 +32,7 @@ fn drain_stream(stream: ReadableStream) -> Result<(u32, u32), JsValue> {
     let (mut total, mut chunks) = (0u32, 0u32);
 
     loop {
-        let result: ReadableStreamReadResult =
-            block_on_promise(&reader.read())?.unchecked_into();
+        let result: ReadableStreamReadResult = block_on_promise(&reader.read())?.unchecked_into();
 
         if result.get_done().unwrap_or(true) {
             break;
@@ -78,12 +77,8 @@ pub fn read_stream(stream: ReadableStream) -> Result<js_sys::Array, JsValue> {
 /// supported).  Returns `[total_bytes, chunk_count]`.
 #[wasm_bindgen(jspi)]
 pub fn fetch_stream(url: String) -> Result<js_sys::Array, JsValue> {
-    let response: Response = block_on_promise(
-        &web_sys::window()
-            .unwrap_throw()
-            .fetch_with_str(&url),
-    )?
-    .unchecked_into();
+    let response: Response =
+        block_on_promise(&web_sys::window().unwrap_throw().fetch_with_str(&url))?.unchecked_into();
 
     if !response.ok() {
         return Err(JsValue::from_str(&format!("HTTP {}", response.status())));

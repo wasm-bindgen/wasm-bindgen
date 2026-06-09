@@ -424,6 +424,7 @@ impl<'a> Context<'a> {
              }\n\
              function __jspi_stack_free(ptr) { __jspi_stack_pool.push(ptr); }"
             .into(),
+            &[],
         );
     }
 
@@ -444,7 +445,12 @@ impl<'a> Context<'a> {
                  build script or ensure the linker retains the symbol name"
             )
         })?;
-        if !self.module.exports.iter().any(|e| e.name == "__stack_pointer") {
+        if !self
+            .module
+            .exports
+            .iter()
+            .any(|e| e.name == "__stack_pointer")
+        {
             self.module.exports.add("__stack_pointer", sp_id);
         }
         Ok(())
