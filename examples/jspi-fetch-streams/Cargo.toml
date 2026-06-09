@@ -13,14 +13,14 @@ js-sys = { path = "../../crates/js-sys" }
 wasm-bindgen = { path = "../../" }
 
 [dependencies.web-sys]
-path = "../../crates/web-sys"
 features = [
-    "ReadableStream",
-    "ReadableStreamDefaultReader",
-    "ReadableStreamReadResult",
-    "Response",
-    "Window",
+  "ReadableStream",
+  "ReadableStreamDefaultReader",
+  "ReadableStreamReadResult",
+  "Response",
+  "Window",
 ]
+path = "../../crates/web-sys"
 
 [lints]
 workspace = true
