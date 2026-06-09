@@ -26,11 +26,22 @@
 //! ```
 
 use crate::Promise;
-use std::cell::RefCell;
-use std::future::Future;
-use std::sync::Arc;
-use std::task::{Context, Poll, Waker};
+use alloc::boxed::Box;
+use alloc::sync::Arc;
+use alloc::vec::Vec;
+use core::cell::RefCell;
+use core::future::Future;
+use core::task::{Context, Poll, Waker};
 use wasm_bindgen::prelude::*;
+
+// Copy `ThreadLocalWrapper` impl
+struct ThreadLocalWrapper<T>(T);
+
+#[cfg(not(target_feature = "atomics"))]
+unsafe impl<T> Sync for ThreadLocalWrapper<T> {}
+
+#[cfg(not(target_feature = "atomics"))]
+unsafe impl<T> Send for ThreadLocalWrapper<T> {}
 
 // ─── JS bridge ───────────────────────────────────────────────────────────────
 //
@@ -71,40 +82,38 @@ extern "C" {
 
 // ─── Suspension ID pool (up to 256 concurrent suspensions) ───────────────────
 
-thread_local! {
-    static FREE_IDS: RefCell<Vec<u32>> =
-        RefCell::new((0..256_u32).rev().collect());
-}
+#[cfg_attr(target_feature = "atomics", thread_local)]
+static FREE_IDS: ThreadLocalWrapper<RefCell<Vec<u32>>> =
+    ThreadLocalWrapper(RefCell::new(Vec::new()));
 
 fn alloc_id() -> u32 {
-    FREE_IDS.with(|ids| {
-        ids.borrow_mut()
-            .pop()
-            .expect_throw("exceeded 256 concurrent JSPI suspensions")
-    })
+    FREE_IDS
+        .0
+        .borrow_mut()
+        .pop()
+        .expect_throw("exceeded 256 concurrent JSPI suspensions")
 }
 
 fn release_id(id: u32) {
-    FREE_IDS.with(|ids| ids.borrow_mut().push(id));
+    FREE_IDS.0.borrow_mut().push(id);
 }
 
 // ─── Waker ID pool (up to 256 concurrent futures) ────────────────────────────
 
-thread_local! {
-    static FREE_WAKER_IDS: RefCell<Vec<u32>> =
-        RefCell::new((0..256_u32).rev().collect());
-}
+#[cfg_attr(target_feature = "atomics", thread_local)]
+static FREE_WAKER_IDS: ThreadLocalWrapper<RefCell<Vec<u32>>> =
+    ThreadLocalWrapper(RefCell::new(Vec::new()));
 
 fn alloc_waker_id() -> u32 {
-    FREE_WAKER_IDS.with(|ids| {
-        ids.borrow_mut()
-            .pop()
-            .expect_throw("exceeded 256 concurrent JSPI futures")
-    })
+    FREE_WAKER_IDS
+        .0
+        .borrow_mut()
+        .pop()
+        .expect_throw("exceeded 256 concurrent JSPI futures")
 }
 
 fn release_waker_id(id: u32) {
-    FREE_WAKER_IDS.with(|ids| ids.borrow_mut().push(id));
+    FREE_WAKER_IDS.0.borrow_mut().push(id);
 }
 
 // ─── Low-level primitive: suspend on a JS Promise ────────────────────────────
@@ -142,7 +151,7 @@ struct JspiWaker {
     id: u32,
 }
 
-impl std::task::Wake for JspiWaker {
+impl alloc::task::Wake for JspiWaker {
     fn wake(self: Arc<Self>) {
         jspi_waker_wake(self.id);
     }
