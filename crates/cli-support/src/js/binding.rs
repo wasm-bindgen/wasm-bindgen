@@ -1074,9 +1074,17 @@ fn instruction(
                 js.cx.export_stack_pointer_for_jspi()?;
                 js.cx.expose_jspi_stack_setup();
                 writeln!(js.pre_try, "if (__jspi_sync_sp === undefined) __jspi_sync_sp = wasm.__stack_pointer.value;").unwrap();
-                writeln!(js.pre_try, "else wasm.__stack_pointer.value = __jspi_sync_sp;").unwrap();
+                writeln!(
+                    js.pre_try,
+                    "else wasm.__stack_pointer.value = __jspi_sync_sp;"
+                )
+                .unwrap();
                 writeln!(js.pre_try, "const __jspi_stack = __jspi_stack_alloc();").unwrap();
-                writeln!(js.pre_try, "wasm.__stack_pointer.value = __jspi_stack + 65536;").unwrap();
+                writeln!(
+                    js.pre_try,
+                    "wasm.__stack_pointer.value = __jspi_stack + 65536;"
+                )
+                .unwrap();
             }
 
             // And then figure out how to actually handle where the call
@@ -1094,7 +1102,7 @@ fn instruction(
                     // suspends and block_on_promise returns immediately with null.
                     // Emit `return` directly into prelude; don't push to the
                     // adapter stack (which must stay at len=0 for void).
-                    js.prelude(&format!("return {};", call));
+                    js.prelude(&format!("return {call};"));
                 }
                 (false, 0) if js.cx.current_adapter_jspi => {
                     // Void JSPI export: propagate the Promise and attach
