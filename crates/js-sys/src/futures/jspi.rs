@@ -83,37 +83,44 @@ extern "C" {
 // ─── Suspension ID pool (up to 256 concurrent suspensions) ───────────────────
 
 #[cfg_attr(target_feature = "atomics", thread_local)]
-static FREE_IDS: ThreadLocalWrapper<RefCell<Vec<u32>>> =
-    ThreadLocalWrapper(RefCell::new(Vec::new()));
+static FREE_IDS: ThreadLocalWrapper<RefCell<Option<Vec<u32>>>> =
+    ThreadLocalWrapper(RefCell::new(None));
 
 fn alloc_id() -> u32 {
     FREE_IDS
         .0
         .borrow_mut()
+        .get_or_insert_with(|| (0u32..256).rev().collect())
         .pop()
         .expect_throw("exceeded 256 concurrent JSPI suspensions")
 }
 
 fn release_id(id: u32) {
-    FREE_IDS.0.borrow_mut().push(id);
+    FREE_IDS.0.borrow_mut().as_mut().unwrap_throw().push(id);
 }
 
 // ─── Waker ID pool (up to 256 concurrent futures) ────────────────────────────
 
 #[cfg_attr(target_feature = "atomics", thread_local)]
-static FREE_WAKER_IDS: ThreadLocalWrapper<RefCell<Vec<u32>>> =
-    ThreadLocalWrapper(RefCell::new(Vec::new()));
+static FREE_WAKER_IDS: ThreadLocalWrapper<RefCell<Option<Vec<u32>>>> =
+    ThreadLocalWrapper(RefCell::new(None));
 
 fn alloc_waker_id() -> u32 {
     FREE_WAKER_IDS
         .0
         .borrow_mut()
+        .get_or_insert_with(|| (0u32..256).rev().collect())
         .pop()
         .expect_throw("exceeded 256 concurrent JSPI futures")
 }
 
 fn release_waker_id(id: u32) {
-    FREE_WAKER_IDS.0.borrow_mut().push(id);
+    FREE_WAKER_IDS
+        .0
+        .borrow_mut()
+        .as_mut()
+        .unwrap_throw()
+        .push(id);
 }
 
 // ─── Low-level primitive: suspend on a JS Promise ────────────────────────────
