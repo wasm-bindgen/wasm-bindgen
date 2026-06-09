@@ -828,7 +828,9 @@ pub fn set_on_abort(f: fn()) -> Option<fn()> {
     unsafe {
         __abort_handler = f;
     }
-    if !(prev as usize) == (NO_OP_PTR as usize) {
+
+    // TODO: If the MSRV reaches 1.85, use `core::ptr::fn_addr_eq` instead
+    if (prev as usize) != (NO_OP_PTR as usize) {
         Some(prev)
     } else {
         None
