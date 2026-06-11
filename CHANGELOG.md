@@ -7,6 +7,8 @@
 
 ### Changed
 
+* Made the internal `__wbindgen_destroy_closure` export private in the Rust API.
+
 ### Fixed
 
 ### Removed

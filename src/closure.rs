@@ -752,7 +752,7 @@ struct BorrowedClosure<T: ?Sized, const UNWIND_SAFE: bool> {
 /// `Box<dyn FnOnce/FnMut/Fn>` closure, or `a` must be zero (in which case this
 /// is a no-op).
 #[no_mangle]
-pub unsafe extern "C" fn __wbindgen_destroy_closure(a: WasmWord, b: WasmWord) {
+unsafe extern "C" fn __wbindgen_destroy_closure(a: WasmWord, b: WasmWord) {
     if a.is_zero() {
         return;
     }
