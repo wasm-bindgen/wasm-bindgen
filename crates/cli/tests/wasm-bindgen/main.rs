@@ -1571,10 +1571,12 @@ describe('abort handler', () => {
 
     it('JS import throw fires the handler and terminates the instance', () => {
         // Under panic=abort, every JS import throw is a critical error: the
-        // catch wrapper fires the abort handler and traps instead of
-        // propagating the original error.
+        // catch wrapper calls out to `__wbindgen_rethrow_critical`, which
+        // rethrows the original error wrapped in
+        // `new Error("Critical error", { cause })`.
         assert.throws(() => wasm.call_throwing_import(), (e) => {
-            assert.ok(e instanceof WebAssembly.RuntimeError);
+            assert.match(e.message, /Critical error/);
+            assert.match(e.cause.message, /JS import threw/);
             return true;
         });
         assert.strictEqual(abortCalled(), true);
