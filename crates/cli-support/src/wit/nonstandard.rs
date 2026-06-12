@@ -81,6 +81,11 @@ pub struct WasmBindgenAux {
     /// distinguished from other JS exceptions.
     pub wrapped_js_tag: Option<walrus::TagId>,
 
+    /// The imported `__wbindgen_rethrow_critical` host function used by aborting
+    /// catch wrappers. It rethrows the caught error wrapped in a
+    /// `new Error("Critical error", { cause })`.
+    pub rethrow_critical: Option<walrus::FunctionId>,
+
     /// When building with legacy exception handling
     pub legacy_exception_handling: bool,
 
