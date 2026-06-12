@@ -1,6 +1,6 @@
-use crate::JsValue;
 use crate::__rt;
 use crate::__rt::{WasmPtr, WasmWord};
+use crate::JsValue;
 
 use alloc::slice;
 use alloc::vec::Vec;
