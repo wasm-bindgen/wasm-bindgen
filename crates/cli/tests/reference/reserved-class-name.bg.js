@@ -33,7 +33,7 @@ export function use_js_array() {
     const ret = wasm.use_js_array();
     return ret;
 }
-export function __wbg___wbindgen_throw_ccc13625347c7d2e(arg0, arg1) {
+export function __wbg___wbindgen_throw_ea4887a5f8f9a9db(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbg_new_b111a190b215eaf0() {

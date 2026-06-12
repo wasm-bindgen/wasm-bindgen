@@ -1,7 +1,7 @@
 export function driver() {
     wasm.driver();
 }
-export function __wbg___wbindgen_throw_ccc13625347c7d2e(arg0, arg1) {
+export function __wbg___wbindgen_throw_ea4887a5f8f9a9db(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbg_js_block_slice_u16_4f2e50bc26aab9e1(arg0, arg1) {

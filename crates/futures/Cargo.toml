@@ -10,15 +10,15 @@ name = "wasm-bindgen-futures"
 readme = "./README.md"
 repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/futures"
 rust-version = "1.77"
-version = "0.4.74"
+version = "0.4.75"
 
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
-js-sys = { path = "../js-sys", version = "=0.3.101", default-features = false }
-wasm-bindgen = { path = "../..", version = "=0.2.124", default-features = false }
+js-sys = { path = "../js-sys", version = "=0.3.102", default-features = false }
+wasm-bindgen = { path = "../..", version = "=0.2.125", default-features = false }
 
 [features]
 default = ["std"]
