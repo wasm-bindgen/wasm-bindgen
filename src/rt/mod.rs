@@ -815,9 +815,10 @@ pub static mut __abort_handler: fn() = NO_OP_PTR;
 /// export call from within the handler is immediately blocked.  A throwing
 /// or panicking handler cannot suppress the original error.
 ///
-/// **Experimental — only available when built with `panic=unwind`.**
-/// On `panic=abort` builds the no-op stub always returns `None` and the
-/// callback will never fire.
+/// **Experimental.** The callback fires automatically on `panic=unwind`
+/// builds. On `panic=abort` builds the abort machinery is only emitted when
+/// `wasm-bindgen` is run with `--force-enable-abort-handler`; without that flag
+/// the handler is registered but never fires.
 pub fn set_on_abort(f: fn()) -> Option<fn()> {
     let prev = unsafe { __abort_handler };
     unsafe {

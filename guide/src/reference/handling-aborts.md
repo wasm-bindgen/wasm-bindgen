@@ -11,9 +11,11 @@ The `wasm_bindgen::handler` module provides hooks for responding to these events
 and optionally recovering by reinitializing the module.
 
 > **Note:** Hard abort detection and the abort handler API (`set_on_abort`)
-> currently require `panic=unwind`. Support for `panic=abort` may be added in
-> a future release. `schedule_reinit()` works with both `panic=unwind` and
-> `panic=abort`.
+> are enabled automatically when building with `panic=unwind`. With
+> `panic=abort` the module contains no exception-handling instructions, so the
+> abort machinery is not emitted unless you pass `--force-enable-abort-handler`
+> to `wasm-bindgen`. `schedule_reinit()` works with both `panic=unwind` and
+> `panic=abort` regardless of the flag.
 
 ## Termination States
 
