@@ -35,7 +35,9 @@ enum WrapperKind {
     NonAbortingWrapper {
         wrapped_js_tag: TagId,
     },
-    Aborting,
+    Aborting {
+        rethrow_critical: FunctionId,
+    },
 }
 
 /// Intrinsics and IDs needed to generate catch wrappers.
@@ -103,14 +105,20 @@ pub fn run(
     let js_tag = import_js_tag(module);
     let wrapped_js_tag = import_externref_tag(module, "__wbindgen_wrapped_jstag");
 
+    let rethrow_critical = if eh_version == ExceptionHandlingVersion::ModernButWithPanicAbort {
+        Some(import_rethrow_critical(module))
+    } else {
+        None
+    };
+
     let mut wrappers = HashMap::new();
 
     // Generate wrappers for each import with catch
     for (_import_id, func_id, adapter_id) in wit.implements.iter() {
         let wrapper_kind = if aux.imports_with_catch.contains(adapter_id) {
             WrapperKind::CatchWrapper
-        } else if eh_version == ExceptionHandlingVersion::ModernButWithPanicAbort {
-            WrapperKind::Aborting
+        } else if let Some(rethrow_critical) = rethrow_critical {
+            WrapperKind::Aborting { rethrow_critical }
         } else {
             WrapperKind::NonAbortingWrapper { wrapped_js_tag }
         };
@@ -137,8 +145,17 @@ pub fn run(
     log::debug!("Catch handler created {} wrappers", wrappers.len());
     aux.js_tag = Some(js_tag);
     aux.wrapped_js_tag = Some(wrapped_js_tag);
+    aux.rethrow_critical = rethrow_critical;
 
     Ok(())
+}
+
+/// Import `__wbindgen_rethrow_critical` host function.
+fn import_rethrow_critical(module: &mut Module) -> FunctionId {
+    let ty = module.types.add(&[ValType::Ref(RefType::EXTERNREF)], &[]);
+    let (func_id, _import_id) =
+        module.add_import_func(crate::PLACEHOLDER_MODULE, "__wbindgen_rethrow_critical", ty);
+    func_id
 }
 
 /// Import the `WebAssembly.JSTag` as a Wasm tag.
@@ -463,7 +480,12 @@ fn emit_catch_handler(
             builder.call(exn_store);
             push_default_values(builder, results);
         }
-        WrapperKind::Aborting => {
+        WrapperKind::Aborting { rethrow_critical } => {
+            // The caught externref (the original error) is on the stack.
+            // rethrow it wrapped in
+            // `new Error("Critical error", { cause: origError })`.
+            builder.call(rethrow_critical);
+            // unreachable needed to keep the instruction sequence well-typed.
             builder.unreachable();
         }
     }

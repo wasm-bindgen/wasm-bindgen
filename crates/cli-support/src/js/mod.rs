@@ -4637,6 +4637,7 @@ if (require('worker_threads').isMainThread) {{
 
         self.generate_jstag_import();
         self.generate_wrapped_jstag_import()?;
+        self.generate_rethrow_critical_import();
         self.maybe_generate_call_guard()?;
 
         for (id, adapter, kind) in iter_adapter(self.aux, self.wit, self.module) {
@@ -4808,6 +4809,43 @@ addToLibrary({
         };
 
         Ok(())
+    }
+
+    /// Generate the import for `__wbindgen_rethrow_critical` if it was used.
+    fn generate_rethrow_critical_import(&mut self) {
+        let Some(rethrow_critical) = self.aux.rethrow_critical else {
+            return;
+        };
+
+        // Find the import ID for the host function.
+        let import_id = self.module.imports.iter().find_map(|import| {
+            let walrus::ImportKind::Function(func_id) = import.kind else {
+                return None;
+            };
+            if func_id == rethrow_critical {
+                Some(import.id())
+            } else {
+                None
+            }
+        });
+
+        let Some(id) = import_id else {
+            return;
+        };
+
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.emscripten_library.push_str(
+                "addToLibrary({\n  __wbindgen_rethrow_critical: function(cause) { throw new Error(\"Critical error\", { cause }); },\n});\n",
+            );
+            return;
+        }
+
+        self.wasm_import_definitions.insert(
+            id,
+            ImportDefinition::Function(
+                "(cause) { throw new Error(\"Critical error\", { cause }); }".to_string(),
+            ),
+        );
     }
 
     /// Emit a `__wbg_call_guard`, handling hard aborts and reinitialization
