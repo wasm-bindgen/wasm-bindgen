@@ -794,15 +794,10 @@ impl<T, const UNWIND_SAFE: bool> WasmDescribe for OwnedClosure<T, UNWIND_SAFE>
 where
     T: WasmClosure + ?Sized,
 {
-    const SCHEMA_LEN: usize = 3 + T::SCHEMA_LEN;
-    const SCHEMA_BUF: [u32; crate::describe::SCHEMA_MAX] = crate::describe::wrap_schema(
-        &[
-            crate::describe::CLOSURE,
-            /* owned */ 1,
-            T::IS_MUT as u32,
-        ],
-        &T::SCHEMA_BUF,
-        T::SCHEMA_LEN,
+    const SCHEMA: &'static crate::describe::Schema = &crate::describe::Schema::node(
+        crate::describe::SCHEMA_NODE_WRAP,
+        &[crate::describe::CLOSURE, /* owned */ 1, T::IS_MUT as u32],
+        &[T::SCHEMA],
     );
 }
 
@@ -810,15 +805,10 @@ impl<T, const UNWIND_SAFE: bool> WasmDescribe for BorrowedClosure<T, UNWIND_SAFE
 where
     T: WasmClosure + ?Sized,
 {
-    const SCHEMA_LEN: usize = 3 + T::SCHEMA_LEN;
-    const SCHEMA_BUF: [u32; crate::describe::SCHEMA_MAX] = crate::describe::wrap_schema(
-        &[
-            crate::describe::CLOSURE,
-            /* owned */ 0,
-            T::IS_MUT as u32,
-        ],
-        &T::SCHEMA_BUF,
-        T::SCHEMA_LEN,
+    const SCHEMA: &'static crate::describe::Schema = &crate::describe::Schema::node(
+        crate::describe::SCHEMA_NODE_WRAP,
+        &[crate::describe::CLOSURE, /* owned */ 0, T::IS_MUT as u32],
+        &[T::SCHEMA],
     );
 }
 
@@ -853,9 +843,8 @@ where
     // and its captured environment live behind the scenes via
     // `wbg_cast_closure`. From the descriptor's perspective it is
     // just an externref, regardless of `T`.
-    const SCHEMA_LEN: usize = 1;
-    const SCHEMA_BUF: [u32; crate::describe::SCHEMA_MAX] =
-        crate::describe::leaf_schema(crate::describe::EXTERNREF);
+    const SCHEMA: &'static crate::describe::Schema =
+        &crate::describe::Schema::leaf(&[crate::describe::EXTERNREF]);
 }
 
 // `ScopedClosure` can be passed by reference to imports (for any lifetime).

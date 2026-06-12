@@ -69,3 +69,23 @@ tys! {
 /// Chosen as `0xFF` to leave plenty of headroom above the existing dense
 /// opcode range (currently `0..=36`) for future low-numbered additions.
 pub const SYMBOL_REF: u32 = 0xFF;
+
+/// Structural tags for the reference-based `Schema` tree (see
+/// `wasm_bindgen::describe::Schema`). These label the *shape* of a `Schema`
+/// node and are shared by the producer (runtime composition) and the consumer
+/// (`wasm-bindgen-cli-support`, which walks the tree out of a cast record's
+/// data segment). They are a separate namespace from the schema *opcodes*
+/// above: tags live in the `Schema::tag` field, never in the flat opcode
+/// stream that `Descriptor::decode` consumes.
+///
+/// Flattening is uniform regardless of tag — a node contributes its `words`
+/// run followed by the flattened streams of its `children`, in order — so the
+/// tags are primarily documentation/validation aids:
+///
+/// * `SCHEMA_NODE_LEAF` — `words` only, no children (e.g. `i32`, `JsValue`).
+/// * `SCHEMA_NODE_WRAP` — leading `words` plus one or more children (e.g.
+///   `Option<T>`, `&T`, the closure trait-object header + arg/ret schemas).
+/// * `SCHEMA_NODE_CAT` — no `words`, children only (pure concatenation).
+pub const SCHEMA_NODE_LEAF: u32 = 0;
+pub const SCHEMA_NODE_WRAP: u32 = 1;
+pub const SCHEMA_NODE_CAT: u32 = 2;

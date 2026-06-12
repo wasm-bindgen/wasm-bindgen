@@ -108,17 +108,24 @@ where
     }
 }
 
-// Schema-buffer forwarders: re-expose a generic type's `SCHEMA_BUF`
-// associated const through a non-generic static so we can hand a
-// stable address to the cli. Wasm-ld resolves `&FromBuf::<F>::BUF` to
-// an `i32.const` pointing into the data segment.
+// Schema-buffer forwarders: flatten a generic type's `SCHEMA` tree
+// into a non-generic fixed-size static so we can hand a stable
+// (pointer, length) pair to the cli. Wasm-ld resolves `&FromBuf::<F>::BUF`
+// to an `i32.const` pointing into the data segment.
+//
+// Transitional: this still-buffer-based path (with its 256-word
+// `flatten_padded` cap) is replaced by the reference-based `CastRecord`
+// in the Phase 3 cast-trampoline refactor.
+const SCHEMA_BUF_CAP: usize = 256;
 struct FromBuf<F: crate::describe::WasmDescribe + ?Sized>(core::marker::PhantomData<F>);
 impl<F: crate::describe::WasmDescribe + ?Sized> FromBuf<F> {
-    const BUF: [u32; crate::describe::SCHEMA_MAX] = F::SCHEMA_BUF;
+    const LEN: usize = crate::describe::flatten_len(F::SCHEMA);
+    const BUF: [u32; SCHEMA_BUF_CAP] = crate::describe::flatten_padded::<SCHEMA_BUF_CAP>(F::SCHEMA);
 }
 struct ToBuf<T: crate::describe::WasmDescribe + ?Sized>(core::marker::PhantomData<T>);
 impl<T: crate::describe::WasmDescribe + ?Sized> ToBuf<T> {
-    const BUF: [u32; crate::describe::SCHEMA_MAX] = T::SCHEMA_BUF;
+    const LEN: usize = crate::describe::flatten_len(T::SCHEMA);
+    const BUF: [u32; SCHEMA_BUF_CAP] = crate::describe::flatten_padded::<SCHEMA_BUF_CAP>(T::SCHEMA);
 }
 
 #[inline(never)]
@@ -135,9 +142,9 @@ where
 {
     super::__wbindgen_describe_cast(
         FromBuf::<From>::BUF.as_ptr(),
-        <From as crate::describe::WasmDescribe>::SCHEMA_LEN,
+        FromBuf::<From>::LEN,
         ToBuf::<To>::BUF.as_ptr(),
-        <To as crate::describe::WasmDescribe>::SCHEMA_LEN,
+        ToBuf::<To>::LEN,
         core::ptr::null(),
     );
     // The cli rewrites this whole function to a JS adapter import
@@ -169,9 +176,9 @@ where
 {
     super::__wbindgen_describe_cast(
         FromBuf::<From>::BUF.as_ptr(),
-        <From as crate::describe::WasmDescribe>::SCHEMA_LEN,
+        FromBuf::<From>::LEN,
         ToBuf::<To>::BUF.as_ptr(),
-        <To as crate::describe::WasmDescribe>::SCHEMA_LEN,
+        ToBuf::<To>::LEN,
         T::invoke_shim_addr::<UNWIND_SAFE>(),
     );
     keep_prims_alive(prim1, prim2, prim3, prim4);

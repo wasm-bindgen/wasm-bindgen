@@ -143,12 +143,11 @@ macro_rules! vectors_internal {
     ($t:ty) => {
         impl WasmDescribeVector for $t {
             // `Vec<primitive>` schema: [VECTOR, ...primitive's SCHEMA]
-            const VECTOR_SCHEMA_LEN: usize = 1 + <$t as crate::describe::WasmDescribe>::SCHEMA_LEN;
-            const VECTOR_SCHEMA_BUF: [u32; crate::describe::SCHEMA_MAX] =
-                crate::describe::wrap_schema(
+            const VECTOR_SCHEMA: &'static crate::describe::Schema =
+                &crate::describe::Schema::node(
+                    crate::describe::SCHEMA_NODE_WRAP,
                     &[crate::describe::VECTOR],
-                    &<$t as crate::describe::WasmDescribe>::SCHEMA_BUF,
-                    <$t as crate::describe::WasmDescribe>::SCHEMA_LEN,
+                    &[<$t as crate::describe::WasmDescribe>::SCHEMA],
                 );
         }
 
@@ -249,9 +248,8 @@ impl WasmDescribeVector for String {
     // Vec<String> crosses the boundary as a JS array of
     // named-externref ("string") handles, not as a flat sequence
     // of STRING descriptors.
-    const VECTOR_SCHEMA_LEN: usize = 9;
-    const VECTOR_SCHEMA_BUF: [u32; crate::describe::SCHEMA_MAX] =
-        crate::describe::schema_from_slice(&[
+    const VECTOR_SCHEMA: &'static crate::describe::Schema =
+        &crate::describe::Schema::leaf(&[
             VECTOR,
             NAMED_EXTERNREF,
             6,

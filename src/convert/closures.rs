@@ -13,7 +13,7 @@ use crate::convert::slices::WasmSlice;
 use crate::convert::traits::UpcastFrom;
 use crate::convert::RefFromWasmAbi;
 use crate::convert::{FromWasmAbi, IntoWasmAbi, ReturnWasmAbi, WasmAbi, WasmRet};
-use crate::describe::{cat_schema, WasmDescribe, FUNCTION, SCHEMA_MAX};
+use crate::describe::{Schema, WasmDescribe, FUNCTION, SCHEMA_NODE_WRAP};
 use crate::sys::Undefined;
 use crate::throw_str;
 use crate::JsValue;
@@ -125,24 +125,18 @@ macro_rules! closures {
             // The duplicated ret matches the legacy descriptor stream
             // shape; `Function::decode` consumes both as `ret` and
             // `inner_ret`.
-            const SCHEMA_LEN: usize =
-                3
-                $( + <$SchemaArgTy as WasmDescribe>::SCHEMA_LEN )*
-                + 2 * <R as WasmDescribe>::SCHEMA_LEN;
-            const SCHEMA_BUF: [u32; SCHEMA_MAX] = {
-                const fn header() -> [u32; SCHEMA_MAX] {
-                    let mut b = [0u32; SCHEMA_MAX];
-                    b[0] = FUNCTION;
-                    b[1] = 0; // shim_idx placeholder, filled by the cli
-                    b[2] = 0 $( + closures!(@count_one $SchemaArgTy) )*;
-                    b
-                }
-                cat_schema(&[
-                    (&header(), 3),
-                    $( (&<$SchemaArgTy as WasmDescribe>::SCHEMA_BUF, <$SchemaArgTy as WasmDescribe>::SCHEMA_LEN), )*
-                    (&<R as WasmDescribe>::SCHEMA_BUF, <R as WasmDescribe>::SCHEMA_LEN),
-                    (&<R as WasmDescribe>::SCHEMA_BUF, <R as WasmDescribe>::SCHEMA_LEN),
-                ])
+            const SCHEMA: &'static Schema = {
+                // Header words: [FUNCTION, shim_idx placeholder, nargs].
+                const NARGS: u32 = 0 $( + closures!(@count_one $SchemaArgTy) )*;
+                &Schema::node(
+                    SCHEMA_NODE_WRAP,
+                    &[FUNCTION, 0, NARGS],
+                    &[
+                        $( <$SchemaArgTy as WasmDescribe>::SCHEMA, )*
+                        <R as WasmDescribe>::SCHEMA,
+                        <R as WasmDescribe>::SCHEMA,
+                    ],
+                )
             };
         }
 
