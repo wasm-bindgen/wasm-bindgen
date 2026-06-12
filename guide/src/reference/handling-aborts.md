@@ -10,33 +10,14 @@ export call will throw `"Module terminated"`.
 The `wasm_bindgen::handler` module provides hooks for responding to these events
 and optionally recovering by reinitializing the module.
 
-> **Note:** Hard abort detection and the abort handler API (`set_on_abort`)
-> are enabled automatically when building with `panic=unwind`. With
-> `panic=abort` the module contains no exception-handling instructions, so the
-> abort machinery is not emitted unless you pass `--force-enable-abort-handler`
-> to `wasm-bindgen`. `schedule_reinit()` works with both `panic=unwind` and
-> `panic=abort` regardless of the flag.
-
-## Termination States
-
-When using `panic=unwind`, the `(export "__instance_terminated" (global i32))` flag
-points to a boolean in linear memory:
-
-| Value | Meaning | Behavior on next export call |
-|-------|---------|------------------------------|
-| `0` | Live | Normal execution |
-| `1` | Terminated | Abort hook fires (if not already called), then throws `"Module terminated"` |
-
-All aborts will set this `__instance_terminated` flag.
-
-When the terminated state is set, reentrancy guards call the abort hook and
-ensure that the WebAssembly instance cannot again execute, immediately
-throwing if any new call is attempted instead.
-
 ## Abort Handling
 
 `handler::set_on_abort` registers a callback that fires when the instance has been
 aborted.
+
+This handler is only engaged when building with `panic=unwind` or with the
+`--force-enable-abort-handler` flag for `panic=abort`. This is because `panic=abort`
+does not otherwise introduce exception-handling instructions to the binary.
 
 `set_on_abort` returns the previously registered handler (`None` if none was
 set), mirroring the `std::panic::set_hook` convention.
@@ -66,7 +47,7 @@ means the handler fires on the next export call, giving it a chance to respond
 
 `handler::schedule_reinit()` can be used to reinitialize the WebAssembly instance, while
 keeping the JS wrapper bindings in place, performing a transparent reinitialization
-of the library when state loss is acceptable. Works with both `panic=unwind` and
+of the library when state loss is acceptable. It works with both `panic=unwind` and
 `panic=abort` builds.
 
 `schedule_reinit` may be called at any time. With `panic=unwind` it can also be
@@ -101,6 +82,22 @@ pub fn start() {
 With this setup, a hard abort (or host-initiated termination) transparently
 reinitializes the module on the next export call. The caller sees a fresh
 instance with all Rust statics reset to their initial values.
+
+## Termination States
+
+When using `panic=unwind` or for `panic=abort` with the `--force-enable-abort-handler`
+flag, the `(export "__instance_terminated" (global i32))` flag points to a boolean in linear memory:
+
+| Value | Meaning | Behavior on next export call |
+|-------|---------|------------------------------|
+| `0` | Live | Normal execution |
+| `1` | Terminated | Abort hook fires (if not already called), then throws `"Module terminated"` |
+
+All aborts will set this `__instance_terminated` flag.
+
+When the terminated state is set, reentrancy guards call the abort hook and
+ensure that the WebAssembly instance cannot again execute, immediately
+throwing if any new call is attempted instead.
 
 ## See Also
 
