@@ -32,7 +32,10 @@ enum WrapperKind {
     CatchWrapper,
     /// This rethrows recoverable exceptions with a wrapped tag so that our
     /// abort machinery will not treat them as fatal errors.
-    NonAbortingWrapper { wrapped_js_tag: TagId },
+    NonAbortingWrapper {
+        wrapped_js_tag: TagId,
+    },
+    Aborting,
 }
 
 /// Intrinsics and IDs needed to generate catch wrappers.
@@ -106,6 +109,8 @@ pub fn run(
     for (_import_id, func_id, adapter_id) in wit.implements.iter() {
         let wrapper_kind = if aux.imports_with_catch.contains(adapter_id) {
             WrapperKind::CatchWrapper
+        } else if eh_version == ExceptionHandlingVersion::ModernButWithPanicAbort {
+            WrapperKind::Aborting
         } else {
             WrapperKind::NonAbortingWrapper { wrapped_js_tag }
         };
@@ -211,7 +216,7 @@ fn generate_catch_wrapper(
     };
 
     match eh_version {
-        ExceptionHandlingVersion::Modern => {
+        ExceptionHandlingVersion::Modern | ExceptionHandlingVersion::ModernButWithPanicAbort => {
             generate_modern_eh_wrapper(&mut builder, module, &param_locals, &results, ctx);
         }
         ExceptionHandlingVersion::Legacy => {
@@ -458,6 +463,9 @@ fn emit_catch_handler(
             builder.call(exn_store);
             push_default_values(builder, results);
         }
+        WrapperKind::Aborting => {
+            builder.unreachable();
+        }
     }
 }
 
@@ -474,7 +482,7 @@ fn emit_catch_handler(
 /// This checks if `__instance_terminated` is nonzero and traps if so, ensuring
 /// that instance termination is never swallowed by an outer catch handler.
 fn emit_termination_guard(builder: &mut walrus::InstrSeqBuilder, ctx: CatchContext) {
-    let mem_arg = MemArg {
+    let mem_arg: MemArg = MemArg {
         align: 4,
         offset: 0,
     };
@@ -924,7 +932,7 @@ mod tests {
         wit.implements.push((import_id, import_func_id, adapter_id));
 
         // Verify EH is detected
-        let eh_version = super::super::detect_exception_handling_version(&module);
+        let eh_version = super::super::detect_exception_handling_version(&module, false);
         assert_eq!(eh_version, super::super::ExceptionHandlingVersion::Legacy);
 
         // Run the transform

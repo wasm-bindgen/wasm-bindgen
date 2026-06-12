@@ -4773,10 +4773,6 @@ if (require('worker_threads').isMainThread) {{
             }
         });
 
-        let Some(id) = import_id else {
-            return Ok(());
-        };
-
         if matches!(self.config.mode, OutputMode::Emscripten) {
             self.emscripten_library.push_str(
                 r#"
@@ -4803,38 +4799,13 @@ addToLibrary({
             "const __wbindgen_wrapped_jstag = new WebAssembly.Tag({ parameters: ['externref'] });",
         );
 
-        let memory = get_memory(self.module).unwrap();
-        let mem_view = self.expose_int32_memory(memory);
-        let table = self.export_function_table()?;
-
-        self.global(&format!(
-            "
-            let __wbg_terminated_addr;
-            let __wbg_called_abort = false;
-            function __wbg_call_abort_hook() {{
-                __wbg_called_abort = true;
-                try {{
-                    const idx = {mem_view}()[wasm.__abort_handler.value / 4];
-                    if (idx) wasm.{table}.get(idx)();
-                }} catch(_) {{}}
-            }}
-
-            function __wbg_handle_catch(e) {{
-                if (e instanceof WebAssembly.Exception && e.is(__wbindgen_wrapped_jstag)) {{
-                    throw e.getArg(__wbindgen_wrapped_jstag, 0);
-                }}
-                {mem_view}()[__wbg_terminated_addr] = 1;
-                __wbg_call_abort_hook();
-                throw e;
-            }}
-            "
-        ));
-
-        // Use the constant for the import
-        self.wasm_import_definitions.insert(
-            id,
-            ImportDefinition::GlobalRef("__wbindgen_wrapped_jstag".to_string()),
-        );
+        if let Some(id) = import_id {
+            // Use the constant for the import
+            self.wasm_import_definitions.insert(
+                id,
+                ImportDefinition::GlobalRef("__wbindgen_wrapped_jstag".to_string()),
+            );
+        };
 
         Ok(())
     }
@@ -4851,9 +4822,34 @@ addToLibrary({
 
         let mut termination_guard = String::from("function __wbg_call_guard() {");
         // Exception handling tags -> hard aborts
-        if self.aux.wrapped_js_tag.is_some() {
-            let memory = get_memory(self.module)?;
+        if self.aux.wrapped_js_tag.is_some() || self.config.force_enable_abort_handler {
+            let memory = get_memory(self.module).unwrap();
             let mem_view = self.expose_int32_memory(memory);
+            let table = self.export_function_table()?;
+
+            self.global(&format!(
+                "
+                let __wbg_terminated_addr;
+                let __wbg_called_abort = false;
+                function __wbg_call_abort_hook() {{
+                    __wbg_called_abort = true;
+                    try {{
+                        const idx = {mem_view}()[wasm.__abort_handler.value / 4];
+                        if (idx) wasm.{table}.get(idx)();
+                    }} catch(_) {{}}
+                }}
+
+                function __wbg_handle_catch(e) {{
+                    if (e instanceof WebAssembly.Exception && e.is(__wbindgen_wrapped_jstag)) {{
+                        throw e.getArg(__wbindgen_wrapped_jstag, 0);
+                    }}
+                    {mem_view}()[__wbg_terminated_addr] = 1;
+                    __wbg_call_abort_hook();
+                    throw e;
+                }}
+                "
+            ));
+
             termination_guard.push_str(&format!(
                 "
                 __wbg_terminated_addr ??= wasm.__instance_terminated.value / 4;

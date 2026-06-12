@@ -42,6 +42,7 @@ pub struct Bindgen {
     encode_into: EncodeInto,
     split_linked_modules: bool,
     generate_reset_state: bool,
+    force_enable_abort_handler: bool,
 }
 
 pub struct Output {
@@ -116,6 +117,7 @@ impl Bindgen {
             omit_default_module_path: true,
             split_linked_modules: false,
             generate_reset_state: false,
+            force_enable_abort_handler: false,
         }
     }
 
@@ -303,6 +305,11 @@ impl Bindgen {
         self
     }
 
+    pub fn force_enable_abort_handler(&mut self, force_enable_abort_handler: bool) -> &mut Self {
+        self.force_enable_abort_handler = force_enable_abort_handler;
+        self
+    }
+
     pub fn generate<P: AsRef<Path>>(&mut self, path: P) -> Result<(), Error> {
         self.generate_output()?.emit(path.as_ref())
     }
@@ -478,7 +485,7 @@ impl Bindgen {
         // `__wbindgen_exn_store`) may be absent. Skip the transform until
         // proper emscripten-mode catch support lands.
         if !matches!(self.mode, OutputMode::Emscripten) {
-            generate_wasm_catch_wrappers(&mut module)?;
+            generate_wasm_catch_wrappers(&mut module, self.force_enable_abort_handler)?;
         }
 
         // We've done a whole bunch of transformations to the Wasm module, many
@@ -835,8 +842,11 @@ impl Output {
 /// When exception handling instructions are available in the module, this generates
 /// Wasm wrapper functions that catch JavaScript exceptions using `WebAssembly.JSTag`
 /// instead of relying on JS `handleError` wrappers.
-fn generate_wasm_catch_wrappers(module: &mut Module) -> Result<(), Error> {
-    let eh_version = transforms::detect_exception_handling_version(module);
+fn generate_wasm_catch_wrappers(
+    module: &mut Module,
+    enable_abort_handler: bool,
+) -> Result<(), Error> {
+    let eh_version = transforms::detect_exception_handling_version(module, enable_abort_handler);
     log::debug!("Exception handling version: {eh_version:?}");
 
     if eh_version == transforms::ExceptionHandlingVersion::None {

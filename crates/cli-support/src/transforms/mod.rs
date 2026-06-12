@@ -22,13 +22,17 @@ pub enum ExceptionHandlingVersion {
     Legacy,
     /// Modern EH (phase 4): try_table instruction
     Modern,
+    ModernButWithPanicAbort,
 }
 
 /// Detect which exception handling version is used in the module.
 ///
 /// Scans all functions for `Try` (legacy) vs `TryTable` (modern) instructions.
 /// If both are present, returns `Modern` as the module likely supports both.
-pub fn detect_exception_handling_version(module: &walrus::Module) -> ExceptionHandlingVersion {
+pub fn detect_exception_handling_version(
+    module: &walrus::Module,
+    enable_abort_handler: bool,
+) -> ExceptionHandlingVersion {
     struct EhDetector {
         has_try: bool,
         has_try_table: bool,
@@ -59,10 +63,15 @@ pub fn detect_exception_handling_version(module: &walrus::Module) -> ExceptionHa
         }
     }
 
-    match (detector.has_try_table, detector.has_try) {
-        (true, _) => ExceptionHandlingVersion::Modern,
-        (false, true) => ExceptionHandlingVersion::Legacy,
-        (false, false) => ExceptionHandlingVersion::None,
+    match (
+        detector.has_try_table,
+        detector.has_try,
+        enable_abort_handler,
+    ) {
+        (true, _, _) => ExceptionHandlingVersion::Modern,
+        (false, true, _) => ExceptionHandlingVersion::Legacy,
+        (false, false, true) => ExceptionHandlingVersion::ModernButWithPanicAbort,
+        (false, false, false) => ExceptionHandlingVersion::None,
     }
 }
 
@@ -104,7 +113,7 @@ mod tests {
         "#;
         let module = parse_wat(wat);
         assert_eq!(
-            detect_exception_handling_version(&module),
+            detect_exception_handling_version(&module, false),
             ExceptionHandlingVersion::None
         );
     }
@@ -126,7 +135,7 @@ mod tests {
         "#;
         let module = parse_wat(wat);
         assert_eq!(
-            detect_exception_handling_version(&module),
+            detect_exception_handling_version(&module, false),
             ExceptionHandlingVersion::Legacy
         );
     }
@@ -149,7 +158,7 @@ mod tests {
         "#;
         let module = parse_wat(wat);
         assert_eq!(
-            detect_exception_handling_version(&module),
+            detect_exception_handling_version(&module, false),
             ExceptionHandlingVersion::Modern
         );
     }
@@ -180,7 +189,7 @@ mod tests {
         "#;
         let module = parse_wat(wat);
         assert_eq!(
-            detect_exception_handling_version(&module),
+            detect_exception_handling_version(&module, false),
             ExceptionHandlingVersion::Modern
         );
     }
