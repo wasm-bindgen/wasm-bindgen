@@ -150,23 +150,6 @@ pub const fn flatten_into<const N: usize>(s: &Schema) -> [u32; N] {
     out
 }
 
-/// Flatten a schema into a fixed-size, zero-padded `[u32; N]` buffer.
-///
-/// Transitional: lets the still-buffer-based closure-cast path
-/// (`src/rt/mod.rs`) build a pointer+length pair from the new `Schema`
-/// tree without a generic-length array (the buffer is `N`-sized for a
-/// concrete `N`, and the meaningful prefix is [`flatten_len`] words).
-/// Removed in the Phase 3 cast-trampoline refactor.
-pub const fn flatten_padded<const N: usize>(s: &Schema) -> [u32; N] {
-    let mut out = [0u32; N];
-    let written = write_flat(s, &mut out, 0);
-    assert!(
-        written <= N,
-        "flatten_padded: schema exceeds the fixed buffer capacity N"
-    );
-    out
-}
-
 const fn write_flat(s: &Schema, out: &mut [u32], mut idx: usize) -> usize {
     let words = words_slice(s);
     let mut i = 0;
@@ -183,6 +166,27 @@ const fn write_flat(s: &Schema, out: &mut [u32], mut idx: usize) -> usize {
     }
     idx
 }
+
+/// One closure/plain cast's descriptor, referenced (by pointer) from a
+/// cast trampoline's call to the `__wbindgen_cast_marker` import.
+///
+/// `#[repr(C)]` so `wasm-bindgen-cli-support` can parse it out of the
+/// linked module's data segment. `invoke` is stored as a **pointer**
+/// (not a const integer): for closure casts it is the invoke shim's
+/// function-item address (`fn as *const ()`), which the linker lowers
+/// to a function-table-index relocation the CLI reads back from the
+/// data segment; for plain casts it is null.
+#[repr(C)]
+pub struct CastRecord {
+    pub from: &'static Schema,
+    pub to: &'static Schema,
+    pub invoke: *const (),
+}
+
+// `CastRecord` holds a raw pointer (`invoke`), so it is not `Sync` by
+// default; it is only ever shared immutably as a promoted `'static`, so
+// asserting `Sync` is sound.
+unsafe impl Sync for CastRecord {}
 
 /// Describes the wasm-bindgen type schema for a type as a single
 /// `&'static Schema` tree (see [`Schema`]).

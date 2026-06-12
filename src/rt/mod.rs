@@ -51,86 +51,94 @@ pub fn js_panic(err: JsValue) {
 // Cast between arbitrary wasm-bindgen-ABI types by going through JS.
 //
 // At compile time each `wbg_cast::<From, To>` instantiates a fresh
-// `breaks_if_inlined::<From, To>` that does nothing useful — it just
-// calls the marker import `__wbindgen_describe_cast` with five
-// `i32.const` immediates:
+// cast trampoline (`__wbg_cast_trampoline*`) that does nothing useful
+// at runtime — it just calls the marker import `__wbindgen_cast_marker`
+// with the address of a per-monomorphisation `CastRecord`. The record
+// (a `#[repr(C)]` static in the data segment) holds:
 //
-//   * pointer + length of `<From as WasmDescribe>::SCHEMA_BUF[..SCHEMA_LEN]`
-//   * pointer + length of `<To as WasmDescribe>::SCHEMA_BUF[..SCHEMA_LEN]`
-//   * an optional invoke address (used by `wbg_cast_closure` only;
-//     `null` for plain `wbg_cast`)
+//   * `from` / `to`: `&'static Schema` roots for the cast's `From`/`To`.
+//   * `invoke`: the closure invoke shim's function-table address
+//     (relocated by the linker) for closure casts, or null for plain
+//     `wbg_cast`.
 //
-// `wasm-bindgen-cli` finds each `breaks_if_inlined` by looking for
-// callers of `__wbindgen_describe_cast`, reads the five immediates
-// structurally (a narrow scanner — no wasm interpretation),
-// reconstructs the cast's `(From, To)` descriptor from the schema
-// bytes in the data segment, synthesises a JS adapter, and replaces
-// every call to `breaks_if_inlined` with a call to the import the
+// `wasm-bindgen-cli` finds each trampoline by looking for callers of
+// `__wbindgen_cast_marker`, reads the single record-pointer operand,
+// walks the `Schema` trees out of the data segment to recover the
+// cast's `(From, To)` descriptor, synthesises a JS adapter, and
+// replaces every call to the trampoline with a call to the import the
 // JS adapter is bound to.
+//
+// Layer 1: the manufactured import's Wasm signature is recovered by
+// the CLI from the trampoline's own `.ty()`, so the trampoline keeps a
+// minimal signature guard (`keep_prims_alive` / `make_ret`) to stop the
+// optimiser from collapsing the canonical `(From::Abi prims) ->
+// WasmRet<To::Abi>` shape when prims/ret are zero-sized.
 pub fn wbg_cast<From, To>(value: From) -> To
 where
     From: IntoWasmAbi + crate::describe::WasmDescribe,
     To: FromWasmAbi + crate::describe::WasmDescribe,
 {
-    // Keep the helper's address-of present in the module so LLVM
-    // treats it as escaping and cannot run interprocedural argument
-    // elimination on it (which would strip unused prims from the
-    // wasm-level signature the cli scanner inspects).
-    let _keepalive: unsafe extern "C" fn(_, _, _, _) -> _ = breaks_if_inlined::<From, To>;
-    core::hint::black_box(_keepalive);
     let (prim1, prim2, prim3, prim4) = value.into_abi().split();
     unsafe {
-        let result = breaks_if_inlined::<From, To>(prim1, prim2, prim3, prim4);
+        let result = __wbg_cast_trampoline::<From, To>(prim1, prim2, prim3, prim4);
         To::from_abi(result.join())
     }
 }
 
-/// Closure-cast variant: passes the per-`(T, UNWIND_SAFE)`
-/// monomorphisation invoke shim's address into the marker call so
-/// the cli scanner can resolve the function-table slot. `T` and
-/// `UNWIND_SAFE` are baked into the `breaks_if_inlined_closure`
-/// instantiation so the address folds to a single `i32.const` in
-/// the cast body.
+/// Closure-cast variant: the per-`(T, UNWIND_SAFE)` monomorphisation's
+/// invoke shim address is baked into the `CastRecord` `invoke` field so
+/// the CLI can resolve the function-table slot from the data segment.
 pub fn wbg_cast_closure<From, To, T, const UNWIND_SAFE: bool>(value: From) -> To
 where
     From: IntoWasmAbi + crate::describe::WasmDescribe,
     To: FromWasmAbi + crate::describe::WasmDescribe,
     T: crate::closure::WasmClosure + ?Sized,
 {
-    let _keepalive: unsafe extern "C" fn(_, _, _, _) -> _ =
-        breaks_if_inlined_closure::<From, To, T, UNWIND_SAFE>;
-    core::hint::black_box(_keepalive);
     let (prim1, prim2, prim3, prim4) = value.into_abi().split();
     unsafe {
         let result =
-            breaks_if_inlined_closure::<From, To, T, UNWIND_SAFE>(prim1, prim2, prim3, prim4);
+            __wbg_cast_trampoline_closure::<From, To, T, UNWIND_SAFE>(prim1, prim2, prim3, prim4);
         To::from_abi(result.join())
     }
 }
 
-// Schema-buffer forwarders: flatten a generic type's `SCHEMA` tree
-// into a non-generic fixed-size static so we can hand a stable
-// (pointer, length) pair to the cli. Wasm-ld resolves `&FromBuf::<F>::BUF`
-// to an `i32.const` pointing into the data segment.
-//
-// Transitional: this still-buffer-based path (with its 256-word
-// `flatten_padded` cap) is replaced by the reference-based `CastRecord`
-// in the Phase 3 cast-trampoline refactor.
-const SCHEMA_BUF_CAP: usize = 256;
-struct FromBuf<F: crate::describe::WasmDescribe + ?Sized>(core::marker::PhantomData<F>);
-impl<F: crate::describe::WasmDescribe + ?Sized> FromBuf<F> {
-    const LEN: usize = crate::describe::flatten_len(F::SCHEMA);
-    const BUF: [u32; SCHEMA_BUF_CAP] = crate::describe::flatten_padded::<SCHEMA_BUF_CAP>(F::SCHEMA);
+// Per-monomorphisation cast records. `&CastRec::<..>::RECORD` resolves
+// to a stable data-segment address the trampoline hands to the marker;
+// the linker fills the `invoke` slot with the relocated function-table
+// index (closure casts) or leaves it null (plain casts).
+struct CastRec<From, To>(core::marker::PhantomData<(From, To)>);
+impl<From: crate::describe::WasmDescribe, To: crate::describe::WasmDescribe> CastRec<From, To> {
+    const RECORD: &'static crate::describe::CastRecord = &crate::describe::CastRecord {
+        from: From::SCHEMA,
+        to: To::SCHEMA,
+        invoke: core::ptr::null(),
+    };
 }
-struct ToBuf<T: crate::describe::WasmDescribe + ?Sized>(core::marker::PhantomData<T>);
-impl<T: crate::describe::WasmDescribe + ?Sized> ToBuf<T> {
-    const LEN: usize = crate::describe::flatten_len(T::SCHEMA);
-    const BUF: [u32; SCHEMA_BUF_CAP] = crate::describe::flatten_padded::<SCHEMA_BUF_CAP>(T::SCHEMA);
+
+struct CastRecClosure<From, To, T: crate::closure::WasmClosure + ?Sized, const UNWIND_SAFE: bool>(
+    core::marker::PhantomData<(From, To, *const T)>,
+);
+impl<
+        From: crate::describe::WasmDescribe,
+        To: crate::describe::WasmDescribe,
+        T: crate::closure::WasmClosure + ?Sized,
+        const UNWIND_SAFE: bool,
+    > CastRecClosure<From, To, T, UNWIND_SAFE>
+{
+    const RECORD: &'static crate::describe::CastRecord = &crate::describe::CastRecord {
+        from: From::SCHEMA,
+        to: To::SCHEMA,
+        invoke: if UNWIND_SAFE {
+            T::INVOKE_SHIM_ADDR_UNWIND_SAFE
+        } else {
+            T::INVOKE_SHIM_ADDR_NOT_UNWIND_SAFE
+        },
+    };
 }
 
 #[inline(never)]
 #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-unsafe extern "C" fn breaks_if_inlined<From, To>(
+unsafe extern "C" fn __wbg_cast_trampoline<From, To>(
     prim1: <From::Abi as WasmAbi>::Prim1,
     prim2: <From::Abi as WasmAbi>::Prim2,
     prim3: <From::Abi as WasmAbi>::Prim3,
@@ -140,13 +148,7 @@ where
     From: IntoWasmAbi + crate::describe::WasmDescribe,
     To: FromWasmAbi + crate::describe::WasmDescribe,
 {
-    super::__wbindgen_describe_cast(
-        FromBuf::<From>::BUF.as_ptr(),
-        FromBuf::<From>::LEN,
-        ToBuf::<To>::BUF.as_ptr(),
-        ToBuf::<To>::LEN,
-        core::ptr::null(),
-    );
+    super::__wbindgen_cast_marker(CastRec::<From, To>::RECORD as *const _ as *const ());
     // The cli rewrites this whole function to a JS adapter import
     // before it ever runs. Force each prim and the return slot to
     // be observably used via volatile reads/writes so the optimiser
@@ -159,7 +161,7 @@ where
 
 #[inline(never)]
 #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-unsafe extern "C" fn breaks_if_inlined_closure<
+unsafe extern "C" fn __wbg_cast_trampoline_closure<
     From,
     To,
     T: crate::closure::WasmClosure + ?Sized,
@@ -174,12 +176,8 @@ where
     From: IntoWasmAbi + crate::describe::WasmDescribe,
     To: FromWasmAbi + crate::describe::WasmDescribe,
 {
-    super::__wbindgen_describe_cast(
-        FromBuf::<From>::BUF.as_ptr(),
-        FromBuf::<From>::LEN,
-        ToBuf::<To>::BUF.as_ptr(),
-        ToBuf::<To>::LEN,
-        T::invoke_shim_addr::<UNWIND_SAFE>(),
+    super::__wbindgen_cast_marker(
+        CastRecClosure::<From, To, T, UNWIND_SAFE>::RECORD as *const _ as *const (),
     );
     keep_prims_alive(prim1, prim2, prim3, prim4);
     make_ret::<To>()
@@ -190,11 +188,11 @@ where
 /// of the caller. Without this, when `WasmRet<To::Abi>` is zero-sized
 /// (e.g. `To = ()`), the parameters look unused after dead-store
 /// elimination and the function's wasm signature collapses to
-/// `() -> ()`, breaking the cli-support assumption that the helper's
-/// signature carries the cast ABI.
+/// `() -> ()`, breaking the (Layer 1) cli-support assumption that the
+/// trampoline's signature carries the cast ABI.
 ///
 /// The function body is never executed at runtime: the cli rewrites
-/// the containing `breaks_if_inlined*` into a JS adapter import.
+/// the containing `__wbg_cast_trampoline*` into a JS adapter import.
 #[inline(always)]
 #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
 unsafe fn keep_prims_alive<P1, P2, P3, P4>(p1: P1, p2: P2, p3: P3, p4: P4) {
@@ -206,7 +204,7 @@ unsafe fn keep_prims_alive<P1, P2, P3, P4>(p1: P1, p2: P2, p3: P3, p4: P4) {
 /// are sourced through a volatile read so the optimiser cannot
 /// statically prove the value is uninit, dead, or zero-sized-and-
 /// thus-empty. This preserves the wasm-level return signature of the
-/// containing `breaks_if_inlined*` function across all `To`s. The
+/// containing `__wbg_cast_trampoline*` function across all `To`s. The
 /// containing function is never executed at runtime — the cli rewrites
 /// it into a JS adapter import.
 #[inline(always)]

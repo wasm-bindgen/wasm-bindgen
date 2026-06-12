@@ -148,10 +148,10 @@ macro_rules! closures {
             const IS_MUT: bool = $is_mut;
             type Static = dyn $Fn $FnArgs -> R;
             type AsMut = dyn FnMut $FnArgs -> R + '__closure;
-            #[inline(always)]
-            fn invoke_shim_addr<const UNWIND_SAFE: bool>() -> *const () {
-                invoke::<$($var,)* R, UNWIND_SAFE> as *const ()
-            }
+            const INVOKE_SHIM_ADDR_UNWIND_SAFE: *const () =
+                invoke::<$($var,)* R, true> as *const ();
+            const INVOKE_SHIM_ADDR_NOT_UNWIND_SAFE: *const () =
+                invoke::<$($var,)* R, false> as *const ();
         }
 
         impl<T, $($var,)* R> IntoWasmClosure<dyn $Fn $FnArgs -> R> for T

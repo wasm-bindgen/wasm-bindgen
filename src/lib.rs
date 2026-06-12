@@ -1301,31 +1301,19 @@ externs! {
         fn __wbindgen_object_clone_ref(idx: u32) -> u32;
         fn __wbindgen_object_drop_ref(idx: u32) -> ();
 
-        // Marker import called by `breaks_if_inlined` once per
-        // `wbg_cast::<From, To>` monomorphisation. The five arguments
-        // are all `i32.const` immediates in the linked wasm body
-        // (no runtime computation), and the `wasm-bindgen-cli`
-        // scanner reads them back to recover the cast descriptor:
-        //
-        //   from_schema_ptr / from_schema_len:
-        //     pointer + length of `<From as WasmDescribe>::SCHEMA_BUF[..SCHEMA_LEN]`.
-        //   to_schema_ptr / to_schema_len:
-        //     pointer + length of `<To as WasmDescribe>::SCHEMA_BUF[..SCHEMA_LEN]`.
-        //   invoke_addr:
-        //     for closure casts, `T::invoke_addr::<UNWIND_SAFE>()`, which folds to
-        //     the function-table slot of the per-monomorphisation invoke shim.
-        //     For non-closure casts, `null`.
+        // Marker import called by each cast trampoline
+        // (`__wbg_cast_trampoline*`) once per `wbg_cast::<From, To>`
+        // monomorphisation. The single argument is the address of a
+        // per-monomorphisation `CastRecord` static (a constant pointer
+        // into the data segment, no runtime computation); the
+        // `wasm-bindgen-cli` scanner reads it back, walks the record's
+        // `from`/`to` `Schema` trees, and reads the relocated `invoke`
+        // slot to recover the cast descriptor.
         //
         // The cli never actually executes this call; the entire
-        // `breaks_if_inlined` function is replaced by a synthesised
-        // JS-adapter import once the descriptor is recovered.
-        fn __wbindgen_describe_cast(
-            from_schema_ptr: *const u32,
-            from_schema_len: usize,
-            to_schema_ptr: *const u32,
-            to_schema_len: usize,
-            invoke_addr: *const (),
-        ) -> ();
+        // trampoline function is replaced by a synthesised JS-adapter
+        // import once the descriptor is recovered.
+        fn __wbindgen_cast_marker(record: *const ()) -> ();
 
         // Type-specific JS-value constructors. Recognized by
         // cli-support as intrinsics; the JS adapter generated for each

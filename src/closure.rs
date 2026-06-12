@@ -777,17 +777,17 @@ unsafe extern "C" fn __wbindgen_destroy_closure(a: WasmWord, b: WasmWord) {
     ));
 }
 
-// Full closure-cast descriptor in static form. The invoke address is
-// NOT included in `SCHEMA_BUF` — closure casts emit it separately as
-// an `i32.const` immediate in the marker call (see `wbg_cast_closure`
-// in `src/rt/mod.rs`), because function-pointer-to-integer casts
-// can't be const-evaluated on stable Rust. The cli reads both pieces
-// (static schema + scanned invoke addr) and composes the final
-// `Closure` descriptor.
+// Full closure-cast descriptor in `Schema`-tree form. The invoke
+// address is NOT part of this schema — closure casts carry it in the
+// `CastRecord::invoke` field instead (see `wbg_cast_closure` /
+// `CastRecClosure` in `src/rt/mod.rs`), where `fn as *const ()` is
+// const-evaluated and the linker emits a function-table-index
+// relocation. The cli reads both pieces (this schema + the relocated
+// invoke slot) and composes the final `Closure` descriptor.
 //
-// Layout in `SCHEMA_BUF`:
+// Flattened layout:
 //   [CLOSURE, owned_bit, IS_MUT, <T's closure-trait-object SCHEMA>]
-// where `T's SCHEMA` is `[FUNCTION, nargs, args..., ret, ret]`,
+// where `T's SCHEMA` is `[FUNCTION, 0, nargs, args..., ret, ret]`,
 // produced by the per-arity `WasmDescribe for dyn Fn(...) -> R + '_`
 // impls in `src/convert/closures.rs`.
 impl<T, const UNWIND_SAFE: bool> WasmDescribe for OwnedClosure<T, UNWIND_SAFE>
@@ -947,23 +947,22 @@ pub unsafe trait WasmClosure: WasmDescribe {
     /// For `dyn Fn(...) -> R` this is `dyn FnMut(...) -> R`.
     /// For `dyn FnMut(...) -> R` this is itself.
     type AsMut: ?Sized;
-    /// Address of the per-monomorphisation invoke shim. The
-    /// implementation must be `#[inline(always)] fn ...` returning
-    /// `invoke::<...> as *const ()` so the value folds to a single
-    /// `i32.const N` in the linked wasm (where N is the function-
-    /// table slot). `wasm-bindgen-cli`'s closure-cast scanner reads
-    /// that `i32.const` to recover the slot.
-    fn invoke_shim_addr<const UNWIND_SAFE: bool>() -> *const ();
+    /// Address of the per-monomorphisation invoke shim, one per
+    /// `UNWIND_SAFE` flavour, as a const-evaluable `invoke::<...> as
+    /// *const ()`. These are baked into the closure cast's
+    /// [`crate::describe::CastRecord`] `invoke` field, where the linker
+    /// lowers each to a function-table-index relocation that
+    /// `wasm-bindgen-cli` reads back from the data segment.
+    const INVOKE_SHIM_ADDR_UNWIND_SAFE: *const ();
+    const INVOKE_SHIM_ADDR_NOT_UNWIND_SAFE: *const ();
 }
 
 unsafe impl<T: WasmClosure> WasmClosure for AssertUnwindSafe<T> {
     type Static = T::Static;
     const IS_MUT: bool = T::IS_MUT;
     type AsMut = T::AsMut;
-    #[inline(always)]
-    fn invoke_shim_addr<const UNWIND_SAFE: bool>() -> *const () {
-        T::invoke_shim_addr::<UNWIND_SAFE>()
-    }
+    const INVOKE_SHIM_ADDR_UNWIND_SAFE: *const () = T::INVOKE_SHIM_ADDR_UNWIND_SAFE;
+    const INVOKE_SHIM_ADDR_NOT_UNWIND_SAFE: *const () = T::INVOKE_SHIM_ADDR_NOT_UNWIND_SAFE;
 }
 
 /// An internal trait for the `Closure` type.
