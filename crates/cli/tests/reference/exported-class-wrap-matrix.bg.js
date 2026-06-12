@@ -679,14 +679,14 @@ export class Car extends Vehicle {
     }
 }
 if (Symbol.dispose) Car.prototype[Symbol.dispose] = Car.prototype.free;
-export function __wbg___wbindgen_debug_string_56c147eb1a51f0c4(arg0, arg1) {
+export function __wbg___wbindgen_debug_string_c25b10b7971b60c3(arg0, arg1) {
     const ret = debugString(arg1);
     const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len1 = WASM_VECTOR_LEN;
     getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
     getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
 }
-export function __wbg___wbindgen_throw_bbadd78c1bac3a77(arg0, arg1) {
+export function __wbg___wbindgen_throw_ccc13625347c7d2e(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbg_animal_new(arg0) {

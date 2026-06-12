@@ -5,32 +5,32 @@ export function foo() {
     const ret = wasm.foo();
     return ret;
 }
-export function __wbg___wbindgen_debug_string_56c147eb1a51f0c4(arg0, arg1) {
+export function __wbg___wbindgen_debug_string_c25b10b7971b60c3(arg0, arg1) {
     const ret = debugString(arg1);
     const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len1 = WASM_VECTOR_LEN;
     getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
     getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
 }
-export function __wbg___wbindgen_is_function_147961669f068cd4(arg0) {
+export function __wbg___wbindgen_is_function_15c35275216996b3(arg0) {
     const ret = typeof(arg0) === 'function';
     return ret;
 }
-export function __wbg___wbindgen_is_undefined_4410e3c20a99fa97(arg0) {
+export function __wbg___wbindgen_is_undefined_7cd6cb6d875f7fdb(arg0) {
     const ret = arg0 === undefined;
     return ret;
 }
-export function __wbg___wbindgen_throw_bbadd78c1bac3a77(arg0, arg1) {
+export function __wbg___wbindgen_throw_ccc13625347c7d2e(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
-export function __wbg__wbg_cb_unref_c2301a3c9b78104b(arg0) {
+export function __wbg__wbg_cb_unref_c2016d4b91c10082(arg0) {
     arg0._wbg_cb_unref();
 }
-export function __wbg_call_ec09a4cf93377d3a() { return handleError(function (arg0, arg1, arg2) {
+export function __wbg_call_0bf56b53136c97e8() { return handleError(function (arg0, arg1, arg2) {
     const ret = arg0.call(arg1, arg2);
     return ret;
 }, arguments); }
-export function __wbg_new_typed_90c3f6c29ba36d19(arg0, arg1) {
+export function __wbg_new_typed_3023d3e943ae8820(arg0, arg1) {
     try {
         var state0 = {a: arg0, b: arg1};
         var cb0 = (arg0, arg1) => {
@@ -48,18 +48,18 @@ export function __wbg_new_typed_90c3f6c29ba36d19(arg0, arg1) {
         state0.a = 0;
     }
 }
-export function __wbg_queueMicrotask_4698f900840e3286(arg0) {
+export function __wbg_queueMicrotask_91542d1cc51b0257(arg0) {
     queueMicrotask(arg0);
 }
-export function __wbg_queueMicrotask_477a5533c7100338(arg0) {
+export function __wbg_queueMicrotask_b0f40c6e03e02773(arg0) {
     const ret = arg0.queueMicrotask;
     return ret;
 }
-export function __wbg_resolve_0183de2e8c6b1d54(arg0) {
+export function __wbg_resolve_a8ac202f67f99cbe(arg0) {
     const ret = Promise.resolve(arg0);
     return ret;
 }
-export function __wbg_run_bfa36e62cfcfdd90(arg0, arg1, arg2) {
+export function __wbg_run_a0db8e9382ccf4b3(arg0, arg1, arg2) {
     try {
         var state0 = {a: arg1, b: arg2};
         var cb0 = () => {
@@ -77,27 +77,27 @@ export function __wbg_run_bfa36e62cfcfdd90(arg0, arg1, arg2) {
         state0.a = 0;
     }
 }
-export function __wbg_static_accessor_CREATE_TASK_1a299bb85a9d1646() {
+export function __wbg_static_accessor_CREATE_TASK_a66afe1d2888f34f() {
     const ret = typeof console === 'undefined' ? null : console?.createTask;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 }
-export function __wbg_static_accessor_GLOBAL_60a4124bab7dcc9a() {
+export function __wbg_static_accessor_GLOBAL_990f8a6d4c835e19() {
     const ret = typeof global === 'undefined' ? null : global;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 }
-export function __wbg_static_accessor_GLOBAL_THIS_95ca6460658b5d13() {
+export function __wbg_static_accessor_GLOBAL_THIS_8cd237f776703592() {
     const ret = typeof globalThis === 'undefined' ? null : globalThis;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 }
-export function __wbg_static_accessor_SELF_4c95f759a91e9aae() {
+export function __wbg_static_accessor_SELF_c59cb0e504a32fd2() {
     const ret = typeof self === 'undefined' ? null : self;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 }
-export function __wbg_static_accessor_WINDOW_44b435597f9e9ee7() {
+export function __wbg_static_accessor_WINDOW_32746d839aeb5b95() {
     const ret = typeof window === 'undefined' ? null : window;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 }
-export function __wbg_then_3ea18602c6a5123b(arg0, arg1) {
+export function __wbg_then_23186d2729c19596(arg0, arg1) {
     const ret = arg0.then(arg1);
     return ret;
 }

@@ -5,6 +5,16 @@
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Removed
+
+## [0.2.124](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.122...0.2.123)
+
+### Added
+
 * Added the `--force-enable-abort-handler` CLI flag, which emits the hard-abort
   detection and `set_on_abort` machinery on `panic=abort` builds. With
   `panic=unwind` this machinery is generated automatically; the flag does
@@ -15,10 +25,6 @@
 
 * Made the internal `__wbindgen_destroy_closure` export private in the Rust API.
   [#5196](https://github.com/wasm-bindgen/wasm-bindgen/pull/5196)
-
-### Fixed
-
-### Removed
 
 ## [0.2.123](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.122...0.2.123)
 
