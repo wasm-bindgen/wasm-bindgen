@@ -17,6 +17,7 @@ mod reference;
 
 use assert_cmd::Command;
 use predicates::str;
+use std::collections::HashSet;
 use std::env;
 use std::fs;
 use std::hash::DefaultHasher;
@@ -25,6 +26,7 @@ use std::hash::Hasher;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::LazyLock;
+use std::sync::Mutex;
 use walrus::{ModuleConfig, RawCustomSection};
 use wasmparser::Payload;
 
@@ -45,6 +47,11 @@ static REPO_ROOT: LazyLock<PathBuf> = LazyLock::new(|| {
     repo_root
 });
 
+// Every `Project` must have a unique name: the name keys its build dir, wasm
+// artifact, and `pkg` output, all of which live under one shared target dir.
+// Two projects sharing a name clobber each other when tests run in parallel.
+static PROJECT_NAMES: LazyLock<Mutex<HashSet<String>>> = LazyLock::new(Mutex::default);
+
 struct Project {
     root: PathBuf,
     name: String,
@@ -57,6 +64,11 @@ struct Project {
 impl Project {
     fn new(name: impl Into<String>) -> Project {
         let name = name.into();
+        assert!(
+            PROJECT_NAMES.lock().unwrap().insert(name.clone()),
+            "duplicate Project name {name:?}: each test must use a unique name so \
+             their build dirs and wasm artifacts don't collide in parallel",
+        );
         let root = TARGET_DIR.join("cli-tests").join(&name);
         drop(fs::remove_dir_all(&root));
         fs::create_dir_all(&root).unwrap();
@@ -1370,21 +1382,29 @@ const HANDLER_LIB_RS: &str = r#"
     }
 "#;
 
-#[test]
-fn termination_abort_handler_unwind_panic() {
-    let mut project = Project::new("termination_abort_handler");
+/// Builds the abort-handler test project, writes a `node:test` harness wrapping
+/// `describe_body`, and asserts it passes. Each test must pass a unique `name`
+/// so their build dirs, wasm artifacts, and `pkg` output don't collide when run
+/// in parallel.
+fn run_abort_handler_test(
+    name: &str,
+    wasm_bindgen_args: &str,
+    build_std_unwind: bool,
+    describe_body: &str,
+) {
+    let mut project = Project::new(name);
     project.file("src/lib.rs", HANDLER_LIB_RS).file(
         "Cargo.toml",
         &format!(
             "
                 [package]
-                name = \"termination_abort_handler\"
+                name = \"{name}\"
                 authors = []
                 version = \"1.0.0\"
                 edition = '2021'
 
                 [dependencies]
-                wasm-bindgen = {{ path = '{}' }}
+                wasm-bindgen = {{ path = '{repo}' }}
 
                 [lib]
                 crate-type = ['cdylib']
@@ -1394,46 +1414,70 @@ fn termination_abort_handler_unwind_panic() {
                 [profile.dev]
                 codegen-units = 1
             ",
-            REPO_ROOT.display(),
+            name = name,
+            repo = REPO_ROOT.display(),
         ),
     );
 
-    // panic=unwind + nightly build-std required for EH catch wrappers
-    project
-        .cargo_cmd
-        .env("RUSTUP_TOOLCHAIN", "nightly")
-        .env("RUSTFLAGS", "-Cpanic=unwind")
-        .arg("-Zbuild-std=std,panic_unwind");
+    if build_std_unwind {
+        // panic=unwind + nightly build-std required for EH catch wrappers
+        project
+            .cargo_cmd
+            .env("RUSTUP_TOOLCHAIN", "nightly")
+            .env("RUSTFLAGS", "-Cpanic=unwind")
+            .arg("-Zbuild-std=std,panic_unwind");
+    }
 
-    let out_dir = project.wasm_bindgen("--target nodejs").unwrap();
+    let out_dir = project.wasm_bindgen(wasm_bindgen_args).unwrap();
 
     // Read __abort_called flag directly from linear memory after termination —
     // JS-level exports are blocked but the buffer is still readable.
-    fs::write(
-        out_dir.join("test_abort_handler.js"),
+    let preamble = format!(
         r#"
-const { describe, it } = require('node:test');
+const {{ describe, it }} = require('node:test');
 const assert = require('node:assert/strict');
 
 let wasmExports = null;
 const OrigInstance = WebAssembly.Instance;
-WebAssembly.Instance = function(module, imports) {
+WebAssembly.Instance = function(module, imports) {{
     const instance = new OrigInstance(module, imports);
     wasmExports = instance.exports;
     return instance;
-};
-const wasm = require('./termination_abort_handler.js');
+}};
+const wasm = require('./{name}.js');
 WebAssembly.Instance = OrigInstance;
 
-function abortCalled() {
+function abortCalled() {{
     const addr = wasmExports.__abort_called.value;
     return new Int32Array(wasmExports.memory.buffer)[addr / 4] !== 0;
-}
-function isTerminated() {
+}}
+function isTerminated() {{
     const addr = wasmExports.__instance_terminated.value;
     return new Int32Array(wasmExports.memory.buffer)[addr / 4] !== 0;
+}}
+"#
+    );
+    fs::write(
+        out_dir.join("test_abort_handler.js"),
+        format!("{preamble}{describe_body}"),
+    )
+    .unwrap();
+
+    Command::new("node")
+        .arg("--test")
+        .arg("test_abort_handler.js")
+        .current_dir(&out_dir)
+        .assert()
+        .success();
 }
 
+#[test]
+fn termination_abort_handler_unwind_panic() {
+    run_abort_handler_test(
+        "termination_abort_handler_unwind_panic",
+        "--target nodejs",
+        true,
+        r#"
 describe('abort handler', () => {
     it('set_on_abort returns true with panic=unwind', () => {
         assert.strictEqual(wasm.setup_abort_handler(), true);
@@ -1467,76 +1511,16 @@ describe('abort handler', () => {
     });
 });
 "#,
-    )
-    .unwrap();
-
-    Command::new("node")
-        .arg("--test")
-        .arg("test_abort_handler.js")
-        .current_dir(&out_dir)
-        .assert()
-        .success();
+    );
 }
 
 #[test]
 fn termination_abort_handler_unwind_abort1() {
-    let mut project = Project::new("termination_abort_handler");
-    project.file("src/lib.rs", HANDLER_LIB_RS).file(
-        "Cargo.toml",
-        &format!(
-            "
-                [package]
-                name = \"termination_abort_handler\"
-                authors = []
-                version = \"1.0.0\"
-                edition = '2021'
-
-                [dependencies]
-                wasm-bindgen = {{ path = '{}' }}
-
-                [lib]
-                crate-type = ['cdylib']
-
-                [workspace]
-
-                [profile.dev]
-                codegen-units = 1
-            ",
-            REPO_ROOT.display(),
-        ),
-    );
-
-    let out_dir = project
-        .wasm_bindgen("--target nodejs --force-enable-abort-handler")
-        .unwrap();
-
-    // Read __abort_called flag directly from linear memory after termination —
-    // JS-level exports are blocked but the buffer is still readable.
-    fs::write(
-        out_dir.join("test_abort_handler.js"),
+    run_abort_handler_test(
+        "termination_abort_handler_unwind_abort1",
+        "--target nodejs --force-enable-abort-handler",
+        false,
         r#"
-const { describe, it } = require('node:test');
-const assert = require('node:assert/strict');
-
-let wasmExports = null;
-const OrigInstance = WebAssembly.Instance;
-WebAssembly.Instance = function(module, imports) {
-    const instance = new OrigInstance(module, imports);
-    wasmExports = instance.exports;
-    return instance;
-};
-const wasm = require('./termination_abort_handler.js');
-WebAssembly.Instance = OrigInstance;
-
-function abortCalled() {
-    const addr = wasmExports.__abort_called.value;
-    return new Int32Array(wasmExports.memory.buffer)[addr / 4] !== 0;
-}
-function isTerminated() {
-    const addr = wasmExports.__instance_terminated.value;
-    return new Int32Array(wasmExports.memory.buffer)[addr / 4] !== 0;
-}
-
 describe('abort handler', () => {
     it('set_on_abort returns true with panic=unwind', () => {
         assert.strictEqual(wasm.setup_abort_handler(), true);
@@ -1566,76 +1550,16 @@ describe('abort handler', () => {
     });
 });
 "#,
-    )
-    .unwrap();
-
-    Command::new("node")
-        .arg("--test")
-        .arg("test_abort_handler.js")
-        .current_dir(&out_dir)
-        .assert()
-        .success();
+    );
 }
 
 #[test]
 fn termination_abort_handler_unwind_abort2() {
-    let mut project = Project::new("termination_abort_handler");
-    project.file("src/lib.rs", HANDLER_LIB_RS).file(
-        "Cargo.toml",
-        &format!(
-            "
-                [package]
-                name = \"termination_abort_handler\"
-                authors = []
-                version = \"1.0.0\"
-                edition = '2021'
-
-                [dependencies]
-                wasm-bindgen = {{ path = '{}' }}
-
-                [lib]
-                crate-type = ['cdylib']
-
-                [workspace]
-
-                [profile.dev]
-                codegen-units = 1
-            ",
-            REPO_ROOT.display(),
-        ),
-    );
-
-    let out_dir = project
-        .wasm_bindgen("--target nodejs --force-enable-abort-handler")
-        .unwrap();
-
-    // Read __abort_called flag directly from linear memory after termination —
-    // JS-level exports are blocked but the buffer is still readable.
-    fs::write(
-        out_dir.join("test_abort_handler.js"),
+    run_abort_handler_test(
+        "termination_abort_handler_unwind_abort2",
+        "--target nodejs --force-enable-abort-handler",
+        false,
         r#"
-const { describe, it } = require('node:test');
-const assert = require('node:assert/strict');
-
-let wasmExports = null;
-const OrigInstance = WebAssembly.Instance;
-WebAssembly.Instance = function(module, imports) {
-    const instance = new OrigInstance(module, imports);
-    wasmExports = instance.exports;
-    return instance;
-};
-const wasm = require('./termination_abort_handler.js');
-WebAssembly.Instance = OrigInstance;
-
-function abortCalled() {
-    const addr = wasmExports.__abort_called.value;
-    return new Int32Array(wasmExports.memory.buffer)[addr / 4] !== 0;
-}
-function isTerminated() {
-    const addr = wasmExports.__instance_terminated.value;
-    return new Int32Array(wasmExports.memory.buffer)[addr / 4] !== 0;
-}
-
 describe('abort handler', () => {
     it('set_on_abort returns true with panic=unwind', () => {
         assert.strictEqual(wasm.setup_abort_handler(), true);
@@ -1646,7 +1570,13 @@ describe('abort handler', () => {
     });
 
     it('JS import throw fires the handler and terminates the instance', () => {
-        assert.throws(() => wasm.call_throwing_import(), /JS import threw/);
+        // Under panic=abort, every JS import throw is a critical error: the
+        // catch wrapper fires the abort handler and traps instead of
+        // propagating the original error.
+        assert.throws(() => wasm.call_throwing_import(), (e) => {
+            assert.ok(e instanceof WebAssembly.RuntimeError);
+            return true;
+        });
         assert.strictEqual(abortCalled(), true);
         assert.strictEqual(isTerminated(), true);
     });
@@ -1656,76 +1586,16 @@ describe('abort handler', () => {
     });
 });
 "#,
-    )
-    .unwrap();
-
-    Command::new("node")
-        .arg("--test")
-        .arg("test_abort_handler.js")
-        .current_dir(&out_dir)
-        .assert()
-        .success();
+    );
 }
 
 #[test]
 fn termination_abort_handler_unwind_abort3() {
-    let mut project = Project::new("termination_abort_handler");
-    project.file("src/lib.rs", HANDLER_LIB_RS).file(
-        "Cargo.toml",
-        &format!(
-            "
-                [package]
-                name = \"termination_abort_handler\"
-                authors = []
-                version = \"1.0.0\"
-                edition = '2021'
-
-                [dependencies]
-                wasm-bindgen = {{ path = '{}' }}
-
-                [lib]
-                crate-type = ['cdylib']
-
-                [workspace]
-
-                [profile.dev]
-                codegen-units = 1
-            ",
-            REPO_ROOT.display(),
-        ),
-    );
-
-    let out_dir = project
-        .wasm_bindgen("--target nodejs --force-enable-abort-handler")
-        .unwrap();
-
-    // Read __abort_called flag directly from linear memory after termination —
-    // JS-level exports are blocked but the buffer is still readable.
-    fs::write(
-        out_dir.join("test_abort_handler.js"),
+    run_abort_handler_test(
+        "termination_abort_handler_unwind_abort3",
+        "--target nodejs --force-enable-abort-handler",
+        false,
         r#"
-const { describe, it } = require('node:test');
-const assert = require('node:assert/strict');
-
-let wasmExports = null;
-const OrigInstance = WebAssembly.Instance;
-WebAssembly.Instance = function(module, imports) {
-    const instance = new OrigInstance(module, imports);
-    wasmExports = instance.exports;
-    return instance;
-};
-const wasm = require('./termination_abort_handler.js');
-WebAssembly.Instance = OrigInstance;
-
-function abortCalled() {
-    const addr = wasmExports.__abort_called.value;
-    return new Int32Array(wasmExports.memory.buffer)[addr / 4] !== 0;
-}
-function isTerminated() {
-    const addr = wasmExports.__instance_terminated.value;
-    return new Int32Array(wasmExports.memory.buffer)[addr / 4] !== 0;
-}
-
 describe('abort handler', () => {
     it('set_on_abort returns true with panic=unwind', () => {
         assert.strictEqual(wasm.setup_abort_handler(), true);
@@ -1742,15 +1612,7 @@ describe('abort handler', () => {
     });
 });
 "#,
-    )
-    .unwrap();
-
-    Command::new("node")
-        .arg("--test")
-        .arg("test_abort_handler.js")
-        .current_dir(&out_dir)
-        .assert()
-        .success();
+    );
 }
 
 #[test]
