@@ -37,7 +37,7 @@ export class Test {
     }
 }
 if (Symbol.dispose) Test.prototype[Symbol.dispose] = Test.prototype.free;
-export function __wbg___wbindgen_throw_bbadd78c1bac3a77(arg0, arg1) {
+export function __wbg___wbindgen_throw_ccc13625347c7d2e(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbindgen_init_externref_table() {
