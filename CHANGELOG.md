@@ -11,7 +11,7 @@
 
 ### Removed
 
-## [0.2.124](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.122...0.2.123)
+## [0.2.125](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.123...0.2.125)
 
 ### Added
 
