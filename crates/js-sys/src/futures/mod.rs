@@ -32,6 +32,7 @@
 
 extern crate alloc;
 
+#[cfg(js_sys_unstable_apis)]
 pub mod jspi;
 
 use crate::Promise;
