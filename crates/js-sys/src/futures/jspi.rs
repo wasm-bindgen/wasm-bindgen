@@ -52,13 +52,15 @@ unsafe impl<T> Send for ThreadLocalWrapper<T> {}
 #[wasm_bindgen(inline_js = "\
 const _jspiPending  = new Array(256).fill(null);\n\
 const _jspiResolved = new Array(256).fill(null);\n\
+const _jspiRejected = new Array(256).fill(false);\n\
 export function jspi_set_pending(id, promise)  { _jspiPending[id]  = promise; }\n\
 export async function jspi_do_suspend(id) {\n\
-    try { _jspiResolved[id] = await _jspiPending[id]; }\n\
-    catch(e) { _jspiResolved[id] = e instanceof Error ? e : new Error(String(e)); }\n\
+    try { _jspiRejected[id] = false; _jspiResolved[id] = await _jspiPending[id]; }\n\
+    catch(e) { _jspiRejected[id] = true; _jspiResolved[id] = e; }\n\
 }\n\
+export function jspi_is_rejected(id)           { return _jspiRejected[id]; }\n\
 export function jspi_get_resolved(id)          { return _jspiResolved[id]; }\n\
-export function jspi_cleanup(id)               { _jspiPending[id] = _jspiResolved[id] = null; }\n\
+export function jspi_cleanup(id)               { _jspiPending[id] = _jspiResolved[id] = null; _jspiRejected[id] = false; }\n\
 const _jspiWakerMap = new Map();\n\
 export function jspi_waker_create(id) {\n\
     return new Promise(resolve => _jspiWakerMap.set(id, resolve));\n\
@@ -73,6 +75,7 @@ extern "C" {
     fn jspi_set_pending(id: u32, promise: &Promise);
     #[wasm_bindgen(suspending)]
     fn jspi_do_suspend(id: u32);
+    fn jspi_is_rejected(id: u32) -> bool;
     fn jspi_get_resolved(id: u32) -> JsValue;
     fn jspi_cleanup(id: u32);
     fn jspi_waker_create(id: u32) -> Promise;
@@ -137,10 +140,11 @@ pub fn block_on_promise(promise: &Promise) -> Result<JsValue, JsValue> {
     // #[inline(never)] so the function prologue/epilogue saves/restores
     // __stack_pointer, which JSPI does not preserve across fiber switches.
     suspend(id);
+    let rejected = jspi_is_rejected(id);
     let result = jspi_get_resolved(id);
     jspi_cleanup(id);
     release_id(id);
-    if result.is_instance_of::<crate::Error>() {
+    if rejected {
         Err(result)
     } else {
         Ok(result)
