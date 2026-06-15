@@ -5245,6 +5245,14 @@ addToLibrary({
         // Compute before builder borrows self mutably.
         let is_suspending = matches!(kind, ContextAdapterKind::Import(_))
             && self.aux.imports_with_suspending.contains(&id);
+        let is_jspi = matches!(kind, ContextAdapterKind::Export(e) if e.jspi);
+
+        if matches!(self.config.mode, OutputMode::Emscripten) && (is_jspi || is_suspending) {
+            bail!(
+                "`#[wasm_bindgen(jspi)]` and `#[wasm_bindgen(suspending)]` are not yet \
+                 supported with the emscripten target"
+            );
+        }
 
         // Construct a JS shim builder, and configure it based on the kind of
         // export that we're generating.
