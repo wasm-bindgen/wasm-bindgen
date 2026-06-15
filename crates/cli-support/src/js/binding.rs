@@ -1082,7 +1082,7 @@ fn instruction(
                 writeln!(js.pre_try, "const __jspi_stack = __jspi_stack_alloc();").unwrap();
                 writeln!(
                     js.pre_try,
-                    "wasm.__stack_pointer.value = __jspi_stack + 65536;"
+                    "wasm.__stack_pointer.value = __jspi_stack + __jspi_stack_size;"
                 )
                 .unwrap();
             }

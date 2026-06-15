@@ -411,25 +411,30 @@ impl<'a> Context<'a> {
     ///
     /// - `__jspi_sync_sp` — captures the synchronous SP so non-fiber WASM
     ///   calls between suspensions use the correct shadow stack.
-    /// - `__jspi_stack_alloc()` / `__jspi_stack_free()` — allocate/free 64 KiB
-    ///   fiber stacks via `wasm.memory.grow(1)` + a JS free-list.  Using
+    /// - `__jspi_stack_size` — per-fiber stack size in bytes (`jspi_stack_pages * 65536`).
+    /// - `__jspi_stack_alloc()` / `__jspi_stack_free()` — allocate/free fiber
+    ///   stacks via `wasm.memory.grow(N)` + a JS free-list.  Using
     ///   `memory.grow` avoids any dependency on `__wbindgen_malloc`/
     ///   `__wbindgen_free`, which may not be exported in modules that have no
     ///   string or heap-allocation JS glue.
     pub(crate) fn expose_jspi_stack_setup(&mut self) {
+        let pages = self.config.jspi_stack_pages;
+        let stack_size = pages as usize * 65536;
         self.intrinsic(
             "jspi_sync_sp".into(),
             None,
-            "let __jspi_sync_sp;\n\
-             const __jspi_stack_pool = [];\n\
-             function __jspi_stack_alloc() {\n    \
-                 if (__jspi_stack_pool.length > 0) return __jspi_stack_pool.pop();\n    \
-                 const ptr = wasm.memory.grow(1);\n    \
-                 if (ptr === -1) throw new RangeError('out of memory allocating JSPI fiber stack');\n    \
-                 return ptr * 65536;\n\
-             }\n\
-             function __jspi_stack_free(ptr) { __jspi_stack_pool.push(ptr); }"
-            .into(),
+            Cow::Owned(format!(
+                "let __jspi_sync_sp;\n\
+                 const __jspi_stack_size = {stack_size};\n\
+                 const __jspi_stack_pool = [];\n\
+                 function __jspi_stack_alloc() {{\n    \
+                     if (__jspi_stack_pool.length > 0) return __jspi_stack_pool.pop();\n    \
+                     const ptr = wasm.memory.grow({pages});\n    \
+                     if (ptr === -1) throw new RangeError('out of memory allocating JSPI fiber stack');\n    \
+                     return ptr * 65536;\n\
+                 }}\n\
+                 function __jspi_stack_free(ptr) {{ __jspi_stack_pool.push(ptr); }}"
+            )),
             &[],
         );
     }
@@ -5570,9 +5575,22 @@ addToLibrary({
                 // If this import is marked `#[wasm_bindgen(suspending)]`, wrap
                 // it with `WebAssembly.Suspending` so that calling it from WASM
                 // suspends the current fiber.
+                //
+                // The outer async wrapper saves/restores `__stack_pointer`
+                // around the suspension: JSPI preserves wasm locals but not
+                // globals, so `__stack_pointer` (a wasm global) would be
+                // clobbered if another fiber runs while this one is suspended.
+                // The `finally` block executes before the `WebAssembly.Suspending`
+                // mechanism resumes the wasm fiber, guaranteeing the correct SP
+                // is in place when execution continues.
                 let import_def = if self.aux.imports_with_suspending.contains(&id) {
+                    self.export_stack_pointer_for_jspi()?;
                     ImportDefinition::Expression(format!(
-                        "new WebAssembly.Suspending(function{code})"
+                        "((__inner) => new WebAssembly.Suspending(async function(...args) {{\n\
+                             const __sp = wasm.__stack_pointer.value;\n\
+                             try {{ return await __inner(...args); }}\n\
+                             finally {{ wasm.__stack_pointer.value = __sp; }}\n\
+                         }}))(function{code})"
                     ))
                 } else {
                     ImportDefinition::Function(code)
