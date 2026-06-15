@@ -1,3 +1,4 @@
+#![cfg(js_sys_unstable_apis)]
 //! # JSPI + Fetch Streaming Example
 //!
 //! Demonstrates using JSPI to drive `ReadableStream` I/O from plain

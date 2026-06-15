@@ -1,3 +1,4 @@
+#![cfg(js_sys_unstable_apis)]
 //! # JSPI (JS Promise Integration) Example
 //!
 //! WebAssembly JSPI lets **non-async** Rust code suspend a WASM fiber while

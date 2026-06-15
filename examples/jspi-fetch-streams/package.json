@@ -1,6 +1,9 @@
 {
   "scripts": {
-    "build": "wasm-pack build --target web --out-dir ../dist/jspi-fetch-streams",
+    "build": "cross-env RUSTFLAGS=--cfg=js_sys_unstable_apis wasm-pack build --target web --out-dir ../dist/jspi-fetch-streams",
     "postbuild": "node build-post.mjs"
+  },
+  "devDependencies": {
+    "cross-env": "catalog:"
   }
 }
