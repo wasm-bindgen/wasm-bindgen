@@ -1112,7 +1112,7 @@ fn build_arg_schema_exprs(
                 let inner_expr = schema_expr_for_type(wasm_bindgen, inner);
                 quote! {
                     & #wasm_bindgen::describe::Schema::node(
-                        #wasm_bindgen::describe::SCHEMA_NODE_WRAP,
+                        #wasm_bindgen::describe::SchemaTag::Wrap,
                         &[#wasm_bindgen::describe::LONGREF],
                         &[#inner_expr],
                     )
@@ -1159,7 +1159,7 @@ fn emit_static_descriptor_entry(
     // fixed-buffer output.
     let schema_tree = quote! {
         & #wasm_bindgen::describe::Schema::node(
-            #wasm_bindgen::describe::SCHEMA_NODE_WRAP,
+            #wasm_bindgen::describe::SchemaTag::Wrap,
             &[#wasm_bindgen::describe::FUNCTION, 0u32, #nargs],
             &[
                 #(#arg_exprs,)*
@@ -1453,7 +1453,7 @@ fn schema_expr_for_raw_closure(
     //   children: each arg's SCHEMA, then ret SCHEMA twice
     quote! {
         & #wasm_bindgen::describe::Schema::node(
-            #wasm_bindgen::describe::SCHEMA_NODE_WRAP,
+            #wasm_bindgen::describe::SchemaTag::Wrap,
             &[
                 #ref_opcode,
                 #wasm_bindgen::describe::FUNCTION,
@@ -2634,7 +2634,7 @@ impl ToTokens for ast::DynamicUnion {
             impl #wasm_bindgen::describe::WasmDescribe for #enum_name {
                 const SCHEMA: &'static #wasm_bindgen::describe::Schema =
                     & #wasm_bindgen::describe::Schema::node(
-                        #wasm_bindgen::describe::SCHEMA_NODE_WRAP,
+                        #wasm_bindgen::describe::SchemaTag::Wrap,
                         &[
                             #wasm_bindgen::describe::DYNAMIC_UNION,
                             #name_len,

@@ -144,7 +144,7 @@ macro_rules! vectors_internal {
         impl WasmDescribeVector for $t {
             // `Vec<primitive>` schema: [VECTOR, ...primitive's SCHEMA]
             const VECTOR_SCHEMA: &'static crate::describe::Schema = &crate::describe::Schema::node(
-                crate::describe::SCHEMA_NODE_WRAP,
+                crate::describe::SchemaTag::Wrap,
                 &[crate::describe::VECTOR],
                 &[<$t as crate::describe::WasmDescribe>::SCHEMA],
             );

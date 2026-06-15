@@ -795,7 +795,7 @@ where
     T: WasmClosure + ?Sized,
 {
     const SCHEMA: &'static crate::describe::Schema = &crate::describe::Schema::node(
-        crate::describe::SCHEMA_NODE_WRAP,
+        crate::describe::SchemaTag::Wrap,
         &[
             crate::describe::CLOSURE,
             /* owned */ 1,
@@ -810,7 +810,7 @@ where
     T: WasmClosure + ?Sized,
 {
     const SCHEMA: &'static crate::describe::Schema = &crate::describe::Schema::node(
-        crate::describe::SCHEMA_NODE_WRAP,
+        crate::describe::SchemaTag::Wrap,
         &[
             crate::describe::CLOSURE,
             /* owned */ 0,

@@ -82,10 +82,22 @@ pub const SYMBOL_REF: u32 = 0xFF;
 /// run followed by the flattened streams of its `children`, in order — so the
 /// tags are primarily documentation/validation aids:
 ///
-/// * `SCHEMA_NODE_LEAF` — `words` only, no children (e.g. `i32`, `JsValue`).
-/// * `SCHEMA_NODE_WRAP` — leading `words` plus one or more children (e.g.
+/// * `Leaf` — `words` only, no children (e.g. `i32`, `JsValue`).
+/// * `Wrap` — leading `words` plus one or more children (e.g.
 ///   `Option<T>`, `&T`, the closure trait-object header + arg/ret schemas).
-/// * `SCHEMA_NODE_CAT` — no `words`, children only (pure concatenation).
-pub const SCHEMA_NODE_LEAF: u32 = 0;
-pub const SCHEMA_NODE_WRAP: u32 = 1;
-pub const SCHEMA_NODE_CAT: u32 = 2;
+/// * `Cat` — no `words`, children only (pure concatenation).
+///
+/// `#[repr(u32)]` pins the discriminants so the `Schema::tag` field keeps the
+/// exact 4-byte layout the previous bare-`u32` constants produced; the
+/// CLI-side `#[repr(C)] Schema` parser is unaffected.
+#[repr(u32)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum SchemaTag {
+    /// `words` only, no children (e.g. `i32`, `JsValue`).
+    Leaf = 0,
+    /// Leading `words` plus one or more children (e.g. `Option<T>`, `&T`,
+    /// the closure trait-object header + arg/ret schemas).
+    Wrap = 1,
+    /// No `words`, children only (pure concatenation).
+    Cat = 2,
+}

@@ -45,17 +45,17 @@ pub use wasm_bindgen_shared::tys::*;
 /// are unchanged.
 #[repr(C)]
 pub struct Schema {
-    /// Structural tag: `SCHEMA_NODE_LEAF` / `SCHEMA_NODE_WRAP` /
-    /// `SCHEMA_NODE_CAT`. Informational for flattening (which is
-    /// uniform); used by the CLI as a validation/documentation aid.
-    pub tag: u32,
+    /// Structural tag (`SchemaTag::Leaf` / `Wrap` / `Cat`).
+    /// Informational for flattening (which is uniform); used by the CLI
+    /// as a validation/documentation aid.
+    pub tag: SchemaTag,
     /// Base of a `words_len`-long run of opcode words (`None` when empty).
-    pub words: Option<&'static u32>,
-    pub words_len: usize,
+    words: Option<&'static u32>,
+    words_len: usize,
     /// Base of a `children_len`-long run of child schema references
     /// (`None` when empty).
-    pub children: Option<&'static &'static Schema>,
-    pub children_len: usize,
+    children: Option<&'static &'static Schema>,
+    children_len: usize,
 }
 
 // `Schema` contains only shared references (inside `Option`), so it is
@@ -70,7 +70,7 @@ impl Schema {
     /// `children` run inside a `const fn` does not work: rvalue static
     /// promotion only happens at the call site.
     pub const fn node(
-        tag: u32,
+        tag: SchemaTag,
         words: &'static [u32],
         children: &'static [&'static Schema],
     ) -> Schema {
@@ -88,37 +88,42 @@ impl Schema {
 
     /// A leaf node: `words` only, no children.
     pub const fn leaf(words: &'static [u32]) -> Schema {
-        Schema::node(SCHEMA_NODE_LEAF, words, &[])
+        Schema::node(SchemaTag::Leaf, words, &[])
     }
-}
 
-/// Reconstruct a node's `words` run as a slice. Const-safe: the base
-/// pointer was taken from element 0 of a `'static` array of exactly
-/// `words_len` elements, so the provenance covers the whole run.
-const fn words_slice(s: &Schema) -> &[u32] {
-    match s.words {
-        // SAFETY: `p` points at the first of `s.words_len` contiguous
-        // `'static` `u32`s (it was taken via `<[u32]>::first`).
-        Some(p) => unsafe { core::slice::from_raw_parts(p, s.words_len) },
-        None => &[],
+    /// This node's run of opcode words as a slice.
+    ///
+    /// Const-safe: the base pointer was taken from element 0 of a
+    /// `'static` array of exactly `words_len` elements, so the
+    /// provenance covers the whole run.
+    pub const fn words(&self) -> &[u32] {
+        match self.words {
+            // SAFETY: `p` points at the first of `self.words_len`
+            // contiguous `'static` `u32`s (it was taken via
+            // `<[u32]>::first`).
+            Some(p) => unsafe { core::slice::from_raw_parts(p, self.words_len) },
+            None => &[],
+        }
     }
-}
 
-/// Reconstruct a node's `children` run as a slice. See [`words_slice`].
-const fn children_slice(s: &Schema) -> &[&'static Schema] {
-    match s.children {
-        // SAFETY: `p` points at the first of `s.children_len` contiguous
-        // `'static` `&Schema`s (it was taken via `<[_]>::first`).
-        Some(p) => unsafe { core::slice::from_raw_parts(p, s.children_len) },
-        None => &[],
+    /// This node's run of child schema references as a slice. See
+    /// [`Schema::words`].
+    pub const fn children(&self) -> &[&'static Schema] {
+        match self.children {
+            // SAFETY: `p` points at the first of `self.children_len`
+            // contiguous `'static` `&Schema`s (it was taken via
+            // `<[_]>::first`).
+            Some(p) => unsafe { core::slice::from_raw_parts(p, self.children_len) },
+            None => &[],
+        }
     }
 }
 
 /// Number of `u32` words the flattened schema occupies: this node's
 /// `words` plus every child's flattened length, recursively.
 pub const fn flatten_len(s: &Schema) -> usize {
-    let mut total = s.words_len;
-    let kids = children_slice(s);
+    let mut total = s.words().len();
+    let kids = s.children();
     let mut i = 0;
     while i < kids.len() {
         total += flatten_len(kids[i]);
@@ -155,14 +160,14 @@ const fn write_flat<const N: usize>(
     mut out: [u32; N],
     mut idx: usize,
 ) -> ([u32; N], usize) {
-    let words = words_slice(s);
+    let words = s.words();
     let mut i = 0;
     while i < words.len() {
         out[idx] = words[i];
         idx += 1;
         i += 1;
     }
-    let kids = children_slice(s);
+    let kids = s.children();
     let mut k = 0;
     while k < kids.len() {
         let (next, next_idx) = write_flat(kids[k], out, idx);
@@ -283,15 +288,15 @@ impl<T> WasmDescribe for NonNull<T> {
 }
 
 impl<T: WasmDescribe> WasmDescribe for [T] {
-    const SCHEMA: &'static Schema = &Schema::node(SCHEMA_NODE_WRAP, &[SLICE], &[T::SCHEMA]);
+    const SCHEMA: &'static Schema = &Schema::node(SchemaTag::Wrap, &[SLICE], &[T::SCHEMA]);
 }
 
 impl<T: WasmDescribe + ?Sized> WasmDescribe for &T {
-    const SCHEMA: &'static Schema = &Schema::node(SCHEMA_NODE_WRAP, &[REF], &[T::SCHEMA]);
+    const SCHEMA: &'static Schema = &Schema::node(SchemaTag::Wrap, &[REF], &[T::SCHEMA]);
 }
 
 impl<T: WasmDescribe + ?Sized> WasmDescribe for &mut T {
-    const SCHEMA: &'static Schema = &Schema::node(SCHEMA_NODE_WRAP, &[REFMUT], &[T::SCHEMA]);
+    const SCHEMA: &'static Schema = &Schema::node(SchemaTag::Wrap, &[REFMUT], &[T::SCHEMA]);
 }
 
 cfg_if! {
@@ -336,7 +341,7 @@ where
 }
 
 impl<T: WasmDescribe> WasmDescribe for Option<T> {
-    const SCHEMA: &'static Schema = &Schema::node(SCHEMA_NODE_WRAP, &[OPTIONAL], &[T::SCHEMA]);
+    const SCHEMA: &'static Schema = &Schema::node(SchemaTag::Wrap, &[OPTIONAL], &[T::SCHEMA]);
 }
 
 impl WasmDescribe for () {
@@ -344,7 +349,7 @@ impl WasmDescribe for () {
 }
 
 impl<T: WasmDescribe, E: Into<JsValue>> WasmDescribe for Result<T, E> {
-    const SCHEMA: &'static Schema = &Schema::node(SCHEMA_NODE_WRAP, &[RESULT], &[T::SCHEMA]);
+    const SCHEMA: &'static Schema = &Schema::node(SchemaTag::Wrap, &[RESULT], &[T::SCHEMA]);
 }
 
 impl<T: WasmDescribe> WasmDescribe for MaybeUninit<T> {
@@ -354,7 +359,7 @@ impl<T: WasmDescribe> WasmDescribe for MaybeUninit<T> {
 }
 
 impl<T: WasmDescribe> WasmDescribe for Clamped<T> {
-    const SCHEMA: &'static Schema = &Schema::node(SCHEMA_NODE_WRAP, &[CLAMPED], &[T::SCHEMA]);
+    const SCHEMA: &'static Schema = &Schema::node(SchemaTag::Wrap, &[CLAMPED], &[T::SCHEMA]);
 }
 
 impl WasmDescribe for JsError {

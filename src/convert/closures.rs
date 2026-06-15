@@ -13,7 +13,7 @@ use crate::convert::slices::WasmSlice;
 use crate::convert::traits::UpcastFrom;
 use crate::convert::RefFromWasmAbi;
 use crate::convert::{FromWasmAbi, IntoWasmAbi, ReturnWasmAbi, WasmAbi, WasmRet};
-use crate::describe::{Schema, WasmDescribe, FUNCTION, SCHEMA_NODE_WRAP};
+use crate::describe::{Schema, SchemaTag, WasmDescribe, FUNCTION};
 use crate::sys::Undefined;
 use crate::throw_str;
 use crate::JsValue;
@@ -129,7 +129,7 @@ macro_rules! closures {
                 // Header words: [FUNCTION, shim_idx placeholder, nargs].
                 const NARGS: u32 = 0 $( + closures!(@count_one $SchemaArgTy) )*;
                 &Schema::node(
-                    SCHEMA_NODE_WRAP,
+                    SchemaTag::Wrap,
                     &[FUNCTION, 0, NARGS],
                     &[
                         $( <$SchemaArgTy as WasmDescribe>::SCHEMA, )*
