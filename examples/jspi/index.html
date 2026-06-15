@@ -32,7 +32,8 @@
 <script type="module">
 // wasm-pack build --target web output lives in pkg/.
 import init, {
-    do_sleep
+    do_sleep,
+    deep_stack,
 } from "./jspi.js";
 
 const logEl = document.getElementById("log");
@@ -89,6 +90,36 @@ async function run() {
     }
     log(`         all 3 fibers done in ${elapsed.toFixed(0)} ms (ran concurrently)`);
     log("         shadow-stack isolation confirmed — no fiber corrupted another");
+    log("");
+
+    // ── Demo 3: shadow-stack depth (--jspi-stack-pages) ─────────────────────
+    // `deep_stack` uses ~96 KiB of shadow-stack space across two active frames
+    // while suspended.  The correct return value is 49152 (48 KiB × 1).
+    //
+    // With --jspi-stack-pages 1 (64 KiB, the default), the stack overflows
+    // and the return value is corrupted.  With --jspi-stack-pages 2 (128 KiB)
+    // it fits and returns the correct value.
+    //
+    // Rebuild the module to switch between the two behaviours:
+    //   overflow: RUSTFLAGS=--cfg=js_sys_unstable_apis wasm-pack build --target web
+    //   correct:  add  --jspi-stack-pages 2  via wasm-bindgen CLI flags
+    log("Demo 3: shadow-stack depth test (deep_stack) …");
+    const EXPECTED = 49152; // 48 * 1024 bytes each filled with 1
+    let actual;
+    try {
+        actual = await deep_stack();
+    } catch (e) {
+        err(`✗  deep_stack() threw: ${e}`);
+        err(`   Shadow-stack overflow likely. Rebuild with --jspi-stack-pages 2.`);
+        return;
+    }
+    if (actual === EXPECTED) {
+        log(`✓  deep_stack() = ${actual} (correct — stack did not overflow)`);
+    } else {
+        err(`✗  deep_stack() = ${actual}, expected ${EXPECTED}`);
+        err(`   Shadow-stack overflow corrupted memory.`);
+        err(`   Rebuild with --jspi-stack-pages 2 to fix this.`);
+    }
     log("");
 }
 

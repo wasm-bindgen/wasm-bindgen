@@ -109,6 +109,59 @@ Use `block_on_promise` when you hold a bare `js_sys::Promise`; use `block_on`
 when you have a `Future` (e.g. returned from a `wasm_bindgen_futures`-based
 helper or assembled with Rust async combinators).
 
+## Shadow-stack size and `--jspi-stack-pages`
+
+Each `#[wasm_bindgen(jspi)]` export allocates a fresh region of Wasm linear
+memory for its fiber's shadow stack. The size is:
+
+```
+stack_size = N × 64 KiB    (N = --jspi-stack-pages, default 1)
+```
+
+Pass the flag to the `wasm-bindgen` CLI:
+
+```sh
+wasm-bindgen target/wasm32-unknown-unknown/release/my_module.wasm \
+    --out-dir pkg --target web \
+    --jspi-stack-pages 2
+```
+
+> **Warning — no guard page.** If a fiber's shadow stack overflows, writes go
+> into adjacent linear memory and corrupt data silently. There is no trap, no
+> error, and no diagnostic output. Symptoms include garbled return values,
+> random assertion failures, and `unwrap_throw` panics at unexpected sites.
+
+> **Note — no reclamation.** Freed fiber stacks return to a JS pool; Wasm
+> linear memory never shrinks. If your application creates many concurrent
+> fibers, the pool amortises re-use, but initial `memory.grow` calls are
+> permanent.
+
+### Choosing N
+
+| Situation | Recommended N |
+|-----------|---------------|
+| Shallow call trees, small locals (typical) | 1 (default) |
+| Moderate stack depth or medium-sized locals | 2–4 |
+| Deep recursion or large stack-allocated buffers | 8–16 |
+
+The default Wasm shadow stack is considerably larger than 64 KiB (typically
+1 MiB). Code migrated from non-JSPI Rust may silently overflow a 1-page fiber
+stack. If you suspect overflow, double `N` and see whether the problem
+disappears.
+
+### Demonstrating overflow: the `deep_stack` example
+
+The `jspi` example ships a `deep_stack` export that allocates ~48 KiB per
+frame across two live frames (~96 KiB total) while suspended.
+
+| `--jspi-stack-pages` | Budget  | Outcome |
+|----------------------|---------|---------|
+| 1 (default)          | 64 KiB  | overflow → corrupted return value |
+| 2                    | 128 KiB | returns `49152` (correct) |
+
+Build and serve the example, then open `index.html`. Demo 3 reports the actual
+vs expected return value, so you can see the corruption without reading assembly.
+
 ## Full example — OPFS file system
 
 The `jspi-opfs` example demonstrates all four patterns: `#[wasm_bindgen(jspi)]`
