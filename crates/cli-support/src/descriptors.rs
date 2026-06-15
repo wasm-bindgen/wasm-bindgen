@@ -183,15 +183,11 @@ impl WasmBindgenDescriptorsSection {
         let resolved_symbols = build_symbol_table(module)?;
 
         for entry in entries {
-            let stream =
-                descriptors_section::resolve_symbols(&entry.schema_bytes, &resolved_symbols)
-                    .with_context(|| {
-                        format!(
-                            "failed to resolve symbol references in descriptor for {:?}",
-                            entry.name
-                        )
-                    })?;
-            let descriptor = Descriptor::decode(&stream);
+            let stream = entry.schema_words();
+            let descriptor = Descriptor::decode_with_symbols(&stream, Some(&resolved_symbols))
+                .with_context(|| {
+                    format!("failed to decode descriptor for {:?}", entry.name)
+                })?;
             match entry.kind {
                 DESCRIPTOR_KIND_REGULAR | DESCRIPTOR_KIND_STATIC => {
                     // STATIC entries decode the same way (`Descriptor::decode`
@@ -701,7 +697,8 @@ impl CustomSection for WasmBindgenDescriptorsSection {
     }
 }
 
-/// Build a `name -> u32` lookup for [`descriptors_section::resolve_symbols`].
+/// Build a `name -> u32` lookup for
+/// [`crate::descriptor::Descriptor::decode_with_symbols`].
 ///
 /// For each exported function present in the main function table, the
 /// map records the function-table slot index — the value the legacy

@@ -8,12 +8,13 @@
 //! Responsibilities:
 //!
 //! 1. Decode the raw section bytes into a list of [`Entry`] records.
-//! 2. Resolve any `SYMBOL_REF` slots in each entry's schema stream against
-//!    a caller-supplied `HashMap<String, u32>` of symbol-name → resolved
-//!    `u32` value (typically a function-table index).
-//! 3. Hand back a `&[u32]` stream that is byte-compatible with what the
-//!    interpreter previously produced, so the existing
-//!    `Descriptor::decode` consumes it unchanged.
+//! 2. Expose each entry's schema as a `Vec<u32>` ([`Entry::schema_words`])
+//!    that feeds directly into [`crate::descriptor::Descriptor::decode_with_symbols`].
+//!
+//! Symbol (`SYMBOL_REF`) resolution and grammar decoding are *not* done
+//! here: they share a single traversal in `crate::descriptor`, so the
+//! schema grammar lives in exactly one place and cannot drift. This module
+//! only owns the outer section framing.
 //!
 //! This module is deliberately self-contained: it has no dependency on
 //! `walrus` so it can be unit-tested with hand-built byte arrays.
@@ -21,10 +22,8 @@
 //! `crates/cli-support/src/descriptors.rs`.
 
 use anyhow::{anyhow, bail, Result};
-use std::collections::HashMap;
 use wasm_bindgen_shared::{
-    tys::SYMBOL_REF, DESCRIPTOR_FORMAT_VERSION, DESCRIPTOR_KIND_CAST, DESCRIPTOR_KIND_REGULAR,
-    DESCRIPTOR_KIND_STATIC,
+    DESCRIPTOR_FORMAT_VERSION, DESCRIPTOR_KIND_CAST, DESCRIPTOR_KIND_REGULAR, DESCRIPTOR_KIND_STATIC,
 };
 
 /// One descriptor entry recovered from the section. Only entries with a
@@ -41,11 +40,24 @@ pub struct Entry {
     /// Kind discriminator. See [`wasm_bindgen_shared::DESCRIPTOR_KIND_REGULAR`].
     pub kind: u8,
     /// Schema stream encoded as little-endian `u32`s, exactly the bytes
-    /// the legacy interpreter would have produced. `SYMBOL_REF` opcodes
-    /// (followed by a length-prefixed UTF-8 symbol name padded to 4 bytes)
-    /// remain in this stream and must be resolved by
-    /// [`resolve_symbols`] before feeding into `Descriptor::decode`.
+    /// the legacy interpreter would have produced. Any `SYMBOL_REF` slot
+    /// (a length-prefixed UTF-8 symbol name in a `FUNCTION`'s `shim_idx`
+    /// position) is resolved by
+    /// [`crate::descriptor::Descriptor::decode_with_symbols`]. Always a
+    /// multiple of 4 bytes (the parser reads `schema_word_count * 4` bytes).
     pub schema_bytes: Vec<u8>,
+}
+
+impl Entry {
+    /// The entry's schema stream as little-endian `u32` words, ready for
+    /// [`crate::descriptor::Descriptor::decode_with_symbols`]. `schema_bytes`
+    /// is always a multiple of 4 bytes by construction.
+    pub fn schema_words(&self) -> Vec<u32> {
+        self.schema_bytes
+            .chunks_exact(4)
+            .map(|c| u32::from_le_bytes([c[0], c[1], c[2], c[3]]))
+            .collect()
+    }
 }
 
 /// Statistics about a parse, useful for the caller's log output when
@@ -176,57 +188,6 @@ pub fn parse(section: &[u8]) -> Result<(Vec<Entry>, ParseStats)> {
     Ok((entries, stats))
 }
 
-/// Walk a schema byte stream and replace any `SYMBOL_REF` opcode plus its
-/// inline name payload with the resolved `u32` value from `resolved`.
-///
-/// On input the stream is a sequence of little-endian `u32` words. When the
-/// word `SYMBOL_REF` is encountered, the following layout is expected:
-///
-/// ```text
-/// SYMBOL_REF  (u32)
-/// name_len    (u32)         // length in bytes of the UTF-8 symbol name
-/// name_bytes  ([u8; n], padded to 4-byte alignment with zeros)
-/// ```
-///
-/// The output stream replaces those words with a single resolved `u32`,
-/// matching the layout the legacy interpreter would have produced (a raw
-/// function-table index in place of the original `i32.const N; call
-/// $__wbindgen_describe` pair).
-pub fn resolve_symbols(schema_bytes: &[u8], resolved: &HashMap<String, u32>) -> Result<Vec<u32>> {
-    if schema_bytes.len() % 4 != 0 {
-        bail!(
-            "schema byte length {} is not a multiple of 4",
-            schema_bytes.len()
-        );
-    }
-    let mut out = Vec::with_capacity(schema_bytes.len() / 4);
-    let mut r = Reader::new(schema_bytes);
-    while r.pos < schema_bytes.len() {
-        let word = r.u32()?;
-        if word != SYMBOL_REF {
-            out.push(word);
-            continue;
-        }
-        let name_len = r.u32()? as usize;
-        if name_len == 0 {
-            bail!("SYMBOL_REF entry has empty name");
-        }
-        let name_bytes = r.bytes(name_len)?;
-        let name = std::str::from_utf8(name_bytes)
-            .map_err(|e| anyhow!("SYMBOL_REF name is not UTF-8: {e}"))?;
-        let padding = (4 - (name_len % 4)) % 4;
-        let pad = r.bytes(padding)?;
-        if pad.iter().any(|&b| b != 0) {
-            bail!("SYMBOL_REF padding bytes for {name:?} are not zero");
-        }
-        let value = resolved.get(name).copied().ok_or_else(|| {
-            anyhow!("SYMBOL_REF target {name:?} was not found in the wasm module")
-        })?;
-        out.push(value);
-    }
-    Ok(out)
-}
-
 struct Reader<'a> {
     buf: &'a [u8],
     pos: usize,
@@ -274,6 +235,7 @@ impl<'a> Reader<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::descriptor::Descriptor;
     use wasm_bindgen_shared::tys;
 
     /// Pack the *body* of a single entry (everything after the outer
@@ -319,15 +281,20 @@ mod tests {
 
     #[test]
     fn parses_single_regular_entry() {
-        let words = [tys::FUNCTION, 0, 1, tys::I32, tys::I32];
+        // FUNCTION: shim_idx=0, nargs=1, arg=I32, ret=I32, inner_ret=I32.
+        let words = [tys::FUNCTION, 0, 1, tys::I32, tys::I32, tys::I32];
         let bytes = section(&[frame(entry_body("foo", DESCRIPTOR_KIND_REGULAR, &words))]);
         let (entries, stats) = parse(&bytes).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(stats.decoded, 1);
         assert_eq!(entries[0].name, "foo");
         assert_eq!(entries[0].kind, DESCRIPTOR_KIND_REGULAR);
-        let resolved = resolve_symbols(&entries[0].schema_bytes, &HashMap::new()).unwrap();
-        assert_eq!(resolved, words);
+        // `schema_words` round-trips the bytes, and the stream decodes
+        // through the shared grammar in `Descriptor`.
+        assert_eq!(entries[0].schema_words(), words);
+        let func = Descriptor::decode(&entries[0].schema_words()).unwrap_function();
+        assert_eq!(func.shim_idx, 0);
+        assert_eq!(func.arguments, vec![Descriptor::I32]);
     }
 
     #[test]
@@ -386,50 +353,6 @@ mod tests {
     }
 
     #[test]
-    fn resolves_symbol_ref() {
-        // Schema: REF, SYMBOL_REF, name_len=4, "shim", I32
-        let name = "shim";
-        let name_len = name.len() as u32;
-        let mut schema = Vec::new();
-        schema.extend_from_slice(&tys::REF.to_le_bytes());
-        schema.extend_from_slice(&SYMBOL_REF.to_le_bytes());
-        schema.extend_from_slice(&name_len.to_le_bytes());
-        schema.extend_from_slice(name.as_bytes());
-        // Already 4-byte aligned (len 4).
-        schema.extend_from_slice(&tys::I32.to_le_bytes());
-
-        let mut map = HashMap::new();
-        map.insert("shim".to_string(), 17);
-        let out = resolve_symbols(&schema, &map).unwrap();
-        assert_eq!(out, [tys::REF, 17, tys::I32]);
-    }
-
-    #[test]
-    fn resolves_symbol_ref_with_padding() {
-        // 5-byte name needs 3 bytes of zero padding.
-        let name = "abcde";
-        let mut schema = Vec::new();
-        schema.extend_from_slice(&SYMBOL_REF.to_le_bytes());
-        schema.extend_from_slice(&(name.len() as u32).to_le_bytes());
-        schema.extend_from_slice(name.as_bytes());
-        schema.extend_from_slice(&[0, 0, 0]); // padding
-        let mut map = HashMap::new();
-        map.insert("abcde".to_string(), 99);
-        let out = resolve_symbols(&schema, &map).unwrap();
-        assert_eq!(out, [99]);
-    }
-
-    #[test]
-    fn unresolved_symbol_is_an_error() {
-        let mut schema = Vec::new();
-        schema.extend_from_slice(&SYMBOL_REF.to_le_bytes());
-        schema.extend_from_slice(&4u32.to_le_bytes());
-        schema.extend_from_slice(b"shim");
-        let err = resolve_symbols(&schema, &HashMap::new()).unwrap_err();
-        assert!(err.to_string().contains("shim"));
-    }
-
-    #[test]
     fn unknown_kind_is_rejected() {
         let body = entry_body("x", DESCRIPTOR_KIND_REGULAR, &[]);
         let mut framed = frame(body);
@@ -471,11 +394,5 @@ mod tests {
             msg.contains("unexpected end") || msg.contains("extends past"),
             "unexpected truncation error message: {msg}"
         );
-    }
-
-    #[test]
-    fn rejects_misaligned_schema() {
-        let err = resolve_symbols(&[1, 2, 3], &HashMap::new()).unwrap_err();
-        assert!(err.to_string().contains("not a multiple of 4"));
     }
 }

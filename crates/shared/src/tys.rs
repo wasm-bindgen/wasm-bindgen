@@ -66,8 +66,16 @@ tys! {
 /// into the stream as the next `u32`. The remainder of the stream is then
 /// interpreted unchanged by `Descriptor::decode`.
 ///
-/// Chosen as `0xFF` to leave plenty of headroom above the existing dense
-/// opcode range (currently `0..=36`) for future low-numbered additions.
+/// The macro only ever emits `SYMBOL_REF` in one position: the `shim_idx`
+/// slot of a `FUNCTION` node. Because this value (`0xFF`) can also occur as
+/// *literal data* elsewhere in the stream — e.g. the codepoint `U+00FF`
+/// (`'ÿ'`) inside a name, or an `ENUM`/`STRING_ENUM` count of 255 — the
+/// `cli-support` resolver (`descriptors_section::resolve_symbols`) is
+/// **structure-aware**: it walks the same grammar as `Descriptor::decode`
+/// and only interprets `SYMBOL_REF` at that `shim_idx` slot, copying every
+/// other word (opcodes and literal data alike) through untouched. The
+/// specific numeric value is therefore not load-bearing for disambiguation;
+/// `0xFF` simply sits clear of the dense opcode range (currently `0..=36`).
 pub const SYMBOL_REF: u32 = 0xFF;
 
 /// Structural tags for the reference-based `Schema` tree (see
