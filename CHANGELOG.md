@@ -37,16 +37,15 @@
   interpretation).
 
   The construction sidesteps the `generic_const_exprs` wall
-  (rust-lang/rust#76560) by carrying every schema in a fixed-size
-  256-word buffer paired with a length. Wrapper types (`Option<T>`,
-  `Vec<T>`, `Result<T, E>`, `&T`, `&mut T`, `Clamped<T>`,
-  `MaybeUninit<T>`, closure trait objects) compose their schemas at
-  const time via `const fn`s that read the inner type's
-  `(SCHEMA_LEN, SCHEMA_BUF)` pair.
-
-* MSRV bumped from 1.77 to 1.79 for library and macro crates (the
-  cli crates were already at 1.86). Required by the const-expression
-  composition that backs the schema-buffer system.
+  (rust-lang/rust#76560) by exposing each type's schema as a single
+  `&'static Schema` tree node. Wrapper types (`Option<T>`, `Vec<T>`,
+  `Result<T, E>`, `&T`, `&mut T`, `Clamped<T>`, `MaybeUninit<T>`,
+  closure trait objects) compose **by reference** — pointing at the
+  inner type's already-built `Schema` rather than copying opcodes into
+  a buffer — and the macro flattens the tree into the descriptors
+  section at compile time. The library MSRV is unchanged at 1.77: the
+  const builders avoid `const_mut_refs` / `const_refs_to_static` (the
+  buffer-based predecessor needed 1.79).
 
 ### Removed
 
