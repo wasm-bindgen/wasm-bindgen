@@ -146,14 +146,36 @@ fn release_waker_id(id: u32) {
 pub fn block_on_promise(promise: &Promise) -> Result<JsValue, JsValue> {
     let id = alloc_id();
     jspi_set_pending(id, promise);
-    // `__stack_pointer` save/restore is handled by the CLI-generated
-    // `WebAssembly.Suspending` wrapper; `#[inline(never)]` just ensures the
-    // call boundary is visible to the optimizer.
     suspend(id);
+    // At this point `__stack_pointer` is guaranteed to hold the correct value
+    // for this fiber, regardless of how many other fibers ran while this one
+    // was suspended.  The invariant is maintained entirely in JS, not by any
+    // Rust/LLVM trick.  The execution sequence is:
+    //
+    //   1. `suspend(id)` calls `jspi_do_suspend(id)`.
+    //   2. The CLI-generated JS for that import (all `#[wasm_bindgen(suspending)]`
+    //      imports are wrapped) runs:
+    //
+    //        async function(...args) {
+    //            const __sp = wasm.__stack_pointer.value;   // ← save
+    //            try { return await __inner(...args); }      // ← fiber suspends
+    //            finally { wasm.__stack_pointer.value = __sp; } // ← restore
+    //        }
+    //
+    //   3. The `finally` block executes on the JS microtask queue BEFORE the
+    //      `WebAssembly.Suspending` mechanism delivers the resolved value back
+    //      to wasm.  The fiber does not run a single wasm instruction between
+    //      the `finally` restore and the next Rust statement here.
+    //
+    //   4. Therefore, everything that follows — `jspi_is_rejected`, `release_id`
+    //      (which calls `Vec::push` and may trigger `malloc`), and any call in
+    //      the user's code after `block_on_promise` returns — all execute with
+    //      the correct stack pointer, even after deep recursion or concurrent
+    //      fiber interleaving.
     let rejected = jspi_is_rejected(id);
     let result = jspi_get_resolved(id);
     jspi_cleanup(id);
-    release_id(id);
+    release_id(id); // Vec::push — allocates with correct SP
     if rejected {
         Err(result)
     } else {
@@ -161,6 +183,11 @@ pub fn block_on_promise(promise: &Promise) -> Result<JsValue, JsValue> {
     }
 }
 
+// `jspi_do_suspend` must not be inlined into `block_on_promise` so that
+// the two functions' wasm shadow-stack frames are distinct.  This is not
+// load-bearing for SP correctness (the JS wrapper handles that), but it
+// keeps the generated wasm readable and the call graph unambiguous for
+// future analysis.
 #[inline(never)]
 fn suspend(id: u32) {
     jspi_do_suspend(id);
