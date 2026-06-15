@@ -122,3 +122,81 @@ fn inner_frame() -> u32 {
 fn read_first(s: &[u8]) -> u8 {
     s[0]
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Example: deep recursion + post-resume heap allocation
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Stress-tests that `__stack_pointer` is correctly restored after suspension
+/// for arbitrary call depth and for heap allocations that occur after resume.
+///
+/// The call tree recurses `depth` levels deep (each frame has a 1 KiB
+/// shadow-stack local), suspends at the bottom, then allocates a `Vec` on
+/// the way back up through every frame.
+///
+/// ## Why this validates the SP-restore invariant
+///
+/// `__stack_pointer` is a Wasm *global*; JSPI preserves Wasm locals across
+/// fiber switches but **not** globals.  If another fiber runs while this one
+/// is suspended it will overwrite the global.  Correctness therefore requires
+/// that the correct SP is restored before any Wasm code in this fiber
+/// continues.
+///
+/// wasm-bindgen's generated JS wraps every `#[wasm_bindgen(suspending)]`
+/// import like this:
+///
+/// ```js
+/// async function(...args) {
+///     const __sp = wasm.__stack_pointer.value;          // save
+///     try { return await __inner(...args); }             // fiber suspends
+///     finally { wasm.__stack_pointer.value = __sp; }    // restore
+/// }
+/// ```
+///
+/// The `finally` block runs *before* the `WebAssembly.Suspending` mechanism
+/// resumes the Wasm fiber, so by the time any Rust instruction executes after
+/// `block_on_promise` returns, the SP is already correct — even after 20
+/// nested frames and even when the very next operation (`release_id` →
+/// `Vec::push` → `malloc`) allocates from the heap.
+///
+/// ## Expected return value
+///
+/// `deep_alloc(N)` returns `1000 + N*(N+1)/2`.
+/// For `deep_alloc(20)` the expected value is **1210**.
+#[wasm_bindgen(jspi)]
+pub fn deep_alloc(depth: u32) -> u32 {
+    deep_alloc_inner(depth)
+}
+
+/// Recursive helper: 1 KiB shadow-stack frame per level.
+///
+/// 20 levels × 1 KiB = 20 KiB, well within the default 1-page (64 KiB)
+/// budget, so no `--jspi-stack-pages` increase is needed.
+#[inline(never)]
+fn deep_alloc_inner(depth: u32) -> u32 {
+    // 1 KiB on the shadow stack — enough to accumulate meaningful depth while
+    // staying within the default per-fiber budget.
+    let buf = [depth as u8; 1024];
+    // Pass a reference to a non-inlined callee so LLVM allocates `buf` on the
+    // shadow stack rather than keeping it in wasm locals.
+    let _ = read_first(&buf);
+
+    if depth == 0 {
+        // Deepest frame: suspend the fiber.
+        let promise = Promise::resolve(&JsValue::UNDEFINED);
+        block_on_promise(&promise).unwrap_throw();
+        // First thing after resume: heap-allocate.  `block_on_promise` itself
+        // calls `release_id` → `Vec::push` internally, so the very first post-
+        // resume instruction is already an allocation.  This additional Vec
+        // is a second, explicit heap allocation at the deepest call depth.
+        let v: Vec<u32> = vec![1000];
+        v[0] // base value
+    } else {
+        // Recurse first, then allocate on the way back up.
+        let child = deep_alloc_inner(depth - 1);
+        // Vec allocation at every level on the return path exercises malloc
+        // with the restored SP at each call depth.
+        let v: Vec<u32> = vec![depth];
+        child + v[0]
+    }
+}

@@ -34,6 +34,7 @@
 import init, {
     do_sleep,
     deep_stack,
+    deep_alloc,
 } from "./jspi.js";
 
 const logEl = document.getElementById("log");
@@ -119,6 +120,59 @@ async function run() {
         err(`✗  deep_stack() = ${actual}, expected ${EXPECTED}`);
         err(`   Shadow-stack overflow corrupted memory.`);
         err(`   Rebuild with --jspi-stack-pages 2 to fix this.`);
+    }
+    log("");
+
+    // ── Demo 4: deep recursion + post-resume heap allocation ─────────────────
+    // `deep_alloc(20)` recurses 20 levels (each frame uses 1 KiB of shadow
+    // stack, total ~20 KiB), suspends at the bottom, then allocates a Vec at
+    // every level on the way back up.
+    //
+    // This validates that __stack_pointer is correctly restored before ANY Rust
+    // code runs after a suspension — including the Vec::push inside
+    // block_on_promise's own release_id() call and the explicit allocations in
+    // the user code.  With a wrong SP those allocations would corrupt memory.
+    //
+    // Expected: deep_alloc(N) = 1000 + N*(N+1)/2  →  deep_alloc(20) = 1210
+    log("Demo 4: deep recursion + post-resume allocation (deep_alloc(20)) …");
+    const DEPTH = 20;
+    const EXPECTED_ALLOC = 1000 + DEPTH * (DEPTH + 1) / 2; // 1210
+    let allocResult;
+    try {
+        allocResult = await deep_alloc(DEPTH);
+    } catch (e) {
+        err(`✗  deep_alloc(${DEPTH}) threw: ${e}`);
+        return;
+    }
+    if (allocResult === EXPECTED_ALLOC) {
+        log(`✓  deep_alloc(${DEPTH}) = ${allocResult} (correct)`);
+        log(`   __stack_pointer restored before resume; all 20 post-resume Vec allocations correct`);
+    } else {
+        err(`✗  deep_alloc(${DEPTH}) = ${allocResult}, expected ${EXPECTED_ALLOC}`);
+        err(`   SP not correctly restored — post-resume allocation corrupted memory`);
+    }
+    log("");
+
+    // ── Demo 5: concurrent deep-alloc fibers ─────────────────────────────────
+    // Three deep_alloc(20) fibers run concurrently.  Each is suspended at a
+    // different point in its own shadow-stack frame set.  When one fiber
+    // resumes, the JS wrapper restores *its own* saved SP before any wasm code
+    // runs — the other fibers' shadow-stack frames are never visible to it.
+    log("Demo 5: 3 × deep_alloc(20) concurrently …");
+    let concResults;
+    try {
+        concResults = await Promise.all([deep_alloc(DEPTH), deep_alloc(DEPTH), deep_alloc(DEPTH)]);
+    } catch (e) {
+        err(`✗  concurrent deep_alloc threw: ${e}`);
+        return;
+    }
+    const allCorrect = concResults.every(r => r === EXPECTED_ALLOC);
+    if (allCorrect) {
+        log(`✓  all 3 fibers returned ${EXPECTED_ALLOC} (correct)`);
+        log(`   concurrent SP isolation confirmed — no fiber corrupted another`);
+    } else {
+        err(`✗  concurrent results: ${concResults} — expected all ${EXPECTED_ALLOC}`);
+        err(`   SP isolation failure: fibers corrupted each other's allocations`);
     }
     log("");
 }
