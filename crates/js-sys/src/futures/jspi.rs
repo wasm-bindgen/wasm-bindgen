@@ -50,9 +50,9 @@ unsafe impl<T> Send for ThreadLocalWrapper<T> {}
 // coupling between Rust and JS.
 
 #[wasm_bindgen(inline_js = "\
-const _jspiPending  = new Array(256).fill(null);\n\
-const _jspiResolved = new Array(256).fill(null);\n\
-const _jspiRejected = new Array(256).fill(false);\n\
+const _jspiPending  = [];\n\
+const _jspiResolved = [];\n\
+const _jspiRejected = [];\n\
 export function jspi_set_pending(id, promise)  { _jspiPending[id]  = promise; }\n\
 export async function jspi_do_suspend(id) {\n\
     try { _jspiRejected[id] = false; _jspiResolved[id] = await _jspiPending[id]; }\n\
@@ -60,7 +60,7 @@ export async function jspi_do_suspend(id) {\n\
 }\n\
 export function jspi_is_rejected(id)           { return _jspiRejected[id]; }\n\
 export function jspi_get_resolved(id)          { return _jspiResolved[id]; }\n\
-export function jspi_cleanup(id)               { _jspiPending[id] = _jspiResolved[id] = null; _jspiRejected[id] = false; }\n\
+export function jspi_cleanup(id)               { _jspiPending[id] = _jspiResolved[id] = undefined; _jspiRejected[id] = false; }\n\
 const _jspiWakerMap = new Map();\n\
 export function jspi_waker_create(id) {\n\
     return new Promise(resolve => _jspiWakerMap.set(id, resolve));\n\
@@ -83,47 +83,56 @@ extern "C" {
     fn jspi_waker_cleanup(id: u32);
 }
 
-// ─── Suspension ID pool (up to 256 concurrent suspensions) ───────────────────
+// ─── Growable ID pool ─────────────────────────────────────────────────────────
+
+struct IdPool {
+    free: Vec<u32>,
+    next: u32,
+}
+
+impl IdPool {
+    const fn new() -> Self {
+        Self {
+            free: Vec::new(),
+            next: 0,
+        }
+    }
+
+    fn alloc(&mut self) -> u32 {
+        self.free.pop().unwrap_or_else(|| {
+            let id = self.next;
+            self.next += 1;
+            id
+        })
+    }
+
+    fn release(&mut self, id: u32) {
+        self.free.push(id);
+    }
+}
 
 #[cfg_attr(target_feature = "atomics", thread_local)]
-static FREE_IDS: ThreadLocalWrapper<RefCell<Option<Vec<u32>>>> =
-    ThreadLocalWrapper(RefCell::new(None));
+static SUSPEND_IDS: ThreadLocalWrapper<RefCell<IdPool>> =
+    ThreadLocalWrapper(RefCell::new(IdPool::new()));
 
 fn alloc_id() -> u32 {
-    FREE_IDS
-        .0
-        .borrow_mut()
-        .get_or_insert_with(|| (0u32..256).rev().collect())
-        .pop()
-        .expect_throw("exceeded 256 concurrent JSPI suspensions")
+    SUSPEND_IDS.0.borrow_mut().alloc()
 }
 
 fn release_id(id: u32) {
-    FREE_IDS.0.borrow_mut().as_mut().unwrap_throw().push(id);
+    SUSPEND_IDS.0.borrow_mut().release(id);
 }
 
-// ─── Waker ID pool (up to 256 concurrent futures) ────────────────────────────
-
 #[cfg_attr(target_feature = "atomics", thread_local)]
-static FREE_WAKER_IDS: ThreadLocalWrapper<RefCell<Option<Vec<u32>>>> =
-    ThreadLocalWrapper(RefCell::new(None));
+static WAKER_IDS: ThreadLocalWrapper<RefCell<IdPool>> =
+    ThreadLocalWrapper(RefCell::new(IdPool::new()));
 
 fn alloc_waker_id() -> u32 {
-    FREE_WAKER_IDS
-        .0
-        .borrow_mut()
-        .get_or_insert_with(|| (0u32..256).rev().collect())
-        .pop()
-        .expect_throw("exceeded 256 concurrent JSPI futures")
+    WAKER_IDS.0.borrow_mut().alloc()
 }
 
 fn release_waker_id(id: u32) {
-    FREE_WAKER_IDS
-        .0
-        .borrow_mut()
-        .as_mut()
-        .unwrap_throw()
-        .push(id);
+    WAKER_IDS.0.borrow_mut().release(id);
 }
 
 // ─── Low-level primitive: suspend on a JS Promise ────────────────────────────
@@ -137,8 +146,9 @@ fn release_waker_id(id: u32) {
 pub fn block_on_promise(promise: &Promise) -> Result<JsValue, JsValue> {
     let id = alloc_id();
     jspi_set_pending(id, promise);
-    // #[inline(never)] so the function prologue/epilogue saves/restores
-    // __stack_pointer, which JSPI does not preserve across fiber switches.
+    // `__stack_pointer` save/restore is handled by the CLI-generated
+    // `WebAssembly.Suspending` wrapper; `#[inline(never)]` just ensures the
+    // call boundary is visible to the optimizer.
     suspend(id);
     let rejected = jspi_is_rejected(id);
     let result = jspi_get_resolved(id);
