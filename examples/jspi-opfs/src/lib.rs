@@ -35,13 +35,19 @@ use web_sys::{
 // both types.
 
 fn opfs_root() -> FileSystemDirectoryHandle {
-    let global = js_sys::global();
-    let navigator = js_sys::Reflect::get(&global, &JsValue::from_str("navigator"))
+    use wasm_bindgen::JsCast;
+
+    let global = js_sys::global(); // Object<JsValue>
+    let navigator: JsValue = js_sys::Reflect::get(&global, &js_sys::JsString::from("navigator"))
+        .expect_throw("Reflect.get failed on global")
         .expect_throw("no navigator in global scope");
-    let storage = js_sys::Reflect::get(&navigator, &JsValue::from_str("storage"))
-        .expect_throw("no storage on navigator")
-        .dyn_into::<web_sys::StorageManager>()
-        .expect_throw("expected StorageManager");
+    let navigator_obj = navigator.unchecked_ref::<js_sys::Object>();
+    let storage: web_sys::StorageManager =
+        js_sys::Reflect::get(navigator_obj, &js_sys::JsString::from("storage"))
+            .expect_throw("Reflect.get failed on navigator")
+            .expect_throw("no storage on navigator")
+            .dyn_into()
+            .expect_throw("expected StorageManager");
 
     block_on_promise(&storage.get_directory())
         .expect_throw("getDirectory() failed — must run in a secure context")
