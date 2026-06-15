@@ -1,3 +1,4 @@
+#![cfg(js_sys_unstable_apis)]
 //! # JSPI + OPFS Example
 //!
 //! Demonstrates using JSPI to call the normally-async
