@@ -30,7 +30,12 @@ pub use wasm_bindgen_shared::tys::*;
 /// fields use thin base pointers plus explicit lengths (rather than
 /// `&'static [T]` fat-pointer slices, whose field order is not
 /// `#[repr(C)]`-stable) so the layout is fully determined for the CLI
-/// parser. Empty runs use `*_len == 0` with a `'static` sentinel base.
+/// parser. The bases are `Option<&'static _>`: an empty run is `None`
+/// (with `*_len == 0`), which the guaranteed null-pointer niche stores
+/// as a null word — exactly the value the CLI ignores when the length
+/// is zero. Using `Option` (instead of a `'static` sentinel base)
+/// avoids referencing a `static` inside the `const fn` builders, which
+/// keeps the minimum supported Rust version low.
 ///
 /// The flat `u32` opcode stream a schema represents is its `words`
 /// followed by each child's flattened stream, in order (see
@@ -44,29 +49,17 @@ pub struct Schema {
     /// `SCHEMA_NODE_CAT`. Informational for flattening (which is
     /// uniform); used by the CLI as a validation/documentation aid.
     pub tag: u32,
-    /// Base of a `words_len`-long run of opcode words.
-    pub words: &'static u32,
+    /// Base of a `words_len`-long run of opcode words (`None` when empty).
+    pub words: Option<&'static u32>,
     pub words_len: usize,
-    /// Base of a `children_len`-long run of child schema references.
-    pub children: &'static &'static Schema,
+    /// Base of a `children_len`-long run of child schema references
+    /// (`None` when empty).
+    pub children: Option<&'static &'static Schema>,
     pub children_len: usize,
 }
 
-// `Schema` contains only shared references, so it is automatically
-// `Sync`; the explicit empty sentinels below rely on that.
-
-/// Sentinel for empty `words` runs (`words_len == 0`); never read.
-static EMPTY_WORD: u32 = 0;
-/// Sentinel pointee for empty `children` runs (`children_len == 0`).
-static EMPTY_CHILD: Schema = Schema {
-    tag: SCHEMA_NODE_LEAF,
-    words: &EMPTY_WORD,
-    words_len: 0,
-    children: &EMPTY_CHILD_PTR,
-    children_len: 0,
-};
-/// Sentinel base pointer for empty `children` runs; never read.
-static EMPTY_CHILD_PTR: &Schema = &EMPTY_CHILD;
+// `Schema` contains only shared references (inside `Option`), so it is
+// automatically `Sync`.
 
 impl Schema {
     /// General `Schema` builder.
@@ -83,17 +76,12 @@ impl Schema {
     ) -> Schema {
         Schema {
             tag,
-            words: if words.is_empty() {
-                &EMPTY_WORD
-            } else {
-                &words[0]
-            },
+            // `first()` yields `Some(&run[0])` or `None` for an empty
+            // run — no `static` reference, so this stays valid on old
+            // compilers (`const_refs_to_static` was unstable < 1.83).
+            words: words.first(),
             words_len: words.len(),
-            children: if children.is_empty() {
-                &EMPTY_CHILD_PTR
-            } else {
-                &children[0]
-            },
+            children: children.first(),
             children_len: children.len(),
         }
     }
@@ -108,16 +96,22 @@ impl Schema {
 /// pointer was taken from element 0 of a `'static` array of exactly
 /// `words_len` elements, so the provenance covers the whole run.
 const fn words_slice(s: &Schema) -> &[u32] {
-    // SAFETY: `s.words` points at the first of `s.words_len` contiguous
-    // `'static` `u32`s (or the empty sentinel when `words_len == 0`).
-    unsafe { core::slice::from_raw_parts(s.words as *const u32, s.words_len) }
+    match s.words {
+        // SAFETY: `p` points at the first of `s.words_len` contiguous
+        // `'static` `u32`s (it was taken via `<[u32]>::first`).
+        Some(p) => unsafe { core::slice::from_raw_parts(p, s.words_len) },
+        None => &[],
+    }
 }
 
 /// Reconstruct a node's `children` run as a slice. See [`words_slice`].
 const fn children_slice(s: &Schema) -> &[&'static Schema] {
-    // SAFETY: `s.children` points at the first of `s.children_len`
-    // contiguous `'static` `&Schema`s (or the empty sentinel).
-    unsafe { core::slice::from_raw_parts(s.children as *const &'static Schema, s.children_len) }
+    match s.children {
+        // SAFETY: `p` points at the first of `s.children_len` contiguous
+        // `'static` `&Schema`s (it was taken via `<[_]>::first`).
+        Some(p) => unsafe { core::slice::from_raw_parts(p, s.children_len) },
+        None => &[],
+    }
 }
 
 /// Number of `u32` words the flattened schema occupies: this node's
@@ -139,8 +133,8 @@ pub const fn flatten_len(s: &Schema) -> usize {
 /// `N` must equal [`flatten_len`] for `s`; the macro picks it at the
 /// concrete call site (legal on stable — no generic-length arrays).
 pub const fn flatten_into<const N: usize>(s: &Schema) -> [u32; N] {
-    let mut out = [0u32; N];
-    let written = write_flat(s, &mut out, 0);
+    let out = [0u32; N];
+    let (out, written) = write_flat(s, out, 0);
     assert!(
         written == N,
         "flatten_into: N does not match flatten_len(schema)"
@@ -148,7 +142,19 @@ pub const fn flatten_into<const N: usize>(s: &Schema) -> [u32; N] {
     out
 }
 
-const fn write_flat(s: &Schema, out: &mut [u32], mut idx: usize) -> usize {
+/// Pre-order write of `s`'s flattened words into `out` starting at
+/// `idx`, returning the (moved-through) buffer and the next free index.
+///
+/// The buffer is threaded **by value** rather than via `&mut [u32]`:
+/// passing a mutable reference through a `const fn` needs `const_mut_refs`
+/// (unstable < 1.83), whereas owning the array and mutating it by index
+/// is allowed on old compilers. The extra compile-time array copies are
+/// negligible for real schema sizes.
+const fn write_flat<const N: usize>(
+    s: &Schema,
+    mut out: [u32; N],
+    mut idx: usize,
+) -> ([u32; N], usize) {
     let words = words_slice(s);
     let mut i = 0;
     while i < words.len() {
@@ -159,10 +165,12 @@ const fn write_flat(s: &Schema, out: &mut [u32], mut idx: usize) -> usize {
     let kids = children_slice(s);
     let mut k = 0;
     while k < kids.len() {
-        idx = write_flat(kids[k], out, idx);
+        let (next, next_idx) = write_flat(kids[k], out, idx);
+        out = next;
+        idx = next_idx;
         k += 1;
     }
-    idx
+    (out, idx)
 }
 
 /// One closure/plain cast's descriptor, referenced (by pointer) from a
