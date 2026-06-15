@@ -113,40 +113,46 @@ helper or assembled with Rust async combinators).
 
 The `jspi-opfs` example demonstrates all four patterns: `#[wasm_bindgen(jspi)]`
 exports, multiple sequential `block_on_promise` calls, cross-context
-`navigator.storage`, and testing with QUnit + Playwright.
+`navigator.storage`, and testing with Playwright.
 
 [View the jspi-opfs example](../examples/jspi-opfs.md)
 
 ## Testing
 
-JSPI exports require a real browser with the flag enabled; Node.js does not
-support `WebAssembly.Suspending` / `WebAssembly.promising`.
+JSPI exports require a real browser; Node.js does not support
+`WebAssembly.Suspending` / `WebAssembly.promising`. Chrome has JSPI enabled by
+default since v123, and CI runs all three JSPI examples automatically via the
+Playwright test suite.
 
 ### Building the examples
 
-```
-just build-jspi-opfs
+```sh
+cargo build -p wasm-bindgen-cli
+
+cd examples/jspi-opfs
+PATH="$(git rev-parse --show-toplevel)/target/debug:$PATH" npm run build
 ```
 
-This runs `npm run build` inside `examples/jspi-opfs/` and produces a
-ready-to-serve `examples/dist/jspi-opfs/` directory.
+This produces a ready-to-serve `examples/dist/jspi-opfs/` directory.
 
 ### Running headless Playwright tests
 
-```
-just test-jspi-examples
+```sh
+cd examples
+pnpm install
+PREBUILT_EXAMPLES=1 pnpm exec playwright test -g "jspi"
 ```
 
-Builds both JSPI examples and runs the Playwright test suite against them.
-Chrome 117+ or Firefox 150+ must be available to the Playwright runner.
+Runs all three JSPI examples (`jspi`, `jspi-opfs`, `jspi-fetch-streams`) under
+Chrome via Playwright.
 
 ### Manual testing
 
 Serve the built output from any static HTTP server (e.g. `npx serve`) over
-`localhost` or HTTPS and open `index.html` or `tests.html`.
+`localhost` or HTTPS and open `index.html`.
 
-```
+```sh
 cd examples/dist/jspi-opfs
 npx serve .
-# then open http://localhost:3000/tests.html in Chrome 117+ or Firefox 150+
+# then open http://localhost:3000/index.html in Chrome 123+
 ```
