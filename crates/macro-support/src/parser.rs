@@ -2089,6 +2089,34 @@ impl MacroParse<&ClassMarker> for &mut syn::ImplItemFn {
             ast::MethodKind::Operation(ast::Operation { is_static, kind })
         };
 
+        if function.jspi {
+            match &method_kind {
+                ast::MethodKind::Constructor => {
+                    if let Some(span) = opts.jspi() {
+                        return Err(Diagnostic::span_error(
+                            *span,
+                            "`jspi` cannot be used on constructors",
+                        ));
+                    }
+                }
+                ast::MethodKind::Operation(ast::Operation { kind, .. }) => match kind {
+                    ast::OperationKind::Getter(_)
+                    | ast::OperationKind::Setter(_)
+                    | ast::OperationKind::IndexingGetter
+                    | ast::OperationKind::IndexingSetter
+                    | ast::OperationKind::IndexingDeleter => {
+                        if let Some(span) = opts.jspi() {
+                            return Err(Diagnostic::span_error(
+                                *span,
+                                "`jspi` cannot be used on getters or setters",
+                            ));
+                        }
+                    }
+                    _ => {}
+                },
+            }
+        }
+
         // Validate that js_namespace is not used on methods
         if let Some((_, span)) = opts.js_namespace() {
             return Err(Diagnostic::span_error(

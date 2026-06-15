@@ -9068,9 +9068,6 @@ pub mod WebAssembly {
         /// raw WASM export; any JSPI suspensions that occur while the function
         /// executes will resolve the returned `Promise` when the fiber finishes.
         ///
-        /// See [`jspi_exports`][crate::jspi_exports] for a wasm-bindgen
-        /// helper that wraps all exports at once.
-        ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/promising)
         #[wasm_bindgen(js_namespace = WebAssembly)]
         pub fn promising(func: &Function) -> Function;
