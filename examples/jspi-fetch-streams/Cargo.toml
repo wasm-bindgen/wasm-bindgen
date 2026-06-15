@@ -1,6 +1,6 @@
 [package]
 authors = ["The wasm-bindgen Developers"]
-edition = "2024"
+edition = "2021"
 name = "jspi-fetch-streams"
 publish = false
 version = "0.0.0"
