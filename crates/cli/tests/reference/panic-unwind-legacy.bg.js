@@ -22,11 +22,6 @@ export function __wbg___wbindgen_rethrow_858623e73c3311dc() { return wrapError(f
 export function __wbg___wbindgen_throw_ea4887a5f8f9a9db() { return wrapError(function (arg0, arg1) {
     throw new WebAssembly.Exception(__wbindgen_wrapped_jstag, [new Error(getStringFromWasm0(arg0, arg1))]);
 }, arguments); }
-export function __wbindgen_cast_0000000000000000() { return wrapError(function (arg0, arg1) {
-    // Cast intrinsic for `Ref(String) -> Externref`.
-    const ret = getStringFromWasm0(arg0, arg1);
-    return ret;
-}, arguments); }
 export function __wbindgen_init_externref_table() { return wrapError(function () {
     const table = wasm.__wbindgen_externrefs;
     const offset = table.grow(4);
@@ -38,6 +33,10 @@ export function __wbindgen_init_externref_table() { return wrapError(function ()
 }, arguments); }
 
 export { __wbindgen_jstag_polyfill as __wbindgen_jstag };
+export function __wbindgen_string_new() { return wrapError(function (arg0, arg1) {
+    const ret = getStringFromWasm0(arg0, arg1);
+    return ret;
+}, arguments); }
 
 export { __wbindgen_wrapped_jstag };
 const __wbindgen_jstag_polyfill = new WebAssembly.Tag({ parameters: ['externref'] });

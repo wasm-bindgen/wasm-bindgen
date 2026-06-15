@@ -35,7 +35,7 @@ export function __wbg_forEach_4c5c948fbac43e8f(arg0, arg1, arg2) {
             const a = state0.a;
             state0.a = 0;
             try {
-                return __wbg_invoke_4eb65d03b312d111(a, state0.b, arg0, arg1, arg2);
+                return __wbg_invoke_55c06cab3b226b01(a, state0.b, arg0, arg1, arg2);
             } finally {
                 state0.a = a;
             }
@@ -120,8 +120,8 @@ function wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg
     wasm.wasm_bindgen__convert__closures_____invoke__h0000000000000003(arg0, arg1);
 }
 
-function __wbg_invoke_4eb65d03b312d111(arg0, arg1, arg2, arg3, arg4) {
-    wasm.__wbg_invoke_4eb65d03b312d111(arg0, arg1, arg2, arg3, arg4);
+function __wbg_invoke_55c06cab3b226b01(arg0, arg1, arg2, arg3, arg4) {
+    wasm.__wbg_invoke_55c06cab3b226b01(arg0, arg1, arg2, arg3, arg4);
 }
 
 function addToExternrefTable0(obj) {
