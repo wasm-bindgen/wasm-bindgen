@@ -117,9 +117,7 @@ const fn words_slice(s: &Schema) -> &[u32] {
 const fn children_slice(s: &Schema) -> &[&'static Schema] {
     // SAFETY: `s.children` points at the first of `s.children_len`
     // contiguous `'static` `&Schema`s (or the empty sentinel).
-    unsafe {
-        core::slice::from_raw_parts(s.children as *const &'static Schema, s.children_len)
-    }
+    unsafe { core::slice::from_raw_parts(s.children as *const &'static Schema, s.children_len) }
 }
 
 /// Number of `u32` words the flattened schema occupies: this node's

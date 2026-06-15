@@ -796,7 +796,11 @@ where
 {
     const SCHEMA: &'static crate::describe::Schema = &crate::describe::Schema::node(
         crate::describe::SCHEMA_NODE_WRAP,
-        &[crate::describe::CLOSURE, /* owned */ 1, T::IS_MUT as u32],
+        &[
+            crate::describe::CLOSURE,
+            /* owned */ 1,
+            T::IS_MUT as u32,
+        ],
         &[T::SCHEMA],
     );
 }
@@ -807,7 +811,11 @@ where
 {
     const SCHEMA: &'static crate::describe::Schema = &crate::describe::Schema::node(
         crate::describe::SCHEMA_NODE_WRAP,
-        &[crate::describe::CLOSURE, /* owned */ 0, T::IS_MUT as u32],
+        &[
+            crate::describe::CLOSURE,
+            /* owned */ 0,
+            T::IS_MUT as u32,
+        ],
         &[T::SCHEMA],
     );
 }

@@ -464,9 +464,10 @@ impl DataSegmentView {
 
         for i in 0..children_len {
             let slot = children_ptr
-                .checked_add(i.checked_mul(self.ptr_size).ok_or_else(|| {
-                    anyhow::anyhow!("schema children run length overflows")
-                })?)
+                .checked_add(
+                    i.checked_mul(self.ptr_size)
+                        .ok_or_else(|| anyhow::anyhow!("schema children run length overflows"))?,
+                )
                 .ok_or_else(|| anyhow::anyhow!("schema children pointer overflows"))?;
             let child = self.read_ptr(slot)?;
             self.read_schema_tree_into(child, out, depth + 1)?;

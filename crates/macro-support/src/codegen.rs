@@ -1733,8 +1733,7 @@ impl TryToTokens for ast::ImportType {
 
         // Schema is provided as a single `&'static Schema` const.
         // `vector_*` is the matching expr for `Vec<Self>` / `Box<[Self]>`.
-        let (schema_expr, vector_schema_expr) = if let Some(typescript_type) =
-            &self.typescript_type
+        let (schema_expr, vector_schema_expr) = if let Some(typescript_type) = &self.typescript_type
         {
             let typescript_type_len = typescript_type.len() as u32;
             let typescript_type_chars: Vec<u32> =
