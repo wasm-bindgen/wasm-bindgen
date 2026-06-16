@@ -381,7 +381,8 @@ impl Frame<'_> {
                         "Read a negative or zero address value from the stack. Did we run out of memory?"
                     );
                     let width = e.kind.width();
-                    ensure!(address % width == 0);
+                    // Also support word-aligned 8-byte types.
+                    ensure!(address % width.min(4) == 0);
                     let val = self.interp.mem[address as usize / 4];
                     if width == 4 {
                         stack.push(val)
@@ -420,7 +421,8 @@ impl Frame<'_> {
                         "Read a negative or zero address value from the stack. Did we run out of memory?"
                     );
                     let width = e.kind.width();
-                    ensure!(address % width == 0);
+                    // Also support word-aligned 8-byte types.
+                    ensure!(address % width.min(4) == 0);
                     let index = address as usize / 4;
                     if width == 8 {
                         // Oops our stack is of i32s so we can't really handle a

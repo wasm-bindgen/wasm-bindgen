@@ -261,6 +261,54 @@ fn i64_loads_and_stores() {
     interpret(wat, "foo", &[42]);
 }
 
+// Regression test: a width-8 (i64) access that is only 4-byte aligned (not
+// 8-byte aligned). `-Cinstrument-coverage` injects i64 profiler-counter
+// load/store/add into the `__wbindgen_describe_*` helpers, and those counters
+// can land on a 4-aligned (not 8-aligned) slot. The interpreter models linear
+// memory as i32 words, so 4-byte alignment is sufficient; a natural-alignment
+// check wrongly panicked with "Condition failed: `address % width == 0` (4 vs 0)".
+#[test]
+fn i64_loads_and_stores_unaligned() {
+    let wat = r#"
+        (module
+            (import "__wbindgen_placeholder__" "__wbindgen_describe"
+              (func $__wbindgen_describe (param i32)))
+
+            (global $__stack_pointer (mut i32) (i32.const 65536))
+            (memory 1)
+
+            (func $foo
+                (local i32)
+
+                global.get $__stack_pointer
+                i32.const 16
+                i32.sub
+                local.set 0
+                local.get 0
+                global.set $__stack_pointer
+
+                ;; i64.store at fp+4: the address is only 4-aligned
+                local.get 0
+                i64.const 42
+                i64.store offset=4
+
+                local.get 0
+                i64.load offset=4
+                i32.wrap_i64
+                call $__wbindgen_describe
+
+                local.get 0
+                i32.const 16
+                i32.add
+                global.set $__stack_pointer
+            )
+
+            (export "foo" (func $foo))
+        )
+    "#;
+    interpret(wat, "foo", &[42]);
+}
+
 #[test]
 fn calling_functions() {
     let wat = r#"
