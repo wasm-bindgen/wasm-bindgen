@@ -30,12 +30,19 @@ pub use wasm_bindgen_shared::tys::*;
 /// fields use thin base pointers plus explicit lengths (rather than
 /// `&'static [T]` fat-pointer slices, whose field order is not
 /// `#[repr(C)]`-stable) so the layout is fully determined for the CLI
-/// parser. The bases are `Option<&'static _>`: an empty run is `None`
-/// (with `*_len == 0`), which the guaranteed null-pointer niche stores
-/// as a null word — exactly the value the CLI ignores when the length
-/// is zero. Using `Option` (instead of a `'static` sentinel base)
-/// avoids referencing a `static` inside the `const fn` builders, which
-/// keeps the minimum supported Rust version low.
+/// parser.
+///
+/// Each base is a raw `*const` taken via `<[_]>::as_ptr`, so it carries
+/// provenance over the **whole** run — reconstructing the slice in
+/// [`Schema::words`] / [`Schema::children`] is therefore sound at
+/// runtime as well as in const-eval (a reference to element 0, by
+/// contrast, only has provenance for one element and would be UB to read
+/// past under Stacked/Tree Borrows). For an *empty* run the base is a
+/// dangling-but-aligned pointer and `*_len == 0`; every reader must
+/// check the length before touching the pointer (the accessors below and
+/// the CLI's `read_schema_tree` both do). `as_ptr` does not reference a
+/// `static`, so this stays valid on old compilers (it keeps the MSRV
+/// low — `const_refs_to_static` was unstable < 1.83).
 ///
 /// The flat `u32` opcode stream a schema represents is its `words`
 /// followed by each child's flattened stream, in order (see
@@ -49,17 +56,21 @@ pub struct Schema {
     /// Informational for flattening (which is uniform); used by the CLI
     /// as a validation/documentation aid.
     pub tag: SchemaTag,
-    /// Base of a `words_len`-long run of opcode words (`None` when empty).
-    words: Option<&'static u32>,
+    /// Base of a `words_len`-long run of opcode words. Dangling (but
+    /// aligned) when `words_len == 0`.
+    words: *const u32,
     words_len: usize,
-    /// Base of a `children_len`-long run of child schema references
-    /// (`None` when empty).
-    children: Option<&'static &'static Schema>,
+    /// Base of a `children_len`-long run of child schema references.
+    /// Dangling (but aligned) when `children_len == 0`.
+    children: *const &'static Schema,
     children_len: usize,
 }
 
-// `Schema` contains only shared references (inside `Option`), so it is
-// automatically `Sync`.
+// SAFETY: a `Schema` is only ever constructed as an immutable, promoted
+// `'static` whose raw pointers address other `'static`s; it is never
+// mutated, so sharing it across threads is sound despite the raw
+// pointers (which are what cost the auto `Sync` impl).
+unsafe impl Sync for Schema {}
 
 impl Schema {
     /// General `Schema` builder.
@@ -76,12 +87,13 @@ impl Schema {
     ) -> Schema {
         Schema {
             tag,
-            // `first()` yields `Some(&run[0])` or `None` for an empty
-            // run — no `static` reference, so this stays valid on old
-            // compilers (`const_refs_to_static` was unstable < 1.83).
-            words: words.first(),
+            // `as_ptr` gives whole-run provenance (unlike `first()`,
+            // which only covers element 0) and references no `static`,
+            // keeping the MSRV low. Empty runs yield a dangling pointer
+            // that readers must guard with `*_len == 0`.
+            words: words.as_ptr(),
             words_len: words.len(),
-            children: children.first(),
+            children: children.as_ptr(),
             children_len: children.len(),
         }
     }
@@ -92,29 +104,29 @@ impl Schema {
     }
 
     /// This node's run of opcode words as a slice.
-    ///
-    /// Const-safe: the base pointer was taken from element 0 of a
-    /// `'static` array of exactly `words_len` elements, so the
-    /// provenance covers the whole run.
     pub const fn words(&self) -> &[u32] {
-        match self.words {
-            // SAFETY: `p` points at the first of `self.words_len`
-            // contiguous `'static` `u32`s (it was taken via
-            // `<[u32]>::first`).
-            Some(p) => unsafe { core::slice::from_raw_parts(p, self.words_len) },
-            None => &[],
+        if self.words_len == 0 {
+            // The base is dangling for an empty run; never form a slice
+            // from it.
+            &[]
+        } else {
+            // SAFETY: `words` has whole-run provenance over exactly
+            // `words_len` contiguous `'static` `u32`s (taken via
+            // `<[u32]>::as_ptr`).
+            unsafe { core::slice::from_raw_parts(self.words, self.words_len) }
         }
     }
 
     /// This node's run of child schema references as a slice. See
     /// [`Schema::words`].
     pub const fn children(&self) -> &[&'static Schema] {
-        match self.children {
-            // SAFETY: `p` points at the first of `self.children_len`
-            // contiguous `'static` `&Schema`s (it was taken via
-            // `<[_]>::first`).
-            Some(p) => unsafe { core::slice::from_raw_parts(p, self.children_len) },
-            None => &[],
+        if self.children_len == 0 {
+            &[]
+        } else {
+            // SAFETY: `children` has whole-run provenance over exactly
+            // `children_len` contiguous `'static` `&Schema`s (taken via
+            // `<[_]>::as_ptr`).
+            unsafe { core::slice::from_raw_parts(self.children, self.children_len) }
         }
     }
 }

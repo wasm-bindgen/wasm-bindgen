@@ -499,6 +499,13 @@ impl DataSegmentView {
     }
 
     fn read_bytes(&self, addr: u32, count: usize) -> Result<Vec<u8>, Error> {
+        // An empty run's base pointer is a dangling-but-aligned address
+        // (the producer takes it via `<[_]>::as_ptr` on an empty slice),
+        // so it is not inside any data segment. Short-circuit before the
+        // segment scan so a zero-length read never fails on that pointer.
+        if count == 0 {
+            return Ok(Vec::new());
+        }
         for (start, bytes) in &self.segments {
             let end = start
                 .checked_add(bytes.len() as u32)

@@ -93,7 +93,11 @@ pub const SYMBOL_REF: u32 = 0xFF;
 /// * `Leaf` — `words` only, no children (e.g. `i32`, `JsValue`).
 /// * `Wrap` — leading `words` plus one or more children (e.g.
 ///   `Option<T>`, `&T`, the closure trait-object header + arg/ret schemas).
-/// * `Cat` — no `words`, children only (pure concatenation).
+/// * `Cat` — no `words`, children only (pure concatenation). Reserved: no
+///   runtime impl or macro path currently emits a `Cat` node, but the
+///   flattening rule and the CLI walker handle it like any other node (an
+///   empty `words` run followed by the children), so it is safe to start
+///   using. It is exercised by the `Schema` unit tests.
 ///
 /// `#[repr(u32)]` pins the discriminants so the `Schema::tag` field keeps the
 /// exact 4-byte layout the previous bare-`u32` constants produced; the
