@@ -79,6 +79,10 @@ pub struct FinalizedOutput {
     /// Content to write alongside the main JS as a sidecar that emcc loads
     /// with `--extern-pre-js`. Empty for non-emscripten output modes.
     pub emscripten_extern_pre_js: String,
+    /// JSON array of the clean wasm-bindgen export names, written alongside the
+    /// main JS as a `library_bindgen.exports.json` sidecar. Empty for
+    /// non-emscripten output modes.
+    pub emscripten_exports_json: String,
 }
 
 pub struct Context<'a> {
@@ -98,6 +102,12 @@ pub struct Context<'a> {
     emscripten_extern_pre_js: String,
     imports_post: String,
     export_name_list: Vec<String>,
+    /// JSON array body of the clean wasm-bindgen export names, accumulated at
+    /// the same point the `Module.<name> = <name>;` lines are emitted (the
+    /// source of truth for what's publicly exported). Written to a
+    /// `library_bindgen.exports.json` sidecar so tooling can discover the
+    /// public API in every emscripten build. Empty for non-emscripten modes.
+    emscripten_exports_json: String,
     typescript: String,
     typescript_emscripten_classes: String,
     config: &'a Bindgen,
@@ -331,6 +341,7 @@ impl<'a> Context<'a> {
             intrinsics: Some(Default::default()),
             imports_post: String::new(),
             export_name_list: Vec::new(),
+            emscripten_exports_json: String::new(),
             typescript: "/* tslint:disable */\n/* eslint-disable */\n".to_string(),
             typescript_emscripten_classes: String::new(),
             imported_names: Default::default(),
@@ -586,6 +597,12 @@ impl<'a> Context<'a> {
 
                     if export_name == id {
                         self.global(&format!("Module.{export_name} = {id};\n"));
+                        // Record the public export name for the JSON sidecar.
+                        if !self.emscripten_exports_json.is_empty() {
+                            self.emscripten_exports_json.push(',');
+                        }
+                        self.emscripten_exports_json
+                            .push_str(&format!("{export_name:?}"));
                     } else {
                         self.global(&format!("export {{ {id} as {export_name} }};\n"));
                     }
@@ -864,11 +881,18 @@ impl<'a> Context<'a> {
             ts.push_str(&node_atomics_ts);
         }
 
+        let emscripten_exports_json = if matches!(self.config.mode, OutputMode::Emscripten) {
+            format!("[{}]\n", self.emscripten_exports_json)
+        } else {
+            String::new()
+        };
+
         Ok(FinalizedOutput {
             js: self.globals.to_owned(),
             ts,
             start,
             emscripten_extern_pre_js: std::mem::take(&mut self.emscripten_extern_pre_js),
+            emscripten_exports_json,
         })
     }
 

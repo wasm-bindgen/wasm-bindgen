@@ -2345,6 +2345,80 @@ fn emscripten_namespaced_exports_valid_ts() {
     }
 }
 
+#[test]
+fn emscripten_exports_json_lists_public_api() {
+    // Every emscripten build emits `library_bindgen.exports.json`, a JSON array
+    // of the clean wasm-bindgen export names (the `Module.<name> = <name>` set),
+    // so tooling can discover the public API regardless of build flags. Private
+    // internals (e.g. a private class) must not appear.
+    let mut project = Project::new("emscripten_exports_json_lists_public_api");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen::prelude::*;
+
+            #[wasm_bindgen]
+            pub fn add(a: i32, b: i32) -> i32 {
+                a + b
+            }
+
+            #[wasm_bindgen]
+            pub struct Counter {
+                value: i32,
+            }
+
+            #[wasm_bindgen]
+            impl Counter {
+                #[wasm_bindgen(constructor)]
+                pub fn new(start: i32) -> Counter {
+                    Counter { value: start }
+                }
+            }
+        "#,
+    );
+
+    let built = project.build();
+    let mut module = ModuleConfig::new().parse_file(&built).unwrap();
+    module.customs.add(RawCustomSection {
+        name: "__wasm_bindgen_emscripten_marker".into(),
+        data: vec![1],
+    });
+    let emscripten_wasm = project.root.join("emscripten_input.wasm");
+    module.emit_wasm_file(&emscripten_wasm).unwrap();
+
+    let out_dir = project.root.join("pkg-emscripten");
+    fs::create_dir_all(&out_dir).unwrap();
+    wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
+        "wasm-bindgen".as_ref(),
+        "--out-dir".as_ref(),
+        out_dir.as_os_str(),
+        emscripten_wasm.as_os_str(),
+    ])
+    .unwrap();
+
+    let json = fs::read_to_string(out_dir.join("library_bindgen.exports.json"))
+        .expect("library_bindgen.exports.json should be emitted for emscripten builds");
+
+    // Valid JSON array of strings, containing exactly the public names.
+    let names: Vec<String> = serde_json::from_str(&json)
+        .unwrap_or_else(|e| panic!("exports json is not a JSON string array ({e}): {json}"));
+    let set: HashSet<&str> = names.iter().map(String::as_str).collect();
+    assert!(set.contains("add"), "missing `add` in exports json: {json}");
+    assert!(
+        set.contains("Counter"),
+        "missing `Counter` in exports json: {json}"
+    );
+    // No mangled wasm exports or private internals leak in.
+    assert!(
+        !set.contains("_add"),
+        "mangled wasm export leaked into exports json: {json}"
+    );
+    assert!(
+        names.iter().all(|n| !n.starts_with("__wbg")),
+        "internal `__wbg*` name leaked into exports json: {json}"
+    );
+}
+
 /// Look up an executable on `PATH`. Used so the test can opportunistically
 /// validate the generated .d.ts with `tsc` without hard-requiring it.
 fn which(name: &str) -> Option<PathBuf> {

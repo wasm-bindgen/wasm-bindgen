@@ -64,6 +64,10 @@ struct Generated {
     /// emcc loads via `--extern-pre-js`, containing ESM `import` statements
     /// that must live at module top-level. Empty for other modes.
     emscripten_extern_pre_js: String,
+    /// For `OutputMode::Emscripten` only: a JSON array of the clean
+    /// wasm-bindgen export names, written to `library_bindgen.exports.json`.
+    /// Empty for other modes.
+    emscripten_exports_json: String,
 }
 
 #[derive(Clone)]
@@ -511,6 +515,7 @@ impl Bindgen {
             ts,
             start,
             emscripten_extern_pre_js,
+            emscripten_exports_json,
         } = cx.finalize(stem)?;
         let generated = Generated {
             snippets: aux.snippets.clone(),
@@ -522,6 +527,7 @@ impl Bindgen {
             ts,
             start,
             emscripten_extern_pre_js,
+            emscripten_exports_json,
         };
 
         Ok(Output {
@@ -811,6 +817,11 @@ impl Output {
                     reset_indentation(&gen.emscripten_extern_pre_js),
                 )?;
             }
+            // The clean wasm-bindgen export names as a JSON array, so tooling
+            // can discover the public API in every emscripten build (regardless
+            // of `--emscripten-post-js`).
+            let exports_json_path = out_dir.join("library_bindgen.exports.json");
+            write(&exports_json_path, &gen.emscripten_exports_json)?;
         } else {
             write(&js_path, reset_indentation(&gen.js))?;
         }
