@@ -9,6 +9,8 @@
 
 ### Fixed
 
+* Relaxed alignment requirement for 8-byte types.
+  [#5204](https://github.com/wasm-bindgen/wasm-bindgen/pull/5204)
 * The `externref` and `multivalue` transforms now honor an explicit
   `-Ctarget-feature=+/-<feature>` advertisement in the `target_features` custom
   section. When that section is absent (for example because `strip = true`
@@ -19,6 +21,7 @@
   wrappers fail the build with "externref table required for catch wrappers". The
   fallback leaves the transforms off for `-Ctarget-cpu=mvp` builds, which have
   neither the section nor the intrinsics.
+  [5205](https://github.com/wasm-bindgen/wasm-bindgen/pull/5205)
 
 ### Removed
 
