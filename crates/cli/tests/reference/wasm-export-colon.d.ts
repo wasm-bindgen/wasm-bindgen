@@ -109,11 +109,11 @@ export interface InitOutput {
     readonly wasmbindgentestcontext_include_ignored: (a: number, b: number) => void;
     readonly wasmbindgentestcontext_new: (a: number) => number;
     readonly wasmbindgentestcontext_run: (a: number, b: number, c: number) => any;
-    readonly wasm_bindgen__convert__closures_____invoke__h0000000000000004: (a: number, b: number, c: any, d: number, e: any) => void;
-    readonly wasm_bindgen__convert__closures_____invoke__h0000000000000007: (a: number, b: number, c: any) => [number, number];
-    readonly wasm_bindgen__convert__closures_____invoke__h0000000000000005: (a: number, b: number, c: any, d: any) => void;
-    readonly wasm_bindgen__convert__closures_____invoke__h0000000000000006: (a: number, b: number) => number;
-    readonly wasm_bindgen__convert__closures_____invoke__h0000000000000003: (a: number, b: number) => void;
+    readonly __wbg_invoke_55c06cab3b226b01: (a: number, b: number, c: any, d: number, e: any) => void;
+    readonly wasm_bindgen__convert__closures_____invoke__h0000000000000001: (a: number, b: number, c: any) => [number, number];
+    readonly __wbg_invoke_169e9a83113c8e99: (a: number, b: number, c: any, d: any) => void;
+    readonly __wbg_invoke_3321153732e14c4c: (a: number, b: number) => number;
+    readonly __wbg_invoke_4b948caffd5964a6: (a: number, b: number) => void;
     readonly __externref_table_alloc: () => number;
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_malloc: (a: number, b: number) => number;

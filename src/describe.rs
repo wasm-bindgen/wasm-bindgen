@@ -9,32 +9,234 @@ use alloc::vec::Vec;
 use core::panic::AssertUnwindSafe;
 use core::{mem::MaybeUninit, ptr::NonNull};
 
-use crate::{__rt::marker::ErasableGeneric, Clamped, JsError, JsValue};
+use crate::{Clamped, JsError, JsValue};
 use cfg_if::cfg_if;
 
 pub use wasm_bindgen_shared::tys::*;
 
-#[inline(always)] // see the wasm-interpreter module
-#[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-pub fn inform(a: u32) {
-    unsafe { super::__wbindgen_describe(a) }
+/// A node in the reference-based wasm-bindgen type schema tree.
+///
+/// Each `WasmDescribe` impl exposes its schema as a single
+/// `&'static Schema`. Wrapper types (`Option<T>`, `Vec<T>`, `&T`,
+/// closures, ...) compose **by reference**: they point at the inner
+/// type's already-built `Schema` rather than copying its opcodes into
+/// a buffer. Because no array length ever depends on a generic
+/// parameter, this sidesteps the `generic_const_exprs` wall
+/// (rust-lang/rust#76560) without the old fixed-size `[u32; SCHEMA_MAX]`
+/// buffer (and its hard 256-word cap).
+///
+/// `#[repr(C)]` so `wasm-bindgen-cli-support` can parse the node out of
+/// the linked module's data segment deterministically. The structural
+/// fields use thin base pointers plus explicit lengths (rather than
+/// `&'static [T]` fat-pointer slices, whose field order is not
+/// `#[repr(C)]`-stable) so the layout is fully determined for the CLI
+/// parser.
+///
+/// Each base is a raw `*const` taken via `<[_]>::as_ptr`, so it carries
+/// provenance over the **whole** run — reconstructing the slice in
+/// [`Schema::words`] / [`Schema::children`] is therefore sound at
+/// runtime as well as in const-eval (a reference to element 0, by
+/// contrast, only has provenance for one element and would be UB to read
+/// past under Stacked/Tree Borrows). For an *empty* run the base is a
+/// dangling-but-aligned pointer and `*_len == 0`; every reader must
+/// check the length before touching the pointer (the accessors below and
+/// the CLI's `read_schema_tree` both do). `as_ptr` does not reference a
+/// `static`, so this stays valid on old compilers (it keeps the MSRV
+/// low — `const_refs_to_static` was unstable < 1.83).
+///
+/// The flat `u32` opcode stream a schema represents is its `words`
+/// followed by each child's flattened stream, in order (see
+/// [`flatten_len`] / [`flatten_into`]); this is byte-identical to the
+/// stream the previous fixed-buffer scheme produced, so the shipped
+/// `__wasm_bindgen_descriptors` wire format and `Descriptor::decode`
+/// are unchanged.
+#[repr(C)]
+pub struct Schema {
+    /// Structural tag (`SchemaTag::Leaf` / `Wrap`).
+    /// Informational for flattening (which is uniform); used by the CLI
+    /// as a validation/documentation aid.
+    pub tag: SchemaTag,
+    /// Base of a `words_len`-long run of opcode words. Dangling (but
+    /// aligned) when `words_len == 0`.
+    words: *const u32,
+    words_len: usize,
+    /// Base of a `children_len`-long run of child schema references.
+    /// Dangling (but aligned) when `children_len == 0`.
+    children: *const &'static Schema,
+    children_len: usize,
 }
 
+// SAFETY: a `Schema` is only ever constructed as an immutable, promoted
+// `'static` whose raw pointers address other `'static`s; it is never
+// mutated, so sharing it across threads is sound despite the raw
+// pointers (which are what cost the auto `Sync` impl).
+unsafe impl Sync for Schema {}
+
+impl Schema {
+    /// General `Schema` builder.
+    ///
+    /// `words` and `children` must be promotable to `'static` at the
+    /// **call site** — write them as array literals in a `const`
+    /// initializer (e.g. `&[OPTIONAL]`, `&[T::SCHEMA]`). Building the
+    /// `children` run inside a `const fn` does not work: rvalue static
+    /// promotion only happens at the call site.
+    pub const fn node(
+        tag: SchemaTag,
+        words: &'static [u32],
+        children: &'static [&'static Schema],
+    ) -> Schema {
+        Schema {
+            tag,
+            // `as_ptr` gives whole-run provenance (unlike `first()`,
+            // which only covers element 0) and references no `static`,
+            // keeping the MSRV low. Empty runs yield a dangling pointer
+            // that readers must guard with `*_len == 0`.
+            words: words.as_ptr(),
+            words_len: words.len(),
+            children: children.as_ptr(),
+            children_len: children.len(),
+        }
+    }
+
+    /// A leaf node: `words` only, no children.
+    pub const fn leaf(words: &'static [u32]) -> Schema {
+        Schema::node(SchemaTag::Leaf, words, &[])
+    }
+
+    /// This node's run of opcode words as a slice.
+    pub const fn words(&self) -> &[u32] {
+        if self.words_len == 0 {
+            // The base is dangling for an empty run; never form a slice
+            // from it.
+            &[]
+        } else {
+            // SAFETY: `words` has whole-run provenance over exactly
+            // `words_len` contiguous `'static` `u32`s (taken via
+            // `<[u32]>::as_ptr`).
+            unsafe { core::slice::from_raw_parts(self.words, self.words_len) }
+        }
+    }
+
+    /// This node's run of child schema references as a slice. See
+    /// [`Schema::words`].
+    pub const fn children(&self) -> &[&'static Schema] {
+        if self.children_len == 0 {
+            &[]
+        } else {
+            // SAFETY: `children` has whole-run provenance over exactly
+            // `children_len` contiguous `'static` `&Schema`s (taken via
+            // `<[_]>::as_ptr`).
+            unsafe { core::slice::from_raw_parts(self.children, self.children_len) }
+        }
+    }
+}
+
+/// Number of `u32` words the flattened schema occupies: this node's
+/// `words` plus every child's flattened length, recursively.
+pub const fn flatten_len(s: &Schema) -> usize {
+    let mut total = s.words().len();
+    let kids = s.children();
+    let mut i = 0;
+    while i < kids.len() {
+        total += flatten_len(kids[i]);
+        i += 1;
+    }
+    total
+}
+
+/// Flatten a schema tree into the flat `u32` opcode stream (pre-order:
+/// each node's `words` then its children's flattened streams).
+///
+/// `N` must equal [`flatten_len`] for `s`; the macro picks it at the
+/// concrete call site (legal on stable — no generic-length arrays).
+pub const fn flatten_into<const N: usize>(s: &Schema) -> [u32; N] {
+    let out = [0u32; N];
+    let (out, written) = write_flat(s, out, 0);
+    assert!(
+        written == N,
+        "flatten_into: N does not match flatten_len(schema)"
+    );
+    out
+}
+
+/// Pre-order write of `s`'s flattened words into `out` starting at
+/// `idx`, returning the (moved-through) buffer and the next free index.
+///
+/// The buffer is threaded **by value** rather than via `&mut [u32]`:
+/// passing a mutable reference through a `const fn` needs `const_mut_refs`
+/// (unstable < 1.83), whereas owning the array and mutating it by index
+/// is allowed on old compilers. The extra compile-time array copies are
+/// negligible for real schema sizes.
+const fn write_flat<const N: usize>(
+    s: &Schema,
+    mut out: [u32; N],
+    mut idx: usize,
+) -> ([u32; N], usize) {
+    let words = s.words();
+    let mut i = 0;
+    while i < words.len() {
+        out[idx] = words[i];
+        idx += 1;
+        i += 1;
+    }
+    let kids = s.children();
+    let mut k = 0;
+    while k < kids.len() {
+        let (next, next_idx) = write_flat(kids[k], out, idx);
+        out = next;
+        idx = next_idx;
+        k += 1;
+    }
+    (out, idx)
+}
+
+/// One closure/plain cast's descriptor, referenced (by pointer) from a
+/// cast trampoline's call to the `__wbindgen_cast_marker` import.
+///
+/// `#[repr(C)]` so `wasm-bindgen-cli-support` can parse it out of the
+/// linked module's data segment. `invoke` is stored as a **pointer**
+/// (not a const integer): for closure casts it is the invoke shim's
+/// function-item address (`fn as *const ()`), which the linker lowers
+/// to a function-table-index relocation the CLI reads back from the
+/// data segment; for plain casts it is null.
+#[repr(C)]
+pub struct CastRecord {
+    pub from: &'static Schema,
+    pub to: &'static Schema,
+    pub invoke: *const (),
+}
+
+// `CastRecord` holds a raw pointer (`invoke`), so it is not `Sync` by
+// default; it is only ever shared immutably as a promoted `'static`, so
+// asserting `Sync` is sound.
+unsafe impl Sync for CastRecord {}
+
+/// Describes the wasm-bindgen type schema for a type as a single
+/// `&'static Schema` tree (see [`Schema`]).
+///
+/// The `#[wasm_bindgen]` macro flattens this tree at compile time (via
+/// [`flatten_into`]) and writes the resulting words into the
+/// `__wasm_bindgen_descriptors` custom section
+/// ([`wasm_bindgen_shared::DESCRIPTORS_SECTION_NAME`]).
+/// `wasm-bindgen-cli` reads those bytes structurally — no wasm
+/// interpretation involved.
 pub trait WasmDescribe {
-    fn describe();
+    /// This type's schema tree.
+    const SCHEMA: &'static Schema;
 }
 
-/// Trait for element types to implement WasmDescribe for vectors of
-/// themselves.
+/// Trait for element types to implement `WasmDescribe` for vectors of
+/// themselves. Same shape as [`WasmDescribe`] but describes the
+/// `Vec<Self>` / `Box<[Self]>` schema rather than `Self`'s.
 pub trait WasmDescribeVector {
-    fn describe_vector();
+    /// The `Vec<Self>` / `Box<[Self]>` schema tree.
+    const VECTOR_SCHEMA: &'static Schema;
 }
 
 macro_rules! simple {
     ($($t:ident => $d:ident)*) => ($(
         impl WasmDescribe for $t {
-            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-            fn describe() { inform($d) }
+            const SCHEMA: &'static Schema = &Schema::leaf(&[$d]);
         }
     )*)
 }
@@ -86,48 +288,27 @@ cfg_if! {
 }
 
 impl<T> WasmDescribe for *const T {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(RAW_POINTER)
-    }
+    const SCHEMA: &'static Schema = &Schema::leaf(&[RAW_POINTER]);
 }
 
 impl<T> WasmDescribe for *mut T {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(RAW_POINTER)
-    }
+    const SCHEMA: &'static Schema = &Schema::leaf(&[RAW_POINTER]);
 }
 
 impl<T> WasmDescribe for NonNull<T> {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(NONNULL)
-    }
+    const SCHEMA: &'static Schema = &Schema::leaf(&[NONNULL]);
 }
 
 impl<T: WasmDescribe> WasmDescribe for [T] {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(SLICE);
-        T::describe();
-    }
+    const SCHEMA: &'static Schema = &Schema::node(SchemaTag::Wrap, &[SLICE], &[T::SCHEMA]);
 }
 
 impl<T: WasmDescribe + ?Sized> WasmDescribe for &T {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(REF);
-        T::describe();
-    }
+    const SCHEMA: &'static Schema = &Schema::node(SchemaTag::Wrap, &[REF], &[T::SCHEMA]);
 }
 
 impl<T: WasmDescribe + ?Sized> WasmDescribe for &mut T {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(REFMUT);
-        T::describe();
-    }
+    const SCHEMA: &'static Schema = &Schema::node(SchemaTag::Wrap, &[REFMUT], &[T::SCHEMA]);
 }
 
 cfg_if! {
@@ -143,81 +324,200 @@ cfg_if! {
     }
 }
 
-impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> WasmDescribeVector for T {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe_vector() {
-        inform(VECTOR);
-        T::describe();
-    }
+// Concrete `WasmDescribeVector` impls for the JsValue-erased types
+// previously covered by a blanket
+// `impl<T: ErasableGeneric<Repr=JsValue>> WasmDescribeVector for T`.
+//
+// Retaining concrete impls keeps `Vec<UserStruct>`-style
+// `VECTOR_SCHEMA` emissions inside the macro (which use
+// `NAMED_EXTERNREF` rather than the struct's own `SCHEMA`)
+// straightforward, and avoids unnecessary deep monomorphisation
+// chains in the const evaluator.
+impl WasmDescribeVector for JsValue {
+    const VECTOR_SCHEMA: &'static Schema = &Schema::leaf(&[VECTOR, EXTERNREF]);
+}
+
+impl WasmDescribeVector for JsError {
+    const VECTOR_SCHEMA: &'static Schema = &Schema::leaf(&[VECTOR, EXTERNREF]);
 }
 
 impl<T: WasmDescribeVector> WasmDescribe for Box<[T]> {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        T::describe_vector();
-    }
+    const SCHEMA: &'static Schema = T::VECTOR_SCHEMA;
 }
 
 impl<T> WasmDescribe for Vec<T>
 where
     Box<[T]>: WasmDescribe,
 {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        <Box<[T]>>::describe();
-    }
+    const SCHEMA: &'static Schema = <Box<[T]> as WasmDescribe>::SCHEMA;
 }
 
 impl<T: WasmDescribe> WasmDescribe for Option<T> {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(OPTIONAL);
-        T::describe();
-    }
+    const SCHEMA: &'static Schema = &Schema::node(SchemaTag::Wrap, &[OPTIONAL], &[T::SCHEMA]);
 }
 
 impl WasmDescribe for () {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(UNIT)
-    }
+    const SCHEMA: &'static Schema = &Schema::leaf(&[UNIT]);
 }
 
 impl<T: WasmDescribe, E: Into<JsValue>> WasmDescribe for Result<T, E> {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(RESULT);
-        T::describe();
-    }
+    const SCHEMA: &'static Schema = &Schema::node(SchemaTag::Wrap, &[RESULT], &[T::SCHEMA]);
 }
 
 impl<T: WasmDescribe> WasmDescribe for MaybeUninit<T> {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        T::describe();
-    }
+    // MaybeUninit<T> is transparent for descriptor purposes: it
+    // crosses the boundary as exactly the same shape as T.
+    const SCHEMA: &'static Schema = T::SCHEMA;
 }
 
 impl<T: WasmDescribe> WasmDescribe for Clamped<T> {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(CLAMPED);
-        T::describe();
-    }
+    const SCHEMA: &'static Schema = &Schema::node(SchemaTag::Wrap, &[CLAMPED], &[T::SCHEMA]);
 }
 
 impl WasmDescribe for JsError {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        JsValue::describe();
-    }
+    // JsError's schema is the same as JsValue's: a single EXTERNREF.
+    const SCHEMA: &'static Schema = <JsValue as WasmDescribe>::SCHEMA;
 }
 
 impl<T> WasmDescribe for AssertUnwindSafe<T>
 where
     T: WasmDescribe,
 {
-    fn describe() {
-        T::describe();
+    const SCHEMA: &'static Schema = T::SCHEMA;
+}
+
+/// Const-eval helpers used by the `#[wasm_bindgen]` macro when it emits
+/// static descriptor entries into the `__wasm_bindgen_descriptors` custom
+/// section.
+///
+/// All items here are `pub` because the macro expands code into the user's
+/// crate that refers to them by absolute path. They are not part of the
+/// public API.
+pub mod schema {
+    use wasm_bindgen_shared::{
+        DESCRIPTOR_FORMAT_VERSION, DESCRIPTOR_KIND_CAST, DESCRIPTOR_KIND_REGULAR,
+        DESCRIPTOR_KIND_STATIC,
+    };
+
+    /// Length in bytes of the body half of one descriptor section entry,
+    /// i.e. everything that follows the outer `format_version` byte and
+    /// `entry_body_byte_len` u32. Matches the format documented next to
+    /// [`wasm_bindgen_shared::DESCRIPTORS_SECTION_NAME`]:
+    ///
+    /// ```text
+    /// body bytes:
+    ///   1 (shim_name_len)
+    ///   + name_len            // shim_name UTF-8 bytes
+    ///   + 1 (kind)
+    ///   + 4 (schema_word_count u32 LE)
+    ///   + word_count * 4      // schema (u32 LE per word)
+    /// ```
+    pub const fn entry_body_byte_len(name_len: usize, word_count: usize) -> usize {
+        1 + name_len + 1 + 4 + word_count * 4
+    }
+
+    /// Total length in bytes of a packed descriptor section entry,
+    /// including the outer per-entry framing (version + body length).
+    /// This is the size of the `[u8; N]` static the macro emits.
+    pub const fn entry_byte_len(name_len: usize, word_count: usize) -> usize {
+        // 1 byte format_version + 4 bytes body_byte_len + body
+        1 + 4 + entry_body_byte_len(name_len, word_count)
+    }
+
+    /// Pack one full descriptor entry (including its per-entry framing)
+    /// into a fixed-size byte array.
+    ///
+    /// `B` must equal [`entry_byte_len`] for the given `name` and
+    /// `schema_words.len()`. The macro picks the right value at
+    /// expansion time.
+    ///
+    /// `schema_words` is a type's flattened schema opcode stream
+    /// (i.e. `&flatten_into::<N>(<T>::SCHEMA)` for some `WasmDescribe`
+    /// impl, where `N == flatten_len(<T>::SCHEMA)`).
+    ///
+    /// Layout:
+    ///
+    /// ```text
+    /// out[0]                       = DESCRIPTOR_FORMAT_VERSION
+    /// out[1..5]                    = body_byte_len (u32 LE)
+    /// out[5..5 + body_byte_len]    = body (see entry_body_byte_len)
+    /// ```
+    pub const fn pack_entry<const B: usize>(
+        name: &[u8],
+        kind: u8,
+        schema_words: &[u32],
+    ) -> [u8; B] {
+        let mut out = [0u8; B];
+        let mut i = 0;
+
+        // ----- per-entry framing -----
+        out[i] = DESCRIPTOR_FORMAT_VERSION;
+        i += 1;
+
+        let body_len = entry_body_byte_len(name.len(), schema_words.len()) as u32;
+        let body_len_bytes = body_len.to_le_bytes();
+        out[i] = body_len_bytes[0];
+        out[i + 1] = body_len_bytes[1];
+        out[i + 2] = body_len_bytes[2];
+        out[i + 3] = body_len_bytes[3];
+        i += 4;
+
+        // ----- body -----
+
+        // shim_name_len (u8). `name.len()` is bounded by 255 because the
+        // wire format only allots one byte for it; this assert catches
+        // accidental over-long names at compile time.
+        assert!(
+            name.len() <= 255,
+            "descriptor shim name longer than 255 bytes"
+        );
+        out[i] = name.len() as u8;
+        i += 1;
+
+        // shim name bytes
+        let mut j = 0;
+        while j < name.len() {
+            out[i] = name[j];
+            i += 1;
+            j += 1;
+        }
+
+        // kind byte (sanity: must be one of the known constants).
+        assert!(
+            kind == DESCRIPTOR_KIND_REGULAR
+                || kind == DESCRIPTOR_KIND_CAST
+                || kind == DESCRIPTOR_KIND_STATIC,
+            "unknown descriptor entry kind"
+        );
+        out[i] = kind;
+        i += 1;
+
+        // schema word count (u32 LE)
+        let wc = schema_words.len() as u32;
+        let wc_bytes = wc.to_le_bytes();
+        out[i] = wc_bytes[0];
+        out[i + 1] = wc_bytes[1];
+        out[i + 2] = wc_bytes[2];
+        out[i + 3] = wc_bytes[3];
+        i += 4;
+
+        // schema words (each u32 LE)
+        let mut k = 0;
+        while k < schema_words.len() {
+            let b = schema_words[k].to_le_bytes();
+            out[i] = b[0];
+            out[i + 1] = b[1];
+            out[i + 2] = b[2];
+            out[i + 3] = b[3];
+            i += 4;
+            k += 1;
+        }
+
+        // We must have used every byte of the array.
+        assert!(
+            i == B,
+            "entry size mismatch: B is wrong for this name/schema"
+        );
+        out
     }
 }

@@ -56,7 +56,7 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
-use crate::convert::{TryFromJsValue, UpcastFrom, VectorIntoWasmAbi};
+use crate::convert::{TryFromJsValue, UpcastFrom};
 use crate::sys::Promising;
 use alloc::boxed::Box;
 use alloc::string::String;
@@ -67,28 +67,6 @@ use core::ops::{
     Add, BitAnd, BitOr, BitXor, Deref, DerefMut, Div, Mul, Neg, Not, Rem, Shl, Shr, Sub,
 };
 use core::ptr::NonNull;
-
-const _: () = {
-    /// Dummy empty function provided in order to detect linker-injected functions like `__wasm_call_ctors` and others that should be skipped by the wasm-bindgen interpreter.
-    ///
-    /// ## About `__wasm_call_ctors`
-    ///
-    /// There are several ways `__wasm_call_ctors` is introduced by the linker:
-    ///
-    /// * Using `#[link_section = ".init_array"]`;
-    /// * Linking with a C library that uses `__attribute__((constructor))`.
-    ///
-    /// The Wasm linker will insert a call to the `__wasm_call_ctors` function at the beginning of every
-    /// function that your module exports if it regards a module as having "command-style linkage".
-    /// Specifically, it regards a module as having "command-style linkage" if:
-    ///
-    /// * it is not relocatable;
-    /// * it is not a position-independent executable;
-    /// * and it does not call `__wasm_call_ctors`, directly or indirectly, from any
-    ///   exported function.
-    #[no_mangle]
-    pub extern "C" fn __wbindgen_skip_interpret_calls() {}
-};
 
 macro_rules! externs {
     ($(#[$attr:meta])* extern "C" { $(fn $name:ident($($args:tt)*) -> $ret:ty;)* }) => (
@@ -157,7 +135,6 @@ pub use cache::intern::{intern, unintern};
 #[doc(hidden)]
 #[path = "rt/mod.rs"]
 pub mod __rt;
-use __rt::wbg_cast;
 
 /// Representation of an object owned by JS.
 ///
@@ -211,7 +188,12 @@ impl JsValue {
     #[allow(clippy::should_implement_trait)] // cannot fix without breaking change
     #[inline]
     pub fn from_str(s: &str) -> JsValue {
-        wbg_cast(s)
+        unsafe {
+            JsValue::_new(__wbindgen_string_new(
+                __rt::ptr_to_word(s.as_ptr()),
+                __rt::len_to_word(s.len()),
+            ))
+        }
     }
 
     /// Creates a new JS value which is a number.
@@ -220,7 +202,7 @@ impl JsValue {
     /// allocated number) and returns a handle to the JS version of it.
     #[inline]
     pub fn from_f64(n: f64) -> JsValue {
-        wbg_cast(n)
+        unsafe { JsValue::_new(__wbindgen_number_new(n)) }
     }
 
     /// Creates a new JS value which is a bigint from a string representing a number.
@@ -1036,7 +1018,7 @@ macro_rules! floats {
 floats! { f32 f64 }
 
 macro_rules! big_integers {
-    ($($n:ident)*) => ($(
+    ($($n:ident => $intrinsic:ident)*) => ($(
         impl PartialEq<$n> for JsValue {
             #[inline]
             fn eq(&self, other: &$n) -> bool {
@@ -1047,7 +1029,7 @@ macro_rules! big_integers {
         impl From<$n> for JsValue {
             #[inline]
             fn from(arg: $n) -> JsValue {
-                wbg_cast(arg)
+                unsafe { JsValue::_new($intrinsic(arg)) }
             }
         }
 
@@ -1078,10 +1060,10 @@ macro_rules! big_integers {
     )*)
 }
 
-big_integers! { i64 u64 }
+big_integers! { i64 => __wbindgen_bigint_from_i64 u64 => __wbindgen_bigint_from_u64 }
 
 macro_rules! num128 {
-    ($ty:ty, $hi_ty:ty) => {
+    ($ty:ty, $hi_ty:ty, $intrinsic:ident, $hi_cast:ty) => {
         impl PartialEq<$ty> for JsValue {
             #[inline]
             fn eq(&self, other: &$ty) -> bool {
@@ -1092,7 +1074,12 @@ macro_rules! num128 {
         impl From<$ty> for JsValue {
             #[inline]
             fn from(arg: $ty) -> JsValue {
-                wbg_cast(arg)
+                // Split into (hi, lo): high 64 bits sign-extended into
+                // an i64 for i128 or zero-extended into a u64 for u128.
+                // The JS side reconstructs via `hi << 64 | lo`.
+                let hi = (arg >> 64) as $hi_cast;
+                let lo = arg as u64;
+                unsafe { JsValue::_new($intrinsic(hi, lo)) }
             }
         }
 
@@ -1122,9 +1109,9 @@ macro_rules! num128 {
     };
 }
 
-num128!(i128, i64);
+num128!(i128, i64, __wbindgen_bigint_from_i128, i64);
 
-num128!(u128, u64);
+num128!(u128, u64, __wbindgen_bigint_from_u128, u64);
 
 impl TryFromJsValue for () {
     fn try_from_js_value_ref(value: &JsValue) -> Option<Self> {
@@ -1314,8 +1301,58 @@ externs! {
         fn __wbindgen_object_clone_ref(idx: u32) -> u32;
         fn __wbindgen_object_drop_ref(idx: u32) -> ();
 
-        fn __wbindgen_describe(v: u32) -> ();
-        fn __wbindgen_describe_cast(func: *const (), prims: *const ()) -> *const ();
+        // Marker import called by each cast trampoline
+        // (`__wbg_cast_trampoline*`) once per `wbg_cast::<From, To>`
+        // monomorphisation. The single argument is the address of a
+        // per-monomorphisation `CastRecord` static (a constant pointer
+        // into the data segment, no runtime computation); the
+        // `wasm-bindgen-cli` scanner reads it back, walks the record's
+        // `from`/`to` `Schema` trees, and reads the relocated `invoke`
+        // slot to recover the cast descriptor.
+        //
+        // The cli never actually executes this call; the entire
+        // trampoline function is replaced by a synthesised JS-adapter
+        // import once the descriptor is recovered.
+        fn __wbindgen_cast_marker(record: *const ()) -> ();
+
+        // Type-specific JS-value constructors. Recognized by
+        // cli-support as intrinsics; the JS adapter generated for each
+        // is a trivial pass-through (or, for the bigint i128/u128
+        // pair, a single `<<` + `|` combine). Used to replace
+        // per-call-site wbg_cast usage so that casts route through
+        // the regular descriptor section pathway instead of through
+        // the wasm interpreter.
+        // ptr/len arguments use `WasmWordRepr` so the wasm-level
+        // signature lowers to `(param f64 f64)` on wasm64 (matching the
+        // JS-Number ABI the cast-import path used before these became
+        // named intrinsics). `WasmWordRepr` is `u32` on wasm32, so
+        // wasm32 output is unchanged.
+        fn __wbindgen_string_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
+        fn __wbindgen_number_new(f: f64) -> u32;
+        fn __wbindgen_bigint_from_i64(n: i64) -> u32;
+        fn __wbindgen_bigint_from_u64(n: u64) -> u32;
+        fn __wbindgen_bigint_from_i128(hi: i64, lo: u64) -> u32;
+        fn __wbindgen_bigint_from_u128(hi: u64, lo: u64) -> u32;
+
+        // Typed-array constructors: take a (ptr, len) pair from a
+        // forgotten Box<[T]> and return a fresh JS typed-array handle.
+        // The JS adapter for each is a trivial identity.
+        fn __wbindgen_uint8_array_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
+        fn __wbindgen_uint8_clamped_array_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
+        fn __wbindgen_uint16_array_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
+        fn __wbindgen_uint32_array_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
+        fn __wbindgen_biguint64_array_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
+        fn __wbindgen_int8_array_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
+        fn __wbindgen_int16_array_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
+        fn __wbindgen_int32_array_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
+        fn __wbindgen_bigint64_array_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
+        fn __wbindgen_float32_array_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
+        fn __wbindgen_float64_array_new(ptr: __rt::WasmWordRepr, len: __rt::WasmWordRepr) -> u32;
+
+        // Array construction primitives for the Vec<T>/Box<[T]>
+        // generic case where T is a non-primitive convertible-to-JsValue.
+        fn __wbindgen_array_new() -> u32;
+        fn __wbindgen_array_push(arr: u32, value: u32) -> ();
     }
 }
 
@@ -1857,25 +1894,77 @@ impl From<JsError> for JsValue {
     }
 }
 
-impl<T: VectorIntoWasmAbi> From<Box<[T]>> for JsValue {
-    fn from(vector: Box<[T]>) -> Self {
-        wbg_cast(vector)
+// Per-primitive typed-array From impls. Each calls the corresponding
+// __wbindgen_*_array_new intrinsic, forgetting the Box because the JS
+// side now owns the underlying buffer.
+macro_rules! typed_arrays {
+    ($($ty:ident $ctor:ident $clamped_ctor:ident,)*) => {$(
+        impl From<Box<[$ty]>> for JsValue {
+            fn from(mut vector: Box<[$ty]>) -> Self {
+                let result = unsafe {
+                    JsValue::_new($ctor(
+                        __rt::ptr_to_word(vector.as_mut_ptr()),
+                        __rt::len_to_word(vector.len()),
+                    ))
+                };
+                core::mem::forget(vector);
+                result
+            }
+        }
+
+        impl From<Clamped<Box<[$ty]>>> for JsValue {
+            fn from(mut vector: Clamped<Box<[$ty]>>) -> Self {
+                let result = unsafe {
+                    JsValue::_new($clamped_ctor(
+                        __rt::ptr_to_word(vector.as_mut_ptr()),
+                        __rt::len_to_word(vector.len()),
+                    ))
+                };
+                core::mem::forget(vector);
+                result
+            }
+        }
+    )*};
+}
+
+typed_arrays! {
+    u8 __wbindgen_uint8_array_new __wbindgen_uint8_clamped_array_new,
+    u16 __wbindgen_uint16_array_new __wbindgen_uint16_array_new,
+    u32 __wbindgen_uint32_array_new __wbindgen_uint32_array_new,
+    u64 __wbindgen_biguint64_array_new __wbindgen_biguint64_array_new,
+    i8 __wbindgen_int8_array_new __wbindgen_int8_array_new,
+    i16 __wbindgen_int16_array_new __wbindgen_int16_array_new,
+    i32 __wbindgen_int32_array_new __wbindgen_int32_array_new,
+    i64 __wbindgen_bigint64_array_new __wbindgen_bigint64_array_new,
+    f32 __wbindgen_float32_array_new __wbindgen_float32_array_new,
+    f64 __wbindgen_float64_array_new __wbindgen_float64_array_new,
+}
+
+impl __rt::VectorIntoJsValue for JsValue {
+    fn vector_into_jsvalue(vector: Box<[JsValue]>) -> JsValue {
+        __rt::js_value_vector_into_jsvalue(vector)
     }
 }
 
-impl<T: VectorIntoWasmAbi> From<Clamped<Box<[T]>>> for JsValue {
-    fn from(vector: Clamped<Box<[T]>>) -> Self {
-        wbg_cast(vector)
+impl __rt::VectorIntoJsValue for String {
+    fn vector_into_jsvalue(vector: Box<[String]>) -> JsValue {
+        __rt::js_value_vector_into_jsvalue(vector)
     }
 }
 
-impl<T: VectorIntoWasmAbi> From<Vec<T>> for JsValue {
+impl<T> From<Vec<T>> for JsValue
+where
+    JsValue: From<Box<[T]>>,
+{
     fn from(vector: Vec<T>) -> Self {
         JsValue::from(vector.into_boxed_slice())
     }
 }
 
-impl<T: VectorIntoWasmAbi> From<Clamped<Vec<T>>> for JsValue {
+impl<T> From<Clamped<Vec<T>>> for JsValue
+where
+    JsValue: From<Clamped<Box<[T]>>>,
+{
     fn from(vector: Clamped<Vec<T>>) -> Self {
         JsValue::from(Clamped(vector.0.into_boxed_slice()))
     }

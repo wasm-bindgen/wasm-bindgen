@@ -142,11 +142,12 @@ macro_rules! vectors {
 macro_rules! vectors_internal {
     ($t:ty) => {
         impl WasmDescribeVector for $t {
-            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-            fn describe_vector() {
-                inform(VECTOR);
-                <$t>::describe();
-            }
+            // `Vec<primitive>` schema: [VECTOR, ...primitive's SCHEMA]
+            const VECTOR_SCHEMA: &'static crate::describe::Schema = &crate::describe::Schema::node(
+                crate::describe::SchemaTag::Wrap,
+                &[crate::describe::VECTOR],
+                &[<$t as crate::describe::WasmDescribe>::SCHEMA],
+            );
         }
 
         impl VectorIntoWasmAbi for $t {
@@ -243,19 +244,20 @@ vectors! {
 }
 
 impl WasmDescribeVector for String {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe_vector() {
-        inform(VECTOR);
-        inform(NAMED_EXTERNREF);
-        // Trying to use an actual loop for this breaks the Wasm interpreter.
-        inform(6);
-        inform('s' as u32);
-        inform('t' as u32);
-        inform('r' as u32);
-        inform('i' as u32);
-        inform('n' as u32);
-        inform('g' as u32);
-    }
+    // Vec<String> crosses the boundary as a JS array of
+    // named-externref ("string") handles, not as a flat sequence
+    // of STRING descriptors.
+    const VECTOR_SCHEMA: &'static crate::describe::Schema = &crate::describe::Schema::leaf(&[
+        VECTOR,
+        NAMED_EXTERNREF,
+        6,
+        's' as u32,
+        't' as u32,
+        'r' as u32,
+        'i' as u32,
+        'n' as u32,
+        'g' as u32,
+    ]);
 }
 
 impl VectorIntoWasmAbi for String {
@@ -532,7 +534,9 @@ where
     }
 }
 
-impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> VectorFromWasmAbi for T {
+impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe + WasmDescribeVector> VectorFromWasmAbi
+    for T
+{
     type Abi = WasmSlice;
 
     #[inline]
@@ -543,7 +547,9 @@ impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> VectorFromWasmAbi for T 
     }
 }
 
-impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> VectorIntoWasmAbi for T {
+impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe + WasmDescribeVector> VectorIntoWasmAbi
+    for T
+{
     type Abi = WasmSlice;
 
     #[inline]

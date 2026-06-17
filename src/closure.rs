@@ -356,7 +356,9 @@ where
         data: Box<impl IntoWasmClosure<T> + ?Sized>,
     ) -> Self {
         Self {
-            js: crate::__rt::wbg_cast(OwnedClosure::<T, UNWIND_SAFE>(data.unsize())),
+            js: crate::__rt::wbg_cast_closure::<_, _, T, UNWIND_SAFE>(
+                OwnedClosure::<T, UNWIND_SAFE>(data.unsize()),
+            ),
             _marker: PhantomData,
             _lifetime: PhantomData,
         }
@@ -458,7 +460,10 @@ where
         let t: &T = t.unsize_closure_ref();
         let (ptr, len): (usize, usize) = unsafe { mem::transmute_copy(&t) };
         ScopedClosure {
-            js: crate::__rt::wbg_cast(BorrowedClosure::<T, UNWIND_SAFE> {
+            js: crate::__rt::wbg_cast_closure::<_, _, T, UNWIND_SAFE>(BorrowedClosure::<
+                T,
+                UNWIND_SAFE,
+            > {
                 data: WasmSlice::from_usize(ptr, len),
                 _marker: PhantomData,
             }),
@@ -537,7 +542,10 @@ where
         let t: &mut T = t.unsize_closure_ref();
         let (ptr, len): (usize, usize) = unsafe { mem::transmute_copy(&t) };
         ScopedClosure {
-            js: crate::__rt::wbg_cast(BorrowedClosure::<T, UNWIND_SAFE> {
+            js: crate::__rt::wbg_cast_closure::<_, _, T, UNWIND_SAFE>(BorrowedClosure::<
+                T,
+                UNWIND_SAFE,
+            > {
                 data: WasmSlice::from_usize(ptr, len),
                 _marker: PhantomData,
             }),
@@ -769,30 +777,47 @@ unsafe extern "C" fn __wbindgen_destroy_closure(a: WasmWord, b: WasmWord) {
     ));
 }
 
+// Full closure-cast descriptor in `Schema`-tree form. The invoke
+// address is NOT part of this schema — closure casts carry it in the
+// `CastRecord::invoke` field instead (see `wbg_cast_closure` /
+// `CastRecClosure` in `src/rt/mod.rs`), where `fn as *const ()` is
+// const-evaluated and the linker emits a function-table-index
+// relocation. The cli reads both pieces (this schema + the relocated
+// invoke slot) and composes the final `Closure` descriptor.
+//
+// Flattened layout:
+//   [CLOSURE, owned_bit, IS_MUT, <T's closure-trait-object SCHEMA>]
+// where `T's SCHEMA` is `[FUNCTION, 0, nargs, args..., ret, ret]`,
+// produced by the per-arity `WasmDescribe for dyn Fn(...) -> R + '_`
+// impls in `src/convert/closures.rs`.
 impl<T, const UNWIND_SAFE: bool> WasmDescribe for OwnedClosure<T, UNWIND_SAFE>
 where
     T: WasmClosure + ?Sized,
 {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(CLOSURE);
-        inform(1);
-        inform(T::IS_MUT as u32);
-        T::describe_invoke::<UNWIND_SAFE>();
-    }
+    const SCHEMA: &'static crate::describe::Schema = &crate::describe::Schema::node(
+        crate::describe::SchemaTag::Wrap,
+        &[
+            crate::describe::CLOSURE,
+            /* owned */ 1,
+            T::IS_MUT as u32,
+        ],
+        &[T::SCHEMA],
+    );
 }
 
 impl<T, const UNWIND_SAFE: bool> WasmDescribe for BorrowedClosure<T, UNWIND_SAFE>
 where
     T: WasmClosure + ?Sized,
 {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(CLOSURE);
-        inform(0);
-        inform(T::IS_MUT as u32);
-        T::describe_invoke::<UNWIND_SAFE>();
-    }
+    const SCHEMA: &'static crate::describe::Schema = &crate::describe::Schema::node(
+        crate::describe::SchemaTag::Wrap,
+        &[
+            crate::describe::CLOSURE,
+            /* owned */ 0,
+            T::IS_MUT as u32,
+        ],
+        &[T::SCHEMA],
+    );
 }
 
 impl<T, const UNWIND_SAFE: bool> IntoWasmAbi for OwnedClosure<T, UNWIND_SAFE>
@@ -821,10 +846,13 @@ impl<T> WasmDescribe for ScopedClosure<'_, T>
 where
     T: WasmClosure + ?Sized,
 {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(EXTERNREF);
-    }
+    // ScopedClosure (and `Closure<T>` via the type alias) crosses
+    // the JS boundary as a single JsValue handle — the closure body
+    // and its captured environment live behind the scenes via
+    // `wbg_cast_closure`. From the descriptor's perspective it is
+    // just an externref, regardless of `T`.
+    const SCHEMA: &'static crate::describe::Schema =
+        &crate::describe::Schema::leaf(&[crate::describe::EXTERNREF]);
 }
 
 // `ScopedClosure` can be passed by reference to imports (for any lifetime).
@@ -927,19 +955,22 @@ pub unsafe trait WasmClosure: WasmDescribe {
     /// For `dyn Fn(...) -> R` this is `dyn FnMut(...) -> R`.
     /// For `dyn FnMut(...) -> R` this is itself.
     type AsMut: ?Sized;
-    /// Emit the FUNCTION descriptor with the invoke shim selected by
-    /// `UNWIND_SAFE`: `true` picks the panic-catching shim, `false`
-    /// picks the non-catching shim.
-    fn describe_invoke<const UNWIND_SAFE: bool>();
+    /// Address of the per-monomorphisation invoke shim, one per
+    /// `UNWIND_SAFE` flavour, as a const-evaluable `invoke::<...> as
+    /// *const ()`. These are baked into the closure cast's
+    /// [`crate::describe::CastRecord`] `invoke` field, where the linker
+    /// lowers each to a function-table-index relocation that
+    /// `wasm-bindgen-cli` reads back from the data segment.
+    const INVOKE_SHIM_ADDR_UNWIND_SAFE: *const ();
+    const INVOKE_SHIM_ADDR_NOT_UNWIND_SAFE: *const ();
 }
 
 unsafe impl<T: WasmClosure> WasmClosure for AssertUnwindSafe<T> {
     type Static = T::Static;
     const IS_MUT: bool = T::IS_MUT;
     type AsMut = T::AsMut;
-    fn describe_invoke<const UNWIND_SAFE: bool>() {
-        T::describe_invoke::<UNWIND_SAFE>();
-    }
+    const INVOKE_SHIM_ADDR_UNWIND_SAFE: *const () = T::INVOKE_SHIM_ADDR_UNWIND_SAFE;
+    const INVOKE_SHIM_ADDR_NOT_UNWIND_SAFE: *const () = T::INVOKE_SHIM_ADDR_NOT_UNWIND_SAFE;
 }
 
 /// An internal trait for the `Closure` type.

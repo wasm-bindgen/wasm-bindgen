@@ -12,11 +12,6 @@ export function __wbg_parseFloat_efb706da0845cf8f(arg0, arg1) {
     const ret = parseFloat(getStringFromWasm0(arg0, arg1));
     return ret;
 }
-export function __wbindgen_cast_0000000000000000(arg0, arg1) {
-    // Cast intrinsic for `Ref(String) -> Externref`.
-    const ret = getStringFromWasm0(arg0, arg1);
-    return ret;
-}
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;
     const offset = table.grow(4);
@@ -25,6 +20,10 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 1, null);
     table.set(offset + 2, true);
     table.set(offset + 3, false);
+}
+export function __wbindgen_string_new(arg0, arg1) {
+    const ret = getStringFromWasm0(arg0, arg1);
+    return ret;
 }
 function getStringFromWasm0(ptr, len) {
     return decodeText(ptr >>> 0, len);

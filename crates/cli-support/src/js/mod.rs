@@ -6024,6 +6024,61 @@ addToLibrary({
                 args[0].clone()
             }
 
+            Intrinsic::AsNumber => {
+                assert_eq!(args.len(), 1);
+                format!("+{}", args[0])
+            }
+
+            Intrinsic::NumberNew => {
+                assert_eq!(args.len(), 1);
+                args[0].clone()
+            }
+
+            Intrinsic::BigIntFromI64 | Intrinsic::BigIntFromU64 => {
+                assert_eq!(args.len(), 1);
+                args[0].clone()
+            }
+
+            Intrinsic::BigIntFromI128 | Intrinsic::BigIntFromU128 => {
+                assert_eq!(args.len(), 2);
+                format!("{} << BigInt(64) | {}", args[0], args[1])
+            }
+
+            Intrinsic::StringNew => {
+                assert_eq!(args.len(), 1);
+                args[0].clone()
+            }
+
+            Intrinsic::Uint8ArrayNew
+            | Intrinsic::Uint8ClampedArrayNew
+            | Intrinsic::Uint16ArrayNew
+            | Intrinsic::Uint32ArrayNew
+            | Intrinsic::BigUint64ArrayNew
+            | Intrinsic::Int8ArrayNew
+            | Intrinsic::Int16ArrayNew
+            | Intrinsic::Int32ArrayNew
+            | Intrinsic::BigInt64ArrayNew
+            | Intrinsic::Float32ArrayNew
+            | Intrinsic::Float64ArrayNew => {
+                // Typed array constructors: the IntoWasmAbi side
+                // converts Box<[$t]> into a (ptr, len) pair via
+                // WasmSlice; the JS side already has the values
+                // unpacked into a typed array by the adapter machinery,
+                // so the intrinsic body is the identity.
+                assert_eq!(args.len(), 1);
+                args[0].clone()
+            }
+
+            Intrinsic::ArrayNew => {
+                assert_eq!(args.len(), 0);
+                "[]".to_string()
+            }
+
+            Intrinsic::ArrayPush => {
+                assert_eq!(args.len(), 2);
+                format!("{}.push({})", args[0], args[1])
+            }
+
             Intrinsic::NumberGet => {
                 assert_eq!(args.len(), 1);
                 prelude.push_str(&format!("const obj = {};\n", args[0]));
