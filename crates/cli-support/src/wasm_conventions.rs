@@ -292,48 +292,79 @@ pub fn get_or_insert_start_builder(module: &mut Module) -> &mut FunctionBuilder 
         .builder_mut()
 }
 
-pub fn target_feature(module: &Module, feature: &str) -> Result<bool> {
+/// Whether a target feature is enabled (`+`), disabled (`-`), or unspecified in
+/// the module's `target_features` custom section.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FeatureState {
+    /// The feature is advertised as enabled (`+feature`).
+    Enabled,
+    /// The feature is advertised as explicitly disabled (`-feature`).
+    Disabled,
+    /// The feature is not listed, or there is no `target_features` section at
+    /// all — for example because it was stripped from the binary.
+    Unspecified,
+}
+
+/// Inspect the module's `target_features` custom section to determine whether
+/// `feature` is enabled, disabled, or unspecified.
+pub fn target_feature_state(module: &Module, feature: &str) -> Result<FeatureState> {
     // Taken from <https://github.com/bytecodealliance/wasm-tools/blob/f1898f46bb9d96f0f09682415cb6ccfd6a4dca79/crates/wasmparser/src/limits.rs#L27>.
     anyhow::ensure!(feature.len() <= 100_000, "feature name too long");
 
-    // Try to find an existing section.
-    let section = module
+    // A missing section means the feature is unspecified (e.g. the section was
+    // stripped from the binary).
+    let Some((_, section)) = module
         .customs
         .iter()
-        .find(|(_, custom)| custom.name() == "target_features");
+        .find(|(_, custom)| custom.name() == "target_features")
+    else {
+        return Ok(FeatureState::Unspecified);
+    };
 
-    if let Some((_, section)) = section {
-        let section: &RawCustomSection = section
-            .as_any()
-            .downcast_ref()
-            .context("failed to read section")?;
-        let mut reader = BinaryReader::new(&section.data, 0);
-        // The first integer contains the target feature count.
-        let count = reader.read_var_u32()?;
+    let section: &RawCustomSection = section
+        .as_any()
+        .downcast_ref()
+        .context("failed to read section")?;
+    let mut reader = BinaryReader::new(&section.data, 0);
+    // The first integer contains the target feature count.
+    let count = reader.read_var_u32()?;
 
-        // Try to find if the target feature is already present.
-        for _ in 0..count {
-            // First byte is the prefix.
-            let prefix = reader.read_u8()?;
-            // Read the feature.
-            let length = reader.read_var_u32()?;
-            let this_feature = reader.read_bytes(length as usize)?;
+    // Look for the requested feature.
+    for _ in 0..count {
+        // First byte is the prefix (`+` enabled / `-` disabled).
+        let prefix = reader.read_u8()?;
+        // Read the feature name.
+        let length = reader.read_var_u32()?;
+        let this_feature = reader.read_bytes(length as usize)?;
 
-            // If we found the target feature, we are done here.
-            if this_feature == feature.as_bytes() {
-                // Make sure we set any existing prefix to "enabled".
-                if prefix == b'-' {
-                    return Ok(false);
-                }
-
-                return Ok(true);
-            }
+        if this_feature == feature.as_bytes() {
+            return Ok(if prefix == b'-' {
+                FeatureState::Disabled
+            } else {
+                FeatureState::Enabled
+            });
         }
-
-        Ok(false)
-    } else {
-        Ok(false)
     }
+
+    Ok(FeatureState::Unspecified)
+}
+
+/// Whether the module advertises `+feature`. Both an explicit `-feature` and an
+/// absent/stripped section report `false`; use [`target_feature_state`] when
+/// the distinction matters.
+pub fn target_feature(module: &Module, feature: &str) -> Result<bool> {
+    Ok(target_feature_state(module, feature)? == FeatureState::Enabled)
+}
+
+/// Whether `feature` should be treated as available, defaulting to enabled
+/// unless the module *explicitly* disables it (`-Ctarget-feature=-<feature>`).
+///
+/// Unlike [`target_feature`], a missing or stripped `target_features` section
+/// (e.g. from `strip = true`) counts as enabled. This suits features such as
+/// `reference-types` and `multivalue` that modern engines support universally
+/// and that recent toolchains enable by default.
+pub fn target_feature_enabled_by_default(module: &Module, feature: &str) -> Result<bool> {
+    Ok(target_feature_state(module, feature)? != FeatureState::Disabled)
 }
 
 pub fn insert_target_feature(module: &mut Module, new_feature: &str) -> Result<()> {
@@ -646,5 +677,79 @@ mod tests {
 
         assert_eq!(get_function_table_entry(&module, 0).unwrap(), func_a);
         assert_eq!(get_function_table_entry(&module, 128).unwrap(), func_b);
+    }
+
+    /// Build a module with a `target_features` section listing the given
+    /// `(prefix, name)` entries.
+    fn module_with_features(features: &[(u8, &str)]) -> Module {
+        let mut data = Vec::new();
+        leb128::write::unsigned(&mut data, features.len() as u64).unwrap();
+        for (prefix, name) in features {
+            data.push(*prefix);
+            leb128::write::unsigned(&mut data, name.len() as u64).unwrap();
+            data.extend_from_slice(name.as_bytes());
+        }
+        let mut module = Module::default();
+        module.customs.add(RawCustomSection {
+            name: String::from("target_features"),
+            data,
+        });
+        module
+    }
+
+    #[test]
+    fn target_feature_missing_section_is_unspecified() {
+        // A stripped binary has no `target_features` section at all.
+        let module = Module::default();
+        assert_eq!(
+            target_feature_state(&module, "reference-types").unwrap(),
+            FeatureState::Unspecified
+        );
+        assert!(!target_feature(&module, "reference-types").unwrap());
+    }
+
+    #[test]
+    fn target_feature_enabled_is_detected() {
+        let module = module_with_features(&[(b'+', "bulk-memory"), (b'+', "reference-types")]);
+        assert_eq!(
+            target_feature_state(&module, "reference-types").unwrap(),
+            FeatureState::Enabled
+        );
+        assert!(target_feature(&module, "reference-types").unwrap());
+    }
+
+    #[test]
+    fn target_feature_disabled_is_distinguished_from_missing() {
+        let module = module_with_features(&[(b'-', "reference-types")]);
+        assert_eq!(
+            target_feature_state(&module, "reference-types").unwrap(),
+            FeatureState::Disabled
+        );
+        // The bool wrapper still reports an explicit `-feature` as not enabled.
+        assert!(!target_feature(&module, "reference-types").unwrap());
+    }
+
+    #[test]
+    fn target_feature_section_without_entry_is_unspecified() {
+        let module = module_with_features(&[(b'+', "bulk-memory")]);
+        assert_eq!(
+            target_feature_state(&module, "reference-types").unwrap(),
+            FeatureState::Unspecified
+        );
+    }
+
+    #[test]
+    fn target_feature_enabled_by_default_only_excludes_explicit_disable() {
+        // A missing section and a section that simply omits the feature both
+        // default to enabled (the `strip = true` case this policy exists for).
+        assert!(target_feature_enabled_by_default(&Module::default(), "reference-types").unwrap());
+        let omitted = module_with_features(&[(b'+', "bulk-memory")]);
+        assert!(target_feature_enabled_by_default(&omitted, "reference-types").unwrap());
+        // An advertised feature is enabled...
+        let enabled = module_with_features(&[(b'+', "reference-types")]);
+        assert!(target_feature_enabled_by_default(&enabled, "reference-types").unwrap());
+        // ...and only an explicit `-feature` disables it.
+        let disabled = module_with_features(&[(b'-', "reference-types")]);
+        assert!(!target_feature_enabled_by_default(&disabled, "reference-types").unwrap());
     }
 }
