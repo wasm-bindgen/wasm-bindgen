@@ -5,9 +5,10 @@
 
 ### Added
 
-* Emscripten builds now emit a `library_bindgen.exports.json` sidecar: a JSON
-  array of the clean wasm-bindgen export names (the `Module.<name>` set), so
-  tooling can discover the public API in every emscripten build.
+* Emscripten builds now emit a `// wasm-bindgen-exports:` marker comment at the
+  top of `library_bindgen.js`, listing the clean wasm-bindgen export names (the
+  `Module.<name>` set) comma-separated, so tooling can discover the public API
+  in every emscripten build.
   [#5208](https://github.com/wasm-bindgen/wasm-bindgen/pull/5208)
 
 ### Changed

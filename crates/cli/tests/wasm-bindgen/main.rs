@@ -2346,12 +2346,13 @@ fn emscripten_namespaced_exports_valid_ts() {
 }
 
 #[test]
-fn emscripten_exports_json_lists_public_api() {
-    // Every emscripten build emits `library_bindgen.exports.json`, a JSON array
-    // of the clean wasm-bindgen export names (the `Module.<name> = <name>` set),
-    // so tooling can discover the public API regardless of build flags. Private
-    // internals (e.g. a private class) must not appear.
-    let mut project = Project::new("emscripten_exports_json_lists_public_api");
+fn emscripten_exports_marker_lists_public_api() {
+    // Every emscripten build emits a `// wasm-bindgen-exports:` marker comment
+    // at the top of `library_bindgen.js`, listing the clean wasm-bindgen export
+    // names (the `Module.<name> = <name>` set) comma-separated, so tooling can
+    // discover the public API regardless of build flags. Mangled wasm exports
+    // and internal `__wbg*` names must not appear.
+    let mut project = Project::new("emscripten_exports_marker_lists_public_api");
     project.file(
         "src/lib.rs",
         r#"
@@ -2396,26 +2397,29 @@ fn emscripten_exports_json_lists_public_api() {
     ])
     .unwrap();
 
-    let json = fs::read_to_string(out_dir.join("library_bindgen.exports.json"))
-        .expect("library_bindgen.exports.json should be emitted for emscripten builds");
+    let library = fs::read_to_string(out_dir.join("library_bindgen.js")).unwrap();
 
-    // Valid JSON array of strings, containing exactly the public names.
-    let names: Vec<String> = serde_json::from_str(&json)
-        .unwrap_or_else(|e| panic!("exports json is not a JSON string array ({e}): {json}"));
-    let set: HashSet<&str> = names.iter().map(String::as_str).collect();
-    assert!(set.contains("add"), "missing `add` in exports json: {json}");
+    // The marker is the first line and carries the comma-separated names.
+    let first = library.lines().next().unwrap_or("");
+    let list = first
+        .strip_prefix("// wasm-bindgen-exports:")
+        .unwrap_or_else(|| {
+            panic!("first line must be the `// wasm-bindgen-exports:` marker, got: {first:?}")
+        });
+    let names: HashSet<&str> = list.trim().split(',').map(str::trim).collect();
+    assert!(names.contains("add"), "missing `add` in marker: {first:?}");
     assert!(
-        set.contains("Counter"),
-        "missing `Counter` in exports json: {json}"
+        names.contains("Counter"),
+        "missing `Counter` in marker: {first:?}"
     );
-    // No mangled wasm exports or private internals leak in.
+    // No mangled wasm exports or internal names leak in.
     assert!(
-        !set.contains("_add"),
-        "mangled wasm export leaked into exports json: {json}"
+        !names.contains("_add"),
+        "mangled wasm export leaked into marker: {first:?}"
     );
     assert!(
         names.iter().all(|n| !n.starts_with("__wbg")),
-        "internal `__wbg*` name leaked into exports json: {json}"
+        "internal `__wbg*` name leaked into marker: {first:?}"
     );
 }
 
