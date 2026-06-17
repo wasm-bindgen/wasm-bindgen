@@ -9,6 +9,9 @@
 
 ### Fixed
 
+* Relaxed alignment requirement for 8-byte types.
+  [#5204](https://github.com/wasm-bindgen/wasm-bindgen/pull/5204)
+
 ### Removed
 
 ## [0.2.125](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.123...0.2.125)
