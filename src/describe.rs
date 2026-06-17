@@ -52,7 +52,7 @@ pub use wasm_bindgen_shared::tys::*;
 /// are unchanged.
 #[repr(C)]
 pub struct Schema {
-    /// Structural tag (`SchemaTag::Leaf` / `Wrap` / `Cat`).
+    /// Structural tag (`SchemaTag::Leaf` / `Wrap`).
     /// Informational for flattening (which is uniform); used by the CLI
     /// as a validation/documentation aid.
     pub tag: SchemaTag,

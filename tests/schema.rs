@@ -78,22 +78,22 @@ fn wrap_node_flattens_words_then_children() {
 }
 
 #[test]
-fn cat_node_has_empty_words_and_concatenates_children() {
-    // A `Cat` node has an *empty* `words` run plus children — the exact shape
-    // that the element-0 base-pointer bug (PLAN issue 2) would have tripped
-    // both at runtime and in the CLI walker.
+fn wrap_node_with_empty_words_concatenates_children() {
+    // A `Wrap` node with an *empty* `words` run plus children — the exact
+    // shape that the element-0 base-pointer bug (PLAN issue 2) would have
+    // tripped both at runtime and in the CLI walker.
     const A: &Schema = &Schema::leaf(&[I32]);
     const B: &Schema = &Schema::leaf(&[EXTERNREF]);
-    const CAT: &Schema = &Schema::node(SchemaTag::Cat, &[], &[A, B]);
+    const CONCAT: &Schema = &Schema::node(SchemaTag::Wrap, &[], &[A, B]);
 
-    assert_eq!(CAT.tag, SchemaTag::Cat);
-    assert!(CAT.words().is_empty());
-    assert_eq!(CAT.children().len(), 2);
+    assert_eq!(CONCAT.tag, SchemaTag::Wrap);
+    assert!(CONCAT.words().is_empty());
+    assert_eq!(CONCAT.children().len(), 2);
 
-    const N: usize = flatten_len(CAT);
+    const N: usize = flatten_len(CONCAT);
     assert_eq!(N, 2);
-    assert_eq!(flatten_into::<N>(CAT), [I32, EXTERNREF]);
-    assert_eq!(flatten_oracle(CAT), [I32, EXTERNREF]);
+    assert_eq!(flatten_into::<N>(CONCAT), [I32, EXTERNREF]);
+    assert_eq!(flatten_oracle(CONCAT), [I32, EXTERNREF]);
 }
 
 #[test]

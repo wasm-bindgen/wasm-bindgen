@@ -91,13 +91,10 @@ pub const SYMBOL_REF: u32 = 0xFF;
 /// tags are primarily documentation/validation aids:
 ///
 /// * `Leaf` — `words` only, no children (e.g. `i32`, `JsValue`).
-/// * `Wrap` — leading `words` plus one or more children (e.g.
+/// * `Wrap` — leading `words` plus zero or more children (e.g.
 ///   `Option<T>`, `&T`, the closure trait-object header + arg/ret schemas).
-/// * `Cat` — no `words`, children only (pure concatenation). Reserved: no
-///   runtime impl or macro path currently emits a `Cat` node, but the
-///   flattening rule and the CLI walker handle it like any other node (an
-///   empty `words` run followed by the children), so it is safe to start
-///   using. It is exercised by the `Schema` unit tests.
+///   An empty `words` run is permitted, so `Wrap` also covers a pure
+///   concatenation of children.
 ///
 /// `#[repr(u32)]` pins the discriminants so the `Schema::tag` field keeps the
 /// exact 4-byte layout the previous bare-`u32` constants produced; the
@@ -107,9 +104,9 @@ pub const SYMBOL_REF: u32 = 0xFF;
 pub enum SchemaTag {
     /// `words` only, no children (e.g. `i32`, `JsValue`).
     Leaf = 0,
-    /// Leading `words` plus one or more children (e.g. `Option<T>`, `&T`,
-    /// the closure trait-object header + arg/ret schemas).
+    /// Leading `words` plus zero or more children (e.g. `Option<T>`, `&T`,
+    /// the closure trait-object header + arg/ret schemas). An empty `words`
+    /// run is permitted, so this also covers a pure concatenation of
+    /// children.
     Wrap = 1,
-    /// No `words`, children only (pure concatenation).
-    Cat = 2,
 }

@@ -34,11 +34,10 @@ tree). Only defects are listed below; positives/verified-correct items are omitt
 - **Problem (CLI):** `Schema::node` stores a null base when the run is empty; the
   CLI's `read_schema_tree_into` → `read_bytes(0, 0)` bails because address `0` is
   not inside any data segment. Latent today (every emitted node has a non-empty
-  `words` run) but the unused `SchemaTag::Cat` variant would be the first to trip
-  it.
+  `words` run) but any future empty-`words` node (e.g. a headerless concatenation)
+  would be the first to trip it.
 - **Fix direction:** base the slice on `as_ptr()` (whole-run provenance) instead of
-  `&run[0]`; short-circuit `len == 0` in `read_bytes`/`read_u32_slice`; remove or
-  document `SchemaTag::Cat` (currently dead/unreachable, `tys.rs:71`).
+  `&run[0]`; short-circuit `len == 0` in `read_bytes`/`read_u32_slice`.
 
 ## Medium
 
@@ -194,6 +193,6 @@ and now mislead about how invoke addresses are filled or whether a fallback exis
 - **`SCHEMA_VERSION` lag:** `crates/shared/src/lib.rs:7` is `"0.2.122"` while the crate
   builds as `0.2.125`. The hash-approval test only guards `lib.rs` content, so it passes —
   confirm the lag is intentional.
-- **Interaction:** items #1, #2, and the `Cat` variant interact — the first `Cat` node
-  ever emitted would simultaneously hit the empty-`words` null-pointer bug, so the
-  slice/`len == 0` handling should precede any use of `Cat`.
+- **Interaction:** items #1 and #2 interact with any future empty-`words` node —
+  the first such node emitted would simultaneously hit the empty-`words`
+  null-pointer bug, so the slice/`len == 0` handling must precede it.
