@@ -5,6 +5,13 @@
 
 ### Added
 
+* Added the `--emscripten-post-js` CLI flag, passed by emcc for
+  `-sMODULARIZE=instance` builds. It emits a `library_bindgen.post.js` sidecar
+  with deferred ESM named exports of the clean wasm-bindgen API (`add`,
+  `Counter`, ...), which are otherwise unreachable in instance mode where the
+  consumer receives named exports instead of `Module`.
+  [#5207](https://github.com/wasm-bindgen/wasm-bindgen/pull/5207)
+
 ### Changed
 
 ### Fixed
