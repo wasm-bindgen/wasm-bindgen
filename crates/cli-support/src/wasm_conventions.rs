@@ -356,15 +356,42 @@ pub fn target_feature(module: &Module, feature: &str) -> Result<bool> {
     Ok(target_feature_state(module, feature)? == FeatureState::Enabled)
 }
 
-/// Whether `feature` should be treated as available, defaulting to enabled
-/// unless the module *explicitly* disables it (`-Ctarget-feature=-<feature>`).
+/// Whether `feature` should be treated as enabled. An explicit `+`/`-`
+/// advertisement decides it; when the feature is [`FeatureState::Unspecified`]
+/// (not listed, or the section was stripped) the result is
+/// `default_when_unspecified`.
+pub fn target_feature_enabled_or(
+    module: &Module,
+    feature: &str,
+    default_when_unspecified: bool,
+) -> Result<bool> {
+    Ok(match target_feature_state(module, feature)? {
+        FeatureState::Enabled => true,
+        FeatureState::Disabled => false,
+        FeatureState::Unspecified => default_when_unspecified,
+    })
+}
+
+/// Export names of the wasm-bindgen runtime's externref intrinsics. The runtime
+/// only emits them when built with the `reference-types` target feature.
+pub const EXTERNREF_TABLE_ALLOC: &str = "__externref_table_alloc";
+pub const EXTERNREF_TABLE_DEALLOC: &str = "__externref_table_dealloc";
+pub const EXTERNREF_DROP_SLICE: &str = "__externref_drop_slice";
+
+/// Whether the module's wasm-bindgen runtime was compiled with `reference-types`,
+/// detected by the presence of its externref table-allocation intrinsic.
 ///
-/// Unlike [`target_feature`], a missing or stripped `target_features` section
-/// (e.g. from `strip = true`) counts as enabled. This suits features such as
-/// `reference-types` and `multivalue` that modern engines support universally
-/// and that recent toolchains enable by default.
-pub fn target_feature_enabled_by_default(module: &Module, feature: &str) -> Result<bool> {
-    Ok(target_feature_state(module, feature)? != FeatureState::Disabled)
+/// When the `target_features` section is missing, this is how we tell a modern
+/// `wasm32-unknown-unknown` build from a `-Ctarget-cpu=mvp` one: `strip = true`
+/// drops the custom section but leaves these function exports in place, whereas an
+/// mvp build (reference-types off) never emits them at all. The runtime gates the
+/// same intrinsic on the `reference-types` target feature, so its presence means
+/// the externref and multivalue transforms are both safe and necessary.
+pub fn module_uses_externref_intrinsics(module: &Module) -> bool {
+    module
+        .exports
+        .iter()
+        .any(|export| export.name == EXTERNREF_TABLE_ALLOC)
 }
 
 pub fn insert_target_feature(module: &mut Module, new_feature: &str) -> Result<()> {
@@ -739,17 +766,32 @@ mod tests {
     }
 
     #[test]
-    fn target_feature_enabled_by_default_only_excludes_explicit_disable() {
-        // A missing section and a section that simply omits the feature both
-        // default to enabled (the `strip = true` case this policy exists for).
-        assert!(target_feature_enabled_by_default(&Module::default(), "reference-types").unwrap());
-        let omitted = module_with_features(&[(b'+', "bulk-memory")]);
-        assert!(target_feature_enabled_by_default(&omitted, "reference-types").unwrap());
-        // An advertised feature is enabled...
+    fn target_feature_enabled_or_honors_advertisement_then_falls_back() {
+        // An explicit advertisement wins regardless of the fallback.
         let enabled = module_with_features(&[(b'+', "reference-types")]);
-        assert!(target_feature_enabled_by_default(&enabled, "reference-types").unwrap());
-        // ...and only an explicit `-feature` disables it.
+        assert!(target_feature_enabled_or(&enabled, "reference-types", false).unwrap());
         let disabled = module_with_features(&[(b'-', "reference-types")]);
-        assert!(!target_feature_enabled_by_default(&disabled, "reference-types").unwrap());
+        assert!(!target_feature_enabled_or(&disabled, "reference-types", true).unwrap());
+
+        // Unspecified (missing section or omitted entry) uses the fallback.
+        assert!(target_feature_enabled_or(&Module::default(), "reference-types", true).unwrap());
+        assert!(!target_feature_enabled_or(&Module::default(), "reference-types", false).unwrap());
+        let omitted = module_with_features(&[(b'+', "bulk-memory")]);
+        assert!(target_feature_enabled_or(&omitted, "reference-types", true).unwrap());
+        assert!(!target_feature_enabled_or(&omitted, "reference-types", false).unwrap());
+    }
+
+    #[test]
+    fn externref_intrinsics_detected_via_export() {
+        // No exports (e.g. an `-Ctarget-cpu=mvp` build) means no intrinsics.
+        assert!(!module_uses_externref_intrinsics(&Module::default()));
+
+        // A module that exports the table-allocation intrinsic counts as a
+        // reference-types build, even with no `target_features` section.
+        let mut module = Module::default();
+        let func =
+            FunctionBuilder::new(&mut module.types, &[], &[]).finish(vec![], &mut module.funcs);
+        module.exports.add(EXTERNREF_TABLE_ALLOC, func);
+        assert!(module_uses_externref_intrinsics(&module));
     }
 }

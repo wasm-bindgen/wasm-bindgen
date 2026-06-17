@@ -353,18 +353,25 @@ impl Bindgen {
             self.mode = OutputMode::Emscripten;
         }
 
-        // `reference-types` and `multivalue` are universally supported by
-        // today's engines (and on by default for `wasm32-unknown-unknown` since
-        // Rust 1.82), so enable the matching transforms unless the module
-        // explicitly disables them via `-Ctarget-feature=-<feature>`. We can't
-        // gate on the `target_features` section being present: `strip = true`
-        // drops it entirely, which would silently disable these transforms and
-        // break `#[wasm_bindgen(catch)]` ("externref table required for catch
-        // wrappers").
-        self.externref =
-            wasm_conventions::target_feature_enabled_by_default(&module, "reference-types")?;
-        self.multi_value =
-            wasm_conventions::target_feature_enabled_by_default(&module, "multivalue")?;
+        // `reference-types` and `multivalue` are on by default for
+        // `wasm32-unknown-unknown` since Rust 1.82. Honor an explicit
+        // `-Ctarget-feature=+/-<feature>` advertisement when the `target_features`
+        // section is present; when it is absent (e.g. `strip = true` dropped it),
+        // detect support from the runtime's externref intrinsics instead. That
+        // keeps the transforms running on stripped modern builds, so
+        // `#[wasm_bindgen(catch)]` still works, while leaving them off on
+        // `-Ctarget-cpu=mvp` builds.
+        let default_modern_features = wasm_conventions::module_uses_externref_intrinsics(&module);
+        self.externref = wasm_conventions::target_feature_enabled_or(
+            &module,
+            "reference-types",
+            default_modern_features,
+        )?;
+        self.multi_value = wasm_conventions::target_feature_enabled_or(
+            &module,
+            "multivalue",
+            default_modern_features,
+        )?;
 
         // Check that no exported symbol is called "default" if we target web.
         if matches!(self.mode, OutputMode::Web)

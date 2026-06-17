@@ -9,13 +9,16 @@
 
 ### Fixed
 
-* The `externref` and `multivalue` transforms are now enabled unless the module
-  *explicitly* disables the corresponding target feature
-  (`-Ctarget-feature=-reference-types` / `-multivalue`), instead of requiring
-  the `target_features` custom section to advertise them. Previously a stripped
-  section (for example from `strip = true` in a release profile) silently
-  disabled the transforms, which made `#[wasm_bindgen(catch)]` wrappers fail the
-  build with "externref table required for catch wrappers".
+* The `externref` and `multivalue` transforms now honor an explicit
+  `-Ctarget-feature=+/-<feature>` advertisement in the `target_features` custom
+  section. When that section is absent (for example because `strip = true`
+  dropped it), they fall back to checking whether the wasm-bindgen runtime was
+  built with `reference-types`, detected from its externref intrinsics.
+  Previously the transforms ran only when the section advertised the feature, so
+  a stripped section silently disabled them and made `#[wasm_bindgen(catch)]`
+  wrappers fail the build with "externref table required for catch wrappers". The
+  fallback leaves the transforms off for `-Ctarget-cpu=mvp` builds, which have
+  neither the section nor the intrinsics.
 
 ### Removed
 
