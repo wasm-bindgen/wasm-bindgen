@@ -79,6 +79,11 @@ pub struct FinalizedOutput {
     /// Content to write alongside the main JS as a sidecar that emcc loads
     /// with `--extern-pre-js`. Empty for non-emscripten output modes.
     pub emscripten_extern_pre_js: String,
+    /// Deferred ESM named-export glue, written alongside the main JS as a
+    /// sidecar that emcc loads with `--post-js`. Re-exports the clean
+    /// wasm-bindgen API (`add`, `Counter`, ...) under `-sMODULARIZE=instance`.
+    /// Empty for non-emscripten output modes.
+    pub emscripten_exports_post_js: String,
 }
 
 pub struct Context<'a> {
@@ -98,6 +103,13 @@ pub struct Context<'a> {
     emscripten_extern_pre_js: String,
     imports_post: String,
     export_name_list: Vec<String>,
+    /// Deferred ESM re-export glue for emscripten output, written to a sidecar
+    /// `library_bindgen_exports.post.js`. Accumulated at the same point the
+    /// `Module.<name> = <name>;` lines are emitted (the source of truth for
+    /// what's publicly exported), one self-contained line per export. Empty
+    /// for non-emscripten modes. See `generate_emscripten_wasm_loading` for
+    /// the rationale on why this can't live in the JS library or `--pre-js`.
+    emscripten_exports_post_js: String,
     typescript: String,
     typescript_emscripten_classes: String,
     config: &'a Bindgen,
@@ -331,6 +343,7 @@ impl<'a> Context<'a> {
             intrinsics: Some(Default::default()),
             imports_post: String::new(),
             export_name_list: Vec::new(),
+            emscripten_exports_post_js: String::new(),
             typescript: "/* tslint:disable */\n/* eslint-disable */\n".to_string(),
             typescript_emscripten_classes: String::new(),
             imported_names: Default::default(),
@@ -586,6 +599,13 @@ impl<'a> Context<'a> {
 
                     if export_name == id {
                         self.global(&format!("Module.{export_name} = {id};\n"));
+                        // Mirror this export as a deferred ESM named export in
+                        // the post-js sidecar. The value is only live after
+                        // `initBindgen` runs (it closes over the wasm
+                        // instance), so declare now and bind in `addOnPostCtor`.
+                        self.emscripten_exports_post_js.push_str(&format!(
+                            "export var {export_name}; addOnPostCtor(() => {{ {export_name} = Module['{export_name}']; }});\n"
+                        ));
                     } else {
                         self.global(&format!("export {{ {id} as {export_name} }};\n"));
                     }
@@ -864,11 +884,28 @@ impl<'a> Context<'a> {
             ts.push_str(&node_atomics_ts);
         }
 
+        // Emitted only when emcc requested it via `--emscripten-post-js`,
+        // which it passes solely for `-sMODULARIZE=instance`. The first line
+        // must be exactly `#preprocess` so emcc runs its preprocessor over the
+        // file; the `#if MODULARIZE == 'instance'` guard then keeps the export
+        // block (defensive — emcc only feeds us this flag in instance mode).
+        let emscripten_exports_post_js = if matches!(self.config.mode, OutputMode::Emscripten)
+            && self.config.emscripten_post_js
+        {
+            format!(
+                "#preprocess\n#if MODULARIZE == 'instance'\n{}#endif\n",
+                self.emscripten_exports_post_js
+            )
+        } else {
+            String::new()
+        };
+
         Ok(FinalizedOutput {
             js: self.globals.to_owned(),
             ts,
             start,
             emscripten_extern_pre_js: std::mem::take(&mut self.emscripten_extern_pre_js),
+            emscripten_exports_post_js,
         })
     }
 
@@ -1692,6 +1729,17 @@ if (require('worker_threads').isMainThread) {{
             ""
         };
 
+        // The `--post-js` export glue calls `addOnPostCtor`, a library
+        // function only linked in if something depends on it. Force it in
+        // alongside the other bindgen runtime deps when we actually emit
+        // export glue, so the post-js resolves under `MODULARIZE=instance`.
+        let post_ctor_dep =
+            if self.config.emscripten_post_js && !self.emscripten_exports_post_js.is_empty() {
+                ", '$addOnPostCtor'"
+            } else {
+                ""
+            };
+
         format!(
             r#"
             addToLibrary({{
@@ -1709,7 +1757,7 @@ if (require('worker_threads').isMainThread) {{
                 }}
             }});
 
-            extraLibraryFuncs.push('$initBindgen', '$addOnInit', '$wasm', {global_deps});
+            extraLibraryFuncs.push('$initBindgen', '$addOnInit', '$wasm'{post_ctor_dep}, {global_deps});
             "#,
             init_deps = init_dep_refs.join(", "),
             global_deps = global_dep_refs.join(", "),

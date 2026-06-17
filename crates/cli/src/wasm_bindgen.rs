@@ -98,6 +98,12 @@ struct Args {
         help = "Enable abort handler even if building with panic=abort. Does nothing when panic=unwind."
     )]
     force_enable_abort_handler: bool,
+    #[arg(
+        long = "emscripten-post-js",
+        hide = true,
+        help = "Emit library_bindgen.post.js with deferred ESM named exports. Passed by emcc for -sMODULARIZE=instance."
+    )]
+    emscripten_post_js: bool,
     // The options below are deprecated. They're still parsed for backwards compatibility,
     // but we don't want to show them in `--help` to avoid distracting users.
     #[arg(long, hide = true)]
@@ -169,7 +175,8 @@ fn rmain(args: &Args) -> Result<(), Error> {
         .split_linked_modules(args.split_linked_modules)
         .reference_types(args.reference_types)
         .reset_state_function(args.generate_reset_state)
-        .force_enable_abort_handler(args.force_enable_abort_handler);
+        .force_enable_abort_handler(args.force_enable_abort_handler)
+        .emscripten_post_js(args.emscripten_post_js);
 
     if let Some(ref name) = args.no_modules_global {
         b.no_modules_global(name)?;

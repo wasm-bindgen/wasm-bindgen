@@ -2345,6 +2345,128 @@ fn emscripten_namespaced_exports_valid_ts() {
     }
 }
 
+#[test]
+fn emscripten_post_js_named_exports() {
+    // Under `-sMODULARIZE=instance` the consumer receives ESM named exports +
+    // a default `init`, never `Module`, so the `Module.<name> = <name>;` lines
+    // in `library_bindgen.js` are dead writes. emcc passes `--emscripten-post-js`
+    // (instance mode only); wasm-bindgen then emits `library_bindgen.post.js`
+    // with deferred ESM re-exports of the clean API (`add`, `Counter`).
+    let mut project = Project::new("emscripten_post_js_named_exports");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen::prelude::*;
+
+            #[wasm_bindgen]
+            pub fn add(a: i32, b: i32) -> i32 {
+                a + b
+            }
+
+            #[wasm_bindgen]
+            pub struct Counter {
+                value: i32,
+            }
+
+            #[wasm_bindgen]
+            impl Counter {
+                #[wasm_bindgen(constructor)]
+                pub fn new(start: i32) -> Counter {
+                    Counter { value: start }
+                }
+                pub fn inc(&mut self) -> i32 {
+                    self.value += 1;
+                    self.value
+                }
+            }
+        "#,
+    );
+
+    let built = project.build();
+    let mut module = ModuleConfig::new().parse_file(&built).unwrap();
+    module.customs.add(RawCustomSection {
+        name: "__wasm_bindgen_emscripten_marker".into(),
+        data: vec![1],
+    });
+    let emscripten_wasm = project.root.join("emscripten_input.wasm");
+    module.emit_wasm_file(&emscripten_wasm).unwrap();
+
+    // --- With the flag: post-js sidecar is emitted with the deferred glue. ---
+    let out_dir = project.root.join("pkg-with-flag");
+    fs::create_dir_all(&out_dir).unwrap();
+    wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
+        "wasm-bindgen".as_ref(),
+        "--emscripten-post-js".as_ref(),
+        "--out-dir".as_ref(),
+        out_dir.as_os_str(),
+        emscripten_wasm.as_os_str(),
+    ])
+    .unwrap();
+
+    let post_js_path = out_dir.join("library_bindgen.post.js");
+    let post_js = fs::read_to_string(&post_js_path)
+        .expect("library_bindgen.post.js should be emitted with --emscripten-post-js");
+
+    // Rule 1: first line must be exactly `#preprocess`.
+    assert_eq!(
+        post_js.lines().next(),
+        Some("#preprocess"),
+        "post-js must open with the `#preprocess` directive:\n{post_js}"
+    );
+    // Rule 2: guarded by the MODULARIZE == 'instance' preprocessor block.
+    assert!(
+        post_js.contains("#if MODULARIZE == 'instance'") && post_js.contains("#endif"),
+        "post-js must guard the export block on instance mode:\n{post_js}"
+    );
+    // Rule 3: declare, then assign in addOnPostCtor (deferred, value-agnostic).
+    for name in ["add", "Counter"] {
+        assert!(
+            post_js.contains(&format!("export var {name};")),
+            "post-js must declare `export var {name};`:\n{post_js}"
+        );
+        assert!(
+            post_js.contains(&format!("{name} = Module['{name}'];")),
+            "post-js must bind `{name}` from Module in addOnPostCtor:\n{post_js}"
+        );
+    }
+    assert!(
+        post_js.contains("addOnPostCtor("),
+        "post-js must bind values inside addOnPostCtor:\n{post_js}"
+    );
+    // It must NOT eagerly read Module (init hasn't run when the file evaluates).
+    assert!(
+        !post_js.contains("export var add = Module"),
+        "post-js must not eagerly read Module at module-eval time:\n{post_js}"
+    );
+
+    // Rule 6: $addOnPostCtor must be force-linked so the call resolves.
+    let library = fs::read_to_string(out_dir.join("library_bindgen.js")).unwrap();
+    assert!(
+        library.contains("'$addOnPostCtor'"),
+        "library_bindgen.js must force-include $addOnPostCtor:\n{library}"
+    );
+
+    // --- Without the flag: no post-js sidecar, no $addOnPostCtor dep. ---
+    let out_dir_no = project.root.join("pkg-no-flag");
+    fs::create_dir_all(&out_dir_no).unwrap();
+    wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
+        "wasm-bindgen".as_ref(),
+        "--out-dir".as_ref(),
+        out_dir_no.as_os_str(),
+        emscripten_wasm.as_os_str(),
+    ])
+    .unwrap();
+    assert!(
+        !out_dir_no.join("library_bindgen.post.js").exists(),
+        "library_bindgen.post.js must not be emitted without --emscripten-post-js"
+    );
+    let library_no = fs::read_to_string(out_dir_no.join("library_bindgen.js")).unwrap();
+    assert!(
+        !library_no.contains("'$addOnPostCtor'"),
+        "library_bindgen.js must not force $addOnPostCtor without the flag:\n{library_no}"
+    );
+}
+
 /// Look up an executable on `PATH`. Used so the test can opportunistically
 /// validate the generated .d.ts with `tsc` without hard-requiring it.
 fn which(name: &str) -> Option<PathBuf> {

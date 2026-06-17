@@ -43,6 +43,11 @@ pub struct Bindgen {
     split_linked_modules: bool,
     generate_reset_state: bool,
     force_enable_abort_handler: bool,
+    /// Set when emcc passes `--emscripten-post-js` (only in
+    /// `-sMODULARIZE=instance` builds). Emits the deferred ESM named-export
+    /// glue to a `library_bindgen.post.js` sidecar that emcc feeds through its
+    /// post-js pipeline.
+    emscripten_post_js: bool,
 }
 
 pub struct Output {
@@ -64,6 +69,10 @@ struct Generated {
     /// emcc loads via `--extern-pre-js`, containing ESM `import` statements
     /// that must live at module top-level. Empty for other modes.
     emscripten_extern_pre_js: String,
+    /// For `OutputMode::Emscripten` with `--emscripten-post-js` only: the
+    /// deferred ESM named-export glue emcc loads via `--post-js`. Empty
+    /// otherwise.
+    emscripten_exports_post_js: String,
 }
 
 #[derive(Clone)]
@@ -118,6 +127,7 @@ impl Bindgen {
             split_linked_modules: false,
             generate_reset_state: false,
             force_enable_abort_handler: false,
+            emscripten_post_js: false,
         }
     }
 
@@ -307,6 +317,11 @@ impl Bindgen {
 
     pub fn force_enable_abort_handler(&mut self, force_enable_abort_handler: bool) -> &mut Self {
         self.force_enable_abort_handler = force_enable_abort_handler;
+        self
+    }
+
+    pub fn emscripten_post_js(&mut self, emscripten_post_js: bool) -> &mut Self {
+        self.emscripten_post_js = emscripten_post_js;
         self
     }
 
@@ -511,6 +526,7 @@ impl Bindgen {
             ts,
             start,
             emscripten_extern_pre_js,
+            emscripten_exports_post_js,
         } = cx.finalize(stem)?;
         let generated = Generated {
             snippets: aux.snippets.clone(),
@@ -522,6 +538,7 @@ impl Bindgen {
             ts,
             start,
             emscripten_extern_pre_js,
+            emscripten_exports_post_js,
         };
 
         Ok(Output {
@@ -810,6 +827,20 @@ impl Output {
                     &extern_pre_js_path,
                     reset_indentation(&gen.emscripten_extern_pre_js),
                 )?;
+            }
+            // Deferred ESM named-export glue, emitted only when emcc requested
+            // it via `--emscripten-post-js` (instance mode). emcc reads it from
+            // this fixed path and feeds it through `--post-js`, which appends it
+            // after `postamble.js` — i.e. at module top level, where `export`
+            // is legal and the runtime helpers (`addOnPostCtor`) are defined.
+            // The `#preprocess` header opts the file into emcc's preprocessor,
+            // so write it verbatim (reset-indentation would mangle the leading
+            // directive).
+            let exports_post_js_path = out_dir.join("library_bindgen.post.js");
+            if gen.emscripten_exports_post_js.is_empty() {
+                let _ = fs::remove_file(&exports_post_js_path);
+            } else {
+                write(&exports_post_js_path, &gen.emscripten_exports_post_js)?;
             }
         } else {
             write(&js_path, reset_indentation(&gen.js))?;
