@@ -2305,9 +2305,18 @@ if (require('worker_threads').isMainThread) {{
                 : new FinalizationRegistry({finalization_callback})"
         );
         if hoist {
-            // The callback closes over the module-scope `wasm` global.
+            // Emit the registry's *source* as a string-valued library member.
+            // emscripten evaluates non-string library values while loading the
+            // library file, then re-serializes them from the live object. A
+            // `FinalizationRegistry` instance has no enumerable own properties,
+            // so that round-trip would collapse it to `{}` and drop
+            // `register`/`unregister`. A string member is emitted verbatim as
+            // `var XFinalization = <source>` (same as intrinsic values like
+            // `$cachedTextDecoder: "new TextDecoder()"`). The callback closes
+            // over the module-scope `wasm` global.
+            let value_lit = format!("{finalization_value:?}");
             self.emscripten_library(&format!(
-                "addToLibrary({{\n    ${identifier}Finalization: {finalization_value},\n    \
+                "addToLibrary({{\n    ${identifier}Finalization: {value_lit},\n    \
                  ${identifier}Finalization__deps: ['$wasm']\n}});"
             ));
         } else {
@@ -6502,7 +6511,12 @@ addToLibrary({
             // ESM exports / `Module.<name>`; namespaced ones are private and
             // reached through their namespace root.
             let is_namespaced = enum_.js_namespace.is_some();
-            let value = format!("Object.freeze({{\n{variants}}})");
+            // String-valued member so the `Object.freeze(...)` source is
+            // emitted verbatim. As a live value it would be evaluated while
+            // loading the library and re-serialized to a plain object, losing
+            // `Object.freeze` (see the finalization-registry note in
+            // `write_class`).
+            let value = format!("{:?}", format!("Object.freeze({{\n{variants}}})"));
             self.hoist_emscripten_export(
                 &identifier,
                 &value,

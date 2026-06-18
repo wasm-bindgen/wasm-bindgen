@@ -2430,10 +2430,18 @@ fn emscripten_exports_hoisted_to_library_symbols() {
         lib.contains("$Counter__deps: ['$initBindgen', '$CounterFinalization']"),
         "Counter should depend on $initBindgen + its finalizer:\n{lib}"
     );
-    // Enum hoisted to its own frozen-object library symbol.
+    // Enum hoisted to its own library symbol. The `Object.freeze(...)` source
+    // is a string-valued member so emscripten emits it verbatim (a live value
+    // would be re-serialized to a plain object, losing the freeze).
     assert!(
-        lib.contains("$Color: Object.freeze("),
-        "Color enum should be a hoisted library symbol:\n{lib}"
+        lib.contains(r#"$Color: "Object.freeze("#),
+        "Color enum should be a hoisted string-valued library symbol:\n{lib}"
+    );
+    // The finalization registry is likewise emitted as source via a string
+    // member, so it survives emscripten's evaluate-then-reserialize.
+    assert!(
+        lib.contains(r#"$CounterFinalization: "(typeof FinalizationRegistry"#),
+        "CounterFinalization should be emitted as source (string member):\n{lib}"
     );
     // Self-registration so emscripten exports them itself.
     for name in ["add", "Counter", "Color"] {
