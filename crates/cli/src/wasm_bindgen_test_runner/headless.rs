@@ -446,6 +446,43 @@ an issue against wasm-bindgen/wasm-bindgen!
     }
 }
 
+/// Parse a legacy (JSON Wire Protocol) "new session" response from
+/// chromedriver/msedgedriver.
+///
+/// These drivers reply with HTTP 200 even when session creation fails, encoding
+/// the failure in a non-zero `status` field alongside a human-readable
+/// `value.message`. We used to read only `sessionId` here, so a failed response
+/// (which still carries a placeholder `sessionId`) was treated as a success and
+/// every subsequent request 404'd with a baffling `http status: 404`. Instead,
+/// surface the driver's own message (e.g. a chromedriver/Chrome version
+/// mismatch).
+fn parse_legacy_session_response(browser: &str, body: &str) -> Result<String, Error> {
+    #[derive(Deserialize)]
+    struct Response {
+        #[serde(rename = "sessionId")]
+        session_id: Option<String>,
+        status: Option<i64>,
+        value: Option<Json>,
+    }
+
+    let response: Response = serde_json::from_str(body)
+        .with_context(|| format!("failed to parse {browser} session response: {body}"))?;
+
+    if response.status.unwrap_or(0) != 0 {
+        let message = response
+            .value
+            .as_ref()
+            .and_then(|value| value.get("message"))
+            .and_then(|message| message.as_str())
+            .unwrap_or(body);
+        bail!("failed to create a {browser} session: {message}");
+    }
+
+    response
+        .session_id
+        .ok_or_else(|| anyhow::anyhow!("{browser} session response missing `sessionId`: {body}"))
+}
+
 struct Client {
     agent: Agent,
     driver_url: Url,
@@ -526,11 +563,6 @@ impl Client {
                     .unwrap())
             }
             Driver::Chrome(_) => {
-                #[derive(Deserialize)]
-                struct Response {
-                    #[serde(rename = "sessionId")]
-                    session_id: String,
-                }
                 cap.entry("goog:chromeOptions".to_string())
                     .or_insert_with(|| Json::Object(serde_json::Map::new()))
                     .as_object_mut()
@@ -551,15 +583,10 @@ impl Client {
                     desired: cap,
                     required: Capabilities::new(),
                 };
-                let x: Response = self.post("/session", &request)?;
-                Ok(x.session_id)
+                let body = self.post_raw("/session", &request)?;
+                parse_legacy_session_response("Chrome", &body)
             }
             Driver::Edge(_) => {
-                #[derive(Deserialize)]
-                struct Response {
-                    #[serde(rename = "sessionId")]
-                    session_id: String,
-                }
                 cap.entry("ms:edgeOptions".to_string())
                     .or_insert_with(|| Json::Object(serde_json::Map::new()))
                     .as_object_mut()
@@ -580,8 +607,8 @@ impl Client {
                     desired: cap,
                     required: Capabilities::new(),
                 };
-                let x: Response = self.post("/session", &request)?;
-                Ok(x.session_id)
+                let body = self.post_raw("/session", &request)?;
+                parse_legacy_session_response("Edge", &body)
             }
         }
     }
@@ -700,6 +727,17 @@ impl Client {
         debug!("POST {path} {input}");
         let result = self.doit(path, Method::Post(&input))?;
         Ok(serde_json::from_str(&result)?)
+    }
+
+    /// Like [`post`](Self::post) but returns the raw response body instead of
+    /// deserializing it, so callers can inspect driver-specific error encodings.
+    fn post_raw<T>(&mut self, path: &str, data: &T) -> Result<String, Error>
+    where
+        T: Serialize,
+    {
+        let input = serde_json::to_string(data)?;
+        debug!("POST {path} {input}");
+        self.doit(path, Method::Post(&input))
     }
 
     fn delete<U>(&mut self, path: &str) -> Result<U, Error>
@@ -834,5 +872,36 @@ impl Drop for BackgroundChild<'_> {
         if !stderr.is_empty() {
             println!("driver stderr:\n{}", tab(&String::from_utf8_lossy(&stderr)));
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse_legacy_session_response;
+
+    // A real chromedriver 150 response when driving Chrome 149: HTTP 200 with a
+    // non-zero JSON Wire Protocol `status` and a placeholder `sessionId`.
+    const VERSION_MISMATCH_BODY: &str = r#"{"sessionId":"daa26256195a0a06927e6d7f7b0cfcfc","status":33,"value":{"message":"session not created: This version of ChromeDriver only supports Chrome version 150\nCurrent browser version is 149.0.7827.155 with binary path /opt/google/chrome/chrome"}}"#;
+
+    #[test]
+    fn surfaces_driver_error_message() {
+        let err = parse_legacy_session_response("Chrome", VERSION_MISMATCH_BODY)
+            .expect_err("a non-zero status response must be treated as an error");
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("only supports Chrome version 150"),
+            "error should surface the driver's own message, got: {msg}"
+        );
+        assert!(
+            msg.contains("149.0.7827.155"),
+            "error should include the current browser version, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn returns_session_id_on_success() {
+        let body = r#"{"sessionId":"abc123","status":0,"value":{}}"#;
+        let id = parse_legacy_session_response("Chrome", body).expect("success should parse");
+        assert_eq!(id, "abc123");
     }
 }
