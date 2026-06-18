@@ -514,6 +514,52 @@ impl<'a> Context<'a> {
         }
     }
 
+    /// Hoist a clean export (free function, class, or enum) to a library symbol
+    /// and, when it's namespaced, register a declaration-free entry in the
+    /// export tree so the namespace root assembles `ns.<name> = <identifier>`
+    /// and the `.d.ts` namespace shape resolves `typeof <identifier>`. The
+    /// hoisted symbol is public (named ESM export / `Module.<name>`) unless it's
+    /// namespaced (reached via the root) or `private`. Shared by the function,
+    /// class, and enum emission paths.
+    fn hoist_emscripten_export_with_tree(
+        &mut self,
+        identifier: &str,
+        value: &str,
+        extra_deps: &[&str],
+        postset_extra: &str,
+        private: bool,
+        js_name: &str,
+        js_namespace: Option<&[String]>,
+        ts_definition: String,
+        parent_identifier: Option<String>,
+    ) -> Result<(), Error> {
+        let is_namespaced = js_namespace.is_some();
+        self.hoist_emscripten_export(
+            identifier,
+            value,
+            extra_deps,
+            postset_extra,
+            !is_namespaced && !private,
+        );
+        if is_namespaced {
+            define_export(
+                &mut self.exports,
+                js_name,
+                js_namespace.unwrap_or_default(),
+                ExportEntry::Definition(ExportDefinition {
+                    identifier: identifier.to_string(),
+                    comments: None,
+                    definition: String::new(),
+                    ts_definition,
+                    ts_comments: None,
+                    private,
+                    parent_identifier,
+                }),
+            )?;
+        }
+        Ok(())
+    }
+
     /// Register a wasm-bindgen-internal helper as an intrinsic.
     ///
     /// `deps` lists library symbols the intrinsic body itself references by
@@ -2257,7 +2303,6 @@ if (require('worker_threads').isMainThread) {{
         // Hoisted classes need their finalization registry as a sibling library
         // symbol rather than a `$initBindgen` local.
         let hoist = matches!(self.config.mode, OutputMode::Emscripten);
-        let is_namespaced = class.js_namespace.is_some();
         let finalization_value = format!(
             "(typeof FinalizationRegistry === 'undefined')\n\
                 ? {{ register: () => {{}}, unregister: () => {{}} }}\n\
@@ -2469,31 +2514,17 @@ if (require('worker_threads').isMainThread) {{
             }
             let extra_dep_refs: Vec<&str> = extra_deps.iter().map(String::as_str).collect();
             // Private classes are hoisted but not exposed as a runtime value.
-            self.hoist_emscripten_export(
+            self.hoist_emscripten_export_with_tree(
                 &identifier,
                 dst.trim_end(),
                 &extra_dep_refs,
                 &format!("{dispose_wiring} "),
-                !is_namespaced && !class.private,
-            );
-            // Namespaced classes still need a tree entry (empty definition) so
-            // the root assembles `ns.Class = <identifier>`.
-            if is_namespaced {
-                define_export(
-                    &mut self.exports,
-                    js_name,
-                    class.js_namespace.as_deref().unwrap_or_default(),
-                    ExportEntry::Definition(ExportDefinition {
-                        identifier: class.identifier.clone(),
-                        comments: None,
-                        definition: String::new(),
-                        ts_definition,
-                        ts_comments: None,
-                        private: class.private,
-                        parent_identifier: parent_identifier.clone(),
-                    }),
-                )?;
-            }
+                class.private,
+                js_name,
+                class.js_namespace.as_deref(),
+                ts_definition,
+                parent_identifier.clone(),
+            )?;
             return Ok(());
         }
 
@@ -5282,33 +5313,20 @@ addToLibrary({
                         };
 
                         if matches!(self.config.mode, OutputMode::Emscripten) {
-                            // Hoist into a library symbol. Namespaced functions
-                            // are hoisted privately and recorded in the tree
-                            // (empty definition) so the root wires `ns.fn`.
+                            // Hoist into a library symbol (namespaced functions
+                            // are hoisted privately and wired via their root).
                             let value = format!("function {identifier}{code}");
-                            self.hoist_emscripten_export(
+                            self.hoist_emscripten_export_with_tree(
                                 &identifier,
                                 &value,
                                 &[],
                                 "",
-                                !is_namespaced,
-                            );
-                            if is_namespaced {
-                                define_export(
-                                    &mut self.exports,
-                                    name,
-                                    export.js_namespace.as_deref().unwrap_or_default(),
-                                    ExportEntry::Definition(ExportDefinition {
-                                        identifier: identifier.clone(),
-                                        comments: None,
-                                        definition: String::new(),
-                                        ts_definition,
-                                        ts_comments,
-                                        private: false,
-                                        parent_identifier: None,
-                                    }),
-                                )?;
-                            }
+                                false,
+                                name,
+                                export.js_namespace.as_deref(),
+                                ts_definition,
+                                None,
+                            )?;
                         } else {
                             let definition = format!("function {identifier}{code}\n");
                             define_export(
@@ -6475,34 +6493,21 @@ addToLibrary({
 
         if matches!(self.config.mode, OutputMode::Emscripten) {
             // Hoist the frozen enum into a library symbol like functions and
-            // classes.
-            let is_namespaced = enum_.js_namespace.is_some();
-            // String-valued so the `Object.freeze(...)` source is emitted
-            // verbatim (see the finalization-registry note in `write_class`).
+            // classes. String-valued so the `Object.freeze(...)` source is
+            // emitted verbatim (see the finalization-registry note in
+            // `write_class`).
             let value = format!("{:?}", format!("Object.freeze({{\n{variants}}})"));
-            self.hoist_emscripten_export(
+            self.hoist_emscripten_export_with_tree(
                 &identifier,
                 &value,
                 &[],
                 "",
-                !is_namespaced && !enum_.private,
-            );
-            if is_namespaced {
-                define_export(
-                    &mut self.exports,
-                    &enum_.name,
-                    enum_.js_namespace.as_deref().unwrap_or_default(),
-                    ExportEntry::Definition(ExportDefinition {
-                        identifier: identifier.clone(),
-                        comments: None,
-                        definition: String::new(),
-                        ts_definition,
-                        ts_comments: None,
-                        private: enum_.private,
-                        parent_identifier: None,
-                    }),
-                )?;
-            }
+                enum_.private,
+                &enum_.name,
+                enum_.js_namespace.as_deref(),
+                ts_definition,
+                None,
+            )?;
             return Ok(());
         }
 
