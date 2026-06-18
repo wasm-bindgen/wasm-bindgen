@@ -1768,32 +1768,19 @@ if (require('worker_threads').isMainThread) {{
 
         // Self-register the hoisted public exports at compile time. emscripten
         // runs `--js-library` files in the compiler context, so we can push
-        // straight onto its settings (the same way `extraLibraryFuncs` is used
-        // below):
-        //   * `extraLibraryFuncs` force-keeps each `$<id>` library symbol.
-        //   * `EXPORTED_FUNCTIONS` makes `jsifier` prepend `export` to the
-        //     symbol's declaration under `MODULARIZE=instance`, producing a
-        //     named ESM export. (Factory mode gets `Module.<id>` via the
-        //     symbol's `__postset`.)
-        let export_lib_refs: Vec<String> = self
+        // straight onto its settings. Adding each name to `EXPORTED_FUNCTIONS`
+        // does double duty in `jsifier`: membership forces the `$<id>` library
+        // symbol to be included (`EXPORTED_FUNCTIONS.has(mangleCSymbolName(key))`
+        // at jsifier.mjs:419) *and* makes it prepend `export` to the symbol's
+        // declaration under `MODULARIZE=instance` (jsifier.mjs:802) — a named
+        // ESM export. Factory mode gets `Module.<id>` via the symbol's
+        // `__postset`. So no separate `extraLibraryFuncs` force-keep is needed;
+        // the transitive closure is pulled in by each symbol's `__deps`.
+        let self_register = self
             .emscripten_runtime_exports
             .iter()
-            .map(|id| format!("'${id}'"))
-            .collect();
-        let self_register = if self.emscripten_runtime_exports.is_empty() {
-            String::new()
-        } else {
-            let funcs: Vec<String> = self
-                .emscripten_runtime_exports
-                .iter()
-                .map(|id| format!("EXPORTED_FUNCTIONS.add('{id}');"))
-                .collect();
-            format!(
-                "extraLibraryFuncs.push({});\n{}\n",
-                export_lib_refs.join(", "),
-                funcs.join("\n"),
-            )
-        };
+            .map(|id| format!("EXPORTED_FUNCTIONS.add('{id}');\n"))
+            .collect::<String>();
 
         format!(
             r#"

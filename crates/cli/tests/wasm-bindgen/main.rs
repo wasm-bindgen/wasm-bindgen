@@ -2469,9 +2469,16 @@ fn emscripten_exports_hoisted_to_library_symbols() {
             "{name} should be self-registered into EXPORTED_FUNCTIONS:\n{lib}"
         );
     }
+    // No separate force-keep: EXPORTED_FUNCTIONS membership already includes
+    // each public symbol (jsifier.mjs:419), and the finalization registry is
+    // retained purely as a dependency of its class.
     assert!(
-        lib.contains("extraLibraryFuncs.push('$add', '$Color', '$Counter')"),
-        "hoisted exports should be force-kept via extraLibraryFuncs:\n{lib}"
+        !lib.contains("extraLibraryFuncs.push('$add'"),
+        "public exports should rely on EXPORTED_FUNCTIONS, not a redundant force-keep:\n{lib}"
+    );
+    assert!(
+        lib.contains("$Counter__deps: ['$initBindgen', '$CounterFinalization']"),
+        "Counter must keep its finalization registry via __deps:\n{lib}"
     );
     // A private class is hoisted but must NOT be exposed as a public export.
     assert!(
