@@ -28,9 +28,17 @@
             // emscripten emits each `$Name` library symbol as a module-scope
             // `var Name = <value>`. Simulate that so the hoisted exports and
             // their `__postset` wiring (which reference bare names) resolve.
+            // A symbol's name may itself contain `__` (e.g. `__wbgtest_*` or a
+            // namespaced `app__math__Calc`), so exclude only the `__deps` /
+            // `__postset` decorator keys, which are suffixes.
             for (const key of Object.keys(window.mergedLibrary)) {
                 const name = key.slice(1);
-                if (key.startsWith('$') && !key.includes('__') && window[name] === undefined) {
+                if (
+                    key.startsWith('$') &&
+                    !key.endsWith('__deps') &&
+                    !key.endsWith('__postset') &&
+                    window[name] === undefined
+                ) {
                     window[name] = window.mergedLibrary[key];
                 }
             }
