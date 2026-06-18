@@ -2,6 +2,9 @@
     var elem = document.querySelector('#output');
     window.extraLibraryFuncs = [];
     window.mergedLibrary = {};
+    // emscripten settings the library file self-registers into at compile time.
+    window.EXPORTED_FUNCTIONS = new Set();
+    window.EXPORTED_RUNTIME_METHODS = new Set();
 
     window.wasmExports = {
         __wbindgen_start: () => {},
@@ -22,8 +25,26 @@
             if (typeof window.mergedLibrary.$initBindgen !== 'function') {
                 throw new Error("$initBindgen not found in the merged library.");
             }
-            // Execute the initialization
+            // emscripten emits each `$Name` library symbol as a module-scope
+            // `var Name = <value>`. Simulate that so the hoisted exports and
+            // their `__postset` wiring (which reference bare names) resolve.
+            for (const key of Object.keys(window.mergedLibrary)) {
+                const name = key.slice(1);
+                if (key.startsWith('$') && !key.includes('__') && window[name] === undefined) {
+                    window[name] = window.mergedLibrary[key];
+                }
+            }
+            // Execute the initialization (assigns `wasm`, runs start).
             window.mergedLibrary.$initBindgen();
+            // Run each symbol's `__postset` — this is where exports attach to
+            // `Module` (factory mode) and namespace roots are assembled. Skip
+            // emscripten's own `$initBindgen__postset` (an `addOnInit(...)`
+            // registration that isn't modelled by this harness).
+            for (const key of Object.keys(window.mergedLibrary)) {
+                if (key.endsWith('__postset') && key !== '$initBindgen__postset') {
+                    (0, eval)(window.mergedLibrary[key]);
+                }
+            }
         } catch (e) {
             elem.textContent += 'test setup failed: ' + e;
             return;
@@ -46,6 +67,13 @@
             }
             if (typeof Module.Interval !== 'function') {
                 return { status: false, e: 'test result: Interval is not found in Module' };
+            }
+            // The hoisted exports must self-register so emscripten emits them as
+            // named ESM exports under -sMODULARIZE=instance.
+            for (const name of ['hello', 'Interval']) {
+                if (!window.EXPORTED_FUNCTIONS.has(name)) {
+                    return { status: false, e: `test result: ${name} not registered in EXPORTED_FUNCTIONS` };
+                }
             }
 
             // Search the accumulated library object for the specific imports
