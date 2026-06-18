@@ -195,12 +195,14 @@ pub struct Context<'a> {
     /// before generating each import and diffing afterwards.
     emscripten_import_deps: BTreeMap<ImportId, BTreeSet<String>>,
 
-    /// Clean public export identifiers (free functions and classes) that have
-    /// been hoisted into top-level `addToLibrary` symbols in emscripten mode.
-    /// Used to self-register them at compile time via `EXPORTED_RUNTIME_METHODS`
-    /// (inclusion + `Module.<name>` in factory mode) and `EXPORTED_FUNCTIONS`
-    /// (the `export` prefix under `MODULARIZE=instance`), so emscripten emits
-    /// the clean named exports itself.
+    /// Clean public export identifiers (free functions, classes, enums, and
+    /// namespace roots) that have been hoisted into top-level `addToLibrary`
+    /// symbols in emscripten mode. Used to self-register them at compile time
+    /// (in `generate_emscripten_wasm_loading`) via `extraLibraryFuncs`
+    /// (force-keep the symbol) and `EXPORTED_FUNCTIONS` (the `export` prefix
+    /// under `MODULARIZE=instance`), so emscripten emits the clean named
+    /// exports itself. Factory-mode `Module.<name>` attachment is handled
+    /// separately by each symbol's `__postset`.
     emscripten_runtime_exports: Vec<String>,
 
     /// `true` when the module's memory is a memory64 (wasm64) memory.
@@ -480,7 +482,9 @@ impl<'a> Context<'a> {
     /// Hoist a clean public export (a free function or class) into its own
     /// top-level `addToLibrary({ $id: <value>, ... })` library symbol so
     /// emscripten can turn it into a named ESM export under
-    /// `MODULARIZE=instance` (see `self_register_emscripten_exports`).
+    /// `MODULARIZE=instance`. Public symbols are recorded in
+    /// `emscripten_runtime_exports` and self-registered in
+    /// `generate_emscripten_wasm_loading`.
     ///
     /// `value` is the right-hand side expression — a named function expression
     /// (`function add(a, b) { ... }`), class expression (`class Counter
@@ -2305,19 +2309,19 @@ if (require('worker_threads').isMainThread) {{
                 : new FinalizationRegistry({finalization_callback})"
         );
         if hoist {
-            // Emit the registry's *source* as a string-valued library member.
-            // emscripten evaluates non-string library values while loading the
-            // library file, then re-serializes them from the live object. A
-            // `FinalizationRegistry` instance has no enumerable own properties,
-            // so that round-trip would collapse it to `{}` and drop
-            // `register`/`unregister`. A string member is emitted verbatim as
-            // `var XFinalization = <source>` (same as intrinsic values like
-            // `$cachedTextDecoder: "new TextDecoder()"`). The callback closes
-            // over the module-scope `wasm` global.
-            let value_lit = format!("{finalization_value:?}");
+            // Construct the registry in a `__postset` rather than as the
+            // member's value. emscripten evaluates non-string library values
+            // while loading the library file, then re-serializes them from the
+            // live object; a `FinalizationRegistry` instance has no enumerable
+            // own properties, so that round-trip collapses it to `{}` and drops
+            // `register`/`unregister`. `__postset` text is emitted verbatim, so
+            // the initializer source is preserved. The callback closes over the
+            // module-scope `wasm` global.
+            let postset = format!("{identifier}Finalization = {finalization_value};");
             self.emscripten_library(&format!(
-                "addToLibrary({{\n    ${identifier}Finalization: {value_lit},\n    \
-                 ${identifier}Finalization__deps: ['$wasm']\n}});"
+                "addToLibrary({{\n    ${identifier}Finalization: undefined,\n    \
+                 ${identifier}Finalization__deps: ['$wasm'],\n    \
+                 ${identifier}Finalization__postset: {postset:?}\n}});"
             ));
         } else {
             self.globals.push_str(&format!(
@@ -2515,12 +2519,17 @@ if (require('worker_threads').isMainThread) {{
                 extra_deps.push(parent.clone());
             }
             let extra_dep_refs: Vec<&str> = extra_deps.iter().map(String::as_str).collect();
+            // A `#[wasm_bindgen(private)]` class is declared but never exposed
+            // as a runtime value in other modes (`export_def` returns early on
+            // `private`); keep it module-internal here too — hoist it as a
+            // library symbol but don't attach it to `Module` or self-register
+            // it as a named export.
             self.hoist_emscripten_export(
                 &identifier,
                 dst.trim_end(),
                 &extra_dep_refs,
                 &format!("{dispose_wiring} "),
-                !is_namespaced,
+                !is_namespaced && !class.private,
             );
             // A namespaced class still needs a namespace-tree entry so its root
             // assembles `ns.Class = <identifier>` and the `.d.ts` namespace

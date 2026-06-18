@@ -2,9 +2,8 @@
     var elem = document.querySelector('#output');
     window.extraLibraryFuncs = [];
     window.mergedLibrary = {};
-    // emscripten settings the library file self-registers into at compile time.
+    // emscripten setting the library file self-registers into at compile time.
     window.EXPORTED_FUNCTIONS = new Set();
-    window.EXPORTED_RUNTIME_METHODS = new Set();
 
     window.wasmExports = {
         __wbindgen_start: () => {},

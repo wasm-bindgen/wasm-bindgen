@@ -2368,6 +2368,21 @@ fn emscripten_exports_hoisted_to_library_symbols() {
                 Green = 1,
             }
 
+            // A private class must stay module-internal: hoisted, but not
+            // attached to Module nor self-registered as a public export.
+            #[wasm_bindgen(private)]
+            pub struct Secret {
+                value: i32,
+            }
+
+            #[wasm_bindgen]
+            impl Secret {
+                #[wasm_bindgen(constructor)]
+                pub fn new() -> Secret {
+                    Secret { value: 0 }
+                }
+            }
+
             #[wasm_bindgen]
             pub struct Counter {
                 value: i32,
@@ -2437,11 +2452,15 @@ fn emscripten_exports_hoisted_to_library_symbols() {
         lib.contains(r#"$Color: "Object.freeze("#),
         "Color enum should be a hoisted string-valued library symbol:\n{lib}"
     );
-    // The finalization registry is likewise emitted as source via a string
-    // member, so it survives emscripten's evaluate-then-reserialize.
+    // The finalization registry is constructed in a __postset (emitted
+    // verbatim) so the live FinalizationRegistry isn't evaluated then
+    // re-serialized to `{}` by emscripten.
     assert!(
-        lib.contains(r#"$CounterFinalization: "(typeof FinalizationRegistry"#),
-        "CounterFinalization should be emitted as source (string member):\n{lib}"
+        lib.contains("$CounterFinalization: undefined,")
+            && lib.contains(
+                r#"$CounterFinalization__postset: "CounterFinalization = (typeof FinalizationRegistry"#
+            ),
+        "CounterFinalization should be constructed in a __postset:\n{lib}"
     );
     // Self-registration so emscripten exports them itself.
     for name in ["add", "Counter", "Color"] {
@@ -2453,6 +2472,19 @@ fn emscripten_exports_hoisted_to_library_symbols() {
     assert!(
         lib.contains("extraLibraryFuncs.push('$add', '$Color', '$Counter')"),
         "hoisted exports should be force-kept via extraLibraryFuncs:\n{lib}"
+    );
+    // A private class is hoisted but must NOT be exposed as a public export.
+    assert!(
+        lib.contains("$Secret: class Secret"),
+        "private class should still be hoisted as a library symbol:\n{lib}"
+    );
+    assert!(
+        !lib.contains("EXPORTED_FUNCTIONS.add('Secret')"),
+        "private class must not self-register as a named export:\n{lib}"
+    );
+    assert!(
+        !lib.contains("Module['Secret']"),
+        "private class must not attach to Module:\n{lib}"
     );
     // They must no longer be inlined inside the $initBindgen closure.
     let init = lib
