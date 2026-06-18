@@ -195,14 +195,9 @@ pub struct Context<'a> {
     /// before generating each import and diffing afterwards.
     emscripten_import_deps: BTreeMap<ImportId, BTreeSet<String>>,
 
-    /// Clean public export identifiers (free functions, classes, enums, and
-    /// namespace roots) that have been hoisted into top-level `addToLibrary`
-    /// symbols in emscripten mode. Used to self-register them at compile time
-    /// (in `generate_emscripten_wasm_loading`) via `extraLibraryFuncs`
-    /// (force-keep the symbol) and `EXPORTED_FUNCTIONS` (the `export` prefix
-    /// under `MODULARIZE=instance`), so emscripten emits the clean named
-    /// exports itself. Factory-mode `Module.<name>` attachment is handled
-    /// separately by each symbol's `__postset`.
+    /// Public exports hoisted into top-level `addToLibrary` symbols, recorded
+    /// so they can be added to `EXPORTED_FUNCTIONS` in
+    /// `generate_emscripten_wasm_loading`.
     emscripten_runtime_exports: Vec<String>,
 
     /// `true` when the module's memory is a memory64 (wasm64) memory.
@@ -382,9 +377,8 @@ impl<'a> Context<'a> {
             return;
         }
         if matches!(self.config.mode, OutputMode::Emscripten) {
-            // Hoisted classes live in top-level `addToLibrary` symbols, so the
-            // sentinel their constructors compare against must also be a
-            // module-scope library symbol (not a `const` inside `$initBindgen`).
+            // Hoisted classes reference the sentinel at module scope, so it
+            // must be a library symbol rather than a `$initBindgen` local.
             self.export_to_emscripten("__wbgSuperSkip", "Symbol('wasm-bindgen.super-skip')", &[]);
             self.adapter_deps.insert("__wbgSuperSkip".to_string());
         } else {
@@ -479,29 +473,15 @@ impl<'a> Context<'a> {
         ));
     }
 
-    /// Hoist a clean public export (a free function or class) into its own
-    /// top-level `addToLibrary({ $id: <value>, ... })` library symbol so
-    /// emscripten can turn it into a named ESM export under
-    /// `MODULARIZE=instance`. Public symbols are recorded in
-    /// `emscripten_runtime_exports` and self-registered in
-    /// `generate_emscripten_wasm_loading`.
+    /// Hoist a clean export into its own top-level `addToLibrary` symbol so
+    /// emscripten can emit it as a named ESM export.
     ///
-    /// `value` is the right-hand side expression — a named function expression
-    /// (`function add(a, b) { ... }`), class expression (`class Counter
-    /// { ... }`), or `{}` for a namespace root. `extra_deps` lists additional
-    /// `$`-less library symbols the value/postset references (a class's
-    /// `<id>Finalization` and its `extends` parent; a namespace root's leaf
-    /// symbols); every hoisted symbol also depends on `$initBindgen`, which
-    /// aggregates `$wasm` plus all intrinsic deps, so nothing referenced by
-    /// bare name is tree-shaken. `postset_extra` is JS run right after the
-    /// symbol is defined (the class `Symbol.dispose` wiring, or a namespace
-    /// root's nested assembly).
-    ///
-    /// `public` marks a top-level export: it adds the `Module.<id> = <id>`
-    /// attachment (factory mode) and records the name for self-registration
-    /// into `EXPORTED_FUNCTIONS` (named ESM export under instance mode).
-    /// Namespace *leaves* are hoisted with `public = false`: they're reachable
-    /// only through their namespace root, which is the public export.
+    /// `value` is the right-hand side (a function/class expression, or `{}`
+    /// for a namespace root). `extra_deps` lists `$`-less library symbols the
+    /// body references; every symbol also depends on `$initBindgen`.
+    /// `postset_extra` runs after the symbol is defined. `public` adds the
+    /// `Module.<id>` attachment and records the name for `EXPORTED_FUNCTIONS`;
+    /// namespace leaves are hoisted privately (`public = false`).
     fn hoist_emscripten_export(
         &mut self,
         identifier: &str,
@@ -1766,16 +1746,8 @@ if (require('worker_threads').isMainThread) {{
             ""
         };
 
-        // Self-register the hoisted public exports at compile time. emscripten
-        // runs `--js-library` files in the compiler context, so we can push
-        // straight onto its settings. Adding each name to `EXPORTED_FUNCTIONS`
-        // does double duty in `jsifier`: membership forces the `$<id>` library
-        // symbol to be included (`EXPORTED_FUNCTIONS.has(mangleCSymbolName(key))`
-        // at jsifier.mjs:419) *and* makes it prepend `export` to the symbol's
-        // declaration under `MODULARIZE=instance` (jsifier.mjs:802) — a named
-        // ESM export. Factory mode gets `Module.<id>` via the symbol's
-        // `__postset`. So no separate `extraLibraryFuncs` force-keep is needed;
-        // the transitive closure is pulled in by each symbol's `__deps`.
+        // Adding each name to `EXPORTED_FUNCTIONS` forces jsifier to include the
+        // `$<id>` symbol and prefix it with `export` under `MODULARIZE=instance`.
         let self_register = self
             .emscripten_runtime_exports
             .iter()
@@ -2282,12 +2254,8 @@ if (require('worker_threads').isMainThread) {{
             )
         };
 
-        // In emscripten mode every class is hoisted into top-level
-        // `addToLibrary` symbols, so its finalization registry must be a
-        // sibling library symbol rather than a `const` inside `$initBindgen`.
-        // A non-namespaced class is a *public* export (named ESM export /
-        // `Module.<name>`); a namespaced class is hoisted privately and reached
-        // through its namespace root (the public export).
+        // Hoisted classes need their finalization registry as a sibling library
+        // symbol rather than a `$initBindgen` local.
         let hoist = matches!(self.config.mode, OutputMode::Emscripten);
         let is_namespaced = class.js_namespace.is_some();
         let finalization_value = format!(
@@ -2296,14 +2264,9 @@ if (require('worker_threads').isMainThread) {{
                 : new FinalizationRegistry({finalization_callback})"
         );
         if hoist {
-            // Construct the registry in a `__postset` rather than as the
-            // member's value. emscripten evaluates non-string library values
-            // while loading the library file, then re-serializes them from the
-            // live object; a `FinalizationRegistry` instance has no enumerable
-            // own properties, so that round-trip collapses it to `{}` and drops
-            // `register`/`unregister`. `__postset` text is emitted verbatim, so
-            // the initializer source is preserved. The callback closes over the
-            // module-scope `wasm` global.
+            // Build the registry in a `__postset` (emitted verbatim). As a
+            // member value emscripten would re-serialize the live instance and
+            // collapse it to `{}`, losing `register`/`unregister`.
             let postset = format!("{identifier}Finalization = {finalization_value};");
             self.emscripten_library(&format!(
                 "addToLibrary({{\n    ${identifier}Finalization: undefined,\n    \
@@ -2496,21 +2459,16 @@ if (require('worker_threads').isMainThread) {{
         );
 
         if hoist {
-            // `dst` is the bare `class {identifier} { ... }` expression; the
-            // `Symbol.dispose` wiring is a follow-up statement, so it goes in
-            // the `__postset`. Deps: the sibling finalization registry and, if
-            // present, the `extends` parent (also a hoisted library symbol).
+            // The `Symbol.dispose` wiring follows the class expression, so it
+            // goes in the `__postset`. Deps: the finalization registry and any
+            // `extends` parent (also a hoisted symbol).
             let identifier = identifier.clone();
             let mut extra_deps: Vec<String> = vec![format!("{identifier}Finalization")];
             if let Some(parent) = &parent_identifier {
                 extra_deps.push(parent.clone());
             }
             let extra_dep_refs: Vec<&str> = extra_deps.iter().map(String::as_str).collect();
-            // A `#[wasm_bindgen(private)]` class is declared but never exposed
-            // as a runtime value in other modes (`export_def` returns early on
-            // `private`); keep it module-internal here too — hoist it as a
-            // library symbol but don't attach it to `Module` or self-register
-            // it as a named export.
+            // Private classes are hoisted but not exposed as a runtime value.
             self.hoist_emscripten_export(
                 &identifier,
                 dst.trim_end(),
@@ -2518,11 +2476,8 @@ if (require('worker_threads').isMainThread) {{
                 &format!("{dispose_wiring} "),
                 !is_namespaced && !class.private,
             );
-            // A namespaced class still needs a namespace-tree entry so its root
-            // assembles `ns.Class = <identifier>` and the `.d.ts` namespace
-            // shape resolves `typeof <identifier>`. The declaration itself is
-            // the hoisted library symbol above, so the tree entry carries an
-            // empty definition.
+            // Namespaced classes still need a tree entry (empty definition) so
+            // the root assembles `ns.Class = <identifier>`.
             if is_namespaced {
                 define_export(
                     &mut self.exports,
@@ -2725,11 +2680,9 @@ if (require('worker_threads').isMainThread) {{
                         String::new()
                     };
                     if matches!(self.config.mode, OutputMode::Emscripten) {
-                        // The namespace root is the public export: a top-level
-                        // `{}` library symbol. Its leaves are hoisted private
-                        // library symbols listed as deps (so emscripten emits
-                        // them first), and `ns_dst` assembles the nested shape
-                        // (`root.a.b = <leaf>`) in the root's `__postset`.
+                        // The namespace root is a public `{}` symbol; its
+                        // hoisted leaves are deps and `ns_dst` assembles the
+                        // nested shape in the root's `__postset`.
                         if self.config.typescript {
                             self.typescript
                                 .push_str(&format!("{identifier}: {ts_dst};\n"));
@@ -2793,11 +2746,8 @@ if (require('worker_threads').isMainThread) {{
                     output.push_str(&self.write_namespace(&full_name, &ns.ns, existing, leaf_ids)?);
                 }
                 ExportEntry::Definition(def) => {
-                    // In emscripten mode the leaf's declaration is its own
-                    // hoisted library symbol (see `write_class` / the function
-                    // export branch), so we only wire `ns.leaf = <identifier>`
-                    // here and record the symbol so the namespace root can list
-                    // it as a dep. Other modes inline the declaration.
+                    // In emscripten mode the leaf is its own hoisted symbol, so
+                    // record it as a root dep; other modes inline the decl.
                     if emscripten {
                         leaf_ids.push(def.identifier.clone());
                     } else {
@@ -5316,13 +5266,9 @@ addToLibrary({
                         };
 
                         if matches!(self.config.mode, OutputMode::Emscripten) {
-                            // Hoist into a top-level library symbol. Non-namespaced
-                            // functions are public (named ESM export in instance
-                            // mode, `Module.<name>` in factory mode). Namespaced
-                            // functions are hoisted privately and still recorded in
-                            // the namespace tree (with an empty definition, since
-                            // the declaration is now the library symbol) so the
-                            // namespace root assembles `ns.fn = <identifier>`.
+                            // Hoist into a library symbol. Namespaced functions
+                            // are hoisted privately and recorded in the tree
+                            // (empty definition) so the root wires `ns.fn`.
                             let value = format!("function {identifier}{code}");
                             self.hoist_emscripten_export(
                                 &identifier,
@@ -6502,16 +6448,11 @@ addToLibrary({
         };
 
         if matches!(self.config.mode, OutputMode::Emscripten) {
-            // Hoist the frozen enum object into its own library symbol, like
-            // functions and classes. Non-namespaced public enums become named
-            // ESM exports / `Module.<name>`; namespaced ones are private and
-            // reached through their namespace root.
+            // Hoist the frozen enum into a library symbol like functions and
+            // classes.
             let is_namespaced = enum_.js_namespace.is_some();
-            // String-valued member so the `Object.freeze(...)` source is
-            // emitted verbatim. As a live value it would be evaluated while
-            // loading the library and re-serialized to a plain object, losing
-            // `Object.freeze` (see the finalization-registry note in
-            // `write_class`).
+            // String-valued so the `Object.freeze(...)` source is emitted
+            // verbatim (see the finalization-registry note in `write_class`).
             let value = format!("{:?}", format!("Object.freeze({{\n{variants}}})"));
             self.hoist_emscripten_export(
                 &identifier,
@@ -6593,11 +6534,8 @@ addToLibrary({
             let name = &string_enum.name;
             let values = variants.join(", ");
             if matches!(self.config.mode, OutputMode::Emscripten) {
-                // The array is referenced by hoisted function/class bodies, so
-                // it must be a module-scope library symbol (not a `const`
-                // inside `$initBindgen`). Register it as an adapter dep so
-                // `$initBindgen` — which the hoisted symbols depend on — keeps
-                // it alive.
+                // Referenced by hoisted bodies at module scope, so it must be a
+                // library symbol; register as an adapter dep to keep it alive.
                 self.export_to_emscripten(
                     &format!("__wbindgen_enum_{name}"),
                     &format!("[{values}]"),

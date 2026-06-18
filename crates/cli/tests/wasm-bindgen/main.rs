@@ -2347,10 +2347,8 @@ fn emscripten_namespaced_exports_valid_ts() {
 
 #[test]
 fn emscripten_exports_hoisted_to_library_symbols() {
-    // Non-namespaced clean exports are hoisted out of the `$initBindgen`
-    // closure into top-level `addToLibrary` symbols and self-registered, so
-    // emscripten emits them as named ESM exports (instance mode) / `Module`
-    // properties (factory mode) on its own.
+    // Clean exports are hoisted into top-level `addToLibrary` symbols and
+    // self-registered so emscripten emits them itself.
     let mut project = Project::new("emscripten_exports_hoisted_to_library_symbols");
     project.file(
         "src/lib.rs",
@@ -2445,16 +2443,12 @@ fn emscripten_exports_hoisted_to_library_symbols() {
         lib.contains("$Counter__deps: ['$initBindgen', '$CounterFinalization']"),
         "Counter should depend on $initBindgen + its finalizer:\n{lib}"
     );
-    // Enum hoisted to its own library symbol. The `Object.freeze(...)` source
-    // is a string-valued member so emscripten emits it verbatim (a live value
-    // would be re-serialized to a plain object, losing the freeze).
+    // Enum hoisted as a string-valued symbol so the freeze is emitted verbatim.
     assert!(
         lib.contains(r#"$Color: "Object.freeze("#),
         "Color enum should be a hoisted string-valued library symbol:\n{lib}"
     );
-    // The finalization registry is constructed in a __postset (emitted
-    // verbatim) so the live FinalizationRegistry isn't evaluated then
-    // re-serialized to `{}` by emscripten.
+    // Finalization registry built in a __postset to avoid re-serialization.
     assert!(
         lib.contains("$CounterFinalization: undefined,")
             && lib.contains(
@@ -2469,9 +2463,7 @@ fn emscripten_exports_hoisted_to_library_symbols() {
             "{name} should be self-registered into EXPORTED_FUNCTIONS:\n{lib}"
         );
     }
-    // No separate force-keep: EXPORTED_FUNCTIONS membership already includes
-    // each public symbol (jsifier.mjs:419), and the finalization registry is
-    // retained purely as a dependency of its class.
+    // No force-keep: EXPORTED_FUNCTIONS membership already retains each symbol.
     assert!(
         !lib.contains("extraLibraryFuncs.push('$add'"),
         "public exports should rely on EXPORTED_FUNCTIONS, not a redundant force-keep:\n{lib}"
