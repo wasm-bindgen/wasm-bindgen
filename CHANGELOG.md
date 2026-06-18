@@ -8,13 +8,17 @@
 ### Changed
 
 * Emscripten output now hoists every clean export (free functions, classes,
-  enums, their finalization registries and string-enum tables) out of the
-  `$initBindgen` init closure into its own top-level `addToLibrary` symbol, and
-  self-registers it via `EXPORTED_FUNCTIONS` / `extraLibraryFuncs`. emscripten
-  then emits the clean API (`add`, `Counter`, ...) as named ESM exports under
-  `-sMODULARIZE=instance` and as `Module.<name>` properties in factory mode,
-  with no extra sidecar files. Namespaced exports are exported through their
-  namespace root (e.g. `app`), assembled in the root symbol's `__postset`.
+  enums, plus their finalization registries and string-enum tables) out of the
+  `$initBindgen` init closure into its own top-level `addToLibrary` symbol and
+  self-registers it into `EXPORTED_FUNCTIONS`. emscripten then emits the clean
+  API (`add`, `Counter`, ...) as named ESM exports under `-sMODULARIZE=instance`
+  and as `Module.<name>` properties (via each symbol's `__postset`) in factory
+  mode, with no extra sidecar files. Namespaced exports are reached through
+  their namespace root (e.g. `app`), assembled in the root symbol's `__postset`.
+  User module/inline-js imports are now wired as `addToLibrary` shims (they were
+  previously dropped, since emcc resolves imports only against `env`), and their
+  ESM-imported bindings are `__wbg_`-prefixed to avoid colliding with emcc
+  runtime names such as `Module`/`HEAP8`.
   [#5210](https://github.com/wasm-bindgen/wasm-bindgen/pull/5210)
 
 ### Fixed
