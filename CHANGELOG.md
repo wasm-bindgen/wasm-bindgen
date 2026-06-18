@@ -15,7 +15,7 @@
   `-sMODULARIZE=instance` and as `Module.<name>` properties in factory mode,
   with no extra sidecar files. Namespaced exports are exported through their
   namespace root (e.g. `app`), assembled in the root symbol's `__postset`.
-  [#5209](https://github.com/wasm-bindgen/wasm-bindgen/pull/5209)
+  [#5209](https://github.com/wasm-bindgen/wasm-bindgen/pull/5210)
 
 ### Fixed
 
