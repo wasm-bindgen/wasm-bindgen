@@ -751,7 +751,7 @@ struct BorrowedClosure<T: ?Sized, const UNWIND_SAFE: bool> {
 /// `(a, b)` must be a valid pair previously produced by `Box::into_raw` on a
 /// `Box<dyn FnOnce/FnMut/Fn>` closure, or `a` must be zero (in which case this
 /// is a no-op).
-#[no_mangle]
+#[unsafe(export_name = "__wbindgen_destroy_closure")]
 unsafe extern "C" fn __wbindgen_destroy_closure(a: WasmWord, b: WasmWord) {
     if a.is_zero() {
         return;

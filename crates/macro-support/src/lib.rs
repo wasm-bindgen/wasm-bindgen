@@ -96,7 +96,7 @@ pub fn expand_class_marker(
     // output stream. If we were to do that then it wouldn't parse!
     //
     // Instead what we want to do is to generate the tokens for `program` into
-    // the header of the function. This'll inject some no_mangle functions and
+    // the header of the function. This'll inject some exported functions and
     // statics and such, and they should all be valid in the context of the
     // start of a function.
     //

@@ -223,7 +223,8 @@ impl ToTokens for ast::Struct {
         let name_len = name_str.len() as u32;
         let name_chars: Vec<u32> = name_str.chars().map(|c| c as u32).collect();
         let new_fn = Ident::new(&shared::new_function(&name_str), Span::call_site());
-        let free_fn = Ident::new(&shared::free_function(&name_str), Span::call_site());
+        let free_fn_name = shared::free_function(&name_str);
+        let free_fn = Ident::new(&free_fn_name, Span::call_site());
         let unwrap_fn = Ident::new(&shared::unwrap_function(&name_str), Span::call_site());
         let wasm_bindgen = &self.wasm_bindgen;
         let class_abi = quote! {
@@ -310,7 +311,7 @@ impl ToTokens for ast::Struct {
             #[automatically_derived]
             const _: () = {
                 #wasm_bindgen::__wbindgen_coverage! {
-                #[no_mangle]
+                #[unsafe(export_name = #free_fn_name)]
                 #[doc(hidden)]
                 // `allow_delayed` is whether it's ok to not actually free the `ptr` immediately
                 // if it's still borrowed.
@@ -498,10 +499,8 @@ impl ToTokens for ast::Struct {
                     .unwrap_or_default();
                 let parent_qualified =
                     shared::qualified_name(self.extends_js_namespace.as_deref(), &parent_bare_name);
-                let upcast_fn = Ident::new(
-                    &shared::upcast_function(&name_str, &parent_qualified),
-                    Span::call_site(),
-                );
+                let upcast_fn_name = shared::upcast_function(&name_str, &parent_qualified);
+                let upcast_fn = Ident::new(&upcast_fn_name, Span::call_site());
                 (quote! {
                     #[automatically_derived]
                     impl #wasm_bindgen::__rt::core::convert::AsRef<#field_ty> for #name {
@@ -514,7 +513,7 @@ impl ToTokens for ast::Struct {
                     #[cfg(all(target_family = "wasm", not(target_os = "wasi")))]
                     #[automatically_derived]
                     const _: () = {
-                        #[no_mangle]
+                        #[unsafe(export_name = #upcast_fn_name)]
                         #[doc(hidden)]
                         pub unsafe extern "C-unwind" fn #upcast_fn(ptr: u32) -> u32 {
                             use #wasm_bindgen::__rt::alloc::rc::Rc;
@@ -552,6 +551,8 @@ impl ToTokens for ast::StructField {
         let ty = &self.ty;
         let getter = &self.getter;
         let setter = &self.setter;
+        let getter_name = getter.to_string();
+        let setter_name = setter.to_string();
 
         let maybe_assert_copy = if self.getter_with_clone.is_some() {
             quote! {}
@@ -581,7 +582,7 @@ impl ToTokens for ast::StructField {
             #[automatically_derived]
             const _: () = {
                 #wasm_bindgen::__wbindgen_coverage! {
-                #[cfg_attr(all(target_family = "wasm", not(target_os = "wasi")), no_mangle)]
+                #[cfg_attr(all(target_family = "wasm", not(target_os = "wasi")), unsafe(export_name = #getter_name))]
                 #[doc(hidden)]
                 pub unsafe extern "C-unwind" fn #getter(js: #struct_abi)
                     -> #wasm_bindgen::convert::WasmRet<<#ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi>
@@ -624,7 +625,7 @@ impl ToTokens for ast::StructField {
             #[automatically_derived]
             const _: () = {
                 #wasm_bindgen::__wbindgen_coverage! {
-                #[no_mangle]
+                #[unsafe(export_name = #setter_name)]
                 #[doc(hidden)]
                 pub unsafe extern "C-unwind" fn #setter(
                     js: #struct_abi,
@@ -1009,7 +1010,7 @@ impl TryToTokens for ast::Export {
                 #(#attrs)*
                 #[cfg_attr(
                     all(target_family = "wasm", not(target_os = "wasi")),
-                    export_name = #export_name,
+                    unsafe(export_name = #export_name),
                 )]
                 pub unsafe extern "C-unwind" fn #generated_name(#(#args),*) -> #wasm_bindgen::convert::WasmRet<#projection::Abi> {
                     const _: () = {
@@ -3199,7 +3200,8 @@ impl<T: ToTokens> ToTokens for Descriptor<'_, T> {
             return;
         }
 
-        let name = Ident::new(&format!("__wbindgen_describe_{ident}"), ident.span());
+        let name_str = format!("__wbindgen_describe_{ident}");
+        let name = Ident::new(&name_str, ident.span());
         let inner = &self.inner;
         let attrs = &self.attrs;
         let wasm_bindgen = &self.wasm_bindgen;
@@ -3209,7 +3211,7 @@ impl<T: ToTokens> ToTokens for Descriptor<'_, T> {
             const _: () = {
                 #wasm_bindgen::__wbindgen_coverage! {
                 #(#attrs)*
-                #[no_mangle]
+                #[unsafe(export_name = #name_str)]
                 #[doc(hidden)]
                 pub extern "C-unwind" fn #name() {
                     use #wasm_bindgen::describe::*;

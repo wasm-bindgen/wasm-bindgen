@@ -38,7 +38,7 @@ In addition to the shims we talked about above which JS generates the macro
 *also* generates something like:
 
 ```
-#[no_mangle]
+#[unsafe(export_name = "__wbindgen_describe_greet")]
 pub extern "C" fn __wbindgen_describe_greet() {
     <dyn Fn(&str)>::describe();
 }
