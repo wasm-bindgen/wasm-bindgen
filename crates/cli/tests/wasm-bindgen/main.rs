@@ -2500,6 +2500,87 @@ fn emscripten_exports_hoisted_to_library_symbols() {
     );
 }
 
+#[test]
+fn emscripten_user_imports_are_prefixed() {
+    // User module imports land in the `--extern-pre-js` sidecar at module top
+    // level alongside emcc's runtime, and the imported names come verbatim from
+    // the user's JS. They're prefixed with `__wbg_` so arbitrary names (e.g. a
+    // function literally called `Module`) can't collide with emcc globals. The
+    // public export (`run`) stays unprefixed.
+    let mut project = Project::new("emscripten_user_imports_are_prefixed");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen::prelude::*;
+
+            // A name that would collide with emscripten's runtime if unprefixed.
+            #[wasm_bindgen(module = "imports")]
+            extern "C" {
+                fn Module() -> i32;
+            }
+
+            #[wasm_bindgen(inline_js = "export function snippet_value() { return 7; }")]
+            extern "C" {
+                fn snippet_value() -> i32;
+            }
+
+            #[wasm_bindgen]
+            pub fn run() -> i32 {
+                Module() + snippet_value()
+            }
+        "#,
+    );
+
+    let built = project.build();
+    let mut module = ModuleConfig::new().parse_file(&built).unwrap();
+    module.customs.add(RawCustomSection {
+        name: "__wasm_bindgen_emscripten_marker".into(),
+        data: vec![1],
+    });
+    let emscripten_wasm = project.root.join("emscripten_input.wasm");
+    module.emit_wasm_file(&emscripten_wasm).unwrap();
+
+    let out_dir = project.root.join("pkg-emscripten");
+    fs::create_dir_all(&out_dir).unwrap();
+    wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
+        "wasm-bindgen".as_ref(),
+        "--out-dir".as_ref(),
+        out_dir.as_os_str(),
+        emscripten_wasm.as_os_str(),
+    ])
+    .unwrap();
+
+    // ESM imports live in the extern-pre sidecar, aliased to a `__wbg_` local.
+    let extern_pre = fs::read_to_string(out_dir.join("library_bindgen.extern-pre.js")).unwrap();
+    assert!(
+        extern_pre.contains("Module as __wbg_Module"),
+        "module import should be aliased to a __wbg_-prefixed local:\n{extern_pre}"
+    );
+    assert!(
+        extern_pre.contains("snippet_value as __wbg_snippet_value"),
+        "inline-js snippet import should be aliased to a __wbg_-prefixed local:\n{extern_pre}"
+    );
+    // The bare user name must NOT bind at module scope (no collision with emcc).
+    assert!(
+        !extern_pre.contains("import { Module }")
+            && !extern_pre.contains("import { Module,")
+            && !extern_pre.contains(", Module }"),
+        "the unprefixed `Module` must not be imported into module scope:\n{extern_pre}"
+    );
+
+    // The library shims reference the prefixed locals.
+    let lib = fs::read_to_string(out_dir.join("library_bindgen.js")).unwrap();
+    assert!(
+        lib.contains("__wbg_Module(") && lib.contains("__wbg_snippet_value("),
+        "shims should call the prefixed import locals:\n{lib}"
+    );
+    // The public export keeps its clean name.
+    assert!(
+        lib.contains("$run: function run("),
+        "the public export `run` must stay unprefixed:\n{lib}"
+    );
+}
+
 /// Look up an executable on `PATH`. Used so the test can opportunistically
 /// validate the generated .d.ts with `tsc` without hard-requiring it.
 fn which(name: &str) -> Option<PathBuf> {

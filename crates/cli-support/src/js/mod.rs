@@ -4494,6 +4494,22 @@ if (require('worker_threads').isMainThread) {{
             .push((name.to_string(), rename));
     }
 
+    /// Module-scope local name for an imported value. In emscripten mode user
+    /// imports are emitted as ESM imports in the `--extern-pre-js` sidecar,
+    /// landing at module top level alongside emcc's runtime; the imported name
+    /// comes verbatim from the user's JS module, so prefix the local with
+    /// `__wbg_` to avoid colliding with arbitrary names (`Module`, `HEAP8`,
+    /// `wasm`, ...). The import is aliased (`import { Foo as __wbg_Foo }`) and
+    /// every shim references the same prefixed local. Other modes are
+    /// unaffected (their imports aren't merged into a foreign module scope).
+    fn generate_import_identifier(&mut self, name: &str) -> String {
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.generate_identifier(&format!("__wbg_{name}"))
+        } else {
+            self.generate_identifier(name)
+        }
+    }
+
     fn import_name(&mut self, import: &JsImport) -> Result<String, Error> {
         if let Some(name) = self.imported_names.get(&import.name) {
             let mut name = name.clone();
@@ -4505,13 +4521,13 @@ if (require('worker_threads').isMainThread) {{
 
         let mut name = match &import.name {
             JsImportName::Module { module, name } => {
-                let unique_name = self.generate_identifier(name);
+                let unique_name = self.generate_import_identifier(name);
                 self.add_module_import(module.clone(), name, &unique_name);
                 unique_name
             }
 
             JsImportName::LocalModule { module, name } => {
-                let unique_name = self.generate_identifier(name);
+                let unique_name = self.generate_import_identifier(name);
                 let module = self.config.local_module_name(module);
                 self.add_module_import(module, name, &unique_name);
                 unique_name
@@ -4525,7 +4541,7 @@ if (require('worker_threads').isMainThread) {{
                 let module = self
                     .config
                     .inline_js_module_name(unique_crate_identifier, *snippet_idx_in_crate);
-                let unique_name = self.generate_identifier(name);
+                let unique_name = self.generate_import_identifier(name);
                 self.add_module_import(module, name, &unique_name);
                 unique_name
             }
@@ -5493,6 +5509,16 @@ addToLibrary({
         id: ImportId,
         instrs: &[InstructionData],
     ) -> Result<bool, Error> {
+        // Emscripten resolves wasm imports only against its `env` library, so
+        // (unlike bundler/web/nodejs, which wire a direct module import via
+        // `import * as` + the import object) it can't satisfy an import that
+        // points straight at an arbitrary user module. Always fall through to a
+        // JS shim, which becomes an `addToLibrary` function calling the
+        // (prefixed) ESM-imported binding emitted into the extern-pre sidecar.
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            return Ok(false);
+        }
+
         // First up extract the ID of the single called adapter, if any.
         let mut call = None;
         for instr in instrs {
