@@ -7,6 +7,15 @@
 
 ### Changed
 
+* Emscripten output now hoists each non-namespaced clean export (free functions
+  and classes, plus their finalization registries) out of the `$initBindgen`
+  init closure into its own top-level `addToLibrary` symbol, and self-registers
+  it via `EXPORTED_FUNCTIONS` / `extraLibraryFuncs`. emscripten then emits the
+  clean API (`add`, `Counter`, ...) as named ESM exports under
+  `-sMODULARIZE=instance` and as `Module.<name>` properties in factory mode,
+  with no extra sidecar files. Namespaced exports are unchanged.
+  [#5209](https://github.com/wasm-bindgen/wasm-bindgen/pull/5209)
+
 ### Fixed
 
 * Relaxed alignment requirement for 8-byte types.

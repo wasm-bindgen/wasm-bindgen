@@ -2345,6 +2345,110 @@ fn emscripten_namespaced_exports_valid_ts() {
     }
 }
 
+#[test]
+fn emscripten_exports_hoisted_to_library_symbols() {
+    // Non-namespaced clean exports are hoisted out of the `$initBindgen`
+    // closure into top-level `addToLibrary` symbols and self-registered, so
+    // emscripten emits them as named ESM exports (instance mode) / `Module`
+    // properties (factory mode) on its own.
+    let mut project = Project::new("emscripten_exports_hoisted_to_library_symbols");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen::prelude::*;
+
+            #[wasm_bindgen]
+            pub fn add(a: i32, b: i32) -> i32 {
+                a + b
+            }
+
+            #[wasm_bindgen]
+            pub struct Counter {
+                value: i32,
+            }
+
+            #[wasm_bindgen]
+            impl Counter {
+                #[wasm_bindgen(constructor)]
+                pub fn new(start: i32) -> Counter {
+                    Counter { value: start }
+                }
+                pub fn inc(&mut self) -> i32 {
+                    self.value += 1;
+                    self.value
+                }
+            }
+        "#,
+    );
+
+    let built = project.build();
+    let mut module = ModuleConfig::new().parse_file(&built).unwrap();
+    module.customs.add(RawCustomSection {
+        name: "__wasm_bindgen_emscripten_marker".into(),
+        data: vec![1],
+    });
+    let emscripten_wasm = project.root.join("emscripten_input.wasm");
+    module.emit_wasm_file(&emscripten_wasm).unwrap();
+
+    let out_dir = project.root.join("pkg-emscripten");
+    fs::create_dir_all(&out_dir).unwrap();
+    wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
+        "wasm-bindgen".as_ref(),
+        "--out-dir".as_ref(),
+        out_dir.as_os_str(),
+        emscripten_wasm.as_os_str(),
+    ])
+    .unwrap();
+
+    let lib = fs::read_to_string(out_dir.join("library_bindgen.js")).unwrap();
+
+    // Free function hoisted to its own library symbol with Module attachment.
+    assert!(
+        lib.contains("$add: function add("),
+        "add should be a hoisted library function:\n{lib}"
+    );
+    assert!(
+        lib.contains("$add__postset: \"Module['add'] = add;\""),
+        "add should attach to Module via __postset:\n{lib}"
+    );
+    // Class + its finalization registry hoisted to library symbols.
+    assert!(
+        lib.contains("$Counter: class Counter"),
+        "Counter should be a hoisted library class:\n{lib}"
+    );
+    assert!(
+        lib.contains("$CounterFinalization:"),
+        "Counter's finalization registry should be a sibling library symbol:\n{lib}"
+    );
+    assert!(
+        lib.contains("$Counter__deps: ['$initBindgen', '$CounterFinalization']"),
+        "Counter should depend on $initBindgen + its finalizer:\n{lib}"
+    );
+    // Self-registration so emscripten exports them itself.
+    assert!(
+        lib.contains("EXPORTED_FUNCTIONS.add('add');")
+            && lib.contains("EXPORTED_FUNCTIONS.add('Counter');"),
+        "exports should be self-registered into EXPORTED_FUNCTIONS:\n{lib}"
+    );
+    assert!(
+        lib.contains("extraLibraryFuncs.push('$add', '$Counter')"),
+        "hoisted exports should be force-kept via extraLibraryFuncs:\n{lib}"
+    );
+    // They must no longer be inlined inside the $initBindgen closure.
+    let init = lib
+        .split_once("$initBindgen: () =>")
+        .map(|(_, rest)| rest)
+        .expect("$initBindgen present");
+    let init_body = init
+        .split_once("\n            });")
+        .map(|(b, _)| b)
+        .unwrap_or(init);
+    assert!(
+        !init_body.contains("class Counter") && !init_body.contains("function add("),
+        "exports must not be inlined in $initBindgen:\n{init_body}"
+    );
+}
+
 /// Look up an executable on `PATH`. Used so the test can opportunistically
 /// validate the generated .d.ts with `tsc` without hard-requiring it.
 fn which(name: &str) -> Option<PathBuf> {

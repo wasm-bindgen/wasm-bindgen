@@ -195,6 +195,14 @@ pub struct Context<'a> {
     /// before generating each import and diffing afterwards.
     emscripten_import_deps: BTreeMap<ImportId, BTreeSet<String>>,
 
+    /// Clean public export identifiers (free functions and classes) that have
+    /// been hoisted into top-level `addToLibrary` symbols in emscripten mode.
+    /// Used to self-register them at compile time via `EXPORTED_RUNTIME_METHODS`
+    /// (inclusion + `Module.<name>` in factory mode) and `EXPORTED_FUNCTIONS`
+    /// (the `export` prefix under `MODULARIZE=instance`), so emscripten emits
+    /// the clean named exports itself.
+    emscripten_runtime_exports: Vec<String>,
+
     /// `true` when the module's memory is a memory64 (wasm64) memory.
     memory64: bool,
 
@@ -358,6 +366,7 @@ impl<'a> Context<'a> {
             adapter_deps: Default::default(),
             emscripten_global_deps: Default::default(),
             emscripten_import_deps: Default::default(),
+            emscripten_runtime_exports: Default::default(),
             memory64,
             super_skip_sentinel_emitted: false,
         })
@@ -370,8 +379,16 @@ impl<'a> Context<'a> {
         if self.super_skip_sentinel_emitted {
             return;
         }
-        self.globals
-            .push_str("const __wbgSuperSkip = Symbol('wasm-bindgen.super-skip');\n");
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            // Hoisted classes live in top-level `addToLibrary` symbols, so the
+            // sentinel their constructors compare against must also be a
+            // module-scope library symbol (not a `const` inside `$initBindgen`).
+            self.export_to_emscripten("__wbgSuperSkip", "Symbol('wasm-bindgen.super-skip')", &[]);
+            self.adapter_deps.insert("__wbgSuperSkip".to_string());
+        } else {
+            self.globals
+                .push_str("const __wbgSuperSkip = Symbol('wasm-bindgen.super-skip');\n");
+        }
         self.super_skip_sentinel_emitted = true;
     }
 
@@ -458,6 +475,40 @@ impl<'a> Context<'a> {
             "addToLibrary({{\n    ${js_name}: \"{}\"{deps_str}\n}});",
             content.replace('\\', "\\\\").replace('"', "\\\""),
         ));
+    }
+
+    /// Hoist a clean public export (a free function or class) into its own
+    /// top-level `addToLibrary({ $id: <value>, ... })` library symbol so
+    /// emscripten can turn it into a named ESM export under
+    /// `MODULARIZE=instance` (see `self_register_emscripten_exports`).
+    ///
+    /// `value` is the right-hand side expression — a named function expression
+    /// (`function add(a, b) { ... }`) or class expression (`class Counter
+    /// { ... }`). `extra_deps` lists additional `$`-less library symbols the
+    /// value references directly (e.g. a class's `<id>Finalization` and its
+    /// `extends` parent); every hoisted symbol also depends on `$initBindgen`,
+    /// which aggregates `$wasm` plus all intrinsic deps, so nothing the body
+    /// references by bare name is tree-shaken. `postset_extra` is JS run right
+    /// after the symbol is defined, before it's attached to `Module` (used for
+    /// the class `Symbol.dispose` wiring); the `Module.<id> = <id>` attachment
+    /// keeps factory mode (`MODULARIZE=1`) working.
+    fn hoist_emscripten_export(
+        &mut self,
+        identifier: &str,
+        value: &str,
+        extra_deps: &[&str],
+        postset_extra: &str,
+    ) {
+        let mut deps = vec!["$initBindgen".to_string()];
+        deps.extend(extra_deps.iter().map(|d| format!("${d}")));
+        let deps_fmt: Vec<String> = deps.iter().map(|d| format!("'{d}'")).collect();
+        let postset = format!("{postset_extra}Module['{identifier}'] = {identifier};");
+        self.emscripten_library(&format!(
+            "addToLibrary({{\n    ${identifier}: {value},\n    \
+             ${identifier}__deps: [{}],\n    ${identifier}__postset: {postset:?}\n}});",
+            deps_fmt.join(", "),
+        ));
+        self.emscripten_runtime_exports.push(identifier.to_string());
     }
 
     /// Register a wasm-bindgen-internal helper as an intrinsic.
@@ -1692,6 +1743,35 @@ if (require('worker_threads').isMainThread) {{
             ""
         };
 
+        // Self-register the hoisted public exports at compile time. emscripten
+        // runs `--js-library` files in the compiler context, so we can push
+        // straight onto its settings (the same way `extraLibraryFuncs` is used
+        // below):
+        //   * `extraLibraryFuncs` force-keeps each `$<id>` library symbol.
+        //   * `EXPORTED_FUNCTIONS` makes `jsifier` prepend `export` to the
+        //     symbol's declaration under `MODULARIZE=instance`, producing a
+        //     named ESM export. (Factory mode gets `Module.<id>` via the
+        //     symbol's `__postset`.)
+        let export_lib_refs: Vec<String> = self
+            .emscripten_runtime_exports
+            .iter()
+            .map(|id| format!("'${id}'"))
+            .collect();
+        let self_register = if self.emscripten_runtime_exports.is_empty() {
+            String::new()
+        } else {
+            let funcs: Vec<String> = self
+                .emscripten_runtime_exports
+                .iter()
+                .map(|id| format!("EXPORTED_FUNCTIONS.add('{id}');"))
+                .collect();
+            format!(
+                "extraLibraryFuncs.push({});\n{}\n",
+                export_lib_refs.join(", "),
+                funcs.join("\n"),
+            )
+        };
+
         format!(
             r#"
             addToLibrary({{
@@ -1710,7 +1790,7 @@ if (require('worker_threads').isMainThread) {{
             }});
 
             extraLibraryFuncs.push('$initBindgen', '$addOnInit', '$wasm', {global_deps});
-            "#,
+            {self_register}"#,
             init_deps = init_dep_refs.join(", "),
             global_deps = global_dep_refs.join(", "),
         )
@@ -2192,11 +2272,29 @@ if (require('worker_threads').isMainThread) {{
             )
         };
 
-        self.globals.push_str(&format!(
-            "const {identifier}Finalization = (typeof FinalizationRegistry === 'undefined')
-                ? {{ register: () => {{}}, unregister: () => {{}} }}
-                : new FinalizationRegistry({finalization_callback});\n"
-        ));
+        // Non-namespaced classes in emscripten mode are hoisted into top-level
+        // `addToLibrary` symbols (so they become named ESM exports / `Module`
+        // properties); their finalization registry must be a sibling library
+        // symbol rather than a `const` inside `$initBindgen`. Namespaced
+        // classes stay on the `$initBindgen` path (nested `Module.<ns>` shape).
+        let hoist =
+            matches!(self.config.mode, OutputMode::Emscripten) && class.js_namespace.is_none();
+        let finalization_value = format!(
+            "(typeof FinalizationRegistry === 'undefined')\n\
+                ? {{ register: () => {{}}, unregister: () => {{}} }}\n\
+                : new FinalizationRegistry({finalization_callback})"
+        );
+        if hoist {
+            // The callback closes over the module-scope `wasm` global.
+            self.emscripten_library(&format!(
+                "addToLibrary({{\n    ${identifier}Finalization: {finalization_value},\n    \
+                 ${identifier}Finalization__deps: ['$wasm']\n}});"
+            ));
+        } else {
+            self.globals.push_str(&format!(
+                "const {identifier}Finalization = {finalization_value};\n"
+            ));
+        }
 
         // If the class is inspectable, generate `toJSON` and `toString`
         // to expose all readable properties of the class. Otherwise,
@@ -2373,9 +2471,32 @@ if (require('worker_threads').isMainThread) {{
             String::new()
         };
 
-        dst.push_str(&format!(
-            "if (Symbol.dispose) {identifier}.prototype[Symbol.dispose] = {identifier}.prototype.free;\n"
-        ));
+        let dispose_wiring = format!(
+            "if (Symbol.dispose) {identifier}.prototype[Symbol.dispose] = {identifier}.prototype.free;"
+        );
+
+        if hoist {
+            // `dst` is the bare `class {identifier} { ... }` expression; the
+            // `Symbol.dispose` wiring is a follow-up statement, so it goes in
+            // the `__postset`. Deps: the sibling finalization registry and, if
+            // present, the `extends` parent (also a hoisted library symbol).
+            let identifier = identifier.clone();
+            let mut extra_deps: Vec<String> = vec![format!("{identifier}Finalization")];
+            if let Some(parent) = &parent_identifier {
+                extra_deps.push(parent.clone());
+            }
+            let extra_dep_refs: Vec<&str> = extra_deps.iter().map(String::as_str).collect();
+            self.hoist_emscripten_export(
+                &identifier,
+                dst.trim_end(),
+                &extra_dep_refs,
+                &format!("{dispose_wiring} "),
+            );
+            return Ok(());
+        }
+
+        dst.push_str(&dispose_wiring);
+        dst.push('\n');
 
         let ts_comments = if class.generate_typescript {
             Some(class.comments.clone())
@@ -5137,21 +5258,31 @@ addToLibrary({
                             (String::new(), None)
                         };
 
-                        let definition = format!("function {identifier}{code}\n");
-                        define_export(
-                            &mut self.exports,
-                            name,
-                            export.js_namespace.as_deref().unwrap_or_default(),
-                            ExportEntry::Definition(ExportDefinition {
-                                identifier: identifier.clone(),
-                                comments: Some(js_docs),
-                                definition,
-                                ts_definition,
-                                ts_comments,
-                                private: false,
-                                parent_identifier: None,
-                            }),
-                        )?;
+                        if matches!(self.config.mode, OutputMode::Emscripten) && !is_namespaced {
+                            // Hoist into a top-level library symbol so emscripten
+                            // exports it as a named ESM export (instance mode) and
+                            // attaches it to `Module` (factory mode). Namespaced
+                            // functions stay on the `$initBindgen` path below since
+                            // they live under a nested `Module.<ns>...` shape.
+                            let value = format!("function {identifier}{code}");
+                            self.hoist_emscripten_export(&identifier, &value, &[], "");
+                        } else {
+                            let definition = format!("function {identifier}{code}\n");
+                            define_export(
+                                &mut self.exports,
+                                name,
+                                export.js_namespace.as_deref().unwrap_or_default(),
+                                ExportEntry::Definition(ExportDefinition {
+                                    identifier: identifier.clone(),
+                                    comments: Some(js_docs),
+                                    definition,
+                                    ts_definition,
+                                    ts_comments,
+                                    private: false,
+                                    parent_identifier: None,
+                                }),
+                            )?;
+                        }
                     }
                     AuxExportKind::Constructor(class) => {
                         let exported = self.require_class(class);
