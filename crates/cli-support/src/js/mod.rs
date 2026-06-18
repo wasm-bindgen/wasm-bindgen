@@ -483,32 +483,51 @@ impl<'a> Context<'a> {
     /// `MODULARIZE=instance` (see `self_register_emscripten_exports`).
     ///
     /// `value` is the right-hand side expression — a named function expression
-    /// (`function add(a, b) { ... }`) or class expression (`class Counter
-    /// { ... }`). `extra_deps` lists additional `$`-less library symbols the
-    /// value references directly (e.g. a class's `<id>Finalization` and its
-    /// `extends` parent); every hoisted symbol also depends on `$initBindgen`,
-    /// which aggregates `$wasm` plus all intrinsic deps, so nothing the body
-    /// references by bare name is tree-shaken. `postset_extra` is JS run right
-    /// after the symbol is defined, before it's attached to `Module` (used for
-    /// the class `Symbol.dispose` wiring); the `Module.<id> = <id>` attachment
-    /// keeps factory mode (`MODULARIZE=1`) working.
+    /// (`function add(a, b) { ... }`), class expression (`class Counter
+    /// { ... }`), or `{}` for a namespace root. `extra_deps` lists additional
+    /// `$`-less library symbols the value/postset references (a class's
+    /// `<id>Finalization` and its `extends` parent; a namespace root's leaf
+    /// symbols); every hoisted symbol also depends on `$initBindgen`, which
+    /// aggregates `$wasm` plus all intrinsic deps, so nothing referenced by
+    /// bare name is tree-shaken. `postset_extra` is JS run right after the
+    /// symbol is defined (the class `Symbol.dispose` wiring, or a namespace
+    /// root's nested assembly).
+    ///
+    /// `public` marks a top-level export: it adds the `Module.<id> = <id>`
+    /// attachment (factory mode) and records the name for self-registration
+    /// into `EXPORTED_FUNCTIONS` (named ESM export under instance mode).
+    /// Namespace *leaves* are hoisted with `public = false`: they're reachable
+    /// only through their namespace root, which is the public export.
     fn hoist_emscripten_export(
         &mut self,
         identifier: &str,
         value: &str,
         extra_deps: &[&str],
         postset_extra: &str,
+        public: bool,
     ) {
         let mut deps = vec!["$initBindgen".to_string()];
         deps.extend(extra_deps.iter().map(|d| format!("${d}")));
         let deps_fmt: Vec<String> = deps.iter().map(|d| format!("'{d}'")).collect();
-        let postset = format!("{postset_extra}Module['{identifier}'] = {identifier};");
+        let module_attach = if public {
+            format!("Module['{identifier}'] = {identifier};")
+        } else {
+            String::new()
+        };
+        let postset = format!("{postset_extra}{module_attach}");
+        let postset_field = if postset.is_empty() {
+            String::new()
+        } else {
+            format!(",\n    ${identifier}__postset: {postset:?}")
+        };
         self.emscripten_library(&format!(
             "addToLibrary({{\n    ${identifier}: {value},\n    \
-             ${identifier}__deps: [{}],\n    ${identifier}__postset: {postset:?}\n}});",
+             ${identifier}__deps: [{}]{postset_field}\n}});",
             deps_fmt.join(", "),
         ));
-        self.emscripten_runtime_exports.push(identifier.to_string());
+        if public {
+            self.emscripten_runtime_exports.push(identifier.to_string());
+        }
     }
 
     /// Register a wasm-bindgen-internal helper as an intrinsic.
@@ -2272,13 +2291,14 @@ if (require('worker_threads').isMainThread) {{
             )
         };
 
-        // Non-namespaced classes in emscripten mode are hoisted into top-level
-        // `addToLibrary` symbols (so they become named ESM exports / `Module`
-        // properties); their finalization registry must be a sibling library
-        // symbol rather than a `const` inside `$initBindgen`. Namespaced
-        // classes stay on the `$initBindgen` path (nested `Module.<ns>` shape).
-        let hoist =
-            matches!(self.config.mode, OutputMode::Emscripten) && class.js_namespace.is_none();
+        // In emscripten mode every class is hoisted into top-level
+        // `addToLibrary` symbols, so its finalization registry must be a
+        // sibling library symbol rather than a `const` inside `$initBindgen`.
+        // A non-namespaced class is a *public* export (named ESM export /
+        // `Module.<name>`); a namespaced class is hoisted privately and reached
+        // through its namespace root (the public export).
+        let hoist = matches!(self.config.mode, OutputMode::Emscripten);
+        let is_namespaced = class.js_namespace.is_some();
         let finalization_value = format!(
             "(typeof FinalizationRegistry === 'undefined')\n\
                 ? {{ register: () => {{}}, unregister: () => {{}} }}\n\
@@ -2491,7 +2511,29 @@ if (require('worker_threads').isMainThread) {{
                 dst.trim_end(),
                 &extra_dep_refs,
                 &format!("{dispose_wiring} "),
+                !is_namespaced,
             );
+            // A namespaced class still needs a namespace-tree entry so its root
+            // assembles `ns.Class = <identifier>` and the `.d.ts` namespace
+            // shape resolves `typeof <identifier>`. The declaration itself is
+            // the hoisted library symbol above, so the tree entry carries an
+            // empty definition.
+            if is_namespaced {
+                define_export(
+                    &mut self.exports,
+                    js_name,
+                    class.js_namespace.as_deref().unwrap_or_default(),
+                    ExportEntry::Definition(ExportDefinition {
+                        identifier: class.identifier.clone(),
+                        comments: None,
+                        definition: String::new(),
+                        ts_definition,
+                        ts_comments: None,
+                        private: class.private,
+                        parent_identifier: parent_identifier.clone(),
+                    }),
+                )?;
+            }
             return Ok(());
         }
 
@@ -2669,42 +2711,41 @@ if (require('worker_threads').isMainThread) {{
                     // don't clobber each other.
                     let emit_existing =
                         existing || matches!(self.config.mode, OutputMode::Emscripten);
-                    let ns_dst = self.write_namespace(&identifier, &ns.ns, emit_existing)?;
+                    let mut leaf_ids = Vec::new();
+                    let ns_dst =
+                        self.write_namespace(&identifier, &ns.ns, emit_existing, &mut leaf_ids)?;
                     let ts_dst = if self.config.typescript {
                         Self::write_namespace_ts(&ns.ns, "")?
                     } else {
                         String::new()
                     };
-                    let definition = if matches!(self.config.mode, OutputMode::Emscripten) {
-                        // Attach to `Module.<identifier>` and bind a local
-                        // `const` in one expression so the `ns_dst` lines
-                        // below can write unqualified `identifier.foo.bar`.
-                        format!(
-                            "const {identifier} = Module.{identifier} = Module.{identifier} || {{}};\n{ns_dst}"
-                        )
-                    } else if !existing {
+                    if matches!(self.config.mode, OutputMode::Emscripten) {
+                        // The namespace root is the public export: a top-level
+                        // `{}` library symbol. Its leaves are hoisted private
+                        // library symbols listed as deps (so emscripten emits
+                        // them first), and `ns_dst` assembles the nested shape
+                        // (`root.a.b = <leaf>`) in the root's `__postset`.
+                        if self.config.typescript {
+                            self.typescript
+                                .push_str(&format!("{identifier}: {ts_dst};\n"));
+                        }
+                        let leaf_refs: Vec<&str> = leaf_ids.iter().map(String::as_str).collect();
+                        self.hoist_emscripten_export(
+                            &identifier,
+                            "{}",
+                            &leaf_refs,
+                            ns_dst.trim_end(),
+                            true,
+                        );
+                        continue;
+                    }
+                    let definition = if !existing {
                         format!("const {identifier} = {{}};\n{ns_dst}")
                     } else {
                         self.global(&ns_dst);
                         "".to_string()
                     };
-                    // Emscripten splices `self.typescript` line-by-line into
-                    // `interface BindgenModule { ... }`. The module-scope
-                    // `export let foo: { ... };` form `export_def` would
-                    // produce is invalid inside an interface body (TS1131),
-                    // so push the namespace shape as a plain interface
-                    // member (`foo: { ... };`) directly and hand
-                    // `export_def` an empty `ts_definition` to skip its TS
-                    // emission path.
-                    let ts_definition = if matches!(self.config.mode, OutputMode::Emscripten) {
-                        if self.config.typescript {
-                            self.typescript
-                                .push_str(&format!("{identifier}: {ts_dst};\n"));
-                        }
-                        String::new()
-                    } else {
-                        format!("let {identifier}: {ts_dst};\n")
-                    };
+                    let ts_definition = format!("let {identifier}: {ts_dst};\n");
                     self.export_def(
                         Some(export_name),
                         &ExportDefinition {
@@ -2728,7 +2769,9 @@ if (require('worker_threads').isMainThread) {{
         name: &str,
         namespace: &[(String, ExportEntry)],
         existing: bool,
+        leaf_ids: &mut Vec<String>,
     ) -> Result<String, Error> {
+        let emscripten = matches!(self.config.mode, OutputMode::Emscripten);
         let mut output = String::new();
         for (key, entry) in namespace {
             let full_name = if is_valid_ident(key) {
@@ -2742,10 +2785,19 @@ if (require('worker_threads').isMainThread) {{
                         "{full_name} {}= {{}};\n",
                         if existing { "||" } else { "" }
                     ));
-                    output.push_str(&self.write_namespace(&full_name, &ns.ns, existing)?);
+                    output.push_str(&self.write_namespace(&full_name, &ns.ns, existing, leaf_ids)?);
                 }
                 ExportEntry::Definition(def) => {
-                    self.export_def(None, def);
+                    // In emscripten mode the leaf's declaration is its own
+                    // hoisted library symbol (see `write_class` / the function
+                    // export branch), so we only wire `ns.leaf = <identifier>`
+                    // here and record the symbol so the namespace root can list
+                    // it as a dep. Other modes inline the declaration.
+                    if emscripten {
+                        leaf_ids.push(def.identifier.clone());
+                    } else {
+                        self.export_def(None, def);
+                    }
                     output.push_str(&format!("{full_name} = {};\n", def.identifier));
                 }
             }
@@ -5258,14 +5310,38 @@ addToLibrary({
                             (String::new(), None)
                         };
 
-                        if matches!(self.config.mode, OutputMode::Emscripten) && !is_namespaced {
-                            // Hoist into a top-level library symbol so emscripten
-                            // exports it as a named ESM export (instance mode) and
-                            // attaches it to `Module` (factory mode). Namespaced
-                            // functions stay on the `$initBindgen` path below since
-                            // they live under a nested `Module.<ns>...` shape.
+                        if matches!(self.config.mode, OutputMode::Emscripten) {
+                            // Hoist into a top-level library symbol. Non-namespaced
+                            // functions are public (named ESM export in instance
+                            // mode, `Module.<name>` in factory mode). Namespaced
+                            // functions are hoisted privately and still recorded in
+                            // the namespace tree (with an empty definition, since
+                            // the declaration is now the library symbol) so the
+                            // namespace root assembles `ns.fn = <identifier>`.
                             let value = format!("function {identifier}{code}");
-                            self.hoist_emscripten_export(&identifier, &value, &[], "");
+                            self.hoist_emscripten_export(
+                                &identifier,
+                                &value,
+                                &[],
+                                "",
+                                !is_namespaced,
+                            );
+                            if is_namespaced {
+                                define_export(
+                                    &mut self.exports,
+                                    name,
+                                    export.js_namespace.as_deref().unwrap_or_default(),
+                                    ExportEntry::Definition(ExportDefinition {
+                                        identifier: identifier.clone(),
+                                        comments: None,
+                                        definition: String::new(),
+                                        ts_definition,
+                                        ts_comments,
+                                        private: false,
+                                        parent_identifier: None,
+                                    }),
+                                )?;
+                            }
                         } else {
                             let definition = format!("function {identifier}{code}\n");
                             define_export(
@@ -6420,6 +6496,39 @@ addToLibrary({
             typescript
         };
 
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            // Hoist the frozen enum object into its own library symbol, like
+            // functions and classes. Non-namespaced public enums become named
+            // ESM exports / `Module.<name>`; namespaced ones are private and
+            // reached through their namespace root.
+            let is_namespaced = enum_.js_namespace.is_some();
+            let value = format!("Object.freeze({{\n{variants}}})");
+            self.hoist_emscripten_export(
+                &identifier,
+                &value,
+                &[],
+                "",
+                !is_namespaced && !enum_.private,
+            );
+            if is_namespaced {
+                define_export(
+                    &mut self.exports,
+                    &enum_.name,
+                    enum_.js_namespace.as_deref().unwrap_or_default(),
+                    ExportEntry::Definition(ExportDefinition {
+                        identifier: identifier.clone(),
+                        comments: None,
+                        definition: String::new(),
+                        ts_definition,
+                        ts_comments: None,
+                        private: enum_.private,
+                        parent_identifier: None,
+                    }),
+                )?;
+            }
+            return Ok(());
+        }
+
         define_export(
             &mut self.exports,
             &enum_.name,
@@ -6471,11 +6580,23 @@ addToLibrary({
 
         if self.used_string_enums.contains(&string_enum.name) {
             // only generate the internal string enum array if it's actually used
-            self.global(&format!(
-                "\nconst __wbindgen_enum_{name} = [{values}];\n",
-                name = string_enum.name,
-                values = variants.join(", ")
-            ));
+            let name = &string_enum.name;
+            let values = variants.join(", ");
+            if matches!(self.config.mode, OutputMode::Emscripten) {
+                // The array is referenced by hoisted function/class bodies, so
+                // it must be a module-scope library symbol (not a `const`
+                // inside `$initBindgen`). Register it as an adapter dep so
+                // `$initBindgen` — which the hoisted symbols depend on — keeps
+                // it alive.
+                self.export_to_emscripten(
+                    &format!("__wbindgen_enum_{name}"),
+                    &format!("[{values}]"),
+                    &[],
+                );
+                self.adapter_deps.insert(format!("__wbindgen_enum_{name}"));
+            } else {
+                self.global(&format!("\nconst __wbindgen_enum_{name} = [{values}];\n"));
+            }
         }
 
         Ok(())

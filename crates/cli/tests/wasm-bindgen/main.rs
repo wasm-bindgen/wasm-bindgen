@@ -2363,6 +2363,12 @@ fn emscripten_exports_hoisted_to_library_symbols() {
             }
 
             #[wasm_bindgen]
+            pub enum Color {
+                Red = 0,
+                Green = 1,
+            }
+
+            #[wasm_bindgen]
             pub struct Counter {
                 value: i32,
             }
@@ -2424,14 +2430,20 @@ fn emscripten_exports_hoisted_to_library_symbols() {
         lib.contains("$Counter__deps: ['$initBindgen', '$CounterFinalization']"),
         "Counter should depend on $initBindgen + its finalizer:\n{lib}"
     );
-    // Self-registration so emscripten exports them itself.
+    // Enum hoisted to its own frozen-object library symbol.
     assert!(
-        lib.contains("EXPORTED_FUNCTIONS.add('add');")
-            && lib.contains("EXPORTED_FUNCTIONS.add('Counter');"),
-        "exports should be self-registered into EXPORTED_FUNCTIONS:\n{lib}"
+        lib.contains("$Color: Object.freeze("),
+        "Color enum should be a hoisted library symbol:\n{lib}"
     );
+    // Self-registration so emscripten exports them itself.
+    for name in ["add", "Counter", "Color"] {
+        assert!(
+            lib.contains(&format!("EXPORTED_FUNCTIONS.add('{name}');")),
+            "{name} should be self-registered into EXPORTED_FUNCTIONS:\n{lib}"
+        );
+    }
     assert!(
-        lib.contains("extraLibraryFuncs.push('$add', '$Counter')"),
+        lib.contains("extraLibraryFuncs.push('$add', '$Color', '$Counter')"),
         "hoisted exports should be force-kept via extraLibraryFuncs:\n{lib}"
     );
     // They must no longer be inlined inside the $initBindgen closure.
