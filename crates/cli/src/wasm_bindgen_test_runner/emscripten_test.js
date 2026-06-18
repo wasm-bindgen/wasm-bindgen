@@ -24,33 +24,16 @@
             if (typeof window.mergedLibrary.$initBindgen !== 'function') {
                 throw new Error("$initBindgen not found in the merged library.");
             }
-            // emscripten emits each `$Name` library symbol as a module-scope
-            // `var Name = <value>`. Simulate that so the hoisted exports and
-            // their `__postset` wiring (which reference bare names) resolve.
-            // A symbol's name may itself contain `__` (e.g. `__wbgtest_*` or a
-            // namespaced `app__math__Calc`), so exclude only the `__deps` /
-            // `__postset` decorator keys, which are suffixes.
-            for (const key of Object.keys(window.mergedLibrary)) {
-                const name = key.slice(1);
-                if (
-                    key.startsWith('$') &&
-                    !key.endsWith('__deps') &&
-                    !key.endsWith('__postset') &&
-                    window[name] === undefined
-                ) {
-                    window[name] = window.mergedLibrary[key];
-                }
-            }
             // Execute the initialization (assigns `wasm`, runs start).
             window.mergedLibrary.$initBindgen();
-            // Run each symbol's `__postset` — this is where exports attach to
-            // `Module` (factory mode) and namespace roots are assembled. Skip
-            // emscripten's own `$initBindgen__postset` (an `addOnInit(...)`
-            // registration that isn't modelled by this harness).
-            for (const key of Object.keys(window.mergedLibrary)) {
-                if (key.endsWith('__postset') && key !== '$initBindgen__postset') {
-                    (0, eval)(window.mergedLibrary[key]);
-                }
+            // Each clean export is a hoisted `$<name>` library symbol that
+            // self-registers into `EXPORTED_FUNCTIONS`. Under emscripten that
+            // makes it a named ESM export (instance mode) and, via the symbol's
+            // `Module['<name>'] = <name>` __postset, a `Module` property
+            // (factory mode). Simulate the latter directly from the symbols
+            // rather than evaluating postset source.
+            for (const name of window.EXPORTED_FUNCTIONS) {
+                window.Module[name] = window.mergedLibrary['$' + name];
             }
         } catch (e) {
             elem.textContent += 'test setup failed: ' + e;
