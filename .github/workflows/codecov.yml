@@ -18,7 +18,7 @@ jobs:
       # Pinned due to __llvm_profile_runtime regression in newer nightlies
       RUSTUP_TOOLCHAIN: nightly-2026-02-18
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@nightly
         with:
           # Pinned due to __llvm_profile_runtime symbol removal in newer nightlies
