@@ -12,7 +12,6 @@ pub(crate) const PLACEHOLDER_MODULE: &str = "__wbindgen_placeholder__";
 mod decode;
 mod descriptor;
 mod descriptors;
-mod descriptors_section;
 mod externref;
 
 mod intrinsic;

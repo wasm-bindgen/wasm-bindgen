@@ -189,64 +189,6 @@ pub(crate) fn evaluate_const_expr(expr: &ConstExpr, module: &Module) -> Option<V
     }
 }
 
-/// Given a `FunctionId`, find the function-table slot it occupies in the
-/// main function table. Returns the absolute slot index, the same value
-/// the legacy descriptor interpreter would have observed via
-/// `invoke as *const () as u32`.
-///
-/// Walks the same element segments as [`get_function_table_entry`] in
-/// the inverse direction. Handles active segments with `i32.const` /
-/// `i64.const` offsets, the `ref.func` expression-list variant, and PIC
-/// builds whose offsets are `global.get $__table_base` (treated as 0 to
-/// match the value the Rust-side descriptor encoded).
-///
-/// Returns an error when the function is not present in any element
-/// segment. Callers (e.g. the SYMBOL_REF resolver in
-/// `crate::descriptors`) treat that as a fallback signal: the entry is
-/// dropped and the legacy interpreter pathway handles that shim.
-pub fn function_table_slot_of(module: &Module, target: FunctionId) -> Result<u32> {
-    let table = module
-        .tables
-        .main_function_table()?
-        .ok_or_else(|| anyhow!("no function table found in module"))?;
-    let table = module.tables.get(table);
-    for &segment_id in table.elem_segments.iter() {
-        let segment = module.elements.get(segment_id);
-        let base = match &segment.kind {
-            walrus::ElementKind::Active { offset, .. } => match evaluate_const_expr(offset, module)
-            {
-                Some(Value::I32(n)) => n as u32,
-                Some(Value::I64(n)) => match u32::try_from(n) {
-                    Ok(n) => n,
-                    Err(_) => continue,
-                },
-                None if matches!(
-                    offset,
-                    ConstExpr::Global(g) if matches!(
-                        module.globals.get(*g).kind,
-                        GlobalKind::Import(_)
-                    )
-                ) =>
-                {
-                    0
-                }
-                _ => continue,
-            },
-            _ => continue,
-        };
-        let position = match &segment.items {
-            ElementItems::Functions(items) => items.iter().position(|f| *f == target),
-            ElementItems::Expressions(_, items) => items
-                .iter()
-                .position(|expr| matches!(expr, ConstExpr::RefFunc(f) if *f == target)),
-        };
-        if let Some(local_idx) = position {
-            return Ok(base + local_idx as u32);
-        }
-    }
-    bail!("function {target:?} is not present in any function-table element segment");
-}
-
 /// Looks up a function table entry by index in the main function table.
 pub fn get_function_table_entry(module: &Module, idx: u32) -> Result<FunctionId> {
     let table = module

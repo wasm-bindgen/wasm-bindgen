@@ -1,4 +1,4 @@
-//! Management of wasm-bindgen descriptor functions.
+//! Recovery of wasm-bindgen descriptors.
 //!
 //! Each `#[wasm_bindgen]` shim has an accompanying descriptor that
 //! encodes its type signature for the cli. The cli reads those
@@ -7,40 +7,43 @@
 //!
 //! # Transport
 //!
-//! The **primary** transport is the `__wasm_bindgen_descriptors`
-//! custom section ([`wasm_bindgen_shared::DESCRIPTORS_SECTION_NAME`]).
-//! The `#[wasm_bindgen]` macro builds each descriptor's bytes purely
-//! from compile-time information and writes them into this section as
-//! `#[link_section]` statics. Entries are decoded by
-//! [`crate::descriptors_section`] and turn directly into [`Descriptor`]s.
+//! The reference-based `Schema` tree (`wasm_bindgen::describe::Schema`)
+//! is the **sole canonical descriptor ABI**. There is no custom section
+//! and no flat opcode stream.
 //!
-//! [`assert_no_legacy_describe_exports`] enforces that the macro has
-//! actually populated the section for every shim it emits: any
-//! leftover `__wbindgen_describe_<name>` export (the historical
-//! "describe-by-execution" mechanism) is a hard error, not a silent
-//! fallback to the interpreter.
+//! The `#[wasm_bindgen]` macro and the `wbg_cast` runtime emit, per
+//! shim/cast, a `#[repr(C)] DescriptorRecord` static into the data
+//! segment plus a function that calls the unified marker import
+//! [`wasm_bindgen_shared::DESCRIPTOR_MARKER_NAME`] exactly once with the
+//! record's address:
 //!
-//! # Casts
+//! * **Regular shims / imported statics** emit a small *carrier*
+//!   function whose only body is the marker call. The carrier is
+//!   exported (which keeps the record alive and forces the archive
+//!   member to be pulled); [`WasmBindgenDescriptorsSection::ingest`]
+//!   reads its record by the embedded shim name and then strips the
+//!   carrier export so the walrus GC drops both the carrier and the
+//!   descriptor bytes.
+//! * **Casts** call the marker from their `__wbg_cast_trampoline*`,
+//!   which is replaced wholesale by a synthesised JS-adapter import
+//!   later in the pipeline.
 //!
-//! Cast descriptors — `wbg_cast::<OwnedClosure<T, UW>, JsValue>` and
-//! similar — are recovered structurally by [`Self::execute_casts`].
-//! Each `wbg_cast` monomorphisation emits a `__wbg_cast_trampoline`
-//! whose body calls the `__wbindgen_cast_marker` import with the
-//! address of a per-monomorphisation `#[repr(C)] CastRecord`. The
-//! record references the cast's `From`/`To` `Schema` trees (and, for
-//! closure casts, a relocated invoke function-table index); the CLI
-//! walks those trees out of the data segment to recover the
-//! descriptor. No wasm interpretation is involved.
+//! Discovery is uniform: [`ingest`](WasmBindgenDescriptorsSection::ingest)
+//! scans every function body for calls to the marker, reads each
+//! `DescriptorRecord` out of the data segment, walks its `Schema`
+//! tree(s) structurally into [`Descriptor`]s, and dispatches on the
+//! record's `kind`. No wasm interpretation is involved.
 
-use crate::descriptor::Descriptor;
-use crate::descriptors_section;
+use crate::descriptor::{Descriptor, Function};
 
-use anyhow::{Context, Error};
+use anyhow::{bail, Context, Error};
 use std::borrow::Cow;
 use std::collections::hash_map::HashMap;
-use walrus::{CustomSection, ExportItem, FunctionId, Module, TypedCustomSectionId};
+use walrus::{CustomSection, FunctionId, Module, TypedCustomSectionId};
+use wasm_bindgen_shared::tys;
 use wasm_bindgen_shared::{
-    DESCRIPTORS_SECTION_NAME, DESCRIPTOR_KIND_CAST, DESCRIPTOR_KIND_REGULAR, DESCRIPTOR_KIND_STATIC,
+    DESCRIPTOR_FORMAT_VERSION, DESCRIPTOR_KIND_CAST, DESCRIPTOR_KIND_REGULAR,
+    DESCRIPTOR_KIND_STATIC, DESCRIPTOR_MARKER_NAME,
 };
 
 #[derive(Default, Debug)]
@@ -51,53 +54,33 @@ pub struct WasmBindgenDescriptorsSection {
 
 pub type WasmBindgenDescriptorsSectionId = TypedCustomSectionId<WasmBindgenDescriptorsSection>;
 
-/// Execute all `__wbindgen_describe_*` functions in a module, inserting a
-/// custom section which represents the executed value of each descriptor.
+/// Recover every descriptor from the module by scanning for calls to the
+/// descriptor marker import, reading each [`DescriptorRecord`] out of the
+/// data segment, and decoding its `Schema` tree(s).
 ///
-/// Afterwards this will delete all descriptor functions from the module.
+/// Afterwards the marker-carrier exports are stripped so the later GC
+/// pass drops the carriers and their (now unreferenced) descriptor data.
 pub fn execute(module: &mut Module) -> Result<WasmBindgenDescriptorsSectionId, Error> {
     let mut section = WasmBindgenDescriptorsSection::default();
-
-    // Phase 1: ingest the `__wasm_bindgen_descriptors` custom section.
-    // This is the primary descriptor transport; every shim except
-    // closure casts has its descriptor here.
     section
-        .ingest_section(module)
-        .context("failed to read __wasm_bindgen_descriptors section")?;
+        .ingest(module)
+        .context("failed to recover wasm-bindgen descriptors")?;
 
-    // Phase 2: cross-check that the macro did not emit any legacy
-    // `__wbindgen_describe_<name>` exports. The cli no longer reads
-    // them; leftovers indicate a stale macro paired with this cli.
-    assert_no_legacy_describe_exports(module)?;
-
-    // Phase 3: recover cast descriptors. Each `wbg_cast`
-    // monomorphisation emits a `__wbg_cast_trampoline` function whose
-    // body calls `__wbindgen_cast_marker` with a single record-pointer
-    // immediate; the scanner here reads that pointer, walks the
-    // referenced `CastRecord`'s `from`/`to` `Schema` trees out of the
-    // data segment, and composes the descriptor. No wasm interpretation
-    // involved.
-    section.execute_casts(module)?;
-
-    // Phase 4: strip __wbg_invoke_* exports.
-    //
-    // The macro emits these to give per-closure-monomorphisation
-    // forwarding wrappers a stable name we can look up. Now that
-    // every SYMBOL_REF has been resolved to a function-table slot
-    // we no longer need the export. Deleting it lets the walrus GC
-    // pass run later (see `gc_module_and_adapters`) drop wrappers
-    // whose only remaining liveness root was this export; wrappers
-    // that JS will call retain liveness through the function table.
+    // Strip `__wbg_invoke_*` exports. The macro exports each closure invoke
+    // wrapper only to give it a clean, stable symbol name; the wrapper is
+    // discovered structurally (via the descriptor's relocated
+    // `Schema::invoke` function-table index), not by export name. Removing
+    // the export lets the later GC pass drop any wrapper whose only
+    // remaining liveness root was this export; wrappers that JS will call
+    // stay live through the function table.
     strip_closure_invoke_exports(module);
 
     Ok(module.customs.add(section))
 }
 
-/// Remove every `__wbg_invoke_*` export from the module. Their job
-/// (giving the macro-emitted closure wrappers a stable name for
-/// `function_table_slot_of` to find) is done by the time this runs.
-/// The actual removal of unreferenced wrapper *functions* happens
-/// later via the existing walrus GC pass.
+/// Remove every `__wbg_invoke_*` export from the module. Their job (giving
+/// the macro-emitted closure wrappers a clean exported name) is done by
+/// the time this runs.
 fn strip_closure_invoke_exports(module: &mut Module) {
     const PREFIX: &str = "__wbg_invoke_";
     let to_remove: Vec<_> = module
@@ -111,112 +94,27 @@ fn strip_closure_invoke_exports(module: &mut Module) {
     }
 }
 
-/// Assert that every shim's descriptor came through the
-/// `__wasm_bindgen_descriptors` section: the macro must not be
-/// emitting any legacy `__wbindgen_describe_<name>` exports. The
-/// interpreter is no longer wired to read them, so leftovers indicate
-/// a macro-version mismatch (a binary produced by an older macro
-/// paired with this newer cli).
-///
-/// Returns an error rather than silently invoking the interpreter so
-/// any regression in macro coverage surfaces immediately.
-fn assert_no_legacy_describe_exports(module: &Module) -> Result<(), Error> {
-    use anyhow::bail;
-    const PREFIX: &str = "__wbindgen_describe_";
-    // Allow `__wbindgen_describe` itself (the inform-stream marker
-    // import; not an export). We're only looking at exports with
-    // a `_<name>` suffix.
-    let leftovers: Vec<&str> = module
-        .exports
-        .iter()
-        .filter_map(|e| {
-            let name = e.name.as_str();
-            if !name.starts_with(PREFIX) {
-                return None;
-            }
-            // Exact name `__wbindgen_describe_cast` happens only if a
-            // module re-exports the marker import for some reason —
-            // not produced by the macro, but guard anyway.
-            if name == "__wbindgen_describe_cast" {
-                return None;
-            }
-            Some(name)
-        })
-        .collect();
-    if !leftovers.is_empty() {
-        bail!(
-            "wasm-bindgen-cli no longer reads legacy `__wbindgen_describe_<name>` \
-             exports; every shim's descriptor must come from the \
-             `__wasm_bindgen_descriptors` custom section. The following exports \
-             were emitted by an older `#[wasm_bindgen]` macro and would have \
-             been read by the legacy wasm interpreter: {leftovers:?}"
-        );
-    }
-    Ok(())
+/// One descriptor recovered from a `DescriptorRecord` in the data
+/// segment, paired with the function whose body hosted the marker call.
+struct FoundRecord {
+    /// The function that called the marker. For a cast this is the
+    /// `__wbg_cast_trampoline*`; for a regular/static descriptor it is
+    /// the exported carrier function.
+    host: FunctionId,
+    kind: u32,
+    /// Shim name (empty for casts).
+    name: String,
+    descriptor: Descriptor,
+    /// `Some(to)` for casts (the `To` type), else `None`.
+    cast_to: Option<Descriptor>,
 }
 
 impl WasmBindgenDescriptorsSection {
-    /// Pull the `__wasm_bindgen_descriptors` custom section out of
-    /// `module` (if present), parse it, and populate `self` with the
-    /// REGULAR and STATIC entries it contains.
-    ///
-    /// CAST entries are ignored here: their trampoline needs to be
-    /// back-resolved into a `FunctionId`, which [`Self::execute_casts`]
-    /// does by walking calls to `__wbindgen_cast_marker`.
-    fn ingest_section(&mut self, module: &mut Module) -> Result<(), Error> {
-        let raw = match module.customs.remove_raw(DESCRIPTORS_SECTION_NAME) {
-            Some(raw) => raw,
-            None => return Ok(()),
-        };
-
-        let (entries, stats) = descriptors_section::parse(&raw.data)?;
-        if stats.skipped_total() > 0 {
-            for (version, count) in &stats.skipped_unknown_version {
-                log::info!(
-                    "wasm-bindgen-cli does not recognise format_version {version} \
-                     for {count} __wasm_bindgen_descriptors entries; these are \
-                     ignored. This usually means the binary was produced by a \
-                     newer wasm-bindgen than this CLI."
-                );
-            }
-        }
-        let resolved_symbols = build_symbol_table(module)?;
-
-        for entry in entries {
-            let stream = entry.schema_words();
-            let descriptor = Descriptor::decode_with_symbols(&stream, Some(&resolved_symbols))
-                .with_context(|| {
-                    format!("failed to decode descriptor for {:?}", entry.name)
-                })?;
-            match entry.kind {
-                DESCRIPTOR_KIND_REGULAR | DESCRIPTOR_KIND_STATIC => {
-                    // STATIC entries decode the same way (`Descriptor::decode`
-                    // accepts either a FUNCTION-wrapped or a bare type
-                    // schema); the difference is purely how the macro
-                    // emits it. ImportStatic consumes the resulting
-                    // `Descriptor` as the static's type directly.
-                    self.descriptors.insert(entry.name, descriptor);
-                }
-                DESCRIPTOR_KIND_CAST => {
-                    log::debug!(
-                        "ignoring cast descriptor for {:?} in section \
-                         (still handled by interpreter; see module docs)",
-                        entry.name
-                    );
-                }
-                _ => unreachable!("parser already validated kind byte"),
-            }
-        }
-        Ok(())
-    }
-
-    fn execute_casts(&mut self, module: &mut Module) -> Result<(), Error> {
-        // Locate the `__wbindgen_cast_marker` import. If it isn't
-        // present nothing in this module performs a `wbg_cast`.
+    fn ingest(&mut self, module: &mut Module) -> Result<(), Error> {
+        // Locate the unified descriptor marker import. If it isn't
+        // present, this module emitted no descriptors.
         let marker_id = module.imports.iter().find_map(|import| {
-            if import.module == "__wbindgen_placeholder__"
-                && import.name == "__wbindgen_cast_marker"
-            {
+            if import.module == "__wbindgen_placeholder__" && import.name == DESCRIPTOR_MARKER_NAME {
                 if let walrus::ImportKind::Function(id) = import.kind {
                     return Some(id);
                 }
@@ -228,39 +126,76 @@ impl WasmBindgenDescriptorsSection {
             None => return Ok(()),
         };
 
-        // Snapshot the data segments so we can read the `CastRecord`
+        // Snapshot the data segments so we can read each `DescriptorRecord`
         // and its `Schema` trees by absolute address.
         let data_view = DataSegmentView::new(module);
 
-        // For each function containing a call to
-        // `__wbindgen_cast_marker`, scan its body for the single
-        // record-pointer immediate feeding that call. It is an
-        // `i32.const` (wasm32) / `i64.const` (wasm64) in optimised
-        // builds, possibly round-tripped through `local.set`/`local.get`
-        // in debug.
-        let mut local_funcs = Vec::new();
-        for (func_id, _local) in module.funcs.iter_local() {
-            local_funcs.push(func_id);
-        }
+        // Find every function that calls the marker and the
+        // record-pointer immediate fed to each call.
+        let local_funcs: Vec<FunctionId> =
+            module.funcs.iter_local().map(|(id, _)| id).collect();
+        let mut found: Vec<FoundRecord> = Vec::new();
         for func_id in local_funcs {
             let local = match &module.funcs.get(func_id).kind {
                 walrus::FunctionKind::Local(l) => l,
                 _ => continue,
             };
-            let entry = local.entry_block();
             let mut scanner = MarkerCallScanner::new(marker_id);
-            scanner.walk(local, entry);
+            scanner.walk(local, local.entry_block());
             for record_ptr in scanner.found_calls {
-                let record_ptr = record_ptr as u32;
-                let (from_root, to_root, invoke_addr) = data_view.read_cast_record(record_ptr)?;
-                let from_schema = data_view.read_schema_tree(from_root)?;
-                let to_schema = data_view.read_schema_tree(to_root)?;
-                let descriptor = compose_cast_descriptor(&from_schema, &to_schema, invoke_addr);
-                let descriptor = Descriptor::decode(&descriptor);
-                self.cast_imports
-                    .entry(descriptor)
-                    .or_default()
-                    .push(func_id);
+                if let Some(rec) = data_view.read_descriptor(record_ptr as u32, func_id)? {
+                    found.push(rec);
+                }
+            }
+        }
+
+        // Dispatch each recovered record and remember which carrier
+        // exports to strip (the regular/static hosts; cast trampolines
+        // are replaced downstream and must stay).
+        let mut carriers_to_strip: Vec<FunctionId> = Vec::new();
+        for rec in found {
+            match rec.kind {
+                DESCRIPTOR_KIND_REGULAR | DESCRIPTOR_KIND_STATIC => {
+                    self.descriptors.insert(rec.name, rec.descriptor);
+                    carriers_to_strip.push(rec.host);
+                }
+                DESCRIPTOR_KIND_CAST => {
+                    let to = rec
+                        .cast_to
+                        .expect("cast record always carries a `to` schema");
+                    // The cast itself is a single-argument function:
+                    // `fn(From) -> To`. `inner_ret` mirrors `ret`, as the
+                    // rest of the pipeline expects.
+                    let cast = Descriptor::Function(Box::new(Function {
+                        arguments: vec![rec.descriptor],
+                        shim_idx: 0,
+                        ret: to.clone(),
+                        inner_ret: Some(to),
+                    }));
+                    self.cast_imports.entry(cast).or_default().push(rec.host);
+                }
+                other => bail!("descriptor record has unknown kind {other}"),
+            }
+        }
+
+        // Strip the marker-carrier exports. Their job (keeping the record
+        // alive and pulling the archive member) is done; removing the
+        // export lets the later GC pass drop the carrier function, its
+        // marker call, and the now-unreferenced descriptor bytes.
+        if !carriers_to_strip.is_empty() {
+            let strip: std::collections::HashSet<FunctionId> =
+                carriers_to_strip.into_iter().collect();
+            let export_ids: Vec<_> = module
+                .exports
+                .iter()
+                .filter(|e| match e.item {
+                    walrus::ExportItem::Function(id) => strip.contains(&id),
+                    _ => false,
+                })
+                .map(|e| e.id())
+                .collect();
+            for id in export_ids {
+                module.exports.delete(id);
             }
         }
 
@@ -273,8 +208,7 @@ impl WasmBindgenDescriptorsSection {
 /// (atomics, wasm-shared, etc.) wasm-ld emits passive data segments
 /// and a `__wasm_init_memory` ctor function that copies each one into
 /// linear memory at startup; this scanner extracts those destination
-/// addresses so closure-cast `SCHEMA_BUF` pointers can still be
-/// resolved.
+/// addresses so descriptor/`Schema` pointers can still be resolved.
 fn scan_memory_init(
     func: &walrus::LocalFunction,
     passive: &HashMap<walrus::DataId, Vec<u8>>,
@@ -345,18 +279,19 @@ struct SchemaOffsets {
     words_len: u32,
     children: u32,
     children_len: u32,
+    invoke: u32,
 }
 
 /// Snapshot of the module's active data segments. Lets us resolve a
 /// linear-memory address to the bytes that wasm-ld wrote into the data
-/// section at link time. Used by the cast scanner to read each cast's
-/// `CastRecord` and walk its `Schema` trees by absolute address.
+/// section at link time. Used to read each `DescriptorRecord` and walk
+/// its `Schema` trees by absolute address.
 struct DataSegmentView {
     segments: Vec<(u32, Vec<u8>)>, // (start address, bytes)
     /// Target pointer width in bytes (4 on wasm32, 8 on wasm64). The
-    /// `#[repr(C)]` `Schema` / `CastRecord` layouts use pointer-sized
-    /// fields, so parsing them out of the data segment is pointer-width
-    /// dependent.
+    /// `#[repr(C)]` `Schema` / `DescriptorRecord` layouts use
+    /// pointer-sized fields, so parsing them out of the data segment is
+    /// pointer-width dependent.
     ptr_size: u32,
 }
 
@@ -394,7 +329,7 @@ impl DataSegmentView {
         // including atomics), look for `memory.init` instructions in
         // `__wasm_init_memory` to learn where wasm-ld will copy each
         // segment at module-init time. Record those as effectively
-        // active so the scanner can resolve schema pointers.
+        // active so the scanner can resolve descriptor/schema pointers.
         if !passive_bytes.is_empty() {
             for (_func_id, local) in module.funcs.iter_local() {
                 scan_memory_init(local, &passive_bytes, &mut segments);
@@ -413,11 +348,72 @@ impl DataSegmentView {
         Ok(u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]))
     }
 
+    /// Read a `u32` (always 4 bytes LE, independent of pointer width) at
+    /// `addr`.
+    fn read_u32(&self, addr: u32) -> Result<u32, Error> {
+        let bytes = self.read_bytes(addr, 4)?;
+        Ok(u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]))
+    }
+
+    /// Read a `#[repr(C)] DescriptorRecord` at `addr` and decode the
+    /// schema tree(s) it references. Returns `None` (after logging) for a
+    /// record whose `version` this CLI does not recognise.
+    ///
+    /// `DescriptorRecord` layout (pointer-width dependent):
+    /// `version: u32`, `kind: u32`, then four/five pointer-aligned
+    /// fields `name: *const u8`, `name_len: usize`, `root: *const Schema`,
+    /// `to_root: *const Schema`. On wasm64 the two leading `u32`s exactly
+    /// fill the 8 bytes before the first 8-byte-aligned pointer.
+    fn read_descriptor(
+        &self,
+        addr: u32,
+        host: FunctionId,
+    ) -> Result<Option<FoundRecord>, Error> {
+        let p = self.ptr_size;
+        let version = self.read_u32(addr)?;
+        if version != DESCRIPTOR_FORMAT_VERSION {
+            log::info!(
+                "ignoring DescriptorRecord with unrecognised version {version} \
+                 (this CLI understands version {DESCRIPTOR_FORMAT_VERSION}); the \
+                 binary was likely produced by a newer wasm-bindgen"
+            );
+            return Ok(None);
+        }
+        let kind = self.read_u32(addr + 4)?;
+        let name_ptr = self.read_ptr(addr + 8)?;
+        let name_len = self.read_ptr(addr + 8 + p)?;
+        let root = self.read_ptr(addr + 8 + 2 * p)?;
+        let to_root = self.read_ptr(addr + 8 + 3 * p)?;
+
+        let name = if name_len == 0 {
+            String::new()
+        } else {
+            let bytes = self.read_bytes(name_ptr, name_len as usize)?;
+            String::from_utf8(bytes).context("descriptor shim name is not UTF-8")?
+        };
+
+        let descriptor = self.decode_node(root, false, 0)?;
+        let cast_to = if kind == DESCRIPTOR_KIND_CAST {
+            Some(self.decode_node(to_root, false, 0)?)
+        } else {
+            None
+        };
+
+        Ok(Some(FoundRecord {
+            host,
+            kind,
+            name,
+            descriptor,
+            cast_to,
+        }))
+    }
+
     /// `#[repr(C)] Schema` field byte offsets for the target pointer
     /// width. Layout: `tag: u32`, then pointer-aligned `words: *const
     /// u32`, `words_len: usize`, `children: *const *const Schema`,
-    /// `children_len: usize`. On wasm64 the `u32` tag is followed by 4
-    /// bytes of padding before the first 8-byte-aligned pointer.
+    /// `children_len: usize`, `invoke: *const ()`. On wasm64 the `u32`
+    /// tag is followed by 4 bytes of padding before the first
+    /// 8-byte-aligned pointer.
     fn schema_field_offsets(&self) -> SchemaOffsets {
         let p = self.ptr_size;
         let words = p; // align_up(4, ptr_size): 4 on wasm32, 8 on wasm64
@@ -426,38 +422,21 @@ impl DataSegmentView {
             words_len: words + p,
             children: words + 2 * p,
             children_len: words + 3 * p,
+            invoke: words + 4 * p,
         }
     }
 
-    /// Walk the `Schema` tree rooted at `root` out of the data segment
-    /// and emit the flat `u32` opcode stream (each node's `words` run
-    /// followed by its children's flattened streams, in order). This is
-    /// byte-identical to the producer's `flatten_into`.
-    fn read_schema_tree(&self, root: u32) -> Result<Vec<u32>, Error> {
-        let mut out = Vec::new();
-        self.read_schema_tree_into(root, &mut out, 0)?;
-        Ok(out)
-    }
-
-    fn read_schema_tree_into(
-        &self,
-        root: u32,
-        out: &mut Vec<u32>,
-        depth: u32,
-    ) -> Result<(), Error> {
-        // Guard against a malformed / cyclic graph driving unbounded
-        // recursion.
-        if depth > 256 {
-            anyhow::bail!("schema tree nesting exceeds 256 while reading cast descriptor");
-        }
+    /// Read one `Schema` node out of the data segment.
+    fn read_node(&self, addr: u32) -> Result<SchemaNode, Error> {
         let off = self.schema_field_offsets();
-        let words_ptr = self.read_ptr(root + off.words)?;
-        let words_len = self.read_ptr(root + off.words_len)?;
-        let children_ptr = self.read_ptr(root + off.children)?;
-        let children_len = self.read_ptr(root + off.children_len)?;
+        let words_ptr = self.read_ptr(addr + off.words)?;
+        let words_len = self.read_ptr(addr + off.words_len)?;
+        let children_ptr = self.read_ptr(addr + off.children)?;
+        let children_len = self.read_ptr(addr + off.children_len)?;
+        let invoke = self.read_ptr(addr + off.invoke)?;
 
-        out.extend_from_slice(&self.read_u32_slice(words_ptr, words_len)?);
-
+        let words = self.read_u32_slice(words_ptr, words_len)?;
+        let mut children = Vec::with_capacity(children_len as usize);
         for i in 0..children_len {
             let slot = children_ptr
                 .checked_add(
@@ -465,27 +444,178 @@ impl DataSegmentView {
                         .ok_or_else(|| anyhow::anyhow!("schema children run length overflows"))?,
                 )
                 .ok_or_else(|| anyhow::anyhow!("schema children pointer overflows"))?;
-            let child = self.read_ptr(slot)?;
-            self.read_schema_tree_into(child, out, depth + 1)?;
+            children.push(self.read_ptr(slot)?);
         }
-        Ok(())
+        Ok(SchemaNode {
+            words,
+            children,
+            invoke,
+        })
     }
 
-    /// Read a `#[repr(C)] CastRecord { from, to, invoke }` (three
-    /// pointer-sized fields) at `addr`. Returns
-    /// `(from_root, to_root, invoke)` where `invoke` is the relocated
-    /// function-table index for closure casts, or `0` (null) for plain
-    /// casts.
-    fn read_cast_record(&self, addr: u32) -> Result<(u32, u32, u32), Error> {
-        let from = self.read_ptr(addr)?;
-        let to = self.read_ptr(addr + self.ptr_size)?;
-        let invoke = self.read_ptr(addr + 2 * self.ptr_size)?;
-        Ok((from, to, invoke))
+    /// Decode the `Schema` node rooted at `addr` into a [`Descriptor`].
+    ///
+    /// Scalars (opcode, lengths, names, holes, `nargs`) come from the
+    /// node's `words`; sub-descriptors come from its `children`. A
+    /// closure-bearing `FUNCTION` node carries its invoke shim's
+    /// function-table index in `invoke`. `clamped` propagates through
+    /// wrapper nodes exactly as it did in the previous flat decoder
+    /// (only `CLAMPED` sets it, and it resets at function boundaries).
+    fn decode_node(&self, addr: u32, clamped: bool, depth: u32) -> Result<Descriptor, Error> {
+        if depth > 256 {
+            bail!("schema tree nesting exceeds 256 while decoding descriptor");
+        }
+        let node = self.read_node(addr)?;
+        let mut cur = NodeCursor::new(&node);
+        let opcode = cur.word()?;
+        let descriptor = match opcode {
+            tys::I8 => Descriptor::I8,
+            tys::I16 => Descriptor::I16,
+            tys::I32 => Descriptor::I32,
+            tys::I64 => Descriptor::I64,
+            tys::I64_AS_F64 => Descriptor::I64AsF64,
+            tys::I128 => Descriptor::I128,
+            tys::U8 if clamped => Descriptor::ClampedU8,
+            tys::U8 => Descriptor::U8,
+            tys::U16 => Descriptor::U16,
+            tys::U32 => Descriptor::U32,
+            tys::U64 => Descriptor::U64,
+            tys::U64_AS_F64 => Descriptor::U64AsF64,
+            tys::U128 => Descriptor::U128,
+            tys::F32 => Descriptor::F32,
+            tys::F64 => Descriptor::F64,
+            tys::BOOLEAN => Descriptor::Boolean,
+            tys::CHAR => Descriptor::Char,
+            tys::UNIT => Descriptor::Unit,
+            tys::NONNULL => Descriptor::NonNull,
+            tys::RAW_POINTER => Descriptor::RawPointer,
+            tys::CACHED_STRING => Descriptor::CachedString,
+            tys::STRING => Descriptor::String,
+            tys::EXTERNREF => Descriptor::Externref,
+            tys::FUNCTION => {
+                Descriptor::Function(Box::new(self.decode_function(&node, &mut cur, depth)?))
+            }
+            tys::CLOSURE => {
+                let owned = boolean(cur.word()?)?;
+                let mutable = boolean(cur.word()?)?;
+                // The single child is the closure's `FUNCTION` node
+                // (which carries the invoke index in its `invoke` field).
+                let func = match self.decode_child(&mut cur, false, depth)? {
+                    Descriptor::Function(f) => *f,
+                    _ => bail!("closure body is not a FUNCTION node"),
+                };
+                Descriptor::Closure(Box::new(crate::descriptor::Closure {
+                    owned,
+                    mutable,
+                    function: func,
+                }))
+            }
+            tys::REF => Descriptor::Ref(Box::new(self.decode_child(&mut cur, clamped, depth)?)),
+            tys::REFMUT => {
+                Descriptor::RefMut(Box::new(self.decode_child(&mut cur, clamped, depth)?))
+            }
+            tys::LONGREF => {
+                // Most things become normal `Ref`s, but long refs to
+                // externrefs become owned.
+                let contents = self.decode_child(&mut cur, clamped, depth)?;
+                match contents {
+                    Descriptor::Externref | Descriptor::NamedExternref(_) => contents,
+                    _ => Descriptor::Ref(Box::new(contents)),
+                }
+            }
+            tys::SLICE => Descriptor::Slice(Box::new(self.decode_child(&mut cur, clamped, depth)?)),
+            tys::VECTOR => {
+                Descriptor::Vector(Box::new(self.decode_child(&mut cur, clamped, depth)?))
+            }
+            tys::OPTIONAL => {
+                Descriptor::Option(Box::new(self.decode_child(&mut cur, clamped, depth)?))
+            }
+            tys::RESULT => {
+                Descriptor::Result(Box::new(self.decode_child(&mut cur, clamped, depth)?))
+            }
+            tys::CLAMPED => self.decode_child(&mut cur, true, depth)?,
+            tys::ENUM => {
+                let name = cur.string()?;
+                let hole = cur.word()?;
+                Descriptor::Enum { name, hole }
+            }
+            tys::STRING_ENUM => {
+                let name = cur.string()?;
+                let variant_count = cur.word()?;
+                Descriptor::StringEnum {
+                    name,
+                    invalid: variant_count,
+                    hole: variant_count + 1,
+                }
+            }
+            tys::DYNAMIC_UNION => {
+                let name = cur.string()?;
+                let type_count = cur.word()?;
+                let mut variant_types = Vec::with_capacity(type_count as usize);
+                for _ in 0..type_count {
+                    variant_types.push(self.decode_child(&mut cur, false, depth)?);
+                }
+                Descriptor::DynamicUnion {
+                    name,
+                    variant_types,
+                }
+            }
+            tys::RUST_STRUCT => Descriptor::RustStruct(cur.string()?),
+            tys::NAMED_EXTERNREF => Descriptor::NamedExternref(cur.string()?),
+            other => bail!("unknown descriptor opcode: {other}"),
+        };
+        cur.finish()?;
+        Ok(descriptor)
+    }
+
+    /// Decode a `FUNCTION` node. `node`/`cur` are the in-progress node
+    /// (the `FUNCTION` opcode has already been consumed from `cur`).
+    ///
+    /// Words: `[FUNCTION, shim_idx_placeholder, nargs]`. The real
+    /// `shim_idx` is the node's relocated `invoke` index when non-zero
+    /// (closures); otherwise the placeholder (regular functions, which
+    /// the rest of the pipeline matches by name). Children: `nargs`
+    /// argument schemas, then `ret`, then `inner_ret`.
+    fn decode_function(
+        &self,
+        node: &SchemaNode,
+        cur: &mut NodeCursor,
+        depth: u32,
+    ) -> Result<Function, Error> {
+        let placeholder = cur.word()?;
+        let shim_idx = if node.invoke != 0 {
+            node.invoke
+        } else {
+            placeholder
+        };
+        let nargs = cur.word()?;
+        let mut arguments = Vec::with_capacity(nargs as usize);
+        for _ in 0..nargs {
+            arguments.push(self.decode_child(cur, false, depth)?);
+        }
+        let ret = self.decode_child(cur, false, depth)?;
+        let inner_ret = Some(self.decode_child(cur, false, depth)?);
+        Ok(Function {
+            arguments,
+            shim_idx,
+            ret,
+            inner_ret,
+        })
+    }
+
+    /// Decode the next child of the current node.
+    fn decode_child(
+        &self,
+        cur: &mut NodeCursor,
+        clamped: bool,
+        depth: u32,
+    ) -> Result<Descriptor, Error> {
+        let addr = cur.child()?;
+        self.decode_node(addr, clamped, depth + 1)
     }
 
     /// Read `len` `u32` words (`4 * len` bytes) starting at linear-
-    /// memory address `addr`. Returns an error if the range straddles
-    /// segment boundaries or is unmapped.
+    /// memory address `addr`.
     fn read_u32_slice(&self, addr: u32, len: u32) -> Result<Vec<u32>, Error> {
         let byte_count = (len as usize)
             .checked_mul(4)
@@ -516,71 +646,113 @@ impl DataSegmentView {
             }
         }
         anyhow::bail!(
-            "schema pointer {addr:#x}..{:#x} is not inside any active data segment",
+            "descriptor pointer {addr:#x}..{:#x} is not inside any active data segment",
             addr as u64 + count as u64
         );
     }
 }
 
-/// Compose a complete cast descriptor stream from the From/To schema
-/// halves and the closure-invoke address. The cli's
-/// `Descriptor::decode` consumes:
-///
-///   [FUNCTION, shim_idx=0, nargs=1, <From schema>, <To schema>, <To schema>]
-///
-/// For closure casts, the From schema is the OwnedClosure /
-/// BorrowedClosure layout, which contains a `0` placeholder at the
-/// shim_idx slot (inside the inner FUNCTION descriptor). We overwrite
-/// that slot with the real `invoke_addr` here. Non-closure casts
-/// (`invoke_addr == 0`) need no patching.
-fn compose_cast_descriptor(from: &[u32], to: &[u32], invoke_addr: u32) -> Vec<u32> {
-    let mut from = from.to_vec();
-    if invoke_addr != 0 {
-        // Find FUNCTION inside the From schema and patch the next
-        // word (shim_idx placeholder) with the invoke address.
-        // Closure schema layout:
-        //   [CLOSURE, owned, IS_MUT, FUNCTION, 0, nargs, ...args, ret, ret]
-        // We look for the first FUNCTION opcode (the inner function
-        // descriptor) and confirm the next word is the placeholder 0
-        // before patching.
-        let function_op = wasm_bindgen_shared::tys::FUNCTION;
-        if let Some(idx) = from.iter().position(|w| *w == function_op) {
-            if idx + 1 < from.len() && from[idx + 1] == 0 {
-                from[idx + 1] = invoke_addr;
-            }
-        }
-    }
-    let mut out = Vec::with_capacity(3 + from.len() + 2 * to.len());
-    out.push(wasm_bindgen_shared::tys::FUNCTION);
-    out.push(0); // shim_idx for the cast itself, unused
-    out.push(1); // nargs
-    out.extend_from_slice(&from);
-    out.extend_from_slice(to);
-    out.extend_from_slice(to);
-    out
+/// One `Schema` node read out of the data segment.
+struct SchemaNode {
+    words: Vec<u32>,
+    /// Child node addresses (already resolved from the children run).
+    children: Vec<u32>,
+    /// Relocated closure invoke function-table index, or `0`.
+    invoke: u32,
 }
 
-/// Narrow scanner that finds calls to `__wbindgen_cast_marker` and
+/// Cursor over a single node's `words` (scalars) and `children`
+/// (sub-descriptor addresses), decoded in lock-step by the grammar.
+struct NodeCursor<'a> {
+    words: &'a [u32],
+    wpos: usize,
+    children: &'a [u32],
+    cpos: usize,
+}
+
+impl<'a> NodeCursor<'a> {
+    fn new(node: &'a SchemaNode) -> Self {
+        NodeCursor {
+            words: &node.words,
+            wpos: 0,
+            children: &node.children,
+            cpos: 0,
+        }
+    }
+
+    fn word(&mut self) -> Result<u32, Error> {
+        let w = self
+            .words
+            .get(self.wpos)
+            .copied()
+            .ok_or_else(|| anyhow::anyhow!("unexpected end of schema node words"))?;
+        self.wpos += 1;
+        Ok(w)
+    }
+
+    /// A `get_string`-style payload: a length word followed by that many
+    /// `char` codepoint words.
+    fn string(&mut self) -> Result<String, Error> {
+        let len = self.word()?;
+        (0..len)
+            .map(|_| {
+                let cp = self.word()?;
+                char::from_u32(cp)
+                    .ok_or_else(|| anyhow::anyhow!("invalid char codepoint {cp:#x} in descriptor"))
+            })
+            .collect()
+    }
+
+    fn child(&mut self) -> Result<u32, Error> {
+        let c = self
+            .children
+            .get(self.cpos)
+            .copied()
+            .ok_or_else(|| anyhow::anyhow!("schema node has fewer children than its opcode needs"))?;
+        self.cpos += 1;
+        Ok(c)
+    }
+
+    /// Assert the whole node was consumed — no leftover scalar words or
+    /// undecoded children. Catches producer/consumer schema drift.
+    fn finish(&self) -> Result<(), Error> {
+        if self.wpos != self.words.len() {
+            bail!(
+                "schema node has {} leftover scalar word(s) after decoding",
+                self.words.len() - self.wpos
+            );
+        }
+        if self.cpos != self.children.len() {
+            bail!(
+                "schema node has {} undecoded child/children after decoding",
+                self.children.len() - self.cpos
+            );
+        }
+        Ok(())
+    }
+}
+
+fn boolean(word: u32) -> Result<bool, Error> {
+    match word {
+        0 => Ok(false),
+        1 => Ok(true),
+        other => bail!("expected bool value (0/1) in schema, got {other}"),
+    }
+}
+
+/// Narrow scanner that finds calls to the descriptor marker import and
 /// recovers the single record-pointer immediate fed into each. Handles
 /// the trivial optimised shape (one `i32.const`/`i64.const`) plus the
-/// debug shape where rustc shuttles the value through a local.
+/// debug shape where rustc shuttles the value through a local, and
+/// recurses into nested instruction sequences so a non-flat (debug)
+/// carrier/trampoline body is still handled.
 ///
-/// Not a wasm interpreter: we track only `i32.const`/`i64.const` values
-/// written into locals (`local.set` / `local.tee`) and the operand
-/// stack the next `call` will consume. Branches, loops, memory loads,
-/// globals, arithmetic are all unsupported and simply invalidate the
-/// pending state — which is fine because they don't appear in a
-/// `__wbg_cast_trampoline` body.
+/// Not a wasm interpreter: it tracks only `i32.const`/`i64.const` values
+/// written into locals and the operand stack the next `call` consumes.
 struct MarkerCallScanner {
     target: walrus::FunctionId,
-    /// Operand stack: const values pushed since the most recent stack
-    /// reset. The top of the stack is at the end. `None` means "value
-    /// at this stack slot is not a known constant" (we still track
-    /// depth so we can find the right slot at the call).
     operand_stack: Vec<Option<i32>>,
-    /// Locals -> last const written via `local.set`/`local.tee`.
     locals: std::collections::BTreeMap<walrus::LocalId, i32>,
-    /// The record pointer of each marker call found in this function.
     found_calls: Vec<i32>,
 }
 
@@ -628,32 +800,20 @@ impl MarkerCallScanner {
                 Instr::Drop(_) => {
                     self.operand_stack.pop();
                 }
-                // Store: consumes two operands (addr + value). We
-                // don't track its effect on linear memory; the
-                // body's stack-pointer dance writes intermediate
-                // values to the stack frame without affecting the
-                // immediates that ultimately flow into the cast
-                // marker call.
                 Instr::Store(_) => {
                     self.operand_stack.pop(); // value
                     self.operand_stack.pop(); // addr
                 }
-                // Load: consumes one (addr) and pushes one
-                // (untracked).
                 Instr::Load(_) => {
                     self.operand_stack.pop();
                     self.operand_stack.push(None);
                 }
-                // Global get/set: track stack effect but not value.
                 Instr::GlobalGet(_) => {
                     self.operand_stack.push(None);
                 }
                 Instr::GlobalSet(_) => {
                     self.operand_stack.pop();
                 }
-                // Arithmetic operations on the stack pointer / local
-                // ABI plumbing. Treat as opaque: consume operands,
-                // produce untracked value.
                 Instr::Binop(_) => {
                     self.operand_stack.pop();
                     self.operand_stack.pop();
@@ -662,6 +822,35 @@ impl MarkerCallScanner {
                 Instr::Unop(_) => {
                     self.operand_stack.pop();
                     self.operand_stack.push(None);
+                }
+                // Recurse into nested instruction sequences so a
+                // debug/unoptimised carrier or trampoline body that
+                // wraps the marker call in a block/loop/if is still
+                // scanned. State is reset around the descent because the
+                // operand stack at the nested boundary is not tracked.
+                Instr::Block(b) => {
+                    self.operand_stack.clear();
+                    self.locals.clear();
+                    self.walk(func, b.seq);
+                    self.operand_stack.clear();
+                    self.locals.clear();
+                }
+                Instr::Loop(l) => {
+                    self.operand_stack.clear();
+                    self.locals.clear();
+                    self.walk(func, l.seq);
+                    self.operand_stack.clear();
+                    self.locals.clear();
+                }
+                Instr::IfElse(ifelse) => {
+                    self.operand_stack.clear();
+                    self.locals.clear();
+                    self.walk(func, ifelse.consequent);
+                    self.operand_stack.clear();
+                    self.locals.clear();
+                    self.walk(func, ifelse.alternative);
+                    self.operand_stack.clear();
+                    self.locals.clear();
                 }
                 Instr::Call(Call { func: callee })
                 | Instr::ReturnCall(ReturnCall { func: callee }) => {
@@ -674,18 +863,15 @@ impl MarkerCallScanner {
                         }
                         self.operand_stack.pop();
                     } else {
-                        // Unknown call: we don't know its exact arity
-                        // at this level, so the safest move is to reset.
-                        // Cast bodies don't have intervening calls
-                        // between the const setup and the marker.
+                        // Unknown call: reset, since we don't track its
+                        // arity. Carrier/trampoline bodies don't have
+                        // intervening calls between the const setup and
+                        // the marker.
                         self.operand_stack.clear();
                         self.locals.clear();
                     }
                 }
                 _ => {
-                    // Branches, loops, etc. — none of these appear
-                    // in `breaks_if_inlined` bodies. Reset to be
-                    // safe.
                     self.operand_stack.clear();
                     self.locals.clear();
                 }
@@ -702,142 +888,4 @@ impl CustomSection for WasmBindgenDescriptorsSection {
     fn data(&self, _: &walrus::IdsToIndices) -> Cow<'_, [u8]> {
         panic!("shouldn't emit custom sections just yet");
     }
-}
-
-/// Build a `name -> u32` lookup for
-/// [`crate::descriptor::Descriptor::decode_with_symbols`].
-///
-/// For each exported function present in the main function table, the
-/// map records the function-table slot index — the value the legacy
-/// interpreter would have observed via `invoke as *const () as u32`.
-/// This is what makes the closure SYMBOL_REF path work: the macro
-/// emits a non-generic wrapper around `invoke` whose `#[export_name]`
-/// is a stable content hash of the closure signature, and the cli
-/// surfaces its slot here.
-///
-/// The macro-emitted `#[used] static FOO: fn-ptr = wrapper;` keepalive
-/// causes wasm-ld to place the wrapper in an element segment on
-/// `wasm32`, but on `wasm64` that keepalive does not trigger the
-/// address-taken treatment (rustc/wasm-ld limitation). For exported
-/// functions named `__wbg_invoke_*` that are missing from any element
-/// segment, this function appends them to the main function table by
-/// adding a fresh active element segment at the current table tail
-/// (growing the table by one) so the SYMBOL_REF resolver can address
-/// them. This keeps the runtime-side macro simple and works uniformly
-/// across wasm32 and wasm64.
-fn build_symbol_table(module: &mut Module) -> Result<HashMap<String, u32>, Error> {
-    use walrus::{ConstExpr, ElementItems, ElementKind};
-
-    let mut out = HashMap::new();
-
-    // Snapshot exports first; we may mutate the module below.
-    let exports: Vec<(String, walrus::FunctionId)> = module
-        .exports
-        .iter()
-        .filter_map(|e| match e.item {
-            ExportItem::Function(id) => Some((e.name.clone(), id)),
-            _ => None,
-        })
-        .collect();
-
-    let main_table_id = module.tables.main_function_table().ok().flatten();
-
-    for (name, func_id) in exports {
-        if let Ok(slot) = crate::wasm_conventions::function_table_slot_of(module, func_id) {
-            out.insert(name, slot);
-            continue;
-        }
-        // Fallback A: some test-runner / transformation layers wrap an
-        // exported function (`__wbg_invoke_X`) with a thin shim
-        // (`__wbg_invoke_X.command_export`). The export now points at
-        // the shim, but the original function still sits in the
-        // function table under its original symbol name.
-        if let Some(slot) = lookup_table_slot_by_name(module, &name) {
-            out.insert(name, slot);
-            continue;
-        }
-        // Fallback B: the macro-emitted keepalive didn't make wasm-ld
-        // place the wrapper in the function table (notably on wasm64).
-        // Append it to the table ourselves. Limit this to closure
-        // invoke wrappers to avoid touching unrelated exports.
-        if !name.starts_with("__wbg_invoke_") {
-            continue;
-        }
-        let table_id = match main_table_id {
-            Some(id) => id,
-            None => continue,
-        };
-        let (slot, table64) = {
-            let table = module.tables.get_mut(table_id);
-            let slot = u32::try_from(table.initial)
-                .map_err(|_| anyhow::anyhow!("function table initial size does not fit in u32"))?;
-            // Grow the table by one to make room for the new slot.
-            table.initial = table.initial.saturating_add(1);
-            if let Some(max) = table.maximum.as_mut() {
-                if *max < table.initial {
-                    *max = table.initial;
-                }
-            }
-            (slot, table.table64)
-        };
-        // Active element segment offset uses the table's index type:
-        // i64 for table64 (wasm64), i32 otherwise.
-        let offset_val = if table64 {
-            walrus::ir::Value::I64(slot as i64)
-        } else {
-            walrus::ir::Value::I32(slot as i32)
-        };
-        let elem_id = module.elements.add(
-            ElementKind::Active {
-                table: table_id,
-                offset: ConstExpr::Value(offset_val),
-            },
-            ElementItems::Functions(vec![func_id]),
-        );
-        module
-            .tables
-            .get_mut(table_id)
-            .elem_segments
-            .insert(elem_id);
-        out.insert(name, slot);
-    }
-    Ok(out)
-}
-
-/// Walk the main function table's element segments and find any
-/// function whose own `name` matches `wanted_name`. Returns the
-/// absolute slot index in that case. Used as a fallback when an
-/// export points to a wrapping shim function instead of the table-
-/// registered original.
-fn lookup_table_slot_by_name(module: &Module, wanted_name: &str) -> Option<u32> {
-    use walrus::{ConstExpr, ElementItems, ElementKind};
-
-    let table_id = module.tables.main_function_table().ok().flatten()?;
-    let table = module.tables.get(table_id);
-    for &segment_id in &table.elem_segments {
-        let segment = module.elements.get(segment_id);
-        let base = match &segment.kind {
-            ElementKind::Active {
-                offset: ConstExpr::Value(walrus::ir::Value::I32(n)),
-                ..
-            } => *n as u32,
-            _ => continue,
-        };
-        let funcs: Vec<walrus::FunctionId> = match &segment.items {
-            ElementItems::Functions(items) => items.clone(),
-            ElementItems::Expressions(_, items) => items
-                .iter()
-                .filter_map(|e| match e {
-                    ConstExpr::RefFunc(f) => Some(*f),
-                    _ => None,
-                })
-                .collect(),
-        };
-        for (i, fid) in funcs.iter().enumerate() {
-            if module.funcs.get(*fid).name.as_deref() == Some(wanted_name) {
-                return Some(base + i as u32);
-            }
-        }
-    }
-    None
 }

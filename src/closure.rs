@@ -777,19 +777,21 @@ unsafe extern "C" fn __wbindgen_destroy_closure(a: WasmWord, b: WasmWord) {
     ));
 }
 
-// Full closure-cast descriptor in `Schema`-tree form. The invoke
-// address is NOT part of this schema — closure casts carry it in the
-// `CastRecord::invoke` field instead (see `wbg_cast_closure` /
-// `CastRecClosure` in `src/rt/mod.rs`), where `fn as *const ()` is
-// const-evaluated and the linker emits a function-table-index
-// relocation. The cli reads both pieces (this schema + the relocated
-// invoke slot) and composes the final `Closure` descriptor.
+// Closure-cast `From` descriptor in `Schema`-tree form. The invoke
+// address is NOT part of this shared schema — `CastRecClosure` (in
+// `src/rt/mod.rs`) rebuilds the inner `FUNCTION` node with
+// `Schema::with_invoke`, attaching the per-`(T, UNWIND_SAFE)` invoke
+// shim address (`fn as *const ()`, which the linker lowers to a
+// function-table-index relocation) before pointing the cast record's
+// `root` at it.
 //
-// Flattened layout:
-//   [CLOSURE, owned_bit, IS_MUT, <T's closure-trait-object SCHEMA>]
-// where `T's SCHEMA` is `[FUNCTION, 0, nargs, args..., ret, ret]`,
-// produced by the per-arity `WasmDescribe for dyn Fn(...) -> R + '_`
-// impls in `src/convert/closures.rs`.
+// Tree shape:
+//   CLOSURE node: words [CLOSURE, owned_bit, IS_MUT]
+//     child: <T's closure-trait-object SCHEMA>
+// where `T's SCHEMA` is a `FUNCTION` node (words [FUNCTION, 0, nargs];
+// children args..., ret, ret), produced by the per-arity
+// `WasmDescribe for dyn Fn(...) -> R + '_` impls in
+// `src/convert/closures.rs`.
 impl<T, const UNWIND_SAFE: bool> WasmDescribe for OwnedClosure<T, UNWIND_SAFE>
 where
     T: WasmClosure + ?Sized,
@@ -957,10 +959,10 @@ pub unsafe trait WasmClosure: WasmDescribe {
     type AsMut: ?Sized;
     /// Address of the per-monomorphisation invoke shim, one per
     /// `UNWIND_SAFE` flavour, as a const-evaluable `invoke::<...> as
-    /// *const ()`. These are baked into the closure cast's
-    /// [`crate::describe::CastRecord`] `invoke` field, where the linker
-    /// lowers each to a function-table-index relocation that
-    /// `wasm-bindgen-cli` reads back from the data segment.
+    /// *const ()`. These are attached to the closure cast's `From`
+    /// schema `FUNCTION` node via [`crate::describe::Schema::invoke`],
+    /// where the linker lowers each to a function-table-index relocation
+    /// that `wasm-bindgen-cli` reads back from the data segment.
     const INVOKE_SHIM_ADDR_UNWIND_SAFE: *const ();
     const INVOKE_SHIM_ADDR_NOT_UNWIND_SAFE: *const ();
 }

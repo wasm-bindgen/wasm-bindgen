@@ -1301,19 +1301,19 @@ externs! {
         fn __wbindgen_object_clone_ref(idx: u32) -> u32;
         fn __wbindgen_object_drop_ref(idx: u32) -> ();
 
-        // Marker import called by each cast trampoline
-        // (`__wbg_cast_trampoline*`) once per `wbg_cast::<From, To>`
-        // monomorphisation. The single argument is the address of a
-        // per-monomorphisation `CastRecord` static (a constant pointer
+        // The single, unified descriptor marker import. Called once by
+        // every descriptor carrier function the `#[wasm_bindgen]` macro
+        // emits (regular shims, imported statics) and by every cast
+        // trampoline (`__wbg_cast_trampoline*`). The single argument is
+        // the address of a `DescriptorRecord` static (a constant pointer
         // into the data segment, no runtime computation); the
         // `wasm-bindgen-cli` scanner reads it back, walks the record's
-        // `from`/`to` `Schema` trees, and reads the relocated `invoke`
-        // slot to recover the cast descriptor.
+        // `Schema` tree(s), and recovers the descriptor.
         //
-        // The cli never actually executes this call; the entire
-        // trampoline function is replaced by a synthesised JS-adapter
-        // import once the descriptor is recovered.
-        fn __wbindgen_cast_marker(record: *const ()) -> ();
+        // The cli never actually executes these calls: carrier functions
+        // are deleted after ingestion and cast trampolines are replaced
+        // by synthesised JS-adapter imports.
+        fn __wbindgen_descriptor_marker(record: *const ()) -> ();
 
         // Type-specific JS-value constructors. Recognized by
         // cli-support as intrinsics; the JS adapter generated for each

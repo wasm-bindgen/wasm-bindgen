@@ -108,22 +108,21 @@ macro_rules! closures {
             // Schema for the closure trait object itself (the inner
             // half of a closure-cast descriptor).
             //
-            // Layout: [FUNCTION, 0 /* shim_idx placeholder */, nargs,
-            //          <each arg's SCHEMA>, <ret SCHEMA>, <ret SCHEMA>].
+            // Tree shape: a `FUNCTION` node with words
+            // `[FUNCTION, 0 /* shim_idx placeholder */, nargs]` and
+            // children `<each arg's SCHEMA>, <ret SCHEMA>, <ret SCHEMA>`.
             //
-            // The `0` slot is a placeholder for the function-table
-            // index of the invoke shim. `wasm-bindgen-cli` substitutes
-            // the real index in when processing each cast site: the
-            // cast call passes `T::invoke_shim_addr::<UNWIND_SAFE>()`
-            // as an `i32.const` immediate alongside the schema, and
-            // the cli's closure-cast scanner reads that immediate and
-            // overwrites this slot before feeding the stream to
-            // `Closure::decode`. Function-pointer-to-integer casts
-            // can't be const-evaluated on stable Rust, so the slot is
-            // kept zero in the static.
+            // The `0` shim_idx word is a placeholder: this shared
+            // `SCHEMA` carries no invoke address (the choice of invoke
+            // shim depends on `UNWIND_SAFE`, which is fixed at the cast
+            // site, not on the type). `CastRecClosure` in `src/rt/mod.rs`
+            // copies this node via `Schema::with_invoke`, attaching the
+            // real `invoke::<..>` address in `Schema::invoke`; the linker
+            // lowers it to a function-table-index relocation that the cli
+            // reads back as the closure's `shim_idx`.
             //
-            // The duplicated ret matches the legacy descriptor stream
-            // shape; `Function::decode` consumes both as `ret` and
+            // The duplicated ret matches the descriptor shape the cli
+            // expects; `Function` decoding consumes both as `ret` and
             // `inner_ret`.
             const SCHEMA: &'static Schema = {
                 // Header words: [FUNCTION, shim_idx placeholder, nargs].

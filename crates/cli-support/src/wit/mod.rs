@@ -379,7 +379,13 @@ impl<'a> Context<'a> {
             // access to them while processing programs.
             self.descriptors.extend(descriptors);
 
-            // Sort cast imports by signature for deterministic output.
+            // Sort cast imports for deterministic output. The
+            // user-facing `sig_comment` (`{arg} -> {ret}`) is only the
+            // arg/ret pair, so distinct casts that share it (e.g. closure
+            // casts differing only by `shim_idx`/`inner_ret`) would tie
+            // and fall back to nondeterministic `HashMap` order. Break
+            // ties on the full descriptor's debug encoding, which is a
+            // total, stable order over every field.
             let mut sorted_casts: Vec<_> = cast_imports
                 .into_iter()
                 .map(|(descriptor, orig_func_ids)| {
@@ -388,12 +394,13 @@ impl<'a> Context<'a> {
                         unreachable!("Cast function must take exactly one argument");
                     };
                     let sig_comment = format!("{arg:?} -> {:?}", &signature.ret);
-                    (sig_comment, signature, orig_func_ids)
+                    let sort_key = format!("{signature:?}");
+                    (sort_key, sig_comment, signature, orig_func_ids)
                 })
                 .collect();
             sorted_casts.sort_by(|a, b| a.0.cmp(&b.0));
 
-            for (idx, (sig_comment, signature, orig_func_ids)) in
+            for (idx, (_sort_key, sig_comment, signature, orig_func_ids)) in
                 sorted_casts.into_iter().enumerate()
             {
                 // Use the sort index for a deterministic import name.
@@ -1624,11 +1631,12 @@ impl<'a> Context<'a> {
                 _ => bail!("import from `{PLACEHOLDER_MODULE}` was not a function"),
             }
 
-            // `__wbindgen_cast_marker` is a marker intrinsic the
-            // cli reads structurally for cast scanning; it has no JS
-            // implementation and lingers in the module until the
-            // post-processing pass drops it. Skip it here.
-            if import.name == "__wbindgen_cast_marker" {
+            // The descriptor marker is read structurally by the cli for
+            // descriptor recovery; it has no JS implementation and
+            // lingers in the module until the post-processing GC pass
+            // drops it (once all carriers/trampolines that called it are
+            // gone). Skip it here.
+            if import.name == wasm_bindgen_shared::DESCRIPTOR_MARKER_NAME {
                 continue;
             }
             if implemented.remove(&import.id()).is_none() {

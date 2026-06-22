@@ -32,12 +32,13 @@ pub mod marker;
 
 pub use wasm_bindgen_macro::BindgenedStruct;
 
-// Re-export the descriptor section entry-kind discriminator bytes for the
-// `#[wasm_bindgen]` macro expansion. The macro refers to these by absolute
-// path (`::wasm_bindgen::__rt::DESCRIPTOR_KIND_REGULAR`) so they need to
-// live somewhere reachable from user crates that depend on this one.
+// Re-export the descriptor record kind discriminators and format version
+// for the `#[wasm_bindgen]` macro expansion. The macro refers to these by
+// absolute path (`::wasm_bindgen::__rt::DESCRIPTOR_KIND_REGULAR`) so they
+// need to live somewhere reachable from user crates that depend on this one.
 pub use wasm_bindgen_shared::{
-    DESCRIPTOR_KIND_CAST, DESCRIPTOR_KIND_REGULAR, DESCRIPTOR_KIND_STATIC,
+    DESCRIPTOR_FORMAT_VERSION, DESCRIPTOR_KIND_CAST, DESCRIPTOR_KIND_REGULAR,
+    DESCRIPTOR_KIND_STATIC,
 };
 
 /// Wrapper implementation for JsValue errors, with atomics and std handling
@@ -52,19 +53,22 @@ pub fn js_panic(err: JsValue) {
 //
 // At compile time each `wbg_cast::<From, To>` instantiates a fresh
 // cast trampoline (`__wbg_cast_trampoline*`) that does nothing useful
-// at runtime — it just calls the marker import `__wbindgen_cast_marker`
-// with the address of a per-monomorphisation `CastRecord`. The record
-// (a `#[repr(C)]` static in the data segment) holds:
+// at runtime — it just calls the marker import
+// `__wbindgen_descriptor_marker` (the single, unified descriptor
+// marker) with the address of a per-monomorphisation `DescriptorRecord`.
+// The record (a `#[repr(C)]` static in the data segment) holds:
 //
-//   * `from` / `to`: `&'static Schema` roots for the cast's `From`/`To`.
-//   * `invoke`: the closure invoke shim's function-table address
-//     (relocated by the linker) for closure casts, or null for plain
-//     `wbg_cast`.
+//   * `root` / `to_root`: `&'static Schema` roots for the cast's
+//     `From`/`To`.
+//   * the closure invoke shim's function-table address (relocated by the
+//     linker) is carried out-of-band in the `From` schema's closure
+//     `FUNCTION` node (`Schema::invoke`) for closure casts; plain
+//     `wbg_cast` carries no invoke.
 //
 // `wasm-bindgen-cli` finds each trampoline by looking for callers of
-// `__wbindgen_cast_marker`, reads the single record-pointer operand,
-// walks the `Schema` trees out of the data segment to recover the
-// cast's `(From, To)` descriptor, synthesises a JS adapter, and
+// `__wbindgen_descriptor_marker`, reads the single record-pointer
+// operand, walks the `Schema` trees out of the data segment to recover
+// the cast's `(From, To)` descriptor, synthesises a JS adapter, and
 // replaces every call to the trampoline with a call to the import the
 // JS adapter is bound to.
 //
@@ -86,8 +90,9 @@ where
 }
 
 /// Closure-cast variant: the per-`(T, UNWIND_SAFE)` monomorphisation's
-/// invoke shim address is baked into the `CastRecord` `invoke` field so
-/// the CLI can resolve the function-table slot from the data segment.
+/// invoke shim address is attached to the `From` schema's closure
+/// `FUNCTION` node (`Schema::invoke`) so the CLI can resolve the
+/// function-table slot from the data segment.
 pub fn wbg_cast_closure<From, To, T, const UNWIND_SAFE: bool>(value: From) -> To
 where
     From: IntoWasmAbi + crate::describe::WasmDescribe,
@@ -103,16 +108,21 @@ where
 }
 
 // Per-monomorphisation cast records. `&CastRec::<..>::RECORD` resolves
-// to a stable data-segment address the trampoline hands to the marker;
-// the linker fills the `invoke` slot with the relocated function-table
-// index (closure casts) or leaves it null (plain casts).
+// to a stable data-segment address the trampoline hands to the marker.
+// A plain cast carries no invoke; a closure cast carries the relocated
+// invoke shim address on the `From` schema's closure `FUNCTION` node
+// (`Schema::invoke`).
 struct CastRec<From, To>(core::marker::PhantomData<(From, To)>);
 impl<From: crate::describe::WasmDescribe, To: crate::describe::WasmDescribe> CastRec<From, To> {
-    const RECORD: &'static crate::describe::CastRecord = &crate::describe::CastRecord {
-        from: From::SCHEMA,
-        to: To::SCHEMA,
-        invoke: core::ptr::null(),
-    };
+    const RECORD: &'static crate::describe::DescriptorRecord =
+        &crate::describe::DescriptorRecord {
+            version: DESCRIPTOR_FORMAT_VERSION,
+            kind: DESCRIPTOR_KIND_CAST,
+            name: core::ptr::null(),
+            name_len: 0,
+            root: From::SCHEMA,
+            to_root: To::SCHEMA as *const _,
+        };
 }
 
 struct CastRecClosure<From, To, T: crate::closure::WasmClosure + ?Sized, const UNWIND_SAFE: bool>(
@@ -125,15 +135,37 @@ impl<
         const UNWIND_SAFE: bool,
     > CastRecClosure<From, To, T, UNWIND_SAFE>
 {
-    const RECORD: &'static crate::describe::CastRecord = &crate::describe::CastRecord {
-        from: From::SCHEMA,
-        to: To::SCHEMA,
-        invoke: if UNWIND_SAFE {
-            T::INVOKE_SHIM_ADDR_UNWIND_SAFE
-        } else {
-            T::INVOKE_SHIM_ADDR_NOT_UNWIND_SAFE
-        },
+    /// The per-`(T, UNWIND_SAFE)` invoke shim address.
+    const INVOKE: *const () = if UNWIND_SAFE {
+        T::INVOKE_SHIM_ADDR_UNWIND_SAFE
+    } else {
+        T::INVOKE_SHIM_ADDR_NOT_UNWIND_SAFE
     };
+
+    /// `From`'s closure `FUNCTION` node (`<T>::SCHEMA`) with the invoke
+    /// shim attached. The CLI reads `Schema::invoke` here as the
+    /// function-table index for the closure's `shim_idx`.
+    const FN_WITH_INVOKE: crate::describe::Schema =
+        crate::describe::Schema::with_invoke(T::SCHEMA, Self::INVOKE);
+
+    /// `From`'s `CLOSURE` wrapper rebuilt around the invoke-bearing
+    /// `FUNCTION` node. Reuses `From::SCHEMA`'s own header words
+    /// (`[CLOSURE, owned, IS_MUT]`); only the child is swapped.
+    const FROM_WITH_INVOKE: crate::describe::Schema = crate::describe::Schema::node(
+        crate::describe::SchemaTag::Wrap,
+        From::SCHEMA.words(),
+        &[&Self::FN_WITH_INVOKE],
+    );
+
+    const RECORD: &'static crate::describe::DescriptorRecord =
+        &crate::describe::DescriptorRecord {
+            version: DESCRIPTOR_FORMAT_VERSION,
+            kind: DESCRIPTOR_KIND_CAST,
+            name: core::ptr::null(),
+            name_len: 0,
+            root: &Self::FROM_WITH_INVOKE,
+            to_root: To::SCHEMA as *const _,
+        };
 }
 
 #[inline(never)]
@@ -148,7 +180,7 @@ where
     From: IntoWasmAbi + crate::describe::WasmDescribe,
     To: FromWasmAbi + crate::describe::WasmDescribe,
 {
-    super::__wbindgen_cast_marker(CastRec::<From, To>::RECORD as *const _ as *const ());
+    super::__wbindgen_descriptor_marker(CastRec::<From, To>::RECORD as *const _ as *const ());
     // The cli rewrites this whole function to a JS adapter import
     // before it ever runs. Force each prim and the return slot to
     // be observably used via volatile reads/writes so the optimiser
@@ -176,7 +208,7 @@ where
     From: IntoWasmAbi + crate::describe::WasmDescribe,
     To: FromWasmAbi + crate::describe::WasmDescribe,
 {
-    super::__wbindgen_cast_marker(
+    super::__wbindgen_descriptor_marker(
         CastRecClosure::<From, To, T, UNWIND_SAFE>::RECORD as *const _ as *const (),
     );
     keep_prims_alive(prim1, prim2, prim3, prim4);

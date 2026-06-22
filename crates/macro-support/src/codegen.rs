@@ -423,21 +423,22 @@ impl ToTokens for ast::Struct {
 
             #[automatically_derived]
             impl #wasm_bindgen::describe::WasmDescribeVector for #name {
-                // `Vec<UserStruct>` schema:
-                // [VECTOR, NAMED_EXTERNREF, name_len, ...name chars].
-                // The struct's own `SCHEMA` is `[RUST_STRUCT,
-                // name_len, ...]`; this override produces the right
-                // shape for `Vec<UserStruct>` arguments, since
-                // user structs cross the JS boundary as named-
-                // externref handles rather than as
-                // RUST_STRUCT-tagged values.
+                // `Vec<UserStruct>` schema: a VECTOR node whose child is
+                // a NAMED_EXTERNREF leaf. The struct's own `SCHEMA` is
+                // `[RUST_STRUCT, name_len, ...]`; this override produces
+                // the right shape for `Vec<UserStruct>` arguments, since
+                // user structs cross the JS boundary as named-externref
+                // handles rather than as RUST_STRUCT-tagged values.
                 const VECTOR_SCHEMA: &'static #wasm_bindgen::describe::Schema =
-                    & #wasm_bindgen::describe::Schema::leaf(&[
-                        #wasm_bindgen::describe::VECTOR,
-                        #wasm_bindgen::describe::NAMED_EXTERNREF,
-                        #name_len,
-                        #(#name_chars,)*
-                    ]);
+                    & #wasm_bindgen::describe::Schema::node(
+                        #wasm_bindgen::describe::SchemaTag::Wrap,
+                        &[#wasm_bindgen::describe::VECTOR],
+                        &[& #wasm_bindgen::describe::Schema::leaf(&[
+                            #wasm_bindgen::describe::NAMED_EXTERNREF,
+                            #name_len,
+                            #(#name_chars,)*
+                        ])],
+                    );
             }
 
             #[automatically_derived]
@@ -1051,16 +1052,15 @@ impl TryToTokens for ast::Export {
         })
         .to_tokens(into);
 
-        // Section transport: emit the descriptor bytes for this
-        // export directly into `__wasm_bindgen_descriptors`. The
-        // legacy synthetic `__wbindgen_describe_<export_name>`
-        // function (executed by the cli's wasm interpreter) is no
-        // longer emitted — the section is the sole transport.
+        // Descriptor transport: emit this export's `DescriptorRecord`
+        // (plus its marker carrier) referencing a `Schema` tree. The
+        // reference tree is the sole canonical descriptor ABI — there is
+        // no custom section and no synthetic `__wbindgen_describe_<name>`
+        // function.
         //
-        // The set of schema parts is a 3-word header, one entry per
-        // argument (with LONGREF inserted for async-shared-ref args,
-        // matching the legacy describe-stream shape), then ret_ty and
-        // inner_ret_ty.
+        // The schema is a 3-word FUNCTION header node, one child per
+        // argument (with a LONGREF wrapper for async-shared-ref args),
+        // then ret_ty and inner_ret_ty.
         let arg_exprs = build_arg_schema_exprs(&self.wasm_bindgen, &argtys, self.function.r#async);
         let ret_expr = schema_expr_for_type_tokens(&self.wasm_bindgen, &ret_ty);
         let inner_ret_expr = schema_expr_for_type_tokens(&self.wasm_bindgen, &inner_ret_ty);
@@ -1079,20 +1079,6 @@ impl TryToTokens for ast::Export {
     }
 }
 
-/// Emit a `static` linked into the `__wasm_bindgen_descriptors` custom
-/// section whose bytes encode the same descriptor stream the legacy
-/// `__wbindgen_describe_<name>` function would have produced.
-///
-/// The layout of the static matches the section format documented next
-/// to [`wasm_bindgen_shared::DESCRIPTORS_SECTION_NAME`].
-///
-/// The composition relies on every involved `<Ty as WasmDescribe>::SCHEMA`
-/// being a non-empty slice. If any type's `SCHEMA` is still the trait
-/// default (`&[]`), the resulting bytes are malformed; `cli-support`
-/// detects this on decode and falls back to the interpreter for that
-/// shim, so emitting the static is always safe. The macro will expand
-/// the set of recognised wrapper types in follow-up commits, eventually
-/// covering everything the interpreter handles today.
 /// Build per-argument `&'static Schema` expressions shared between the
 /// export and import codegen paths. Async-shared-ref args get a
 /// `LONGREF`-headed wrapper composed by reference; everything else
@@ -1134,29 +1120,16 @@ fn emit_static_descriptor_entry(
     attrs: &[syn::Attribute],
     into: &mut TokenStream,
 ) {
-    let static_ident = Ident::new(
-        &format!(
-            "__WBG_DESCRIPTOR_{}",
-            mangle_export_name_for_ident(shim_name)
-        ),
-        Span::call_site(),
-    );
-    let shim_name_bytes = syn::LitByteStr::new(shim_name.as_bytes(), Span::call_site());
-    let shim_name_len = shim_name.len();
-
     // Drain any closure-wrapper emissions queued by recursive
-    // `schema_expr_for_type` calls during arg / ret expr building.
-    // These appear next to the descriptor entry static so the wrappers
-    // and the section entries live or die together at compile-time cfg
-    // evaluation.
+    // `schema_expr_for_type` calls during arg / ret expr building, so the
+    // wrappers and the descriptor they support live or die together at
+    // compile-time cfg evaluation.
     let pending_closure_wrappers = take_pending_closure_wrappers();
 
     // The function descriptor as a single `&'static Schema` tree: a
     // `[FUNCTION, 0 /* shim_idx placeholder */, nargs]` header node
     // whose children are each arg's schema, then `ret` and `inner_ret`
-    // (the duplicated return that `Function::decode` consumes). The
-    // flattened opcode stream is byte-identical to the legacy
-    // fixed-buffer output.
+    // (the duplicated return the cli's `Function` decode consumes).
     let schema_tree = quote! {
         & #wasm_bindgen::describe::Schema::node(
             #wasm_bindgen::describe::SchemaTag::Wrap,
@@ -1169,37 +1142,15 @@ fn emit_static_descriptor_entry(
         )
     };
 
-    // The descriptor static is hoisted to module scope (not inside
-    // an anonymous `const _: () = { ... }`) so the matching wrapper
-    // body can reference it by Rust path — `&#static_ident`. That
-    // reference makes any CGU that inlines the wrapper undef-ref the
-    // descriptor symbol, forcing wasm-lld to pull the archive `.o`
-    // member that defines it. Without that, lazy archive resolution
-    // can drop the `.o` containing the descriptor when the wrapper
-    // body inlines into every caller and nothing else in that `.o`
-    // is referenced, taking the custom-section bytes with it.
+    let record = emit_descriptor_record(
+        wasm_bindgen,
+        shim_name,
+        quote! { #wasm_bindgen::__rt::DESCRIPTOR_KIND_REGULAR },
+        schema_tree,
+        attrs,
+    );
     (quote! {
-        #[cfg(target_family = "wasm")]
-        #(#attrs)*
-        #[automatically_derived]
-        #[doc(hidden)]
-        #[allow(non_upper_case_globals)]
-        #[link_section = "__wasm_bindgen_descriptors"]
-        pub static #static_ident: [u8; {
-            const __WORDS: usize = #wasm_bindgen::describe::flatten_len(#schema_tree);
-            #wasm_bindgen::describe::schema::entry_byte_len(#shim_name_len, __WORDS)
-        }] = {
-            const __SCHEMA_TREE: &#wasm_bindgen::describe::Schema = #schema_tree;
-            const __WORDS: usize = #wasm_bindgen::describe::flatten_len(__SCHEMA_TREE);
-            const __ENTRY_LEN: usize =
-                #wasm_bindgen::describe::schema::entry_byte_len(#shim_name_len, __WORDS);
-            #wasm_bindgen::describe::schema::pack_entry::<__ENTRY_LEN>(
-                #shim_name_bytes,
-                #wasm_bindgen::__rt::DESCRIPTOR_KIND_REGULAR,
-                & #wasm_bindgen::describe::flatten_into::<__WORDS>(__SCHEMA_TREE),
-            )
-        };
-
+        #record
         #(#pending_closure_wrappers)*
     })
     .to_tokens(into);
@@ -1214,41 +1165,103 @@ fn emit_static_descriptor_entry_static(
     schema_expr: TokenStream,
     into: &mut TokenStream,
 ) {
-    let static_ident = Ident::new(
-        &format!(
-            "__WBG_DESCRIPTOR_{}",
-            mangle_export_name_for_ident(shim_name)
-        ),
-        Span::call_site(),
+    // Static-kind schema exprs can also recurse through
+    // `schema_expr_for_type` (e.g. a closure-typed field), so drain the
+    // closure-wrapper queue here too. Fixes the previous leak where only
+    // the FUNCTION path drained it.
+    let pending_closure_wrappers = take_pending_closure_wrappers();
+
+    let record = emit_descriptor_record(
+        wasm_bindgen,
+        shim_name,
+        quote! { #wasm_bindgen::__rt::DESCRIPTOR_KIND_STATIC },
+        schema_expr,
+        &[],
     );
+    (quote! {
+        #record
+        #(#pending_closure_wrappers)*
+    })
+    .to_tokens(into);
+}
+
+/// Emit a `DescriptorRecord` static plus its deletable, exported marker
+/// carrier function.
+///
+/// The record (a `#[repr(C)]` static in the data segment) points at the
+/// schema tree `root_expr`. The carrier — an exported `extern "C" fn`
+/// whose only body is a single `__wbindgen_descriptor_marker(&RECORD)`
+/// call — is what `wasm-bindgen-cli` discovers by scanning for marker
+/// calls; it reads the record (kind, name, schema root) and then deletes
+/// the carrier. Exporting the carrier is also what keeps the record
+/// alive through linking and forces wasm-ld to pull the defining archive
+/// `.o`. Because nothing in the *live* shim references the record, the
+/// cli's GC drops the descriptor bytes from the final binary after
+/// ingestion.
+fn emit_descriptor_record(
+    wasm_bindgen: &syn::Path,
+    shim_name: &str,
+    kind: TokenStream,
+    root_expr: TokenStream,
+    attrs: &[syn::Attribute],
+) -> TokenStream {
+    // The carrier's exported symbol must be globally unique across the
+    // whole linked program. A content-based shim name is intentionally
+    // shared (a given JS import dedups to one shim), and a single shim's
+    // descriptor can legitimately be emitted in more than one expansion
+    // scope; the previous custom-section `static` tolerated this because
+    // its symbol was Rust-name-mangled (scope + crate disambiguated),
+    // whereas a fixed `#[export_name]` would collide. Mix a crate-salted
+    // (`ShortHash` folds in `CARGO_PKG_NAME`/`_VERSION`) per-emission
+    // sequence number into all three generated names so duplicates and
+    // cross-crate shares each get a distinct symbol. The cli recovers the
+    // real shim name from the record's `name` field and dedups there, so
+    // redundant carriers are harmless.
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static DESCRIPTOR_SEQ: AtomicU64 = AtomicU64::new(0);
+    let seq = DESCRIPTOR_SEQ.fetch_add(1, Ordering::Relaxed);
+    let uniq = ShortHash((shim_name, seq)).to_string();
+
+    let static_ident = Ident::new(&format!("__WBG_DESCRIPTOR_{uniq}"), Span::call_site());
+    let carrier_ident = Ident::new(&format!("__wbg_descr_fn_{uniq}"), Span::call_site());
+    let carrier_export = format!("__wbindgen_descr_{uniq}");
     let shim_name_bytes = syn::LitByteStr::new(shim_name.as_bytes(), Span::call_site());
     let shim_name_len = shim_name.len();
 
-    // See the comment in `emit_static_descriptor_entry` for why the
-    // descriptor static is hoisted to module scope rather than buried
-    // inside an anonymous `const _: () = { ... }` block.
-    (quote! {
+    quote! {
         #[cfg(target_family = "wasm")]
+        #(#attrs)*
         #[automatically_derived]
         #[doc(hidden)]
         #[allow(non_upper_case_globals)]
-        #[link_section = "__wasm_bindgen_descriptors"]
-        pub static #static_ident: [u8; {
-            const __WORDS: usize = #wasm_bindgen::describe::flatten_len(#schema_expr);
-            #wasm_bindgen::describe::schema::entry_byte_len(#shim_name_len, __WORDS)
-        }] = {
-            const __SCHEMA_TREE: &#wasm_bindgen::describe::Schema = #schema_expr;
-            const __WORDS: usize = #wasm_bindgen::describe::flatten_len(__SCHEMA_TREE);
-            const __ENTRY_LEN: usize =
-                #wasm_bindgen::describe::schema::entry_byte_len(#shim_name_len, __WORDS);
-            #wasm_bindgen::describe::schema::pack_entry::<__ENTRY_LEN>(
-                #shim_name_bytes,
-                #wasm_bindgen::__rt::DESCRIPTOR_KIND_STATIC,
-                & #wasm_bindgen::describe::flatten_into::<__WORDS>(__SCHEMA_TREE),
-            )
-        };
-    })
-    .to_tokens(into);
+        static #static_ident: #wasm_bindgen::describe::DescriptorRecord =
+            #wasm_bindgen::describe::DescriptorRecord {
+                version: #wasm_bindgen::__rt::DESCRIPTOR_FORMAT_VERSION,
+                kind: #kind,
+                name: #shim_name_bytes.as_ptr(),
+                name_len: #shim_name_len,
+                root: #root_expr,
+                to_root: ::core::ptr::null(),
+            };
+
+        #[cfg(target_family = "wasm")]
+        #(#attrs)*
+        #[automatically_derived]
+        #[doc(hidden)]
+        #[allow(non_snake_case)]
+        #[export_name = #carrier_export]
+        pub extern "C" fn #carrier_ident() {
+            #[link(wasm_import_module = "__wbindgen_placeholder__")]
+            extern "C" {
+                fn __wbindgen_descriptor_marker(record: *const ());
+            }
+            unsafe {
+                __wbindgen_descriptor_marker(
+                    &#static_ident as *const _ as *const (),
+                );
+            }
+        }
+    }
 }
 
 /// Get the `&'static Schema` token expression for a type. Returns a
@@ -1263,9 +1276,9 @@ fn emit_static_descriptor_entry_static(
 /// `WasmDescribe` impl.
 ///
 /// Special case: raw `&dyn Fn` / `&mut dyn FnMut` arg shapes still
-/// need bespoke handling because their schema embeds a `SYMBOL_REF`
-/// pointing at a per-monomorphisation invoke wrapper that's only
-/// resolved post-link. See [`schema_expr_for_raw_closure`].
+/// need bespoke handling because their schema carries the address of a
+/// per-monomorphisation invoke wrapper in `Schema::invoke` (relocated to
+/// a function-table index post-link). See [`schema_expr_for_raw_closure`].
 fn schema_expr_for_type(wasm_bindgen: &syn::Path, ty: &syn::Type) -> TokenStream {
     if let Some((is_mut, arg_tys, ret_ty)) = detect_closure_arg(ty) {
         return schema_expr_for_raw_closure(wasm_bindgen, is_mut, &arg_tys, &ret_ty);
@@ -1285,10 +1298,10 @@ fn schema_expr_for_type_tokens(wasm_bindgen: &syn::Path, ty_tokens: &TokenStream
 
 thread_local! {
     /// Module-scope items emitted as side effects of `schema_expr_for_type`.
-    /// Specifically: the closure-invoke wrappers that back closure
-    /// SYMBOL_REF entries. Drained at the end of each
-    /// `emit_static_descriptor_entry` so the wrappers appear next to
-    /// the descriptor they support.
+    /// Specifically: the closure-invoke wrappers whose addresses back
+    /// closure `Schema::invoke` fields. Drained at the end of every
+    /// descriptor-entry emitter so the wrappers appear next to the
+    /// descriptor they support.
     ///
     /// Per-thread because proc-macros run on whatever thread cargo
     /// dispatches. Per-crate dedup is handled by [`CLOSURE_WRAPPERS_EMITTED`].
@@ -1318,12 +1331,9 @@ fn take_pending_closure_wrappers() -> Vec<TokenStream> {
 /// * `arg_tys`: parsed argument types `(A1, A2, ...)`.
 /// * `ret_ty`: parsed return type. `()` if the signature has no `-> R`.
 ///
-/// Only matches the **raw `&dyn Fn` / `&mut dyn FnMut`** form right now.
-/// `Closure<T>` and friends are intentionally not detected here — those
-/// flow through the legacy interpreter pathway for now and will be
-/// migrated in a follow-up commit. The fallback is safe because
-/// emitting a malformed section entry causes cli-support to drop it
-/// and use the interpreter for that shim.
+/// Only matches the **raw `&dyn Fn` / `&mut dyn FnMut`** form. Owned
+/// `Closure<T>` / `ScopedClosure<T>` arguments are handled through the
+/// cast path (`wbg_cast_closure`), not here.
 fn detect_closure_arg(ty: &syn::Type) -> Option<(bool, Vec<syn::Type>, syn::Type)> {
     let unwrapped = get_ty(ty);
     let syn::Type::Reference(syn::TypeReference {
@@ -1379,8 +1389,10 @@ fn detect_closure_arg(ty: &syn::Type) -> Option<(bool, Vec<syn::Type>, syn::Type
     None
 }
 
-/// Emit the schema parts for a `&dyn Fn(...) -> R` or `&mut dyn FnMut(...) -> R`
-/// argument: `REF/REFMUT, FUNCTION, SYMBOL_REF, <name_payload>, nargs, ...args..., ret, ret`.
+/// Emit the schema for a `&dyn Fn(...) -> R` or `&mut dyn FnMut(...) -> R`
+/// argument: a `REF`/`REFMUT` node wrapping a closure `FUNCTION` node
+/// whose `Schema::invoke` carries the per-monomorphisation invoke wrapper's
+/// address (relocated to a function-table index post-link).
 /// Side-effect: queues a wrapper-function emission into
 /// `CLOSURE_WRAPPER_EMISSIONS` so the next call to
 /// `take_pending_closure_wrappers` returns it.
@@ -1410,7 +1422,21 @@ fn schema_expr_for_raw_closure(
         ret_ty.to_token_stream(),
     );
     let hash = ShortHash(&sig_repr).to_string();
-    let export_name = format!("__wbg_invoke_{hash}");
+    // Per-monomorphisation dedup key, Rust-ident seed, and clean export
+    // name for the invoke wrapper. The export name is only cosmetic (it
+    // gives the cli-generated JS shim a tidy `__wbg_invoke_<hash>` name and
+    // is stripped after ingestion); discovery is by the descriptor's
+    // relocated `Schema::invoke` function-table index, not by name. The
+    // hash is crate-salted via `ShortHash`, so the export name is unique
+    // across crates.
+    let wrapper_key = format!("__wbg_invoke_{hash}");
+    let wrapper_ident = Ident::new(
+        &format!(
+            "__wbg_invoke_wrap_{}",
+            mangle_export_name_for_ident(&wrapper_key)
+        ),
+        Span::call_site(),
+    );
 
     let arg_exprs: Vec<TokenStream> = arg_tys
         .iter()
@@ -1418,27 +1444,11 @@ fn schema_expr_for_raw_closure(
         .collect();
     let ret_expr = schema_expr_for_type(wasm_bindgen, ret_ty);
 
-    // SYMBOL_REF payload (u32 words): name_len + ceil(name_len / 4) packed words.
-    let name_bytes = export_name.as_bytes();
-    let name_len_u32 = name_bytes.len() as u32;
-    let mut packed_words: Vec<u32> = Vec::with_capacity(name_bytes.len().div_ceil(4) + 1);
-    packed_words.push(name_len_u32);
-    let mut i = 0;
-    while i < name_bytes.len() {
-        let b0 = name_bytes[i];
-        let b1 = name_bytes.get(i + 1).copied().unwrap_or(0);
-        let b2 = name_bytes.get(i + 2).copied().unwrap_or(0);
-        let b3 = name_bytes.get(i + 3).copied().unwrap_or(0);
-        packed_words.push(
-            u32::from(b0) | (u32::from(b1) << 8) | (u32::from(b2) << 16) | (u32::from(b3) << 24),
-        );
-        i += 4;
-    }
-    // Queue the wrapper emission, deduplicating by export name.
+    // Queue the wrapper emission, deduplicating by signature.
     let already_emitted =
-        CLOSURE_WRAPPERS_EMITTED.with(|set| !set.borrow_mut().insert(export_name.clone()));
+        CLOSURE_WRAPPERS_EMITTED.with(|set| !set.borrow_mut().insert(wrapper_key.clone()));
     if !already_emitted {
-        let wrapper = emit_closure_wrapper(wasm_bindgen, &export_name, is_mut, arg_tys, ret_ty);
+        let wrapper = emit_closure_wrapper(wasm_bindgen, &wrapper_key, is_mut, arg_tys, ret_ty);
         CLOSURE_WRAPPER_EMISSIONS.with(|cell| cell.borrow_mut().push(wrapper));
     }
 
@@ -1448,23 +1458,27 @@ fn schema_expr_for_raw_closure(
         quote! { #wasm_bindgen::describe::REF }
     };
 
-    // Final layout (a single WRAP node):
-    //   header words: [REF/REFMUT, FUNCTION, SYMBOL_REF, name_len, ...packed_name, nargs]
-    //   children: each arg's SCHEMA, then ret SCHEMA twice
+    // A `REF`/`REFMUT` node wrapping a closure `FUNCTION` node. The
+    // `FUNCTION` node carries the invoke shim's address in
+    // `Schema::invoke`; the cli reads the linker-relocated
+    // function-table index as the closure's `shim_idx`. Scalars stay in
+    // `words`, sub-descriptors in `children`, and the relocated pointer
+    // lives out-of-band — so structure and relocations never alias.
     quote! {
         & #wasm_bindgen::describe::Schema::node(
             #wasm_bindgen::describe::SchemaTag::Wrap,
+            &[#ref_opcode],
             &[
-                #ref_opcode,
-                #wasm_bindgen::describe::FUNCTION,
-                #wasm_bindgen::describe::SYMBOL_REF,
-                #(#packed_words,)*
-                #nargs,
-            ],
-            &[
-                #(#arg_exprs,)*
-                #ret_expr,
-                #ret_expr,
+                & #wasm_bindgen::describe::Schema::closure_node(
+                    #wasm_bindgen::describe::SchemaTag::Wrap,
+                    &[#wasm_bindgen::describe::FUNCTION, 0u32, #nargs],
+                    &[
+                        #(#arg_exprs,)*
+                        #ret_expr,
+                        #ret_expr,
+                    ],
+                    #wrapper_ident as *const (),
+                ),
             ],
         )
     }
@@ -1484,14 +1498,17 @@ fn schema_expr_for_raw_closure(
 /// }
 /// ```
 ///
-/// The wrapper is exported by name so cli-support can find it via
-/// `module.exports`, and is placed in the function table because
-/// wasm-ld puts functions that have their address taken into element
-/// segments. We force that by following the wrapper definition with
-/// a `#[used] static` of the wrapper's function-pointer type.
+/// The wrapper is placed in the function table because wasm-ld puts
+/// functions whose address is taken into element segments: the
+/// descriptor's closure node references the wrapper via
+/// `Schema::invoke` (`#wrapper_ident as *const ()`), which the linker
+/// lowers to a function-table-index relocation the cli reads back. A
+/// `#[used] static` of the wrapper's function-pointer type is also
+/// emitted as belt-and-suspenders table-placement insurance. The
+/// wrapper is **not** exported: the cli no longer looks it up by name.
 fn emit_closure_wrapper(
     wasm_bindgen: &syn::Path,
-    export_name: &str,
+    wrapper_key: &str,
     is_mut: bool,
     arg_tys: &[syn::Type],
     ret_ty: &syn::Type,
@@ -1499,14 +1516,14 @@ fn emit_closure_wrapper(
     let wrapper_ident = Ident::new(
         &format!(
             "__wbg_invoke_wrap_{}",
-            mangle_export_name_for_ident(export_name)
+            mangle_export_name_for_ident(wrapper_key)
         ),
         Span::call_site(),
     );
     let static_ident = Ident::new(
         &format!(
             "__wbg_invoke_keepalive_{}",
-            mangle_export_name_for_ident(export_name)
+            mangle_export_name_for_ident(wrapper_key)
         ),
         Span::call_site(),
     );
@@ -1591,12 +1608,20 @@ fn emit_closure_wrapper(
         // panic=unwind is opt-in for the runtime; we always use the
         // catching variant (`maybe_catch_unwind`) since that matches
         // the runtime's `WasmDescribe for dyn Fn(...)` choice.
+        // `#[export_name]` gives the wrapper a clean, stable symbol so the
+        // cli-generated JS shim reads `__wbg_invoke_<hash>` rather than the
+        // Rust-mangled function name. The name is crate-salted (`ShortHash`
+        // folds in `CARGO_PKG_NAME`/`_VERSION`), so it does not collide
+        // across crates. It is not used for *discovery* — the cli finds the
+        // wrapper via the descriptor's relocated `Schema::invoke` table
+        // index — and the export is stripped by cli-support after ingestion
+        // (the table slot keeps the wrapper live for JS dispatch).
         #[cfg(target_family = "wasm")]
         #[automatically_derived]
         #[doc(hidden)]
         #[allow(non_snake_case)]
         #[allow(clippy::too_many_arguments)]
-        #[export_name = #export_name]
+        #[export_name = #wrapper_key]
         pub unsafe extern "C-unwind" fn #wrapper_ident(
             a: #wasm_bindgen::__rt::WasmWord,
             b: #wasm_bindgen::__rt::WasmWord,
@@ -1619,22 +1644,22 @@ fn emit_closure_wrapper(
 
         // Keep-alive: wasm-ld only places a function in the function
         // table when its address is taken in code it can see. The
-        // wrapper is exported by name, which keeps it from DCE, but
-        // by itself doesn't force a table entry. Taking its address
-        // through a `#[used] static` does.
+        // descriptor's closure node already takes the wrapper's address
+        // (`Schema::invoke`), which both keeps it from DCE and forces a
+        // table entry. This `#[used] static` is additional insurance for
+        // targets/toolchains where that single reference is not enough.
         //
-        // Type-erased: we store the wrapper's address as a raw
-        // pointer so the static's type doesn't have to mirror the
-        // wrapper's (per-monomorphisation) signature. wasm-ld treats
-        // the address-of as a function-pointer relocation regardless.
+        // Type-erased: we store the wrapper's address as a raw pointer
+        // so the static's type doesn't have to mirror the wrapper's
+        // (per-monomorphisation) signature. wasm-ld treats the
+        // address-of as a function-pointer relocation regardless.
         //
-        // After cli-support harvests the wrapper's table slot via
-        // `function_table_slot_of`, it strips this export and the
-        // walrus GC pass drops the wrapper if the slot is now
-        // unreferenced. Common case: the slot is referenced from the
-        // exported function table (via a JS-callable adapter
-        // generated by cli-support) and the wrapper stays live, just
-        // without its descriptor-emission-related export name.
+        // The cli reads the wrapper's table slot from the descriptor's
+        // relocated `Schema::invoke`; the walrus GC pass drops the
+        // wrapper if the slot is unreferenced after descriptor
+        // ingestion. Common case: the slot is referenced from the
+        // exported function table (via a JS-callable adapter generated
+        // by cli-support) and the wrapper stays live.
         #[cfg(target_family = "wasm")]
         #[automatically_derived]
         #[doc(hidden)]
@@ -1664,35 +1689,18 @@ fn mangle_export_name_for_ident(name: &str) -> String {
     out
 }
 
-/// Emit an expression that materialises the address of the descriptor
-/// static for `shim_name` so the surrounding CGU undef-references it.
+/// Liveness/archive-pull for a descriptor is now provided by its
+/// exported marker carrier function (see [`emit_descriptor_record`]),
+/// so no in-shim anchor is emitted.
 ///
-/// Used inside every macro-generated body whose codegen might be
-/// inlined into (or otherwise emitted in) a CGU different from the
-/// one that holds the matching `__WBG_DESCRIPTOR_<mangled>` static.
-/// Without this anchor, lazy archive resolution can drop the `.o`
-/// member that contributes the descriptor's `__wasm_bindgen_descriptors`
-/// custom-section bytes — the wrapper body inlines into every caller
-/// and nothing else in that `.o` is referenced.
-///
-/// `core::hint::black_box` is the right tool here: it's an opaque
-/// inline-asm wrapper LLVM cannot see through, so the symbol reference
-/// survives all the way to the wasm encoding as a relocation, not
-/// just at the IR level.
-fn descriptor_anchor(shim_name: &str) -> TokenStream {
-    let descriptor_ident = Ident::new(
-        &format!(
-            "__WBG_DESCRIPTOR_{}",
-            mangle_export_name_for_ident(shim_name)
-        ),
-        Span::call_site(),
-    );
-    quote! {
-        #[cfg(target_family = "wasm")]
-        {
-            ::core::hint::black_box(&#descriptor_ident);
-        }
-    }
+/// This intentionally expands to nothing. A `black_box(&RECORD)` in a
+/// *live* shim body would be counter-productive: it would pin the
+/// `DescriptorRecord` (and its `Schema` tree) into the final binary
+/// even after the cli has ingested and deleted the carrier, leaking the
+/// descriptor bytes the carrier exists to keep out of runtime. The call
+/// sites are retained as no-ops to keep the surrounding codegen stable.
+fn descriptor_anchor(_shim_name: &str) -> TokenStream {
+    quote! {}
 }
 
 impl TryToTokens for ast::ImportKind {
@@ -1747,25 +1755,30 @@ impl TryToTokens for ast::ImportType {
                         #(#typescript_type_chars,)*
                     ])
                 },
-                // [VECTOR, NAMED_EXTERNREF, name_len, ...name chars]
+                // VECTOR node whose child is the NAMED_EXTERNREF leaf.
                 quote! {
-                    & #wasm_bindgen::describe::Schema::leaf(&[
-                        #wasm_bindgen::describe::VECTOR,
-                        #wasm_bindgen::describe::NAMED_EXTERNREF,
-                        #typescript_type_len,
-                        #(#typescript_type_chars,)*
-                    ])
+                    & #wasm_bindgen::describe::Schema::node(
+                        #wasm_bindgen::describe::SchemaTag::Wrap,
+                        &[#wasm_bindgen::describe::VECTOR],
+                        &[& #wasm_bindgen::describe::Schema::leaf(&[
+                            #wasm_bindgen::describe::NAMED_EXTERNREF,
+                            #typescript_type_len,
+                            #(#typescript_type_chars,)*
+                        ])],
+                    )
                 },
             )
         } else {
             (
                 // Forward to JsValue's schema.
                 quote! { <#wasm_bindgen::JsValue as #wasm_bindgen::describe::WasmDescribe>::SCHEMA },
+                // VECTOR node whose child is JsValue's EXTERNREF leaf.
                 quote! {
-                    & #wasm_bindgen::describe::Schema::leaf(&[
-                        #wasm_bindgen::describe::VECTOR,
-                        #wasm_bindgen::describe::EXTERNREF,
-                    ])
+                    & #wasm_bindgen::describe::Schema::node(
+                        #wasm_bindgen::describe::SchemaTag::Wrap,
+                        &[#wasm_bindgen::describe::VECTOR],
+                        &[<#wasm_bindgen::JsValue as #wasm_bindgen::describe::WasmDescribe>::SCHEMA],
+                    )
                 },
             )
         };
@@ -3587,9 +3600,9 @@ impl TryToTokens for DescribeImport<'_> {
             None => quote! { () },
         };
 
-        // Section transport: 3-word header, one entry per argument
-        // (no async-LONGREF transform — imports' args aren't held
-        // across awaits), then the ret schema twice.
+        // Descriptor transport: FUNCTION header node, one child per
+        // argument (no async-LONGREF transform — imports' args aren't
+        // held across awaits), then the ret schema twice.
         let argty_refs: Vec<&syn::Type> = argtys.iter().collect();
         let arg_exprs = build_arg_schema_exprs(self.wasm_bindgen, &argty_refs, false);
         let ret_expr = schema_expr_for_type_tokens(self.wasm_bindgen, &ret_schema_ty);
@@ -3703,12 +3716,14 @@ impl ToTokens for ast::Enum {
             #[automatically_derived]
             impl #wasm_bindgen::describe::WasmDescribeVector for #enum_name {
                 // `Vec<StringEnum>` crosses the boundary as a JS array
-                // of JsValues — VECTOR + EXTERNREF.
+                // of JsValues — a VECTOR node whose child is an
+                // EXTERNREF leaf.
                 const VECTOR_SCHEMA: &'static #wasm_bindgen::describe::Schema =
-                    & #wasm_bindgen::describe::Schema::leaf(&[
-                        #wasm_bindgen::describe::VECTOR,
-                        #wasm_bindgen::describe::EXTERNREF,
-                    ]);
+                    & #wasm_bindgen::describe::Schema::node(
+                        #wasm_bindgen::describe::SchemaTag::Wrap,
+                        &[#wasm_bindgen::describe::VECTOR],
+                        &[<#wasm_bindgen::JsValue as #wasm_bindgen::describe::WasmDescribe>::SCHEMA],
+                    );
             }
 
             #[automatically_derived]

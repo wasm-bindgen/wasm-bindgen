@@ -142,7 +142,8 @@ macro_rules! vectors {
 macro_rules! vectors_internal {
     ($t:ty) => {
         impl WasmDescribeVector for $t {
-            // `Vec<primitive>` schema: [VECTOR, ...primitive's SCHEMA]
+            // `Vec<primitive>` schema: a VECTOR node whose single child is
+            // the primitive's own schema.
             const VECTOR_SCHEMA: &'static crate::describe::Schema = &crate::describe::Schema::node(
                 crate::describe::SchemaTag::Wrap,
                 &[crate::describe::VECTOR],
@@ -246,18 +247,22 @@ vectors! {
 impl WasmDescribeVector for String {
     // Vec<String> crosses the boundary as a JS array of
     // named-externref ("string") handles, not as a flat sequence
-    // of STRING descriptors.
-    const VECTOR_SCHEMA: &'static crate::describe::Schema = &crate::describe::Schema::leaf(&[
-        VECTOR,
-        NAMED_EXTERNREF,
-        6,
-        's' as u32,
-        't' as u32,
-        'r' as u32,
-        'i' as u32,
-        'n' as u32,
-        'g' as u32,
-    ]);
+    // of STRING descriptors: a VECTOR node whose child is the
+    // named-externref leaf.
+    const VECTOR_SCHEMA: &'static crate::describe::Schema = &crate::describe::Schema::node(
+        crate::describe::SchemaTag::Wrap,
+        &[VECTOR],
+        &[&crate::describe::Schema::leaf(&[
+            NAMED_EXTERNREF,
+            6,
+            's' as u32,
+            't' as u32,
+            'r' as u32,
+            'i' as u32,
+            'n' as u32,
+            'g' as u32,
+        ])],
+    );
 }
 
 impl VectorIntoWasmAbi for String {
