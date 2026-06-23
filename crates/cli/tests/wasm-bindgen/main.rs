@@ -2345,6 +2345,242 @@ fn emscripten_namespaced_exports_valid_ts() {
     }
 }
 
+#[test]
+fn emscripten_exports_hoisted_to_library_symbols() {
+    // Clean exports are hoisted into top-level `addToLibrary` symbols and
+    // self-registered so emscripten emits them itself.
+    let mut project = Project::new("emscripten_exports_hoisted_to_library_symbols");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen::prelude::*;
+
+            #[wasm_bindgen]
+            pub fn add(a: i32, b: i32) -> i32 {
+                a + b
+            }
+
+            #[wasm_bindgen]
+            pub enum Color {
+                Red = 0,
+                Green = 1,
+            }
+
+            // A private class must stay module-internal: hoisted, but not
+            // attached to Module nor self-registered as a public export.
+            #[wasm_bindgen(private)]
+            pub struct Secret {
+                value: i32,
+            }
+
+            #[wasm_bindgen]
+            impl Secret {
+                #[wasm_bindgen(constructor)]
+                pub fn new() -> Secret {
+                    Secret { value: 0 }
+                }
+            }
+
+            #[wasm_bindgen]
+            pub struct Counter {
+                value: i32,
+            }
+
+            #[wasm_bindgen]
+            impl Counter {
+                #[wasm_bindgen(constructor)]
+                pub fn new(start: i32) -> Counter {
+                    Counter { value: start }
+                }
+                pub fn inc(&mut self) -> i32 {
+                    self.value += 1;
+                    self.value
+                }
+            }
+        "#,
+    );
+
+    let built = project.build();
+    let mut module = ModuleConfig::new().parse_file(&built).unwrap();
+    module.customs.add(RawCustomSection {
+        name: "__wasm_bindgen_emscripten_marker".into(),
+        data: vec![1],
+    });
+    let emscripten_wasm = project.root.join("emscripten_input.wasm");
+    module.emit_wasm_file(&emscripten_wasm).unwrap();
+
+    let out_dir = project.root.join("pkg-emscripten");
+    fs::create_dir_all(&out_dir).unwrap();
+    wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
+        "wasm-bindgen".as_ref(),
+        "--out-dir".as_ref(),
+        out_dir.as_os_str(),
+        emscripten_wasm.as_os_str(),
+    ])
+    .unwrap();
+
+    let lib = fs::read_to_string(out_dir.join("library_bindgen.js")).unwrap();
+
+    // Free function hoisted to its own library symbol with Module attachment.
+    assert!(
+        lib.contains("$add: function add("),
+        "add should be a hoisted library function:\n{lib}"
+    );
+    assert!(
+        lib.contains("$add__postset: \"Module['add'] = add;\""),
+        "add should attach to Module via __postset:\n{lib}"
+    );
+    // Class + its finalization registry hoisted to library symbols.
+    assert!(
+        lib.contains("$Counter: class Counter"),
+        "Counter should be a hoisted library class:\n{lib}"
+    );
+    assert!(
+        lib.contains("$CounterFinalization:"),
+        "Counter's finalization registry should be a sibling library symbol:\n{lib}"
+    );
+    assert!(
+        lib.contains("$Counter__deps: ['$initBindgen', '$CounterFinalization']"),
+        "Counter should depend on $initBindgen + its finalizer:\n{lib}"
+    );
+    // Enum hoisted as a string-valued symbol so the freeze is emitted verbatim.
+    assert!(
+        lib.contains(r#"$Color: "Object.freeze("#),
+        "Color enum should be a hoisted string-valued library symbol:\n{lib}"
+    );
+    // Finalization registry built in a __postset to avoid re-serialization.
+    assert!(
+        lib.contains("$CounterFinalization: undefined,")
+            && lib.contains(
+                r#"$CounterFinalization__postset: "CounterFinalization = (typeof FinalizationRegistry"#
+            ),
+        "CounterFinalization should be constructed in a __postset:\n{lib}"
+    );
+    // Self-registration so emscripten exports them itself.
+    for name in ["add", "Counter", "Color"] {
+        assert!(
+            lib.contains(&format!("EXPORTED_FUNCTIONS.add('{name}');")),
+            "{name} should be self-registered into EXPORTED_FUNCTIONS:\n{lib}"
+        );
+    }
+    // No force-keep: EXPORTED_FUNCTIONS membership already retains each symbol.
+    assert!(
+        !lib.contains("extraLibraryFuncs.push('$add'"),
+        "public exports should rely on EXPORTED_FUNCTIONS, not a redundant force-keep:\n{lib}"
+    );
+    assert!(
+        lib.contains("$Counter__deps: ['$initBindgen', '$CounterFinalization']"),
+        "Counter must keep its finalization registry via __deps:\n{lib}"
+    );
+    // A private class is hoisted but must NOT be exposed as a public export.
+    assert!(
+        lib.contains("$Secret: class Secret"),
+        "private class should still be hoisted as a library symbol:\n{lib}"
+    );
+    assert!(
+        !lib.contains("EXPORTED_FUNCTIONS.add('Secret')"),
+        "private class must not self-register as a named export:\n{lib}"
+    );
+    assert!(
+        !lib.contains("Module['Secret']"),
+        "private class must not attach to Module:\n{lib}"
+    );
+    // They must no longer be inlined inside the $initBindgen closure.
+    let init = lib
+        .split_once("$initBindgen: () =>")
+        .map(|(_, rest)| rest)
+        .expect("$initBindgen present");
+    let init_body = init
+        .split_once("\n            });")
+        .map(|(b, _)| b)
+        .unwrap_or(init);
+    assert!(
+        !init_body.contains("class Counter") && !init_body.contains("function add("),
+        "exports must not be inlined in $initBindgen:\n{init_body}"
+    );
+}
+
+#[test]
+fn emscripten_user_imports_are_prefixed() {
+    // User module imports land in the `--extern-pre-js` sidecar at module top
+    // level alongside emcc's runtime, and the imported names come verbatim from
+    // the user's JS. They're prefixed with `__wbg_` so arbitrary names (e.g. a
+    // function literally called `Module`) can't collide with emcc globals. The
+    // public export (`run`) stays unprefixed.
+    let mut project = Project::new("emscripten_user_imports_are_prefixed");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen::prelude::*;
+
+            // A name that would collide with emscripten's runtime if unprefixed.
+            #[wasm_bindgen(module = "imports")]
+            extern "C" {
+                fn Module() -> i32;
+            }
+
+            #[wasm_bindgen(inline_js = "export function snippet_value() { return 7; }")]
+            extern "C" {
+                fn snippet_value() -> i32;
+            }
+
+            #[wasm_bindgen]
+            pub fn run() -> i32 {
+                Module() + snippet_value()
+            }
+        "#,
+    );
+
+    let built = project.build();
+    let mut module = ModuleConfig::new().parse_file(&built).unwrap();
+    module.customs.add(RawCustomSection {
+        name: "__wasm_bindgen_emscripten_marker".into(),
+        data: vec![1],
+    });
+    let emscripten_wasm = project.root.join("emscripten_input.wasm");
+    module.emit_wasm_file(&emscripten_wasm).unwrap();
+
+    let out_dir = project.root.join("pkg-emscripten");
+    fs::create_dir_all(&out_dir).unwrap();
+    wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
+        "wasm-bindgen".as_ref(),
+        "--out-dir".as_ref(),
+        out_dir.as_os_str(),
+        emscripten_wasm.as_os_str(),
+    ])
+    .unwrap();
+
+    // ESM imports live in the extern-pre sidecar, aliased to a `__wbg_` local.
+    let extern_pre = fs::read_to_string(out_dir.join("library_bindgen.extern-pre.js")).unwrap();
+    assert!(
+        extern_pre.contains("Module as __wbg_Module"),
+        "module import should be aliased to a __wbg_-prefixed local:\n{extern_pre}"
+    );
+    assert!(
+        extern_pre.contains("snippet_value as __wbg_snippet_value"),
+        "inline-js snippet import should be aliased to a __wbg_-prefixed local:\n{extern_pre}"
+    );
+    // The bare user name must NOT bind at module scope (no collision with emcc).
+    assert!(
+        !extern_pre.contains("import { Module }")
+            && !extern_pre.contains("import { Module,")
+            && !extern_pre.contains(", Module }"),
+        "the unprefixed `Module` must not be imported into module scope:\n{extern_pre}"
+    );
+
+    // The library shims reference the prefixed locals.
+    let lib = fs::read_to_string(out_dir.join("library_bindgen.js")).unwrap();
+    assert!(
+        lib.contains("__wbg_Module(") && lib.contains("__wbg_snippet_value("),
+        "shims should call the prefixed import locals:\n{lib}"
+    );
+    // The public export keeps its clean name.
+    assert!(
+        lib.contains("$run: function run("),
+        "the public export `run` must stay unprefixed:\n{lib}"
+    );
+}
+
 /// Look up an executable on `PATH`. Used so the test can opportunistically
 /// validate the generated .d.ts with `tsc` without hard-requiring it.
 fn which(name: &str) -> Option<PathBuf> {

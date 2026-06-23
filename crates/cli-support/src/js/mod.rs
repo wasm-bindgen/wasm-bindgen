@@ -195,6 +195,11 @@ pub struct Context<'a> {
     /// before generating each import and diffing afterwards.
     emscripten_import_deps: BTreeMap<ImportId, BTreeSet<String>>,
 
+    /// Public exports hoisted into top-level `addToLibrary` symbols, recorded
+    /// so they can be added to `EXPORTED_FUNCTIONS` in
+    /// `generate_emscripten_wasm_loading`.
+    emscripten_runtime_exports: Vec<String>,
+
     /// `true` when the module's memory is a memory64 (wasm64) memory.
     memory64: bool,
 
@@ -358,6 +363,7 @@ impl<'a> Context<'a> {
             adapter_deps: Default::default(),
             emscripten_global_deps: Default::default(),
             emscripten_import_deps: Default::default(),
+            emscripten_runtime_exports: Default::default(),
             memory64,
             super_skip_sentinel_emitted: false,
         })
@@ -370,8 +376,15 @@ impl<'a> Context<'a> {
         if self.super_skip_sentinel_emitted {
             return;
         }
-        self.globals
-            .push_str("const __wbgSuperSkip = Symbol('wasm-bindgen.super-skip');\n");
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            // Hoisted classes reference the sentinel at module scope, so it
+            // must be a library symbol rather than a `$initBindgen` local.
+            self.export_to_emscripten("__wbgSuperSkip", "Symbol('wasm-bindgen.super-skip')", &[]);
+            self.adapter_deps.insert("__wbgSuperSkip".to_string());
+        } else {
+            self.globals
+                .push_str("const __wbgSuperSkip = Symbol('wasm-bindgen.super-skip');\n");
+        }
         self.super_skip_sentinel_emitted = true;
     }
 
@@ -458,6 +471,93 @@ impl<'a> Context<'a> {
             "addToLibrary({{\n    ${js_name}: \"{}\"{deps_str}\n}});",
             content.replace('\\', "\\\\").replace('"', "\\\""),
         ));
+    }
+
+    /// Hoist a clean export into its own top-level `addToLibrary` symbol so
+    /// emscripten can emit it as a named ESM export.
+    ///
+    /// `value` is the right-hand side (a function/class expression, or `{}`
+    /// for a namespace root). `extra_deps` lists `$`-less library symbols the
+    /// body references; every symbol also depends on `$initBindgen`.
+    /// `postset_extra` runs after the symbol is defined. `public` adds the
+    /// `Module.<id>` attachment and records the name for `EXPORTED_FUNCTIONS`;
+    /// namespace leaves are hoisted privately (`public = false`).
+    fn hoist_emscripten_export(
+        &mut self,
+        identifier: &str,
+        value: &str,
+        extra_deps: &[&str],
+        postset_extra: &str,
+        public: bool,
+    ) {
+        let mut deps = vec!["$initBindgen".to_string()];
+        deps.extend(extra_deps.iter().map(|d| format!("${d}")));
+        let deps_fmt: Vec<String> = deps.iter().map(|d| format!("'{d}'")).collect();
+        let module_attach = if public {
+            format!("Module['{identifier}'] = {identifier};")
+        } else {
+            String::new()
+        };
+        let postset = format!("{postset_extra}{module_attach}");
+        let postset_field = if postset.is_empty() {
+            String::new()
+        } else {
+            format!(",\n    ${identifier}__postset: {postset:?}")
+        };
+        self.emscripten_library(&format!(
+            "addToLibrary({{\n    ${identifier}: {value},\n    \
+             ${identifier}__deps: [{}]{postset_field}\n}});",
+            deps_fmt.join(", "),
+        ));
+        if public {
+            self.emscripten_runtime_exports.push(identifier.to_string());
+        }
+    }
+
+    /// Hoist a clean export (free function, class, or enum) to a library symbol
+    /// and, when it's namespaced, register a declaration-free entry in the
+    /// export tree so the namespace root assembles `ns.<name> = <identifier>`
+    /// and the `.d.ts` namespace shape resolves `typeof <identifier>`. The
+    /// hoisted symbol is public (named ESM export / `Module.<name>`) unless it's
+    /// namespaced (reached via the root) or `private`. Shared by the function,
+    /// class, and enum emission paths.
+    fn hoist_emscripten_export_with_tree(
+        &mut self,
+        identifier: &str,
+        value: &str,
+        extra_deps: &[&str],
+        postset_extra: &str,
+        private: bool,
+        js_name: &str,
+        js_namespace: Option<&[String]>,
+        ts_definition: String,
+        parent_identifier: Option<String>,
+    ) -> Result<(), Error> {
+        let is_namespaced = js_namespace.is_some();
+        self.hoist_emscripten_export(
+            identifier,
+            value,
+            extra_deps,
+            postset_extra,
+            !is_namespaced && !private,
+        );
+        if is_namespaced {
+            define_export(
+                &mut self.exports,
+                js_name,
+                js_namespace.unwrap_or_default(),
+                ExportEntry::Definition(ExportDefinition {
+                    identifier: identifier.to_string(),
+                    comments: None,
+                    definition: String::new(),
+                    ts_definition,
+                    ts_comments: None,
+                    private,
+                    parent_identifier,
+                }),
+            )?;
+        }
+        Ok(())
     }
 
     /// Register a wasm-bindgen-internal helper as an intrinsic.
@@ -1692,6 +1792,14 @@ if (require('worker_threads').isMainThread) {{
             ""
         };
 
+        // Adding each name to `EXPORTED_FUNCTIONS` forces jsifier to include the
+        // `$<id>` symbol and prefix it with `export` under `MODULARIZE=instance`.
+        let self_register = self
+            .emscripten_runtime_exports
+            .iter()
+            .map(|id| format!("EXPORTED_FUNCTIONS.add('{id}');\n"))
+            .collect::<String>();
+
         format!(
             r#"
             addToLibrary({{
@@ -1710,7 +1818,7 @@ if (require('worker_threads').isMainThread) {{
             }});
 
             extraLibraryFuncs.push('$initBindgen', '$addOnInit', '$wasm', {global_deps});
-            "#,
+            {self_register}"#,
             init_deps = init_dep_refs.join(", "),
             global_deps = global_dep_refs.join(", "),
         )
@@ -2192,11 +2300,29 @@ if (require('worker_threads').isMainThread) {{
             )
         };
 
-        self.globals.push_str(&format!(
-            "const {identifier}Finalization = (typeof FinalizationRegistry === 'undefined')
-                ? {{ register: () => {{}}, unregister: () => {{}} }}
-                : new FinalizationRegistry({finalization_callback});\n"
-        ));
+        // Hoisted classes need their finalization registry as a sibling library
+        // symbol rather than a `$initBindgen` local.
+        let hoist = matches!(self.config.mode, OutputMode::Emscripten);
+        let finalization_value = format!(
+            "(typeof FinalizationRegistry === 'undefined')\n\
+                ? {{ register: () => {{}}, unregister: () => {{}} }}\n\
+                : new FinalizationRegistry({finalization_callback})"
+        );
+        if hoist {
+            // Build the registry in a `__postset` (emitted verbatim). As a
+            // member value emscripten would re-serialize the live instance and
+            // collapse it to `{}`, losing `register`/`unregister`.
+            let postset = format!("{identifier}Finalization = {finalization_value};");
+            self.emscripten_library(&format!(
+                "addToLibrary({{\n    ${identifier}Finalization: undefined,\n    \
+                 ${identifier}Finalization__deps: ['$wasm'],\n    \
+                 ${identifier}Finalization__postset: {postset:?}\n}});"
+            ));
+        } else {
+            self.globals.push_str(&format!(
+                "const {identifier}Finalization = {finalization_value};\n"
+            ));
+        }
 
         // If the class is inspectable, generate `toJSON` and `toString`
         // to expose all readable properties of the class. Otherwise,
@@ -2373,9 +2499,37 @@ if (require('worker_threads').isMainThread) {{
             String::new()
         };
 
-        dst.push_str(&format!(
-            "if (Symbol.dispose) {identifier}.prototype[Symbol.dispose] = {identifier}.prototype.free;\n"
-        ));
+        let dispose_wiring = format!(
+            "if (Symbol.dispose) {identifier}.prototype[Symbol.dispose] = {identifier}.prototype.free;"
+        );
+
+        if hoist {
+            // The `Symbol.dispose` wiring follows the class expression, so it
+            // goes in the `__postset`. Deps: the finalization registry and any
+            // `extends` parent (also a hoisted symbol).
+            let identifier = identifier.clone();
+            let mut extra_deps: Vec<String> = vec![format!("{identifier}Finalization")];
+            if let Some(parent) = &parent_identifier {
+                extra_deps.push(parent.clone());
+            }
+            let extra_dep_refs: Vec<&str> = extra_deps.iter().map(String::as_str).collect();
+            // Private classes are hoisted but not exposed as a runtime value.
+            self.hoist_emscripten_export_with_tree(
+                &identifier,
+                dst.trim_end(),
+                &extra_dep_refs,
+                &format!("{dispose_wiring} "),
+                class.private,
+                js_name,
+                class.js_namespace.as_deref(),
+                ts_definition,
+                parent_identifier.clone(),
+            )?;
+            return Ok(());
+        }
+
+        dst.push_str(&dispose_wiring);
+        dst.push('\n');
 
         let ts_comments = if class.generate_typescript {
             Some(class.comments.clone())
@@ -2548,42 +2702,39 @@ if (require('worker_threads').isMainThread) {{
                     // don't clobber each other.
                     let emit_existing =
                         existing || matches!(self.config.mode, OutputMode::Emscripten);
-                    let ns_dst = self.write_namespace(&identifier, &ns.ns, emit_existing)?;
+                    let mut leaf_ids = Vec::new();
+                    let ns_dst =
+                        self.write_namespace(&identifier, &ns.ns, emit_existing, &mut leaf_ids)?;
                     let ts_dst = if self.config.typescript {
                         Self::write_namespace_ts(&ns.ns, "")?
                     } else {
                         String::new()
                     };
-                    let definition = if matches!(self.config.mode, OutputMode::Emscripten) {
-                        // Attach to `Module.<identifier>` and bind a local
-                        // `const` in one expression so the `ns_dst` lines
-                        // below can write unqualified `identifier.foo.bar`.
-                        format!(
-                            "const {identifier} = Module.{identifier} = Module.{identifier} || {{}};\n{ns_dst}"
-                        )
-                    } else if !existing {
+                    if matches!(self.config.mode, OutputMode::Emscripten) {
+                        // The namespace root is a public `{}` symbol; its
+                        // hoisted leaves are deps and `ns_dst` assembles the
+                        // nested shape in the root's `__postset`.
+                        if self.config.typescript {
+                            self.typescript
+                                .push_str(&format!("{identifier}: {ts_dst};\n"));
+                        }
+                        let leaf_refs: Vec<&str> = leaf_ids.iter().map(String::as_str).collect();
+                        self.hoist_emscripten_export(
+                            &identifier,
+                            "{}",
+                            &leaf_refs,
+                            ns_dst.trim_end(),
+                            true,
+                        );
+                        continue;
+                    }
+                    let definition = if !existing {
                         format!("const {identifier} = {{}};\n{ns_dst}")
                     } else {
                         self.global(&ns_dst);
                         "".to_string()
                     };
-                    // Emscripten splices `self.typescript` line-by-line into
-                    // `interface BindgenModule { ... }`. The module-scope
-                    // `export let foo: { ... };` form `export_def` would
-                    // produce is invalid inside an interface body (TS1131),
-                    // so push the namespace shape as a plain interface
-                    // member (`foo: { ... };`) directly and hand
-                    // `export_def` an empty `ts_definition` to skip its TS
-                    // emission path.
-                    let ts_definition = if matches!(self.config.mode, OutputMode::Emscripten) {
-                        if self.config.typescript {
-                            self.typescript
-                                .push_str(&format!("{identifier}: {ts_dst};\n"));
-                        }
-                        String::new()
-                    } else {
-                        format!("let {identifier}: {ts_dst};\n")
-                    };
+                    let ts_definition = format!("let {identifier}: {ts_dst};\n");
                     self.export_def(
                         Some(export_name),
                         &ExportDefinition {
@@ -2607,7 +2758,9 @@ if (require('worker_threads').isMainThread) {{
         name: &str,
         namespace: &[(String, ExportEntry)],
         existing: bool,
+        leaf_ids: &mut Vec<String>,
     ) -> Result<String, Error> {
+        let emscripten = matches!(self.config.mode, OutputMode::Emscripten);
         let mut output = String::new();
         for (key, entry) in namespace {
             let full_name = if is_valid_ident(key) {
@@ -2621,10 +2774,16 @@ if (require('worker_threads').isMainThread) {{
                         "{full_name} {}= {{}};\n",
                         if existing { "||" } else { "" }
                     ));
-                    output.push_str(&self.write_namespace(&full_name, &ns.ns, existing)?);
+                    output.push_str(&self.write_namespace(&full_name, &ns.ns, existing, leaf_ids)?);
                 }
                 ExportEntry::Definition(def) => {
-                    self.export_def(None, def);
+                    // In emscripten mode the leaf is its own hoisted symbol, so
+                    // record it as a root dep; other modes inline the decl.
+                    if emscripten {
+                        leaf_ids.push(def.identifier.clone());
+                    } else {
+                        self.export_def(None, def);
+                    }
                     output.push_str(&format!("{full_name} = {};\n", def.identifier));
                 }
             }
@@ -4366,6 +4525,22 @@ if (require('worker_threads').isMainThread) {{
             .push((name.to_string(), rename));
     }
 
+    /// Module-scope local name for an imported value. In emscripten mode user
+    /// imports are emitted as ESM imports in the `--extern-pre-js` sidecar,
+    /// landing at module top level alongside emcc's runtime; the imported name
+    /// comes verbatim from the user's JS module, so prefix the local with
+    /// `__wbg_` to avoid colliding with arbitrary names (`Module`, `HEAP8`,
+    /// `wasm`, ...). The import is aliased (`import { Foo as __wbg_Foo }`) and
+    /// every shim references the same prefixed local. Other modes are
+    /// unaffected (their imports aren't merged into a foreign module scope).
+    fn generate_import_identifier(&mut self, name: &str) -> String {
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.generate_identifier(&format!("__wbg_{name}"))
+        } else {
+            self.generate_identifier(name)
+        }
+    }
+
     fn import_name(&mut self, import: &JsImport) -> Result<String, Error> {
         if let Some(name) = self.imported_names.get(&import.name) {
             let mut name = name.clone();
@@ -4377,13 +4552,13 @@ if (require('worker_threads').isMainThread) {{
 
         let mut name = match &import.name {
             JsImportName::Module { module, name } => {
-                let unique_name = self.generate_identifier(name);
+                let unique_name = self.generate_import_identifier(name);
                 self.add_module_import(module.clone(), name, &unique_name);
                 unique_name
             }
 
             JsImportName::LocalModule { module, name } => {
-                let unique_name = self.generate_identifier(name);
+                let unique_name = self.generate_import_identifier(name);
                 let module = self.config.local_module_name(module);
                 self.add_module_import(module, name, &unique_name);
                 unique_name
@@ -4397,7 +4572,7 @@ if (require('worker_threads').isMainThread) {{
                 let module = self
                     .config
                     .inline_js_module_name(unique_crate_identifier, *snippet_idx_in_crate);
-                let unique_name = self.generate_identifier(name);
+                let unique_name = self.generate_import_identifier(name);
                 self.add_module_import(module, name, &unique_name);
                 unique_name
             }
@@ -5137,21 +5312,38 @@ addToLibrary({
                             (String::new(), None)
                         };
 
-                        let definition = format!("function {identifier}{code}\n");
-                        define_export(
-                            &mut self.exports,
-                            name,
-                            export.js_namespace.as_deref().unwrap_or_default(),
-                            ExportEntry::Definition(ExportDefinition {
-                                identifier: identifier.clone(),
-                                comments: Some(js_docs),
-                                definition,
+                        if matches!(self.config.mode, OutputMode::Emscripten) {
+                            // Hoist into a library symbol (namespaced functions
+                            // are hoisted privately and wired via their root).
+                            let value = format!("function {identifier}{code}");
+                            self.hoist_emscripten_export_with_tree(
+                                &identifier,
+                                &value,
+                                &[],
+                                "",
+                                false,
+                                name,
+                                export.js_namespace.as_deref(),
                                 ts_definition,
-                                ts_comments,
-                                private: false,
-                                parent_identifier: None,
-                            }),
-                        )?;
+                                None,
+                            )?;
+                        } else {
+                            let definition = format!("function {identifier}{code}\n");
+                            define_export(
+                                &mut self.exports,
+                                name,
+                                export.js_namespace.as_deref().unwrap_or_default(),
+                                ExportEntry::Definition(ExportDefinition {
+                                    identifier: identifier.clone(),
+                                    comments: Some(js_docs),
+                                    definition,
+                                    ts_definition,
+                                    ts_comments,
+                                    private: false,
+                                    parent_identifier: None,
+                                }),
+                            )?;
+                        }
                     }
                     AuxExportKind::Constructor(class) => {
                         let exported = self.require_class(class);
@@ -5335,6 +5527,16 @@ addToLibrary({
         id: ImportId,
         instrs: &[InstructionData],
     ) -> Result<bool, Error> {
+        // Emscripten resolves wasm imports only against its `env` library, so
+        // (unlike bundler/web/nodejs, which wire a direct module import via
+        // `import * as` + the import object) it can't satisfy an import that
+        // points straight at an arbitrary user module. Always fall through to a
+        // JS shim, which becomes an `addToLibrary` function calling the
+        // (prefixed) ESM-imported binding emitted into the extern-pre sidecar.
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            return Ok(false);
+        }
+
         // First up extract the ID of the single called adapter, if any.
         let mut call = None;
         for instr in instrs {
@@ -6289,6 +6491,26 @@ addToLibrary({
             typescript
         };
 
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            // Hoist the frozen enum into a library symbol like functions and
+            // classes. String-valued so the `Object.freeze(...)` source is
+            // emitted verbatim (see the finalization-registry note in
+            // `write_class`).
+            let value = format!("{:?}", format!("Object.freeze({{\n{variants}}})"));
+            self.hoist_emscripten_export_with_tree(
+                &identifier,
+                &value,
+                &[],
+                "",
+                enum_.private,
+                &enum_.name,
+                enum_.js_namespace.as_deref(),
+                ts_definition,
+                None,
+            )?;
+            return Ok(());
+        }
+
         define_export(
             &mut self.exports,
             &enum_.name,
@@ -6340,11 +6562,20 @@ addToLibrary({
 
         if self.used_string_enums.contains(&string_enum.name) {
             // only generate the internal string enum array if it's actually used
-            self.global(&format!(
-                "\nconst __wbindgen_enum_{name} = [{values}];\n",
-                name = string_enum.name,
-                values = variants.join(", ")
-            ));
+            let name = &string_enum.name;
+            let values = variants.join(", ");
+            if matches!(self.config.mode, OutputMode::Emscripten) {
+                // Referenced by hoisted bodies at module scope, so it must be a
+                // library symbol; register as an adapter dep to keep it alive.
+                self.export_to_emscripten(
+                    &format!("__wbindgen_enum_{name}"),
+                    &format!("[{values}]"),
+                    &[],
+                );
+                self.adapter_deps.insert(format!("__wbindgen_enum_{name}"));
+            } else {
+                self.global(&format!("\nconst __wbindgen_enum_{name} = [{values}];\n"));
+            }
         }
 
         Ok(())

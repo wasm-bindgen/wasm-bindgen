@@ -2,6 +2,8 @@
     var elem = document.querySelector('#output');
     window.extraLibraryFuncs = [];
     window.mergedLibrary = {};
+    // emscripten setting the library file self-registers into at compile time.
+    window.EXPORTED_FUNCTIONS = new Set();
 
     window.wasmExports = {
         __wbindgen_start: () => {},
@@ -22,8 +24,17 @@
             if (typeof window.mergedLibrary.$initBindgen !== 'function') {
                 throw new Error("$initBindgen not found in the merged library.");
             }
-            // Execute the initialization
+            // Execute the initialization (assigns `wasm`, runs start).
             window.mergedLibrary.$initBindgen();
+            // Each clean export is a hoisted `$<name>` library symbol that
+            // self-registers into `EXPORTED_FUNCTIONS`. Under emscripten that
+            // makes it a named ESM export (instance mode) and, via the symbol's
+            // `Module['<name>'] = <name>` __postset, a `Module` property
+            // (factory mode). Simulate the latter directly from the symbols
+            // rather than evaluating postset source.
+            for (const name of window.EXPORTED_FUNCTIONS) {
+                window.Module[name] = window.mergedLibrary['$' + name];
+            }
         } catch (e) {
             elem.textContent += 'test setup failed: ' + e;
             return;
@@ -46,6 +57,13 @@
             }
             if (typeof Module.Interval !== 'function') {
                 return { status: false, e: 'test result: Interval is not found in Module' };
+            }
+            // The hoisted exports must self-register so emscripten emits them as
+            // named ESM exports under -sMODULARIZE=instance.
+            for (const name of ['hello', 'Interval']) {
+                if (!window.EXPORTED_FUNCTIONS.has(name)) {
+                    return { status: false, e: `test result: ${name} not registered in EXPORTED_FUNCTIONS` };
+                }
             }
 
             // Search the accumulated library object for the specific imports
