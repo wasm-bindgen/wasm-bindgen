@@ -99,11 +99,13 @@ impl Task {
 
         let closure = {
             let this = Rc::clone(&this);
-            Closure::new(move |_| {
-                // The promise resolution acts like a wake, so ensure the state
-                // transitions to AWAKE before entering `run`.
-                this.atomic.wake_by_ref();
-                this.run();
+
+            Closure::own_assert_unwind_safe(move |_| {
+                #[cfg(all(feature = "std", panic = "unwind"))]
+                this.catch_unwind_wake_and_run();
+
+                #[cfg(not(all(feature = "std", panic = "unwind")))]
+                this.wake_and_run();
             })
         };
         *this.inner.borrow_mut() = Some(Inner {
@@ -113,6 +115,23 @@ impl Task {
 
         // Queue up the Future's work to happen on the next microtask tick.
         crate::futures::queue::Queue::with(move |queue| queue.schedule_task(this));
+    }
+
+    #[cfg(all(feature = "std", panic = "unwind"))]
+    fn catch_unwind_wake_and_run(&self) {
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| self.wake_and_run()));
+        if let Err(payload) = result {
+            // Make sure that Task is freed after a panic.
+            *self.inner.borrow_mut() = None;
+            std::panic::resume_unwind(payload);
+        }
+    }
+
+    fn wake_and_run(&self) {
+        // The promise resolution acts like a wake, so ensure the state
+        // transitions to AWAKE before entering `run`.
+        self.atomic.wake_by_ref();
+        self.run();
     }
 
     pub(crate) fn run(&self) {

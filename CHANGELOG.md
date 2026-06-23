@@ -51,6 +51,8 @@
 
 * Relaxed alignment requirement for 8-byte types.
   [#5204](https://github.com/wasm-bindgen/wasm-bindgen/pull/5204)
+* Fixed compilation with `(feature = "std", panic = "unwind", target_feature = "atomics")`.
+  [#5214](https://github.com/wasm-bindgen/wasm-bindgen/pull/5214)
 
 * Headless Chrome/Edge tests now surface the WebDriver's own error message when
   session creation fails (e.g. a chromedriver/Chrome version mismatch) instead
