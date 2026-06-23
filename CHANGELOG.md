@@ -7,6 +7,14 @@
 
 ### Changed
 
+### Fixed
+
+### Removed
+
+## [0.2.126](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.125...0.2.126)
+
+### Changed
+
 * Emscripten output now hoists every clean export (free functions, classes,
   enums, plus their finalization registries and string-enum tables) out of the
   `$initBindgen` init closure into its own top-level `addToLibrary` symbol and
