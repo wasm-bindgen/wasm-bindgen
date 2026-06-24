@@ -71,11 +71,16 @@ pub struct Interpreter {
     skip_calls: HashSet<FunctionId>,
     stopped: bool,
 
-    // When a `Br` or `BrIf` (taken) instruction is executed, this holds the
-    // target InstrSeqId. Evaluation breaks out of nested blocks until the
-    // block whose seq matches this target is reached, at which point it is
-    // cleared and normal execution resumes after that block.
-    branch_target: Option<InstrSeqId>,
+    /// Emscripten `env::invoke_*` trampolines. Emscripten rewrites direct calls
+    /// that may unwind/longjmp into indirect calls through the function table,
+    /// wrapped in these imported helpers (`invoke_v(fnptr)`, `invoke_vi(fnptr,
+    /// a)`, ...). The first argument is the table index of the real target; the
+    /// rest are forwarded. Maps the import id to its number of result values.
+    invoke_imports: HashMap<FunctionId, usize>,
+
+    /// Function table contents (index -> function), reconstructed from active
+    /// element segments. Used to resolve the target of an `invoke_*` call.
+    funcref_table: BTreeMap<i32, FunctionId>,
 }
 
 fn skip_calls(module: &Module, id: FunctionId) -> HashSet<FunctionId> {
@@ -183,6 +188,40 @@ impl Interpreter {
             }
         }
 
+        // Collect emscripten `invoke_*` trampolines so calls to them can be
+        // redirected to their real (table-indexed) targets during descriptor
+        // interpretation.
+        for import in module.imports.iter() {
+            let id = match import.kind {
+                walrus::ImportKind::Function(id) => id,
+                _ => continue,
+            };
+            if import.module == "env" && import.name.starts_with("invoke_") {
+                let results = module.types.get(module.funcs.get(id).ty()).results().len();
+                ret.invoke_imports.insert(id, results);
+            }
+        }
+
+        // Reconstruct the function table from active element segments so an
+        // `invoke_*(fnptr, ..)` can resolve `fnptr` to a concrete function.
+        for element in module.elements.iter() {
+            let offset = match &element.kind {
+                walrus::ElementKind::Active { offset, .. } => offset,
+                _ => continue,
+            };
+            let base = match offset {
+                walrus::ConstExpr::Value(walrus::ir::Value::I32(n)) => *n,
+                walrus::ConstExpr::Value(walrus::ir::Value::I64(n)) => *n as i32,
+                walrus::ConstExpr::Global(g) => ret.globals.get(g).copied().unwrap_or(0),
+                _ => continue,
+            };
+            if let walrus::ElementItems::Functions(funcs) = &element.items {
+                for (i, func) in funcs.iter().enumerate() {
+                    ret.funcref_table.insert(base + i as i32, *func);
+                }
+            }
+        }
+
         // Setup skip_interpret id and skip_calls
         if let Some(export) = module
             .exports
@@ -223,7 +262,6 @@ impl Interpreter {
     pub fn interpret_descriptor(&mut self, id: FunctionId, module: &Module) -> &[u32] {
         self.descriptor.truncate(0);
         self.stopped = false;
-        self.branch_target = None;
 
         if let Some(sp) = self.stack_pointer {
             self.stack_pointer_initial = self.globals[&sp];
@@ -258,6 +296,13 @@ impl Interpreter {
         log::trace!("arguments {args:?}");
         let local = match &func.kind {
             walrus::FunctionKind::Local(l) => l,
+            walrus::FunctionKind::Import(imp) => {
+                let i = module.imports.get(imp.import);
+                panic!(
+                    "can only call locally defined functions (got import {:?}::{:?}, fn name {:?})",
+                    i.module, i.name, func.name
+                );
+            }
             _ => panic!("can only call locally defined functions"),
         };
 
@@ -273,13 +318,13 @@ impl Interpreter {
             frame.locals.insert(*arg, *val);
         }
 
-        frame.eval(local.entry_block()).unwrap_or_else(|err| {
+        let _ = frame.eval(local.entry_block()).unwrap_or_else(|err| {
             if let Some(name) = &module.funcs.get(id).name {
                 panic!("{name}: {err}")
             } else {
                 panic!("{err}")
             }
-        })
+        });
     }
 }
 
@@ -290,25 +335,24 @@ struct Frame<'a> {
     locals: BTreeMap<LocalId, i32>,
 }
 
-impl Frame<'_> {
-    fn should_break_after_block(&mut self, seq: InstrSeqId) -> bool {
-        if self.interp.stopped {
-            return true;
-        }
-        if let Some(target) = self.interp.branch_target {
-            if target == seq {
-                self.interp.branch_target = None;
-            } else {
-                return true;
-            }
-        }
-        false
-    }
+/// Result of evaluating an instruction sequence: either it ran to the end, a
+/// branch escaped to an enclosing block, or the function returned. Needed to
+/// interpret the control flow emscripten emits around `invoke_*` (the "did it
+/// throw?" guard) in descriptor functions.
+enum Flow {
+    Normal,
+    Branch(InstrSeqId),
+    Return,
+}
 
-    fn eval(&mut self, seq: InstrSeqId) -> anyhow::Result<()> {
+impl Frame<'_> {
+    fn eval(&mut self, seq: InstrSeqId) -> anyhow::Result<Flow> {
         use walrus::ir::*;
 
         for (instr, _) in self.func.block(seq).iter() {
+            if self.interp.stopped {
+                return Ok(Flow::Normal);
+            }
             let stack = &mut self.interp.scratch;
 
             match instr {
@@ -353,6 +397,19 @@ impl Frame<'_> {
                         BinaryOp::I32Sub | BinaryOp::I64Sub => lhs - rhs,
                         BinaryOp::I32Add | BinaryOp::I64Add => lhs + rhs,
                         BinaryOp::I32And | BinaryOp::I64And => lhs & rhs,
+                        BinaryOp::I32Or | BinaryOp::I64Or => lhs | rhs,
+                        BinaryOp::I32Xor | BinaryOp::I64Xor => lhs ^ rhs,
+                        BinaryOp::I32Shl | BinaryOp::I64Shl => lhs << (rhs & 31),
+                        BinaryOp::I32Eq | BinaryOp::I64Eq => (lhs == rhs) as i32,
+                        BinaryOp::I32Ne | BinaryOp::I64Ne => (lhs != rhs) as i32,
+                        BinaryOp::I32LtU | BinaryOp::I64LtU => ((lhs as u32) < rhs as u32) as i32,
+                        BinaryOp::I32LtS | BinaryOp::I64LtS => (lhs < rhs) as i32,
+                        BinaryOp::I32GtU | BinaryOp::I64GtU => ((lhs as u32) > rhs as u32) as i32,
+                        BinaryOp::I32GtS | BinaryOp::I64GtS => (lhs > rhs) as i32,
+                        BinaryOp::I32LeU | BinaryOp::I64LeU => ((lhs as u32) <= rhs as u32) as i32,
+                        BinaryOp::I32LeS | BinaryOp::I64LeS => (lhs <= rhs) as i32,
+                        BinaryOp::I32GeU | BinaryOp::I64GeU => ((lhs as u32) >= rhs as u32) as i32,
+                        BinaryOp::I32GeS | BinaryOp::I64GeS => (lhs >= rhs) as i32,
                         op => bail!("invalid binary op {op:?}"),
                     });
                 }
@@ -366,6 +423,7 @@ impl Frame<'_> {
                         UnaryOp::I32WrapI64 => val,
                         // i32→i64 extend: already fits in our i32 representation
                         UnaryOp::I64ExtendUI32 | UnaryOp::I64ExtendSI32 => val,
+                        UnaryOp::I32Eqz | UnaryOp::I64Eqz => (val == 0) as i32,
                         op => bail!("invalid unary op {op:?}"),
                     });
                 }
@@ -443,7 +501,7 @@ impl Frame<'_> {
 
                 Instr::Return(_) => {
                     log::trace!("return");
-                    break;
+                    return Ok(Flow::Return);
                 }
 
                 Instr::Drop(_) => {
@@ -478,7 +536,7 @@ impl Frame<'_> {
                                 .insert(sp, self.interp.stack_pointer_initial);
                         }
                         self.interp.stopped = true;
-                        break;
+                        return Ok(Flow::Normal);
 
                     // ... otherwise this is a normal call so we recurse.
                     } else {
@@ -518,50 +576,98 @@ impl Frame<'_> {
                             .collect::<Vec<_>>();
                         args.reverse();
 
-                        self.interp.call(func, self.module, &args);
+                        // Redirect emscripten `invoke_*(fnptr, ..args)` to the
+                        // table-indexed target, forwarding the trailing args.
+                        if self.interp.invoke_imports.contains_key(&func) {
+                            let (&fnptr, rest) = args
+                                .split_first()
+                                .expect("invoke_* always takes a function pointer");
+                            let target =
+                                *self.interp.funcref_table.get(&fnptr).unwrap_or_else(|| {
+                                    panic!(
+                                        "invoke_* target {fnptr} not found in the function table"
+                                    )
+                                });
+                            self.interp.call(target, self.module, rest);
+                        } else {
+                            self.interp.call(func, self.module, &args);
+                        }
                     }
 
                     if let Instr::ReturnCall(_) = instr {
                         log::trace!("return_call");
-                        break;
+                        return Ok(Flow::Return);
                     }
                 }
 
-                Instr::Br(Br { block }) => {
-                    log::trace!("br {block:?}");
-                    self.interp.branch_target = Some(*block);
-                    break;
-                }
+                Instr::Block(block) => match self.eval(block.seq)? {
+                    Flow::Branch(t) if t == block.seq => {}
+                    Flow::Normal => {}
+                    other => return Ok(other),
+                },
 
-                Instr::BrIf(BrIf { block }) => {
+                Instr::Loop(block) => loop {
+                    match self.eval(block.seq)? {
+                        // A branch back to the loop header re-runs it.
+                        Flow::Branch(t) if t == block.seq => {
+                            if self.interp.stopped {
+                                return Ok(Flow::Normal);
+                            }
+                            continue;
+                        }
+                        // Falling off the end of a loop body exits the loop.
+                        Flow::Normal => break,
+                        other => return Ok(other),
+                    }
+                },
+
+                Instr::IfElse(e) => {
                     let cond = stack.pop().unwrap();
-                    log::trace!("br_if {block:?} (cond={cond})");
+                    let seq = if cond != 0 {
+                        e.consequent
+                    } else {
+                        e.alternative
+                    };
+                    match self.eval(seq)? {
+                        Flow::Branch(t) if t == seq => {}
+                        Flow::Normal => {}
+                        other => return Ok(other),
+                    }
+                }
+
+                Instr::Br(e) => return Ok(Flow::Branch(e.block)),
+
+                Instr::BrIf(e) => {
+                    let cond = stack.pop().unwrap();
                     if cond != 0 {
-                        self.interp.branch_target = Some(*block);
-                        break;
+                        return Ok(Flow::Branch(e.block));
                     }
                 }
 
-                Instr::Block(block) => {
-                    self.eval(block.seq)?;
-                    if self.should_break_after_block(block.seq) {
-                        break;
-                    }
+                Instr::BrTable(e) => {
+                    let idx = stack.pop().unwrap();
+                    let target = e.blocks.get(idx as usize).copied().unwrap_or(e.default);
+                    return Ok(Flow::Branch(target));
                 }
 
-                Instr::Try(block) => {
-                    self.eval(block.seq)?;
-                    if self.should_break_after_block(block.seq) {
-                        break;
-                    }
+                Instr::Select(_) => {
+                    let cond = stack.pop().unwrap();
+                    let rhs = stack.pop().unwrap();
+                    let lhs = stack.pop().unwrap();
+                    stack.push(if cond != 0 { lhs } else { rhs });
                 }
 
-                Instr::TryTable(block) => {
-                    self.eval(block.seq)?;
-                    if self.should_break_after_block(block.seq) {
-                        break;
-                    }
-                }
+                Instr::Try(block) => match self.eval(block.seq)? {
+                    Flow::Branch(t) if t == block.seq => {}
+                    Flow::Normal => {}
+                    other => return Ok(other),
+                },
+
+                Instr::TryTable(block) => match self.eval(block.seq)? {
+                    Flow::Branch(t) if t == block.seq => {}
+                    Flow::Normal => {}
+                    other => return Ok(other),
+                },
 
                 // All other instructions shouldn't be used by our various
                 // descriptor functions. LLVM optimizations may mean that some
@@ -576,7 +682,7 @@ impl Frame<'_> {
             }
         }
 
-        Ok(())
+        Ok(Flow::Normal)
     }
 }
 
