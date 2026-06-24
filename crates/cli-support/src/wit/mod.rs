@@ -31,17 +31,6 @@ struct Context<'a> {
     vendor_prefixes: HashMap<String, Vec<String>>,
     unique_crate_identifier: &'a str,
     descriptors: HashMap<String, Descriptor>,
-    /// Per-monomorphisation generic imports, keyed by shim name: each
-    /// entry's `(concrete spliced descriptor, courier function id)` pairs are
-    /// recovered from the descriptor section and bound after the program loop
-    /// using the AST metadata stashed in `generic_import_meta`.
-    generic_imports: HashMap<String, Vec<(Descriptor, FunctionId)>>,
-    /// AST metadata for each generic import shim, captured from the
-    /// `decode::Import` during the program loop.
-    generic_import_meta: HashMap<String, GenericImportMeta>,
-    /// Courier-function → synthesised-import rewrites for generic imports,
-    /// applied after the program loop.
-    generic_import_rewrites: HashMap<FunctionId, FunctionId>,
     externref_enabled: bool,
     thread_count: Option<ThreadCount>,
     support_start: bool,
@@ -51,84 +40,6 @@ struct Context<'a> {
     /// when wasm-ld ICF merges invoke functions for different closure types
     /// into the same export.
     export_adapter_sigs: HashMap<AdapterId, (Vec<Descriptor>, Descriptor, Option<Descriptor>)>,
-}
-
-/// AST metadata for a generic `#[wasm_bindgen]` import, captured from its
-/// `decode::Import` so generic monomorphisations can be bound (after the
-/// program loop) with the same metadata a normal import would get.
-struct GenericImportMeta {
-    module: Option<OwnedImportModule>,
-    js_namespace: Option<Vec<String>>,
-    name: String,
-    catch: bool,
-    variadic: bool,
-    structural: bool,
-    method: Option<OwnedMethodData>,
-}
-
-/// Owned form of `decode::ImportModule` (which borrows the program bytes).
-///
-/// Inline (local-JS snippet) modules are resolved to their `(crate, snippet
-/// index)` identity **at capture time**: the snippet index is program-local
-/// and depends on `self.unique_crate_identifier`, which is only correct
-/// during the owning program's pass. `bind_generic_imports` runs after the
-/// program loop, so it must use the captured identity rather than
-/// re-resolving a bare index against whatever crate was processed last.
-enum OwnedImportModule {
-    Named(String),
-    RawNamed(String),
-    InlineResolved {
-        unique_crate_identifier: String,
-        snippet_idx_in_crate: usize,
-    },
-}
-
-/// Owned form of `decode::MethodData` / `MethodKind` / `Operation`.
-struct OwnedMethodData {
-    class: String,
-    kind: OwnedMethodKind,
-}
-
-enum OwnedMethodKind {
-    Constructor,
-    Operation {
-        is_static: bool,
-        kind: OwnedOperationKind,
-    },
-}
-
-enum OwnedOperationKind {
-    Regular,
-    RegularThis,
-    Getter(String),
-    Setter(String),
-    IndexingGetter,
-    IndexingSetter,
-    IndexingDeleter,
-}
-
-impl OwnedMethodData {
-    fn from_decode(data: &decode::MethodData<'_>) -> Self {
-        let kind = match &data.kind {
-            decode::MethodKind::Constructor => OwnedMethodKind::Constructor,
-            decode::MethodKind::Operation(op) => OwnedMethodKind::Operation {
-                is_static: op.is_static,
-                kind: match &op.kind {
-                    decode::OperationKind::Regular => OwnedOperationKind::Regular,
-                    decode::OperationKind::RegularThis => OwnedOperationKind::RegularThis,
-                    decode::OperationKind::Getter(f) => OwnedOperationKind::Getter(f.to_string()),
-                    decode::OperationKind::Setter(f) => OwnedOperationKind::Setter(f.to_string()),
-                    decode::OperationKind::IndexingGetter => OwnedOperationKind::IndexingGetter,
-                    decode::OperationKind::IndexingSetter => OwnedOperationKind::IndexingSetter,
-                    decode::OperationKind::IndexingDeleter => OwnedOperationKind::IndexingDeleter,
-                },
-            },
-        };
-        OwnedMethodData {
-            class: data.class.to_string(),
-            kind,
-        }
-    }
 }
 
 struct InstructionBuilder<'a, 'b> {
@@ -163,9 +74,6 @@ pub fn process(
         function_imports: Default::default(),
         vendor_prefixes: Default::default(),
         descriptors: Default::default(),
-        generic_imports: Default::default(),
-        generic_import_meta: Default::default(),
-        generic_import_rewrites: Default::default(),
         unique_crate_identifier: "",
         memory: wasm_conventions::get_memory(module).ok(),
         module,
@@ -181,8 +89,6 @@ pub fn process(
     for program in programs {
         cx.program(program)?;
     }
-
-    cx.bind_generic_imports()?;
 
     if !cx.start_found {
         cx.discover_main()?;
@@ -468,14 +374,10 @@ impl<'a> Context<'a> {
             let WasmBindgenDescriptorsSection {
                 descriptors,
                 cast_imports,
-                generic_imports,
             } = *custom;
             // Store all the executed descriptors in our own field so we have
             // access to them while processing programs.
             self.descriptors.extend(descriptors);
-            // Generic imports are bound after the program loop, once their
-            // AST metadata has been captured.
-            self.generic_imports.extend(generic_imports);
 
             // Sort cast imports for deterministic output. The
             // user-facing `sig_comment` (`{arg} -> {ret}`) is only the
@@ -575,180 +477,6 @@ impl<'a> Context<'a> {
                 }
             }
         }
-    }
-
-    /// Bind the generic `#[wasm_bindgen]` imports collected during the
-    /// program loop. Each shim's monomorphisations are grouped by their
-    /// concrete (spliced) descriptor; per distinct descriptor we synthesise
-    /// one import bound to the real JS function via the AST metadata (module,
-    /// namespace, name, catch, variadic) — the same machinery a normal import
-    /// uses — and rewrite the courier call sites to it.
-    fn bind_generic_imports(&mut self) -> Result<(), Error> {
-        let generic_imports = std::mem::take(&mut self.generic_imports);
-        let mut shims: Vec<_> = generic_imports.into_iter().collect();
-        shims.sort_by(|a, b| a.0.cmp(&b.0));
-
-        let mut counter = 0usize;
-        for (shim, variants) in shims {
-            let meta = self.generic_import_meta.remove(&shim).ok_or_else(|| {
-                anyhow::anyhow!("generic import `{shim}` has no AST metadata record")
-            })?;
-
-            // Group monomorphisations by concrete descriptor so call sites
-            // whose `T` resolves to the same schema collapse to one import.
-            let mut by_desc: HashMap<Descriptor, Vec<FunctionId>> = HashMap::new();
-            for (descriptor, func_id) in variants {
-                by_desc.entry(descriptor).or_default().push(func_id);
-            }
-            let mut by_desc: Vec<_> = by_desc.into_iter().collect();
-            by_desc.sort_by(|a, b| format!("{:?}", a.0).cmp(&format!("{:?}", b.0)));
-
-            for (descriptor, func_ids) in by_desc {
-                counter += 1;
-                let import_name = format!("__wbindgen_generic_import_{counter:016x}");
-                let ty = self.module.funcs.get(func_ids[0]).ty();
-                let (import_func_id, import_id) =
-                    self.module
-                        .add_import_func(PLACEHOLDER_MODULE, &import_name, ty);
-                self.module.funcs.get_mut(import_func_id).name = Some(meta.name.clone());
-
-                let signature = descriptor.unwrap_function();
-
-                // Mirror `import_function`'s binding: free function, method,
-                // constructor, getter/setter, or static, selecting the right
-                // adapter kind and JS-import shape from the AST metadata.
-                let (adapter_id, aux_import) = match &meta.method {
-                    Some(m) => {
-                        let class = self.determine_generic_import(
-                            &meta.module,
-                            &meta.js_namespace,
-                            &m.class,
-                        )?;
-                        match &m.kind {
-                            OwnedMethodKind::Constructor => {
-                                let id = self.import_adapter(
-                                    import_id,
-                                    signature,
-                                    AdapterJsImportKind::Constructor,
-                                )?;
-                                (id, AuxImport::Value(AuxValue::Bare(class)))
-                            }
-                            OwnedMethodKind::Operation { is_static, kind } => {
-                                let op = decode::Operation {
-                                    is_static: *is_static,
-                                    kind: match kind {
-                                        OwnedOperationKind::Regular => {
-                                            decode::OperationKind::Regular
-                                        }
-                                        OwnedOperationKind::RegularThis => {
-                                            decode::OperationKind::RegularThis
-                                        }
-                                        OwnedOperationKind::Getter(f) => {
-                                            decode::OperationKind::Getter(f)
-                                        }
-                                        OwnedOperationKind::Setter(f) => {
-                                            decode::OperationKind::Setter(f)
-                                        }
-                                        OwnedOperationKind::IndexingGetter => {
-                                            decode::OperationKind::IndexingGetter
-                                        }
-                                        OwnedOperationKind::IndexingSetter => {
-                                            decode::OperationKind::IndexingSetter
-                                        }
-                                        OwnedOperationKind::IndexingDeleter => {
-                                            decode::OperationKind::IndexingDeleter
-                                        }
-                                    },
-                                };
-                                let (import, method) = self.determine_import_op(
-                                    class,
-                                    &meta.name,
-                                    meta.structural,
-                                    op,
-                                )?;
-                                let kind = if method {
-                                    AdapterJsImportKind::Method
-                                } else {
-                                    AdapterJsImportKind::Normal
-                                };
-                                (self.import_adapter(import_id, signature, kind)?, import)
-                            }
-                        }
-                    }
-                    None => {
-                        let js_import = self.determine_generic_import(
-                            &meta.module,
-                            &meta.js_namespace,
-                            &meta.name,
-                        )?;
-                        let id =
-                            self.import_adapter(import_id, signature, AdapterJsImportKind::Normal)?;
-                        (id, AuxImport::Value(AuxValue::Bare(js_import)))
-                    }
-                };
-                self.aux.import_map.insert(adapter_id, aux_import);
-
-                // Apply catch/variadic exactly as `import_function` does.
-                if meta.variadic {
-                    self.aux.imports_with_variadic.insert(adapter_id);
-                }
-                if meta.catch {
-                    let adapter = self.adapters.implements.last().unwrap().2;
-                    self.aux.imports_with_catch.insert(adapter);
-                    if self.aux.exn_store.is_none() {
-                        self.find_exn_store();
-                    }
-                }
-
-                for id in func_ids {
-                    self.generic_import_rewrites.insert(id, import_func_id);
-                }
-            }
-        }
-
-        let rewrites = std::mem::take(&mut self.generic_import_rewrites);
-        self.handle_duplicate_imports(&rewrites);
-        Ok(())
-    }
-
-    /// Resolve a generic import's JS import from its captured (owned) module.
-    /// Inline snippet modules are resolved from the identity captured during
-    /// the owning program's pass (see `OwnedImportModule`); everything else
-    /// delegates to `determine_import`.
-    fn determine_generic_import(
-        &self,
-        module: &Option<OwnedImportModule>,
-        js_namespace: &Option<Vec<String>>,
-        item: &str,
-    ) -> Result<JsImport, Error> {
-        if let Some(OwnedImportModule::InlineResolved {
-            unique_crate_identifier,
-            snippet_idx_in_crate,
-        }) = module
-        {
-            let (name, fields) = match js_namespace {
-                Some(ns) => {
-                    let mut tail = ns[1..].to_owned();
-                    tail.push(item.to_string());
-                    (ns[0].clone(), tail)
-                }
-                None => (item.to_string(), Vec::new()),
-            };
-            return Ok(JsImport {
-                name: JsImportName::InlineJs {
-                    unique_crate_identifier: unique_crate_identifier.clone(),
-                    snippet_idx_in_crate: *snippet_idx_in_crate,
-                    name,
-                },
-                fields,
-            });
-        }
-        let module = module.as_ref().map(|m| match m {
-            OwnedImportModule::Named(s) => decode::ImportModule::Named(s),
-            OwnedImportModule::RawNamed(s) => decode::ImportModule::RawNamed(s),
-            OwnedImportModule::InlineResolved { .. } => unreachable!(),
-        });
-        self.determine_import(&module, js_namespace, item)
     }
 
     // Discover the C `main(i32, argv) -> i32` shim and, if it exists, make it
@@ -1174,45 +902,6 @@ impl<'a> Context<'a> {
             assert_no_shim,
         } = function;
         let generate_typescript = import.generate_typescript;
-        // Generic `#[wasm_bindgen]` imports have no single shim import
-        // function (each monomorphisation has its own courier). They reach
-        // here via the normal AST record, which carries exactly the metadata
-        // we need to bind each variant. Capture it; the actual binding happens
-        // after the program loop in `bind_generic_imports`.
-        if self.generic_imports.contains_key(shim) {
-            let module = import.module.as_ref().map(|m| match m {
-                decode::ImportModule::Named(n) => OwnedImportModule::Named(n.to_string()),
-                decode::ImportModule::RawNamed(n) => OwnedImportModule::RawNamed(n.to_string()),
-                // Resolve the program-local snippet index now, while
-                // `unique_crate_identifier` and the snippet offset are this
-                // import's own program's.
-                decode::ImportModule::Inline(idx) => {
-                    let offset = self
-                        .aux
-                        .snippets
-                        .get(self.unique_crate_identifier)
-                        .map(|s| s.len())
-                        .unwrap_or(0);
-                    OwnedImportModule::InlineResolved {
-                        unique_crate_identifier: self.unique_crate_identifier.to_string(),
-                        snippet_idx_in_crate: *idx as usize + offset,
-                    }
-                }
-            });
-            self.generic_import_meta.insert(
-                shim.to_string(),
-                GenericImportMeta {
-                    module,
-                    js_namespace: import.js_namespace.clone(),
-                    name: function.name.to_string(),
-                    catch,
-                    variadic,
-                    structural,
-                    method: method.as_ref().map(OwnedMethodData::from_decode),
-                },
-            );
-            return Ok(());
-        }
         let (import_id, _id) = match self.function_imports.get(shim) {
             Some(pair) => *pair,
             None => {
@@ -1262,7 +951,7 @@ impl<'a> Context<'a> {
                     }
                     decode::MethodKind::Operation(op) => {
                         let (import, method) =
-                            self.determine_import_op(class, function.name, structural, op)?;
+                            self.determine_import_op(class, &function, structural, op)?;
                         let kind = if method {
                             AdapterJsImportKind::Method
                         } else {
@@ -1343,19 +1032,25 @@ impl<'a> Context<'a> {
     fn determine_import_op(
         &mut self,
         mut class: JsImport,
-        name: &str,
+        function: &decode::Function<'_>,
         structural: bool,
         op: decode::Operation<'_>,
     ) -> Result<(AuxImport, bool), Error> {
         match op.kind {
             decode::OperationKind::Regular => {
                 if op.is_static {
-                    Ok((AuxImport::ValueWithThis(class, name.to_string()), false))
+                    Ok((
+                        AuxImport::ValueWithThis(class, function.name.to_string()),
+                        false,
+                    ))
                 } else if structural {
-                    Ok((AuxImport::StructuralMethod(name.to_string()), false))
+                    Ok((
+                        AuxImport::StructuralMethod(function.name.to_string()),
+                        false,
+                    ))
                 } else {
                     class.fields.push("prototype".to_string());
-                    class.fields.push(name.to_string());
+                    class.fields.push(function.name.to_string());
                     Ok((AuxImport::Value(AuxValue::Bare(class)), true))
                 }
             }

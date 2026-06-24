@@ -59,11 +59,6 @@ tys! {
 ///   `Option<T>`, `&T`, the closure trait-object header + arg/ret schemas).
 ///   An empty `words` run is permitted, so `Wrap` also covers a pure
 ///   concatenation of children.
-/// * `TypeParam` — a generic type-parameter *hole* in a generic import's
-///   signature *template*. The zero-based parameter index is the node's
-///   single word (`words[0]`); it has no children. The CLI splices in the
-///   concrete `fills[words[0]]` schema, recovered per monomorphisation from
-///   the call-site courier's [`DescriptorRecord`], in place of this node.
 ///
 /// The CLI decodes a node by reading scalar opcodes/operands from `words`
 /// and recursing into `children` for sub-descriptors; the tag is a
@@ -82,9 +77,4 @@ pub enum SchemaTag {
     /// run is permitted, so this also covers a pure concatenation of
     /// children.
     Wrap = 1,
-    /// A generic type-parameter hole in a generic import's signature
-    /// template. The zero-based parameter index is the node's single word
-    /// (`words[0]`); no children. The CLI splices `fills[words[0]]` here per
-    /// monomorphisation.
-    TypeParam = 2,
 }

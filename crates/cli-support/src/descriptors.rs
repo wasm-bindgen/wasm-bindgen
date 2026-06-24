@@ -41,23 +41,15 @@ use std::borrow::Cow;
 use std::collections::hash_map::HashMap;
 use walrus::{CustomSection, FunctionId, Module, TypedCustomSectionId};
 use wasm_bindgen_shared::tys;
-use wasm_bindgen_shared::tys::SchemaTag;
 use wasm_bindgen_shared::{
-    DESCRIPTOR_FORMAT_VERSION, DESCRIPTOR_KIND_CAST, DESCRIPTOR_KIND_GENERIC_IMPORT,
-    DESCRIPTOR_KIND_REGULAR, DESCRIPTOR_KIND_STATIC, DESCRIPTOR_MARKER_NAME,
+    DESCRIPTOR_FORMAT_VERSION, DESCRIPTOR_KIND_CAST, DESCRIPTOR_KIND_REGULAR,
+    DESCRIPTOR_KIND_STATIC, DESCRIPTOR_MARKER_NAME,
 };
 
 #[derive(Default, Debug)]
 pub struct WasmBindgenDescriptorsSection {
     pub descriptors: HashMap<String, Descriptor>,
     pub cast_imports: HashMap<Descriptor, Vec<FunctionId>>,
-    /// Generic `#[wasm_bindgen]` imports, keyed by shim name. Each entry is
-    /// the list of per-monomorphisation `(concrete Function descriptor,
-    /// courier function id)` recovered from the call sites: the descriptor is
-    /// the template spliced with that monomorphisation's fills, and the
-    /// function id is the `breaks_if_inlined_generic_import_*` courier whose
-    /// call site is rewritten to the synthesised per-`T` JS adapter import.
-    pub generic_imports: HashMap<String, Vec<(Descriptor, FunctionId)>>,
 }
 
 pub type WasmBindgenDescriptorsSectionId = TypedCustomSectionId<WasmBindgenDescriptorsSection>;
@@ -166,18 +158,6 @@ impl WasmBindgenDescriptorsSection {
                 DESCRIPTOR_KIND_REGULAR | DESCRIPTOR_KIND_STATIC => {
                     self.descriptors.insert(rec.name, rec.descriptor);
                     carriers_to_strip.push(rec.host);
-                }
-                DESCRIPTOR_KIND_GENERIC_IMPORT => {
-                    // A per-monomorphisation generic import. `rec.descriptor`
-                    // is the concrete `FUNCTION` descriptor (template spliced
-                    // with the call site's fills); `rec.host` is the courier
-                    // whose call site is rewritten to the synthesised per-`T`
-                    // JS adapter. Do NOT strip the host: it is replaced
-                    // downstream (like a cast trampoline) and must stay.
-                    self.generic_imports
-                        .entry(rec.name)
-                        .or_default()
-                        .push((rec.descriptor, rec.host));
                 }
                 DESCRIPTOR_KIND_CAST => {
                     let to = rec
@@ -412,30 +392,9 @@ impl DataSegmentView {
             String::from_utf8(bytes).context("descriptor shim name is not UTF-8")?
         };
 
-        // For a generic import, read the per-monomorphisation fills run
-        // (one `&Schema` per distinct type parameter, indexed by parameter
-        // index) and resolve each `TypeParam(idx)` hole in the template with
-        // `fills[idx]` while decoding.
-        let fills: Vec<u32> = if kind == DESCRIPTOR_KIND_GENERIC_IMPORT {
-            let fills_ptr = self.read_ptr(addr + 8 + 4 * p)?;
-            let fills_len = self.read_ptr(addr + 8 + 5 * p)?;
-            let mut v = Vec::with_capacity(fills_len as usize);
-            for i in 0..fills_len {
-                let slot = fills_ptr
-                    .checked_add(i.checked_mul(p).ok_or_else(|| {
-                        anyhow::anyhow!("generic-import fills run length overflows")
-                    })?)
-                    .ok_or_else(|| anyhow::anyhow!("generic-import fills pointer overflows"))?;
-                v.push(self.read_ptr(slot)?);
-            }
-            v
-        } else {
-            Vec::new()
-        };
-
-        let descriptor = self.decode_node(root, false, 0, &fills)?;
+        let descriptor = self.decode_node(root, false, 0)?;
         let cast_to = if kind == DESCRIPTOR_KIND_CAST {
-            Some(self.decode_node(to_root, false, 0, &fills)?)
+            Some(self.decode_node(to_root, false, 0)?)
         } else {
             None
         };
@@ -470,7 +429,6 @@ impl DataSegmentView {
     /// Read one `Schema` node out of the data segment.
     fn read_node(&self, addr: u32) -> Result<SchemaNode, Error> {
         let off = self.schema_field_offsets();
-        let tag = self.read_u32(addr)?;
         let words_ptr = self.read_ptr(addr + off.words)?;
         let words_len = self.read_ptr(addr + off.words_len)?;
         let children_ptr = self.read_ptr(addr + off.children)?;
@@ -489,7 +447,6 @@ impl DataSegmentView {
             children.push(self.read_ptr(slot)?);
         }
         Ok(SchemaNode {
-            tag,
             words,
             children,
             invoke,
@@ -504,32 +461,11 @@ impl DataSegmentView {
     /// function-table index in `invoke`. `clamped` propagates through
     /// wrapper nodes exactly as it did in the previous flat decoder
     /// (only `CLAMPED` sets it, and it resets at function boundaries).
-    fn decode_node(
-        &self,
-        addr: u32,
-        clamped: bool,
-        depth: u32,
-        fills: &[u32],
-    ) -> Result<Descriptor, Error> {
+    fn decode_node(&self, addr: u32, clamped: bool, depth: u32) -> Result<Descriptor, Error> {
         if depth > 256 {
             bail!("schema tree nesting exceeds 256 while decoding descriptor");
         }
         let node = self.read_node(addr)?;
-        // A generic-import template hole: splice in the concrete fill for this
-        // parameter index (the hole's single word) and decode that instead.
-        if node.tag == SchemaTag::TypeParam as u32 {
-            let idx = *node
-                .words
-                .first()
-                .ok_or_else(|| anyhow::anyhow!("TypeParam schema node has no parameter index"))?;
-            let fill = *fills.get(idx as usize).ok_or_else(|| {
-                anyhow::anyhow!(
-                    "generic import references type parameter {idx} but only {} fill(s) supplied",
-                    fills.len()
-                )
-            })?;
-            return self.decode_node(fill, clamped, depth + 1, fills);
-        }
         let mut cur = NodeCursor::new(&node);
         let opcode = cur.word()?;
         let descriptor = match opcode {
@@ -557,14 +493,14 @@ impl DataSegmentView {
             tys::STRING => Descriptor::String,
             tys::EXTERNREF => Descriptor::Externref,
             tys::FUNCTION => {
-                Descriptor::Function(Box::new(self.decode_function(&node, &mut cur, depth, fills)?))
+                Descriptor::Function(Box::new(self.decode_function(&node, &mut cur, depth)?))
             }
             tys::CLOSURE => {
                 let owned = boolean(cur.word()?)?;
                 let mutable = boolean(cur.word()?)?;
                 // The single child is the closure's `FUNCTION` node
                 // (which carries the invoke index in its `invoke` field).
-                let func = match self.decode_child(&mut cur, false, depth, fills)? {
+                let func = match self.decode_child(&mut cur, false, depth)? {
                     Descriptor::Function(f) => *f,
                     _ => bail!("closure body is not a FUNCTION node"),
                 };
@@ -574,30 +510,30 @@ impl DataSegmentView {
                     function: func,
                 }))
             }
-            tys::REF => Descriptor::Ref(Box::new(self.decode_child(&mut cur, clamped, depth, fills)?)),
+            tys::REF => Descriptor::Ref(Box::new(self.decode_child(&mut cur, clamped, depth)?)),
             tys::REFMUT => {
-                Descriptor::RefMut(Box::new(self.decode_child(&mut cur, clamped, depth, fills)?))
+                Descriptor::RefMut(Box::new(self.decode_child(&mut cur, clamped, depth)?))
             }
             tys::LONGREF => {
                 // Most things become normal `Ref`s, but long refs to
                 // externrefs become owned.
-                let contents = self.decode_child(&mut cur, clamped, depth, fills)?;
+                let contents = self.decode_child(&mut cur, clamped, depth)?;
                 match contents {
                     Descriptor::Externref | Descriptor::NamedExternref(_) => contents,
                     _ => Descriptor::Ref(Box::new(contents)),
                 }
             }
-            tys::SLICE => Descriptor::Slice(Box::new(self.decode_child(&mut cur, clamped, depth, fills)?)),
+            tys::SLICE => Descriptor::Slice(Box::new(self.decode_child(&mut cur, clamped, depth)?)),
             tys::VECTOR => {
-                Descriptor::Vector(Box::new(self.decode_child(&mut cur, clamped, depth, fills)?))
+                Descriptor::Vector(Box::new(self.decode_child(&mut cur, clamped, depth)?))
             }
             tys::OPTIONAL => {
-                Descriptor::Option(Box::new(self.decode_child(&mut cur, clamped, depth, fills)?))
+                Descriptor::Option(Box::new(self.decode_child(&mut cur, clamped, depth)?))
             }
             tys::RESULT => {
-                Descriptor::Result(Box::new(self.decode_child(&mut cur, clamped, depth, fills)?))
+                Descriptor::Result(Box::new(self.decode_child(&mut cur, clamped, depth)?))
             }
-            tys::CLAMPED => self.decode_child(&mut cur, true, depth, fills)?,
+            tys::CLAMPED => self.decode_child(&mut cur, true, depth)?,
             tys::ENUM => {
                 let name = cur.string()?;
                 let hole = cur.word()?;
@@ -617,7 +553,7 @@ impl DataSegmentView {
                 let type_count = cur.word()?;
                 let mut variant_types = Vec::with_capacity(type_count as usize);
                 for _ in 0..type_count {
-                    variant_types.push(self.decode_child(&mut cur, false, depth, fills)?);
+                    variant_types.push(self.decode_child(&mut cur, false, depth)?);
                 }
                 Descriptor::DynamicUnion {
                     name,
@@ -645,7 +581,6 @@ impl DataSegmentView {
         node: &SchemaNode,
         cur: &mut NodeCursor,
         depth: u32,
-        fills: &[u32],
     ) -> Result<Function, Error> {
         let placeholder = cur.word()?;
         let shim_idx = if node.invoke != 0 {
@@ -656,10 +591,10 @@ impl DataSegmentView {
         let nargs = cur.word()?;
         let mut arguments = Vec::with_capacity(nargs as usize);
         for _ in 0..nargs {
-            arguments.push(self.decode_child(cur, false, depth, fills)?);
+            arguments.push(self.decode_child(cur, false, depth)?);
         }
-        let ret = self.decode_child(cur, false, depth, fills)?;
-        let inner_ret = Some(self.decode_child(cur, false, depth, fills)?);
+        let ret = self.decode_child(cur, false, depth)?;
+        let inner_ret = Some(self.decode_child(cur, false, depth)?);
         Ok(Function {
             arguments,
             shim_idx,
@@ -674,10 +609,9 @@ impl DataSegmentView {
         cur: &mut NodeCursor,
         clamped: bool,
         depth: u32,
-        fills: &[u32],
     ) -> Result<Descriptor, Error> {
         let addr = cur.child()?;
-        self.decode_node(addr, clamped, depth + 1, fills)
+        self.decode_node(addr, clamped, depth + 1)
     }
 
     /// Read `len` `u32` words (`4 * len` bytes) starting at linear-
@@ -720,8 +654,6 @@ impl DataSegmentView {
 
 /// One `Schema` node read out of the data segment.
 struct SchemaNode {
-    /// Structural tag (`SchemaTag::Leaf` / `Wrap` / `TypeParam`).
-    tag: u32,
     words: Vec<u32>,
     /// Child node addresses (already resolved from the children run).
     children: Vec<u32>,

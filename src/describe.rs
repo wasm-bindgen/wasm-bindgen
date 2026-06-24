@@ -154,15 +154,6 @@ impl Schema {
         Schema::node(SchemaTag::Leaf, words, &[])
     }
 
-    /// A generic type-parameter hole node used inside a generic import's
-    /// signature *template*. `idx_word` must be a single-element slice
-    /// holding the zero-based parameter index (write it as a literal at the
-    /// call site so it promotes to `'static`, e.g. `&[0u32]`). The CLI
-    /// splices the concrete `fills[idx]` schema in place of this node.
-    pub const fn type_param(idx_word: &'static [u32]) -> Schema {
-        Schema::node(SchemaTag::TypeParam, idx_word, &[])
-    }
-
     /// This node's run of opcode words as a slice.
     pub const fn words(&self) -> &[u32] {
         if self.words_len == 0 {
@@ -194,8 +185,7 @@ impl Schema {
 /// One descriptor entry, referenced (by pointer) from a marker carrier
 /// function's call to the `__wbindgen_descriptor_marker` import. This is
 /// the single, unified descriptor transport: regular shims, imported
-/// statics, casts, and generic-import monomorphizations all emit one of
-/// these into the data segment.
+/// statics, and casts all emit one of these into the data segment.
 ///
 /// `#[repr(C)]` so `wasm-bindgen-cli-support` can parse it out of the
 /// linked module's data segment. All pointer fields are relocated by the
@@ -206,33 +196,18 @@ pub struct DescriptorRecord {
     /// Format version. The CLI skips (and logs) records whose version it
     /// does not recognise, mirroring the old per-entry forward-compat.
     pub version: u32,
-    /// One of `DESCRIPTOR_KIND_REGULAR` / `_STATIC` / `_CAST` /
-    /// `_GENERIC_IMPORT`.
+    /// One of `DESCRIPTOR_KIND_REGULAR` / `_STATIC` / `_CAST`.
     pub kind: u32,
     /// Pointer to the shim name's UTF-8 bytes, or null for casts (which
-    /// the CLI matches by trampoline identity, not by name). For
-    /// `GENERIC_IMPORT` this is the generic import's shim name.
+    /// the CLI matches by trampoline identity, not by name).
     pub name: *const u8,
     /// Length of the shim name in bytes; `0` for casts.
     pub name_len: usize,
     /// Schema root. For `REGULAR` it is the `FUNCTION` node; for `STATIC`
-    /// the bare type node; for `CAST` the `From` type node; for
-    /// `GENERIC_IMPORT` the `FUNCTION` *template* node (whose
-    /// generic-parameter positions are `SchemaTag::TypeParam` holes).
+    /// the bare type node; for `CAST` the `From` type node.
     pub root: &'static Schema,
-    /// `CAST` only: the `To` type node. Null for `REGULAR` / `STATIC` /
-    /// `GENERIC_IMPORT`.
+    /// `CAST` only: the `To` type node. Null for `REGULAR` / `STATIC`.
     pub to_root: *const Schema,
-    /// `GENERIC_IMPORT` only: base of a `fills_len`-long run of concrete
-    /// per-type-parameter `Schema`s, indexed by parameter index (deduped:
-    /// one entry per distinct parameter). The CLI splices `fills[idx]` into
-    /// each `TypeParam(idx)` hole in `root`. Closure-typed parameters carry
-    /// their per-monomorphization invoke-shim address in the fill node's
-    /// `Schema::invoke`. Dangling-but-aligned when `fills_len == 0` (every
-    /// non-generic record); readers must guard on the length.
-    pub fills: *const &'static Schema,
-    /// Number of fills; `0` for non-generic records.
-    pub fills_len: usize,
 }
 
 // `DescriptorRecord` holds raw pointers, so it is not `Sync` by default;

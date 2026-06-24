@@ -55,20 +55,6 @@ pub const DESCRIPTOR_KIND_CAST: u32 = 1;
 /// return type.
 pub const DESCRIPTOR_KIND_STATIC: u32 = 2;
 
-/// Record kind for a generic `#[wasm_bindgen]` imported function (a single
-/// call-site monomorphization of a generic import). The `root` schema is the
-/// `FUNCTION` *template*: a normal function descriptor whose generic-parameter
-/// positions are `SchemaTag::TypeParam` holes (the hole's `words[0]` is the
-/// zero-based type-parameter index). The record additionally carries a `fills`
-/// run — one `&Schema` per distinct type parameter, indexed by that same
-/// parameter index — which the CLI splices into the holes to recover the
-/// concrete signature for this monomorphization. Generic-closure holes carry
-/// their per-monomorphization invoke-shim address in the corresponding fill
-/// node's `Schema::invoke` field. `name`/`name_len` hold the import's shim
-/// name, the key under which the rest of its metadata (js_name, module,
-/// namespace, catch, variadic, ...) lives in the normal AST custom section.
-pub const DESCRIPTOR_KIND_GENERIC_IMPORT: u32 = 3;
-
 #[macro_export]
 macro_rules! shared_api {
     ($mac:ident) => {
