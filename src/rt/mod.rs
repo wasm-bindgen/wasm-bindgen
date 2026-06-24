@@ -114,15 +114,14 @@ where
 // (`Schema::invoke`).
 struct CastRec<From, To>(core::marker::PhantomData<(From, To)>);
 impl<From: crate::describe::WasmDescribe, To: crate::describe::WasmDescribe> CastRec<From, To> {
-    const RECORD: &'static crate::describe::DescriptorRecord =
-        &crate::describe::DescriptorRecord {
-            version: DESCRIPTOR_FORMAT_VERSION,
-            kind: DESCRIPTOR_KIND_CAST,
-            name: core::ptr::null(),
-            name_len: 0,
-            root: From::SCHEMA,
-            to_root: To::SCHEMA as *const _,
-        };
+    const RECORD: &'static crate::describe::DescriptorRecord = &crate::describe::DescriptorRecord {
+        version: DESCRIPTOR_FORMAT_VERSION,
+        kind: DESCRIPTOR_KIND_CAST,
+        name: core::ptr::null(),
+        name_len: 0,
+        root: From::SCHEMA,
+        to_root: Some(To::SCHEMA),
+    };
 }
 
 struct CastRecClosure<From, To, T: crate::closure::WasmClosure + ?Sized, const UNWIND_SAFE: bool>(
@@ -157,15 +156,14 @@ impl<
         &[&Self::FN_WITH_INVOKE],
     );
 
-    const RECORD: &'static crate::describe::DescriptorRecord =
-        &crate::describe::DescriptorRecord {
-            version: DESCRIPTOR_FORMAT_VERSION,
-            kind: DESCRIPTOR_KIND_CAST,
-            name: core::ptr::null(),
-            name_len: 0,
-            root: &Self::FROM_WITH_INVOKE,
-            to_root: To::SCHEMA as *const _,
-        };
+    const RECORD: &'static crate::describe::DescriptorRecord = &crate::describe::DescriptorRecord {
+        version: DESCRIPTOR_FORMAT_VERSION,
+        kind: DESCRIPTOR_KIND_CAST,
+        name: core::ptr::null(),
+        name_len: 0,
+        root: &Self::FROM_WITH_INVOKE,
+        to_root: Some(To::SCHEMA),
+    };
 }
 
 #[inline(never)]

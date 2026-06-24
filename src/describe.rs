@@ -207,7 +207,7 @@ pub struct DescriptorRecord {
     /// the bare type node; for `CAST` the `From` type node.
     pub root: &'static Schema,
     /// `CAST` only: the `To` type node. Null for `REGULAR` / `STATIC`.
-    pub to_root: *const Schema,
+    pub to_root: Option<&'static Schema>,
 }
 
 // `DescriptorRecord` holds raw pointers, so it is not `Sync` by default;
@@ -336,13 +336,19 @@ cfg_if! {
 // straightforward, and avoids unnecessary deep monomorphisation
 // chains in the const evaluator.
 impl WasmDescribeVector for JsValue {
-    const VECTOR_SCHEMA: &'static Schema =
-        &Schema::node(SchemaTag::Wrap, &[VECTOR], &[<JsValue as WasmDescribe>::SCHEMA]);
+    const VECTOR_SCHEMA: &'static Schema = &Schema::node(
+        SchemaTag::Wrap,
+        &[VECTOR],
+        &[<JsValue as WasmDescribe>::SCHEMA],
+    );
 }
 
 impl WasmDescribeVector for JsError {
-    const VECTOR_SCHEMA: &'static Schema =
-        &Schema::node(SchemaTag::Wrap, &[VECTOR], &[<JsValue as WasmDescribe>::SCHEMA]);
+    const VECTOR_SCHEMA: &'static Schema = &Schema::node(
+        SchemaTag::Wrap,
+        &[VECTOR],
+        &[<JsValue as WasmDescribe>::SCHEMA],
+    );
 }
 
 impl<T: WasmDescribeVector> WasmDescribe for Box<[T]> {
