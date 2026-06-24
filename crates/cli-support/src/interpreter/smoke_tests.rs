@@ -702,6 +702,112 @@ fn multiple_globals_with_named_stack_pointer_not_exported() {
     interpret(wat, "foo", &[5, 7]);
 }
 
+// Emscripten rewrites calls that may unwind/longjmp into indirect calls through
+// the function table, wrapped in imported `invoke_*(fnptr, ..args)` helpers. The
+// interpreter must redirect such a call to the real table-indexed target and
+// forward the trailing arguments.
+#[test]
+fn invoke_redirect() {
+    let wat = r#"
+        (module
+            (import "__wbindgen_placeholder__" "__wbindgen_describe"
+              (func $describe (param i32)))
+            (import "env" "invoke_vi" (func $invoke_vi (param i32 i32)))
+
+            (table 1 funcref)
+            (elem (i32.const 0) $target)
+
+            (func $target (param i32)
+                local.get 0
+                call $describe
+            )
+
+            (func $foo
+                i32.const 0   ;; table index of $target
+                i32.const 5   ;; forwarded argument
+                call $invoke_vi
+            )
+
+            (export "foo" (func $foo))
+        )
+    "#;
+    interpret(wat, "foo", &[5]);
+}
+
+#[test]
+fn if_else() {
+    let wat = r#"
+        (module
+            (import "__wbindgen_placeholder__" "__wbindgen_describe"
+              (func $describe (param i32)))
+
+            (func $foo
+                i32.const 1
+                (if
+                    (then
+                        i32.const 11
+                        call $describe)
+                    (else
+                        i32.const 22
+                        call $describe)))
+
+            (export "foo" (func $foo))
+        )
+    "#;
+    interpret(wat, "foo", &[11]);
+}
+
+#[test]
+fn loop_back_edge() {
+    let wat = r#"
+        (module
+            (import "__wbindgen_placeholder__" "__wbindgen_describe"
+              (func $describe (param i32)))
+
+            (func $foo
+                (local $i i32)
+                (loop $l
+                    local.get $i
+                    call $describe
+                    local.get $i
+                    i32.const 1
+                    i32.add
+                    local.tee $i
+                    i32.const 2
+                    i32.lt_s
+                    br_if $l))
+
+            (export "foo" (func $foo))
+        )
+    "#;
+    interpret(wat, "foo", &[0, 1]);
+}
+
+#[test]
+fn br_table_block() {
+    let wat = r#"
+        (module
+            (import "__wbindgen_placeholder__" "__wbindgen_describe"
+              (func $describe (param i32)))
+
+            (func $foo
+                (block $out
+                    (block $zero
+                        (block $one
+                            i32.const 1
+                            br_table $zero $one $out)
+                        i32.const 100
+                        call $describe
+                        br $out)
+                    i32.const 200
+                    call $describe))
+
+            (export "foo" (func $foo))
+        )
+    "#;
+    interpret(wat, "foo", &[100]);
+}
+
 #[test]
 fn wasm64_stack_pointer_global() {
     let wat = r#"

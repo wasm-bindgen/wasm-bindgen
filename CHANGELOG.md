@@ -23,6 +23,16 @@
 
 ### Fixed
 
+* The descriptor interpreter now follows emscripten `invoke_*` trampolines.
+  emscripten's exception/longjmp lowering rewrites direct calls into indirect
+  calls through the function table wrapped in imported `invoke_*(fnptr, ..args)`
+  helpers, including the describe helpers a descriptor function must reach. The
+  interpreter resolves `fnptr` against the reconstructed function table, forwards
+  the trailing arguments, and evaluates the surrounding "did it throw?" control
+  flow (`if`/`else`, `loop`, `br_table`), so descriptors are interpreted
+  correctly on emscripten builds with unwinding/longjmp enabled.
+  [#5215](https://github.com/wasm-bindgen/wasm-bindgen/pull/5215)
+
 * Relaxed alignment requirement for 8-byte types.
   [#5204](https://github.com/wasm-bindgen/wasm-bindgen/pull/5204)
 
