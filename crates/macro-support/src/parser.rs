@@ -111,6 +111,7 @@ macro_rules! attrgen {
             (fallback, false, Fallback(Span)),
             (main, false, Main(Span)),
             (start, false, Start(Span)),
+            (tokio, false, Tokio(Span)),
             (wasm_bindgen, false, WasmBindgen(Span, syn::Path)),
             (js_sys, false, JsSys(Span, syn::Path)),
             (wasm_bindgen_futures, false, WasmBindgenFutures(Span, syn::Path)),
@@ -1566,6 +1567,17 @@ fn function_from_decl(
             rust_vis: vis,
             r#unsafe: sig.unsafety.is_some(),
             r#async: sig.asyncness.is_some(),
+            tokio: {
+                if let Some(span) = opts.tokio() {
+                    if sig.asyncness.is_none() {
+                        return Err(Diagnostic::span_error(
+                            *span,
+                            "#[wasm_bindgen(tokio)] can only be applied to `async` functions",
+                        ));
+                    }
+                }
+                opts.tokio().is_some()
+            },
             generate_typescript: opts.skip_typescript().is_none(),
             generate_jsdoc: opts.skip_jsdoc().is_none(),
             variadic: opts.variadic().is_some(),

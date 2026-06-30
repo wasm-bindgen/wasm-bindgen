@@ -460,6 +460,10 @@ pub struct Function {
     pub r#unsafe: bool,
     /// Whether this is an `async` function
     pub r#async: bool,
+    /// Whether the `tokio` attribute was applied: drive the exported async
+    /// function on tokio's emscripten event-loop runtime instead of
+    /// `wasm-bindgen-futures`' executor.
+    pub tokio: bool,
     /// Whether to generate a typescript definition for this function
     pub generate_typescript: bool,
     /// Whether to generate jsdoc documentation for this function
