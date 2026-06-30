@@ -6850,6 +6850,15 @@ addToLibrary({
         self.wasm_export_ref(&name)
     }
 
+    /// JS snippet for an optional trailing function argument, either
+    /// `", <export ref>"` or empty when absent.
+    fn optional_func_arg(&mut self, func: Option<walrus::FunctionId>) -> String {
+        match func {
+            Some(f) => format!(", {}", self.wasm_export_of(f)),
+            None => String::new(),
+        }
+    }
+
     fn export_name_of(&mut self, id: impl Into<walrus::ExportItem>) -> String {
         use walrus::ExportItem::*;
 

@@ -947,10 +947,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         let malloc = self.cx.export_name_of(malloc);
         let i = self.tmp();
         let malloc = self.cx.wasm_export_ref(&malloc);
-        let realloc = match realloc {
-            Some(f) => format!(", {}", self.cx.wasm_export_of(f)),
-            None => String::new(),
-        };
+        let realloc = self.cx.optional_func_arg(realloc);
         self.prelude(&format!("const ptr{i} = {pass}({val}, {malloc}{realloc});",));
         self.prelude(&format!("const len{i} = WASM_VECTOR_LEN;"));
         self.push(format!("ptr{i}"));
@@ -1530,10 +1527,7 @@ fn instruction(
             let i = js.tmp();
             let malloc = js.cx.wasm_export_of(*malloc);
             let val = js.pop();
-            let realloc = match realloc {
-                Some(f) => format!(", {}", js.cx.wasm_export_of(*f)),
-                None => String::new(),
-            };
+            let realloc = js.cx.optional_func_arg(*realloc);
             js.prelude(&format!(
                 "var ptr{i} = isLikeNone({val}) ? 0 : {func}({val}, {malloc}{realloc});",
             ));
