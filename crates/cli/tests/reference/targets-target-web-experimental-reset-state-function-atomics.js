@@ -24,7 +24,7 @@ export function add_that_might_fail(a, b) {
 function __wbg_get_imports(memory) {
     const import0 = {
         __proto__: null,
-        __wbg___wbindgen_throw_344f42d3211c4765: function(arg0, arg1) {
+        __wbg___wbindgen_throw_bb96b2010945f0bc: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         },
         __wbg_random_6e647071acda68e7: function() {
