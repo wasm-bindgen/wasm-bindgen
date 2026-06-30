@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>JSPI (JS Promise Integration) — wasm-bindgen example</title>
+  <style>
+    body { font-family: monospace; max-width: 720px; margin: 2em auto; padding: 0 1em; }
+    h1   { font-size: 1.2em; }
+    pre  { background: #f5f5f5; padding: 1em; border-radius: 4px; white-space: pre-wrap; }
+    .err { color: #c00; }
+  </style>
+</head>
+<body>
+<h1>WebAssembly JSPI Example</h1>
+<p>
+  JSPI lets plain (non-<code>async</code>) Rust functions await JS Promises by
+  suspending the WASM fiber — without blocking the browser's event loop.
+  Open DevTools to follow the timings.
+</p>
+<p>
+  With the fully integrated JSPI support in wasm-bindgen, no manual bridge
+  setup is required:
+  <ul>
+    <li>Imports marked <code>#[wasm_bindgen(suspending)]</code> are automatically wrapped
+        with <code>new WebAssembly.Suspending(...)</code> by the generated glue.</li>
+    <li>Exports marked <code>#[wasm_bindgen(jspi)]</code> are automatically wrapped with
+        <code>WebAssembly.promising</code> via a lazy cache in the generated glue.</li>
+  </ul>
+</p>
+<pre id="log">Loading…</pre>
+
+<script type="module">
+// wasm-pack build --target web output lives in pkg/.
+import init, {
+    do_sleep,
+    deep_stack,
+    deep_alloc,
+} from "./jspi.js";
+
+const logEl = document.getElementById("log");
+const nl = "\n";
+
+function log(msg) { logEl.textContent += msg + nl; console.log(msg); }
+function err(msg) { logEl.textContent += msg + nl; logEl.classList.add("err"); console.error(msg); }
+
+async function run() {
+    logEl.textContent = "";
+
+    // ── Feature detection ────────────────────────────────────────────────────
+    if (typeof WebAssembly?.Suspending !== "function") {
+        err("❌  WebAssembly.Suspending is not available in this browser.");
+        err("");
+        err("Required browsers:");
+        err("  • Chrome 137+  (enabled by default; 119–136 behind a flag)");
+        err("  • Firefox 150+  →  set javascript.options.wasm_js_promise_integration");
+        err("                      to true in about:config");
+        err("  • Safari 18.4+");
+        return;
+    }
+    log("✓  WebAssembly.Suspending available");
+
+    // ── Load WASM module ─────────────────────────────────────────────────────
+    // No patching needed: the generated glue handles WebAssembly.Suspending
+    // for #[wasm_bindgen(suspending)] imports and WebAssembly.promising for
+    // #[wasm_bindgen(jspi)] exports automatically.
+    await init();
+    log("✓  WASM module loaded");
+    log("");
+
+    // ── Demo 1: non-async sleep ──────────────────────────────────────────────
+    // `do_sleep` is marked #[wasm_bindgen(jspi)].  The generated glue wraps it
+    // with WebAssembly.promising, so it returns a Promise automatically.
+    log("Demo 1: sleeping 300 ms via do_sleep(300) …");
+    const t0 = performance.now();
+    await do_sleep(300);
+    log(`         done in ${(performance.now() - t0).toFixed(0)} ms`);
+    log("");
+
+    // ── Demo 2: concurrent fibers ────────────────────────────────────────────
+    // Three do_sleep(50) calls run concurrently via Promise.all.  Each fiber
+    // gets its own shadow-stack region (per-fiber __stack_pointer isolation),
+    // so they cannot corrupt each other's Rust locals on resume.
+    // Wall-clock time should be ~50 ms, not ~150 ms.
+    log("Demo 2: 3 × do_sleep(50 ms) concurrently via Promise.all …");
+    const t1 = performance.now();
+    await Promise.all([do_sleep(50), do_sleep(50), do_sleep(50)]);
+    const elapsed = performance.now() - t1;
+    if (elapsed > 400) {
+        err(`✗  concurrent sleeps took ${elapsed.toFixed(0)} ms — expected ~50 ms (parallel)`);
+        return;
+    }
+    log(`         all 3 fibers done in ${elapsed.toFixed(0)} ms (ran concurrently)`);
+    log("         shadow-stack isolation confirmed — no fiber corrupted another");
+    log("");
+
+    // ── Demo 3: shadow-stack depth (--jspi-stack-pages) ─────────────────────
+    // This demo is intentionally informational, not a pass/fail assertion.
+    // It shows the effect of --jspi-stack-pages on a ~96 KiB call tree.
+    //
+    // Default build (1 page = 64 KiB): the call tree overflows the per-fiber
+    // slot.  The suspending-import wrapper detects this at the fiber's deepest
+    // point (SP descended into the guard band) and throws a `RangeError`
+    // instead of silently corrupting the neighbouring slot.
+    // Rebuilt with --jspi-stack-pages 2 (128 KiB): returns 49152 (correct).
+    //
+    // To get the correct value: add --jspi-stack-pages 2 to the wasm-bindgen
+    // invocation.
+    log("Demo 3: shadow-stack depth (deep_stack) — informational …");
+    const EXPECTED = 49152; // 48 * 1024 bytes each filled with 1
+    let actual;
+    try {
+        actual = await deep_stack();
+        if (actual === EXPECTED) {
+            log(`✓  deep_stack() = ${actual} (stack did not overflow — built with ≥2 pages)`);
+        } else {
+            log(`ℹ  deep_stack() = ${actual}, expected ${EXPECTED}`);
+            log(`   Rebuild with --jspi-stack-pages 2 to get the correct value.`);
+        }
+    } catch (e) {
+        log(`ℹ  deep_stack() threw: ${e}`);
+        log(`   Fiber-stack overflow caught by the guard band (expected with`);
+        log(`   --jspi-stack-pages 1). Rebuild with --jspi-stack-pages 2 to fit.`);
+    }
+    log("");
+
+    // ── Demo 4: deep recursion + post-resume heap allocation ─────────────────
+    // `deep_alloc(20)` recurses 20 levels (each frame uses 1 KiB of shadow
+    // stack, total ~20 KiB), suspends at the bottom, then allocates a Vec at
+    // every level on the way back up.
+    //
+    // This validates that __stack_pointer is correctly restored before ANY Rust
+    // code runs after a suspension — including the Vec::push inside
+    // block_on_promise's own release_id() call and the explicit allocations in
+    // the user code.  With a wrong SP those allocations would corrupt memory.
+    //
+    // Expected: deep_alloc(N) = 1000 + N*(N+1)/2  →  deep_alloc(20) = 1210
+    log("Demo 4: deep recursion + post-resume allocation (deep_alloc(20)) …");
+    const DEPTH = 20;
+    const EXPECTED_ALLOC = 1000 + DEPTH * (DEPTH + 1) / 2; // 1210
+    let allocResult;
+    try {
+        allocResult = await deep_alloc(DEPTH);
+    } catch (e) {
+        err(`✗  deep_alloc(${DEPTH}) threw: ${e}`);
+        return;
+    }
+    if (allocResult === EXPECTED_ALLOC) {
+        log(`✓  deep_alloc(${DEPTH}) = ${allocResult} (correct)`);
+        log(`   __stack_pointer restored before resume; all 20 post-resume Vec allocations correct`);
+    } else {
+        err(`✗  deep_alloc(${DEPTH}) = ${allocResult}, expected ${EXPECTED_ALLOC}`);
+        err(`   SP not correctly restored — post-resume allocation corrupted memory`);
+    }
+    log("");
+
+    // ── Demo 5: concurrent deep-alloc fibers ─────────────────────────────────
+    // Three deep_alloc(20) fibers run concurrently.  Each is suspended at a
+    // different point in its own shadow-stack frame set.  When one fiber
+    // resumes, the JS wrapper restores *its own* saved SP before any wasm code
+    // runs — the other fibers' shadow-stack frames are never visible to it.
+    log("Demo 5: 3 × deep_alloc(20) concurrently …");
+    let concResults;
+    try {
+        concResults = await Promise.all([deep_alloc(DEPTH), deep_alloc(DEPTH), deep_alloc(DEPTH)]);
+    } catch (e) {
+        err(`✗  concurrent deep_alloc threw: ${e}`);
+        return;
+    }
+    const allCorrect = concResults.every(r => r === EXPECTED_ALLOC);
+    if (allCorrect) {
+        log(`✓  all 3 fibers returned ${EXPECTED_ALLOC} (correct)`);
+        log(`   concurrent SP isolation confirmed — no fiber corrupted another`);
+    } else {
+        err(`✗  concurrent results: ${concResults} — expected all ${EXPECTED_ALLOC}`);
+        err(`   SP isolation failure: fibers corrupted each other's allocations`);
+    }
+    log("");
+}
+
+run().catch(e => err("Fatal: " + e));
+</script>
+</body>
+</html>

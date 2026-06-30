@@ -43,6 +43,9 @@ pub struct Bindgen {
     split_linked_modules: bool,
     generate_reset_state: bool,
     force_enable_abort_handler: bool,
+    /// Number of wasm memory pages (64 KiB each) to allocate for each
+    /// JSPI fiber's shadow stack. Defaults to 1 (64 KiB).
+    pub jspi_stack_pages: u32,
 }
 
 pub struct Output {
@@ -118,6 +121,7 @@ impl Bindgen {
             split_linked_modules: false,
             generate_reset_state: false,
             force_enable_abort_handler: false,
+            jspi_stack_pages: 1,
         }
     }
 
@@ -297,6 +301,11 @@ impl Bindgen {
 
     pub fn split_linked_modules(&mut self, split_linked_modules: bool) -> &mut Bindgen {
         self.split_linked_modules = split_linked_modules;
+        self
+    }
+
+    pub fn jspi_stack_pages(&mut self, pages: u32) -> &mut Bindgen {
+        self.jspi_stack_pages = pages.max(1);
         self
     }
 

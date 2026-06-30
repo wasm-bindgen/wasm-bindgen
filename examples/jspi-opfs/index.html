@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>JSPI + OPFS — wasm-bindgen example</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    :root {
+      --bg: #0d1117; --surface: #161b22; --border: #30363d;
+      --text: #c9d1d9; --muted: #8b949e; --accent: #58a6ff;
+      --green: #3fb950; --red: #f85149; --yellow: #d29922;
+      font-size: 15px;
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 0; padding: 2rem 1rem;
+    }
+    .wrap { max-width: 860px; margin: 0 auto; }
+    h1 { font-size: 1.6rem; margin: 0 0 .25rem; }
+    h2 { font-size: 1.05rem; color: var(--accent); margin: 2rem 0 .75rem; border-bottom: 1px solid var(--border); padding-bottom: .4rem; }
+    p  { color: var(--muted); line-height: 1.6; margin: .5rem 0; }
+    a  { color: var(--accent); }
+    .badge {
+      display: inline-block; font-size: .7rem; font-weight: 600;
+      padding: 2px 8px; border-radius: 999px; margin-left: .4rem;
+      background: #388bfd26; color: var(--accent); vertical-align: middle;
+    }
+    /* comparison table */
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: .9rem; }
+    th, td { border: 1px solid var(--border); padding: .45rem .75rem; text-align: left; }
+    th { background: var(--surface); color: var(--accent); }
+    td:first-child { color: var(--muted); }
+    /* code */
+    pre, code { font-family: 'SFMono-Regular', Consolas, monospace; font-size: .85rem; }
+    .code-block {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 1rem 1.25rem; overflow-x: auto;
+      margin: .75rem 0;
+    }
+    .kw  { color: #ff7b72; }
+    .fn  { color: #d2a8ff; }
+    .at  { color: #79c0ff; }
+    .str { color: #a5d6ff; }
+    .cm  { color: var(--muted); font-style: italic; }
+    /* demo */
+    .demo-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+      margin: 1rem 0;
+    }
+    @media (max-width: 600px) { .demo-grid { grid-template-columns: 1fr; } }
+    label { display: block; font-size: .8rem; color: var(--muted); margin-bottom: .3rem; }
+    input, textarea {
+      width: 100%; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); padding: .5rem .75rem;
+      font-size: .9rem; font-family: inherit; outline: none;
+    }
+    input:focus, textarea:focus { border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 80px; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0; }
+    button {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); padding: .4rem 1rem;
+      font-size: .85rem; cursor: pointer; transition: border-color .15s;
+    }
+    button:hover { border-color: var(--accent); color: var(--accent); }
+    button:active { opacity: .7; }
+    /* log */
+    .log-wrap { position: relative; }
+    #log {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: .75rem 1rem; min-height: 160px;
+      font-family: 'SFMono-Regular', Consolas, monospace; font-size: .82rem;
+      line-height: 1.6; white-space: pre-wrap; overflow-y: auto; max-height: 400px;
+    }
+    .log-ok   { color: var(--green); }
+    .log-err  { color: var(--red); }
+    .log-dim  { color: var(--muted); }
+    .log-info { color: var(--accent); }
+    #clear-btn {
+      position: absolute; top: .5rem; right: .5rem;
+      font-size: .75rem; padding: .2rem .6rem;
+    }
+    /* status chips */
+    .status { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: .4rem; }
+    .status-ok  { background: var(--green); }
+    .status-err { background: var(--red); }
+    .status-pending { background: var(--yellow); }
+    .feat-row { display: flex; gap: 1rem; flex-wrap: wrap; margin: .75rem 0; font-size: .85rem; }
+    .feat { display: flex; align-items: center; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>WebAssembly JSPI + OPFS <span class="badge">example</span></h1>
+<p>
+  <a href="https://developer.mozilla.org/en-US/docs/WebAssembly/JavaScript_interface/Suspending" target="_blank">JSPI</a>
+  lets plain (non-<code>async</code>) Rust functions await JS Promises by suspending the WASM fiber —
+  without blocking the event loop.  This example applies that to the browser's
+  <a href="https://developer.mozilla.org/en-US/docs/Web/API/File_System_API/Origin_private_file_system" target="_blank">Origin Private File System</a>
+  (OPFS), whose entire API surface is Promise-based.
+</p>
+
+<div class="feat-row" id="feat-row">
+  <span class="feat"><span class="status status-pending" id="jspi-dot"></span><code>WebAssembly.Suspending</code></span>
+  <span class="feat"><span class="status status-pending" id="opfs-dot"></span><code>navigator.storage.getDirectory</code></span>
+  <span class="feat"><span class="status status-pending" id="wasm-dot"></span>WASM module</span>
+</div>
+
+<h2>How it works</h2>
+<table>
+  <tr><th></th><th><code>wasm-bindgen-futures</code></th><th>JSPI</th></tr>
+  <tr><td>Rust call style</td><td><code>async fn</code></td><td>ordinary <code>fn</code></td></tr>
+  <tr><td>Awaiting Promises</td><td><code>.await</code></td><td><code>block_on_promise()</code></td></tr>
+  <tr><td>Event loop blocked?</td><td>no</td><td>no</td></tr>
+  <tr><td>Needs async call chain?</td><td>yes</td><td>no</td></tr>
+</table>
+
+<p>Four OPFS operations — each requires multiple Promise awaits — are exposed as
+plain Rust functions via <code>#[wasm_bindgen(jspi)]</code>:</p>
+
+<div class="code-block"><pre
+><span class="cm">// ── write a file ─────────────────────────────────────</span>
+<span class="at">#[wasm_bindgen(jspi)]</span>
+<span class="kw">pub fn</span> <span class="fn">opfs_write</span>(path: String, content: String) {
+    <span class="kw">let</span> root = <span class="fn">opfs_root</span>();                       <span class="cm">// suspends once</span>
+    <span class="kw">let</span> fh = block_on_promise(&amp;root.<span class="fn">get_file_handle_with_options</span>(...));
+    <span class="kw">let</span> wr = block_on_promise(&amp;fh.<span class="fn">create_writable</span>());  <span class="cm">// suspends again</span>
+    block_on_promise(&amp;wr.<span class="fn">write_with_str</span>(&amp;content));
+    block_on_promise(&amp;WritableStream::<span class="fn">close</span>(&amp;wr));
+}
+
+<span class="cm">// ── read a file ──────────────────────────────────────</span>
+<span class="at">#[wasm_bindgen(jspi)]</span>
+<span class="kw">pub fn</span> <span class="fn">opfs_read</span>(path: String) -&gt; String {
+    <span class="kw">let</span> fh: FileSystemFileHandle = block_on_promise(&amp;<span class="fn">opfs_root</span>()
+        .<span class="fn">get_file_handle</span>(&amp;path)).<span class="fn">dyn_into</span>()...;
+    <span class="kw">let</span> file: File = block_on_promise(&amp;fh.<span class="fn">get_file</span>()).<span class="fn">dyn_into</span>()...;
+    block_on_promise(&amp;Blob::<span class="fn">text</span>(&amp;file)).<span class="fn">as_string</span>()...
+}</pre></div>
+
+<p>The generated JS glue wraps each export with <code>WebAssembly.promising</code>,
+so JavaScript callers simply <code>await</code> the result as usual.</p>
+
+<h2>Live demo</h2>
+
+<div class="demo-grid">
+  <div>
+    <label for="path-input">File path (OPFS key)</label>
+    <input id="path-input" type="text" value="demo/hello.txt" />
+  </div>
+  <div>
+    <label for="content-input">Content</label>
+    <textarea id="content-input">Hello from plain Rust via JSPI + OPFS!
+Second line here 🦀</textarea>
+  </div>
+</div>
+
+<div class="btn-row">
+  <button id="btn-write">Write</button>
+  <button id="btn-read">Read</button>
+  <button id="btn-has">Has?</button>
+  <button id="btn-delete">Delete</button>
+  <button id="btn-run-all">▶ Run all</button>
+</div>
+
+<div class="log-wrap">
+  <button id="clear-btn">clear</button>
+  <div id="log"></div>
+</div>
+
+</div><!-- .wrap -->
+
+<script type="module">
+import init, { opfs_write, opfs_read, opfs_has, opfs_delete } from './jspi_opfs.js';
+
+const logEl   = document.getElementById('log');
+const pathEl  = document.getElementById('path-input');
+const bodyEl  = document.getElementById('content-input');
+const jspiDot = document.getElementById('jspi-dot');
+const opfsDot = document.getElementById('opfs-dot');
+const wasmDot = document.getElementById('wasm-dot');
+
+function appendLine(text, cls) {
+    const span = document.createElement('span');
+    if (cls) span.className = cls;
+    span.textContent = text + '\n';
+    logEl.appendChild(span);
+    logEl.scrollTop = logEl.scrollHeight;
+}
+function log(msg)  { appendLine(msg); }
+function ok(msg)   { appendLine('✓  ' + msg, 'log-ok'); }
+function err(msg)  { appendLine('✗  ' + msg, 'log-err'); console.error(msg); }
+function dim(msg)  { appendLine('   ' + msg, 'log-dim'); }
+function info(msg) { appendLine(msg, 'log-info'); }
+
+document.getElementById('clear-btn').onclick = () => { logEl.textContent = ''; };
+
+// ── Feature detection ────────────────────────────────────────────────────────
+function setDot(el, ok) {
+    el.classList.remove('status-pending');
+    el.classList.add(ok ? 'status-ok' : 'status-err');
+}
+
+const jspiOk = typeof WebAssembly?.Suspending === 'function';
+setDot(jspiDot, jspiOk);
+const opfsOk = !!navigator.storage?.getDirectory;
+setDot(opfsDot, opfsOk);
+
+// ── Load WASM ────────────────────────────────────────────────────────────────
+let ready = false;
+if (!jspiOk) {
+    err('WebAssembly.Suspending not available — Chrome 137+, Firefox 150+, Safari 18.4+ required.');
+} else if (!opfsOk) {
+    err('navigator.storage.getDirectory not available — must run in a secure context (https / localhost).');
+} else {
+    await init();
+    setDot(wasmDot, true);
+    ready = true;
+}
+
+// ── Button handlers ──────────────────────────────────────────────────────────
+async function guard(fn) {
+    if (!ready) { err('Module not ready.'); return; }
+    try { await fn(); } catch(e) { err(String(e)); }
+}
+
+document.getElementById('btn-write').onclick = () => guard(async () => {
+    const path = pathEl.value, content = bodyEl.value;
+    const t = performance.now();
+    await opfs_write(path, content);
+    ok(`wrote ${content.length} chars to "${path}" in ${(performance.now()-t).toFixed(0)} ms`);
+});
+
+document.getElementById('btn-read').onclick = () => guard(async () => {
+    const path = pathEl.value;
+    const t = performance.now();
+    const text = await opfs_read(path);
+    ok(`read ${text.length} chars from "${path}" in ${(performance.now()-t).toFixed(0)} ms`);
+    dim(text.slice(0, 200) + (text.length > 200 ? ' …' : ''));
+});
+
+document.getElementById('btn-has').onclick = () => guard(async () => {
+    const path = pathEl.value;
+    const exists = await opfs_has(path);
+    ok(`"${path}" ${exists ? 'EXISTS' : 'does NOT exist'}`);
+});
+
+document.getElementById('btn-delete').onclick = () => guard(async () => {
+    const path = pathEl.value;
+    const t = performance.now();
+    await opfs_delete(path);
+    ok(`deleted "${path}" in ${(performance.now()-t).toFixed(0)} ms`);
+});
+
+document.getElementById('btn-run-all').onclick = () => guard(async () => {
+    info('── Running full demo sequence ──────────────────');
+    const path = 'jspi-opfs-demo/roundtrip.txt';
+    const content = 'Hello from JSPI + OPFS!\nLine 2 🦀\n';
+
+    let t;
+
+    // write
+    t = performance.now();
+    await opfs_write(path, content);
+    ok(`write: ${content.length} chars → "${path}" (${(performance.now()-t).toFixed(0)} ms)`);
+
+    // has — should be true
+    const exists = await opfs_has(path);
+    if (!exists) { err('opfs_has returned false after write'); return; }
+    ok('has: true (as expected after write)');
+
+    // read back
+    t = performance.now();
+    const readBack = await opfs_read(path);
+    if (readBack !== content) {
+        err(`content mismatch! expected ${JSON.stringify(content)}, got ${JSON.stringify(readBack)}`);
+        return;
+    }
+    ok(`read: ${readBack.length} chars matched exactly (${(performance.now()-t).toFixed(0)} ms)`);
+
+    // overwrite
+    const newContent = 'Overwritten content 🔁\n';
+    await opfs_write(path, newContent);
+    const readBack2 = await opfs_read(path);
+    if (readBack2 !== newContent) {
+        err('overwrite did not replace content');
+        return;
+    }
+    ok('overwrite: content replaced correctly');
+
+    // delete
+    t = performance.now();
+    await opfs_delete(path);
+    ok(`delete: "${path}" removed (${(performance.now()-t).toFixed(0)} ms)`);
+
+    // has — should be false
+    const existsAfter = await opfs_has(path);
+    if (existsAfter) { err('opfs_has returned true after delete'); return; }
+    ok('has: false (as expected after delete)');
+
+    // ── Concurrent reads (shadow-stack isolation test) ───────────────────────
+    info('── Concurrent fibers: 3 × opfs_read() via Promise.all ─');
+    const concFiles = [
+        ['jspi-opfs-concurrent/a.txt', 'content-alpha'],
+        ['jspi-opfs-concurrent/b.txt', 'content-beta'],
+        ['jspi-opfs-concurrent/c.txt', 'content-gamma'],
+    ];
+    for (const [p, c] of concFiles) await opfs_write(p, c);
+    dim('wrote 3 files for concurrent read test');
+
+    const tc = performance.now();
+    const [r0, r1, r2] = await Promise.all(concFiles.map(([p]) => opfs_read(p)));
+    const tcElapsed = (performance.now() - tc).toFixed(0);
+
+    if (r0 !== concFiles[0][1]) { err(`concurrent read[0] mismatch: got "${r0}"`); return; }
+    if (r1 !== concFiles[1][1]) { err(`concurrent read[1] mismatch: got "${r1}"`); return; }
+    if (r2 !== concFiles[2][1]) { err(`concurrent read[2] mismatch: got "${r2}"`); return; }
+    ok(`3 concurrent opfs_read() all matched (${tcElapsed} ms)`);
+    dim('shadow-stack isolation confirmed — no fiber corrupted another');
+
+    info('── All demo steps passed ✓ ─────────────────────');
+});
+
+// Auto-run on page load for Playwright
+if (ready) {
+    document.getElementById('btn-run-all').click();
+}
+</script>
+</body>
+</html>

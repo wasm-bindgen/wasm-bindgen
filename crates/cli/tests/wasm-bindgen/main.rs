@@ -2593,3 +2593,326 @@ fn which(name: &str) -> Option<PathBuf> {
     }
     None
 }
+
+// ─── JSPI (JS Promise Integration) runtime tests ─────────────────────────────
+//
+// These build a JSPI module and run it under Node with `--experimental-wasm-jspi`
+// (Node ≥ 24; CI's `test_native` job pins 24.15). They exercise the interaction
+// between JSPI stack switching and the in-wasm exception-handling / abort-handler
+// machinery, which is reasoned about statically elsewhere but only proven here.
+
+/// Shared library for the JSPI runtime tests. Mirrors the `jspi` example but
+/// trimmed to the functions the Node harness drives directly.
+const JSPI_LIB_RS: &str = r#"
+    use wasm_bindgen::prelude::*;
+    use js_sys::Promise;
+    use js_sys::futures::jspi::block_on_promise;
+
+    #[wasm_bindgen(inline_js = "
+        export function note_drop() { globalThis.__jspi_drops = (globalThis.__jspi_drops | 0) + 1; }
+    ")]
+    extern "C" {
+        fn note_drop();
+    }
+
+    // Increments a JS-side counter when dropped, so tests can prove destructors
+    // run on a resumed-then-unwound fiber stack.
+    struct DropGuard;
+    impl Drop for DropGuard {
+        fn drop(&mut self) { note_drop(); }
+    }
+
+    #[no_mangle]
+    pub static mut __abort_called: u32 = 0;
+
+    fn on_abort() { unsafe { __abort_called = 1; } }
+
+    #[wasm_bindgen]
+    pub fn setup_abort_handler() -> bool {
+        wasm_bindgen::handler::set_on_abort(on_abort).is_none()
+    }
+
+    #[wasm_bindgen]
+    pub fn simple_add(a: u32, b: u32) -> u32 { a + b }
+
+    // Plain (NON-jspi) export that calls a suspending import with no
+    // `WebAssembly.promising` frame on the stack — fails with `SuspendError`
+    // at the import boundary.
+    #[wasm_bindgen]
+    pub fn misuse_suspend() {
+        let p = Promise::resolve(&JsValue::UNDEFINED);
+        let _ = block_on_promise(&p);
+    }
+
+    // Happy path: suspend on an already-resolved promise, then resume.
+    // Returns 42.
+    #[wasm_bindgen(jspi)]
+    pub fn do_sleep() -> u32 {
+        let p = Promise::resolve(&JsValue::from(41u32));
+        let v = block_on_promise(&p).unwrap_throw();
+        v.as_f64().unwrap_or(0.0) as u32 + 1
+    }
+
+    // Deep recursion, suspend at the bottom, then allocate a `Vec` at every
+    // level on the way back up. `deep_alloc(N) == 1000 + N*(N+1)/2`, so
+    // `deep_alloc(20) == 1210`. Run concurrently this also proves per-fiber
+    // shadow-stack isolation.
+    #[wasm_bindgen(jspi)]
+    pub fn deep_alloc(depth: u32) -> u32 { deep_alloc_inner(depth) }
+
+    #[inline(never)]
+    fn deep_alloc_inner(depth: u32) -> u32 {
+        let buf = [depth as u8; 1024];
+        let _ = core::hint::black_box(&buf);
+        if depth == 0 {
+            let p = Promise::resolve(&JsValue::UNDEFINED);
+            block_on_promise(&p).unwrap_throw();
+            let v: Vec<u32> = vec![1000];
+            v[0]
+        } else {
+            let child = deep_alloc_inner(depth - 1);
+            let v: Vec<u32> = vec![depth];
+            child + v[0]
+        }
+    }
+
+    // Panic AFTER a suspend/resume, with a `DropGuard` live across the suspend.
+    // Exercises unwind starting from a post-switch native stack with the shadow
+    // SP freshly restored by the suspending wrapper's `finally`.
+    #[wasm_bindgen(jspi)]
+    pub fn panic_after_resume() {
+        let _g = DropGuard;
+        let p = Promise::resolve(&JsValue::UNDEFINED);
+        block_on_promise(&p).unwrap_throw();
+        panic!("boom after resume");
+    }
+"#;
+
+/// Returns true if the `node` on `PATH` exposes JSPI (`WebAssembly.Suspending`)
+/// under `--experimental-wasm-jspi`. Older Node either rejects the flag (≤ 20)
+/// or lacks the API (22), in which case the JSPI runtime tests skip.
+fn node_supports_jspi() -> bool {
+    std::process::Command::new("node")
+        .args([
+            "--experimental-wasm-jspi",
+            "-e",
+            "process.exit(typeof WebAssembly.Suspending === 'function' ? 0 : 1)",
+        ])
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
+}
+
+/// Builds the JSPI test project, writes a `node:test` harness wrapping
+/// `describe_body`, and asserts it passes under `node --experimental-wasm-jspi`.
+/// Each test must pass a unique `name`. Pass `panic_unwind` to build with
+/// nightly `-Cpanic=unwind -Zbuild-std`, which emits modern EH instructions.
+fn run_jspi_test(name: &str, wasm_bindgen_args: &str, panic_unwind: bool, describe_body: &str) {
+    if !node_supports_jspi() {
+        eprintln!(
+            "skipping {name}: the `node` on PATH lacks JSPI \
+             (needs Node >= 24 run with --experimental-wasm-jspi)"
+        );
+        return;
+    }
+
+    let mut project = Project::new(name);
+    project.file("src/lib.rs", JSPI_LIB_RS).file(
+        "Cargo.toml",
+        &format!(
+            "
+                [package]
+                name = \"{name}\"
+                authors = []
+                version = \"1.0.0\"
+                edition = '2021'
+
+                [dependencies]
+                wasm-bindgen = {{ path = '{repo}' }}
+                js-sys = {{ path = '{repo}/crates/js-sys' }}
+
+                [lib]
+                crate-type = ['cdylib']
+
+                [workspace]
+
+                [profile.dev]
+                codegen-units = 1
+            ",
+            name = name,
+            repo = REPO_ROOT.display(),
+        ),
+    );
+
+    // `js_sys::futures::jspi` is gated behind the `js_sys_unstable_apis` cfg.
+    if panic_unwind {
+        project
+            .cargo_cmd
+            .env("RUSTUP_TOOLCHAIN", "nightly")
+            .env("RUSTFLAGS", "--cfg=js_sys_unstable_apis -Cpanic=unwind")
+            .arg("-Zbuild-std=std,panic_unwind");
+    } else {
+        project
+            .cargo_cmd
+            .env("RUSTFLAGS", "--cfg=js_sys_unstable_apis");
+    }
+
+    let out_dir = project.wasm_bindgen(wasm_bindgen_args).unwrap();
+
+    let preamble = format!(
+        r#"
+const {{ describe, it }} = require('node:test');
+const assert = require('node:assert/strict');
+
+// Capture the wasm exports before the generated JS module hides them, so the
+// abort/termination flags can be read straight out of linear memory.
+let wasmExports = null;
+const OrigInstance = WebAssembly.Instance;
+WebAssembly.Instance = function(module, imports) {{
+    const instance = new OrigInstance(module, imports);
+    wasmExports = instance.exports;
+    return instance;
+}};
+const wasm = require('./{name}.js');
+WebAssembly.Instance = OrigInstance;
+
+function abortCalled() {{
+    const addr = wasmExports.__abort_called.value;
+    return new Int32Array(wasmExports.memory.buffer)[addr / 4] !== 0;
+}}
+function isTerminated() {{
+    const addr = wasmExports.__instance_terminated.value;
+    return new Int32Array(wasmExports.memory.buffer)[addr / 4] !== 0;
+}}
+"#
+    );
+    fs::write(
+        out_dir.join("test_jspi.js"),
+        format!("{preamble}{describe_body}"),
+    )
+    .unwrap();
+
+    Command::new("node")
+        .arg("--experimental-wasm-jspi")
+        .arg("--test")
+        .arg("test_jspi.js")
+        .current_dir(&out_dir)
+        .assert()
+        .success();
+}
+
+#[test]
+fn jspi_runtime_basics() {
+    run_jspi_test(
+        "jspi_runtime_basics",
+        "--target nodejs",
+        false,
+        r#"
+describe('jspi runtime', () => {
+    it('suspends on a resolved promise and resumes', async () => {
+        assert.strictEqual(await wasm.do_sleep(), 42);
+    });
+
+    it('restores the shadow SP across deep recursion + post-resume alloc', async () => {
+        assert.strictEqual(await wasm.deep_alloc(20), 1210);
+    });
+
+    it('keeps per-fiber shadow stacks isolated across concurrent fibers', async () => {
+        const r = await Promise.all([wasm.deep_alloc(20), wasm.deep_alloc(20), wasm.deep_alloc(20)]);
+        assert.deepStrictEqual(r, [1210, 1210, 1210]);
+    });
+
+    it('fails with SuspendError when no promising frame is on the stack', async () => {
+        let threw = false;
+        try { await wasm.misuse_suspend(); } catch (e) {
+            threw = true;
+            assert.match(String(e), /SuspendError|promising/);
+        }
+        assert.ok(threw, 'misuse_suspend should have thrown');
+    });
+});
+"#,
+    );
+}
+
+#[test]
+fn jspi_abort_handler_suspend_misuse() {
+    run_jspi_test(
+        "jspi_abort_handler_suspend_misuse",
+        "--target nodejs --force-enable-abort-handler",
+        false,
+        r#"
+describe('jspi misuse under --force-enable-abort-handler', () => {
+    it('routes the import-boundary SuspendError through the abort handler', () => {
+        assert.strictEqual(wasm.setup_abort_handler(), true);
+        assert.strictEqual(abortCalled(), false);
+        // The suspending import is wrapped in an `Aborting` try_table; calling
+        // it without a promising frame throws SuspendError in-wasm, which the
+        // wrapper routes to a clean abort via __wbindgen_rethrow_critical.
+        assert.throws(() => wasm.misuse_suspend(), (e) => {
+            assert.match(e.message, /Critical error/);
+            return true;
+        });
+        assert.strictEqual(abortCalled(), true);
+        assert.strictEqual(isTerminated(), true);
+    });
+
+    it('blocks all exports after termination', () => {
+        assert.throws(() => wasm.simple_add(1, 2), /Module terminated/);
+    });
+});
+"#,
+    );
+}
+
+#[test]
+fn jspi_abort_handler_happy_and_panic() {
+    run_jspi_test(
+        "jspi_abort_handler_happy_and_panic",
+        "--target nodejs --force-enable-abort-handler",
+        false,
+        r#"
+describe('jspi under --force-enable-abort-handler', () => {
+    // Proves a try_table EH frame survives a JSPI stack switch on the happy
+    // path: the catch-wrapper transform predates JSPI and wraps a call that
+    // now suspends mid-flight.
+    it('still suspends, resumes, and returns correct values with the handler armed', async () => {
+        assert.strictEqual(wasm.setup_abort_handler(), true);
+        assert.strictEqual(await wasm.do_sleep(), 42);
+        const r = await Promise.all([wasm.deep_alloc(20), wasm.deep_alloc(20), wasm.deep_alloc(20)]);
+        assert.deepStrictEqual(r, [1210, 1210, 1210]);
+    });
+
+    it('rejects (rather than hangs or corrupts) when a fiber panics after resume', async () => {
+        await assert.rejects(() => wasm.panic_after_resume());
+    });
+});
+"#,
+    );
+}
+
+#[test]
+fn jspi_panic_unwind() {
+    run_jspi_test(
+        "jspi_panic_unwind",
+        "--target nodejs",
+        true,
+        r#"
+describe('jspi with panic=unwind', () => {
+    // Under panic=unwind the catch wrappers are generated with no flag, so every
+    // suspending-import call is wrapped in an EH frame that is live across the
+    // JSPI stack switch on the happy path.
+    it('concurrent fibers suspend, resume, and return correct values', async () => {
+        const r = await Promise.all([wasm.deep_alloc(20), wasm.deep_alloc(20), wasm.deep_alloc(20)]);
+        assert.deepStrictEqual(r, [1210, 1210, 1210]);
+    });
+
+    it('panic after resume rejects and runs destructors across the suspend', async () => {
+        globalThis.__jspi_drops = 0;
+        await assert.rejects(() => wasm.panic_after_resume());
+        assert.ok((globalThis.__jspi_drops | 0) >= 1, 'DropGuard must run on unwind');
+    });
+});
+"#,
+    );
+}

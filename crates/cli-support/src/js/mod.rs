@@ -209,6 +209,22 @@ pub struct Context<'a> {
     /// from a subclass — avoiding a spurious extra Rust allocation that
     /// would otherwise be leaked.
     super_skip_sentinel_emitted: bool,
+
+    /// Set to `true` while generating code for a JSPI-enabled export adapter.
+    /// Consumed by `binding.rs` `Invocation::Core::generate()` to wrap the
+    /// raw `wasm.fn(args)` call with a `WebAssembly.promising` lazy cache.
+    pub(crate) current_adapter_jspi: bool,
+
+    /// Set to `true` while generating the shim body for a
+    /// `#[wasm_bindgen(suspending)]` import.  Consumed by `binding.rs` to
+    /// ensure void-returning shims still emit `return <call>` — required
+    /// because `WebAssembly.Suspending` must receive the Promise back from
+    /// the wrapper function.
+    pub(crate) current_adapter_suspending: bool,
+
+    /// Tracks whether `__stack_pointer` has been exported for JSPI per-fiber
+    /// shadow-stack management.  Set once so duplicate exports are avoided.
+    jspi_stack_pointer_exported: bool,
 }
 
 /// Definition of a module export
@@ -366,6 +382,9 @@ impl<'a> Context<'a> {
             emscripten_runtime_exports: Default::default(),
             memory64,
             super_skip_sentinel_emitted: false,
+            current_adapter_jspi: false,
+            current_adapter_suspending: false,
+            jspi_stack_pointer_exported: false,
         })
     }
 
@@ -386,6 +405,82 @@ impl<'a> Context<'a> {
                 .push_str("const __wbgSuperSkip = Symbol('wasm-bindgen.super-skip');\n");
         }
         self.super_skip_sentinel_emitted = true;
+    }
+
+    /// Emits the per-fiber shadow-stack helpers at module scope exactly once:
+    ///
+    /// - `__jspi_sync_sp` — captures the synchronous SP so non-fiber WASM
+    ///   calls between suspensions use the correct shadow stack.
+    /// - `__jspi_stack_size` — per-fiber stack size in bytes (`jspi_stack_pages * 65536`).
+    /// - `__jspi_guard_size` — sacrificial band at the bottom of each slot.
+    ///   The shadow stack grows *down* from `__jspi_stack + __jspi_stack_size`
+    ///   toward `__jspi_stack`; unlike the main stack (which faults out-of-bounds
+    ///   past address 0) an overflow here grows into live linear memory and would
+    ///   silently corrupt the neighbouring slot/heap.  The suspending-import
+    ///   wrapper checks the SP against `__jspi_active_floor` (`__jspi_stack +
+    ///   __jspi_guard_size`) at the fiber's deepest point and throws a
+    ///   `RangeError` instead, converting silent corruption into a clear error.
+    /// - `__jspi_active_floor` — the floor of the fiber currently being entered,
+    ///   saved/restored by the suspending-import wrapper so it stays correct
+    ///   across interleaved/nested fibers.
+    /// - `__jspi_stack_alloc()` / `__jspi_stack_free()` — allocate/free fiber
+    ///   stacks via `wasm.memory.grow(N)` + a JS free-list.  Using
+    ///   `memory.grow` avoids any dependency on `__wbindgen_malloc`/
+    ///   `__wbindgen_free`, which may not be exported in modules that have no
+    ///   string or heap-allocation JS glue.
+    pub(crate) fn expose_jspi_stack_setup(&mut self) {
+        let pages = self.config.jspi_stack_pages;
+        let stack_size = pages as usize * 65536;
+        // Sacrificial band reserved at the bottom of each fiber slot, capped so
+        // it never swallows more than half of a single-page slot.
+        let guard_size = std::cmp::min(stack_size / 2, 8192);
+        self.intrinsic(
+            "jspi_sync_sp".into(),
+            None,
+            Cow::Owned(format!(
+                "let __jspi_sync_sp;\n\
+                 let __jspi_active_floor = 0;\n\
+                 const __jspi_stack_size = {stack_size};\n\
+                 const __jspi_guard_size = {guard_size};\n\
+                 const __jspi_stack_pool = [];\n\
+                 function __jspi_stack_alloc() {{\n    \
+                     if (__jspi_stack_pool.length > 0) return __jspi_stack_pool.pop();\n    \
+                     const ptr = wasm.memory.grow({pages});\n    \
+                     if (ptr === -1) throw new RangeError('out of memory allocating JSPI fiber stack');\n    \
+                     return ptr * 65536;\n\
+                 }}\n\
+                 function __jspi_stack_free(ptr) {{ __jspi_stack_pool.push(ptr); }}"
+            )),
+            &[],
+        );
+    }
+
+    /// Export the `__stack_pointer` global so that the generated JSPI wrapper
+    /// can set it per-fiber for concurrent shadow-stack isolation.
+    /// Idempotent — safe to call multiple times.
+    pub(crate) fn export_stack_pointer_for_jspi(&mut self) -> Result<(), Error> {
+        if self.jspi_stack_pointer_exported {
+            return Ok(());
+        }
+        self.jspi_stack_pointer_exported = true;
+        let sp_id = self.aux.stack_pointer.ok_or_else(|| {
+            anyhow!(
+                "could not locate `__stack_pointer` global in the WASM module; \
+                 JSPI requires the shadow-stack pointer to be exported so that \
+                 concurrent fibers each get an isolated shadow stack — \
+                 add `cargo:rustc-link-arg=--export=__stack_pointer` to your \
+                 build script or ensure the linker retains the symbol name"
+            )
+        })?;
+        if !self
+            .module
+            .exports
+            .iter()
+            .any(|e| e.name == "__stack_pointer")
+        {
+            self.module.exports.add("__stack_pointer", sp_id);
+        }
+        Ok(())
     }
 
     /// Whether the super-skip sentinel has been emitted. Constructor
@@ -5168,6 +5263,18 @@ addToLibrary({
             }
         }
 
+        // Compute before builder borrows self mutably.
+        let is_suspending = matches!(kind, ContextAdapterKind::Import(_))
+            && self.aux.imports_with_suspending.contains(&id);
+        let is_jspi = matches!(kind, ContextAdapterKind::Export(e) if e.jspi);
+
+        if matches!(self.config.mode, OutputMode::Emscripten) && (is_jspi || is_suspending) {
+            bail!(
+                "`#[wasm_bindgen(jspi)]` and `#[wasm_bindgen(suspending)]` are not yet \
+                 supported with the emscripten target"
+            );
+        }
+
         // Construct a JS shim builder, and configure it based on the kind of
         // export that we're generating.
         let mut builder = binding::Builder::new(self);
@@ -5178,6 +5285,7 @@ addToLibrary({
         builder.catch(catch);
         let mut args = &None;
         let mut asyncness = false;
+        let mut jspi = false;
         let mut variadic = false;
         let mut generate_jsdoc = false;
         let mut ret_ty_override = &None;
@@ -5186,6 +5294,7 @@ addToLibrary({
             ContextAdapterKind::Export(export) => {
                 args = &export.args;
                 asyncness = export.asyncness;
+                jspi = export.jspi;
                 variadic = export.variadic;
                 generate_jsdoc = export.generate_jsdoc;
                 ret_ty_override = &export.fn_ret_ty_override;
@@ -5224,6 +5333,12 @@ addToLibrary({
             ContextAdapterKind::Export(e) => format!("`{}`", e.debug_name),
             ContextAdapterKind::Adapter => format!("adapter {}", id.0),
         };
+        // Set JSPI flag on the context so `Invocation::Core::generate()` can
+        // wrap the raw WASM call with `WebAssembly.promising`.
+        builder.cx.current_adapter_jspi = jspi;
+
+        builder.cx.current_adapter_suspending = is_suspending;
+
         // Process the `binding` and generate a bunch of JS/TypeScript/etc.
         let binding::JsFunction {
             ts_sig,
@@ -5236,6 +5351,7 @@ addToLibrary({
             might_be_optional_field,
             catch,
             log_error,
+            jspi_async,
         } = builder
             .process(
                 adapter,
@@ -5249,6 +5365,10 @@ addToLibrary({
                 ret_desc,
             )
             .with_context(|| "failed to generates bindings for ".to_string() + &debug_name)?;
+
+        // Reset per-adapter flags after processing.
+        self.current_adapter_jspi = false;
+        self.current_adapter_suspending = false;
 
         self.typescript_refs.extend(ts_refs);
 
@@ -5336,7 +5456,8 @@ addToLibrary({
                                 None,
                             )?;
                         } else {
-                            let definition = format!("function {identifier}{code}\n");
+                            let async_kw = if jspi_async { "async " } else { "" };
+                            let definition = format!("{async_kw}function {identifier}{code}\n");
                             define_export(
                                 &mut self.exports,
                                 name,
@@ -5467,8 +5588,46 @@ addToLibrary({
                     }
                 }
 
-                self.wasm_import_definitions
-                    .insert(core, ImportDefinition::Function(code));
+                // If this import is marked `#[wasm_bindgen(suspending)]`, wrap
+                // it with `WebAssembly.Suspending` so that calling it from WASM
+                // suspends the current fiber.
+                //
+                // The outer async wrapper saves/restores `__stack_pointer`
+                // around the suspension: JSPI preserves wasm locals but not
+                // globals, so `__stack_pointer` (a wasm global) would be
+                // clobbered if another fiber runs while this one is suspended.
+                // The `finally` block executes before the `WebAssembly.Suspending`
+                // mechanism resumes the wasm fiber, guaranteeing the correct SP
+                // is in place when execution continues.
+                //
+                // This is also the fiber's deepest point, so it doubles as the
+                // overflow checkpoint: if the SP has descended into the
+                // sacrificial guard band (`__sp <= __jspi_active_floor`) we
+                // throw a `RangeError` *before* the `await` — it propagates as a
+                // trap so the export's promise rejects, instead of resuming a
+                // fiber that has corrupted its neighbour.  `__jspi_active_floor`
+                // is saved/restored alongside `__sp` so the check stays correct
+                // across interleaved/nested fibers.
+                let import_def = if self.aux.imports_with_suspending.contains(&id) {
+                    self.export_stack_pointer_for_jspi()?;
+                    // The wrapper references `__jspi_active_floor`/`__jspi_guard_size`;
+                    // ensure the shadow-stack setup is emitted even if no export
+                    // adapter has been processed yet (idempotent).
+                    self.expose_jspi_stack_setup();
+                    ImportDefinition::Expression(format!(
+                        "((__inner) => new WebAssembly.Suspending(async function(...args) {{\n\
+                             const __sp = wasm.__stack_pointer.value;\n\
+                             const __floor = __jspi_active_floor;\n\
+                             if (__sp <= __floor) throw new RangeError('JSPI fiber stack overflow');\n\
+                             try {{ return await __inner(...args); }}\n\
+                             finally {{ wasm.__stack_pointer.value = __sp; __jspi_active_floor = __floor; }}\n\
+                         }}))(function{code})"
+                    ))
+                } else {
+                    ImportDefinition::Function(code)
+                };
+
+                self.wasm_import_definitions.insert(core, import_def);
             }
             ContextAdapterKind::Adapter => {
                 assert!(!catch);

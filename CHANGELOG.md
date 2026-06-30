@@ -5,6 +5,16 @@
 
 ### Added
 
+* Added JSPI (JS Promise Integration) support: `#[wasm_bindgen(jspi)]` on exports
+  wraps them with `WebAssembly.promising`, `#[wasm_bindgen(suspending)]` on imports
+  wraps them with `WebAssembly.Suspending`, and `js_sys::futures::jspi::{block_on,
+  block_on_promise}` let plain (non-`async`) Rust suspend a fiber while a JS
+  `Promise` settles. Each fiber gets an isolated shadow stack (sized with
+  `--jspi-stack-pages`) with a guard band that turns an overflow into a thrown
+  `RangeError` instead of silent corruption. The `jspi` API is gated behind the
+  `js_sys_unstable_apis` cfg and is not yet supported on the emscripten target.
+  [#5193](https://github.com/wasm-bindgen/wasm-bindgen/pull/5193)
+
 ### Changed
 
 ### Fixed

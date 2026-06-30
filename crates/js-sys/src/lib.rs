@@ -9028,6 +9028,50 @@ pub mod WebAssembly {
         #[wasm_bindgen(method, js_namespace = WebAssembly)]
         pub fn grow(this: &Memory, pages: u32) -> u32;
     }
+
+    // WebAssembly.Suspending / WebAssembly.promising (JSPI — JS Promise Integration)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen]
+    extern "C" {
+        /// A `WebAssembly.Suspending` object wraps a JavaScript async function
+        /// so it can be used as a WebAssembly import under
+        /// [JSPI (JS Promise Integration)][jspi].
+        ///
+        /// When WASM calls a `Suspending`-wrapped import that returns a
+        /// `Promise`, the WASM fiber suspends until the promise settles; the
+        /// resolved value is then returned to WASM as if the call had returned
+        /// synchronously.  The browser's event loop is **not** blocked.
+        ///
+        /// [jspi]: https://github.com/WebAssembly/js-promise-integration
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Suspending)
+        #[wasm_bindgen(
+            js_namespace = WebAssembly,
+            extends = Object,
+            typescript_type = "WebAssembly.Suspending"
+        )]
+        #[derive(Clone, Debug, PartialEq, Eq)]
+        pub type Suspending;
+
+        /// Wraps `func` (an async function) in a `WebAssembly.Suspending` object.
+        ///
+        /// Pass the returned object as a WASM import.  Every call to that
+        /// import from WASM will suspend the current fiber and resume it with
+        /// the resolved value once `func`'s returned `Promise` settles.
+        #[wasm_bindgen(constructor, js_namespace = WebAssembly)]
+        pub fn new(func: &Function) -> Suspending;
+
+        /// Wraps a WebAssembly exported `Function` so that calling it returns a
+        /// `Promise` and enables JSPI suspension inside.
+        ///
+        /// Use `WebAssembly.promising` to obtain a "promising" wrapper around a
+        /// raw WASM export; any JSPI suspensions that occur while the function
+        /// executes will resolve the returned `Promise` when the fiber finishes.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/promising)
+        #[wasm_bindgen(js_namespace = WebAssembly)]
+        pub fn promising(func: &Function) -> Function;
+    }
 }
 
 /// The `JSON` object contains methods for parsing [JavaScript Object

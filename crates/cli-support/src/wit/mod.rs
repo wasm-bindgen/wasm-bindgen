@@ -708,6 +708,7 @@ impl<'a> Context<'a> {
                 comments: concatenate_comments(&export.comments),
                 args,
                 asyncness: export.function.asyncness,
+                jspi: export.function.jspi,
                 kind,
                 js_namespace: export
                     .js_namespace
@@ -766,6 +767,7 @@ impl<'a> Context<'a> {
             structural,
             function,
             assert_no_shim,
+            suspending,
         } = function;
         let generate_typescript = import.generate_typescript;
         let (import_id, _id) = match self.function_imports.get(shim) {
@@ -885,6 +887,9 @@ impl<'a> Context<'a> {
         }
         if assert_no_shim {
             self.aux.imports_with_assert_no_shim.insert(adapter);
+        }
+        if suspending {
+            self.aux.imports_with_suspending.insert(adapter);
         }
 
         self.aux.import_map.insert(id, aux_import);
@@ -1281,6 +1286,7 @@ impl<'a> Context<'a> {
                     debug_name: format!("getter for `{}::{}`", struct_.name, field.name),
                     args: None,
                     asyncness: false,
+                    jspi: false,
                     comments: concatenate_comments(&field.comments),
                     kind: AuxExportKind::Method {
                         class: qualified_name.clone(),
@@ -1316,6 +1322,7 @@ impl<'a> Context<'a> {
                     debug_name: format!("setter for `{}::{}`", struct_.name, field.name),
                     args: None,
                     asyncness: false,
+                    jspi: false,
                     comments: concatenate_comments(&field.comments),
                     kind: AuxExportKind::Method {
                         class: qualified_name.clone(),

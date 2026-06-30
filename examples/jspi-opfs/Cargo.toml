@@ -1,0 +1,30 @@
+[package]
+authors = ["The wasm-bindgen Developers"]
+edition = "2021"
+name = "jspi-opfs"
+publish = false
+version = "0.0.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+js-sys = { path = "../../crates/js-sys" }
+wasm-bindgen = { path = "../../" }
+
+[dependencies.web-sys]
+features = [
+  "Blob",
+  "File",
+  "FileSystemDirectoryHandle",
+  "FileSystemFileHandle",
+  "FileSystemGetDirectoryOptions",
+  "FileSystemGetFileOptions",
+  "FileSystemWritableFileStream",
+  "StorageManager",
+  "WritableStream",
+]
+path = "../../crates/web-sys"
+
+[lints]
+workspace = true
