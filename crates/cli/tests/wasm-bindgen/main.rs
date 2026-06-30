@@ -1025,6 +1025,153 @@ describe('nested unreachable', () => {
         .success();
 }
 
+/// Regression test for a `Task` leak in the futures executor: when a spawned
+/// future panics during `poll`, the executor must drop the future (and
+/// everything it owns) rather than leaving it alive via the
+/// `Task -> Inner -> future -> Waker -> Rc<Task>` reference cycle. The panic
+/// propagates out of the microtask that drives the first poll, so the Node
+/// script installs an `uncaughtException` handler to observe it while checking
+/// that the future's `DropGuard` ran.
+#[test]
+fn spawn_local_panic_frees_future() {
+    let mut project = Project::new("spawn_local_panic_frees_future");
+    project
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+                use wasm_bindgen_futures::spawn_local;
+                use std::future::Future;
+                use std::pin::Pin;
+                use std::task::{Context, Poll, Waker};
+
+                #[wasm_bindgen(inline_js = "
+                    export function set_was_dropped(v) { globalThis.was_dropped = v; }
+                ")]
+                extern "C" {
+                    fn set_was_dropped(v: bool);
+                }
+
+                struct DropGuard;
+
+                impl Drop for DropGuard {
+                    fn drop(&mut self) {
+                        set_was_dropped(true);
+                    }
+                }
+
+                // Retains its own waker before panicking, forming the
+                // `future -> Waker -> Rc<Task>` cycle that the single-threaded
+                // executor would otherwise leak on a panicking poll.
+                struct PanicFuture {
+                    _guard: DropGuard,
+                    waker: Option<Waker>,
+                }
+
+                impl Future for PanicFuture {
+                    type Output = ();
+                    fn poll(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<()> {
+                        self.waker = Some(cx.waker().clone());
+                        panic!("spawned future panic");
+                    }
+                }
+
+                #[wasm_bindgen]
+                pub fn spawn_panicking_future() {
+                    set_was_dropped(false);
+                    spawn_local(PanicFuture {
+                        _guard: DropGuard,
+                        waker: None,
+                    });
+                }
+            "#,
+        )
+        .file(
+            "Cargo.toml",
+            &format!(
+                "
+                    [package]
+                    name = \"spawn_local_panic_frees_future\"
+                    authors = []
+                    version = \"1.0.0\"
+                    edition = '2021'
+
+                    [dependencies]
+                    wasm-bindgen = {{ path = '{root}' }}
+                    wasm-bindgen-futures = {{ path = '{root}/crates/futures' }}
+
+                    [lib]
+                    crate-type = ['cdylib']
+
+                    [workspace]
+
+                    [profile.dev]
+                    codegen-units = 1
+                ",
+                root = REPO_ROOT.display(),
+            ),
+        );
+
+    // The leak fix matters when a poll unwinds, which requires building with
+    // nightly build-std under `panic = "unwind"`.
+    project
+        .cargo_cmd
+        .env("RUSTUP_TOOLCHAIN", "nightly")
+        .env("RUSTFLAGS", "-Cpanic=unwind")
+        .arg("-Zbuild-std=std,panic_unwind");
+
+    let out_dir = project.wasm_bindgen("--target nodejs").unwrap();
+
+    fs::write(
+        out_dir.join("test_spawn_panic.js"),
+        r#"
+const assert = require('node:assert/strict');
+const wasm = require('./spawn_local_panic_frees_future.js');
+
+// The spawned future's panic propagates out of the microtask that drives its
+// first poll, surfacing as an uncaught exception. That's expected here; record
+// it and swallow only that specific panic so the process keeps running.
+let sawPanic = false;
+process.on('uncaughtException', (e) => {
+    const msg = (e && e.message) || String(e);
+    if (/spawned future panic/.test(msg)) {
+        sawPanic = true;
+    } else {
+        throw e;
+    }
+});
+
+wasm.spawn_panicking_future();
+
+// A macrotask runs after the microtask queue, so by now the spawned task has
+// been polled (and panicked).
+setTimeout(() => {
+    try {
+        assert.ok(sawPanic, 'expected the spawned future to panic');
+        assert.strictEqual(
+            globalThis.was_dropped,
+            true,
+            'spawned future must be dropped after a panicking poll, not leaked',
+        );
+        console.log('PASS');
+        process.exit(0);
+    } catch (e) {
+        console.error(e);
+        process.exit(1);
+    }
+}, 50);
+"#,
+    )
+    .unwrap();
+
+    Command::new("node")
+        .arg("test_spawn_panic.js")
+        .current_dir(&out_dir)
+        .assert()
+        .success()
+        .stdout(str::contains("PASS"));
+}
+
 #[test]
 fn termination_reset_state() {
     let mut project = Project::new("termination_reset_state");

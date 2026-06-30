@@ -139,13 +139,30 @@ impl Task {
     }
 
     pub(crate) fn run(&self) {
+        // A poll can unwind via either a Rust panic or a foreign (JS)
+        // exception. `catch_unwind` only catches the former, but both run
+        // drops, so a drop guard covers both: if a poll unwinds we drop
+        // `Inner`, releasing the future and breaking the
+        // `Inner -> Waker -> Rc<Task>` cycle that would otherwise leak the
+        // `Task`. The guard is disarmed (forgotten) on a normal return.
+        struct ClearOnUnwind<'a>(&'a RefCell<Option<Inner>>);
+        impl Drop for ClearOnUnwind<'_> {
+            fn drop(&mut self) {
+                *self.0.borrow_mut() = None;
+            }
+        }
+        let clear_on_unwind = ClearOnUnwind(&self.inner);
+
         let mut borrow = self.inner.borrow_mut();
 
         // Wakeups can come in after a Future has finished and been destroyed,
         // so handle this gracefully by just ignoring the request to run.
         let inner = match borrow.as_mut() {
             Some(inner) => inner,
-            None => return,
+            None => {
+                core::mem::forget(clear_on_unwind);
+                return;
+            }
         };
 
         // Ensure that if poll calls `waker.wake()` we can get enqueued back on
@@ -158,7 +175,8 @@ impl Task {
         let is_ready = match self.console.as_ref() {
             // Wrap `inner` in AssertUnwindSafe before capturing it, so the closure
             // satisfies MaybeUnwindSafe (required when panic=unwind). This is safe:
-            // console.run's poll callback is not invoked inside a panic-catching context.
+            // a panic from `is_ready` propagates as usual and is handled by the
+            // `ClearOnUnwind` guard above.
             Some(console) => {
                 let mut inner = core::panic::AssertUnwindSafe(inner);
                 console.run(&mut move || inner.is_ready())
@@ -180,5 +198,7 @@ impl Task {
         if is_ready {
             *borrow = None;
         }
+
+        core::mem::forget(clear_on_unwind);
     }
 }
