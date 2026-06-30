@@ -946,13 +946,9 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         let val = self.pop();
         let malloc = self.cx.export_name_of(malloc);
         let i = self.tmp();
-        let realloc = match realloc {
-            Some(f) => format!(", wasm.{}", self.cx.export_name_of(f)),
-            None => String::new(),
-        };
-        self.prelude(&format!(
-            "const ptr{i} = {pass}({val}, wasm.{malloc}{realloc});",
-        ));
+        let malloc = self.cx.wasm_export_ref(&malloc);
+        let realloc = self.cx.optional_func_arg(realloc);
+        self.prelude(&format!("const ptr{i} = {pass}({val}, {malloc}{realloc});",));
         self.prelude(&format!("const len{i} = WASM_VECTOR_LEN;"));
         self.push(format!("ptr{i}"));
         self.push(format!("len{i}"));
@@ -1200,10 +1196,9 @@ fn instruction(
 
         Instruction::Retptr { size } => {
             js.cx.inject_stack_pointer_shim()?;
-            js.prelude(&format!(
-                "const retptr = wasm.__wbindgen_add_to_stack_pointer(-{size});"
-            ));
-            js.finally(&format!("wasm.__wbindgen_add_to_stack_pointer({size});"));
+            let sp = js.cx.wasm_export_ref("__wbindgen_add_to_stack_pointer");
+            js.prelude(&format!("const retptr = {sp}(-{size});"));
+            js.finally(&format!("{sp}({size});"));
             js.stack.push("retptr".to_string());
         }
 
@@ -1460,9 +1455,9 @@ fn instruction(
         Instruction::VectorToMemory { kind, malloc, mem } => {
             let val = js.pop();
             let func = js.cx.pass_to_wasm_function(kind.clone(), *mem);
-            let malloc = js.cx.export_name_of(*malloc);
+            let malloc = js.cx.wasm_export_of(*malloc);
             let i = js.tmp();
-            js.prelude(&format!("const ptr{i} = {func}({val}, wasm.{malloc});",));
+            js.prelude(&format!("const ptr{i} = {func}({val}, {malloc});",));
             js.prelude(&format!("const len{i} = WASM_VECTOR_LEN;"));
             js.push(format!("ptr{i}"));
             js.push(format!("len{i}"));
@@ -1530,14 +1525,11 @@ fn instruction(
             let func = js.cx.expose_pass_string_to_wasm(*mem);
             js.cx.expose_is_like_none();
             let i = js.tmp();
-            let malloc = js.cx.export_name_of(*malloc);
+            let malloc = js.cx.wasm_export_of(*malloc);
             let val = js.pop();
-            let realloc = match realloc {
-                Some(f) => format!(", wasm.{}", js.cx.export_name_of(*f)),
-                None => String::new(),
-            };
+            let realloc = js.cx.optional_func_arg(*realloc);
             js.prelude(&format!(
-                "var ptr{i} = isLikeNone({val}) ? 0 : {func}({val}, wasm.{malloc}{realloc});",
+                "var ptr{i} = isLikeNone({val}) ? 0 : {func}({val}, {malloc}{realloc});",
             ));
             js.prelude(&format!("var len{i} = WASM_VECTOR_LEN;"));
             js.push(format!("ptr{i}"));
@@ -1548,10 +1540,10 @@ fn instruction(
             let func = js.cx.pass_to_wasm_function(kind.clone(), *mem);
             js.cx.expose_is_like_none();
             let i = js.tmp();
-            let malloc = js.cx.export_name_of(*malloc);
+            let malloc = js.cx.wasm_export_of(*malloc);
             let val = js.pop();
             js.prelude(&format!(
-                "var ptr{i} = isLikeNone({val}) ? 0 : {func}({val}, wasm.{malloc});",
+                "var ptr{i} = isLikeNone({val}) ? 0 : {func}({val}, {malloc});",
             ));
             js.prelude(&format!("var len{i} = WASM_VECTOR_LEN;"));
             js.push(format!("ptr{i}"));
@@ -1562,9 +1554,9 @@ fn instruction(
             // Copy the contents of the typed array into wasm.
             let val = js.pop();
             let func = js.cx.pass_to_wasm_function(kind.clone(), *mem);
-            let malloc = js.cx.export_name_of(*malloc);
+            let malloc = js.cx.wasm_export_of(*malloc);
             let i = js.tmp();
-            js.prelude(&format!("var ptr{i} = {func}({val}, wasm.{malloc});",));
+            js.prelude(&format!("var ptr{i} = {func}({val}, {malloc});",));
             js.prelude(&format!("var len{i} = WASM_VECTOR_LEN;"));
             // Then pass it the pointer and the length of where we copied it.
             js.push(format!("ptr{i}"));
@@ -1653,8 +1645,9 @@ fn instruction(
                                 anc_qualified,
                             );
                             let tmp = format!("__wbg_anc_{idx}");
+                            let sym = js.cx.wasm_export_ref(&sym);
                             body.push_str(&format!(
-                                "const {tmp} = wasm.{sym}({prev_ptr_expr}) >>> 0;\n"
+                                "const {tmp} = {sym}({prev_ptr_expr}) >>> 0;\n"
                             ));
                             body.push_str(&format!("this.__wbg_ptr_{anc_id} = {tmp};\n"));
                             token_parts.push(format!("__wbg_ptr_{anc_id}: {tmp}"));
@@ -1726,10 +1719,8 @@ fn instruction(
             js.prelude(&format!("var v{tmp} = {get}({ptr}, {len});"));
 
             if *owned {
-                let free = js.cx.export_name_of(*free);
-                js.prelude(&format!(
-                    "if ({ptr} !== 0) {{ wasm.{free}({ptr}, {len}, 1); }}",
-                ));
+                let free = js.cx.wasm_export_of(*free);
+                js.prelude(&format!("if ({ptr} !== 0) {{ {free}({ptr}, {len}, 1); }}",));
             }
 
             js.push(format!("v{tmp}"));
@@ -1825,10 +1816,10 @@ fn instruction(
             let ptr = js.pop();
             let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
             let i = js.tmp();
-            let free = js.cx.export_name_of(*free);
+            let free = js.cx.wasm_export_of(*free);
             js.prelude(&format!("var v{i} = {f}({ptr}, {len}).slice();"));
             js.prelude(&format!(
-                "wasm.{free}({ptr}, {len} * {size}, {size});",
+                "{free}({ptr}, {len} * {size}, {size});",
                 size = kind.size()
             ));
             js.push(format!("v{i}"))
@@ -1854,10 +1845,10 @@ fn instruction(
             let i = js.tmp();
             match kind {
                 VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_) => {
-                    let free = js.cx.export_name_of(*free);
+                    let free = js.cx.wasm_export_of(*free);
                     js.prelude(&format!("var v{i} = {f}({ptr}, {len});"));
                     js.prelude(&format!(
-                        "wasm.{free}({ptr}, {len} * {size}, {size});",
+                        "{free}({ptr}, {len} * {size}, {size});",
                         size = kind.size()
                     ));
                 }
@@ -1875,12 +1866,12 @@ fn instruction(
             let ptr = js.pop();
             let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
             let i = js.tmp();
-            let free = js.cx.export_name_of(*free);
+            let free = js.cx.wasm_export_of(*free);
             js.prelude(&format!("let v{i};"));
             js.prelude(&format!("if ({ptr} !== 0) {{"));
             js.prelude(&format!("v{i} = {f}({ptr}, {len}).slice();"));
             js.prelude(&format!(
-                "wasm.{free}({ptr}, {len} * {size}, {size});",
+                "{free}({ptr}, {len} * {size}, {size});",
                 size = kind.size()
             ));
             js.prelude("}");
@@ -1899,10 +1890,10 @@ fn instruction(
             js.prelude(&format!("if ({ptr} !== 0) {{"));
             match kind {
                 VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_) => {
-                    let free = js.cx.export_name_of(*free);
+                    let free = js.cx.wasm_export_of(*free);
                     js.prelude(&format!("v{i} = {f}({ptr}, {len}).slice();"));
                     js.prelude(&format!(
-                        "wasm.{free}({ptr}, {len} * {size}, {size});",
+                        "{free}({ptr}, {len} * {size}, {size});",
                         size = kind.size()
                     ));
                 }
@@ -2071,7 +2062,8 @@ impl Invocation {
                     Some(eid) => cx.module.exports.get(*eid).name.clone(),
                     None => cx.export_name_of(*id),
                 };
-                Ok(format!("wasm.{name}({})", args.join(", ")))
+                let accessor = cx.wasm_export_ref(&name);
+                Ok(format!("{accessor}({})", args.join(", ")))
             }
             Invocation::Adapter(id) => {
                 let adapter = &cx.wit.adapters[id];
