@@ -1087,10 +1087,6 @@ impl<'a> Context<'a> {
         }
 
         imports.push_str("addToLibrary({\n");
-        // Declare `wasm` as a library variable so it can be assigned in initBindgen.
-        // In emscripten's modularized output, implicit global assignment is not allowed
-        // (strict mode), so we need an explicit declaration.
-        imports.push_str("$wasm: \"null\",\n");
         // Inject Global Dependencies
         for global_dep in self.emscripten_global_deps.iter() {
             if global_dep == "WASM_VECTOR_LEN" {
@@ -1774,7 +1770,6 @@ if (require('worker_threads').isMainThread) {{
         // `adapter_deps` with `emscripten_global_deps` so symbols that are
         // *only* declared globally (e.g. `$heap`) are also pulled in.
         let init_deps: BTreeSet<&str> = std::iter::once("addOnInit")
-            .chain(std::iter::once("wasm"))
             .chain(self.adapter_deps.iter().map(String::as_str))
             .chain(self.emscripten_global_deps.iter().map(String::as_str))
             .collect();
@@ -1787,7 +1782,7 @@ if (require('worker_threads').isMainThread) {{
             .collect();
 
         let start_logic = if needs_manual_start {
-            "wasmExports.__wbindgen_start();"
+            "wasmExports['__wbindgen_start']();"
         } else {
             ""
         };
@@ -1806,7 +1801,6 @@ if (require('worker_threads').isMainThread) {{
                 $initBindgen__deps: [{init_deps}],
                 $initBindgen__postset: 'addOnInit(initBindgen);',
                 $initBindgen: () => {{
-                    wasm = wasmExports;
                     // Call emscripten's _initialize to run static constructors
                     // (needed for --no-entry builds)
                     if (wasmExports['_initialize']) {{
@@ -1817,7 +1811,7 @@ if (require('worker_threads').isMainThread) {{
                 }}
             }});
 
-            extraLibraryFuncs.push('$initBindgen', '$addOnInit', '$wasm', {global_deps});
+            extraLibraryFuncs.push('$initBindgen', '$addOnInit', {global_deps});
             {self_register}"#,
             init_deps = init_dep_refs.join(", "),
             global_deps = global_dep_refs.join(", "),
@@ -2198,8 +2192,9 @@ if (require('worker_threads').isMainThread) {{
                     // half from `extends_js_class` + `extends_js_namespace`
                     // (or the defaulted-from-Rust-path equivalents).
                     let sym = wasm_bindgen_shared::upcast_function(&from_qualified, anc_qualified);
+                    let sym = self.wasm_export_ref(&sym);
                     let tmp = format!("__wbg_anc_{idx}");
-                    body.push_str(&format!("const {tmp} = wasm.{sym}({prev_expr}) >>> 0;\n"));
+                    body.push_str(&format!("const {tmp} = {sym}({prev_expr}) >>> 0;\n"));
                     body.push_str(&format!("obj.__wbg_ptr_{anc_id} = {tmp};\n"));
                     prev_expr = tmp;
                     from_qualified = anc_qualified.clone();
@@ -2272,13 +2267,13 @@ if (require('worker_threads').isMainThread) {{
         let finalization_callback = if participates {
             let mut body = String::new();
             body.push_str(&format!(
-                "wasm.{}(tok.__wbg_ptr_{identifier} >>> 0, 1);\n",
-                wasm_bindgen_shared::free_function(qualified)
+                "{}(tok.__wbg_ptr_{identifier} >>> 0, 1);\n",
+                self.wasm_export_ref(&wasm_bindgen_shared::free_function(qualified))
             ));
             for (anc_id, anc_q) in ancestors.iter() {
                 body.push_str(&format!(
-                    "wasm.{}(tok.__wbg_ptr_{anc_id} >>> 0, 1);\n",
-                    wasm_bindgen_shared::free_function(anc_q)
+                    "{}(tok.__wbg_ptr_{anc_id} >>> 0, 1);\n",
+                    self.wasm_export_ref(&wasm_bindgen_shared::free_function(anc_q))
                 ));
             }
             if self.generate_reinit {
@@ -2289,14 +2284,14 @@ if (require('worker_threads').isMainThread) {{
         } else if self.generate_reinit {
             format!(
                 "({{ ptr, instance }}) => {{
-                if (instance === __wbg_instance_id) wasm.{}(ptr, 1);
+                if (instance === __wbg_instance_id) {}(ptr, 1);
             }}",
-                wasm_bindgen_shared::free_function(qualified)
+                self.wasm_export_ref(&wasm_bindgen_shared::free_function(qualified))
             )
         } else {
             format!(
-                "ptr => wasm.{}(ptr, 1)",
-                wasm_bindgen_shared::free_function(qualified)
+                "ptr => {}(ptr, 1)",
+                self.wasm_export_ref(&wasm_bindgen_shared::free_function(qualified))
             )
         };
 
@@ -2315,7 +2310,6 @@ if (require('worker_threads').isMainThread) {{
             let postset = format!("{identifier}Finalization = {finalization_value};");
             self.emscripten_library(&format!(
                 "addToLibrary({{\n    ${identifier}Finalization: undefined,\n    \
-                 ${identifier}Finalization__deps: ['$wasm'],\n    \
                  ${identifier}Finalization__postset: {postset:?}\n}});"
             ));
         } else {
@@ -2381,8 +2375,8 @@ if (require('worker_threads').isMainThread) {{
         }
 
         let mut free = format!(
-            "wasm.{}(ptr, 0)",
-            wasm_bindgen_shared::free_function(qualified)
+            "{}(ptr, 0)",
+            self.wasm_export_ref(&wasm_bindgen_shared::free_function(qualified))
         );
         free = binding::maybe_wrap_export_call(
             &free,
@@ -2403,13 +2397,13 @@ if (require('worker_threads').isMainThread) {{
             // child's Rc<Parent> field may still be alive). Order doesn't
             // matter because refcounts commute.
             for (anc_id, anc_q) in ancestors.iter() {
-                let anc_free = wasm_bindgen_shared::free_function(anc_q);
+                let anc_free = self.wasm_export_ref(&wasm_bindgen_shared::free_function(anc_q));
                 body.push_str(&format!(
                     "const __anc_{anc_id} = this.__wbg_ptr_{anc_id};\n"
                 ));
                 body.push_str(&format!("this.__wbg_ptr_{anc_id} = 0;\n"));
                 body.push_str(&format!(
-                    "if (__anc_{anc_id} !== 0) wasm.{anc_free}(__anc_{anc_id} >>> 0, 1);\n"
+                    "if (__anc_{anc_id} !== 0) {anc_free}(__anc_{anc_id} >>> 0, 1);\n"
                 ));
             }
             body.push_str(&format!("{identifier}Finalization.unregister(this);\n"));
@@ -3467,7 +3461,9 @@ if (require('worker_threads').isMainThread) {{
         match (self.aux.externref_table, self.aux.externref_drop_slice) {
             (Some(table), Some(drop)) => {
                 let table = self.export_name_of(table);
+                let table = self.wasm_export_ref(&table);
                 let drop = self.export_name_of(drop);
+                let drop = self.wasm_export_ref(&drop);
                 let ptr_fixup = self.coerce_ptr_assign("ptr");
                 self.intrinsic(
                     ret.to_string().into(),
@@ -3480,9 +3476,9 @@ if (require('worker_threads').isMainThread) {{
                             const mem = {mem_access};
                             const result = [];
                             for (let i = ptr; i < ptr + 4 * len; i += 4) {{
-                                result.push(wasm.{table}.get(mem.getUint32(i, true)));
+                                result.push({table}.get(mem.getUint32(i, true)));
                             }}
-                            wasm.{drop}(ptr, len);
+                            {drop}(ptr, len);
                             return result;
                         }}
                         ",
@@ -3538,6 +3534,7 @@ if (require('worker_threads').isMainThread) {{
         match self.aux.externref_table {
             Some(table) => {
                 let table = self.export_name_of(table);
+                let table = self.wasm_export_ref(&table);
                 let ptr_fixup = self.coerce_ptr_assign("ptr");
                 self.intrinsic(
                     ret.to_string().into(),
@@ -3550,7 +3547,7 @@ if (require('worker_threads').isMainThread) {{
                             const mem = {mem_access};
                             const result = [];
                             for (let i = ptr; i < ptr + 4 * len; i += 4) {{
-                                result.push(wasm.{table}.get(mem.getUint32(i, true)));
+                                result.push({table}.get(mem.getUint32(i, true)));
                             }}
                             return result;
                         }}
@@ -3749,6 +3746,7 @@ if (require('worker_threads').isMainThread) {{
         }
         let view = self.memview_memory(kind, memory);
         let mem = self.export_name_of(memory);
+        let mem = self.wasm_export_ref(&mem);
         self.intrinsic(view.name.to_string().into(), None, {
             let cache = format!("cached{kind}Memory{}", view.num);
             let resized_check = if self.module.memories.get(memory).shared {
@@ -3756,11 +3754,11 @@ if (require('worker_threads').isMainThread) {{
                 // doesn't detach old references; instead, it just leaves them pointing to a
                 // slice of the up-to-date memory. So in order to check if it's been grown, we
                 // have to compare it to the up-to-date buffer.
-                format!("{cache}.buffer !== wasm.{mem}.buffer")
+                format!("{cache}.buffer !== {mem}.buffer")
             } else if kind == "DataView" {
                 // `DataView`s throw when accessing detached memory, including `byteLength`.
                 // However this requires JS engine support, so we fallback to comparing the buffer.
-                format!("{cache}.buffer.detached === true || ({cache}.buffer.detached === undefined && {cache}.buffer !== wasm.{mem}.buffer)")
+                format!("{cache}.buffer.detached === true || ({cache}.buffer.detached === undefined && {cache}.buffer !== {mem}.buffer)")
             } else {
                 // Otherwise, we can do a quicker check of whether the buffer's been detached,
                 // which is indicated by a length of 0.
@@ -3771,7 +3769,7 @@ if (require('worker_threads').isMainThread) {{
                 let {cache} = null;
                 function {view}() {{
                     if ({cache} === null || {resized_check}) {{
-                        {cache} = new {kind}(wasm.{mem}.buffer);
+                        {cache} = new {kind}({mem}.buffer);
                     }}
                     return {cache};
                 }}
@@ -3937,6 +3935,7 @@ if (require('worker_threads').isMainThread) {{
             .exn_store
             .ok_or_else(|| anyhow!("failed to find `__wbindgen_exn_store` intrinsic"))?;
         let store = self.export_name_of(store);
+        let store = self.wasm_export_ref(&store);
         match (self.aux.externref_table, self.aux.externref_alloc) {
             (Some(table), Some(alloc)) => {
                 let add = self.expose_add_to_externref_table(table, alloc);
@@ -3953,7 +3952,7 @@ if (require('worker_threads').isMainThread) {{
                                 return f.apply(this, args);
                             }} catch (e) {{
                                 const idx = {add}(e);
-                                wasm.{store}(idx);
+                                {store}(idx);
                             }}
                         }}
                         "
@@ -3978,7 +3977,7 @@ if (require('worker_threads').isMainThread) {{
                             try {{
                                 return f.apply(this, args);
                             }} catch (e) {{
-                                wasm.{store}(addHeapObject(e));
+                                {store}(addHeapObject(e));
                             }}
                         }}
                         "
@@ -4289,7 +4288,8 @@ if (require('worker_threads').isMainThread) {{
             .destroy_closure
             .expect("failed to find `__wbindgen_destroy_closure` intrinsic");
         let dtor = self.export_name_of(func_id);
-        let destroy_state = format!("wasm.{dtor}(state.a, state.b)");
+        let dtor = self.wasm_export_ref(&dtor);
+        let destroy_state = format!("{dtor}(state.a, state.b)");
         self.intrinsic("closure_finalization".into(), "CLOSURE_DTORS".into(), {
             let prevent_stale = if self.generate_reinit {
                 format!(
@@ -4661,10 +4661,11 @@ if (require('worker_threads').isMainThread) {{
         let view = self.memview_table("getFromExternrefTable", table);
         assert!(self.config.externref);
         let table = self.export_name_of(table);
+        let table = self.wasm_export_ref(&table);
         self.intrinsic(
             view.to_string().into(),
             None,
-            format!("\nfunction {view}(idx) {{ return wasm.{table}.get(idx); }}\n").into(),
+            format!("\nfunction {view}(idx) {{ return {table}.get(idx); }}\n").into(),
             &[],
         );
         view
@@ -4674,7 +4675,9 @@ if (require('worker_threads').isMainThread) {{
         let view = self.memview_table("takeFromExternrefTable", table);
         assert!(self.config.externref);
         let drop = self.export_name_of(drop);
+        let drop = self.wasm_export_ref(&drop);
         let table = self.export_name_of(table);
+        let table = self.wasm_export_ref(&table);
         self.intrinsic(
             view.to_string().into(),
             None,
@@ -4682,8 +4685,8 @@ if (require('worker_threads').isMainThread) {{
                 format!(
                     "
                 function {view}(idx) {{
-                    const value = wasm.{table}.get(idx);
-                    wasm.{drop}(idx);
+                    const value = {table}.get(idx);
+                    {drop}(idx);
                     return value;
                 }}
             ",
@@ -4700,7 +4703,9 @@ if (require('worker_threads').isMainThread) {{
         let view = self.memview_table("addToExternrefTable", table);
         assert!(self.config.externref);
         let alloc = self.export_name_of(alloc);
+        let alloc = self.wasm_export_ref(&alloc);
         let table = self.export_name_of(table);
+        let table = self.wasm_export_ref(&table);
 
         self.intrinsic(
             view.to_string().into(),
@@ -4709,8 +4714,8 @@ if (require('worker_threads').isMainThread) {{
                 format!(
                     "
                 function {view}(obj) {{
-                    const idx = wasm.{alloc}();
-                    wasm.{table}.set(idx, obj);
+                    const idx = {alloc}();
+                    {table}.set(idx, obj);
                     return idx;
                 }}
                 ",
@@ -5039,6 +5044,8 @@ addToLibrary({
             let memory = get_memory(self.module).unwrap();
             let mem_view = self.expose_int32_memory(memory);
             let table = self.export_function_table()?;
+            let table = self.wasm_export_ref(&table);
+            let abort_handler = self.wasm_export_ref("__abort_handler");
 
             self.global(&format!(
                 "
@@ -5047,8 +5054,8 @@ addToLibrary({
                 function __wbg_call_abort_hook() {{
                     __wbg_called_abort = true;
                     try {{
-                        const idx = {mem_view}()[wasm.__abort_handler.value / 4];
-                        if (idx) wasm.{table}.get(idx)();
+                        const idx = {mem_view}()[{abort_handler}.value / 4];
+                        if (idx) {table}.get(idx)();
                     }} catch(_) {{}}
                 }}
 
@@ -5063,9 +5070,10 @@ addToLibrary({
                 "
             ));
 
+            let instance_terminated = self.wasm_export_ref("__instance_terminated");
             termination_guard.push_str(&format!(
                 "
-                __wbg_terminated_addr ??= wasm.__instance_terminated.value / 4;
+                __wbg_terminated_addr ??= {instance_terminated}.value / 4;
                 const flag = {mem_view}()[__wbg_terminated_addr];
                 if (flag) {{
                     if (!__wbg_called_abort) {{
@@ -6311,7 +6319,11 @@ addToLibrary({
 
             Intrinsic::Exports => {
                 assert_eq!(args.len(), 0);
-                "wasm".to_string()
+                if matches!(self.config.mode, OutputMode::Emscripten) {
+                    "wasmExports".to_string()
+                } else {
+                    "wasm".to_string()
+                }
             }
 
             Intrinsic::Memory => {
@@ -6337,7 +6349,7 @@ addToLibrary({
             Intrinsic::FunctionTable => {
                 assert_eq!(args.len(), 0);
                 let name = self.export_function_table()?;
-                format!("wasm.{name}")
+                self.wasm_export_ref(&name)
             }
 
             Intrinsic::DebugString => {
@@ -6380,14 +6392,8 @@ addToLibrary({
                     .aux
                     .externref_table
                     .ok_or_else(|| anyhow!("must enable externref to use externref intrinsic"))?;
-                let mut base = "\n".to_string();
                 let name = self.export_name_of(table);
-
-                if matches!(self.config.mode, OutputMode::Emscripten) {
-                    base.push_str(&format!("const table = wasmExports['{name}'];\n"));
-                } else {
-                    base.push_str(&format!("const table = wasm.{name};\n"));
-                }
+                let table_ref = self.wasm_export_ref(&name);
 
                 // Grow the table to insert our initial values, and then also
                 // set the 0th slot to `undefined` since that's what we've
@@ -6395,7 +6401,7 @@ addToLibrary({
                 // returns `undefined` for types like `None` going out.
                 let mut base = format!(
                     "
-                      const table = wasm.{name};
+                      const table = {table_ref};
                       const offset = table.grow({});
                       table.set(0, undefined);
                     ",
@@ -6824,6 +6830,24 @@ addToLibrary({
             Some(id) => Ok(self.export_name_of(id)),
             None => bail!("no function table found in module"),
         }
+    }
+
+    /// JS expression that reaches a wasm export by name, honoring the output
+    /// mode. The emscripten target reaches exports through emscripten's own
+    /// `wasmExports` object using bracket (string-literal) access, which is the
+    /// form emcc's DCE graph and import/export minifier track and rename in
+    /// lockstep; other modes use the local `wasm` binding.
+    fn wasm_export_ref(&self, name: &str) -> String {
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            format!("wasmExports['{name}']")
+        } else {
+            format!("wasm.{name}")
+        }
+    }
+
+    fn wasm_export_of(&mut self, id: impl Into<walrus::ExportItem>) -> String {
+        let name = self.export_name_of(id);
+        self.wasm_export_ref(&name)
     }
 
     fn export_name_of(&mut self, id: impl Into<walrus::ExportItem>) -> String {
