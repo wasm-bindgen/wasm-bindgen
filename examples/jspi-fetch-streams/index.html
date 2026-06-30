@@ -233,7 +233,7 @@ setDot(reqDot, supportsRequestStreaming ? 'ok' : 'dim');
 
 let ready = false;
 if (!jspiOk) {
-    err('WebAssembly.Suspending not available — Chrome 117+, Firefox 150+, Safari 18.4+ required.');
+    err('WebAssembly.Suspending not available — Chrome 137+, Firefox 150+, Safari 18.4+ required.');
 } else {
     await init();
     setDot(wasmDot, 'ok');
