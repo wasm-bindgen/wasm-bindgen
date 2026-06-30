@@ -1080,6 +1080,14 @@ fn instruction(
                 )
                 .unwrap();
                 writeln!(js.pre_try, "const __jspi_stack = __jspi_stack_alloc();").unwrap();
+                // Publish this fiber's overflow floor (top of the guard band) so
+                // the suspending-import wrapper can detect a deep overflow at the
+                // fiber's deepest point and throw instead of corrupting memory.
+                writeln!(
+                    js.pre_try,
+                    "__jspi_active_floor = __jspi_stack + __jspi_guard_size;"
+                )
+                .unwrap();
                 writeln!(
                     js.pre_try,
                     "wasm.__stack_pointer.value = __jspi_stack + __jspi_stack_size;"
@@ -1114,6 +1122,7 @@ fn instruction(
                         "return {call}.finally(() => {{ \
                             wasm.__stack_pointer.value = __jspi_sync_sp; \
                             __jspi_stack_free(__jspi_stack); \
+                            __jspi_active_floor = 0; \
                         }});",
                     ));
                 }
@@ -1153,7 +1162,8 @@ fn instruction(
                     if js.cx.current_adapter_jspi {
                         js.finally(
                             "wasm.__stack_pointer.value = __jspi_sync_sp;\n\
-                             __jspi_stack_free(__jspi_stack);",
+                             __jspi_stack_free(__jspi_stack);\n\
+                             __jspi_active_floor = 0;",
                         );
                     }
                 }

@@ -22,10 +22,10 @@
 //!    store the pending `Promise`, call `jspi_do_suspend` (which suspends the fiber),
 //!    then read the resolved value after the fiber resumes.
 //!
-//! ## Browser support (2025)
-//! - Chrome 117+
+//! ## Browser support
+//! - Chrome 137+ (enabled by default; 119–136 behind a flag/origin trial)
 //! - Firefox 150+ (`javascript.options.wasm_js_promise_integration = true`)
-//! - Safari 18.4+
+//! - Safari 18.4+ (Develop ▸ Feature Flags)
 //!
 //! See [`index.html`](../index.html) for the full setup and live demo.
 
@@ -71,7 +71,7 @@ pub fn do_sleep(ms: u32) {
 ///
 /// | `--jspi-stack-pages` | Stack budget | Result |
 /// |----------------------|-------------|--------|
-/// | 1 (default)          | 64 KiB      | **silent overflow → corrupted return value** |
+/// | 1 (default)          | 64 KiB      | **overflow → `RangeError` thrown by the guard band** |
 /// | 2                    | 128 KiB     | 49152 (correct) |
 ///
 /// Build with the flag you want to test, then call this export:
@@ -107,12 +107,14 @@ fn outer_frame() -> u32 {
 fn inner_frame() -> u32 {
     let buf = [1u8; 48 * 1024];
     let _ = read_first(&buf);
-    // Suspend: the shadow stack must hold both frames simultaneously.
-    // With --jspi-stack-pages 1 (64 KiB), it already overflowed before here.
+    // Suspend: the shadow stack must hold both frames simultaneously. With
+    // --jspi-stack-pages 1 (64 KiB) the SP has descended into the guard band by
+    // now, so the suspending-import wrapper throws a RangeError here instead of
+    // resuming a fiber that overran its slot.
     let promise = Promise::resolve(&JsValue::UNDEFINED);
     block_on_promise(&promise).unwrap_throw();
-    // After resume, sum the buffer to produce a verifiable value (49152).
-    // If the shadow stack overflowed, this memory is corrupt and the sum is wrong.
+    // After resume (≥2 pages), sum the buffer to produce a verifiable value
+    // (49152).
     buf.iter().copied().map(u32::from).sum()
 }
 
