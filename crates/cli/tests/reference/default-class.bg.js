@@ -28,7 +28,7 @@ class _default {
 }
 if (Symbol.dispose) _default.prototype[Symbol.dispose] = _default.prototype.free;
 export { _default as default }
-export function __wbg___wbindgen_throw_344f42d3211c4765(arg0, arg1) {
+export function __wbg___wbindgen_throw_bb96b2010945f0bc(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbindgen_init_externref_table() {

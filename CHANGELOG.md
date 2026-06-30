@@ -5,6 +5,16 @@
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Removed
+
+## [0.2.127](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.126...0.2.127)
+
+### Added
+
 * [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
   to `web-sys` [#5247](https://github.com/wasm-bindgen/wasm-bindgen/pull/5247)
 
@@ -118,8 +128,6 @@
 * The emscripten detection marker static is no longer leaked as public API.
   [#5220](https://github.com/wasm-bindgen/wasm-bindgen/pull/5220)
   [#5222](https://github.com/wasm-bindgen/wasm-bindgen/pull/5222)
-
-### Removed
 
 ## [0.2.126](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.125...0.2.126)
 
