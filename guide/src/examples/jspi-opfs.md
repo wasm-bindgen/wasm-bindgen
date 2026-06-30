@@ -11,8 +11,8 @@ from plain (non-`async`) Rust functions.
 [jspi]: ../reference/jspi.md
 [opfs]: https://developer.mozilla.org/en-US/docs/Web/API/File_System_API/Origin_private_file_system
 
-**Requirements:** Chrome 117+, Firefox 150+, or Safari 18.4+; secure context
-(HTTPS or `localhost`).
+**Requirements:** Chrome 137+ (or 119–136 behind a flag), Firefox 150+, or
+Safari 18.4+; secure context (HTTPS or `localhost`).
 
 ## `Cargo.toml`
 

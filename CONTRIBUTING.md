@@ -33,9 +33,10 @@ Update fixtures:
 ## Browser Examples
 
 The JSPI browser examples (`jspi`, `jspi-opfs`, `jspi-fetch-streams`) require a
-browser with JSPI support. Chrome has JSPI enabled by default since v123, and CI
+browser with JSPI support. Chrome has JSPI enabled by default since v137, and CI
 runs all three examples automatically via the Playwright test suite
-(`channel: 'chrome'`). They cannot be run via `cargo test`.
+(`channel: 'chrome'`, which tracks current stable). They cannot be run via
+`cargo test`.
 
 To build and test locally:
 

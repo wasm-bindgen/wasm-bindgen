@@ -9,13 +9,16 @@ browser APIs from ordinary Rust code, with no `async` call chain required.
 
 ## Browser support
 
-| Browser           | Minimum version |
-|-------------------|-----------------|
-| Chrome / Chromium | 117             |
-| Firefox           | 150             |
-| Safari            | 18.4            |
+| Browser           | Enabled by default | Behind a flag |
+|-------------------|--------------------|---------------|
+| Chrome / Chromium | 137                | 119–136 (`#enable-experimental-webassembly-jspi`, or origin trial) |
+| Firefox           | —                  | 150 (`javascript.options.wasm_js_promise_integration`) |
+| Safari            | —                  | 18.4 (Develop ▸ Feature Flags) |
+| Node.js           | —                  | 24 (`--experimental-wasm-jspi`) |
 
-JSPI requires a **secure context** (HTTPS or `localhost`).
+JSPI shipped *enabled by default* in **Chrome 137**; earlier versions
+(from 119 through 136) required the experimental-WebAssembly-JSPI flag or an
+origin trial. JSPI also requires a **secure context** (HTTPS or `localhost`).
 
 ## Attributes
 
@@ -126,15 +129,25 @@ wasm-bindgen target/wasm32-unknown-unknown/release/my_module.wasm \
     --jspi-stack-pages 2
 ```
 
-> **Warning — no guard page.** If a fiber's shadow stack overflows, writes go
-> into adjacent linear memory and corrupt data silently. There is no trap, no
-> error, and no diagnostic output. Symptoms include garbled return values,
-> random assertion failures, and `unwrap_throw` panics at unexpected sites.
+> **Overflow detection (guard band, not a guard page).** A true trapping guard
+> *page* is impossible in Wasm — no in-bounds linear-memory address can be made
+> to fault, and only the single region adjacent to address 0 traps on overflow.
+> Each fiber slot therefore reserves a small sacrificial band at its base. The
+> suspending-import wrapper reads the shadow-stack pointer at the fiber's
+> deepest point (just before it suspends) and, if it has descended into the
+> band, throws a `RangeError('JSPI fiber stack overflow')` *before* suspending
+> — so the export's `Promise` rejects instead of resuming a fiber that has
+> overrun its slot. This converts the common overflow case from silent
+> corruption into a clear error. It is not airtight: a single frame larger than
+> the band that never crosses the suspend checkpoint can still slip through, so
+> size `N` generously for deep call trees.
 
-> **Note — no reclamation.** Freed fiber stacks return to a JS pool; Wasm
-> linear memory never shrinks. If your application creates many concurrent
-> fibers, the pool amortises re-use, but initial `memory.grow` calls are
-> permanent.
+> **Memory is fixed-size and never reclaimed.** Each concurrent fiber pins
+> `--jspi-stack-pages × 64 KiB` of linear memory for its lifetime. Freed slots
+> return to a JS free-list for re-use, but `memory.grow` is never undone — peak
+> memory is the high-water mark of concurrent fibers for the whole instance
+> lifetime. An application that briefly fans out to many concurrent fibers
+> keeps that memory reserved afterwards.
 
 ### Choosing N
 
@@ -145,9 +158,9 @@ wasm-bindgen target/wasm32-unknown-unknown/release/my_module.wasm \
 | Deep recursion or large stack-allocated buffers | 8–16 |
 
 The default Wasm shadow stack is considerably larger than 64 KiB (typically
-1 MiB). Code migrated from non-JSPI Rust may silently overflow a 1-page fiber
-stack. If you suspect overflow, double `N` and see whether the problem
-disappears.
+1 MiB). Code migrated from non-JSPI Rust may overflow a 1-page fiber stack; the
+guard band turns the common case into a `RangeError`. If you hit one, double
+`N` and see whether the problem disappears.
 
 ### Demonstrating overflow: the `deep_stack` example
 
@@ -156,11 +169,11 @@ frame across two live frames (~96 KiB total) while suspended.
 
 | `--jspi-stack-pages` | Budget  | Outcome |
 |----------------------|---------|---------|
-| 1 (default)          | 64 KiB  | overflow → corrupted return value |
+| 1 (default)          | 64 KiB  | overflow → `RangeError` thrown by the guard band |
 | 2                    | 128 KiB | returns `49152` (correct) |
 
-Build and serve the example, then open `index.html`. Demo 3 reports the actual
-vs expected return value, so you can see the corruption without reading assembly.
+Build and serve the example, then open `index.html`. Demo 3 reports whether the
+call returned the expected value or was rejected by the overflow guard.
 
 ## Full example — OPFS file system
 
@@ -172,10 +185,10 @@ exports, multiple sequential `block_on_promise` calls, cross-context
 
 ## Testing
 
-JSPI exports require a real browser; Node.js does not support
-`WebAssembly.Suspending` / `WebAssembly.promising`. Chrome has JSPI enabled by
-default since v123, and CI runs all three JSPI examples automatically via the
-Playwright test suite.
+JSPI exports require a JSPI-capable runtime. Chrome has JSPI enabled by default
+since **v137** (Node.js needs `--experimental-wasm-jspi` on v24), and CI runs
+all three JSPI examples automatically via the Playwright test suite using a
+Chrome channel new enough to have it on by default.
 
 ### Building the examples
 
@@ -207,5 +220,18 @@ Serve the built output from any static HTTP server (e.g. `npx serve`) over
 ```sh
 cd examples/dist/jspi-opfs
 npx serve .
-# then open http://localhost:3000/index.html in Chrome 123+
+# then open http://localhost:3000/index.html in Chrome 137+
 ```
+
+## Calling a suspending import outside a `jspi` export
+
+A `#[wasm_bindgen(suspending)]` import may only be called while a
+`WebAssembly.promising` frame is on the stack — i.e. transitively from a
+`#[wasm_bindgen(jspi)]` export. Calling one from a plain export (or from the
+module's start path) throws a `SuspendError` at the import boundary at runtime.
+
+This cannot easily be a compile error: "is this function only ever reached from
+a `jspi` export?" is a whole-program reachability property, not a local one. So
+the failure surfaces at runtime as an opaque JS error type that does not point
+at the offending Rust call. If you see a `SuspendError`, check that every path
+reaching the suspending import originates in a `jspi` export.

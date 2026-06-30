@@ -50,8 +50,8 @@ async function run() {
     if (typeof WebAssembly?.Suspending !== "function") {
         err("❌  WebAssembly.Suspending is not available in this browser.");
         err("");
-        err("Required browsers (2025):");
-        err("  • Chrome 117+");
+        err("Required browsers:");
+        err("  • Chrome 137+  (enabled by default; 119–136 behind a flag)");
         err("  • Firefox 150+  →  set javascript.options.wasm_js_promise_integration");
         err("                      to true in about:config");
         err("  • Safari 18.4+");
@@ -97,11 +97,14 @@ async function run() {
     // This demo is intentionally informational, not a pass/fail assertion.
     // It shows the effect of --jspi-stack-pages on a ~96 KiB call tree.
     //
-    // Default build (1 page = 64 KiB): stack overflows → corrupted return value.
+    // Default build (1 page = 64 KiB): the call tree overflows the per-fiber
+    // slot.  The suspending-import wrapper detects this at the fiber's deepest
+    // point (SP descended into the guard band) and throws a `RangeError`
+    // instead of silently corrupting the neighbouring slot.
     // Rebuilt with --jspi-stack-pages 2 (128 KiB): returns 49152 (correct).
     //
-    // To observe the overflow manually:
-    //   correct:  add --jspi-stack-pages 2 to the wasm-bindgen invocation
+    // To get the correct value: add --jspi-stack-pages 2 to the wasm-bindgen
+    // invocation.
     log("Demo 3: shadow-stack depth (deep_stack) — informational …");
     const EXPECTED = 49152; // 48 * 1024 bytes each filled with 1
     let actual;
@@ -111,11 +114,12 @@ async function run() {
             log(`✓  deep_stack() = ${actual} (stack did not overflow — built with ≥2 pages)`);
         } else {
             log(`ℹ  deep_stack() = ${actual}, expected ${EXPECTED}`);
-            log(`   Stack overflow corrupted memory as expected for --jspi-stack-pages 1.`);
             log(`   Rebuild with --jspi-stack-pages 2 to get the correct value.`);
         }
     } catch (e) {
-        log(`ℹ  deep_stack() threw: ${e} (stack overflow, expected with --jspi-stack-pages 1)`);
+        log(`ℹ  deep_stack() threw: ${e}`);
+        log(`   Fiber-stack overflow caught by the guard band (expected with`);
+        log(`   --jspi-stack-pages 1). Rebuild with --jspi-stack-pages 2 to fit.`);
     }
     log("");
 

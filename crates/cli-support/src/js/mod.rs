@@ -412,6 +412,17 @@ impl<'a> Context<'a> {
     /// - `__jspi_sync_sp` — captures the synchronous SP so non-fiber WASM
     ///   calls between suspensions use the correct shadow stack.
     /// - `__jspi_stack_size` — per-fiber stack size in bytes (`jspi_stack_pages * 65536`).
+    /// - `__jspi_guard_size` — sacrificial band at the bottom of each slot.
+    ///   The shadow stack grows *down* from `__jspi_stack + __jspi_stack_size`
+    ///   toward `__jspi_stack`; unlike the main stack (which faults out-of-bounds
+    ///   past address 0) an overflow here grows into live linear memory and would
+    ///   silently corrupt the neighbouring slot/heap.  The suspending-import
+    ///   wrapper checks the SP against `__jspi_active_floor` (`__jspi_stack +
+    ///   __jspi_guard_size`) at the fiber's deepest point and throws a
+    ///   `RangeError` instead, converting silent corruption into a clear error.
+    /// - `__jspi_active_floor` — the floor of the fiber currently being entered,
+    ///   saved/restored by the suspending-import wrapper so it stays correct
+    ///   across interleaved/nested fibers.
     /// - `__jspi_stack_alloc()` / `__jspi_stack_free()` — allocate/free fiber
     ///   stacks via `wasm.memory.grow(N)` + a JS free-list.  Using
     ///   `memory.grow` avoids any dependency on `__wbindgen_malloc`/
@@ -420,12 +431,17 @@ impl<'a> Context<'a> {
     pub(crate) fn expose_jspi_stack_setup(&mut self) {
         let pages = self.config.jspi_stack_pages;
         let stack_size = pages as usize * 65536;
+        // Sacrificial band reserved at the bottom of each fiber slot, capped so
+        // it never swallows more than half of a single-page slot.
+        let guard_size = std::cmp::min(stack_size / 2, 8192);
         self.intrinsic(
             "jspi_sync_sp".into(),
             None,
             Cow::Owned(format!(
                 "let __jspi_sync_sp;\n\
+                 let __jspi_active_floor = 0;\n\
                  const __jspi_stack_size = {stack_size};\n\
+                 const __jspi_guard_size = {guard_size};\n\
                  const __jspi_stack_pool = [];\n\
                  function __jspi_stack_alloc() {{\n    \
                      if (__jspi_stack_pool.length > 0) return __jspi_stack_pool.pop();\n    \
@@ -5583,13 +5599,28 @@ addToLibrary({
                 // The `finally` block executes before the `WebAssembly.Suspending`
                 // mechanism resumes the wasm fiber, guaranteeing the correct SP
                 // is in place when execution continues.
+                //
+                // This is also the fiber's deepest point, so it doubles as the
+                // overflow checkpoint: if the SP has descended into the
+                // sacrificial guard band (`__sp <= __jspi_active_floor`) we
+                // throw a `RangeError` *before* the `await` — it propagates as a
+                // trap so the export's promise rejects, instead of resuming a
+                // fiber that has corrupted its neighbour.  `__jspi_active_floor`
+                // is saved/restored alongside `__sp` so the check stays correct
+                // across interleaved/nested fibers.
                 let import_def = if self.aux.imports_with_suspending.contains(&id) {
                     self.export_stack_pointer_for_jspi()?;
+                    // The wrapper references `__jspi_active_floor`/`__jspi_guard_size`;
+                    // ensure the shadow-stack setup is emitted even if no export
+                    // adapter has been processed yet (idempotent).
+                    self.expose_jspi_stack_setup();
                     ImportDefinition::Expression(format!(
                         "((__inner) => new WebAssembly.Suspending(async function(...args) {{\n\
                              const __sp = wasm.__stack_pointer.value;\n\
+                             const __floor = __jspi_active_floor;\n\
+                             if (__sp <= __floor) throw new RangeError('JSPI fiber stack overflow');\n\
                              try {{ return await __inner(...args); }}\n\
-                             finally {{ wasm.__stack_pointer.value = __sp; }}\n\
+                             finally {{ wasm.__stack_pointer.value = __sp; __jspi_active_floor = __floor; }}\n\
                          }}))(function{code})"
                     ))
                 } else {
