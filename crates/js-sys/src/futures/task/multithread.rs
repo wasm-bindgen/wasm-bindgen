@@ -99,7 +99,11 @@ impl Task {
 
         let closure = {
             let this = Rc::clone(&this);
-            Closure::new(move |_| {
+
+            // `own_assert_unwind_safe` is required because the closure captures
+            // `Rc<Task>`, which isn't `UnwindSafe`. A poll unwinding out of
+            // `run` frees the `Task` via a drop guard to avoid a leak.
+            Closure::own_assert_unwind_safe(move |_| {
                 // The promise resolution acts like a wake, so ensure the state
                 // transitions to AWAKE before entering `run`.
                 this.atomic.wake_by_ref();
@@ -116,13 +120,32 @@ impl Task {
     }
 
     pub(crate) fn run(&self) {
+        // A poll can unwind via either a Rust panic or a foreign (JS)
+        // exception. `catch_unwind` only catches the former, but both run
+        // drops, so a drop guard covers both: if a poll unwinds we drop
+        // `Inner`, releasing the future and breaking the
+        // `Inner -> closure -> Rc<Task>` cycle that would otherwise leak the
+        // `Task`. This covers both the first poll (driven by the queue) and
+        // wakeup polls (driven by the per-task closure). The guard is disarmed
+        // (forgotten) on a normal return.
+        struct ClearOnUnwind<'a>(&'a RefCell<Option<Inner>>);
+        impl Drop for ClearOnUnwind<'_> {
+            fn drop(&mut self) {
+                *self.0.borrow_mut() = None;
+            }
+        }
+        let clear_on_unwind = ClearOnUnwind(&self.inner);
+
         let mut borrow = self.inner.borrow_mut();
 
         // Same as `singlethread.rs`, handle spurious wakeups happening after we
         // finished.
         let inner = match borrow.as_mut() {
             Some(inner) => inner,
-            None => return,
+            None => {
+                core::mem::forget(clear_on_unwind);
+                return;
+            }
         };
 
         loop {
@@ -170,6 +193,8 @@ impl Task {
             }
             break;
         }
+
+        core::mem::forget(clear_on_unwind);
     }
 }
 

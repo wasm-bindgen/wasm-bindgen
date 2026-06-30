@@ -51,6 +51,11 @@
 
 * Relaxed alignment requirement for 8-byte types.
   [#5204](https://github.com/wasm-bindgen/wasm-bindgen/pull/5204)
+* Fixed compilation with `(feature = "std", panic = "unwind", target_feature = "atomics")`
+  and prevented a `Task` leak when a future unwinds out of `poll` (via a Rust
+  panic or a foreign JS exception) in both the single-threaded and
+  multi-threaded executors.
+  [#5214](https://github.com/wasm-bindgen/wasm-bindgen/pull/5214)
 
 * Headless Chrome/Edge tests now surface the WebDriver's own error message when
   session creation fails (e.g. a chromedriver/Chrome version mismatch) instead
