@@ -9,6 +9,12 @@
 
 ### Fixed
 
+### Removed
+
+## [0.2.127](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.126...0.2.127)
+
+### Fixed
+
 * Emscripten output now reaches wasm exports through emscripten's `wasmExports`
   object using bracket (string-literal) access (`wasmExports['__wbindgen_start']`)
   instead of a local `wasm` alias with dot access. `wasmExports['name']` is the
@@ -16,6 +22,7 @@
   and the wasm together, so the glue now survives and stays consistent under
   `-O3`/`-Os` (previously the export names were minified without updating the JS
   call sites, e.g. `__wbindgen_start is not defined`).
+  [#5217](https://github.com/wasm-bindgen/wasm-bindgen/pull/5217)
 
 ### Removed
 
