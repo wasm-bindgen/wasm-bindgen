@@ -18,10 +18,6 @@
   call sites, e.g. `__wbindgen_start is not defined`).
 
 * The emscripten detection marker static is no longer leaked as public API.
-  It is `#[used]` so its custom section survives linking for detection, but that
-  also left it as a stray wasm export that emscripten's `EMSCRIPTEN_KEEPALIVE`
-  heuristic surfaced as public API. `cli-support` now drops the export once it
-  has consumed the section to switch into emscripten mode.
   [#5220](https://github.com/wasm-bindgen/wasm-bindgen/pull/5220)
 
 ### Removed
