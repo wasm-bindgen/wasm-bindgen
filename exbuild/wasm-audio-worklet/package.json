@@ -1,0 +1,18 @@
+{
+  "name": "wasm-audio-worklet",
+  "type": "module",
+  "collaborators": [
+    "The wasm-bindgen Developers"
+  ],
+  "version": "0.0.0",
+  "files": [
+    "wasm_audio_worklet_bg.wasm",
+    "wasm_audio_worklet.js",
+    "wasm_audio_worklet.d.ts"
+  ],
+  "main": "wasm_audio_worklet.js",
+  "types": "wasm_audio_worklet.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
