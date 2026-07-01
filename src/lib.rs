@@ -86,7 +86,7 @@ const _: () = {
     /// * it is not a position-independent executable;
     /// * and it does not call `__wasm_call_ctors`, directly or indirectly, from any
     ///   exported function.
-    #[no_mangle]
+    #[unsafe(export_name = "__wbindgen_skip_interpret_calls")]
     pub extern "C" fn __wbindgen_skip_interpret_calls() {}
 };
 

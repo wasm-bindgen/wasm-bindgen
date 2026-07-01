@@ -95,13 +95,13 @@ let's take a look at that.
 ```rust
 // original input to `#[wasm_bindgen]` omitted ...
 
-#[export_name = "foo_new"]
+#[unsafe(export_name = "foo_new")]
 pub extern "C" fn __wasm_bindgen_generated_Foo_new(arg0: i32) -> u32 {
     let ret = Foo::new(arg0);
     Box::into_raw(Box::new(WasmRefCell::new(ret))) as u32
 }
 
-#[export_name = "foo_get"]
+#[unsafe(export_name = "foo_get")]
 pub extern "C" fn __wasm_bindgen_generated_Foo_get(me: u32) -> i32 {
     let me = me as *mut WasmRefCell<Foo>;
     wasm_bindgen::__rt::assert_not_null(me);
@@ -109,7 +109,7 @@ pub extern "C" fn __wasm_bindgen_generated_Foo_get(me: u32) -> i32 {
     return me.borrow().get();
 }
 
-#[export_name = "foo_set"]
+#[unsafe(export_name = "foo_set")]
 pub extern "C" fn __wasm_bindgen_generated_Foo_set(me: u32, arg1: i32) {
     let me = me as *mut WasmRefCell<Foo>;
     wasm_bindgen::__rt::assert_not_null(me);
@@ -117,7 +117,7 @@ pub extern "C" fn __wasm_bindgen_generated_Foo_set(me: u32, arg1: i32) {
     me.borrow_mut().set(arg1);
 }
 
-#[no_mangle]
+#[unsafe(export_name = "__wbindgen_foo_free")]
 pub unsafe extern "C" fn __wbindgen_foo_free(me: u32) {
     let me = me as *mut WasmRefCell<Foo>;
     wasm_bindgen::__rt::assert_not_null(me);
