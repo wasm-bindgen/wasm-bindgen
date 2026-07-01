@@ -1185,19 +1185,23 @@ fn emit_static_descriptor_entry_static(
     .to_tokens(into);
 }
 
-/// Emit a `DescriptorRecord` static plus its deletable, exported marker
-/// carrier function.
+/// Emit a descriptor as a `#[link_section = "__wasm_bindgen_descriptors"]`
+/// byte array plus an exported anchor function.
 ///
-/// The record (a `#[repr(C)]` static in the data segment) points at the
-/// schema tree `root_expr`. The carrier — an exported `extern "C" fn`
-/// whose only body is a single `__wbindgen_descriptor_marker(&RECORD)`
-/// call — is what `wasm-bindgen-cli` discovers by scanning for marker
-/// calls; it reads the record (kind, name, schema root) and then deletes
-/// the carrier. Exporting the carrier is also what keeps the record
-/// alive through linking and forces wasm-ld to pull the defining archive
-/// `.o`. Because nothing in the *live* shim references the record, the
-/// cli's GC drops the descriptor bytes from the final binary after
-/// ingestion.
+/// The byte array is a self-delimiting entry (see
+/// [`wasm_bindgen::describe::schema`]) built entirely at const-eval time
+/// from the schema tree `root_expr`: it carries the shim `kind`/`name`,
+/// its root node's 128-bit content-hash id, and the pre-order node DAG.
+/// Nodes reference their children — and the entry references its root —
+/// by id only, so the section is free of linker relocations.
+///
+/// The anchor is an exported `extern "C" fn` that returns the address of
+/// the byte array. Exporting it is what forces wasm-ld to pull the
+/// defining archive `.o` (so descriptors from rlib dependencies such as
+/// `web-sys` are included), and the address-of reference keeps the
+/// `#[link_section]` static live. `wasm-bindgen-cli` reads the whole
+/// section up front, then strips these anchors so the walrus GC drops
+/// them; the section itself is removed after ingestion.
 fn emit_descriptor_record(
     wasm_bindgen: &syn::Path,
     shim_name: &str,
@@ -1205,26 +1209,24 @@ fn emit_descriptor_record(
     root_expr: TokenStream,
     attrs: &[syn::Attribute],
 ) -> TokenStream {
-    // The carrier's exported symbol must be globally unique across the
+    // The anchor's exported symbol must be globally unique across the
     // whole linked program. A content-based shim name is intentionally
     // shared (a given JS import dedups to one shim), and a single shim's
     // descriptor can legitimately be emitted in more than one expansion
-    // scope; the previous custom-section `static` tolerated this because
-    // its symbol was Rust-name-mangled (scope + crate disambiguated),
-    // whereas a fixed `#[export_name]` would collide. Mix a crate-salted
+    // scope, so a fixed `#[export_name]` would collide. Mix a crate-salted
     // (`ShortHash` folds in `CARGO_PKG_NAME`/`_VERSION`) per-emission
-    // sequence number into all three generated names so duplicates and
+    // sequence number into the generated names so duplicates and
     // cross-crate shares each get a distinct symbol. The cli recovers the
-    // real shim name from the record's `name` field and dedups there, so
-    // redundant carriers are harmless.
+    // real shim name from the entry's `name` field and dedups there, so
+    // redundant entries are harmless.
     use std::sync::atomic::{AtomicU64, Ordering};
     static DESCRIPTOR_SEQ: AtomicU64 = AtomicU64::new(0);
     let seq = DESCRIPTOR_SEQ.fetch_add(1, Ordering::Relaxed);
     let uniq = ShortHash((shim_name, seq)).to_string();
 
     let static_ident = Ident::new(&format!("__WBG_DESCRIPTOR_{uniq}"), Span::call_site());
-    let carrier_ident = Ident::new(&format!("__wbg_descr_fn_{uniq}"), Span::call_site());
-    let carrier_export = format!("__wbindgen_descr_{uniq}");
+    let anchor_ident = Ident::new(&format!("__wbg_descr_anchor_fn_{uniq}"), Span::call_site());
+    let anchor_export = format!("__wbindgen_descr_anchor_{uniq}");
     let shim_name_bytes = syn::LitByteStr::new(shim_name.as_bytes(), Span::call_site());
     let shim_name_len = shim_name.len();
 
@@ -1234,32 +1236,30 @@ fn emit_descriptor_record(
         #[automatically_derived]
         #[doc(hidden)]
         #[allow(non_upper_case_globals)]
-        static #static_ident: #wasm_bindgen::describe::DescriptorRecord =
-            #wasm_bindgen::describe::DescriptorRecord {
-                version: #wasm_bindgen::__rt::DESCRIPTOR_FORMAT_VERSION,
-                kind: #kind,
-                name: #shim_name_bytes.as_ptr(),
-                name_len: #shim_name_len,
-                root: #root_expr,
-                to_root: ::core::ptr::null(),
-            };
+        #[link_section = "__wasm_bindgen_descriptors"]
+        #[used]
+        static #static_ident: [u8; {
+            const __ROOT: &#wasm_bindgen::describe::Schema = #root_expr;
+            #wasm_bindgen::describe::schema::entry_byte_len(#shim_name_len, __ROOT)
+        }] = {
+            const __ROOT: &#wasm_bindgen::describe::Schema = #root_expr;
+            const __LEN: usize =
+                #wasm_bindgen::describe::schema::entry_byte_len(#shim_name_len, __ROOT);
+            #wasm_bindgen::describe::schema::pack_entry::<__LEN>(
+                #shim_name_bytes,
+                #kind,
+                __ROOT,
+            )
+        };
 
         #[cfg(target_family = "wasm")]
         #(#attrs)*
         #[automatically_derived]
         #[doc(hidden)]
         #[allow(non_snake_case)]
-        #[export_name = #carrier_export]
-        pub extern "C" fn #carrier_ident() {
-            #[link(wasm_import_module = "__wbindgen_placeholder__")]
-            extern "C" {
-                fn __wbindgen_descriptor_marker(record: *const ());
-            }
-            unsafe {
-                __wbindgen_descriptor_marker(
-                    &#static_ident as *const _ as *const (),
-                );
-            }
+        #[export_name = #anchor_export]
+        pub extern "C" fn #anchor_ident() -> *const u8 {
+            &#static_ident as *const _ as *const u8
         }
     }
 }
@@ -1422,21 +1422,13 @@ fn schema_expr_for_raw_closure(
         ret_ty.to_token_stream(),
     );
     let hash = ShortHash(&sig_repr).to_string();
-    // Per-monomorphisation dedup key, Rust-ident seed, and clean export
-    // name for the invoke wrapper. The export name is only cosmetic (it
-    // gives the cli-generated JS shim a tidy `__wbg_invoke_<hash>` name and
-    // is stripped after ingestion); discovery is by the descriptor's
-    // relocated `Schema::invoke` function-table index, not by name. The
-    // hash is crate-salted via `ShortHash`, so the export name is unique
-    // across crates.
+    // Per-monomorphisation dedup key and clean export name for the invoke
+    // wrapper. Unlike the previous data-segment transport, the export
+    // name is now load-bearing: the descriptor's closure node stores this
+    // string in `Schema::invoke_name`, and the cli resolves it to a
+    // function-table slot (see `build_symbol_table`). The hash is
+    // crate-salted via `ShortHash`, so the name is unique across crates.
     let wrapper_key = format!("__wbg_invoke_{hash}");
-    let wrapper_ident = Ident::new(
-        &format!(
-            "__wbg_invoke_wrap_{}",
-            mangle_export_name_for_ident(&wrapper_key)
-        ),
-        Span::call_site(),
-    );
 
     let arg_exprs: Vec<TokenStream> = arg_tys
         .iter()
@@ -1459,17 +1451,18 @@ fn schema_expr_for_raw_closure(
     };
 
     // A `REF`/`REFMUT` node wrapping a closure `FUNCTION` node. The
-    // `FUNCTION` node carries the invoke shim's address in
-    // `Schema::invoke`; the cli reads the linker-relocated
-    // function-table index as the closure's `shim_idx`. Scalars stay in
-    // `words`, sub-descriptors in `children`, and the relocated pointer
-    // lives out-of-band — so structure and relocations never alias.
+    // `FUNCTION` node records the invoke shim's export **name** in
+    // `Schema::invoke_name`; the cli resolves that name to a
+    // function-table slot and uses it as the closure's `shim_idx`.
+    // Because the reference is a name (serialised into the
+    // `__wasm_bindgen_descriptors` section) rather than a relocated
+    // pointer, the section stays relocation-free.
     quote! {
         & #wasm_bindgen::describe::Schema::node(
             #wasm_bindgen::describe::SchemaTag::Wrap,
             &[#ref_opcode],
             &[
-                & #wasm_bindgen::describe::Schema::closure_node(
+                & #wasm_bindgen::describe::Schema::closure_node_named(
                     #wasm_bindgen::describe::SchemaTag::Wrap,
                     &[#wasm_bindgen::describe::FUNCTION, 0u32, #nargs],
                     &[
@@ -1477,7 +1470,7 @@ fn schema_expr_for_raw_closure(
                         #ret_expr,
                         #ret_expr,
                     ],
-                    #wrapper_ident as *const (),
+                    #wrapper_key,
                 ),
             ],
         )
@@ -1689,16 +1682,15 @@ fn mangle_export_name_for_ident(name: &str) -> String {
     out
 }
 
-/// Liveness/archive-pull for a descriptor is now provided by its
-/// exported marker carrier function (see [`emit_descriptor_record`]),
-/// so no in-shim anchor is emitted.
+/// Liveness/archive-pull for a descriptor is provided by its exported
+/// descriptor anchor function (see [`emit_descriptor_record`]), so no
+/// in-shim anchor is emitted.
 ///
-/// This intentionally expands to nothing. A `black_box(&RECORD)` in a
-/// *live* shim body would be counter-productive: it would pin the
-/// `DescriptorRecord` (and its `Schema` tree) into the final binary
-/// even after the cli has ingested and deleted the carrier, leaking the
-/// descriptor bytes the carrier exists to keep out of runtime. The call
-/// sites are retained as no-ops to keep the surrounding codegen stable.
+/// This intentionally expands to nothing. Pinning the descriptor from a
+/// *live* shim body would be counter-productive: it would keep the
+/// `#[link_section]` bytes referenced after the cli has ingested and
+/// removed the section. The call sites are retained as no-ops to keep the
+/// surrounding codegen stable.
 fn descriptor_anchor(_shim_name: &str) -> TokenStream {
     quote! {}
 }

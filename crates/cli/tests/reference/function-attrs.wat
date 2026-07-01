@@ -43,7 +43,7 @@
   (import "./reference_test_bg.js" "__wbindgen_number_new" (func (;20;) (type 6)))
   (import "./reference_test_bg.js" "__wbindgen_string_new" (func (;21;) (type 14)))
   (table $__wbindgen_externrefs (;0;) 1024 externref)
-  (memory (;0;) 17)
+  (memory (;0;) 26)
   (export "memory" (memory 0))
   (export "__wbg_holdsnumber_free" (func $__wbg_holdsnumber_free))
   (export "fn_with_attr" (func $"fn_with_attr externref shim"))

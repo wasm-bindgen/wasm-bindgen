@@ -13,7 +13,7 @@
   (import "./reference_test_bg.js" "__wbg_new_26880d0ec07a54ec" (func (;2;) (type 2)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;3;) (type 8)))
   (table $__wbindgen_externrefs (;0;) 1024 externref)
-  (memory (;0;) 17)
+  (memory (;0;) 27)
   (export "memory" (memory 0))
   (export "get_media_source" (func $get_media_source))
   (export "get_url" (func $"get_url externref shim"))

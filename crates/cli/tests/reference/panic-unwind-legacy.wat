@@ -12,7 +12,7 @@
   (import "./reference_test_bg.js" "__wbindgen_string_new" (func (;4;) (type 2)))
   (table (;0;) 0 funcref)
   (table $__wbindgen_externrefs (;1;) 1024 externref)
-  (memory (;0;) 17)
+  (memory (;0;) 18)
   (export "memory" (memory 0))
   (export "maybe_panic" (func $maybe_panic))
   (export "__wbindgen_export" (table 0))

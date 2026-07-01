@@ -75,7 +75,7 @@
   (import "./reference_test_bg.js" "__wbindgen_number_new" (func (;45;) (type 9)))
   (import "./reference_test_bg.js" "__wbindgen_string_new" (func (;46;) (type 18)))
   (table $__wbindgen_externrefs (;0;) 1024 externref)
-  (memory (;0;) 18)
+  (memory (;0;) 27)
   (export "memory" (memory 0))
   (export "__wbgt__wasm_export_colon_reftest::colon_test" (func $__wbgt__wasm_export_colon_reftest::colon_test))
   (export "__wbg_wasmbindgentestcontext_free" (func $__wbg_wasmbindgentestcontext_free))

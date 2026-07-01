@@ -188,3 +188,70 @@ fn nested_wrapper_describe_walks_preorder() {
         [RESULT, REFMUT, I32]
     );
 }
+
+// --- Content-addressed node ids (the `__wasm_bindgen_descriptors`
+// --- section identifies and cross-references nodes by these). ---
+
+#[test]
+fn structurally_identical_nodes_share_an_id() {
+    // Two independently-built trees with the same structure must hash to
+    // the same id — this is what lets duplicate emissions (across shims
+    // and across crates) dedup and cross-reference by id.
+    const A: &Schema = &Schema::node(SchemaTag::Wrap, &[OPTIONAL], &[&Schema::leaf(&[I32])]);
+    const B: &Schema = &Schema::node(SchemaTag::Wrap, &[OPTIONAL], &[&Schema::leaf(&[I32])]);
+    assert_eq!(A.id(), B.id());
+    // And it matches the real `WasmDescribe` impl for the same type.
+    assert_eq!(A.id(), <Option<i32> as WasmDescribe>::SCHEMA.id());
+}
+
+#[test]
+fn different_structure_yields_different_id() {
+    const OPT_I32: &Schema = <Option<i32> as WasmDescribe>::SCHEMA;
+    const OPT_U32: &Schema = <Option<u32> as WasmDescribe>::SCHEMA;
+    const REF_I32: &Schema = <&i32 as WasmDescribe>::SCHEMA;
+    assert_ne!(OPT_I32.id(), OPT_U32.id());
+    assert_ne!(OPT_I32.id(), REF_I32.id());
+    // A wrapper's id differs from its inner type's id.
+    assert_ne!(OPT_I32.id(), <i32 as WasmDescribe>::SCHEMA.id());
+}
+
+#[test]
+fn with_invoke_preserves_id_but_named_closure_differs() {
+    const I: &Schema = &Schema::leaf(&[I32]);
+    let base = Schema::node(SchemaTag::Wrap, &[FUNCTION, 0, 1], &[I, I, I]);
+    let leaked: &'static Schema = Box::leak(Box::new(base));
+
+    // `with_invoke` (cast path, data-segment; id unused) copies structure
+    // verbatim including the id.
+    let with = Schema::with_invoke(leaked, 0x1234 as *const ());
+    assert_eq!(leaked.id(), with.id());
+
+    // A named closure node (section path) MUST differ from the otherwise
+    // identical plain-function node, or the two would dedup by id in the
+    // section and the closure's invoke shim would be lost.
+    let named = Schema::closure_node_named(SchemaTag::Wrap, &[FUNCTION, 0, 1], &[I, I, I], "shim");
+    assert_ne!(leaked.id(), named.id());
+
+    // Different invoke shims yield different ids.
+    let named2 = Schema::closure_node_named(SchemaTag::Wrap, &[FUNCTION, 0, 1], &[I, I, I], "shim2");
+    assert_ne!(named.id(), named2.id());
+}
+
+#[test]
+fn pack_entry_size_matches_entry_byte_len() {
+    // The macro sizes the `#[link_section]` array with `entry_byte_len`
+    // and fills it with `pack_entry`; a mismatch panics inside
+    // `pack_entry`. Exercise a representative tree end to end here.
+    use wasm_bindgen::describe::schema;
+    const ROOT: &Schema = <Option<i32> as WasmDescribe>::SCHEMA;
+    const NAME: &[u8] = b"demo_shim";
+    const LEN: usize = schema::entry_byte_len(NAME.len(), ROOT);
+    let bytes = schema::pack_entry::<LEN>(NAME, 0, ROOT);
+    assert_eq!(bytes.len(), LEN);
+    // version byte, then body_len == LEN - 5.
+    assert_eq!(bytes[0] as usize, 1);
+    let body_len = u32::from_le_bytes([bytes[1], bytes[2], bytes[3], bytes[4]]) as usize;
+    assert_eq!(body_len, LEN - 5);
+    // node_count: OPTIONAL wrapper + I32 leaf == 2.
+    assert_eq!(schema::node_count(ROOT), 2);
+}

@@ -255,6 +255,55 @@ pub fn get_function_table_entry(module: &Module, idx: u32) -> Result<FunctionId>
     bail!("failed to find `{idx}` in function table");
 }
 
+/// Find the main-function-table slot index that references `target`.
+///
+/// The inverse of [`get_function_table_entry`]: used to resolve a
+/// closure invoke shim (recovered by export name from the
+/// `__wasm_bindgen_descriptors` section) to the function-table index a
+/// closure descriptor needs as its `shim_idx`.
+pub fn function_table_slot_of(module: &Module, target: FunctionId) -> Result<u32> {
+    let table = module
+        .tables
+        .main_function_table()?
+        .ok_or_else(|| anyhow!("no function table found in module"))?;
+    let table = module.tables.get(table);
+    for &segment_id in table.elem_segments.iter() {
+        let segment = module.elements.get(segment_id);
+        let base = match &segment.kind {
+            walrus::ElementKind::Active { offset, .. } => match evaluate_const_expr(offset, module)
+            {
+                Some(Value::I32(n)) => n as u32,
+                Some(Value::I64(n)) => match u32::try_from(n) {
+                    Ok(n) => n,
+                    Err(_) => continue,
+                },
+                None if matches!(
+                    offset,
+                    ConstExpr::Global(g) if matches!(
+                        module.globals.get(*g).kind,
+                        GlobalKind::Import(_)
+                    )
+                ) =>
+                {
+                    0
+                }
+                _ => continue,
+            },
+            _ => continue,
+        };
+        let position = match &segment.items {
+            ElementItems::Functions(items) => items.iter().position(|f| *f == target),
+            ElementItems::Expressions(_, items) => items
+                .iter()
+                .position(|expr| matches!(expr, ConstExpr::RefFunc(f) if *f == target)),
+        };
+        if let Some(local_idx) = position {
+            return Ok(base + local_idx as u32);
+        }
+    }
+    bail!("function {target:?} is not present in any function-table element segment");
+}
+
 pub fn get_start(module: &mut Module) -> Result<FunctionId, Option<FunctionId>> {
     match module.start {
         Some(start) => match module.funcs.get_mut(start).kind {

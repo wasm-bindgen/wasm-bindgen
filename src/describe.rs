@@ -44,15 +44,28 @@ pub use wasm_bindgen_shared::tys::*;
 /// `static`, so this stays valid on old compilers (it keeps the MSRV
 /// low — `const_refs_to_static` was unstable < 1.83).
 ///
-/// This reference tree is the **sole canonical descriptor ABI**: the
-/// `#[wasm_bindgen]` macro and runtime emit a [`DescriptorRecord`] (in
-/// the data segment) per shim/cast pointing at its `Schema` root, and
-/// `wasm-bindgen-cli` walks the tree structurally — there is no flat
-/// `u32` opcode stream and no custom section. Scalars (opcodes, lengths,
-/// holes, `nargs`) live in a node's [`Schema::words`]; sub-descriptors
-/// live in its [`Schema::children`]. Closure invoke shim addresses are
-/// carried out-of-band in [`Schema::invoke`] (see below), never inside
-/// the `words` run, so structure and relocated pointers never alias.
+/// This reference tree is the canonical descriptor representation, but it
+/// reaches `wasm-bindgen-cli` through two transports:
+///
+/// * **Macro-emitted descriptors** (regular shims, imported statics,
+///   struct-field getters, raw `&dyn Fn` args) are serialised — at
+///   const-eval time, by the [`schema`] module — into the
+///   `__wasm_bindgen_descriptors` custom section
+///   ([`wasm_bindgen_shared::DESCRIPTORS_SECTION_NAME`]). There each node
+///   is identified by a 128-bit content hash ([`Schema::id`]) and
+///   references its children — and its closure invoke shim
+///   ([`Schema::invoke_name`]) — by id/name, so the section is free of
+///   linker relocations.
+/// * **Cast descriptors** (`wbg_cast::<From, To>`) cannot be emitted into
+///   a `#[link_section]` from generic runtime code, so they keep the
+///   data-segment [`DescriptorRecord`] transport and `wasm-bindgen-cli`
+///   walks their `Schema` trees by relocated pointer.
+///
+/// Scalars (opcodes, lengths, holes, `nargs`) live in a node's
+/// [`Schema::words`]; sub-descriptors live in its [`Schema::children`].
+/// The cast transport carries the closure invoke shim address out-of-band
+/// in [`Schema::invoke`], never inside the `words` run, so structure and
+/// relocated pointers never alias.
 #[repr(C)]
 pub struct Schema {
     /// Structural tag (`SchemaTag::Leaf` / `Wrap`).
@@ -75,7 +88,29 @@ pub struct Schema {
     /// pointer cannot live in the plain `u32` data stream, and because
     /// const-eval on the MSRV cannot reconstruct a contiguous nested
     /// record by value.
+    ///
+    /// This field is used only by the **cast** transport, whose records
+    /// still live in the data segment (a generic `wbg_cast::<From, To>`
+    /// cannot emit `#[link_section]` bytes). Section-emitted descriptors
+    /// reference their closure invoke shim by name via [`Schema::invoke_name`].
     invoke: *const (),
+    // --- fields below are appended after `invoke` on purpose ---
+    //
+    // The CLI's `#[repr(C)]` cast reader only ever reads the six fields
+    // above (`tag` .. `invoke`) out of the data segment, so appending
+    // more fields — even a 16-byte-aligned `u128` — leaves those offsets
+    // untouched. These fields are consumed at const-eval time by the
+    // section serialiser below, never by memory-layout parsing.
+    /// 128-bit content hash of this node (`H(tag, words, child ids)`),
+    /// the node's identity in the `__wasm_bindgen_descriptors` section.
+    /// Excludes [`Schema::invoke`] / [`Schema::invoke_name`] so
+    /// structurally-identical types share an id.
+    id: u128,
+    /// Export name of this node's closure invoke shim, or `""` for a
+    /// non-closure node. The section stores this string; the CLI resolves
+    /// it to a function-table slot (no relocation needed, unlike the
+    /// data-segment [`Schema::invoke`] pointer).
+    invoke_name: &'static str,
 }
 
 // SAFETY: a `Schema` is only ever constructed as an immutable, promoted
@@ -108,6 +143,8 @@ impl Schema {
             children: children.as_ptr(),
             children_len: children.len(),
             invoke: core::ptr::null(),
+            id: compute_id(tag, words, children, ""),
+            invoke_name: "",
         }
     }
 
@@ -128,6 +165,32 @@ impl Schema {
             children: children.as_ptr(),
             children_len: children.len(),
             invoke,
+            id: compute_id(tag, words, children, ""),
+            invoke_name: "",
+        }
+    }
+
+    /// Like [`Schema::closure_node`], but records the invoke shim's
+    /// export **name** instead of a relocated address. Used by the
+    /// section transport for raw `&dyn Fn` / `&mut dyn FnMut` arguments:
+    /// the macro emits and exports an `__wbg_invoke_<hash>` wrapper and
+    /// stores its name here, which the CLI resolves to a function-table
+    /// slot without any linker relocation.
+    pub const fn closure_node_named(
+        tag: SchemaTag,
+        words: &'static [u32],
+        children: &'static [&'static Schema],
+        invoke_name: &'static str,
+    ) -> Schema {
+        Schema {
+            tag,
+            words: words.as_ptr(),
+            words_len: words.len(),
+            children: children.as_ptr(),
+            children_len: children.len(),
+            invoke: core::ptr::null(),
+            id: compute_id(tag, words, children, invoke_name),
+            invoke_name,
         }
     }
 
@@ -146,6 +209,10 @@ impl Schema {
             children: base.children,
             children_len: base.children_len,
             invoke,
+            // The content id is structural, so it is preserved verbatim:
+            // attaching a different invoke shim does not change the type.
+            id: base.id,
+            invoke_name: base.invoke_name,
         }
     }
 
@@ -179,6 +246,259 @@ impl Schema {
             // `<[_]>::as_ptr`).
             unsafe { core::slice::from_raw_parts(self.children, self.children_len) }
         }
+    }
+
+    /// This node's 128-bit content-hash id — its identity in the
+    /// `__wasm_bindgen_descriptors` section.
+    pub const fn id(&self) -> u128 {
+        self.id
+    }
+
+    /// This node's closure invoke shim export name, or `""` if it is not
+    /// a section-emitted closure node.
+    pub const fn invoke_name(&self) -> &'static str {
+        self.invoke_name
+    }
+}
+
+/// Compute a node's 128-bit content-hash id from its structural content
+/// (tag, opcode words, its children's already-computed ids) plus its
+/// closure invoke reference, using the shared FNV-1a-128 primitives so
+/// producer and consumer agree.
+///
+/// The invoke name is folded in so a closure-bearing `FUNCTION` node is
+/// never conflated with a structurally-identical plain-function node
+/// (which carries no invoke): e.g. the `FUNCTION` node for `&dyn
+/// Fn(u32, u32)` must not dedup against the top-level node for
+/// `fn(u32, u32)`, or the closure's `shim_idx` would be lost when the
+/// consumer unions nodes by id. It also keeps distinct invoke shims
+/// distinct.
+const fn compute_id(
+    tag: SchemaTag,
+    words: &[u32],
+    children: &[&'static Schema],
+    invoke_name: &str,
+) -> u128 {
+    use wasm_bindgen_shared::descriptor_hash as h;
+    let mut hash = h::init();
+    hash = h::update_u32(hash, tag as u32);
+    hash = h::update_u32(hash, words.len() as u32);
+    let mut i = 0;
+    while i < words.len() {
+        hash = h::update_u32(hash, words[i]);
+        i += 1;
+    }
+    hash = h::update_u32(hash, children.len() as u32);
+    let mut j = 0;
+    while j < children.len() {
+        hash = h::update_u128(hash, children[j].id);
+        j += 1;
+    }
+    hash = h::update_bytes(hash, invoke_name.as_bytes());
+    hash
+}
+
+/// Const-fn serialisation of a schema tree into a
+/// `__wasm_bindgen_descriptors` section entry.
+///
+/// The `#[wasm_bindgen]` macro emits one `#[link_section]` byte array per
+/// descriptor by calling [`pack_entry`] (sized via [`entry_byte_len`]) at
+/// const-eval time. Every reachable node is written pre-order (no
+/// in-entry dedup — the consumer unions all nodes across all entries into
+/// one `id -> node` map, so duplicates are harmless and collapse for
+/// free). Children and roots are referenced only by 128-bit id, so the
+/// section carries no linker relocations.
+///
+/// ## Wire format
+///
+/// One entry (`#[link_section]` static), little-endian throughout:
+///
+/// ```text
+/// u8        format_version
+/// u32       body_len            (bytes after this field; lets an older
+///                                CLI skip an unknown-version entry)
+/// -- body --
+/// u8        kind                (REGULAR / STATIC)
+/// u32       name_len
+/// [u8]      name                (shim name, UTF-8)
+/// u128      root_id
+/// u32       node_count
+/// node_count x Node:
+///   u128    id
+///   u32     n_words
+///   [u32]   words
+///   u32     n_children
+///   [u128]  child_ids
+///   u32     invoke_name_len
+///   [u8]    invoke_name         (closure invoke shim export name; empty
+///                                for the overwhelmingly common case)
+/// ```
+pub mod schema {
+    use super::Schema;
+    use wasm_bindgen_shared::DESCRIPTOR_FORMAT_VERSION;
+
+    /// Number of nodes written for `s` (pre-order, no dedup).
+    pub const fn node_count(s: &Schema) -> usize {
+        let mut count = 1;
+        let kids = s.children();
+        let mut i = 0;
+        while i < kids.len() {
+            count += node_count(kids[i]);
+            i += 1;
+        }
+        count
+    }
+
+    /// Bytes occupied by a single node record.
+    const fn single_node_byte_len(s: &Schema) -> usize {
+        16 // id
+            + 4 // n_words
+            + 4 * s.words().len()
+            + 4 // n_children
+            + 16 * s.children().len()
+            + 4 // invoke_name_len
+            + s.invoke_name().len()
+    }
+
+    /// Bytes occupied by `s` and all its descendants (pre-order).
+    const fn nodes_byte_len(s: &Schema) -> usize {
+        let mut total = single_node_byte_len(s);
+        let kids = s.children();
+        let mut i = 0;
+        while i < kids.len() {
+            total += nodes_byte_len(kids[i]);
+            i += 1;
+        }
+        total
+    }
+
+    /// Total byte length of an entry for a shim `name` of `name_len`
+    /// bytes whose descriptor root is `root`. The macro passes the result
+    /// as the `[u8; N]` array length at the emission site.
+    pub const fn entry_byte_len(name_len: usize, root: &Schema) -> usize {
+        1  // format_version
+            + 4  // body_len
+            + 1  // kind
+            + 4  // name_len
+            + name_len
+            + 16 // root_id
+            + 4  // node_count
+            + nodes_byte_len(root)
+    }
+
+    const fn write_u8<const B: usize>(mut buf: [u8; B], idx: usize, v: u8) -> ([u8; B], usize) {
+        buf[idx] = v;
+        (buf, idx + 1)
+    }
+
+    const fn write_u32<const B: usize>(
+        mut buf: [u8; B],
+        mut idx: usize,
+        v: u32,
+    ) -> ([u8; B], usize) {
+        let bytes = v.to_le_bytes();
+        let mut i = 0;
+        while i < bytes.len() {
+            buf[idx] = bytes[i];
+            idx += 1;
+            i += 1;
+        }
+        (buf, idx)
+    }
+
+    const fn write_u128<const B: usize>(
+        mut buf: [u8; B],
+        mut idx: usize,
+        v: u128,
+    ) -> ([u8; B], usize) {
+        let bytes = v.to_le_bytes();
+        let mut i = 0;
+        while i < bytes.len() {
+            buf[idx] = bytes[i];
+            idx += 1;
+            i += 1;
+        }
+        (buf, idx)
+    }
+
+    const fn write_bytes<const B: usize>(
+        mut buf: [u8; B],
+        mut idx: usize,
+        data: &[u8],
+    ) -> ([u8; B], usize) {
+        let mut i = 0;
+        while i < data.len() {
+            buf[idx] = data[i];
+            idx += 1;
+            i += 1;
+        }
+        (buf, idx)
+    }
+
+    /// Write one node record (no recursion).
+    const fn write_single_node<const B: usize>(
+        buf: [u8; B],
+        idx: usize,
+        s: &Schema,
+    ) -> ([u8; B], usize) {
+        let (buf, idx) = write_u128(buf, idx, s.id());
+        let words = s.words();
+        let (mut buf, mut idx) = write_u32(buf, idx, words.len() as u32);
+        let mut i = 0;
+        while i < words.len() {
+            let (b, n) = write_u32(buf, idx, words[i]);
+            buf = b;
+            idx = n;
+            i += 1;
+        }
+        let kids = s.children();
+        let (mut buf, mut idx) = write_u32(buf, idx, kids.len() as u32);
+        let mut k = 0;
+        while k < kids.len() {
+            let (b, n) = write_u128(buf, idx, kids[k].id());
+            buf = b;
+            idx = n;
+            k += 1;
+        }
+        let inv = s.invoke_name().as_bytes();
+        let (buf, idx) = write_u32(buf, idx, inv.len() as u32);
+        write_bytes(buf, idx, inv)
+    }
+
+    /// Write `s` and all descendants pre-order.
+    const fn write_nodes<const B: usize>(
+        buf: [u8; B],
+        idx: usize,
+        s: &Schema,
+    ) -> ([u8; B], usize) {
+        let (mut buf, mut idx) = write_single_node(buf, idx, s);
+        let kids = s.children();
+        let mut i = 0;
+        while i < kids.len() {
+            let (b, n) = write_nodes(buf, idx, kids[i]);
+            buf = b;
+            idx = n;
+            i += 1;
+        }
+        (buf, idx)
+    }
+
+    /// Pack a full section entry into a `[u8; B]`. `B` must equal
+    /// [`entry_byte_len`]`(name.len(), root)`; the macro guarantees this
+    /// at the call site (a mismatch fails the trailing `assert!`).
+    pub const fn pack_entry<const B: usize>(name: &[u8], kind: u32, root: &Schema) -> [u8; B] {
+        let buf = [0u8; B];
+        let (buf, idx) = write_u8(buf, 0, DESCRIPTOR_FORMAT_VERSION as u8);
+        // body_len = everything after the 5-byte (version + len) header.
+        let (buf, idx) = write_u32(buf, idx, (B - 5) as u32);
+        let (buf, idx) = write_u8(buf, idx, kind as u8);
+        let (buf, idx) = write_u32(buf, idx, name.len() as u32);
+        let (buf, idx) = write_bytes(buf, idx, name);
+        let (buf, idx) = write_u128(buf, idx, root.id());
+        let (buf, idx) = write_u32(buf, idx, node_count(root) as u32);
+        let (buf, idx) = write_nodes(buf, idx, root);
+        assert!(idx == B, "pack_entry: computed size does not match B");
+        buf
     }
 }
 

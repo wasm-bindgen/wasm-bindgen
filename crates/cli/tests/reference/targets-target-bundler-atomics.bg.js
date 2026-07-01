@@ -24,7 +24,7 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 3, false);
 }
 
-export const memory = new WebAssembly.Memory({initial:18,maximum:16384,shared:true});
+export const memory = new WebAssembly.Memory({initial:19,maximum:16384,shared:true});
 function getStringFromWasm0(ptr, len) {
     return decodeText(ptr >>> 0, len);
 }

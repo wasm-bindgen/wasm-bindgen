@@ -8,7 +8,7 @@
   (import "./reference_test_bg.js" "__wbg___wbindgen_throw_ea4887a5f8f9a9db" (func (;0;) (type 2)))
   (import "./reference_test_bg.js" "__wbg_random_6e647071acda68e7" (func (;1;) (type 4)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;2;) (type 5)))
-  (import "./reference_test_bg.js" "memory" (memory (;0;) 18 16384 shared))
+  (import "./reference_test_bg.js" "memory" (memory (;0;) 19 16384 shared))
   (table $__wbindgen_externrefs (;0;) 1024 externref)
   (export "add_that_might_fail" (func $add_that_might_fail))
   (export "memory" (memory 0))

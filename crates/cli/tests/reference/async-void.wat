@@ -37,7 +37,7 @@
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;18;) (type 16)))
   (import "./reference_test_bg.js" "__wbindgen_string_new" (func (;19;) (type 10)))
   (table $__wbindgen_externrefs (;0;) 1024 externref)
-  (memory (;0;) 17)
+  (memory (;0;) 26)
   (export "memory" (memory 0))
   (export "foo" (func $"foo externref shim"))
   (export "wasm_bindgen__convert__closures_____invoke__h0000000000000001" (func $"wasm_bindgen::convert::closures::_::invoke::h0000000000000001 externref shim multivalue shim"))

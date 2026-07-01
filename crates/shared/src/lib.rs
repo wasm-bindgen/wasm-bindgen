@@ -5,27 +5,49 @@ extern crate alloc;
 
 use alloc::string::{String, ToString};
 
+pub mod descriptor_hash;
 pub mod identifier;
 #[cfg(test)]
 mod schema_hash_approval;
 pub mod tys;
+
+/// Name of the custom section that carries the content-addressed
+/// descriptor node DAG.
+///
+/// The `#[wasm_bindgen]` macro serialises each regular/static/import
+/// descriptor's schema tree into this section as a set of **nodes**, each
+/// identified by a 128-bit content hash (see [`descriptor_hash`]). Nodes
+/// reference their children by id, and each descriptor entry references
+/// its root node by id — so nothing in the section relies on linker
+/// relocations or absolute data-segment addresses. `wasm-bindgen-cli`
+/// reads the section, builds an `id -> node` map, and resolves each
+/// descriptor structurally.
+///
+/// Cast descriptors (`wbg_cast::<From, To>`) cannot be emitted here
+/// because they are produced by generic runtime code and Rust cannot
+/// place per-monomorphisation bytes into a named `#[link_section]`; those
+/// keep using the data-segment `DescriptorRecord` transport.
+pub const DESCRIPTORS_SECTION_NAME: &str = "__wasm_bindgen_descriptors";
 
 // This gets changed whenever our schema changes.
 // At this time versions of wasm-bindgen and wasm-bindgen-cli are required to have the exact same
 // SCHEMA_VERSION in order to work together.
 pub const SCHEMA_VERSION: &str = "0.2.122";
 
-/// Name of the marker import that every descriptor carrier function (and
-/// every `wbg_cast` trampoline) calls exactly once with the address of a
-/// `DescriptorRecord` in the data segment.
+/// Name of the marker import that every `wbg_cast` trampoline calls
+/// exactly once with the address of a `DescriptorRecord` in the data
+/// segment.
 ///
-/// `wasm-bindgen-cli-support` discovers descriptors by scanning function
-/// bodies for calls to this import, reading the record-pointer operand,
-/// and walking the referenced `Schema` tree(s) structurally out of the
-/// data segment. The reference tree is the sole canonical descriptor ABI
-/// — there is no custom section and no flat opcode stream. The CLI never
-/// executes these calls: carrier functions are deleted after ingestion
-/// and cast trampolines are replaced by synthesised JS-adapter imports.
+/// This is the **cast** transport only. Regular/static/import descriptors
+/// travel through the [`DESCRIPTORS_SECTION_NAME`] custom section;
+/// `wbg_cast::<From, To>` cannot emit `#[link_section]` bytes from generic
+/// runtime code, so it keeps the data-segment record + marker mechanism.
+///
+/// `wasm-bindgen-cli-support` recovers casts by scanning function bodies
+/// for calls to this import, reading the record-pointer operand, and
+/// walking the referenced `Schema` tree(s) structurally out of the data
+/// segment. The CLI never executes these calls: cast trampolines are
+/// replaced by synthesised JS-adapter imports.
 pub const DESCRIPTOR_MARKER_NAME: &str = "__wbindgen_descriptor_marker";
 
 /// Current `DescriptorRecord` format version (the value emitted into
