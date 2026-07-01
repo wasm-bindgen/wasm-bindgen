@@ -76,16 +76,31 @@ impl<T: ?Sized> MaybeUnwindSafe for T {}
 //     )
 // )]
 pub unsafe trait ErasableGeneric {
-    /// The singular concrete type that all generic variants can be transmuted on
-    type Repr: 'static;
+    /// The singular concrete type that all generic variants can be transmuted on.
+    ///
+    /// For reference types this deliberately carries the borrow lifetime (rather
+    /// than erasing it to `'static`). The lifetime-faithful repr is what makes
+    /// [`Upcast::upcast`](crate::convert::Upcast::upcast) and
+    /// [`upcast_into`](crate::convert::Upcast::upcast_into) sound: the
+    /// `Repr`-equality bound then rejects upcasts that would launder a
+    /// short-lived borrow into a longer one. The `'static` erasure that the JS
+    /// ABI boundary relies on (where borrows are only ever call-scoped) is
+    /// instead performed explicitly via an `unsafe` cast in codegen.
+    type Repr;
 }
 
-unsafe impl<T: ErasableGeneric> ErasableGeneric for &mut T {
-    type Repr = &'static mut T::Repr;
+unsafe impl<'b, T: ErasableGeneric> ErasableGeneric for &'b mut T
+where
+    <T as ErasableGeneric>::Repr: 'b,
+{
+    type Repr = &'b mut T::Repr;
 }
 
-unsafe impl<T: ErasableGeneric> ErasableGeneric for &T {
-    type Repr = &'static T::Repr;
+unsafe impl<'b, T: ErasableGeneric> ErasableGeneric for &'b T
+where
+    <T as ErasableGeneric>::Repr: 'b,
+{
+    type Repr = &'b T::Repr;
 }
 
 /// Trait bound marker for types that are passed as an own generic type.
@@ -123,11 +138,10 @@ where
 )]
 pub trait ErasableGenericBorrow<Target: ?Sized> {}
 
-impl<'a, T: ?Sized + 'a, ConcreteTarget: ?Sized + 'static> ErasableGenericBorrow<ConcreteTarget>
-    for T
+impl<'a, T: ?Sized + 'a, ConcreteTarget: ?Sized + 'a> ErasableGenericBorrow<ConcreteTarget> for T
 where
-    &'static ConcreteTarget: ErasableGeneric,
-    &'a T: ErasableGeneric<Repr = <&'static ConcreteTarget as ErasableGeneric>::Repr>,
+    &'a ConcreteTarget: ErasableGeneric,
+    &'a T: ErasableGeneric<Repr = <&'a ConcreteTarget as ErasableGeneric>::Repr>,
 {
 }
 
@@ -145,10 +159,9 @@ where
 )]
 pub trait ErasableGenericBorrowMut<Target: ?Sized> {}
 
-impl<'a, T: ?Sized + 'a, ConcreteTarget: ?Sized + 'static> ErasableGenericBorrowMut<ConcreteTarget>
-    for T
+impl<'a, T: ?Sized + 'a, ConcreteTarget: ?Sized + 'a> ErasableGenericBorrowMut<ConcreteTarget> for T
 where
-    &'static mut ConcreteTarget: ErasableGeneric,
-    &'a mut T: ErasableGeneric<Repr = <&'static mut ConcreteTarget as ErasableGeneric>::Repr>,
+    &'a mut ConcreteTarget: ErasableGeneric,
+    &'a mut T: ErasableGeneric<Repr = <&'a mut ConcreteTarget as ErasableGeneric>::Repr>,
 {
 }
