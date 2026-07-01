@@ -51,6 +51,17 @@
 
 * Relaxed alignment requirement for 8-byte types.
   [#5204](https://github.com/wasm-bindgen/wasm-bindgen/pull/5204)
+* The `externref` and `multivalue` transforms now honor an explicit
+  `-Ctarget-feature=+/-<feature>` advertisement in the `target_features` custom
+  section. When that section is absent (for example because `strip = true`
+  dropped it), they fall back to checking whether the wasm-bindgen runtime was
+  built with `reference-types`, detected from its externref intrinsics.
+  Previously the transforms ran only when the section advertised the feature, so
+  a stripped section silently disabled them and made `#[wasm_bindgen(catch)]`
+  wrappers fail the build with "externref table required for catch wrappers". The
+  fallback leaves the transforms off for `-Ctarget-cpu=mvp` builds, which have
+  neither the section nor the intrinsics.
+  [5205](https://github.com/wasm-bindgen/wasm-bindgen/pull/5205)
 
 * Headless Chrome/Edge tests now surface the WebDriver's own error message when
   session creation fails (e.g. a chromedriver/Chrome version mismatch) instead

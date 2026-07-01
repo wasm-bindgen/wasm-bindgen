@@ -353,15 +353,25 @@ impl Bindgen {
             self.mode = OutputMode::Emscripten;
         }
 
-        // Enable reference type transformations if the module is already using it.
-        if let Ok(true) = wasm_conventions::target_feature(&module, "reference-types") {
-            self.externref = true;
-        }
-
-        // Enable multivalue transformations if the module is already using it.
-        if let Ok(true) = wasm_conventions::target_feature(&module, "multivalue") {
-            self.multi_value = true;
-        }
+        // `reference-types` and `multivalue` are on by default for
+        // `wasm32-unknown-unknown` since Rust 1.82. Honor an explicit
+        // `-Ctarget-feature=+/-<feature>` advertisement when the `target_features`
+        // section is present; when it is absent (e.g. `strip = true` dropped it),
+        // detect support from the runtime's externref intrinsics instead. That
+        // keeps the transforms running on stripped modern builds, so
+        // `#[wasm_bindgen(catch)]` still works, while leaving them off on
+        // `-Ctarget-cpu=mvp` builds.
+        let default_modern_features = wasm_conventions::module_uses_externref_intrinsics(&module);
+        self.externref = wasm_conventions::target_feature_enabled_or(
+            &module,
+            "reference-types",
+            default_modern_features,
+        )?;
+        self.multi_value = wasm_conventions::target_feature_enabled_or(
+            &module,
+            "multivalue",
+            default_modern_features,
+        )?;
 
         // Check that no exported symbol is called "default" if we target web.
         if matches!(self.mode, OutputMode::Web)
