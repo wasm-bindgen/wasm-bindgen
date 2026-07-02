@@ -167,9 +167,9 @@ impl Context {
                 _ => continue,
             };
             match export.name.as_str() {
-                "__externref_table_alloc" => heap_alloc = Some(f),
-                "__externref_table_dealloc" => heap_dealloc = Some(f),
-                "__externref_drop_slice" => drop_slice = Some(f),
+                wasm_conventions::EXTERNREF_TABLE_ALLOC => heap_alloc = Some(f),
+                wasm_conventions::EXTERNREF_TABLE_DEALLOC => heap_dealloc = Some(f),
+                wasm_conventions::EXTERNREF_DROP_SLICE => drop_slice = Some(f),
                 _ => continue,
             }
             to_delete.push(export.id());
