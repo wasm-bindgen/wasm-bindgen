@@ -88,6 +88,11 @@ const _: () = {
     ///   exported function.
     #[no_mangle]
     pub extern "C" fn __wbindgen_skip_interpret_calls() {}
+
+    /// A custom data section used to detect Emscripten.
+    #[cfg(target_os = "emscripten")]
+    #[link_section = "__wasm_bindgen_emscripten_marker"]
+    static __WASM_BINDGEN_EMSCRIPTEN_MARKER: [u8; 1] = [1];
 };
 
 macro_rules! externs {
@@ -1880,10 +1885,3 @@ impl<T: VectorIntoWasmAbi> From<Clamped<Vec<T>>> for JsValue {
         JsValue::from(Clamped(vector.0.into_boxed_slice()))
     }
 }
-
-#[cfg(target_os = "emscripten")]
-#[doc(hidden)]
-#[used]
-#[link_section = "__wasm_bindgen_emscripten_marker"]
-/// A custom data section used to detect Emscripten.
-pub static __WASM_BINDGEN_EMSCRIPTEN_MARKER: [u8; 1] = [1];

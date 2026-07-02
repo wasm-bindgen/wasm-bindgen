@@ -351,19 +351,6 @@ impl Bindgen {
         {
             // Force the internal configuration to Emscripten mode.
             self.mode = OutputMode::Emscripten;
-
-            // The marker static is `#[used]` so its section survives linking for
-            // the detection above, but that also leaves it as a wasm export that
-            // nothing references. Drop it here so emscripten's
-            // EMSCRIPTEN_KEEPALIVE heuristic doesn't surface it as public API.
-            let marker_export = module
-                .exports
-                .iter()
-                .find(|e| e.name.contains("__WASM_BINDGEN_EMSCRIPTEN_MARKER"))
-                .map(|e| e.id());
-            if let Some(id) = marker_export {
-                module.exports.delete(id);
-            }
         }
 
         // Enable reference type transformations if the module is already using it.

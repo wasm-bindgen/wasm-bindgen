@@ -19,6 +19,7 @@
 
 * The emscripten detection marker static is no longer leaked as public API.
   [#5220](https://github.com/wasm-bindgen/wasm-bindgen/pull/5220)
+  [#5222](https://github.com/wasm-bindgen/wasm-bindgen/pull/5222)
 
 ### Removed
 
