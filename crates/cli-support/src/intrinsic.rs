@@ -89,5 +89,13 @@ intrinsics! {
         InitExternrefTable = "__wbindgen_init_externref_table",
         PanicError = "__wbindgen_panic_error",
         Reinit = "__wbindgen_reinit",
+        JspiSetPending = "__wbindgen_jspi_set_pending",
+        JspiSuspend = "__wbindgen_jspi_suspend",
+        JspiIsRejected = "__wbindgen_jspi_is_rejected",
+        JspiGetResolved = "__wbindgen_jspi_get_resolved",
+        JspiCleanup = "__wbindgen_jspi_cleanup",
+        JspiWakerCreate = "__wbindgen_jspi_waker_create",
+        JspiWakerWake = "__wbindgen_jspi_waker_wake",
+        JspiWakerCleanup = "__wbindgen_jspi_waker_cleanup",
     }
 }
