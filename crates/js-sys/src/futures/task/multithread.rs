@@ -120,14 +120,12 @@ impl Task {
     }
 
     pub(crate) fn run(&self) {
-        // A poll can unwind via either a Rust panic or a foreign (JS)
+        // A poll can unwind via either a Rust panic or a JS
         // exception. `catch_unwind` only catches the former, but both run
         // drops, so a drop guard covers both: if a poll unwinds we drop
         // `Inner`, releasing the future and breaking the
         // `Inner -> closure -> Rc<Task>` cycle that would otherwise leak the
-        // `Task`. This covers both the first poll (driven by the queue) and
-        // wakeup polls (driven by the per-task closure). The guard is disarmed
-        // (forgotten) on a normal return.
+        // `Task`. The guard is forgotten on a normal return.
         struct ClearOnUnwind<'a>(&'a RefCell<Option<Inner>>);
         impl Drop for ClearOnUnwind<'_> {
             fn drop(&mut self) {
