@@ -449,6 +449,27 @@ impl<'a> Context<'a> {
         );
     }
 
+    /// Emit the shared state used by the JSPI bridge intrinsics
+    /// (`__wbindgen_jspi_*`) at module scope exactly once.
+    ///
+    /// These arrays and the waker map back `js_sys::futures::jspi::block_on`
+    /// and `block_on_promise`.  They live here as intrinsics rather than in an
+    /// `inline_js` snippet so that the JSPI runtime works with every target,
+    /// including `--target no-modules` (which cannot import from snippets).
+    pub(crate) fn expose_jspi_bridge(&mut self) {
+        self.intrinsic(
+            "jspi_bridge_state".into(),
+            None,
+            Cow::Borrowed(
+                "const _jspiPending = [];\n\
+                 const _jspiResolved = [];\n\
+                 const _jspiRejected = [];\n\
+                 const _jspiWakerMap = new Map();",
+            ),
+            &[],
+        );
+    }
+
     /// Export the `__stack_pointer` global so that the generated JSPI wrapper
     /// can set it per-fiber for concurrent shadow-stack isolation.
     /// Idempotent — safe to call multiple times.
@@ -6590,6 +6611,73 @@ addToLibrary({
             Intrinsic::Reinit => {
                 assert_eq!(args.len(), 0);
                 "__wbg_reinit_scheduled = true".to_string()
+            }
+
+            Intrinsic::JspiSetPending => {
+                assert_eq!(args.len(), 2);
+                self.expose_jspi_bridge();
+                format!("_jspiPending[{}] = {}", args[0], args[1])
+            }
+
+            // Returns the pending Promise wired to record its settled value.
+            // The `#[wasm_bindgen(suspending)]` wrapper `await`s the returned
+            // Promise, suspending the fiber until it settles.
+            Intrinsic::JspiSuspend => {
+                assert_eq!(args.len(), 1);
+                self.expose_jspi_bridge();
+                let id = &args[0];
+                format!(
+                    "_jspiPending[{id}].then(\
+                        v => {{ _jspiRejected[{id}] = false; _jspiResolved[{id}] = v; }}, \
+                        e => {{ _jspiRejected[{id}] = true; _jspiResolved[{id}] = e; }})"
+                )
+            }
+
+            Intrinsic::JspiIsRejected => {
+                assert_eq!(args.len(), 1);
+                self.expose_jspi_bridge();
+                format!("_jspiRejected[{}]", args[0])
+            }
+
+            Intrinsic::JspiGetResolved => {
+                assert_eq!(args.len(), 1);
+                self.expose_jspi_bridge();
+                format!("_jspiResolved[{}]", args[0])
+            }
+
+            Intrinsic::JspiCleanup => {
+                assert_eq!(args.len(), 1);
+                self.expose_jspi_bridge();
+                let id = &args[0];
+                prelude.push_str(&format!(
+                    "_jspiResolved[{id}] = undefined;\n_jspiRejected[{id}] = false;\n"
+                ));
+                format!("_jspiPending[{id}] = undefined")
+            }
+
+            Intrinsic::JspiWakerCreate => {
+                assert_eq!(args.len(), 1);
+                self.expose_jspi_bridge();
+                format!(
+                    "new Promise(resolve => _jspiWakerMap.set({}, resolve))",
+                    args[0]
+                )
+            }
+
+            Intrinsic::JspiWakerWake => {
+                assert_eq!(args.len(), 1);
+                self.expose_jspi_bridge();
+                prelude.push_str(&format!(
+                    "const resolve = _jspiWakerMap.get({});\n",
+                    args[0]
+                ));
+                "resolve && resolve()".to_string()
+            }
+
+            Intrinsic::JspiWakerCleanup => {
+                assert_eq!(args.len(), 1);
+                self.expose_jspi_bridge();
+                format!("_jspiWakerMap.delete({})", args[0])
             }
         };
         Ok(expr)
