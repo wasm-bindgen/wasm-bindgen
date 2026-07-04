@@ -37,12 +37,15 @@ This feature relies on the [minicov] crate, which provides a profiling runtime f
 
 _Requires rust >= 1.87.0 and wasm-bindgen-test >= 0.3.57._
 
-Install [cargo-llvm-cov](https://github.com/taiki-e/cargo-llvm-cov) and run with:
+Install [cargo-llvm-cov](https://github.com/taiki-e/cargo-llvm-cov)  or [cargo-tarpaulin](https://github.com/xd009642/tarpaulin) and run with:
 
 ```sh
 CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER=wasm-bindgen-test-runner \
 CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS="-Cinstrument-coverage -Zno-profiler-runtime -Clink-args=--no-gc-sections --cfg=wasm_bindgen_unstable_test_coverage" \
+# cargo-llvm-cov 
 cargo +nightly llvm-cov test --target wasm32-unknown-unknown
+# cargo tarpaulin 
+cargo +nightly tarpaulin --target wasm32-unknown-unknown
 ```
 
 ## Attribution
