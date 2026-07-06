@@ -185,6 +185,7 @@ fn delete_synthetic_export(module: &mut Module, name: &str) -> Result<ExportItem
 /// - `base` is the starting address of the extra `pages`.
 /// - `addr` is the _first_ address in that chunk that is aligned to `align`.
 fn allocate_static_data(memory: &mut Memory, pages: u32, align: u32) -> Result<(u32, u32), Error> {
+    // Allocate after the module's original initial memory.
     let base = memory
         .initial
         .checked_mul(u64::from(PAGE_SIZE))
