@@ -28,7 +28,7 @@
   (type (;2;) (func (param i32 i32) (result i32)))
   (type (;3;) (func (param i32 i32 i32)))
   (import "env" "memory" (memory (;0;) 7 1024 shared))
-  (global (;0;) i32 i32.const 393216)
+  (global (;0;) i32 i32.const 327680)
   (global (;1;) (mut i32) i32.const 0)
   (global (;2;) (mut i32) i32.const 65536)
   (global (;3;) (mut i32) i32.const 0)
@@ -65,15 +65,15 @@
       i32.const 16
       call $__wbindgen_free
     else
-      i32.const 393216
+      i32.const 458752
       global.set 2
       loop ;; label = @2
-        i32.const 327684
+        i32.const 393220
         i32.const 0
         i32.const 1
         i32.atomic.rmw.cmpxchg
         if ;; label = @3
-          i32.const 327684
+          i32.const 393220
           i32.const 1
           i64.const -1
           memory.atomic.wait32
@@ -86,10 +86,10 @@
       global.get 4
       i32.const 16
       call $__wbindgen_free
-      i32.const 327684
+      i32.const 393220
       i32.const 0
       i32.atomic.store
-      i32.const 327684
+      i32.const 393220
       i32.const 1
       memory.atomic.notify
       drop
@@ -100,7 +100,7 @@
   (func (;1;) (type 1) (param i32)
     (local i32 i32)
     call $start
-    i32.const 327680
+    i32.const 393216
     i32.const 1
     i32.atomic.rmw.add
     local.tee 2
@@ -111,15 +111,15 @@
         global.set 4
       else
       end
-      i32.const 393216
+      i32.const 458752
       global.set 2
       loop ;; label = @2
-        i32.const 327684
+        i32.const 393220
         i32.const 0
         i32.const 1
         i32.atomic.rmw.cmpxchg
         if ;; label = @3
-          i32.const 327684
+          i32.const 393220
           i32.const 1
           i64.const -1
           memory.atomic.wait32
@@ -132,10 +132,10 @@
       i32.const 16
       call $__wbindgen_malloc
       local.tee 1
-      i32.const 327684
+      i32.const 393220
       i32.const 0
       i32.atomic.store
-      i32.const 327684
+      i32.const 393220
       i32.const 1
       memory.atomic.notify
       drop

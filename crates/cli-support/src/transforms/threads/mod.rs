@@ -4,7 +4,7 @@ use std::cmp;
 use walrus::ir::Value;
 use walrus::FunctionBuilder;
 use walrus::{
-    ir::MemArg, ConstExpr, ExportItem, FunctionId, GlobalId, GlobalKind, InstrSeqBuilder, MemoryId,
+    ir::MemArg, ConstExpr, ExportItem, FunctionId, GlobalId, InstrSeqBuilder, Memory, MemoryId,
     Module, ValType,
 };
 
@@ -59,6 +59,11 @@ pub fn run(module: &mut Module) -> Result<Option<ThreadCount>, Error> {
 
     let memory = wasm_conventions::get_memory(module)?;
 
+    let mem = module.memories.get_mut(memory);
+    assert!(mem.shared);
+    assert!(mem.import.is_some());
+    assert!(mem.data_segments.is_empty());
+
     // Now we need to allocate extra static memory for:
     // - A thread id counter.
     // - A temporary stack for calls to `malloc()` and `free()`.
@@ -67,12 +72,7 @@ pub fn run(module: &mut Module) -> Result<Option<ThreadCount>, Error> {
     // stack) and grab the first 2 _aligned_ i32 words to use as counter and lock.
     let static_data_align = 4;
     let static_data_pages = 1;
-    let (base, addr) = allocate_static_data(module, memory, static_data_pages, static_data_align)?;
-
-    let mem = module.memories.get(memory);
-    assert!(mem.shared);
-    assert!(mem.import.is_some());
-    assert!(mem.data_segments.is_empty());
+    let (base, addr) = allocate_static_data(mem, static_data_pages, static_data_align)?;
 
     let tls = Tls {
         init: delete_synthetic_func(module, "__wasm_init_tls")?,
@@ -184,59 +184,23 @@ fn delete_synthetic_export(module: &mut Module, name: &str) -> Result<ExportItem
 /// Allocates extra space for static data. Returns `(addr, base)`, where:
 /// - `base` is the starting address of the extra `pages`.
 /// - `addr` is the _first_ address in that chunk that is aligned to `align`.
-fn allocate_static_data(
-    module: &mut Module,
-    memory: MemoryId,
-    pages: u32,
-    align: u32,
-) -> Result<(u32, u32), Error> {
-    // First up, look for a `__heap_base` export which is injected by LLD as
-    // part of the linking process. Note that `__heap_base` should in theory be
-    // *after* the stack and data, which means it's at the very end of the
-    // address space and should be safe for us to inject extra pages of data at.
-    let heap_base = module
-        .exports
-        .iter()
-        .filter(|e| e.name == "__heap_base")
-        .find_map(|e| match e.item {
-            ExportItem::Global(id) => Some(id),
-            _ => None,
-        });
-    let heap_base = match heap_base {
-        Some(idx) => idx,
-        None => bail!("failed to find `__heap_base` for injecting thread id"),
-    };
+fn allocate_static_data(memory: &mut Memory, pages: u32, align: u32) -> Result<(u32, u32), Error> {
+    let base = memory
+        .initial
+        .checked_mul(u64::from(PAGE_SIZE))
+        .and_then(|base| u32::try_from(base).ok())
+        .ok_or_else(|| anyhow!("initial memory size exceeds wasm32 address space"))?;
+    let static_data_size = pages
+        .checked_mul(PAGE_SIZE)
+        .ok_or_else(|| anyhow!("static data allocation size overflows wasm32 address space"))?;
+    base.checked_add(static_data_size)
+        .ok_or_else(|| anyhow!("static data allocation exceeds wasm32 address space"))?;
+    let address = (base + (align - 1)) & !(align - 1); // align up
 
-    // Now we need to bump up `__heap_base` by a few pages. Do lots of validation
-    // here to make sure that `__heap_base` is an non-mutable integer, and then do
-    // some logic to ensure that the return the correct, aligned `address` as specified
-    // by `align`.
-    let (base, address) = {
-        let global = module.globals.get_mut(heap_base);
-        if global.ty != ValType::I32 {
-            bail!("the `__heap_base` global doesn't have the type `i32`");
-        }
-        if global.mutable {
-            bail!("the `__heap_base` global is unexpectedly mutable");
-        }
-        let offset = match &mut global.kind {
-            GlobalKind::Local(ConstExpr::Value(Value::I32(n))) => n,
-            _ => bail!("`__heap_base` not a locally defined `i32`"),
-        };
-
-        let address = (*offset as u32 + (align - 1)) & !(align - 1); // align up
-        let base = *offset;
-
-        *offset += (pages * PAGE_SIZE) as i32;
-
-        (base, address)
-    };
-
-    let memory = module.memories.get_mut(memory);
     memory.initial += u64::from(pages);
     memory.maximum = memory.maximum.map(|m| cmp::max(m, memory.initial));
 
-    Ok((base as u32, address))
+    Ok((base, address))
 }
 
 struct Tls {

@@ -9,6 +9,12 @@
 
 ### Fixed
 
+* Fixed threaded Wasm memory layout to reserve wasm-bindgen's internal thread
+  page after the module's original initial memory instead of at `__heap_base`,
+  avoiding overlap with allocators that resolve `__heap_base`/`__heap_end` at
+  link time and treat that range as preexisting heap space.
+  [#5225](https://github.com/wasm-bindgen/wasm-bindgen/pull/5225)
+
 * Emscripten output now reaches wasm exports through emscripten's `wasmExports`
   object using bracket (string-literal) access (`wasmExports['__wbindgen_start']`)
   instead of a local `wasm` alias with dot access. `wasmExports['name']` is the
