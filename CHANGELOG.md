@@ -9,6 +9,17 @@
 
 ### Fixed
 
+* Fixed threaded Wasm worker startup stalling with a large linker-provided
+  initial memory. Allocators such as dlmalloc (>= 0.2.13) donate the
+  linker-provided `[__heap_base, __heap_end)` range as a preexisting heap chunk,
+  reading both bounds as constants inlined at link time. The threads transform
+  reserved its bookkeeping page at `__heap_base` and only bumped the
+  `__heap_base` *global*, which those allocators don't read, so the reserved page
+  could be handed out and corrupted. The transform now also shifts the
+  allocator's inlined `[__heap_base, __heap_end)` bounds up past the reserved
+  page, keeping the heap a single contiguous region.
+  [#5223](https://github.com/wasm-bindgen/wasm-bindgen/issues/5223)
+
 * Emscripten output now reaches wasm exports through emscripten's `wasmExports`
   object using bracket (string-literal) access (`wasmExports['__wbindgen_start']`)
   instead of a local `wasm` alias with dot access. `wasmExports['name']` is the

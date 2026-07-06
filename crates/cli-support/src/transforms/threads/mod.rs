@@ -1,7 +1,7 @@
 use crate::wasm_conventions;
 use anyhow::{anyhow, bail, Error};
 use std::cmp;
-use walrus::ir::Value;
+use walrus::ir::{dfs_pre_order_mut, Const, Value, VisitorMut};
 use walrus::FunctionBuilder;
 use walrus::{
     ir::MemArg, ConstExpr, ExportItem, FunctionId, GlobalId, GlobalKind, InstrSeqBuilder, MemoryId,
@@ -59,6 +59,20 @@ pub fn run(module: &mut Module) -> Result<Option<ThreadCount>, Error> {
 
     let memory = wasm_conventions::get_memory(module)?;
 
+    let mem = module.memories.get(memory);
+    assert!(mem.shared); // guaranteed by `is_enabled`
+    if mem.import.is_none() {
+        bail!("threading requires imported memory; build with `-Clink-arg=--import-memory`");
+    }
+    if !mem.data_segments.is_empty() {
+        bail!("expected data segments to be passive before running the threads transform");
+    }
+
+    // The original end of linear memory, i.e. LLD's `__heap_end`. Captured before
+    // `allocate_static_data` grows the memory below.
+    let heap_end = u32::try_from(mem.initial * u64::from(PAGE_SIZE))
+        .map_err(|_| anyhow!("initial memory size exceeds the wasm32 address space"))?;
+
     // Now we need to allocate extra static memory for:
     // - A thread id counter.
     // - A temporary stack for calls to `malloc()` and `free()`.
@@ -69,10 +83,13 @@ pub fn run(module: &mut Module) -> Result<Option<ThreadCount>, Error> {
     let static_data_pages = 1;
     let (base, addr) = allocate_static_data(module, memory, static_data_pages, static_data_align)?;
 
-    let mem = module.memories.get(memory);
-    assert!(mem.shared);
-    assert!(mem.import.is_some());
-    assert!(mem.data_segments.is_empty());
+    // Some allocators (e.g. dlmalloc >= 0.2.13) treat the linker-provided range
+    // `[__heap_base, __heap_end)` as a preexisting heap chunk, reading both
+    // symbols as constants baked in at link time. Bumping the `__heap_base`
+    // *global* above doesn't move those constants, so such an allocator would
+    // hand out the page we just reserved at the old `__heap_base`. Shift its view
+    // up past the reserved page, keeping the heap a single contiguous region.
+    reserve_preexisting_chunk(module, base, heap_end, static_data_pages * PAGE_SIZE);
 
     let tls = Tls {
         init: delete_synthetic_func(module, "__wasm_init_tls")?,
@@ -237,6 +254,81 @@ fn allocate_static_data(
     memory.maximum = memory.maximum.map(|m| cmp::max(m, memory.initial));
 
     Ok((base as u32, address))
+}
+
+/// Shifts an allocator's linker-provided preexisting heap chunk up past the
+/// reserved page.
+///
+/// Allocators such as dlmalloc (>= 0.2.13) donate the range
+/// `[__heap_base, __heap_end)` before falling back to `memory.grow`. Both bounds
+/// are resolved by the linker and inlined into the allocator's code as
+/// constants, so [`allocate_static_data`]'s bump of the `__heap_base` *global*
+/// is invisible to them and they would reuse the page we reserved there.
+///
+/// The reader of that chunk computes its length at runtime as
+/// `__heap_end - __heap_base` from the two inlined constants, so shifting *both*
+/// bounds up by `reserved` moves the chunk above the reserved page while
+/// preserving its length. The result is a single contiguous heap:
+/// `[data][reserved page][heap chunk][memory.grow ...]`.
+///
+/// The function is identified as the one referencing *both* bounds; anything
+/// merely reusing one of the two addresses is left untouched.
+fn reserve_preexisting_chunk(module: &mut Module, heap_base: u32, heap_end: u32, reserved: u32) {
+    // An empty (or absent) preexisting chunk can never overlap the reserved page.
+    if heap_end <= heap_base {
+        return;
+    }
+
+    struct Scan {
+        heap_base: u32,
+        heap_end: u32,
+        has_base: bool,
+        has_end: bool,
+    }
+    impl VisitorMut for Scan {
+        fn visit_const_mut(&mut self, c: &mut Const) {
+            if let Value::I32(v) = c.value {
+                let v = v as u32;
+                self.has_base |= v == self.heap_base;
+                self.has_end |= v == self.heap_end;
+            }
+        }
+    }
+
+    struct Bump {
+        heap_base: u32,
+        heap_end: u32,
+        reserved: u32,
+    }
+    impl VisitorMut for Bump {
+        fn visit_const_mut(&mut self, c: &mut Const) {
+            if let Value::I32(v) = c.value {
+                let v = v as u32;
+                if v == self.heap_base || v == self.heap_end {
+                    c.value = Value::I32(v.wrapping_add(self.reserved) as i32);
+                }
+            }
+        }
+    }
+
+    for (_, func) in module.funcs.iter_local_mut() {
+        let entry = func.entry_block();
+        let mut scan = Scan {
+            heap_base,
+            heap_end,
+            has_base: false,
+            has_end: false,
+        };
+        dfs_pre_order_mut(&mut scan, func, entry);
+        if scan.has_base && scan.has_end {
+            let mut bump = Bump {
+                heap_base,
+                heap_end,
+                reserved,
+            };
+            dfs_pre_order_mut(&mut bump, func, entry);
+        }
+    }
 }
 
 struct Tls {
