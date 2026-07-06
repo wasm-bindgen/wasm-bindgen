@@ -12,7 +12,6 @@
     drop
   )
   (func $__wbindgen_free (export "__wbindgen_free") (param i32 i32 i32))
-  (global (export "__heap_base") i32 (i32.const 327680))
   (global (export "__tls_size") i32 (i32.const 128))
   (global (export "__tls_align") i32 (i32.const 4))
   (global (export "__tls_base") (mut i32) (i32.const 0))
@@ -28,16 +27,14 @@
   (type (;2;) (func (param i32 i32) (result i32)))
   (type (;3;) (func (param i32 i32 i32)))
   (import "env" "memory" (memory (;0;) 7 1024 shared))
-  (global (;0;) i32 i32.const 327680)
-  (global (;1;) (mut i32) i32.const 0)
-  (global (;2;) (mut i32) i32.const 65536)
-  (global (;3;) (mut i32) i32.const 0)
-  (global (;4;) (mut i32) i32.const 2097152)
+  (global (;0;) (mut i32) i32.const 0)
+  (global (;1;) (mut i32) i32.const 65536)
+  (global (;2;) (mut i32) i32.const 0)
+  (global (;3;) (mut i32) i32.const 2097152)
   (export "__wbindgen_malloc" (func $__wbindgen_malloc))
   (export "__wbindgen_free" (func $__wbindgen_free))
-  (export "__heap_base" (global 0))
-  (export "__tls_base" (global 1))
-  (export "__stack_alloc" (global 3))
+  (export "__tls_base" (global 0))
+  (export "__stack_alloc" (global 2))
   (export "__wbindgen_thread_destroy" (func $__wbindgen_thread_destroy))
   (export "__wbindgen_start" (func 1))
   (func $__wbindgen_thread_destroy (;0;) (type 3) (param i32 i32 i32)
@@ -48,12 +45,12 @@
       i32.const 4
       call $__wbindgen_free
     else
-      global.get 1
+      global.get 0
       i32.const 128
       i32.const 4
       call $__wbindgen_free
       i32.const -2147483648
-      global.set 1
+      global.set 0
     end
     local.get 1
     if ;; label = @1
@@ -66,7 +63,7 @@
       call $__wbindgen_free
     else
       i32.const 458752
-      global.set 2
+      global.set 1
       loop ;; label = @2
         i32.const 393220
         i32.const 0
@@ -82,8 +79,8 @@
         else
         end
       end
+      global.get 2
       global.get 3
-      global.get 4
       i32.const 16
       call $__wbindgen_free
       i32.const 393220
@@ -94,7 +91,7 @@
       memory.atomic.notify
       drop
       i32.const 0
-      global.set 3
+      global.set 2
     end
   )
   (func (;1;) (type 1) (param i32)
@@ -108,11 +105,11 @@
       local.get 0
       if ;; label = @2
         local.get 0
-        global.set 4
+        global.set 3
       else
       end
       i32.const 458752
-      global.set 2
+      global.set 1
       loop ;; label = @2
         i32.const 393220
         i32.const 0
@@ -128,7 +125,7 @@
         else
         end
       end
-      global.get 4
+      global.get 3
       i32.const 16
       call $__wbindgen_malloc
       local.tee 1
@@ -139,18 +136,18 @@
       i32.const 1
       memory.atomic.notify
       drop
-      global.set 3
-      global.get 3
-      global.get 4
-      i32.add
       global.set 2
+      global.get 2
+      global.get 3
+      i32.add
+      global.set 1
     else
     end
     i32.const 128
     i32.const 4
     call $__wbindgen_malloc
-    global.set 1
-    global.get 1
+    global.set 0
+    global.get 0
     call $__wasm_init_tls
   )
   (func $__wasm_init_tls (;2;) (type 1) (param i32)
