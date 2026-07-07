@@ -62,11 +62,16 @@ pub fn run(module: &mut Module) -> Result<Option<ThreadCount>, Error> {
     let mem = module.memories.get_mut(memory);
     assert!(mem.shared);
 
+    // TODO: support memory64. This transform currently emits i32 addresses for
+    // thread counters, locks, stacks, and allocator calls.
+    if mem.memory64 {
+        bail!("threading does not currently support memory64");
+    }
     if mem.import.is_none() {
         bail!("threading requires memory to be imported; add `-Clink-arg=--import-memory` to RUSTFLAGS");
     }
     if !mem.data_segments.is_empty() {
-        bail!("threading requires memory must not have active data segments");
+        bail!("threading requires memory to not have active data segments");
     }
 
     // Now we need to allocate extra static memory for:
