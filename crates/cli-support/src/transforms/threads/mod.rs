@@ -61,8 +61,13 @@ pub fn run(module: &mut Module) -> Result<Option<ThreadCount>, Error> {
 
     let mem = module.memories.get_mut(memory);
     assert!(mem.shared);
-    assert!(mem.import.is_some());
-    assert!(mem.data_segments.is_empty());
+
+    if mem.import.is_none() {
+        bail!("threading requires memory to be imported; add `-Clink-arg=--import-memory` to RUSTFLAGS");
+    }
+    if !mem.data_segments.is_empty() {
+        bail!("threading requires memory must not have active data segments");
+    }
 
     // Now we need to allocate extra static memory for:
     // - A thread id counter.
