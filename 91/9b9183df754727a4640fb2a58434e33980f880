@@ -1,0 +1,25 @@
+crates/cli/tests/reference/import-catch-i64.bg.js
+  s_efa274db759c8c::t_39a2178a652bf9 1-78
+crates/cli/tests/reference/import-catch-i64.d.ts
+  s_efa274db759c8c::t_bfd39011400b95 1-4
+crates/cli/tests/reference/import-catch-i64.js
+  s_efa274db759c8c::t_2984161935389d 1-9
+crates/cli/tests/reference/import-catch-i64.wat
+  s_efa274db759c8c::t_295b7c54b01fec 1-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "919b9183df754727a4640fb2a58434e33980f880",
+  "prompts": {},
+  "sessions": {
+    "s_efa274db759c8c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_06a8c171fffeRtaXLvXQmag5kF",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <gbedford@cloudflare.com>"
+    }
+  }
+}
