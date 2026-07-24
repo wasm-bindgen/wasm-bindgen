@@ -9,6 +9,12 @@
 
 ### Fixed
 
+* Fixed `catch` imports returning `i64`/`u64` throwing a `TypeError` (and
+  panicking in `__wbindgen_exn_store`) when the JS import throws, since the
+  `handleError` catch path returned `undefined` which cannot be converted to
+  a Wasm `i64`.
+  [#5238](https://github.com/wasm-bindgen/wasm-bindgen/pull/5238)
+
 * Fixed threaded Wasm memory layout to reserve wasm-bindgen's internal thread
   page after the module's original initial memory instead of at `__heap_base`,
   avoiding overlap with allocators that resolve `__heap_base`/`__heap_end` at
