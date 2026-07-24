@@ -1,0 +1,27 @@
+crates/cli-support/src/interpreter/mod.rs
+  s_f9c249788c22e6::t_8921cc80100c3c 263
+crates/cli-support/src/js/binding.rs
+  s_f9c249788c22e6::t_e52b19ff5f5b0c 1069
+crates/cli-support/src/js/mod.rs
+  s_f9c249788c22e6::t_3c0155082b675a 1018
+crates/cli-support/src/wit/mod.rs
+  s_f9c249788c22e6::t_2dba09cffa5d0f 263,1419,1426
+crates/cli-support/src/wit/standard.rs
+  s_f9c249788c22e6::t_55e14c73242551 513
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "e94d9fdd5d30e00917a71bce9ee7e873e7df62e6",
+  "prompts": {},
+  "sessions": {
+    "s_f9c249788c22e6": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_06a75c3f2ffeoNxhkih0iWP1R3",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <gbedford@cloudflare.com>"
+    }
+  }
+}
