@@ -260,7 +260,7 @@ impl<'a> Context<'a> {
                     let [arg] = &signature.arguments[..] else {
                         unreachable!("Cast function must take exactly one argument");
                     };
-                    let sig_comment = format!("{arg:?} -> {:?}", &signature.ret);
+                    let sig_comment = format!("{arg:?} -> {:?}", signature.ret);
                     (sig_comment, signature, orig_func_ids)
                 })
                 .collect();
@@ -1416,14 +1416,14 @@ impl<'a> Context<'a> {
                 bail!(
                     "local JS snippets do not support vendor prefixes for \
                      the import of `{item}` with a polyfill of `{}`",
-                    &vendor_prefixes[0]
+                    vendor_prefixes[0]
                 );
             }
             if let Some(decode::ImportModule::RawNamed(module)) = module {
                 bail!(
                     "import of `{item}` from `{module}` has a polyfill of `{}` listed, but
                      vendor prefixes aren't supported when importing from modules",
-                    &vendor_prefixes[0],
+                    vendor_prefixes[0],
                 );
             }
             if let Some(ns) = js_namespace {

@@ -1028,7 +1028,7 @@ impl<'src> FirstPassRecord<'src> {
 
         // Add custom methods (e.g., maplike/setlike iterators)
         // Generator will produce both compat and non-compat output
-        for (_, method) in data.custom_methods.iter() {
+        for method in data.custom_methods.values() {
             methods.push(method.clone());
         }
 
