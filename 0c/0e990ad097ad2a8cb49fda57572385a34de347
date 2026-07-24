@@ -1,0 +1,41 @@
+crates/cli/tests/reference/async-number.bg.js
+  s_f9c249788c22e6::t_a75f3966f9872a 40,69,106,128-129,133-134,140-141
+crates/cli/tests/reference/async-number.wat
+  s_f9c249788c22e6::t_35bd4a4b92d9bb 45-47,57-59
+crates/cli/tests/reference/async-void.bg.js
+  s_f9c249788c22e6::t_c2e2aea82419ab 40,69,106,123-124,128-129,135-136
+crates/cli/tests/reference/async-void.wat
+  s_f9c249788c22e6::t_5740922986b460 43-45,55-57
+crates/cli/tests/reference/closures.bg.js
+  s_f9c249788c22e6::t_ebb307f853ff44 38,87,93,98-99,116-117,120-121,124-125
+crates/cli/tests/reference/closures.wat
+  s_f9c249788c22e6::t_3b76b2fa61f57d 35-37,47-49
+crates/cli/tests/reference/function-attrs.bg.js
+  s_f9c249788c22e6::t_2afc85a0bafbac 98,127,164,186-187,191-192,198-199
+crates/cli/tests/reference/function-attrs.wat
+  s_f9c249788c22e6::t_3f15dee220f590 53-55,69-71
+crates/cli/tests/reference/wasm-export-colon.d.ts
+  s_f9c249788c22e6::t_280dc18f929504 112-116
+crates/cli/tests/reference/wasm-export-colon.js
+  s_f9c249788c22e6::t_958844a39a5de9 205,268,311,348,431-432,461-462,465-466,470-471,477-478,481-482
+crates/cli/tests/reference/wasm-export-colon.wat
+  s_f9c249788c22e6::t_39adbc7dd35e7c 96-100,126-130
+crates/cli/tests/wasm-bindgen/reference.rs
+  s_f9c249788c22e6::t_320cb6b0880acb 109-117
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "0c0e990ad097ad2a8cb49fda57572385a34de347",
+  "prompts": {},
+  "sessions": {
+    "s_f9c249788c22e6": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_06a75c3f2ffeoNxhkih0iWP1R3",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <gbedford@cloudflare.com>"
+    }
+  }
+}
