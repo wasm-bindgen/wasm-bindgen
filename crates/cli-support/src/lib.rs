@@ -434,10 +434,22 @@ impl Bindgen {
                     bail!("`env.discard` import must have type [i32 i32] -> []");
                 }
                 let memory = wasm_conventions::get_memory(&module)?;
+                // Experimental escape hatch for A/B benchmarking: setting
+                // WASM_BINDGEN_MEMORY_DISCARD=0 emits a semantically
+                // equivalent `memory.fill` with zero instead, which zeroes
+                // the pages without releasing them.
+                let zero_fill = std::env::var("WASM_BINDGEN_MEMORY_DISCARD").as_deref() == Ok("0");
                 module.replace_imported_func(fid, |(body, args)| {
-                    body.local_get(args[0])
-                        .local_get(args[1])
-                        .instr(walrus::ir::MemoryDiscard { memory });
+                    if zero_fill {
+                        body.local_get(args[0])
+                            .i32_const(0)
+                            .local_get(args[1])
+                            .instr(walrus::ir::MemoryFill { memory });
+                    } else {
+                        body.local_get(args[0])
+                            .local_get(args[1])
+                            .instr(walrus::ir::MemoryDiscard { memory });
+                    }
                 })?;
                 module.funcs.get_mut(fid).name = Some("discard".to_string());
             }
