@@ -795,7 +795,16 @@ impl<'a> Context<'a> {
                 if let Some(def) = self.wasm_import_definitions.get_mut(&id) {
                     if !self.config.mode.bundler() {
                         match def {
-                            ImportDefinition::Expression(expr) => expr.insert_str(0, "memory || "),
+                            ImportDefinition::Expression(expr)
+                                if matches!(self.config.mode, OutputMode::Emscripten) =>
+                            {
+                                *expr = format!(
+                                    "(typeof memory !== 'undefined' ? memory : (typeof wasmMemory !== 'undefined' ? wasmMemory : {expr}))"
+                                );
+                            }
+                            ImportDefinition::Expression(expr) => {
+                                expr.insert_str(0, "memory || ");
+                            }
                             ImportDefinition::Function(_) | ImportDefinition::GlobalRef(_) => {
                                 unreachable!("memory import is always inserted as an Expression")
                             }
