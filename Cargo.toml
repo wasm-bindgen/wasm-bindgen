@@ -144,6 +144,7 @@ members = [
 resolver = "2"
 
 [patch.crates-io]
+walrus = { git = 'https://github.com/wasm-bindgen/walrus', branch = 'memory-discard' }
 js-sys = { path = 'crates/js-sys' }
 wasm-bindgen = { path = '.' }
 wasm-bindgen-futures = { path = 'crates/futures' }

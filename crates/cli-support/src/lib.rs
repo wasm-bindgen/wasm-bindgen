@@ -415,6 +415,33 @@ impl Bindgen {
                 .producers
                 .add_processed_by("wasm-bindgen", &wasm_bindgen_shared::version());
         }
+        // Replace the unlinked `env.discard` import with a generated local
+        // function containing the `memory.discard` instruction from the
+        // memory-control proposal. This is the trampoline assumed by libc's
+        // prototype wasm32-unknown-unknown `madvise` implementation.
+        {
+            let discard_import = module.imports.iter().find_map(|impt| match impt.kind {
+                walrus::ImportKind::Function(id)
+                    if impt.module == "env" && impt.name == "discard" =>
+                {
+                    Some(id)
+                }
+                _ => None,
+            });
+            if let Some(fid) = discard_import {
+                let ty = module.types.get(module.funcs.get(fid).ty());
+                if ty.params() != [walrus::ValType::I32; 2] || !ty.results().is_empty() {
+                    bail!("`env.discard` import must have type [i32 i32] -> []");
+                }
+                let memory = wasm_conventions::get_memory(&module)?;
+                module.replace_imported_func(fid, |(body, args)| {
+                    body.local_get(args[0])
+                        .local_get(args[1])
+                        .instr(walrus::ir::MemoryDiscard { memory });
+                })?;
+                module.funcs.get_mut(fid).name = Some("discard".to_string());
+            }
+        }
         // Parse and remove our custom section before executing descriptors.
         // That includes checking that the binary has the same schema version
         // as this version of the CLI, which is why we do it first - to make
