@@ -1,0 +1,19 @@
+crates/cli/src/wasm_bindgen_test_runner/emscripten_test.js
+  s_47d04d66729438::t_1c01ea8584e216 61-66,69
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "dc95b54e31fc13299f3fb804c173073aca7ed2e1",
+  "prompts": {},
+  "sessions": {
+    "s_47d04d66729438": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_0596ffc8dffeC6yRIvupPpozSe",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
