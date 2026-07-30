@@ -1,4 +1,5 @@
 pub mod catch_handler;
+pub mod export_sp_restore;
 pub mod externref;
 pub mod multi_value;
 pub mod threads;
@@ -23,6 +24,15 @@ pub enum ExceptionHandlingVersion {
     /// Modern EH (phase 4): try_table instruction
     Modern,
     ModernButWithPanicAbort,
+}
+
+impl ExceptionHandlingVersion {
+    /// Whether a Rust panic can unwind out of an export. `Modern` and
+    /// `ModernButWithPanicAbort` share a dialect but not this answer, so ask
+    /// here rather than matching on the dialect at the call site.
+    pub fn unwinds(self) -> bool {
+        matches!(self, Self::Legacy | Self::Modern)
+    }
 }
 
 /// Detect which exception handling version is used in the module.
@@ -88,17 +98,17 @@ pub(crate) fn unstart_start_function(module: &mut walrus::Module) -> bool {
 }
 
 #[cfg(test)]
+pub(crate) fn parse_wat(wat: &str) -> walrus::Module {
+    let wasm = wat::parse_str(wat).unwrap();
+    walrus::ModuleConfig::new()
+        .generate_producers_section(false)
+        .parse(&wasm)
+        .unwrap()
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
-    use walrus::ModuleConfig;
-
-    fn parse_wat(wat: &str) -> walrus::Module {
-        let wasm = wat::parse_str(wat).unwrap();
-        ModuleConfig::new()
-            .generate_producers_section(false)
-            .parse(&wasm)
-            .unwrap()
-    }
 
     #[test]
     fn detect_eh_version_none() {

@@ -447,3 +447,51 @@ fn ref_unwind_safe_method_runtime_behavior() {
     assert_eq!(c.n(), 3);
     assert_eq!(c.panicked_at(), 3);
 }
+
+mod shadow_stack {
+    use wasm_bindgen::prelude::*;
+    use wasm_bindgen_test::wasm_bindgen_test;
+
+    #[wasm_bindgen(module = "tests/wasm/unwind.js")]
+    extern "C" {
+        // `__stack_pointer` movement across `n` throwing calls to `f`
+        fn js_closure_sp_drift(f: &Closure<dyn FnMut()>, n: u32) -> u32;
+
+        // Same, calling the `sp_leak_panic` export directly
+        fn js_export_sp_drift(n: u32) -> u32;
+    }
+
+    /// Address of a local in this call's own frame, which sits at whatever
+    /// `__stack_pointer` holds on entry. Called from JS between panics it
+    /// reports the live pointer; taking the address keeps the buffer on the
+    /// shadow stack rather than in a wasm local.
+    #[wasm_bindgen]
+    pub fn sp_now() -> u32 {
+        let buf = [0u8; 64];
+        core::hint::black_box(buf.as_ptr()) as u32
+    }
+
+    /// Panics with a non-empty frame, so an abandoned one is measurable.
+    #[wasm_bindgen]
+    pub fn sp_leak_panic() {
+        let buf = [0u8; 1024];
+        core::hint::black_box(&buf);
+        panic!("expected panic");
+    }
+
+    /// A panic thrown back out to JS abandons the shim's frame without
+    /// rewinding `__stack_pointer`, unless the CLI wrapped the export.
+    #[wasm_bindgen_test]
+    fn escaping_panics_do_not_leak_shadow_stack() {
+        let cb = Closure::own(|| sp_leak_panic());
+        let drift = js_closure_sp_drift(&cb, 64);
+        assert_eq!(drift, 0, "shadow stack lost {drift} bytes to 64 panics");
+    }
+
+    /// Same, through an export shim rather than a closure `invoke` shim.
+    #[wasm_bindgen_test]
+    fn escaping_panics_from_an_export_do_not_leak_shadow_stack() {
+        let drift = js_export_sp_drift(64);
+        assert_eq!(drift, 0, "shadow stack lost {drift} bytes to 64 panics");
+    }
+}

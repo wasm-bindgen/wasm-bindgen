@@ -9,6 +9,13 @@
 
 ### Fixed
 
+* Restored `__stack_pointer` when an exception unwinds out of a wasm export,
+  preventing repeated `panic = "unwind"` calls from leaking shadow-stack frames
+  until the shadow stack is exhausted and calls trap. Node reports
+  `memory access out of bounds`; poisoned instances can instead report
+  `Module terminated`.
+  [#5244](https://github.com/wasm-bindgen/wasm-bindgen/pull/5244)
+
 * `js_namespace` is now part of an imported function's and imported static's
   generated shim name. Two imports with identical Rust signatures that differed
   *only* in their `js_namespace` hashed to the same `__wbg_<name>_<hash>`
