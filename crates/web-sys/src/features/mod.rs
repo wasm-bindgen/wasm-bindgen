@@ -6263,6 +6263,13 @@ mod gen_NavigationHistoryEntry;
 #[allow(unused_imports)]
 pub use gen_NavigationHistoryEntry::*;
 
+#[cfg(feature = "NavigationTransition")]
+#[allow(non_snake_case)]
+mod gen_NavigationTransition;
+#[cfg(feature = "NavigationTransition")]
+#[allow(unused_imports)]
+pub use gen_NavigationTransition::*;
+
 #[cfg(feature = "NavigationType")]
 #[allow(non_snake_case)]
 mod gen_NavigationType;
