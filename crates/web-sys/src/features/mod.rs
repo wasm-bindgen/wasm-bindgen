@@ -6242,6 +6242,13 @@ mod gen_NativeOsFileWriteAtomicOptions;
 #[allow(unused_imports)]
 pub use gen_NativeOsFileWriteAtomicOptions::*;
 
+#[cfg(feature = "Navigation")]
+#[allow(non_snake_case)]
+mod gen_Navigation;
+#[cfg(feature = "Navigation")]
+#[allow(unused_imports)]
+pub use gen_Navigation::*;
+
 #[cfg(feature = "NavigationActivation")]
 #[allow(non_snake_case)]
 mod gen_NavigationActivation;
@@ -6256,12 +6263,47 @@ mod gen_NavigationDestination;
 #[allow(unused_imports)]
 pub use gen_NavigationDestination::*;
 
+#[cfg(feature = "NavigationHistoryBehavior")]
+#[allow(non_snake_case)]
+mod gen_NavigationHistoryBehavior;
+#[cfg(feature = "NavigationHistoryBehavior")]
+#[allow(unused_imports)]
+pub use gen_NavigationHistoryBehavior::*;
+
 #[cfg(feature = "NavigationHistoryEntry")]
 #[allow(non_snake_case)]
 mod gen_NavigationHistoryEntry;
 #[cfg(feature = "NavigationHistoryEntry")]
 #[allow(unused_imports)]
 pub use gen_NavigationHistoryEntry::*;
+
+#[cfg(feature = "NavigationNavigateOptions")]
+#[allow(non_snake_case)]
+mod gen_NavigationNavigateOptions;
+#[cfg(feature = "NavigationNavigateOptions")]
+#[allow(unused_imports)]
+pub use gen_NavigationNavigateOptions::*;
+
+#[cfg(feature = "NavigationOptions")]
+#[allow(non_snake_case)]
+mod gen_NavigationOptions;
+#[cfg(feature = "NavigationOptions")]
+#[allow(unused_imports)]
+pub use gen_NavigationOptions::*;
+
+#[cfg(feature = "NavigationReloadOptions")]
+#[allow(non_snake_case)]
+mod gen_NavigationReloadOptions;
+#[cfg(feature = "NavigationReloadOptions")]
+#[allow(unused_imports)]
+pub use gen_NavigationReloadOptions::*;
+
+#[cfg(feature = "NavigationResult")]
+#[allow(non_snake_case)]
+mod gen_NavigationResult;
+#[cfg(feature = "NavigationResult")]
+#[allow(unused_imports)]
+pub use gen_NavigationResult::*;
 
 #[cfg(feature = "NavigationTransition")]
 #[allow(non_snake_case)]
@@ -6276,6 +6318,13 @@ mod gen_NavigationType;
 #[cfg(feature = "NavigationType")]
 #[allow(unused_imports)]
 pub use gen_NavigationType::*;
+
+#[cfg(feature = "NavigationUpdateCurrentEntryOptions")]
+#[allow(non_snake_case)]
+mod gen_NavigationUpdateCurrentEntryOptions;
+#[cfg(feature = "NavigationUpdateCurrentEntryOptions")]
+#[allow(unused_imports)]
+pub use gen_NavigationUpdateCurrentEntryOptions::*;
 
 #[cfg(feature = "Navigator")]
 #[allow(non_snake_case)]
