@@ -6242,6 +6242,13 @@ mod gen_NativeOsFileWriteAtomicOptions;
 #[allow(unused_imports)]
 pub use gen_NativeOsFileWriteAtomicOptions::*;
 
+#[cfg(feature = "NavigationHistoryEntry")]
+#[allow(non_snake_case)]
+mod gen_NavigationHistoryEntry;
+#[cfg(feature = "NavigationHistoryEntry")]
+#[allow(unused_imports)]
+pub use gen_NavigationHistoryEntry::*;
+
 #[cfg(feature = "NavigationType")]
 #[allow(non_snake_case)]
 mod gen_NavigationType;
