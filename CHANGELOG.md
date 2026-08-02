@@ -19,6 +19,9 @@
   reachable through `__deps`. Requires an emscripten with `__export`/`__force`
   symbol-attribute support.
 
+* Updated WebGPU bindings to the August 2026 spec. `GPUCommandEncoder::copy_buffer_to_buffer_*` signatures changed.
+  [#5246](https://github.com/wasm-bindgen/wasm-bindgen/pull/5246)
+
 ### Fixed
 
 * The `name` property of the JS error thrown for `panic=unwind` is now set from
