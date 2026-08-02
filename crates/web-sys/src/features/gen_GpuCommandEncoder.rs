@@ -212,7 +212,72 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn copy_buffer_to_buffer_with_u32_and_u32(
+    pub fn copy_buffer_to_buffer_with_gpu_buffer(
+        this: &GpuCommandEncoder,
+        source: &GpuBuffer,
+        destination: &GpuBuffer,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuBuffer")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUCommandEncoder",
+        js_name = "copyBufferToBuffer"
+    )]
+    #[doc = "The `copyBufferToBuffer()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUCommandEncoder/copyBufferToBuffer)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuCommandEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn copy_buffer_to_buffer_with_gpu_buffer_and_u32(
+        this: &GpuCommandEncoder,
+        source: &GpuBuffer,
+        destination: &GpuBuffer,
+        size: u32,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuBuffer")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUCommandEncoder",
+        js_name = "copyBufferToBuffer"
+    )]
+    #[doc = "The `copyBufferToBuffer()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUCommandEncoder/copyBufferToBuffer)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuCommandEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn copy_buffer_to_buffer_with_gpu_buffer_and_f64(
+        this: &GpuCommandEncoder,
+        source: &GpuBuffer,
+        destination: &GpuBuffer,
+        size: f64,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuBuffer")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUCommandEncoder",
+        js_name = "copyBufferToBuffer"
+    )]
+    #[doc = "The `copyBufferToBuffer()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUCommandEncoder/copyBufferToBuffer)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuBuffer`, `GpuCommandEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn copy_buffer_to_buffer_with_u32_and_gpu_buffer_and_u32(
         this: &GpuCommandEncoder,
         source: &GpuBuffer,
         source_offset: u32,
@@ -235,7 +300,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn copy_buffer_to_buffer_with_f64_and_u32(
+    pub fn copy_buffer_to_buffer_with_f64_and_gpu_buffer_and_u32(
         this: &GpuCommandEncoder,
         source: &GpuBuffer,
         source_offset: f64,
@@ -258,7 +323,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn copy_buffer_to_buffer_with_u32_and_f64(
+    pub fn copy_buffer_to_buffer_with_u32_and_gpu_buffer_and_f64(
         this: &GpuCommandEncoder,
         source: &GpuBuffer,
         source_offset: u32,
@@ -281,7 +346,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn copy_buffer_to_buffer_with_f64_and_f64(
+    pub fn copy_buffer_to_buffer_with_f64_and_gpu_buffer_and_f64(
         this: &GpuCommandEncoder,
         source: &GpuBuffer,
         source_offset: f64,
@@ -304,7 +369,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn copy_buffer_to_buffer_with_u32_and_u32_and_u32(
+    pub fn copy_buffer_to_buffer_with_u32_and_gpu_buffer_and_u32_and_u32(
         this: &GpuCommandEncoder,
         source: &GpuBuffer,
         source_offset: u32,
@@ -328,7 +393,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn copy_buffer_to_buffer_with_f64_and_u32_and_u32(
+    pub fn copy_buffer_to_buffer_with_f64_and_gpu_buffer_and_u32_and_u32(
         this: &GpuCommandEncoder,
         source: &GpuBuffer,
         source_offset: f64,
@@ -352,7 +417,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn copy_buffer_to_buffer_with_u32_and_f64_and_u32(
+    pub fn copy_buffer_to_buffer_with_u32_and_gpu_buffer_and_f64_and_u32(
         this: &GpuCommandEncoder,
         source: &GpuBuffer,
         source_offset: u32,
@@ -376,7 +441,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn copy_buffer_to_buffer_with_f64_and_f64_and_u32(
+    pub fn copy_buffer_to_buffer_with_f64_and_gpu_buffer_and_f64_and_u32(
         this: &GpuCommandEncoder,
         source: &GpuBuffer,
         source_offset: f64,
@@ -400,7 +465,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn copy_buffer_to_buffer_with_u32_and_u32_and_f64(
+    pub fn copy_buffer_to_buffer_with_u32_and_gpu_buffer_and_u32_and_f64(
         this: &GpuCommandEncoder,
         source: &GpuBuffer,
         source_offset: u32,
@@ -424,7 +489,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn copy_buffer_to_buffer_with_f64_and_u32_and_f64(
+    pub fn copy_buffer_to_buffer_with_f64_and_gpu_buffer_and_u32_and_f64(
         this: &GpuCommandEncoder,
         source: &GpuBuffer,
         source_offset: f64,
@@ -448,7 +513,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn copy_buffer_to_buffer_with_u32_and_f64_and_f64(
+    pub fn copy_buffer_to_buffer_with_u32_and_gpu_buffer_and_f64_and_f64(
         this: &GpuCommandEncoder,
         source: &GpuBuffer,
         source_offset: u32,
@@ -472,7 +537,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn copy_buffer_to_buffer_with_f64_and_f64_and_f64(
+    pub fn copy_buffer_to_buffer_with_f64_and_gpu_buffer_and_f64_and_f64(
         this: &GpuCommandEncoder,
         source: &GpuBuffer,
         source_offset: f64,
