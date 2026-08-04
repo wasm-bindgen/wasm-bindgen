@@ -2116,6 +2116,8 @@ impl TryToTokens for ast::ImportFunction {
                 ),
             };
 
+            check_slice_to_array_concrete_elem(arg, ty, &fn_generic_param_names)?;
+
             let var = if i == 0 && is_method {
                 quote! { self }
             } else {
@@ -2207,59 +2209,17 @@ impl TryToTokens for ast::ImportFunction {
                 convert_arg = quote! { #var };
             }
 
-            // `slice_to_array`: re-route an `&[T]` (or `Option<&[T]>`)
-            // outgoing argument through `<T as VectorRefIntoWasmAbi>`
-            // instead of the default `&[T]: IntoWasmAbi`. The user-facing
-            // parameter is unchanged; only the ABI / describe path
-            // changes. `VectorRefIntoWasmAbi`'s impls cover the two
-            // genuine ABI shapes (zero-copy primitive borrow,
-            // fresh-`Box<[u32]>` for handle-shaped element types) — no
-            // `T: Clone` bound is introduced.
-            //
-            // Wire format is `WasmSlice` either way; the cli-support
-            // side picks the right JS shim based on the element
-            // `VectorKind` recovered from the descriptor.
-            // `slice_to_array` is set per-fn or per-`extern "C"` block
-            // and applies to every `&[T]` / `Option<&[T]>` argument of
-            // every fn it covers. Args that aren't slice-shaped (e.g.
-            // the `this: &Foo` of a method, or any other non-slice
-            // argument of a slice_to_array fn) silently fall through to
-            // the default ABI path — there's no per-arg opt-out form
-            // in Rust attribute syntax to require, so silent no-op is
-            // the only sensible behaviour.
-            if arg.slice_to_array && detect_slice_or_option_slice(ty).is_some() {
-                let (elem_ty, is_option) = detect_slice_or_option_slice(ty).unwrap();
-
-                let abi = quote! { #wasm_bindgen::convert::WasmSlice };
-                let (prim_args, prim_names) = splat(wasm_bindgen, &name, &abi);
-                abi_arguments.extend(prim_args);
-                abi_argument_names.extend(prim_names.iter().cloned());
-
-                let body = if is_option {
-                    quote! {
-                        match #var {
-                            #wasm_bindgen::__rt::core::option::Option::Some(s) =>
-                                <#elem_ty as #wasm_bindgen::convert::VectorRefIntoWasmAbi>
-                                    ::slice_into_abi(s),
-                            #wasm_bindgen::__rt::core::option::Option::None =>
-                                <#elem_ty as #wasm_bindgen::convert::VectorRefIntoWasmAbi>
-                                    ::slice_none(),
-                        }
-                    }
-                } else {
-                    quote! {
-                        <#elem_ty as #wasm_bindgen::convert::VectorRefIntoWasmAbi>
-                            ::slice_into_abi(#var)
-                    }
-                };
-
-                arg_conversions.push(quote! {
-                    let #name: #wasm_bindgen::convert::WasmSlice = #body;
-                    let (#(#prim_names),*) =
-                        <#wasm_bindgen::convert::WasmSlice as #wasm_bindgen::convert::WasmAbi>
-                            ::split(#name);
-                });
-                continue;
+            // `slice_to_array` re-routes a slice-shaped argument through
+            // `VectorRefIntoWasmAbi`; see `slice_to_array_rewrite` for the full
+            // rationale, including why a non-slice argument silently falls
+            // through to the default ABI path.
+            if arg.slice_to_array {
+                if let Some(rewrite) = slice_to_array_rewrite(wasm_bindgen, &name, &var, ty) {
+                    abi_arguments.extend(rewrite.abi_args);
+                    abi_argument_names.extend(rewrite.prim_names.iter().cloned());
+                    arg_conversions.push(rewrite.conversion);
+                    continue;
+                }
             }
 
             let abi = quote! { <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi };
@@ -2868,14 +2828,8 @@ impl TryToTokens for DescribeImport<'_> {
                 // to their default describe — slice_to_array is a mode that
                 // only acts on slice-shaped args.
                 if arg.slice_to_array {
-                    if let Some((elem_ty, is_option)) = detect_slice_or_option_slice(&ty) {
-                        if is_option {
-                            return Ok(parse_quote! {
-                                #wasm_bindgen::__rt::core::option::Option<&#wasm_bindgen::__rt::alloc::vec::Vec<#elem_ty>>
-                            });
-                        } else {
-                            return Ok(parse_quote! { &#wasm_bindgen::__rt::alloc::vec::Vec<#elem_ty> });
-                        }
+                    if let Some(described) = slice_to_array_describe_ty(wasm_bindgen, &ty) {
+                        return Ok(described);
                     }
                 }
                 Ok(ty)
@@ -3319,23 +3273,36 @@ fn get_ty(mut ty: &syn::Type) -> &syn::Type {
     ty
 }
 
-/// Detects whether a type is a raw `&dyn Fn(...)` or `&mut dyn FnMut(...)` argument.
-///
-/// Returns `Some((is_mut, fn_trait_bounds))` where:
-/// - `is_mut` is `true` for `&mut dyn FnMut`, `false` for `&dyn Fn`
-/// - `fn_trait_bounds` are the `TypeParamBound`s from the `dyn` trait object (e.g. `FnMut(A)->R`)
-///
-/// This is used by the import function codegen to auto-inject `MaybeUnwindSafe`
-/// bounds for closure arguments, ensuring unwind safety when `panic = "unwind"`.
-/// Recognise `&[T]` and `Option<&[T]>` argument types. Returns the element
-/// type plus a flag indicating whether the outer `Option` was present. Used
-/// by the `slice_to_array` codegen to rewrite the ABI path.
-fn detect_slice_or_option_slice(ty: &syn::Type) -> Option<(syn::Type, bool)> {
-    // Direct `&[T]` (mutability ignored — `&mut [T]` is intentionally
-    // accepted too; the ABI layer treats it the same as `&[T]`).
-    if let syn::Type::Reference(syn::TypeReference { elem, .. }) = ty {
+/// A slice-shaped argument recognised by the `slice_to_array` codegen.
+pub(crate) struct SliceArg {
+    /// The slice's element type `T`.
+    pub elem_ty: syn::Type,
+    /// Whether the slice was wrapped in an outer `Option`.
+    pub is_option: bool,
+    /// Whether the reference was `&mut` rather than `&`.
+    ///
+    /// `slice_to_array` cannot honour this: it hands JS an owned `Array`, and
+    /// mutations to that `Array` are not written back into the caller's slice.
+    /// The parser rejects the combination rather than silently dropping the
+    /// write-back; see `reject_slice_to_array_on_mut_slice`.
+    pub is_mut: bool,
+}
+
+/// Recognise `&[T]`, `&mut [T]`, and either wrapped in `Option`. Used by the
+/// `slice_to_array` codegen to rewrite the ABI path, and by the parser to reject
+/// the mutable forms.
+pub(crate) fn detect_slice_or_option_slice(ty: &syn::Type) -> Option<SliceArg> {
+    // Direct `&[T]` / `&mut [T]`.
+    if let syn::Type::Reference(syn::TypeReference {
+        elem, mutability, ..
+    }) = ty
+    {
         if let syn::Type::Slice(syn::TypeSlice { elem: inner, .. }) = &**elem {
-            return Some(((**inner).clone(), false));
+            return Some(SliceArg {
+                elem_ty: (**inner).clone(),
+                is_option: false,
+                is_mut: mutability.is_some(),
+            });
         }
     }
     // `Option<&[T]>` — match shape `Option<...>` and recurse once.
@@ -3345,8 +3312,13 @@ fn detect_slice_or_option_slice(ty: &syn::Type) -> Option<(syn::Type, bool)> {
                 if let syn::PathArguments::AngleBracketed(args) = &seg.arguments {
                     if args.args.len() == 1 {
                         if let syn::GenericArgument::Type(inner) = &args.args[0] {
-                            if let Some((elem, false)) = detect_slice_or_option_slice(inner) {
-                                return Some((elem, true));
+                            if let Some(inner) = detect_slice_or_option_slice(inner) {
+                                if !inner.is_option {
+                                    return Some(SliceArg {
+                                        is_option: true,
+                                        ..inner
+                                    });
+                                }
                             }
                         }
                     }
@@ -3357,6 +3329,152 @@ fn detect_slice_or_option_slice(ty: &syn::Type) -> Option<(syn::Type, bool)> {
     None
 }
 
+/// The type to hand `WasmDescribe::describe` for a `slice_to_array` argument,
+/// or `None` if `ty` is not slice-shaped.
+///
+/// Describing through `&Vec<T>` / `Option<&Vec<T>>` makes the descriptor
+/// `Ref(Vector(T))` / `Option(Ref(Vector(T)))`, which is what cli-support
+/// recognises as "hand JS an owned `Array`" rather than "hand JS a typed-array
+/// view". This must stay in lockstep with the ABI rewrite in
+/// [`slice_to_array_rewrite`]: the descriptor is what selects the JS shim, and
+/// the ABI is what the shim is handed.
+fn slice_to_array_describe_ty(wasm_bindgen: &syn::Path, ty: &syn::Type) -> Option<syn::Type> {
+    let SliceArg {
+        elem_ty, is_option, ..
+    } = detect_slice_or_option_slice(ty)?;
+    // `alloc`, not `std`: `wasm-bindgen` is `#![no_std]` and supports `no_std`
+    // consumers, so generated code must never name `::std`.
+    let vec = quote! { #wasm_bindgen::__rt::alloc::vec::Vec };
+    // `Option` likewise goes through the `__rt::core` re-export rather than a
+    // bare `::core`, for the same call-site-hygiene reason as `Vec` above.
+    let option = quote! { #wasm_bindgen::__rt::core::option::Option };
+    Some(if is_option {
+        parse_quote! { #option<&#vec<#elem_ty>> }
+    } else {
+        parse_quote! { &#vec<#elem_ty> }
+    })
+}
+
+/// The pieces of the `slice_to_array` rewrite for one argument.
+struct SliceToArrayRewrite {
+    /// Flattened wasm ABI parameters to splice into the shim signature.
+    abi_args: Vec<TokenStream>,
+    /// The names `conversion` binds, in ABI order.
+    prim_names: Vec<Ident>,
+    /// Statements converting the user-facing argument into `prim_names`.
+    conversion: TokenStream,
+}
+
+/// Build the `slice_to_array` rewrite for one argument, or `None` if `ty` is not
+/// slice-shaped (`&[T]` / `Option<&[T]>`).
+///
+/// This re-routes the argument through `<T as VectorRefIntoWasmAbi>` instead of
+/// the default `&[T]: IntoWasmAbi`. The user-facing parameter is unchanged; only
+/// the ABI and describe paths move. `VectorRefIntoWasmAbi`'s impls cover the two
+/// genuine ABI shapes (zero-copy borrow for primitive elements, freshly
+/// allocated `Box<[u32]>` for handle-shaped ones), so no `T: Clone` bound is
+/// introduced. The wire format is `WasmSlice` either way; cli-support picks the
+/// right JS shim from the element `VectorKind` in the descriptor.
+///
+/// `slice_to_array` is set per-fn or per-`extern "C"` block and applies to every
+/// slice-shaped argument of every fn it covers. Arguments that are not
+/// slice-shaped (the `this: &Foo` receiver of a method, a `Vec<T>`, any scalar)
+/// return `None` and take the default ABI path — there is no per-argument
+/// opt-out in Rust attribute syntax to require, so a silent no-op is the only
+/// sensible behaviour.
+///
+/// `&mut [T]` never reaches here: the parser rejects `slice_to_array` on a
+/// mutable slice up front, because an owned `Array` cannot carry JS's writes back
+/// into the caller's buffer.
+fn slice_to_array_rewrite(
+    wasm_bindgen: &syn::Path,
+    name: &Ident,
+    var: &TokenStream,
+    ty: &syn::Type,
+) -> Option<SliceToArrayRewrite> {
+    let SliceArg {
+        elem_ty, is_option, ..
+    } = detect_slice_or_option_slice(ty)?;
+
+    let abi = quote! { #wasm_bindgen::convert::WasmSlice };
+    let (abi_args, prim_names) = splat(wasm_bindgen, name, &abi);
+
+    let body = if is_option {
+        quote! {
+            match #var {
+                #wasm_bindgen::__rt::core::option::Option::Some(s) =>
+                    <#elem_ty as #wasm_bindgen::convert::VectorRefIntoWasmAbi>
+                        ::slice_into_abi(s),
+                #wasm_bindgen::__rt::core::option::Option::None =>
+                    <#elem_ty as #wasm_bindgen::convert::VectorRefIntoWasmAbi>
+                        ::slice_none(),
+            }
+        }
+    } else {
+        quote! {
+            <#elem_ty as #wasm_bindgen::convert::VectorRefIntoWasmAbi>
+                ::slice_into_abi(#var)
+        }
+    };
+    let conversion = quote! {
+        let #name: #wasm_bindgen::convert::WasmSlice = #body;
+        let (#(#prim_names),*) =
+            <#wasm_bindgen::convert::WasmSlice as #wasm_bindgen::convert::WasmAbi>
+                ::split(#name);
+    };
+
+    Some(SliceToArrayRewrite {
+        abi_args,
+        prim_names,
+        conversion,
+    })
+}
+
+/// Reject `slice_to_array` on a slice whose element type mentions a type
+/// parameter.
+///
+/// The rewrite names `<#elem_ty as VectorRefIntoWasmAbi>` and describes through
+/// `&Vec<#elem_ty>`, neither of which a bare type parameter can satisfy — and no
+/// bound the user can write makes it satisfiable, because the blanket
+/// `VectorRefIntoWasmAbi` impls are keyed on concrete ABI shapes. Left
+/// unchecked, the user sees two `E0277`s naming private traits plus a
+/// syntactically invalid `help:` suggestion, so bail with a span instead.
+///
+/// This matters on both import paths: `slice_to_array` is inheritable from the
+/// enclosing `extern "C"` block, so a user who never wrote it on this argument
+/// can still hit it.
+fn check_slice_to_array_concrete_elem(
+    arg: &ast::FunctionArgumentData,
+    ty: &syn::Type,
+    // `&Vec` rather than `&[..]` to match `uses_generic_params` and the rest of
+    // this module; widening those signatures is unrelated churn.
+    type_param_names: &Vec<&Ident>,
+) -> Result<(), Diagnostic> {
+    if !arg.slice_to_array || type_param_names.is_empty() {
+        return Ok(());
+    }
+    let Some(SliceArg { elem_ty, .. }) = detect_slice_or_option_slice(ty) else {
+        return Ok(());
+    };
+    if generics::uses_generic_params(&elem_ty, type_param_names) {
+        bail_span!(
+            arg.pat_type.ty,
+            "`slice_to_array` requires a concrete slice element type (e.g. `&[u16]`); a type \
+             parameter cannot work here because `VectorRefIntoWasmAbi` is implemented per \
+             concrete ABI shape — drop `slice_to_array`, or take the argument by value"
+        );
+    }
+    Ok(())
+}
+
+/// Detects whether a type is a raw `&dyn Fn(...)` or `&mut dyn FnMut(...)` argument.
+///
+/// Returns `Some((is_mut, fn_trait_bounds))` where:
+/// - `is_mut` is `true` for `&mut dyn FnMut`, `false` for `&dyn Fn`
+/// - `fn_trait_bounds` are the `TypeParamBound`s from the `dyn` trait object (e.g. `FnMut(A)->R`)
+///
+/// This is used by the import function codegen to auto-inject `MaybeUnwindSafe`
+/// bounds for closure arguments, ensuring unwind safety when `panic = "unwind"`.
 fn detect_raw_fn_trait_obj(
     ty: &syn::Type,
 ) -> Option<(

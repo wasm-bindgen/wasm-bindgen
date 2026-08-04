@@ -1633,6 +1633,82 @@ struct FnArgAttrs {
     slice_to_array: bool,
 }
 
+/// Rejects `slice_to_array` on a `&mut [T]` (or `Option<&mut [T]>`) argument.
+///
+/// `slice_to_array` hands JS an owned `Array`, built by copying the slice's
+/// elements out of linear memory. There is nowhere for JS's writes to that
+/// `Array` to go: the copy is discarded when the call returns, so every mutation
+/// is silently lost. A plain `&mut [T]` argument, by contrast, gives JS a
+/// typed-array *view* into wasm memory, where writes land in the caller's buffer.
+///
+/// So the two features are fundamentally incompatible rather than merely
+/// unimplemented, and the failure mode — silent data loss with no runtime symptom
+/// — is much worse than a compile error. `slice_to_array` has only ever been
+/// documented for `&[T]` and `Option<&[T]>` (0.2.121), so rejecting the mutable
+/// forms takes nothing away.
+///
+/// The flag is rejected however it was applied — directly on the argument, on the
+/// function, or on the enclosing `extern "C"` block. Quietly skipping the rewrite
+/// for the inherited cases was the alternative, but that would leave two slices in
+/// one signature marshalled differently with nothing in the source to say why, so
+/// the message names all three places it could be coming from instead.
+fn reject_slice_to_array_on_mut_slice(ty: &syn::Type) -> Result<(), Diagnostic> {
+    let Some(slice) = crate::codegen::detect_slice_or_option_slice(ty) else {
+        return Ok(());
+    };
+    if !slice.is_mut {
+        return Ok(());
+    }
+    let elem = type_to_string(&slice.elem_ty);
+    let shared = if slice.is_option {
+        format!("Option<&[{elem}]>")
+    } else {
+        format!("&[{elem}]")
+    };
+    Err(Diagnostic::span_error(
+        syn::spanned::Spanned::span(ty),
+        format!(
+            "`slice_to_array` cannot be applied to a `&mut` slice: it hands JS an \
+             owned `Array` copied out of linear memory, so anything JS writes into \
+             that `Array` is discarded rather than written back into the caller's \
+             slice.\n\
+             \n\
+             Either change this argument to `{shared}`, if JS only needs to read \
+             the elements, or remove `slice_to_array` (from this argument, from \
+             this function, or from the enclosing `extern \"C\"` block, wherever it \
+             is set) so the slice keeps the writable typed-array view that `&mut` \
+             normally gets."
+        ),
+    ))
+}
+
+/// Renders a type for use in a diagnostic.
+///
+/// `ToTokens` stringification inserts a space between every token pair, which
+/// turns `Option<&[my::Elem]>` into `:: core :: option :: Option < & [my :: Elem] >`.
+/// This tightens up the punctuation that appears in type syntax so the suggestion
+/// is something the user can paste.
+fn type_to_string(ty: &syn::Type) -> String {
+    let mut s = quote::quote!(#ty).to_string();
+    for (from, to) in [
+        (" :: ", "::"),
+        (":: ", "::"),
+        (" ::", "::"),
+        (" <", "<"),
+        ("< ", "<"),
+        (" >", ">"),
+        ("& ", "&"),
+        (" ,", ","),
+        ("[ ", "["),
+        (" ]", "]"),
+    ] {
+        while s.contains(from) {
+            s = s.replace(from, to);
+        }
+    }
+    s
+}
+
 /// Extracts function arguments attributes. `default_slice_to_array` is the
 /// inherited flag from the enclosing function / `extern "C"` block; per-arg
 /// `#[wasm_bindgen(slice_to_array)]` ORs on top of it.
@@ -1736,6 +1812,9 @@ fn extract_args_attrs(
                     })?,
                 slice_to_array: default_slice_to_array || attrs.slice_to_array().is_some(),
             };
+            if arg_attrs.slice_to_array {
+                reject_slice_to_array_on_mut_slice(&pat_type.ty)?;
+            }
             // throw error for any unused attrs
             attrs.enforce_used()?;
             args_attrs.push(arg_attrs);

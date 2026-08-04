@@ -70,6 +70,20 @@ exports.js_st2a_optional_u16 = (v) => {
     return v.map(x => x * 2);
 };
 
+exports.js_st2a_optional_string = (v) => {
+    if (v === undefined) {
+        return undefined;
+    }
+    assert.ok(Array.isArray(v));
+    assert.deepStrictEqual(v, ['p', 'q']);
+    // The array is handed over without a defensive copy, so confirm it is a
+    // real mutable `Array` that JS owns rather than an aliased view.
+    v.push('r');
+    assert.deepStrictEqual(v, ['p', 'q', 'r']);
+    v.pop();
+    return v.map(s => s + '!');
+};
+
 // Block-level `slice_to_array` test handlers.
 exports.js_st2a_block_a = (v) => {
     assert.ok(Array.isArray(v));

@@ -1891,7 +1891,15 @@ fn instruction(
             match kind {
                 VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_) => {
                     let free = js.cx.wasm_export_of(*free);
-                    js.prelude(&format!("v{i} = {f}({ptr}, {len}).slice();"));
+                    // No `.slice()`, unlike `OptionVectorLoad` above: that
+                    // instruction's loader hands back a typed-array *view* into
+                    // linear memory, which has to be copied before the `free`
+                    // on the next line invalidates it. This one's loader builds
+                    // a fresh `Array` (dropping the externrefs as it reads
+                    // them), so there is nothing aliasing the freed buffer and
+                    // the copy would be pure overhead. Matches the non-`Option`
+                    // `VectorLoadAsArray` arm.
+                    js.prelude(&format!("v{i} = {f}({ptr}, {len});"));
                     js.prelude(&format!(
                         "{free}({ptr}, {len} * {size}, {size});",
                         size = kind.size()

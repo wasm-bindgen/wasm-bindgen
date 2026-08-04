@@ -25,6 +25,30 @@
   `Module terminated`.
   [#5244](https://github.com/wasm-bindgen/wasm-bindgen/pull/5244)
 
+* `slice_to_array` on a `&mut` slice is now a compile error instead of silently
+  discarding JS's writes. The attribute hands JS an owned `Array` copied out of
+  linear memory, so mutations to that `Array` were dropped when the call returned,
+  whereas a plain `&mut [T]` argument gives JS a typed-array view whose writes do
+  reach the caller's buffer. Because that difference has no runtime symptom, the
+  combination is rejected rather than ignored. `slice_to_array` was only ever
+  documented for `&[T]` and `Option<&[T]>`, so no supported signature is affected;
+  the case most likely to be hit in practice is a `&mut` slice in an `extern "C"`
+  block carrying a block-level `slice_to_array`.
+
+* `slice_to_array` on a slice whose element type is a type parameter is now
+  rejected with a single targeted error. It could never have worked —
+  `VectorRefIntoWasmAbi` is implemented per concrete ABI shape, and no bound the
+  caller can write makes an arbitrary `T` satisfy it — but the failure surfaced as
+  trait errors naming private traits plus a syntactically invalid `help:`
+  suggestion. The element type must be concrete; a concrete element type in a
+  generic function is still fine.
+
+* `Option<&[T]>` under `slice_to_array` no longer makes a redundant copy of the
+  array it hands to JS when `T` is a string or an imported type. The loader for
+  those element kinds already builds a fresh `Array`, so the extra `.slice()`
+  duplicated every element on every call for no benefit. The non-`Option` form
+  never had it.
+
 * Fixed `async` imports with non-JS-handle resolved types (e.g.
   `async fn f() -> u32;`) silently producing garbage since 0.2.109: the
   descriptor named the resolved type instead of the `Promise` handle that
