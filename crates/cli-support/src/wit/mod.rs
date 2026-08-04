@@ -4,7 +4,7 @@ use crate::descriptors::WasmBindgenDescriptorsSection;
 use crate::intrinsic::Intrinsic;
 use crate::transforms::threads::ThreadCount;
 use crate::{decode, wasm_conventions, Bindgen, PLACEHOLDER_MODULE};
-use anyhow::{anyhow, bail, ensure, Error};
+use anyhow::{anyhow, bail, ensure, Context as _, Error};
 use std::collections::{BTreeSet, HashMap};
 use std::str;
 use walrus::ir::VisitorMut;
@@ -158,9 +158,15 @@ pub fn process(
         })
         .collect();
 
-    // Sort bare adapters by signature only to avoid machine-specific mangling non-determinism.
+    // Sort bare adapters primarily by signature, to avoid machine-specific
+    // mangling non-determinism, then by export name to make the order total.
+    //
+    // The name tie-break matters: `sort_by` is stable, so without it adapters
+    // with an identical signature keep their *creation* order, which makes this
+    // output depend on the order of unrelated earlier pipeline stages rather
+    // than on anything about the adapters themselves.
     // Resorting with Walrus requires deleting and re-injecting, so we then update the stored ID again.
-    adapter_exports.sort_by(|a, b| a.1.cmp(&b.1));
+    adapter_exports.sort_by(|a, b| a.1.cmp(&b.1).then_with(|| a.2.cmp(&b.2)));
 
     // Build mapping of old to new ExportIds
     let mut old_to_new: std::collections::HashMap<walrus::ExportId, walrus::ExportId> =
@@ -339,6 +345,13 @@ impl<'a> Context<'a> {
     /// The map provided here is a map where the key is a function id to replace
     /// and the value is what to replace it with.
     fn handle_duplicate_imports(&mut self, map: &HashMap<FunctionId, FunctionId>) {
+        // Nothing to replace: skip the full-module instruction walk entirely,
+        // rather than traversing every function in the module to perform zero
+        // substitutions.
+        if map.is_empty() {
+            return;
+        }
+
         struct Replace<'a> {
             map: &'a HashMap<FunctionId, FunctionId>,
         }
@@ -1720,24 +1733,38 @@ impl<'a> Context<'a> {
         };
         self.normalize_memory64_signature(&mut signature, core_id);
 
+        // Name the export in any binding failure below. Without this the error is
+        // just "unsupported type ..." with nothing to say which export produced
+        // it, which is close to unactionable in a crate of any size.
+        let export_name = self.module.exports.get(export).name.clone();
+
         // Figure out how to translate all the incoming arguments ...
         let mut args = self.instruction_builder(false);
-        for arg in signature.arguments.iter() {
-            args.incoming(arg)?;
+        for (i, arg) in signature.arguments.iter().enumerate() {
+            args.incoming(arg).with_context(|| {
+                format!(
+                    "failed to generate a binding for argument {} of `{export_name}`",
+                    i + 1
+                )
+            })?;
         }
 
         // ... then the returned value being translated back
 
         let inner_ret_output = if let Some(sig_inner_ret) = &signature.inner_ret {
             let mut inner_ret = args.cx.instruction_builder(true);
-            inner_ret.outgoing(sig_inner_ret)?;
+            inner_ret.outgoing(sig_inner_ret).with_context(|| {
+                format!("failed to generate a binding for the return value of `{export_name}`")
+            })?;
             inner_ret.output
         } else {
             vec![]
         };
 
         let mut ret = args.cx.instruction_builder(true);
-        ret.outgoing(&signature.ret)?;
+        ret.outgoing(&signature.ret).with_context(|| {
+            format!("failed to generate a binding for the return value of `{export_name}`")
+        })?;
         let uses_retptr = ret.input.len() > 1;
 
         // Our instruction stream starts out with the return pointer as the first
