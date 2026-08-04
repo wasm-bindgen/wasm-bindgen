@@ -1,0 +1,100 @@
+error[E0277]: the trait bound `CopyCell: ScalarIntoWasmAbi` is not satisfied
+  --> ui-tests/unsupported-ref-arg.rs:30:1
+   |
+30 | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `ScalarIntoWasmAbi` is not implemented for `CopyCell`
+  --> ui-tests/unsupported-ref-arg.rs:19:1
+   |
+19 | pub struct CopyCell {
+   | ^^^^^^^^^^^^^^^^^^^
+   = help: the following other types implement trait `ScalarIntoWasmAbi`:
+             bool
+             char
+             f32
+             f64
+             i128
+             i16
+             i32
+             i64
+           and $N others
+   = note: required for `&CopyCell` to implement `IntoWasmAbi`
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `Color: ScalarIntoWasmAbi` is not satisfied
+  --> ui-tests/unsupported-ref-arg.rs:30:1
+   |
+30 | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `ScalarIntoWasmAbi` is not implemented for `Color`
+  --> ui-tests/unsupported-ref-arg.rs:25:1
+   |
+25 | pub enum Color {
+   | ^^^^^^^^^^^^^^
+   = help: the following other types implement trait `ScalarIntoWasmAbi`:
+             bool
+             char
+             f32
+             f64
+             i128
+             i16
+             i32
+             i64
+           and $N others
+   = note: required for `&Color` to implement `IntoWasmAbi`
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `Option<u32>: ScalarIntoWasmAbi` is not satisfied
+  --> ui-tests/unsupported-ref-arg.rs:30:1
+   |
+30 | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ the trait `ScalarIntoWasmAbi` is not implemented for `Option<u32>`
+   |
+   = help: the following other types implement trait `ScalarIntoWasmAbi`:
+             bool
+             char
+             f32
+             f64
+             i128
+             i16
+             i32
+             i64
+           and $N others
+   = note: required for `&Option<u32>` to implement `IntoWasmAbi`
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `&u32: ScalarIntoWasmAbi` is not satisfied
+  --> ui-tests/unsupported-ref-arg.rs:30:1
+   |
+30 | #[wasm_bindgen]
+   | ^^^^^^^^^^^^^^^ the trait `ScalarIntoWasmAbi` is not implemented for `&u32`
+   |
+help: the trait `ScalarIntoWasmAbi` is implemented for `u32`
+  --> $WORKSPACE/src/convert/impls.rs
+   |
+   |         impl ScalarIntoWasmAbi for $t {}
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+   | scalar_into_wasm_abi!(i8 u8 i16 u16 i32 u32 i64 u64 i128 u128 isize usize f32 f64 bool char);
+   | -------------------------------------------------------------------------------------------- in this macro invocation
+   = note: required for `&&u32` to implement `IntoWasmAbi`
+   = note: this error originates in the attribute macro `wasm_bindgen` which comes from the expansion of the macro `scalar_into_wasm_abi` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `&u32: ScalarIntoWasmAbi` is not satisfied
+  --> ui-tests/unsupported-ref-arg.rs:43:21
+   |
+43 |     fn take_ref_ref(x: &&u32);
+   |                     ^ the trait `ScalarIntoWasmAbi` is not implemented for `&u32`
+   |
+help: the trait `ScalarIntoWasmAbi` is implemented for `u32`
+  --> $WORKSPACE/src/convert/impls.rs
+   |
+   |         impl ScalarIntoWasmAbi for $t {}
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+   | scalar_into_wasm_abi!(i8 u8 i16 u16 i32 u32 i64 u64 i128 u128 isize usize f32 f64 bool char);
+   | -------------------------------------------------------------------------------------------- in this macro invocation
+   = note: required for `&&u32` to implement `IntoWasmAbi`
+   = note: this error originates in the macro `scalar_into_wasm_abi` (in Nightly builds, run with -Z macro-backtrace for more info)

@@ -162,6 +162,77 @@ pub trait OptionFromWasmAbi: FromWasmAbi {
     fn is_none(abi: &Self::Abi) -> bool;
 }
 
+/// Marker for the types whose shared reference can be handed to JS by copying
+/// the value: `&T: IntoWasmAbi` is provided for exactly these `T`.
+///
+/// JS has no way to hold a reference into linear memory, so `&T` can only be
+/// passed by copying `T` across the boundary. That is sound for a scalar, whose
+/// wire representation is the same whether it is passed by value or by
+/// reference, but not for a type with an identity or an owner — a
+/// `#[wasm_bindgen]` struct passed as `&T` would silently hand JS a *distinct*
+/// copy with its own `free()` obligation, so that the `&` conveys nothing and
+/// JS-side mutation is invisible to the caller.
+///
+/// This deliberately mirrors, exactly, the set of descriptors the CLI accepts
+/// behind a `Ref(..)` when generating a call into JS (see `outgoing_ref` in
+/// `wasm-bindgen-cli-support`). Keeping the two in lockstep is what turns "the
+/// CLI cannot bind this" into a call-site trait error the user can act on.
+///
+/// The trait is **sealed** and cannot be implemented outside of this crate: its
+/// private supertrait `sealed::ScalarIntoWasmAbi` is not nameable downstream.
+/// This is deliberate. The impl set has to stay in exact lockstep with the
+/// descriptors `outgoing_ref` accepts, and a downstream
+/// `impl ScalarIntoWasmAbi for MyType {}` could only ever break that: it would
+/// compile, then fail at wasm-bindgen CLI time with an "unsupported type behind
+/// a reference" error, long after the point where the mistake was made. Sealing
+/// turns that deferred, confusing failure into a compile error at the `impl`.
+///
+/// The type below satisfies `Copy + IntoWasmAbi`, so the *only* bound it fails
+/// is the private supertrait. That is what makes this a test of the seal
+/// specifically, rather than of the other bounds incidentally:
+///
+/// ```compile_fail,E0277
+/// use wasm_bindgen::convert::{IntoWasmAbi, ScalarIntoWasmAbi};
+/// use wasm_bindgen::describe::WasmDescribe;
+///
+/// #[derive(Copy, Clone)]
+/// struct NotReallyScalar(u32);
+///
+/// impl WasmDescribe for NotReallyScalar {
+///     fn describe() { u32::describe() }
+/// }
+/// impl IntoWasmAbi for NotReallyScalar {
+///     type Abi = u32;
+///     fn into_abi(self) -> u32 { self.0 }
+/// }
+///
+/// // `Copy` and `IntoWasmAbi` both hold, so this is rejected only because
+/// // `ScalarIntoWasmAbi`'s sealed supertrait cannot be named, let alone
+/// // implemented, from outside the `wasm-bindgen` crate.
+/// impl ScalarIntoWasmAbi for NotReallyScalar {}
+/// ```
+///
+/// # ⚠️ Unstable
+///
+/// This is part of the internal [`convert`](crate::convert) module, **no
+/// stability guarantees** are provided. Use at your own risk. See its
+/// documentation for more details.
+pub trait ScalarIntoWasmAbi: sealed::ScalarIntoWasmAbi + Copy + IntoWasmAbi {}
+
+/// Seals [`ScalarIntoWasmAbi`].
+///
+/// This module is `pub(crate)`, so while the trait inside it is `pub` (as it
+/// must be, to appear as a supertrait of a publicly re-exported trait) it is not
+/// *nameable* from outside the `wasm-bindgen` crate. Downstream code therefore
+/// cannot satisfy the supertrait bound and cannot implement
+/// [`ScalarIntoWasmAbi`]. It stays reachable from `super::impls`, where
+/// `scalar_into_wasm_abi!` implements it alongside the public trait.
+pub(crate) mod sealed {
+    /// See the module docs. Implemented only by `scalar_into_wasm_abi!` in
+    /// `crate::convert::impls`.
+    pub trait ScalarIntoWasmAbi {}
+}
+
 /// A trait for any type which maps to a Wasm primitive type when used in FFI
 /// (`i32`, `i64`, `f32`, or `f64`).
 ///
