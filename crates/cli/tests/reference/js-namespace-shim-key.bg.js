@@ -1,48 +1,23 @@
-export function _function() {
-    wasm._function();
-}
-
-export function _var() {
-    wasm._var();
-}
-
 export function exported() {
     wasm.exported();
 }
-
-/**
- * @param {number} _new
- * @param {number} _var
- * @param {number} _switch
- * @param {number} _default
- * @param {number} _arguments
- */
-export function weird_arguments(_new, _var, _switch, _default, _arguments) {
-    wasm.weird_arguments(_new, _var, _switch, _default, _arguments);
+export function __wbg_c_c6c4f07d196bdffe(arg0, arg1) {
+    a.b.c(getStringFromWasm0(arg0, arg1));
 }
-export function __wbg___wbindgen_throw_344f42d3211c4765(arg0, arg1) {
-    throw new Error(getStringFromWasm0(arg0, arg1));
+export function __wbg_c_ca0c67a358a3ed69(arg0, arg1) {
+    a.c(getStringFromWasm0(arg0, arg1));
 }
-export function __wbg_await_4ea226770dbb5814() {
-    await();
+export function __wbg_log_5e5e4051c9e253ff(arg0, arg1) {
+    beta.log(getStringFromWasm0(arg0, arg1));
 }
-export function __wbg_let_bd65bc5e4baee9c0(arg0) {
-    arg0.let();
+export function __wbg_log_747870ed06c474c8(arg0, arg1) {
+    alpha.log(getStringFromWasm0(arg0, arg1));
 }
-export function __wbg_new_c882a94b69381309() {
-    const ret = A.new();
-    return ret;
+export function __wbg_warn_505bf06fa20f48dc(arg0, arg1) {
+    warn(getStringFromWasm0(arg0, arg1));
 }
-export function __wbg_new_f3862fcd77f12fa3() {
-    B.new();
-}
-export function __wbg_new_ff795aff2a2882eb() {
-    const ret = window.__TAURI__.menu.Menu.new();
-    return ret;
-}
-export function __wbg_static_accessor_TRUE_c4e736fa46a2ab00() {
-    const ret = true;
-    return ret;
+export function __wbg_warn_ac30e50f7e66848f(arg0, arg1) {
+    gamma.warn(getStringFromWasm0(arg0, arg1));
 }
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;

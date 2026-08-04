@@ -910,17 +910,19 @@ impl<'a>
         BindgenAttrs,
         &'a Option<ast::ImportModule>,
         bool,
+        Option<&'a [String]>,
     )> for syn::ForeignItemFn
 {
     type Target = ast::ImportKind;
 
     fn convert(
         mut self,
-        (program, opts, module, block_slice_to_array): (
+        (program, opts, module, block_slice_to_array, js_namespace): (
             &ast::Program,
             BindgenAttrs,
             &'a Option<ast::ImportModule>,
             bool,
+            Option<&'a [String]>,
         ),
     ) -> Result<Self::Target, Diagnostic> {
         // `slice_to_array` is inherited from the enclosing `extern "C"`
@@ -1056,9 +1058,50 @@ impl<'a>
         }
 
         let shim = {
+            // The second element is an owned `String` rather than a `&str`
+            // purely so `js_namespace` can be folded into it below. `String`'s
+            // `Hash` impl delegates to `str`'s, so `(0, "n")` and
+            // `(0, String::from("n"))` hash identically and shim names for
+            // imports without a `js_namespace` are unchanged.
             let ns = match kind {
-                ast::ImportFunctionKind::Normal => (0, "n"),
-                ast::ImportFunctionKind::Method { ref class, .. } => (1, &class[..]),
+                ast::ImportFunctionKind::Normal => (0, "n".to_string()),
+                ast::ImportFunctionKind::Method { ref class, .. } => (1, class.clone()),
+            };
+            // `js_namespace` is part of a binding's identity: two otherwise
+            // identical imports that differ only in their namespace resolve to
+            // different JS values, so they must not share a shim name. Fold it
+            // into the existing namespace element rather than extending the
+            // hashed tuple, which would perturb the shim name of every import
+            // in existence, including the ones with no namespace at all.
+            //
+            // Each segment is written length-prefixed rather than plain-joined.
+            // Namespace segments come from string literals
+            // (`js_namespace = ["a", "b"]`, parsed via `syn::LitStr::value`), so a
+            // segment may contain *any* character — including whatever separator
+            // we pick. A plain join would therefore let `["a\u{1}b"]` alias
+            // `["a", "b"]` and reintroduce precisely the collision this exists to
+            // prevent. An explicit length in front of each segment is unambiguous
+            // whatever the segments contain.
+            //
+            // This must be the *resolved* namespace — a `js_namespace` written on
+            // the enclosing `extern "C"` block is inherited by every item in it and
+            // is just as much a part of the binding's identity as one written on
+            // the item. The caller performs that resolution
+            // (`item_opts.js_namespace().or(ctx.js_namespace)`) and hands the result
+            // in, so there is only one namespace value in scope here and reading the
+            // item-level attribute directly is not possible.
+            let ns = match js_namespace {
+                Some(namespace) => {
+                    let mut encoded = ns.1;
+                    for segment in namespace {
+                        encoded.push('\u{1}');
+                        encoded.push_str(&segment.len().to_string());
+                        encoded.push('\u{1}');
+                        encoded.push_str(segment);
+                    }
+                    (ns.0, encoded)
+                }
+                None => ns,
             };
             // Include cfg attributes in the hash so that functions with different
             // cfg gates get different shim names, even if their signatures are identical.
@@ -2608,9 +2651,13 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
         }
 
         let kind = match self {
-            syn::ForeignItem::Fn(f) => {
-                f.convert((program, item_opts, &module, block_slice_to_array))?
-            }
+            syn::ForeignItem::Fn(f) => f.convert((
+                program,
+                item_opts,
+                &module,
+                block_slice_to_array,
+                js_namespace.as_deref(),
+            ))?,
             syn::ForeignItem::Type(t) => t.convert((program, item_opts))?,
             syn::ForeignItem::Static(s) => s.convert((program, item_opts, &module))?,
             _ => panic!("only foreign functions/types allowed for now"),

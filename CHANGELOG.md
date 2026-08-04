@@ -9,6 +9,27 @@
 
 ### Fixed
 
+* `js_namespace` is now part of an imported function's generated shim name. Two
+  imports with identical Rust signatures that differed *only* in their
+  `js_namespace` hashed to the same `__wbg_<name>_<hash>` symbol, so they were
+  treated as one binding and one of the two call sites silently invoked the wrong
+  JS value:
+
+  ```rust
+  mod a { #[wasm_bindgen(js_namespace = ["alpha"])] extern "C" { pub fn log(s: &str); } }
+  mod b { #[wasm_bindgen(js_namespace = ["beta"])]  extern "C" { pub fn log(s: &str); } }
+  // previously: one shim, so both `a::log` and `b::log` reached the same object
+  ```
+
+  This applies whether the namespace is written on the item or inherited from the
+  enclosing `extern "C"` block, and imported statics already accounted for it, so
+  imported functions were the outlier.
+
+  Note that this changes the generated shim symbol for every import that has a
+  `js_namespace`. Shim names are an internal contract between the macro and the
+  CLI of the same version, so this needs no action, but anything matching on
+  `__wbg_*` names in generated output will see them move.
+
 * Fixed threaded Wasm memory layout to reserve wasm-bindgen's internal thread
   page after the module's original initial memory instead of at `__heap_base`,
   avoiding overlap with allocators that resolve `__heap_base`/`__heap_end` at
