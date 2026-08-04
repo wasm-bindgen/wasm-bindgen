@@ -1,13 +1,16 @@
 error[E0277]: the trait bound `CopyCell: ScalarIntoWasmAbi` is not satisfied
-  --> ui-tests/unsupported-ref-arg.rs:30:1
+  --> ui-tests/unsupported-ref-arg.rs:35:8
    |
-30 | #[wasm_bindgen]
-   | ^^^^^^^^^^^^^^^ unsatisfied trait bound
+31 | #[wasm_bindgen]
+   | --------------- in this attribute macro expansion
+...
+35 |     fn take_struct_ref(x: &CopyCell);
+   |        ^^^^^^^^^^^^^^^ unsatisfied trait bound
    |
 help: the trait `ScalarIntoWasmAbi` is not implemented for `CopyCell`
-  --> ui-tests/unsupported-ref-arg.rs:19:1
+  --> ui-tests/unsupported-ref-arg.rs:20:1
    |
-19 | pub struct CopyCell {
+20 | pub struct CopyCell {
    | ^^^^^^^^^^^^^^^^^^^
    = help: the following other types implement trait `ScalarIntoWasmAbi`:
              bool
@@ -23,15 +26,18 @@ help: the trait `ScalarIntoWasmAbi` is not implemented for `CopyCell`
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0277]: the trait bound `Color: ScalarIntoWasmAbi` is not satisfied
-  --> ui-tests/unsupported-ref-arg.rs:30:1
+  --> ui-tests/unsupported-ref-arg.rs:38:8
    |
-30 | #[wasm_bindgen]
-   | ^^^^^^^^^^^^^^^ unsatisfied trait bound
+31 | #[wasm_bindgen]
+   | --------------- in this attribute macro expansion
+...
+38 |     fn take_enum_ref(x: &Color);
+   |        ^^^^^^^^^^^^^ unsatisfied trait bound
    |
 help: the trait `ScalarIntoWasmAbi` is not implemented for `Color`
-  --> ui-tests/unsupported-ref-arg.rs:25:1
+  --> ui-tests/unsupported-ref-arg.rs:26:1
    |
-25 | pub enum Color {
+26 | pub enum Color {
    | ^^^^^^^^^^^^^^
    = help: the following other types implement trait `ScalarIntoWasmAbi`:
              bool
@@ -47,10 +53,13 @@ help: the trait `ScalarIntoWasmAbi` is not implemented for `Color`
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0277]: the trait bound `Option<u32>: ScalarIntoWasmAbi` is not satisfied
-  --> ui-tests/unsupported-ref-arg.rs:30:1
+  --> ui-tests/unsupported-ref-arg.rs:41:8
    |
-30 | #[wasm_bindgen]
-   | ^^^^^^^^^^^^^^^ the trait `ScalarIntoWasmAbi` is not implemented for `Option<u32>`
+31 | #[wasm_bindgen]
+   | --------------- in this attribute macro expansion
+...
+41 |     fn take_option_ref(x: &Option<u32>);
+   |        ^^^^^^^^^^^^^^^ the trait `ScalarIntoWasmAbi` is not implemented for `Option<u32>`
    |
    = help: the following other types implement trait `ScalarIntoWasmAbi`:
              bool
@@ -66,10 +75,13 @@ error[E0277]: the trait bound `Option<u32>: ScalarIntoWasmAbi` is not satisfied
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0277]: the trait bound `&u32: ScalarIntoWasmAbi` is not satisfied
-  --> ui-tests/unsupported-ref-arg.rs:30:1
+  --> ui-tests/unsupported-ref-arg.rs:44:8
    |
-30 | #[wasm_bindgen]
-   | ^^^^^^^^^^^^^^^ the trait `ScalarIntoWasmAbi` is not implemented for `&u32`
+31 | #[wasm_bindgen]
+   | --------------- in this attribute macro expansion
+...
+44 |     fn take_ref_ref(x: &&u32);
+   |        ^^^^^^^^^^^^ the trait `ScalarIntoWasmAbi` is not implemented for `&u32`
    |
 help: the trait `ScalarIntoWasmAbi` is implemented for `u32`
   --> $WORKSPACE/src/convert/impls.rs
@@ -82,11 +94,75 @@ help: the trait `ScalarIntoWasmAbi` is implemented for `u32`
    = note: required for `&&u32` to implement `IntoWasmAbi`
    = note: this error originates in the attribute macro `wasm_bindgen` which comes from the expansion of the macro `scalar_into_wasm_abi` (in Nightly builds, run with -Z macro-backtrace for more info)
 
-error[E0277]: the trait bound `&u32: ScalarIntoWasmAbi` is not satisfied
-  --> ui-tests/unsupported-ref-arg.rs:43:21
+error[E0277]: the trait bound `CopyCell: ScalarIntoWasmAbi` is not satisfied
+  --> ui-tests/unsupported-ref-arg.rs:35:27
    |
-43 |     fn take_ref_ref(x: &&u32);
-   |                     ^ the trait `ScalarIntoWasmAbi` is not implemented for `&u32`
+35 |     fn take_struct_ref(x: &CopyCell);
+   |                           ^ unsatisfied trait bound
+   |
+help: the trait `ScalarIntoWasmAbi` is not implemented for `CopyCell`
+  --> ui-tests/unsupported-ref-arg.rs:20:1
+   |
+20 | pub struct CopyCell {
+   | ^^^^^^^^^^^^^^^^^^^
+   = help: the following other types implement trait `ScalarIntoWasmAbi`:
+             bool
+             char
+             f32
+             f64
+             i128
+             i16
+             i32
+             i64
+           and $N others
+   = note: required for `&CopyCell` to implement `IntoWasmAbi`
+
+error[E0277]: the trait bound `Color: ScalarIntoWasmAbi` is not satisfied
+  --> ui-tests/unsupported-ref-arg.rs:38:25
+   |
+38 |     fn take_enum_ref(x: &Color);
+   |                         ^ unsatisfied trait bound
+   |
+help: the trait `ScalarIntoWasmAbi` is not implemented for `Color`
+  --> ui-tests/unsupported-ref-arg.rs:26:1
+   |
+26 | pub enum Color {
+   | ^^^^^^^^^^^^^^
+   = help: the following other types implement trait `ScalarIntoWasmAbi`:
+             bool
+             char
+             f32
+             f64
+             i128
+             i16
+             i32
+             i64
+           and $N others
+   = note: required for `&Color` to implement `IntoWasmAbi`
+
+error[E0277]: the trait bound `Option<u32>: ScalarIntoWasmAbi` is not satisfied
+  --> ui-tests/unsupported-ref-arg.rs:41:27
+   |
+41 |     fn take_option_ref(x: &Option<u32>);
+   |                           ^ the trait `ScalarIntoWasmAbi` is not implemented for `Option<u32>`
+   |
+   = help: the following other types implement trait `ScalarIntoWasmAbi`:
+             bool
+             char
+             f32
+             f64
+             i128
+             i16
+             i32
+             i64
+           and $N others
+   = note: required for `&Option<u32>` to implement `IntoWasmAbi`
+
+error[E0277]: the trait bound `&u32: ScalarIntoWasmAbi` is not satisfied
+  --> ui-tests/unsupported-ref-arg.rs:44:24
+   |
+44 |     fn take_ref_ref(x: &&u32);
+   |                        ^ the trait `ScalarIntoWasmAbi` is not implemented for `&u32`
    |
 help: the trait `ScalarIntoWasmAbi` is implemented for `u32`
   --> $WORKSPACE/src/convert/impls.rs

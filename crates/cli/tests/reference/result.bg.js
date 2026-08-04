@@ -44,7 +44,7 @@ export function __wbg_Error_92b29b0548f8b746(arg0, arg1) {
 export function __wbg___wbindgen_throw_344f42d3211c4765(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
-export function __wbindgen_cast_0000000000000000(arg0) {
+export function __wbindgen_generic_0000000000000000(arg0) {
     // Cast intrinsic for `F64 -> Externref`.
     const ret = arg0;
     return ret;

@@ -15,7 +15,7 @@ macro_rules! intrinsics {
     }) => {
         /// All wasm-bindgen intrinsics that could be depended on by a wasm
         /// module.
-        #[derive(Debug)]
+        #[derive(Debug, Clone)]
         pub enum Intrinsic {
             $($name,)*
         }

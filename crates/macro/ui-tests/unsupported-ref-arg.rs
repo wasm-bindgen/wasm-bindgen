@@ -5,13 +5,14 @@
 // at compile time with a trait error naming the user's own type, rather than
 // aborting `wasm-bindgen` after the build has already succeeded.
 //
-// Note the spans below: four of the five errors point at the block's
-// `#[wasm_bindgen]` rather than at the offending argument. That is a pre-existing
-// limitation of how imported-function signatures are respanned (see the comment
-// on `respan` in `crates/macro-support/src/codegen.rs`), not something specific
-// to `ScalarIntoWasmAbi` -- any unimplemented-ABI error on an import argument
-// lands there. It is recorded here rather than papered over, because this check
-// makes that path considerably easier to reach.
+// Note the spans below: each rejected argument produces two errors, one located
+// at the imported function and one at the argument's type. Both are on the
+// offending declaration rather than on the block's `#[wasm_bindgen]`, which is
+// where an unimplemented-ABI error would otherwise land -- the generated shim
+// signature and the generated body each carry the obligation independently, and
+// `respan_all`/`abi_span` in `crates/macro-support/src/codegen.rs` place them.
+// The pair is redundant but points at the right place, which matters because
+// this check makes that path considerably easier to reach.
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

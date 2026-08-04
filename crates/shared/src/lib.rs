@@ -13,7 +13,7 @@ pub mod tys;
 // This gets changed whenever our schema changes.
 // At this time versions of wasm-bindgen and wasm-bindgen-cli are required to have the exact same
 // SCHEMA_VERSION in order to work together.
-pub const SCHEMA_VERSION: &str = "0.2.122";
+pub const SCHEMA_VERSION: &str = "0.2.127";
 
 #[macro_export]
 macro_rules! shared_api {
@@ -72,6 +72,12 @@ macro_rules! shared_api {
             method: Option<MethodData<'a>>,
             structural: bool,
             function: Function<'a>,
+            // Whether this import uses the per-monomorphisation generic path
+            // (`#[wasm_bindgen(generic_per_mono)]`) and is therefore bound per
+            // concrete instantiation via the `__wbindgen_describe_generic_import`
+            // marker rather than a single named descriptor shim. (Type-erasure
+            // generic imports do not set this; they bind like normal imports.)
+            generic_per_mono: bool,
         }
 
         struct MethodData<'a> {
