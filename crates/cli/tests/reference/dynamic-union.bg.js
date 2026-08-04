@@ -113,7 +113,7 @@ export function __wbg_instanceof_ImportedType_fe5eedffdd3920ad(arg0) {
     const ret = result;
     return ret;
 }
-export function __wbindgen_cast_0000000000000000(arg0, arg1) {
+export function __wbindgen_generic_0000000000000000(arg0, arg1) {
     // Cast intrinsic for `Ref(String) -> Externref`.
     const ret = getStringFromWasm0(arg0, arg1);
     return ret;

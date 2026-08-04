@@ -2098,6 +2098,13 @@ impl Invocation {
                 if cx.import_never_handle_error(import) {
                     *guard = ExportGuard::None;
                 }
+                // Label manufactured bindings whose name says nothing about what
+                // they bind. A `generic_per_mono` monomorphisation is emitted as
+                // `__wbindgen_generic_<hash>`, so without this the glue is a wall of
+                // near-identical anonymous shims.
+                if let Some(comment) = cx.aux.import_comments.get(id) {
+                    writeln!(prelude, "// {comment}")?;
+                }
                 cx.invoke_import(import, kind, args, variadic, prelude)
             }
         }

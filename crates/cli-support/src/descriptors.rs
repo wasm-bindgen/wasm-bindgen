@@ -10,9 +10,9 @@
 //! `walrus::Module` which contains all the results of all the descriptor
 //! functions.
 
-use crate::descriptor::Descriptor;
+use crate::descriptor::{Descriptor, GenericImportKey};
 use crate::interpreter::Interpreter;
-use anyhow::Error;
+use anyhow::{bail, Error};
 use std::borrow::Cow;
 use std::collections::hash_map::HashMap;
 use walrus::{CustomSection, FunctionId, Module, TypedCustomSectionId};
@@ -20,7 +20,12 @@ use walrus::{CustomSection, FunctionId, Module, TypedCustomSectionId};
 #[derive(Default, Debug)]
 pub struct WasmBindgenDescriptorsSection {
     pub descriptors: HashMap<String, Descriptor>,
-    pub cast_imports: HashMap<Descriptor, Vec<FunctionId>>,
+    /// Per-monomorphisation imports discovered via the
+    /// `__wbindgen_describe_generic_import` marker. Keyed by the
+    /// `(key, signature)` pair so that two distinct generic imports sharing an
+    /// identical concrete signature don't collapse into a single manufactured
+    /// binding. See [`GenericImportKey`] for the two kinds of key.
+    pub generic_imports: HashMap<(GenericImportKey, Descriptor), Vec<FunctionId>>,
 }
 
 pub type WasmBindgenDescriptorsSectionId = TypedCustomSectionId<WasmBindgenDescriptorsSection>;
@@ -34,7 +39,7 @@ pub fn execute(module: &mut Module) -> Result<WasmBindgenDescriptorsSectionId, E
     let mut interpreter = Interpreter::new(module)?;
 
     section.execute_exports(module, &mut interpreter)?;
-    section.execute_casts(module, &mut interpreter)?;
+    section.execute_generic_imports(module, &mut interpreter)?;
 
     Ok(module.customs.add(section))
 }
@@ -74,55 +79,93 @@ impl WasmBindgenDescriptorsSection {
         Ok(())
     }
 
-    fn execute_casts(
+    /// Discover per-monomorphisation imports (generic imports and `wbg_cast`
+    /// identity adapters).
+    ///
+    /// It finds every function that calls the
+    /// `__wbindgen_describe_generic_import` marker, interprets each to recover
+    /// its `(key, concrete signature)`, and groups the originating function ids
+    /// by that key. See [`GenericImportKey`] for what the key distinguishes.
+    fn execute_generic_imports(
         &mut self,
         module: &mut Module,
         interpreter: &mut Interpreter,
     ) -> Result<(), Error> {
         use walrus::ir::*;
 
-        // If our describe cast intrinsic isn't present or wasn't linked
-        // then there're no casts, so nothing to do!
-        let wbindgen_describe_cast = match interpreter.describe_cast_id() {
+        let wbindgen_describe_generic_import = match interpreter.describe_generic_import_id() {
             Some(i) => i,
             None => return Ok(()),
         };
 
-        // Find all functions which call `wbindgen_describe_cast`. These are
-        // specially codegen'd so we know the rough structure of them. For each
-        // one we delegate to the interpreter to figure out the source and
-        // target type descriptors.
-        let mut replace_with_imports = Vec::new();
+        let mut generic_funcs = Vec::new();
         for (func_id, local) in module.funcs.iter_local() {
-            let mut find = FindDescribeCast {
-                wbindgen_describe_cast,
-                found: false,
+            let mut find = FindDescribeGenericImport {
+                wbindgen_describe_generic_import,
+                calls: 0,
             };
             dfs_in_order(&mut find, local, local.entry_block());
-            if find.found {
-                replace_with_imports.push(func_id);
+            if find.calls > 0 {
+                generic_funcs.push((func_id, find.calls));
             }
         }
-        for func_id in replace_with_imports {
+        for (func_id, calls) in generic_funcs {
+            // `interpret_descriptor` stops at the first marker call, so a second
+            // one in the same function would be silently dropped and every call
+            // site bound to it mis-bound. That should be impossible — the macro
+            // emits one `#[inline(never)]` shim per monomorphisation — but
+            // function merging or outlining in LLVM could in principle fuse two
+            // of them, so refuse rather than miscompile.
+            if calls > 1 {
+                bail!(
+                    "function {} contains {calls} calls to \
+                     `__wbindgen_describe_generic_import`, but exactly one was expected. \
+                     Each monomorphisation must live in its own `#[inline(never)]` shim; \
+                     if two were merged into one Wasm function only the first would be \
+                     bound. This is a wasm-bindgen bug, please report it.",
+                    describe_func(module, func_id),
+                );
+            }
+
             let descriptor = interpreter.interpret_descriptor(func_id, module);
-            let descriptor = Descriptor::decode(descriptor);
-            self.cast_imports
-                .entry(descriptor)
+            let (key, descriptor) = Descriptor::decode_generic_import(descriptor);
+            self.generic_imports
+                .entry((key, descriptor))
                 .or_default()
                 .push(func_id);
         }
 
         return Ok(());
 
-        struct FindDescribeCast {
-            wbindgen_describe_cast: FunctionId,
-            found: bool,
+        /// Best-effort human-readable identification of a function for error
+        /// messages: the name if the module has one, else the raw index.
+        fn describe_func(module: &Module, id: FunctionId) -> String {
+            match &module.funcs.get(id).name {
+                Some(name) => format!("`{name}`"),
+                None => format!("#{:?}", id.index()),
+            }
         }
 
-        impl Visitor<'_> for FindDescribeCast {
+        struct FindDescribeGenericImport {
+            wbindgen_describe_generic_import: FunctionId,
+            calls: usize,
+        }
+
+        impl Visitor<'_> for FindDescribeGenericImport {
             fn visit_call(&mut self, call: &Call) {
-                if call.func == self.wbindgen_describe_cast {
-                    self.found = true;
+                if call.func == self.wbindgen_describe_generic_import {
+                    self.calls += 1;
+                }
+            }
+
+            // A tail call to the marker is just as much a direct call. Both the
+            // interpreter (`Instr::Call(..) | Instr::ReturnCall(..)`) and the
+            // call-site rewriter already treat the two alike; without this
+            // override discovery alone would miss `return_call` and the
+            // monomorphisation would never be bound.
+            fn visit_return_call(&mut self, call: &ReturnCall) {
+                if call.func == self.wbindgen_describe_generic_import {
+                    self.calls += 1;
                 }
             }
         }

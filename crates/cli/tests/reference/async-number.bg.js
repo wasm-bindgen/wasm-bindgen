@@ -101,17 +101,17 @@ export function __wbg_then_7026b513a94278a8(arg0, arg1) {
     const ret = arg0.then(arg1);
     return ret;
 }
-export function __wbindgen_cast_0000000000000000(arg0, arg1) {
+export function __wbindgen_generic_0000000000000000(arg0, arg1) {
     // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [Externref], shim_idx: 6, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
     const ret = makeMutClosure(arg0, arg1, wasm_bindgen_0000000000000003___convert__closures_____invoke___wasm_bindgen_0000000000000003___JsValue__core_0000000000000005___result__Result_____wasm_bindgen_0000000000000003___JsError___true_);
     return ret;
 }
-export function __wbindgen_cast_0000000000000001(arg0) {
+export function __wbindgen_generic_0000000000000001(arg0) {
     // Cast intrinsic for `F64 -> Externref`.
     const ret = arg0;
     return ret;
 }
-export function __wbindgen_cast_0000000000000002(arg0, arg1) {
+export function __wbindgen_generic_0000000000000002(arg0, arg1) {
     // Cast intrinsic for `Ref(String) -> Externref`.
     const ret = getStringFromWasm0(arg0, arg1);
     return ret;

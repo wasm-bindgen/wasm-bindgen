@@ -20,6 +20,47 @@ pub fn inform(a: u32) {
     unsafe { super::__wbindgen_describe(a) }
 }
 
+/// Marker terminating a per-monomorphisation descriptor function. See
+/// `__wbindgen_describe_generic_import` in the crate root. Used both for
+/// generic imports and, with an empty shim key, for `__rt::wbg_cast` identity
+/// adapters. `func` is the monomorphised shim's own pointer and `prims` points
+/// at its ABI arguments; both exist only to keep inputs live across the opaque
+/// FFI boundary so the descriptor survives to be interpreted by the CLI.
+///
+/// Must be `#[inline(always)]` (like [`inform`]) so the marker call lands
+/// directly inside each monomorphised shim; the CLI's discovery pass scans for
+/// functions that *directly* call the marker import.
+///
+/// # Safety
+///
+/// This is an FFI call into an import that the CLI replaces wholesale, so
+/// nothing here is checked. The caller must guarantee all of:
+///
+/// * It is called from an `#[inline(never)]`, monomorphised descriptor shim
+///   whose body is a descriptor stream, and exactly once in that shim. If the
+///   call is inlined into a caller, or two monomorphisations end up in one Wasm
+///   function, the CLI's discovery pass either misses the descriptor or binds
+///   only the first one and silently mis-binds the rest.
+/// * `prims` points at the shim's own live ABI arguments (a
+///   `*const (Prim1, ..)`), so that they are kept alive across this opaque
+///   boundary and cannot be eliminated as dead code before the descriptor is
+///   emitted.
+/// * `func` is the monomorphised shim's own function pointer, again only to keep
+///   it live.
+/// * The returned pointer is *not* a valid pointer to dereference as such. It is
+///   only ever valid to `core::ptr::read` it at exactly the `Abi` type the shim
+///   declares as its return type — that is what the CLI's rewritten call site
+///   provides. Reading it at any other type, or dereferencing it directly, is
+///   undefined behaviour.
+///
+/// Note that unlike [`crate::convert`], this module does not
+/// `#![allow(clippy::missing_safety_doc)]`, so this section is required.
+#[inline(always)]
+#[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+pub unsafe fn describe_generic_import(func: *const (), prims: *const ()) -> *const () {
+    super::__wbindgen_describe_generic_import(func, prims)
+}
+
 pub trait WasmDescribe {
     fn describe();
 }

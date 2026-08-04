@@ -110,8 +110,8 @@ export interface InitOutput {
     readonly wasmbindgentestcontext_new: (a: number) => number;
     readonly wasmbindgentestcontext_run: (a: number, b: number, c: number) => any;
     readonly wasm_bindgen_0000000000000003___convert__closures_____invoke___wasm_bindgen_0000000000000003___JsValue__u32__js_sys_0000000000000004___Array______true_: (a: number, b: number, c: any, d: number, e: any) => void;
-    readonly wasm_bindgen_0000000000000003___convert__closures_____invoke___wasm_bindgen_0000000000000003___JsValue__core_0000000000000005___result__Result_____wasm_bindgen_0000000000000003___JsError___true_: (a: number, b: number, c: any) => [number, number];
     readonly wasm_bindgen_0000000000000003___convert__closures_____invoke___js_sys_0000000000000004___Function_fn_wasm_bindgen_0000000000000003___JsValue_____wasm_bindgen_0000000000000003___sys__Undefined___js_sys_0000000000000004___Function_fn_wasm_bindgen_0000000000000003___JsValue_____wasm_bindgen_0000000000000003___sys__Undefined_______true_: (a: number, b: number, c: any, d: any) => void;
+    readonly wasm_bindgen_0000000000000003___convert__closures_____invoke___wasm_bindgen_0000000000000003___JsValue__core_0000000000000005___result__Result_____wasm_bindgen_0000000000000003___JsError___true_: (a: number, b: number, c: any) => [number, number];
     readonly wasm_bindgen_0000000000000003___convert__closures_____invoke___bool__true_: (a: number, b: number) => number;
     readonly wasm_bindgen_0000000000000003___convert__closures_____invoke_______true_: (a: number, b: number) => void;
     readonly __externref_table_alloc: () => number;
