@@ -220,17 +220,6 @@ impl ToTokens for ast::Struct {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let name = &self.rust_name;
         let name_str = self.qualified_name.to_string();
-        // One descriptor word per `char`, so the length prefix counts `char`s, not
-        // UTF-8 bytes.
-        //
-        // Unlike the other length-prefixed strings, this one is not reachable with
-        // a non-ASCII value today: an exported struct also generates `#[no_mangle]`
-        // symbols derived from this same qualified name, and `#[no_mangle]`
-        // requires an ASCII identifier (E0754), so a non-ASCII `js_name` or
-        // `js_namespace` on a struct fails to compile long before a descriptor is
-        // emitted. This is kept correct for consistency with the reachable cases,
-        // and so that the invariant still holds if that restriction is ever lifted
-        // (rust-lang/rust#83942).
         let name_len = name_str.chars().count() as u32;
         let name_chars: Vec<u32> = name_str.chars().map(|c| c as u32).collect();
         let new_fn = Ident::new(&shared::new_function(&name_str), Span::call_site());
@@ -1913,10 +1902,6 @@ impl ToTokens for ast::DynamicUnion {
         };
 
         let name_str = &self.js_name;
-        // One descriptor word per `char`: count `char`s, not UTF-8 bytes. As with
-        // `ast::Struct` above, a dynamic union's `#[no_mangle]` symbols are derived
-        // from this name, so a non-ASCII value cannot reach here today; corrected
-        // for consistency and future-proofing rather than to fix a live bug.
         let name_len = name_str.chars().count() as u32;
         let name_chars = name_str.chars().map(u32::from);
 
@@ -2935,7 +2920,6 @@ impl ToTokens for ast::Enum {
     fn to_tokens(&self, into: &mut TokenStream) {
         let enum_name = &self.rust_name;
         let name_str = shared::qualified_name(self.js_namespace.as_deref(), &self.js_name);
-        // One descriptor word per `char`: count `char`s, not UTF-8 bytes.
         let name_len = name_str.chars().count() as u32;
         let name_chars = name_str.chars().map(|c| c as u32);
         let hole = &self.hole;
