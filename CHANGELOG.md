@@ -9,6 +9,28 @@
 
 ### Fixed
 
+* Length-prefixed strings in the descriptor stream now count `char`s rather than
+  UTF-8 bytes. The descriptor wire format emits one word per `char` and prefixes
+  it with a length, but that length was computed with `str::len()`, so any
+  non-ASCII string made the prefix exceed the number of words actually written
+  and left the CLI's decoder consuming descriptor *payload* words as characters.
+  Depending on what followed, that either aborted the build with an opaque
+  decoder panic or silently mis-bound everything after the affected item.
+
+  In practice this was reachable through `#[wasm_bindgen(typescript_type = "…")]`
+  (an arbitrary user string), and through `js_name` on a string enum or a C-style
+  enum, e.g.:
+
+  ```rust
+  #[wasm_bindgen(typescript_type = "\"Café\" | \"naïve\"")]
+  type AccentedType;
+  ```
+
+  The equivalent prefixes for exported structs and dynamic unions were corrected
+  too, but those are not reachable with a non-ASCII value today: both also
+  generate `#[no_mangle]` symbols from the same name, and `#[no_mangle]` requires
+  an ASCII identifier, so they fail to compile before any descriptor is emitted.
+
 * Fixed threaded Wasm memory layout to reserve wasm-bindgen's internal thread
   page after the module's original initial memory instead of at `__heap_base`,
   avoiding overlap with allocators that resolve `__heap_base`/`__heap_end` at

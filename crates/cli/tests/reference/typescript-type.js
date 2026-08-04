@@ -5,5 +5,5 @@ import { __wbg_set_wasm } from "./reference_test_bg.js";
 __wbg_set_wasm(wasm);
 wasm.__wbindgen_start();
 export {
-    single, slice
+    Größe, accented, single, slice, take_cafe, take_groesse
 } from "./reference_test_bg.js";
