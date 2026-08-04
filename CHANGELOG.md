@@ -8,6 +8,34 @@
 * [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
   to `web-sys` [#5247](https://github.com/wasm-bindgen/wasm-bindgen/pull/5247)
 
+* Added the `ScalarIntoWasmAbi` marker trait and, with it, a blanket
+  `impl<T: ScalarIntoWasmAbi> IntoWasmAbi for &T`. `&T` arguments where `T` is a
+  scalar are now accepted in imported function signatures; previously only
+  `&JsValue` and the concrete slice/string references were. The scalar set is
+  `i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `i64`, `u64`, `i128`, `u128`, `isize`,
+  `usize`, `f32`, `f64`, `bool` and `char`. JS cannot hold a reference into linear
+  memory, so the value is copied across and the wire is identical to passing `T`
+  by value.
+
+  `ScalarIntoWasmAbi` is sealed and cannot be implemented downstream. Beyond
+  keeping its impl set in lockstep with the types the CLI can bind behind a
+  reference, sealing is what keeps the blanket impl coherent: a downstream
+  `impl ScalarIntoWasmAbi for SomeImportedType` would overlap the
+  macro-generated `impl<'a> IntoWasmAbi for &'a SomeImportedType` and fail with
+  `E0119`, breaking every imported type in that crate rather than just the one.
+
+  This is fully additive for downstream crates. A hand-written
+  `impl IntoWasmAbi for &MyConcreteType` still compiles alongside the blanket impl
+  — which is why the macro-generated impls for imported types, and hence all of
+  `js-sys`/`web-sys`, are unaffected — and the only shape that could genuinely
+  overlap, a generic `impl<T: MyBound> IntoWasmAbi for &T`, is already forbidden
+  outside this crate by the orphan rule (`E0210`) and so cannot exist to be
+  broken.
+
+  Passing `&T` for a non-scalar `T` is now a trait error at the import
+  declaration instead of an abort partway through `wasm-bindgen` after the build
+  has already succeeded.
+
 ### Changed
 
 * Emscripten output now marks public exports (free functions, classes, enums,
