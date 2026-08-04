@@ -81,8 +81,9 @@ fresh JS string.
 * It does **not** work with a generic element type. `&[T]` for a type
   parameter `T` is rejected at compile time, because
   `VectorRefIntoWasmAbi` is implemented per concrete ABI shape and no
-  bound the caller can write makes an arbitrary `T` satisfy it. The
-  element type must be concrete, e.g. `&[u16]`. A concrete element type
+  bound the caller can write makes an arbitrary `T` satisfy it. This
+  applies on both the type-erasure generic path and `generic_per_mono`.
+  The element type must be concrete, e.g. `&[u16]`. A concrete element type
   in a generic function is fine — it is the element type that has to be
   concrete, not the function. Note that `slice_to_array` is inheritable
   from the enclosing `extern "C"` block, so a generic function in such a

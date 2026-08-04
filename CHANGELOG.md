@@ -27,6 +27,18 @@
 * [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
   to `web-sys` [#5247](https://github.com/wasm-bindgen/wasm-bindgen/pull/5247)
 
+* Added `#[wasm_bindgen(generic_per_mono)]` for imported functions, which binds a
+  generic import once per monomorphisation instead of erasing its type
+  parameters to `JsValue`. It can be applied to an individual import or to a
+  whole `extern "C"` block, which every function in the block then inherits.
+  Each instantiation gets its own descriptor, so
+  arguments and return values are marshalled at their concrete types (a `u32`
+  crosses as a number, a `String` as a string) rather than being boxed. Trait
+  bounds, `where` predicates (including higher-ranked ones), associated-type
+  projections, `async`, `catch`, and `slice_to_array` are all supported; see
+  [the guide](https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/generic_per_mono.html)
+  for the supported surface and the shapes that are rejected.
+
 * Added `riscv64gc-unknown-linux-gnu` release artifacts.
   [#5265](https://github.com/wasm-bindgen/wasm-bindgen/pull/5265)
 
@@ -68,6 +80,29 @@
   reachable through `__deps`. Requires an emscripten with `__export`/`__force`
   symbol-attribute support.
 
+* **The schema version was bumped**, so the `wasm-bindgen` runtime crate and the
+  `wasm-bindgen` CLI must be updated together. A mismatched pair now fails with
+  an explicit schema-version error instead of producing wrong output. This
+  affects every user, not just users of the new features below, because the
+  `#[wasm_bindgen]`-emitted metadata gained a field (`generic_per_mono` on
+  imported functions).
+
+* Casts are now bound through the same pipeline as `generic_per_mono` imports,
+  which both discover their monomorphisations through one shared descriptor
+  marker. Two internal names changed as a result: the marker import
+  `__wbindgen_describe_cast` is now `__wbindgen_describe_generic_import`, and the
+  cast shims emitted into the JS glue are named `__wbindgen_generic_N` instead of
+  `__wbindgen_cast_N`. Both are internal details of the generated output, but the
+  latter is visible in the emitted JS and will change the output of anyone
+  matching on those names.
+
+  The cast *descriptor wire format* changed to match: a cast descriptor now
+  begins with an extra `inform(0)`, the zero-length shim key that marks it as the
+  degenerate generic import. This is purely internal, but it is why the runtime
+  and CLI have to be upgraded in lockstep (see the schema version bump above) —
+  an old CLI reading a new cast descriptor would misinterpret the leading length
+  prefix as a descriptor tag.
+
 * Updated WebGPU bindings to the August 2026 spec, including the new
   `GPUCommandEncoder::copy_buffer_to_buffer` overloads and `setImmediates`.
   [#5246](https://github.com/wasm-bindgen/wasm-bindgen/pull/5246)
@@ -76,7 +111,6 @@
   variant: `LockManager::request_with_callback` is now `request`, and
   `request_with_options_and_callback` is now `request_with_options`.
   [#5246](https://github.com/wasm-bindgen/wasm-bindgen/pull/5246)
-
 ### Fixed
 
 * The `name` property of the JS error thrown for `panic=unwind` is now set from

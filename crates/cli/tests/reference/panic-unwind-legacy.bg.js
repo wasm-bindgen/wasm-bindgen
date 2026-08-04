@@ -22,7 +22,7 @@ export function __wbg___wbindgen_rethrow_fbd2dcd7d2b9ac5f() { return wrapError(f
 export function __wbg___wbindgen_throw_bb96b2010945f0bc() { return wrapError(function (arg0, arg1) {
     throw new WebAssembly.Exception(__wbindgen_wrapped_jstag, [new Error(getStringFromWasm0(arg0, arg1))]);
 }, arguments); }
-export function __wbindgen_cast_0000000000000000() { return wrapError(function (arg0, arg1) {
+export function __wbindgen_generic_0000000000000000() { return wrapError(function (arg0, arg1) {
     // Cast intrinsic for `Ref(String) -> Externref`.
     const ret = getStringFromWasm0(arg0, arg1);
     return ret;

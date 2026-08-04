@@ -262,6 +262,203 @@ fn one_export_works() {
         .unwrap();
 }
 
+/// A `generic_per_mono` import declared in an upstream crate must still bind
+/// when that crate's `extern "C"` block contains *nothing else*.
+///
+/// The crate's `#[link_section = "__wasm_bindgen_unstable"]` AST metadata lives
+/// in an rlib object file, and wasm-ld only pulls an archive member in if
+/// something references one of its symbols. The monomorphised shim is
+/// instantiated in the downstream crate's CGU, so it references nothing
+/// upstream; without the anchoring descriptor export the member is dropped, the
+/// AST entry goes missing, and the CLI fails with "generic import
+/// monomorphisation references unknown shim".
+///
+/// This has to be a real two-crate build: a single-crate test cannot reproduce
+/// it, since there is no archive member to drop. It also has to be a debug,
+/// non-LTO build — `lto = true` merges everything and masks the problem
+/// entirely, which is why this regressed without CI noticing.
+#[test]
+fn cross_crate_generic_per_mono_only_block() {
+    let mut project = Project::new("cross_crate_generic_per_mono_only_block");
+    project
+        .dep("upstream_generic = { path = 'upstream_generic' }")
+        .file(
+            "upstream_generic/Cargo.toml",
+            &format!(
+                "
+                    [package]
+                    name = \"upstream_generic\"
+                    authors = []
+                    version = \"1.0.0\"
+                    edition = '2021'
+
+                    [dependencies]
+                    wasm-bindgen = {{ path = '{repo}' }}
+                ",
+                repo = REPO_ROOT.display(),
+            ),
+        )
+        // Nothing but the generic import: any non-generic import here would
+        // emit its own descriptor export and anchor the member by accident,
+        // hiding the bug this test exists to catch.
+        .file(
+            "upstream_generic/src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+                #[wasm_bindgen]
+                extern "C" {
+                    #[wasm_bindgen(generic_per_mono)]
+                    pub fn shared_log<T>(x: T);
+                }
+            "#,
+        )
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+                #[wasm_bindgen]
+                pub fn go() {
+                    upstream_generic::shared_log(1u32);
+                    upstream_generic::shared_log("two");
+                }
+            "#,
+        );
+
+    let out_dir = project.wasm_bindgen("--target web").unwrap();
+    let js =
+        fs::read_to_string(out_dir.join("cross_crate_generic_per_mono_only_block.js")).unwrap();
+
+    // One manufactured shim per monomorphisation, each calling the upstream
+    // import. `u32` crosses as a number, `&str` as a (ptr, len) pair.
+    assert!(
+        js.contains("shared_log(arg0 >>> 0)"),
+        "missing per-mono binding for the u32 instantiation:\n{js}"
+    );
+    assert!(
+        js.contains("shared_log(getStringFromWasm0(arg0, arg1))"),
+        "missing per-mono binding for the &str instantiation:\n{js}"
+    );
+
+    // The anchoring descriptor export is interpreted and deleted by
+    // `execute_exports`, so none of it may survive into the output.
+    assert!(
+        !js.contains("__wbindgen_describe"),
+        "descriptor export leaked into the generated JS:\n{js}"
+    );
+}
+
+/// The generated per-monomorphisation shim is expanded with call-site hygiene
+/// into the user's own module, so every path it names must be fully qualified.
+///
+/// An unqualified `core::ptr::read` is shadowed by a user item called `core` in
+/// that module, and the expansion then fails with `cannot find function read in
+/// module core::ptr` — an error pointing at code the user never wrote, with no
+/// hint that their own module is the cause. (A 2015-edition consumer would fail
+/// even without the shadowing, since `core::` resolves relative to the crate
+/// root there.)
+///
+/// `core` is the realistic case because the shim reaches for `ptr::read`, but the
+/// same applies to any prelude crate name, so `alloc` and `std` are shadowed here
+/// too to keep the whole expansion honest.
+#[test]
+fn generic_per_mono_shim_paths_survive_shadowing() {
+    let mut project = Project::new("generic_per_mono_shim_paths_survive_shadowing");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen::prelude::*;
+
+            // User items shadowing the crate names the expansion relies on.
+            mod core { pub mod ptr {} pub mod option {} }
+            mod alloc {}
+            mod std {}
+
+            #[wasm_bindgen]
+            extern "C" {
+                // Covers the `WasmRet<..>`-returning shim shape.
+                #[wasm_bindgen(generic_per_mono)]
+                fn echo<T>(x: T) -> T;
+                // Covers the unit-returning shim shape, which builds its marker
+                // call as a statement rather than a tail expression.
+                #[wasm_bindgen(generic_per_mono)]
+                fn sink<T>(x: T);
+                // Covers the `slice_to_array` rewrite, which names both
+                // `alloc::vec::Vec` (in the describe type) and `core::option::Option`
+                // (in the ABI conversion for the `Option<&[T]>` shape).
+                #[wasm_bindgen(generic_per_mono, slice_to_array)]
+                fn take_slice<T>(xs: &[u32], t: T);
+                #[wasm_bindgen(generic_per_mono, slice_to_array)]
+                fn take_opt_slice<T>(xs: Option<&[u32]>, t: T);
+            }
+
+            #[wasm_bindgen]
+            pub fn go() {
+                let _ = echo(1u32);
+                let _ = echo(1.5f64);
+                sink(2u32);
+                take_slice(&[1u32, 2], 3u32);
+                take_opt_slice(None, 4u32);
+                take_opt_slice(Some(&[5u32]), 6u32);
+            }
+        "#,
+    );
+
+    // A successful `cargo build` is the assertion: any unqualified path in the
+    // generated shim resolves to one of the shadowing modules and fails to
+    // compile.
+    project.build();
+}
+
+/// The per-monomorphisation shim body performs unsafe operations (a `ptr::read`
+/// of the descriptor tuple, and the call to the imported shim) inside a function
+/// the macro declares `unsafe`.
+///
+/// `codegen.rs` relies on rustc suppressing `unsafe_op_in_unsafe_fn` — like most
+/// lints — inside an external macro's expansion, so a downstream crate denying
+/// that lint does not see it fire on code it did not write. That is an
+/// assumption about rustc behaviour rather than something the expansion
+/// controls, so pin it: if it ever stops holding, this fails at the point the
+/// toolchain changes rather than in a user's bug report.
+#[test]
+fn generic_per_mono_unsafe_op_in_unsafe_fn() {
+    let mut project = Project::new("generic_per_mono_unsafe_op_in_unsafe_fn");
+    project.file(
+        "src/lib.rs",
+        r#"
+            #![deny(unsafe_op_in_unsafe_fn)]
+
+            use wasm_bindgen::prelude::*;
+
+            #[wasm_bindgen]
+            extern "C" {
+                // Covers the `WasmRet<..>`-returning shim shape.
+                #[wasm_bindgen(generic_per_mono)]
+                fn echo<T>(x: T) -> T;
+                // Covers the unit-returning shim shape, which builds its marker
+                // call as a statement rather than a tail expression.
+                #[wasm_bindgen(generic_per_mono)]
+                fn sink<T>(x: T);
+                // Covers the `slice_to_array` rewrite, whose ABI conversion is
+                // spliced into the same unsafe body.
+                #[wasm_bindgen(generic_per_mono, slice_to_array)]
+                fn take_slice<T>(xs: &[u32], t: T);
+            }
+
+            #[wasm_bindgen]
+            pub fn go() {
+                let _ = echo(1u32);
+                let _ = echo(1.5f64);
+                sink(2u32);
+                take_slice(&[1u32, 2], 3u32);
+            }
+        "#,
+    );
+
+    // `#![deny(..)]` turns the lint into an error, so a successful build is the
+    // assertion.
+    project.build();
+}
+
 fn assert_no_placeholder_imports(wasm: &Path) {
     let module = ModuleConfig::new().parse_file(wasm).unwrap();
     let placeholder_imports: Vec<_> = module
@@ -1575,7 +1772,6 @@ fn run_abort_handler_test(
                 [profile.dev]
                 codegen-units = 1
             ",
-            name = name,
             repo = REPO_ROOT.display(),
         ),
     );

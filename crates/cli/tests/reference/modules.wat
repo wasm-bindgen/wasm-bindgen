@@ -7,7 +7,7 @@
   (import "./reference_test_bg.js" "__wbg___wbindgen_throw_bb96b2010945f0bc" (func (;0;) (type 3)))
   (import "./reference_test_bg.js" "__wbg_parseFloat_8d725959a008cb49" (func (;1;) (type 0)))
   (import "./reference_test_bg.js" "__wbg_parseFloat_efb706da0845cf8f" (func (;2;) (type 2)))
-  (import "./reference_test_bg.js" "__wbindgen_cast_0000000000000000" (func (;3;) (type 1)))
+  (import "./reference_test_bg.js" "__wbindgen_generic_0000000000000000" (func (;3;) (type 1)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;4;) (type 4)))
   (table $__wbindgen_externrefs (;0;) 1024 externref)
   (memory (;0;) 17)

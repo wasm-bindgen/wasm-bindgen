@@ -1,0 +1,72 @@
+error[E0277]: the trait bound `u32: Marker` is not satisfied
+  --> ui-tests/generic-per-mono-bounds.rs:40:18
+   |
+40 |     inline_bound(1u32);
+   |     ------------ ^^^^ the trait `Marker` is not implemented for `u32`
+   |     |
+   |     required by a bound introduced by this call
+   |
+help: this trait has no implementations, consider adding one
+  --> ui-tests/generic-per-mono-bounds.rs:18:1
+   |
+18 | trait Marker {}
+   | ^^^^^^^^^^^^
+note: required by a bound in `inline_bound`
+  --> ui-tests/generic-per-mono-bounds.rs:23:24
+   |
+23 |     fn inline_bound<T: Marker>(x: T);
+   |                        ^^^^^^ required by this bound in `inline_bound`
+
+error[E0277]: the trait bound `u32: Marker` is not satisfied
+  --> ui-tests/generic-per-mono-bounds.rs:44:17
+   |
+44 |     where_bound(2u32);
+   |     ----------- ^^^^ the trait `Marker` is not implemented for `u32`
+   |     |
+   |     required by a bound introduced by this call
+   |
+help: this trait has no implementations, consider adding one
+  --> ui-tests/generic-per-mono-bounds.rs:18:1
+   |
+18 | trait Marker {}
+   | ^^^^^^^^^^^^
+note: required by a bound in `where_bound`
+  --> ui-tests/generic-per-mono-bounds.rs:28:12
+   |
+26 |     fn where_bound<T>(x: T)
+   |        ----------- required by a bound in this function
+27 |     where
+28 |         T: Marker;
+   |            ^^^^^^ required by this bound in `where_bound`
+
+error[E0277]: `u32` is not an iterator
+  --> ui-tests/generic-per-mono-bounds.rs:48:16
+   |
+48 |     iter_bound(3u32);
+   |     ---------- ^^^^ `u32` is not an iterator
+   |     |
+   |     required by a bound introduced by this call
+   |
+   = help: the trait `Iterator` is not implemented for `u32`
+note: required by a bound in `iter_bound`
+  --> ui-tests/generic-per-mono-bounds.rs:31:22
+   |
+31 |     fn iter_bound<T: Iterator>(x: T);
+   |                      ^^^^^^^^ required by this bound in `iter_bound`
+
+error[E0271]: type mismatch resolving `<Vec<u32> as IntoIterator>::Item == String`
+  --> ui-tests/generic-per-mono-bounds.rs:52:21
+   |
+52 |     iter_item_bound(vec![4u32]);
+   |     --------------- ^^^^^^^^^^ expected `String`, found `u32`
+   |     |
+   |     required by a bound introduced by this call
+   |
+note: required by a bound in `iter_item_bound`
+  --> ui-tests/generic-per-mono-bounds.rs:36:25
+   |
+34 |     fn iter_item_bound<T>(x: T)
+   |        --------------- required by a bound in this function
+35 |     where
+36 |         T: IntoIterator<Item = String>;
+   |                         ^^^^^^^^^^^^^ required by this bound in `iter_item_bound`
