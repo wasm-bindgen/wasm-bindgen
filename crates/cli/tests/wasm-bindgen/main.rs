@@ -2728,6 +2728,145 @@ fn emscripten_user_imports_are_prefixed() {
     );
 }
 
+#[test]
+fn generated_paths_survive_shadowed_core_alloc_std() {
+    let mut project = Project::new("generated_paths_survive_shadowed_core_alloc_std");
+    project.dep("wasm-bindgen-futures = { path = '{root}/crates/futures' }");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen::prelude::*;
+
+            // User items shadowing the crate names the expansion relies on. In
+            // 2018+ a `mod core` in scope wins over the extern-prelude `core`,
+            // so any unqualified `core::`/`alloc::`/`std::` path in generated
+            // code resolves in here and fails to compile.
+            mod core { pub mod mem {} pub mod option {} pub mod borrow {} pub mod marker {} }
+            mod alloc { pub mod vec {} }
+            mod std { pub mod vec {} }
+
+            // Imported type: exercises the phantom-data, `to_js` and
+            // `RefFromWasmAbi` (`ManuallyDrop`) shapes.
+            #[wasm_bindgen]
+            extern "C" {
+                type Widget;
+                #[wasm_bindgen(constructor)]
+                fn new() -> Widget;
+                #[wasm_bindgen(method)]
+                fn tap(this: &Widget);
+
+                // `slice_to_array` names `alloc::vec::Vec` in the describe type
+                // and `core::option::Option` in the ABI conversion.
+                #[wasm_bindgen(slice_to_array)]
+                fn take_slice(xs: &[u32]);
+                #[wasm_bindgen(slice_to_array)]
+                fn take_opt_slice(xs: Option<&[u32]>);
+            }
+
+            // Exported fn taking `&T` in an `async` body: exercises the
+            // `borrow::Borrow` anchor shape.
+            #[wasm_bindgen]
+            pub struct Held { pub v: u32 }
+
+            #[wasm_bindgen]
+            pub async fn hold(h: &Held) -> u32 { h.v }
+
+            #[wasm_bindgen]
+            pub fn go() {
+                let w = Widget::new();
+                w.tap();
+                take_slice(&[1u32, 2]);
+                take_opt_slice(None);
+                take_opt_slice(Some(&[3u32]));
+            }
+        "#,
+    );
+
+    // A successful `cargo build` is the assertion.
+    project.build();
+}
+
+/// `slice_to_array` used to name `::std::vec::Vec` in the type it describes
+/// through. `::std::` is an absolute path to the `std` *crate*, so unlike the
+/// shadowing cases above this was not a hygiene problem -- it simply does not
+/// resolve in a `#![no_std]` crate, which `wasm-bindgen` explicitly supports.
+/// The generated code now goes through the `alloc` re-export instead.
+#[test]
+fn slice_to_array_works_in_a_no_std_crate() {
+    let mut project = Project::new("slice_to_array_works_in_a_no_std_crate");
+    // Written out rather than going through `dep`, because the point of the test
+    // is `default-features = false` and `Project` seeds a plain `wasm-bindgen`
+    // dependency that would collide with a second entry for the same key.
+    project.file(
+        "Cargo.toml",
+        &format!(
+            "
+            [package]
+            name = 'slice_to_array_works_in_a_no_std_crate'
+            version = '1.0.0'
+            edition = '2021'
+
+            [dependencies]
+            wasm-bindgen = {{ path = '{root}', default-features = false }}
+
+            [lib]
+            crate-type = ['cdylib']
+
+            [workspace]
+
+            [profile.dev]
+            codegen-units = 1
+        ",
+            root = REPO_ROOT.display(),
+        ),
+    );
+    project.file(
+        "src/lib.rs",
+        r#"
+            #![no_std]
+
+            extern crate alloc;
+
+            use wasm_bindgen::prelude::*;
+
+            // Minimum viable `no_std` scaffolding. Nothing here is exercised --
+            // the crate only has to *link* for the test to mean anything.
+            #[panic_handler]
+            fn panic(_: &core::panic::PanicInfo) -> ! {
+                core::arch::wasm32::unreachable()
+            }
+
+            struct Bump;
+            unsafe impl core::alloc::GlobalAlloc for Bump {
+                unsafe fn alloc(&self, _: core::alloc::Layout) -> *mut u8 {
+                    core::ptr::null_mut()
+                }
+                unsafe fn dealloc(&self, _: *mut u8, _: core::alloc::Layout) {}
+            }
+            #[global_allocator]
+            static ALLOC: Bump = Bump;
+
+            #[wasm_bindgen]
+            extern "C" {
+                #[wasm_bindgen(slice_to_array)]
+                fn take_slice(xs: &[u32]);
+                #[wasm_bindgen(slice_to_array)]
+                fn take_opt_slice(xs: Option<&[u32]>);
+            }
+
+            #[wasm_bindgen]
+            pub fn go() {
+                take_slice(&[1u32, 2]);
+                take_opt_slice(None);
+                take_opt_slice(Some(&[3u32]));
+            }
+        "#,
+    );
+
+    // A successful `cargo build` is the assertion.
+    project.build();
+}
+
 /// Look up an executable on `PATH`. Used so the test can opportunistically
 /// validate the generated .d.ts with `tsc` without hard-requiring it.
 fn which(name: &str) -> Option<PathBuf> {
