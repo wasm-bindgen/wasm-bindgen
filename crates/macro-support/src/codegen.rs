@@ -2880,19 +2880,22 @@ impl TryToTokens for DescribeImport<'_> {
             })
             .collect::<Result<Vec<syn::Type>, Diagnostic>>()?;
         let nargs = f.function.arguments.len() as u32;
-        let inform_ret = match &f.js_ret {
-            Some(ref t) => {
-                let t = generics::generic_to_concrete(
-                    t.clone(),
-                    &fn_class_generics.concrete_defaults,
-                    &fn_lifetime_params,
-                )?;
-                quote! { <#t as WasmDescribe>::describe(); }
-            }
-            // async functions always return a JsValue, even if they say to return ()
-            None if f.function.r#async => quote! { <JsValue as WasmDescribe>::describe(); },
-            None => quote! { <() as WasmDescribe>::describe(); },
+        // An `async` import's declared return type never reaches the ABI — a
+        // `Promise` handle does — so it is not concretised or described at all.
+        // See `import_describe_ret`.
+        let concrete_ret = match (&f.js_ret, f.function.r#async) {
+            (Some(t), false) => Some(generics::generic_to_concrete(
+                t.clone(),
+                &fn_class_generics.concrete_defaults,
+                &fn_lifetime_params,
+            )?),
+            _ => None,
         };
+        let inform_ret = import_describe_ret(
+            self.wasm_bindgen,
+            concrete_ret.as_ref(),
+            f.function.r#async,
+        );
 
         Descriptor {
             ident: &f.shim,
@@ -3301,6 +3304,36 @@ fn respan(input: TokenStream, span: &dyn ToTokens) -> TokenStream {
         new_tokens.push(token);
     }
     new_tokens.into_iter().collect()
+}
+
+/// Emits the `WasmDescribe::describe()` call that states what an imported
+/// function actually returns *across the ABI*.
+///
+/// `ret_ty` is the import's declared return type, already concretised, or `None`
+/// for a unit return. `is_async` selects the promise shape.
+///
+/// The subtle case is `async`. An `async` import hands back a `Promise` handle —
+/// an externref — no matter what it resolves to; the resolved value is converted
+/// separately, inside `JsFuture<T>`. So the descriptor has to say externref.
+/// Describing the *resolved* type instead makes cli-support marshal the promise
+/// handle as if it were a `T`, which silently produces garbage for every `T` that
+/// is not itself handle-shaped (`async fn f() -> u32` being the obvious case).
+/// That this only affects non-handle types is why it went unnoticed: the existing
+/// async-import tests all resolve to `JsValue`/`JsString`.
+fn import_describe_ret(
+    wasm_bindgen: &syn::Path,
+    ret_ty: Option<&syn::Type>,
+    is_async: bool,
+) -> TokenStream {
+    let describe = quote! { #wasm_bindgen::describe::WasmDescribe };
+    if is_async {
+        // The `Promise` handle is what crosses, not the resolved value.
+        return quote! { <#wasm_bindgen::JsValue as #describe>::describe(); };
+    }
+    match ret_ty {
+        Some(ty) => quote! { <#ty as #describe>::describe(); },
+        None => quote! { <() as #describe>::describe(); },
+    }
 }
 
 fn get_ty(mut ty: &syn::Type) -> &syn::Type {
