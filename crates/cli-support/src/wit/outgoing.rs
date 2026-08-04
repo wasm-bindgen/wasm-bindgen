@@ -310,8 +310,29 @@ impl InstructionBuilder<'_, '_> {
                 ),
             },
 
+            // `&T` where `T` is a scalar. The Rust side passes the value by copy
+            // (`impl<T: ScalarIntoWasmAbi> IntoWasmAbi for &T`), so the wire is
+            // identical to passing `T` by value — JS just receives the primitive.
+            // Only the shared-ref form participates; `&mut primitive` has no such
+            // ABI.
+            //
+            // The accepted set lives in `is_scalar_by_shared_ref` below and must
+            // match the `scalar_into_wasm_abi!` list in `src/convert/impls.rs`.
+            _ if !mutable && is_scalar_by_shared_ref(arg) => {
+                self.outgoing(arg)?;
+            }
+
+            // Reaching here means `&T: IntoWasmAbi` held on the Rust side for a
+            // `T` that has no by-reference wire representation. `ScalarIntoWasmAbi`
+            // is meant to keep that set in lockstep with the arms above, so this
+            // is either a type that opted into `ScalarIntoWasmAbi` without really
+            // being scalar, or the two lists have drifted. Say what *is*
+            // supported rather than only dumping the internal descriptor.
             _ => bail!(
-                "unsupported reference argument type for calling JS function from Rust: {arg:?}"
+                "unsupported type behind a reference when passing a value to JS: {arg:?}. \
+                 Only scalars, `JsValue`, imported JS types, strings, slices and \
+                 `&dyn Fn`/`&mut dyn FnMut` closures can cross the boundary by \
+                 reference — pass anything else by value"
             ),
         }
         Ok(())
@@ -822,8 +843,174 @@ impl InstructionBuilder<'_, '_> {
     }
 }
 
+/// Whether `Ref(d)` can be handed to JS by simply copying the value, i.e.
+/// whether `d` is a scalar whose wire form is identical by value and by
+/// shared reference.
+///
+/// This is the CLI half of a two-sided invariant. The Rust half is the
+/// `scalar_into_wasm_abi!` list in `src/convert/impls.rs`, which decides for
+/// which `T` an `impl IntoWasmAbi for &T` exists at all. If this function
+/// accepts less than that list, a program compiles and then fails in the CLI;
+/// if it accepts more, this arm is dead. The `scalar-ref-args` reference test
+/// binds every type in that list, so it fails if this function is narrower;
+/// `scalar_by_shared_ref_set_is_exactly_the_scalars` below pins this side.
+///
+/// The match is deliberately exhaustive (no `_` arm) so that adding a
+/// `Descriptor` variant is a compile error here and forces an explicit
+/// decision about its by-reference wire form.
+fn is_scalar_by_shared_ref(d: &Descriptor) -> bool {
+    match d {
+        Descriptor::I8
+        | Descriptor::U8
+        | Descriptor::I16
+        | Descriptor::U16
+        | Descriptor::I32
+        | Descriptor::U32
+        | Descriptor::I64
+        | Descriptor::U64
+        | Descriptor::I64AsF64
+        | Descriptor::U64AsF64
+        | Descriptor::I128
+        | Descriptor::U128
+        | Descriptor::F32
+        | Descriptor::F64
+        | Descriptor::Boolean
+        | Descriptor::Char => true,
+
+        // `ClampedU8` only ever arises under `#[wasm_bindgen(clamped)]`, which
+        // applies to `Clamped<T>`; `Clamped<u8>` is not `ScalarIntoWasmAbi`, so
+        // there is no `impl IntoWasmAbi for &Clamped<u8>` and `Ref(ClampedU8)`
+        // is unreachable. Excluded on purpose.
+        Descriptor::ClampedU8
+        // Handled by earlier, more specific arms of `outgoing_ref`, or genuinely
+        // unsupported behind a reference.
+        | Descriptor::Function(_)
+        | Descriptor::Closure(_)
+        | Descriptor::Ref(_)
+        | Descriptor::RefMut(_)
+        | Descriptor::Slice(_)
+        | Descriptor::Vector(_)
+        | Descriptor::CachedString
+        | Descriptor::String
+        | Descriptor::Externref
+        | Descriptor::NamedExternref(_)
+        | Descriptor::Enum { .. }
+        | Descriptor::StringEnum { .. }
+        | Descriptor::DynamicUnion { .. }
+        | Descriptor::RustStruct(_)
+        | Descriptor::Option(_)
+        | Descriptor::Result(_)
+        | Descriptor::Unit
+        | Descriptor::NonNull
+        | Descriptor::RawPointer => false,
+    }
+}
+
 #[test]
 fn closure_word_descriptor_uses_number_abi_on_memory64() {
     assert_eq!(closure_word_descriptor(true), Descriptor::I64AsF64);
     assert_eq!(closure_word_descriptor(false), Descriptor::I32);
 }
+
+/// Every `Descriptor` variant, so the tests below can enumerate the accepted
+/// set rather than restating it. Payloads are irrelevant to
+/// `is_scalar_by_shared_ref`, which only inspects the discriminant.
+#[cfg(test)]
+fn all_descriptor_variants() -> Vec<Descriptor> {
+    use crate::descriptor::Function;
+
+    let f = || Function {
+        arguments: Vec::new(),
+        shim_idx: 0,
+        ret: Descriptor::Unit,
+        inner_ret: None,
+    };
+    vec![
+        Descriptor::I8,
+        Descriptor::U8,
+        Descriptor::ClampedU8,
+        Descriptor::I16,
+        Descriptor::U16,
+        Descriptor::I32,
+        Descriptor::U32,
+        Descriptor::I64,
+        Descriptor::U64,
+        Descriptor::I64AsF64,
+        Descriptor::U64AsF64,
+        Descriptor::I128,
+        Descriptor::U128,
+        Descriptor::F32,
+        Descriptor::F64,
+        Descriptor::Boolean,
+        Descriptor::Function(Box::new(f())),
+        Descriptor::Closure(Box::new(crate::descriptor::Closure {
+            owned: false,
+            function: f(),
+            mutable: false,
+        })),
+        Descriptor::Ref(Box::new(Descriptor::Unit)),
+        Descriptor::RefMut(Box::new(Descriptor::Unit)),
+        Descriptor::Slice(Box::new(Descriptor::U8)),
+        Descriptor::Vector(Box::new(Descriptor::U8)),
+        Descriptor::CachedString,
+        Descriptor::String,
+        Descriptor::Externref,
+        Descriptor::NamedExternref("X".into()),
+        Descriptor::Enum {
+            name: "E".into(),
+            hole: 0,
+        },
+        Descriptor::StringEnum {
+            name: "S".into(),
+            invalid: 0,
+            hole: 1,
+        },
+        Descriptor::DynamicUnion {
+            name: "D".into(),
+            variant_types: Vec::new(),
+        },
+        Descriptor::RustStruct("R".into()),
+        Descriptor::Char,
+        Descriptor::Option(Box::new(Descriptor::U8)),
+        Descriptor::Result(Box::new(Descriptor::U8)),
+        Descriptor::Unit,
+        Descriptor::NonNull,
+        Descriptor::RawPointer,
+    ]
+}
+
+/// Guards the CLI half of the invariant on its own: the exact set of
+/// descriptors accepted behind a `Ref(..)`.
+///
+/// Deliberately spelled out rather than derived, so that *changing*
+/// `is_scalar_by_shared_ref` fails here and has to be done on purpose.
+#[test]
+fn scalar_by_shared_ref_set_is_exactly_the_scalars() {
+    let accepted: Vec<_> = all_descriptor_variants()
+        .into_iter()
+        .filter(is_scalar_by_shared_ref)
+        .collect();
+
+    assert_eq!(
+        accepted,
+        vec![
+            Descriptor::I8,
+            Descriptor::U8,
+            Descriptor::I16,
+            Descriptor::U16,
+            Descriptor::I32,
+            Descriptor::U32,
+            Descriptor::I64,
+            Descriptor::U64,
+            Descriptor::I64AsF64,
+            Descriptor::U64AsF64,
+            Descriptor::I128,
+            Descriptor::U128,
+            Descriptor::F32,
+            Descriptor::F64,
+            Descriptor::Boolean,
+            Descriptor::Char,
+        ],
+    );
+}
+
