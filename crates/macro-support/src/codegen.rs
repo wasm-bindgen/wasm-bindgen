@@ -814,7 +814,7 @@ impl TryToTokens for ast::Export {
                                     )
                             };
                             let #ident = <<#elem as #wasm_bindgen::convert::LongRefFromWasmAbi>
-                                ::Anchor as core::borrow::Borrow<#elem>>
+                                ::Anchor as #wasm_bindgen::__rt::core::borrow::Borrow<#elem>>
                                 ::borrow(&#ident);
                         });
                     } else {
@@ -1183,9 +1183,9 @@ impl TryToTokens for ast::ImportType {
             let generic_param_names: Vec<_> = class_generic_params.iter().map(|p| p.0).collect();
             let lifetime_refs = lifetime_params.iter().map(|lt| quote! { &#lt () });
             phantom = quote! {
-                generics: ::core::marker::PhantomData<(#(#generic_param_names,)* #(#lifetime_refs),*)>
+                generics: #wasm_bindgen::__rt::core::marker::PhantomData<(#(#generic_param_names,)* #(#lifetime_refs),*)>
             };
-            phantom_init = quote! { generics: ::core::marker::PhantomData };
+            phantom_init = quote! { generics: #wasm_bindgen::__rt::core::marker::PhantomData };
         } else {
             phantom = quote! {};
             phantom_init = quote! {};
@@ -1235,7 +1235,7 @@ impl TryToTokens for ast::ImportType {
                     type JsCanon = #rust_name #ty_generics;
                     #[inline]
                     fn to_js(self) -> #rust_name #ty_generics {
-            unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(self)) }
+            unsafe { #wasm_bindgen::__rt::core::mem::transmute_copy(&#wasm_bindgen::__rt::core::mem::ManuallyDrop::new(self)) }
                     }
                 }
             }
@@ -1325,13 +1325,13 @@ impl TryToTokens for ast::ImportType {
                 #[automatically_derived]
                 impl #impl_generics RefFromWasmAbi for #rust_name #ty_generics #where_clause {
                     type Abi = <JsValue as RefFromWasmAbi>::Abi;
-                    type Anchor = core::mem::ManuallyDrop<#rust_name #ty_generics>;
+                    type Anchor = #wasm_bindgen::__rt::core::mem::ManuallyDrop<#rust_name #ty_generics>;
 
                     #[inline]
                     unsafe fn ref_from_abi(js: Self::Abi) -> Self::Anchor {
                         let tmp = <JsValue as RefFromWasmAbi>::ref_from_abi(js);
-                        core::mem::ManuallyDrop::new(#rust_name {
-                            obj: core::mem::ManuallyDrop::into_inner(tmp).into(),
+                        #wasm_bindgen::__rt::core::mem::ManuallyDrop::new(#rust_name {
+                            obj: #wasm_bindgen::__rt::core::mem::ManuallyDrop::into_inner(tmp).into(),
                             #phantom_init
                         })
                     }
@@ -2165,7 +2165,7 @@ impl TryToTokens for ast::ImportFunction {
                     quote! { #concrete_ty }
                 };
 
-                convert_arg = quote! { unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(#var)) } };
+                convert_arg = quote! { unsafe { #wasm_bindgen::__rt::core::mem::transmute_copy(&#wasm_bindgen::__rt::core::mem::ManuallyDrop::new(#var)) } };
             } else if let Some((is_mut, fn_bounds)) = detect_raw_fn_trait_obj(ty) {
                 // Raw `&dyn Fn(...)` or `&mut dyn FnMut(...)` argument.
                 //
@@ -2238,10 +2238,10 @@ impl TryToTokens for ast::ImportFunction {
                 let body = if is_option {
                     quote! {
                         match #var {
-                            ::core::option::Option::Some(s) =>
+                            #wasm_bindgen::__rt::core::option::Option::Some(s) =>
                                 <#elem_ty as #wasm_bindgen::convert::VectorRefIntoWasmAbi>
                                     ::slice_into_abi(s),
-                            ::core::option::Option::None =>
+                            #wasm_bindgen::__rt::core::option::Option::None =>
                                 <#elem_ty as #wasm_bindgen::convert::VectorRefIntoWasmAbi>
                                     ::slice_none(),
                         }
@@ -2301,7 +2301,7 @@ impl TryToTokens for ast::ImportFunction {
                     fn_class_generics.add_fn_bound(
                         parse_quote! { #ty: #wasm_bindgen::__rt::marker::ErasableGenericOwn<#concrete_ty> },
                     );
-                    convert_ret = quote! { unsafe { core::mem::transmute_copy(&core::mem::ManuallyDrop::new(<#concrete_ty as #wasm_bindgen::convert::FromWasmAbi>::from_abi(#ret_ident.join()))) } };
+                    convert_ret = quote! { unsafe { #wasm_bindgen::__rt::core::mem::transmute_copy(&#wasm_bindgen::__rt::core::mem::ManuallyDrop::new(<#concrete_ty as #wasm_bindgen::convert::FromWasmAbi>::from_abi(#ret_ident.join()))) } };
                     abi_ret = quote! { #wasm_bindgen::convert::WasmRet<<#concrete_ty as #wasm_bindgen::convert::FromWasmAbi>::Abi> };
                 } else {
                     convert_ret = quote! { <#ty as #wasm_bindgen::convert::FromWasmAbi>::from_abi(#ret_ident.join()) };
@@ -2848,6 +2848,7 @@ impl TryToTokens for DescribeImport<'_> {
         };
         let fn_class_generics = f.get_fn_generics()?;
         let fn_lifetime_params = generics::lifetime_params(&f.generics);
+        let wasm_bindgen = self.wasm_bindgen;
         let argtys = f
             .function
             .arguments
@@ -2870,10 +2871,10 @@ impl TryToTokens for DescribeImport<'_> {
                     if let Some((elem_ty, is_option)) = detect_slice_or_option_slice(&ty) {
                         if is_option {
                             return Ok(parse_quote! {
-                                ::core::option::Option<&::std::vec::Vec<#elem_ty>>
+                                #wasm_bindgen::__rt::core::option::Option<&#wasm_bindgen::__rt::alloc::vec::Vec<#elem_ty>>
                             });
                         } else {
-                            return Ok(parse_quote! { &::std::vec::Vec<#elem_ty> });
+                            return Ok(parse_quote! { &#wasm_bindgen::__rt::alloc::vec::Vec<#elem_ty> });
                         }
                     }
                 }

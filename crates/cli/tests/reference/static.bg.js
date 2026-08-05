@@ -4,19 +4,19 @@ export function exported() {
 export function __wbg___wbindgen_throw_344f42d3211c4765(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
-export function __wbg_static_accessor_NAMESPACE_OPTIONAL_2e93032090b95d76() {
+export function __wbg_static_accessor_NAMESPACE_OPTIONAL_b9bf8f551b93cb41() {
     const ret = typeof test === 'undefined' ? null : test?.NAMESPACE_OPTIONAL;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 }
-export function __wbg_static_accessor_NAMESPACE_PLAIN_996cfe92d41df43c() {
+export function __wbg_static_accessor_NAMESPACE_PLAIN_a008a31c5522d406() {
     const ret = test.NAMESPACE_PLAIN;
     return ret;
 }
-export function __wbg_static_accessor_NESTED_NAMESPACE_OPTIONAL_c736ff66b2fdaa43() {
+export function __wbg_static_accessor_NESTED_NAMESPACE_OPTIONAL_95bd855aa229802c() {
     const ret = typeof test1 === 'undefined' ? null : test1?.test2?.NESTED_NAMESPACE_OPTIONAL;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 }
-export function __wbg_static_accessor_NESTED_NAMESPACE_PLAIN_e9affde7bc139ebd() {
+export function __wbg_static_accessor_NESTED_NAMESPACE_PLAIN_96275dd6d61a36d2() {
     const ret = test1.test2.NESTED_NAMESPACE_PLAIN;
     return ret;
 }

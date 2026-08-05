@@ -29,15 +29,15 @@ export function __wbg_await_4ea226770dbb5814() {
 export function __wbg_let_bd65bc5e4baee9c0(arg0) {
     arg0.let();
 }
-export function __wbg_new_8ea43830bd92dbd2() {
+export function __wbg_new_2f43e23298be9748() {
     B.new();
-}
-export function __wbg_new_aa2b5c77eb49997e() {
-    const ret = window.__TAURI__.menu.Menu.new();
-    return ret;
 }
 export function __wbg_new_c882a94b69381309() {
     const ret = A.new();
+    return ret;
+}
+export function __wbg_new_ca4a0eaecd5065ac() {
+    const ret = window.__TAURI__.menu.Menu.new();
     return ret;
 }
 export function __wbg_static_accessor_TRUE_c4e736fa46a2ab00() {

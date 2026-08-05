@@ -15,6 +15,17 @@
   actually crosses the ABI.
   #[5249](https://github.com/wasm-bindgen/wasm-bindgen/pull/5249)
 
+* `js_namespace` is now part of an imported function's and imported static's
+  generated shim name. Two imports with identical Rust signatures that differed
+  *only* in their `js_namespace` hashed to the same `__wbg_<name>_<hash>`
+  symbol, so they were treated as one binding and one of the two call sites
+  silently invoked the wrong JS value.
+  [#5250](https://github.com/wasm-bindgen/wasm-bindgen/pull/5250)
+
+* Macro hygiene fixes - `slice_to_array` now works in `#![no_std]` crates.
+  Generated code no longer names `core` or `std` unqualified.
+  [#5251](https://github.com/wasm-bindgen/wasm-bindgen/pull/5251)
+
 * Fixed length prefixes in descriptor strings to count `char`s rather than
   UTF-8 bytes, so non-ASCII names in `js_name`/`typescript_type` no longer
   panic the CLI or mis-bind the generated bindings.
