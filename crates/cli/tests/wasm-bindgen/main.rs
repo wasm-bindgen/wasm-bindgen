@@ -2347,6 +2347,34 @@ fn emscripten_namespaced_exports_valid_ts() {
     ])
     .unwrap();
 
+    // Only the public namespace roots carry the `__export`/`__force`
+    // attributes; the hoisted leaves stay private, reachable through the
+    // root's `__deps`.
+    let lib = fs::read_to_string(out_dir.join("library_bindgen.js")).unwrap();
+    for root in ["app", "foo", "bar"] {
+        assert!(
+            lib.contains(&format!("${root}__export: true"))
+                && lib.contains(&format!("${root}__force: true")),
+            "namespace root {root} should carry __export/__force:\n{lib}"
+        );
+    }
+    for leaf in [
+        "app__math__Calc",
+        "app__math__Op",
+        "app__math__pi",
+        "foo__Point",
+        "bar__Point",
+    ] {
+        assert!(
+            !lib.contains(&format!("${leaf}__export")) && !lib.contains(&format!("${leaf}__force")),
+            "namespace leaf {leaf} must not carry __export/__force:\n{lib}"
+        );
+        assert!(
+            lib.contains(&format!("'${leaf}'")),
+            "namespace leaf {leaf} must be reachable via __deps:\n{lib}"
+        );
+    }
+
     let d_ts_path = out_dir.join("emscripten_input.d.ts");
     let d_ts = fs::read_to_string(&d_ts_path).unwrap();
 
@@ -2494,8 +2522,8 @@ fn emscripten_namespaced_exports_valid_ts() {
 
 #[test]
 fn emscripten_exports_hoisted_to_library_symbols() {
-    // Clean exports are hoisted into top-level `addToLibrary` symbols and
-    // self-registered so emscripten emits them itself.
+    // Clean exports are hoisted into top-level `addToLibrary` symbols carrying
+    // `__export`/`__force` attributes so emscripten emits them itself.
     let mut project = Project::new("emscripten_exports_hoisted_to_library_symbols");
     project.file(
         "src/lib.rs",
@@ -2603,17 +2631,32 @@ fn emscripten_exports_hoisted_to_library_symbols() {
             ),
         "CounterFinalization should be constructed in a __postset:\n{lib}"
     );
-    // Self-registration so emscripten exports them itself.
+    // Public exports carry the `__export`/`__force` symbol attributes so
+    // emscripten includes and exports them itself.
     for name in ["add", "Counter", "Color"] {
         assert!(
-            lib.contains(&format!("EXPORTED_FUNCTIONS.add('{name}');")),
-            "{name} should be self-registered into EXPORTED_FUNCTIONS:\n{lib}"
+            lib.contains(&format!("${name}__export: true")),
+            "{name} should carry __export: true:\n{lib}"
+        );
+        assert!(
+            lib.contains(&format!("${name}__force: true")),
+            "{name} should carry __force: true:\n{lib}"
         );
     }
-    // No force-keep: EXPORTED_FUNCTIONS membership already retains each symbol.
+    // No EXPORTED_FUNCTIONS mutation and no extraLibraryFuncs force-keep:
+    // the symbol attributes replace both mechanisms.
     assert!(
-        !lib.contains("extraLibraryFuncs.push('$add'"),
-        "public exports should rely on EXPORTED_FUNCTIONS, not a redundant force-keep:\n{lib}"
+        !lib.contains("EXPORTED_FUNCTIONS"),
+        "generated library must not mutate EXPORTED_FUNCTIONS:\n{lib}"
+    );
+    assert!(
+        !lib.contains("extraLibraryFuncs"),
+        "generated library must not push to extraLibraryFuncs:\n{lib}"
+    );
+    // The init closure roots the graph via __force instead.
+    assert!(
+        lib.contains("$initBindgen__force: true"),
+        "$initBindgen must be force-included:\n{lib}"
     );
     assert!(
         lib.contains("$Counter__deps: ['$initBindgen', '$CounterFinalization']"),
@@ -2625,8 +2668,8 @@ fn emscripten_exports_hoisted_to_library_symbols() {
         "private class should still be hoisted as a library symbol:\n{lib}"
     );
     assert!(
-        !lib.contains("EXPORTED_FUNCTIONS.add('Secret')"),
-        "private class must not self-register as a named export:\n{lib}"
+        !lib.contains("$Secret__export") && !lib.contains("$Secret__force"),
+        "private class must not carry __export/__force attributes:\n{lib}"
     );
     assert!(
         !lib.contains("Module['Secret']"),

@@ -7,6 +7,15 @@
 
 ### Changed
 
+* Emscripten output now marks public exports (free functions, classes, enums,
+  and namespace roots) with the `__export: true` and `__force: true` symbol
+  attributes on their `addToLibrary` entries, instead of mutating
+  `EXPORTED_FUNCTIONS` and pushing to `extraLibraryFuncs` at library-load time.
+  The `$initBindgen` init closure is kept via `__force: true`, and private
+  symbols (including namespace leaves) carry neither attribute — they remain
+  reachable through `__deps`. Requires an emscripten with `__export`/`__force`
+  symbol-attribute support.
+
 ### Fixed
 
 * Fixed threaded Wasm memory layout to reserve wasm-bindgen's internal thread

@@ -188,17 +188,12 @@ pub struct Context<'a> {
     /// the emscripten library file (e.g. `$heap`, `$WASM_VECTOR_LEN`,
     /// `$HEAP_DATA_VIEW`). Drives the top-of-library `addToLibrary({...})`
     /// block in `generate_emscripten_imports` and is unioned into
-    /// `extraLibraryFuncs` so emcc keeps them.
+    /// `$initBindgen__deps` (which is `__force`d) so emcc keeps them.
     emscripten_global_deps: BTreeSet<String>,
 
     /// Per-import `__deps` arrays, computed by snapshotting `adapter_deps`
     /// before generating each import and diffing afterwards.
     emscripten_import_deps: BTreeMap<ImportId, BTreeSet<String>>,
-
-    /// Public exports hoisted into top-level `addToLibrary` symbols, recorded
-    /// so they can be added to `EXPORTED_FUNCTIONS` in
-    /// `generate_emscripten_wasm_loading`.
-    emscripten_runtime_exports: Vec<String>,
 
     /// `true` when the module's memory is a memory64 (wasm64) memory.
     memory64: bool,
@@ -363,7 +358,6 @@ impl<'a> Context<'a> {
             adapter_deps: Default::default(),
             emscripten_global_deps: Default::default(),
             emscripten_import_deps: Default::default(),
-            emscripten_runtime_exports: Default::default(),
             memory64,
             super_skip_sentinel_emitted: false,
         })
@@ -480,8 +474,10 @@ impl<'a> Context<'a> {
     /// for a namespace root). `extra_deps` lists `$`-less library symbols the
     /// body references; every symbol also depends on `$initBindgen`.
     /// `postset_extra` runs after the symbol is defined. `public` adds the
-    /// `Module.<id>` attachment and records the name for `EXPORTED_FUNCTIONS`;
-    /// namespace leaves are hoisted privately (`public = false`).
+    /// `Module.<id>` attachment plus the `__export`/`__force` attributes so
+    /// emscripten includes the symbol and emits it as a named export;
+    /// namespace leaves are hoisted privately (`public = false`) and stay
+    /// reachable through the root's `__deps`.
     fn hoist_emscripten_export(
         &mut self,
         identifier: &str,
@@ -504,14 +500,16 @@ impl<'a> Context<'a> {
         } else {
             format!(",\n    ${identifier}__postset: {postset:?}")
         };
+        let export_attrs = if public {
+            format!(",\n    ${identifier}__export: true,\n    ${identifier}__force: true")
+        } else {
+            String::new()
+        };
         self.emscripten_library(&format!(
             "addToLibrary({{\n    ${identifier}: {value},\n    \
-             ${identifier}__deps: [{}]{postset_field}\n}});",
+             ${identifier}__deps: [{}]{postset_field}{export_attrs}\n}});",
             deps_fmt.join(", "),
         ));
-        if public {
-            self.emscripten_runtime_exports.push(identifier.to_string());
-        }
     }
 
     /// Hoist a clean export (free function, class, or enum) to a library symbol
@@ -1775,31 +1773,24 @@ if (require('worker_threads').isMainThread) {{
             .collect();
         let init_dep_refs: Vec<String> = init_deps.iter().map(|d| format!("'${d}'")).collect();
 
-        let global_dep_refs: Vec<String> = self
-            .emscripten_global_deps
-            .iter()
-            .map(|dep| format!("'${dep}'"))
-            .collect();
-
         let start_logic = if needs_manual_start {
             "wasmExports['__wbindgen_start']();"
         } else {
             ""
         };
 
-        // Adding each name to `EXPORTED_FUNCTIONS` forces jsifier to include the
-        // `$<id>` symbol and prefix it with `export` under `MODULARIZE=instance`.
-        let self_register = self
-            .emscripten_runtime_exports
-            .iter()
-            .map(|id| format!("EXPORTED_FUNCTIONS.add('{id}');\n"))
-            .collect::<String>();
-
+        // `__force` keeps `$initBindgen` (and, via its `__deps`, every global
+        // helper) in the build even though no compiled code references it.
+        // Public exports carry their own `__export`/`__force` attributes at
+        // their `addToLibrary` definitions, which makes jsifier include the
+        // `$<id>` symbol and prefix it with `export` under
+        // `MODULARIZE=instance`.
         format!(
             r#"
             addToLibrary({{
                 $initBindgen__deps: [{init_deps}],
                 $initBindgen__postset: 'addOnInit(initBindgen);',
+                $initBindgen__force: true,
                 $initBindgen: () => {{
                     // Call emscripten's _initialize to run static constructors
                     // (needed for --no-entry builds)
@@ -1809,12 +1800,8 @@ if (require('worker_threads').isMainThread) {{
                     {start_logic}
                     {classes_and_exports}
                 }}
-            }});
-
-            extraLibraryFuncs.push('$initBindgen', '$addOnInit', {global_deps});
-            {self_register}"#,
+            }});"#,
             init_deps = init_dep_refs.join(", "),
-            global_deps = global_dep_refs.join(", "),
         )
     }
 
