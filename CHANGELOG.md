@@ -53,6 +53,13 @@
   panic the CLI or mis-bind the generated bindings.
   [#5248](https://github.com/wasm-bindgen/wasm-bindgen/pull/5248)
 
+* Emscripten output no longer emits a JS library binding for an imported
+  `env.memory` (shared memory / `-pthread` builds). The emitted
+  `memory || new WebAssembly.Memory(...)` expression referenced a binding that
+  doesn't exist in emscripten output and broke the emcc link; emscripten's own
+  runtime creates `wasmMemory` and supplies `env.memory` to instantiation
+  itself, so no binding is needed.
+
 * Fixed threaded Wasm memory layout to reserve wasm-bindgen's internal thread
   page after the module's original initial memory instead of at `__heap_base`,
   avoiding overlap with allocators that resolve `__heap_base`/`__heap_end` at
