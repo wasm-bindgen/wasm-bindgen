@@ -510,7 +510,7 @@ impl walrus::CustomSection for NonstandardWitSection {
     fn add_gc_roots(&self, roots: &mut walrus::passes::Roots) {
         use Instruction::*;
 
-        for (_, adapter) in self.adapters.iter() {
+        for adapter in self.adapters.values() {
             let instrs = match &adapter.kind {
                 AdapterKind::Local { instructions } => instructions,
                 AdapterKind::Import { .. } => continue,
