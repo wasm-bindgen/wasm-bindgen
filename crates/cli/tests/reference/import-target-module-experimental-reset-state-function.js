@@ -38,7 +38,7 @@ function __wbg_get_imports() {
             const ret = arg0.get();
             return ret;
         },
-        __wbg_my_function_9c9b44befa10c96f: function() {
+        __wbg_my_function_2652ada790ab5788: function() {
             b.my_function();
         },
         __wbg_new_625e056221ff6a6e: function(arg0) {
@@ -48,14 +48,14 @@ function __wbg_get_imports() {
         __wbg_no_catch_be4131677910f8cc: function() {
             no_catch();
         },
-        __wbg_reload_2653607e441f1ab1: function() {
+        __wbg_reload_9304512f393dbf03: function() {
             window.location.reload();
         },
-        __wbg_static_accessor_CONST_85b96acb48be57e1: function() {
+        __wbg_static_accessor_CONST_ebdae5b17dd38d40: function() {
             const ret = a.CONST;
             return ret;
         },
-        __wbg_write_ddba260cf11052e4: function(arg0, arg1) {
+        __wbg_write_1670eca42f648f32: function(arg0, arg1) {
             window.document.write(getStringFromWasm0(arg0, arg1));
         },
         __wbindgen_init_externref_table: function() {

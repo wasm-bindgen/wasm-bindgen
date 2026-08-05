@@ -7,7 +7,7 @@ export function add_that_might_fail(a, b) {
     const ret = wasm.add_that_might_fail(a, b);
     return ret >>> 0;
 }
-export function __wbg_random_05fd70d9b60b78cc() {
+export function __wbg_random_dde35eec351b7d54() {
     const ret = Math.random();
     return ret;
 }

@@ -12,11 +12,11 @@ export function __wbg_b_9258c02a5383359c(arg0) {
     const ret = arg0.a;
     return ret;
 }
-export function __wbg_bar2_4dc7f9ec486ee048() {
+export function __wbg_bar2_27fd601ca9c7705e() {
     const ret = Bar.bar2();
     return ret;
 }
-export function __wbg_get_foo_fe59e13754d53ce6() {
+export function __wbg_get_foo_225ac333baff72fb() {
     const ret = Bar.get_foo();
     return ret;
 }
@@ -30,10 +30,10 @@ export function __wbg_set_another_c7bea22c1395f7c7(arg0, arg1) {
 export function __wbg_set_b_28af687e466c2915(arg0, arg1) {
     arg0.a = arg1 >>> 0;
 }
-export function __wbg_set_bar2_47c8ef2967b23e49(arg0) {
+export function __wbg_set_bar2_dfbeba9889d2c348(arg0) {
     Bar.set_bar2(arg0 >>> 0);
 }
-export function __wbg_set_foo_18632695c3fb4ea7(arg0) {
+export function __wbg_set_foo_f48c7ea95bc10ade(arg0) {
     Bar.set_foo(arg0 >>> 0);
 }
 export function __wbg_set_signal_2da17cf9cd6c4702(arg0, arg1) {

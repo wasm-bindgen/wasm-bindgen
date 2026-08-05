@@ -29,14 +29,14 @@ export function __wbg_await_4ea226770dbb5814() {
 export function __wbg_let_bd65bc5e4baee9c0(arg0) {
     arg0.let();
 }
+export function __wbg_new_2f43e23298be9748() {
+    B.new();
+}
 export function __wbg_new_c882a94b69381309() {
     const ret = A.new();
     return ret;
 }
-export function __wbg_new_f3862fcd77f12fa3() {
-    B.new();
-}
-export function __wbg_new_ff795aff2a2882eb() {
+export function __wbg_new_ca4a0eaecd5065ac() {
     const ret = window.__TAURI__.menu.Menu.new();
     return ret;
 }

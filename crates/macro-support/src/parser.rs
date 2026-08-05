@@ -1058,50 +1058,9 @@ impl<'a>
         }
 
         let shim = {
-            // The second element is an owned `String` rather than a `&str`
-            // purely so `js_namespace` can be folded into it below. `String`'s
-            // `Hash` impl delegates to `str`'s, so `(0, "n")` and
-            // `(0, String::from("n"))` hash identically and shim names for
-            // imports without a `js_namespace` are unchanged.
             let ns = match kind {
-                ast::ImportFunctionKind::Normal => (0, "n".to_string()),
-                ast::ImportFunctionKind::Method { ref class, .. } => (1, class.clone()),
-            };
-            // `js_namespace` is part of a binding's identity: two otherwise
-            // identical imports that differ only in their namespace resolve to
-            // different JS values, so they must not share a shim name. Fold it
-            // into the existing namespace element rather than extending the
-            // hashed tuple, which would perturb the shim name of every import
-            // in existence, including the ones with no namespace at all.
-            //
-            // Each segment is written length-prefixed rather than plain-joined.
-            // Namespace segments come from string literals
-            // (`js_namespace = ["a", "b"]`, parsed via `syn::LitStr::value`), so a
-            // segment may contain *any* character — including whatever separator
-            // we pick. A plain join would therefore let `["a\u{1}b"]` alias
-            // `["a", "b"]` and reintroduce precisely the collision this exists to
-            // prevent. An explicit length in front of each segment is unambiguous
-            // whatever the segments contain.
-            //
-            // This must be the *resolved* namespace — a `js_namespace` written on
-            // the enclosing `extern "C"` block is inherited by every item in it and
-            // is just as much a part of the binding's identity as one written on
-            // the item. The caller performs that resolution
-            // (`item_opts.js_namespace().or(ctx.js_namespace)`) and hands the result
-            // in, so there is only one namespace value in scope here and reading the
-            // item-level attribute directly is not possible.
-            let ns = match js_namespace {
-                Some(namespace) => {
-                    let mut encoded = ns.1;
-                    for segment in namespace {
-                        encoded.push('\u{1}');
-                        encoded.push_str(&segment.len().to_string());
-                        encoded.push('\u{1}');
-                        encoded.push_str(segment);
-                    }
-                    (ns.0, encoded)
-                }
-                None => ns,
+                ast::ImportFunctionKind::Normal => (0, "n"),
+                ast::ImportFunctionKind::Method { ref class, .. } => (1, &class[..]),
             };
             // Include cfg attributes in the hash so that functions with different
             // cfg gates get different shim names, even if their signatures are identical.
@@ -1117,13 +1076,22 @@ impl<'a>
                 module,
                 cfg_attrs,
             );
+            // The *resolved* `js_namespace` (item-level, or inherited from the
+            // enclosing `extern "C"` block) is part of a binding's identity:
+            // two otherwise identical imports that differ only in their
+            // namespace resolve to different JS values, so they must not share
+            // a shim name. Hashing is gated on `None` so that shim names for
+            // imports without a namespace are unchanged.
+            let hash = match js_namespace {
+                None => ShortHash(data).to_string(),
+                Some(ns) => ShortHash((data, ns)).to_string(),
+            };
             format!(
-                "__wbg_{}_{}",
+                "__wbg_{}_{hash}",
                 wasm.name
                     .chars()
                     .filter(|&c| c.is_ascii_alphanumeric() || c == '_')
                     .collect::<String>(),
-                ShortHash(data)
             )
         };
         if let Some(span) = opts.r#final() {
@@ -1267,14 +1235,24 @@ impl ConvertToAst<(&ast::Program, BindgenAttrs)> for syn::ForeignItemType {
     }
 }
 
-impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule>)>
-    for syn::ForeignItemStatic
+impl<'a>
+    ConvertToAst<(
+        &ast::Program,
+        BindgenAttrs,
+        &'a Option<ast::ImportModule>,
+        Option<&'a [String]>,
+    )> for syn::ForeignItemStatic
 {
     type Target = ast::ImportKind;
 
     fn convert(
         self,
-        (program, opts, module): (&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule>),
+        (program, opts, module, js_namespace): (
+            &ast::Program,
+            BindgenAttrs,
+            &'a Option<ast::ImportModule>,
+            Option<&'a [String]>,
+        ),
     ) -> Result<Self::Target, Diagnostic> {
         if let syn::StaticMutability::Mut(_) = self.mutability {
             bail_span!(self.mutability, "cannot import mutable globals yet")
@@ -1293,7 +1271,12 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
             .unwrap_or(&default_name)
             .to_string();
         let unraw_ident = self.ident.unraw();
-        let hash = ShortHash((&js_name, module, &unraw_ident));
+        // As for functions above, the resolved `js_namespace` is part of the
+        // binding's identity, gated on `None` to keep existing names.
+        let hash = match js_namespace {
+            None => ShortHash((&js_name, module, &unraw_ident)).to_string(),
+            Some(ns) => ShortHash((&js_name, module, &unraw_ident, ns)).to_string(),
+        };
         let shim = format!("__wbg_static_accessor_{unraw_ident}_{hash}");
         let thread_local = opts.get_thread_local()?;
 
@@ -2659,7 +2642,9 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
                 js_namespace.as_deref(),
             ))?,
             syn::ForeignItem::Type(t) => t.convert((program, item_opts))?,
-            syn::ForeignItem::Static(s) => s.convert((program, item_opts, &module))?,
+            syn::ForeignItem::Static(s) => {
+                s.convert((program, item_opts, &module, js_namespace.as_deref()))?
+            }
             _ => panic!("only foreign functions/types allowed for now"),
         };
 

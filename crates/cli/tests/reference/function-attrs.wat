@@ -32,7 +32,7 @@
   (import "./reference_test_bg.js" "__wbg_queueMicrotask_6a09b7bc46549209" (func (;9;) (type 5)))
   (import "./reference_test_bg.js" "__wbg_resolve_2191a4dfe481c25b" (func (;10;) (type 3)))
   (import "./reference_test_bg.js" "__wbg_run_5aa314612b150933" (func (;11;) (type 2)))
-  (import "./reference_test_bg.js" "__wbg_static_accessor_CREATE_TASK_7ee0dd8bc83df5b2" (func (;12;) (type 19)))
+  (import "./reference_test_bg.js" "__wbg_static_accessor_CREATE_TASK_6d9a581bae5d915b" (func (;12;) (type 19)))
   (import "./reference_test_bg.js" "__wbg_static_accessor_GLOBAL_4ef717fb391d88b7" (func (;13;) (type 19)))
   (import "./reference_test_bg.js" "__wbg_static_accessor_GLOBAL_THIS_8d1badc68b5a74f4" (func (;14;) (type 19)))
   (import "./reference_test_bg.js" "__wbg_static_accessor_SELF_146583524fe1469b" (func (;15;) (type 19)))
