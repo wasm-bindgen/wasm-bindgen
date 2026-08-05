@@ -1,4 +1,19 @@
 /**
+ * @enum {1 | 2}
+ */
+export const Größe = Object.freeze({
+    Klein: 1, "1": "Klein",
+    Gross: 2, "2": "Gross",
+});
+
+/**
+ * @param {"Café" | "naïve"} a
+ */
+export function accented(a) {
+    wasm.accented(a);
+}
+
+/**
  * @param {number | string} a
  */
 export function single(a) {
@@ -13,6 +28,24 @@ export function slice(a) {
     const len0 = WASM_VECTOR_LEN;
     wasm.slice(ptr0, len0);
 }
+
+/**
+ * @param {Café} c
+ * @returns {Café}
+ */
+export function take_cafe(c) {
+    const ret = wasm.take_cafe((__wbindgen_enum_Café.indexOf(c) + 1 || 3) - 1);
+    return __wbindgen_enum_Café[ret];
+}
+
+/**
+ * @param {Größe} g
+ * @returns {Größe}
+ */
+export function take_groesse(g) {
+    const ret = wasm.take_groesse(g);
+    return ret;
+}
 export function __wbg___wbindgen_throw_344f42d3211c4765(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
@@ -25,6 +58,8 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
 }
+const __wbindgen_enum_Café = ["espresso", "crème"];
+
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
