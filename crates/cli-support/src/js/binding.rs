@@ -1066,7 +1066,7 @@ fn instruction(
                     } else {
                         format!(
                             "let ret;\n{}",
-                            &maybe_wrap_export_call(&format!("ret = {call}"), guard)
+                            maybe_wrap_export_call(&format!("ret = {call}"), guard)
                         )
                     };
                     js.prelude(&body);
