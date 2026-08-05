@@ -9,6 +9,11 @@
 
 ### Fixed
 
+* `__wbg_load` in web targets now throws a clear error including the HTTP
+  status and URL when given a non-ok fetch `Response`, instead of surfacing a
+  misleading MIME-type or Wasm-magic-number error.
+  [#5255](https://github.com/wasm-bindgen/wasm-bindgen/pull/5255)
+
 * Fixed `async` imports with non-JS-handle resolved types (e.g.
   `async fn f() -> u32;`) silently producing garbage since 0.2.109: the
   descriptor named the resolved type instead of the `Promise` handle that
