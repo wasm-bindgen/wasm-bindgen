@@ -6,15 +6,23 @@
 //! runs out and later calls trap. Saving at the export boundary rewinds the
 //! whole abandoned chain, not just the outermost frame.
 //!
-//! Targets are the adapter-backed exports in `wit.exports`, a superset of the
-//! shims that can actually unwind. Runtime intrinsics are left alone: JS
-//! resolves those by searching for the export pointing at a known `FunctionId`
-//! (`Context::export_name_of`), which repointing breaks.
+//! Targets are the macro's `extern "C-unwind"` boundaries, the only exports an
+//! exception may leave as a supported egress: the adapter-backed exports in
+//! `wit.exports`, plus the name-resolved class exports (`__wbg_*_free`,
+//! `__wbg_upcast_*`) which are `C-unwind` but have no adapter. Everything else
+//! -- the runtime intrinsics such as `__wbindgen_malloc` and the closure dtor
+//! -- is plain `extern "C"`, where an escaping panic is already an abort
+//! ("panic in a function that cannot unwind"), exactly like a panic during
+//! panic unwinding. Aborts are traps, which no `catch_all` observes, so
+//! wrapping those would be dead weight. Leaving them alone also keeps JS
+//! generation working: it resolves intrinsics by searching for the export
+//! pointing at a known `FunctionId` (`Context::export_name_of`), which
+//! repointing breaks.
 
 use super::ExceptionHandlingVersion;
 use crate::wasm_conventions;
 use crate::wit::NonstandardWitSection;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use walrus::ir::*;
 use walrus::{
     ExportItem, FunctionBuilder, FunctionId, FunctionKind, GlobalId, LocalId, Module, RefType,
@@ -44,7 +52,31 @@ pub fn run(module: &mut Module, wit: &NonstandardWitSection, eh_version: Excepti
     // function that ends up exported under both names.
     let mut wrappers: HashMap<FunctionId, FunctionId> = HashMap::new();
 
-    for &(export_id, _) in &wit.exports {
+    let mut targets: Vec<_> = wit
+        .exports
+        .iter()
+        .map(|&(export_id, _)| export_id)
+        .collect();
+    // The `C-unwind` class exports without an adapter, named by
+    // `shared::free_function` / `shared::upcast_function`. `free` panics
+    // recoverably when the value is still borrowed, so it can unwind
+    // repeatedly against a live instance.
+    targets.extend(
+        module
+            .exports
+            .iter()
+            .filter(|e| {
+                e.name.starts_with("__wbg_")
+                    && (e.name.ends_with("_free") || e.name.starts_with("__wbg_upcast_"))
+            })
+            .map(|e| e.id()),
+    );
+
+    let mut seen = HashSet::new();
+    for export_id in targets {
+        if !seen.insert(export_id) {
+            continue;
+        }
         let ExportItem::Function(func_id) = module.exports.get(export_id).item else {
             continue;
         };
@@ -309,6 +341,48 @@ mod tests {
                 .count(),
             1
         );
+
+        validate(&mut module, wasmparser::WasmFeatures::empty());
+    }
+
+    /// `__wbg_*_free` and `__wbg_upcast_*` are `extern "C-unwind"` class
+    /// exports resolved by name, with no adapter in `wit.exports`. `free`
+    /// panics recoverably when the value is still borrowed, so an unwrapped
+    /// export leaks a frame per caught panic.
+    #[test]
+    fn wraps_name_resolved_c_unwind_exports() {
+        let wat = r#"
+            (module
+                (global $__stack_pointer (mut i32) (i32.const 1048576))
+                (func $free (param i32 i32))
+                (func $upcast (param i32) (result i32) local.get 0)
+                (func $__wbindgen_malloc (param i32) (result i32) local.get 0)
+                (export "__wbg_widget_free" (func $free))
+                (export "__wbg_upcast_child_to_parent" (func $upcast))
+                (export "__wbindgen_malloc" (func $__wbindgen_malloc))
+            )
+        "#;
+        let mut module = parse_wat(wat);
+        let free = func_of(&module, "__wbg_widget_free");
+        let upcast = func_of(&module, "__wbg_upcast_child_to_parent");
+        let malloc = func_of(&module, "__wbindgen_malloc");
+        let wit = NonstandardWitSection::default();
+
+        run(&mut module, &wit, ExceptionHandlingVersion::Modern);
+
+        let sp = stack_pointer(&module);
+        for (name, original) in [
+            ("__wbg_widget_free", free),
+            ("__wbg_upcast_child_to_parent", upcast),
+        ] {
+            let wrapped = func_of(&module, name);
+            assert_ne!(wrapped, original, "{name}");
+            assert_saves_and_restores(&module, wrapped, sp);
+        }
+
+        // Plain `extern "C"` intrinsics abort on an escaping panic and stay
+        // resolvable by `FunctionId`.
+        assert_eq!(func_of(&module, "__wbindgen_malloc"), malloc);
 
         validate(&mut module, wasmparser::WasmFeatures::empty());
     }
