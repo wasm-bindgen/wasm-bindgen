@@ -19,6 +19,10 @@ extern "C" {
     fn exceptions_throw();
     #[wasm_bindgen(catch)]
     fn exceptions_throw2() -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, js_name = exceptions_throw2)]
+    fn exceptions_throw_i64() -> Result<i64, JsValue>;
+    #[wasm_bindgen(catch, js_name = exceptions_throw2)]
+    fn exceptions_throw_u64() -> Result<u64, JsValue>;
     fn test_exception_propagates();
 
     fn assert_valid_error(val: JsValue);
@@ -172,6 +176,12 @@ pub fn exceptions_propagate() {
 #[wasm_bindgen_test]
 fn exn_caught() {
     assert_valid_error(exceptions_throw2().unwrap_err());
+}
+
+#[wasm_bindgen_test]
+fn exn_caught_i64() {
+    assert_valid_error(exceptions_throw_i64().unwrap_err());
+    assert_valid_error(exceptions_throw_u64().unwrap_err());
 }
 
 #[wasm_bindgen_test]
