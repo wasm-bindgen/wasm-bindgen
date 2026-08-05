@@ -1,11 +1,8 @@
-// Values are returned from `async` functions so the import genuinely receives a
-// `Promise` and has to describe it as one. The point of these fixtures is that
-// the *resolved* values are deliberately not handle-shaped: numbers, strings and
-// booleans, which are the types a descriptor bug corrupts.
+// Fixtures for async_import.rs: promises resolving to non-handle values.
 
 exports.asyncU32 = async function() {
   await null;
-  return 4294967295; // u32::MAX — also catches a signed reinterpretation
+  return 4294967295; // u32::MAX also catches a signed reinterpretation
 };
 
 exports.asyncI32 = async function() {

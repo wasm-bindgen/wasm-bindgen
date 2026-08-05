@@ -9,16 +9,10 @@
 
 ### Fixed
 
-* `async` imports now describe their return value as the `Promise` handle that
-  actually crosses the ABI, rather than as the type the promise resolves to. The
-  resolved value is converted separately, on the Rust side, when the returned
-  `JsFuture` is awaited. Previously the descriptor named the resolved type, so
-  the CLI marshalled the promise handle as if it were that type and silently
-  produced garbage for any resolved type that is not itself handle-shaped —
-  `async fn f() -> u32;` being the simplest case, and `async fn f() -> String;`
-  going as far as handing the `Promise` object to `passStringToWasm0`. Imports
-  resolving to a JS handle type were unaffected, since the two marshal
-  identically, which is why the existing test suite did not catch it.
+* Fixed `async` imports with non-JS-handle resolved types (e.g.
+  `async fn f() -> u32;`) silently producing garbage since 0.2.109: the
+  descriptor named the resolved type instead of the `Promise` handle that
+  actually crosses the ABI.
 
 * Fixed threaded Wasm memory layout to reserve wasm-bindgen's internal thread
   page after the module's original initial memory instead of at `__heap_base`,

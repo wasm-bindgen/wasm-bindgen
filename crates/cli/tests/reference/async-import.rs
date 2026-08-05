@@ -1,18 +1,7 @@
-// Pins the descriptor/binding shape of `async` *imports* on the ordinary
-// (non-`generic_per_mono`) path.
-//
-// What actually crosses the ABI for an `async` import is the `Promise` handle —
-// an externref — never the resolved value. The resolved value is produced later,
-// on the Rust side, by awaiting `JsFuture`. So every import below must show the
-// same `(result externref)` in the `.wat` regardless of what it resolves to, and
-// the JS shim must simply forward the promise.
-//
-// Before this was fixed, the descriptor named the *resolved* type instead, so
-// cli-support marshalled the promise handle as if it were e.g. a `u32` and
-// silently produced garbage for any resolved type that is not itself
-// handle-shaped. `async_number` and `async_string` are the regression tests for
-// that; `async_handle` and `async_unit` are the cases that worked either way and
-// are here to prove they did not change.
+// An `async` import returns a `Promise` handle at the ABI regardless of its
+// resolved type (see `DescribeImport` in macro-support), so every import below
+// must show `(result externref)` in the `.wat` and the JS shim must simply
+// forward the promise.
 
 use wasm_bindgen::prelude::*;
 
@@ -20,21 +9,18 @@ use wasm_bindgen::prelude::*;
 extern "C" {
     type Widget;
 
-    // The regression: a non-handle resolved type. Must be `(result externref)`.
+    // Non-handle resolved types: the regression cases.
     async fn async_number() -> u32;
-
-    // Another non-handle resolved type, this one heap-allocated.
     async fn async_string() -> String;
 
-    // Handle-shaped resolved type. This one was already correct, because the
-    // resolved type and the promise handle marshal identically.
+    // Handle-shaped resolved type: marshals the same either way.
     async fn async_handle() -> Widget;
 
     // No declared return type still yields a promise at the ABI.
     async fn async_unit();
 
-    // `catch` composes with the above: the `Result` is produced by awaiting the
-    // promise, so the ABI return is still just the promise handle.
+    // `catch`: the `Result` comes from awaiting the promise, so the ABI
+    // return is still just the promise handle.
     #[wasm_bindgen(catch)]
     async fn async_catch() -> Result<u32, JsValue>;
 }

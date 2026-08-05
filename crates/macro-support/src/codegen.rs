@@ -2880,25 +2880,24 @@ impl TryToTokens for DescribeImport<'_> {
             })
             .collect::<Result<Vec<syn::Type>, Diagnostic>>()?;
         let nargs = f.function.arguments.len() as u32;
-        // An `async` import's declared return type never reaches the ABI — a
-        // `Promise` handle does — so it is not concretised or described at all.
-        let concrete_ret = match (&f.js_ret, f.function.r#async) {
-            (Some(t), false) => Some(generics::generic_to_concrete(
-                t.clone(),
-                &fn_class_generics.concrete_defaults,
-                &fn_lifetime_params,
-            )?),
-            _ => None,
-        };
         let inform_ret = {
             let wasm_bindgen = self.wasm_bindgen;
             let describe = quote! { #wasm_bindgen::describe::WasmDescribe };
-            match (&concrete_ret, f.function.r#async) {
+            if f.function.r#async {
                 // An `async` import hands back a `Promise` handle regardless of
-                // what it resolves to, so describe an externref.
-                (_, true) => quote! { <#wasm_bindgen::JsValue as #describe>::describe(); },
-                (Some(ty), false) => quote! { <#ty as #describe>::describe(); },
-                (None, false) => quote! { <() as #describe>::describe(); },
+                // its declared return type, which never reaches the ABI: the
+                // resolved value is converted separately when the returned
+                // `JsFuture` is awaited. So describe an externref.
+                quote! { <#wasm_bindgen::JsValue as #describe>::describe(); }
+            } else if let Some(t) = &f.js_ret {
+                let t = generics::generic_to_concrete(
+                    t.clone(),
+                    &fn_class_generics.concrete_defaults,
+                    &fn_lifetime_params,
+                )?;
+                quote! { <#t as #describe>::describe(); }
+            } else {
+                quote! { <() as #describe>::describe(); }
             }
         };
 
