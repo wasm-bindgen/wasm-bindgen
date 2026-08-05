@@ -1024,7 +1024,7 @@ impl<'a> Context<'a> {
 
         for (id, def) in iter_by_import(&self.wasm_import_definitions, self.module) {
             let import = self.module.imports.get_mut(*id);
-            fn_def.push_str(&format!("{}: {},\n", &import.name, def.body()));
+            fn_def.push_str(&format!("{}: {},\n", import.name, def.body()));
             import.module = self_module_name.clone();
         }
 

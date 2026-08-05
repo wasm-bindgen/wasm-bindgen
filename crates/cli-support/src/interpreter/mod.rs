@@ -260,7 +260,7 @@ impl Interpreter {
     /// Returns `Some` if `func` was found in the `module` and `None` if it was
     /// not found in the `module`.
     pub fn interpret_descriptor(&mut self, id: FunctionId, module: &Module) -> &[u32] {
-        self.descriptor.truncate(0);
+        self.descriptor.clear();
         self.stopped = false;
 
         if let Some(sp) = self.stack_pointer {
