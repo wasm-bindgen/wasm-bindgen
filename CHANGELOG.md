@@ -9,13 +9,10 @@
 
 ### Fixed
 
-* Length-prefixed strings in the descriptor stream now count `char`s rather than
-  UTF-8 bytes. The descriptor wire format emits one word per `char` and prefixes
-  it with a length, but that length was computed with `str::len()`, so any
-  non-ASCII string made the prefix exceed the number of words actually written
-  and left the CLI's decoder consuming descriptor *payload* words as characters.
-  Depending on what followed, that either aborted the build with an opaque
-  decoder panic or silently mis-bound everything after the affected item.
+* Fixed length prefixes in descriptor strings to count `char`s rather than
+  UTF-8 bytes, so non-ASCII names in `js_name`/`typescript_type` no longer
+  panic the CLI or mis-bind the generated bindings.
+  [#5248](https://github.com/wasm-bindgen/wasm-bindgen/pull/5248)
 
 * Fixed threaded Wasm memory layout to reserve wasm-bindgen's internal thread
   page after the module's original initial memory instead of at `__heap_base`,

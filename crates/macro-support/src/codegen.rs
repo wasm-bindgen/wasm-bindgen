@@ -1112,9 +1112,7 @@ impl TryToTokens for ast::ImportType {
         };
 
         let description = if let Some(typescript_type) = &self.typescript_type {
-            // One descriptor word per `char`, so the prefix counts `char`s, not
-            // UTF-8 bytes. `typescript_type` is an arbitrary user string, so a
-            // byte count silently mis-binds for anything non-ASCII.
+            // One descriptor word per `char`, so count `char`s, not bytes.
             let typescript_type_len = typescript_type.chars().count() as u32;
             let typescript_type_chars = typescript_type.chars().map(|c| c as u32);
             quote! {
@@ -1631,7 +1629,6 @@ impl ToTokens for ast::StringEnum {
         let vis = &self.vis;
         let enum_name = &self.name;
         let name_str = &self.export_name;
-        // One descriptor word per `char`: count `char`s, not UTF-8 bytes.
         let name_len = name_str.chars().count() as u32;
         let name_chars = name_str.chars().map(u32::from);
         let variants = &self.variants;
