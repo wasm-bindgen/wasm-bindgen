@@ -5439,7 +5439,21 @@ addToLibrary({
                 // literal, so we strip the keyword once at the end.
                 let code = if catch && !has_wasm_catch {
                     self.expose_handle_error()?;
-                    format!("() {{ return handleError(function {code}, arguments); }}")
+                    // The catch path of `handleError` returns undefined, which
+                    // would trap converting to `i64` at the JS -> Wasm
+                    // boundary, so substitute a `0n` placeholder (the value is
+                    // discarded once the stored exception is checked).
+                    let fallback = match self.module.imports.get(core).kind {
+                        walrus::ImportKind::Function(f) => {
+                            let ty = self.module.funcs.get(f).ty();
+                            match self.module.types.get(ty).results() {
+                                [walrus::ValType::I64] => " ?? 0n",
+                                _ => "",
+                            }
+                        }
+                        _ => "",
+                    };
+                    format!("() {{ return handleError(function {code}, arguments){fallback}; }}")
                 } else if log_error {
                     format!("() {{ return logError(function {code}, arguments); }}")
                 } else {
