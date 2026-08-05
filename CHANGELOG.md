@@ -14,6 +14,13 @@
   misleading MIME-type or Wasm-magic-number error.
   [#5256](https://github.com/wasm-bindgen/wasm-bindgen/pull/5256)
 
+* Restored `__stack_pointer` when an exception unwinds out of a wasm export,
+  preventing repeated `panic = "unwind"` calls from leaking shadow-stack frames
+  until the shadow stack is exhausted and calls trap. Node reports
+  `memory access out of bounds`; poisoned instances can instead report
+  `Module terminated`.
+  [#5244](https://github.com/wasm-bindgen/wasm-bindgen/pull/5244)
+
 * Fixed `async` imports with non-JS-handle resolved types (e.g.
   `async fn f() -> u32;`) silently producing garbage since 0.2.109: the
   descriptor named the resolved type instead of the `Promise` handle that
