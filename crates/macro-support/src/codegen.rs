@@ -2882,18 +2882,25 @@ impl TryToTokens for DescribeImport<'_> {
             })
             .collect::<Result<Vec<syn::Type>, Diagnostic>>()?;
         let nargs = f.function.arguments.len() as u32;
-        let inform_ret = match &f.js_ret {
-            Some(ref t) => {
+        let inform_ret = {
+            let wasm_bindgen = self.wasm_bindgen;
+            let describe = quote! { #wasm_bindgen::describe::WasmDescribe };
+            if f.function.r#async {
+                // An `async` import hands back a `Promise` handle regardless of
+                // its declared return type, which never reaches the ABI: the
+                // resolved value is converted separately when the returned
+                // `JsFuture` is awaited. So describe an externref.
+                quote! { <#wasm_bindgen::JsValue as #describe>::describe(); }
+            } else if let Some(t) = &f.js_ret {
                 let t = generics::generic_to_concrete(
                     t.clone(),
                     &fn_class_generics.concrete_defaults,
                     &fn_lifetime_params,
                 )?;
-                quote! { <#t as WasmDescribe>::describe(); }
+                quote! { <#t as #describe>::describe(); }
+            } else {
+                quote! { <() as #describe>::describe(); }
             }
-            // async functions always return a JsValue, even if they say to return ()
-            None if f.function.r#async => quote! { <JsValue as WasmDescribe>::describe(); },
-            None => quote! { <() as WasmDescribe>::describe(); },
         };
 
         Descriptor {

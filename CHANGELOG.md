@@ -9,6 +9,12 @@
 
 ### Fixed
 
+* Fixed `async` imports with non-JS-handle resolved types (e.g.
+  `async fn f() -> u32;`) silently producing garbage since 0.2.109: the
+  descriptor named the resolved type instead of the `Promise` handle that
+  actually crosses the ABI.
+  #[5249](https://github.com/wasm-bindgen/wasm-bindgen/pull/5249)
+
 * Fixed `catch` imports returning `i64`/`u64` throwing a `TypeError` (and
   panicking in `__wbindgen_exn_store`) when the JS import throws, since the
   `handleError` catch path returned `undefined` which cannot be converted to
