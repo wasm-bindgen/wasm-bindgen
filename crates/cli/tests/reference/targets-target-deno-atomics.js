@@ -15,7 +15,7 @@ function __wbg_get_imports(memory) {
         __wbg___wbindgen_throw_344f42d3211c4765: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         },
-        __wbg_random_6e647071acda68e7: function() {
+        __wbg_random_e615c3eb33f6b875: function() {
             const ret = Math.random();
             return ret;
         },

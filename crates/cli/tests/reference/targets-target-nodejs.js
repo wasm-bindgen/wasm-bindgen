@@ -13,7 +13,7 @@ exports.add_that_might_fail = add_that_might_fail;
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,
-        __wbg_random_fcf922927450bad6: function() {
+        __wbg_random_a5a0d0660264cf8c: function() {
             const ret = Math.random();
             return ret;
         },

@@ -55,7 +55,7 @@ export function __wbg_instanceof_Window_05ba1ee4f6781663(arg0) {
     const ret = result;
     return ret;
 }
-export function __wbg_log_d267660666346fb3(arg0) {
+export function __wbg_log_9884276894d36053(arg0) {
     console.log(arg0);
 }
 export function __wbg_setTimeout_5ccd86968701f1ec() { return handleError(function (arg0, arg1) {

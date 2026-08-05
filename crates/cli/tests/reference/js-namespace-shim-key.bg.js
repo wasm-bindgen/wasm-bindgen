@@ -4,51 +4,43 @@ export function exported() {
 export function __wbg___wbindgen_throw_344f42d3211c4765(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
-export function __wbg_another_5e391a82904c95f3(arg0) {
-    const ret = arg0.prop2;
+export function __wbg_c_27eb6c8c34a36e09(arg0, arg1) {
+    a.c(getStringFromWasm0(arg0, arg1));
+}
+export function __wbg_c_62f7c495c0da1f6c(arg0, arg1) {
+    a.b.c(getStringFromWasm0(arg0, arg1));
+}
+export function __wbg_debug_8a4a9026c85569a7(arg0, arg1) {
+    zeta.debug(getStringFromWasm0(arg0, arg1));
+}
+export function __wbg_debug_feebc9df6d1ce7c8(arg0, arg1) {
+    eta.debug(getStringFromWasm0(arg0, arg1));
+}
+export function __wbg_info_219b4a73877b158f(arg0, arg1) {
+    epsilon.info(getStringFromWasm0(arg0, arg1));
+}
+export function __wbg_info_b8c8b37229b5e91d(arg0, arg1) {
+    delta.info(getStringFromWasm0(arg0, arg1));
+}
+export function __wbg_log_aa9c51e79de6434e(arg0, arg1) {
+    alpha.log(getStringFromWasm0(arg0, arg1));
+}
+export function __wbg_log_df735e8b40a03464(arg0, arg1) {
+    beta.log(getStringFromWasm0(arg0, arg1));
+}
+export function __wbg_static_accessor_STATE_21acaf98a2b6b7ca() {
+    const ret = iota.STATE;
     return ret;
 }
-export function __wbg_b_9258c02a5383359c(arg0) {
-    const ret = arg0.a;
+export function __wbg_static_accessor_STATE_73563c4d96c22122() {
+    const ret = theta.STATE;
     return ret;
 }
-export function __wbg_bar2_27fd601ca9c7705e() {
-    const ret = Bar.bar2();
-    return ret;
+export function __wbg_warn_505bf06fa20f48dc(arg0, arg1) {
+    warn(getStringFromWasm0(arg0, arg1));
 }
-export function __wbg_get_foo_225ac333baff72fb() {
-    const ret = Bar.get_foo();
-    return ret;
-}
-export function __wbg_new_2d06dc6ad956a2e8() {
-    const ret = new SomeClass();
-    return ret;
-}
-export function __wbg_set_another_c7bea22c1395f7c7(arg0, arg1) {
-    arg0.prop2 = arg1 >>> 0;
-}
-export function __wbg_set_b_28af687e466c2915(arg0, arg1) {
-    arg0.a = arg1 >>> 0;
-}
-export function __wbg_set_bar2_dfbeba9889d2c348(arg0) {
-    Bar.set_bar2(arg0 >>> 0);
-}
-export function __wbg_set_foo_f48c7ea95bc10ade(arg0) {
-    Bar.set_foo(arg0 >>> 0);
-}
-export function __wbg_set_signal_2da17cf9cd6c4702(arg0, arg1) {
-    arg0.signal = arg1 >>> 0;
-}
-export function __wbg_set_some_prop_1f95e7eaab86103b(arg0, arg1) {
-    arg0.some_prop = arg1 >>> 0;
-}
-export function __wbg_signal_178ef00cfc37cb61(arg0) {
-    const ret = arg0.signal;
-    return ret;
-}
-export function __wbg_some_prop_97f412fbfc566107(arg0) {
-    const ret = arg0.some_prop;
-    return ret;
+export function __wbg_warn_74a4944fa727b481(arg0, arg1) {
+    gamma.warn(getStringFromWasm0(arg0, arg1));
 }
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;
