@@ -7,6 +7,9 @@
 
 ### Changed
 
+* Library MSRV bumped from 1.77 to 1.81, per the 2-year MSRV policy.
+  [#5256](https://github.com/wasm-bindgen/wasm-bindgen/pull/5256)
+
 ### Fixed
 
 * Fixed `async` imports with non-JS-handle resolved types (e.g.
