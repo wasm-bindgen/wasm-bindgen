@@ -16,6 +16,12 @@
   `Module terminated`.
   [#5244](https://github.com/wasm-bindgen/wasm-bindgen/pull/5244)
 
+* Fixed `catch` imports returning `i64`/`u64` throwing a `TypeError` (and
+  panicking in `__wbindgen_exn_store`) when the JS import throws, since the
+  `handleError` catch path returned `undefined` which cannot be converted to
+  a Wasm `i64`.
+  [#5238](https://github.com/wasm-bindgen/wasm-bindgen/pull/5238)
+
 * `js_namespace` is now part of an imported function's and imported static's
   generated shim name. Two imports with identical Rust signatures that differed
   *only* in their `js_namespace` hashed to the same `__wbg_<name>_<hash>`
