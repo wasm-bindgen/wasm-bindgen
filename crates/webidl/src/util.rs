@@ -215,11 +215,11 @@ pub(crate) fn option_ty(t: syn::Type) -> syn::Type {
     ty.into()
 }
 
-/// From `T` create `::js_sys::JsOption<T>`
+/// From `T` create `::js_sys::JsNullable<T>`
 ///
-/// Used for nullable types nested inside generic containers (e.g., `Promise<JsOption<Foo>>`).
-/// Unlike `Option<T>` which is a Rust ABI, `JsOption<T>` is a valid erasable generic type.
-pub(crate) fn js_option_ty(t: syn::Type) -> syn::Type {
+/// Used for nullable types nested inside generic containers (e.g., `Promise<JsNullable<Foo>>`).
+/// Unlike `Option<T>` which is a Rust ABI, `JsNullable<T>` is a valid erasable generic type.
+pub(crate) fn js_nullable_ty(t: syn::Type) -> syn::Type {
     let arguments = syn::PathArguments::AngleBracketed(syn::AngleBracketedGenericArguments {
         colon2_token: None,
         lt_token: Default::default(),
@@ -227,7 +227,7 @@ pub(crate) fn js_option_ty(t: syn::Type) -> syn::Type {
         gt_token: Default::default(),
     });
 
-    let ident = raw_ident("JsOption");
+    let ident = raw_ident("JsNullable");
     let seg = syn::PathSegment { ident, arguments };
     let path = syn::Path {
         leading_colon: Some(Default::default()),
@@ -290,7 +290,7 @@ pub enum Direction {
 ///
 /// This models where a type appears, which affects how it's converted to Rust:
 /// - Top-level positions (`inner: false`) can use Rust-native types (`String`, `Option<T>`)
-/// - Inner positions (`inner: true`) must use JS-compatible types (`JsString`, `JsOption<T>`)
+/// - Inner positions (`inner: true`) must use JS-compatible types (`JsString`, `JsNullable<T>`)
 ///
 /// Inner positions include:
 /// - Nested inside generic type parameters (e.g., inside `Promise<T>`, `Array<T>`)
@@ -762,12 +762,12 @@ impl<'src> FirstPassRecord<'src> {
             let deprecated = get_rust_deprecated(signature.orig.attrs);
             let ret_ty = if id == &OperationId::IndexingGetter {
                 match ret_ty {
-                    WbgType::JsOption(_) => ret_ty,
+                    WbgType::Nullable(_) => ret_ty,
                     ref ty => {
                         if catch {
                             ret_ty
                         } else {
-                            WbgType::JsOption(Box::new(ty.clone()))
+                            WbgType::Nullable(Box::new(ty.clone()))
                         }
                     }
                 }
@@ -1177,7 +1177,7 @@ fn arg_throws(ty: &WbgType<'_>) -> bool {
                 | IdentifierType::Float64Slice { allow_shared, .. },
             ..
         } => !allow_shared,
-        WbgType::JsOption(item) => arg_throws(item),
+        WbgType::Nullable(item) => arg_throws(item),
         WbgType::Union(list) => list.iter().any(arg_throws),
         // catch-all for everything else like Object
         _ => false,
@@ -1231,7 +1231,7 @@ fn flag_slices_immutable(ty: &mut WbgType) {
             ty: IdentifierType::AllowSharedBufferSource { immutable },
             ..
         } => *immutable = true,
-        WbgType::JsOption(item) => flag_slices_immutable(item),
+        WbgType::Nullable(item) => flag_slices_immutable(item),
         WbgType::Union(list) => {
             for item in list {
                 flag_slices_immutable(item);
@@ -1256,7 +1256,7 @@ fn flag_slices_allow_shared(ty: &mut WbgType) {
         | WbgType::Float64Array { allow_shared, .. }
         | WbgType::ArrayBufferView { allow_shared, .. }
         | WbgType::BufferSource { allow_shared, .. } => *allow_shared = true,
-        WbgType::JsOption(item) => flag_slices_allow_shared(item),
+        WbgType::Nullable(item) => flag_slices_allow_shared(item),
         WbgType::FrozenArray(item) => flag_slices_allow_shared(item),
         WbgType::Sequence(item) => flag_slices_allow_shared(item),
         WbgType::ObservableArray(item) => flag_slices_allow_shared(item),

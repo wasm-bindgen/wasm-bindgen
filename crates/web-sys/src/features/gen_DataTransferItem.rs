@@ -55,7 +55,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get_as_file_system_handle(
         this: &DataTransferItem,
-    ) -> ::js_sys::Promise<::js_sys::JsOption<FileSystemHandle>>;
+    ) -> ::js_sys::Promise<::js_sys::JsNullable<FileSystemHandle>>;
     #[wasm_bindgen(catch, method, js_class = "DataTransferItem", js_name = "getAsString")]
     #[doc = "The `getAsString()` method."]
     #[doc = ""]

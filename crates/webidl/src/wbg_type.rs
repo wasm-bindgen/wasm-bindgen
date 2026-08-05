@@ -8,7 +8,7 @@ use weedle::types::*;
 
 use crate::first_pass::FirstPassRecord;
 use crate::util::{
-    array, camel_case_ident, generic_ty, js_option_ty, option_ty, shared_ref, slice_ty,
+    array, camel_case_ident, generic_ty, js_nullable_ty, option_ty, shared_ref, slice_ty,
     snake_case_ident, Direction, TypePosition,
 };
 
@@ -85,7 +85,7 @@ pub(crate) enum WbgType<'a> {
         immutable: bool,
     },
 
-    JsOption(Box<WbgType<'a>>),
+    Nullable(Box<WbgType<'a>>),
     FrozenArray(Box<WbgType<'a>>),
     ObservableArray(Box<WbgType<'a>>),
     Sequence(Box<WbgType<'a>>),
@@ -260,7 +260,7 @@ impl<'a, T: ToWbgType<'a>> ToWbgType<'a> for MayBeNull<T> {
     fn to_wbg_type(&self, record: &FirstPassRecord<'a>) -> WbgType<'a> {
         let inner_wbg_type = self.type_.to_wbg_type(record);
         if self.q_mark.is_some() {
-            WbgType::JsOption(Box::new(inner_wbg_type))
+            WbgType::Nullable(Box::new(inner_wbg_type))
         } else {
             inner_wbg_type
         }
@@ -586,7 +586,7 @@ impl<'a> WbgType<'a> {
 
             WbgType::UnknownIdentifier(name) => dst.push_str(&snake_case_ident(name)),
 
-            WbgType::JsOption(wbg_type) => {
+            WbgType::Nullable(wbg_type) => {
                 dst.push_str("opt_");
                 wbg_type.push_snake_case_name(dst);
             }
@@ -739,12 +739,12 @@ impl<'a> WbgType<'a> {
                     Ok(js_sys("JsString"))
                 }
 
-                // JsOption must use JsOption<T> for inner positions (not Rust Option<T>)
-                WbgType::JsOption(wbg_type) => {
+                // Nullable must use JsNullable<T> for inner positions (not Rust Option<T>)
+                WbgType::Nullable(wbg_type) => {
                     let inner = wbg_type.to_syn_type(pos, legacy, no_generics)?;
                     match inner {
                         Some(inner) => {
-                            // JsOption<JsValue> isn't well-supported, just use JsValue
+                            // JsNullable<JsValue> isn't well-supported, just use JsValue
                             if let syn::Type::Path(path) = &inner {
                                 if path.qself.is_none()
                                     && path
@@ -757,7 +757,7 @@ impl<'a> WbgType<'a> {
                                     return Ok(Some(inner.clone()));
                                 }
                             }
-                            Ok(Some(js_option_ty(inner)))
+                            Ok(Some(js_nullable_ty(inner)))
                         }
                         None => Ok(None),
                     }
@@ -908,7 +908,7 @@ impl<'a> WbgType<'a> {
 
             WbgType::ArrayBufferView { .. } | WbgType::BufferSource { .. } => Ok(js_sys("Object")),
 
-            WbgType::JsOption(wbg_type) => {
+            WbgType::Nullable(wbg_type) => {
                 // Top-level position: use Rust Option<T>
                 // (inner positions are handled in to_syn_type before calling to_syn_type_inner)
                 let inner = wbg_type.to_syn_type(pos, legacy, no_generics)?;
@@ -1158,11 +1158,11 @@ impl<'a> WbgType<'a> {
     /// [flattened union member types]: https://heycam.github.io/webidl/#dfn-flattened-union-member-types
     pub(crate) fn flatten(&self, attrs: Option<&ExtendedAttributeList<'_>>) -> Vec<Self> {
         match self {
-            WbgType::JsOption(wbg_type) => wbg_type
+            WbgType::Nullable(wbg_type) => wbg_type
                 .flatten(attrs)
                 .into_iter()
                 .map(Box::new)
-                .map(WbgType::JsOption)
+                .map(WbgType::Nullable)
                 .collect(),
             WbgType::FrozenArray(wbg_type) => wbg_type
                 .flatten(attrs)
@@ -1553,7 +1553,7 @@ fn wbg_type_flatten_test() {
                 Sequence(Box::new(Long),),
                 WbgType::id("Event", Interface("Event"))
             ]),
-            JsOption(Box::new(Union(vec![
+            Nullable(Box::new(Union(vec![
                 WbgType::id("XMLHttpRequest", Interface("XMLHttpRequest")),
                 DomString,
             ])),),
@@ -1567,11 +1567,11 @@ fn wbg_type_flatten_test() {
             WbgType::id("Node", Interface("Node")),
             Sequence(Box::new(Long)),
             WbgType::id("Event", Interface("Event")),
-            JsOption(Box::new(WbgType::id(
+            Nullable(Box::new(WbgType::id(
                 "XMLHttpRequest",
                 Interface("XMLHttpRequest")
             ))),
-            JsOption(Box::new(DomString)),
+            Nullable(Box::new(DomString)),
             Sequence(Box::new(Sequence(Box::new(Double)))),
             Sequence(Box::new(WbgType::id("NodeList", Interface("NodeList")))),
         ],

@@ -47,6 +47,7 @@ pub(crate) static BUILTIN_IDENTS: Lazy<BTreeSet<&'static str>> = Lazy::new(|| {
         // Generic js-sys types
         "JsString",
         "JsOption",
+        "JsNullable",
         "ArrayTuple",
         "Symbol",
         "BigInt",

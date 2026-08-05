@@ -42,7 +42,7 @@ extern "C" {
     #[wasm_bindgen(method, getter = "colorFormats")]
     pub fn get_color_formats(
         this: &GpuRenderPassLayout,
-    ) -> ::js_sys::Array<::js_sys::JsOption<::js_sys::JsString>>;
+    ) -> ::js_sys::Array<::js_sys::JsNullable<::js_sys::JsString>>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `colorFormats` field of this object."]
     #[doc = ""]
@@ -53,7 +53,7 @@ extern "C" {
     #[wasm_bindgen(method, setter = "colorFormats")]
     pub fn set_color_formats(
         this: &GpuRenderPassLayout,
-        val: &[::js_sys::JsOption<::js_sys::JsString>],
+        val: &[::js_sys::JsNullable<::js_sys::JsString>],
     );
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuTextureFormat")]
@@ -102,7 +102,7 @@ impl GpuRenderPassLayout {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new(color_formats: &[::js_sys::JsOption<::js_sys::JsString>]) -> Self {
+    pub fn new(color_formats: &[::js_sys::JsNullable<::js_sys::JsString>]) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_color_formats(color_formats);
@@ -116,7 +116,7 @@ impl GpuRenderPassLayout {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_color_formats()` instead."]
-    pub fn color_formats(&mut self, val: &[::js_sys::JsOption<::js_sys::JsString>]) -> &mut Self {
+    pub fn color_formats(&mut self, val: &[::js_sys::JsNullable<::js_sys::JsString>]) -> &mut Self {
         self.set_color_formats(val);
         self
     }

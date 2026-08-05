@@ -429,7 +429,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn pop_error_scope(this: &GpuDevice) -> ::js_sys::Promise<::js_sys::JsOption<GpuError>>;
+    pub fn pop_error_scope(this: &GpuDevice) -> ::js_sys::Promise<::js_sys::JsNullable<GpuError>>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuErrorFilter")]
     #[wasm_bindgen(method, js_class = "GPUDevice", js_name = "pushErrorScope")]

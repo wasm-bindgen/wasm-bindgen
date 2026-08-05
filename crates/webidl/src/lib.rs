@@ -585,7 +585,7 @@ impl<'src> FirstPassRecord<'src> {
         // With generics enabled, the types are precise (e.g. Option<&[T]>) so no collapse needed.
         let is_js_value_ref_option_type = generics_compat
             && match &wbg_type {
-                wbg_type::WbgType::JsOption(ty) => match **ty {
+                wbg_type::WbgType::Nullable(ty) => match **ty {
                     wbg_type::WbgType::Any => true,
                     wbg_type::WbgType::FrozenArray(..) | wbg_type::WbgType::Sequence(..) => true,
                     wbg_type::WbgType::Union(ref types) => !types.iter().all(|wbg_type| {

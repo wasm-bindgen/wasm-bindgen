@@ -81,7 +81,7 @@ extern "C" {
     #[wasm_bindgen(method, getter = "targets")]
     pub fn get_targets(
         this: &GpuFragmentState,
-    ) -> ::js_sys::Array<::js_sys::JsOption<GpuColorTargetState>>;
+    ) -> ::js_sys::Array<::js_sys::JsNullable<GpuColorTargetState>>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuColorTargetState")]
     #[doc = "Change the `targets` field of this object."]
@@ -91,7 +91,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "targets")]
-    pub fn set_targets(this: &GpuFragmentState, val: &[::js_sys::JsOption<GpuColorTargetState>]);
+    pub fn set_targets(this: &GpuFragmentState, val: &[::js_sys::JsNullable<GpuColorTargetState>]);
 }
 #[cfg(web_sys_unstable_apis)]
 impl GpuFragmentState {
@@ -104,7 +104,7 @@ impl GpuFragmentState {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn new(
         module: &GpuShaderModule,
-        targets: &[::js_sys::JsOption<GpuColorTargetState>],
+        targets: &[::js_sys::JsNullable<GpuColorTargetState>],
     ) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
@@ -134,7 +134,7 @@ impl GpuFragmentState {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuColorTargetState")]
     #[deprecated = "Use `set_targets()` instead."]
-    pub fn targets(&mut self, val: &[::js_sys::JsOption<GpuColorTargetState>]) -> &mut Self {
+    pub fn targets(&mut self, val: &[::js_sys::JsNullable<GpuColorTargetState>]) -> &mut Self {
         self.set_targets(val);
         self
     }

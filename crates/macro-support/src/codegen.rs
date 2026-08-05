@@ -1492,7 +1492,7 @@ impl TryToTokens for ast::ImportType {
             })
             .to_tokens(tokens);
 
-            // 2. For non-generic types: generate identity upcast (UpcastFrom<Self> for Self, UpcastFrom<Self> for JsOption<Self>)
+            // 2. For non-generic types: generate identity upcast (UpcastFrom<Self> for Self, UpcastFrom<Self> for JsOption<Self>/JsNullable<Self>)
             // 3. For generic types: generate structural covariance
             let type_params: Vec<_> = self.generics.type_params().collect();
             if type_params.is_empty() {
@@ -1508,6 +1508,12 @@ impl TryToTokens for ast::ImportType {
                     #[automatically_derived]
                     impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
                         for #wasm_bindgen::sys::JsOption<#rust_name #ty_generics>
+                    #where_clause
+                    {
+                    }
+                    #[automatically_derived]
+                    impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
+                        for #wasm_bindgen::sys::JsNullable<#rust_name #ty_generics>
                     #where_clause
                     {
                     }
@@ -1576,6 +1582,12 @@ impl TryToTokens for ast::ImportType {
                     #where_clause_extended
                     {
                     }
+                    #[automatically_derived]
+                    impl #impl_generics_split #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
+                        for #wasm_bindgen::sys::JsNullable<#rust_name #target_ty_generics>
+                    #where_clause_extended
+                    {
+                    }
                 })
                 .to_tokens(tokens);
             }
@@ -1592,6 +1604,12 @@ impl TryToTokens for ast::ImportType {
                     #[automatically_derived]
                     impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
                         for #wasm_bindgen::sys::JsOption<#superclass>
+                    #where_clause
+                    {
+                    }
+                    #[automatically_derived]
+                    impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
+                        for #wasm_bindgen::sys::JsNullable<#superclass>
                     #where_clause
                     {
                     }

@@ -11,6 +11,16 @@
 * Added `riscv64gc-unknown-linux-gnu` release artifacts.
   [#5265](https://github.com/wasm-bindgen/wasm-bindgen/pull/5265)
 
+* Added `JsNullable<T>`, modeling WebIDL nullable types (`T | null`). Both
+  `null` and `undefined` are treated as absent, per WebIDL's ECMAScript
+  conversion rules; the canonical empty value produced from Rust is `null`.
+  `web-sys` now uses `JsNullable<T>` instead of `JsOption<T>` for nullable
+  types nested inside generics (e.g. `Promise<GpuError?>` from
+  `GPUDevice.popErrorScope()`), fixing spec-defined `null` resolutions being
+  treated as present values under `JsOption<T>`'s strict undefined-only
+  semantics.
+  [#5234](https://github.com/wasm-bindgen/wasm-bindgen/issues/5234)
+
 ### Changed
 
 * Emscripten output now marks public exports (free functions, classes, enums,

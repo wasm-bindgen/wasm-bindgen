@@ -1,4 +1,4 @@
-use js_sys::{JsOption, Undefined};
+use js_sys::{JsNullable, JsOption, Null, Undefined};
 use js_sys::{JsString, Number, Object};
 use wasm_bindgen::convert::Upcast;
 use wasm_bindgen::prelude::*;
@@ -31,6 +31,20 @@ extern "C" {
     fn take_nullable_string(val: JsOption<JsString>);
 
     fn test_nullable_exports();
+
+    #[wasm_bindgen(js_name = return_null)]
+    fn js_nullable_return_null() -> JsNullable<Number>;
+    #[wasm_bindgen(js_name = return_undefined)]
+    fn js_nullable_return_undefined() -> JsNullable<Number>;
+    #[wasm_bindgen(js_name = return_number)]
+    fn js_nullable_return_number() -> JsNullable<Number>;
+    #[wasm_bindgen(js_name = return_string)]
+    fn js_nullable_return_string() -> JsNullable<JsString>;
+
+    fn take_js_nullable_null(val: JsNullable<Number>);
+    fn take_js_nullable_value(val: JsNullable<Number>);
+
+    fn test_js_nullable_exports();
 }
 
 #[wasm_bindgen_test]
@@ -332,6 +346,150 @@ fn test_upcast_with_helper_function() {
     // Pass Undefined via upcast
     let result = accepts_nullable_number(Undefined::UNDEFINED.upcast_into());
     assert_eq!(result, None);
+}
+
+// ============================================================================
+// JsNullable tests
+// ============================================================================
+
+#[wasm_bindgen_test]
+fn test_js_nullable_new() {
+    let empty: JsNullable<Number> = JsNullable::new();
+    assert!(empty.is_empty());
+    // Canonical empty is `null`
+    assert!(JsValue::from(empty).is_null());
+}
+
+#[wasm_bindgen_test]
+fn test_js_nullable_wrap() {
+    let num = JsNullable::wrap(Number::from(42));
+    assert!(!num.is_empty());
+    assert_eq!(num.unwrap().value_of(), 42.0);
+}
+
+#[wasm_bindgen_test]
+fn test_js_nullable_from_option() {
+    let nullable = JsNullable::from_option(Some(Number::from(123)));
+    assert!(!nullable.is_empty());
+    assert_eq!(nullable.unwrap().value_of(), 123.0);
+
+    let nullable = JsNullable::from_option(None::<Number>);
+    assert!(nullable.is_empty());
+    assert!(JsValue::from(nullable).is_null());
+}
+
+#[wasm_bindgen_test]
+fn test_js_nullable_null_is_empty() {
+    // The WebIDL `T?` contract: JS `null` is absent.
+    let val = js_nullable_return_null();
+    assert!(val.is_empty());
+    assert!(val.into_option().is_none());
+}
+
+#[wasm_bindgen_test]
+fn test_js_nullable_undefined_is_empty() {
+    // WebIDL ES conversion coerces `undefined` to `null` at nullable
+    // positions, so `undefined` is also absent.
+    let val = js_nullable_return_undefined();
+    assert!(val.is_empty());
+    assert!(val.as_option().is_none());
+}
+
+#[wasm_bindgen_test]
+fn test_js_nullable_value() {
+    let val = js_nullable_return_number();
+    assert!(!val.is_empty());
+    assert_eq!(val.as_option().unwrap().value_of(), 42.0);
+    assert_eq!(val.into_option().unwrap().value_of(), 42.0);
+}
+
+#[wasm_bindgen_test]
+fn test_js_nullable_string() {
+    let val = js_nullable_return_string();
+    assert_eq!(val.unwrap(), "hello");
+}
+
+#[wasm_bindgen_test]
+#[should_panic(expected = "called `JsNullable::unwrap()` on an empty value")]
+fn test_js_nullable_unwrap_panic() {
+    js_nullable_return_null().unwrap();
+}
+
+#[wasm_bindgen_test]
+fn test_js_nullable_unwrap_or() {
+    let num = js_nullable_return_null().unwrap_or_default();
+    assert_eq!(num.value_of(), 0.0);
+
+    let num = js_nullable_return_undefined().unwrap_or_else(|| Number::from(99));
+    assert_eq!(num.value_of(), 99.0);
+}
+
+#[wasm_bindgen_test]
+fn test_js_nullable_debug() {
+    let val = JsNullable::wrap(Number::from(42));
+    let debug_str = format!("{:?}", val);
+    assert!(debug_str.contains("Number"));
+    assert!(debug_str.contains("42"));
+
+    let val: JsNullable<Number> = JsNullable::new();
+    let debug_str = format!("{:?}", val);
+    assert!(debug_str.contains("null"));
+}
+
+#[wasm_bindgen_test]
+fn test_js_nullable_default() {
+    let val: JsNullable<Number> = Default::default();
+    assert!(val.is_empty());
+}
+
+#[wasm_bindgen_test]
+fn test_js_nullable_upcasts() {
+    // A value upcasts to JsNullable of its own type
+    let nullable: JsNullable<Number> = Number::from(42).upcast_into();
+    assert_eq!(nullable.unwrap().value_of(), 42.0);
+
+    // Null and Undefined both upcast to empty
+    let nullable: JsNullable<Number> = Null::NULL.upcast_into();
+    assert!(nullable.is_empty());
+    let nullable: JsNullable<Number> = Undefined::UNDEFINED.upcast_into();
+    assert!(nullable.is_empty());
+
+    // JsOption<T> upcasts to JsNullable<T>
+    let opt: JsOption<Number> = JsOption::wrap(Number::from(7));
+    let nullable: JsNullable<Number> = opt.upcast_into();
+    assert_eq!(nullable.unwrap().value_of(), 7.0);
+}
+
+#[wasm_bindgen_test]
+fn test_js_nullable_export() {
+    take_js_nullable_null(JsNullable::new());
+    take_js_nullable_value(JsNullable::wrap(Number::from(321)));
+}
+
+#[wasm_bindgen_test]
+fn test_js_nullable_js_calls_rust() {
+    test_js_nullable_exports();
+}
+
+// Exported functions for JS to call
+#[wasm_bindgen]
+pub fn rust_return_js_nullable_null() -> JsNullable<Number> {
+    JsNullable::new()
+}
+
+#[wasm_bindgen]
+pub fn rust_return_js_nullable_value() -> JsNullable<Number> {
+    JsNullable::wrap(Number::from(654))
+}
+
+#[wasm_bindgen]
+pub fn rust_take_js_nullable_empty(val: JsNullable<Number>) {
+    assert!(val.is_empty());
+}
+
+#[wasm_bindgen]
+pub fn rust_take_js_nullable_value(val: JsNullable<Number>) {
+    assert_eq!(val.unwrap().value_of(), 987.0);
 }
 
 #[wasm_bindgen_test]

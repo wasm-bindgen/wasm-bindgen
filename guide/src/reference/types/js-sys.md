@@ -22,7 +22,8 @@ All generic types listed implement `JsGeneric` and default to `JsValue` when typ
 | [`Generator<T>` / `AsyncGenerator<T>`](#generatort-and-asyncgeneratort) | Typed generators |
 | [`Object<T>`](#objectt) | Object with typed values |
 | [`WeakMap<K, V>` / `WeakSet<T>` / `WeakRef<T>`](#weakmapk-v-weaksett-weakreft) | Weak collections |
-| [`JsOption<T>`](#jsoptiont) | Nullable JS value (`T`, `null`, or `undefined`) |
+| [`JsOption<T>`](#jsoptiont) | Optional JS value (`T` or `undefined`) |
+| [`JsNullable<T>`](#jsnullablet) | Nullable JS value (`T` or `null`) |
 | `Number` | JavaScript number primitive |
 | `JsString` | JavaScript string primitive |
 | `Boolean` | JavaScript boolean primitive |
@@ -302,15 +303,57 @@ let weak_ref: WeakRef<Object> = WeakRef::new(&my_object);
 
 ## JsOption\<T\>
 
-Represents a JS value that may be `T`, `null`, or `undefined`.
+Represents a JS value that may be `T` or `undefined`, matching TypeScript's
+`T | undefined`. Only `undefined` is treated as absent; JS `null` is a
+distinct present value.
 
 ```rust
-use wasm_bindgen::JsOption;
-use js_sys::Number;
+use js_sys::{JsOption, Number};
 
 #[wasm_bindgen]
 extern "C" {
     fn maybeGetValue() -> JsOption<Number>;
+}
+
+let value = maybeGetValue();
+
+// Check emptiness
+if value.is_empty() {
+    // undefined
+}
+
+// Convert to Option
+match value.into_option() {
+    Some(num) => { /* use num */ }
+    None => { /* handle undefined */ }
+}
+
+// Unwrap methods
+let num = value.unwrap();
+let num = value.expect("should exist");
+let num = value.unwrap_or_default();
+let num = value.unwrap_or_else(|| Number::from(0));
+
+// Create values
+let with_value = JsOption::wrap(Number::from(42));
+let empty: JsOption<Number> = JsOption::new();
+let from_opt = JsOption::from_option(Some(Number::from(42)));
+```
+
+## JsNullable\<T\>
+
+Represents a JS value that may be `T` or `null`, matching WebIDL nullable
+types (`T?`). Following WebIDL's ECMAScript conversion rules, both `null`
+and `undefined` are treated as absent; the canonical empty value produced
+from Rust is `null`. `web-sys` uses `JsNullable<T>` for nullable types
+nested inside generics, such as `Promise<GpuError?>`.
+
+```rust
+use js_sys::{JsNullable, Number};
+
+#[wasm_bindgen]
+extern "C" {
+    fn maybeGetValue() -> JsNullable<Number>;
 }
 
 let value = maybeGetValue();
@@ -326,21 +369,16 @@ match value.into_option() {
     None => { /* handle null */ }
 }
 
-// Unwrap methods
-let num = value.unwrap();
-let num = value.expect("should exist");
-let num = value.unwrap_or_default();
-let num = value.unwrap_or_else(|| Number::from(0));
-
-// Create values
-let with_value = JsOption::wrap(Number::from(42));
-let empty: JsOption<Number> = JsOption::new();
-let from_opt = JsOption::from_option(Some(Number::from(42)));
+// Create values (the same unwrap methods as JsOption are also available)
+let with_value = JsNullable::wrap(Number::from(42));
+let empty: JsNullable<Number> = JsNullable::new(); // null
+let from_opt = JsNullable::from_option(Some(Number::from(42)));
 ```
 
-**`JsOption<T>` vs `Option<T>`:**
+**`JsOption<T>` / `JsNullable<T>` vs `Option<T>`:**
 
 | Type | Behavior |
 | ---- | -------- |
 | `Option<T>` | Undefined or Null check at ABI boundary, immediately converts to `Some(T)` or `None` |
-| `JsOption<T>` | Defers undefined or null check, works in `JsGeneric` positions |
+| `JsOption<T>` | Defers undefined check, works in `JsGeneric` positions |
+| `JsNullable<T>` | Defers null or undefined check, works in `JsGeneric` positions |

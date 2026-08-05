@@ -549,6 +549,9 @@ global.TestPromises = class {
   anyPromise() {
     return new Promise(r => r({ foo: "bar", num: 42 }));
   }
+  optionalStringPromise(isNull) {
+    return new Promise(r => r(isNull ? null : "abc"));
+  }
 };
 
 global.SignatureStability = class {
