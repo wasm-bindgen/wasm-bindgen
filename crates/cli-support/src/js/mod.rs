@@ -7015,7 +7015,7 @@ addToLibrary({
 /// This is different from [`AdapterKind`] and is only used internally in the
 /// code generation process.
 enum ContextAdapterKind<'a> {
-    /// An exported function, method, constrctor, or getter/setter.
+    /// An exported function, method, constructor, or getter/setter.
     Export(&'a AuxExport),
     /// An imported function or intrinsic.
     Import(walrus::ImportId),
