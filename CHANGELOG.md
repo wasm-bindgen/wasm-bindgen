@@ -10,8 +10,9 @@
 ### Fixed
 
 * `slice_to_array` now works in `#![no_std]` crates. The type it described
-  through was spelled `::std::vec::Vec`, an absolute path to the `std`. It now
-  goes through the `alloc` re-export.
+  through was spelled `::std::vec::Vec`, an absolute path to the `std` crate.
+  It now goes through the `alloc` re-export.
+  [#5251](https://github.com/wasm-bindgen/wasm-bindgen/pull/5251)
 
 * Generated code no longer names `core` or `std` unqualified, so it keeps working
   in a module that happens to define an item with either name. `mod core { .. }`
@@ -20,6 +21,7 @@
   `&T` anchor in `async` exports, imported-function argument and return
   conversions, and the `slice_to_array` rewrite. All of them are now routed
   through wasm-bindgen's own re-exports.
+  [#5251](https://github.com/wasm-bindgen/wasm-bindgen/pull/5251)
 
 * Fixed threaded Wasm memory layout to reserve wasm-bindgen's internal thread
   page after the module's original initial memory instead of at `__heap_base`,
