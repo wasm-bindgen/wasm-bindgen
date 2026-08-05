@@ -222,7 +222,9 @@ jobs:
       - name: Setup Emscripten SDK
         uses: mymindstorm/setup-emsdk@v16
         with:
-          version: latest
+          # Pinned: 6.0.6 drops the legacy JS-exceptions ABI (`__cpp_exception`)
+          # that rustc's prebuilt wasm32-unknown-emscripten std still links.
+          version: 6.0.5
       - uses: actions/setup-node@v7
         with:
           node-version: '22'

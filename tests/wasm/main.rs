@@ -22,6 +22,7 @@ use wasm_bindgen::prelude::*;
 pub mod _3944;
 pub mod api;
 pub mod arg_names;
+pub mod async_import;
 pub mod async_vecs;
 pub mod bigint;
 pub mod char;
