@@ -9,7 +9,7 @@ license = "MIT OR Apache-2.0"
 name = "wasm-bindgen-futures"
 readme = "./README.md"
 repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/futures"
-rust-version = "1.77"
+rust-version = "1.81"
 version = "0.4.76"
 
 [package.metadata.docs.rs]

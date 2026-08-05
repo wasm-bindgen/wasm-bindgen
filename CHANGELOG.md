@@ -7,6 +7,9 @@
 
 ### Changed
 
+* Library MSRV bumped from 1.77 to 1.81, per the 2-year MSRV policy.
+  [#5257](https://github.com/wasm-bindgen/wasm-bindgen/pull/5257)
+
 ### Fixed
 
 * Restored `__stack_pointer` when an exception unwinds out of a wasm export,
