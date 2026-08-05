@@ -484,7 +484,7 @@ impl Frame<'_> {
                     let index = address as usize / 4;
                     if width == 8 {
                         // Oops our stack is of i32s so we can't really handle a
-                        // store of width 8. Just treat the more signifcant 4
+                        // store of width 8. Just treat the more significant 4
                         // bytes as 0.
                         self.interp.mem[index] = value;
                         self.interp.mem[index + 1] = 0;

@@ -9,19 +9,14 @@
 
 ### Fixed
 
-* `slice_to_array` now works in `#![no_std]` crates. The type it described
-  through was spelled `::std::vec::Vec`, an absolute path to the `std` crate.
-  It now goes through the `alloc` re-export.
+* Macro hygiene fixes - `slice_to_array` now works in `#![no_std]` crates.
+  Generated code no longer names `core` or `std` unqualified.
   [#5251](https://github.com/wasm-bindgen/wasm-bindgen/pull/5251)
 
-* Generated code no longer names `core` or `std` unqualified, so it keeps working
-  in a module that happens to define an item with either name. `mod core { .. }`
-  in scope wins over the extern-prelude crate, which previously broke the
-  expansions for imported types (phantom data, `to_js`, `RefFromWasmAbi`), the
-  `&T` anchor in `async` exports, imported-function argument and return
-  conversions, and the `slice_to_array` rewrite. All of them are now routed
-  through wasm-bindgen's own re-exports.
-  [#5251](https://github.com/wasm-bindgen/wasm-bindgen/pull/5251)
+* Fixed length prefixes in descriptor strings to count `char`s rather than
+  UTF-8 bytes, so non-ASCII names in `js_name`/`typescript_type` no longer
+  panic the CLI or mis-bind the generated bindings.
+  [#5248](https://github.com/wasm-bindgen/wasm-bindgen/pull/5248)
 
 * Fixed threaded Wasm memory layout to reserve wasm-bindgen's internal thread
   page after the module's original initial memory instead of at `__heap_base`,

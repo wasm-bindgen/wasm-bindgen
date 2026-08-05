@@ -107,7 +107,7 @@ impl F64 {
     ///   in [`Instant::now()`].
     /// - We only round the fractional part after multiplying it by `1e6`. A
     ///   fraction always has a negative exponent. `1e6` has an exponent of
-    ///   `19`. Therefor the resulting exponent can at most be `19`.
+    ///   `19`. Therefore the resulting exponent can at most be `19`.
     ///
     /// [`f64::round_ties_even()`]: https://doc.rust-lang.org/1.83.0/std/primitive.f64.html#method.round_ties_even
     fn internal_round_ties_even(self) -> f64 {
