@@ -799,7 +799,7 @@ impl<'src> FirstPassRecord<'src> {
                                     ),
                             );
                             if let Some(arguments) = arguments {
-                                let mut name = format!("{}_{i}", &rust_name);
+                                let mut name = format!("{rust_name}_{i}");
                                 if let Some(map) = type_name.and_then(|t| FIXED_INTERFACES.get(t)) {
                                     if let Some(fixed) = map.get(name.as_str()) {
                                         name = fixed.to_string();
