@@ -485,7 +485,7 @@ impl Bindgen {
         // `__wbindgen_exn_store`) may be absent. Skip the transform until
         // proper emscripten-mode catch support lands.
         if !matches!(self.mode, OutputMode::Emscripten) {
-            generate_wasm_catch_wrappers(&mut module, self.force_enable_abort_handler)?;
+            run_exception_handling_transforms(&mut module, self.force_enable_abort_handler)?;
         }
 
         // We've done a whole bunch of transformations to the Wasm module, many
@@ -837,12 +837,14 @@ impl Output {
     }
 }
 
-/// Generate Wasm catch wrappers for imports marked with `#[wasm_bindgen(catch)]`.
+/// Run the exception-handling transforms: catch wrappers for imports marked
+/// `#[wasm_bindgen(catch)]`, then shadow stack restore wrappers for the exports
+/// a panic can unwind out of.
 ///
-/// When exception handling instructions are available in the module, this generates
-/// Wasm wrapper functions that catch JavaScript exceptions using `WebAssembly.JSTag`
-/// instead of relying on JS `handleError` wrappers.
-fn generate_wasm_catch_wrappers(
+/// They share a function so they share one EH detection. Re-detecting in
+/// between would see `catch_handler`'s own `try_table`s and reclassify a
+/// `panic=abort` module as `Modern`.
+fn run_exception_handling_transforms(
     module: &mut Module,
     enable_abort_handler: bool,
 ) -> Result<(), Error> {
@@ -873,14 +875,15 @@ fn generate_wasm_catch_wrappers(
 
     let result = transforms::catch_handler::run(module, &mut aux, &wit, eh_version)
         .context("failed to generate catch wrappers");
+    if result.is_ok() {
+        transforms::export_sp_restore::run(module, &wit, eh_version);
+    }
 
     // Re-add the custom sections
     module.customs.add(*wit);
     module.customs.add(*aux);
 
-    result?;
-
-    Ok(())
+    result
 }
 
 fn gc_module_and_adapters(module: &mut Module) {
