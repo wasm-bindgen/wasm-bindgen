@@ -120,7 +120,7 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: wasm32-unknown-unknown
-    - uses: actions/setup-node@v6
+    - uses: actions/setup-node@v7
       with:
         node-version: '20'
     - run: ${{ matrix.runs.run }}
@@ -143,7 +143,7 @@ jobs:
       with:
         targets: wasm32-unknown-unknown
         components: rust-src
-    - uses: actions/setup-node@v6
+    - uses: actions/setup-node@v7
       with:
         node-version: '20'
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std=std,panic_abort --config="target.wasm32-unknown-unknown.rustflags='${{ matrix.envs.RUSTFLAGS }}'"
@@ -158,7 +158,7 @@ jobs:
     - uses: dtolnay/rust-toolchain@nightly
       with:
         components: rust-src
-    - uses: actions/setup-node@v6
+    - uses: actions/setup-node@v7
       with:
         node-version: '24'
     - run: cargo test --target wasm64-unknown-unknown -Zbuild-std=std,panic_abort
@@ -184,7 +184,7 @@ jobs:
     # `WebAssembly.JSTag` required. Node 18 is excluded because its V8 10.2
     # has unrelated funcref / WASM_INTERNAL_FUNCTION_TYPE bugs that crash the
     # wasm-bindgen-test runtime.
-    - uses: actions/setup-node@v6
+    - uses: actions/setup-node@v7
       with:
         node-version: '20'
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --lib --bins --tests
@@ -205,7 +205,7 @@ jobs:
         targets: wasm32-unknown-unknown
         components: rust-src
     # TODO: drop back to Node 22 LTS once 22.22.3 ships (2026-05-13, modern EH backport).
-    - uses: actions/setup-node@v6
+    - uses: actions/setup-node@v7
       with:
         node-version: '25'
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --lib --bins --tests
@@ -223,7 +223,7 @@ jobs:
         uses: mymindstorm/setup-emsdk@v16
         with:
           version: latest
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
       - name: Run Emscripten headless tests
@@ -238,7 +238,7 @@ jobs:
   #   - uses: actions/checkout@v7
   #   - run: rustup update --no-self-update stable && rustup default stable
   #   - run: rustup target add wasm32-unknown-unknown
-  #   - uses: actions/setup-node@v6
+  #   - uses: actions/setup-node@v7
   #     with:
   #       node-version: '20'
   #   - run: cargo test --target wasm32-unknown-unknown
@@ -257,7 +257,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
-    - uses: actions/setup-node@v6
+    - uses: actions/setup-node@v7
       with:
         node-version: 'lts/*'
     - run: npm i -g typescript
@@ -283,7 +283,7 @@ jobs:
     # rust-lang/rust#156061 produces modern (exnref) EH by default. That needs
     # Node 22.22.3+ on the 22 LTS line (or 24.15.0+) to validate.
     # TODO: drop back to Node 22 LTS once 22.22.3 ships (2026-05-13, modern EH backport).
-    - uses: actions/setup-node@v6
+    - uses: actions/setup-node@v7
       with:
         node-version: '24.15'
     # `cargo test -p wasm-bindgen-cli` includes the emscripten namespaced
@@ -357,7 +357,7 @@ jobs:
       with:
         targets: wasm32-unknown-unknown
         components: rustfmt
-    - uses: actions/setup-node@v6
+    - uses: actions/setup-node@v7
       with:
         node-version: '20'
     - run: ${{ matrix.runs.run }}
@@ -419,7 +419,7 @@ jobs:
         name: examples
         path: examples/dist
     - uses: dtolnay/rust-toolchain@stable
-    - uses: actions/setup-node@v6
+    - uses: actions/setup-node@v7
       with:
         node-version: 24
     - uses: denoland/setup-deno@v2
