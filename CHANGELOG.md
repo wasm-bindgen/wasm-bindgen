@@ -16,6 +16,10 @@
   silently invoked the wrong JS value.
   [#5250](https://github.com/wasm-bindgen/wasm-bindgen/pull/5250)
 
+* Macro hygiene fixes - `slice_to_array` now works in `#![no_std]` crates.
+  Generated code no longer names `core` or `std` unqualified.
+  [#5251](https://github.com/wasm-bindgen/wasm-bindgen/pull/5251)
+
 * Fixed length prefixes in descriptor strings to count `char`s rather than
   UTF-8 bytes, so non-ASCII names in `js_name`/`typescript_type` no longer
   panic the CLI or mis-bind the generated bindings.
