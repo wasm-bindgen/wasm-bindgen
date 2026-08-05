@@ -106,9 +106,13 @@ impl Sanitizer {
         // `h...` are mangled generic function names with unstable type IDs.
         let s = self.sanitize_one(&s, regex!(r"h[0-9a-f]{16}"), |idx| format!("h{idx:016x}"));
 
-        // Crate disambiguators in v0-demangled symbol names (`crate_<hash>__`)
-        // are unstable across compiler and crate versions.
+        // Crate disambiguators in v0-demangled symbol names (`crate_<hash>__`
+        // in sanitized shim names, `crate[<hash>]` in raw names) are unstable
+        // across compiler and crate versions.
         let s = self.sanitize_one(&s, regex!(r"_[0-9a-f]{16}_"), |idx| format!("_{idx:016x}_"));
+        let s = self.sanitize_one(&s, regex!(r"\[[0-9a-f]{16}\]"), |idx| {
+            format!("[{idx:016x}]")
+        });
 
         // Cast descriptors contain `Closure`'s `Debug` impl which has unstable function indices.
         let s = self.sanitize_one(&s, regex!(r"_idx: \d+,"), |idx| format!("_idx: {idx},"));
