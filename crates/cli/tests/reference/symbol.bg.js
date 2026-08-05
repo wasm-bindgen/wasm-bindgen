@@ -47,13 +47,13 @@ export function __wbg_Symboliterator_9a3ae6c7dad7d3ed(arg0) {
     const ret = arg0[Symbol.iterator]();
     return ret;
 }
-export function __wbg_SymboltoPrimitive_4bd6ba9d43ef2762(arg0, arg1) {
+export function __wbg_SymboltoPrimitive_7761e7f6168d1752(arg0, arg1) {
     SomeClass[Symbol.toPrimitive](getStringFromWasm0(arg0, arg1));
 }
 export function __wbg___wbindgen_throw_344f42d3211c4765(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
-export function __wbg_import_static_symbol_getter_00eaaec525eefd39() {
+export function __wbg_import_static_symbol_getter_81f53842c69f201c() {
     SomeClass.import_static_symbol_getter();
 }
 export function __wbg_new_40230a3912a25f41() {

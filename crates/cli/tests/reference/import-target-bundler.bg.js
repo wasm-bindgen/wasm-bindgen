@@ -17,7 +17,7 @@ export function __wbg_get_b0096ab6db85c3a1(arg0) {
     const ret = arg0.get();
     return ret;
 }
-export function __wbg_my_function_d6c76e66f4e6751a() {
+export function __wbg_my_function_2652ada790ab5788() {
     b.my_function();
 }
 export function __wbg_new_625e056221ff6a6e(arg0) {
@@ -27,14 +27,14 @@ export function __wbg_new_625e056221ff6a6e(arg0) {
 export function __wbg_no_catch_be4131677910f8cc() {
     no_catch();
 }
-export function __wbg_reload_cbb85f596c80d974() {
+export function __wbg_reload_9304512f393dbf03() {
     window.location.reload();
 }
-export function __wbg_static_accessor_CONST_85b96acb48be57e1() {
+export function __wbg_static_accessor_CONST_ebdae5b17dd38d40() {
     const ret = a.CONST;
     return ret;
 }
-export function __wbg_write_1411fb0c6d3ebc7b(arg0, arg1) {
+export function __wbg_write_1670eca42f648f32(arg0, arg1) {
     window.document.write(getStringFromWasm0(arg0, arg1));
 }
 export function __wbindgen_init_externref_table() {

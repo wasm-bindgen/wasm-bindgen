@@ -77,7 +77,7 @@ export function __wbg_run_5aa314612b150933(arg0, arg1, arg2) {
         state0.a = 0;
     }
 }
-export function __wbg_static_accessor_CREATE_TASK_7ee0dd8bc83df5b2() {
+export function __wbg_static_accessor_CREATE_TASK_6d9a581bae5d915b() {
     const ret = typeof console === 'undefined' ? null : console?.createTask;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 }

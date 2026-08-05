@@ -910,17 +910,19 @@ impl<'a>
         BindgenAttrs,
         &'a Option<ast::ImportModule>,
         bool,
+        Option<&'a [String]>,
     )> for syn::ForeignItemFn
 {
     type Target = ast::ImportKind;
 
     fn convert(
         mut self,
-        (program, opts, module, block_slice_to_array): (
+        (program, opts, module, block_slice_to_array, js_namespace): (
             &ast::Program,
             BindgenAttrs,
             &'a Option<ast::ImportModule>,
             bool,
+            Option<&'a [String]>,
         ),
     ) -> Result<Self::Target, Diagnostic> {
         // `slice_to_array` is inherited from the enclosing `extern "C"`
@@ -1074,13 +1076,22 @@ impl<'a>
                 module,
                 cfg_attrs,
             );
+            // The *resolved* `js_namespace` (item-level, or inherited from the
+            // enclosing `extern "C"` block) is part of a binding's identity:
+            // two otherwise identical imports that differ only in their
+            // namespace resolve to different JS values, so they must not share
+            // a shim name. Hashing is gated on `None` so that shim names for
+            // imports without a namespace are unchanged.
+            let hash = match js_namespace {
+                None => ShortHash(data).to_string(),
+                Some(ns) => ShortHash((data, ns)).to_string(),
+            };
             format!(
-                "__wbg_{}_{}",
+                "__wbg_{}_{hash}",
                 wasm.name
                     .chars()
                     .filter(|&c| c.is_ascii_alphanumeric() || c == '_')
                     .collect::<String>(),
-                ShortHash(data)
             )
         };
         if let Some(span) = opts.r#final() {
@@ -1224,14 +1235,24 @@ impl ConvertToAst<(&ast::Program, BindgenAttrs)> for syn::ForeignItemType {
     }
 }
 
-impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule>)>
-    for syn::ForeignItemStatic
+impl<'a>
+    ConvertToAst<(
+        &ast::Program,
+        BindgenAttrs,
+        &'a Option<ast::ImportModule>,
+        Option<&'a [String]>,
+    )> for syn::ForeignItemStatic
 {
     type Target = ast::ImportKind;
 
     fn convert(
         self,
-        (program, opts, module): (&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule>),
+        (program, opts, module, js_namespace): (
+            &ast::Program,
+            BindgenAttrs,
+            &'a Option<ast::ImportModule>,
+            Option<&'a [String]>,
+        ),
     ) -> Result<Self::Target, Diagnostic> {
         if let syn::StaticMutability::Mut(_) = self.mutability {
             bail_span!(self.mutability, "cannot import mutable globals yet")
@@ -1250,7 +1271,12 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
             .unwrap_or(&default_name)
             .to_string();
         let unraw_ident = self.ident.unraw();
-        let hash = ShortHash((&js_name, module, &unraw_ident));
+        // As for functions above, the resolved `js_namespace` is part of the
+        // binding's identity, gated on `None` to keep existing names.
+        let hash = match js_namespace {
+            None => ShortHash((&js_name, module, &unraw_ident)).to_string(),
+            Some(ns) => ShortHash((&js_name, module, &unraw_ident, ns)).to_string(),
+        };
         let shim = format!("__wbg_static_accessor_{unraw_ident}_{hash}");
         let thread_local = opts.get_thread_local()?;
 
@@ -2608,11 +2634,17 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
         }
 
         let kind = match self {
-            syn::ForeignItem::Fn(f) => {
-                f.convert((program, item_opts, &module, block_slice_to_array))?
-            }
+            syn::ForeignItem::Fn(f) => f.convert((
+                program,
+                item_opts,
+                &module,
+                block_slice_to_array,
+                js_namespace.as_deref(),
+            ))?,
             syn::ForeignItem::Type(t) => t.convert((program, item_opts))?,
-            syn::ForeignItem::Static(s) => s.convert((program, item_opts, &module))?,
+            syn::ForeignItem::Static(s) => {
+                s.convert((program, item_opts, &module, js_namespace.as_deref()))?
+            }
             _ => panic!("only foreign functions/types allowed for now"),
         };
 
