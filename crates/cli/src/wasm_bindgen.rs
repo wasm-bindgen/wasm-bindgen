@@ -102,6 +102,12 @@ struct Args {
     )]
     split_linked_modules: bool,
     #[arg(
+        long,
+        help = "Emit `Uint8Array<ArrayBuffer>`-style generic typed array return types\n\
+                in generated TypeScript. Requires TypeScript 5.7 or later."
+    )]
+    ts_typed_array_buffers: bool,
+    #[arg(
         long = "experimental-reset-state-function",
         help = "Generate __wbg_reset_state function for Wasm reinitialization (experimental)"
     )]
@@ -187,6 +193,7 @@ fn rmain(args: &Args) -> Result<(), Error> {
         .omit_imports(args.omit_imports)
         .omit_default_module_path(args.omit_default_module_path)
         .split_linked_modules(args.split_linked_modules)
+        .ts_typed_array_buffers(args.ts_typed_array_buffers)
         .reference_types(args.reference_types)
         .reset_state_function(args.generate_reset_state)
         .force_enable_abort_handler(args.force_enable_abort_handler)

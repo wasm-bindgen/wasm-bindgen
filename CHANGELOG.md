@@ -106,6 +106,12 @@
   `panic=unwind`.
   [#5193](https://github.com/wasm-bindgen/wasm-bindgen/pull/5193)
 
+* Added a `--ts-typed-array-buffers` CLI flag to declare owned typed-array
+  return values (e.g. `Vec<u8>`) as `Uint8Array<ArrayBuffer>` in generated
+  TypeScript, since they are always copied into a fresh, non-shared
+  `ArrayBuffer`. Requires TypeScript 5.7+.
+  [#5263](https://github.com/wasm-bindgen/wasm-bindgen/pull/5263)
+
 ### Changed
 
 * Emscripten output now marks public exports (free functions, classes, enums,
