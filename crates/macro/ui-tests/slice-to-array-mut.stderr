@@ -4,7 +4,7 @@ error: `slice_to_array` cannot be applied to a `&mut` slice: it hands JS an owne
   --> ui-tests/slice-to-array-mut.rs:17:51
    |
 17 |     fn direct(#[wasm_bindgen(slice_to_array)] xs: &mut [u16]);
-   |                                                   ^
+   |                                                   ^^^^^^^^^^
 
 error: `slice_to_array` cannot be applied to a `&mut` slice: it hands JS an owned `Array` copied out of linear memory, so anything JS writes into that `Array` is discarded rather than written back into the caller's slice.
 
@@ -12,7 +12,7 @@ error: `slice_to_array` cannot be applied to a `&mut` slice: it hands JS an owne
   --> ui-tests/slice-to-array-mut.rs:21:19
    |
 21 |     fn per_fn(xs: &mut [u32]);
-   |                   ^
+   |                   ^^^^^^^^^^
 
 error: `slice_to_array` cannot be applied to a `&mut` slice: it hands JS an owned `Array` copied out of linear memory, so anything JS writes into that `Array` is discarded rather than written back into the caller's slice.
 
@@ -20,7 +20,7 @@ error: `slice_to_array` cannot be applied to a `&mut` slice: it hands JS an owne
   --> ui-tests/slice-to-array-mut.rs:26:21
    |
 26 |     fn optional(xs: Option<&mut [f64]>);
-   |                     ^^^^^^
+   |                     ^^^^^^^^^^^^^^^^^^
 
 error: `slice_to_array` cannot be applied to a `&mut` slice: it hands JS an owned `Array` copied out of linear memory, so anything JS writes into that `Array` is discarded rather than written back into the caller's slice.
 
@@ -28,7 +28,7 @@ error: `slice_to_array` cannot be applied to a `&mut` slice: it hands JS an owne
   --> ui-tests/slice-to-array-mut.rs:32:41
    |
 32 |     fn mixed(readable: &[u8], writable: &mut [u8]);
-   |                                         ^
+   |                                         ^^^^^^^^^
 
 error: `slice_to_array` cannot be applied to a `&mut` slice: it hands JS an owned `Array` copied out of linear memory, so anything JS writes into that `Array` is discarded rather than written back into the caller's slice.
 
@@ -36,7 +36,7 @@ error: `slice_to_array` cannot be applied to a `&mut` slice: it hands JS an owne
   --> ui-tests/slice-to-array-mut.rs:40:31
    |
 40 |     fn generic_and_mut<T>(xs: &mut [T]);
-   |                               ^
+   |                               ^^^^^^^^
 
 error: `slice_to_array` cannot be applied to a `&mut` slice: it hands JS an owned `Array` copied out of linear memory, so anything JS writes into that `Array` is discarded rather than written back into the caller's slice.
 
@@ -44,4 +44,4 @@ error: `slice_to_array` cannot be applied to a `&mut` slice: it hands JS an owne
   --> ui-tests/slice-to-array-mut.rs:48:22
    |
 48 |     fn per_block(xs: &mut [i32]);
-   |                      ^
+   |                      ^^^^^^^^^^

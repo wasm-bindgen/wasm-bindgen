@@ -2116,8 +2116,6 @@ impl TryToTokens for ast::ImportFunction {
                 ),
             };
 
-            check_slice_to_array_concrete_elem(arg, ty, &fn_generic_param_names)?;
-
             let var = if i == 0 && is_method {
                 quote! { self }
             } else {
@@ -3284,13 +3282,13 @@ pub(crate) struct SliceArg {
     /// `slice_to_array` cannot honour this: it hands JS an owned `Array`, and
     /// mutations to that `Array` are not written back into the caller's slice.
     /// The parser rejects the combination rather than silently dropping the
-    /// write-back; see `reject_slice_to_array_on_mut_slice`.
+    /// write-back; see `check_slice_to_array_arg` in `parser.rs`.
     pub is_mut: bool,
 }
 
 /// Recognise `&[T]`, `&mut [T]`, and either wrapped in `Option`. Used by the
-/// `slice_to_array` codegen to rewrite the ABI path, and by the parser to reject
-/// the mutable forms.
+/// `slice_to_array` codegen to rewrite the ABI path, and by the parser to
+/// reject the mutable and generic-element forms.
 pub(crate) fn detect_slice_or_option_slice(ty: &syn::Type) -> Option<SliceArg> {
     // Direct `&[T]` / `&mut [T]`.
     if let syn::Type::Reference(syn::TypeReference {
@@ -3383,9 +3381,8 @@ struct SliceToArrayRewrite {
 /// opt-out in Rust attribute syntax to require, so a silent no-op is the only
 /// sensible behaviour.
 ///
-/// `&mut [T]` never reaches here: the parser rejects `slice_to_array` on a
-/// mutable slice up front, because an owned `Array` cannot carry JS's writes back
-/// into the caller's buffer.
+/// Neither `&mut [T]` nor a generic element type reaches here: the parser
+/// rejects both up front (see `check_slice_to_array_arg` in `parser.rs`).
 fn slice_to_array_rewrite(
     wasm_bindgen: &syn::Path,
     name: &Ident,
@@ -3428,54 +3425,6 @@ fn slice_to_array_rewrite(
         prim_names,
         conversion,
     })
-}
-
-/// Reject `slice_to_array` on a slice whose element type mentions a type
-/// parameter.
-///
-/// The rewrite names `<#elem_ty as VectorRefIntoWasmAbi>` and describes through
-/// `&Vec<#elem_ty>`, neither of which a bare type parameter can satisfy — and no
-/// bound the user can write makes it satisfiable, because the blanket
-/// `VectorRefIntoWasmAbi` impls are keyed on concrete ABI shapes. Left
-/// unchecked, the user sees two `E0277`s naming private traits plus a
-/// syntactically invalid `help:` suggestion, so bail with a span instead.
-///
-/// This matters on both import paths: `slice_to_array` is inheritable from the
-/// enclosing `extern "C"` block, so a user who never wrote it on this argument
-/// can still hit it.
-///
-/// This check runs at codegen time, alongside (not instead of) the
-/// parser-time `&mut`-slice rejection in `parser.rs`. The two never
-/// double-report *for the same argument* — a parse-time error on one
-/// argument short-circuits codegen for the whole item before this runs. But
-/// parse errors are aggregated per `extern "C"` block, not per program, so
-/// this check can still be skipped for a *different* function in the same
-/// block that has a `&mut`-slice violation elsewhere: fixing that first
-/// error and recompiling is what surfaces this one. Not a correctness bug —
-/// both errors are genuine and eventually reported — just worth knowing if
-/// you're staring at only one error and expecting the full picture.
-fn check_slice_to_array_concrete_elem(
-    arg: &ast::FunctionArgumentData,
-    ty: &syn::Type,
-    // `&Vec` rather than `&[..]` to match `uses_generic_params` and the rest of
-    // this module; widening those signatures is unrelated churn.
-    type_param_names: &Vec<&Ident>,
-) -> Result<(), Diagnostic> {
-    if !arg.slice_to_array || type_param_names.is_empty() {
-        return Ok(());
-    }
-    let Some(SliceArg { elem_ty, .. }) = detect_slice_or_option_slice(ty) else {
-        return Ok(());
-    };
-    if generics::uses_generic_params(&elem_ty, type_param_names) {
-        bail_span!(
-            arg.pat_type.ty,
-            "`slice_to_array` requires a concrete slice element type (e.g. `&[u16]`); a type \
-             parameter cannot work here because `VectorRefIntoWasmAbi` is implemented per \
-             concrete ABI shape — drop `slice_to_array`, or take the argument by value"
-        );
-    }
-    Ok(())
 }
 
 /// Detects whether a type is a raw `&dyn Fn(...)` or `&mut dyn FnMut(...)` argument.
