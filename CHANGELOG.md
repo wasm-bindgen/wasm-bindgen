@@ -18,6 +18,14 @@
 
 ### Fixed
 
+* Emscripten output no longer emits a JS library binding for an imported
+  `env.memory` (shared memory / `-pthread` builds). The emitted
+  `memory || new WebAssembly.Memory(...)` expression referenced a binding that
+  doesn't exist in emscripten output and broke the emcc link; emscripten's own
+  runtime creates `wasmMemory` and supplies `env.memory` to instantiation
+  itself, so no binding is needed.
+  [#5254](https://github.com/wasm-bindgen/wasm-bindgen/pull/5254)
+
 * Restored `__stack_pointer` when an exception unwinds out of a wasm export,
   preventing repeated `panic = "unwind"` calls from leaking shadow-stack frames
   until the shadow stack is exhausted and calls trap. Node reports
@@ -52,13 +60,6 @@
   UTF-8 bytes, so non-ASCII names in `js_name`/`typescript_type` no longer
   panic the CLI or mis-bind the generated bindings.
   [#5248](https://github.com/wasm-bindgen/wasm-bindgen/pull/5248)
-
-* Emscripten output no longer emits a JS library binding for an imported
-  `env.memory` (shared memory / `-pthread` builds). The emitted
-  `memory || new WebAssembly.Memory(...)` expression referenced a binding that
-  doesn't exist in emscripten output and broke the emcc link; emscripten's own
-  runtime creates `wasmMemory` and supplies `env.memory` to instantiation
-  itself, so no binding is needed.
 
 * Fixed threaded Wasm memory layout to reserve wasm-bindgen's internal thread
   page after the module's original initial memory instead of at `__heap_base`,

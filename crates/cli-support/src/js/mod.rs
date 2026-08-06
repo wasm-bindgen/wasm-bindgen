@@ -770,11 +770,7 @@ impl<'a> Context<'a> {
             String::new()
         };
 
-        // Emscripten's runtime owns `env.memory` (`wasmMemory`, created for
-        // `-sIMPORTED_MEMORY`/`-pthread` links) and supplies it to
-        // instantiation itself, so it must never be bound from the bindings
-        // library. `addToLibrary` values are also evaluated eagerly by emcc at
-        // link time, where no runtime binding exists.
+        // The Emscripten linker automatically handles memory imports.
         if !matches!(self.config.mode, OutputMode::Emscripten) {
             if let Some(mem) = self.module.memories.iter().next() {
                 if let Some(id) = mem.import {
