@@ -26,13 +26,18 @@
   [#5244](https://github.com/wasm-bindgen/wasm-bindgen/pull/5244)
 
 * `slice_to_array` on a `&mut` slice is now a compile error instead of silently
-  discarding JS's writes. 
+  discarding JS's writes.
+  [#5261](https://github.com/wasm-bindgen/wasm-bindgen/pull/5261)
 
 * `slice_to_array` on a slice whose element type is a type parameter is now
   rejected with a single targeted error.
+  [#5261](https://github.com/wasm-bindgen/wasm-bindgen/pull/5261)
 
-* `Option<&[T]>` under `slice_to_array` no longer makes a redundant copy of the
-  array it hands to JS when `T` is a string or an imported type. 
+* Values with string, `JsValue`, or exported-struct elements received by JS
+  (e.g. a `Vec<String>` return value, or `Option<&[T]>` under
+  `slice_to_array`) no longer make a redundant copy of the fresh string or
+  array handed to JS.
+  [#5261](https://github.com/wasm-bindgen/wasm-bindgen/pull/5261)
 
 * Fixed `async` imports with non-JS-handle resolved types (e.g.
   `async fn f() -> u32;`) silently producing garbage since 0.2.109: the

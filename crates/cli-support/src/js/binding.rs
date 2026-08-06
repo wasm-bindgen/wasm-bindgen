@@ -1817,7 +1817,16 @@ fn instruction(
             let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
             let i = js.tmp();
             let free = js.cx.wasm_export_of(*free);
-            js.prelude(&format!("var v{i} = {f}({ptr}, {len}).slice();"));
+            // String/externref loaders return a fresh value, so only the
+            // primitive typed-array *view* needs copying before the free.
+            match kind {
+                VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_) => {
+                    js.prelude(&format!("var v{i} = {f}({ptr}, {len});"));
+                }
+                _ => {
+                    js.prelude(&format!("var v{i} = {f}({ptr}, {len}).slice();"));
+                }
+            }
             js.prelude(&format!(
                 "{free}({ptr}, {len} * {size}, {size});",
                 size = kind.size()
@@ -1843,15 +1852,6 @@ fn instruction(
             let ptr = js.pop();
             let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
             let i = js.tmp();
-            // `VectorKind::String` can't actually occur here: a `&[String]`
-            // element describes as `NamedExternref("string")`, not `String`
-            // (see `WasmDescribeVector for String`), so `Descriptor::Vector`'s
-            // kind recovery never produces `VectorKind::String` for the
-            // `slice_to_array` codegen that's the sole producer of this
-            // instruction. Included in the match anyway since it's the exact
-            // same codegen as the `Externref`/`NamedExternref` arms if it were
-            // ever reached, and to keep this arm's shape symmetric with the
-            // `VectorKind` match elsewhere in this file.
             match kind {
                 VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_) => {
                     let free = js.cx.wasm_export_of(*free);
@@ -1878,7 +1878,15 @@ fn instruction(
             let free = js.cx.wasm_export_of(*free);
             js.prelude(&format!("let v{i};"));
             js.prelude(&format!("if ({ptr} !== 0) {{"));
-            js.prelude(&format!("v{i} = {f}({ptr}, {len}).slice();"));
+            // Same fresh-value vs view distinction as `VectorLoad` above.
+            match kind {
+                VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_) => {
+                    js.prelude(&format!("v{i} = {f}({ptr}, {len});"));
+                }
+                _ => {
+                    js.prelude(&format!("v{i} = {f}({ptr}, {len}).slice();"));
+                }
+            }
             js.prelude(&format!(
                 "{free}({ptr}, {len} * {size}, {size});",
                 size = kind.size()
@@ -1897,19 +1905,9 @@ fn instruction(
             let i = js.tmp();
             js.prelude(&format!("let v{i};"));
             js.prelude(&format!("if ({ptr} !== 0) {{"));
-            // `VectorKind::String` is unreachable here too; see the
-            // `VectorLoadAsArray` arm above for why.
             match kind {
                 VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_) => {
                     let free = js.cx.wasm_export_of(*free);
-                    // No `.slice()`, unlike `OptionVectorLoad` above: that
-                    // instruction's loader hands back a typed-array *view* into
-                    // linear memory, which has to be copied before the `free`
-                    // on the next line invalidates it. This one's loader builds
-                    // a fresh `Array` (dropping the externrefs as it reads
-                    // them), so there is nothing aliasing the freed buffer and
-                    // the copy would be pure overhead. Matches the non-`Option`
-                    // `VectorLoadAsArray` arm.
                     js.prelude(&format!("v{i} = {f}({ptr}, {len});"));
                     js.prelude(&format!(
                         "{free}({ptr}, {len} * {size}, {size});",
