@@ -30,6 +30,14 @@ extern "C" {
     // guessed.
     #[wasm_bindgen(slice_to_array)]
     fn mixed(readable: &[u8], writable: &mut [u8]);
+
+    // Doubly invalid: the slice is `&mut` *and* its element type is a type
+    // parameter (see `slice-to-array-generic-elem.rs` for that restriction on
+    // its own). The `&mut`-slice check runs first and must not suggest a fix
+    // ("change to `&[T]`") that would just trade this error for the other one
+    // on the next compile.
+    #[wasm_bindgen(slice_to_array)]
+    fn generic_and_mut<T>(xs: &mut [T]);
 }
 
 // Inherited from the enclosing block rather than the function. This is the case a

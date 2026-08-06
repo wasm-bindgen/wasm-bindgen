@@ -1843,6 +1843,15 @@ fn instruction(
             let ptr = js.pop();
             let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
             let i = js.tmp();
+            // `VectorKind::String` can't actually occur here: a `&[String]`
+            // element describes as `NamedExternref("string")`, not `String`
+            // (see `WasmDescribeVector for String`), so `Descriptor::Vector`'s
+            // kind recovery never produces `VectorKind::String` for the
+            // `slice_to_array` codegen that's the sole producer of this
+            // instruction. Included in the match anyway since it's the exact
+            // same codegen as the `Externref`/`NamedExternref` arms if it were
+            // ever reached, and to keep this arm's shape symmetric with the
+            // `VectorKind` match elsewhere in this file.
             match kind {
                 VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_) => {
                     let free = js.cx.wasm_export_of(*free);
@@ -1888,6 +1897,8 @@ fn instruction(
             let i = js.tmp();
             js.prelude(&format!("let v{i};"));
             js.prelude(&format!("if ({ptr} !== 0) {{"));
+            // `VectorKind::String` is unreachable here too; see the
+            // `VectorLoadAsArray` arm above for why.
             match kind {
                 VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_) => {
                     let free = js.cx.wasm_export_of(*free);

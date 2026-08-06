@@ -3443,6 +3443,17 @@ fn slice_to_array_rewrite(
 /// This matters on both import paths: `slice_to_array` is inheritable from the
 /// enclosing `extern "C"` block, so a user who never wrote it on this argument
 /// can still hit it.
+///
+/// This check runs at codegen time, alongside (not instead of) the
+/// parser-time `&mut`-slice rejection in `parser.rs`. The two never
+/// double-report *for the same argument* — a parse-time error on one
+/// argument short-circuits codegen for the whole item before this runs. But
+/// parse errors are aggregated per `extern "C"` block, not per program, so
+/// this check can still be skipped for a *different* function in the same
+/// block that has a `&mut`-slice violation elsewhere: fixing that first
+/// error and recompiling is what surfaces this one. Not a correctness bug —
+/// both errors are genuine and eventually reported — just worth knowing if
+/// you're staring at only one error and expecting the full picture.
 fn check_slice_to_array_concrete_elem(
     arg: &ast::FunctionArgumentData,
     ty: &syn::Type,

@@ -931,7 +931,7 @@ impl<'a>
         // individual arg overrides it via its own attribute (the
         // attribute is additive — you can only opt in, not out).
         let fn_slice_to_array = block_slice_to_array || opts.slice_to_array().is_some();
-        let args_attrs = extract_args_attrs(&mut self.sig, fn_slice_to_array)?;
+        let args_attrs = extract_args_attrs(&mut self.sig, fn_slice_to_array, true)?;
         let (mut wasm, _) = function_from_decl(
             &self.sig.ident,
             &opts,
@@ -1625,11 +1625,13 @@ struct FnArgAttrs {
     js_type: Option<String>,
     optional: bool,
     desc: Option<String>,
-    /// When set, an `&[T]` (or `Option<&[T]>`) argument is converted to a
-    /// freshly-allocated buffer that JS receives as a plain `Array` rather
-    /// than a typed array (for primitive element kinds). The wire format
-    /// matches `Vec<T>` (ownership transferred + freed by JS) but the
-    /// JS-visible type is always a plain `Array`.
+    /// When set, an `&[T]` (or `Option<&[T]>`) argument is routed through
+    /// `VectorRefIntoWasmAbi` so JS receives a plain `Array` rather than a
+    /// typed array. Ownership of the underlying buffer depends on the
+    /// element kind: primitive elements are a zero-copy *borrow* of the
+    /// caller's slice and are never freed, while string/externref-shaped
+    /// elements arrive in a freshly allocated index buffer that JS owns and
+    /// must free (see `VectorLoadAsArray` in `cli-support`'s `js/binding.rs`).
     slice_to_array: bool,
 }
 
@@ -1652,7 +1654,18 @@ struct FnArgAttrs {
 /// for the inherited cases was the alternative, but that would leave two slices in
 /// one signature marshalled differently with nothing in the source to say why, so
 /// the message names all three places it could be coming from instead.
-fn reject_slice_to_array_on_mut_slice(ty: &syn::Type) -> Result<(), Diagnostic> {
+///
+/// `type_param_names` are the enclosing function's type parameters (possibly
+/// empty). When the slice's element type also mentions one of them, this
+/// argument is doubly invalid for `slice_to_array` — see
+/// `check_slice_to_array_concrete_elem` in `codegen.rs` for that second,
+/// independent restriction — and the suggested fix is adjusted so it doesn't
+/// tell the user to make a change that would just trade this error for that
+/// one on the next compile.
+fn reject_slice_to_array_on_mut_slice(
+    ty: &syn::Type,
+    type_param_names: &[&Ident],
+) -> Result<(), Diagnostic> {
     let Some(slice) = crate::codegen::detect_slice_or_option_slice(ty) else {
         return Ok(());
     };
@@ -1665,6 +1678,26 @@ fn reject_slice_to_array_on_mut_slice(ty: &syn::Type) -> Result<(), Diagnostic> 
     } else {
         format!("&[{elem}]")
     };
+    let elem_is_generic = !type_param_names.is_empty()
+        && crate::generics::uses_generic_params(&slice.elem_ty, &type_param_names.to_vec());
+    let fix = if elem_is_generic {
+        format!(
+            "Remove `slice_to_array` (from this argument, from this function, or from \
+             the enclosing `extern \"C\"` block, wherever it is set) so the slice keeps \
+             the writable typed-array view that `&mut` normally gets. Changing this \
+             argument to `{shared}` on its own will not be enough: `slice_to_array` \
+             also requires a concrete, non-generic slice element type, which `{elem}` \
+             is not."
+        )
+    } else {
+        format!(
+            "Either change this argument to `{shared}`, if JS only needs to read \
+             the elements, or remove `slice_to_array` (from this argument, from \
+             this function, or from the enclosing `extern \"C\"` block, wherever it \
+             is set) so the slice keeps the writable typed-array view that `&mut` \
+             normally gets."
+        )
+    };
     Err(Diagnostic::span_error(
         syn::spanned::Spanned::span(ty),
         format!(
@@ -1673,11 +1706,7 @@ fn reject_slice_to_array_on_mut_slice(ty: &syn::Type) -> Result<(), Diagnostic> 
              that `Array` is discarded rather than written back into the caller's \
              slice.\n\
              \n\
-             Either change this argument to `{shared}`, if JS only needs to read \
-             the elements, or remove `slice_to_array` (from this argument, from \
-             this function, or from the enclosing `extern \"C\"` block, wherever it \
-             is set) so the slice keeps the writable typed-array view that `&mut` \
-             normally gets."
+             {fix}"
         ),
     ))
 }
@@ -1712,10 +1741,20 @@ fn type_to_string(ty: &syn::Type) -> String {
 /// Extracts function arguments attributes. `default_slice_to_array` is the
 /// inherited flag from the enclosing function / `extern "C"` block; per-arg
 /// `#[wasm_bindgen(slice_to_array)]` ORs on top of it.
+///
+/// `is_import` is `true` only when `sig` belongs to an imported (`extern
+/// "C"`) function, where `slice_to_array` actually changes the outgoing-
+/// argument codegen. For exported free functions and impl-block methods the
+/// attribute is a documented no-op (see the call sites), so the `&mut`-slice
+/// rejection below must not run for them — a `slice_to_array` attribute
+/// misapplied to an export argument should stay inert, not turn into a
+/// compile error for a restriction that only matters on the import side.
 fn extract_args_attrs(
     sig: &mut syn::Signature,
     default_slice_to_array: bool,
+    is_import: bool,
 ) -> Result<Vec<FnArgAttrs>, Diagnostic> {
+    let type_param_names: Vec<&Ident> = sig.generics.type_params().map(|tp| &tp.ident).collect();
     let mut args_attrs = vec![];
     let mut seen_optional: Option<Span> = None;
     for input in sig.inputs.iter_mut() {
@@ -1812,8 +1851,8 @@ fn extract_args_attrs(
                     })?,
                 slice_to_array: default_slice_to_array || attrs.slice_to_array().is_some(),
             };
-            if arg_attrs.slice_to_array {
-                reject_slice_to_array_on_mut_slice(&pat_type.ty)?;
+            if is_import && arg_attrs.slice_to_array {
+                reject_slice_to_array_on_mut_slice(&pat_type.ty, &type_param_names)?;
             }
             // throw error for any unused attrs
             attrs.enforce_used()?;
@@ -1864,8 +1903,11 @@ impl<'a> MacroParse<(Option<BindgenAttrs>, &'a mut TokenStream)> for syn::Item {
                     f.attrs.remove(i);
                 }
                 // extract fn args attributes before parsing to tokens stream;
-                // `slice_to_array` is irrelevant for exported free functions.
-                let args_attrs = extract_args_attrs(&mut f.sig, false)?;
+                // `slice_to_array` is irrelevant for exported free functions,
+                // so pass `is_import: false` — a stray `slice_to_array` on an
+                // export argument must stay a no-op, not trip the import-only
+                // `&mut`-slice rejection.
+                let args_attrs = extract_args_attrs(&mut f.sig, false, false)?;
                 let comments = extract_doc_comments(&f.attrs);
                 // If the function isn't used for anything other than being exported to JS,
                 // it'll be unused when not building for the Wasm target and produce a
@@ -2148,8 +2190,11 @@ impl MacroParse<&ClassMarker> for &mut syn::ImplItemFn {
         let comments = extract_doc_comments(&self.attrs);
         // `slice_to_array` is meaningless on exported impl-block methods (the
         // attribute only changes the outgoing-argument codegen for imported
-        // functions), so we always pass `false` here.
-        let args_attrs: Vec<FnArgAttrs> = extract_args_attrs(&mut self.sig, false)?;
+        // functions), so we always pass `false` here — including for
+        // `is_import`, so a stray `slice_to_array` on a method argument
+        // stays a no-op rather than tripping the import-only `&mut`-slice
+        // rejection.
+        let args_attrs: Vec<FnArgAttrs> = extract_args_attrs(&mut self.sig, false, false)?;
         let (function, method_self) = function_from_decl(
             &self.sig.ident,
             &opts,
@@ -3052,6 +3097,20 @@ pub fn check_unused_attrs(tokens: &mut TokenStream) {
             let unused_attrs = unused_attrs.iter().map(|UnusedState { error, ident }| {
                 if *error {
                     let text = format!("invalid attribute {ident} in this position");
+                    // Leading `::` (not a bare `core::`), so this isn't
+                    // vulnerable to the local-`mod core`-shadowing hygiene bug
+                    // the `__rt::core` re-exports elsewhere in this crate
+                    // guard against — Rust 2018+'s uniform path resolution
+                    // routes a leading-`::` path through the extern prelude
+                    // regardless of local items. This helper also has no
+                    // access to the invocation's `#[wasm_bindgen(crate = ..)]`
+                    // path (it runs as a global post-pass over already-
+                    // generated tokens, not during a single macro's expansion),
+                    // and only ever executes when the crate already has a bug
+                    // (an attribute the crate forgot to consume), so a
+                    // once-in-a-blue-moon failure to resolve `core` on some
+                    // exotic pre-2018-edition setup just surfaces a different
+                    // compiler error rather than this one.
                     quote::quote_spanned! { ident.span() => ::core::compile_error!(#text); }
                 } else {
                     quote::quote! { let #ident: (); }
