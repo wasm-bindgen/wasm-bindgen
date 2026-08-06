@@ -32,7 +32,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NavigationActivation`, `NavigationHistoryEntry`*"]
     pub fn entry(this: &NavigationActivation) -> NavigationHistoryEntry;
-    #[cfg(feature = "NavigationType")]
+    #[cfg(feature = "NavigationApiType")]
     #[wasm_bindgen(
         method,
         getter,
@@ -43,6 +43,6 @@ extern "C" {
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/NavigationActivation/navigationType)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `NavigationActivation`, `NavigationType`*"]
-    pub fn navigation_type(this: &NavigationActivation) -> NavigationType;
+    #[doc = "*This API requires the following crate features to be activated: `NavigationActivation`, `NavigationApiType`*"]
+    pub fn navigation_type(this: &NavigationActivation) -> NavigationApiType;
 }

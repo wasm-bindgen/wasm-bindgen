@@ -49,3 +49,12 @@ enum NavigationHistoryBehavior {
   "push",
   "replace"
 };
+
+// Named `NavigationType` in the HTML spec; renamed to avoid colliding with
+// the legacy `NavigationType` from PerformanceNavigationTiming.
+enum NavigationApiType {
+  "push",
+  "replace",
+  "reload",
+  "traverse"
+};

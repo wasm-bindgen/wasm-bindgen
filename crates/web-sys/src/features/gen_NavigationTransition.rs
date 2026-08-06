@@ -16,7 +16,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NavigationTransition`*"]
     pub type NavigationTransition;
-    #[cfg(feature = "NavigationType")]
+    #[cfg(feature = "NavigationApiType")]
     #[wasm_bindgen(
         method,
         getter,
@@ -27,8 +27,8 @@ extern "C" {
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/NavigationTransition/navigationType)"]
     #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `NavigationTransition`, `NavigationType`*"]
-    pub fn navigation_type(this: &NavigationTransition) -> NavigationType;
+    #[doc = "*This API requires the following crate features to be activated: `NavigationApiType`, `NavigationTransition`*"]
+    pub fn navigation_type(this: &NavigationTransition) -> NavigationApiType;
     #[cfg(feature = "NavigationHistoryEntry")]
     #[wasm_bindgen(method, getter, js_class = "NavigationTransition", js_name = "from")]
     #[doc = "Getter for the `from` field of this object."]

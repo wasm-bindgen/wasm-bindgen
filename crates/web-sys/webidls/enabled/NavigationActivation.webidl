@@ -2,5 +2,5 @@
 interface NavigationActivation {
   readonly attribute NavigationHistoryEntry? from;
   readonly attribute NavigationHistoryEntry entry;
-  readonly attribute NavigationType navigationType;
+  readonly attribute NavigationApiType navigationType;
 };

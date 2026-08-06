@@ -78,13 +78,13 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `History`, `Window`*"]
     pub fn history(this: &Window) -> Result<History, JsValue>;
     #[cfg(feature = "Navigation")]
-    #[wasm_bindgen(catch, method, getter, js_class = "Window", js_name = "navigation")]
+    #[wasm_bindgen(method, getter, js_class = "Window", js_name = "navigation")]
     #[doc = "Getter for the `navigation` field of this object."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/navigation)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Navigation`, `Window`*"]
-    pub fn navigation(this: &Window) -> Result<Navigation, JsValue>;
+    pub fn navigation(this: &Window) -> Navigation;
     #[cfg(feature = "CustomElementRegistry")]
     #[wasm_bindgen(method, getter, js_class = "Window", js_name = "customElements")]
     #[doc = "Getter for the `customElements` field of this object."]
