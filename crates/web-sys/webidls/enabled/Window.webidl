@@ -38,6 +38,7 @@
   [PutForwards=href, Unforgeable, BinaryName="getLocation",
    CrossOriginReadable, CrossOriginWritable] readonly attribute Location location;
   [Throws] readonly attribute History history;
+  [Replaceable] readonly attribute Navigation navigation;
   [Func="CustomElementRegistry::IsCustomElementEnabled"]
   readonly attribute CustomElementRegistry customElements;
   [Replaceable, Throws] readonly attribute BarProp locationbar;

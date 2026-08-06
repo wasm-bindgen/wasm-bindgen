@@ -5,6 +5,9 @@
 
 ### Added
 
+* [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
+  to `web-sys` [#5247](https://github.com/wasm-bindgen/wasm-bindgen/pull/5247)
+
 ### Changed
 
 * Emscripten output now marks public exports (free functions, classes, enums,
@@ -20,6 +23,11 @@
 
 * Fixed Emscripten builds using pthreads failing to link.
   [#5254](https://github.com/wasm-bindgen/wasm-bindgen/pull/5254)
+
+* `__wbg_load` in web targets now throws a clear error including the HTTP
+  status and URL when given a non-ok fetch `Response`, instead of surfacing a
+  misleading MIME-type or Wasm-magic-number error.
+  [#5256](https://github.com/wasm-bindgen/wasm-bindgen/pull/5256)
 
 * Restored `__stack_pointer` when an exception unwinds out of a wasm export,
   preventing repeated `panic = "unwind"` calls from leaking shadow-stack frames
