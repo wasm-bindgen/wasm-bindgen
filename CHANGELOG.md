@@ -18,12 +18,7 @@
 
 ### Fixed
 
-* Emscripten output no longer emits a JS library binding for an imported
-  `env.memory` (shared memory / `-pthread` builds). The emitted
-  `memory || new WebAssembly.Memory(...)` expression referenced a binding that
-  doesn't exist in emscripten output and broke the emcc link; emscripten's own
-  runtime creates `wasmMemory` and supplies `env.memory` to instantiation
-  itself, so no binding is needed.
+* Fixed Emscripten builds using pthreads failing to link.
   [#5254](https://github.com/wasm-bindgen/wasm-bindgen/pull/5254)
 
 * Restored `__stack_pointer` when an exception unwinds out of a wasm export,
