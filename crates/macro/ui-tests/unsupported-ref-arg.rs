@@ -1,9 +1,10 @@
 // `&T` can only be handed to JS by copying `T` across the boundary, which is
-// sound for a scalar but not for a type with an identity or an owner. The
-// `ScalarIntoWasmAbi` marker keeps the set of types with an `impl IntoWasmAbi for
-// &T` in lockstep with the set the CLI can actually bind, so each of these fails
-// at compile time with a trait error naming the user's own type, rather than
-// aborting `wasm-bindgen` after the build has already succeeded.
+// sound for a scalar but not for a type with an identity or an owner. Only a
+// fixed list of concrete types has an `impl IntoWasmAbi for &T`
+// (`ref_into_wasm_abi_for_scalar!` in `src/convert/impls.rs`), kept in lockstep
+// with the set the CLI can actually bind, so each of these fails at compile
+// time with a trait error naming the user's own type, rather than aborting
+// `wasm-bindgen` after the build has already succeeded.
 //
 // Note the spans below: each rejected argument produces two errors, one located
 // at the imported function and one at the argument's type. Both are on the

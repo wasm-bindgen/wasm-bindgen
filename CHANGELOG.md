@@ -36,51 +36,31 @@
   [the guide](https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/generic_per_mono.html)
   for the supported surface and the shapes that are rejected.
 
-* Added `riscv64gc-unknown-linux-gnu` release artifacts.
-  [#5265](https://github.com/wasm-bindgen/wasm-bindgen/pull/5265)
+* Added sixteen concrete `impl IntoWasmAbi for &T` impls, one per built-in
+  scalar type. `&T` arguments where `T` is a scalar are now accepted in
+  imported function signatures; previously only `&JsValue` and the concrete
+  slice/string references were. The scalar set is `i8`, `u8`, `i16`, `u16`,
+  `i32`, `u32`, `i64`, `u64`, `i128`, `u128`, `isize`, `usize`, `f32`, `f64`,
+  `bool` and `char`. JS cannot hold a reference into linear memory, so the value
+  is copied across and the wire is identical to passing `T` by value.
 
-* Added `JsNullable<T>`, modeling WebIDL nullable types (`T | null`). Both
-  `null` and `undefined` are treated as absent, per WebIDL's ECMAScript
-  conversion rules; the canonical empty value produced from Rust is `null`.
-  `web-sys` now uses `JsNullable<T>` instead of `JsOption<T>` for nullable
-  types nested inside generics (e.g. `Promise<GpuError?>` from
-  `GPUDevice.popErrorScope()`), fixing spec-defined `null` resolutions being
-  treated as present values under `JsOption<T>`'s strict undefined-only
-  semantics. `JsNullable<T>` participates in the same upcast lattice as
-  `JsOption<T>` (including contravariant closure argument casts), and
-  additionally upcasts from `Null` and from `JsOption<T>` itself. Imported
-  extern types now also upcast into `JsOption<JsValue>` and
-  `JsNullable<JsValue>`, so catch-all nullable closures can be used where a
-  typed callback is expected.
-  [#5234](https://github.com/wasm-bindgen/wasm-bindgen/issues/5234)
-* Added the `ScalarIntoWasmAbi` marker trait and, with it, a blanket
-  `impl<T: ScalarIntoWasmAbi> IntoWasmAbi for &T`. `&T` arguments where `T` is a
-  scalar are now accepted in imported function signatures; previously only
-  `&JsValue` and the concrete slice/string references were. The scalar set is
-  `i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `i64`, `u64`, `i128`, `u128`, `isize`,
-  `usize`, `f32`, `f64`, `bool` and `char`. JS cannot hold a reference into linear
-  memory, so the value is copied across and the wire is identical to passing `T`
-  by value.
+  The impl set is deliberately a fixed list of concrete types rather than a
+  generic impl gated by some `Copy`-like bound: a `#[wasm_bindgen]` struct that
+  happens to derive `Copy` still has an identity and an owner, so handing JS
+  `&T` for it would silently give JS a *distinct* copy carrying its own
+  `free()` obligation. Keeping the list concrete and fixed also keeps it in
+  lockstep with the types the CLI can actually bind behind a reference, with no
+  new trait needed to express that.
 
-  `ScalarIntoWasmAbi` is sealed and cannot be implemented downstream. Beyond
-  keeping its impl set in lockstep with the types the CLI can bind behind a
-  reference, sealing is what keeps the blanket impl coherent: a downstream
-  `impl ScalarIntoWasmAbi for SomeImportedType` would overlap the
-  macro-generated `impl<'a> IntoWasmAbi for &'a SomeImportedType` and fail with
-  `E0119`, breaking every imported type in that crate rather than just the one.
+  This is fully additive for downstream crates: a hand-written
+  `impl IntoWasmAbi for &MyConcreteType` still compiles alongside these — which
+  is why the macro-generated impls for imported types, and hence all of
+  `js-sys`/`web-sys`, are unaffected.
 
-  This is fully additive for downstream crates. A hand-written
-  `impl IntoWasmAbi for &MyConcreteType` still compiles alongside the blanket impl
-  — which is why the macro-generated impls for imported types, and hence all of
-  `js-sys`/`web-sys`, are unaffected — and the only shape that could genuinely
-  overlap, a generic `impl<T: MyBound> IntoWasmAbi for &T`, is already forbidden
-  outside this crate by the orphan rule (`E0210`) and so cannot exist to be
-  broken.
-
-  One side effect worth knowing about: because the blanket impl is on `&T`
-  generally, it also widens what *exported* functions may return. Writing
-  `-> &u32` directly is still rejected, but that guard is necessarily syntactic —
-  a proc macro cannot resolve a type alias — so a return type that reaches `&u32`
+  One side effect worth knowing about: because each impl is on a concrete `&T`,
+  it also widens what *exported* functions may return. Writing `-> &u32`
+  directly is still rejected, but that guard is necessarily syntactic — a proc
+  macro cannot resolve a type alias — so a return type that reaches `&u32`
   through an alias (`type R = &'static u32;`) now compiles where it previously
   did not, and returns the pointed-to value by copy. That is the sensible
   behaviour, and the emitted ABI is pinned by the `generic-import` reference

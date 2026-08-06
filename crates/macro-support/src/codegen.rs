@@ -2273,8 +2273,9 @@ impl TryToTokens for ast::ImportFunction {
             // such error in an `extern "C"` block lands on the block's
             // `#[wasm_bindgen]` attribute instead — N identical errors with no
             // indication of which argument is at fault. `&T` arguments make this
-            // routine rather than exotic: `&T: IntoWasmAbi` now depends on
-            // `T: ScalarIntoWasmAbi`, so any `&SomeStruct` argument fails here.
+            // routine rather than exotic: `&T: IntoWasmAbi` only exists for a
+            // fixed list of scalar `T` (see `ref_into_wasm_abi_for_scalar!` in
+            // `src/convert/impls.rs`), so any `&SomeStruct` argument fails here.
             let abi_span = arg.pat_type.ty.span();
             let abi = quote_spanned! { abi_span =>
                 <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi
@@ -2790,7 +2791,8 @@ impl ast::ImportFunction {
                 // is supported: the referent's schema is emitted via `REF`
                 // (`WasmDescribe for &T`), and the value is marshalled by the
                 // referent-generic `IntoWasmAbi` impls (`&Handle`, `&JsValue`,
-                // `&str`, `&[T]`, and `&T where T: ScalarIntoWasmAbi`). Because
+                // `&str`, `&[T]`, and the fixed list of concrete `&T` scalar
+                // impls in `ref_into_wasm_abi_for_scalar!`). Because
                 // the shim names `<&T as IntoWasmAbi>::Abi` under a late-bound
                 // elided lifetime, the required bound is higher-ranked over
                 // the referent rather than `&T: IntoWasmAbi`.
