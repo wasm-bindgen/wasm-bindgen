@@ -19,7 +19,13 @@
   reachable through `__deps`. Requires an emscripten with `__export`/`__force`
   symbol-attribute support.
 
-* Updated WebGPU bindings to the August 2026 spec. `GPUCommandEncoder::copy_buffer_to_buffer_*` signatures changed.
+* Updated WebGPU bindings to the August 2026 spec, including the new
+  `GPUCommandEncoder::copy_buffer_to_buffer` overloads and `setImmediates`.
+  [#5246](https://github.com/wasm-bindgen/wasm-bindgen/pull/5246)
+
+* Overloaded WebIDL methods marked `[WbgGeneric]` now elide name tokens shared
+  by every overload variant when doing so keeps all names distinct, avoiding
+  redundant type names in generated overload names.
   [#5246](https://github.com/wasm-bindgen/wasm-bindgen/pull/5246)
 
 ### Fixed

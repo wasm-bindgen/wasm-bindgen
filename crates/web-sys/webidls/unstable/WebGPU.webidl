@@ -973,13 +973,13 @@ interface GPUCommandEncoder {
     GPURenderPassEncoder beginRenderPass(GPURenderPassDescriptor descriptor);
     GPUComputePassEncoder beginComputePass(optional GPUComputePassDescriptor descriptor = {});
 
-    [Throws]
+    [Throws, WbgGeneric]
     undefined copyBufferToBuffer(
         GPUBuffer source,
         GPUBuffer destination,
         optional GPUSize64 size);
 
-    [Throws]
+    [Throws, WbgGeneric]
     undefined copyBufferToBuffer(
         GPUBuffer source,
         GPUSize64 sourceOffset,
