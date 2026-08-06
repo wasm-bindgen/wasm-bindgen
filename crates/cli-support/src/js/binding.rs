@@ -530,6 +530,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                             &mut ts,
                             Some(&mut ts_refs),
                             &self.cx.qualified_to_identifier,
+                            self.cx.config.ts_typed_array_buffers,
                         );
                         ts.push_str(" | null");
                     }
@@ -540,6 +541,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                             &mut ts,
                             Some(&mut ts_refs),
                             &self.cx.qualified_to_identifier,
+                            self.cx.config.ts_typed_array_buffers,
                         );
                         omittable = false;
                         arg.push_str(": ");
@@ -588,6 +590,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                         &mut ret,
                         Some(&mut ts_refs),
                         &self.cx.qualified_to_identifier,
+                        self.cx.config.ts_typed_array_buffers,
                     ),
                     _ => ret.push_str("[any]"),
                 }
@@ -653,6 +656,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                             &mut arg,
                             None,
                             &self.cx.qualified_to_identifier,
+                            self.cx.config.ts_typed_array_buffers,
                         );
                         arg.push_str(" | null} ");
                         arg.push('[');
@@ -667,6 +671,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                             &mut arg,
                             None,
                             &self.cx.qualified_to_identifier,
+                            self.cx.config.ts_typed_array_buffers,
                         );
                         arg.push_str("} ");
                         arg.push_str(name);
@@ -704,6 +709,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                     &mut ret,
                     None,
                     &self.cx.qualified_to_identifier,
+                    self.cx.config.ts_typed_array_buffers,
                 );
             }
             ret.push_str("} ");
@@ -2106,6 +2112,7 @@ pub(crate) fn adapter2ts(
     dst: &mut String,
     refs: Option<&mut HashSet<TsReference>>,
     name_map: &HashMap<String, String>,
+    typed_array_buffers: bool,
 ) {
     match ty {
         AdapterType::I32
@@ -2135,10 +2142,18 @@ pub(crate) fn adapter2ts(
                     dst.push_str(&format!("({resolved})[]"));
                 }
             }
-            _ => dst.push_str(&kind.js_ty()),
+            VectorKind::String | VectorKind::Externref => dst.push_str(&kind.js_ty()),
+            _ => {
+                dst.push_str(&kind.js_ty());
+                // Owned typed-array returns are always copied out of wasm
+                // memory into a fresh, non-shared `ArrayBuffer`.
+                if typed_array_buffers && matches!(position, TypePosition::Return) {
+                    dst.push_str("<ArrayBuffer>");
+                }
+            }
         },
         AdapterType::Option(ty) => {
-            adapter2ts(ty, position, dst, refs, name_map);
+            adapter2ts(ty, position, dst, refs, name_map, typed_array_buffers);
             dst.push_str(match position {
                 TypePosition::Argument => " | null | undefined",
                 TypePosition::Return => " | undefined",
