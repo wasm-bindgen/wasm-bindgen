@@ -74,8 +74,9 @@ extern "C" {
 Note that a bound only constrains which types the import can be *called* with; it
 cannot make a type marshallable. Combining a higher-ranked bound with a `&T`
 argument is a common way to write a declaration that compiles but can never be
-called: `&T` additionally requires `T: ScalarIntoWasmAbi`, which is sealed and
-implemented only for the primitive scalars, so a bound such as
+called: `&T` additionally requires `for<'a> &'a T: IntoWasmAbi`, which only
+holds for a fixed set of types (the primitive scalars, `JsValue`, imported JS
+handle types, `&str` and `&[T]`), so a bound such as
 `for<'a> &'a T: IntoIterator<Item = &'a u32>` leaves no type that satisfies both.
 See [Note on `&T` arguments](#note-on-t-arguments).
 
@@ -199,6 +200,8 @@ different signatures.
 ## Note on `&T` arguments
 
 A bare `&T` argument is supported, and requires the referent to satisfy the bound
-`wasm-bindgen` needs to marshal it — either a scalar (via `ScalarIntoWasmAbi`) or
-a JS handle type. Passing `&SomeStruct` for a plain Rust struct is rejected,
-since there is no ABI representation for it; take it by value, or pass a JS type.
+`wasm-bindgen` needs to marshal it — either one of the built-in scalar types
+(`i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `i64`, `u64`, `i128`, `u128`, `isize`,
+`usize`, `f32`, `f64`, `bool`, `char`) or a JS handle type. Passing `&SomeStruct`
+for a plain Rust struct is rejected, since there is no ABI representation for it;
+take it by value, or pass a JS type.
