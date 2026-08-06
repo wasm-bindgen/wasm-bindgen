@@ -21,6 +21,10 @@
 
 ### Fixed
 
+* The `name` property of the JS error thrown for `panic=unwind` is now set from
+  a string literal instead of `PanicError.name`, so it survives minification.
+  [#5260](https://github.com/wasm-bindgen/wasm-bindgen/issues/5260)
+
 * Restored `__stack_pointer` when an exception unwinds out of a wasm export,
   preventing repeated `panic = "unwind"` calls from leaking shadow-stack frames
   until the shadow stack is exhausted and calls trap. Node reports

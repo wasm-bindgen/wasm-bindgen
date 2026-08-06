@@ -4331,7 +4331,7 @@ if (require('worker_threads').isMainThread) {{
                 } else {
                     "class PanicError extends Error {}
                 Object.defineProperty(PanicError.prototype, 'name', {
-                    value: PanicError.name,
+                    value: 'PanicError',
                 });
                 "
                     .into()
