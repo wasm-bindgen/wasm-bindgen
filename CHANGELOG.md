@@ -23,11 +23,6 @@
   `GPUCommandEncoder::copy_buffer_to_buffer` overloads and `setImmediates`.
   [#5246](https://github.com/wasm-bindgen/wasm-bindgen/pull/5246)
 
-* Overloaded WebIDL methods marked `[WbgGeneric]` now elide name tokens shared
-  by every overload variant when doing so keeps all names distinct, avoiding
-  redundant type names in generated overload names.
-  [#5246](https://github.com/wasm-bindgen/wasm-bindgen/pull/5246)
-
 ### Fixed
 
 * The `name` property of the JS error thrown for `panic=unwind` is now set from
