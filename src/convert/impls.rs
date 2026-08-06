@@ -6,7 +6,7 @@ use core::ptr::NonNull;
 
 use crate::__rt::marker::ErasableGeneric;
 use crate::__rt::{WasmSignedWordRepr, WasmWordRepr};
-use crate::convert::traits::{ScalarIntoWasmAbi, WasmAbi, WasmPrimitive};
+use crate::convert::traits::{WasmAbi, WasmPrimitive};
 use crate::convert::{
     FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, OptionFromWasmAbi, OptionIntoWasmAbi,
     RefFromWasmAbi, ReturnWasmAbi, TryFromJsValue, UpcastFrom,
@@ -901,28 +901,31 @@ pub unsafe fn js_value_vector_from_abi<T: TryFromJsValue>(
 }
 
 // `&T` for a scalar `T` is passed to JS by copying the value; the wire is
-// identical to passing `T` by value. See `ScalarIntoWasmAbi` for why this is
-// restricted to a fixed list rather than every `Copy + IntoWasmAbi` type.
-impl<T: ScalarIntoWasmAbi> IntoWasmAbi for &T {
-    type Abi = <T as IntoWasmAbi>::Abi;
-    fn into_abi(self) -> Self::Abi {
-        (*self).into_abi()
-    }
-}
-
-// Exactly the descriptors `outgoing_ref` accepts behind a `Ref(..)`. If you add
-// or remove a type here, update `is_scalar_by_shared_ref` in
-// `crates/cli-support/src/wit/outgoing.rs` to match, and add the type to the
-// `scalar-ref-args` reference test — otherwise `&NewType` compiles here and then
-// fails in the CLI with "unsupported type behind a reference". That reference
-// test binds every type in this list, so it is what catches the omission.
+// identical to passing `T` by value. Each of these is a concrete, non-generic
+// impl (rather than one blanket impl gated by a marker trait) precisely
+// because the set has to stay a fixed list: every type here must also be
+// accepted by `is_scalar_by_shared_ref` in
+// `crates/cli-support/src/wit/outgoing.rs`, and it wouldn't be safe to widen
+// this to "every `Copy + IntoWasmAbi` type" (e.g. a `#[wasm_bindgen]` struct
+// that happens to derive `Copy` still has an identity and an owner: handing
+// JS `&T` would silently give it a *distinct* copy with its own `free()`
+// obligation).
 //
-// `ScalarIntoWasmAbi` is sealed, so this macro must also implement the private
-// supertrait; see `crate::convert::traits::sealed`.
-macro_rules! scalar_into_wasm_abi {
+// If you add or remove a type here, update `is_scalar_by_shared_ref` to
+// match, and add the type to the `scalar-ref-args` reference test —
+// otherwise `&NewType` compiles here and then fails in the CLI with
+// "unsupported type behind a reference". That reference test binds every
+// type in this list, so it is what catches the omission.
+macro_rules! ref_into_wasm_abi_for_scalar {
     ($($t:ty)*) => ($(
-        impl ScalarIntoWasmAbi for $t {}
-        impl crate::convert::traits::sealed::ScalarIntoWasmAbi for $t {}
+        impl IntoWasmAbi for &$t {
+            type Abi = <$t as IntoWasmAbi>::Abi;
+
+            #[inline]
+            fn into_abi(self) -> Self::Abi {
+                (*self).into_abi()
+            }
+        }
     )*)
 }
-scalar_into_wasm_abi!(i8 u8 i16 u16 i32 u32 i64 u64 i128 u128 isize usize f32 f64 bool char);
+ref_into_wasm_abi_for_scalar!(i8 u8 i16 u16 i32 u32 i64 u64 i128 u128 isize usize f32 f64 bool char);
