@@ -183,6 +183,30 @@ pub(crate) fn type_params_with_bounds(generics: &syn::Generics) -> Vec<proc_macr
         })
         .collect()
 }
+
+/// Returns a vector of token streams representing generic lifetime parameters
+/// with their inline bounds. For example, `<'a: 'b, 'b>` returns
+/// `[quote!('a: 'b), quote!('b)]`. This is useful for redeclaring lifetime
+/// parameters on a nested item (e.g. a monomorphised shim `fn`), which does
+/// not inherit the enclosing function's generics and must repeat them
+/// (including their bounds) explicitly.
+pub(crate) fn lifetime_params_with_bounds(
+    generics: &syn::Generics,
+) -> Vec<proc_macro2::TokenStream> {
+    generics
+        .lifetimes()
+        .map(|lp| {
+            let lifetime = &lp.lifetime;
+            let bounds = &lp.bounds;
+            if bounds.is_empty() {
+                quote::quote! { #lifetime }
+            } else {
+                quote::quote! { #lifetime: #bounds }
+            }
+        })
+        .collect()
+}
+
 /// Obtain the generic bounds, both inline and where clauses together
 pub(crate) fn generic_bounds<'a>(generics: &'a syn::Generics) -> Vec<Cow<'a, syn::WherePredicate>> {
     let mut bounds = Vec::new();
@@ -881,6 +905,27 @@ mod tests {
             !found_set.contains(&ret_ident),
             "Ret should NOT be found when not in search set"
         );
+    }
+
+    #[test]
+    fn test_lifetime_params_with_bounds() {
+        // No lifetimes -> empty
+        let generics: syn::Generics = syn::parse_quote!(<T>);
+        let result = crate::generics::lifetime_params_with_bounds(&generics);
+        assert!(result.is_empty());
+
+        // Unbounded lifetime
+        let generics: syn::Generics = syn::parse_quote!(<'a, T>);
+        let result = crate::generics::lifetime_params_with_bounds(&generics);
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].to_string(), quote::quote!('a).to_string());
+
+        // Bounded lifetime: 'a: 'b
+        let generics: syn::Generics = syn::parse_quote!(<'a: 'b, 'b, T>);
+        let result = crate::generics::lifetime_params_with_bounds(&generics);
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].to_string(), quote::quote!('a: 'b).to_string());
+        assert_eq!(result[1].to_string(), quote::quote!('b).to_string());
     }
 
     #[test]

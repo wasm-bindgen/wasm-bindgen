@@ -40,6 +40,7 @@ pub mod gc;
 pub mod generic_import_args;
 pub mod generic_import_async;
 pub mod generic_import_bounds;
+pub mod generic_import_lifetime;
 pub mod generic_import_methods;
 pub mod generic_import_ref;
 pub mod generics;

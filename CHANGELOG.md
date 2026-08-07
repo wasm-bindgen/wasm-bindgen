@@ -35,8 +35,8 @@
   arguments and return values are marshalled at their concrete types (a `u32`
   crosses as a number, a `String` as a string) rather than being boxed. Trait
   bounds, `where` predicates (including higher-ranked ones), associated-type
-  projections, `async`, `catch`, and `slice_to_array` are all supported; see
-  [the guide](https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/generic_per_mono.html)
+  projections, lifetime parameters, `async`, `catch`, and `slice_to_array` are
+  all supported; see [the guide](https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/generic_per_mono.html)
   for the supported surface and the shapes that are rejected.
 
 * Added `riscv64gc-unknown-linux-gnu` release artifacts.
