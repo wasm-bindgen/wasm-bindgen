@@ -52,19 +52,6 @@ extern "C" {
     #[wasm_bindgen(generic_per_mono, catch)]
     fn catch_generic_err<T>(x: T) -> Result<JsValue, T>;
 
-    // `slice_to_array` needs a concrete element type: `VectorRefIntoWasmAbi` is
-    // implemented per concrete ABI shape, so no bound makes `&[T]` work.
-    #[wasm_bindgen(generic_per_mono, slice_to_array)]
-    fn slice_to_array_generic_elem<T>(xs: &[T], other: T);
-
-    // Also rejected when only nested inside the element type...
-    #[wasm_bindgen(generic_per_mono, slice_to_array)]
-    fn slice_to_array_nested_elem<T>(xs: &[Vec<T>], other: T);
-
-    // ...and through the `Option<&[T]>` form.
-    #[wasm_bindgen(generic_per_mono, slice_to_array)]
-    fn slice_to_array_option_elem<T>(xs: Option<&[T]>, other: T);
-
     // The rejection is on *any* `&mut` whose referent mentions a type
     // parameter, not just a bare `&mut T`.
     #[wasm_bindgen(generic_per_mono)]
@@ -144,6 +131,22 @@ extern "C" {
     // per-mono one -- the erasure path already covers the same message.
     #[wasm_bindgen(generic_per_mono)]
     fn unsized_type_param<T: ?Sized>(x: &T);
+
+    // `slice_to_array` needs a concrete element type: `VectorRefIntoWasmAbi` is
+    // implemented per concrete ABI shape, so no bound makes `&[T]` work. This is
+    // also a parse-time rejection, so it belongs in this block: leaving it in the
+    // codegen-time block above would abort that block and swallow every
+    // diagnostic in it.
+    #[wasm_bindgen(generic_per_mono, slice_to_array)]
+    fn slice_to_array_generic_elem<T>(xs: &[T], other: T);
+
+    // Also rejected when only nested inside the element type...
+    #[wasm_bindgen(generic_per_mono, slice_to_array)]
+    fn slice_to_array_nested_elem<T>(xs: &[Vec<T>], other: T);
+
+    // ...and through the `Option<&[T]>` form.
+    #[wasm_bindgen(generic_per_mono, slice_to_array)]
+    fn slice_to_array_option_elem<T>(xs: Option<&[T]>, other: T);
 }
 
 // `slice_to_array` is inherited from the enclosing block, and the same rejection
