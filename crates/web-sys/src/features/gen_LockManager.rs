@@ -46,7 +46,7 @@ extern "C" {
     pub fn request(
         this: &LockManager,
         name: &str,
-        callback: &::js_sys::Function<fn(::js_sys::JsOption<Lock>) -> ::js_sys::Promise>,
+        callback: &::js_sys::Function<fn(::js_sys::JsNullable<Lock>) -> ::js_sys::Promise>,
     ) -> ::js_sys::Promise;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(feature = "Lock", feature = "LockOptions",))]
@@ -63,6 +63,6 @@ extern "C" {
         this: &LockManager,
         name: &str,
         options: &LockOptions,
-        callback: &::js_sys::Function<fn(::js_sys::JsOption<Lock>) -> ::js_sys::Promise>,
+        callback: &::js_sys::Function<fn(::js_sys::JsNullable<Lock>) -> ::js_sys::Promise>,
     ) -> ::js_sys::Promise;
 }

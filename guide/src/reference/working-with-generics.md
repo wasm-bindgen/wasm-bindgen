@@ -137,7 +137,7 @@ For the common case, it is recommended to use the `JsGeneric` trait bound when n
 - All js-sys types: `Object`, `Array`, `Function`, `Promise`, `Map`, `Set`, etc.
 - JS primitives: `JsValue`, `Number`, `BigInt`, `Boolean`, `JsString`, `Symbol`
 - JS special values: `Undefined`, `Null`
-- Wrapper types: `JsOption<T>` (for any `T: JsGeneric`)
+- Wrapper types: `JsOption<T>` and `JsNullable<T>` (for any `T: JsGeneric`)
 - All web-sys generated types
 - Custom types imported via `#[wasm_bindgen]` automatically generate this trait on the `JsValue` repr.
 

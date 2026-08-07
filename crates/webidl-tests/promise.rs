@@ -21,6 +21,41 @@ async fn return_promise() {
     }
 }
 
+/// Test that `Promise<T?>` resolving to JS `null` decodes as absent
+/// (https://github.com/wasm-bindgen/wasm-bindgen/issues/5234)
+#[wasm_bindgen_test]
+async fn return_nullable_promise() {
+    let f = TestPromises::new().unwrap();
+
+    #[cfg(not(wbg_next_unstable))]
+    {
+        let v = JsFuture::from(f.optional_string_promise(true))
+            .await
+            .unwrap();
+        assert!(v.is_null());
+
+        let v = JsFuture::from(f.optional_string_promise(false))
+            .await
+            .unwrap();
+        assert_eq!(v.as_string().unwrap(), "abc");
+    }
+
+    #[cfg(wbg_next_unstable)]
+    {
+        let v: js_sys::JsNullable<js_sys::JsString> =
+            JsFuture::from(f.optional_string_promise(true))
+                .await
+                .unwrap();
+        assert!(v.is_empty());
+        assert!(v.into_option().is_none());
+
+        let v = JsFuture::from(f.optional_string_promise(false))
+            .await
+            .unwrap();
+        assert_eq!(v.into_option().unwrap(), "abc");
+    }
+}
+
 /// Test that `Promise<any>` returns just `Promise` (not `Promise<JsValue>`)
 /// and that both generics and non-generics variants are identical (no cfg branching needed)
 #[wasm_bindgen_test]

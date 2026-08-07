@@ -2,5 +2,5 @@
 interface TestPromises {
   Promise<DOMString> stringPromise();
   Promise<any> anyPromise();
-  Promise<DOMString?> optionalStringPromise();
+  Promise<DOMString?> optionalStringPromise(boolean isNull);
 };

@@ -81,7 +81,7 @@ extern "C" {
     #[wasm_bindgen(method, getter = "buffers")]
     pub fn get_buffers(
         this: &GpuVertexState,
-    ) -> Option<::js_sys::Array<::js_sys::JsOption<GpuVertexBufferLayout>>>;
+    ) -> Option<::js_sys::Array<::js_sys::JsNullable<GpuVertexBufferLayout>>>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuVertexBufferLayout")]
     #[doc = "Change the `buffers` field of this object."]
@@ -91,7 +91,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "buffers")]
-    pub fn set_buffers(this: &GpuVertexState, val: &[::js_sys::JsOption<GpuVertexBufferLayout>]);
+    pub fn set_buffers(this: &GpuVertexState, val: &[::js_sys::JsNullable<GpuVertexBufferLayout>]);
 }
 #[cfg(web_sys_unstable_apis)]
 impl GpuVertexState {
@@ -130,7 +130,7 @@ impl GpuVertexState {
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuVertexBufferLayout")]
     #[deprecated = "Use `set_buffers()` instead."]
-    pub fn buffers(&mut self, val: &[::js_sys::JsOption<GpuVertexBufferLayout>]) -> &mut Self {
+    pub fn buffers(&mut self, val: &[::js_sys::JsNullable<GpuVertexBufferLayout>]) -> &mut Self {
         self.set_buffers(val);
         self
     }
