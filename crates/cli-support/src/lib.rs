@@ -474,6 +474,26 @@ impl Bindgen {
                 .context("failed to transform return pointers into multi-value Wasm")?;
         }
 
+        // Detect the exception-handling version before the JSPI transform
+        // runs: the JSPI suspending wrappers contain `try_table`s of their
+        // own, which would otherwise reclassify a `panic=abort` module as
+        // having full (unwinding) exception support.
+        let eh_version =
+            transforms::detect_exception_handling_version(&module, self.force_enable_abort_handler);
+
+        // Instrument JSPI exports and suspending imports with the in-wasm
+        // shadow-stack save/restore wrappers. This must run after the
+        // externref/multi-value passes (which repoint export items) and
+        // before the catch-wrapper pass, which then wraps *outside* the
+        // suspending wrappers (via the repointed `implements` entries) so
+        // that promise rejections are consumed innermost as data while
+        // SuspendError misuse and rethrown exceptions still reach the
+        // abort/catch machinery over a restored shadow stack. The transform
+        // is target agnostic: on emscripten it operates against emscripten's
+        // `__stack_pointer` in exactly the same way, with no interaction
+        // with emscripten's own JSPI machinery.
+        run_jspi_transform(&mut module, self.externref)?;
+
         // Generate Wasm catch wrappers for imports with #[wasm_bindgen(catch)].
         // This runs after externref processing so that we have access to the
         // externref table and allocation function.
@@ -485,7 +505,7 @@ impl Bindgen {
         // `__wbindgen_exn_store`) may be absent. Skip the transform until
         // proper emscripten-mode catch support lands.
         if !matches!(self.mode, OutputMode::Emscripten) {
-            run_exception_handling_transforms(&mut module, self.force_enable_abort_handler)?;
+            run_exception_handling_transforms(&mut module, eh_version)?;
         }
 
         // We've done a whole bunch of transformations to the Wasm module, many
@@ -837,6 +857,27 @@ impl Output {
     }
 }
 
+/// Instrument `#[wasm_bindgen(jspi)]` exports and `#[wasm_bindgen(suspending)]`
+/// imports with in-wasm shadow-stack management. See `transforms::jspi`.
+fn run_jspi_transform(module: &mut Module, externref: bool) -> Result<(), Error> {
+    let mut aux = module
+        .customs
+        .delete_typed::<wit::WasmBindgenAux>()
+        .expect("aux section should exist");
+    let mut wit = module
+        .customs
+        .delete_typed::<wit::NonstandardWitSection>()
+        .expect("wit section should exist");
+
+    let result = transforms::jspi::run(module, &mut aux, &mut wit, externref)
+        .context("failed to instrument module for JSPI");
+
+    module.customs.add(*wit);
+    module.customs.add(*aux);
+
+    result
+}
+
 /// Run the exception-handling transforms: catch wrappers for imports marked
 /// `#[wasm_bindgen(catch)]`, then shadow stack restore wrappers for the exports
 /// a panic can unwind out of.
@@ -846,9 +887,8 @@ impl Output {
 /// `panic=abort` module as `Modern`.
 fn run_exception_handling_transforms(
     module: &mut Module,
-    enable_abort_handler: bool,
+    eh_version: transforms::ExceptionHandlingVersion,
 ) -> Result<(), Error> {
-    let eh_version = transforms::detect_exception_handling_version(module, enable_abort_handler);
     log::debug!("Exception handling version: {eh_version:?}");
 
     if eh_version == transforms::ExceptionHandlingVersion::None {

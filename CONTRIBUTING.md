@@ -30,6 +30,29 @@ Update fixtures:
 - `just test-cli-overwrite` - Run CLI tests overwriting reference tests
 - `just test-ui-overwrite` - Overwrite UI test outputs
 
+## Browser Examples
+
+The JSPI browser examples (`jspi`, `jspi-opfs`, `jspi-fetch-streams`) require a
+browser with JSPI support. Chrome has JSPI enabled by default since v137, and CI
+runs all three examples automatically via the Playwright test suite
+(`channel: 'chrome'`, which tracks current stable). They cannot be run via
+`cargo test`.
+
+To build and test locally:
+
+```sh
+# Build the local CLI first so wasm-pack picks it up instead of a cached version.
+cargo build -p wasm-bindgen-cli
+
+# Build a specific example (substitute jspi-fetch-streams as needed).
+cd examples/jspi-opfs
+PATH="$(git rev-parse --show-toplevel)/target/debug:$PATH" npm run build
+cd ..
+
+# Run the Playwright tests for one or all JSPI examples.
+PREBUILT_EXAMPLES=1 pnpm exec playwright test -g "jspi"
+```
+
 ## Release Process
 
 The release process for Wasm Bindgen typically consists of the following steps:

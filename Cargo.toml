@@ -78,6 +78,7 @@ workspace = true
 
 [workspace.lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = [
+  'cfg(js_sys_unstable_apis)',
   'cfg(wasm_bindgen_unstable_test_coverage)',
   'cfg(wasm_bindgen_use_js_sys)',
   'cfg(xxx_debug_only_print_generated_code)',
@@ -117,6 +118,9 @@ members = [
   "examples/duck-typed-interfaces",
   "examples/explicit-resource-management",
   "examples/fetch",
+  "examples/jspi",
+  "examples/jspi-fetch-streams",
+  "examples/jspi-opfs",
   "examples/guide-supported-types-examples",
   "examples/hello_world",
   "examples/import_js/crate",

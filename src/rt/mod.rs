@@ -796,6 +796,23 @@ static GLOBAL_EXNDATA: ThreadLocalWrapper<Cell<[u32; 2]>> = ThreadLocalWrapper(C
 #[no_mangle]
 pub static mut __instance_terminated: u32 = 0;
 
+/// Written in-fiber at every resume by the CLI-generated wrapper around a
+/// `#[wasm_bindgen(catch, suspending)]` import (see
+/// `cli-support/src/transforms/jspi.rs`): 0 when the awaited `Promise`
+/// fulfilled, 1 when it rejected — in which case the rejection reason is the
+/// import's return value. The store happens immediately before the suspend
+/// call returns, so reading it right after is race-free even with arbitrary
+/// fiber interleaving.
+#[no_mangle]
+pub static mut __wbindgen_jspi_rejected: u32 = 0;
+
+/// Whether the just-returned `#[wasm_bindgen(catch, suspending)]` import
+/// call's awaited promise rejected. Used by macro-generated glue.
+#[inline]
+pub fn jspi_rejected() -> bool {
+    unsafe { __wbindgen_jspi_rejected != 0 }
+}
+
 fn no_op() {}
 
 pub static NO_OP_PTR: fn() = no_op;

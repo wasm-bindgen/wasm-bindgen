@@ -89,5 +89,6 @@ intrinsics! {
         InitExternrefTable = "__wbindgen_init_externref_table",
         PanicError = "__wbindgen_panic_error",
         Reinit = "__wbindgen_reinit",
+        JspiSuspend = "__wbindgen_jspi_suspend",
     }
 }
