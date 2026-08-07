@@ -474,6 +474,9 @@ jobs:
     - run: sudo apt update -y && sudo apt install gcc-aarch64-linux-gnu -y
     - run: |
         cargo build --manifest-path crates/cli/Cargo.toml --target aarch64-unknown-linux-gnu --features vendored-openssl --release
+        aarch64-linux-gnu-strip -g target/aarch64-unknown-linux-gnu/release/wasm-bindgen
+        aarch64-linux-gnu-strip -g target/aarch64-unknown-linux-gnu/release/wasm-bindgen-test-runner
+        aarch64-linux-gnu-strip -g target/aarch64-unknown-linux-gnu/release/wasm2es6js
       env:
         CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
     - uses: actions/upload-artifact@v7
@@ -508,6 +511,9 @@ jobs:
     - run: sudo apt update -y && sudo apt install gcc-riscv64-linux-gnu -y
     - run: |
         cargo build --manifest-path crates/cli/Cargo.toml --target riscv64gc-unknown-linux-gnu --features vendored-openssl --release
+        riscv64-linux-gnu-strip -g target/riscv64gc-unknown-linux-gnu/release/wasm-bindgen
+        riscv64-linux-gnu-strip -g target/riscv64gc-unknown-linux-gnu/release/wasm-bindgen-test-runner
+        riscv64-linux-gnu-strip -g target/riscv64gc-unknown-linux-gnu/release/wasm2es6js
       env:
         CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_GNU_LINKER: riscv64-linux-gnu-gcc
     - uses: actions/upload-artifact@v7
