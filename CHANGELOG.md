@@ -8,6 +8,9 @@
 * [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
   to `web-sys` [#5247](https://github.com/wasm-bindgen/wasm-bindgen/pull/5247)
 
+* Added `riscv64gc-unknown-linux-gnu` release artifacts.
+  [#5265](https://github.com/wasm-bindgen/wasm-bindgen/pull/5265)
+
 ### Changed
 
 * Emscripten output now marks public exports (free functions, classes, enums,
