@@ -5532,8 +5532,13 @@ addToLibrary({
                 // it with `WebAssembly.Suspending` so that calling it from WASM
                 // suspends the current fiber until the returned Promise
                 // settles. All shadow-stack management is instrumented into
-                // the wasm module itself (see `transforms::jspi`), so no JS
-                // wrapper logic is needed here.
+                // the wasm module itself (see `transforms::jspi`), so the only
+                // JS wrapper logic is converting a synchronous throw into a
+                // rejection: a sync throw would otherwise propagate into wasm
+                // *without* a suspension tick, breaking the invariant that
+                // reaching the post-call restore implies the fiber suspended
+                // (and making sync throws behave differently from
+                // rejections).
                 //
                 // Emscripten JS libraries are evaluated at compile time by the
                 // jsifier, where a `WebAssembly.Suspending` instance cannot be
@@ -5545,12 +5550,21 @@ addToLibrary({
                         let name = self.module.imports.get(core).name.clone();
                         self.emscripten_import_postsets.insert(
                             core,
-                            format!("{name} = new WebAssembly.Suspending({name});"),
+                            format!(
+                                "var __wbg_inner_{name} = {name}; \
+                                 {name} = new WebAssembly.Suspending(function(...args) {{ \
+                                     try {{ return __wbg_inner_{name}.apply(this, args); }} \
+                                     catch (e) {{ return Promise.reject(e); }} \
+                                 }});"
+                            ),
                         );
                         ImportDefinition::Function(code)
                     } else {
                         ImportDefinition::Expression(format!(
-                            "new WebAssembly.Suspending(function{code})"
+                            "((__inner) => new WebAssembly.Suspending(function(...args) {{\n\
+                                 try {{ return __inner.apply(this, args); }}\n\
+                                 catch (e) {{ return Promise.reject(e); }}\n\
+                             }}))(function{code})"
                         ))
                     }
                 } else {

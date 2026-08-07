@@ -3181,6 +3181,7 @@ const JSPI_LIB_RS: &str = r#"
     #[wasm_bindgen(inline_js = "
         export function get_text() { return new Promise(r => setTimeout(() => r('hello world'), 1)); }
         export function flaky(ok) { return ok ? Promise.resolve(41) : Promise.reject(new Error('nope')); }
+        export function throws_sync() { throw new Error('sync boom'); }
     ")]
     extern "C" {
         // Non-externref return: marshalled to String in Rust post-resume.
@@ -3189,6 +3190,10 @@ const JSPI_LIB_RS: &str = r#"
         // catch + suspending: rejections surface as `Err` data.
         #[wasm_bindgen(catch, suspending)]
         fn flaky(ok: bool) -> Result<u32, JsValue>;
+        // A synchronous throw is converted to a rejection by the Suspending
+        // shim, so it ticks and surfaces as `Err` like a rejection.
+        #[wasm_bindgen(catch, suspending)]
+        fn throws_sync() -> Result<u32, JsValue>;
     }
 
     #[wasm_bindgen(jspi)]
@@ -3201,6 +3206,14 @@ const JSPI_LIB_RS: &str = r#"
         match flaky(ok) {
             Ok(v) => v + 1,
             Err(_) => 13,
+        }
+    }
+
+    #[wasm_bindgen(jspi)]
+    pub fn try_sync_throw() -> u32 {
+        match throws_sync() {
+            Ok(v) => v,
+            Err(_) => 27,
         }
     }
 
@@ -3408,6 +3421,10 @@ describe('jspi runtime', () => {
         assert.strictEqual(await wasm.try_flaky(false), 13);
     });
 
+    it('catch + suspending converts synchronous throws into Err', async () => {
+        assert.strictEqual(await wasm.try_sync_throw(), 27);
+    });
+
     it('drives a Rust future via block_on with a self-waking waker', async () => {
         assert.strictEqual(await wasm.drive_future(), 7);
     });
@@ -3503,6 +3520,17 @@ describe('jspi with panic=unwind', () => {
         globalThis.__jspi_drops = 0;
         await assert.rejects(() => wasm.panic_after_resume());
         assert.ok((globalThis.__jspi_drops | 0) >= 1, 'DropGuard must run on unwind');
+    });
+
+    it('fiber state stays clean after an unwound fiber', async () => {
+        // The export wrapper's exceptional path must reset the fiber globals;
+        // stale state would corrupt subsequent fibers or misroute the
+        // suspending-import guard.
+        await assert.rejects(() => wasm.panic_after_resume());
+        assert.strictEqual(await wasm.deep_alloc(20), 1210);
+        let threw = false;
+        try { await wasm.misuse_suspend(); } catch (e) { threw = true; }
+        assert.ok(threw, 'misuse_suspend should still throw after an unwound fiber');
     });
 });
 "#,
