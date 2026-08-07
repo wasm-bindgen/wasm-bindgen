@@ -518,6 +518,7 @@ fn test_option_vs_js_option_compat() {
 mod nullable_closure_variance {
     use super::*;
     use std::cell::Cell;
+    use std::panic::AssertUnwindSafe;
     use std::rc::Rc;
 
     #[wasm_bindgen_test]
@@ -566,7 +567,7 @@ mod nullable_closure_variance {
     #[wasm_bindgen_test]
     fn invoke_nullable_arg_closure() {
         let calls = Rc::new(Cell::new((0u32, 0u32)));
-        let calls2 = calls.clone();
+        let calls2 = AssertUnwindSafe(calls.clone());
         let closure: Closure<dyn FnMut(JsNullable<Number>)> =
             Closure::new(move |val: JsNullable<Number>| {
                 let (empty, present) = calls2.get();
@@ -586,7 +587,7 @@ mod nullable_closure_variance {
     #[wasm_bindgen_test]
     fn invoke_upcast_jsvalue_closure_as_nullable() {
         let calls = Rc::new(Cell::new((0u32, 0u32, 0u32)));
-        let calls2 = calls.clone();
+        let calls2 = AssertUnwindSafe(calls.clone());
         let closure: Closure<dyn FnMut(JsValue)> = Closure::new(move |val: JsValue| {
             let (nulls, undefs, values) = calls2.get();
             if val.is_null() {
