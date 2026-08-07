@@ -218,7 +218,7 @@ export function echo_option_string(a) {
     const ret = wasm.echo_option_string(ptr0, len0);
     let v2;
     if (ret[0] !== 0) {
-        v2 = getStringFromWasm0(ret[0], ret[1]).slice();
+        v2 = getStringFromWasm0(ret[0], ret[1]);
         wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
     }
     return v2;
@@ -366,7 +366,7 @@ export function echo_option_vec_string(a) {
     const ret = wasm.echo_option_vec_string(ptr0, len0);
     let v2;
     if (ret[0] !== 0) {
-        v2 = getArrayJsValueFromWasm0(ret[0], ret[1]).slice();
+        v2 = getArrayJsValueFromWasm0(ret[0], ret[1]);
         wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
     }
     return v2;
@@ -382,7 +382,7 @@ export function echo_option_vec_struct(a) {
     const ret = wasm.echo_option_vec_struct(ptr0, len0);
     let v2;
     if (ret[0] !== 0) {
-        v2 = getArrayJsValueFromWasm0(ret[0], ret[1]).slice();
+        v2 = getArrayJsValueFromWasm0(ret[0], ret[1]);
         wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
     }
     return v2;
@@ -724,7 +724,7 @@ export function echo_vec_string(a) {
     const ptr0 = passArrayJsValueToWasm0(a, wasm.__wbindgen_malloc);
     const len0 = WASM_VECTOR_LEN;
     const ret = wasm.echo_vec_string(ptr0, len0);
-    var v2 = getArrayJsValueFromWasm0(ret[0], ret[1]).slice();
+    var v2 = getArrayJsValueFromWasm0(ret[0], ret[1]);
     wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
     return v2;
 }
@@ -737,7 +737,7 @@ export function echo_vec_struct(a) {
     const ptr0 = passArrayJsValueToWasm0(a, wasm.__wbindgen_malloc);
     const len0 = WASM_VECTOR_LEN;
     const ret = wasm.echo_vec_struct(ptr0, len0);
-    var v2 = getArrayJsValueFromWasm0(ret[0], ret[1]).slice();
+    var v2 = getArrayJsValueFromWasm0(ret[0], ret[1]);
     wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
     return v2;
 }

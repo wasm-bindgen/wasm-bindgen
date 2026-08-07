@@ -66,6 +66,24 @@ extern "C" {
         this: &GpuPipelineLayoutDescriptor,
         val: &[::js_sys::JsOption<GpuBindGroupLayout>],
     );
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Get the `immediateSize` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuPipelineLayoutDescriptor`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "immediateSize")]
+    pub fn get_immediate_size(this: &GpuPipelineLayoutDescriptor) -> Option<u32>;
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `immediateSize` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuPipelineLayoutDescriptor`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "immediateSize")]
+    pub fn set_immediate_size(this: &GpuPipelineLayoutDescriptor, val: u32);
 }
 #[cfg(web_sys_unstable_apis)]
 impl GpuPipelineLayoutDescriptor {
@@ -96,6 +114,12 @@ impl GpuPipelineLayoutDescriptor {
         val: &[::js_sys::JsOption<GpuBindGroupLayout>],
     ) -> &mut Self {
         self.set_bind_group_layouts(val);
+        self
+    }
+    #[cfg(web_sys_unstable_apis)]
+    #[deprecated = "Use `set_immediate_size()` instead."]
+    pub fn immediate_size(&mut self, val: u32) -> &mut Self {
+        self.set_immediate_size(val);
         self
     }
 }

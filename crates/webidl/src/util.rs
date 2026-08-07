@@ -1,4 +1,4 @@
-use std::collections::{BTreeSet, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fs;
 use std::iter::FromIterator;
 use std::path::{Path, PathBuf};
@@ -583,14 +583,14 @@ impl<'src> FirstPassRecord<'src> {
             Some(output)
         }
 
-        fn compute_rust_name<'a>(
+        // Returns the disambiguation name tokens for a signature, each paired
+        // with the index of the argument it was derived from.
+        fn compute_name_tokens<'a>(
             signature: &ExpandedSig<'a>,
             disambiguate_against: &[usize],
             all_signatures: &[ExpandedSig<'a>],
-            js_name: &str,
-        ) -> String {
-            let mut rust_name = snake_case_ident(js_name);
-            let mut first = true;
+        ) -> Vec<(usize, String)> {
+            let mut tokens = Vec::new();
 
             // `&str` is blessed: signatures containing no `JsString`
             // expansions disambiguate only against each other (every
@@ -637,21 +637,120 @@ impl<'src> FirstPassRecord<'src> {
                 if !any_different {
                     continue;
                 }
-                if first {
-                    rust_name.push_str("_with_");
-                    first = false;
+
+                let mut token = String::new();
+                if any_same_name && any_different_type {
+                    arg.push_snake_case_name(&mut token);
                 } else {
-                    rust_name.push_str("_and_");
+                    token.push_str(&snake_case_ident(arg_name));
+                }
+                tokens.push((i, token));
+            }
+
+            tokens
+        }
+
+        // Computes the Rust names for all signatures in `disambiguate_against` at
+        // once so that, when `simplify` is set, name tokens shared by every
+        // overload variant can be elided when doing so keeps all names distinct.
+        // A token is only elided if, within each overload, it comes from the
+        // same argument in every expanded variant of that overload.
+        fn compute_rust_names<'a>(
+            disambiguate_against: &[usize],
+            all_signatures: &[ExpandedSig<'a>],
+            js_name: &str,
+            simplify: bool,
+        ) -> HashMap<usize, String> {
+            let mut token_lists: Vec<(usize, Vec<(usize, String)>)> = disambiguate_against
+                .iter()
+                .map(|&idx| {
+                    (
+                        idx,
+                        compute_name_tokens(
+                            &all_signatures[idx],
+                            disambiguate_against,
+                            all_signatures,
+                        ),
+                    )
+                })
+                .collect();
+
+            fn distinct_count(lists: &[(usize, Vec<(usize, String)>)]) -> usize {
+                lists
+                    .iter()
+                    .map(|(_, tokens)| tokens.iter().map(|(_, t)| t.as_str()).collect::<Vec<_>>())
+                    .collect::<HashSet<_>>()
+                    .len()
+            }
+
+            if simplify {
+                // Group expanded variants by the overload they came from.
+                let mut groups: Vec<(*const (), Vec<usize>)> = Vec::new();
+                for (pos, (idx, _)) in token_lists.iter().enumerate() {
+                    let orig = all_signatures[*idx].orig as *const _ as *const ();
+                    match groups.iter_mut().find(|(o, _)| *o == orig) {
+                        Some((_, members)) => members.push(pos),
+                        None => groups.push((orig, vec![pos])),
+                    }
                 }
 
-                if any_same_name && any_different_type {
-                    arg.push_snake_case_name(&mut rust_name);
-                } else {
-                    rust_name.push_str(&snake_case_ident(arg_name));
+                'elide: loop {
+                    let mut candidates = Vec::new();
+                    for (_, tokens) in &token_lists {
+                        for (_, token) in tokens {
+                            if !candidates.contains(token) {
+                                candidates.push(token.clone());
+                            }
+                        }
+                    }
+
+                    let before = distinct_count(&token_lists);
+                    'candidates: for candidate in candidates {
+                        // For each overload, find an argument that yields this
+                        // token in every variant of that overload.
+                        let mut removals = Vec::new();
+                        for (_, members) in &groups {
+                            let arg = token_lists[members[0]].1.iter().find_map(|(a, t)| {
+                                (t == &candidate
+                                    && members.iter().all(|&m| {
+                                        token_lists[m]
+                                            .1
+                                            .iter()
+                                            .any(|(a2, t2)| a2 == a && t2 == &candidate)
+                                    }))
+                                .then_some(*a)
+                            });
+                            match arg {
+                                Some(arg) => removals.extend(members.iter().map(|&m| (m, arg))),
+                                None => continue 'candidates,
+                            }
+                        }
+                        let mut simplified = token_lists.clone();
+                        for (m, arg) in removals {
+                            let tokens = &mut simplified[m].1;
+                            let pos = tokens.iter().position(|(a, _)| *a == arg).unwrap();
+                            tokens.remove(pos);
+                        }
+                        if distinct_count(&simplified) == before {
+                            token_lists = simplified;
+                            continue 'elide;
+                        }
+                    }
+                    break;
                 }
             }
 
-            rust_name
+            token_lists
+                .into_iter()
+                .map(|(idx, tokens)| {
+                    let mut rust_name = snake_case_ident(js_name);
+                    for (i, (_, token)) in tokens.iter().enumerate() {
+                        rust_name.push_str(if i == 0 { "_with_" } else { "_and_" });
+                        rust_name.push_str(token);
+                    }
+                    (idx, rust_name)
+                })
+                .collect()
         }
 
         fn create_method<'a>(
@@ -765,10 +864,20 @@ impl<'src> FirstPassRecord<'src> {
                                 deconflict_names: &HashSet<String>|
          -> Vec<InterfaceMethod<'_>> {
             let mut methods = Vec::new();
+            // Simplified overload naming is only enabled for typed-generic
+            // operations ([WbgGeneric] or unstable IDL, matching the signature
+            // expansion rule above), keeping legacy generated names stable.
+            let simplify = wbg_generic
+                || unstable
+                || disambiguate_against.iter().any(|&idx| {
+                    let orig = actual_signatures[idx].orig;
+                    orig.stability.is_unstable() || is_wbg_generic(orig.attrs.as_ref())
+                });
+            let rust_names =
+                compute_rust_names(disambiguate_against, &actual_signatures, js_name, simplify);
             for &sig_idx in sig_indices {
                 let signature = &actual_signatures[sig_idx];
-                let mut rust_name =
-                    compute_rust_name(signature, disambiguate_against, &actual_signatures, js_name);
+                let mut rust_name = rust_names[&sig_idx].clone();
 
                 // If the computed name collides with a name from another expansion
                 // (e.g. a stable expansion name colliding with an unstable IDL override

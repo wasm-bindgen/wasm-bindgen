@@ -52,6 +52,12 @@ extern "C" {
     fn js_st2a_imported(v: &[Tagged]) -> Vec<String>;
     #[wasm_bindgen(slice_to_array)]
     fn js_st2a_optional_u16(v: Option<&[u16]>) -> Option<Vec<u16>>;
+    // `Option` + a non-primitive element kind. This is the only
+    // combination that reaches the loader's owned-buffer branch, where
+    // the fresh `Array` the loader builds is handed straight to JS and
+    // the index buffer behind it is freed immediately afterwards.
+    #[wasm_bindgen(slice_to_array)]
+    fn js_st2a_optional_string(v: Option<&[String]>) -> Option<Vec<String>>;
 
     // Method form: the `this` argument is non-slice and must be left
     // alone by `slice_to_array`. Mixed args (the slice gets the rewrite,
@@ -121,6 +127,15 @@ fn optional() {
     assert_eq!(out, Some(vec![10u16, 12, 14]));
     assert_eq!(v, vec![5u16, 6, 7]);
     assert_eq!(js_st2a_optional_u16(None), None);
+}
+
+#[wasm_bindgen_test]
+fn optional_string_elements() {
+    let v = vec!["p".to_string(), "q".to_string()];
+    let out = js_st2a_optional_string(Some(&v));
+    assert_eq!(out, Some(vec!["p!".to_string(), "q!".to_string()]));
+    assert_eq!(v, vec!["p".to_string(), "q".to_string()]);
+    assert_eq!(js_st2a_optional_string(None), None);
 }
 
 #[wasm_bindgen_test]
