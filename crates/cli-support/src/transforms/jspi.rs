@@ -123,6 +123,12 @@ pub fn run(
         );
     }
 
+    // The single stack-top snapshot and the fiber globals are per-instance,
+    // not per-thread, and JSPI itself is a single-threaded proposal.
+    if module.memories.iter().any(|m| m.shared) {
+        bail!("JSPI is not supported with threads/atomics");
+    }
+
     let sp = aux.stack_pointer.ok_or_else(|| {
         anyhow!(
             "could not locate the `__stack_pointer` global in the Wasm module; \

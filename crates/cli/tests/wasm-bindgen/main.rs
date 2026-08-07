@@ -3217,6 +3217,40 @@ const JSPI_LIB_RS: &str = r#"
         }
     }
 
+    // jspi methods on exported classes emit `async` class methods.
+    #[wasm_bindgen]
+    pub struct Counter {
+        n: u32,
+    }
+
+    #[wasm_bindgen]
+    impl Counter {
+        #[wasm_bindgen(constructor)]
+        pub fn new(n: u32) -> Counter {
+            Counter { n }
+        }
+
+        #[wasm_bindgen(jspi)]
+        pub fn add_slept(&self, v: u32) -> u32 {
+            let p = Promise::resolve(&JsValue::from(v));
+            let got = block_on_promise(&p).unwrap_throw();
+            self.n + got.as_f64().unwrap_or(0.0) as u32
+        }
+    }
+
+    // A Result-returning jspi export: `Err` is thrown at the JS boundary
+    // inside the async glue wrapper, rejecting the returned Promise.
+    #[wasm_bindgen(jspi)]
+    pub fn fallible_fiber(ok: bool) -> Result<u32, JsValue> {
+        let p = Promise::resolve(&JsValue::UNDEFINED);
+        block_on_promise(&p).unwrap_throw();
+        if ok {
+            Ok(7)
+        } else {
+            Err(JsValue::from_str("fiber says no"))
+        }
+    }
+
     // A future that wakes itself synchronously *during* poll (exercising the
     // pre-created resolver) and returns Pending a few times before resolving.
     struct SelfWaking { remaining: u32 }
@@ -3423,6 +3457,26 @@ describe('jspi runtime', () => {
 
     it('catch + suspending converts synchronous throws into Err', async () => {
         assert.strictEqual(await wasm.try_sync_throw(), 27);
+    });
+
+    it('supports jspi methods on classes', async () => {
+        const c = new wasm.Counter(10);
+        assert.strictEqual(await c.add_slept(5), 15);
+    });
+
+    it('Result-returning jspi exports reject the promise with Err', async () => {
+        assert.strictEqual(await wasm.fallible_fiber(true), 7);
+        await assert.rejects(() => wasm.fallible_fiber(false), /fiber says no/);
+    });
+
+    it('mixed fulfillment and rejection across concurrent fibers', async () => {
+        const r = await Promise.all([
+            wasm.try_flaky(true),
+            wasm.check_rejection(),
+            wasm.try_flaky(false),
+            wasm.deep_alloc(20),
+        ]);
+        assert.deepStrictEqual(r, [42, 13, 13, 1210]);
     });
 
     it('drives a Rust future via block_on with a self-waking waker', async () => {
