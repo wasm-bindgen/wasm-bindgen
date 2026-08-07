@@ -25,18 +25,10 @@
   `Module terminated`.
   [#5244](https://github.com/wasm-bindgen/wasm-bindgen/pull/5244)
 
-* `slice_to_array` on a `&mut` slice is now a compile error instead of silently
-  discarding JS's writes.
-  [#5261](https://github.com/wasm-bindgen/wasm-bindgen/pull/5261)
-
-* `slice_to_array` on a slice whose element type is a type parameter is now
-  rejected with a single targeted error.
-  [#5261](https://github.com/wasm-bindgen/wasm-bindgen/pull/5261)
-
-* Values with string, `JsValue`, or exported-struct elements received by JS
-  (e.g. a `Vec<String>` return value, or `Option<&[T]>` under
-  `slice_to_array`) no longer make a redundant copy of the fresh string or
-  array handed to JS.
+* `slice_to_array` on a `&mut` slice (which silently discarded JS's writes) or
+  on a slice with a generic element type is now a compile error, and strings
+  and arrays received by JS (e.g. a `Vec<String>` return value) no longer make
+  a redundant copy of the freshly built value.
   [#5261](https://github.com/wasm-bindgen/wasm-bindgen/pull/5261)
 
 * Fixed `async` imports with non-JS-handle resolved types (e.g.
