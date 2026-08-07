@@ -8,14 +8,14 @@
 //!   inside a JSPI fiber, using a JS-Promise-backed waker (high-level).
 //!
 //! The runtime state is minimal by construction. The single bridge import,
-//! `__wbindgen_jspi_suspend`, is an identity function wrapped with
-//! `WebAssembly.Suspending`: JSPI itself awaits the returned `Promise` and
-//! resumes the fiber with the settled value as the import's `externref`
-//! return value, while a rejection is thrown into wasm as a
-//! `WebAssembly.JSTag` exception. The wasm-bindgen CLI instruments the import
-//! (see `cli-support/src/transforms/jspi.rs`) to catch that exception
-//! in-fiber and record it in the [`__wbindgen_jspi_rejected`] linear-memory
-//! flag, so no per-suspension JS-side state exists at all.
+//! `__wbindgen_jspi_suspend`, is a plain `#[wasm_bindgen(catch, suspending)]`
+//! import whose JS body is an identity function: JSPI itself awaits the
+//! returned `Promise` and resumes the fiber with the settled value as the
+//! import's `externref` return value, while a rejection is thrown into wasm
+//! as a `WebAssembly.JSTag` exception and marshalled to `Err` by the
+//! standard `catch + suspending` machinery (see
+//! `cli-support/src/transforms/jspi.rs`), so no per-suspension JS-side state
+//! exists at all.
 //!
 //! ## Usage
 //!
@@ -45,18 +45,10 @@ use core::task::{Context, Poll, Waker};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 
-/// Set in-fiber at every resume by the CLI-generated wrapper around
-/// `__wbindgen_jspi_suspend`: 0 when the awaited `Promise` fulfilled, 1 when
-/// it rejected (in which case the rejection reason is the return value).
-/// Written immediately before the suspend call returns, so reading it right
-/// after is race-free even with arbitrary fiber interleaving.
-#[no_mangle]
-pub static mut __wbindgen_jspi_rejected: u32 = 0;
-
 #[wasm_bindgen(raw_module = "__wbindgen_placeholder__")]
 extern "C" {
-    #[wasm_bindgen(suspending)]
-    fn __wbindgen_jspi_suspend(promise: &Promise) -> JsValue;
+    #[wasm_bindgen(catch, suspending)]
+    fn __wbindgen_jspi_suspend(promise: &Promise) -> Result<JsValue, JsValue>;
 }
 
 // ─── Low-level primitive: suspend on a JS Promise ────────────────────────────
@@ -68,22 +60,16 @@ extern "C" {
 /// **Must only be called from a WASM export wrapped with `WebAssembly.promising`**
 /// (i.e. from a function marked `#[wasm_bindgen(jspi)]`).
 pub fn block_on_promise(promise: &Promise) -> Result<JsValue, JsValue> {
-    let value = suspend(promise);
-    // At this point the shadow stack is guaranteed to hold the correct
-    // contents for this fiber, regardless of how many other fibers ran while
-    // this one was suspended.  The wasm-bindgen CLI instruments every
+    // On return the shadow stack is guaranteed to hold the correct contents
+    // for this fiber, regardless of how many other fibers ran while this one
+    // was suspended.  The wasm-bindgen CLI instruments every
     // `#[wasm_bindgen(suspending)]` import with an in-wasm wrapper that
     // evacuates the fiber's live shadow-stack region to a heap buffer before
     // suspending and copies it back — restoring `__stack_pointer` from a wasm
     // local, which JSPI preserves — as the very first instructions after the
-    // fiber resumes (see `cli-support/src/transforms/jspi.rs`).  The same
-    // wrapper wrote `__wbindgen_jspi_rejected` in-fiber just before
-    // returning, so this read is race-free.
-    if unsafe { __wbindgen_jspi_rejected } != 0 {
-        Err(value)
-    } else {
-        Ok(value)
-    }
+    // fiber resumes (see `cli-support/src/transforms/jspi.rs`).  The `catch`
+    // marshalling (rejections as `Err` data) rides the same wrapper.
+    suspend(promise)
 }
 
 // `__wbindgen_jspi_suspend` must not be inlined into `block_on_promise` so that
@@ -92,7 +78,7 @@ pub fn block_on_promise(promise: &Promise) -> Result<JsValue, JsValue> {
 // the shadow stack), but it keeps the generated wasm readable and the call
 // graph unambiguous for future analysis.
 #[inline(never)]
-fn suspend(promise: &Promise) -> JsValue {
+fn suspend(promise: &Promise) -> Result<JsValue, JsValue> {
     __wbindgen_jspi_suspend(promise)
 }
 

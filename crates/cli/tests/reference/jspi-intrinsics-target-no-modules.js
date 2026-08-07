@@ -16,12 +16,17 @@ let wasm_bindgen = (function(exports) {
     function __wbg_get_imports() {
         const import0 = {
             __proto__: null,
-            __wbg___wbindgen_jspi_suspend_0ba702b1d60015ac: new WebAssembly.Suspending(function(arg0) {
+            __wbg___wbindgen_jspi_suspend_747b367c12c10e32: new WebAssembly.Suspending(function(arg0) {
                 const ret = arg0;
                 return ret;
             }),
             __wbg___wbindgen_throw_344f42d3211c4765: function(arg0, arg1) {
                 throw new Error(getStringFromWasm0(arg0, arg1));
+            },
+            __wbindgen_cast_0000000000000000: function(arg0) {
+                // Cast intrinsic for `Externref -> Externref`.
+                const ret = arg0;
+                return ret;
             },
             __wbindgen_init_externref_table: function() {
                 const table = wasm.__wbindgen_externrefs;

@@ -72,7 +72,14 @@ pub fn run(
     let externref_table = aux.externref_table;
     let table_alloc = aux.externref_alloc;
     let exn_store = aux.exn_store;
-    if !aux.imports_with_catch.is_empty() {
+    // `catch` on a suspending import is handled by the JSPI transform's
+    // rejection protocol instead of a catch wrapper, so it doesn't require
+    // the exception-store intrinsics.
+    let has_catch_wrappers = aux
+        .imports_with_catch
+        .iter()
+        .any(|a| !aux.imports_with_suspending.contains(a));
+    if has_catch_wrappers {
         if externref_table.is_none() {
             anyhow::bail!("externref table required for catch wrappers");
         }
@@ -115,7 +122,9 @@ pub fn run(
 
     // Generate wrappers for each import with catch
     for (_import_id, func_id, adapter_id) in wit.implements.iter() {
-        let wrapper_kind = if aux.imports_with_catch.contains(adapter_id) {
+        let wrapper_kind = if aux.imports_with_catch.contains(adapter_id)
+            && !aux.imports_with_suspending.contains(adapter_id)
+        {
             WrapperKind::CatchWrapper
         } else if let Some(rethrow_critical) = rethrow_critical {
             WrapperKind::Aborting { rethrow_critical }

@@ -30,14 +30,18 @@
   wraps them with `WebAssembly.promising`, `#[wasm_bindgen(suspending)]` on imports
   wraps them with `WebAssembly.Suspending`, and `js_sys::futures::jspi::{block_on,
   block_on_promise}` let plain (non-`async`) Rust suspend a fiber while a JS
-  `Promise` settles. Fibers run on the full main shadow stack: the module is
-  instrumented so a suspending fiber's live stack region is evacuated to the
-  heap and restored on resume, so concurrent fibers cannot corrupt each other
-  and no stack sizing is required. All targets are supported, including
-  emscripten (using the same instrumentation, independent of emscripten's own
-  JSPI machinery). The feature is experimental: using the attributes emits a
-  compiler warning noting the experimental status, and the
-  `js_sys::futures::jspi` API is gated behind the `js_sys_unstable_apis` cfg.
+  `Promise` settles. Suspending imports declare the type the promise resolves
+  to; the settled value is marshalled post-resume with standard ABI semantics,
+  and `catch` surfaces rejections as `Err` data. Fibers run on the full main
+  shadow stack: the module is instrumented so a suspending fiber's live stack
+  region is evacuated to the heap and restored on resume, so concurrent fibers
+  cannot corrupt each other and no stack sizing is required. All targets are
+  supported, including emscripten (using the same instrumentation, independent
+  of emscripten's own JSPI machinery); reference types and an
+  exception-handling-capable engine are required (all JSPI engines qualify).
+  The feature is experimental: using the attributes emits a compiler warning
+  noting the experimental status, and the `js_sys::futures::jspi` API is gated
+  behind the `js_sys_unstable_apis` cfg.
   [#5193](https://github.com/wasm-bindgen/wasm-bindgen/pull/5193)
 
 ### Changed
