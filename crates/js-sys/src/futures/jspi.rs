@@ -7,9 +7,15 @@
 //! - [`block_on`] — drives an arbitrary `async` Rust [`Future`] to completion
 //!   inside a JSPI fiber, using a JS-Promise-backed waker (high-level).
 //!
-//! The bridge functions are wasm-bindgen intrinsics emitted directly into the
-//! generated glue, so no manual setup is required and every target is
-//! supported (including `--target no-modules`).
+//! The runtime state is minimal by construction. The single bridge import,
+//! `__wbindgen_jspi_suspend`, is an identity function wrapped with
+//! `WebAssembly.Suspending`: JSPI itself awaits the returned `Promise` and
+//! resumes the fiber with the settled value as the import's `externref`
+//! return value, while a rejection is thrown into wasm as a
+//! `WebAssembly.JSTag` exception. The wasm-bindgen CLI instruments the import
+//! (see `cli-support/src/transforms/jspi.rs`) to catch that exception
+//! in-fiber and record it in the [`__wbindgen_jspi_rejected`] linear-memory
+//! flag, so no per-suspension JS-side state exists at all.
 //!
 //! ## Usage
 //!
@@ -31,98 +37,26 @@
 // via `js_sys_unstable_apis`, so silence it here.
 #![allow(deprecated)]
 
-use crate::Promise;
+use crate::{Function, Promise};
 use alloc::boxed::Box;
 use alloc::sync::Arc;
-use alloc::vec::Vec;
-use core::cell::RefCell;
 use core::future::Future;
 use core::task::{Context, Poll, Waker};
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast;
 
-// Copy `ThreadLocalWrapper` impl
-struct ThreadLocalWrapper<T>(T);
-
-#[cfg(not(target_feature = "atomics"))]
-unsafe impl<T> Sync for ThreadLocalWrapper<T> {}
-
-#[cfg(not(target_feature = "atomics"))]
-unsafe impl<T> Send for ThreadLocalWrapper<T> {}
-
-// ─── JS bridge ───────────────────────────────────────────────────────────────
-//
-// These are wasm-bindgen intrinsics generated directly into the main JS glue
-// by the CLI (see `crates/cli-support/src/intrinsic.rs`).  They share the
-// module-scoped `_jspiPending`/`_jspiResolved`/`_jspiRejected` arrays and the
-// `_jspiWakerMap` emitted once by `Context::expose_jspi_bridge`.
-//
-// Using intrinsics rather than an `inline_js` snippet means the JSPI runtime
-// works with every target, including `--target no-modules`, which cannot
-// import from `./snippets/...`.
+/// Set in-fiber at every resume by the CLI-generated wrapper around
+/// `__wbindgen_jspi_suspend`: 0 when the awaited `Promise` fulfilled, 1 when
+/// it rejected (in which case the rejection reason is the return value).
+/// Written immediately before the suspend call returns, so reading it right
+/// after is race-free even with arbitrary fiber interleaving.
+#[no_mangle]
+pub static mut __wbindgen_jspi_rejected: u32 = 0;
 
 #[wasm_bindgen(raw_module = "__wbindgen_placeholder__")]
 extern "C" {
-    fn __wbindgen_jspi_set_pending(id: u32, promise: &Promise);
     #[wasm_bindgen(suspending)]
-    fn __wbindgen_jspi_suspend(id: u32);
-    fn __wbindgen_jspi_is_rejected(id: u32) -> bool;
-    fn __wbindgen_jspi_get_resolved(id: u32) -> JsValue;
-    fn __wbindgen_jspi_cleanup(id: u32);
-    fn __wbindgen_jspi_waker_create(id: u32) -> Promise;
-    fn __wbindgen_jspi_waker_wake(id: u32);
-    fn __wbindgen_jspi_waker_cleanup(id: u32);
-}
-
-// ─── Growable ID pool ─────────────────────────────────────────────────────────
-
-struct IdPool {
-    free: Vec<u32>,
-    next: u32,
-}
-
-impl IdPool {
-    const fn new() -> Self {
-        Self {
-            free: Vec::new(),
-            next: 0,
-        }
-    }
-
-    fn alloc(&mut self) -> u32 {
-        self.free.pop().unwrap_or_else(|| {
-            let id = self.next;
-            self.next += 1;
-            id
-        })
-    }
-
-    fn release(&mut self, id: u32) {
-        self.free.push(id);
-    }
-}
-
-#[cfg_attr(target_feature = "atomics", thread_local)]
-static SUSPEND_IDS: ThreadLocalWrapper<RefCell<IdPool>> =
-    ThreadLocalWrapper(RefCell::new(IdPool::new()));
-
-fn alloc_id() -> u32 {
-    SUSPEND_IDS.0.borrow_mut().alloc()
-}
-
-fn release_id(id: u32) {
-    SUSPEND_IDS.0.borrow_mut().release(id);
-}
-
-#[cfg_attr(target_feature = "atomics", thread_local)]
-static WAKER_IDS: ThreadLocalWrapper<RefCell<IdPool>> =
-    ThreadLocalWrapper(RefCell::new(IdPool::new()));
-
-fn alloc_waker_id() -> u32 {
-    WAKER_IDS.0.borrow_mut().alloc()
-}
-
-fn release_waker_id(id: u32) {
-    WAKER_IDS.0.borrow_mut().release(id);
+    fn __wbindgen_jspi_suspend(promise: &Promise) -> JsValue;
 }
 
 // ─── Low-level primitive: suspend on a JS Promise ────────────────────────────
@@ -134,9 +68,7 @@ fn release_waker_id(id: u32) {
 /// **Must only be called from a WASM export wrapped with `WebAssembly.promising`**
 /// (i.e. from a function marked `#[wasm_bindgen(jspi)]`).
 pub fn block_on_promise(promise: &Promise) -> Result<JsValue, JsValue> {
-    let id = alloc_id();
-    __wbindgen_jspi_set_pending(id, promise);
-    suspend(id);
+    let value = suspend(promise);
     // At this point the shadow stack is guaranteed to hold the correct
     // contents for this fiber, regardless of how many other fibers ran while
     // this one was suspended.  The wasm-bindgen CLI instruments every
@@ -144,17 +76,13 @@ pub fn block_on_promise(promise: &Promise) -> Result<JsValue, JsValue> {
     // evacuates the fiber's live shadow-stack region to a heap buffer before
     // suspending and copies it back — restoring `__stack_pointer` from a wasm
     // local, which JSPI preserves — as the very first instructions after the
-    // fiber resumes (see `cli-support/src/transforms/jspi.rs`).  Everything
-    // that follows here therefore executes with the correct shadow stack,
-    // even after deep recursion or concurrent fiber interleaving.
-    let rejected = __wbindgen_jspi_is_rejected(id);
-    let result = __wbindgen_jspi_get_resolved(id);
-    __wbindgen_jspi_cleanup(id);
-    release_id(id); // Vec::push — allocates with correct SP
-    if rejected {
-        Err(result)
+    // fiber resumes (see `cli-support/src/transforms/jspi.rs`).  The same
+    // wrapper wrote `__wbindgen_jspi_rejected` in-fiber just before
+    // returning, so this read is race-free.
+    if unsafe { __wbindgen_jspi_rejected } != 0 {
+        Err(value)
     } else {
-        Ok(result)
+        Ok(value)
     }
 }
 
@@ -164,23 +92,31 @@ pub fn block_on_promise(promise: &Promise) -> Result<JsValue, JsValue> {
 // the shadow stack), but it keeps the generated wasm readable and the call
 // graph unambiguous for future analysis.
 #[inline(never)]
-fn suspend(id: u32) {
-    __wbindgen_jspi_suspend(id);
+fn suspend(promise: &Promise) -> JsValue {
+    __wbindgen_jspi_suspend(promise)
 }
 
 // ─── Waker ───────────────────────────────────────────────────────────────────
 
+/// A waker backed by the `resolve` function of a JS `Promise` the fiber
+/// suspends on: waking resolves the promise, which resumes the fiber.
 struct JspiWaker {
-    id: u32,
+    resolve: Function,
 }
+
+// SAFETY: `Waker::from(Arc<W>)` requires `Send + Sync`, but JSPI fibers are
+// single-threaded — the waker is only ever created, woken, and dropped on
+// the one wasm thread (JSPI is not supported with threads).
+unsafe impl Send for JspiWaker {}
+unsafe impl Sync for JspiWaker {}
 
 impl alloc::task::Wake for JspiWaker {
     fn wake(self: Arc<Self>) {
-        __wbindgen_jspi_waker_wake(self.id);
+        self.wake_by_ref();
     }
 
     fn wake_by_ref(self: &Arc<Self>) {
-        __wbindgen_jspi_waker_wake(self.id);
+        let _ = self.resolve.call0(&JsValue::UNDEFINED);
     }
 }
 
@@ -188,33 +124,33 @@ impl alloc::task::Wake for JspiWaker {
 
 /// Drive `fut` to completion inside a JSPI fiber.
 ///
-/// Each time the future returns [`Poll::Pending`], a fresh JS `Promise` is
-/// pre-created for the waker before polling so that if the waker fires
-/// *during* the poll (before `Pending` is returned), the Promise is already
-/// resolved and `block_on_promise` returns on the next microtask tick.
+/// Each time the future returns [`Poll::Pending`], the fiber suspends on a
+/// fresh JS `Promise` whose `resolve` function backs the waker. The promise
+/// (and its resolver) is created *before* polling, so a `wake()` that fires
+/// synchronously during the poll has already resolved the promise by the
+/// time the fiber suspends on it, and the fiber resumes on the next
+/// microtask tick.
 ///
-/// Nested calls are safe: each invocation gets its own unique `waker_id` and
-/// its own suspension `id`.
+/// Nested calls are safe: every poll iteration owns its own promise/resolver
+/// pair, held as ordinary Rust values.
 ///
 /// **Must only be called from a function marked `#[wasm_bindgen(jspi)]`.**
 pub fn block_on<F: Future>(fut: F) -> F::Output {
     let mut fut = Box::pin(fut);
 
-    let waker_id = alloc_waker_id();
-    let waker: Waker = Arc::new(JspiWaker { id: waker_id }).into();
-
     loop {
-        // Pre-create the waker Promise before polling so that a synchronous
-        // wake() call during poll sees a valid resolver in _jspiWakerMap.
-        let promise = __wbindgen_jspi_waker_create(waker_id);
+        // Create the promise/resolver pair before polling so that a
+        // synchronous wake() during poll resolves a live promise.
+        let mut resolve_slot: Option<Function> = None;
+        let promise: Promise = Promise::new(&mut |resolve, _reject| {
+            resolve_slot = Some(resolve.unchecked_into());
+        });
+        let resolve = resolve_slot.expect_throw("Promise executor did not run synchronously");
+        let waker: Waker = Arc::new(JspiWaker { resolve }).into();
         let mut cx = Context::from_waker(&waker);
 
         match fut.as_mut().poll(&mut cx) {
-            Poll::Ready(val) => {
-                __wbindgen_jspi_waker_cleanup(waker_id);
-                release_waker_id(waker_id);
-                return val;
-            }
+            Poll::Ready(val) => return val,
             Poll::Pending => {
                 // Ignore the resolved value — we only care about being woken.
                 let _ = block_on_promise(&promise);

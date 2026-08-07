@@ -78,6 +78,12 @@ pub struct WasmBindgenAux {
     pub jspi_malloc: Option<walrus::FunctionId>,
     pub jspi_free: Option<walrus::FunctionId>,
 
+    /// Linear-memory address of `js_sys::futures::jspi::__wbindgen_jspi_rejected`,
+    /// the flag the JSPI suspend wrapper writes in-fiber at every resume to
+    /// report whether the awaited promise rejected. Recorded from the exported
+    /// address global before `unexport_intrinsics` removes it.
+    pub jspi_rejected: Option<u64>,
+
     /// The imported JSTag for catching JavaScript exceptions in Wasm.
     /// When this is `Some`, all imports with `catch` use Wasm catch wrappers
     /// instead of JS `handleError` wrappers.

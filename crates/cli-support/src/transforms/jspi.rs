@@ -22,7 +22,26 @@
 //!   suspension. Immediately after the call returns (the first instructions
 //!   executed on resume), the region is copied back to its original address,
 //!   SP and the base global are restored from locals (which JSPI preserved),
-//!   and the buffer is freed.
+//!   and the buffer is freed. The call sits in a `try_table` whose
+//!   `catch_all_ref` arm performs the same restore before rethrowing, so an
+//!   exception delivered at the resume point (e.g. a rejected promise)
+//!   unwinds over a restored shadow stack.
+//!
+//! - The `__wbindgen_jspi_suspend` intrinsic backing
+//!   `js_sys::futures::jspi::block_on_promise` additionally catches
+//!   `WebAssembly.JSTag` exceptions — JSPI throws a rejected promise's reason
+//!   into wasm at the resume point — and converts them to data: the reason
+//!   becomes the return value and the `__wbindgen_jspi_rejected` flag in
+//!   linear memory is set. Fulfillment stores 0. Both stores are in-fiber at
+//!   resume, so reading the flag after the call is race-free. The JS side of
+//!   the intrinsic is an identity function: `WebAssembly.Suspending` performs
+//!   the promise resolution itself.
+//!
+//! The suspending-import entries in `implements` are repointed at the
+//! wrappers so that the later catch-wrapper pass wraps *outside* them:
+//! rejections are consumed innermost as data, while everything else
+//! (SuspendError misuse, rethrown exceptions) still reaches the abort/catch
+//! machinery — over a restored stack.
 //!
 //! Because every suspension drains the shadow stack to its entry watermark,
 //! the same address range is time-multiplexed between fibers: interior
@@ -44,16 +63,17 @@
 use crate::wit::{AdapterKind, Instruction, NonstandardWitSection, WasmBindgenAux};
 use anyhow::{anyhow, bail, Error};
 use std::collections::HashMap;
-use walrus::ir::{self, BinaryOp, UnaryOp, Value};
+use walrus::ir::{self, BinaryOp, MemArg, UnaryOp, Value};
 use walrus::{
     ConstExpr, ExportItem, FunctionBuilder, FunctionId, GlobalId, InstrSeqBuilder, MemoryId,
-    Module, ValType,
+    Module, RefType, TagId, ValType,
 };
 
 pub fn run(
     module: &mut Module,
     aux: &mut WasmBindgenAux,
-    wit: &NonstandardWitSection,
+    wit: &mut NonstandardWitSection,
+    externref: bool,
 ) -> Result<(), Error> {
     // The wasm-level export ids of `#[wasm_bindgen(jspi)]` exports.
     let mut jspi_exports = Vec::new();
@@ -78,16 +98,48 @@ pub fn run(
         }
     }
 
-    // The wasm-level import shims of `#[wasm_bindgen(suspending)]` imports.
+    // The wasm-level import shims of `#[wasm_bindgen(suspending)]` imports,
+    // noting which one is the `block_on_promise` suspend intrinsic. The
+    // wasm-level import name is the mangled shim symbol, so identify the
+    // intrinsic via the aux import map, which is keyed by the inner
+    // `AdapterKind::Import` adapter that the `implements` shim adapter calls.
     let suspending_imports = wit
         .implements
         .iter()
         .filter(|(_, _, adapter)| aux.imports_with_suspending.contains(adapter))
-        .map(|(_, func, _)| *func)
+        .map(|(_, func, adapter)| {
+            let inner = wit.adapters.get(adapter).and_then(|a| match &a.kind {
+                AdapterKind::Local { instructions } => {
+                    instructions.iter().find_map(|i| match i.instr {
+                        Instruction::CallAdapter(inner) => Some(inner),
+                        _ => None,
+                    })
+                }
+                _ => None,
+            });
+            let is_intrinsic = inner.is_some_and(|inner| {
+                matches!(
+                    aux.import_map.get(&inner),
+                    Some(crate::wit::AuxImport::Intrinsic(
+                        crate::intrinsic::Intrinsic::JspiSuspend
+                    ))
+                )
+            });
+            (*func, is_intrinsic)
+        })
         .collect::<Vec<_>>();
 
     if jspi_exports.is_empty() && suspending_imports.is_empty() {
         return Ok(());
+    }
+
+    if !externref {
+        bail!(
+            "JSPI support requires reference types: the resume value of a \
+             suspending import bypasses the JS shim's return conversion, so \
+             it must travel as an externref (enabled by default since \
+             Rust 1.82)"
+        );
     }
 
     let sp = aux.stack_pointer.ok_or_else(|| {
@@ -153,15 +205,67 @@ pub fn run(
         module.exports.get_mut(export_id).item = wrapper.into();
     }
 
+    if suspending_imports.is_empty() {
+        return Ok(());
+    }
+
+    let restore = make_restore_helper(module, ctx);
+
+    // The rejection protocol for the suspend intrinsic, if it's in use.
+    let has_intrinsic = suspending_imports.iter().any(|(_, i)| *i);
+    let rejection = if has_intrinsic {
+        let addr = aux.jspi_rejected.ok_or_else(|| {
+            anyhow!(
+                "could not locate the `__wbindgen_jspi_rejected` flag static; \
+                 it is defined by `js_sys::futures::jspi`"
+            )
+        })?;
+        let js_tag = crate::transforms::catch_handler::get_or_import_js_tag(module);
+        // Ensure the JS glue wires `WebAssembly.JSTag` up to the import.
+        aux.js_tag = Some(js_tag);
+        Some(Rejection { js_tag, addr })
+    } else {
+        None
+    };
+
     let mut wrappers = HashMap::new();
-    for import in suspending_imports {
+    for (import, is_intrinsic) in suspending_imports {
         if wrappers.contains_key(&import) {
             continue;
         }
-        let wrapper = wrap_import(module, import, ctx);
+        let rejection = if is_intrinsic {
+            // The rejection arm stores the caught JSTag payload (externref)
+            // into the result local, which requires the externref ABI end to
+            // end (guaranteed by the reference-types requirement above).
+            let ty = module.types.get(module.funcs.get(import).ty());
+            if ty.params() != [ValType::Ref(RefType::EXTERNREF)]
+                || ty.results() != [ValType::Ref(RefType::EXTERNREF)]
+            {
+                bail!(
+                    "unexpected ABI for the JSPI suspend intrinsic: expected \
+                     (externref) -> externref, found {:?} -> {:?}",
+                    ty.params(),
+                    ty.results()
+                );
+            }
+            rejection
+        } else {
+            None
+        };
+        let wrapper = wrap_suspending(module, import, ctx, restore, rejection);
         wrappers.insert(import, wrapper);
     }
     rewrite_calls(module, &wrappers);
+
+    // Repoint the `implements` entries at the wrappers so the catch-wrapper
+    // pass wraps outside them (see module docs).
+    for (_, func, adapter) in wit.implements.iter_mut() {
+        if aux.imports_with_suspending.contains(adapter) {
+            if let Some(wrapper) = wrappers.get(func) {
+                *func = *wrapper;
+            }
+        }
+    }
 
     Ok(())
 }
@@ -178,6 +282,14 @@ struct JspiContext {
     ptr_ty: ValType,
 }
 
+/// The rejection-to-data protocol for the suspend intrinsic.
+#[derive(Clone, Copy)]
+struct Rejection {
+    js_tag: TagId,
+    /// Linear-memory address of the `__wbindgen_jspi_rejected` u32 flag.
+    addr: u64,
+}
+
 fn const_zero(ty: ValType) -> ConstExpr {
     match ty {
         ValType::I64 => ConstExpr::Value(Value::I64(0)),
@@ -189,11 +301,22 @@ fn const_zero(ty: ValType) -> ConstExpr {
 ///
 /// ```wat
 /// (func $wrapper (param ...) (result ...)
-///     (local $prev ptr) (local $prev_suspended i32)
+///     (local $prev ptr) (local $base ptr) (local $prev_suspended i32)
 ///     global.get $__jspi_stack_base
 ///     local.set $prev
 ///     global.get $__stack_pointer
+///     local.tee $base
 ///     global.set $__jspi_stack_base
+///     ;; push the fiber node: `prev` is stored at [base - 16], inside the
+///     ;; fiber's own shadow-stack region so it is evacuated and restored
+///     ;; with it, and reachable by address from the suspend wrapper
+///     local.get $base
+///     i32.const 16
+///     i32.sub
+///     global.set $__stack_pointer
+///     local.get $base
+///     local.get $prev
+///     i32.store offset=-16 (conceptually; emitted as base-16 + store)
 ///     global.get $__jspi_suspended
 ///     local.set $prev_suspended
 ///     i32.const 0
@@ -202,22 +325,34 @@ fn const_zero(ty: ValType) -> ConstExpr {
 ///     call $inner
 ///     ;; if this fiber suspended, its entry-time callers unwound while it
 ///     ;; was pending (resume only ever happens on an empty stack), so the
-///     ;; correct exit SP is the empty-stack top, not the entry offset —
-///     ;; leaving the entry offset would permanently leak the region above it
+///     ;; correct exit state is the empty-stack SP and no active fiber —
+///     ;; keeping the entry offset would permanently leak the region above
+///     ;; it, and `prev` refers to a context that no longer exists
 ///     global.get $__jspi_suspended
 ///     if
 ///         global.get $__jspi_stack_top
 ///         global.set $__stack_pointer
+///         i32.const 0 (ptr)
+///         global.set $__jspi_stack_base
+///     else
+///         local.get $base
+///         global.set $__stack_pointer
+///         local.get $prev
+///         global.set $__jspi_stack_base
 ///     end
 ///     local.get $prev_suspended
-///     global.set $__jspi_suspended
-///     local.get $prev
-///     global.set $__jspi_stack_base)
+///     global.set $__jspi_suspended)
 /// ```
 ///
 /// This runs inside the fiber that `WebAssembly.promising` creates, so the
 /// base is published exactly when the fiber starts executing and restored
-/// exactly when it completes, with no window for interleaved microtasks.
+/// exactly when it completes or suspends, with no window for interleaved
+/// microtasks. The node makes `prev` reachable from the suspend wrapper:
+/// suspension restores `__jspi_stack_base := prev` because the fiber's
+/// segment leaves the stack, keeping the global equal to the innermost
+/// fiber segment actually on the stack at all times (concurrent fibers
+/// interleave arbitrarily, so a global save/restore chain alone would go
+/// stale).
 fn wrap_export(module: &mut Module, inner: FunctionId, ctx: JspiContext) -> FunctionId {
     let ty = module.types.get(module.funcs.get(inner).ty());
     let params = ty.params().to_vec();
@@ -226,11 +361,22 @@ fn wrap_export(module: &mut Module, inner: FunctionId, ctx: JspiContext) -> Func
     let mut builder = FunctionBuilder::new(&mut module.types, &params, &results);
     let param_locals: Vec<_> = params.iter().map(|ty| module.locals.add(*ty)).collect();
     let prev = module.locals.add(ctx.ptr_ty);
+    let base = module.locals.add(ctx.ptr_ty);
     let prev_suspended = module.locals.add(ValType::I32);
+
+    let sub = ptr_sub(ctx.ptr_ty);
 
     let mut body = builder.func_body();
     body.global_get(ctx.base).local_set(prev);
-    body.global_get(ctx.sp).global_set(ctx.base);
+    body.global_get(ctx.sp).local_tee(base).global_set(ctx.base);
+    // Push the fiber node holding `prev` at [base - 16].
+    body.local_get(base);
+    push_align(&mut body, ctx.ptr_ty);
+    body.binop(sub).global_set(ctx.sp);
+    body.local_get(base);
+    push_align(&mut body, ctx.ptr_ty);
+    body.binop(sub).local_get(prev);
+    store_ptr(&mut body, ctx);
     body.global_get(ctx.suspended).local_set(prev_suspended);
     body.i32_const(0).global_set(ctx.suspended);
     for local in &param_locals {
@@ -241,11 +387,18 @@ fn wrap_export(module: &mut Module, inner: FunctionId, ctx: JspiContext) -> Func
         None,
         |then| {
             then.global_get(ctx.top).global_set(ctx.sp);
+            match ctx.ptr_ty {
+                ValType::I64 => then.i64_const(0),
+                _ => then.i32_const(0),
+            };
+            then.global_set(ctx.base);
         },
-        |_| {},
+        |else_| {
+            else_.local_get(base).global_set(ctx.sp);
+            else_.local_get(prev).global_set(ctx.base);
+        },
     );
     body.local_get(prev_suspended).global_set(ctx.suspended);
-    body.local_get(prev).global_set(ctx.base);
 
     let wrapper = builder.finish(param_locals, &mut module.funcs);
     let name = module.funcs.get(inner).name.clone();
@@ -253,12 +406,104 @@ fn wrap_export(module: &mut Module, inner: FunctionId, ctx: JspiContext) -> Func
     wrapper
 }
 
+/// Store a pointer-sized value: expects `addr, value` on the stack.
+fn store_ptr(body: &mut InstrSeqBuilder, ctx: JspiContext) {
+    let (kind, align) = match ctx.ptr_ty {
+        ValType::I64 => (ir::StoreKind::I64 { atomic: false }, 8),
+        _ => (ir::StoreKind::I32 { atomic: false }, 4),
+    };
+    body.store(ctx.memory, kind, MemArg { align, offset: 0 });
+}
+
+/// Load a pointer-sized value: expects `addr` on the stack.
+fn load_ptr(body: &mut InstrSeqBuilder, ctx: JspiContext) {
+    let (kind, align) = match ctx.ptr_ty {
+        ValType::I64 => (ir::LoadKind::I64 { atomic: false }, 8),
+        _ => (ir::LoadKind::I32 { atomic: false }, 4),
+    };
+    body.load(ctx.memory, kind, MemArg { align, offset: 0 });
+}
+
+/// Build the shared post-resume restore helper:
+///
+/// ```wat
+/// (func $__jspi_restore (param $base ptr) (param $len ptr) (param $buf ptr)
+///     ;; copy the saved shadow-stack region back to its original address
+///     local.get $base
+///     local.get $len
+///     i32.sub
+///     local.get $buf
+///     local.get $len
+///     memory.copy
+///     local.get $base
+///     local.get $len
+///     i32.sub
+///     global.set $__stack_pointer
+///     local.get $base
+///     global.set $__jspi_stack_base
+///     i32.const 1
+///     global.set $__jspi_suspended
+///     local.get $buf
+///     local.get $len
+///     i32.const 16
+///     call $__wbindgen_free)
+/// ```
+///
+/// The helper only touches locals, globals and bulk memory — it has no
+/// shadow-stack frame of its own, so it is safe to run before the caller's
+/// frames have been restored. Setting `__jspi_suspended` here is
+/// unconditionally correct: JSPI performs promise resolution on the
+/// Suspending function's return value, so even a non-Promise return suspends
+/// for at least one microtask tick — reaching the restore always means the
+/// fiber suspended and its entry-time callers unwound.
+fn make_restore_helper(module: &mut Module, ctx: JspiContext) -> FunctionId {
+    let params = [ctx.ptr_ty; 3];
+    let mut builder = FunctionBuilder::new(&mut module.types, &params, &[]);
+    let base = module.locals.add(ctx.ptr_ty);
+    let len = module.locals.add(ctx.ptr_ty);
+    let buf = module.locals.add(ctx.ptr_ty);
+
+    let sub = ptr_sub(ctx.ptr_ty);
+    let mut body = builder.func_body();
+    body.local_get(base).local_get(len).binop(sub);
+    body.local_get(buf).local_get(len);
+    body.instr(ir::MemoryCopy {
+        src: ctx.memory,
+        dst: ctx.memory,
+    });
+    body.local_get(base).local_get(len).binop(sub);
+    body.global_set(ctx.sp);
+    body.local_get(base).global_set(ctx.base);
+    body.i32_const(1).global_set(ctx.suspended);
+    body.local_get(buf).local_get(len);
+    push_align(&mut body, ctx.ptr_ty);
+    body.call(ctx.free);
+
+    let helper = builder.finish(vec![base, len, buf], &mut module.funcs);
+    module.funcs.get_mut(helper).name = Some("__jspi_restore".to_string());
+    helper
+}
+
+fn ptr_sub(ty: ValType) -> BinaryOp {
+    match ty {
+        ValType::I64 => BinaryOp::I64Sub,
+        _ => BinaryOp::I32Sub,
+    }
+}
+
+fn push_align(body: &mut InstrSeqBuilder, ty: ValType) {
+    match ty {
+        ValType::I64 => body.i64_const(16),
+        _ => body.i32_const(16),
+    };
+}
+
 /// Wrap a `#[wasm_bindgen(suspending)]` import with the evacuate-on-suspend
 /// sequence:
 ///
 /// ```wat
 /// (func $wrapper (param ...) (result ...)
-///     (local $base ptr) (local $len ptr) (local $buf ptr)
+///     (local $base ptr) (local $len ptr) (local $buf ptr) (local $exn exnref)
 ///     ;; not inside a fiber: plain call (the engine reports misuse
 ///     ;; with SuspendError if the import actually tries to suspend)
 ///     global.get $__jspi_stack_base
@@ -284,37 +529,64 @@ fn wrap_export(module: &mut Module, inner: FunctionId, ctx: JspiContext) -> Func
 ///     memory.copy
 ///     local.get $base
 ///     global.set $__stack_pointer
-///     ;; suspend
-///     local.get <params>...
-///     call $import
-///     ;; resume: restore the region at its original address before any
-///     ;; other wasm instruction can observe the shadow stack
-///     local.get $base
-///     local.get $len
-///     i32.sub
-///     local.get $buf
-///     local.get $len
-///     memory.copy
-///     local.get $base
-///     local.get $len
-///     i32.sub
-///     global.set $__stack_pointer
-///     local.get $base
-///     global.set $__jspi_stack_base
-///     i32.const 1
-///     global.set $__jspi_suspended
-///     local.get $buf
-///     local.get $len
-///     i32.const 16
-///     call $__wbindgen_free)
+///     ;; the fiber's segment is leaving the stack: the innermost fiber on
+///     ;; the stack during the suspension is this fiber's `prev`, read from
+///     ;; the node the export wrapper pushed at [base - 16]
+///     (global.set $__jspi_stack_base (load [base - 16]))
+///     block $done (result ...)
+///         block $catch_all (result exnref)
+///             ;; only for the suspend intrinsic:
+///             block $rejected (result externref)
+///                 try_table (result ...) (catch $__wbindgen_jstag $rejected)
+///                                        (catch_all_ref $catch_all)
+///                     local.get <params>...
+///                     call $import        ;; the suspension point
+///                 end
+///                 ;; fulfilled: restore, record no rejection
+///                 local.set <results>...
+///                 local.get $base $len $buf
+///                 call $__jspi_restore
+///                 (i32.store rejected_addr (i32.const 0))
+///                 local.get <results>...
+///                 br $done
+///             end
+///             ;; rejected (intrinsic only): the reason is the result
+///             local.set <result>
+///             local.get $base $len $buf
+///             call $__jspi_restore
+///             (i32.store rejected_addr (i32.const 1))
+///             local.get <result>
+///             br $done
+///         end
+///         ;; any other exception: restore, then keep unwinding
+///         local.set $exn
+///         local.get $base $len $buf
+///         call $__jspi_restore
+///         local.get $exn
+///         throw_ref
+///     end)
 /// ```
 ///
 /// `$base`, `$len` and `$buf` are locals, which JSPI preserves across the
 /// suspension — no state survives in globals or JS.
-fn wrap_import(module: &mut Module, import: FunctionId, ctx: JspiContext) -> FunctionId {
+fn wrap_suspending(
+    module: &mut Module,
+    import: FunctionId,
+    ctx: JspiContext,
+    restore: FunctionId,
+    rejection: Option<Rejection>,
+) -> FunctionId {
     let ty = module.types.get(module.funcs.get(import).ty());
     let params = ty.params().to_vec();
     let results = ty.results().to_vec();
+
+    let results_ty: ir::InstrSeqType = match results.len() {
+        0 => ir::InstrSeqType::Simple(None),
+        1 => ir::InstrSeqType::Simple(Some(results[0])),
+        _ => module.types.add(&[], &results).into(),
+    };
+    let exnref_ty: ir::InstrSeqType = ValType::Ref(RefType::EXNREF).into();
+    let externref_ty: ir::InstrSeqType = ValType::Ref(RefType::EXTERNREF).into();
 
     let mut builder = FunctionBuilder::new(&mut module.types, &params, &results);
     let param_locals: Vec<_> = params.iter().map(|ty| module.locals.add(*ty)).collect();
@@ -322,24 +594,111 @@ fn wrap_import(module: &mut Module, import: FunctionId, ctx: JspiContext) -> Fun
     let base = module.locals.add(ctx.ptr_ty);
     let len = module.locals.add(ctx.ptr_ty);
     let buf = module.locals.add(ctx.ptr_ty);
+    let exn = module.locals.add(ValType::Ref(RefType::EXNREF));
 
-    let (sub, eqz) = match ctx.ptr_ty {
-        ValType::I64 => (BinaryOp::I64Sub, UnaryOp::I64Eqz),
-        _ => (BinaryOp::I32Sub, UnaryOp::I32Eqz),
+    let eqz = match ctx.ptr_ty {
+        ValType::I64 => UnaryOp::I64Eqz,
+        _ => UnaryOp::I32Eqz,
     };
-    let align_const = |body: &mut InstrSeqBuilder| {
+    let sub = ptr_sub(ctx.ptr_ty);
+
+    let call_restore = |seq: &mut InstrSeqBuilder| {
+        seq.local_get(base).local_get(len).local_get(buf);
+        seq.call(restore);
+    };
+    let stash_results = |seq: &mut InstrSeqBuilder| {
+        for local in result_locals.iter().rev() {
+            seq.local_set(*local);
+        }
+    };
+    let unstash_results = |seq: &mut InstrSeqBuilder| {
+        for local in &result_locals {
+            seq.local_get(*local);
+        }
+    };
+    let store_rejected = |seq: &mut InstrSeqBuilder, rejection: Rejection, value: i32| {
         match ctx.ptr_ty {
-            ValType::I64 => body.i64_const(16),
-            _ => body.i32_const(16),
+            ValType::I64 => seq.i64_const(rejection.addr as i64),
+            _ => seq.i32_const(rejection.addr as i32),
         };
+        seq.i32_const(value);
+        seq.store(
+            ctx.memory,
+            ir::StoreKind::I32 { atomic: false },
+            MemArg {
+                align: 4,
+                offset: 0,
+            },
+        );
     };
-    let memory_copy = ir::MemoryCopy {
-        src: ctx.memory,
-        dst: ctx.memory,
-    };
+
+    // Pre-allocate the block sequences so labels can reference each other.
+    let try_seq = builder.dangling_instr_seq(results_ty).id();
+    let rejected_seq = rejection.map(|_| builder.dangling_instr_seq(externref_ty).id());
+    let catch_all_seq = builder.dangling_instr_seq(exnref_ty).id();
+    let done_seq = builder.dangling_instr_seq(results_ty).id();
+
+    // The suspension point.
+    {
+        let mut seq = builder.instr_seq(try_seq);
+        for local in &param_locals {
+            seq.local_get(*local);
+        }
+        seq.call(import);
+    }
+
+    // Innermost block: the try_table and the fulfilled path.
+    let innermost = rejected_seq.unwrap_or(catch_all_seq);
+    {
+        let mut catches = Vec::new();
+        if let (Some(rejection), Some(rejected_seq)) = (rejection, rejected_seq) {
+            catches.push(ir::TryTableCatch::Catch {
+                tag: rejection.js_tag,
+                label: rejected_seq,
+            });
+        }
+        catches.push(ir::TryTableCatch::CatchAllRef {
+            label: catch_all_seq,
+        });
+        let mut seq = builder.instr_seq(innermost);
+        seq.instr(ir::TryTable {
+            seq: try_seq,
+            catches,
+        });
+        // Fulfilled: results flow out of the try_table.
+        stash_results(&mut seq);
+        call_restore(&mut seq);
+        if let Some(rejection) = rejection {
+            store_rejected(&mut seq, rejection, 0);
+        }
+        unstash_results(&mut seq);
+        seq.br(done_seq);
+    }
+
+    // Rejection path (intrinsic only): the caught reason is the result.
+    if let (Some(rejection), Some(rejected_seq)) = (rejection, rejected_seq) {
+        let mut seq = builder.instr_seq(catch_all_seq);
+        seq.instr(ir::Block { seq: rejected_seq });
+        stash_results(&mut seq);
+        call_restore(&mut seq);
+        store_rejected(&mut seq, rejection, 1);
+        unstash_results(&mut seq);
+        seq.br(done_seq);
+    }
+
+    // Catch-all path: restore the shadow stack, then keep unwinding.
+    {
+        let mut seq = builder.instr_seq(done_seq);
+        seq.instr(ir::Block { seq: catch_all_seq });
+        seq.local_set(exn);
+        call_restore(&mut seq);
+        seq.local_get(exn);
+        seq.instr(ir::ThrowRef {});
+    }
 
     let mut body = builder.func_body();
 
+    // Not inside a fiber: plain call.
     body.global_get(ctx.base).local_tee(base).unop(eqz).if_else(
         None,
         |then| {
@@ -356,42 +715,25 @@ fn wrap_import(module: &mut Module, import: FunctionId, ctx: JspiContext) -> Fun
     body.local_get(base).global_get(ctx.sp).binop(sub);
     body.local_set(len);
     body.local_get(len);
-    align_const(&mut body);
+    push_align(&mut body, ctx.ptr_ty);
     body.call(ctx.malloc).local_set(buf);
     body.local_get(buf).global_get(ctx.sp).local_get(len);
-    body.instr(memory_copy.clone());
+    body.instr(ir::MemoryCopy {
+        src: ctx.memory,
+        dst: ctx.memory,
+    });
     body.local_get(base).global_set(ctx.sp);
+    // The fiber's segment is leaving the stack: the innermost fiber on the
+    // stack during the suspension is this fiber's `prev`, read from the node
+    // the export wrapper pushed at [base - 16] (part of the evacuated
+    // region, so it is restored with the fiber on resume).
+    body.local_get(base);
+    push_align(&mut body, ctx.ptr_ty);
+    body.binop(sub);
+    load_ptr(&mut body, ctx);
+    body.global_set(ctx.base);
 
-    // The suspension point.
-    for local in &param_locals {
-        body.local_get(*local);
-    }
-    body.call(import);
-    for local in result_locals.iter().rev() {
-        body.local_set(*local);
-    }
-
-    // Restore, first thing on resume.
-    body.local_get(base).local_get(len).binop(sub);
-    body.local_get(buf).local_get(len);
-    body.instr(memory_copy);
-    body.local_get(base).local_get(len).binop(sub);
-    body.global_set(ctx.sp);
-    body.local_get(base).global_set(ctx.base);
-    // Mark the fiber as having suspended so its exit resets the SP to the
-    // empty-stack top (see `wrap_export`). This is unconditionally correct:
-    // JSPI performs promise resolution on the Suspending function's return
-    // value, so even a non-Promise return suspends for at least one
-    // microtask tick — reaching here always means the fiber suspended and
-    // its entry-time callers unwound.
-    body.i32_const(1).global_set(ctx.suspended);
-    body.local_get(buf).local_get(len);
-    align_const(&mut body);
-    body.call(ctx.free);
-
-    for local in &result_locals {
-        body.local_get(*local);
-    }
+    body.instr(ir::Block { seq: done_seq });
 
     let wrapper = builder.finish(param_locals, &mut module.funcs);
     let name = module.funcs.get(import).name.clone();
