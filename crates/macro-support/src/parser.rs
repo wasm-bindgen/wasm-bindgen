@@ -1651,48 +1651,19 @@ fn check_slice_to_array_arg(ty: &syn::Type, type_param_names: &[&Ident]) -> Resu
     let Some(slice) = crate::codegen::detect_slice_or_option_slice(ty) else {
         return Ok(());
     };
-    let elem_is_generic = !type_param_names.is_empty()
-        && crate::generics::uses_generic_params(&slice.elem_ty, &type_param_names.to_vec());
     if slice.is_mut {
-        let elem = type_to_string(&slice.elem_ty);
-        let shared = if slice.is_option {
-            format!("Option<&[{elem}]>")
-        } else {
-            format!("&[{elem}]")
-        };
-        // When the element type is also generic, don't suggest a fix that
-        // would just trade this error for the generic-element one below.
-        let fix = if elem_is_generic {
-            format!(
-                "Remove `slice_to_array` (from this argument, from this function, or from \
-                 the enclosing `extern \"C\"` block, wherever it is set) so the slice keeps \
-                 the writable typed-array view that `&mut` normally gets. Changing this \
-                 argument to `{shared}` on its own will not be enough: `slice_to_array` \
-                 also requires a concrete, non-generic slice element type, which `{elem}` \
-                 is not."
-            )
-        } else {
-            format!(
-                "Either change this argument to `{shared}`, if JS only needs to read \
-                 the elements, or remove `slice_to_array` (from this argument, from \
-                 this function, or from the enclosing `extern \"C\"` block, wherever it \
-                 is set) so the slice keeps the writable typed-array view that `&mut` \
-                 normally gets."
-            )
-        };
         return Err(Diagnostic::spanned_error(
             ty,
-            format!(
-                "`slice_to_array` cannot be applied to a `&mut` slice: it hands JS an \
-                 owned `Array` copied out of linear memory, so anything JS writes into \
-                 that `Array` is discarded rather than written back into the caller's \
-                 slice.\n\
-                 \n\
-                 {fix}"
-            ),
+            "`slice_to_array` cannot be applied to a `&mut` slice: JS receives an owned \
+             `Array`, so its writes are never written back into the caller's slice — use a \
+             shared slice if JS only needs to read the elements, or remove `slice_to_array` \
+             (it may be inherited from the function or the enclosing `extern \"C\"` block) \
+             to keep the writable typed-array view",
         ));
     }
-    if elem_is_generic {
+    if !type_param_names.is_empty()
+        && crate::generics::uses_generic_params(&slice.elem_ty, &type_param_names.to_vec())
+    {
         return Err(Diagnostic::spanned_error(
             ty,
             "`slice_to_array` requires a concrete slice element type (e.g. `&[u16]`); a type \
@@ -1701,33 +1672,6 @@ fn check_slice_to_array_arg(ty: &syn::Type, type_param_names: &[&Ident]) -> Resu
         ));
     }
     Ok(())
-}
-
-/// Renders a type for use in a diagnostic.
-///
-/// `ToTokens` stringification inserts a space between every token pair, which
-/// turns `Option<&[my::Elem]>` into `:: core :: option :: Option < & [my :: Elem] >`.
-/// This tightens up the punctuation that appears in type syntax so the suggestion
-/// is something the user can paste.
-fn type_to_string(ty: &syn::Type) -> String {
-    let mut s = quote::quote!(#ty).to_string();
-    for (from, to) in [
-        (" :: ", "::"),
-        (":: ", "::"),
-        (" ::", "::"),
-        (" <", "<"),
-        ("< ", "<"),
-        (" >", ">"),
-        ("& ", "&"),
-        (" ,", ","),
-        ("[ ", "["),
-        (" ]", "]"),
-    ] {
-        while s.contains(from) {
-            s = s.replace(from, to);
-        }
-    }
-    s
 }
 
 /// Extracts function arguments attributes.
@@ -1747,6 +1691,9 @@ fn extract_args_attrs(
     let type_param_names: Vec<&Ident> = sig.generics.type_params().map(|tp| &tp.ident).collect();
     let mut args_attrs = vec![];
     let mut seen_optional: Option<Span> = None;
+    // Collected rather than returned eagerly so that every offending
+    // `slice_to_array` argument in the signature is reported in one compile.
+    let mut slice_to_array_errors = vec![];
     for input in sig.inputs.iter_mut() {
         if let syn::FnArg::Typed(pat_type) = input {
             let attrs = BindgenAttrs::find(&mut pat_type.attrs)?;
@@ -1843,13 +1790,16 @@ fn extract_args_attrs(
                     || attrs.slice_to_array().is_some(),
             };
             if import_slice_to_array.is_some() && arg_attrs.slice_to_array {
-                check_slice_to_array_arg(&pat_type.ty, &type_param_names)?;
+                if let Err(diagnostic) = check_slice_to_array_arg(&pat_type.ty, &type_param_names) {
+                    slice_to_array_errors.push(diagnostic);
+                }
             }
             // throw error for any unused attrs
             attrs.enforce_used()?;
             args_attrs.push(arg_attrs);
         }
     }
+    Diagnostic::from_vec(slice_to_array_errors)?;
     Ok(args_attrs)
 }
 

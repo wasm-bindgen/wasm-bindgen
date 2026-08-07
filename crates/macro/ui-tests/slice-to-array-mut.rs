@@ -20,22 +20,24 @@ extern "C" {
     #[wasm_bindgen(slice_to_array)]
     fn per_fn(xs: &mut [u32]);
 
-    // The `Option`-wrapped form must be caught too, and its suggestion has to
-    // keep the `Option`.
+    // The `Option`-wrapped form must be caught too.
     #[wasm_bindgen(slice_to_array)]
     fn optional(xs: Option<&mut [f64]>);
 
     // A shared slice alongside a mutable one: only the mutable argument is
-    // rejected, and the element type is reported from the argument rather than
-    // guessed.
+    // rejected.
     #[wasm_bindgen(slice_to_array)]
     fn mixed(readable: &[u8], writable: &mut [u8]);
 
+    // Two offending arguments in one signature: both are reported in a
+    // single compile rather than aborting at the first.
+    #[wasm_bindgen(slice_to_array)]
+    fn two_muts(a: &mut [u8], b: &mut [u16]);
+
     // Doubly invalid: the slice is `&mut` *and* its element type is a type
     // parameter (see `slice-to-array-generic-elem.rs` for that restriction on
-    // its own). The `&mut`-slice check runs first and must not suggest a fix
-    // ("change to `&[T]`") that would just trade this error for the other one
-    // on the next compile.
+    // its own). Only the `&mut`-slice error is reported; the generic-element
+    // one surfaces on the next compile once the `&mut` is fixed.
     #[wasm_bindgen(slice_to_array)]
     fn generic_and_mut<T>(xs: &mut [T]);
 }

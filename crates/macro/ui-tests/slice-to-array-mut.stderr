@@ -1,47 +1,47 @@
-error: `slice_to_array` cannot be applied to a `&mut` slice: it hands JS an owned `Array` copied out of linear memory, so anything JS writes into that `Array` is discarded rather than written back into the caller's slice.
-
-       Either change this argument to `&[u16]`, if JS only needs to read the elements, or remove `slice_to_array` (from this argument, from this function, or from the enclosing `extern "C"` block, wherever it is set) so the slice keeps the writable typed-array view that `&mut` normally gets.
+error: `slice_to_array` cannot be applied to a `&mut` slice: JS receives an owned `Array`, so its writes are never written back into the caller's slice — use a shared slice if JS only needs to read the elements, or remove `slice_to_array` (it may be inherited from the function or the enclosing `extern "C"` block) to keep the writable typed-array view
   --> ui-tests/slice-to-array-mut.rs:17:51
    |
 17 |     fn direct(#[wasm_bindgen(slice_to_array)] xs: &mut [u16]);
    |                                                   ^^^^^^^^^^
 
-error: `slice_to_array` cannot be applied to a `&mut` slice: it hands JS an owned `Array` copied out of linear memory, so anything JS writes into that `Array` is discarded rather than written back into the caller's slice.
-
-       Either change this argument to `&[u32]`, if JS only needs to read the elements, or remove `slice_to_array` (from this argument, from this function, or from the enclosing `extern "C"` block, wherever it is set) so the slice keeps the writable typed-array view that `&mut` normally gets.
+error: `slice_to_array` cannot be applied to a `&mut` slice: JS receives an owned `Array`, so its writes are never written back into the caller's slice — use a shared slice if JS only needs to read the elements, or remove `slice_to_array` (it may be inherited from the function or the enclosing `extern "C"` block) to keep the writable typed-array view
   --> ui-tests/slice-to-array-mut.rs:21:19
    |
 21 |     fn per_fn(xs: &mut [u32]);
    |                   ^^^^^^^^^^
 
-error: `slice_to_array` cannot be applied to a `&mut` slice: it hands JS an owned `Array` copied out of linear memory, so anything JS writes into that `Array` is discarded rather than written back into the caller's slice.
-
-       Either change this argument to `Option<&[f64]>`, if JS only needs to read the elements, or remove `slice_to_array` (from this argument, from this function, or from the enclosing `extern "C"` block, wherever it is set) so the slice keeps the writable typed-array view that `&mut` normally gets.
-  --> ui-tests/slice-to-array-mut.rs:26:21
+error: `slice_to_array` cannot be applied to a `&mut` slice: JS receives an owned `Array`, so its writes are never written back into the caller's slice — use a shared slice if JS only needs to read the elements, or remove `slice_to_array` (it may be inherited from the function or the enclosing `extern "C"` block) to keep the writable typed-array view
+  --> ui-tests/slice-to-array-mut.rs:25:21
    |
-26 |     fn optional(xs: Option<&mut [f64]>);
+25 |     fn optional(xs: Option<&mut [f64]>);
    |                     ^^^^^^^^^^^^^^^^^^
 
-error: `slice_to_array` cannot be applied to a `&mut` slice: it hands JS an owned `Array` copied out of linear memory, so anything JS writes into that `Array` is discarded rather than written back into the caller's slice.
-
-       Either change this argument to `&[u8]`, if JS only needs to read the elements, or remove `slice_to_array` (from this argument, from this function, or from the enclosing `extern "C"` block, wherever it is set) so the slice keeps the writable typed-array view that `&mut` normally gets.
-  --> ui-tests/slice-to-array-mut.rs:32:41
+error: `slice_to_array` cannot be applied to a `&mut` slice: JS receives an owned `Array`, so its writes are never written back into the caller's slice — use a shared slice if JS only needs to read the elements, or remove `slice_to_array` (it may be inherited from the function or the enclosing `extern "C"` block) to keep the writable typed-array view
+  --> ui-tests/slice-to-array-mut.rs:30:41
    |
-32 |     fn mixed(readable: &[u8], writable: &mut [u8]);
+30 |     fn mixed(readable: &[u8], writable: &mut [u8]);
    |                                         ^^^^^^^^^
 
-error: `slice_to_array` cannot be applied to a `&mut` slice: it hands JS an owned `Array` copied out of linear memory, so anything JS writes into that `Array` is discarded rather than written back into the caller's slice.
-
-       Remove `slice_to_array` (from this argument, from this function, or from the enclosing `extern "C"` block, wherever it is set) so the slice keeps the writable typed-array view that `&mut` normally gets. Changing this argument to `&[T]` on its own will not be enough: `slice_to_array` also requires a concrete, non-generic slice element type, which `T` is not.
-  --> ui-tests/slice-to-array-mut.rs:40:31
+error: `slice_to_array` cannot be applied to a `&mut` slice: JS receives an owned `Array`, so its writes are never written back into the caller's slice — use a shared slice if JS only needs to read the elements, or remove `slice_to_array` (it may be inherited from the function or the enclosing `extern "C"` block) to keep the writable typed-array view
+  --> ui-tests/slice-to-array-mut.rs:35:20
    |
-40 |     fn generic_and_mut<T>(xs: &mut [T]);
+35 |     fn two_muts(a: &mut [u8], b: &mut [u16]);
+   |                    ^^^^^^^^^
+
+error: `slice_to_array` cannot be applied to a `&mut` slice: JS receives an owned `Array`, so its writes are never written back into the caller's slice — use a shared slice if JS only needs to read the elements, or remove `slice_to_array` (it may be inherited from the function or the enclosing `extern "C"` block) to keep the writable typed-array view
+  --> ui-tests/slice-to-array-mut.rs:35:34
+   |
+35 |     fn two_muts(a: &mut [u8], b: &mut [u16]);
+   |                                  ^^^^^^^^^^
+
+error: `slice_to_array` cannot be applied to a `&mut` slice: JS receives an owned `Array`, so its writes are never written back into the caller's slice — use a shared slice if JS only needs to read the elements, or remove `slice_to_array` (it may be inherited from the function or the enclosing `extern "C"` block) to keep the writable typed-array view
+  --> ui-tests/slice-to-array-mut.rs:42:31
+   |
+42 |     fn generic_and_mut<T>(xs: &mut [T]);
    |                               ^^^^^^^^
 
-error: `slice_to_array` cannot be applied to a `&mut` slice: it hands JS an owned `Array` copied out of linear memory, so anything JS writes into that `Array` is discarded rather than written back into the caller's slice.
-
-       Either change this argument to `&[i32]`, if JS only needs to read the elements, or remove `slice_to_array` (from this argument, from this function, or from the enclosing `extern "C"` block, wherever it is set) so the slice keeps the writable typed-array view that `&mut` normally gets.
-  --> ui-tests/slice-to-array-mut.rs:48:22
+error: `slice_to_array` cannot be applied to a `&mut` slice: JS receives an owned `Array`, so its writes are never written back into the caller's slice — use a shared slice if JS only needs to read the elements, or remove `slice_to_array` (it may be inherited from the function or the enclosing `extern "C"` block) to keep the writable typed-array view
+  --> ui-tests/slice-to-array-mut.rs:50:22
    |
-48 |     fn per_block(xs: &mut [i32]);
+50 |     fn per_block(xs: &mut [i32]);
    |                      ^^^^^^^^^^
