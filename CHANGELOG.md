@@ -21,6 +21,10 @@
 
 ### Fixed
 
+* The `name` property of the JS error thrown for `panic=unwind` is now set from
+  a string literal instead of `PanicError.name`, so it survives minification.
+  [#5260](https://github.com/wasm-bindgen/wasm-bindgen/issues/5260)
+
 * Fixed Emscripten builds using pthreads failing to link.
   [#5254](https://github.com/wasm-bindgen/wasm-bindgen/pull/5254)
 
