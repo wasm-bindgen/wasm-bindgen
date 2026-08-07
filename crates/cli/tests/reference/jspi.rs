@@ -1,6 +1,5 @@
 // FLAGS: --target=bundler
 // FLAGS: --target=web
-// FLAGS: --target=bundler --jspi-stack-pages 4
 use wasm_bindgen::prelude::*;
 
 // ── Suspending imports ───────────────────────────────────────────────────────
@@ -9,8 +8,8 @@ use wasm_bindgen::prelude::*;
 extern "C" {
     /// A plain suspending import: the wasm fiber suspends until the JS
     /// function's returned Promise settles.  The generated glue wraps it with
-    /// `new WebAssembly.Suspending(...)` and saves/restores `__stack_pointer`
-    /// around the suspension.
+    /// `new WebAssembly.Suspending(...)`; shadow-stack save/restore is
+    /// instrumented into the wasm module itself.
     #[wasm_bindgen(suspending)]
     fn sleep(ms: u32);
 

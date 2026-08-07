@@ -2691,6 +2691,106 @@ fn emscripten_exports_hoisted_to_library_symbols() {
 }
 
 #[test]
+fn emscripten_jspi_codegen() {
+    // JSPI on the emscripten target uses exactly the same path as the other
+    // targets: the in-wasm shadow-stack instrumentation plus
+    // `WebAssembly.promising`/`WebAssembly.Suspending` in the JS glue — with
+    // no interaction with emscripten's own JSPI machinery. The emscripten
+    // specifics are purely about the JS library format: exports hoist as
+    // `async function` symbols, the promising cache is a library symbol, and
+    // the suspending import is rewrapped via `__postset` (a Suspending
+    // instance can't be stringified through the compile-time jsifier).
+    let mut project = Project::new("emscripten_jspi_codegen");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen::prelude::*;
+
+            #[wasm_bindgen]
+            extern "C" {
+                #[wasm_bindgen(suspending)]
+                fn sleep(ms: u32);
+            }
+
+            #[wasm_bindgen(jspi)]
+            pub fn do_work() {
+                sleep(100);
+            }
+
+            #[wasm_bindgen(jspi)]
+            pub fn compute() -> u32 {
+                sleep(1);
+                42
+            }
+        "#,
+    );
+
+    let built = project.build();
+    let mut module = ModuleConfig::new().parse_file(&built).unwrap();
+    module.customs.add(RawCustomSection {
+        name: "__wasm_bindgen_emscripten_marker".into(),
+        data: vec![1],
+    });
+    let emscripten_wasm = project.root.join("emscripten_input.wasm");
+    module.emit_wasm_file(&emscripten_wasm).unwrap();
+
+    let out_dir = project.root.join("pkg-emscripten");
+    fs::create_dir_all(&out_dir).unwrap();
+    wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
+        "wasm-bindgen".as_ref(),
+        "--out-dir".as_ref(),
+        out_dir.as_os_str(),
+        emscripten_wasm.as_os_str(),
+    ])
+    .unwrap();
+
+    let lib = fs::read_to_string(out_dir.join("library_bindgen.js")).unwrap();
+
+    // JSPI exports hoist as async library functions awaiting the promising
+    // call, with a lazily-initialized promising cache as a library symbol.
+    assert!(
+        lib.contains("$do_work: async function do_work("),
+        "do_work should hoist as an async library function:\n{lib}"
+    );
+    assert!(
+        lib.contains("$compute: async function compute("),
+        "compute should hoist as an async library function:\n{lib}"
+    );
+    assert!(
+        lib.contains("WebAssembly.promising(wasmExports['do_work'])"),
+        "do_work should call through WebAssembly.promising:\n{lib}"
+    );
+    assert!(
+        lib.contains("$__wbg_jspi_do_work: \"undefined\""),
+        "the promising cache should be a library symbol:\n{lib}"
+    );
+
+    // The suspending import stays a plain library function and is rewrapped
+    // with `WebAssembly.Suspending` via its `__postset`.
+    let suspend_postset = lib
+        .lines()
+        .find(|l| l.contains("__postset") && l.contains("WebAssembly.Suspending"))
+        .unwrap_or_else(|| panic!("missing Suspending __postset:\n{lib}"));
+    assert!(
+        suspend_postset.contains("__wbg_sleep_"),
+        "the Suspending postset should target the sleep import:\n{lib}"
+    );
+
+    // The in-wasm instrumentation ran: the fiber base global exists and the
+    // jspi exports are wired to their wrappers.
+    let out_module = ModuleConfig::new()
+        .parse_file(out_dir.join("emscripten_input_bg.wasm"))
+        .unwrap();
+    assert!(
+        out_module
+            .globals
+            .iter()
+            .any(|g| g.name.as_deref() == Some("__jspi_stack_base")),
+        "output wasm should contain the __jspi_stack_base global"
+    );
+}
+
+#[test]
 fn emscripten_user_imports_are_prefixed() {
     // User module imports land in the `--extern-pre-js` sidecar at module top
     // level alongside emcc's runtime, and the imported names come verbatim from
@@ -3057,13 +3157,34 @@ const JSPI_LIB_RS: &str = r#"
 
     // Panic AFTER a suspend/resume, with a `DropGuard` live across the suspend.
     // Exercises unwind starting from a post-switch native stack with the shadow
-    // SP freshly restored by the suspending wrapper's `finally`.
+    // stack freshly restored by the in-wasm suspending wrapper.
     #[wasm_bindgen(jspi)]
     pub fn panic_after_resume() {
         let _g = DropGuard;
         let p = Promise::resolve(&JsValue::UNDEFINED);
         block_on_promise(&p).unwrap_throw();
         panic!("boom after resume");
+    }
+
+    // Returns the address of a shadow-stack local, approximating the empty-
+    // stack SP. Used to detect shadow-stack leaks across fiber completions.
+    #[wasm_bindgen]
+    pub fn sp_probe() -> u32 {
+        let buf = [0u8; 16];
+        core::hint::black_box(&buf) as *const _ as u32
+    }
+
+    // Plain sync export holding a live 4 KiB shadow-stack frame while calling
+    // back into JS, so a promising export started by `f` enters with a shadow-
+    // stack offset below the true stack top. When that fiber suspends, this
+    // frame unwinds; on the fiber's completion the SP must be reset to the
+    // stack top, not the entry offset, or the 4 KiB is leaked forever.
+    #[wasm_bindgen]
+    pub fn call_nested(f: &js_sys::Function) {
+        let buf = [0u8; 4096];
+        let _ = core::hint::black_box(&buf);
+        f.call0(&JsValue::NULL).unwrap_throw();
+        let _ = core::hint::black_box(&buf);
     }
 "#;
 
@@ -3208,6 +3329,17 @@ describe('jspi runtime', () => {
             assert.match(String(e), /SuspendError|promising/);
         }
         assert.ok(threw, 'misuse_suspend should have thrown');
+    });
+
+    it('resets the SP to the stack top when a fiber entered over live frames completes', async () => {
+        const before = wasm.sp_probe();
+        // Start a fiber from inside a sync export holding a live 4 KiB shadow
+        // frame. The fiber suspends; call_nested's frame unwinds while it is
+        // pending; on completion the SP must return to the true stack top.
+        let pending;
+        wasm.call_nested(() => { pending = wasm.do_sleep(); });
+        assert.strictEqual(await pending, 42);
+        assert.strictEqual(wasm.sp_probe(), before, 'shadow stack leaked across fiber completion');
     });
 });
 "#,

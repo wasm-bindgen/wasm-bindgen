@@ -5,19 +5,8 @@
  * @returns {Promise<number>}
  */
 export async function compute() {
-    if (__jspi_sync_sp === undefined) __jspi_sync_sp = wasm.__stack_pointer.value;
-    else wasm.__stack_pointer.value = __jspi_sync_sp;
-    const __jspi_stack = __jspi_stack_alloc();
-    __jspi_active_floor = __jspi_stack + __jspi_guard_size;
-    wasm.__stack_pointer.value = __jspi_stack + __jspi_stack_size;
-    try {
-        const ret = await (__wbg_jspi_compute ??= WebAssembly.promising(wasm.compute))();
-        return ret >>> 0;
-    } finally {
-        wasm.__stack_pointer.value = __jspi_sync_sp;
-        __jspi_stack_free(__jspi_stack);
-        __jspi_active_floor = 0;
-    }
+    const ret = await (__wbg_jspi_compute ??= WebAssembly.promising(wasm.compute))();
+    return ret >>> 0;
 }
 
 /**
@@ -25,34 +14,20 @@ export async function compute() {
  * TypeScript signature becomes `(): Promise<void>`.
  * @returns {Promise<void>}
  */
-export function do_work() {
-    if (__jspi_sync_sp === undefined) __jspi_sync_sp = wasm.__stack_pointer.value;
-    else wasm.__stack_pointer.value = __jspi_sync_sp;
-    const __jspi_stack = __jspi_stack_alloc();
-    __jspi_active_floor = __jspi_stack + __jspi_guard_size;
-    wasm.__stack_pointer.value = __jspi_stack + __jspi_stack_size;
-    return (__wbg_jspi_do_work ??= WebAssembly.promising(wasm.do_work))().finally(() => { wasm.__stack_pointer.value = __jspi_sync_sp; __jspi_stack_free(__jspi_stack); __jspi_active_floor = 0; });
+export async function do_work() {
+    await (__wbg_jspi_do_work ??= WebAssembly.promising(wasm.do_work))();
 }
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,
-        __wbg_fetch_number_65eabd7e4b01732a: ((__inner) => new WebAssembly.Suspending(async function(...args) {
-            const __sp = wasm.__stack_pointer.value;
-            const __floor = __jspi_active_floor;
-            if (__sp <= __floor) throw new RangeError('JSPI fiber stack overflow');
-            try { return await __inner(...args); }
-            finally { wasm.__stack_pointer.value = __sp; __jspi_active_floor = __floor; }
-        }))(function() {
+        __wbg___wbindgen_throw_344f42d3211c4765: function(arg0, arg1) {
+            throw new Error(getStringFromWasm0(arg0, arg1));
+        },
+        __wbg_fetch_number_65eabd7e4b01732a: new WebAssembly.Suspending(function() {
             const ret = fetch_number();
             return ret;
         }),
-        __wbg_sleep_319b371bcbeaac51: ((__inner) => new WebAssembly.Suspending(async function(...args) {
-            const __sp = wasm.__stack_pointer.value;
-            const __floor = __jspi_active_floor;
-            if (__sp <= __floor) throw new RangeError('JSPI fiber stack overflow');
-            try { return await __inner(...args); }
-            finally { wasm.__stack_pointer.value = __sp; __jspi_active_floor = __floor; }
-        }))(function(arg0) {
+        __wbg_sleep_319b371bcbeaac51: new WebAssembly.Suspending(function(arg0) {
             return sleep(arg0 >>> 0);
         }),
         __wbindgen_init_externref_table: function() {
@@ -73,38 +48,55 @@ function __wbg_get_imports() {
 
 let __wbg_jspi_compute;
 
-
 let __wbg_jspi_do_work;
 
-let __jspi_sync_sp;
-let __jspi_active_floor = 0;
-const __jspi_stack_size = 65536;
-const __jspi_guard_size = 8192;
-const __jspi_stack_pool = [];
-function __jspi_stack_alloc() {
-    if (__jspi_stack_pool.length > 0) return __jspi_stack_pool.pop();
-    const ptr = wasm.memory.grow(1);
-    if (ptr === -1) throw new RangeError('out of memory allocating JSPI fiber stack');
-    return ptr * 65536;
+function getStringFromWasm0(ptr, len) {
+    return decodeText(ptr >>> 0, len);
 }
-function __jspi_stack_free(ptr) { __jspi_stack_pool.push(ptr); }
+
+let cachedUint8ArrayMemory0 = null;
+function getUint8ArrayMemory0() {
+    if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.byteLength === 0) {
+        cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
+    }
+    return cachedUint8ArrayMemory0;
+}
+
+let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+cachedTextDecoder.decode();
+const MAX_SAFARI_DECODE_BYTES = 2146435072;
+let numBytesDecoded = 0;
+function decodeText(ptr, len) {
+    numBytesDecoded += len;
+    if (numBytesDecoded >= MAX_SAFARI_DECODE_BYTES) {
+        cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+        cachedTextDecoder.decode();
+        numBytesDecoded = len;
+    }
+    return cachedTextDecoder.decode(getUint8ArrayMemory0().subarray(ptr, ptr + len));
+}
 
 let wasmModule, wasmInstance, wasm;
 function __wbg_finalize_init(instance, module) {
     wasmInstance = instance;
     wasm = instance.exports;
     wasmModule = module;
+    cachedUint8ArrayMemory0 = null;
     wasm.__wbindgen_start();
     return wasm;
 }
 
 async function __wbg_load(module, imports) {
     if (typeof Response === 'function' && module instanceof Response) {
+        if (!module.ok) {
+            throw new Error(`failed to fetch Wasm: ${module.status} ${module.statusText} fetching '${module.url}'`);
+        }
+
         if (typeof WebAssembly.instantiateStreaming === 'function') {
             try {
                 return await WebAssembly.instantiateStreaming(module, imports);
             } catch (e) {
-                const validResponse = module.ok && expectedResponseType(module.type);
+                const validResponse = expectedResponseType(module.type);
 
                 if (validResponse && module.headers.get('Content-Type') !== 'application/wasm') {
                     console.warn("`WebAssembly.instantiateStreaming` failed because your server does not serve Wasm with `application/wasm` MIME type. Falling back to `WebAssembly.instantiate` which is slower. Original error:\n", e);

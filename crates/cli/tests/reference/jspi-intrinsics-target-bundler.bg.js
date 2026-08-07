@@ -3,19 +3,8 @@
  * @returns {Promise<any>}
  */
 export async function drive(promise) {
-    if (__jspi_sync_sp === undefined) __jspi_sync_sp = wasm.__stack_pointer.value;
-    else wasm.__stack_pointer.value = __jspi_sync_sp;
-    const __jspi_stack = __jspi_stack_alloc();
-    __jspi_active_floor = __jspi_stack + __jspi_guard_size;
-    wasm.__stack_pointer.value = __jspi_stack + __jspi_stack_size;
-    try {
-        const ret = await (__wbg_jspi_drive ??= WebAssembly.promising(wasm.drive))(promise);
-        return ret;
-    } finally {
-        wasm.__stack_pointer.value = __jspi_sync_sp;
-        __jspi_stack_free(__jspi_stack);
-        __jspi_active_floor = 0;
-    }
+    const ret = await (__wbg_jspi_drive ??= WebAssembly.promising(wasm.drive))(promise);
+    return ret;
 }
 export function __wbg___wbindgen_jspi_cleanup_485cc4f59821d0c3(arg0) {
     _jspiResolved[arg0 >>> 0] = undefined;
@@ -34,13 +23,7 @@ export function __wbg___wbindgen_jspi_set_pending_eb0737ebb950d87d(arg0, arg1) {
     _jspiPending[arg0 >>> 0] = arg1;
 }
 
-export const __wbg___wbindgen_jspi_suspend_a72c0d026c006e17 = ((__inner) => new WebAssembly.Suspending(async function(...args) {
-    const __sp = wasm.__stack_pointer.value;
-    const __floor = __jspi_active_floor;
-    if (__sp <= __floor) throw new RangeError('JSPI fiber stack overflow');
-    try { return await __inner(...args); }
-    finally { wasm.__stack_pointer.value = __sp; __jspi_active_floor = __floor; }
-}))(function(arg0) {
+export const __wbg___wbindgen_jspi_suspend_a72c0d026c006e17 = new WebAssembly.Suspending(function(arg0) {
     return _jspiPending[arg0 >>> 0].then(v => { _jspiRejected[arg0 >>> 0] = false; _jspiResolved[arg0 >>> 0] = v; }, e => { _jspiRejected[arg0 >>> 0] = true; _jspiResolved[arg0 >>> 0] = e; });
 });
 export function __wbg___wbindgen_jspi_waker_cleanup_e24dd9d90266971f(arg0) {
@@ -84,19 +67,6 @@ const _jspiPending = [];
 const _jspiResolved = [];
 const _jspiRejected = [];
 const _jspiWakerMap = new Map();
-
-let __jspi_sync_sp;
-let __jspi_active_floor = 0;
-const __jspi_stack_size = 65536;
-const __jspi_guard_size = 8192;
-const __jspi_stack_pool = [];
-function __jspi_stack_alloc() {
-    if (__jspi_stack_pool.length > 0) return __jspi_stack_pool.pop();
-    const ptr = wasm.memory.grow(1);
-    if (ptr === -1) throw new RangeError('out of memory allocating JSPI fiber stack');
-    return ptr * 65536;
-}
-function __jspi_stack_free(ptr) { __jspi_stack_pool.push(ptr); }
 
 let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
 cachedTextDecoder.decode();

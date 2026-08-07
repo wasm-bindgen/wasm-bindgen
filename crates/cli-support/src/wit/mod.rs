@@ -96,6 +96,14 @@ pub fn process(
     cx.find_exn_store();
     cx.find_destroy_closure();
 
+    // The JSPI transform (`transforms::jspi`) needs `__wbindgen_malloc`/
+    // `__wbindgen_free` to evacuate fiber shadow stacks around suspensions.
+    // Record them before `unexport_intrinsics` removes their exports.
+    if !cx.aux.imports_with_suspending.is_empty() || cx.aux.export_map.values().any(|e| e.jspi) {
+        cx.aux.jspi_malloc = Some(cx.malloc()?);
+        cx.aux.jspi_free = Some(cx.free()?);
+    }
+
     cx.verify()?;
 
     cx.unexport_intrinsics();

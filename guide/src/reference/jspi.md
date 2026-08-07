@@ -112,68 +112,33 @@ Use `block_on_promise` when you hold a bare `js_sys::Promise`; use `block_on`
 when you have a `Future` (e.g. returned from a `wasm_bindgen_futures`-based
 helper or assembled with Rust async combinators).
 
-## Shadow-stack size and `--jspi-stack-pages`
+## Shadow-stack management
 
-Each `#[wasm_bindgen(jspi)]` export allocates a fresh region of Wasm linear
-memory for its fiber's shadow stack. The size is:
+JSPI preserves wasm locals across a suspension, but not globals — and the
+LLVM shadow stack (where address-taken locals live) sits in linear memory
+behind the `__stack_pointer` global. wasm-bindgen makes suspension safe with
+an *evacuate-on-suspend* scheme instrumented directly into the wasm module:
 
-```
-stack_size = N × 64 KiB    (N = --jspi-stack-pages, default 1)
-```
+- Fibers run on the ordinary main shadow stack, at its full size (typically
+  1 MiB). There is no separate per-fiber stack, no fixed size limit to tune,
+  and no special overflow behavior — deep recursion behaves exactly as in
+  non-JSPI code.
+- Just before a fiber suspends, its live shadow-stack region is copied out to
+  a heap allocation and the stack pointer is reset, leaving the shadow stack
+  free for anything that runs while the fiber is suspended (other fibers,
+  synchronous calls, `spawn_local` tasks).
+- As the very first instructions after the fiber resumes, the region is copied
+  back to its original address and the stack pointer is restored — so all
+  interior pointers into the stack are valid again before any user code runs.
 
-Pass the flag to the `wasm-bindgen` CLI:
+Memory cost is proportional to the *live stack depth at each suspension*
+(usually small), is paid only when a suspension actually happens, and is
+returned to the Rust allocator on resume. A `#[wasm_bindgen(jspi)]` export
+that never suspends costs nothing beyond the `WebAssembly.promising` wrapper.
 
-```sh
-wasm-bindgen target/wasm32-unknown-unknown/release/my_module.wasm \
-    --out-dir pkg --target web \
-    --jspi-stack-pages 2
-```
-
-> **Overflow detection (guard band, not a guard page).** A true trapping guard
-> *page* is impossible in Wasm — no in-bounds linear-memory address can be made
-> to fault, and only the single region adjacent to address 0 traps on overflow.
-> Each fiber slot therefore reserves a small sacrificial band at its base. The
-> suspending-import wrapper reads the shadow-stack pointer at the fiber's
-> deepest point (just before it suspends) and, if it has descended into the
-> band, throws a `RangeError('JSPI fiber stack overflow')` *before* suspending
-> — so the export's `Promise` rejects instead of resuming a fiber that has
-> overrun its slot. This converts the common overflow case from silent
-> corruption into a clear error. It is not airtight: a single frame larger than
-> the band that never crosses the suspend checkpoint can still slip through, so
-> size `N` generously for deep call trees.
-
-> **Memory is fixed-size and never reclaimed.** Each concurrent fiber pins
-> `--jspi-stack-pages × 64 KiB` of linear memory for its lifetime. Freed slots
-> return to a JS free-list for re-use, but `memory.grow` is never undone — peak
-> memory is the high-water mark of concurrent fibers for the whole instance
-> lifetime. An application that briefly fans out to many concurrent fibers
-> keeps that memory reserved afterwards.
-
-### Choosing N
-
-| Situation | Recommended N |
-|-----------|---------------|
-| Shallow call trees, small locals (typical) | 1 (default) |
-| Moderate stack depth or medium-sized locals | 2–4 |
-| Deep recursion or large stack-allocated buffers | 8–16 |
-
-The default Wasm shadow stack is considerably larger than 64 KiB (typically
-1 MiB). Code migrated from non-JSPI Rust may overflow a 1-page fiber stack; the
-guard band turns the common case into a `RangeError`. If you hit one, double
-`N` and see whether the problem disappears.
-
-### Demonstrating overflow: the `deep_stack` example
-
-The `jspi` example ships a `deep_stack` export that allocates ~48 KiB per
-frame across two live frames (~96 KiB total) while suspended.
-
-| `--jspi-stack-pages` | Budget  | Outcome |
-|----------------------|---------|---------|
-| 1 (default)          | 64 KiB  | overflow → `RangeError` thrown by the guard band |
-| 2                    | 128 KiB | returns `49152` (correct) |
-
-Build and serve the example, then open `index.html`. Demo 3 reports whether the
-call returned the expected value or was rejected by the overflow guard.
+This scheme is target independent: on `--target emscripten` the same
+instrumentation operates against emscripten's stack pointer, with no
+interaction with (or requirement for) emscripten's own JSPI/Asyncify support.
 
 ## Full example — OPFS file system
 
