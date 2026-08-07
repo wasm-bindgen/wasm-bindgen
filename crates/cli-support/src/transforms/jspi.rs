@@ -300,27 +300,43 @@ fn const_zero(ty: ValType) -> ConstExpr {
 ///     local.set $prev_suspended
 ///     i32.const 0
 ///     global.set $__jspi_suspended
-///     local.get <params>...
-///     call $inner
-///     ;; if this fiber suspended, its entry-time callers unwound while it
-///     ;; was pending (resume only ever happens on an empty stack), so the
-///     ;; correct exit state is the empty-stack SP and no active fiber —
-///     ;; keeping the entry offset would permanently leak the region above
-///     ;; it, and `prev` refers to a context that no longer exists
-///     global.get $__jspi_suspended
-///     if
-///         global.get $__jspi_stack_top
-///         global.set $__stack_pointer
-///         i32.const 0 (ptr)
-///         global.set $__jspi_stack_base
-///     else
-///         local.get $base
-///         global.set $__stack_pointer
-///         local.get $prev
-///         global.set $__jspi_stack_base
-///     end
-///     local.get $prev_suspended
-///     global.set $__jspi_suspended)
+///     block $done (result ...)
+///         block $catch_all (result exnref)
+///             try_table (result ...) (catch_all_ref $catch_all)
+///                 local.get <params>...
+///                 call $inner
+///             end
+///             ;; if this fiber suspended, its entry-time callers unwound
+///             ;; while it was pending (resume only ever happens on an empty
+///             ;; stack), so the correct exit state is the empty-stack SP and
+///             ;; no active fiber — keeping the entry offset would
+///             ;; permanently leak the region above it, and `prev` refers to
+///             ;; a context that no longer exists
+///             global.get $__jspi_suspended
+///             if
+///                 global.get $__jspi_stack_top
+///                 global.set $__stack_pointer
+///                 i32.const 0 (ptr)
+///                 global.set $__jspi_stack_base
+///             else
+///                 local.get $base
+///                 global.set $__stack_pointer
+///                 local.get $prev
+///                 global.set $__jspi_stack_base
+///             end
+///             local.get $prev_suspended
+///             global.set $__jspi_suspended
+///             br $done
+///         end
+///         ;; exceptional completion (uncaught rejection, panic unwind, ...):
+///         ;; run the same exit-state logic so the fiber globals aren't left
+///         ;; stale, then keep unwinding — the exception becomes a rejection
+///         ;; of the promising call's promise
+///         local.set $exn
+///         <same exit-state logic>
+///         local.get $exn
+///         throw_ref
+///     end)
 /// ```
 ///
 /// This runs inside the fiber that `WebAssembly.promising` creates, so the
@@ -337,13 +353,80 @@ fn wrap_export(module: &mut Module, inner: FunctionId, ctx: JspiContext) -> Func
     let params = ty.params().to_vec();
     let results = ty.results().to_vec();
 
+    let results_ty: ir::InstrSeqType = match results.len() {
+        0 => ir::InstrSeqType::Simple(None),
+        1 => ir::InstrSeqType::Simple(Some(results[0])),
+        _ => module.types.add(&[], &results).into(),
+    };
+    let exnref_ty: ir::InstrSeqType = ValType::Ref(RefType::EXNREF).into();
+
     let mut builder = FunctionBuilder::new(&mut module.types, &params, &results);
     let param_locals: Vec<_> = params.iter().map(|ty| module.locals.add(*ty)).collect();
     let prev = module.locals.add(ctx.ptr_ty);
     let base = module.locals.add(ctx.ptr_ty);
     let prev_suspended = module.locals.add(ValType::I32);
+    let exn = module.locals.add(ValType::Ref(RefType::EXNREF));
 
     let sub = ptr_sub(ctx.ptr_ty);
+
+    // Fiber exit: if this fiber suspended, its entry-time context is gone
+    // (resume only ever happens on an empty stack), so reset to the
+    // empty-stack SP with no active fiber; otherwise pop the node and
+    // restore the enclosing fiber context.
+    let emit_exit = |seq: &mut InstrSeqBuilder| {
+        seq.global_get(ctx.suspended).if_else(
+            None,
+            |then| {
+                then.global_get(ctx.top).global_set(ctx.sp);
+                match ctx.ptr_ty {
+                    ValType::I64 => then.i64_const(0),
+                    _ => then.i32_const(0),
+                };
+                then.global_set(ctx.base);
+            },
+            |else_| {
+                else_.local_get(base).global_set(ctx.sp);
+                else_.local_get(prev).global_set(ctx.base);
+            },
+        );
+        seq.local_get(prev_suspended).global_set(ctx.suspended);
+    };
+
+    let try_seq = builder.dangling_instr_seq(results_ty).id();
+    let catch_seq = builder.dangling_instr_seq(exnref_ty).id();
+    let done_seq = builder.dangling_instr_seq(results_ty).id();
+
+    {
+        let mut seq = builder.instr_seq(try_seq);
+        for local in &param_locals {
+            seq.local_get(*local);
+        }
+        seq.call(inner);
+    }
+
+    {
+        let mut seq = builder.instr_seq(catch_seq);
+        seq.instr(ir::TryTable {
+            seq: try_seq,
+            catches: vec![ir::TryTableCatch::CatchAllRef { label: catch_seq }],
+        });
+        // Normal completion: results flow out of the try_table.
+        emit_exit(&mut seq);
+        seq.br(done_seq);
+    }
+
+    // Exceptional completion (an uncaught rejection, a panic under unwind,
+    // ...): run the same exit-state logic so the fiber globals aren't left
+    // stale, then keep unwinding — the exception becomes a rejection of the
+    // promising call's promise.
+    {
+        let mut seq = builder.instr_seq(done_seq);
+        seq.instr(ir::Block { seq: catch_seq });
+        seq.local_set(exn);
+        emit_exit(&mut seq);
+        seq.local_get(exn);
+        seq.instr(ir::ThrowRef {});
+    }
 
     let mut body = builder.func_body();
     body.global_get(ctx.base).local_set(prev);
@@ -358,26 +441,7 @@ fn wrap_export(module: &mut Module, inner: FunctionId, ctx: JspiContext) -> Func
     store_ptr(&mut body, ctx);
     body.global_get(ctx.suspended).local_set(prev_suspended);
     body.i32_const(0).global_set(ctx.suspended);
-    for local in &param_locals {
-        body.local_get(*local);
-    }
-    body.call(inner);
-    body.global_get(ctx.suspended).if_else(
-        None,
-        |then| {
-            then.global_get(ctx.top).global_set(ctx.sp);
-            match ctx.ptr_ty {
-                ValType::I64 => then.i64_const(0),
-                _ => then.i32_const(0),
-            };
-            then.global_set(ctx.base);
-        },
-        |else_| {
-            else_.local_get(base).global_set(ctx.sp);
-            else_.local_get(prev).global_set(ctx.base);
-        },
-    );
-    body.local_get(prev_suspended).global_set(ctx.suspended);
+    body.instr(ir::Block { seq: done_seq });
 
     let wrapper = builder.finish(param_locals, &mut module.funcs);
     let name = module.funcs.get(inner).name.clone();

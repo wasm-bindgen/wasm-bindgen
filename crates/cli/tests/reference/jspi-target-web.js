@@ -23,18 +23,30 @@ function __wbg_get_imports() {
         __wbg___wbindgen_throw_344f42d3211c4765: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
         },
-        __wbg_fetch_number_65eabd7e4b01732a: new WebAssembly.Suspending(function() {
+        __wbg_fetch_number_65eabd7e4b01732a: ((__inner) => new WebAssembly.Suspending(function(...args) {
+            try { return __inner.apply(this, args); }
+            catch (e) { return Promise.reject(e); }
+        }))(function() {
             const ret = fetch_number();
             return ret;
         }),
-        __wbg_fetch_text_048849ee5aceab72: new WebAssembly.Suspending(function() {
+        __wbg_fetch_text_048849ee5aceab72: ((__inner) => new WebAssembly.Suspending(function(...args) {
+            try { return __inner.apply(this, args); }
+            catch (e) { return Promise.reject(e); }
+        }))(function() {
             const ret = fetch_text();
             return ret;
         }),
-        __wbg_sleep_319b371bcbeaac51: new WebAssembly.Suspending(function(arg0) {
+        __wbg_sleep_319b371bcbeaac51: ((__inner) => new WebAssembly.Suspending(function(...args) {
+            try { return __inner.apply(this, args); }
+            catch (e) { return Promise.reject(e); }
+        }))(function(arg0) {
             return sleep(arg0 >>> 0);
         }),
-        __wbg_try_fetch_f9048591b2d6944b: new WebAssembly.Suspending(function() {
+        __wbg_try_fetch_f9048591b2d6944b: ((__inner) => new WebAssembly.Suspending(function(...args) {
+            try { return __inner.apply(this, args); }
+            catch (e) { return Promise.reject(e); }
+        }))(function() {
             const ret = try_fetch();
             return ret;
         }),

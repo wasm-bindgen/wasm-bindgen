@@ -7,7 +7,10 @@ export async function drive(promise) {
     return ret;
 }
 
-export const __wbg___wbindgen_jspi_suspend_747b367c12c10e32 = new WebAssembly.Suspending(function(arg0) {
+export const __wbg___wbindgen_jspi_suspend_747b367c12c10e32 = ((__inner) => new WebAssembly.Suspending(function(...args) {
+    try { return __inner.apply(this, args); }
+    catch (e) { return Promise.reject(e); }
+}))(function(arg0) {
     const ret = arg0;
     return ret;
 });
