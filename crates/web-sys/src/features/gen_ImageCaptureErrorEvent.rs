@@ -37,6 +37,15 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ImageCaptureErrorEvent`*"]
     pub fn new(type_: &str) -> Result<ImageCaptureErrorEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "ImageCaptureErrorEvent")]
+    #[doc = "The `new ImageCaptureErrorEvent(..)` constructor, creating a new instance of `ImageCaptureErrorEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ImageCaptureErrorEvent/ImageCaptureErrorEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ImageCaptureErrorEvent`*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+    ) -> Result<ImageCaptureErrorEvent, JsValue>;
     #[cfg(feature = "ImageCaptureErrorEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "ImageCaptureErrorEvent")]
     #[doc = "The `new ImageCaptureErrorEvent(..)` constructor, creating a new instance of `ImageCaptureErrorEvent`."]
@@ -46,6 +55,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ImageCaptureErrorEvent`, `ImageCaptureErrorEventInit`*"]
     pub fn new_with_image_capture_error_init_dict(
         type_: &str,
+        image_capture_error_init_dict: &ImageCaptureErrorEventInit,
+    ) -> Result<ImageCaptureErrorEvent, JsValue>;
+    #[cfg(feature = "ImageCaptureErrorEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "ImageCaptureErrorEvent")]
+    #[doc = "The `new ImageCaptureErrorEvent(..)` constructor, creating a new instance of `ImageCaptureErrorEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ImageCaptureErrorEvent/ImageCaptureErrorEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ImageCaptureErrorEvent`, `ImageCaptureErrorEventInit`*"]
+    pub fn new_with_js_string_and_image_capture_error_init_dict(
+        type_: &::js_sys::JsString,
         image_capture_error_init_dict: &ImageCaptureErrorEventInit,
     ) -> Result<ImageCaptureErrorEvent, JsValue>;
 }

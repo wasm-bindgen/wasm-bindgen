@@ -50,6 +50,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TransitionEvent`*"]
     pub fn new(type_: &str) -> Result<TransitionEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "TransitionEvent")]
+    #[doc = "The `new TransitionEvent(..)` constructor, creating a new instance of `TransitionEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TransitionEvent/TransitionEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TransitionEvent`*"]
+    pub fn new_with_js_string(type_: &::js_sys::JsString) -> Result<TransitionEvent, JsValue>;
     #[cfg(feature = "TransitionEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "TransitionEvent")]
     #[doc = "The `new TransitionEvent(..)` constructor, creating a new instance of `TransitionEvent`."]
@@ -59,6 +66,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `TransitionEvent`, `TransitionEventInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &TransitionEventInit,
+    ) -> Result<TransitionEvent, JsValue>;
+    #[cfg(feature = "TransitionEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "TransitionEvent")]
+    #[doc = "The `new TransitionEvent(..)` constructor, creating a new instance of `TransitionEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TransitionEvent/TransitionEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TransitionEvent`, `TransitionEventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &TransitionEventInit,
     ) -> Result<TransitionEvent, JsValue>;
 }

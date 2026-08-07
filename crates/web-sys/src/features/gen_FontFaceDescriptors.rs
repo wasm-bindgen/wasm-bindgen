@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
     #[wasm_bindgen(method, setter = "display")]
     pub fn set_display(this: &FontFaceDescriptors, val: &str);
+    #[doc = "Change the `display` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
+    #[wasm_bindgen(method, setter = "display")]
+    pub fn set_display_js_string(this: &FontFaceDescriptors, val: &::js_sys::JsString);
     #[doc = "Get the `featureSettings` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
     #[wasm_bindgen(method, setter = "featureSettings")]
     pub fn set_feature_settings(this: &FontFaceDescriptors, val: &str);
+    #[doc = "Change the `featureSettings` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
+    #[wasm_bindgen(method, setter = "featureSettings")]
+    pub fn set_feature_settings_js_string(this: &FontFaceDescriptors, val: &::js_sys::JsString);
     #[doc = "Get the `stretch` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
@@ -40,6 +50,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
     #[wasm_bindgen(method, setter = "stretch")]
     pub fn set_stretch(this: &FontFaceDescriptors, val: &str);
+    #[doc = "Change the `stretch` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
+    #[wasm_bindgen(method, setter = "stretch")]
+    pub fn set_stretch_js_string(this: &FontFaceDescriptors, val: &::js_sys::JsString);
     #[doc = "Get the `style` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
@@ -50,6 +65,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
     #[wasm_bindgen(method, setter = "style")]
     pub fn set_style(this: &FontFaceDescriptors, val: &str);
+    #[doc = "Change the `style` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
+    #[wasm_bindgen(method, setter = "style")]
+    pub fn set_style_js_string(this: &FontFaceDescriptors, val: &::js_sys::JsString);
     #[doc = "Get the `unicodeRange` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
@@ -60,6 +80,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
     #[wasm_bindgen(method, setter = "unicodeRange")]
     pub fn set_unicode_range(this: &FontFaceDescriptors, val: &str);
+    #[doc = "Change the `unicodeRange` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
+    #[wasm_bindgen(method, setter = "unicodeRange")]
+    pub fn set_unicode_range_js_string(this: &FontFaceDescriptors, val: &::js_sys::JsString);
     #[doc = "Get the `variant` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
@@ -70,6 +95,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
     #[wasm_bindgen(method, setter = "variant")]
     pub fn set_variant(this: &FontFaceDescriptors, val: &str);
+    #[doc = "Change the `variant` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
+    #[wasm_bindgen(method, setter = "variant")]
+    pub fn set_variant_js_string(this: &FontFaceDescriptors, val: &::js_sys::JsString);
     #[doc = "Get the `variationSettings` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
@@ -80,6 +110,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
     #[wasm_bindgen(method, setter = "variationSettings")]
     pub fn set_variation_settings(this: &FontFaceDescriptors, val: &str);
+    #[doc = "Change the `variationSettings` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
+    #[wasm_bindgen(method, setter = "variationSettings")]
+    pub fn set_variation_settings_js_string(this: &FontFaceDescriptors, val: &::js_sys::JsString);
     #[doc = "Get the `weight` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
@@ -90,6 +125,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
     #[wasm_bindgen(method, setter = "weight")]
     pub fn set_weight(this: &FontFaceDescriptors, val: &str);
+    #[doc = "Change the `weight` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
+    #[wasm_bindgen(method, setter = "weight")]
+    pub fn set_weight_js_string(this: &FontFaceDescriptors, val: &::js_sys::JsString);
 }
 impl FontFaceDescriptors {
     #[doc = "Construct a new `FontFaceDescriptors`."]

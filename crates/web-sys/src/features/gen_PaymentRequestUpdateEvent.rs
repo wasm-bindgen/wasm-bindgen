@@ -24,6 +24,15 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PaymentRequestUpdateEvent`*"]
     pub fn new(type_: &str) -> Result<PaymentRequestUpdateEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "PaymentRequestUpdateEvent")]
+    #[doc = "The `new PaymentRequestUpdateEvent(..)` constructor, creating a new instance of `PaymentRequestUpdateEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentRequestUpdateEvent/PaymentRequestUpdateEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PaymentRequestUpdateEvent`*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+    ) -> Result<PaymentRequestUpdateEvent, JsValue>;
     #[cfg(feature = "PaymentRequestUpdateEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "PaymentRequestUpdateEvent")]
     #[doc = "The `new PaymentRequestUpdateEvent(..)` constructor, creating a new instance of `PaymentRequestUpdateEvent`."]
@@ -33,6 +42,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PaymentRequestUpdateEvent`, `PaymentRequestUpdateEventInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &PaymentRequestUpdateEventInit,
+    ) -> Result<PaymentRequestUpdateEvent, JsValue>;
+    #[cfg(feature = "PaymentRequestUpdateEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "PaymentRequestUpdateEvent")]
+    #[doc = "The `new PaymentRequestUpdateEvent(..)` constructor, creating a new instance of `PaymentRequestUpdateEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentRequestUpdateEvent/PaymentRequestUpdateEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PaymentRequestUpdateEvent`, `PaymentRequestUpdateEventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &PaymentRequestUpdateEventInit,
     ) -> Result<PaymentRequestUpdateEvent, JsValue>;
     #[wasm_bindgen(

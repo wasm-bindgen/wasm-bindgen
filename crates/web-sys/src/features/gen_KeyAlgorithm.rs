@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `KeyAlgorithm`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &KeyAlgorithm, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyAlgorithm`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &KeyAlgorithm, val: &::js_sys::JsString);
 }
 impl KeyAlgorithm {
     #[doc = "Construct a new `KeyAlgorithm`."]

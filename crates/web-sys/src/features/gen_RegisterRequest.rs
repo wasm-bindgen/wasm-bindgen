@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RegisterRequest`*"]
     #[wasm_bindgen(method, setter = "challenge")]
     pub fn set_challenge(this: &RegisterRequest, val: &str);
+    #[doc = "Change the `challenge` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegisterRequest`*"]
+    #[wasm_bindgen(method, setter = "challenge")]
+    pub fn set_challenge_js_string(this: &RegisterRequest, val: &::js_sys::JsString);
     #[doc = "Get the `version` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RegisterRequest`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RegisterRequest`*"]
     #[wasm_bindgen(method, setter = "version")]
     pub fn set_version(this: &RegisterRequest, val: &str);
+    #[doc = "Change the `version` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegisterRequest`*"]
+    #[wasm_bindgen(method, setter = "version")]
+    pub fn set_version_js_string(this: &RegisterRequest, val: &::js_sys::JsString);
 }
 impl RegisterRequest {
     #[doc = "Construct a new `RegisterRequest`."]

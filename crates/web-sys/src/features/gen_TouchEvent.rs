@@ -77,6 +77,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TouchEvent`*"]
     pub fn new(type_: &str) -> Result<TouchEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "TouchEvent")]
+    #[doc = "The `new TouchEvent(..)` constructor, creating a new instance of `TouchEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/TouchEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TouchEvent`*"]
+    pub fn new_with_js_string(type_: &::js_sys::JsString) -> Result<TouchEvent, JsValue>;
     #[cfg(feature = "TouchEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "TouchEvent")]
     #[doc = "The `new TouchEvent(..)` constructor, creating a new instance of `TouchEvent`."]
@@ -86,6 +93,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `TouchEvent`, `TouchEventInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &TouchEventInit,
+    ) -> Result<TouchEvent, JsValue>;
+    #[cfg(feature = "TouchEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "TouchEvent")]
+    #[doc = "The `new TouchEvent(..)` constructor, creating a new instance of `TouchEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/TouchEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TouchEvent`, `TouchEventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &TouchEventInit,
     ) -> Result<TouchEvent, JsValue>;
     #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
@@ -101,7 +119,25 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TouchEvent`*"]
+    pub fn init_touch_event_with_js_string(this: &TouchEvent, type_: &::js_sys::JsString);
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
+    #[doc = "The `initTouchEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TouchEvent`*"]
     pub fn init_touch_event_with_can_bubble(this: &TouchEvent, type_: &str, can_bubble: bool);
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
+    #[doc = "The `initTouchEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TouchEvent`*"]
+    pub fn init_touch_event_with_js_string_and_can_bubble(
+        this: &TouchEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+    );
     #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
     #[doc = "The `initTouchEvent()` method."]
     #[doc = ""]
@@ -111,6 +147,18 @@ extern "C" {
     pub fn init_touch_event_with_can_bubble_and_cancelable(
         this: &TouchEvent,
         type_: &str,
+        can_bubble: bool,
+        cancelable: bool,
+    );
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
+    #[doc = "The `initTouchEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TouchEvent`*"]
+    pub fn init_touch_event_with_js_string_and_can_bubble_and_cancelable(
+        this: &TouchEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
         cancelable: bool,
     );
@@ -135,9 +183,38 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TouchEvent`, `Window`*"]
+    pub fn init_touch_event_with_js_string_and_can_bubble_and_cancelable_and_view(
+        this: &TouchEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
+    #[doc = "The `initTouchEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TouchEvent`, `Window`*"]
     pub fn init_touch_event_with_can_bubble_and_cancelable_and_view_and_detail(
         this: &TouchEvent,
         type_: &str,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
+    #[doc = "The `initTouchEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TouchEvent`, `Window`*"]
+    pub fn init_touch_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail(
+        this: &TouchEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
         cancelable: bool,
         view: Option<&Window>,
@@ -166,9 +243,42 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TouchEvent`, `Window`*"]
+    pub fn init_touch_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail_and_ctrl_key(
+        this: &TouchEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        ctrl_key: bool,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
+    #[doc = "The `initTouchEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TouchEvent`, `Window`*"]
     pub fn init_touch_event_with_can_bubble_and_cancelable_and_view_and_detail_and_ctrl_key_and_alt_key(
         this: &TouchEvent,
         type_: &str,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        ctrl_key: bool,
+        alt_key: bool,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
+    #[doc = "The `initTouchEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TouchEvent`, `Window`*"]
+    pub fn init_touch_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail_and_ctrl_key_and_alt_key(
+        this: &TouchEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
         cancelable: bool,
         view: Option<&Window>,
@@ -201,9 +311,46 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TouchEvent`, `Window`*"]
+    pub fn init_touch_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail_and_ctrl_key_and_alt_key_and_shift_key(
+        this: &TouchEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        ctrl_key: bool,
+        alt_key: bool,
+        shift_key: bool,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
+    #[doc = "The `initTouchEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TouchEvent`, `Window`*"]
     pub fn init_touch_event_with_can_bubble_and_cancelable_and_view_and_detail_and_ctrl_key_and_alt_key_and_shift_key_and_meta_key(
         this: &TouchEvent,
         type_: &str,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        ctrl_key: bool,
+        alt_key: bool,
+        shift_key: bool,
+        meta_key: bool,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
+    #[doc = "The `initTouchEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TouchEvent`, `Window`*"]
+    pub fn init_touch_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail_and_ctrl_key_and_alt_key_and_shift_key_and_meta_key(
+        this: &TouchEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
         cancelable: bool,
         view: Option<&Window>,
@@ -223,6 +370,26 @@ extern "C" {
     pub fn init_touch_event_with_can_bubble_and_cancelable_and_view_and_detail_and_ctrl_key_and_alt_key_and_shift_key_and_meta_key_and_touches(
         this: &TouchEvent,
         type_: &str,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        ctrl_key: bool,
+        alt_key: bool,
+        shift_key: bool,
+        meta_key: bool,
+        touches: Option<&TouchList>,
+    );
+    #[cfg(all(feature = "TouchList", feature = "Window",))]
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
+    #[doc = "The `initTouchEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TouchEvent`, `TouchList`, `Window`*"]
+    pub fn init_touch_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail_and_ctrl_key_and_alt_key_and_shift_key_and_meta_key_and_touches(
+        this: &TouchEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
         cancelable: bool,
         view: Option<&Window>,
@@ -261,9 +428,52 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TouchEvent`, `TouchList`, `Window`*"]
+    pub fn init_touch_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail_and_ctrl_key_and_alt_key_and_shift_key_and_meta_key_and_touches_and_target_touches(
+        this: &TouchEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        ctrl_key: bool,
+        alt_key: bool,
+        shift_key: bool,
+        meta_key: bool,
+        touches: Option<&TouchList>,
+        target_touches: Option<&TouchList>,
+    );
+    #[cfg(all(feature = "TouchList", feature = "Window",))]
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
+    #[doc = "The `initTouchEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TouchEvent`, `TouchList`, `Window`*"]
     pub fn init_touch_event_with_can_bubble_and_cancelable_and_view_and_detail_and_ctrl_key_and_alt_key_and_shift_key_and_meta_key_and_touches_and_target_touches_and_changed_touches(
         this: &TouchEvent,
         type_: &str,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        ctrl_key: bool,
+        alt_key: bool,
+        shift_key: bool,
+        meta_key: bool,
+        touches: Option<&TouchList>,
+        target_touches: Option<&TouchList>,
+        changed_touches: Option<&TouchList>,
+    );
+    #[cfg(all(feature = "TouchList", feature = "Window",))]
+    #[wasm_bindgen(method, js_class = "TouchEvent", js_name = "initTouchEvent")]
+    #[doc = "The `initTouchEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent/initTouchEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TouchEvent`, `TouchList`, `Window`*"]
+    pub fn init_touch_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail_and_ctrl_key_and_alt_key_and_shift_key_and_meta_key_and_touches_and_target_touches_and_changed_touches(
+        this: &TouchEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
         cancelable: bool,
         view: Option<&Window>,

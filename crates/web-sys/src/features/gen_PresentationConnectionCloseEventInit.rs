@@ -55,6 +55,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PresentationConnectionCloseEventInit`*"]
     #[wasm_bindgen(method, setter = "message")]
     pub fn set_message(this: &PresentationConnectionCloseEventInit, val: &str);
+    #[doc = "Change the `message` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PresentationConnectionCloseEventInit`*"]
+    #[wasm_bindgen(method, setter = "message")]
+    pub fn set_message_js_string(
+        this: &PresentationConnectionCloseEventInit,
+        val: &::js_sys::JsString,
+    );
     #[cfg(feature = "PresentationConnectionClosedReason")]
     #[doc = "Get the `reason` field of this object."]
     #[doc = ""]

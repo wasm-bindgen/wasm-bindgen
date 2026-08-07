@@ -46,6 +46,18 @@ extern "C" {
     pub fn set_autocomplete(this: &HtmlTextAreaElement, value: &str);
     #[wasm_bindgen(
         method,
+        setter,
+        js_class = "HTMLTextAreaElement",
+        js_name = "autocomplete"
+    )]
+    #[doc = "Setter for the `autocomplete` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTextAreaElement/autocomplete)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
+    pub fn set_autocomplete_js_string(this: &HtmlTextAreaElement, value: &::js_sys::JsString);
+    #[wasm_bindgen(
+        method,
         getter,
         js_class = "HTMLTextAreaElement",
         js_name = "autofocus"
@@ -172,6 +184,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
     pub fn set_name(this: &HtmlTextAreaElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLTextAreaElement", js_name = "name")]
+    #[doc = "Setter for the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTextAreaElement/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
+    pub fn set_name_js_string(this: &HtmlTextAreaElement, value: &::js_sys::JsString);
     #[wasm_bindgen(
         method,
         getter,
@@ -196,6 +215,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
     pub fn set_placeholder(this: &HtmlTextAreaElement, value: &str);
+    #[wasm_bindgen(
+        method,
+        setter,
+        js_class = "HTMLTextAreaElement",
+        js_name = "placeholder"
+    )]
+    #[doc = "Setter for the `placeholder` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTextAreaElement/placeholder)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
+    pub fn set_placeholder_js_string(this: &HtmlTextAreaElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLTextAreaElement", js_name = "readOnly")]
     #[doc = "Getter for the `readOnly` field of this object."]
     #[doc = ""]
@@ -252,6 +283,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
     pub fn set_wrap(this: &HtmlTextAreaElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLTextAreaElement", js_name = "wrap")]
+    #[doc = "Setter for the `wrap` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTextAreaElement/wrap)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
+    pub fn set_wrap_js_string(this: &HtmlTextAreaElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLTextAreaElement", js_name = "type")]
     #[doc = "Getter for the `type` field of this object."]
     #[doc = ""]
@@ -285,6 +323,22 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
     pub fn set_default_value(this: &HtmlTextAreaElement, value: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        setter,
+        js_class = "HTMLTextAreaElement",
+        js_name = "defaultValue"
+    )]
+    #[doc = "Setter for the `defaultValue` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTextAreaElement/defaultValue)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
+    pub fn set_default_value_js_string(
+        this: &HtmlTextAreaElement,
+        value: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(method, getter, js_class = "HTMLTextAreaElement", js_name = "value")]
     #[doc = "Getter for the `value` field of this object."]
     #[doc = ""]
@@ -299,6 +353,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
     pub fn set_value(this: &HtmlTextAreaElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLTextAreaElement", js_name = "value")]
+    #[doc = "Setter for the `value` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTextAreaElement/value)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
+    pub fn set_value_js_string(this: &HtmlTextAreaElement, value: &::js_sys::JsString);
     #[wasm_bindgen(
         method,
         getter,
@@ -441,6 +502,22 @@ extern "C" {
         this: &HtmlTextAreaElement,
         value: Option<&str>,
     ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        setter,
+        js_class = "HTMLTextAreaElement",
+        js_name = "selectionDirection"
+    )]
+    #[doc = "Setter for the `selectionDirection` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTextAreaElement/selectionDirection)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
+    pub fn set_selection_direction_opt_js_string(
+        this: &HtmlTextAreaElement,
+        value: Option<&::js_sys::JsString>,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(method, js_class = "HTMLTextAreaElement", js_name = "checkValidity")]
     #[doc = "The `checkValidity()` method."]
     #[doc = ""]
@@ -474,6 +551,20 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
     pub fn set_custom_validity(this: &HtmlTextAreaElement, error: &str);
     #[wasm_bindgen(
+        method,
+        js_class = "HTMLTextAreaElement",
+        js_name = "setCustomValidity"
+    )]
+    #[doc = "The `setCustomValidity()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTextAreaElement/setCustomValidity)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
+    pub fn set_custom_validity_with_js_string(
+        this: &HtmlTextAreaElement,
+        error: &::js_sys::JsString,
+    );
+    #[wasm_bindgen(
         catch,
         method,
         js_class = "HTMLTextAreaElement",
@@ -485,6 +576,21 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
     pub fn set_range_text(this: &HtmlTextAreaElement, replacement: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "HTMLTextAreaElement",
+        js_name = "setRangeText"
+    )]
+    #[doc = "The `setRangeText()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTextAreaElement/setRangeText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
+    pub fn set_range_text_with_js_string(
+        this: &HtmlTextAreaElement,
+        replacement: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(
         catch,
         method,
@@ -513,12 +619,47 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTextAreaElement/setRangeText)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
+    pub fn set_range_text_with_js_string_and_start_and_end(
+        this: &HtmlTextAreaElement,
+        replacement: &::js_sys::JsString,
+        start: u32,
+        end: u32,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "HTMLTextAreaElement",
+        js_name = "setRangeText"
+    )]
+    #[doc = "The `setRangeText()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTextAreaElement/setRangeText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
     pub fn set_range_text_with_start_and_end_and_mode(
         this: &HtmlTextAreaElement,
         replacement: &str,
         start: u32,
         end: u32,
         mode: &str,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "HTMLTextAreaElement",
+        js_name = "setRangeText"
+    )]
+    #[doc = "The `setRangeText()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTextAreaElement/setRangeText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
+    pub fn set_range_text_with_js_string_and_start_and_end_and_js_string(
+        this: &HtmlTextAreaElement,
+        replacement: &::js_sys::JsString,
+        start: u32,
+        end: u32,
+        mode: &::js_sys::JsString,
     ) -> Result<(), JsValue>;
     #[wasm_bindgen(
         catch,
@@ -552,5 +693,22 @@ extern "C" {
         start: u32,
         end: u32,
         direction: &str,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "HTMLTextAreaElement",
+        js_name = "setSelectionRange"
+    )]
+    #[doc = "The `setSelectionRange()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTextAreaElement/setSelectionRange)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
+    pub fn set_selection_range_with_js_string(
+        this: &HtmlTextAreaElement,
+        start: u32,
+        end: u32,
+        direction: &::js_sys::JsString,
     ) -> Result<(), JsValue>;
 }

@@ -34,6 +34,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
     pub fn set_alt(this: &HtmlImageElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLImageElement", js_name = "alt")]
+    #[doc = "Setter for the `alt` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/alt)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
+    pub fn set_alt_js_string(this: &HtmlImageElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLImageElement", js_name = "src")]
     #[doc = "Getter for the `src` field of this object."]
     #[doc = ""]
@@ -48,6 +55,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
     pub fn set_src(this: &HtmlImageElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLImageElement", js_name = "src")]
+    #[doc = "Setter for the `src` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/src)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
+    pub fn set_src_js_string(this: &HtmlImageElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLImageElement", js_name = "srcset")]
     #[doc = "Getter for the `srcset` field of this object."]
     #[doc = ""]
@@ -62,6 +76,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
     pub fn set_srcset(this: &HtmlImageElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLImageElement", js_name = "srcset")]
+    #[doc = "Setter for the `srcset` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/srcset)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
+    pub fn set_srcset_js_string(this: &HtmlImageElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLImageElement", js_name = "crossOrigin")]
     #[doc = "Getter for the `crossOrigin` field of this object."]
     #[doc = ""]
@@ -76,6 +97,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
     pub fn set_cross_origin(this: &HtmlImageElement, value: Option<&str>);
+    #[wasm_bindgen(method, setter, js_class = "HTMLImageElement", js_name = "crossOrigin")]
+    #[doc = "Setter for the `crossOrigin` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/crossOrigin)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
+    pub fn set_cross_origin_opt_js_string(
+        this: &HtmlImageElement,
+        value: Option<&::js_sys::JsString>,
+    );
     #[wasm_bindgen(method, getter, js_class = "HTMLImageElement", js_name = "useMap")]
     #[doc = "Getter for the `useMap` field of this object."]
     #[doc = ""]
@@ -90,6 +121,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
     pub fn set_use_map(this: &HtmlImageElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLImageElement", js_name = "useMap")]
+    #[doc = "Setter for the `useMap` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/useMap)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
+    pub fn set_use_map_js_string(this: &HtmlImageElement, value: &::js_sys::JsString);
     #[wasm_bindgen(
         method,
         getter,
@@ -114,6 +152,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
     pub fn set_referrer_policy(this: &HtmlImageElement, value: &str);
+    #[wasm_bindgen(
+        method,
+        setter,
+        js_class = "HTMLImageElement",
+        js_name = "referrerPolicy"
+    )]
+    #[doc = "Setter for the `referrerPolicy` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/referrerPolicy)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
+    pub fn set_referrer_policy_js_string(this: &HtmlImageElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLImageElement", js_name = "isMap")]
     #[doc = "Getter for the `isMap` field of this object."]
     #[doc = ""]
@@ -170,6 +220,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
     pub fn set_decoding(this: &HtmlImageElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLImageElement", js_name = "decoding")]
+    #[doc = "Setter for the `decoding` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/decoding)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
+    pub fn set_decoding_js_string(this: &HtmlImageElement, value: &::js_sys::JsString);
     #[wasm_bindgen(
         method,
         getter,
@@ -215,6 +272,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
     pub fn set_name(this: &HtmlImageElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLImageElement", js_name = "name")]
+    #[doc = "Setter for the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
+    pub fn set_name_js_string(this: &HtmlImageElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLImageElement", js_name = "align")]
     #[doc = "Getter for the `align` field of this object."]
     #[doc = ""]
@@ -229,6 +293,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
     pub fn set_align(this: &HtmlImageElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLImageElement", js_name = "align")]
+    #[doc = "Setter for the `align` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/align)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
+    pub fn set_align_js_string(this: &HtmlImageElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLImageElement", js_name = "hspace")]
     #[doc = "Getter for the `hspace` field of this object."]
     #[doc = ""]
@@ -271,6 +342,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
     pub fn set_long_desc(this: &HtmlImageElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLImageElement", js_name = "longDesc")]
+    #[doc = "Setter for the `longDesc` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/longDesc)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
+    pub fn set_long_desc_js_string(this: &HtmlImageElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLImageElement", js_name = "border")]
     #[doc = "Getter for the `border` field of this object."]
     #[doc = ""]
@@ -285,6 +363,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
     pub fn set_border(this: &HtmlImageElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLImageElement", js_name = "border")]
+    #[doc = "Setter for the `border` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/border)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
+    pub fn set_border_js_string(this: &HtmlImageElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLImageElement", js_name = "sizes")]
     #[doc = "Getter for the `sizes` field of this object."]
     #[doc = ""]
@@ -299,6 +384,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
     pub fn set_sizes(this: &HtmlImageElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLImageElement", js_name = "sizes")]
+    #[doc = "Setter for the `sizes` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/sizes)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlImageElement`*"]
+    pub fn set_sizes_js_string(this: &HtmlImageElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLImageElement", js_name = "currentSrc")]
     #[doc = "Getter for the `currentSrc` field of this object."]
     #[doc = ""]

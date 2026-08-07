@@ -40,6 +40,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NativeOsFileReadOptions`*"]
     #[wasm_bindgen(method, setter = "encoding")]
     pub fn set_encoding(this: &NativeOsFileReadOptions, val: Option<&str>);
+    #[doc = "Change the `encoding` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NativeOsFileReadOptions`*"]
+    #[wasm_bindgen(method, setter = "encoding")]
+    pub fn set_encoding_opt_js_string(
+        this: &NativeOsFileReadOptions,
+        val: Option<&::js_sys::JsString>,
+    );
 }
 impl NativeOsFileReadOptions {
     #[doc = "Construct a new `NativeOsFileReadOptions`."]

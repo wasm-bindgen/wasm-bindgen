@@ -8,6 +8,12 @@
 * [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
   to `web-sys` [#5247](https://github.com/wasm-bindgen/wasm-bindgen/pull/5247)
 
+* `web-sys` string arguments and setters now have `js_string` variants taking
+  `&js_sys::JsString` (e.g. `set_fill_style_js_string`,
+  `Storage::set_item_with_js_string_and_js_string`), allowing pre-allocated JS
+  strings to be cached and reused without re-encoding across the boundary.
+  Existing `&str` signatures keep their names unchanged.
+
 ### Changed
 
 * Emscripten output now marks public exports (free functions, classes, enums,

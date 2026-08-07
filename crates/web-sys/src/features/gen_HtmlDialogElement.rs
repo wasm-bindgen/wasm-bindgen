@@ -58,6 +58,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDialogElement`*"]
     pub fn set_return_value(this: &HtmlDialogElement, value: &str);
+    #[wasm_bindgen(
+        method,
+        setter,
+        js_class = "HTMLDialogElement",
+        js_name = "returnValue"
+    )]
+    #[doc = "Setter for the `returnValue` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDialogElement/returnValue)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDialogElement`*"]
+    pub fn set_return_value_js_string(this: &HtmlDialogElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, js_class = "HTMLDialogElement")]
     #[doc = "The `close()` method."]
     #[doc = ""]
@@ -72,6 +84,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDialogElement`*"]
     pub fn close_with_return_value(this: &HtmlDialogElement, return_value: &str);
+    #[wasm_bindgen(method, js_class = "HTMLDialogElement", js_name = "close")]
+    #[doc = "The `close()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDialogElement/close)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDialogElement`*"]
+    pub fn close_with_js_string(this: &HtmlDialogElement, return_value: &::js_sys::JsString);
     #[wasm_bindgen(method, js_class = "HTMLDialogElement")]
     #[doc = "The `show()` method."]
     #[doc = ""]

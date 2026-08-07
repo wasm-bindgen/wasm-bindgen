@@ -30,6 +30,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssStyleDeclaration`*"]
     pub fn set_css_text(this: &CssStyleDeclaration, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "CSSStyleDeclaration", js_name = "cssText")]
+    #[doc = "Setter for the `cssText` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleDeclaration/cssText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssStyleDeclaration`*"]
+    pub fn set_css_text_js_string(this: &CssStyleDeclaration, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "CSSStyleDeclaration", js_name = "length")]
     #[doc = "Getter for the `length` field of this object."]
     #[doc = ""]
@@ -65,6 +72,20 @@ extern "C" {
         property: &str,
     ) -> ::alloc::string::String;
     #[wasm_bindgen(
+        method,
+        js_class = "CSSStyleDeclaration",
+        js_name = "getPropertyPriority"
+    )]
+    #[doc = "The `getPropertyPriority()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleDeclaration/getPropertyPriority)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssStyleDeclaration`*"]
+    pub fn get_property_priority_with_js_string(
+        this: &CssStyleDeclaration,
+        property: &::js_sys::JsString,
+    ) -> ::alloc::string::String;
+    #[wasm_bindgen(
         catch,
         method,
         js_class = "CSSStyleDeclaration",
@@ -78,6 +99,21 @@ extern "C" {
     pub fn get_property_value(
         this: &CssStyleDeclaration,
         property: &str,
+    ) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "CSSStyleDeclaration",
+        js_name = "getPropertyValue"
+    )]
+    #[doc = "The `getPropertyValue()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleDeclaration/getPropertyValue)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssStyleDeclaration`*"]
+    pub fn get_property_value_with_js_string(
+        this: &CssStyleDeclaration,
+        property: &::js_sys::JsString,
     ) -> Result<::alloc::string::String, JsValue>;
     #[wasm_bindgen(method, js_class = "CSSStyleDeclaration")]
     #[doc = "The `item()` method."]
@@ -100,6 +136,21 @@ extern "C" {
     pub fn remove_property(
         this: &CssStyleDeclaration,
         property: &str,
+    ) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "CSSStyleDeclaration",
+        js_name = "removeProperty"
+    )]
+    #[doc = "The `removeProperty()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleDeclaration/removeProperty)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssStyleDeclaration`*"]
+    pub fn remove_property_with_js_string(
+        this: &CssStyleDeclaration,
+        property: &::js_sys::JsString,
     ) -> Result<::alloc::string::String, JsValue>;
     #[wasm_bindgen(
         catch,
@@ -128,11 +179,44 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleDeclaration/setProperty)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssStyleDeclaration`*"]
+    pub fn set_property_with_js_string_and_js_string(
+        this: &CssStyleDeclaration,
+        property: &::js_sys::JsString,
+        value: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "CSSStyleDeclaration",
+        js_name = "setProperty"
+    )]
+    #[doc = "The `setProperty()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleDeclaration/setProperty)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssStyleDeclaration`*"]
     pub fn set_property_with_priority(
         this: &CssStyleDeclaration,
         property: &str,
         value: &str,
         priority: &str,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "CSSStyleDeclaration",
+        js_name = "setProperty"
+    )]
+    #[doc = "The `setProperty()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleDeclaration/setProperty)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssStyleDeclaration`*"]
+    pub fn set_property_with_js_string_and_js_string_and_js_string(
+        this: &CssStyleDeclaration,
+        property: &::js_sys::JsString,
+        value: &::js_sys::JsString,
+        priority: &::js_sys::JsString,
     ) -> Result<(), JsValue>;
     #[wasm_bindgen(method, js_class = "CSSStyleDeclaration", indexing_getter)]
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]

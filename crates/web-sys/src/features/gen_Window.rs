@@ -61,6 +61,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     pub fn set_name(this: &Window, value: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, setter, js_class = "Window", js_name = "name")]
+    #[doc = "Setter for the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn set_name_js_string(this: &Window, value: &::js_sys::JsString) -> Result<(), JsValue>;
     #[cfg(feature = "Location")]
     #[wasm_bindgen(method, getter, js_class = "Window", js_name = "location")]
     #[doc = "Getter for the `location` field of this object."]
@@ -155,6 +162,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     pub fn set_status(this: &Window, value: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, setter, js_class = "Window", js_name = "status")]
+    #[doc = "Setter for the `status` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/status)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn set_status_js_string(this: &Window, value: &::js_sys::JsString) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, getter, js_class = "Window", js_name = "closed")]
     #[doc = "Getter for the `closed` field of this object."]
     #[doc = ""]
@@ -2123,6 +2137,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     pub fn alert_with_message(this: &Window, message: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "alert")]
+    #[doc = "The `alert()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/alert)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn alert_with_js_string(this: &Window, message: &::js_sys::JsString)
+        -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Window")]
     #[doc = "The `blur()` method."]
     #[doc = ""]
@@ -2165,6 +2187,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     pub fn confirm_with_message(this: &Window, message: &str) -> Result<bool, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "confirm")]
+    #[doc = "The `confirm()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn confirm_with_js_string(
+        this: &Window,
+        message: &::js_sys::JsString,
+    ) -> Result<bool, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Window")]
     #[doc = "The `focus()` method."]
     #[doc = ""]
@@ -2195,6 +2227,18 @@ extern "C" {
         elt: &Element,
         pseudo_elt: &str,
     ) -> Result<Option<CssStyleDeclaration>, JsValue>;
+    #[cfg(all(feature = "CssStyleDeclaration", feature = "Element",))]
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "getComputedStyle")]
+    #[doc = "The `getComputedStyle()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/getComputedStyle)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssStyleDeclaration`, `Element`, `Window`*"]
+    pub fn get_computed_style_with_js_string(
+        this: &Window,
+        elt: &Element,
+        pseudo_elt: &::js_sys::JsString,
+    ) -> Result<Option<CssStyleDeclaration>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "ScreenDetails")]
     #[wasm_bindgen(catch, method, js_class = "Window", js_name = "getScreenDetails")]
@@ -2223,6 +2267,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaQueryList`, `Window`*"]
     pub fn match_media(this: &Window, query: &str) -> Result<Option<MediaQueryList>, JsValue>;
+    #[cfg(feature = "MediaQueryList")]
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "matchMedia")]
+    #[doc = "The `matchMedia()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaQueryList`, `Window`*"]
+    pub fn match_media_with_js_string(
+        this: &Window,
+        query: &::js_sys::JsString,
+    ) -> Result<Option<MediaQueryList>, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Window", js_name = "moveBy")]
     #[doc = "The `moveBy()` method."]
     #[doc = ""]
@@ -2257,10 +2312,31 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/open)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn open_with_js_string(
+        this: &Window,
+        url: &::js_sys::JsString,
+    ) -> Result<Option<Window>, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "open")]
+    #[doc = "The `open()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/open)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     pub fn open_with_url_and_target(
         this: &Window,
         url: &str,
         target: &str,
+    ) -> Result<Option<Window>, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "open")]
+    #[doc = "The `open()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/open)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn open_with_js_string_and_js_string(
+        this: &Window,
+        url: &::js_sys::JsString,
+        target: &::js_sys::JsString,
     ) -> Result<Option<Window>, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Window", js_name = "open")]
     #[doc = "The `open()` method."]
@@ -2273,6 +2349,18 @@ extern "C" {
         url: &str,
         target: &str,
         features: &str,
+    ) -> Result<Option<Window>, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "open")]
+    #[doc = "The `open()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/open)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn open_with_js_string_and_js_string_and_js_string(
+        this: &Window,
+        url: &::js_sys::JsString,
+        target: &::js_sys::JsString,
+        features: &::js_sys::JsString,
     ) -> Result<Option<Window>, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Window", js_name = "postMessage")]
     #[doc = "The `postMessage()` method."]
@@ -2291,10 +2379,33 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn post_message_with_js_string(
+        this: &Window,
+        message: &::wasm_bindgen::JsValue,
+        target_origin: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "postMessage")]
+    #[doc = "The `postMessage()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     pub fn post_message_with_transfer(
         this: &Window,
         message: &::wasm_bindgen::JsValue,
         target_origin: &str,
+        transfer: &::wasm_bindgen::JsValue,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "postMessage")]
+    #[doc = "The `postMessage()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn post_message_with_js_string_and_transfer(
+        this: &Window,
+        message: &::wasm_bindgen::JsValue,
+        target_origin: &::js_sys::JsString,
         transfer: &::wasm_bindgen::JsValue,
     ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Window")]
@@ -2327,10 +2438,31 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn prompt_with_js_string(
+        this: &Window,
+        message: &::js_sys::JsString,
+    ) -> Result<Option<::alloc::string::String>, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "prompt")]
+    #[doc = "The `prompt()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     pub fn prompt_with_message_and_default(
         this: &Window,
         message: &str,
         default: &str,
+    ) -> Result<Option<::alloc::string::String>, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "prompt")]
+    #[doc = "The `prompt()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn prompt_with_js_string_and_js_string(
+        this: &Window,
+        message: &::js_sys::JsString,
+        default: &::js_sys::JsString,
     ) -> Result<Option<::alloc::string::String>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "FontData")]
@@ -2573,6 +2705,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     pub fn get(this: &Window, name: &str) -> Option<::js_sys::Object>;
+    #[wasm_bindgen(method, js_class = "Window", indexing_getter)]
+    #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
+    #[doc = ""]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn get_with_js_string(this: &Window, name: &::js_sys::JsString)
+        -> Option<::js_sys::Object>;
     #[wasm_bindgen(catch, method, js_class = "Window", js_name = "cancelAnimationFrame")]
     #[doc = "The `cancelAnimationFrame()` method."]
     #[doc = ""]
@@ -2597,6 +2736,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     pub fn atob(this: &Window, atob: &str) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "atob")]
+    #[doc = "The `atob()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/atob)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn atob_with_js_string(
+        this: &Window,
+        atob: &::js_sys::JsString,
+    ) -> Result<::alloc::string::String, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Window")]
     #[doc = "The `btoa()` method."]
     #[doc = ""]
@@ -2604,6 +2753,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     pub fn btoa(this: &Window, btoa: &str) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "btoa")]
+    #[doc = "The `btoa()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/btoa)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn btoa_with_js_string(
+        this: &Window,
+        btoa: &::js_sys::JsString,
+    ) -> Result<::alloc::string::String, JsValue>;
     #[wasm_bindgen(method, js_class = "Window", js_name = "clearInterval")]
     #[doc = "The `clearInterval()` method."]
     #[doc = ""]
@@ -3141,6 +3300,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     pub fn fetch_with_str(this: &Window, input: &str) -> ::js_sys::Promise;
+    #[wasm_bindgen(method, js_class = "Window", js_name = "fetch")]
+    #[doc = "The `fetch()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn fetch_with_js_string(this: &Window, input: &::js_sys::JsString) -> ::js_sys::Promise;
     #[cfg(all(feature = "Request", feature = "RequestInit",))]
     #[wasm_bindgen(method, js_class = "Window", js_name = "fetch")]
     #[doc = "The `fetch()` method."]
@@ -3163,6 +3329,18 @@ extern "C" {
     pub fn fetch_with_str_and_init(
         this: &Window,
         input: &str,
+        init: &RequestInit,
+    ) -> ::js_sys::Promise;
+    #[cfg(feature = "RequestInit")]
+    #[wasm_bindgen(method, js_class = "Window", js_name = "fetch")]
+    #[doc = "The `fetch()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RequestInit`, `Window`*"]
+    pub fn fetch_with_js_string_and_init(
+        this: &Window,
+        input: &::js_sys::JsString,
         init: &RequestInit,
     ) -> ::js_sys::Promise;
     #[wasm_bindgen(method, js_class = "Window", js_name = "queueMicrotask")]
@@ -3317,6 +3495,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     pub fn set_interval_with_str(this: &Window, handler: &str) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "setInterval")]
+    #[doc = "The `setInterval()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/setInterval)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn set_interval_with_js_string(
+        this: &Window,
+        handler: &::js_sys::JsString,
+    ) -> Result<i32, JsValue>;
     #[wasm_bindgen(catch, method, variadic, js_class = "Window", js_name = "setInterval")]
     #[doc = "The `setInterval()` method."]
     #[doc = ""]
@@ -3436,6 +3624,134 @@ extern "C" {
     pub fn set_interval_with_str_and_timeout_and_unused_7(
         this: &Window,
         handler: &str,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+        unused_3: &::wasm_bindgen::JsValue,
+        unused_4: &::wasm_bindgen::JsValue,
+        unused_5: &::wasm_bindgen::JsValue,
+        unused_6: &::wasm_bindgen::JsValue,
+        unused_7: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, variadic, js_class = "Window", js_name = "setInterval")]
+    #[doc = "The `setInterval()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/setInterval)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn set_interval_with_js_string_and_timeout_and_unused(
+        this: &Window,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused: &::js_sys::Array,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "setInterval")]
+    #[doc = "The `setInterval()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/setInterval)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn set_interval_with_js_string_and_timeout_and_unused_0(
+        this: &Window,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "setInterval")]
+    #[doc = "The `setInterval()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/setInterval)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn set_interval_with_js_string_and_timeout_and_unused_1(
+        this: &Window,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "setInterval")]
+    #[doc = "The `setInterval()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/setInterval)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn set_interval_with_js_string_and_timeout_and_unused_2(
+        this: &Window,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "setInterval")]
+    #[doc = "The `setInterval()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/setInterval)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn set_interval_with_js_string_and_timeout_and_unused_3(
+        this: &Window,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+        unused_3: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "setInterval")]
+    #[doc = "The `setInterval()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/setInterval)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn set_interval_with_js_string_and_timeout_and_unused_4(
+        this: &Window,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+        unused_3: &::wasm_bindgen::JsValue,
+        unused_4: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "setInterval")]
+    #[doc = "The `setInterval()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/setInterval)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn set_interval_with_js_string_and_timeout_and_unused_5(
+        this: &Window,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+        unused_3: &::wasm_bindgen::JsValue,
+        unused_4: &::wasm_bindgen::JsValue,
+        unused_5: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "setInterval")]
+    #[doc = "The `setInterval()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/setInterval)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn set_interval_with_js_string_and_timeout_and_unused_6(
+        this: &Window,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+        unused_3: &::wasm_bindgen::JsValue,
+        unused_4: &::wasm_bindgen::JsValue,
+        unused_5: &::wasm_bindgen::JsValue,
+        unused_6: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "setInterval")]
+    #[doc = "The `setInterval()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/setInterval)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn set_interval_with_js_string_and_timeout_and_unused_7(
+        this: &Window,
+        handler: &::js_sys::JsString,
         timeout: i32,
         unused_1: &::wasm_bindgen::JsValue,
         unused_2: &::wasm_bindgen::JsValue,
@@ -3590,6 +3906,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     pub fn set_timeout_with_str(this: &Window, handler: &str) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "setTimeout")]
+    #[doc = "The `setTimeout()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn set_timeout_with_js_string(
+        this: &Window,
+        handler: &::js_sys::JsString,
+    ) -> Result<i32, JsValue>;
     #[wasm_bindgen(catch, method, variadic, js_class = "Window", js_name = "setTimeout")]
     #[doc = "The `setTimeout()` method."]
     #[doc = ""]
@@ -3709,6 +4035,134 @@ extern "C" {
     pub fn set_timeout_with_str_and_timeout_and_unused_7(
         this: &Window,
         handler: &str,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+        unused_3: &::wasm_bindgen::JsValue,
+        unused_4: &::wasm_bindgen::JsValue,
+        unused_5: &::wasm_bindgen::JsValue,
+        unused_6: &::wasm_bindgen::JsValue,
+        unused_7: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, variadic, js_class = "Window", js_name = "setTimeout")]
+    #[doc = "The `setTimeout()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn set_timeout_with_js_string_and_timeout_and_unused(
+        this: &Window,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused: &::js_sys::Array,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "setTimeout")]
+    #[doc = "The `setTimeout()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn set_timeout_with_js_string_and_timeout_and_unused_0(
+        this: &Window,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "setTimeout")]
+    #[doc = "The `setTimeout()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn set_timeout_with_js_string_and_timeout_and_unused_1(
+        this: &Window,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "setTimeout")]
+    #[doc = "The `setTimeout()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn set_timeout_with_js_string_and_timeout_and_unused_2(
+        this: &Window,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "setTimeout")]
+    #[doc = "The `setTimeout()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn set_timeout_with_js_string_and_timeout_and_unused_3(
+        this: &Window,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+        unused_3: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "setTimeout")]
+    #[doc = "The `setTimeout()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn set_timeout_with_js_string_and_timeout_and_unused_4(
+        this: &Window,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+        unused_3: &::wasm_bindgen::JsValue,
+        unused_4: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "setTimeout")]
+    #[doc = "The `setTimeout()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn set_timeout_with_js_string_and_timeout_and_unused_5(
+        this: &Window,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+        unused_3: &::wasm_bindgen::JsValue,
+        unused_4: &::wasm_bindgen::JsValue,
+        unused_5: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "setTimeout")]
+    #[doc = "The `setTimeout()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn set_timeout_with_js_string_and_timeout_and_unused_6(
+        this: &Window,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+        unused_3: &::wasm_bindgen::JsValue,
+        unused_4: &::wasm_bindgen::JsValue,
+        unused_5: &::wasm_bindgen::JsValue,
+        unused_6: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "setTimeout")]
+    #[doc = "The `setTimeout()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn set_timeout_with_js_string_and_timeout_and_unused_7(
+        this: &Window,
+        handler: &::js_sys::JsString,
         timeout: i32,
         unused_1: &::wasm_bindgen::JsValue,
         unused_2: &::wasm_bindgen::JsValue,

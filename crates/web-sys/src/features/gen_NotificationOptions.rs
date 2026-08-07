@@ -30,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
     #[wasm_bindgen(method, setter = "badge")]
     pub fn set_badge(this: &NotificationOptions, val: &str);
+    #[doc = "Change the `badge` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
+    #[wasm_bindgen(method, setter = "badge")]
+    pub fn set_badge_js_string(this: &NotificationOptions, val: &::js_sys::JsString);
     #[doc = "Get the `body` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
@@ -40,6 +45,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
     #[wasm_bindgen(method, setter = "body")]
     pub fn set_body(this: &NotificationOptions, val: &str);
+    #[doc = "Change the `body` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
+    #[wasm_bindgen(method, setter = "body")]
+    pub fn set_body_js_string(this: &NotificationOptions, val: &::js_sys::JsString);
     #[doc = "Get the `data` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
@@ -72,6 +82,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
     #[wasm_bindgen(method, setter = "icon")]
     pub fn set_icon(this: &NotificationOptions, val: &str);
+    #[doc = "Change the `icon` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
+    #[wasm_bindgen(method, setter = "icon")]
+    pub fn set_icon_js_string(this: &NotificationOptions, val: &::js_sys::JsString);
     #[doc = "Get the `image` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
@@ -82,6 +97,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
     #[wasm_bindgen(method, setter = "image")]
     pub fn set_image(this: &NotificationOptions, val: &str);
+    #[doc = "Change the `image` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
+    #[wasm_bindgen(method, setter = "image")]
+    pub fn set_image_js_string(this: &NotificationOptions, val: &::js_sys::JsString);
     #[doc = "Get the `lang` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
@@ -92,6 +112,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
     #[wasm_bindgen(method, setter = "lang")]
     pub fn set_lang(this: &NotificationOptions, val: &str);
+    #[doc = "Change the `lang` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
+    #[wasm_bindgen(method, setter = "lang")]
+    pub fn set_lang_js_string(this: &NotificationOptions, val: &::js_sys::JsString);
     #[doc = "Get the `renotify` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
@@ -132,6 +157,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
     #[wasm_bindgen(method, setter = "tag")]
     pub fn set_tag(this: &NotificationOptions, val: &str);
+    #[doc = "Change the `tag` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
+    #[wasm_bindgen(method, setter = "tag")]
+    pub fn set_tag_js_string(this: &NotificationOptions, val: &::js_sys::JsString);
     #[doc = "Get the `timestamp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]

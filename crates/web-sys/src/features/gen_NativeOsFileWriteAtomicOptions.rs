@@ -23,6 +23,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NativeOsFileWriteAtomicOptions`*"]
     #[wasm_bindgen(method, setter = "backupTo")]
     pub fn set_backup_to(this: &NativeOsFileWriteAtomicOptions, val: Option<&str>);
+    #[doc = "Change the `backupTo` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NativeOsFileWriteAtomicOptions`*"]
+    #[wasm_bindgen(method, setter = "backupTo")]
+    pub fn set_backup_to_opt_js_string(
+        this: &NativeOsFileWriteAtomicOptions,
+        val: Option<&::js_sys::JsString>,
+    );
     #[doc = "Get the `bytes` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NativeOsFileWriteAtomicOptions`*"]
@@ -73,6 +81,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NativeOsFileWriteAtomicOptions`*"]
     #[wasm_bindgen(method, setter = "tmpPath")]
     pub fn set_tmp_path(this: &NativeOsFileWriteAtomicOptions, val: Option<&str>);
+    #[doc = "Change the `tmpPath` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NativeOsFileWriteAtomicOptions`*"]
+    #[wasm_bindgen(method, setter = "tmpPath")]
+    pub fn set_tmp_path_opt_js_string(
+        this: &NativeOsFileWriteAtomicOptions,
+        val: Option<&::js_sys::JsString>,
+    );
 }
 impl NativeOsFileWriteAtomicOptions {
     #[doc = "Construct a new `NativeOsFileWriteAtomicOptions`."]

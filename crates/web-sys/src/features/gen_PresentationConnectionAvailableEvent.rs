@@ -41,4 +41,15 @@ extern "C" {
         type_: &str,
         event_init_dict: &PresentationConnectionAvailableEventInit,
     ) -> Result<PresentationConnectionAvailableEvent, JsValue>;
+    #[cfg(feature = "PresentationConnectionAvailableEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "PresentationConnectionAvailableEvent")]
+    #[doc = "The `new PresentationConnectionAvailableEvent(..)` constructor, creating a new instance of `PresentationConnectionAvailableEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PresentationConnectionAvailableEvent/PresentationConnectionAvailableEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PresentationConnectionAvailableEvent`, `PresentationConnectionAvailableEventInit`*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+        event_init_dict: &PresentationConnectionAvailableEventInit,
+    ) -> Result<PresentationConnectionAvailableEvent, JsValue>;
 }

@@ -70,6 +70,22 @@ extern "C" {
         name: &str,
         prototype: &::js_sys::Object,
     ) -> Result<::js_sys::Object, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WorkerDebuggerGlobalScope",
+        js_name = "createSandbox"
+    )]
+    #[doc = "The `createSandbox()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerDebuggerGlobalScope/createSandbox)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerDebuggerGlobalScope`*"]
+    pub fn create_sandbox_with_js_string(
+        this: &WorkerDebuggerGlobalScope,
+        name: &::js_sys::JsString,
+        prototype: &::js_sys::Object,
+    ) -> Result<::js_sys::Object, JsValue>;
     #[wasm_bindgen(method, js_class = "WorkerDebuggerGlobalScope")]
     #[doc = "The `dump()` method."]
     #[doc = ""]
@@ -84,6 +100,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WorkerDebuggerGlobalScope`*"]
     pub fn dump_with_string(this: &WorkerDebuggerGlobalScope, string: &str);
+    #[wasm_bindgen(method, js_class = "WorkerDebuggerGlobalScope", js_name = "dump")]
+    #[doc = "The `dump()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerDebuggerGlobalScope/dump)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerDebuggerGlobalScope`*"]
+    pub fn dump_with_js_string(this: &WorkerDebuggerGlobalScope, string: &::js_sys::JsString);
     #[wasm_bindgen(
         method,
         js_class = "WorkerDebuggerGlobalScope",
@@ -129,9 +152,40 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerDebuggerGlobalScope/loadSubScript)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WorkerDebuggerGlobalScope`*"]
+    pub fn load_sub_script_with_js_string(
+        this: &WorkerDebuggerGlobalScope,
+        url: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WorkerDebuggerGlobalScope",
+        js_name = "loadSubScript"
+    )]
+    #[doc = "The `loadSubScript()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerDebuggerGlobalScope/loadSubScript)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerDebuggerGlobalScope`*"]
     pub fn load_sub_script_with_sandbox(
         this: &WorkerDebuggerGlobalScope,
         url: &str,
+        sandbox: &::js_sys::Object,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WorkerDebuggerGlobalScope",
+        js_name = "loadSubScript"
+    )]
+    #[doc = "The `loadSubScript()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerDebuggerGlobalScope/loadSubScript)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerDebuggerGlobalScope`*"]
+    pub fn load_sub_script_with_js_string_and_sandbox(
+        this: &WorkerDebuggerGlobalScope,
+        url: &::js_sys::JsString,
         sandbox: &::js_sys::Object,
     ) -> Result<(), JsValue>;
     #[wasm_bindgen(
@@ -148,6 +202,20 @@ extern "C" {
     #[wasm_bindgen(
         method,
         js_class = "WorkerDebuggerGlobalScope",
+        js_name = "postMessage"
+    )]
+    #[doc = "The `postMessage()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerDebuggerGlobalScope/postMessage)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerDebuggerGlobalScope`*"]
+    pub fn post_message_with_js_string(
+        this: &WorkerDebuggerGlobalScope,
+        message: &::js_sys::JsString,
+    );
+    #[wasm_bindgen(
+        method,
+        js_class = "WorkerDebuggerGlobalScope",
         js_name = "reportError"
     )]
     #[doc = "The `reportError()` method."]
@@ -156,6 +224,20 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WorkerDebuggerGlobalScope`*"]
     pub fn report_error(this: &WorkerDebuggerGlobalScope, message: &str);
+    #[wasm_bindgen(
+        method,
+        js_class = "WorkerDebuggerGlobalScope",
+        js_name = "reportError"
+    )]
+    #[doc = "The `reportError()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerDebuggerGlobalScope/reportError)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerDebuggerGlobalScope`*"]
+    pub fn report_error_with_js_string(
+        this: &WorkerDebuggerGlobalScope,
+        message: &::js_sys::JsString,
+    );
     #[wasm_bindgen(
         catch,
         method,

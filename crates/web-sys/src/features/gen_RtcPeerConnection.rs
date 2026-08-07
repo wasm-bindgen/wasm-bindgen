@@ -702,6 +702,17 @@ extern "C" {
         this: &RtcPeerConnection,
         track_or_kind: &str,
     ) -> RtcRtpTransceiver;
+    #[cfg(feature = "RtcRtpTransceiver")]
+    #[wasm_bindgen(method, js_class = "RTCPeerConnection", js_name = "addTransceiver")]
+    #[doc = "The `addTransceiver()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/addTransceiver)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcPeerConnection`, `RtcRtpTransceiver`*"]
+    pub fn add_transceiver_with_js_string(
+        this: &RtcPeerConnection,
+        track_or_kind: &::js_sys::JsString,
+    ) -> RtcRtpTransceiver;
     #[cfg(all(
         feature = "MediaStreamTrack",
         feature = "RtcRtpTransceiver",
@@ -728,6 +739,18 @@ extern "C" {
     pub fn add_transceiver_with_str_and_init(
         this: &RtcPeerConnection,
         track_or_kind: &str,
+        init: &RtcRtpTransceiverInit,
+    ) -> RtcRtpTransceiver;
+    #[cfg(all(feature = "RtcRtpTransceiver", feature = "RtcRtpTransceiverInit",))]
+    #[wasm_bindgen(method, js_class = "RTCPeerConnection", js_name = "addTransceiver")]
+    #[doc = "The `addTransceiver()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/addTransceiver)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcPeerConnection`, `RtcRtpTransceiver`, `RtcRtpTransceiverInit`*"]
+    pub fn add_transceiver_with_js_string_and_init(
+        this: &RtcPeerConnection,
+        track_or_kind: &::js_sys::JsString,
         init: &RtcRtpTransceiverInit,
     ) -> RtcRtpTransceiver;
     #[wasm_bindgen(method, js_class = "RTCPeerConnection")]
@@ -774,6 +797,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcDataChannel`, `RtcPeerConnection`*"]
     pub fn create_data_channel(this: &RtcPeerConnection, label: &str) -> RtcDataChannel;
+    #[cfg(feature = "RtcDataChannel")]
+    #[wasm_bindgen(method, js_class = "RTCPeerConnection", js_name = "createDataChannel")]
+    #[doc = "The `createDataChannel()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/createDataChannel)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcDataChannel`, `RtcPeerConnection`*"]
+    pub fn create_data_channel_with_js_string(
+        this: &RtcPeerConnection,
+        label: &::js_sys::JsString,
+    ) -> RtcDataChannel;
     #[cfg(all(feature = "RtcDataChannel", feature = "RtcDataChannelInit",))]
     #[wasm_bindgen(method, js_class = "RTCPeerConnection", js_name = "createDataChannel")]
     #[doc = "The `createDataChannel()` method."]
@@ -784,6 +818,18 @@ extern "C" {
     pub fn create_data_channel_with_data_channel_dict(
         this: &RtcPeerConnection,
         label: &str,
+        data_channel_dict: &RtcDataChannelInit,
+    ) -> RtcDataChannel;
+    #[cfg(all(feature = "RtcDataChannel", feature = "RtcDataChannelInit",))]
+    #[wasm_bindgen(method, js_class = "RTCPeerConnection", js_name = "createDataChannel")]
+    #[doc = "The `createDataChannel()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/createDataChannel)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcDataChannel`, `RtcDataChannelInit`, `RtcPeerConnection`*"]
+    pub fn create_data_channel_with_js_string_and_data_channel_dict(
+        this: &RtcPeerConnection,
+        label: &::js_sys::JsString,
         data_channel_dict: &RtcDataChannelInit,
     ) -> RtcDataChannel;
     #[wasm_bindgen(method, js_class = "RTCPeerConnection", js_name = "createOffer")]
@@ -855,6 +901,20 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcPeerConnection`*"]
     pub fn generate_certificate_with_str(
         keygen_algorithm: &str,
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        static_method_of = "RtcPeerConnection",
+        js_class = "RTCPeerConnection",
+        js_name = "generateCertificate"
+    )]
+    #[doc = "The `generateCertificate()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/generateCertificate_static)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcPeerConnection`*"]
+    pub fn generate_certificate_with_js_string(
+        keygen_algorithm: &::js_sys::JsString,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "RtcConfiguration")]
     #[wasm_bindgen(method, js_class = "RTCPeerConnection", js_name = "getConfiguration")]
@@ -988,6 +1048,20 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcPeerConnection`*"]
     pub fn set_identity_provider(this: &RtcPeerConnection, provider: &str);
+    #[wasm_bindgen(
+        method,
+        js_class = "RTCPeerConnection",
+        js_name = "setIdentityProvider"
+    )]
+    #[doc = "The `setIdentityProvider()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/setIdentityProvider)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcPeerConnection`*"]
+    pub fn set_identity_provider_with_js_string(
+        this: &RtcPeerConnection,
+        provider: &::js_sys::JsString,
+    );
     #[cfg(feature = "RtcIdentityProviderOptions")]
     #[wasm_bindgen(
         method,
@@ -1002,6 +1076,22 @@ extern "C" {
     pub fn set_identity_provider_with_options(
         this: &RtcPeerConnection,
         provider: &str,
+        options: &RtcIdentityProviderOptions,
+    );
+    #[cfg(feature = "RtcIdentityProviderOptions")]
+    #[wasm_bindgen(
+        method,
+        js_class = "RTCPeerConnection",
+        js_name = "setIdentityProvider"
+    )]
+    #[doc = "The `setIdentityProvider()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/setIdentityProvider)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderOptions`, `RtcPeerConnection`*"]
+    pub fn set_identity_provider_with_js_string_and_options(
+        this: &RtcPeerConnection,
+        provider: &::js_sys::JsString,
         options: &RtcIdentityProviderOptions,
     );
     #[cfg(feature = "RtcSessionDescriptionInit")]

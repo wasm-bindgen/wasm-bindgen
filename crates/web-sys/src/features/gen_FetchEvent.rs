@@ -48,6 +48,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FetchEvent`, `FetchEventInit`*"]
     pub fn new(type_: &str, event_init_dict: &FetchEventInit) -> Result<FetchEvent, JsValue>;
+    #[cfg(feature = "FetchEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "FetchEvent")]
+    #[doc = "The `new FetchEvent(..)` constructor, creating a new instance of `FetchEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FetchEvent/FetchEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FetchEvent`, `FetchEventInit`*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+        event_init_dict: &FetchEventInit,
+    ) -> Result<FetchEvent, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "FetchEvent", js_name = "respondWith")]
     #[doc = "The `respondWith()` method."]
     #[doc = ""]

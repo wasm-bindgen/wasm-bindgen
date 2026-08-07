@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AnimationPropertyDetails`*"]
     #[wasm_bindgen(method, setter = "property")]
     pub fn set_property(this: &AnimationPropertyDetails, val: &str);
+    #[doc = "Change the `property` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AnimationPropertyDetails`*"]
+    #[wasm_bindgen(method, setter = "property")]
+    pub fn set_property_js_string(this: &AnimationPropertyDetails, val: &::js_sys::JsString);
     #[doc = "Get the `runningOnCompositor` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AnimationPropertyDetails`*"]
@@ -50,6 +55,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AnimationPropertyDetails`*"]
     #[wasm_bindgen(method, setter = "warning")]
     pub fn set_warning(this: &AnimationPropertyDetails, val: &str);
+    #[doc = "Change the `warning` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AnimationPropertyDetails`*"]
+    #[wasm_bindgen(method, setter = "warning")]
+    pub fn set_warning_js_string(this: &AnimationPropertyDetails, val: &::js_sys::JsString);
 }
 impl AnimationPropertyDetails {
     #[doc = "Construct a new `AnimationPropertyDetails`."]

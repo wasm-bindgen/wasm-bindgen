@@ -23,6 +23,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BrowserElementDownloadOptions`*"]
     #[wasm_bindgen(method, setter = "filename")]
     pub fn set_filename(this: &BrowserElementDownloadOptions, val: Option<&str>);
+    #[doc = "Change the `filename` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BrowserElementDownloadOptions`*"]
+    #[wasm_bindgen(method, setter = "filename")]
+    pub fn set_filename_opt_js_string(
+        this: &BrowserElementDownloadOptions,
+        val: Option<&::js_sys::JsString>,
+    );
     #[doc = "Get the `referrer` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `BrowserElementDownloadOptions`*"]
@@ -33,6 +41,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BrowserElementDownloadOptions`*"]
     #[wasm_bindgen(method, setter = "referrer")]
     pub fn set_referrer(this: &BrowserElementDownloadOptions, val: Option<&str>);
+    #[doc = "Change the `referrer` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BrowserElementDownloadOptions`*"]
+    #[wasm_bindgen(method, setter = "referrer")]
+    pub fn set_referrer_opt_js_string(
+        this: &BrowserElementDownloadOptions,
+        val: Option<&::js_sys::JsString>,
+    );
 }
 impl BrowserElementDownloadOptions {
     #[doc = "Construct a new `BrowserElementDownloadOptions`."]

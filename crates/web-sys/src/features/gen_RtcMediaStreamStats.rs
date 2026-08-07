@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcMediaStreamStats`*"]
     #[wasm_bindgen(method, setter = "id")]
     pub fn set_id(this: &RtcMediaStreamStats, val: &str);
+    #[doc = "Change the `id` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcMediaStreamStats`*"]
+    #[wasm_bindgen(method, setter = "id")]
+    pub fn set_id_js_string(this: &RtcMediaStreamStats, val: &::js_sys::JsString);
     #[doc = "Get the `timestamp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcMediaStreamStats`*"]
@@ -52,6 +57,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcMediaStreamStats`*"]
     #[wasm_bindgen(method, setter = "streamIdentifier")]
     pub fn set_stream_identifier(this: &RtcMediaStreamStats, val: &str);
+    #[doc = "Change the `streamIdentifier` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcMediaStreamStats`*"]
+    #[wasm_bindgen(method, setter = "streamIdentifier")]
+    pub fn set_stream_identifier_js_string(this: &RtcMediaStreamStats, val: &::js_sys::JsString);
     #[doc = "Get the `trackIds` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcMediaStreamStats`*"]

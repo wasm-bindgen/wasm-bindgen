@@ -54,4 +54,15 @@ extern "C" {
         type_: &str,
         event_init_dict: &NavigationCurrentEntryChangeEventInit,
     ) -> Result<NavigationCurrentEntryChangeEvent, JsValue>;
+    #[cfg(feature = "NavigationCurrentEntryChangeEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "NavigationCurrentEntryChangeEvent")]
+    #[doc = "The `new NavigationCurrentEntryChangeEvent(..)` constructor, creating a new instance of `NavigationCurrentEntryChangeEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/NavigationCurrentEntryChangeEvent/NavigationCurrentEntryChangeEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NavigationCurrentEntryChangeEvent`, `NavigationCurrentEntryChangeEventInit`*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+        event_init_dict: &NavigationCurrentEntryChangeEventInit,
+    ) -> Result<NavigationCurrentEntryChangeEvent, JsValue>;
 }

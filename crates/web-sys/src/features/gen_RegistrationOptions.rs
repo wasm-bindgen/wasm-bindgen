@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RegistrationOptions`*"]
     #[wasm_bindgen(method, setter = "scope")]
     pub fn set_scope(this: &RegistrationOptions, val: &str);
+    #[doc = "Change the `scope` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegistrationOptions`*"]
+    #[wasm_bindgen(method, setter = "scope")]
+    pub fn set_scope_js_string(this: &RegistrationOptions, val: &::js_sys::JsString);
     #[doc = "Get the `type` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RegistrationOptions`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RegistrationOptions`*"]
     #[wasm_bindgen(method, setter = "type")]
     pub fn set_type(this: &RegistrationOptions, val: &str);
+    #[doc = "Change the `type` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegistrationOptions`*"]
+    #[wasm_bindgen(method, setter = "type")]
+    pub fn set_type_js_string(this: &RegistrationOptions, val: &::js_sys::JsString);
     #[cfg(feature = "ServiceWorkerUpdateViaCache")]
     #[doc = "Get the `updateViaCache` field of this object."]
     #[doc = ""]

@@ -33,6 +33,15 @@ extern "C" {
     #[wasm_bindgen(method, setter = "album")]
     pub fn set_album(this: &MediaMetadataInit, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `album` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaMetadataInit`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "album")]
+    pub fn set_album_js_string(this: &MediaMetadataInit, val: &::js_sys::JsString);
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `artist` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaMetadataInit`*"]
@@ -50,6 +59,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "artist")]
     pub fn set_artist(this: &MediaMetadataInit, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `artist` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaMetadataInit`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "artist")]
+    pub fn set_artist_js_string(this: &MediaMetadataInit, val: &::js_sys::JsString);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "MediaImage")]
     #[doc = "Get the `artwork` field of this object."]
@@ -88,6 +106,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "title")]
     pub fn set_title(this: &MediaMetadataInit, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `title` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaMetadataInit`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "title")]
+    pub fn set_title_js_string(this: &MediaMetadataInit, val: &::js_sys::JsString);
 }
 #[cfg(web_sys_unstable_apis)]
 impl MediaMetadataInit {

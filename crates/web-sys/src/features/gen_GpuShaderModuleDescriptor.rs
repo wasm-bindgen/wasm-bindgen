@@ -33,6 +33,15 @@ extern "C" {
     #[wasm_bindgen(method, setter = "label")]
     pub fn set_label(this: &GpuShaderModuleDescriptor, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `label` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuShaderModuleDescriptor`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "label")]
+    pub fn set_label_js_string(this: &GpuShaderModuleDescriptor, val: &::js_sys::JsString);
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `code` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `GpuShaderModuleDescriptor`*"]
@@ -50,6 +59,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "code")]
     pub fn set_code(this: &GpuShaderModuleDescriptor, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `code` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuShaderModuleDescriptor`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "code")]
+    pub fn set_code_js_string(this: &GpuShaderModuleDescriptor, val: &::js_sys::JsString);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuShaderModuleCompilationHint")]
     #[doc = "Get the `compilationHints` field of this object."]

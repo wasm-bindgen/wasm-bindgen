@@ -53,6 +53,15 @@ extern "C" {
     #[wasm_bindgen(method, setter = "scope")]
     pub fn set_scope(this: &MemoryAttribution, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `scope` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MemoryAttribution`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "scope")]
+    pub fn set_scope_js_string(this: &MemoryAttribution, val: &::js_sys::JsString);
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `url` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MemoryAttribution`*"]
@@ -70,6 +79,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "url")]
     pub fn set_url(this: &MemoryAttribution, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `url` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MemoryAttribution`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "url")]
+    pub fn set_url_js_string(this: &MemoryAttribution, val: &::js_sys::JsString);
 }
 #[cfg(web_sys_unstable_apis)]
 impl MemoryAttribution {

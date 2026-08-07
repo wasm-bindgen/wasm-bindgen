@@ -181,6 +181,18 @@ extern "C" {
         blob: &Blob,
         label: &str,
     ) -> Result<(), JsValue>;
+    #[cfg(feature = "Blob")]
+    #[wasm_bindgen(catch, method, js_class = "FileReader", js_name = "readAsText")]
+    #[doc = "The `readAsText()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`, `FileReader`*"]
+    pub fn read_as_text_with_js_string(
+        this: &FileReader,
+        blob: &Blob,
+        label: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
 }
 impl FileReader {
     #[doc = "The `FileReader.EMPTY` const."]

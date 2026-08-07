@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "cmd")]
     pub fn set_cmd(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `cmd` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "cmd")]
+    pub fn set_cmd_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `curExternalIfname` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -31,6 +36,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "curExternalIfname")]
     pub fn set_cur_external_ifname(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `curExternalIfname` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "curExternalIfname")]
+    pub fn set_cur_external_ifname_js_string(
+        this: &NetworkCommandOptions,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `curInternalIfname` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -42,6 +55,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "curInternalIfname")]
     pub fn set_cur_internal_ifname(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `curInternalIfname` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "curInternalIfname")]
+    pub fn set_cur_internal_ifname_js_string(
+        this: &NetworkCommandOptions,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `dns1` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -52,6 +73,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "dns1")]
     pub fn set_dns1(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `dns1` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "dns1")]
+    pub fn set_dns1_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `dns1_long` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -72,6 +98,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "dns2")]
     pub fn set_dns2(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `dns2` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "dns2")]
+    pub fn set_dns2_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `dns2_long` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -102,6 +133,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "domain")]
     pub fn set_domain(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `domain` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "domain")]
+    pub fn set_domain_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `enable` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -132,6 +168,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "endIp")]
     pub fn set_end_ip(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `endIp` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "endIp")]
+    pub fn set_end_ip_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `externalIfname` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -142,6 +183,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "externalIfname")]
     pub fn set_external_ifname(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `externalIfname` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "externalIfname")]
+    pub fn set_external_ifname_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `gateway` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -152,6 +198,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "gateway")]
     pub fn set_gateway(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `gateway` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "gateway")]
+    pub fn set_gateway_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `gateway_long` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -192,6 +243,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "ifname")]
     pub fn set_ifname(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `ifname` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "ifname")]
+    pub fn set_ifname_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `interfaceList` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -212,6 +268,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "internalIfname")]
     pub fn set_internal_ifname(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `internalIfname` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "internalIfname")]
+    pub fn set_internal_ifname_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `ip` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -222,6 +283,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "ip")]
     pub fn set_ip(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `ip` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "ip")]
+    pub fn set_ip_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `ipaddr` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -242,6 +308,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "key")]
     pub fn set_key(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `key` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "key")]
+    pub fn set_key_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `link` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -252,6 +323,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "link")]
     pub fn set_link(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `link` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "link")]
+    pub fn set_link_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `mask` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -272,6 +348,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "maskLength")]
     pub fn set_mask_length(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `maskLength` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "maskLength")]
+    pub fn set_mask_length_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `mode` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -282,6 +363,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "mode")]
     pub fn set_mode(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `mode` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "mode")]
+    pub fn set_mode_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `mtu` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -303,6 +389,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "preExternalIfname")]
     pub fn set_pre_external_ifname(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `preExternalIfname` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "preExternalIfname")]
+    pub fn set_pre_external_ifname_js_string(
+        this: &NetworkCommandOptions,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `preInternalIfname` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -314,6 +408,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "preInternalIfname")]
     pub fn set_pre_internal_ifname(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `preInternalIfname` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "preInternalIfname")]
+    pub fn set_pre_internal_ifname_js_string(
+        this: &NetworkCommandOptions,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `prefix` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -324,6 +426,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "prefix")]
     pub fn set_prefix(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `prefix` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "prefix")]
+    pub fn set_prefix_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `prefixLength` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -354,6 +461,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "security")]
     pub fn set_security(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `security` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "security")]
+    pub fn set_security_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `serverIp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -364,6 +476,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "serverIp")]
     pub fn set_server_ip(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `serverIp` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "serverIp")]
+    pub fn set_server_ip_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `ssid` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -374,6 +491,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "ssid")]
     pub fn set_ssid(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `ssid` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "ssid")]
+    pub fn set_ssid_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `startIp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -384,6 +506,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "startIp")]
     pub fn set_start_ip(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `startIp` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "startIp")]
+    pub fn set_start_ip_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `threshold` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -414,6 +541,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "usbEndIp")]
     pub fn set_usb_end_ip(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `usbEndIp` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "usbEndIp")]
+    pub fn set_usb_end_ip_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `usbStartIp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -424,6 +556,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "usbStartIp")]
     pub fn set_usb_start_ip(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `usbStartIp` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "usbStartIp")]
+    pub fn set_usb_start_ip_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `wifiEndIp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -434,6 +571,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "wifiEndIp")]
     pub fn set_wifi_end_ip(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `wifiEndIp` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "wifiEndIp")]
+    pub fn set_wifi_end_ip_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `wifiStartIp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -444,6 +586,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "wifiStartIp")]
     pub fn set_wifi_start_ip(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `wifiStartIp` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "wifiStartIp")]
+    pub fn set_wifi_start_ip_js_string(this: &NetworkCommandOptions, val: &::js_sys::JsString);
     #[doc = "Get the `wifictrlinterfacename` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -456,6 +603,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, setter = "wifictrlinterfacename")]
     pub fn set_wifictrlinterfacename(this: &NetworkCommandOptions, val: &str);
+    #[doc = "Change the `wifictrlinterfacename` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, setter = "wifictrlinterfacename")]
+    pub fn set_wifictrlinterfacename_js_string(
+        this: &NetworkCommandOptions,
+        val: &::js_sys::JsString,
+    );
 }
 impl NetworkCommandOptions {
     #[doc = "Construct a new `NetworkCommandOptions`."]

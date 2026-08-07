@@ -164,6 +164,21 @@ extern "C" {
         this: &ServiceWorkerRegistration,
         title: &str,
     ) -> Result<::js_sys::Promise, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "ServiceWorkerRegistration",
+        js_name = "showNotification"
+    )]
+    #[doc = "The `showNotification()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration/showNotification)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ServiceWorkerRegistration`*"]
+    pub fn show_notification_with_js_string(
+        this: &ServiceWorkerRegistration,
+        title: &::js_sys::JsString,
+    ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "NotificationOptions")]
     #[wasm_bindgen(
         catch,
@@ -179,6 +194,23 @@ extern "C" {
     pub fn show_notification_with_options(
         this: &ServiceWorkerRegistration,
         title: &str,
+        options: &NotificationOptions,
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(feature = "NotificationOptions")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "ServiceWorkerRegistration",
+        js_name = "showNotification"
+    )]
+    #[doc = "The `showNotification()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration/showNotification)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`, `ServiceWorkerRegistration`*"]
+    pub fn show_notification_with_js_string_and_options(
+        this: &ServiceWorkerRegistration,
+        title: &::js_sys::JsString,
         options: &NotificationOptions,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "ServiceWorkerRegistration")]

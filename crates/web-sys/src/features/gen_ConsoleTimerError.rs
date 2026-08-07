@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleTimerError`*"]
     #[wasm_bindgen(method, setter = "error")]
     pub fn set_error(this: &ConsoleTimerError, val: &str);
+    #[doc = "Change the `error` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleTimerError`*"]
+    #[wasm_bindgen(method, setter = "error")]
+    pub fn set_error_js_string(this: &ConsoleTimerError, val: &::js_sys::JsString);
     #[doc = "Get the `name` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleTimerError`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleTimerError`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &ConsoleTimerError, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleTimerError`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &ConsoleTimerError, val: &::js_sys::JsString);
 }
 impl ConsoleTimerError {
     #[doc = "Construct a new `ConsoleTimerError`."]

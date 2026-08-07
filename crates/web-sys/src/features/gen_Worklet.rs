@@ -23,6 +23,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Worklet`*"]
     pub fn add_module(this: &Worklet, module_url: &str) -> Result<::js_sys::Promise, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Worklet", js_name = "addModule")]
+    #[doc = "The `addModule()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Worklet/addModule)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Worklet`*"]
+    pub fn add_module_with_js_string(
+        this: &Worklet,
+        module_url: &::js_sys::JsString,
+    ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "WorkletOptions")]
     #[wasm_bindgen(catch, method, js_class = "Worklet", js_name = "addModule")]
     #[doc = "The `addModule()` method."]
@@ -33,6 +43,18 @@ extern "C" {
     pub fn add_module_with_options(
         this: &Worklet,
         module_url: &str,
+        options: &WorkletOptions,
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[cfg(feature = "WorkletOptions")]
+    #[wasm_bindgen(catch, method, js_class = "Worklet", js_name = "addModule")]
+    #[doc = "The `addModule()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Worklet/addModule)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Worklet`, `WorkletOptions`*"]
+    pub fn add_module_with_js_string_and_options(
+        this: &Worklet,
+        module_url: &::js_sys::JsString,
         options: &WorkletOptions,
     ) -> Result<::js_sys::Promise, JsValue>;
 }

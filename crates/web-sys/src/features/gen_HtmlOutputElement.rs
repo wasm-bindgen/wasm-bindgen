@@ -50,6 +50,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlOutputElement`*"]
     pub fn set_name(this: &HtmlOutputElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLOutputElement", js_name = "name")]
+    #[doc = "Setter for the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLOutputElement/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlOutputElement`*"]
+    pub fn set_name_js_string(this: &HtmlOutputElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLOutputElement", js_name = "type")]
     #[doc = "Getter for the `type` field of this object."]
     #[doc = ""]
@@ -81,6 +88,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlOutputElement`*"]
     pub fn set_default_value(this: &HtmlOutputElement, value: &str);
+    #[wasm_bindgen(
+        method,
+        setter,
+        js_class = "HTMLOutputElement",
+        js_name = "defaultValue"
+    )]
+    #[doc = "Setter for the `defaultValue` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLOutputElement/defaultValue)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlOutputElement`*"]
+    pub fn set_default_value_js_string(this: &HtmlOutputElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLOutputElement", js_name = "value")]
     #[doc = "Getter for the `value` field of this object."]
     #[doc = ""]
@@ -95,6 +114,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlOutputElement`*"]
     pub fn set_value(this: &HtmlOutputElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLOutputElement", js_name = "value")]
+    #[doc = "Setter for the `value` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLOutputElement/value)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlOutputElement`*"]
+    pub fn set_value_js_string(this: &HtmlOutputElement, value: &::js_sys::JsString);
     #[wasm_bindgen(
         method,
         getter,
@@ -158,4 +184,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlOutputElement`*"]
     pub fn set_custom_validity(this: &HtmlOutputElement, error: &str);
+    #[wasm_bindgen(method, js_class = "HTMLOutputElement", js_name = "setCustomValidity")]
+    #[doc = "The `setCustomValidity()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLOutputElement/setCustomValidity)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlOutputElement`*"]
+    pub fn set_custom_validity_with_js_string(this: &HtmlOutputElement, error: &::js_sys::JsString);
 }

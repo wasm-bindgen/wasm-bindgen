@@ -23,6 +23,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CacheStorage`*"]
     pub fn delete(this: &CacheStorage, cache_name: &str) -> ::js_sys::Promise;
+    #[wasm_bindgen(method, js_class = "CacheStorage", js_name = "delete")]
+    #[doc = "The `delete()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CacheStorage/delete)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CacheStorage`*"]
+    pub fn delete_with_js_string(
+        this: &CacheStorage,
+        cache_name: &::js_sys::JsString,
+    ) -> ::js_sys::Promise;
     #[wasm_bindgen(method, js_class = "CacheStorage")]
     #[doc = "The `has()` method."]
     #[doc = ""]
@@ -30,6 +40,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CacheStorage`*"]
     pub fn has(this: &CacheStorage, cache_name: &str) -> ::js_sys::Promise;
+    #[wasm_bindgen(method, js_class = "CacheStorage", js_name = "has")]
+    #[doc = "The `has()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CacheStorage/has)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CacheStorage`*"]
+    pub fn has_with_js_string(
+        this: &CacheStorage,
+        cache_name: &::js_sys::JsString,
+    ) -> ::js_sys::Promise;
     #[wasm_bindgen(method, js_class = "CacheStorage")]
     #[doc = "The `keys()` method."]
     #[doc = ""]
@@ -52,6 +72,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CacheStorage`*"]
     pub fn match_with_str(this: &CacheStorage, request: &str) -> ::js_sys::Promise;
+    #[wasm_bindgen(method, js_class = "CacheStorage", js_name = "match")]
+    #[doc = "The `match()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CacheStorage/match)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CacheStorage`*"]
+    pub fn match_with_js_string(
+        this: &CacheStorage,
+        request: &::js_sys::JsString,
+    ) -> ::js_sys::Promise;
     #[cfg(all(feature = "CacheQueryOptions", feature = "Request",))]
     #[wasm_bindgen(method, js_class = "CacheStorage", js_name = "match")]
     #[doc = "The `match()` method."]
@@ -76,6 +106,18 @@ extern "C" {
         request: &str,
         options: &CacheQueryOptions,
     ) -> ::js_sys::Promise;
+    #[cfg(feature = "CacheQueryOptions")]
+    #[wasm_bindgen(method, js_class = "CacheStorage", js_name = "match")]
+    #[doc = "The `match()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CacheStorage/match)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CacheQueryOptions`, `CacheStorage`*"]
+    pub fn match_with_js_string_and_options(
+        this: &CacheStorage,
+        request: &::js_sys::JsString,
+        options: &CacheQueryOptions,
+    ) -> ::js_sys::Promise;
     #[wasm_bindgen(method, js_class = "CacheStorage")]
     #[doc = "The `open()` method."]
     #[doc = ""]
@@ -83,4 +125,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CacheStorage`*"]
     pub fn open(this: &CacheStorage, cache_name: &str) -> ::js_sys::Promise;
+    #[wasm_bindgen(method, js_class = "CacheStorage", js_name = "open")]
+    #[doc = "The `open()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CacheStorage/open)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CacheStorage`*"]
+    pub fn open_with_js_string(
+        this: &CacheStorage,
+        cache_name: &::js_sys::JsString,
+    ) -> ::js_sys::Promise;
 }

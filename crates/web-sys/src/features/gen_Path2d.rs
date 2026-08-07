@@ -37,6 +37,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Path2d`*"]
     pub fn new_with_path_string(path_string: &str) -> Result<Path2d, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "Path2D")]
+    #[doc = "The `new Path2d(..)` constructor, creating a new instance of `Path2d`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Path2D/Path2D)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Path2d`*"]
+    pub fn new_with_js_string(path_string: &::js_sys::JsString) -> Result<Path2d, JsValue>;
     #[wasm_bindgen(method, js_class = "Path2D", js_name = "addPath")]
     #[doc = "The `addPath()` method."]
     #[doc = ""]

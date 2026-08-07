@@ -145,6 +145,24 @@ extern "C" {
     #[wasm_bindgen(
         method,
         js_class = "RTCRtpScriptTransformer",
+        js_name = "generateKeyFrame"
+    )]
+    #[doc = "The `generateKeyFrame()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpScriptTransformer/generateKeyFrame)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcRtpScriptTransformer`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn generate_key_frame_with_js_string(
+        this: &RtcRtpScriptTransformer,
+        rid: &::js_sys::JsString,
+    ) -> ::js_sys::Promise<::js_sys::Number>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = "RTCRtpScriptTransformer",
         js_name = "sendKeyFrameRequest"
     )]
     #[doc = "The `sendKeyFrameRequest()` method."]

@@ -175,6 +175,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PresentationConnection`*"]
     pub fn send_with_str(this: &PresentationConnection, data: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "PresentationConnection", js_name = "send")]
+    #[doc = "The `send()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PresentationConnection/send)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PresentationConnection`*"]
+    pub fn send_with_js_string(
+        this: &PresentationConnection,
+        data: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[cfg(feature = "Blob")]
     #[wasm_bindgen(catch, method, js_class = "PresentationConnection", js_name = "send")]
     #[doc = "The `send()` method."]

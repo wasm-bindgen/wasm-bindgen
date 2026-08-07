@@ -56,6 +56,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CacheBatchOperation`*"]
     #[wasm_bindgen(method, setter = "type")]
     pub fn set_type(this: &CacheBatchOperation, val: &str);
+    #[doc = "Change the `type` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CacheBatchOperation`*"]
+    #[wasm_bindgen(method, setter = "type")]
+    pub fn set_type_js_string(this: &CacheBatchOperation, val: &::js_sys::JsString);
 }
 impl CacheBatchOperation {
     #[doc = "Construct a new `CacheBatchOperation`."]

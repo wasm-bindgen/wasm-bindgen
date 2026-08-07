@@ -103,11 +103,34 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/History/pushState)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `History`*"]
+    pub fn push_state_with_js_string(
+        this: &History,
+        data: &::wasm_bindgen::JsValue,
+        title: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "History", js_name = "pushState")]
+    #[doc = "The `pushState()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/History/pushState)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `History`*"]
     pub fn push_state_with_url(
         this: &History,
         data: &::wasm_bindgen::JsValue,
         title: &str,
         url: Option<&str>,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "History", js_name = "pushState")]
+    #[doc = "The `pushState()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/History/pushState)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `History`*"]
+    pub fn push_state_with_js_string_and_opt_js_string(
+        this: &History,
+        data: &::wasm_bindgen::JsValue,
+        title: &::js_sys::JsString,
+        url: Option<&::js_sys::JsString>,
     ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "History", js_name = "replaceState")]
     #[doc = "The `replaceState()` method."]
@@ -126,10 +149,33 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/History/replaceState)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `History`*"]
+    pub fn replace_state_with_js_string(
+        this: &History,
+        data: &::wasm_bindgen::JsValue,
+        title: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "History", js_name = "replaceState")]
+    #[doc = "The `replaceState()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/History/replaceState)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `History`*"]
     pub fn replace_state_with_url(
         this: &History,
         data: &::wasm_bindgen::JsValue,
         title: &str,
         url: Option<&str>,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "History", js_name = "replaceState")]
+    #[doc = "The `replaceState()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/History/replaceState)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `History`*"]
+    pub fn replace_state_with_js_string_and_opt_js_string(
+        this: &History,
+        data: &::wasm_bindgen::JsValue,
+        title: &::js_sys::JsString,
+        url: Option<&::js_sys::JsString>,
     ) -> Result<(), JsValue>;
 }

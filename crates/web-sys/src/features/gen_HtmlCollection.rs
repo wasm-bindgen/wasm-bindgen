@@ -40,6 +40,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Element`, `HtmlCollection`*"]
     pub fn named_item(this: &HtmlCollection, name: &str) -> Option<Element>;
     #[cfg(feature = "Element")]
+    #[wasm_bindgen(method, js_class = "HTMLCollection", js_name = "namedItem")]
+    #[doc = "The `namedItem()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCollection/namedItem)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`, `HtmlCollection`*"]
+    pub fn named_item_with_js_string(
+        this: &HtmlCollection,
+        name: &::js_sys::JsString,
+    ) -> Option<Element>;
+    #[cfg(feature = "Element")]
     #[wasm_bindgen(method, js_class = "HTMLCollection", indexing_getter)]
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]
@@ -53,4 +64,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`, `HtmlCollection`*"]
     pub fn get_with_name(this: &HtmlCollection, name: &str) -> Option<Element>;
+    #[cfg(feature = "Element")]
+    #[wasm_bindgen(method, js_class = "HTMLCollection", indexing_getter)]
+    #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
+    #[doc = ""]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`, `HtmlCollection`*"]
+    pub fn get_with_js_string(this: &HtmlCollection, name: &::js_sys::JsString) -> Option<Element>;
 }

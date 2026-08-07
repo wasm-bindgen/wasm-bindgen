@@ -32,6 +32,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `BlobEvent`*"]
     pub fn new(type_: &str) -> Result<BlobEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "BlobEvent")]
+    #[doc = "The `new BlobEvent(..)` constructor, creating a new instance of `BlobEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BlobEvent/BlobEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BlobEvent`*"]
+    pub fn new_with_js_string(type_: &::js_sys::JsString) -> Result<BlobEvent, JsValue>;
     #[cfg(feature = "BlobEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "BlobEvent")]
     #[doc = "The `new BlobEvent(..)` constructor, creating a new instance of `BlobEvent`."]
@@ -41,6 +48,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BlobEvent`, `BlobEventInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &BlobEventInit,
+    ) -> Result<BlobEvent, JsValue>;
+    #[cfg(feature = "BlobEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "BlobEvent")]
+    #[doc = "The `new BlobEvent(..)` constructor, creating a new instance of `BlobEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BlobEvent/BlobEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BlobEvent`, `BlobEventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &BlobEventInit,
     ) -> Result<BlobEvent, JsValue>;
 }

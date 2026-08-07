@@ -89,6 +89,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UiEvent`*"]
     pub fn new(type_: &str) -> Result<UiEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "UIEvent")]
+    #[doc = "The `new UiEvent(..)` constructor, creating a new instance of `UiEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/UIEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `UiEvent`*"]
+    pub fn new_with_js_string(type_: &::js_sys::JsString) -> Result<UiEvent, JsValue>;
     #[cfg(feature = "UiEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "UIEvent")]
     #[doc = "The `new UiEvent(..)` constructor, creating a new instance of `UiEvent`."]
@@ -98,6 +105,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `UiEvent`, `UiEventInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &UiEventInit,
+    ) -> Result<UiEvent, JsValue>;
+    #[cfg(feature = "UiEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "UIEvent")]
+    #[doc = "The `new UiEvent(..)` constructor, creating a new instance of `UiEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/UIEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `UiEvent`, `UiEventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &UiEventInit,
     ) -> Result<UiEvent, JsValue>;
     #[wasm_bindgen(method, js_class = "UIEvent", js_name = "initUIEvent")]
@@ -113,7 +131,25 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/initUIEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UiEvent`*"]
+    pub fn init_ui_event_with_js_string(this: &UiEvent, a_type: &::js_sys::JsString);
+    #[wasm_bindgen(method, js_class = "UIEvent", js_name = "initUIEvent")]
+    #[doc = "The `initUIEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/initUIEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `UiEvent`*"]
     pub fn init_ui_event_with_a_can_bubble(this: &UiEvent, a_type: &str, a_can_bubble: bool);
+    #[wasm_bindgen(method, js_class = "UIEvent", js_name = "initUIEvent")]
+    #[doc = "The `initUIEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/initUIEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `UiEvent`*"]
+    pub fn init_ui_event_with_js_string_and_a_can_bubble(
+        this: &UiEvent,
+        a_type: &::js_sys::JsString,
+        a_can_bubble: bool,
+    );
     #[wasm_bindgen(method, js_class = "UIEvent", js_name = "initUIEvent")]
     #[doc = "The `initUIEvent()` method."]
     #[doc = ""]
@@ -123,6 +159,18 @@ extern "C" {
     pub fn init_ui_event_with_a_can_bubble_and_a_cancelable(
         this: &UiEvent,
         a_type: &str,
+        a_can_bubble: bool,
+        a_cancelable: bool,
+    );
+    #[wasm_bindgen(method, js_class = "UIEvent", js_name = "initUIEvent")]
+    #[doc = "The `initUIEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/initUIEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `UiEvent`*"]
+    pub fn init_ui_event_with_js_string_and_a_can_bubble_and_a_cancelable(
+        this: &UiEvent,
+        a_type: &::js_sys::JsString,
         a_can_bubble: bool,
         a_cancelable: bool,
     );
@@ -147,9 +195,38 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/initUIEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UiEvent`, `Window`*"]
+    pub fn init_ui_event_with_js_string_and_a_can_bubble_and_a_cancelable_and_a_view(
+        this: &UiEvent,
+        a_type: &::js_sys::JsString,
+        a_can_bubble: bool,
+        a_cancelable: bool,
+        a_view: Option<&Window>,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "UIEvent", js_name = "initUIEvent")]
+    #[doc = "The `initUIEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/initUIEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `UiEvent`, `Window`*"]
     pub fn init_ui_event_with_a_can_bubble_and_a_cancelable_and_a_view_and_a_detail(
         this: &UiEvent,
         a_type: &str,
+        a_can_bubble: bool,
+        a_cancelable: bool,
+        a_view: Option<&Window>,
+        a_detail: i32,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "UIEvent", js_name = "initUIEvent")]
+    #[doc = "The `initUIEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/UIEvent/initUIEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `UiEvent`, `Window`*"]
+    pub fn init_ui_event_with_js_string_and_a_can_bubble_and_a_cancelable_and_a_view_and_a_detail(
+        this: &UiEvent,
+        a_type: &::js_sys::JsString,
         a_can_bubble: bool,
         a_cancelable: bool,
         a_view: Option<&Window>,

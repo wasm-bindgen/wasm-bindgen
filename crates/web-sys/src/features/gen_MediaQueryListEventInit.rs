@@ -60,6 +60,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaQueryListEventInit`*"]
     #[wasm_bindgen(method, setter = "media")]
     pub fn set_media(this: &MediaQueryListEventInit, val: &str);
+    #[doc = "Change the `media` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaQueryListEventInit`*"]
+    #[wasm_bindgen(method, setter = "media")]
+    pub fn set_media_js_string(this: &MediaQueryListEventInit, val: &::js_sys::JsString);
 }
 impl MediaQueryListEventInit {
     #[doc = "Construct a new `MediaQueryListEventInit`."]

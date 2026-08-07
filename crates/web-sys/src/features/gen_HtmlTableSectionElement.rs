@@ -52,6 +52,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableSectionElement`*"]
     pub fn set_align(this: &HtmlTableSectionElement, value: &str);
+    #[wasm_bindgen(
+        method,
+        setter,
+        js_class = "HTMLTableSectionElement",
+        js_name = "align"
+    )]
+    #[doc = "Setter for the `align` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableSectionElement/align)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableSectionElement`*"]
+    pub fn set_align_js_string(this: &HtmlTableSectionElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLTableSectionElement", js_name = "ch")]
     #[doc = "Getter for the `ch` field of this object."]
     #[doc = ""]
@@ -66,6 +78,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableSectionElement`*"]
     pub fn set_ch(this: &HtmlTableSectionElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLTableSectionElement", js_name = "ch")]
+    #[doc = "Setter for the `ch` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableSectionElement/ch)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableSectionElement`*"]
+    pub fn set_ch_js_string(this: &HtmlTableSectionElement, value: &::js_sys::JsString);
     #[wasm_bindgen(
         method,
         getter,
@@ -92,6 +111,18 @@ extern "C" {
     pub fn set_ch_off(this: &HtmlTableSectionElement, value: &str);
     #[wasm_bindgen(
         method,
+        setter,
+        js_class = "HTMLTableSectionElement",
+        js_name = "chOff"
+    )]
+    #[doc = "Setter for the `chOff` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableSectionElement/chOff)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableSectionElement`*"]
+    pub fn set_ch_off_js_string(this: &HtmlTableSectionElement, value: &::js_sys::JsString);
+    #[wasm_bindgen(
+        method,
         getter,
         js_class = "HTMLTableSectionElement",
         js_name = "vAlign"
@@ -114,6 +145,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableSectionElement`*"]
     pub fn set_v_align(this: &HtmlTableSectionElement, value: &str);
+    #[wasm_bindgen(
+        method,
+        setter,
+        js_class = "HTMLTableSectionElement",
+        js_name = "vAlign"
+    )]
+    #[doc = "Setter for the `vAlign` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableSectionElement/vAlign)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableSectionElement`*"]
+    pub fn set_v_align_js_string(this: &HtmlTableSectionElement, value: &::js_sys::JsString);
     #[wasm_bindgen(
         catch,
         method,

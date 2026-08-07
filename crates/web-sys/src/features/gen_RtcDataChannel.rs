@@ -216,6 +216,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcDataChannel`*"]
     pub fn send_with_str(this: &RtcDataChannel, data: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "RTCDataChannel", js_name = "send")]
+    #[doc = "The `send()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannel/send)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcDataChannel`*"]
+    pub fn send_with_js_string(
+        this: &RtcDataChannel,
+        data: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[cfg(feature = "Blob")]
     #[wasm_bindgen(catch, method, js_class = "RTCDataChannel", js_name = "send")]
     #[doc = "The `send()` method."]

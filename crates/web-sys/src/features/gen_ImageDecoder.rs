@@ -131,6 +131,23 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn is_type_supported(type_: &str) -> ::js_sys::Promise<::js_sys::Boolean>;
     #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        static_method_of = "ImageDecoder",
+        js_class = "ImageDecoder",
+        js_name = "isTypeSupported"
+    )]
+    #[doc = "The `isTypeSupported()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ImageDecoder/isTypeSupported_static)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ImageDecoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn is_type_supported_with_js_string(
+        type_: &::js_sys::JsString,
+    ) -> ::js_sys::Promise<::js_sys::Boolean>;
+    #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, js_class = "ImageDecoder")]
     #[doc = "The `reset()` method."]
     #[doc = ""]

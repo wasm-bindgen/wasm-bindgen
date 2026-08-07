@@ -30,6 +30,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SpeechGrammar`*"]
     pub fn set_src(this: &SpeechGrammar, value: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, setter, js_class = "SpeechGrammar", js_name = "src")]
+    #[doc = "Setter for the `src` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechGrammar/src)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechGrammar`*"]
+    pub fn set_src_js_string(
+        this: &SpeechGrammar,
+        value: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, getter, js_class = "SpeechGrammar", js_name = "weight")]
     #[doc = "Getter for the `weight` field of this object."]
     #[doc = ""]

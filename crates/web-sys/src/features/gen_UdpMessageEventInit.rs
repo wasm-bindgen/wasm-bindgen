@@ -60,6 +60,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `UdpMessageEventInit`*"]
     #[wasm_bindgen(method, setter = "remoteAddress")]
     pub fn set_remote_address(this: &UdpMessageEventInit, val: &str);
+    #[doc = "Change the `remoteAddress` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `UdpMessageEventInit`*"]
+    #[wasm_bindgen(method, setter = "remoteAddress")]
+    pub fn set_remote_address_js_string(this: &UdpMessageEventInit, val: &::js_sys::JsString);
     #[doc = "Get the `remotePort` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UdpMessageEventInit`*"]

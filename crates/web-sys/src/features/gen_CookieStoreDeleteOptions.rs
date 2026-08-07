@@ -20,6 +20,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CookieStoreDeleteOptions`*"]
     #[wasm_bindgen(method, setter = "domain")]
     pub fn set_domain(this: &CookieStoreDeleteOptions, val: Option<&str>);
+    #[doc = "Change the `domain` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieStoreDeleteOptions`*"]
+    #[wasm_bindgen(method, setter = "domain")]
+    pub fn set_domain_opt_js_string(
+        this: &CookieStoreDeleteOptions,
+        val: Option<&::js_sys::JsString>,
+    );
     #[doc = "Get the `name` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CookieStoreDeleteOptions`*"]
@@ -30,6 +38,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CookieStoreDeleteOptions`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &CookieStoreDeleteOptions, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieStoreDeleteOptions`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &CookieStoreDeleteOptions, val: &::js_sys::JsString);
     #[doc = "Get the `partitioned` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CookieStoreDeleteOptions`*"]
@@ -50,6 +63,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CookieStoreDeleteOptions`*"]
     #[wasm_bindgen(method, setter = "path")]
     pub fn set_path(this: &CookieStoreDeleteOptions, val: &str);
+    #[doc = "Change the `path` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieStoreDeleteOptions`*"]
+    #[wasm_bindgen(method, setter = "path")]
+    pub fn set_path_js_string(this: &CookieStoreDeleteOptions, val: &::js_sys::JsString);
 }
 impl CookieStoreDeleteOptions {
     #[doc = "Construct a new `CookieStoreDeleteOptions`."]

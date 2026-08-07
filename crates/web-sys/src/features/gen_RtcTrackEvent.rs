@@ -56,4 +56,15 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcTrackEvent`, `RtcTrackEventInit`*"]
     pub fn new(type_: &str, event_init_dict: &RtcTrackEventInit) -> Result<RtcTrackEvent, JsValue>;
+    #[cfg(feature = "RtcTrackEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "RTCTrackEvent")]
+    #[doc = "The `new RtcTrackEvent(..)` constructor, creating a new instance of `RtcTrackEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCTrackEvent/RTCTrackEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcTrackEvent`, `RtcTrackEventInit`*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+        event_init_dict: &RtcTrackEventInit,
+    ) -> Result<RtcTrackEvent, JsValue>;
 }

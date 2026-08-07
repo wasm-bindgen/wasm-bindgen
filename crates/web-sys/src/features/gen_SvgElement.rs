@@ -33,6 +33,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgElement`*"]
     pub fn set_id(this: &SvgElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "SVGElement", js_name = "id")]
+    #[doc = "Setter for the `id` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGElement/id)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgElement`*"]
+    pub fn set_id_js_string(this: &SvgElement, value: &::js_sys::JsString);
     #[cfg(feature = "SvgAnimatedString")]
     #[wasm_bindgen(method, getter, js_class = "SVGElement", js_name = "className")]
     #[doc = "Getter for the `className` field of this object."]
@@ -1398,6 +1405,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgElement`*"]
     pub fn set_nonce(this: &SvgElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "SVGElement", js_name = "nonce")]
+    #[doc = "Setter for the `nonce` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGElement/nonce)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgElement`*"]
+    pub fn set_nonce_js_string(this: &SvgElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "SVGElement", js_name = "autofocus")]
     #[doc = "Getter for the `autofocus` field of this object."]
     #[doc = ""]

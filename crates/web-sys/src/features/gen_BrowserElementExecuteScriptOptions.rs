@@ -24,6 +24,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BrowserElementExecuteScriptOptions`*"]
     #[wasm_bindgen(method, setter = "origin")]
     pub fn set_origin(this: &BrowserElementExecuteScriptOptions, val: Option<&str>);
+    #[doc = "Change the `origin` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BrowserElementExecuteScriptOptions`*"]
+    #[wasm_bindgen(method, setter = "origin")]
+    pub fn set_origin_opt_js_string(
+        this: &BrowserElementExecuteScriptOptions,
+        val: Option<&::js_sys::JsString>,
+    );
     #[doc = "Get the `url` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `BrowserElementExecuteScriptOptions`*"]
@@ -34,6 +42,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BrowserElementExecuteScriptOptions`*"]
     #[wasm_bindgen(method, setter = "url")]
     pub fn set_url(this: &BrowserElementExecuteScriptOptions, val: Option<&str>);
+    #[doc = "Change the `url` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BrowserElementExecuteScriptOptions`*"]
+    #[wasm_bindgen(method, setter = "url")]
+    pub fn set_url_opt_js_string(
+        this: &BrowserElementExecuteScriptOptions,
+        val: Option<&::js_sys::JsString>,
+    );
 }
 impl BrowserElementExecuteScriptOptions {
     #[doc = "Construct a new `BrowserElementExecuteScriptOptions`."]

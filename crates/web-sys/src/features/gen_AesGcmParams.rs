@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AesGcmParams`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &AesGcmParams, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AesGcmParams`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &AesGcmParams, val: &::js_sys::JsString);
     #[doc = "Get the `additionalData` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AesGcmParams`*"]

@@ -30,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SocketElement`*"]
     #[wasm_bindgen(method, setter = "host")]
     pub fn set_host(this: &SocketElement, val: &str);
+    #[doc = "Change the `host` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SocketElement`*"]
+    #[wasm_bindgen(method, setter = "host")]
+    pub fn set_host_js_string(this: &SocketElement, val: &::js_sys::JsString);
     #[doc = "Get the `port` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SocketElement`*"]

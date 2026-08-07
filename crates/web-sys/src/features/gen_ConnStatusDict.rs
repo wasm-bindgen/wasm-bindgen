@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConnStatusDict`*"]
     #[wasm_bindgen(method, setter = "status")]
     pub fn set_status(this: &ConnStatusDict, val: &str);
+    #[doc = "Change the `status` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConnStatusDict`*"]
+    #[wasm_bindgen(method, setter = "status")]
+    pub fn set_status_js_string(this: &ConnStatusDict, val: &::js_sys::JsString);
 }
 impl ConnStatusDict {
     #[doc = "Construct a new `ConnStatusDict`."]

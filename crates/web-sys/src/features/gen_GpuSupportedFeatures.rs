@@ -57,6 +57,17 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn has(this: &GpuSupportedFeatures, value: &str) -> bool;
     #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_class = "GPUSupportedFeatures", js_name = "has")]
+    #[doc = "The `has()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUSupportedFeatures/has)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuSupportedFeatures`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn has_with_js_string(this: &GpuSupportedFeatures, value: &::js_sys::JsString) -> bool;
+    #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, js_class = "GPUSupportedFeatures")]
     #[doc = "The `entries()` method."]
     #[doc = ""]

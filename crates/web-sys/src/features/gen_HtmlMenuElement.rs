@@ -34,6 +34,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlMenuElement`*"]
     pub fn set_type(this: &HtmlMenuElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLMenuElement", js_name = "type")]
+    #[doc = "Setter for the `type` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMenuElement/type)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlMenuElement`*"]
+    pub fn set_type_js_string(this: &HtmlMenuElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLMenuElement", js_name = "label")]
     #[doc = "Getter for the `label` field of this object."]
     #[doc = ""]
@@ -48,6 +55,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlMenuElement`*"]
     pub fn set_label(this: &HtmlMenuElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLMenuElement", js_name = "label")]
+    #[doc = "Setter for the `label` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMenuElement/label)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlMenuElement`*"]
+    pub fn set_label_js_string(this: &HtmlMenuElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLMenuElement", js_name = "compact")]
     #[doc = "Getter for the `compact` field of this object."]
     #[doc = ""]

@@ -37,6 +37,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcStatsReport`*"]
     pub fn get(this: &RtcStatsReport, key: &str) -> Option<::js_sys::Object>;
+    #[wasm_bindgen(method, js_class = "RTCStatsReport", js_name = "get")]
+    #[doc = "The `get()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCStatsReport/get)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcStatsReport`*"]
+    pub fn get_with_js_string(
+        this: &RtcStatsReport,
+        key: &::js_sys::JsString,
+    ) -> Option<::js_sys::Object>;
     #[wasm_bindgen(method, js_class = "RTCStatsReport")]
     #[doc = "The `has()` method."]
     #[doc = ""]
@@ -44,6 +54,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcStatsReport`*"]
     pub fn has(this: &RtcStatsReport, key: &str) -> bool;
+    #[wasm_bindgen(method, js_class = "RTCStatsReport", js_name = "has")]
+    #[doc = "The `has()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCStatsReport/has)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcStatsReport`*"]
+    pub fn has_with_js_string(this: &RtcStatsReport, key: &::js_sys::JsString) -> bool;
     #[wasm_bindgen(method, js_class = "RTCStatsReport")]
     #[doc = "The `entries()` method."]
     #[doc = ""]

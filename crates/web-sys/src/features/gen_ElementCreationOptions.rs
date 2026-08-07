@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ElementCreationOptions`*"]
     #[wasm_bindgen(method, setter = "is")]
     pub fn set_is(this: &ElementCreationOptions, val: &str);
+    #[doc = "Change the `is` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ElementCreationOptions`*"]
+    #[wasm_bindgen(method, setter = "is")]
+    pub fn set_is_js_string(this: &ElementCreationOptions, val: &::js_sys::JsString);
     #[doc = "Get the `pseudo` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ElementCreationOptions`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ElementCreationOptions`*"]
     #[wasm_bindgen(method, setter = "pseudo")]
     pub fn set_pseudo(this: &ElementCreationOptions, val: &str);
+    #[doc = "Change the `pseudo` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ElementCreationOptions`*"]
+    #[wasm_bindgen(method, setter = "pseudo")]
+    pub fn set_pseudo_js_string(this: &ElementCreationOptions, val: &::js_sys::JsString);
 }
 impl ElementCreationOptions {
     #[doc = "Construct a new `ElementCreationOptions`."]

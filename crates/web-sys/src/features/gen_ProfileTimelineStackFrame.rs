@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineStackFrame`*"]
     #[wasm_bindgen(method, setter = "asyncCause")]
     pub fn set_async_cause(this: &ProfileTimelineStackFrame, val: &str);
+    #[doc = "Change the `asyncCause` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineStackFrame`*"]
+    #[wasm_bindgen(method, setter = "asyncCause")]
+    pub fn set_async_cause_js_string(this: &ProfileTimelineStackFrame, val: &::js_sys::JsString);
     #[doc = "Get the `asyncParent` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineStackFrame`*"]
@@ -52,6 +57,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineStackFrame`*"]
     #[wasm_bindgen(method, setter = "functionDisplayName")]
     pub fn set_function_display_name(this: &ProfileTimelineStackFrame, val: &str);
+    #[doc = "Change the `functionDisplayName` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineStackFrame`*"]
+    #[wasm_bindgen(method, setter = "functionDisplayName")]
+    pub fn set_function_display_name_js_string(
+        this: &ProfileTimelineStackFrame,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `line` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineStackFrame`*"]
@@ -82,6 +95,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineStackFrame`*"]
     #[wasm_bindgen(method, setter = "source")]
     pub fn set_source(this: &ProfileTimelineStackFrame, val: &str);
+    #[doc = "Change the `source` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineStackFrame`*"]
+    #[wasm_bindgen(method, setter = "source")]
+    pub fn set_source_js_string(this: &ProfileTimelineStackFrame, val: &::js_sys::JsString);
 }
 impl ProfileTimelineStackFrame {
     #[doc = "Construct a new `ProfileTimelineStackFrame`."]

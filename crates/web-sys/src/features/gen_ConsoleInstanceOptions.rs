@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleInstanceOptions`*"]
     #[wasm_bindgen(method, setter = "consoleID")]
     pub fn set_console_id(this: &ConsoleInstanceOptions, val: &str);
+    #[doc = "Change the `consoleID` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleInstanceOptions`*"]
+    #[wasm_bindgen(method, setter = "consoleID")]
+    pub fn set_console_id_js_string(this: &ConsoleInstanceOptions, val: &::js_sys::JsString);
     #[doc = "Get the `dump` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleInstanceOptions`*"]
@@ -40,6 +45,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleInstanceOptions`*"]
     #[wasm_bindgen(method, setter = "innerID")]
     pub fn set_inner_id(this: &ConsoleInstanceOptions, val: &str);
+    #[doc = "Change the `innerID` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleInstanceOptions`*"]
+    #[wasm_bindgen(method, setter = "innerID")]
+    pub fn set_inner_id_js_string(this: &ConsoleInstanceOptions, val: &::js_sys::JsString);
     #[cfg(feature = "ConsoleLogLevel")]
     #[doc = "Get the `maxLogLevel` field of this object."]
     #[doc = ""]
@@ -63,6 +73,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleInstanceOptions`*"]
     #[wasm_bindgen(method, setter = "maxLogLevelPref")]
     pub fn set_max_log_level_pref(this: &ConsoleInstanceOptions, val: &str);
+    #[doc = "Change the `maxLogLevelPref` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleInstanceOptions`*"]
+    #[wasm_bindgen(method, setter = "maxLogLevelPref")]
+    pub fn set_max_log_level_pref_js_string(
+        this: &ConsoleInstanceOptions,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `prefix` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleInstanceOptions`*"]
@@ -73,6 +91,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleInstanceOptions`*"]
     #[wasm_bindgen(method, setter = "prefix")]
     pub fn set_prefix(this: &ConsoleInstanceOptions, val: &str);
+    #[doc = "Change the `prefix` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleInstanceOptions`*"]
+    #[wasm_bindgen(method, setter = "prefix")]
+    pub fn set_prefix_js_string(this: &ConsoleInstanceOptions, val: &::js_sys::JsString);
 }
 impl ConsoleInstanceOptions {
     #[doc = "Construct a new `ConsoleInstanceOptions`."]

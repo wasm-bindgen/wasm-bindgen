@@ -35,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
     #[wasm_bindgen(method, setter = "ID")]
     pub fn set_id_str(this: &ConsoleEvent, val: &str);
+    #[doc = "Change the `ID` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[wasm_bindgen(method, setter = "ID")]
+    pub fn set_id_js_string(this: &ConsoleEvent, val: &::js_sys::JsString);
     #[doc = "Get the `addonId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
@@ -45,6 +50,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
     #[wasm_bindgen(method, setter = "addonId")]
     pub fn set_addon_id(this: &ConsoleEvent, val: &str);
+    #[doc = "Change the `addonId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[wasm_bindgen(method, setter = "addonId")]
+    pub fn set_addon_id_js_string(this: &ConsoleEvent, val: &::js_sys::JsString);
     #[doc = "Get the `arguments` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
@@ -75,6 +85,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
     #[wasm_bindgen(method, setter = "consoleID")]
     pub fn set_console_id(this: &ConsoleEvent, val: &str);
+    #[doc = "Change the `consoleID` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[wasm_bindgen(method, setter = "consoleID")]
+    pub fn set_console_id_js_string(this: &ConsoleEvent, val: &::js_sys::JsString);
     #[doc = "Get the `counter` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
@@ -95,6 +110,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
     #[wasm_bindgen(method, setter = "filename")]
     pub fn set_filename(this: &ConsoleEvent, val: &str);
+    #[doc = "Change the `filename` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[wasm_bindgen(method, setter = "filename")]
+    pub fn set_filename_js_string(this: &ConsoleEvent, val: &::js_sys::JsString);
     #[doc = "Get the `functionName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
@@ -105,6 +125,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
     #[wasm_bindgen(method, setter = "functionName")]
     pub fn set_function_name(this: &ConsoleEvent, val: &str);
+    #[doc = "Change the `functionName` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[wasm_bindgen(method, setter = "functionName")]
+    pub fn set_function_name_js_string(this: &ConsoleEvent, val: &::js_sys::JsString);
     #[doc = "Get the `groupName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
@@ -115,6 +140,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
     #[wasm_bindgen(method, setter = "groupName")]
     pub fn set_group_name(this: &ConsoleEvent, val: &str);
+    #[doc = "Change the `groupName` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[wasm_bindgen(method, setter = "groupName")]
+    pub fn set_group_name_js_string(this: &ConsoleEvent, val: &::js_sys::JsString);
     #[doc = "Get the `innerID` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
@@ -140,6 +170,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
     #[wasm_bindgen(method, setter = "innerID")]
     pub fn set_inner_id_str(this: &ConsoleEvent, val: &str);
+    #[doc = "Change the `innerID` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[wasm_bindgen(method, setter = "innerID")]
+    pub fn set_inner_id_js_string(this: &ConsoleEvent, val: &::js_sys::JsString);
     #[doc = "Get the `level` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
@@ -150,6 +185,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
     #[wasm_bindgen(method, setter = "level")]
     pub fn set_level(this: &ConsoleEvent, val: &str);
+    #[doc = "Change the `level` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[wasm_bindgen(method, setter = "level")]
+    pub fn set_level_js_string(this: &ConsoleEvent, val: &::js_sys::JsString);
     #[doc = "Get the `lineNumber` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
@@ -170,6 +210,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
     #[wasm_bindgen(method, setter = "prefix")]
     pub fn set_prefix(this: &ConsoleEvent, val: &str);
+    #[doc = "Change the `prefix` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[wasm_bindgen(method, setter = "prefix")]
+    pub fn set_prefix_js_string(this: &ConsoleEvent, val: &::js_sys::JsString);
     #[doc = "Get the `private` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]

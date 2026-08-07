@@ -42,4 +42,15 @@ extern "C" {
         type_: &str,
         event_init_dict: &NotificationEventInit,
     ) -> Result<NotificationEvent, JsValue>;
+    #[cfg(feature = "NotificationEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "NotificationEvent")]
+    #[doc = "The `new NotificationEvent(..)` constructor, creating a new instance of `NotificationEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/NotificationEvent/NotificationEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NotificationEvent`, `NotificationEventInit`*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+        event_init_dict: &NotificationEventInit,
+    ) -> Result<NotificationEvent, JsValue>;
 }

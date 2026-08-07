@@ -43,6 +43,18 @@ extern "C" {
     pub fn set_text(this: &SpeechSynthesisUtterance, value: &str);
     #[wasm_bindgen(
         method,
+        setter,
+        js_class = "SpeechSynthesisUtterance",
+        js_name = "text"
+    )]
+    #[doc = "Setter for the `text` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesisUtterance/text)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechSynthesisUtterance`*"]
+    pub fn set_text_js_string(this: &SpeechSynthesisUtterance, value: &::js_sys::JsString);
+    #[wasm_bindgen(
+        method,
         getter,
         js_class = "SpeechSynthesisUtterance",
         js_name = "lang"
@@ -65,6 +77,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SpeechSynthesisUtterance`*"]
     pub fn set_lang(this: &SpeechSynthesisUtterance, value: &str);
+    #[wasm_bindgen(
+        method,
+        setter,
+        js_class = "SpeechSynthesisUtterance",
+        js_name = "lang"
+    )]
+    #[doc = "Setter for the `lang` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesisUtterance/lang)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechSynthesisUtterance`*"]
+    pub fn set_lang_js_string(this: &SpeechSynthesisUtterance, value: &::js_sys::JsString);
     #[cfg(feature = "SpeechSynthesisVoice")]
     #[wasm_bindgen(
         method,
@@ -345,4 +369,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SpeechSynthesisUtterance`*"]
     pub fn new_with_text(text: &str) -> Result<SpeechSynthesisUtterance, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "SpeechSynthesisUtterance")]
+    #[doc = "The `new SpeechSynthesisUtterance(..)` constructor, creating a new instance of `SpeechSynthesisUtterance`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesisUtterance/SpeechSynthesisUtterance)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechSynthesisUtterance`*"]
+    pub fn new_with_js_string(
+        text: &::js_sys::JsString,
+    ) -> Result<SpeechSynthesisUtterance, JsValue>;
 }

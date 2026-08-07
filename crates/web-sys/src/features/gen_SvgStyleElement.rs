@@ -34,6 +34,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgStyleElement`*"]
     pub fn set_xmlspace(this: &SvgStyleElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "SVGStyleElement", js_name = "xmlspace")]
+    #[doc = "Setter for the `xmlspace` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGStyleElement/xmlspace)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgStyleElement`*"]
+    pub fn set_xmlspace_js_string(this: &SvgStyleElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "SVGStyleElement", js_name = "type")]
     #[doc = "Getter for the `type` field of this object."]
     #[doc = ""]
@@ -48,6 +55,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgStyleElement`*"]
     pub fn set_type(this: &SvgStyleElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "SVGStyleElement", js_name = "type")]
+    #[doc = "Setter for the `type` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGStyleElement/type)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgStyleElement`*"]
+    pub fn set_type_js_string(this: &SvgStyleElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "SVGStyleElement", js_name = "media")]
     #[doc = "Getter for the `media` field of this object."]
     #[doc = ""]
@@ -62,6 +76,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgStyleElement`*"]
     pub fn set_media(this: &SvgStyleElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "SVGStyleElement", js_name = "media")]
+    #[doc = "Setter for the `media` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGStyleElement/media)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgStyleElement`*"]
+    pub fn set_media_js_string(this: &SvgStyleElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "SVGStyleElement", js_name = "title")]
     #[doc = "Getter for the `title` field of this object."]
     #[doc = ""]
@@ -76,6 +97,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgStyleElement`*"]
     pub fn set_title(this: &SvgStyleElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "SVGStyleElement", js_name = "title")]
+    #[doc = "Setter for the `title` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGStyleElement/title)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgStyleElement`*"]
+    pub fn set_title_js_string(this: &SvgStyleElement, value: &::js_sys::JsString);
     #[cfg(feature = "StyleSheet")]
     #[wasm_bindgen(method, getter, js_class = "SVGStyleElement", js_name = "sheet")]
     #[doc = "Getter for the `sheet` field of this object."]

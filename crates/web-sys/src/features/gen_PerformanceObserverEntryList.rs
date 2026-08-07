@@ -63,10 +63,39 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceObserverEntryList/getEntriesByName)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PerformanceObserverEntryList`*"]
+    pub fn get_entries_by_name_with_js_string(
+        this: &PerformanceObserverEntryList,
+        name: &::js_sys::JsString,
+    ) -> ::js_sys::Array;
+    #[wasm_bindgen(
+        method,
+        js_class = "PerformanceObserverEntryList",
+        js_name = "getEntriesByName"
+    )]
+    #[doc = "The `getEntriesByName()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceObserverEntryList/getEntriesByName)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PerformanceObserverEntryList`*"]
     pub fn get_entries_by_name_with_entry_type(
         this: &PerformanceObserverEntryList,
         name: &str,
         entry_type: &str,
+    ) -> ::js_sys::Array;
+    #[wasm_bindgen(
+        method,
+        js_class = "PerformanceObserverEntryList",
+        js_name = "getEntriesByName"
+    )]
+    #[doc = "The `getEntriesByName()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceObserverEntryList/getEntriesByName)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PerformanceObserverEntryList`*"]
+    pub fn get_entries_by_name_with_js_string_and_js_string(
+        this: &PerformanceObserverEntryList,
+        name: &::js_sys::JsString,
+        entry_type: &::js_sys::JsString,
     ) -> ::js_sys::Array;
     #[wasm_bindgen(
         method,
@@ -81,5 +110,19 @@ extern "C" {
     pub fn get_entries_by_type(
         this: &PerformanceObserverEntryList,
         entry_type: &str,
+    ) -> ::js_sys::Array;
+    #[wasm_bindgen(
+        method,
+        js_class = "PerformanceObserverEntryList",
+        js_name = "getEntriesByType"
+    )]
+    #[doc = "The `getEntriesByType()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceObserverEntryList/getEntriesByType)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PerformanceObserverEntryList`*"]
+    pub fn get_entries_by_type_with_js_string(
+        this: &PerformanceObserverEntryList,
+        entry_type: &::js_sys::JsString,
     ) -> ::js_sys::Array;
 }

@@ -31,4 +31,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RadioNodeList`*"]
     pub fn set_value(this: &RadioNodeList, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "RadioNodeList", js_name = "value")]
+    #[doc = "Setter for the `value` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RadioNodeList/value)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RadioNodeList`*"]
+    pub fn set_value_js_string(this: &RadioNodeList, value: &::js_sys::JsString);
 }

@@ -32,6 +32,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HitRegionOptions`*"]
     #[wasm_bindgen(method, setter = "id")]
     pub fn set_id(this: &HitRegionOptions, val: &str);
+    #[doc = "Change the `id` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HitRegionOptions`*"]
+    #[wasm_bindgen(method, setter = "id")]
+    pub fn set_id_js_string(this: &HitRegionOptions, val: &::js_sys::JsString);
     #[cfg(feature = "Path2d")]
     #[doc = "Get the `path` field of this object."]
     #[doc = ""]

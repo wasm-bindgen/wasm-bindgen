@@ -41,4 +41,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `BeforeUnloadEvent`*"]
     pub fn set_return_value(this: &BeforeUnloadEvent, value: &str);
+    #[wasm_bindgen(
+        method,
+        setter,
+        js_class = "BeforeUnloadEvent",
+        js_name = "returnValue"
+    )]
+    #[doc = "Setter for the `returnValue` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BeforeUnloadEvent/returnValue)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BeforeUnloadEvent`*"]
+    pub fn set_return_value_js_string(this: &BeforeUnloadEvent, value: &::js_sys::JsString);
 }

@@ -193,6 +193,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `XmlHttpRequest`*"]
     pub fn new_with_ignored(ignored: &str) -> Result<XmlHttpRequest, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "XMLHttpRequest")]
+    #[doc = "The `new XmlHttpRequest(..)` constructor, creating a new instance of `XmlHttpRequest`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/XMLHttpRequest)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `XmlHttpRequest`*"]
+    pub fn new_with_js_string(ignored: &::js_sys::JsString) -> Result<XmlHttpRequest, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "XMLHttpRequest")]
     #[doc = "The `abort()` method."]
     #[doc = ""]
@@ -229,6 +236,21 @@ extern "C" {
         this: &XmlHttpRequest,
         header: &str,
     ) -> Result<Option<::alloc::string::String>, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "XMLHttpRequest",
+        js_name = "getResponseHeader"
+    )]
+    #[doc = "The `getResponseHeader()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/getResponseHeader)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `XmlHttpRequest`*"]
+    pub fn get_response_header_with_js_string(
+        this: &XmlHttpRequest,
+        header: &::js_sys::JsString,
+    ) -> Result<Option<::alloc::string::String>, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "XMLHttpRequest")]
     #[doc = "The `open()` method."]
     #[doc = ""]
@@ -242,10 +264,33 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/open)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `XmlHttpRequest`*"]
+    pub fn open_with_js_string_and_js_string(
+        this: &XmlHttpRequest,
+        method: &::js_sys::JsString,
+        url: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "XMLHttpRequest", js_name = "open")]
+    #[doc = "The `open()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/open)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `XmlHttpRequest`*"]
     pub fn open_with_async(
         this: &XmlHttpRequest,
         method: &str,
         url: &str,
+        r#async: bool,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "XMLHttpRequest", js_name = "open")]
+    #[doc = "The `open()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/open)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `XmlHttpRequest`*"]
+    pub fn open_with_js_string_and_js_string_and_async(
+        this: &XmlHttpRequest,
+        method: &::js_sys::JsString,
+        url: &::js_sys::JsString,
         r#async: bool,
     ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "XMLHttpRequest", js_name = "open")]
@@ -267,6 +312,19 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/open)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `XmlHttpRequest`*"]
+    pub fn open_with_js_string_and_js_string_and_async_and_opt_js_string(
+        this: &XmlHttpRequest,
+        method: &::js_sys::JsString,
+        url: &::js_sys::JsString,
+        r#async: bool,
+        user: Option<&::js_sys::JsString>,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "XMLHttpRequest", js_name = "open")]
+    #[doc = "The `open()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/open)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `XmlHttpRequest`*"]
     pub fn open_with_async_and_user_and_password(
         this: &XmlHttpRequest,
         method: &str,
@@ -274,6 +332,20 @@ extern "C" {
         r#async: bool,
         user: Option<&str>,
         password: Option<&str>,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "XMLHttpRequest", js_name = "open")]
+    #[doc = "The `open()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/open)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `XmlHttpRequest`*"]
+    pub fn open_with_js_string_and_js_string_and_async_and_opt_js_string_and_opt_js_string(
+        this: &XmlHttpRequest,
+        method: &::js_sys::JsString,
+        url: &::js_sys::JsString,
+        r#async: bool,
+        user: Option<&::js_sys::JsString>,
+        password: Option<&::js_sys::JsString>,
     ) -> Result<(), JsValue>;
     #[wasm_bindgen(
         catch,
@@ -287,6 +359,21 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `XmlHttpRequest`*"]
     pub fn override_mime_type(this: &XmlHttpRequest, mime: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "XMLHttpRequest",
+        js_name = "overrideMimeType"
+    )]
+    #[doc = "The `overrideMimeType()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/overrideMimeType)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `XmlHttpRequest`*"]
+    pub fn override_mime_type_with_js_string(
+        this: &XmlHttpRequest,
+        mime: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "XMLHttpRequest")]
     #[doc = "The `send()` method."]
     #[doc = ""]
@@ -372,6 +459,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `XmlHttpRequest`*"]
     pub fn send_with_opt_str(this: &XmlHttpRequest, body: Option<&str>) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "XMLHttpRequest", js_name = "send")]
+    #[doc = "The `send()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/send)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `XmlHttpRequest`*"]
+    pub fn send_with_opt_js_string(
+        this: &XmlHttpRequest,
+        body: Option<&::js_sys::JsString>,
+    ) -> Result<(), JsValue>;
     #[cfg(feature = "ReadableStream")]
     #[wasm_bindgen(catch, method, js_class = "XMLHttpRequest", js_name = "send")]
     #[doc = "The `send()` method."]
@@ -398,6 +495,22 @@ extern "C" {
         this: &XmlHttpRequest,
         header: &str,
         value: &str,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "XMLHttpRequest",
+        js_name = "setRequestHeader"
+    )]
+    #[doc = "The `setRequestHeader()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/setRequestHeader)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `XmlHttpRequest`*"]
+    pub fn set_request_header_with_js_string_and_js_string(
+        this: &XmlHttpRequest,
+        header: &::js_sys::JsString,
+        value: &::js_sys::JsString,
     ) -> Result<(), JsValue>;
 }
 impl XmlHttpRequest {

@@ -23,4 +23,15 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CanvasGradient`*"]
     pub fn add_color_stop(this: &CanvasGradient, offset: f32, color: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CanvasGradient", js_name = "addColorStop")]
+    #[doc = "The `addColorStop()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CanvasGradient/addColorStop)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CanvasGradient`*"]
+    pub fn add_color_stop_with_js_string(
+        this: &CanvasGradient,
+        offset: f32,
+        color: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
 }

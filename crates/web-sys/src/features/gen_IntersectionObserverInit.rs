@@ -32,6 +32,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `IntersectionObserverInit`*"]
     #[wasm_bindgen(method, setter = "rootMargin")]
     pub fn set_root_margin(this: &IntersectionObserverInit, val: &str);
+    #[doc = "Change the `rootMargin` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IntersectionObserverInit`*"]
+    #[wasm_bindgen(method, setter = "rootMargin")]
+    pub fn set_root_margin_js_string(this: &IntersectionObserverInit, val: &::js_sys::JsString);
     #[doc = "Get the `threshold` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `IntersectionObserverInit`*"]

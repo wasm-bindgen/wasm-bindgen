@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CacheQueryOptions`*"]
     #[wasm_bindgen(method, setter = "cacheName")]
     pub fn set_cache_name(this: &CacheQueryOptions, val: &str);
+    #[doc = "Change the `cacheName` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CacheQueryOptions`*"]
+    #[wasm_bindgen(method, setter = "cacheName")]
+    pub fn set_cache_name_js_string(this: &CacheQueryOptions, val: &::js_sys::JsString);
     #[doc = "Get the `ignoreMethod` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CacheQueryOptions`*"]

@@ -54,6 +54,17 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn delete(this: &HighlightRegistry, key: &str) -> bool;
     #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_class = "HighlightRegistry", js_name = "delete")]
+    #[doc = "The `delete()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HighlightRegistry/delete)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HighlightRegistry`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn delete_with_js_string(this: &HighlightRegistry, key: &::js_sys::JsString) -> bool;
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Highlight")]
     #[wasm_bindgen(catch, method, js_class = "HighlightRegistry", js_name = "forEach")]
     #[doc = "The `forEach()` method."]
@@ -81,6 +92,21 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get(this: &HighlightRegistry, key: &str) -> Option<Highlight>;
     #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "Highlight")]
+    #[wasm_bindgen(method, js_class = "HighlightRegistry", js_name = "get")]
+    #[doc = "The `get()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HighlightRegistry/get)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Highlight`, `HighlightRegistry`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn get_with_js_string(
+        this: &HighlightRegistry,
+        key: &::js_sys::JsString,
+    ) -> Option<Highlight>;
+    #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, js_class = "HighlightRegistry")]
     #[doc = "The `has()` method."]
     #[doc = ""]
@@ -91,6 +117,17 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn has(this: &HighlightRegistry, key: &str) -> bool;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_class = "HighlightRegistry", js_name = "has")]
+    #[doc = "The `has()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HighlightRegistry/has)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HighlightRegistry`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn has_with_js_string(this: &HighlightRegistry, key: &::js_sys::JsString) -> bool;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "HighlightHitResult")]
     #[wasm_bindgen(
@@ -144,6 +181,22 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set(this: &HighlightRegistry, key: &str, value: &Highlight) -> HighlightRegistry;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "Highlight")]
+    #[wasm_bindgen(method, js_class = "HighlightRegistry", js_name = "set")]
+    #[doc = "The `set()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HighlightRegistry/set)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Highlight`, `HighlightRegistry`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_with_js_string(
+        this: &HighlightRegistry,
+        key: &::js_sys::JsString,
+        value: &Highlight,
+    ) -> HighlightRegistry;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Highlight")]
     #[wasm_bindgen(method, js_class = "HighlightRegistry")]

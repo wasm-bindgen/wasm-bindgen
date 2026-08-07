@@ -50,6 +50,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AnimationEventInit`*"]
     #[wasm_bindgen(method, setter = "animationName")]
     pub fn set_animation_name(this: &AnimationEventInit, val: &str);
+    #[doc = "Change the `animationName` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AnimationEventInit`*"]
+    #[wasm_bindgen(method, setter = "animationName")]
+    pub fn set_animation_name_js_string(this: &AnimationEventInit, val: &::js_sys::JsString);
     #[doc = "Get the `elapsedTime` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AnimationEventInit`*"]
@@ -70,6 +75,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AnimationEventInit`*"]
     #[wasm_bindgen(method, setter = "pseudoElement")]
     pub fn set_pseudo_element(this: &AnimationEventInit, val: &str);
+    #[doc = "Change the `pseudoElement` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AnimationEventInit`*"]
+    #[wasm_bindgen(method, setter = "pseudoElement")]
+    pub fn set_pseudo_element_js_string(this: &AnimationEventInit, val: &::js_sys::JsString);
 }
 impl AnimationEventInit {
     #[doc = "Construct a new `AnimationEventInit`."]

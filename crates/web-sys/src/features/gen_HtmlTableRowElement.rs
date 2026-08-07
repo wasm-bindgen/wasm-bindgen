@@ -61,6 +61,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableRowElement`*"]
     pub fn set_align(this: &HtmlTableRowElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLTableRowElement", js_name = "align")]
+    #[doc = "Setter for the `align` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableRowElement/align)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableRowElement`*"]
+    pub fn set_align_js_string(this: &HtmlTableRowElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLTableRowElement", js_name = "ch")]
     #[doc = "Getter for the `ch` field of this object."]
     #[doc = ""]
@@ -75,6 +82,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableRowElement`*"]
     pub fn set_ch(this: &HtmlTableRowElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLTableRowElement", js_name = "ch")]
+    #[doc = "Setter for the `ch` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableRowElement/ch)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableRowElement`*"]
+    pub fn set_ch_js_string(this: &HtmlTableRowElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLTableRowElement", js_name = "chOff")]
     #[doc = "Getter for the `chOff` field of this object."]
     #[doc = ""]
@@ -89,6 +103,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableRowElement`*"]
     pub fn set_ch_off(this: &HtmlTableRowElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLTableRowElement", js_name = "chOff")]
+    #[doc = "Setter for the `chOff` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableRowElement/chOff)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableRowElement`*"]
+    pub fn set_ch_off_js_string(this: &HtmlTableRowElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLTableRowElement", js_name = "vAlign")]
     #[doc = "Getter for the `vAlign` field of this object."]
     #[doc = ""]
@@ -103,6 +124,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableRowElement`*"]
     pub fn set_v_align(this: &HtmlTableRowElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLTableRowElement", js_name = "vAlign")]
+    #[doc = "Setter for the `vAlign` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableRowElement/vAlign)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableRowElement`*"]
+    pub fn set_v_align_js_string(this: &HtmlTableRowElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLTableRowElement", js_name = "bgColor")]
     #[doc = "Getter for the `bgColor` field of this object."]
     #[doc = ""]
@@ -117,6 +145,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableRowElement`*"]
     pub fn set_bg_color(this: &HtmlTableRowElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLTableRowElement", js_name = "bgColor")]
+    #[doc = "Setter for the `bgColor` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableRowElement/bgColor)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableRowElement`*"]
+    pub fn set_bg_color_js_string(this: &HtmlTableRowElement, value: &::js_sys::JsString);
     #[wasm_bindgen(
         catch,
         method,

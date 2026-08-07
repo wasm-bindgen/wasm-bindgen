@@ -36,6 +36,15 @@ extern "C" {
     #[wasm_bindgen(method, setter = "id")]
     pub fn set_id(this: &PublicKeyCredentialDescriptorJson, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `id` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialDescriptorJson`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "id")]
+    pub fn set_id_js_string(this: &PublicKeyCredentialDescriptorJson, val: &::js_sys::JsString);
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `transports` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialDescriptorJson`*"]
@@ -73,6 +82,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "type")]
     pub fn set_type(this: &PublicKeyCredentialDescriptorJson, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `type` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialDescriptorJson`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "type")]
+    pub fn set_type_js_string(this: &PublicKeyCredentialDescriptorJson, val: &::js_sys::JsString);
 }
 #[cfg(web_sys_unstable_apis)]
 impl PublicKeyCredentialDescriptorJson {

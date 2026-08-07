@@ -38,6 +38,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HashChangeEvent`*"]
     pub fn new(type_: &str) -> Result<HashChangeEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "HashChangeEvent")]
+    #[doc = "The `new HashChangeEvent(..)` constructor, creating a new instance of `HashChangeEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HashChangeEvent/HashChangeEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HashChangeEvent`*"]
+    pub fn new_with_js_string(type_: &::js_sys::JsString) -> Result<HashChangeEvent, JsValue>;
     #[cfg(feature = "HashChangeEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "HashChangeEvent")]
     #[doc = "The `new HashChangeEvent(..)` constructor, creating a new instance of `HashChangeEvent`."]
@@ -49,6 +56,17 @@ extern "C" {
         type_: &str,
         event_init_dict: &HashChangeEventInit,
     ) -> Result<HashChangeEvent, JsValue>;
+    #[cfg(feature = "HashChangeEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "HashChangeEvent")]
+    #[doc = "The `new HashChangeEvent(..)` constructor, creating a new instance of `HashChangeEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HashChangeEvent/HashChangeEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HashChangeEvent`, `HashChangeEventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
+        event_init_dict: &HashChangeEventInit,
+    ) -> Result<HashChangeEvent, JsValue>;
     #[wasm_bindgen(method, js_class = "HashChangeEvent", js_name = "initHashChangeEvent")]
     #[doc = "The `initHashChangeEvent()` method."]
     #[doc = ""]
@@ -56,6 +74,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HashChangeEvent`*"]
     pub fn init_hash_change_event(this: &HashChangeEvent, type_arg: &str);
+    #[wasm_bindgen(method, js_class = "HashChangeEvent", js_name = "initHashChangeEvent")]
+    #[doc = "The `initHashChangeEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HashChangeEvent/initHashChangeEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HashChangeEvent`*"]
+    pub fn init_hash_change_event_with_js_string(
+        this: &HashChangeEvent,
+        type_arg: &::js_sys::JsString,
+    );
     #[wasm_bindgen(method, js_class = "HashChangeEvent", js_name = "initHashChangeEvent")]
     #[doc = "The `initHashChangeEvent()` method."]
     #[doc = ""]
@@ -73,9 +101,32 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HashChangeEvent/initHashChangeEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HashChangeEvent`*"]
+    pub fn init_hash_change_event_with_js_string_and_can_bubble_arg(
+        this: &HashChangeEvent,
+        type_arg: &::js_sys::JsString,
+        can_bubble_arg: bool,
+    );
+    #[wasm_bindgen(method, js_class = "HashChangeEvent", js_name = "initHashChangeEvent")]
+    #[doc = "The `initHashChangeEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HashChangeEvent/initHashChangeEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HashChangeEvent`*"]
     pub fn init_hash_change_event_with_can_bubble_arg_and_cancelable_arg(
         this: &HashChangeEvent,
         type_arg: &str,
+        can_bubble_arg: bool,
+        cancelable_arg: bool,
+    );
+    #[wasm_bindgen(method, js_class = "HashChangeEvent", js_name = "initHashChangeEvent")]
+    #[doc = "The `initHashChangeEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HashChangeEvent/initHashChangeEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HashChangeEvent`*"]
+    pub fn init_hash_change_event_with_js_string_and_can_bubble_arg_and_cancelable_arg(
+        this: &HashChangeEvent,
+        type_arg: &::js_sys::JsString,
         can_bubble_arg: bool,
         cancelable_arg: bool,
     );
@@ -98,6 +149,19 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HashChangeEvent/initHashChangeEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HashChangeEvent`*"]
+    pub fn init_hash_change_event_with_js_string_and_can_bubble_arg_and_cancelable_arg_and_js_string(
+        this: &HashChangeEvent,
+        type_arg: &::js_sys::JsString,
+        can_bubble_arg: bool,
+        cancelable_arg: bool,
+        old_url_arg: &::js_sys::JsString,
+    );
+    #[wasm_bindgen(method, js_class = "HashChangeEvent", js_name = "initHashChangeEvent")]
+    #[doc = "The `initHashChangeEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HashChangeEvent/initHashChangeEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HashChangeEvent`*"]
     pub fn init_hash_change_event_with_can_bubble_arg_and_cancelable_arg_and_old_url_arg_and_new_url_arg(
         this: &HashChangeEvent,
         type_arg: &str,
@@ -105,5 +169,19 @@ extern "C" {
         cancelable_arg: bool,
         old_url_arg: &str,
         new_url_arg: &str,
+    );
+    #[wasm_bindgen(method, js_class = "HashChangeEvent", js_name = "initHashChangeEvent")]
+    #[doc = "The `initHashChangeEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HashChangeEvent/initHashChangeEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HashChangeEvent`*"]
+    pub fn init_hash_change_event_with_js_string_and_can_bubble_arg_and_cancelable_arg_and_js_string_and_js_string(
+        this: &HashChangeEvent,
+        type_arg: &::js_sys::JsString,
+        can_bubble_arg: bool,
+        cancelable_arg: bool,
+        old_url_arg: &::js_sys::JsString,
+        new_url_arg: &::js_sys::JsString,
     );
 }

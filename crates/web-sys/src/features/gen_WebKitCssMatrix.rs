@@ -38,6 +38,15 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebKitCSSMatrix/WebKitCSSMatrix)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebKitCssMatrix`*"]
+    pub fn new_with_js_string(
+        transform_list: &::js_sys::JsString,
+    ) -> Result<WebKitCssMatrix, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "WebKitCSSMatrix")]
+    #[doc = "The `new WebKitCssMatrix(..)` constructor, creating a new instance of `WebKitCssMatrix`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebKitCSSMatrix/WebKitCSSMatrix)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebKitCssMatrix`*"]
     pub fn new_with_other(other: &WebKitCssMatrix) -> Result<WebKitCssMatrix, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "WebKitCSSMatrix")]
     #[doc = "The `inverse()` method."]
@@ -191,6 +200,21 @@ extern "C" {
     pub fn set_matrix_value(
         this: &WebKitCssMatrix,
         transform_list: &str,
+    ) -> Result<WebKitCssMatrix, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebKitCSSMatrix",
+        js_name = "setMatrixValue"
+    )]
+    #[doc = "The `setMatrixValue()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebKitCSSMatrix/setMatrixValue)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebKitCssMatrix`*"]
+    pub fn set_matrix_value_with_js_string(
+        this: &WebKitCssMatrix,
+        transform_list: &::js_sys::JsString,
     ) -> Result<WebKitCssMatrix, JsValue>;
     #[wasm_bindgen(method, js_class = "WebKitCSSMatrix", js_name = "skewX")]
     #[doc = "The `skewX()` method."]

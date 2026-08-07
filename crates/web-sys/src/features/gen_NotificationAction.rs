@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NotificationAction`*"]
     #[wasm_bindgen(method, setter = "action")]
     pub fn set_action(this: &NotificationAction, val: &str);
+    #[doc = "Change the `action` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NotificationAction`*"]
+    #[wasm_bindgen(method, setter = "action")]
+    pub fn set_action_js_string(this: &NotificationAction, val: &::js_sys::JsString);
     #[doc = "Get the `icon` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NotificationAction`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NotificationAction`*"]
     #[wasm_bindgen(method, setter = "icon")]
     pub fn set_icon(this: &NotificationAction, val: &str);
+    #[doc = "Change the `icon` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NotificationAction`*"]
+    #[wasm_bindgen(method, setter = "icon")]
+    pub fn set_icon_js_string(this: &NotificationAction, val: &::js_sys::JsString);
     #[doc = "Get the `title` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NotificationAction`*"]
@@ -40,6 +50,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NotificationAction`*"]
     #[wasm_bindgen(method, setter = "title")]
     pub fn set_title(this: &NotificationAction, val: &str);
+    #[doc = "Change the `title` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NotificationAction`*"]
+    #[wasm_bindgen(method, setter = "title")]
+    pub fn set_title_js_string(this: &NotificationAction, val: &::js_sys::JsString);
 }
 impl NotificationAction {
     #[doc = "Construct a new `NotificationAction`."]

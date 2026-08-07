@@ -47,6 +47,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SpeechRecognition`*"]
     pub fn set_lang(this: &SpeechRecognition, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "SpeechRecognition", js_name = "lang")]
+    #[doc = "Setter for the `lang` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition/lang)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechRecognition`*"]
+    pub fn set_lang_js_string(this: &SpeechRecognition, value: &::js_sys::JsString);
     #[wasm_bindgen(
         catch,
         method,
@@ -147,6 +154,22 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SpeechRecognition`*"]
     pub fn set_service_uri(this: &SpeechRecognition, value: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        setter,
+        js_class = "SpeechRecognition",
+        js_name = "serviceURI"
+    )]
+    #[doc = "Setter for the `serviceURI` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition/serviceURI)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechRecognition`*"]
+    pub fn set_service_uri_js_string(
+        this: &SpeechRecognition,
+        value: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(
         method,
         getter,

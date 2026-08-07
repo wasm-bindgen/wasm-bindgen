@@ -34,6 +34,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlScriptElement`*"]
     pub fn set_src(this: &HtmlScriptElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLScriptElement", js_name = "src")]
+    #[doc = "Setter for the `src` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/src)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlScriptElement`*"]
+    pub fn set_src_js_string(this: &HtmlScriptElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLScriptElement", js_name = "type")]
     #[doc = "Getter for the `type` field of this object."]
     #[doc = ""]
@@ -48,6 +55,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlScriptElement`*"]
     pub fn set_type(this: &HtmlScriptElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLScriptElement", js_name = "type")]
+    #[doc = "Setter for the `type` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/type)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlScriptElement`*"]
+    pub fn set_type_js_string(this: &HtmlScriptElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLScriptElement", js_name = "noModule")]
     #[doc = "Getter for the `noModule` field of this object."]
     #[doc = ""]
@@ -76,6 +90,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlScriptElement`*"]
     pub fn set_charset(this: &HtmlScriptElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLScriptElement", js_name = "charset")]
+    #[doc = "Setter for the `charset` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/charset)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlScriptElement`*"]
+    pub fn set_charset_js_string(this: &HtmlScriptElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLScriptElement", js_name = "async")]
     #[doc = "Getter for the `async` field of this object."]
     #[doc = ""]
@@ -129,6 +150,21 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlScriptElement`*"]
     pub fn set_cross_origin(this: &HtmlScriptElement, value: Option<&str>);
     #[wasm_bindgen(
+        method,
+        setter,
+        js_class = "HTMLScriptElement",
+        js_name = "crossOrigin"
+    )]
+    #[doc = "Setter for the `crossOrigin` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/crossOrigin)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlScriptElement`*"]
+    pub fn set_cross_origin_opt_js_string(
+        this: &HtmlScriptElement,
+        value: Option<&::js_sys::JsString>,
+    );
+    #[wasm_bindgen(
         catch,
         method,
         getter,
@@ -154,6 +190,22 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlScriptElement`*"]
     pub fn set_text(this: &HtmlScriptElement, value: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        setter,
+        js_class = "HTMLScriptElement",
+        js_name = "text"
+    )]
+    #[doc = "Setter for the `text` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/text)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlScriptElement`*"]
+    pub fn set_text_js_string(
+        this: &HtmlScriptElement,
+        value: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(method, getter, js_class = "HTMLScriptElement", js_name = "event")]
     #[doc = "Getter for the `event` field of this object."]
     #[doc = ""]
@@ -168,6 +220,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlScriptElement`*"]
     pub fn set_event(this: &HtmlScriptElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLScriptElement", js_name = "event")]
+    #[doc = "Setter for the `event` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/event)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlScriptElement`*"]
+    pub fn set_event_js_string(this: &HtmlScriptElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLScriptElement", js_name = "htmlFor")]
     #[doc = "Getter for the `htmlFor` field of this object."]
     #[doc = ""]
@@ -182,6 +241,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlScriptElement`*"]
     pub fn set_html_for(this: &HtmlScriptElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLScriptElement", js_name = "htmlFor")]
+    #[doc = "Setter for the `htmlFor` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/htmlFor)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlScriptElement`*"]
+    pub fn set_html_for_js_string(this: &HtmlScriptElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLScriptElement", js_name = "integrity")]
     #[doc = "Getter for the `integrity` field of this object."]
     #[doc = ""]
@@ -196,4 +262,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlScriptElement`*"]
     pub fn set_integrity(this: &HtmlScriptElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLScriptElement", js_name = "integrity")]
+    #[doc = "Setter for the `integrity` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLScriptElement/integrity)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlScriptElement`*"]
+    pub fn set_integrity_js_string(this: &HtmlScriptElement, value: &::js_sys::JsString);
 }

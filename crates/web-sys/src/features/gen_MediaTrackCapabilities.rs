@@ -113,6 +113,15 @@ extern "C" {
     #[wasm_bindgen(method, setter = "deviceId")]
     pub fn set_device_id(this: &MediaTrackCapabilities, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `deviceId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaTrackCapabilities`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "deviceId")]
+    pub fn set_device_id_js_string(this: &MediaTrackCapabilities, val: &::js_sys::JsString);
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `echoCancellation` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaTrackCapabilities`*"]
@@ -190,6 +199,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "groupId")]
     pub fn set_group_id(this: &MediaTrackCapabilities, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `groupId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaTrackCapabilities`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "groupId")]
+    pub fn set_group_id_js_string(this: &MediaTrackCapabilities, val: &::js_sys::JsString);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "ULongRange")]
     #[doc = "Get the `height` field of this object."]

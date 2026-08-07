@@ -38,6 +38,15 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AudioParam`, `AudioParamMap`*"]
     pub fn get(this: &AudioParamMap, key: &str) -> Option<AudioParam>;
+    #[cfg(feature = "AudioParam")]
+    #[wasm_bindgen(method, js_class = "AudioParamMap", js_name = "get")]
+    #[doc = "The `get()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioParamMap/get)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AudioParam`, `AudioParamMap`*"]
+    pub fn get_with_js_string(this: &AudioParamMap, key: &::js_sys::JsString)
+        -> Option<AudioParam>;
     #[wasm_bindgen(method, js_class = "AudioParamMap")]
     #[doc = "The `has()` method."]
     #[doc = ""]
@@ -45,6 +54,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AudioParamMap`*"]
     pub fn has(this: &AudioParamMap, key: &str) -> bool;
+    #[wasm_bindgen(method, js_class = "AudioParamMap", js_name = "has")]
+    #[doc = "The `has()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioParamMap/has)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AudioParamMap`*"]
+    pub fn has_with_js_string(this: &AudioParamMap, key: &::js_sys::JsString) -> bool;
     #[wasm_bindgen(method, js_class = "AudioParamMap")]
     #[doc = "The `entries()` method."]
     #[doc = ""]

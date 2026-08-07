@@ -113,6 +113,19 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpCapabilities`, `RtcRtpReceiver`*"]
     pub fn get_capabilities(kind: &str) -> Option<RtcRtpCapabilities>;
+    #[cfg(feature = "RtcRtpCapabilities")]
+    #[wasm_bindgen(
+        static_method_of = "RtcRtpReceiver",
+        js_class = "RTCRtpReceiver",
+        js_name = "getCapabilities"
+    )]
+    #[doc = "The `getCapabilities()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpReceiver/getCapabilities_static)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcRtpCapabilities`, `RtcRtpReceiver`*"]
+    pub fn get_capabilities_with_js_string(kind: &::js_sys::JsString)
+        -> Option<RtcRtpCapabilities>;
     #[wasm_bindgen(
         method,
         js_class = "RTCRtpReceiver",

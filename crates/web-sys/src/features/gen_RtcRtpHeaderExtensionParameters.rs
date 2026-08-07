@@ -43,6 +43,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpHeaderExtensionParameters`*"]
     #[wasm_bindgen(method, setter = "uri")]
     pub fn set_uri(this: &RtcRtpHeaderExtensionParameters, val: &str);
+    #[doc = "Change the `uri` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcRtpHeaderExtensionParameters`*"]
+    #[wasm_bindgen(method, setter = "uri")]
+    pub fn set_uri_js_string(this: &RtcRtpHeaderExtensionParameters, val: &::js_sys::JsString);
 }
 impl RtcRtpHeaderExtensionParameters {
     #[doc = "Construct a new `RtcRtpHeaderExtensionParameters`."]

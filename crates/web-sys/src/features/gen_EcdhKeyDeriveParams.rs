@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `EcdhKeyDeriveParams`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &EcdhKeyDeriveParams, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `EcdhKeyDeriveParams`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &EcdhKeyDeriveParams, val: &::js_sys::JsString);
     #[cfg(feature = "CryptoKey")]
     #[doc = "Get the `public` field of this object."]
     #[doc = ""]

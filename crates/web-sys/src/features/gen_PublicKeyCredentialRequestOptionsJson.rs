@@ -63,6 +63,18 @@ extern "C" {
     #[wasm_bindgen(method, setter = "attestation")]
     pub fn set_attestation(this: &PublicKeyCredentialRequestOptionsJson, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `attestation` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialRequestOptionsJson`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "attestation")]
+    pub fn set_attestation_js_string(
+        this: &PublicKeyCredentialRequestOptionsJson,
+        val: &::js_sys::JsString,
+    );
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `attestationFormats` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialRequestOptionsJson`*"]
@@ -103,6 +115,18 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "challenge")]
     pub fn set_challenge(this: &PublicKeyCredentialRequestOptionsJson, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `challenge` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialRequestOptionsJson`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "challenge")]
+    pub fn set_challenge_js_string(
+        this: &PublicKeyCredentialRequestOptionsJson,
+        val: &::js_sys::JsString,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AuthenticationExtensionsClientInputsJson")]
     #[doc = "Get the `extensions` field of this object."]
@@ -169,6 +193,18 @@ extern "C" {
     #[wasm_bindgen(method, setter = "rpId")]
     pub fn set_rp_id(this: &PublicKeyCredentialRequestOptionsJson, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `rpId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialRequestOptionsJson`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "rpId")]
+    pub fn set_rp_id_js_string(
+        this: &PublicKeyCredentialRequestOptionsJson,
+        val: &::js_sys::JsString,
+    );
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `timeout` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialRequestOptionsJson`*"]
@@ -206,6 +242,18 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "userVerification")]
     pub fn set_user_verification(this: &PublicKeyCredentialRequestOptionsJson, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `userVerification` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialRequestOptionsJson`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "userVerification")]
+    pub fn set_user_verification_js_string(
+        this: &PublicKeyCredentialRequestOptionsJson,
+        val: &::js_sys::JsString,
+    );
 }
 #[cfg(web_sys_unstable_apis)]
 impl PublicKeyCredentialRequestOptionsJson {

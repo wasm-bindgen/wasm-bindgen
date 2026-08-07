@@ -45,9 +45,30 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSGroupingRule/insertRule)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssGroupingRule`*"]
+    pub fn insert_rule_with_js_string(
+        this: &CssGroupingRule,
+        rule: &::js_sys::JsString,
+    ) -> Result<u32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CSSGroupingRule", js_name = "insertRule")]
+    #[doc = "The `insertRule()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSGroupingRule/insertRule)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssGroupingRule`*"]
     pub fn insert_rule_with_index(
         this: &CssGroupingRule,
         rule: &str,
+        index: u32,
+    ) -> Result<u32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CSSGroupingRule", js_name = "insertRule")]
+    #[doc = "The `insertRule()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSGroupingRule/insertRule)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssGroupingRule`*"]
+    pub fn insert_rule_with_js_string_and_index(
+        this: &CssGroupingRule,
+        rule: &::js_sys::JsString,
         index: u32,
     ) -> Result<u32, JsValue>;
 }

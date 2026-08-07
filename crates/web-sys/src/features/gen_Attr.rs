@@ -39,6 +39,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Attr`*"]
     pub fn set_value(this: &Attr, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "Attr", js_name = "value")]
+    #[doc = "Setter for the `value` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Attr/value)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Attr`*"]
+    pub fn set_value_js_string(this: &Attr, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "Attr", js_name = "name")]
     #[doc = "Getter for the `name` field of this object."]
     #[doc = ""]

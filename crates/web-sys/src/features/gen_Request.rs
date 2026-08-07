@@ -137,6 +137,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Request`*"]
     pub fn new_with_str(input: &str) -> Result<Request, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "Request")]
+    #[doc = "The `new Request(..)` constructor, creating a new instance of `Request`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Request/Request)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Request`*"]
+    pub fn new_with_js_string(input: &::js_sys::JsString) -> Result<Request, JsValue>;
     #[cfg(feature = "RequestInit")]
     #[wasm_bindgen(catch, constructor, js_class = "Request")]
     #[doc = "The `new Request(..)` constructor, creating a new instance of `Request`."]
@@ -156,6 +163,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Request`, `RequestInit`*"]
     pub fn new_with_str_and_init(input: &str, init: &RequestInit) -> Result<Request, JsValue>;
+    #[cfg(feature = "RequestInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "Request")]
+    #[doc = "The `new Request(..)` constructor, creating a new instance of `Request`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Request/Request)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Request`, `RequestInit`*"]
+    pub fn new_with_js_string_and_init(
+        input: &::js_sys::JsString,
+        init: &RequestInit,
+    ) -> Result<Request, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Request")]
     #[doc = "The `clone()` method."]
     #[doc = ""]

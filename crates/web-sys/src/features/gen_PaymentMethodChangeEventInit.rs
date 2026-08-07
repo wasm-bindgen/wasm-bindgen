@@ -60,6 +60,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PaymentMethodChangeEventInit`*"]
     #[wasm_bindgen(method, setter = "methodName")]
     pub fn set_method_name(this: &PaymentMethodChangeEventInit, val: &str);
+    #[doc = "Change the `methodName` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PaymentMethodChangeEventInit`*"]
+    #[wasm_bindgen(method, setter = "methodName")]
+    pub fn set_method_name_js_string(this: &PaymentMethodChangeEventInit, val: &::js_sys::JsString);
 }
 impl PaymentMethodChangeEventInit {
     #[doc = "Construct a new `PaymentMethodChangeEventInit`."]

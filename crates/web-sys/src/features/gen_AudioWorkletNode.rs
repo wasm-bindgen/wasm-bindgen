@@ -72,6 +72,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AudioWorkletNode`, `BaseAudioContext`*"]
     pub fn new(context: &BaseAudioContext, name: &str) -> Result<AudioWorkletNode, JsValue>;
+    #[cfg(feature = "BaseAudioContext")]
+    #[wasm_bindgen(catch, constructor, js_class = "AudioWorkletNode")]
+    #[doc = "The `new AudioWorkletNode(..)` constructor, creating a new instance of `AudioWorkletNode`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletNode/AudioWorkletNode)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AudioWorkletNode`, `BaseAudioContext`*"]
+    pub fn new_with_js_string(
+        context: &BaseAudioContext,
+        name: &::js_sys::JsString,
+    ) -> Result<AudioWorkletNode, JsValue>;
     #[cfg(all(feature = "AudioWorkletNodeOptions", feature = "BaseAudioContext",))]
     #[wasm_bindgen(catch, constructor, js_class = "AudioWorkletNode")]
     #[doc = "The `new AudioWorkletNode(..)` constructor, creating a new instance of `AudioWorkletNode`."]
@@ -82,6 +93,18 @@ extern "C" {
     pub fn new_with_options(
         context: &BaseAudioContext,
         name: &str,
+        options: &AudioWorkletNodeOptions,
+    ) -> Result<AudioWorkletNode, JsValue>;
+    #[cfg(all(feature = "AudioWorkletNodeOptions", feature = "BaseAudioContext",))]
+    #[wasm_bindgen(catch, constructor, js_class = "AudioWorkletNode")]
+    #[doc = "The `new AudioWorkletNode(..)` constructor, creating a new instance of `AudioWorkletNode`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletNode/AudioWorkletNode)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AudioWorkletNode`, `AudioWorkletNodeOptions`, `BaseAudioContext`*"]
+    pub fn new_with_js_string_and_options(
+        context: &BaseAudioContext,
+        name: &::js_sys::JsString,
         options: &AudioWorkletNodeOptions,
     ) -> Result<AudioWorkletNode, JsValue>;
 }

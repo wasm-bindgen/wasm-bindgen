@@ -34,6 +34,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlModElement`*"]
     pub fn set_cite(this: &HtmlModElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLModElement", js_name = "cite")]
+    #[doc = "Setter for the `cite` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLModElement/cite)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlModElement`*"]
+    pub fn set_cite_js_string(this: &HtmlModElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLModElement", js_name = "dateTime")]
     #[doc = "Getter for the `dateTime` field of this object."]
     #[doc = ""]
@@ -48,4 +55,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlModElement`*"]
     pub fn set_date_time(this: &HtmlModElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLModElement", js_name = "dateTime")]
+    #[doc = "Setter for the `dateTime` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLModElement/dateTime)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlModElement`*"]
+    pub fn set_date_time_js_string(this: &HtmlModElement, value: &::js_sys::JsString);
 }

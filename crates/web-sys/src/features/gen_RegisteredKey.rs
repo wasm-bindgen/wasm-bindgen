@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RegisteredKey`*"]
     #[wasm_bindgen(method, setter = "appId")]
     pub fn set_app_id(this: &RegisteredKey, val: Option<&str>);
+    #[doc = "Change the `appId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegisteredKey`*"]
+    #[wasm_bindgen(method, setter = "appId")]
+    pub fn set_app_id_opt_js_string(this: &RegisteredKey, val: Option<&::js_sys::JsString>);
     #[doc = "Get the `keyHandle` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RegisteredKey`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RegisteredKey`*"]
     #[wasm_bindgen(method, setter = "keyHandle")]
     pub fn set_key_handle(this: &RegisteredKey, val: &str);
+    #[doc = "Change the `keyHandle` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegisteredKey`*"]
+    #[wasm_bindgen(method, setter = "keyHandle")]
+    pub fn set_key_handle_js_string(this: &RegisteredKey, val: &::js_sys::JsString);
     #[doc = "Get the `transports` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RegisteredKey`*"]
@@ -50,6 +60,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RegisteredKey`*"]
     #[wasm_bindgen(method, setter = "version")]
     pub fn set_version(this: &RegisteredKey, val: &str);
+    #[doc = "Change the `version` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegisteredKey`*"]
+    #[wasm_bindgen(method, setter = "version")]
+    pub fn set_version_js_string(this: &RegisteredKey, val: &::js_sys::JsString);
 }
 impl RegisteredKey {
     #[doc = "Construct a new `RegisteredKey`."]

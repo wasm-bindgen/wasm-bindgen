@@ -56,6 +56,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `BasePropertyIndexedKeyframe`*"]
     #[wasm_bindgen(method, setter = "easing")]
+    pub fn set_easing_js_string(this: &BasePropertyIndexedKeyframe, val: &::js_sys::JsString);
+    #[doc = "Change the `easing` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BasePropertyIndexedKeyframe`*"]
+    #[wasm_bindgen(method, setter = "easing")]
     pub fn set_easing_str_sequence(
         this: &BasePropertyIndexedKeyframe,
         val: &::wasm_bindgen::JsValue,

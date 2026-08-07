@@ -152,6 +152,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `IdbFileHandle`, `IdbFileRequest`*"]
     #[deprecated]
+    pub fn append_with_js_string(
+        this: &IdbFileHandle,
+        value: &::js_sys::JsString,
+    ) -> Result<Option<IdbFileRequest>, JsValue>;
+    #[cfg(feature = "IdbFileRequest")]
+    #[wasm_bindgen(catch, method, js_class = "IDBFileHandle", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBFileHandle/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbFileHandle`, `IdbFileRequest`*"]
+    #[deprecated]
     pub fn append_with_array_buffer(
         this: &IdbFileHandle,
         value: &::js_sys::ArrayBuffer,
@@ -319,6 +331,32 @@ extern "C" {
         encoding: Option<&str>,
     ) -> Result<Option<IdbFileRequest>, JsValue>;
     #[cfg(feature = "IdbFileRequest")]
+    #[wasm_bindgen(catch, method, js_class = "IDBFileHandle", js_name = "readAsText")]
+    #[doc = "The `readAsText()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBFileHandle/readAsText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbFileHandle`, `IdbFileRequest`*"]
+    #[deprecated]
+    pub fn read_as_text_with_u32_and_opt_js_string(
+        this: &IdbFileHandle,
+        size: u32,
+        encoding: Option<&::js_sys::JsString>,
+    ) -> Result<Option<IdbFileRequest>, JsValue>;
+    #[cfg(feature = "IdbFileRequest")]
+    #[wasm_bindgen(catch, method, js_class = "IDBFileHandle", js_name = "readAsText")]
+    #[doc = "The `readAsText()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBFileHandle/readAsText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbFileHandle`, `IdbFileRequest`*"]
+    #[deprecated]
+    pub fn read_as_text_with_f64_and_opt_js_string(
+        this: &IdbFileHandle,
+        size: f64,
+        encoding: Option<&::js_sys::JsString>,
+    ) -> Result<Option<IdbFileRequest>, JsValue>;
+    #[cfg(feature = "IdbFileRequest")]
     #[wasm_bindgen(catch, method, js_class = "IDBFileHandle")]
     #[doc = "The `truncate()` method."]
     #[doc = ""]
@@ -362,6 +400,18 @@ extern "C" {
     pub fn write_with_str(
         this: &IdbFileHandle,
         value: &str,
+    ) -> Result<Option<IdbFileRequest>, JsValue>;
+    #[cfg(feature = "IdbFileRequest")]
+    #[wasm_bindgen(catch, method, js_class = "IDBFileHandle", js_name = "write")]
+    #[doc = "The `write()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBFileHandle/write)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbFileHandle`, `IdbFileRequest`*"]
+    #[deprecated]
+    pub fn write_with_js_string(
+        this: &IdbFileHandle,
+        value: &::js_sys::JsString,
     ) -> Result<Option<IdbFileRequest>, JsValue>;
     #[cfg(feature = "IdbFileRequest")]
     #[wasm_bindgen(catch, method, js_class = "IDBFileHandle", js_name = "write")]

@@ -51,7 +51,25 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCDTMFSender/insertDTMF)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcdtmfSender`*"]
+    pub fn insert_dtmf_with_js_string(this: &RtcdtmfSender, tones: &::js_sys::JsString);
+    #[wasm_bindgen(method, js_class = "RTCDTMFSender", js_name = "insertDTMF")]
+    #[doc = "The `insertDTMF()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCDTMFSender/insertDTMF)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcdtmfSender`*"]
     pub fn insert_dtmf_with_duration(this: &RtcdtmfSender, tones: &str, duration: u32);
+    #[wasm_bindgen(method, js_class = "RTCDTMFSender", js_name = "insertDTMF")]
+    #[doc = "The `insertDTMF()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCDTMFSender/insertDTMF)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcdtmfSender`*"]
+    pub fn insert_dtmf_with_js_string_and_duration(
+        this: &RtcdtmfSender,
+        tones: &::js_sys::JsString,
+        duration: u32,
+    );
     #[wasm_bindgen(method, js_class = "RTCDTMFSender", js_name = "insertDTMF")]
     #[doc = "The `insertDTMF()` method."]
     #[doc = ""]
@@ -61,6 +79,18 @@ extern "C" {
     pub fn insert_dtmf_with_duration_and_inter_tone_gap(
         this: &RtcdtmfSender,
         tones: &str,
+        duration: u32,
+        inter_tone_gap: u32,
+    );
+    #[wasm_bindgen(method, js_class = "RTCDTMFSender", js_name = "insertDTMF")]
+    #[doc = "The `insertDTMF()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCDTMFSender/insertDTMF)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcdtmfSender`*"]
+    pub fn insert_dtmf_with_js_string_and_duration_and_inter_tone_gap(
+        this: &RtcdtmfSender,
+        tones: &::js_sys::JsString,
         duration: u32,
         inter_tone_gap: u32,
     );

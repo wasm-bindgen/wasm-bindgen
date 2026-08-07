@@ -460,6 +460,21 @@ impl<'src> FirstPassRecord<'src> {
                 }
             }
         }
+
+        // Drop mixed string expansions: a signature either keeps all strings
+        // as `&str` or takes all of them as `&JsString`.
+        actual_signatures.retain(|sig| {
+            !(sig
+                .args
+                .iter()
+                .flatten()
+                .any(|arg| arg.is_js_string_variant())
+                && sig
+                    .args
+                    .iter()
+                    .flatten()
+                    .any(|arg| arg.is_expanded_string()))
+        });
         let (js_name, kind, force_throws) = match id {
             // Constructors aren't annotated with `[Throws]` extended attributes
             // (how could they be, since they themselves are extended
@@ -577,6 +592,19 @@ impl<'src> FirstPassRecord<'src> {
             let mut rust_name = snake_case_ident(js_name);
             let mut first = true;
 
+            // `&str` is blessed: signatures containing no `JsString`
+            // expansions disambiguate only against each other (every
+            // `JsString`-bearing signature has an all-`&str` sibling carrying
+            // the same naming information), so they keep the names they had
+            // before string expansion.
+            let has_js_string_arg = |sig: &ExpandedSig<'a>| {
+                sig.args
+                    .iter()
+                    .flatten()
+                    .any(|arg| arg.is_js_string_variant())
+            };
+            let blessed_str = !has_js_string_arg(signature);
+
             for (i, arg) in signature
                 .args
                 .iter()
@@ -590,7 +618,7 @@ impl<'src> FirstPassRecord<'src> {
 
                 for &other_idx in disambiguate_against.iter() {
                     let other = &all_signatures[other_idx];
-                    if signature == other {
+                    if signature == other || (blessed_str && has_js_string_arg(other)) {
                         continue;
                     }
                     if other.orig.args.get(i).map(|s| s.name) == Some(arg_name) {

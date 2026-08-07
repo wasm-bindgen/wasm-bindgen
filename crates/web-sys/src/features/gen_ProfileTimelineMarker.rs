@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineMarker`*"]
     #[wasm_bindgen(method, setter = "causeName")]
     pub fn set_cause_name(this: &ProfileTimelineMarker, val: &str);
+    #[doc = "Change the `causeName` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineMarker`*"]
+    #[wasm_bindgen(method, setter = "causeName")]
+    pub fn set_cause_name_js_string(this: &ProfileTimelineMarker, val: &::js_sys::JsString);
     #[doc = "Get the `end` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineMarker`*"]
@@ -97,6 +102,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineMarker`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &ProfileTimelineMarker, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineMarker`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &ProfileTimelineMarker, val: &::js_sys::JsString);
     #[doc = "Get the `processType` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineMarker`*"]
@@ -147,6 +157,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineMarker`*"]
     #[wasm_bindgen(method, setter = "type")]
     pub fn set_type(this: &ProfileTimelineMarker, val: &str);
+    #[doc = "Change the `type` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineMarker`*"]
+    #[wasm_bindgen(method, setter = "type")]
+    pub fn set_type_js_string(this: &ProfileTimelineMarker, val: &::js_sys::JsString);
     #[doc = "Get the `unixTime` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineMarker`*"]

@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ElementDefinitionOptions`*"]
     #[wasm_bindgen(method, setter = "extends")]
     pub fn set_extends(this: &ElementDefinitionOptions, val: &str);
+    #[doc = "Change the `extends` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ElementDefinitionOptions`*"]
+    #[wasm_bindgen(method, setter = "extends")]
+    pub fn set_extends_js_string(this: &ElementDefinitionOptions, val: &::js_sys::JsString);
 }
 impl ElementDefinitionOptions {
     #[doc = "Construct a new `ElementDefinitionOptions`."]

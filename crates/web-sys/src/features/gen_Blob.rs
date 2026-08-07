@@ -244,6 +244,54 @@ extern "C" {
         end: f64,
         content_type: &str,
     ) -> Result<Blob, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Blob", js_name = "slice")]
+    #[doc = "The `slice()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Blob/slice)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`*"]
+    pub fn slice_with_i32_and_i32_and_js_string(
+        this: &Blob,
+        start: i32,
+        end: i32,
+        content_type: &::js_sys::JsString,
+    ) -> Result<Blob, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Blob", js_name = "slice")]
+    #[doc = "The `slice()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Blob/slice)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`*"]
+    pub fn slice_with_f64_and_i32_and_js_string(
+        this: &Blob,
+        start: f64,
+        end: i32,
+        content_type: &::js_sys::JsString,
+    ) -> Result<Blob, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Blob", js_name = "slice")]
+    #[doc = "The `slice()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Blob/slice)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`*"]
+    pub fn slice_with_i32_and_f64_and_js_string(
+        this: &Blob,
+        start: i32,
+        end: f64,
+        content_type: &::js_sys::JsString,
+    ) -> Result<Blob, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Blob", js_name = "slice")]
+    #[doc = "The `slice()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Blob/slice)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`*"]
+    pub fn slice_with_f64_and_f64_and_js_string(
+        this: &Blob,
+        start: f64,
+        end: f64,
+        content_type: &::js_sys::JsString,
+    ) -> Result<Blob, JsValue>;
     #[cfg(feature = "ReadableStream")]
     #[wasm_bindgen(method, js_class = "Blob")]
     #[doc = "The `stream()` method."]

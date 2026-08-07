@@ -48,6 +48,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Text`*"]
     pub fn new_with_data(data: &str) -> Result<Text, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "Text")]
+    #[doc = "The `new Text(..)` constructor, creating a new instance of `Text`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Text/Text)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Text`*"]
+    pub fn new_with_js_string(data: &::js_sys::JsString) -> Result<Text, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Text", js_name = "splitText")]
     #[doc = "The `splitText()` method."]
     #[doc = ""]

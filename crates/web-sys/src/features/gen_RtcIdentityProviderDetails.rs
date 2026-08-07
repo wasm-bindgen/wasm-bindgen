@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderDetails`*"]
     #[wasm_bindgen(method, setter = "domain")]
     pub fn set_domain(this: &RtcIdentityProviderDetails, val: &str);
+    #[doc = "Change the `domain` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderDetails`*"]
+    #[wasm_bindgen(method, setter = "domain")]
+    pub fn set_domain_js_string(this: &RtcIdentityProviderDetails, val: &::js_sys::JsString);
     #[doc = "Get the `protocol` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderDetails`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderDetails`*"]
     #[wasm_bindgen(method, setter = "protocol")]
     pub fn set_protocol(this: &RtcIdentityProviderDetails, val: &str);
+    #[doc = "Change the `protocol` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderDetails`*"]
+    #[wasm_bindgen(method, setter = "protocol")]
+    pub fn set_protocol_js_string(this: &RtcIdentityProviderDetails, val: &::js_sys::JsString);
 }
 impl RtcIdentityProviderDetails {
     #[doc = "Construct a new `RtcIdentityProviderDetails`."]

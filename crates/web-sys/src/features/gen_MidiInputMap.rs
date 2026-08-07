@@ -38,6 +38,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MidiInput`, `MidiInputMap`*"]
     pub fn get(this: &MidiInputMap, key: &str) -> Option<MidiInput>;
+    #[cfg(feature = "MidiInput")]
+    #[wasm_bindgen(method, js_class = "MIDIInputMap", js_name = "get")]
+    #[doc = "The `get()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MIDIInputMap/get)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MidiInput`, `MidiInputMap`*"]
+    pub fn get_with_js_string(this: &MidiInputMap, key: &::js_sys::JsString) -> Option<MidiInput>;
     #[wasm_bindgen(method, js_class = "MIDIInputMap")]
     #[doc = "The `has()` method."]
     #[doc = ""]
@@ -45,6 +53,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MidiInputMap`*"]
     pub fn has(this: &MidiInputMap, key: &str) -> bool;
+    #[wasm_bindgen(method, js_class = "MIDIInputMap", js_name = "has")]
+    #[doc = "The `has()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MIDIInputMap/has)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MidiInputMap`*"]
+    pub fn has_with_js_string(this: &MidiInputMap, key: &::js_sys::JsString) -> bool;
     #[wasm_bindgen(method, js_class = "MIDIInputMap")]
     #[doc = "The `entries()` method."]
     #[doc = ""]

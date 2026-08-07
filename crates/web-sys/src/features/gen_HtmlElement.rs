@@ -33,6 +33,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn set_title(this: &HtmlElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLElement", js_name = "title")]
+    #[doc = "Setter for the `title` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/title)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
+    pub fn set_title_js_string(this: &HtmlElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLElement", js_name = "scrollHeight")]
     #[doc = "Getter for the `scrollHeight` field of this object."]
     #[doc = ""]
@@ -77,6 +84,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn set_lang(this: &HtmlElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLElement", js_name = "lang")]
+    #[doc = "Setter for the `lang` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/lang)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
+    pub fn set_lang_js_string(this: &HtmlElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLElement", js_name = "dir")]
     #[doc = "Getter for the `dir` field of this object."]
     #[doc = ""]
@@ -91,6 +105,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn set_dir(this: &HtmlElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLElement", js_name = "dir")]
+    #[doc = "Setter for the `dir` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/dir)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
+    pub fn set_dir_js_string(this: &HtmlElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLElement", js_name = "innerText")]
     #[doc = "Getter for the `innerText` field of this object."]
     #[doc = ""]
@@ -105,6 +126,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn set_inner_text(this: &HtmlElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLElement", js_name = "innerText")]
+    #[doc = "Setter for the `innerText` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/innerText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
+    pub fn set_inner_text_js_string(this: &HtmlElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLElement", js_name = "hidden")]
     #[doc = "Getter for the `hidden` field of this object."]
     #[doc = ""]
@@ -147,6 +175,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn set_access_key(this: &HtmlElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLElement", js_name = "accessKey")]
+    #[doc = "Setter for the `accessKey` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/accessKey)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
+    pub fn set_access_key_js_string(this: &HtmlElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLElement", js_name = "accessKeyLabel")]
     #[doc = "Getter for the `accessKeyLabel` field of this object."]
     #[doc = ""]
@@ -182,6 +217,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn set_content_editable(this: &HtmlElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLElement", js_name = "contentEditable")]
+    #[doc = "Setter for the `contentEditable` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/contentEditable)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
+    pub fn set_content_editable_js_string(this: &HtmlElement, value: &::js_sys::JsString);
     #[wasm_bindgen(
         method,
         getter,
@@ -208,6 +250,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn set_popover(this: &HtmlElement, value: Option<&str>) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, setter, js_class = "HTMLElement", js_name = "popover")]
+    #[doc = "Setter for the `popover` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/popover)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
+    pub fn set_popover_opt_js_string(
+        this: &HtmlElement,
+        value: Option<&::js_sys::JsString>,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(method, getter, js_class = "HTMLElement", js_name = "spellcheck")]
     #[doc = "Getter for the `spellcheck` field of this object."]
     #[doc = ""]
@@ -1641,6 +1693,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn set_nonce(this: &HtmlElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLElement", js_name = "nonce")]
+    #[doc = "Setter for the `nonce` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/nonce)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
+    pub fn set_nonce_js_string(this: &HtmlElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLElement", js_name = "autofocus")]
     #[doc = "Getter for the `autofocus` field of this object."]
     #[doc = ""]

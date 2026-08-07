@@ -97,6 +97,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaTrackConstraintSet`*"]
     #[wasm_bindgen(method, setter = "deviceId")]
+    pub fn set_device_id_js_string(this: &MediaTrackConstraintSet, val: &::js_sys::JsString);
+    #[doc = "Change the `deviceId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaTrackConstraintSet`*"]
+    #[wasm_bindgen(method, setter = "deviceId")]
     pub fn set_device_id_str_sequence(
         this: &MediaTrackConstraintSet,
         val: &::wasm_bindgen::JsValue,
@@ -149,6 +154,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaTrackConstraintSet`*"]
     #[wasm_bindgen(method, setter = "facingMode")]
     pub fn set_facing_mode_str(this: &MediaTrackConstraintSet, val: &str);
+    #[doc = "Change the `facingMode` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaTrackConstraintSet`*"]
+    #[wasm_bindgen(method, setter = "facingMode")]
+    pub fn set_facing_mode_js_string(this: &MediaTrackConstraintSet, val: &::js_sys::JsString);
     #[doc = "Change the `facingMode` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaTrackConstraintSet`*"]
@@ -224,6 +234,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaTrackConstraintSet`*"]
     #[wasm_bindgen(method, setter = "mediaSource")]
     pub fn set_media_source(this: &MediaTrackConstraintSet, val: &str);
+    #[doc = "Change the `mediaSource` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaTrackConstraintSet`*"]
+    #[wasm_bindgen(method, setter = "mediaSource")]
+    pub fn set_media_source_js_string(this: &MediaTrackConstraintSet, val: &::js_sys::JsString);
     #[doc = "Get the `noiseSuppression` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaTrackConstraintSet`*"]

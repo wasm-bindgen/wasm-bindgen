@@ -50,6 +50,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcdtmfToneChangeEventInit`*"]
     #[wasm_bindgen(method, setter = "tone")]
     pub fn set_tone(this: &RtcdtmfToneChangeEventInit, val: &str);
+    #[doc = "Change the `tone` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcdtmfToneChangeEventInit`*"]
+    #[wasm_bindgen(method, setter = "tone")]
+    pub fn set_tone_js_string(this: &RtcdtmfToneChangeEventInit, val: &::js_sys::JsString);
 }
 impl RtcdtmfToneChangeEventInit {
     #[doc = "Construct a new `RtcdtmfToneChangeEventInit`."]

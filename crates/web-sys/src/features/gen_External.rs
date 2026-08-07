@@ -19,6 +19,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `External`*"]
     pub fn add_search_provider(this: &External, a_description_url: &str);
+    #[wasm_bindgen(method, js_class = "External", js_name = "AddSearchProvider")]
+    #[doc = "The `AddSearchProvider()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/External/AddSearchProvider)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `External`*"]
+    pub fn add_search_provider_with_js_string(
+        this: &External,
+        a_description_url: &::js_sys::JsString,
+    );
     #[wasm_bindgen(method, js_class = "External", js_name = "IsSearchProviderInstalled")]
     #[doc = "The `IsSearchProviderInstalled()` method."]
     #[doc = ""]
@@ -26,4 +36,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `External`*"]
     pub fn is_search_provider_installed(this: &External, a_search_url: &str) -> u32;
+    #[wasm_bindgen(method, js_class = "External", js_name = "IsSearchProviderInstalled")]
+    #[doc = "The `IsSearchProviderInstalled()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/External/IsSearchProviderInstalled)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `External`*"]
+    pub fn is_search_provider_installed_with_js_string(
+        this: &External,
+        a_search_url: &::js_sys::JsString,
+    ) -> u32;
 }

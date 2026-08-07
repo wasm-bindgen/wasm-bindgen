@@ -33,6 +33,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PushEvent`*"]
     pub fn new(type_: &str) -> Result<PushEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "PushEvent")]
+    #[doc = "The `new PushEvent(..)` constructor, creating a new instance of `PushEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PushEvent/PushEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PushEvent`*"]
+    pub fn new_with_js_string(type_: &::js_sys::JsString) -> Result<PushEvent, JsValue>;
     #[cfg(feature = "PushEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "PushEvent")]
     #[doc = "The `new PushEvent(..)` constructor, creating a new instance of `PushEvent`."]
@@ -42,6 +49,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PushEvent`, `PushEventInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &PushEventInit,
+    ) -> Result<PushEvent, JsValue>;
+    #[cfg(feature = "PushEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "PushEvent")]
+    #[doc = "The `new PushEvent(..)` constructor, creating a new instance of `PushEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PushEvent/PushEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PushEvent`, `PushEventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &PushEventInit,
     ) -> Result<PushEvent, JsValue>;
 }

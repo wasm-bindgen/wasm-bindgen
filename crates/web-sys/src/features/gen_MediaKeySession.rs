@@ -116,9 +116,31 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaKeySession/generateRequest)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaKeySession`*"]
+    pub fn generate_request_with_js_string_and_buffer_source(
+        this: &MediaKeySession,
+        init_data_type: &::js_sys::JsString,
+        init_data: &::js_sys::Object,
+    ) -> ::js_sys::Promise;
+    #[wasm_bindgen(method, js_class = "MediaKeySession", js_name = "generateRequest")]
+    #[doc = "The `generateRequest()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaKeySession/generateRequest)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaKeySession`*"]
     pub fn generate_request_with_u8_array(
         this: &MediaKeySession,
         init_data_type: &str,
+        init_data: &mut [u8],
+    ) -> ::js_sys::Promise;
+    #[wasm_bindgen(method, js_class = "MediaKeySession", js_name = "generateRequest")]
+    #[doc = "The `generateRequest()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaKeySession/generateRequest)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaKeySession`*"]
+    pub fn generate_request_with_js_string_and_u8_slice(
+        this: &MediaKeySession,
+        init_data_type: &::js_sys::JsString,
         init_data: &mut [u8],
     ) -> ::js_sys::Promise;
     #[wasm_bindgen(method, js_class = "MediaKeySession", js_name = "generateRequest")]
@@ -132,6 +154,17 @@ extern "C" {
         init_data_type: &str,
         init_data: &::js_sys::Uint8Array,
     ) -> ::js_sys::Promise;
+    #[wasm_bindgen(method, js_class = "MediaKeySession", js_name = "generateRequest")]
+    #[doc = "The `generateRequest()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaKeySession/generateRequest)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaKeySession`*"]
+    pub fn generate_request_with_js_string_and_u8_array(
+        this: &MediaKeySession,
+        init_data_type: &::js_sys::JsString,
+        init_data: &::js_sys::Uint8Array,
+    ) -> ::js_sys::Promise;
     #[wasm_bindgen(method, js_class = "MediaKeySession")]
     #[doc = "The `load()` method."]
     #[doc = ""]
@@ -139,6 +172,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaKeySession`*"]
     pub fn load(this: &MediaKeySession, session_id: &str) -> ::js_sys::Promise;
+    #[wasm_bindgen(method, js_class = "MediaKeySession", js_name = "load")]
+    #[doc = "The `load()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaKeySession/load)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaKeySession`*"]
+    pub fn load_with_js_string(
+        this: &MediaKeySession,
+        session_id: &::js_sys::JsString,
+    ) -> ::js_sys::Promise;
     #[wasm_bindgen(method, js_class = "MediaKeySession")]
     #[doc = "The `remove()` method."]
     #[doc = ""]

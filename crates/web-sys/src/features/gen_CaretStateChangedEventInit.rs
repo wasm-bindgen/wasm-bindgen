@@ -109,6 +109,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CaretStateChangedEventInit`*"]
     #[wasm_bindgen(method, setter = "selectedTextContent")]
     pub fn set_selected_text_content(this: &CaretStateChangedEventInit, val: &str);
+    #[doc = "Change the `selectedTextContent` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CaretStateChangedEventInit`*"]
+    #[wasm_bindgen(method, setter = "selectedTextContent")]
+    pub fn set_selected_text_content_js_string(
+        this: &CaretStateChangedEventInit,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `selectionEditable` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CaretStateChangedEventInit`*"]

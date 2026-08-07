@@ -49,6 +49,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaEncryptedEvent`*"]
     pub fn new(type_: &str) -> Result<MediaEncryptedEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "MediaEncryptedEvent")]
+    #[doc = "The `new MediaEncryptedEvent(..)` constructor, creating a new instance of `MediaEncryptedEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaEncryptedEvent/MediaEncryptedEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaEncryptedEvent`*"]
+    pub fn new_with_js_string(type_: &::js_sys::JsString) -> Result<MediaEncryptedEvent, JsValue>;
     #[cfg(feature = "MediaKeyNeededEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "MediaEncryptedEvent")]
     #[doc = "The `new MediaEncryptedEvent(..)` constructor, creating a new instance of `MediaEncryptedEvent`."]
@@ -58,6 +65,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaEncryptedEvent`, `MediaKeyNeededEventInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &MediaKeyNeededEventInit,
+    ) -> Result<MediaEncryptedEvent, JsValue>;
+    #[cfg(feature = "MediaKeyNeededEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "MediaEncryptedEvent")]
+    #[doc = "The `new MediaEncryptedEvent(..)` constructor, creating a new instance of `MediaEncryptedEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaEncryptedEvent/MediaEncryptedEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaEncryptedEvent`, `MediaKeyNeededEventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &MediaKeyNeededEventInit,
     ) -> Result<MediaEncryptedEvent, JsValue>;
 }

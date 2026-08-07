@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceServer`*"]
     #[wasm_bindgen(method, setter = "credential")]
     pub fn set_credential(this: &RtcIceServer, val: &str);
+    #[doc = "Change the `credential` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceServer`*"]
+    #[wasm_bindgen(method, setter = "credential")]
+    pub fn set_credential_js_string(this: &RtcIceServer, val: &::js_sys::JsString);
     #[cfg(feature = "RtcIceCredentialType")]
     #[doc = "Get the `credentialType` field of this object."]
     #[doc = ""]
@@ -42,6 +47,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceServer`*"]
     #[wasm_bindgen(method, setter = "url")]
     pub fn set_url(this: &RtcIceServer, val: &str);
+    #[doc = "Change the `url` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceServer`*"]
+    #[wasm_bindgen(method, setter = "url")]
+    pub fn set_url_js_string(this: &RtcIceServer, val: &::js_sys::JsString);
     #[doc = "Get the `urls` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceServer`*"]
@@ -61,6 +71,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceServer`*"]
     #[wasm_bindgen(method, setter = "urls")]
+    pub fn set_urls_js_string(this: &RtcIceServer, val: &::js_sys::JsString);
+    #[doc = "Change the `urls` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceServer`*"]
+    #[wasm_bindgen(method, setter = "urls")]
     pub fn set_urls_str_sequence(this: &RtcIceServer, val: &::wasm_bindgen::JsValue);
     #[doc = "Get the `username` field of this object."]
     #[doc = ""]
@@ -72,6 +87,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceServer`*"]
     #[wasm_bindgen(method, setter = "username")]
     pub fn set_username(this: &RtcIceServer, val: &str);
+    #[doc = "Change the `username` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceServer`*"]
+    #[wasm_bindgen(method, setter = "username")]
+    pub fn set_username_js_string(this: &RtcIceServer, val: &::js_sys::JsString);
 }
 impl RtcIceServer {
     #[doc = "Construct a new `RtcIceServer`."]

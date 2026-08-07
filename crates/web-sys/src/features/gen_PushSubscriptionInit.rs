@@ -61,6 +61,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PushSubscriptionInit`*"]
     #[wasm_bindgen(method, setter = "endpoint")]
     pub fn set_endpoint(this: &PushSubscriptionInit, val: &str);
+    #[doc = "Change the `endpoint` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PushSubscriptionInit`*"]
+    #[wasm_bindgen(method, setter = "endpoint")]
+    pub fn set_endpoint_js_string(this: &PushSubscriptionInit, val: &::js_sys::JsString);
     #[doc = "Get the `p256dhKey` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PushSubscriptionInit`*"]
@@ -81,6 +86,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PushSubscriptionInit`*"]
     #[wasm_bindgen(method, setter = "scope")]
     pub fn set_scope(this: &PushSubscriptionInit, val: &str);
+    #[doc = "Change the `scope` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PushSubscriptionInit`*"]
+    #[wasm_bindgen(method, setter = "scope")]
+    pub fn set_scope_js_string(this: &PushSubscriptionInit, val: &::js_sys::JsString);
 }
 impl PushSubscriptionInit {
     #[doc = "Construct a new `PushSubscriptionInit`."]

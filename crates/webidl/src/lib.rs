@@ -665,6 +665,14 @@ impl<'src> FirstPassRecord<'src> {
         // In unstable mode: no JsValue fallback, first typed variant is unsuffixed,
         //   remaining typed variants get suffixes.
         let flattened_types = wbg_type.flatten(None);
+        // `&str` is blessed: when the string expansion is the only source of
+        // multiplicity, the unsuffixed setter is already the `&str` setter, so
+        // only the `JsString` variant is added (with a suffix).
+        let blessed_str = flattened_types
+            .iter()
+            .filter(|flattened| !flattened.is_js_string_variant())
+            .count()
+            == 1;
         let setter_types = if flattened_types.len() > 1 {
             let mut setters = Vec::new();
 
@@ -674,10 +682,16 @@ impl<'src> FirstPassRecord<'src> {
                     ty: ty.clone(),
                     name_suffix: None,
                     deprecated: false,
+                    is_js_string: false,
                 });
             }
 
             for flattened in &flattened_types {
+                let is_js_string = flattened.is_js_string_variant();
+                if generics_compat && blessed_str && !is_js_string {
+                    // Duplicate of the unsuffixed `&str` fallback above.
+                    continue;
+                }
                 if let Some(setter_ty) = flattened
                     .to_syn_type(TypePosition::ARGUMENT, false, generics_compat)
                     .ok()
@@ -695,6 +709,7 @@ impl<'src> FirstPassRecord<'src> {
                         ty: setter_ty,
                         name_suffix,
                         deprecated: false,
+                        is_js_string,
                     });
                 }
             }
@@ -704,6 +719,7 @@ impl<'src> FirstPassRecord<'src> {
                 ty: ty.clone(),
                 name_suffix: None,
                 deprecated: false,
+                is_js_string: false,
             }]
         };
 
@@ -1102,8 +1118,16 @@ impl<'src> FirstPassRecord<'src> {
         if !readonly {
             let idls = type_.type_.to_wbg_type(self).flatten(attrs.as_ref());
             let any_different_type = idls.len() > 1;
+            // `&str` is blessed: when the string expansion is the only source
+            // of multiplicity, the `&str` setter keeps the unsuffixed name.
+            let blessed_str = idls
+                .iter()
+                .filter(|idl| !idl.is_js_string_variant())
+                .count()
+                == 1;
 
             if any_different_type
+                && !blessed_str
                 && UNFLATTENED_ATTRIBUTES
                     .get(parent_js_name)
                     .filter(|list| list.contains(&js_name.as_str()))
@@ -1139,7 +1163,7 @@ impl<'src> FirstPassRecord<'src> {
             }) {
                 let mut rust_name = format!("set_{}", snake_case_ident(&js_name));
 
-                if any_different_type {
+                if any_different_type && !(blessed_str && !idl.is_js_string_variant()) {
                     let mut ext = String::new();
                     idl.push_snake_case_name(&mut ext);
                     rust_name.push('_');

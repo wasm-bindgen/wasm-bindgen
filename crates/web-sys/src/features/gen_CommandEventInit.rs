@@ -50,6 +50,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CommandEventInit`*"]
     #[wasm_bindgen(method, setter = "command")]
     pub fn set_command(this: &CommandEventInit, val: &str);
+    #[doc = "Change the `command` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CommandEventInit`*"]
+    #[wasm_bindgen(method, setter = "command")]
+    pub fn set_command_js_string(this: &CommandEventInit, val: &::js_sys::JsString);
     #[cfg(feature = "Element")]
     #[doc = "Get the `source` field of this object."]
     #[doc = ""]

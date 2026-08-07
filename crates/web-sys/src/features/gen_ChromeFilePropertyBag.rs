@@ -40,6 +40,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ChromeFilePropertyBag`*"]
     #[wasm_bindgen(method, setter = "type")]
     pub fn set_type(this: &ChromeFilePropertyBag, val: &str);
+    #[doc = "Change the `type` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ChromeFilePropertyBag`*"]
+    #[wasm_bindgen(method, setter = "type")]
+    pub fn set_type_js_string(this: &ChromeFilePropertyBag, val: &::js_sys::JsString);
     #[doc = "Get the `existenceCheck` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ChromeFilePropertyBag`*"]
@@ -60,6 +65,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ChromeFilePropertyBag`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &ChromeFilePropertyBag, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ChromeFilePropertyBag`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &ChromeFilePropertyBag, val: &::js_sys::JsString);
 }
 impl ChromeFilePropertyBag {
     #[doc = "Construct a new `ChromeFilePropertyBag`."]

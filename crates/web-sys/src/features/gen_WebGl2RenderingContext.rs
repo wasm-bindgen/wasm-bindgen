@@ -2681,6 +2681,22 @@ extern "C" {
         program: &WebGlProgram,
         name: &str,
     ) -> i32;
+    #[cfg(feature = "WebGlProgram")]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getFragDataLocation"
+    )]
+    #[doc = "The `getFragDataLocation()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getFragDataLocation)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlProgram`*"]
+    pub fn get_frag_data_location_with_js_string(
+        this: &WebGl2RenderingContext,
+        program: &WebGlProgram,
+        name: &::js_sys::JsString,
+    ) -> i32;
     #[wasm_bindgen(
         catch,
         method,
@@ -2804,6 +2820,22 @@ extern "C" {
         this: &WebGl2RenderingContext,
         program: &WebGlProgram,
         uniform_block_name: &str,
+    ) -> u32;
+    #[cfg(feature = "WebGlProgram")]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getUniformBlockIndex"
+    )]
+    #[doc = "The `getUniformBlockIndex()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getUniformBlockIndex)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlProgram`*"]
+    pub fn get_uniform_block_index_with_js_string(
+        this: &WebGl2RenderingContext,
+        program: &WebGlProgram,
+        uniform_block_name: &::js_sys::JsString,
     ) -> u32;
     #[cfg(feature = "WebGlProgram")]
     #[wasm_bindgen(
@@ -7997,6 +8029,23 @@ extern "C" {
         index: u32,
         name: &str,
     );
+    #[cfg(feature = "WebGlProgram")]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "bindAttribLocation"
+    )]
+    #[doc = "The `bindAttribLocation()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/bindAttribLocation)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlProgram`*"]
+    pub fn bind_attrib_location_with_js_string(
+        this: &WebGl2RenderingContext,
+        program: &WebGlProgram,
+        index: u32,
+        name: &::js_sys::JsString,
+    );
     #[cfg(feature = "WebGlBuffer")]
     #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "bindBuffer")]
     #[doc = "The `bindBuffer()` method."]
@@ -8555,6 +8604,22 @@ extern "C" {
         program: &WebGlProgram,
         name: &str,
     ) -> i32;
+    #[cfg(feature = "WebGlProgram")]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getAttribLocation"
+    )]
+    #[doc = "The `getAttribLocation()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getAttribLocation)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlProgram`*"]
+    pub fn get_attrib_location_with_js_string(
+        this: &WebGl2RenderingContext,
+        program: &WebGlProgram,
+        name: &::js_sys::JsString,
+    ) -> i32;
     #[wasm_bindgen(
         method,
         js_class = "WebGL2RenderingContext",
@@ -8603,6 +8668,21 @@ extern "C" {
     pub fn get_extension(
         this: &WebGl2RenderingContext,
         name: &str,
+    ) -> Result<Option<::js_sys::Object>, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getExtension"
+    )]
+    #[doc = "The `getExtension()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getExtension)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`*"]
+    pub fn get_extension_with_js_string(
+        this: &WebGl2RenderingContext,
+        name: &::js_sys::JsString,
     ) -> Result<Option<::js_sys::Object>, JsValue>;
     #[wasm_bindgen(
         catch,
@@ -8797,6 +8877,22 @@ extern "C" {
         this: &WebGl2RenderingContext,
         program: &WebGlProgram,
         name: &str,
+    ) -> Option<WebGlUniformLocation>;
+    #[cfg(all(feature = "WebGlProgram", feature = "WebGlUniformLocation",))]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGL2RenderingContext",
+        js_name = "getUniformLocation"
+    )]
+    #[doc = "The `getUniformLocation()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/getUniformLocation)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlProgram`, `WebGlUniformLocation`*"]
+    pub fn get_uniform_location_with_js_string(
+        this: &WebGl2RenderingContext,
+        program: &WebGlProgram,
+        name: &::js_sys::JsString,
     ) -> Option<WebGlUniformLocation>;
     #[wasm_bindgen(
         catch,
@@ -8993,6 +9089,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlShader`*"]
     pub fn shader_source(this: &WebGl2RenderingContext, shader: &WebGlShader, source: &str);
+    #[cfg(feature = "WebGlShader")]
+    #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "shaderSource")]
+    #[doc = "The `shaderSource()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/shaderSource)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebGl2RenderingContext`, `WebGlShader`*"]
+    pub fn shader_source_with_js_string(
+        this: &WebGl2RenderingContext,
+        shader: &WebGlShader,
+        source: &::js_sys::JsString,
+    );
     #[wasm_bindgen(method, js_class = "WebGL2RenderingContext", js_name = "stencilFunc")]
     #[doc = "The `stencilFunc()` method."]
     #[doc = ""]

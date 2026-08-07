@@ -40,4 +40,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `XmlDocument`*"]
     pub fn load(this: &XmlDocument, url: &str) -> Result<bool, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "XMLDocument", js_name = "load")]
+    #[doc = "The `load()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLDocument/load)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `XmlDocument`*"]
+    pub fn load_with_js_string(
+        this: &XmlDocument,
+        url: &::js_sys::JsString,
+    ) -> Result<bool, JsValue>;
 }

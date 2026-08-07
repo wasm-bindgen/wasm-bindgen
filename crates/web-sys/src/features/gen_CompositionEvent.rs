@@ -39,6 +39,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CompositionEvent`*"]
     pub fn new(type_: &str) -> Result<CompositionEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "CompositionEvent")]
+    #[doc = "The `new CompositionEvent(..)` constructor, creating a new instance of `CompositionEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent/CompositionEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CompositionEvent`*"]
+    pub fn new_with_js_string(type_: &::js_sys::JsString) -> Result<CompositionEvent, JsValue>;
     #[cfg(feature = "CompositionEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "CompositionEvent")]
     #[doc = "The `new CompositionEvent(..)` constructor, creating a new instance of `CompositionEvent`."]
@@ -48,6 +55,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CompositionEvent`, `CompositionEventInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &CompositionEventInit,
+    ) -> Result<CompositionEvent, JsValue>;
+    #[cfg(feature = "CompositionEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "CompositionEvent")]
+    #[doc = "The `new CompositionEvent(..)` constructor, creating a new instance of `CompositionEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent/CompositionEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CompositionEvent`, `CompositionEventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &CompositionEventInit,
     ) -> Result<CompositionEvent, JsValue>;
     #[wasm_bindgen(
@@ -61,6 +79,20 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CompositionEvent`*"]
     pub fn init_composition_event(this: &CompositionEvent, type_arg: &str);
+    #[wasm_bindgen(
+        method,
+        js_class = "CompositionEvent",
+        js_name = "initCompositionEvent"
+    )]
+    #[doc = "The `initCompositionEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent/initCompositionEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CompositionEvent`*"]
+    pub fn init_composition_event_with_js_string(
+        this: &CompositionEvent,
+        type_arg: &::js_sys::JsString,
+    );
     #[wasm_bindgen(
         method,
         js_class = "CompositionEvent",
@@ -86,9 +118,40 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent/initCompositionEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CompositionEvent`*"]
+    pub fn init_composition_event_with_js_string_and_can_bubble_arg(
+        this: &CompositionEvent,
+        type_arg: &::js_sys::JsString,
+        can_bubble_arg: bool,
+    );
+    #[wasm_bindgen(
+        method,
+        js_class = "CompositionEvent",
+        js_name = "initCompositionEvent"
+    )]
+    #[doc = "The `initCompositionEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent/initCompositionEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CompositionEvent`*"]
     pub fn init_composition_event_with_can_bubble_arg_and_cancelable_arg(
         this: &CompositionEvent,
         type_arg: &str,
+        can_bubble_arg: bool,
+        cancelable_arg: bool,
+    );
+    #[wasm_bindgen(
+        method,
+        js_class = "CompositionEvent",
+        js_name = "initCompositionEvent"
+    )]
+    #[doc = "The `initCompositionEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent/initCompositionEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CompositionEvent`*"]
+    pub fn init_composition_event_with_js_string_and_can_bubble_arg_and_cancelable_arg(
+        this: &CompositionEvent,
+        type_arg: &::js_sys::JsString,
         can_bubble_arg: bool,
         cancelable_arg: bool,
     );
@@ -106,6 +169,24 @@ extern "C" {
     pub fn init_composition_event_with_can_bubble_arg_and_cancelable_arg_and_view_arg(
         this: &CompositionEvent,
         type_arg: &str,
+        can_bubble_arg: bool,
+        cancelable_arg: bool,
+        view_arg: Option<&Window>,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(
+        method,
+        js_class = "CompositionEvent",
+        js_name = "initCompositionEvent"
+    )]
+    #[doc = "The `initCompositionEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent/initCompositionEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CompositionEvent`, `Window`*"]
+    pub fn init_composition_event_with_js_string_and_can_bubble_arg_and_cancelable_arg_and_view_arg(
+        this: &CompositionEvent,
+        type_arg: &::js_sys::JsString,
         can_bubble_arg: bool,
         cancelable_arg: bool,
         view_arg: Option<&Window>,
@@ -140,6 +221,25 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent/initCompositionEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CompositionEvent`, `Window`*"]
+    pub fn init_composition_event_with_js_string_and_can_bubble_arg_and_cancelable_arg_and_view_arg_and_opt_js_string(
+        this: &CompositionEvent,
+        type_arg: &::js_sys::JsString,
+        can_bubble_arg: bool,
+        cancelable_arg: bool,
+        view_arg: Option<&Window>,
+        data_arg: Option<&::js_sys::JsString>,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(
+        method,
+        js_class = "CompositionEvent",
+        js_name = "initCompositionEvent"
+    )]
+    #[doc = "The `initCompositionEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent/initCompositionEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CompositionEvent`, `Window`*"]
     pub fn init_composition_event_with_can_bubble_arg_and_cancelable_arg_and_view_arg_and_data_arg_and_locale_arg(
         this: &CompositionEvent,
         type_arg: &str,
@@ -148,5 +248,25 @@ extern "C" {
         view_arg: Option<&Window>,
         data_arg: Option<&str>,
         locale_arg: &str,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(
+        method,
+        js_class = "CompositionEvent",
+        js_name = "initCompositionEvent"
+    )]
+    #[doc = "The `initCompositionEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent/initCompositionEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CompositionEvent`, `Window`*"]
+    pub fn init_composition_event_with_js_string_and_can_bubble_arg_and_cancelable_arg_and_view_arg_and_opt_js_string_and_js_string(
+        this: &CompositionEvent,
+        type_arg: &::js_sys::JsString,
+        can_bubble_arg: bool,
+        cancelable_arg: bool,
+        view_arg: Option<&Window>,
+        data_arg: Option<&::js_sys::JsString>,
+        locale_arg: &::js_sys::JsString,
     );
 }

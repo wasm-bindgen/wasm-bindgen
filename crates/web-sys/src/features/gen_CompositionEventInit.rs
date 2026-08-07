@@ -72,6 +72,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CompositionEventInit`*"]
     #[wasm_bindgen(method, setter = "data")]
     pub fn set_data(this: &CompositionEventInit, val: &str);
+    #[doc = "Change the `data` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CompositionEventInit`*"]
+    #[wasm_bindgen(method, setter = "data")]
+    pub fn set_data_js_string(this: &CompositionEventInit, val: &::js_sys::JsString);
 }
 impl CompositionEventInit {
     #[doc = "Construct a new `CompositionEventInit`."]

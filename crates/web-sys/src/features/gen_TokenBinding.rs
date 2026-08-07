@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `TokenBinding`*"]
     #[wasm_bindgen(method, setter = "id")]
     pub fn set_id(this: &TokenBinding, val: &str);
+    #[doc = "Change the `id` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TokenBinding`*"]
+    #[wasm_bindgen(method, setter = "id")]
+    pub fn set_id_js_string(this: &TokenBinding, val: &::js_sys::JsString);
     #[doc = "Get the `status` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TokenBinding`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `TokenBinding`*"]
     #[wasm_bindgen(method, setter = "status")]
     pub fn set_status(this: &TokenBinding, val: &str);
+    #[doc = "Change the `status` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TokenBinding`*"]
+    #[wasm_bindgen(method, setter = "status")]
+    pub fn set_status_js_string(this: &TokenBinding, val: &::js_sys::JsString);
 }
 impl TokenBinding {
     #[doc = "Construct a new `TokenBinding`."]

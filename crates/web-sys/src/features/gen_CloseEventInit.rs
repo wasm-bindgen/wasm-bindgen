@@ -60,6 +60,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CloseEventInit`*"]
     #[wasm_bindgen(method, setter = "reason")]
     pub fn set_reason(this: &CloseEventInit, val: &str);
+    #[doc = "Change the `reason` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CloseEventInit`*"]
+    #[wasm_bindgen(method, setter = "reason")]
+    pub fn set_reason_js_string(this: &CloseEventInit, val: &::js_sys::JsString);
     #[doc = "Get the `wasClean` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CloseEventInit`*"]

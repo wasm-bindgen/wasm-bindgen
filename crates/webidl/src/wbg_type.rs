@@ -30,6 +30,9 @@ pub(crate) enum WbgType<'a> {
     DomString,
     ByteString,
     UsvString,
+    /// A pre-allocated JS string (`js_sys::JsString`), avoiding the copy and
+    /// re-encode across the boundary that `&str` arguments incur.
+    JsString,
     Object,
     Symbol,
     Error,
@@ -564,6 +567,7 @@ impl<'a> WbgType<'a> {
             WbgType::Float | WbgType::UnrestrictedFloat => dst.push_str("f32"),
             WbgType::Double | WbgType::UnrestrictedDouble => dst.push_str("f64"),
             WbgType::DomString | WbgType::ByteString | WbgType::UsvString => dst.push_str("str"),
+            WbgType::JsString => dst.push_str("js_string"),
             WbgType::Object => dst.push_str("object"),
             WbgType::Symbol => dst.push_str("symbol"),
             WbgType::Error => dst.push_str("error"),
@@ -677,6 +681,25 @@ impl<'a> WbgType<'a> {
         }
     }
 
+    /// Whether this is a string type that gets a `JsString` expansion during
+    /// argument flattening (top level, through `JsOption`).
+    pub(crate) fn is_expanded_string(&self) -> bool {
+        match self {
+            WbgType::DomString | WbgType::ByteString | WbgType::UsvString => true,
+            WbgType::JsOption(inner) => inner.is_expanded_string(),
+            _ => false,
+        }
+    }
+
+    /// Whether this flattened variant is the `JsString` expansion of a string.
+    pub(crate) fn is_js_string_variant(&self) -> bool {
+        match self {
+            WbgType::JsString => true,
+            WbgType::JsOption(inner) => inner.is_js_string_variant(),
+            _ => false,
+        }
+    }
+
     /// Returns true if this type is a primitive that can be used directly in a Rust slice.
     /// These types have efficient `IntoWasmAbi` implementations for `&[T]`.
     pub(crate) fn is_slice_primitive(&self) -> bool {
@@ -735,9 +758,10 @@ impl<'a> WbgType<'a> {
                 WbgType::Boolean => Ok(js_sys("Boolean")),
 
                 // Strings become js_sys::JsString
-                WbgType::DomString | WbgType::ByteString | WbgType::UsvString => {
-                    Ok(js_sys("JsString"))
-                }
+                WbgType::DomString
+                | WbgType::ByteString
+                | WbgType::UsvString
+                | WbgType::JsString => Ok(js_sys("JsString")),
 
                 // JsOption must use JsOption<T> for inner positions (not Rust Option<T>)
                 WbgType::JsOption(wbg_type) => {
@@ -834,6 +858,7 @@ impl<'a> WbgType<'a> {
                     Ok(Some(leading_colon_path_ty(path)))
                 }
             }
+            WbgType::JsString => Ok(js_sys("JsString")),
             WbgType::Object => Ok(js_sys("Object")),
             WbgType::Symbol => Ok(js_sys("Symbol")),
             WbgType::Error => Ok(js_sys("Error")),
@@ -1157,41 +1182,56 @@ impl<'a> WbgType<'a> {
     ///
     /// [flattened union member types]: https://heycam.github.io/webidl/#dfn-flattened-union-member-types
     pub(crate) fn flatten(&self, attrs: Option<&ExtendedAttributeList<'_>>) -> Vec<Self> {
+        self.flatten_impl(attrs, true)
+    }
+
+    /// `expand_strings` is only true at the top level of an argument (and
+    /// through `JsOption`): strings there expand to both `&str` and
+    /// `&JsString` variants. Strings nested inside containers already map to
+    /// `JsString`, so expanding them would emit duplicate signatures.
+    fn flatten_impl(
+        &self,
+        attrs: Option<&ExtendedAttributeList<'_>>,
+        expand_strings: bool,
+    ) -> Vec<Self> {
         match self {
+            WbgType::DomString | WbgType::ByteString | WbgType::UsvString if expand_strings => {
+                vec![self.clone(), WbgType::JsString]
+            }
             WbgType::JsOption(wbg_type) => wbg_type
-                .flatten(attrs)
+                .flatten_impl(attrs, expand_strings)
                 .into_iter()
                 .map(Box::new)
                 .map(WbgType::JsOption)
                 .collect(),
             WbgType::FrozenArray(wbg_type) => wbg_type
-                .flatten(attrs)
+                .flatten_impl(attrs, false)
                 .into_iter()
                 .map(Box::new)
                 .map(WbgType::FrozenArray)
                 .collect(),
             WbgType::Sequence(wbg_type) => wbg_type
-                .flatten(attrs)
+                .flatten_impl(attrs, false)
                 .into_iter()
                 .map(Box::new)
                 .map(WbgType::Sequence)
                 .collect(),
             WbgType::Promise(wbg_type) => wbg_type
-                .flatten(attrs)
+                .flatten_impl(attrs, false)
                 .into_iter()
                 .map(Box::new)
                 .map(WbgType::Promise)
                 .collect(),
             WbgType::Iterator(wbg_type) => wbg_type
-                .flatten(attrs)
+                .flatten_impl(attrs, false)
                 .into_iter()
                 .map(Box::new)
                 .map(WbgType::Iterator)
                 .collect(),
             WbgType::ArrayTuple(wbg_type_a, wbg_type_b) => {
                 let mut wbg_types = Vec::new();
-                for wbg_type_a in wbg_type_a.flatten(attrs) {
-                    for wbg_type_b in wbg_type_b.flatten(attrs) {
+                for wbg_type_a in wbg_type_a.flatten_impl(attrs, false) {
+                    for wbg_type_b in wbg_type_b.flatten_impl(attrs, false) {
                         wbg_types.push(WbgType::ArrayTuple(
                             Box::new(wbg_type_a.clone()),
                             Box::new(wbg_type_b.clone()),
@@ -1202,8 +1242,8 @@ impl<'a> WbgType<'a> {
             }
             WbgType::Record(wbg_type_from, wbg_type_to) => {
                 let mut wbg_types = Vec::new();
-                for wbg_type_from in wbg_type_from.flatten(attrs) {
-                    for wbg_type_to in wbg_type_to.flatten(attrs) {
+                for wbg_type_from in wbg_type_from.flatten_impl(attrs, false) {
+                    for wbg_type_to in wbg_type_to.flatten_impl(attrs, false) {
                         wbg_types.push(WbgType::Record(
                             Box::new(wbg_type_from.clone()),
                             Box::new(wbg_type_to.clone()),
@@ -1214,7 +1254,7 @@ impl<'a> WbgType<'a> {
             }
             WbgType::Union(wbg_types) => wbg_types
                 .iter()
-                .flat_map(|wbg_type| wbg_type.flatten(attrs))
+                .flat_map(|wbg_type| wbg_type.flatten_impl(attrs, expand_strings))
                 .collect(),
             WbgType::ArrayBufferView {
                 allow_shared,
@@ -1572,6 +1612,7 @@ fn wbg_type_flatten_test() {
                 Interface("XMLHttpRequest")
             ))),
             JsOption(Box::new(DomString)),
+            JsOption(Box::new(JsString)),
             Sequence(Box::new(Sequence(Box::new(Double)))),
             Sequence(Box::new(WbgType::id("NodeList", Interface("NodeList")))),
         ],

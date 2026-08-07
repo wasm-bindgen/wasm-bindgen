@@ -153,6 +153,21 @@ extern "C" {
         this: &FileSystemWritableFileStream,
         data: &str,
     ) -> Result<::js_sys::Promise, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "FileSystemWritableFileStream",
+        js_name = "write"
+    )]
+    #[doc = "The `write()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemWritableFileStream/write)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FileSystemWritableFileStream`*"]
+    pub fn write_with_js_string(
+        this: &FileSystemWritableFileStream,
+        data: &::js_sys::JsString,
+    ) -> Result<::js_sys::Promise, JsValue>;
     #[cfg(feature = "WriteParams")]
     #[wasm_bindgen(
         catch,

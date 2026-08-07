@@ -39,6 +39,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Plugin`, `PluginArray`*"]
     pub fn named_item(this: &PluginArray, name: &str) -> Option<Plugin>;
+    #[cfg(feature = "Plugin")]
+    #[wasm_bindgen(method, js_class = "PluginArray", js_name = "namedItem")]
+    #[doc = "The `namedItem()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PluginArray/namedItem)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Plugin`, `PluginArray`*"]
+    pub fn named_item_with_js_string(
+        this: &PluginArray,
+        name: &::js_sys::JsString,
+    ) -> Option<Plugin>;
     #[wasm_bindgen(method, js_class = "PluginArray")]
     #[doc = "The `refresh()` method."]
     #[doc = ""]
@@ -67,4 +78,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Plugin`, `PluginArray`*"]
     pub fn get_with_name(this: &PluginArray, name: &str) -> Option<Plugin>;
+    #[cfg(feature = "Plugin")]
+    #[wasm_bindgen(method, js_class = "PluginArray", indexing_getter)]
+    #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
+    #[doc = ""]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Plugin`, `PluginArray`*"]
+    pub fn get_with_js_string(this: &PluginArray, name: &::js_sys::JsString) -> Option<Plugin>;
 }

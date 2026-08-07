@@ -171,6 +171,15 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEvent`*"]
     pub fn new(type_: &str) -> Result<SecurityPolicyViolationEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "SecurityPolicyViolationEvent")]
+    #[doc = "The `new SecurityPolicyViolationEvent(..)` constructor, creating a new instance of `SecurityPolicyViolationEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SecurityPolicyViolationEvent/SecurityPolicyViolationEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEvent`*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+    ) -> Result<SecurityPolicyViolationEvent, JsValue>;
     #[cfg(feature = "SecurityPolicyViolationEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "SecurityPolicyViolationEvent")]
     #[doc = "The `new SecurityPolicyViolationEvent(..)` constructor, creating a new instance of `SecurityPolicyViolationEvent`."]
@@ -180,6 +189,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEvent`, `SecurityPolicyViolationEventInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &SecurityPolicyViolationEventInit,
+    ) -> Result<SecurityPolicyViolationEvent, JsValue>;
+    #[cfg(feature = "SecurityPolicyViolationEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "SecurityPolicyViolationEvent")]
+    #[doc = "The `new SecurityPolicyViolationEvent(..)` constructor, creating a new instance of `SecurityPolicyViolationEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SecurityPolicyViolationEvent/SecurityPolicyViolationEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEvent`, `SecurityPolicyViolationEventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &SecurityPolicyViolationEventInit,
     ) -> Result<SecurityPolicyViolationEvent, JsValue>;
 }

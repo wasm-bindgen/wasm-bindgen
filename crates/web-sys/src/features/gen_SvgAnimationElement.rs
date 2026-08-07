@@ -157,4 +157,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimationElement`*"]
     pub fn has_extension(this: &SvgAnimationElement, extension: &str) -> bool;
+    #[wasm_bindgen(method, js_class = "SVGAnimationElement", js_name = "hasExtension")]
+    #[doc = "The `hasExtension()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGAnimationElement/hasExtension)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgAnimationElement`*"]
+    pub fn has_extension_with_js_string(
+        this: &SvgAnimationElement,
+        extension: &::js_sys::JsString,
+    ) -> bool;
 }

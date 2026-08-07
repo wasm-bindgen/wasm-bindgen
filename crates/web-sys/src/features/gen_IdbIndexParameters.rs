@@ -22,6 +22,12 @@ extern "C" {
     #[deprecated]
     #[wasm_bindgen(method, setter = "locale")]
     pub fn set_locale(this: &IdbIndexParameters, val: Option<&str>);
+    #[doc = "Change the `locale` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbIndexParameters`*"]
+    #[deprecated]
+    #[wasm_bindgen(method, setter = "locale")]
+    pub fn set_locale_opt_js_string(this: &IdbIndexParameters, val: Option<&::js_sys::JsString>);
     #[doc = "Get the `multiEntry` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `IdbIndexParameters`*"]

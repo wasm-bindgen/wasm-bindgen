@@ -117,6 +117,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaSource`, `SourceBuffer`*"]
     pub fn add_source_buffer(this: &MediaSource, type_: &str) -> Result<SourceBuffer, JsValue>;
+    #[cfg(feature = "SourceBuffer")]
+    #[wasm_bindgen(catch, method, js_class = "MediaSource", js_name = "addSourceBuffer")]
+    #[doc = "The `addSourceBuffer()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaSource/addSourceBuffer)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaSource`, `SourceBuffer`*"]
+    pub fn add_source_buffer_with_js_string(
+        this: &MediaSource,
+        type_: &::js_sys::JsString,
+    ) -> Result<SourceBuffer, JsValue>;
     #[wasm_bindgen(
         catch,
         method,
@@ -158,6 +169,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaSource`*"]
     pub fn is_type_supported(type_: &str) -> bool;
+    #[wasm_bindgen(
+        static_method_of = "MediaSource",
+        js_class = "MediaSource",
+        js_name = "isTypeSupported"
+    )]
+    #[doc = "The `isTypeSupported()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaSource/isTypeSupported_static)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaSource`*"]
+    pub fn is_type_supported_with_js_string(type_: &::js_sys::JsString) -> bool;
     #[cfg(feature = "SourceBuffer")]
     #[wasm_bindgen(
         catch,

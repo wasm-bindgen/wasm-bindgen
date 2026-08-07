@@ -46,6 +46,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WriteParams`*"]
     #[wasm_bindgen(method, setter = "data")]
     pub fn set_data_opt_str(this: &WriteParams, val: Option<&str>);
+    #[doc = "Change the `data` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WriteParams`*"]
+    #[wasm_bindgen(method, setter = "data")]
+    pub fn set_data_opt_js_string(this: &WriteParams, val: Option<&::js_sys::JsString>);
     #[doc = "Get the `position` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WriteParams`*"]

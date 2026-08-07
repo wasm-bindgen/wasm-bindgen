@@ -43,6 +43,17 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_label(this: &GpuCommandEncoder, value: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(method, setter, js_class = "GPUCommandEncoder", js_name = "label")]
+    #[doc = "Setter for the `label` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUCommandEncoder/label)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuCommandEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_label_js_string(this: &GpuCommandEncoder, value: &::js_sys::JsString);
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuComputePassEncoder")]
     #[wasm_bindgen(method, js_class = "GPUCommandEncoder", js_name = "beginComputePass")]
     #[doc = "The `beginComputePass()` method."]
@@ -703,6 +714,20 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn insert_debug_marker(this: &GpuCommandEncoder, marker_label: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_class = "GPUCommandEncoder", js_name = "insertDebugMarker")]
+    #[doc = "The `insertDebugMarker()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUCommandEncoder/insertDebugMarker)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuCommandEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn insert_debug_marker_with_js_string(
+        this: &GpuCommandEncoder,
+        marker_label: &::js_sys::JsString,
+    );
+    #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, js_class = "GPUCommandEncoder", js_name = "popDebugGroup")]
     #[doc = "The `popDebugGroup()` method."]
     #[doc = ""]
@@ -724,4 +749,18 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn push_debug_group(this: &GpuCommandEncoder, group_label: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_class = "GPUCommandEncoder", js_name = "pushDebugGroup")]
+    #[doc = "The `pushDebugGroup()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUCommandEncoder/pushDebugGroup)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuCommandEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn push_debug_group_with_js_string(
+        this: &GpuCommandEncoder,
+        group_label: &::js_sys::JsString,
+    );
 }

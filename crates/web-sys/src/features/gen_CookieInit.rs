@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
     #[wasm_bindgen(method, setter = "domain")]
     pub fn set_domain(this: &CookieInit, val: Option<&str>);
+    #[doc = "Change the `domain` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
+    #[wasm_bindgen(method, setter = "domain")]
+    pub fn set_domain_opt_js_string(this: &CookieInit, val: Option<&::js_sys::JsString>);
     #[doc = "Get the `expires` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
@@ -60,6 +65,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &CookieInit, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &CookieInit, val: &::js_sys::JsString);
     #[doc = "Get the `partitioned` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
@@ -80,6 +90,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
     #[wasm_bindgen(method, setter = "path")]
     pub fn set_path(this: &CookieInit, val: &str);
+    #[doc = "Change the `path` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
+    #[wasm_bindgen(method, setter = "path")]
+    pub fn set_path_js_string(this: &CookieInit, val: &::js_sys::JsString);
     #[cfg(feature = "CookieSameSite")]
     #[doc = "Get the `sameSite` field of this object."]
     #[doc = ""]
@@ -102,6 +117,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
     #[wasm_bindgen(method, setter = "value")]
     pub fn set_value(this: &CookieInit, val: &str);
+    #[doc = "Change the `value` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
+    #[wasm_bindgen(method, setter = "value")]
+    pub fn set_value_js_string(this: &CookieInit, val: &::js_sys::JsString);
 }
 impl CookieInit {
     #[doc = "Construct a new `CookieInit`."]

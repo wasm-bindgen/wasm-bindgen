@@ -39,6 +39,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TimeEvent`*"]
     pub fn init_time_event(this: &TimeEvent, a_type: &str);
+    #[wasm_bindgen(method, js_class = "TimeEvent", js_name = "initTimeEvent")]
+    #[doc = "The `initTimeEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TimeEvent/initTimeEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TimeEvent`*"]
+    pub fn init_time_event_with_js_string(this: &TimeEvent, a_type: &::js_sys::JsString);
     #[cfg(feature = "Window")]
     #[wasm_bindgen(method, js_class = "TimeEvent", js_name = "initTimeEvent")]
     #[doc = "The `initTimeEvent()` method."]
@@ -54,9 +61,34 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TimeEvent/initTimeEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TimeEvent`, `Window`*"]
+    pub fn init_time_event_with_js_string_and_a_view(
+        this: &TimeEvent,
+        a_type: &::js_sys::JsString,
+        a_view: Option<&Window>,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "TimeEvent", js_name = "initTimeEvent")]
+    #[doc = "The `initTimeEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TimeEvent/initTimeEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TimeEvent`, `Window`*"]
     pub fn init_time_event_with_a_view_and_a_detail(
         this: &TimeEvent,
         a_type: &str,
+        a_view: Option<&Window>,
+        a_detail: i32,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "TimeEvent", js_name = "initTimeEvent")]
+    #[doc = "The `initTimeEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TimeEvent/initTimeEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TimeEvent`, `Window`*"]
+    pub fn init_time_event_with_js_string_and_a_view_and_a_detail(
+        this: &TimeEvent,
+        a_type: &::js_sys::JsString,
         a_view: Option<&Window>,
         a_detail: i32,
     );

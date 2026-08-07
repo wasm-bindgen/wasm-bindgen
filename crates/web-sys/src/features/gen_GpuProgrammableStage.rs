@@ -52,6 +52,15 @@ extern "C" {
     #[wasm_bindgen(method, setter = "entryPoint")]
     pub fn set_entry_point(this: &GpuProgrammableStage, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `entryPoint` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuProgrammableStage`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "entryPoint")]
+    pub fn set_entry_point_js_string(this: &GpuProgrammableStage, val: &::js_sys::JsString);
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuShaderModule")]
     #[doc = "Get the `module` field of this object."]
     #[doc = ""]

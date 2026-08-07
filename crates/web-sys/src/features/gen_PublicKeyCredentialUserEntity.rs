@@ -25,6 +25,12 @@ extern "C" {
     #[deprecated]
     #[wasm_bindgen(method, setter = "icon")]
     pub fn set_icon(this: &PublicKeyCredentialUserEntity, val: &str);
+    #[doc = "Change the `icon` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialUserEntity`*"]
+    #[deprecated]
+    #[wasm_bindgen(method, setter = "icon")]
+    pub fn set_icon_js_string(this: &PublicKeyCredentialUserEntity, val: &::js_sys::JsString);
     #[doc = "Get the `name` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialUserEntity`*"]
@@ -35,6 +41,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialUserEntity`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &PublicKeyCredentialUserEntity, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialUserEntity`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &PublicKeyCredentialUserEntity, val: &::js_sys::JsString);
     #[doc = "Get the `displayName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialUserEntity`*"]
@@ -45,6 +56,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialUserEntity`*"]
     #[wasm_bindgen(method, setter = "displayName")]
     pub fn set_display_name(this: &PublicKeyCredentialUserEntity, val: &str);
+    #[doc = "Change the `displayName` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialUserEntity`*"]
+    #[wasm_bindgen(method, setter = "displayName")]
+    pub fn set_display_name_js_string(
+        this: &PublicKeyCredentialUserEntity,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `id` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialUserEntity`*"]

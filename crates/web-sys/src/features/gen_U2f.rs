@@ -31,9 +31,36 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/U2F/register)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `U2f`*"]
+    pub fn register_with_js_string(
+        this: &U2f,
+        app_id: &::js_sys::JsString,
+        register_requests: &::wasm_bindgen::JsValue,
+        registered_keys: &::wasm_bindgen::JsValue,
+        callback: &::js_sys::Function,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "U2F", js_name = "register")]
+    #[doc = "The `register()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/U2F/register)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `U2f`*"]
     pub fn register_with_opt_timeout_seconds(
         this: &U2f,
         app_id: &str,
+        register_requests: &::wasm_bindgen::JsValue,
+        registered_keys: &::wasm_bindgen::JsValue,
+        callback: &::js_sys::Function,
+        opt_timeout_seconds: Option<i32>,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "U2F", js_name = "register")]
+    #[doc = "The `register()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/U2F/register)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `U2f`*"]
+    pub fn register_with_js_string_and_opt_timeout_seconds(
+        this: &U2f,
+        app_id: &::js_sys::JsString,
         register_requests: &::wasm_bindgen::JsValue,
         registered_keys: &::wasm_bindgen::JsValue,
         callback: &::js_sys::Function,
@@ -58,10 +85,37 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/U2F/sign)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `U2f`*"]
+    pub fn sign_with_js_string_and_js_string(
+        this: &U2f,
+        app_id: &::js_sys::JsString,
+        challenge: &::js_sys::JsString,
+        registered_keys: &::wasm_bindgen::JsValue,
+        callback: &::js_sys::Function,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "U2F", js_name = "sign")]
+    #[doc = "The `sign()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/U2F/sign)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `U2f`*"]
     pub fn sign_with_opt_timeout_seconds(
         this: &U2f,
         app_id: &str,
         challenge: &str,
+        registered_keys: &::wasm_bindgen::JsValue,
+        callback: &::js_sys::Function,
+        opt_timeout_seconds: Option<i32>,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "U2F", js_name = "sign")]
+    #[doc = "The `sign()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/U2F/sign)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `U2f`*"]
+    pub fn sign_with_js_string_and_js_string_and_opt_timeout_seconds(
+        this: &U2f,
+        app_id: &::js_sys::JsString,
+        challenge: &::js_sys::JsString,
         registered_keys: &::wasm_bindgen::JsValue,
         callback: &::js_sys::Function,
         opt_timeout_seconds: Option<i32>,

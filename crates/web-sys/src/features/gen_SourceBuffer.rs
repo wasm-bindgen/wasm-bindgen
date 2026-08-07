@@ -306,6 +306,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SourceBuffer`*"]
     pub fn change_type(this: &SourceBuffer, type_: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "SourceBuffer", js_name = "changeType")]
+    #[doc = "The `changeType()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SourceBuffer/changeType)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SourceBuffer`*"]
+    pub fn change_type_with_js_string(
+        this: &SourceBuffer,
+        type_: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "SourceBuffer")]
     #[doc = "The `remove()` method."]
     #[doc = ""]

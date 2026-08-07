@@ -212,6 +212,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEventInit`*"]
     #[wasm_bindgen(method, setter = "code")]
     pub fn set_code(this: &KeyboardEventInit, val: &str);
+    #[doc = "Change the `code` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyboardEventInit`*"]
+    #[wasm_bindgen(method, setter = "code")]
+    pub fn set_code_js_string(this: &KeyboardEventInit, val: &::js_sys::JsString);
     #[doc = "Get the `isComposing` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEventInit`*"]
@@ -232,6 +237,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEventInit`*"]
     #[wasm_bindgen(method, setter = "key")]
     pub fn set_key(this: &KeyboardEventInit, val: &str);
+    #[doc = "Change the `key` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyboardEventInit`*"]
+    #[wasm_bindgen(method, setter = "key")]
+    pub fn set_key_js_string(this: &KeyboardEventInit, val: &::js_sys::JsString);
     #[doc = "Get the `keyCode` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEventInit`*"]

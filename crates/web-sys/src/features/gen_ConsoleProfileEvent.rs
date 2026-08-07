@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleProfileEvent`*"]
     #[wasm_bindgen(method, setter = "action")]
     pub fn set_action(this: &ConsoleProfileEvent, val: &str);
+    #[doc = "Change the `action` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleProfileEvent`*"]
+    #[wasm_bindgen(method, setter = "action")]
+    pub fn set_action_js_string(this: &ConsoleProfileEvent, val: &::js_sys::JsString);
     #[doc = "Get the `arguments` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleProfileEvent`*"]

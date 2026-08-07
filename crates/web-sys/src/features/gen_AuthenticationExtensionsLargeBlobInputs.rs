@@ -35,6 +35,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsLargeBlobInputs`*"]
     #[wasm_bindgen(method, setter = "support")]
     pub fn set_support(this: &AuthenticationExtensionsLargeBlobInputs, val: &str);
+    #[doc = "Change the `support` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsLargeBlobInputs`*"]
+    #[wasm_bindgen(method, setter = "support")]
+    pub fn set_support_js_string(
+        this: &AuthenticationExtensionsLargeBlobInputs,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `write` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsLargeBlobInputs`*"]

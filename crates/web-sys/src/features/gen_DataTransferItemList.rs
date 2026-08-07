@@ -35,6 +35,18 @@ extern "C" {
         data: &str,
         type_: &str,
     ) -> Result<Option<DataTransferItem>, JsValue>;
+    #[cfg(feature = "DataTransferItem")]
+    #[wasm_bindgen(catch, method, js_class = "DataTransferItemList", js_name = "add")]
+    #[doc = "The `add()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DataTransferItemList/add)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DataTransferItem`, `DataTransferItemList`*"]
+    pub fn add_with_js_string_and_js_string(
+        this: &DataTransferItemList,
+        data: &::js_sys::JsString,
+        type_: &::js_sys::JsString,
+    ) -> Result<Option<DataTransferItem>, JsValue>;
     #[cfg(all(feature = "DataTransferItem", feature = "File",))]
     #[wasm_bindgen(catch, method, js_class = "DataTransferItemList", js_name = "add")]
     #[doc = "The `add()` method."]

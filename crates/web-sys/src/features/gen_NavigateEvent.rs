@@ -117,6 +117,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NavigateEvent`, `NavigateEventInit`*"]
     pub fn new(type_: &str, event_init_dict: &NavigateEventInit) -> Result<NavigateEvent, JsValue>;
+    #[cfg(feature = "NavigateEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "NavigateEvent")]
+    #[doc = "The `new NavigateEvent(..)` constructor, creating a new instance of `NavigateEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/NavigateEvent/NavigateEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NavigateEvent`, `NavigateEventInit`*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+        event_init_dict: &NavigateEventInit,
+    ) -> Result<NavigateEvent, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "NavigateEvent")]
     #[doc = "The `intercept()` method."]
     #[doc = ""]

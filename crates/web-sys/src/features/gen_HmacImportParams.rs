@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HmacImportParams`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &HmacImportParams, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HmacImportParams`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &HmacImportParams, val: &::js_sys::JsString);
     #[doc = "Get the `hash` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HmacImportParams`*"]
@@ -40,6 +45,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HmacImportParams`*"]
     #[wasm_bindgen(method, setter = "hash")]
     pub fn set_hash_str(this: &HmacImportParams, val: &str);
+    #[doc = "Change the `hash` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HmacImportParams`*"]
+    #[wasm_bindgen(method, setter = "hash")]
+    pub fn set_hash_js_string(this: &HmacImportParams, val: &::js_sys::JsString);
 }
 impl HmacImportParams {
     #[doc = "Construct a new `HmacImportParams`."]

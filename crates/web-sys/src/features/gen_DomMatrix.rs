@@ -345,6 +345,13 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMMatrix/DOMMatrix)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomMatrix`*"]
+    pub fn new_with_js_string(transform_list: &::js_sys::JsString) -> Result<DomMatrix, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "DOMMatrix")]
+    #[doc = "The `new DomMatrix(..)` constructor, creating a new instance of `DomMatrix`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMMatrix/DOMMatrix)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomMatrix`*"]
     pub fn new_with_other(other: &DomMatrixReadOnly) -> Result<DomMatrix, JsValue>;
     #[wasm_bindgen(catch, constructor, js_class = "DOMMatrix")]
     #[doc = "The `new DomMatrix(..)` constructor, creating a new instance of `DomMatrix`."]
@@ -594,6 +601,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomMatrix`*"]
     pub fn set_matrix_value(this: &DomMatrix, transform_list: &str) -> Result<DomMatrix, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DOMMatrix", js_name = "setMatrixValue")]
+    #[doc = "The `setMatrixValue()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMMatrix/setMatrixValue)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomMatrix`*"]
+    pub fn set_matrix_value_with_js_string(
+        this: &DomMatrix,
+        transform_list: &::js_sys::JsString,
+    ) -> Result<DomMatrix, JsValue>;
     #[wasm_bindgen(method, js_class = "DOMMatrix", js_name = "skewXSelf")]
     #[doc = "The `skewXSelf()` method."]
     #[doc = ""]

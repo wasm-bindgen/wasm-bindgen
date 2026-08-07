@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AttributeNameValue`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &AttributeNameValue, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AttributeNameValue`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &AttributeNameValue, val: &::js_sys::JsString);
     #[doc = "Get the `value` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AttributeNameValue`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AttributeNameValue`*"]
     #[wasm_bindgen(method, setter = "value")]
     pub fn set_value(this: &AttributeNameValue, val: &str);
+    #[doc = "Change the `value` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AttributeNameValue`*"]
+    #[wasm_bindgen(method, setter = "value")]
+    pub fn set_value_js_string(this: &AttributeNameValue, val: &::js_sys::JsString);
 }
 impl AttributeNameValue {
     #[doc = "Construct a new `AttributeNameValue`."]

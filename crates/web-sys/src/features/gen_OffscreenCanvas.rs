@@ -86,9 +86,30 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas/getContext)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `OffscreenCanvas`*"]
+    pub fn get_context_with_js_string(
+        this: &OffscreenCanvas,
+        context_id: &::js_sys::JsString,
+    ) -> Result<Option<::js_sys::Object>, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "OffscreenCanvas", js_name = "getContext")]
+    #[doc = "The `getContext()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas/getContext)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `OffscreenCanvas`*"]
     pub fn get_context_with_context_options(
         this: &OffscreenCanvas,
         context_id: &str,
+        context_options: &::wasm_bindgen::JsValue,
+    ) -> Result<Option<::js_sys::Object>, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "OffscreenCanvas", js_name = "getContext")]
+    #[doc = "The `getContext()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas/getContext)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `OffscreenCanvas`*"]
+    pub fn get_context_with_js_string_and_context_options(
+        this: &OffscreenCanvas,
+        context_id: &::js_sys::JsString,
         context_options: &::wasm_bindgen::JsValue,
     ) -> Result<Option<::js_sys::Object>, JsValue>;
     #[cfg(feature = "ImageBitmap")]

@@ -52,7 +52,24 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker/SharedWorker)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SharedWorker`*"]
+    pub fn new_with_js_string(script_url: &::js_sys::JsString) -> Result<SharedWorker, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "SharedWorker")]
+    #[doc = "The `new SharedWorker(..)` constructor, creating a new instance of `SharedWorker`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker/SharedWorker)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SharedWorker`*"]
     pub fn new_with_str(script_url: &str, options: &str) -> Result<SharedWorker, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "SharedWorker")]
+    #[doc = "The `new SharedWorker(..)` constructor, creating a new instance of `SharedWorker`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker/SharedWorker)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SharedWorker`*"]
+    pub fn new_with_js_string_and_js_string(
+        script_url: &::js_sys::JsString,
+        options: &::js_sys::JsString,
+    ) -> Result<SharedWorker, JsValue>;
     #[cfg(feature = "WorkerOptions")]
     #[wasm_bindgen(catch, constructor, js_class = "SharedWorker")]
     #[doc = "The `new SharedWorker(..)` constructor, creating a new instance of `SharedWorker`."]
@@ -62,6 +79,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SharedWorker`, `WorkerOptions`*"]
     pub fn new_with_worker_options(
         script_url: &str,
+        options: &WorkerOptions,
+    ) -> Result<SharedWorker, JsValue>;
+    #[cfg(feature = "WorkerOptions")]
+    #[wasm_bindgen(catch, constructor, js_class = "SharedWorker")]
+    #[doc = "The `new SharedWorker(..)` constructor, creating a new instance of `SharedWorker`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker/SharedWorker)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SharedWorker`, `WorkerOptions`*"]
+    pub fn new_with_js_string_and_worker_options(
+        script_url: &::js_sys::JsString,
         options: &WorkerOptions,
     ) -> Result<SharedWorker, JsValue>;
 }

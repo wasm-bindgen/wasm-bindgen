@@ -50,6 +50,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "reason")]
     pub fn set_reason(this: &WebTransportCloseInfo, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `reason` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebTransportCloseInfo`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "reason")]
+    pub fn set_reason_js_string(this: &WebTransportCloseInfo, val: &::js_sys::JsString);
 }
 #[cfg(web_sys_unstable_apis)]
 impl WebTransportCloseInfo {

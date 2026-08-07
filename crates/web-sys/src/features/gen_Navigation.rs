@@ -169,6 +169,15 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Navigation`, `NavigationResult`*"]
     pub fn navigate(this: &Navigation, url: &str) -> NavigationResult;
+    #[cfg(feature = "NavigationResult")]
+    #[wasm_bindgen(method, js_class = "Navigation", js_name = "navigate")]
+    #[doc = "The `navigate()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigation/navigate)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Navigation`, `NavigationResult`*"]
+    pub fn navigate_with_js_string(this: &Navigation, url: &::js_sys::JsString)
+        -> NavigationResult;
     #[cfg(all(feature = "NavigationNavigateOptions", feature = "NavigationResult",))]
     #[wasm_bindgen(method, js_class = "Navigation", js_name = "navigate")]
     #[doc = "The `navigate()` method."]
@@ -179,6 +188,18 @@ extern "C" {
     pub fn navigate_with_options(
         this: &Navigation,
         url: &str,
+        options: &NavigationNavigateOptions,
+    ) -> NavigationResult;
+    #[cfg(all(feature = "NavigationNavigateOptions", feature = "NavigationResult",))]
+    #[wasm_bindgen(method, js_class = "Navigation", js_name = "navigate")]
+    #[doc = "The `navigate()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigation/navigate)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Navigation`, `NavigationNavigateOptions`, `NavigationResult`*"]
+    pub fn navigate_with_js_string_and_options(
+        this: &Navigation,
+        url: &::js_sys::JsString,
         options: &NavigationNavigateOptions,
     ) -> NavigationResult;
     #[cfg(feature = "NavigationResult")]
@@ -208,6 +229,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Navigation`, `NavigationResult`*"]
     pub fn traverse_to(this: &Navigation, key: &str) -> NavigationResult;
+    #[cfg(feature = "NavigationResult")]
+    #[wasm_bindgen(method, js_class = "Navigation", js_name = "traverseTo")]
+    #[doc = "The `traverseTo()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigation/traverseTo)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Navigation`, `NavigationResult`*"]
+    pub fn traverse_to_with_js_string(
+        this: &Navigation,
+        key: &::js_sys::JsString,
+    ) -> NavigationResult;
     #[cfg(all(feature = "NavigationOptions", feature = "NavigationResult",))]
     #[wasm_bindgen(method, js_class = "Navigation", js_name = "traverseTo")]
     #[doc = "The `traverseTo()` method."]
@@ -218,6 +250,18 @@ extern "C" {
     pub fn traverse_to_with_options(
         this: &Navigation,
         key: &str,
+        options: &NavigationOptions,
+    ) -> NavigationResult;
+    #[cfg(all(feature = "NavigationOptions", feature = "NavigationResult",))]
+    #[wasm_bindgen(method, js_class = "Navigation", js_name = "traverseTo")]
+    #[doc = "The `traverseTo()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigation/traverseTo)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Navigation`, `NavigationOptions`, `NavigationResult`*"]
+    pub fn traverse_to_with_js_string_and_options(
+        this: &Navigation,
+        key: &::js_sys::JsString,
         options: &NavigationOptions,
     ) -> NavigationResult;
     #[cfg(feature = "NavigationUpdateCurrentEntryOptions")]

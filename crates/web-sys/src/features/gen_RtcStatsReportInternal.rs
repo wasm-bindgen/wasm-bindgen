@@ -106,6 +106,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcStatsReportInternal`*"]
     #[wasm_bindgen(method, setter = "localSdp")]
     pub fn set_local_sdp(this: &RtcStatsReportInternal, val: &str);
+    #[doc = "Change the `localSdp` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcStatsReportInternal`*"]
+    #[wasm_bindgen(method, setter = "localSdp")]
+    pub fn set_local_sdp_js_string(this: &RtcStatsReportInternal, val: &::js_sys::JsString);
     #[doc = "Get the `mediaStreamStats` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcStatsReportInternal`*"]
@@ -162,6 +167,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcStatsReportInternal`*"]
     #[wasm_bindgen(method, setter = "pcid")]
     pub fn set_pcid(this: &RtcStatsReportInternal, val: &str);
+    #[doc = "Change the `pcid` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcStatsReportInternal`*"]
+    #[wasm_bindgen(method, setter = "pcid")]
+    pub fn set_pcid_js_string(this: &RtcStatsReportInternal, val: &::js_sys::JsString);
     #[doc = "Get the `rawLocalCandidates` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcStatsReportInternal`*"]
@@ -192,6 +202,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcStatsReportInternal`*"]
     #[wasm_bindgen(method, setter = "remoteSdp")]
     pub fn set_remote_sdp(this: &RtcStatsReportInternal, val: &str);
+    #[doc = "Change the `remoteSdp` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcStatsReportInternal`*"]
+    #[wasm_bindgen(method, setter = "remoteSdp")]
+    pub fn set_remote_sdp_js_string(this: &RtcStatsReportInternal, val: &::js_sys::JsString);
     #[doc = "Get the `rtpContributingSourceStats` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcStatsReportInternal`*"]

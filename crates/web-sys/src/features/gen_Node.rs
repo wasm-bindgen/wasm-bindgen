@@ -118,6 +118,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Node`*"]
     pub fn set_node_value(this: &Node, value: Option<&str>);
+    #[wasm_bindgen(method, setter, js_class = "Node", js_name = "nodeValue")]
+    #[doc = "Setter for the `nodeValue` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeValue)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Node`*"]
+    pub fn set_node_value_opt_js_string(this: &Node, value: Option<&::js_sys::JsString>);
     #[wasm_bindgen(method, getter, js_class = "Node", js_name = "textContent")]
     #[doc = "Getter for the `textContent` field of this object."]
     #[doc = ""]
@@ -132,6 +139,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Node`*"]
     pub fn set_text_content(this: &Node, value: Option<&str>);
+    #[wasm_bindgen(method, setter, js_class = "Node", js_name = "textContent")]
+    #[doc = "Setter for the `textContent` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Node/textContent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Node`*"]
+    pub fn set_text_content_opt_js_string(this: &Node, value: Option<&::js_sys::JsString>);
     #[wasm_bindgen(catch, method, js_class = "Node", js_name = "appendChild")]
     #[doc = "The `appendChild()` method."]
     #[doc = ""]
@@ -203,6 +217,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Node`*"]
     pub fn is_default_namespace(this: &Node, namespace: Option<&str>) -> bool;
+    #[wasm_bindgen(method, js_class = "Node", js_name = "isDefaultNamespace")]
+    #[doc = "The `isDefaultNamespace()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Node/isDefaultNamespace)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Node`*"]
+    pub fn is_default_namespace_with_opt_js_string(
+        this: &Node,
+        namespace: Option<&::js_sys::JsString>,
+    ) -> bool;
     #[wasm_bindgen(method, js_class = "Node", js_name = "isEqualNode")]
     #[doc = "The `isEqualNode()` method."]
     #[doc = ""]
@@ -227,6 +251,16 @@ extern "C" {
         this: &Node,
         prefix: Option<&str>,
     ) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, js_class = "Node", js_name = "lookupNamespaceURI")]
+    #[doc = "The `lookupNamespaceURI()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Node/lookupNamespaceURI)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Node`*"]
+    pub fn lookup_namespace_uri_with_opt_js_string(
+        this: &Node,
+        prefix: Option<&::js_sys::JsString>,
+    ) -> Option<::alloc::string::String>;
     #[wasm_bindgen(method, js_class = "Node", js_name = "lookupPrefix")]
     #[doc = "The `lookupPrefix()` method."]
     #[doc = ""]
@@ -234,6 +268,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Node`*"]
     pub fn lookup_prefix(this: &Node, namespace: Option<&str>) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, js_class = "Node", js_name = "lookupPrefix")]
+    #[doc = "The `lookupPrefix()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Node/lookupPrefix)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Node`*"]
+    pub fn lookup_prefix_with_opt_js_string(
+        this: &Node,
+        namespace: Option<&::js_sys::JsString>,
+    ) -> Option<::alloc::string::String>;
     #[wasm_bindgen(method, js_class = "Node")]
     #[doc = "The `normalize()` method."]
     #[doc = ""]

@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RsaOtherPrimesInfo`*"]
     #[wasm_bindgen(method, setter = "d")]
     pub fn set_d(this: &RsaOtherPrimesInfo, val: &str);
+    #[doc = "Change the `d` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RsaOtherPrimesInfo`*"]
+    #[wasm_bindgen(method, setter = "d")]
+    pub fn set_d_js_string(this: &RsaOtherPrimesInfo, val: &::js_sys::JsString);
     #[doc = "Get the `r` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RsaOtherPrimesInfo`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RsaOtherPrimesInfo`*"]
     #[wasm_bindgen(method, setter = "r")]
     pub fn set_r(this: &RsaOtherPrimesInfo, val: &str);
+    #[doc = "Change the `r` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RsaOtherPrimesInfo`*"]
+    #[wasm_bindgen(method, setter = "r")]
+    pub fn set_r_js_string(this: &RsaOtherPrimesInfo, val: &::js_sys::JsString);
     #[doc = "Get the `t` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RsaOtherPrimesInfo`*"]
@@ -40,6 +50,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RsaOtherPrimesInfo`*"]
     #[wasm_bindgen(method, setter = "t")]
     pub fn set_t(this: &RsaOtherPrimesInfo, val: &str);
+    #[doc = "Change the `t` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RsaOtherPrimesInfo`*"]
+    #[wasm_bindgen(method, setter = "t")]
+    pub fn set_t_js_string(this: &RsaOtherPrimesInfo, val: &::js_sys::JsString);
 }
 impl RsaOtherPrimesInfo {
     #[doc = "Construct a new `RsaOtherPrimesInfo`."]

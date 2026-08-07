@@ -82,6 +82,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoTrack`, `VideoTrackList`*"]
     pub fn get_track_by_id(this: &VideoTrackList, id: &str) -> Option<VideoTrack>;
     #[cfg(feature = "VideoTrack")]
+    #[wasm_bindgen(method, js_class = "VideoTrackList", js_name = "getTrackById")]
+    #[doc = "The `getTrackById()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoTrackList/getTrackById)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoTrack`, `VideoTrackList`*"]
+    pub fn get_track_by_id_with_js_string(
+        this: &VideoTrackList,
+        id: &::js_sys::JsString,
+    ) -> Option<VideoTrack>;
+    #[cfg(feature = "VideoTrack")]
     #[wasm_bindgen(method, js_class = "VideoTrackList", indexing_getter)]
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]

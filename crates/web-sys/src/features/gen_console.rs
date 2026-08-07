@@ -135,6 +135,13 @@ pub mod console {
         #[doc = ""]
         #[doc = "*This API requires the following crate features to be activated: `console`*"]
         pub fn count_with_label(label: &str);
+        #[wasm_bindgen(js_namespace = "console", js_name = "count")]
+        #[doc = "The `console.count()` function."]
+        #[doc = ""]
+        #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/console/count)"]
+        #[doc = ""]
+        #[doc = "*This API requires the following crate features to be activated: `console`*"]
+        pub fn count_with_js_string(label: &::js_sys::JsString);
         #[wasm_bindgen(js_namespace = "console", js_name = "countReset")]
         #[doc = "The `console.countReset()` function."]
         #[doc = ""]
@@ -149,6 +156,13 @@ pub mod console {
         #[doc = ""]
         #[doc = "*This API requires the following crate features to be activated: `console`*"]
         pub fn count_reset_with_label(label: &str);
+        #[wasm_bindgen(js_namespace = "console", js_name = "countReset")]
+        #[doc = "The `console.countReset()` function."]
+        #[doc = ""]
+        #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/console/countReset)"]
+        #[doc = ""]
+        #[doc = "*This API requires the following crate features to be activated: `console`*"]
+        pub fn count_reset_with_js_string(label: &::js_sys::JsString);
         #[wasm_bindgen(variadic, js_namespace = "console")]
         #[doc = "The `console.debug()` function."]
         #[doc = ""]
@@ -1289,6 +1303,13 @@ pub mod console {
         #[doc = ""]
         #[doc = "*This API requires the following crate features to be activated: `console`*"]
         pub fn time_with_label(label: &str);
+        #[wasm_bindgen(js_namespace = "console", js_name = "time")]
+        #[doc = "The `console.time()` function."]
+        #[doc = ""]
+        #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/console/time)"]
+        #[doc = ""]
+        #[doc = "*This API requires the following crate features to be activated: `console`*"]
+        pub fn time_with_js_string(label: &::js_sys::JsString);
         #[wasm_bindgen(js_namespace = "console", js_name = "timeEnd")]
         #[doc = "The `console.timeEnd()` function."]
         #[doc = ""]
@@ -1303,6 +1324,13 @@ pub mod console {
         #[doc = ""]
         #[doc = "*This API requires the following crate features to be activated: `console`*"]
         pub fn time_end_with_label(label: &str);
+        #[wasm_bindgen(js_namespace = "console", js_name = "timeEnd")]
+        #[doc = "The `console.timeEnd()` function."]
+        #[doc = ""]
+        #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/console/timeEnd)"]
+        #[doc = ""]
+        #[doc = "*This API requires the following crate features to be activated: `console`*"]
+        pub fn time_end_with_js_string(label: &::js_sys::JsString);
         #[wasm_bindgen(js_namespace = "console", js_name = "timeLog")]
         #[doc = "The `console.timeLog()` function."]
         #[doc = ""]
@@ -1404,6 +1432,111 @@ pub mod console {
         #[doc = "*This API requires the following crate features to be activated: `console`*"]
         pub fn time_log_with_label_and_data_7(
             label: &str,
+            data_1: &::wasm_bindgen::JsValue,
+            data_2: &::wasm_bindgen::JsValue,
+            data_3: &::wasm_bindgen::JsValue,
+            data_4: &::wasm_bindgen::JsValue,
+            data_5: &::wasm_bindgen::JsValue,
+            data_6: &::wasm_bindgen::JsValue,
+            data_7: &::wasm_bindgen::JsValue,
+        );
+        #[wasm_bindgen(variadic, js_namespace = "console", js_name = "timeLog")]
+        #[doc = "The `console.timeLog()` function."]
+        #[doc = ""]
+        #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/console/timeLog)"]
+        #[doc = ""]
+        #[doc = "*This API requires the following crate features to be activated: `console`*"]
+        pub fn time_log_with_js_string_and_data(label: &::js_sys::JsString, data: &::js_sys::Array);
+        #[wasm_bindgen(js_namespace = "console", js_name = "timeLog")]
+        #[doc = "The `console.timeLog()` function."]
+        #[doc = ""]
+        #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/console/timeLog)"]
+        #[doc = ""]
+        #[doc = "*This API requires the following crate features to be activated: `console`*"]
+        pub fn time_log_with_js_string_and_data_0(label: &::js_sys::JsString);
+        #[wasm_bindgen(js_namespace = "console", js_name = "timeLog")]
+        #[doc = "The `console.timeLog()` function."]
+        #[doc = ""]
+        #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/console/timeLog)"]
+        #[doc = ""]
+        #[doc = "*This API requires the following crate features to be activated: `console`*"]
+        pub fn time_log_with_js_string_and_data_1(
+            label: &::js_sys::JsString,
+            data_1: &::wasm_bindgen::JsValue,
+        );
+        #[wasm_bindgen(js_namespace = "console", js_name = "timeLog")]
+        #[doc = "The `console.timeLog()` function."]
+        #[doc = ""]
+        #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/console/timeLog)"]
+        #[doc = ""]
+        #[doc = "*This API requires the following crate features to be activated: `console`*"]
+        pub fn time_log_with_js_string_and_data_2(
+            label: &::js_sys::JsString,
+            data_1: &::wasm_bindgen::JsValue,
+            data_2: &::wasm_bindgen::JsValue,
+        );
+        #[wasm_bindgen(js_namespace = "console", js_name = "timeLog")]
+        #[doc = "The `console.timeLog()` function."]
+        #[doc = ""]
+        #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/console/timeLog)"]
+        #[doc = ""]
+        #[doc = "*This API requires the following crate features to be activated: `console`*"]
+        pub fn time_log_with_js_string_and_data_3(
+            label: &::js_sys::JsString,
+            data_1: &::wasm_bindgen::JsValue,
+            data_2: &::wasm_bindgen::JsValue,
+            data_3: &::wasm_bindgen::JsValue,
+        );
+        #[wasm_bindgen(js_namespace = "console", js_name = "timeLog")]
+        #[doc = "The `console.timeLog()` function."]
+        #[doc = ""]
+        #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/console/timeLog)"]
+        #[doc = ""]
+        #[doc = "*This API requires the following crate features to be activated: `console`*"]
+        pub fn time_log_with_js_string_and_data_4(
+            label: &::js_sys::JsString,
+            data_1: &::wasm_bindgen::JsValue,
+            data_2: &::wasm_bindgen::JsValue,
+            data_3: &::wasm_bindgen::JsValue,
+            data_4: &::wasm_bindgen::JsValue,
+        );
+        #[wasm_bindgen(js_namespace = "console", js_name = "timeLog")]
+        #[doc = "The `console.timeLog()` function."]
+        #[doc = ""]
+        #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/console/timeLog)"]
+        #[doc = ""]
+        #[doc = "*This API requires the following crate features to be activated: `console`*"]
+        pub fn time_log_with_js_string_and_data_5(
+            label: &::js_sys::JsString,
+            data_1: &::wasm_bindgen::JsValue,
+            data_2: &::wasm_bindgen::JsValue,
+            data_3: &::wasm_bindgen::JsValue,
+            data_4: &::wasm_bindgen::JsValue,
+            data_5: &::wasm_bindgen::JsValue,
+        );
+        #[wasm_bindgen(js_namespace = "console", js_name = "timeLog")]
+        #[doc = "The `console.timeLog()` function."]
+        #[doc = ""]
+        #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/console/timeLog)"]
+        #[doc = ""]
+        #[doc = "*This API requires the following crate features to be activated: `console`*"]
+        pub fn time_log_with_js_string_and_data_6(
+            label: &::js_sys::JsString,
+            data_1: &::wasm_bindgen::JsValue,
+            data_2: &::wasm_bindgen::JsValue,
+            data_3: &::wasm_bindgen::JsValue,
+            data_4: &::wasm_bindgen::JsValue,
+            data_5: &::wasm_bindgen::JsValue,
+            data_6: &::wasm_bindgen::JsValue,
+        );
+        #[wasm_bindgen(js_namespace = "console", js_name = "timeLog")]
+        #[doc = "The `console.timeLog()` function."]
+        #[doc = ""]
+        #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/console/timeLog)"]
+        #[doc = ""]
+        #[doc = "*This API requires the following crate features to be activated: `console`*"]
+        pub fn time_log_with_js_string_and_data_7(
+            label: &::js_sys::JsString,
             data_1: &::wasm_bindgen::JsValue,
             data_2: &::wasm_bindgen::JsValue,
             data_3: &::wasm_bindgen::JsValue,

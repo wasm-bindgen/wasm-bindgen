@@ -153,6 +153,15 @@ extern "C" {
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &BluetoothAdvertisingEventInit, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BluetoothAdvertisingEventInit`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &BluetoothAdvertisingEventInit, val: &::js_sys::JsString);
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `rssi` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `BluetoothAdvertisingEventInit`*"]

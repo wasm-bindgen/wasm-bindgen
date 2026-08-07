@@ -32,6 +32,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
     #[wasm_bindgen(method, setter = "cardNumber")]
     pub fn set_card_number(this: &BasicCardResponse, val: &str);
+    #[doc = "Change the `cardNumber` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
+    #[wasm_bindgen(method, setter = "cardNumber")]
+    pub fn set_card_number_js_string(this: &BasicCardResponse, val: &::js_sys::JsString);
     #[doc = "Get the `cardSecurityCode` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
@@ -42,6 +47,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
     #[wasm_bindgen(method, setter = "cardSecurityCode")]
     pub fn set_card_security_code(this: &BasicCardResponse, val: &str);
+    #[doc = "Change the `cardSecurityCode` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
+    #[wasm_bindgen(method, setter = "cardSecurityCode")]
+    pub fn set_card_security_code_js_string(this: &BasicCardResponse, val: &::js_sys::JsString);
     #[doc = "Get the `cardholderName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
@@ -52,6 +62,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
     #[wasm_bindgen(method, setter = "cardholderName")]
     pub fn set_cardholder_name(this: &BasicCardResponse, val: &str);
+    #[doc = "Change the `cardholderName` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
+    #[wasm_bindgen(method, setter = "cardholderName")]
+    pub fn set_cardholder_name_js_string(this: &BasicCardResponse, val: &::js_sys::JsString);
     #[doc = "Get the `expiryMonth` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
@@ -62,6 +77,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
     #[wasm_bindgen(method, setter = "expiryMonth")]
     pub fn set_expiry_month(this: &BasicCardResponse, val: &str);
+    #[doc = "Change the `expiryMonth` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
+    #[wasm_bindgen(method, setter = "expiryMonth")]
+    pub fn set_expiry_month_js_string(this: &BasicCardResponse, val: &::js_sys::JsString);
     #[doc = "Get the `expiryYear` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
@@ -72,6 +92,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
     #[wasm_bindgen(method, setter = "expiryYear")]
     pub fn set_expiry_year(this: &BasicCardResponse, val: &str);
+    #[doc = "Change the `expiryYear` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
+    #[wasm_bindgen(method, setter = "expiryYear")]
+    pub fn set_expiry_year_js_string(this: &BasicCardResponse, val: &::js_sys::JsString);
 }
 impl BasicCardResponse {
     #[doc = "Construct a new `BasicCardResponse`."]

@@ -51,6 +51,15 @@ extern "C" {
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &BluetoothLeScanFilterInit, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BluetoothLeScanFilterInit`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &BluetoothLeScanFilterInit, val: &::js_sys::JsString);
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `namePrefix` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `BluetoothLeScanFilterInit`*"]
@@ -68,6 +77,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "namePrefix")]
     pub fn set_name_prefix(this: &BluetoothLeScanFilterInit, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `namePrefix` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BluetoothLeScanFilterInit`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "namePrefix")]
+    pub fn set_name_prefix_js_string(this: &BluetoothLeScanFilterInit, val: &::js_sys::JsString);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `serviceData` field of this object."]
     #[doc = ""]

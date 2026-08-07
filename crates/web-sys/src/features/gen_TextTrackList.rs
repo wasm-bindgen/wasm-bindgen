@@ -75,6 +75,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `TextTrack`, `TextTrackList`*"]
     pub fn get_track_by_id(this: &TextTrackList, id: &str) -> Option<TextTrack>;
     #[cfg(feature = "TextTrack")]
+    #[wasm_bindgen(method, js_class = "TextTrackList", js_name = "getTrackById")]
+    #[doc = "The `getTrackById()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TextTrackList/getTrackById)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TextTrack`, `TextTrackList`*"]
+    pub fn get_track_by_id_with_js_string(
+        this: &TextTrackList,
+        id: &::js_sys::JsString,
+    ) -> Option<TextTrack>;
+    #[cfg(feature = "TextTrack")]
     #[wasm_bindgen(method, js_class = "TextTrackList", indexing_getter)]
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]

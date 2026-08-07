@@ -25,6 +25,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RequestMediaKeySystemAccessNotification`*"]
     #[wasm_bindgen(method, setter = "keySystem")]
     pub fn set_key_system(this: &RequestMediaKeySystemAccessNotification, val: &str);
+    #[doc = "Change the `keySystem` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RequestMediaKeySystemAccessNotification`*"]
+    #[wasm_bindgen(method, setter = "keySystem")]
+    pub fn set_key_system_js_string(
+        this: &RequestMediaKeySystemAccessNotification,
+        val: &::js_sys::JsString,
+    );
     #[cfg(feature = "MediaKeySystemStatus")]
     #[doc = "Get the `status` field of this object."]
     #[doc = ""]

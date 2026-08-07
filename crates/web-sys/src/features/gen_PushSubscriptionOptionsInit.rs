@@ -57,6 +57,14 @@ extern "C" {
         this: &PushSubscriptionOptionsInit,
         val: Option<&str>,
     );
+    #[doc = "Change the `applicationServerKey` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PushSubscriptionOptionsInit`*"]
+    #[wasm_bindgen(method, setter = "applicationServerKey")]
+    pub fn set_application_server_key_opt_js_string(
+        this: &PushSubscriptionOptionsInit,
+        val: Option<&::js_sys::JsString>,
+    );
     #[doc = "Get the `userVisibleOnly` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PushSubscriptionOptionsInit`*"]

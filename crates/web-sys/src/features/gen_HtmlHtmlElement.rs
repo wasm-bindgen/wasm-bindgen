@@ -34,4 +34,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlHtmlElement`*"]
     pub fn set_version(this: &HtmlHtmlElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLHtmlElement", js_name = "version")]
+    #[doc = "Setter for the `version` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLHtmlElement/version)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlHtmlElement`*"]
+    pub fn set_version_js_string(this: &HtmlHtmlElement, value: &::js_sys::JsString);
 }

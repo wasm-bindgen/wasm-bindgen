@@ -34,6 +34,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlBodyElement`*"]
     pub fn set_text(this: &HtmlBodyElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLBodyElement", js_name = "text")]
+    #[doc = "Setter for the `text` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLBodyElement/text)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlBodyElement`*"]
+    pub fn set_text_js_string(this: &HtmlBodyElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLBodyElement", js_name = "link")]
     #[doc = "Getter for the `link` field of this object."]
     #[doc = ""]
@@ -48,6 +55,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlBodyElement`*"]
     pub fn set_link(this: &HtmlBodyElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLBodyElement", js_name = "link")]
+    #[doc = "Setter for the `link` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLBodyElement/link)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlBodyElement`*"]
+    pub fn set_link_js_string(this: &HtmlBodyElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLBodyElement", js_name = "vLink")]
     #[doc = "Getter for the `vLink` field of this object."]
     #[doc = ""]
@@ -62,6 +76,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlBodyElement`*"]
     pub fn set_v_link(this: &HtmlBodyElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLBodyElement", js_name = "vLink")]
+    #[doc = "Setter for the `vLink` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLBodyElement/vLink)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlBodyElement`*"]
+    pub fn set_v_link_js_string(this: &HtmlBodyElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLBodyElement", js_name = "aLink")]
     #[doc = "Getter for the `aLink` field of this object."]
     #[doc = ""]
@@ -76,6 +97,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlBodyElement`*"]
     pub fn set_a_link(this: &HtmlBodyElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLBodyElement", js_name = "aLink")]
+    #[doc = "Setter for the `aLink` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLBodyElement/aLink)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlBodyElement`*"]
+    pub fn set_a_link_js_string(this: &HtmlBodyElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLBodyElement", js_name = "bgColor")]
     #[doc = "Getter for the `bgColor` field of this object."]
     #[doc = ""]
@@ -90,6 +118,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlBodyElement`*"]
     pub fn set_bg_color(this: &HtmlBodyElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLBodyElement", js_name = "bgColor")]
+    #[doc = "Setter for the `bgColor` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLBodyElement/bgColor)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlBodyElement`*"]
+    pub fn set_bg_color_js_string(this: &HtmlBodyElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLBodyElement", js_name = "background")]
     #[doc = "Getter for the `background` field of this object."]
     #[doc = ""]
@@ -104,6 +139,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlBodyElement`*"]
     pub fn set_background(this: &HtmlBodyElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLBodyElement", js_name = "background")]
+    #[doc = "Setter for the `background` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLBodyElement/background)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlBodyElement`*"]
+    pub fn set_background_js_string(this: &HtmlBodyElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLBodyElement", js_name = "onafterprint")]
     #[doc = "Getter for the `onafterprint` field of this object."]
     #[doc = ""]

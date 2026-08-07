@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `LocaleInfo`*"]
     #[wasm_bindgen(method, setter = "direction")]
     pub fn set_direction(this: &LocaleInfo, val: &str);
+    #[doc = "Change the `direction` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `LocaleInfo`*"]
+    #[wasm_bindgen(method, setter = "direction")]
+    pub fn set_direction_js_string(this: &LocaleInfo, val: &::js_sys::JsString);
     #[doc = "Get the `locale` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `LocaleInfo`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `LocaleInfo`*"]
     #[wasm_bindgen(method, setter = "locale")]
     pub fn set_locale(this: &LocaleInfo, val: &str);
+    #[doc = "Change the `locale` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `LocaleInfo`*"]
+    #[wasm_bindgen(method, setter = "locale")]
+    pub fn set_locale_js_string(this: &LocaleInfo, val: &::js_sys::JsString);
 }
 impl LocaleInfo {
     #[doc = "Construct a new `LocaleInfo`."]

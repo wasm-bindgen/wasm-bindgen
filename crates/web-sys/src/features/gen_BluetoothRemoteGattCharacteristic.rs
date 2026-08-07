@@ -160,6 +160,25 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn get_descriptor_with_js_string(
+        this: &BluetoothRemoteGattCharacteristic,
+        descriptor: &::js_sys::JsString,
+    ) -> ::js_sys::Promise<BluetoothRemoteGattDescriptor>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "BluetoothRemoteGattDescriptor")]
+    #[wasm_bindgen(
+        method,
+        js_class = "BluetoothRemoteGATTCharacteristic",
+        js_name = "getDescriptor"
+    )]
+    #[doc = "The `getDescriptor()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothRemoteGATTCharacteristic/getDescriptor)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BluetoothRemoteGattCharacteristic`, `BluetoothRemoteGattDescriptor`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get_descriptor_with_u32(
         this: &BluetoothRemoteGattCharacteristic,
         descriptor: u32,
@@ -200,6 +219,25 @@ extern "C" {
     pub fn get_descriptors_with_str(
         this: &BluetoothRemoteGattCharacteristic,
         descriptor: &str,
+    ) -> ::js_sys::Promise<::js_sys::Array<BluetoothRemoteGattDescriptor>>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "BluetoothRemoteGattDescriptor")]
+    #[wasm_bindgen(
+        method,
+        js_class = "BluetoothRemoteGATTCharacteristic",
+        js_name = "getDescriptors"
+    )]
+    #[doc = "The `getDescriptors()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothRemoteGATTCharacteristic/getDescriptors)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BluetoothRemoteGattCharacteristic`, `BluetoothRemoteGattDescriptor`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn get_descriptors_with_js_string(
+        this: &BluetoothRemoteGattCharacteristic,
+        descriptor: &::js_sys::JsString,
     ) -> ::js_sys::Promise<::js_sys::Array<BluetoothRemoteGattDescriptor>>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "BluetoothRemoteGattDescriptor")]

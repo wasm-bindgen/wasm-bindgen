@@ -57,6 +57,13 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PresentationRequest/PresentationRequest)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PresentationRequest`*"]
+    pub fn new_with_js_string(url: &::js_sys::JsString) -> Result<PresentationRequest, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "PresentationRequest")]
+    #[doc = "The `new PresentationRequest(..)` constructor, creating a new instance of `PresentationRequest`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PresentationRequest/PresentationRequest)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PresentationRequest`*"]
     pub fn new_with_urls(urls: &::wasm_bindgen::JsValue) -> Result<PresentationRequest, JsValue>;
     #[wasm_bindgen(
         catch,
@@ -79,6 +86,16 @@ extern "C" {
     pub fn reconnect(
         this: &PresentationRequest,
         presentation_id: &str,
+    ) -> Result<::js_sys::Promise, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "PresentationRequest", js_name = "reconnect")]
+    #[doc = "The `reconnect()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PresentationRequest/reconnect)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PresentationRequest`*"]
+    pub fn reconnect_with_js_string(
+        this: &PresentationRequest,
+        presentation_id: &::js_sys::JsString,
     ) -> Result<::js_sys::Promise, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "PresentationRequest")]
     #[doc = "The `start()` method."]

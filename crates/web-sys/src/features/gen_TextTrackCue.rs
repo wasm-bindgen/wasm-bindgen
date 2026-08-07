@@ -39,6 +39,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TextTrackCue`*"]
     pub fn set_id(this: &TextTrackCue, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "TextTrackCue", js_name = "id")]
+    #[doc = "Setter for the `id` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TextTrackCue/id)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TextTrackCue`*"]
+    pub fn set_id_js_string(this: &TextTrackCue, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "TextTrackCue", js_name = "startTime")]
     #[doc = "Getter for the `startTime` field of this object."]
     #[doc = ""]

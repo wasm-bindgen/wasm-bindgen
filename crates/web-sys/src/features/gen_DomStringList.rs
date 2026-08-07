@@ -30,6 +30,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomStringList`*"]
     pub fn contains(this: &DomStringList, string: &str) -> bool;
+    #[wasm_bindgen(method, js_class = "DOMStringList", js_name = "contains")]
+    #[doc = "The `contains()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMStringList/contains)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomStringList`*"]
+    pub fn contains_with_js_string(this: &DomStringList, string: &::js_sys::JsString) -> bool;
     #[wasm_bindgen(method, js_class = "DOMStringList")]
     #[doc = "The `item()` method."]
     #[doc = ""]

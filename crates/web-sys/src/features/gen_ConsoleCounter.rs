@@ -30,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleCounter`*"]
     #[wasm_bindgen(method, setter = "label")]
     pub fn set_label(this: &ConsoleCounter, val: &str);
+    #[doc = "Change the `label` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleCounter`*"]
+    #[wasm_bindgen(method, setter = "label")]
+    pub fn set_label_js_string(this: &ConsoleCounter, val: &::js_sys::JsString);
 }
 impl ConsoleCounter {
     #[doc = "Construct a new `ConsoleCounter`."]

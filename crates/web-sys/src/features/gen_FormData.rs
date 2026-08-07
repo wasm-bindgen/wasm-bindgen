@@ -46,11 +46,36 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FormData/append)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Blob`, `FormData`*"]
+    pub fn append_with_js_string_and_blob(
+        this: &FormData,
+        name: &::js_sys::JsString,
+        value: &Blob,
+    ) -> Result<(), JsValue>;
+    #[cfg(feature = "Blob")]
+    #[wasm_bindgen(catch, method, js_class = "FormData", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FormData/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`, `FormData`*"]
     pub fn append_with_blob_and_filename(
         this: &FormData,
         name: &str,
         value: &Blob,
         filename: &str,
+    ) -> Result<(), JsValue>;
+    #[cfg(feature = "Blob")]
+    #[wasm_bindgen(catch, method, js_class = "FormData", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FormData/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`, `FormData`*"]
+    pub fn append_with_js_string_and_blob_and_js_string(
+        this: &FormData,
+        name: &::js_sys::JsString,
+        value: &Blob,
+        filename: &::js_sys::JsString,
     ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "FormData", js_name = "append")]
     #[doc = "The `append()` method."]
@@ -59,6 +84,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FormData`*"]
     pub fn append_with_str(this: &FormData, name: &str, value: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "FormData", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FormData/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FormData`*"]
+    pub fn append_with_js_string_and_js_string(
+        this: &FormData,
+        name: &::js_sys::JsString,
+        value: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(method, js_class = "FormData")]
     #[doc = "The `delete()` method."]
     #[doc = ""]
@@ -66,6 +102,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FormData`*"]
     pub fn delete(this: &FormData, name: &str);
+    #[wasm_bindgen(method, js_class = "FormData", js_name = "delete")]
+    #[doc = "The `delete()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FormData/delete)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FormData`*"]
+    pub fn delete_with_js_string(this: &FormData, name: &::js_sys::JsString);
     #[wasm_bindgen(catch, method, js_class = "FormData", js_name = "forEach")]
     #[doc = "The `forEach()` method."]
     #[doc = ""]
@@ -80,6 +123,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FormData`*"]
     pub fn get(this: &FormData, name: &str) -> ::wasm_bindgen::JsValue;
+    #[wasm_bindgen(method, js_class = "FormData", js_name = "get")]
+    #[doc = "The `get()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FormData/get)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FormData`*"]
+    pub fn get_with_js_string(
+        this: &FormData,
+        name: &::js_sys::JsString,
+    ) -> ::wasm_bindgen::JsValue;
     #[wasm_bindgen(method, js_class = "FormData", js_name = "getAll")]
     #[doc = "The `getAll()` method."]
     #[doc = ""]
@@ -87,6 +140,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FormData`*"]
     pub fn get_all(this: &FormData, name: &str) -> ::js_sys::Array;
+    #[wasm_bindgen(method, js_class = "FormData", js_name = "getAll")]
+    #[doc = "The `getAll()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FormData/getAll)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FormData`*"]
+    pub fn get_all_with_js_string(this: &FormData, name: &::js_sys::JsString) -> ::js_sys::Array;
     #[wasm_bindgen(method, js_class = "FormData")]
     #[doc = "The `has()` method."]
     #[doc = ""]
@@ -94,6 +154,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FormData`*"]
     pub fn has(this: &FormData, name: &str) -> bool;
+    #[wasm_bindgen(method, js_class = "FormData", js_name = "has")]
+    #[doc = "The `has()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FormData/has)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FormData`*"]
+    pub fn has_with_js_string(this: &FormData, name: &::js_sys::JsString) -> bool;
     #[cfg(feature = "Blob")]
     #[wasm_bindgen(catch, method, js_class = "FormData", js_name = "set")]
     #[doc = "The `set()` method."]
@@ -109,11 +176,36 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FormData/set)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Blob`, `FormData`*"]
+    pub fn set_with_js_string_and_blob(
+        this: &FormData,
+        name: &::js_sys::JsString,
+        value: &Blob,
+    ) -> Result<(), JsValue>;
+    #[cfg(feature = "Blob")]
+    #[wasm_bindgen(catch, method, js_class = "FormData", js_name = "set")]
+    #[doc = "The `set()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FormData/set)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`, `FormData`*"]
     pub fn set_with_blob_and_filename(
         this: &FormData,
         name: &str,
         value: &Blob,
         filename: &str,
+    ) -> Result<(), JsValue>;
+    #[cfg(feature = "Blob")]
+    #[wasm_bindgen(catch, method, js_class = "FormData", js_name = "set")]
+    #[doc = "The `set()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FormData/set)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`, `FormData`*"]
+    pub fn set_with_js_string_and_blob_and_js_string(
+        this: &FormData,
+        name: &::js_sys::JsString,
+        value: &Blob,
+        filename: &::js_sys::JsString,
     ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "FormData", js_name = "set")]
     #[doc = "The `set()` method."]
@@ -122,6 +214,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FormData`*"]
     pub fn set_with_str(this: &FormData, name: &str, value: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "FormData", js_name = "set")]
+    #[doc = "The `set()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FormData/set)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FormData`*"]
+    pub fn set_with_js_string_and_js_string(
+        this: &FormData,
+        name: &::js_sys::JsString,
+        value: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(method, js_class = "FormData")]
     #[doc = "The `entries()` method."]
     #[doc = ""]

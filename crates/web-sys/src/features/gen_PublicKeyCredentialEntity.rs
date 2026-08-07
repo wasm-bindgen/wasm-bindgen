@@ -22,6 +22,12 @@ extern "C" {
     #[deprecated]
     #[wasm_bindgen(method, setter = "icon")]
     pub fn set_icon(this: &PublicKeyCredentialEntity, val: &str);
+    #[doc = "Change the `icon` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialEntity`*"]
+    #[deprecated]
+    #[wasm_bindgen(method, setter = "icon")]
+    pub fn set_icon_js_string(this: &PublicKeyCredentialEntity, val: &::js_sys::JsString);
     #[doc = "Get the `name` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialEntity`*"]
@@ -32,6 +38,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialEntity`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &PublicKeyCredentialEntity, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialEntity`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &PublicKeyCredentialEntity, val: &::js_sys::JsString);
 }
 impl PublicKeyCredentialEntity {
     #[doc = "Construct a new `PublicKeyCredentialEntity`."]

@@ -53,4 +53,19 @@ extern "C" {
         type_: &str,
         gpu_uncaptured_error_event_init_dict: &GpuUncapturedErrorEventInit,
     ) -> Result<GpuUncapturedErrorEvent, JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "GpuUncapturedErrorEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "GPUUncapturedErrorEvent")]
+    #[doc = "The `new GpuUncapturedErrorEvent(..)` constructor, creating a new instance of `GpuUncapturedErrorEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUUncapturedErrorEvent/GPUUncapturedErrorEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuUncapturedErrorEvent`, `GpuUncapturedErrorEventInit`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+        gpu_uncaptured_error_event_init_dict: &GpuUncapturedErrorEventInit,
+    ) -> Result<GpuUncapturedErrorEvent, JsValue>;
 }

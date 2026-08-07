@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
     #[wasm_bindgen(method, setter = "decodeIssue")]
     pub fn set_decode_issue(this: &DecoderDoctorNotification, val: &str);
+    #[doc = "Change the `decodeIssue` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
+    #[wasm_bindgen(method, setter = "decodeIssue")]
+    pub fn set_decode_issue_js_string(this: &DecoderDoctorNotification, val: &::js_sys::JsString);
     #[doc = "Get the `decoderDoctorReportId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
@@ -32,6 +37,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
     #[wasm_bindgen(method, setter = "decoderDoctorReportId")]
     pub fn set_decoder_doctor_report_id(this: &DecoderDoctorNotification, val: &str);
+    #[doc = "Change the `decoderDoctorReportId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
+    #[wasm_bindgen(method, setter = "decoderDoctorReportId")]
+    pub fn set_decoder_doctor_report_id_js_string(
+        this: &DecoderDoctorNotification,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `docURL` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
@@ -42,6 +55,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
     #[wasm_bindgen(method, setter = "docURL")]
     pub fn set_doc_url(this: &DecoderDoctorNotification, val: &str);
+    #[doc = "Change the `docURL` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
+    #[wasm_bindgen(method, setter = "docURL")]
+    pub fn set_doc_url_js_string(this: &DecoderDoctorNotification, val: &::js_sys::JsString);
     #[doc = "Get the `formats` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
@@ -52,6 +70,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
     #[wasm_bindgen(method, setter = "formats")]
     pub fn set_formats(this: &DecoderDoctorNotification, val: &str);
+    #[doc = "Change the `formats` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
+    #[wasm_bindgen(method, setter = "formats")]
+    pub fn set_formats_js_string(this: &DecoderDoctorNotification, val: &::js_sys::JsString);
     #[doc = "Get the `isSolved` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
@@ -72,6 +95,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
     #[wasm_bindgen(method, setter = "resourceURL")]
     pub fn set_resource_url(this: &DecoderDoctorNotification, val: &str);
+    #[doc = "Change the `resourceURL` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
+    #[wasm_bindgen(method, setter = "resourceURL")]
+    pub fn set_resource_url_js_string(this: &DecoderDoctorNotification, val: &::js_sys::JsString);
     #[cfg(feature = "DecoderDoctorNotificationType")]
     #[doc = "Get the `type` field of this object."]
     #[doc = ""]

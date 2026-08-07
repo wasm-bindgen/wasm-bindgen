@@ -55,6 +55,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
     #[wasm_bindgen(method, setter = "blockedURI")]
     pub fn set_blocked_uri(this: &SecurityPolicyViolationEventInit, val: &str);
+    #[doc = "Change the `blockedURI` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
+    #[wasm_bindgen(method, setter = "blockedURI")]
+    pub fn set_blocked_uri_js_string(
+        this: &SecurityPolicyViolationEventInit,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `columnNumber` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
@@ -94,6 +102,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
     #[wasm_bindgen(method, setter = "documentURI")]
     pub fn set_document_uri(this: &SecurityPolicyViolationEventInit, val: &str);
+    #[doc = "Change the `documentURI` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
+    #[wasm_bindgen(method, setter = "documentURI")]
+    pub fn set_document_uri_js_string(
+        this: &SecurityPolicyViolationEventInit,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `effectiveDirective` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
@@ -106,6 +122,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
     #[wasm_bindgen(method, setter = "effectiveDirective")]
     pub fn set_effective_directive(this: &SecurityPolicyViolationEventInit, val: &str);
+    #[doc = "Change the `effectiveDirective` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
+    #[wasm_bindgen(method, setter = "effectiveDirective")]
+    pub fn set_effective_directive_js_string(
+        this: &SecurityPolicyViolationEventInit,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `lineNumber` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
@@ -128,6 +152,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
     #[wasm_bindgen(method, setter = "originalPolicy")]
     pub fn set_original_policy(this: &SecurityPolicyViolationEventInit, val: &str);
+    #[doc = "Change the `originalPolicy` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
+    #[wasm_bindgen(method, setter = "originalPolicy")]
+    pub fn set_original_policy_js_string(
+        this: &SecurityPolicyViolationEventInit,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `referrer` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
@@ -139,6 +171,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
     #[wasm_bindgen(method, setter = "referrer")]
     pub fn set_referrer(this: &SecurityPolicyViolationEventInit, val: &str);
+    #[doc = "Change the `referrer` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
+    #[wasm_bindgen(method, setter = "referrer")]
+    pub fn set_referrer_js_string(
+        this: &SecurityPolicyViolationEventInit,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `sample` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
@@ -149,6 +189,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
     #[wasm_bindgen(method, setter = "sample")]
     pub fn set_sample(this: &SecurityPolicyViolationEventInit, val: &str);
+    #[doc = "Change the `sample` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
+    #[wasm_bindgen(method, setter = "sample")]
+    pub fn set_sample_js_string(this: &SecurityPolicyViolationEventInit, val: &::js_sys::JsString);
     #[doc = "Get the `sourceFile` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
@@ -161,6 +206,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
     #[wasm_bindgen(method, setter = "sourceFile")]
     pub fn set_source_file(this: &SecurityPolicyViolationEventInit, val: &str);
+    #[doc = "Change the `sourceFile` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
+    #[wasm_bindgen(method, setter = "sourceFile")]
+    pub fn set_source_file_js_string(
+        this: &SecurityPolicyViolationEventInit,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `statusCode` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
@@ -183,6 +236,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
     #[wasm_bindgen(method, setter = "violatedDirective")]
     pub fn set_violated_directive(this: &SecurityPolicyViolationEventInit, val: &str);
+    #[doc = "Change the `violatedDirective` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEventInit`*"]
+    #[wasm_bindgen(method, setter = "violatedDirective")]
+    pub fn set_violated_directive_js_string(
+        this: &SecurityPolicyViolationEventInit,
+        val: &::js_sys::JsString,
+    );
 }
 impl SecurityPolicyViolationEventInit {
     #[doc = "Construct a new `SecurityPolicyViolationEventInit`."]

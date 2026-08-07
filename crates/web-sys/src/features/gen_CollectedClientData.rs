@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
     #[wasm_bindgen(method, setter = "challenge")]
     pub fn set_challenge(this: &CollectedClientData, val: &str);
+    #[doc = "Change the `challenge` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
+    #[wasm_bindgen(method, setter = "challenge")]
+    pub fn set_challenge_js_string(this: &CollectedClientData, val: &::js_sys::JsString);
     #[cfg(feature = "AuthenticationExtensionsClientInputs")]
     #[doc = "Get the `clientExtensions` field of this object."]
     #[doc = ""]
@@ -61,6 +66,12 @@ extern "C" {
     #[deprecated]
     #[wasm_bindgen(method, setter = "hashAlgorithm")]
     pub fn set_hash_algorithm(this: &CollectedClientData, val: &str);
+    #[doc = "Change the `hashAlgorithm` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
+    #[deprecated]
+    #[wasm_bindgen(method, setter = "hashAlgorithm")]
+    pub fn set_hash_algorithm_js_string(this: &CollectedClientData, val: &::js_sys::JsString);
     #[doc = "Get the `origin` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
@@ -71,6 +82,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
     #[wasm_bindgen(method, setter = "origin")]
     pub fn set_origin(this: &CollectedClientData, val: &str);
+    #[doc = "Change the `origin` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
+    #[wasm_bindgen(method, setter = "origin")]
+    pub fn set_origin_js_string(this: &CollectedClientData, val: &::js_sys::JsString);
     #[cfg(feature = "TokenBinding")]
     #[doc = "Get the `tokenBinding` field of this object."]
     #[doc = ""]
@@ -95,6 +111,12 @@ extern "C" {
     #[deprecated]
     #[wasm_bindgen(method, setter = "tokenBindingId")]
     pub fn set_token_binding_id(this: &CollectedClientData, val: &str);
+    #[doc = "Change the `tokenBindingId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
+    #[deprecated]
+    #[wasm_bindgen(method, setter = "tokenBindingId")]
+    pub fn set_token_binding_id_js_string(this: &CollectedClientData, val: &::js_sys::JsString);
     #[doc = "Get the `type` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
@@ -105,6 +127,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
     #[wasm_bindgen(method, setter = "type")]
     pub fn set_type(this: &CollectedClientData, val: &str);
+    #[doc = "Change the `type` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
+    #[wasm_bindgen(method, setter = "type")]
+    pub fn set_type_js_string(this: &CollectedClientData, val: &::js_sys::JsString);
 }
 impl CollectedClientData {
     #[doc = "Construct a new `CollectedClientData`."]

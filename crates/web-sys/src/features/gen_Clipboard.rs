@@ -60,4 +60,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Clipboard`*"]
     pub fn write_text(this: &Clipboard, data: &str) -> ::js_sys::Promise;
+    #[wasm_bindgen(method, js_class = "Clipboard", js_name = "writeText")]
+    #[doc = "The `writeText()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Clipboard`*"]
+    pub fn write_text_with_js_string(
+        this: &Clipboard,
+        data: &::js_sys::JsString,
+    ) -> ::js_sys::Promise;
 }

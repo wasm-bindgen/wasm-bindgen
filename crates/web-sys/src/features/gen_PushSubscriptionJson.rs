@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PushSubscriptionJson`*"]
     #[wasm_bindgen(method, setter = "endpoint")]
     pub fn set_endpoint(this: &PushSubscriptionJson, val: &str);
+    #[doc = "Change the `endpoint` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PushSubscriptionJson`*"]
+    #[wasm_bindgen(method, setter = "endpoint")]
+    pub fn set_endpoint_js_string(this: &PushSubscriptionJson, val: &::js_sys::JsString);
     #[cfg(feature = "PushSubscriptionKeys")]
     #[doc = "Get the `keys` field of this object."]
     #[doc = ""]

@@ -30,6 +30,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `IdbObjectStore`*"]
     pub fn set_name(this: &IdbObjectStore, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "IDBObjectStore", js_name = "name")]
+    #[doc = "Setter for the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBObjectStore/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbObjectStore`*"]
+    pub fn set_name_js_string(this: &IdbObjectStore, value: &::js_sys::JsString);
     #[wasm_bindgen(
         catch,
         method,
@@ -135,9 +142,33 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBObjectStore/createIndex)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `IdbIndex`, `IdbObjectStore`*"]
+    pub fn create_index_with_js_string_and_js_string(
+        this: &IdbObjectStore,
+        name: &::js_sys::JsString,
+        key_path: &::js_sys::JsString,
+    ) -> Result<IdbIndex, JsValue>;
+    #[cfg(feature = "IdbIndex")]
+    #[wasm_bindgen(catch, method, js_class = "IDBObjectStore", js_name = "createIndex")]
+    #[doc = "The `createIndex()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBObjectStore/createIndex)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbIndex`, `IdbObjectStore`*"]
     pub fn create_index_with_str_sequence(
         this: &IdbObjectStore,
         name: &str,
+        key_path: &::wasm_bindgen::JsValue,
+    ) -> Result<IdbIndex, JsValue>;
+    #[cfg(feature = "IdbIndex")]
+    #[wasm_bindgen(catch, method, js_class = "IDBObjectStore", js_name = "createIndex")]
+    #[doc = "The `createIndex()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBObjectStore/createIndex)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbIndex`, `IdbObjectStore`*"]
+    pub fn create_index_with_js_string_and_str_sequence(
+        this: &IdbObjectStore,
+        name: &::js_sys::JsString,
         key_path: &::wasm_bindgen::JsValue,
     ) -> Result<IdbIndex, JsValue>;
     #[cfg(all(feature = "IdbIndex", feature = "IdbIndexParameters",))]
@@ -160,9 +191,35 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBObjectStore/createIndex)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `IdbIndex`, `IdbIndexParameters`, `IdbObjectStore`*"]
+    pub fn create_index_with_js_string_and_js_string_and_options(
+        this: &IdbObjectStore,
+        name: &::js_sys::JsString,
+        key_path: &::js_sys::JsString,
+        options: &IdbIndexParameters,
+    ) -> Result<IdbIndex, JsValue>;
+    #[cfg(all(feature = "IdbIndex", feature = "IdbIndexParameters",))]
+    #[wasm_bindgen(catch, method, js_class = "IDBObjectStore", js_name = "createIndex")]
+    #[doc = "The `createIndex()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBObjectStore/createIndex)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbIndex`, `IdbIndexParameters`, `IdbObjectStore`*"]
     pub fn create_index_with_str_sequence_and_optional_parameters(
         this: &IdbObjectStore,
         name: &str,
+        key_path: &::wasm_bindgen::JsValue,
+        options: &IdbIndexParameters,
+    ) -> Result<IdbIndex, JsValue>;
+    #[cfg(all(feature = "IdbIndex", feature = "IdbIndexParameters",))]
+    #[wasm_bindgen(catch, method, js_class = "IDBObjectStore", js_name = "createIndex")]
+    #[doc = "The `createIndex()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBObjectStore/createIndex)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbIndex`, `IdbIndexParameters`, `IdbObjectStore`*"]
+    pub fn create_index_with_js_string_and_str_sequence_and_options(
+        this: &IdbObjectStore,
+        name: &::js_sys::JsString,
         key_path: &::wasm_bindgen::JsValue,
         options: &IdbIndexParameters,
     ) -> Result<IdbIndex, JsValue>;
@@ -184,6 +241,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `IdbObjectStore`*"]
     pub fn delete_index(this: &IdbObjectStore, name: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "IDBObjectStore", js_name = "deleteIndex")]
+    #[doc = "The `deleteIndex()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBObjectStore/deleteIndex)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbObjectStore`*"]
+    pub fn delete_index_with_js_string(
+        this: &IdbObjectStore,
+        name: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[cfg(feature = "IdbRequest")]
     #[wasm_bindgen(catch, method, js_class = "IDBObjectStore")]
     #[doc = "The `get()` method."]
@@ -276,6 +343,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `IdbIndex`, `IdbObjectStore`*"]
     pub fn index(this: &IdbObjectStore, name: &str) -> Result<IdbIndex, JsValue>;
+    #[cfg(feature = "IdbIndex")]
+    #[wasm_bindgen(catch, method, js_class = "IDBObjectStore", js_name = "index")]
+    #[doc = "The `index()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBObjectStore/index)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbIndex`, `IdbObjectStore`*"]
+    pub fn index_with_js_string(
+        this: &IdbObjectStore,
+        name: &::js_sys::JsString,
+    ) -> Result<IdbIndex, JsValue>;
     #[cfg(feature = "IdbRequest")]
     #[wasm_bindgen(catch, method, js_class = "IDBObjectStore", js_name = "openCursor")]
     #[doc = "The `openCursor()` method."]

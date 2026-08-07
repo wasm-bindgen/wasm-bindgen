@@ -35,6 +35,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "kind")]
     pub fn set_kind(this: &MediaStreamTrackGeneratorInit, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `kind` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaStreamTrackGeneratorInit`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "kind")]
+    pub fn set_kind_js_string(this: &MediaStreamTrackGeneratorInit, val: &::js_sys::JsString);
 }
 #[cfg(web_sys_unstable_apis)]
 impl MediaStreamTrackGeneratorInit {

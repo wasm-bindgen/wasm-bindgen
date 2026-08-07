@@ -39,6 +39,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CommandEvent`*"]
     pub fn new(type_: &str) -> Result<CommandEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "CommandEvent")]
+    #[doc = "The `new CommandEvent(..)` constructor, creating a new instance of `CommandEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CommandEvent/CommandEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CommandEvent`*"]
+    pub fn new_with_js_string(type_: &::js_sys::JsString) -> Result<CommandEvent, JsValue>;
     #[cfg(feature = "CommandEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "CommandEvent")]
     #[doc = "The `new CommandEvent(..)` constructor, creating a new instance of `CommandEvent`."]
@@ -48,6 +55,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CommandEvent`, `CommandEventInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &CommandEventInit,
+    ) -> Result<CommandEvent, JsValue>;
+    #[cfg(feature = "CommandEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "CommandEvent")]
+    #[doc = "The `new CommandEvent(..)` constructor, creating a new instance of `CommandEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CommandEvent/CommandEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CommandEvent`, `CommandEventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &CommandEventInit,
     ) -> Result<CommandEvent, JsValue>;
 }

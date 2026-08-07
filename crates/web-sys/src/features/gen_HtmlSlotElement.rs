@@ -34,6 +34,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlSlotElement`*"]
     pub fn set_name(this: &HtmlSlotElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLSlotElement", js_name = "name")]
+    #[doc = "Setter for the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLSlotElement/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlSlotElement`*"]
+    pub fn set_name_js_string(this: &HtmlSlotElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, js_class = "HTMLSlotElement", js_name = "assignedNodes")]
     #[doc = "The `assignedNodes()` method."]
     #[doc = ""]

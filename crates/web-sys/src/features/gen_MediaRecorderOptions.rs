@@ -52,6 +52,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorderOptions`*"]
     #[wasm_bindgen(method, setter = "mimeType")]
     pub fn set_mime_type(this: &MediaRecorderOptions, val: &str);
+    #[doc = "Change the `mimeType` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaRecorderOptions`*"]
+    #[wasm_bindgen(method, setter = "mimeType")]
+    pub fn set_mime_type_js_string(this: &MediaRecorderOptions, val: &::js_sys::JsString);
     #[doc = "Get the `videoBitsPerSecond` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorderOptions`*"]

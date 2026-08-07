@@ -146,6 +146,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Response`*"]
     pub fn new_with_opt_str(body: Option<&str>) -> Result<Response, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "Response")]
+    #[doc = "The `new Response(..)` constructor, creating a new instance of `Response`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/Response)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Response`*"]
+    pub fn new_with_opt_js_string(body: Option<&::js_sys::JsString>) -> Result<Response, JsValue>;
     #[cfg(feature = "ReadableStream")]
     #[wasm_bindgen(catch, constructor, js_class = "Response")]
     #[doc = "The `new Response(..)` constructor, creating a new instance of `Response`."]
@@ -232,6 +239,17 @@ extern "C" {
         body: Option<&str>,
         init: &ResponseInit,
     ) -> Result<Response, JsValue>;
+    #[cfg(feature = "ResponseInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "Response")]
+    #[doc = "The `new Response(..)` constructor, creating a new instance of `Response`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/Response)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Response`, `ResponseInit`*"]
+    pub fn new_with_opt_js_string_and_init(
+        body: Option<&::js_sys::JsString>,
+        init: &ResponseInit,
+    ) -> Result<Response, JsValue>;
     #[cfg(all(feature = "ReadableStream", feature = "ResponseInit",))]
     #[wasm_bindgen(catch, constructor, js_class = "Response")]
     #[doc = "The `new Response(..)` constructor, creating a new instance of `Response`."]
@@ -275,7 +293,34 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/redirect_static)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Response`*"]
+    pub fn redirect_with_js_string(url: &::js_sys::JsString) -> Result<Response, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        static_method_of = "Response",
+        js_class = "Response",
+        js_name = "redirect"
+    )]
+    #[doc = "The `redirect()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/redirect_static)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Response`*"]
     pub fn redirect_with_status(url: &str, status: u16) -> Result<Response, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        static_method_of = "Response",
+        js_class = "Response",
+        js_name = "redirect"
+    )]
+    #[doc = "The `redirect()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/redirect_static)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Response`*"]
+    pub fn redirect_with_js_string_and_status(
+        url: &::js_sys::JsString,
+        status: u16,
+    ) -> Result<Response, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Response", js_name = "arrayBuffer")]
     #[doc = "The `arrayBuffer()` method."]
     #[doc = ""]

@@ -50,6 +50,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HashChangeEventInit`*"]
     #[wasm_bindgen(method, setter = "newURL")]
     pub fn set_new_url(this: &HashChangeEventInit, val: &str);
+    #[doc = "Change the `newURL` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HashChangeEventInit`*"]
+    #[wasm_bindgen(method, setter = "newURL")]
+    pub fn set_new_url_js_string(this: &HashChangeEventInit, val: &::js_sys::JsString);
     #[doc = "Get the `oldURL` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HashChangeEventInit`*"]
@@ -60,6 +65,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HashChangeEventInit`*"]
     #[wasm_bindgen(method, setter = "oldURL")]
     pub fn set_old_url(this: &HashChangeEventInit, val: &str);
+    #[doc = "Change the `oldURL` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HashChangeEventInit`*"]
+    #[wasm_bindgen(method, setter = "oldURL")]
+    pub fn set_old_url_js_string(this: &HashChangeEventInit, val: &::js_sys::JsString);
 }
 impl HashChangeEventInit {
     #[doc = "Construct a new `HashChangeEventInit`."]

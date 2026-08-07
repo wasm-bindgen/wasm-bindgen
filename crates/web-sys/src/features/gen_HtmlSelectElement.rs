@@ -64,6 +64,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlSelectElement`*"]
     pub fn set_autocomplete(this: &HtmlSelectElement, value: &str);
+    #[wasm_bindgen(
+        method,
+        setter,
+        js_class = "HTMLSelectElement",
+        js_name = "autocomplete"
+    )]
+    #[doc = "Setter for the `autocomplete` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLSelectElement/autocomplete)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlSelectElement`*"]
+    pub fn set_autocomplete_js_string(this: &HtmlSelectElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLSelectElement", js_name = "disabled")]
     #[doc = "Getter for the `disabled` field of this object."]
     #[doc = ""]
@@ -114,6 +126,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlSelectElement`*"]
     pub fn set_name(this: &HtmlSelectElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLSelectElement", js_name = "name")]
+    #[doc = "Setter for the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLSelectElement/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlSelectElement`*"]
+    pub fn set_name_js_string(this: &HtmlSelectElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLSelectElement", js_name = "required")]
     #[doc = "Getter for the `required` field of this object."]
     #[doc = ""]
@@ -222,6 +241,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlSelectElement`*"]
     pub fn set_value(this: &HtmlSelectElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLSelectElement", js_name = "value")]
+    #[doc = "Setter for the `value` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLSelectElement/value)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlSelectElement`*"]
+    pub fn set_value_js_string(this: &HtmlSelectElement, value: &::js_sys::JsString);
     #[wasm_bindgen(
         method,
         getter,
@@ -356,6 +382,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlOptionElement`, `HtmlSelectElement`*"]
     pub fn named_item(this: &HtmlSelectElement, name: &str) -> Option<HtmlOptionElement>;
+    #[cfg(feature = "HtmlOptionElement")]
+    #[wasm_bindgen(method, js_class = "HTMLSelectElement", js_name = "namedItem")]
+    #[doc = "The `namedItem()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLSelectElement/namedItem)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlOptionElement`, `HtmlSelectElement`*"]
+    pub fn named_item_with_js_string(
+        this: &HtmlSelectElement,
+        name: &::js_sys::JsString,
+    ) -> Option<HtmlOptionElement>;
     #[wasm_bindgen(method, js_class = "HTMLSelectElement", js_name = "remove")]
     #[doc = "The `remove()` method."]
     #[doc = ""]
@@ -384,6 +421,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlSelectElement`*"]
     pub fn set_custom_validity(this: &HtmlSelectElement, error: &str);
+    #[wasm_bindgen(method, js_class = "HTMLSelectElement", js_name = "setCustomValidity")]
+    #[doc = "The `setCustomValidity()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLSelectElement/setCustomValidity)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlSelectElement`*"]
+    pub fn set_custom_validity_with_js_string(this: &HtmlSelectElement, error: &::js_sys::JsString);
     #[wasm_bindgen(method, js_class = "HTMLSelectElement", indexing_getter)]
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]

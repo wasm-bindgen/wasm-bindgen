@@ -30,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebSocketElement`*"]
     #[wasm_bindgen(method, setter = "hostport")]
     pub fn set_hostport(this: &WebSocketElement, val: &str);
+    #[doc = "Change the `hostport` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebSocketElement`*"]
+    #[wasm_bindgen(method, setter = "hostport")]
+    pub fn set_hostport_js_string(this: &WebSocketElement, val: &::js_sys::JsString);
     #[doc = "Get the `msgreceived` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebSocketElement`*"]

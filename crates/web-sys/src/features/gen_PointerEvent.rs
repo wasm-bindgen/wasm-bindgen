@@ -101,6 +101,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PointerEvent`*"]
     pub fn new(type_: &str) -> Result<PointerEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "PointerEvent")]
+    #[doc = "The `new PointerEvent(..)` constructor, creating a new instance of `PointerEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/PointerEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PointerEvent`*"]
+    pub fn new_with_js_string(type_: &::js_sys::JsString) -> Result<PointerEvent, JsValue>;
     #[cfg(feature = "PointerEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "PointerEvent")]
     #[doc = "The `new PointerEvent(..)` constructor, creating a new instance of `PointerEvent`."]
@@ -110,6 +117,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PointerEvent`, `PointerEventInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &PointerEventInit,
+    ) -> Result<PointerEvent, JsValue>;
+    #[cfg(feature = "PointerEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "PointerEvent")]
+    #[doc = "The `new PointerEvent(..)` constructor, creating a new instance of `PointerEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/PointerEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PointerEvent`, `PointerEventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &PointerEventInit,
     ) -> Result<PointerEvent, JsValue>;
     #[wasm_bindgen(method, js_class = "PointerEvent", js_name = "getCoalescedEvents")]

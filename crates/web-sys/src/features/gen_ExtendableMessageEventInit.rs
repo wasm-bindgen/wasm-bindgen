@@ -60,6 +60,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEventInit`*"]
     #[wasm_bindgen(method, setter = "lastEventId")]
     pub fn set_last_event_id(this: &ExtendableMessageEventInit, val: &str);
+    #[doc = "Change the `lastEventId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEventInit`*"]
+    #[wasm_bindgen(method, setter = "lastEventId")]
+    pub fn set_last_event_id_js_string(this: &ExtendableMessageEventInit, val: &::js_sys::JsString);
     #[doc = "Get the `origin` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEventInit`*"]
@@ -70,6 +75,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEventInit`*"]
     #[wasm_bindgen(method, setter = "origin")]
     pub fn set_origin(this: &ExtendableMessageEventInit, val: &str);
+    #[doc = "Change the `origin` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEventInit`*"]
+    #[wasm_bindgen(method, setter = "origin")]
+    pub fn set_origin_js_string(this: &ExtendableMessageEventInit, val: &::js_sys::JsString);
     #[doc = "Get the `ports` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEventInit`*"]

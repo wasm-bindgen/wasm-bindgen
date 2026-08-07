@@ -22,6 +22,12 @@ extern "C" {
     #[deprecated]
     #[wasm_bindgen(method, setter = "icon")]
     pub fn set_icon(this: &PublicKeyCredentialRpEntity, val: &str);
+    #[doc = "Change the `icon` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialRpEntity`*"]
+    #[deprecated]
+    #[wasm_bindgen(method, setter = "icon")]
+    pub fn set_icon_js_string(this: &PublicKeyCredentialRpEntity, val: &::js_sys::JsString);
     #[doc = "Get the `name` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialRpEntity`*"]
@@ -32,6 +38,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialRpEntity`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &PublicKeyCredentialRpEntity, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialRpEntity`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &PublicKeyCredentialRpEntity, val: &::js_sys::JsString);
     #[doc = "Get the `id` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialRpEntity`*"]
@@ -42,6 +53,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialRpEntity`*"]
     #[wasm_bindgen(method, setter = "id")]
     pub fn set_id(this: &PublicKeyCredentialRpEntity, val: &str);
+    #[doc = "Change the `id` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialRpEntity`*"]
+    #[wasm_bindgen(method, setter = "id")]
+    pub fn set_id_js_string(this: &PublicKeyCredentialRpEntity, val: &::js_sys::JsString);
 }
 impl PublicKeyCredentialRpEntity {
     #[doc = "Construct a new `PublicKeyCredentialRpEntity`."]

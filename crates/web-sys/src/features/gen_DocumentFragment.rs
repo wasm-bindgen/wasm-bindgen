@@ -80,6 +80,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`, `Element`*"]
     pub fn get_element_by_id(this: &DocumentFragment, element_id: &str) -> Option<Element>;
     #[cfg(feature = "Element")]
+    #[wasm_bindgen(method, js_class = "DocumentFragment", js_name = "getElementById")]
+    #[doc = "The `getElementById()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/getElementById)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`, `Element`*"]
+    pub fn get_element_by_id_with_js_string(
+        this: &DocumentFragment,
+        element_id: &::js_sys::JsString,
+    ) -> Option<Element>;
+    #[cfg(feature = "Element")]
     #[wasm_bindgen(
         catch,
         method,
@@ -94,6 +105,22 @@ extern "C" {
     pub fn query_selector(
         this: &DocumentFragment,
         selectors: &str,
+    ) -> Result<Option<Element>, JsValue>;
+    #[cfg(feature = "Element")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "DocumentFragment",
+        js_name = "querySelector"
+    )]
+    #[doc = "The `querySelector()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/querySelector)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`, `Element`*"]
+    pub fn query_selector_with_js_string(
+        this: &DocumentFragment,
+        selectors: &::js_sys::JsString,
     ) -> Result<Option<Element>, JsValue>;
     #[cfg(feature = "NodeList")]
     #[wasm_bindgen(
@@ -110,6 +137,22 @@ extern "C" {
     pub fn query_selector_all(
         this: &DocumentFragment,
         selectors: &str,
+    ) -> Result<NodeList, JsValue>;
+    #[cfg(feature = "NodeList")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "DocumentFragment",
+        js_name = "querySelectorAll"
+    )]
+    #[doc = "The `querySelectorAll()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/querySelectorAll)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`, `NodeList`*"]
+    pub fn query_selector_all_with_js_string(
+        this: &DocumentFragment,
+        selectors: &::js_sys::JsString,
     ) -> Result<NodeList, JsValue>;
     #[wasm_bindgen(
         catch,
@@ -336,6 +379,120 @@ extern "C" {
         method,
         variadic,
         js_class = "DocumentFragment",
+        js_name = "append"
+    )]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn append_with_js_string(
+        this: &DocumentFragment,
+        nodes: &::js_sys::Array,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentFragment", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn append_with_js_string_0(this: &DocumentFragment) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentFragment", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn append_with_js_string_1(
+        this: &DocumentFragment,
+        nodes_1: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentFragment", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn append_with_js_string_2(
+        this: &DocumentFragment,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentFragment", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn append_with_js_string_3(
+        this: &DocumentFragment,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentFragment", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn append_with_js_string_4(
+        this: &DocumentFragment,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentFragment", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn append_with_js_string_5(
+        this: &DocumentFragment,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentFragment", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn append_with_js_string_6(
+        this: &DocumentFragment,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentFragment", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn append_with_js_string_7(
+        this: &DocumentFragment,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+        nodes_7: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        variadic,
+        js_class = "DocumentFragment",
         js_name = "prepend"
     )]
     #[doc = "The `prepend()` method."]
@@ -554,6 +711,120 @@ extern "C" {
         nodes_7: &str,
     ) -> Result<(), JsValue>;
     #[wasm_bindgen(
+        catch,
+        method,
+        variadic,
+        js_class = "DocumentFragment",
+        js_name = "prepend"
+    )]
+    #[doc = "The `prepend()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/prepend)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn prepend_with_js_string(
+        this: &DocumentFragment,
+        nodes: &::js_sys::Array,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentFragment", js_name = "prepend")]
+    #[doc = "The `prepend()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/prepend)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn prepend_with_js_string_0(this: &DocumentFragment) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentFragment", js_name = "prepend")]
+    #[doc = "The `prepend()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/prepend)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn prepend_with_js_string_1(
+        this: &DocumentFragment,
+        nodes_1: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentFragment", js_name = "prepend")]
+    #[doc = "The `prepend()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/prepend)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn prepend_with_js_string_2(
+        this: &DocumentFragment,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentFragment", js_name = "prepend")]
+    #[doc = "The `prepend()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/prepend)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn prepend_with_js_string_3(
+        this: &DocumentFragment,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentFragment", js_name = "prepend")]
+    #[doc = "The `prepend()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/prepend)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn prepend_with_js_string_4(
+        this: &DocumentFragment,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentFragment", js_name = "prepend")]
+    #[doc = "The `prepend()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/prepend)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn prepend_with_js_string_5(
+        this: &DocumentFragment,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentFragment", js_name = "prepend")]
+    #[doc = "The `prepend()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/prepend)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn prepend_with_js_string_6(
+        this: &DocumentFragment,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentFragment", js_name = "prepend")]
+    #[doc = "The `prepend()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/prepend)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn prepend_with_js_string_7(
+        this: &DocumentFragment,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+        nodes_7: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
         method,
         variadic,
         js_class = "DocumentFragment",
@@ -758,5 +1029,112 @@ extern "C" {
         nodes_5: &str,
         nodes_6: &str,
         nodes_7: &str,
+    );
+    #[wasm_bindgen(
+        method,
+        variadic,
+        js_class = "DocumentFragment",
+        js_name = "replaceChildren"
+    )]
+    #[doc = "The `replaceChildren()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/replaceChildren)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn replace_children_with_js_string(this: &DocumentFragment, nodes: &::js_sys::Array);
+    #[wasm_bindgen(method, js_class = "DocumentFragment", js_name = "replaceChildren")]
+    #[doc = "The `replaceChildren()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/replaceChildren)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn replace_children_with_js_string_0(this: &DocumentFragment);
+    #[wasm_bindgen(method, js_class = "DocumentFragment", js_name = "replaceChildren")]
+    #[doc = "The `replaceChildren()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/replaceChildren)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn replace_children_with_js_string_1(this: &DocumentFragment, nodes_1: &::js_sys::JsString);
+    #[wasm_bindgen(method, js_class = "DocumentFragment", js_name = "replaceChildren")]
+    #[doc = "The `replaceChildren()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/replaceChildren)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn replace_children_with_js_string_2(
+        this: &DocumentFragment,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+    );
+    #[wasm_bindgen(method, js_class = "DocumentFragment", js_name = "replaceChildren")]
+    #[doc = "The `replaceChildren()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/replaceChildren)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn replace_children_with_js_string_3(
+        this: &DocumentFragment,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+    );
+    #[wasm_bindgen(method, js_class = "DocumentFragment", js_name = "replaceChildren")]
+    #[doc = "The `replaceChildren()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/replaceChildren)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn replace_children_with_js_string_4(
+        this: &DocumentFragment,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+    );
+    #[wasm_bindgen(method, js_class = "DocumentFragment", js_name = "replaceChildren")]
+    #[doc = "The `replaceChildren()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/replaceChildren)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn replace_children_with_js_string_5(
+        this: &DocumentFragment,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+    );
+    #[wasm_bindgen(method, js_class = "DocumentFragment", js_name = "replaceChildren")]
+    #[doc = "The `replaceChildren()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/replaceChildren)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn replace_children_with_js_string_6(
+        this: &DocumentFragment,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+    );
+    #[wasm_bindgen(method, js_class = "DocumentFragment", js_name = "replaceChildren")]
+    #[doc = "The `replaceChildren()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment/replaceChildren)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`*"]
+    pub fn replace_children_with_js_string_7(
+        this: &DocumentFragment,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+        nodes_7: &::js_sys::JsString,
     );
 }

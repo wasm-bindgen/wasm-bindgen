@@ -200,6 +200,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `VttCue`*"]
     pub fn set_text(this: &VttCue, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "VTTCue", js_name = "text")]
+    #[doc = "Setter for the `text` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VTTCue/text)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VttCue`*"]
+    pub fn set_text_js_string(this: &VttCue, value: &::js_sys::JsString);
     #[wasm_bindgen(catch, constructor, js_class = "VTTCue")]
     #[doc = "The `new VttCue(..)` constructor, creating a new instance of `VttCue`."]
     #[doc = ""]
@@ -207,6 +214,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `VttCue`*"]
     pub fn new(start_time: f64, end_time: f64, text: &str) -> Result<VttCue, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "VTTCue")]
+    #[doc = "The `new VttCue(..)` constructor, creating a new instance of `VttCue`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VTTCue/VTTCue)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VttCue`*"]
+    pub fn new_with_js_string(
+        start_time: f64,
+        end_time: f64,
+        text: &::js_sys::JsString,
+    ) -> Result<VttCue, JsValue>;
     #[cfg(feature = "DocumentFragment")]
     #[wasm_bindgen(method, js_class = "VTTCue", js_name = "getCueAsHTML")]
     #[doc = "The `getCueAsHTML()` method."]

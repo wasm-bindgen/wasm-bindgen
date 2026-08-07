@@ -31,6 +31,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Animation`*"]
     pub fn set_id(this: &Animation, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "Animation", js_name = "id")]
+    #[doc = "Setter for the `id` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Animation/id)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Animation`*"]
+    pub fn set_id_js_string(this: &Animation, value: &::js_sys::JsString);
     #[cfg(feature = "AnimationEffect")]
     #[wasm_bindgen(method, getter, js_class = "Animation", js_name = "effect")]
     #[doc = "Getter for the `effect` field of this object."]
