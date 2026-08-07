@@ -35,8 +35,9 @@
   heap and restored on resume, so concurrent fibers cannot corrupt each other
   and no stack sizing is required. All targets are supported, including
   emscripten (using the same instrumentation, independent of emscripten's own
-  JSPI machinery). The `jspi` API is gated behind the `js_sys_unstable_apis`
-  cfg.
+  JSPI machinery). The feature is experimental: using the attributes emits a
+  compiler warning noting the experimental status, and the
+  `js_sys::futures::jspi` API is gated behind the `js_sys_unstable_apis` cfg.
   [#5193](https://github.com/wasm-bindgen/wasm-bindgen/pull/5193)
 
 ### Changed
