@@ -3,6 +3,8 @@
 
 ## Unreleased
 
+* Added logic to the `no-modules` JavaScript boilerplate in order to support usage within WebWorkers. [#4943](https://github.com/wasm-bindgen/wasm-bindgen/issues/4943)
+
 ### Added
 
 * [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
