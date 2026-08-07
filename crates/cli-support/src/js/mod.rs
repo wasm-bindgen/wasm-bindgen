@@ -770,20 +770,23 @@ impl<'a> Context<'a> {
             String::new()
         };
 
-        if let Some(mem) = self.module.memories.iter().next() {
-            if let Some(id) = mem.import {
-                self.module.imports.get_mut(id).module = PLACEHOLDER_MODULE.to_owned();
-                let mut init_memory = "new WebAssembly.Memory({".to_string();
-                init_memory.push_str(&format!("initial:{}", mem.initial));
-                if let Some(max) = mem.maximum {
-                    init_memory.push_str(&format!(",maximum:{max}"));
+        // The Emscripten linker automatically handles memory imports.
+        if !matches!(self.config.mode, OutputMode::Emscripten) {
+            if let Some(mem) = self.module.memories.iter().next() {
+                if let Some(id) = mem.import {
+                    self.module.imports.get_mut(id).module = PLACEHOLDER_MODULE.to_owned();
+                    let mut init_memory = "new WebAssembly.Memory({".to_string();
+                    init_memory.push_str(&format!("initial:{}", mem.initial));
+                    if let Some(max) = mem.maximum {
+                        init_memory.push_str(&format!(",maximum:{max}"));
+                    }
+                    if mem.shared {
+                        init_memory.push_str(",shared:true");
+                    }
+                    init_memory.push_str("})");
+                    self.wasm_import_definitions
+                        .insert(id, ImportDefinition::Expression(init_memory));
                 }
-                if mem.shared {
-                    init_memory.push_str(",shared:true");
-                }
-                init_memory.push_str("})");
-                self.wasm_import_definitions
-                    .insert(id, ImportDefinition::Expression(init_memory));
             }
         }
 

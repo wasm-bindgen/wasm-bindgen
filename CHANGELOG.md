@@ -25,6 +25,9 @@
   a string literal instead of `PanicError.name`, so it survives minification.
   [#5260](https://github.com/wasm-bindgen/wasm-bindgen/issues/5260)
 
+* Fixed Emscripten builds using pthreads failing to link.
+  [#5254](https://github.com/wasm-bindgen/wasm-bindgen/pull/5254)
+
 * `__wbg_load` in web targets now throws a clear error including the HTTP
   status and URL when given a non-ok fetch `Response`, instead of surfacing a
   misleading MIME-type or Wasm-magic-number error.
