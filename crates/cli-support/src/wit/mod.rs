@@ -427,10 +427,10 @@ impl<'a> Context<'a> {
                                 signature.arguments.len()
                             );
                         };
-                        format!("{arg:?} -> {:?}", &signature.ret)
+                        format!("{arg:?} -> {:?}", signature.ret)
                     }
                     GenericImportKey::Shim(shim) => {
-                        format!("{shim}: {:?} -> {:?}", &signature.arguments, &signature.ret)
+                        format!("{shim}: {:?} -> {:?}", signature.arguments, signature.ret)
                     }
                 };
                 Ok((sig_comment, key, signature, orig_func_ids))

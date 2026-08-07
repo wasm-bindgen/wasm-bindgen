@@ -800,7 +800,8 @@ impl TryToTokens for ast::Export {
                     ..
                 }) => {
                     let abi = quote! { <#elem as #wasm_bindgen::convert::RefMutFromWasmAbi>::Abi };
-                    let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi, Span::call_site());
+                    let (prim_args, prim_names) =
+                        splat(wasm_bindgen, &ident, &abi, Span::call_site());
                     args.extend(prim_args);
                     arg_conversions.push(quote! {
                         // `&mut T` arg: same logical-unwind-safety check as
@@ -820,7 +821,8 @@ impl TryToTokens for ast::Export {
                     if self.function.r#async {
                         let abi =
                             quote! { <#elem as #wasm_bindgen::convert::LongRefFromWasmAbi>::Abi };
-                        let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi, Span::call_site());
+                        let (prim_args, prim_names) =
+                            splat(wasm_bindgen, &ident, &abi, Span::call_site());
                         args.extend(prim_args);
                         arg_conversions.push(quote! {
                             // `&T` arg in async export: enforce
@@ -838,7 +840,8 @@ impl TryToTokens for ast::Export {
                         });
                     } else {
                         let abi = quote! { <#elem as #wasm_bindgen::convert::RefFromWasmAbi>::Abi };
-                        let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi, Span::call_site());
+                        let (prim_args, prim_names) =
+                            splat(wasm_bindgen, &ident, &abi, Span::call_site());
                         args.extend(prim_args);
                         arg_conversions.push(quote! {
                             // `&T` arg: enforce `T: RefUnwindSafe`.
@@ -855,7 +858,8 @@ impl TryToTokens for ast::Export {
                 }
                 _ => {
                     let abi = quote! { <#ty as #wasm_bindgen::convert::FromWasmAbi>::Abi };
-                    let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi, Span::call_site());
+                    let (prim_args, prim_names) =
+                        splat(wasm_bindgen, &ident, &abi, Span::call_site());
                     args.extend(prim_args);
                     arg_conversions.push(quote! {
                         // Owned arg: consumed locally inside the catch-unwind
@@ -2810,9 +2814,7 @@ impl ast::ImportFunction {
         if self.variadic {
             if let Some(last) = self.function.arguments.last() {
                 let ty = &last.pat_type.ty;
-                if generics::uses_generic_params(ty, &type_params)
-                    && !is_spreadable_sequence(ty)
-                {
+                if generics::uses_generic_params(ty, &type_params) && !is_spreadable_sequence(ty) {
                     bail_span!(
                         ty,
                         "generic_per_mono requires the `variadic` argument to be a sequence when \
@@ -4160,6 +4162,11 @@ fn respan(input: TokenStream, span: &dyn ToTokens) -> TokenStream {
 /// is not itself handle-shaped (`async fn f() -> u32` being the obvious case).
 /// That this only affects non-handle types is why it went unnoticed: the existing
 /// async-import tests all resolve to `JsValue`/`JsString`.
+///
+/// Both import codegen paths must agree here — [`DescribeImport`] for ordinary
+/// imports and [`ImportFunction::try_to_tokens_generic`] for `generic_per_mono`
+/// ones. They used to carry separate copies of this logic with a "keep the two in
+/// sync" comment; this helper is what makes that drift impossible.
 fn import_describe_ret(
     wasm_bindgen: &syn::Path,
     ret_ty: Option<&syn::Type>,
@@ -4260,26 +4267,6 @@ fn result_err_ty(ty: &syn::Type) -> Option<&syn::Type> {
         _ => None,
     }
 }
-
-/// Emits the `WasmDescribe::describe()` call that states what an imported
-/// function actually returns *across the ABI*.
-///
-/// `ret_ty` is the import's declared return type, already concretised, or `None`
-/// for a unit return. `is_async` selects the promise shape.
-///
-/// The subtle case is `async`. An `async` import hands back a `Promise` handle —
-/// an externref — no matter what it resolves to; the resolved value is converted
-/// separately, inside `JsFuture<T>`. So the descriptor has to say externref.
-/// Describing the *resolved* type instead makes cli-support marshal the promise
-/// handle as if it were a `T`, which silently produces garbage for every `T` that
-/// is not itself handle-shaped (`async fn f() -> u32` being the obvious case).
-/// That this only affects non-handle types is why it went unnoticed: the existing
-/// async-import tests all resolve to `JsValue`/`JsString`.
-///
-/// Both import codegen paths must agree here — [`DescribeImport`] for ordinary
-/// imports and [`ImportFunction::try_to_tokens_generic`] for `generic_per_mono`
-/// ones. They used to carry separate copies of this logic with a "keep the two in
-/// sync" comment; this helper is what makes that drift impossible.
 
 /// The type to hand `WasmDescribe::describe` for a `slice_to_array` argument,
 /// or `None` if `ty` is not slice-shaped.
