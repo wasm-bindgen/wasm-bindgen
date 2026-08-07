@@ -9,7 +9,7 @@
   (import "./reference_test_bg.js" "__wbg_js_slice_optional_u16_as_array_57dd5435097afce2" (func (;3;) (type 2)))
   (import "./reference_test_bg.js" "__wbg_js_slice_string_as_array_fc6d35fea48d3225" (func (;4;) (type 2)))
   (import "./reference_test_bg.js" "__wbg_js_slice_u16_as_array_f3ff7d1fa16fa117" (func (;5;) (type 2)))
-  (import "./reference_test_bg.js" "__wbindgen_cast_0000000000000000" (func (;6;) (type 1)))
+  (import "./reference_test_bg.js" "__wbindgen_generic_0000000000000000" (func (;6;) (type 1)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;7;) (type 3)))
   (table $__wbindgen_externrefs (;0;) 1024 externref)
   (memory (;0;) 17)

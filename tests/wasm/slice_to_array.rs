@@ -1,11 +1,14 @@
 //! Tests for the `slice_to_array` attribute on imported functions.
 //!
 //! The attribute lets a `&[T]` (or `Option<&[T]>`) outgoing argument
-//! arrive on the JS side as a plain `Array` rather than a typed array
-//! (for primitive element kinds), without changing the Rust-side
-//! `&[T]` signature. The slice contents are cloned into a freshly
-//! allocated buffer that JS owns and frees; the caller's slice is
-//! left untouched.
+//! arrive on the JS side as a plain `Array` rather than a typed array,
+//! without changing the Rust-side `&[T]` signature. The caller's slice
+//! is left untouched either way.
+//!
+//! Ownership depends on the element kind: primitive elements are
+//! borrowed from the caller's slice (no allocation, no free), while
+//! string/externref elements are handed over in a freshly allocated
+//! index buffer that JS owns and frees.
 //!
 //! Coverage:
 //! - per-fn `slice_to_array` for primitive element kinds

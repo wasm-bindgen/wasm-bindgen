@@ -12,7 +12,7 @@ export function __wbg_parseFloat_efb706da0845cf8f(arg0, arg1) {
     const ret = parseFloat(getStringFromWasm0(arg0, arg1));
     return ret;
 }
-export function __wbindgen_cast_0000000000000000(arg0, arg1) {
+export function __wbindgen_generic_0000000000000000(arg0, arg1) {
     // Cast intrinsic for `Ref(String) -> Externref`.
     const ret = getStringFromWasm0(arg0, arg1);
     return ret;

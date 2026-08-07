@@ -8,6 +8,52 @@
 * [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
   to `web-sys` [#5247](https://github.com/wasm-bindgen/wasm-bindgen/pull/5247)
 
+* Added `#[wasm_bindgen(generic_per_mono)]` for imported functions, which binds a
+  generic import once per monomorphisation instead of erasing its type
+  parameters to `JsValue`. It can be applied to an individual import or to a
+  whole `extern "C"` block, which every function in the block then inherits.
+  Each instantiation gets its own descriptor, so
+  arguments and return values are marshalled at their concrete types (a `u32`
+  crosses as a number, a `String` as a string) rather than being boxed. Trait
+  bounds, `where` predicates (including higher-ranked ones), associated-type
+  projections, lifetime parameters, `async`, `catch`, and `slice_to_array` are
+  all supported; see [the guide](https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/generic_per_mono.html)
+  for the supported surface and the shapes that are rejected.
+
+* Added sixteen concrete `impl IntoWasmAbi for &T` impls, one per built-in
+  scalar type. `&T` arguments where `T` is a scalar are now accepted in
+  imported function signatures; previously only `&JsValue` and the concrete
+  slice/string references were. The scalar set is `i8`, `u8`, `i16`, `u16`,
+  `i32`, `u32`, `i64`, `u64`, `i128`, `u128`, `isize`, `usize`, `f32`, `f64`,
+  `bool` and `char`. JS cannot hold a reference into linear memory, so the value
+  is copied across and the wire is identical to passing `T` by value.
+
+  The impl set is deliberately a fixed list of concrete types rather than a
+  generic impl gated by some `Copy`-like bound: a `#[wasm_bindgen]` struct that
+  happens to derive `Copy` still has an identity and an owner, so handing JS
+  `&T` for it would silently give JS a *distinct* copy carrying its own
+  `free()` obligation. Keeping the list concrete and fixed also keeps it in
+  lockstep with the types the CLI can actually bind behind a reference, with no
+  new trait needed to express that.
+
+  This is fully additive for downstream crates: a hand-written
+  `impl IntoWasmAbi for &MyConcreteType` still compiles alongside these — which
+  is why the macro-generated impls for imported types, and hence all of
+  `js-sys`/`web-sys`, are unaffected.
+
+  One side effect worth knowing about: because each impl is on a concrete `&T`,
+  it also widens what *exported* functions may return. Writing `-> &u32`
+  directly is still rejected, but that guard is necessarily syntactic — a proc
+  macro cannot resolve a type alias — so a return type that reaches `&u32`
+  through an alias (`type R = &'static u32;`) now compiles where it previously
+  did not, and returns the pointed-to value by copy. That is the sensible
+  behaviour, and the emitted ABI is pinned by the `generic-import` reference
+  test.
+
+  Passing `&T` for a non-scalar `T` is now a trait error at the import
+  declaration instead of an abort partway through `wasm-bindgen` after the build
+  has already succeeded.
+
 ### Changed
 
 * Emscripten output now marks public exports (free functions, classes, enums,
@@ -18,6 +64,29 @@
   symbols (including namespace leaves) carry neither attribute — they remain
   reachable through `__deps`. Requires an emscripten with `__export`/`__force`
   symbol-attribute support.
+
+* **The schema version was bumped**, so the `wasm-bindgen` runtime crate and the
+  `wasm-bindgen` CLI must be updated together. A mismatched pair now fails with
+  an explicit schema-version error instead of producing wrong output. This
+  affects every user, not just users of the new features below, because the
+  `#[wasm_bindgen]`-emitted metadata gained a field (`generic_per_mono` on
+  imported functions).
+
+* Casts are now bound through the same pipeline as `generic_per_mono` imports,
+  which both discover their monomorphisations through one shared descriptor
+  marker. Two internal names changed as a result: the marker import
+  `__wbindgen_describe_cast` is now `__wbindgen_describe_generic_import`, and the
+  cast shims emitted into the JS glue are named `__wbindgen_generic_N` instead of
+  `__wbindgen_cast_N`. Both are internal details of the generated output, but the
+  latter is visible in the emitted JS and will change the output of anyone
+  matching on those names.
+
+  The cast *descriptor wire format* changed to match: a cast descriptor now
+  begins with an extra `inform(0)`, the zero-length shim key that marks it as the
+  degenerate generic import. This is purely internal, but it is why the runtime
+  and CLI have to be upgraded in lockstep (see the schema version bump above) —
+  an old CLI reading a new cast descriptor would misinterpret the leading length
+  prefix as a descriptor tag.
 
 ### Fixed
 

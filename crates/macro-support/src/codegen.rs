@@ -617,7 +617,12 @@ impl ToTokens for ast::StructField {
         }
 
         let abi = quote! { <#ty as #wasm_bindgen::convert::FromWasmAbi>::Abi };
-        let (args, names) = splat(wasm_bindgen, &Ident::new("val", rust_name.span()), &abi);
+        let (args, names) = splat(
+            wasm_bindgen,
+            &Ident::new("val", rust_name.span()),
+            &abi,
+            Span::call_site(),
+        );
 
         (quote! {
             #[cfg(all(target_family = "wasm", not(target_os = "wasi")))]
@@ -781,7 +786,8 @@ impl TryToTokens for ast::Export {
                     ..
                 }) => {
                     let abi = quote! { <#elem as #wasm_bindgen::convert::RefMutFromWasmAbi>::Abi };
-                    let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi);
+                    let (prim_args, prim_names) =
+                        splat(wasm_bindgen, &ident, &abi, Span::call_site());
                     args.extend(prim_args);
                     arg_conversions.push(quote! {
                         // `&mut T` arg: same logical-unwind-safety check as
@@ -801,7 +807,8 @@ impl TryToTokens for ast::Export {
                     if self.function.r#async {
                         let abi =
                             quote! { <#elem as #wasm_bindgen::convert::LongRefFromWasmAbi>::Abi };
-                        let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi);
+                        let (prim_args, prim_names) =
+                            splat(wasm_bindgen, &ident, &abi, Span::call_site());
                         args.extend(prim_args);
                         arg_conversions.push(quote! {
                             // `&T` arg in async export: enforce
@@ -819,7 +826,8 @@ impl TryToTokens for ast::Export {
                         });
                     } else {
                         let abi = quote! { <#elem as #wasm_bindgen::convert::RefFromWasmAbi>::Abi };
-                        let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi);
+                        let (prim_args, prim_names) =
+                            splat(wasm_bindgen, &ident, &abi, Span::call_site());
                         args.extend(prim_args);
                         arg_conversions.push(quote! {
                             // `&T` arg: enforce `T: RefUnwindSafe`.
@@ -836,7 +844,8 @@ impl TryToTokens for ast::Export {
                 }
                 _ => {
                     let abi = quote! { <#ty as #wasm_bindgen::convert::FromWasmAbi>::Abi };
-                    let (prim_args, prim_names) = splat(wasm_bindgen, &ident, &abi);
+                    let (prim_args, prim_names) =
+                        splat(wasm_bindgen, &ident, &abi, Span::call_site());
                     args.extend(prim_args);
                     arg_conversions.push(quote! {
                         // Owned arg: consumed locally inside the catch-unwind
@@ -1182,6 +1191,11 @@ impl TryToTokens for ast::ImportType {
         if !class_generic_params.is_empty() || !lifetime_params.is_empty() {
             let generic_param_names: Vec<_> = class_generic_params.iter().map(|p| p.0).collect();
             let lifetime_refs = lifetime_params.iter().map(|lt| quote! { &#lt () });
+            // Via `#wasm_bindgen::__rt::core`, not a bare `::core`: this is
+            // expanded with call-site hygiene into the user's own module, where a
+            // user item named `core` shadows the extern-prelude entry, and a
+            // 2015-edition consumer would resolve `core::` relative to its crate
+            // root and fail outright.
             phantom = quote! {
                 generics: #wasm_bindgen::__rt::core::marker::PhantomData<(#(#generic_param_names,)* #(#lifetime_refs),*)>
             };
@@ -1235,7 +1249,11 @@ impl TryToTokens for ast::ImportType {
                     type JsCanon = #rust_name #ty_generics;
                     #[inline]
                     fn to_js(self) -> #rust_name #ty_generics {
-            unsafe { #wasm_bindgen::__rt::core::mem::transmute_copy(&#wasm_bindgen::__rt::core::mem::ManuallyDrop::new(self)) }
+                        unsafe {
+                            #wasm_bindgen::__rt::core::mem::transmute_copy(
+                                &#wasm_bindgen::__rt::core::mem::ManuallyDrop::new(self),
+                            )
+                        }
                     }
                 }
             }
@@ -2040,6 +2058,9 @@ impl ToTokens for ast::DynamicUnion {
 
 impl TryToTokens for ast::ImportFunction {
     fn try_to_tokens(&self, tokens: &mut TokenStream) -> Result<(), Diagnostic> {
+        if self.generic_per_mono {
+            return self.try_to_tokens_generic(tokens);
+        }
         let mut class = None;
         let mut is_constructor = false;
         let mut is_method = false;
@@ -2207,25 +2228,36 @@ impl TryToTokens for ast::ImportFunction {
                 convert_arg = quote! { #var };
             }
 
-            // `slice_to_array` re-routes a slice-shaped argument through
-            // `VectorRefIntoWasmAbi`; see `slice_to_array_rewrite` for the full
-            // rationale, including why a non-slice argument silently falls
-            // through to the default ABI path.
+            // `slice_to_array`: hand JS an owned `Array` instead of a
+            // typed-array view. See `slice_to_array_rewrite`.
             if arg.slice_to_array {
                 if let Some(rewrite) = slice_to_array_rewrite(wasm_bindgen, &name, &var, ty) {
                     abi_arguments.extend(rewrite.abi_args);
-                    abi_argument_names.extend(rewrite.prim_names.iter().cloned());
+                    abi_argument_names.extend(rewrite.prim_names);
                     arg_conversions.push(rewrite.conversion);
                     continue;
                 }
             }
 
-            let abi = quote! { <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi };
-            let (prim_args, prim_names) = splat(wasm_bindgen, &name, &abi);
+            // Span the `IntoWasmAbi` projection at the argument's own type. This
+            // is where a "does not implement `IntoWasmAbi`" error is actually
+            // raised (the projection has to resolve before anything else in the
+            // signature typechecks), and with a `quote!` call-site span every
+            // such error in an `extern "C"` block lands on the block's
+            // `#[wasm_bindgen]` attribute instead — N identical errors with no
+            // indication of which argument is at fault. `&T` arguments make this
+            // routine rather than exotic: `&T: IntoWasmAbi` only exists for a
+            // fixed list of scalar `T` (see `ref_into_wasm_abi_for_scalar!` in
+            // `src/convert/impls.rs`), so any `&SomeStruct` argument fails here.
+            let abi_span = arg.pat_type.ty.span();
+            let abi = quote_spanned! { abi_span =>
+                <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi
+            };
+            let (prim_args, prim_names) = splat(wasm_bindgen, &name, &abi, abi_span);
             abi_arguments.extend(prim_args);
             abi_argument_names.extend(prim_names.iter().cloned());
 
-            arg_conversions.push(quote! {
+            arg_conversions.push(quote_spanned! { abi_span =>
                 let #name = <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>
                     ::into_abi(#convert_arg);
                 let (#(#prim_names),*) = <#abi as #wasm_bindgen::convert::WasmAbi>::split(#name);
@@ -2311,7 +2343,15 @@ impl TryToTokens for ast::ImportFunction {
         }
 
         let rust_name = &self.rust_name;
-        let import_name = &self.shim;
+        // The shim's own identifier is synthesised (`__wbg_<name>_<hash>`) and so
+        // is created at `Span::call_site()`. Both the declaration of the shim and
+        // the call to it normalise its whole signature, and rustc attributes that
+        // to the identifier — which means every "argument type doesn't implement
+        // `IntoWasmAbi`" failure is reported on the `#[wasm_bindgen]` attribute of
+        // the enclosing `extern "C"` block. Re-span it onto the imported
+        // function's own name so at least the failing *import* is identified.
+        let fn_span = Span::call_site().located_at(self.rust_name.span());
+        let import_name = &Ident::new(&self.shim.to_string(), fn_span);
         let attrs = &self.function.rust_attrs;
         let arguments = &arguments;
         let abi_arguments = &abi_arguments[..];
@@ -2345,7 +2385,14 @@ impl TryToTokens for ast::ImportFunction {
         // the specific argument/type that generated the error, but it looks
         // like rustc itself doesn't do great in that regard so let's just do
         // the best we can in the meantime.
-        let extern_fn = respan(
+        // `respan` only rewrites the top-level tokens of the stream, so
+        // everything nested inside the generated function's signature and body
+        // keeps `Span::call_site()` — which is the `#[wasm_bindgen]` attribute of
+        // the enclosing `extern "C"` block. Rewrite the whole tree instead, so a
+        // shim whose signature does not typecheck at least names the import it
+        // belongs to. Per-argument precision comes from `arg_conversions` in the
+        // wrapper body, which is spanned at each argument's own type.
+        let extern_fn = respan_all(
             extern_fn(
                 import_name,
                 attrs,
@@ -2353,7 +2400,7 @@ impl TryToTokens for ast::ImportFunction {
                 abi_argument_names,
                 abi_ret,
             ),
-            &self.rust_name,
+            fn_span,
         );
 
         let maybe_unsafe = if self.function.r#unsafe {
@@ -2422,6 +2469,15 @@ impl TryToTokens for ast::ImportFunction {
             quote! { where #(#fn_bounds),* }
         };
 
+        // Calling the shim normalises its whole signature at one span, so a bad
+        // argument's ABI projection is reported here too — with no way to say
+        // *which* argument, since a single call covers all of them. Point it at
+        // the function's own name, matching `respan(extern_fn, ..)` above, so at
+        // least it names the import rather than the `#[wasm_bindgen]` attribute
+        // on the enclosing `extern "C"` block.
+        let shim_call = quote_spanned! { fn_span =>
+            #import_name(#(#abi_argument_names),*)
+        };
         let invocation = quote! {
             // This is due to `#[automatically_derived]` attribute cannot be
             // placed onto bare functions.
@@ -2435,7 +2491,7 @@ impl TryToTokens for ast::ImportFunction {
                 unsafe {
                     let #ret_ident = {
                         #(#arg_conversions)*
-                        #import_name(#(#abi_argument_names),*)
+                        #shim_call
                     };
                     #exceptional_ret
                     #convert_ret
@@ -2455,6 +2511,641 @@ impl TryToTokens for ast::ImportFunction {
             invocation.to_tokens(tokens);
         }
 
+        Ok(())
+    }
+}
+
+/// Whether `ty` marshals to a JS value that the `variadic` spread (`...arg`)
+/// can iterate.
+///
+/// This is an allow-list rather than a deny-list, and deliberately so. The
+/// property being checked is "crosses the ABI as a JS array", which only the
+/// sequence shapes have; everything else — a bare `T`, `Option<T>`, `Box<T>`,
+/// an associated type `T::Item`, a tuple — either cannot spread at all or can
+/// only spread for *some* monomorphisations, which is worse, because the import
+/// then compiles and throws a `TypeError` at runtime for the instantiations that
+/// happen not to be iterable.
+///
+/// Top-level references and grouping layers are stripped first: `&[T]` crosses
+/// as whatever `[T]` does, and grouping is transparent to a type's meaning.
+fn is_spreadable_sequence(ty: &syn::Type) -> bool {
+    let mut ty = ty;
+    loop {
+        ty = match ty {
+            syn::Type::Reference(r) => &r.elem,
+            syn::Type::Paren(p) => &p.elem,
+            syn::Type::Group(g) => &g.elem,
+            _ => break,
+        };
+    }
+    match ty {
+        // `[T]` and `[T; N]`.
+        syn::Type::Slice(_) | syn::Type::Array(_) => true,
+        syn::Type::Path(syn::TypePath { qself: None, path }) => {
+            let Some(seg) = path.segments.last() else {
+                return false;
+            };
+            if seg.ident == "Vec" {
+                return true;
+            }
+            // `Box<[T]>` marshals as a slice, but `Box<T>` does not.
+            if seg.ident == "Box" {
+                if let syn::PathArguments::AngleBracketed(args) = &seg.arguments {
+                    if let Some(syn::GenericArgument::Type(inner)) = args.args.first() {
+                        return matches!(get_ty(inner), syn::Type::Slice(_));
+                    }
+                }
+            }
+            false
+        }
+        _ => false,
+    }
+}
+
+impl ast::ImportFunction {
+    /// Experimental per-monomorphisation codegen for a generic import.
+    ///
+    /// Instead of erasing type parameters to `JsValue`, this emits a
+    /// monomorphised `#[inline(never)]` shim (modelled on `wbg_cast`'s
+    /// `breaks_if_inlined`) that, per concrete instantiation, describes its
+    /// exact ABI signature and terminates with the
+    /// `__wbindgen_describe_generic_import` marker. The CLI interpreter
+    /// discovers each monomorphisation, recovers its `(shim key, signature)`,
+    /// and rewrites the call site to a manufactured JS binding.
+    ///
+    /// Supported: free functions, methods, constructors, static methods,
+    /// getters/setters (structural and non-structural), owned arguments
+    /// (including generic `T`, `Option<T>`, `Vec<T>`, and concrete
+    /// references/slices/strings), a bare shared reference to a generic type
+    /// parameter (`&T`, passed by value/handle), unit and non-unit returns
+    /// (including a generic `-> T`), `catch`, `variadic`, `async` (including a
+    /// generic `-> T`, since the value crossing the ABI is the `Promise` and the
+    /// resolved value is converted inside `JsFuture<T>`), and `slice_to_array`
+    /// for slices with a concrete element type.
+    ///
+    /// User-written trait bounds, both inline (`fn f<T: Trait>`) and in a `where`
+    /// clause (including higher-ranked predicates), are part of the declared
+    /// contract and are carried through to the generated wrapper, so callers must
+    /// satisfy them. They also reach the monomorphised shim, whose ABI signature
+    /// may project associated types off a bounded parameter.
+    ///
+    /// Lifetime parameters on the function (e.g. `fn f<'a, T>(x: &'a T)`) are
+    /// supported: they carry no runtime information (lifetimes are erased before
+    /// the wasm ABI boundary), so the work is just redeclaring them, with their
+    /// bounds, on the monomorphised shim below — a nested item, which inherits
+    /// none of the wrapper's generics — and, for a method whose receiver names
+    /// one (`this: &'a Foo`), binding the receiver as `&'a self`.
+    ///
+    /// Not (yet) supported, and rejected with a diagnostic:
+    /// - generic parameters belonging to the imported *class*, whether a type
+    ///   (`this: &Holder<T>`) or a lifetime (`this: &Holder<'a>`), since the
+    ///   generated `impl` block would have to be parameterised to carry them;
+    /// - a mutable reference to a generic type parameter (`&mut T`), or a
+    ///   reference to one nested inside another type (e.g. `Option<&T>`);
+    /// - a bare generic type parameter, or a reference to one (`&T`), as the
+    ///   `variadic` argument, since it may monomorphise to a non-iterable
+    ///   scalar;
+    /// - a type parameter in the error position of a `catch` import, since only
+    ///   the `Ok` type is monomorphised;
+    /// - `slice_to_array` on a slice whose element type mentions a type
+    ///   parameter;
+    /// - `reexport` and `assert_no_shim`, neither of which has a well-defined
+    ///   meaning when one shim is manufactured per monomorphisation.
+    ///
+    /// Const generic parameters never reach here: `validate_generics` in the
+    /// parser rejects them for *every* wasm-bindgen generic, erased or not.
+    ///
+    /// The rejected shapes generally keep working on the type-erasure path.
+    fn try_to_tokens_generic(&self, tokens: &mut TokenStream) -> Result<(), Diagnostic> {
+        let wasm_bindgen = &self.wasm_bindgen;
+        let wasm_bindgen_futures = &self.wasm_bindgen_futures;
+        let js_sys = &self.js_sys;
+        let futures = if ast::use_js_sys_futures() {
+            quote! { #js_sys::futures }
+        } else {
+            quote! { #wasm_bindgen_futures }
+        };
+        let promise = if ast::use_js_sys_futures() {
+            quote! { #js_sys::Promise }
+        } else {
+            quote! { #wasm_bindgen_futures::js_sys::Promise }
+        };
+
+        // --- Generic-parameter guards (opt-in path, so bailing is safe) ---
+        let type_params: Vec<&syn::Ident> =
+            self.generics.type_params().map(|tp| &tp.ident).collect();
+        if type_params.is_empty() {
+            bail_span!(
+                self.rust_name,
+                "generic_per_mono requires at least one type parameter"
+            );
+        }
+        let lifetime_params = generics::lifetime_params(&self.generics);
+
+        // --- Determine the receiver/class shape (mirrors the normal path) ---
+        let mut class = None;
+        let mut is_method = false;
+        if let ast::ImportFunctionKind::Method { ty, kind, .. } = &self.kind {
+            class = Some(get_ty(ty).clone());
+            if let ast::MethodKind::Operation(ast::Operation {
+                is_static: false, ..
+            }) = kind
+            {
+                is_method = true;
+            }
+            // Constructors and self-returning static methods impl on the return
+            // type's class so the manufactured JS binding attaches correctly.
+            if self.class_return_path().is_some() {
+                class = Some(get_ty(self.js_ret.as_ref().unwrap()).clone());
+            }
+        }
+        // Class-level generics require the erasure machinery (`fn_class_generics`).
+        // This covers a type parameter (`this: &Holder<T>`) or a lifetime
+        // (`this: &Holder<'a>`) of the function appearing in the receiver/return
+        // *class* type's own argument list — either way the generated `impl`
+        // block would have to be parameterised, which this path does not do.
+        //
+        // Note `class` is the referent, with the receiver's outer `&` already
+        // stripped at parse time, so a lifetime written on the reference itself
+        // (`this: &'a Holder`) is deliberately not caught here: that one is
+        // supported, and is handled by binding the receiver as `&'a self` below.
+        if let Some(c) = &class {
+            if generics::uses_generic_params(c, &type_params)
+                || generics::uses_lifetime_params(c, &lifetime_params)
+            {
+                bail_span!(
+                    self.rust_name,
+                    "generic_per_mono does not support class-level generic parameters yet; \
+                     use the type-erasure generic path instead"
+                );
+            }
+        }
+
+        // A `variadic` import splats its final argument (`...arg`) on the JS
+        // side, which requires that argument to be iterable at runtime.
+        //
+        // Only check arguments that actually mention a type parameter: a fully
+        // concrete variadic argument is the ordinary import path's business, and
+        // is left exactly as permissive as it is there. Once a type parameter is
+        // involved, though, iterability stops being a property of the
+        // declaration and becomes a property of each instantiation, so require a
+        // shape that marshals to a JS array for *every* monomorphisation. A bare
+        // `T` can be `u32`; `Option<T>`, `Box<T>` and `T::Item` are no better.
+        if self.variadic {
+            if let Some(last) = self.function.arguments.last() {
+                let ty = &last.pat_type.ty;
+                if generics::uses_generic_params(ty, &type_params) && !is_spreadable_sequence(ty) {
+                    bail_span!(
+                        ty,
+                        "generic_per_mono requires the `variadic` argument to be a sequence when \
+                         it mentions a type parameter, because it is spread with `...` on the JS \
+                         side and must be iterable for every monomorphisation; use `Vec<T>`, \
+                         `[T; N]` or `&[T]`, or the type-erasure generic path instead"
+                    );
+                }
+            }
+        }
+
+        // `catch` keeps only the `Ok` type and hard-codes the error to `JsValue`
+        // (see `extract_first_ty_param` in the parser), so the `?` the codegen
+        // emits would need `T: From<JsValue>`. A type parameter in the error
+        // position therefore surfaces as "`?` couldn't convert the error to `T`"
+        // pointing at `#[wasm_bindgen]`. Reject it with the error type's own span.
+        if self.catch {
+            if let Some(err_ty) = self
+                .function
+                .ret
+                .as_ref()
+                .and_then(|ret| result_err_ty(&ret.r#type))
+            {
+                if generics::uses_generic_params(err_ty, &type_params) {
+                    bail_span!(
+                        err_ty,
+                        "the error type of a `catch` import must be `JsValue`, not a type \
+                         parameter; only the `Ok` type is monomorphised"
+                    );
+                }
+            }
+        }
+
+        // --- Per-argument wrapper signature, ABI splat, describe, and bounds ---
+        //
+        // Each type param stays concrete via rustc monomorphisation, so args are
+        // marshalled with the plain `IntoWasmAbi`/`WasmDescribe` traits (no
+        // erasure). We add a `where` bound for exactly the arg/return types that
+        // mention a type parameter (bounding concrete types would be a trivial
+        // bound, which is an error on stable).
+        //
+        // The user's own bounds are part of the declared signature's contract, so
+        // they are carried through verbatim ahead of the synthesized ones: callers
+        // are then held to them by rustc, and any associated type they unlock
+        // (e.g. `T::Assoc` in an argument) resolves in both the wrapper and the
+        // monomorphised shim. Inline bounds (`fn f<T: Trait>`) ride along with the
+        // parameter list; `where` predicates have no such carrier and are
+        // collected here.
+        let mut where_bounds: Vec<TokenStream> = self
+            .generics
+            .where_clause
+            .iter()
+            .flat_map(|where_clause| where_clause.predicates.iter())
+            .map(ToTokens::to_token_stream)
+            .collect();
+        let mut wrapper_args = Vec::new();
+        let mut shim_abi_args = Vec::new();
+        let mut all_prim_names = Vec::new();
+        let mut arg_conversions = Vec::new();
+        let mut describe_args = Vec::new();
+        for (i, arg) in self.function.arguments.iter().enumerate() {
+            let ty = &*arg.pat_type.ty;
+            let name = match &*arg.pat_type.pat {
+                syn::Pat::Ident(syn::PatIdent {
+                    by_ref: None,
+                    ident,
+                    subpat: None,
+                    ..
+                }) => ident.clone(),
+                syn::Pat::Wild(_) => Ident::new(&format!("__genarg_{i}"), Span::call_site()),
+                _ => bail_span!(
+                    arg.pat_type.pat,
+                    "unsupported pattern in generic_per_mono imported function",
+                ),
+            };
+
+            if generics::uses_generic_params(ty, &type_params) {
+                // A bare, shared reference to a generic type parameter (`&T`)
+                // is supported: the referent's schema is emitted via `REF`
+                // (`WasmDescribe for &T`), and the value is marshalled by the
+                // referent-generic `IntoWasmAbi` impls (`&Handle`, `&JsValue`,
+                // `&str`, `&[T]`, and the fixed list of concrete `&T` scalar
+                // impls in `ref_into_wasm_abi_for_scalar!`). Because
+                // the shim names `<&T as IntoWasmAbi>::Abi` under a late-bound
+                // elided lifetime, the required bound is higher-ranked over
+                // the referent rather than `&T: IntoWasmAbi`.
+                //
+                // Still rejected: `&mut T`, and references nested inside
+                // another type (e.g. `Option<&T>`, `(T, &T)`, `[&T; N]`,
+                // `&&T`), which need the type-erasure path.
+                //
+                // Note this cannot fire for an argument the `slice_to_array`
+                // rewrite below will take over: such an argument must have a
+                // concrete element type (checked before the loop), so it never
+                // mentions a type parameter and no bound is recorded for it.
+                let top_level_shared_ref = match ty {
+                    syn::Type::Reference(r) if r.mutability.is_none() => {
+                        !generics::references_generic_param(&r.elem, &type_params)
+                    }
+                    _ => false,
+                };
+                if let (true, syn::Type::Reference(r)) = (top_level_shared_ref, ty) {
+                    let elem = &r.elem;
+                    where_bounds.push(quote! {
+                        for<'__wbg> &'__wbg #elem: #wasm_bindgen::convert::IntoWasmAbi
+                            + #wasm_bindgen::describe::WasmDescribe
+                    });
+                } else if generics::references_generic_param(ty, &type_params) {
+                    bail_span!(
+                        arg.pat_type.ty,
+                        "generic_per_mono only supports a bare shared reference to a generic \
+                         type parameter (`&T`); mutable references (`&mut T`) and references \
+                         nested inside another type (e.g. `Option<&T>`) are not supported — \
+                         take the argument by value or use the type-erasure generic path"
+                    );
+                } else {
+                    where_bounds.push(quote! {
+                        #ty: #wasm_bindgen::convert::IntoWasmAbi + #wasm_bindgen::describe::WasmDescribe
+                    });
+                }
+            }
+
+            // For methods the first argument is the receiver, referred to as
+            // `self` and omitted from the explicit parameter list.
+            let var = if i == 0 && is_method {
+                quote! { self }
+            } else {
+                wrapper_args.push(quote! { #name: #ty });
+                quote! { #name }
+            };
+
+            // `slice_to_array`: hand JS an owned `Array` instead of a
+            // typed-array view, exactly as on the normal import path. Before
+            // this was wired up the attribute was silently ignored here.
+            if arg.slice_to_array {
+                if let Some(rewrite) = slice_to_array_rewrite(wasm_bindgen, &name, &var, ty) {
+                    shim_abi_args.extend(rewrite.abi_args);
+                    all_prim_names.extend(rewrite.prim_names);
+                    arg_conversions.push(rewrite.conversion);
+                    let describe_ty = rewrite.describe_ty;
+                    describe_args.push(quote! {
+                        <#describe_ty as #wasm_bindgen::describe::WasmDescribe>::describe();
+                    });
+                    continue;
+                }
+            }
+
+            let abi = quote! { <#ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi };
+            let (args, names) = splat(wasm_bindgen, &name, &abi, Span::call_site());
+            shim_abi_args.extend(args);
+            arg_conversions.push(quote! {
+                let #name = <#ty as #wasm_bindgen::convert::IntoWasmAbi>::into_abi(#var);
+                let (#(#names),*) = <#abi as #wasm_bindgen::convert::WasmAbi>::split(#name);
+            });
+            all_prim_names.extend(names);
+            describe_args.push(quote! {
+                <#ty as #wasm_bindgen::describe::WasmDescribe>::describe();
+            });
+        }
+
+        // --- Return handling (mirrors the normal import path) ---
+        let ret_ident = Ident::new("_ret", Span::call_site());
+        let shim_ret_ty;
+        let shim_ret_expr;
+        let describe_ret;
+        let mut convert_ret;
+        // Paths in here go through `#wasm_bindgen::__rt::core` (the `pub extern
+        // crate core` re-export) rather than a bare `core::`, because the shim is
+        // expanded with call-site hygiene into the user's module: a user item named
+        // `core` in that module shadows the extern-prelude entry and the expansion
+        // fails with `cannot find function read in module core::ptr`, pointing at
+        // code the user never wrote. A 2015-edition consumer would resolve `core::`
+        // relative to its crate root and fail outright.
+        //
+        // The explicit `unsafe` blocks in `shim_ret_expr` below are belt-and-braces
+        // rather than load-bearing: rustc suppresses `unsafe_op_in_unsafe_fn` (like
+        // most lints) inside an external macro's expansion, so downstream crates do
+        // not see it fire even on edition 2024 with `#![deny(warnings)]`. They are
+        // kept because they document which operations are actually unsafe, and
+        // because an `unsafe` block inside an `unsafe fn` does not trigger
+        // `unused_unsafe` on any edition, so they cost nothing.
+        let marker_call = quote! {
+            #wasm_bindgen::describe::describe_generic_import(
+                breaks_if_inlined::<#(#type_params),*> as _,
+                &(#(#all_prim_names,)*) as *const _ as _,
+            )
+        };
+        match &self.js_ret {
+            Some(syn::Type::Reference(_)) => {
+                bail_span!(
+                    self.js_ret,
+                    "cannot return references in #[wasm_bindgen] imports yet"
+                );
+            }
+            Some(original_ty) => {
+                let maybe_async_wrapped;
+                let ty = if self.function.r#async {
+                    maybe_async_wrapped = parse_quote!(#promise<#original_ty>);
+                    &maybe_async_wrapped
+                } else {
+                    original_ty
+                };
+                if self.function.r#async {
+                    // The resolved value of the promise crosses the closure seam
+                    // inside `JsFuture<T>` via `T::from_abi`, so an `async` import
+                    // *can* return a monomorphised `T` — the bound that makes
+                    // `JsFuture<T>: From<Promise<T>>` hold is the one below, not
+                    // `T: WasmDescribe`.
+                    if generics::uses_generic_params(original_ty, &type_params) {
+                        where_bounds.push(quote! {
+                            #original_ty: #wasm_bindgen::convert::FromWasmAbi + 'static
+                        });
+                    }
+                } else if generics::uses_generic_params(ty, &type_params) {
+                    where_bounds.push(quote! {
+                        #ty: #wasm_bindgen::convert::FromWasmAbi
+                            + #wasm_bindgen::describe::WasmDescribe
+                    });
+                }
+                shim_ret_ty = quote! {
+                    #wasm_bindgen::convert::WasmRet<<#ty as #wasm_bindgen::convert::FromWasmAbi>::Abi>
+                };
+                shim_ret_expr =
+                    quote! { unsafe { #wasm_bindgen::__rt::core::ptr::read(#marker_call as _) } };
+                describe_ret =
+                    import_describe_ret(wasm_bindgen, Some(original_ty), self.function.r#async);
+                convert_ret = quote! {
+                    <#ty as #wasm_bindgen::convert::FromWasmAbi>::from_abi(#ret_ident.join())
+                };
+                if self.function.r#async {
+                    convert_ret = quote! {
+                        #futures::JsFuture::from(
+                            <#promise<#original_ty> as #wasm_bindgen::convert::FromWasmAbi>
+                                ::from_abi(#ret_ident.join())
+                        ).await
+                    };
+                    convert_ret = if self.catch {
+                        quote! { Ok(#convert_ret?) }
+                    } else {
+                        quote! { #convert_ret.expect("uncaught exception") }
+                    };
+                }
+            }
+            None => {
+                if self.function.r#async {
+                    shim_ret_ty = quote! {
+                        #wasm_bindgen::convert::WasmRet<<#promise as #wasm_bindgen::convert::FromWasmAbi>::Abi>
+                    };
+                    shim_ret_expr = quote! { unsafe { #wasm_bindgen::__rt::core::ptr::read(#marker_call as _) } };
+                    describe_ret = import_describe_ret(wasm_bindgen, None, true);
+                    let future = quote! {
+                        #futures::JsFuture::from(
+                            <#promise as #wasm_bindgen::convert::FromWasmAbi>
+                                ::from_abi(#ret_ident.join())
+                        ).await
+                    };
+                    convert_ret = if self.catch {
+                        quote! { #future?; Ok(()) }
+                    } else {
+                        quote! { #future.expect("uncaught exception"); }
+                    };
+                } else {
+                    shim_ret_ty = quote! { () };
+                    shim_ret_expr = quote! { let _ = unsafe { #marker_call }; };
+                    describe_ret = import_describe_ret(wasm_bindgen, None, false);
+                    convert_ret = quote! { () };
+                }
+            }
+        }
+
+        let mut exceptional_ret = quote!();
+        if self.catch && !self.function.r#async {
+            convert_ret = quote! { Ok(#convert_ret) };
+            exceptional_ret = quote! {
+                #wasm_bindgen::__rt::take_last_exception()?;
+            };
+        }
+
+        // --- Descriptor stream: [key string][FUNCTION signature] ---
+        let key = self.shim.to_string();
+        // The shim key is built in `parser.rs` from an ASCII-filtered function name
+        // plus a hex hash, so it is always ASCII; the `chars().count()` below is
+        // therefore equal to `len()`, but it is what the wire format actually
+        // wants (one word per `char`) and stays correct if that ever changes.
+        debug_assert!(key.is_ascii(), "shim keys are ASCII-filtered in parser.rs");
+        let key_len = key.chars().count() as u32;
+        let key_chars = key.chars().map(|c| c as u32);
+        let nargs = self.function.arguments.len() as u32;
+
+        // --- Assemble ---
+        let vis = &self.function.rust_vis;
+        let rust_name = &self.rust_name;
+        let attrs = &self.function.rust_attrs;
+        let ret = match self.function.ret.as_ref().map(|r| &r.r#type) {
+            Some(ty) => quote! { -> #ty },
+            None => quote!(),
+        };
+        let doc = if self.doc_comment.is_empty() {
+            quote! {}
+        } else {
+            let doc_comment = &self.doc_comment;
+            quote! { #[doc = #doc_comment] }
+        };
+        let generic_params = &self.generics.params;
+        // The shim redeclares the wrapper's type *and* lifetime parameters,
+        // since it's a nested item and inherits none of the wrapper's generics.
+        // Type params need their inline bounds too: its signature names ABI
+        // types projected off them (`<T::Assoc as IntoWasmAbi>::Abi`), which
+        // only resolve under the bound. Defaults are dropped here: they are
+        // meaningless on a nested item, and rustc's `invalid_type_param_default`
+        // future-compatibility lint already rejects them on the wrapper's own
+        // parameter list, so per-mono codegen deliberately does not add a check
+        // of its own.
+        //
+        // Lifetime params carry their inline bounds (`<'a: 'b>`) across too.
+        // Unlike the type-param bounds above this is not currently load-bearing:
+        // every type the shim names in a `where` predicate is also named in an
+        // argument- or return-position projection, and the implied bounds that
+        // position grants are enough to prove the predicate well-formed on their
+        // own. It is done anyway because the alternative is a silent dependency
+        // on that coincidence — an inline `<'a: 'b>` has no carrier in the
+        // `where` clause, so dropping it here makes the shim's declaration say
+        // something weaker than the wrapper's, and any future change that puts a
+        // lifetime-relating type in a predicate without a matching projection
+        // (`E0478: lifetime bound not satisfied`) would surface as an error in
+        // generated code the user never wrote.
+        let shim_generic_params: Vec<TokenStream> =
+            generics::lifetime_params_with_bounds(&self.generics)
+                .into_iter()
+                .chain(generics::type_params_with_bounds(&self.generics))
+                .collect();
+        let where_clause = if where_bounds.is_empty() {
+            quote! {}
+        } else {
+            quote! { where #(#where_bounds),* }
+        };
+        // Bind the receiver at whatever lifetime the declaration named it with
+        // (`this: &'a Foo` -> `&'a self`). The argument loop above marshals the
+        // receiver as `<&'a Foo as IntoWasmAbi>::into_abi(self)`, so a plain
+        // `&self` would give `self` an anonymous, caller-chosen lifetime that
+        // rustc cannot prove outlives `'a` — "lifetime may not live long
+        // enough", reported on the `#[wasm_bindgen]` attribute. An elided `'_`
+        // is dropped rather than forwarded: it is not a name `&'_ self` can be
+        // bound at, and it means the same thing as the elided `&self`.
+        let me = if is_method {
+            let recv_lifetime = self
+                .function
+                .arguments
+                .first()
+                .and_then(|arg| match get_ty(&arg.pat_type.ty) {
+                    syn::Type::Reference(r) => r.lifetime.as_ref(),
+                    _ => None,
+                })
+                .filter(|lt| lt.ident != "_");
+            quote! { & #recv_lifetime self, }
+        } else {
+            quote!()
+        };
+        let maybe_unsafe = if self.function.r#unsafe {
+            Some(quote! { unsafe })
+        } else {
+            None
+        };
+        let maybe_async = if self.function.r#async {
+            Some(quote! { async })
+        } else {
+            None
+        };
+
+        // The monomorphised shim's signature names ABI projections and, for `&T`
+        // arguments, a higher-ranked `IntoWasmAbi` bound. When one of those does
+        // not hold, rustc reports it at the offending token's span — which is
+        // `Span::call_site()` for everything `quote!` emits, i.e. the
+        // `#[wasm_bindgen]` attribute on the enclosing `extern "C"` block. The
+        // ordinary import path avoids that by respanning its `extern_fn` onto the
+        // function's own name; do the same here so an HRTB or `WasmAbi::PrimN`
+        // failure at least says which import it belongs to.
+        let fn_span = Span::call_site().located_at(self.rust_name.span());
+        let shim = respan_all(
+            quote! {
+                // Route through `__wbindgen_coverage!` rather than writing
+                // `#[cfg_attr(wasm_bindgen_unstable_test_coverage, ..)]` here:
+                // that cfg is only declared inside the `wasm-bindgen` crate, so
+                // naming it in generated code warns (`unexpected_cfgs`) in every
+                // downstream crate, and the bare `#[coverage(off)]` it expands to
+                // needs the `allow_internal_unstable` that the macro carries.
+                #wasm_bindgen::__wbindgen_coverage! {
+                #[inline(never)]
+                unsafe extern "C" fn breaks_if_inlined<#(#shim_generic_params),*>(
+                    #(#shim_abi_args),*
+                ) -> #shim_ret_ty
+                #where_clause
+                {
+                    use #wasm_bindgen::describe::*;
+                    // Leading length-prefixed `shim` key identifying the AST
+                    // entry that supplies this import's JS binding metadata.
+                    inform(#key_len);
+                    #(inform(#key_chars);)*
+                    // Concrete FUNCTION signature for this monomorphisation.
+                    inform(FUNCTION);
+                    inform(0);
+                    inform(#nargs);
+                    #(#describe_args)*
+                    #describe_ret
+                    #describe_ret
+                    #shim_ret_expr
+                }
+                }
+            },
+            fn_span,
+        );
+
+        let invocation = quote! {
+            #[allow(nonstandard_style)]
+            #[allow(clippy::all, clippy::nursery, clippy::pedantic, clippy::restriction)]
+            #(#attrs)*
+            #doc
+            #vis #maybe_async #maybe_unsafe fn #rust_name <#generic_params> (#me #(#wrapper_args),*) #ret #where_clause {
+                #shim
+
+                unsafe {
+                    let #ret_ident = {
+                        #(#arg_conversions)*
+                        breaks_if_inlined::<#(#type_params),*>(#(#all_prim_names),*)
+                    };
+                    #exceptional_ret
+                    #convert_ret
+                }
+            }
+        };
+
+        if let Some(class) = class {
+            // Strip any generic arguments from the class type's last path
+            // segment so we impl on the bare class (class generics are rejected
+            // above, so this only removes defaulted/elided arguments).
+            let mut class = class;
+            if let syn::Type::Path(syn::TypePath { qself: None, path }) = &mut class {
+                if let Some(segment) = path.segments.last_mut() {
+                    segment.arguments = syn::PathArguments::None;
+                }
+            }
+            quote! {
+                #[automatically_derived]
+                impl #class {
+                    #invocation
+                }
+            }
+            .to_tokens(tokens);
+        } else {
+            invocation.to_tokens(tokens);
+        }
         Ok(())
     }
 }
@@ -2804,9 +3495,55 @@ impl TryToTokens for DescribeImport<'_> {
             ast::ImportKind::Enum(_) => return Ok(()),
             ast::ImportKind::DynamicUnion(_) => return Ok(()),
         };
+        // Per-monomorphisation generic imports describe their real signatures
+        // elsewhere: each monomorphisation emits its own `(key, signature)`
+        // descriptor from inside `breaks_if_inlined`, terminated by the
+        // `__wbindgen_describe_generic_import` marker. So there is nothing
+        // useful to say here.
+        //
+        // We nevertheless emit a descriptor, because the *export* has a job to
+        // do that has nothing to do with its contents: it anchors this crate's
+        // `#[link_section = "__wasm_bindgen_unstable"]` static into the link.
+        // That static lives in the same object file, and wasm-ld only pulls an
+        // archive member out of an rlib if something in the link references one
+        // of its symbols. The monomorphised shim is instantiated in the
+        // *downstream* crate's CGU, so it does not reference anything here — an
+        // upstream `extern "C"` block containing only `generic_per_mono`
+        // imports would leave no referenced symbol at all, the member would
+        // never be pulled, and the crate's AST metadata would silently go
+        // missing. The CLI then fails with "generic import monomorphisation
+        // references unknown shim". A `#[no_mangle]` export is always kept, so
+        // emitting one forces the member in.
+        //
+        // The body is deliberately meaningless: the trivial zero-argument,
+        // unit-returning function shape, written with the same two
+        // `describe_ret` calls the real path uses so `Function` can decode
+        // `arguments`, `ret` and `inner_ret`. Nothing consumes it —
+        // `import_function` in cli-support drops the entry, and
+        // `execute_exports` deletes the export from the module after
+        // interpreting it, so none of this reaches the output.
+        //
+        // Going through `Descriptor` rather than hand-rolling the export gets
+        // us the `#[no_mangle]` naming, the wasm-only `#[cfg]` gate, and the
+        // `DESCRIPTORS_EMITTED` dedup for free.
+        if f.generic_per_mono {
+            Descriptor {
+                ident: &f.shim,
+                inner: quote! {
+                    inform(FUNCTION);
+                    inform(0);
+                    inform(0);
+                    <() as WasmDescribe>::describe();
+                    <() as WasmDescribe>::describe();
+                },
+                attrs: f.function.rust_attrs.clone(),
+                wasm_bindgen: self.wasm_bindgen,
+            }
+            .to_tokens(tokens);
+            return Ok(());
+        }
         let fn_class_generics = f.get_fn_generics()?;
         let fn_lifetime_params = generics::lifetime_params(&f.generics);
-        let wasm_bindgen = self.wasm_bindgen;
         let argtys = f
             .function
             .arguments
@@ -2817,43 +3554,34 @@ impl TryToTokens for DescribeImport<'_> {
                     &fn_class_generics.concrete_defaults,
                     &fn_lifetime_params,
                 )?;
-                // For `slice_to_array` args, describe through `&Vec<T>` (or
-                // `Option<&Vec<T>>`) to match the ABI rewrite in
-                // `ImportFunction::try_to_tokens` — the descriptor shape is
-                // `Ref(Vector(T))`, which the cli-support side recognises.
-                // Non-slice args (e.g. `this: &Foo` of a method) under a
-                // fn- or block-level `slice_to_array` silently fall through
-                // to their default describe — slice_to_array is a mode that
-                // only acts on slice-shaped args.
+                // Must match the ABI rewrite in `ImportFunction::try_to_tokens`;
+                // both go through the same helper. Non-slice args under a fn- or
+                // block-level `slice_to_array` fall through to their default
+                // describe.
                 if arg.slice_to_array {
-                    if let Some(described) = slice_to_array_describe_ty(wasm_bindgen, &ty) {
-                        return Ok(described);
+                    if let Some(describe_ty) = slice_to_array_describe_ty(self.wasm_bindgen, &ty) {
+                        return Ok(describe_ty);
                     }
                 }
                 Ok(ty)
             })
             .collect::<Result<Vec<syn::Type>, Diagnostic>>()?;
         let nargs = f.function.arguments.len() as u32;
-        let inform_ret = {
-            let wasm_bindgen = self.wasm_bindgen;
-            let describe = quote! { #wasm_bindgen::describe::WasmDescribe };
-            if f.function.r#async {
-                // An `async` import hands back a `Promise` handle regardless of
-                // its declared return type, which never reaches the ABI: the
-                // resolved value is converted separately when the returned
-                // `JsFuture` is awaited. So describe an externref.
-                quote! { <#wasm_bindgen::JsValue as #describe>::describe(); }
-            } else if let Some(t) = &f.js_ret {
-                let t = generics::generic_to_concrete(
-                    t.clone(),
-                    &fn_class_generics.concrete_defaults,
-                    &fn_lifetime_params,
-                )?;
-                quote! { <#t as #describe>::describe(); }
-            } else {
-                quote! { <() as #describe>::describe(); }
-            }
+        // Concretising the return type is only needed when it is what actually gets
+        // described. An `async` import always describes the `Promise` handle
+        // instead, so its resolved type never reaches the descriptor — see
+        // `import_describe_ret`, which both import paths share precisely so this
+        // rule cannot drift between them.
+        let concrete_ret = match (&f.js_ret, f.function.r#async) {
+            (Some(t), false) => Some(generics::generic_to_concrete(
+                t.clone(),
+                &fn_class_generics.concrete_defaults,
+                &fn_lifetime_params,
+            )?),
+            _ => None,
         };
+        let inform_ret =
+            import_describe_ret(self.wasm_bindgen, concrete_ret.as_ref(), f.function.r#async);
 
         Descriptor {
             ident: &f.shim,
@@ -3217,24 +3945,56 @@ fn extern_fn(
 /// Returns an `(args, names)` pair, where `args` is the list of arguments to
 /// be inserted into the function signature, and `names` is a list of the names
 /// of those arguments.
+///
+/// `span` is where a failure to resolve `<abi as WasmAbi>` should be reported.
+/// That matters because the well-formedness obligation for `abi` itself (for an
+/// import argument, `<#ty as IntoWasmAbi>::Abi`) is attributed to this outer
+/// projection, so leaving it at `Span::call_site()` sends the error to the
+/// `#[wasm_bindgen]` attribute instead of the argument. Pass
+/// `Span::call_site()` to keep the previous behaviour.
 fn splat(
     wasm_bindgen: &syn::Path,
     name: &Ident,
     abi: &TokenStream,
+    span: Span,
 ) -> (Vec<TokenStream>, Vec<Ident>) {
     let mut args = Vec::new();
     let mut names = Vec::new();
 
     for n in 1_u32..=4 {
-        let arg_name = format_ident!("{}_{}", name, n);
+        let arg_name = format_ident!("{}_{}", name, n, span = span);
         let prim_name = format_ident!("Prim{}", n);
-        args.push(quote! {
+        args.push(quote_spanned! { span =>
             #arg_name: <#abi as #wasm_bindgen::convert::WasmAbi>::#prim_name
         });
         names.push(arg_name);
     }
 
     (args, names)
+}
+
+/// Like [`respan`], but rewrites *every* token in the tree, including the
+/// contents of nested groups.
+///
+/// [`respan`] only touches the top-level tokens, which is enough to relocate a
+/// whole item but leaves everything inside its parentheses and braces at
+/// whatever span `quote!` gave it — normally `Span::call_site()`, i.e. the
+/// `#[wasm_bindgen]` attribute. That is exactly where the interesting errors
+/// (unresolvable `IntoWasmAbi`/`FromWasmAbi` projections in a generated shim
+/// signature) come from.
+fn respan_all(input: TokenStream, span: Span) -> TokenStream {
+    input
+        .into_iter()
+        .map(|mut token| {
+            if let proc_macro2::TokenTree::Group(g) = &token {
+                let mut new = proc_macro2::Group::new(g.delimiter(), respan_all(g.stream(), span));
+                new.set_span(span);
+                return proc_macro2::TokenTree::Group(new);
+            }
+            token.set_span(span);
+            token
+        })
+        .collect()
 }
 
 /// Converts `span` into a stream of tokens, and attempts to ensure that `input`
@@ -3262,6 +4022,41 @@ fn respan(input: TokenStream, span: &dyn ToTokens) -> TokenStream {
         new_tokens.push(token);
     }
     new_tokens.into_iter().collect()
+}
+
+/// Emits the `WasmDescribe::describe()` call that states what an imported
+/// function actually returns *across the ABI*.
+///
+/// `ret_ty` is the import's declared return type, already concretised, or `None`
+/// for a unit return. `is_async` selects the promise shape.
+///
+/// The subtle case is `async`. An `async` import hands back a `Promise` handle —
+/// an externref — no matter what it resolves to; the resolved value is converted
+/// separately, inside `JsFuture<T>`. So the descriptor has to say externref.
+/// Describing the *resolved* type instead makes cli-support marshal the promise
+/// handle as if it were a `T`, which silently produces garbage for every `T` that
+/// is not itself handle-shaped (`async fn f() -> u32` being the obvious case).
+/// That this only affects non-handle types is why it went unnoticed: the existing
+/// async-import tests all resolve to `JsValue`/`JsString`.
+///
+/// Both import codegen paths must agree here — [`DescribeImport`] for ordinary
+/// imports and [`ImportFunction::try_to_tokens_generic`] for `generic_per_mono`
+/// ones. They used to carry separate copies of this logic with a "keep the two in
+/// sync" comment; this helper is what makes that drift impossible.
+fn import_describe_ret(
+    wasm_bindgen: &syn::Path,
+    ret_ty: Option<&syn::Type>,
+    is_async: bool,
+) -> TokenStream {
+    let describe = quote! { #wasm_bindgen::describe::WasmDescribe };
+    if is_async {
+        // The `Promise` handle is what crosses, not the resolved value.
+        return quote! { <#wasm_bindgen::JsValue as #describe>::describe(); };
+    }
+    match ret_ty {
+        Some(ty) => quote! { <#ty as #describe>::describe(); },
+        None => quote! { <() as #describe>::describe(); },
+    }
 }
 
 fn get_ty(mut ty: &syn::Type) -> &syn::Type {
@@ -3327,6 +4122,28 @@ pub(crate) fn detect_slice_or_option_slice(ty: &syn::Type) -> Option<SliceArg> {
     None
 }
 
+/// The error type `E` of a `Result<T, E>` return type, if `ty` looks like a
+/// `Result` with two type arguments.
+///
+/// Best-effort and purely syntactic, like the rest of the `catch` handling: a
+/// `Result` alias or a re-ordered alias will not be recognised, which only means
+/// a diagnostic is skipped.
+fn result_err_ty(ty: &syn::Type) -> Option<&syn::Type> {
+    let syn::Type::Path(syn::TypePath { qself: None, path }) = get_ty(ty) else {
+        return None;
+    };
+    let syn::PathArguments::AngleBracketed(args) = &path.segments.last()?.arguments else {
+        return None;
+    };
+    if args.args.len() != 2 {
+        return None;
+    }
+    match &args.args[1] {
+        syn::GenericArgument::Type(t) => Some(t),
+        _ => None,
+    }
+}
+
 /// The type to hand `WasmDescribe::describe` for a `slice_to_array` argument,
 /// or `None` if `ty` is not slice-shaped.
 ///
@@ -3361,6 +4178,8 @@ struct SliceToArrayRewrite {
     prim_names: Vec<Ident>,
     /// Statements converting the user-facing argument into `prim_names`.
     conversion: TokenStream,
+    /// The type to describe, per [`slice_to_array_describe_ty`].
+    describe_ty: syn::Type,
 }
 
 /// Build the `slice_to_array` rewrite for one argument, or `None` if `ty` is not
@@ -3392,9 +4211,10 @@ fn slice_to_array_rewrite(
     let SliceArg {
         elem_ty, is_option, ..
     } = detect_slice_or_option_slice(ty)?;
+    let describe_ty = slice_to_array_describe_ty(wasm_bindgen, ty)?;
 
     let abi = quote! { #wasm_bindgen::convert::WasmSlice };
-    let (abi_args, prim_names) = splat(wasm_bindgen, name, &abi);
+    let (abi_args, prim_names) = splat(wasm_bindgen, name, &abi, Span::call_site());
 
     let body = if is_option {
         quote! {
@@ -3424,6 +4244,7 @@ fn slice_to_array_rewrite(
         abi_args,
         prim_names,
         conversion,
+        describe_ty,
     })
 }
 

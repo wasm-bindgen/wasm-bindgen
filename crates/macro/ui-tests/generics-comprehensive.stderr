@@ -99,6 +99,32 @@ error[E0496]: lifetime name `'a` shadows a lifetime name that is already in scop
    |                                                 ^^ lifetime `'a` already in scope
 
 error[E0412]: cannot find type `T` in this scope
+   --> ui-tests/generics-comprehensive.rs:102:12
+    |
+91  | #[wasm_bindgen]
+    | --------------- in this procedural macro expansion
+...
+102 |     pub fn method_extra_bounds<V: Clone>(this: &GenericClass<T, U>, v: V) -> u32;
+    |            ^^^^^^^^^^^^^^^^^^^ - similarly named type parameter `V` defined here
+    |            |
+    |            help: a type parameter with a similar name exists: `V`
+    |
+    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0412]: cannot find type `U` in this scope
+   --> ui-tests/generics-comprehensive.rs:102:12
+    |
+91  | #[wasm_bindgen]
+    | --------------- in this procedural macro expansion
+...
+102 |     pub fn method_extra_bounds<V: Clone>(this: &GenericClass<T, U>, v: V) -> u32;
+    |            ^^^^^^^^^^^^^^^^^^^ - similarly named type parameter `V` defined here
+    |            |
+    |            help: a type parameter with a similar name exists: `V`
+    |
+    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0412]: cannot find type `T` in this scope
    --> ui-tests/generics-comprehensive.rs:102:62
     |
 102 |     pub fn method_extra_bounds<V: Clone>(this: &GenericClass<T, U>, v: V) -> u32;
@@ -124,6 +150,32 @@ error[E0412]: cannot find type `T` in this scope
     |         ^ help: a type parameter with a similar name exists: `V`
 
 error[E0412]: cannot find type `T` in this scope
+   --> ui-tests/generics-comprehensive.rs:105:12
+    |
+91  | #[wasm_bindgen]
+    | --------------- in this procedural macro expansion
+...
+105 |     pub fn method_where_clause_mixing<V>(this: &GenericClass<T, U>, v: V) -> u32
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^ - similarly named type parameter `V` defined here
+    |            |
+    |            help: a type parameter with a similar name exists: `V`
+    |
+    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0412]: cannot find type `U` in this scope
+   --> ui-tests/generics-comprehensive.rs:105:12
+    |
+91  | #[wasm_bindgen]
+    | --------------- in this procedural macro expansion
+...
+105 |     pub fn method_where_clause_mixing<V>(this: &GenericClass<T, U>, v: V) -> u32
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^ - similarly named type parameter `V` defined here
+    |            |
+    |            help: a type parameter with a similar name exists: `V`
+    |
+    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0412]: cannot find type `T` in this scope
    --> ui-tests/generics-comprehensive.rs:105:62
     |
 105 |     pub fn method_where_clause_mixing<V>(this: &GenericClass<T, U>, v: V) -> u32
@@ -138,6 +190,28 @@ error[E0412]: cannot find type `U` in this scope
     |                                       -                         ^ help: a type parameter with a similar name exists: `V`
     |                                       |
     |                                       similarly named type parameter `V` defined here
+
+error[E0412]: cannot find type `T` in this scope
+   --> ui-tests/generics-comprehensive.rs:165:12
+    |
+149 | #[wasm_bindgen]
+    | --------------- in this procedural macro expansion
+...
+165 |     pub fn valid_method(this: &GenericClass<T, U>) -> u32;
+    |            ^^^^^^^^^^^^ not found in this scope
+    |
+    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0412]: cannot find type `U` in this scope
+   --> ui-tests/generics-comprehensive.rs:165:12
+    |
+149 | #[wasm_bindgen]
+    | --------------- in this procedural macro expansion
+...
+165 |     pub fn valid_method(this: &GenericClass<T, U>) -> u32;
+    |            ^^^^^^^^^^^^ not found in this scope
+    |
+    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0412]: cannot find type `T` in this scope
    --> ui-tests/generics-comprehensive.rs:165:45
@@ -385,18 +459,21 @@ error[E0308]: mismatched types
   --> ui-tests/generics-comprehensive.rs:91:1
    |
 91 | #[wasm_bindgen]
-   | ^^^^^^^^^^^^^^^
-   | |
-   | expected `&GenericClass<String>`, found `&GenericClass`
-   | arguments to this function are incorrect
+   | ^^^^^^^^^^^^^^^ expected `&GenericClass<String>`, found `&GenericClass`
+...
+99 |     pub fn method_wrong_generic_args(this: &GenericClass<String>) -> u32;
+   |                                            - arguments to this function are incorrect
    |
    = note: expected reference `&GenericClass<String>`
               found reference `&GenericClass<wasm_bindgen::JsValue>`
 help: the return type of this call is `&GenericClass` due to the type of the argument passed
-  --> ui-tests/generics-comprehensive.rs:91:1
+  --> ui-tests/generics-comprehensive.rs:99:44
    |
 91 | #[wasm_bindgen]
-   | ^^^^^^^^^^^^^^^ this argument influences the return type of `into_abi`
+   | --------------- this argument influences the return type of `into_abi`
+...
+99 |     pub fn method_wrong_generic_args(this: &GenericClass<String>) -> u32;
+   |                                            ^
 note: method defined here
   --> $WORKSPACE/src/convert/traits.rs
    |
