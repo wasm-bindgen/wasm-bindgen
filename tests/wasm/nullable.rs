@@ -551,6 +551,27 @@ mod nullable_closure_variance {
     }
 
     #[wasm_bindgen_test]
+    fn arg_contravariance_wrapped_jsvalue_to_extern_type() {
+        // Catch-all nullable/optional handlers can accept any extern type:
+        // extern types upcast into JsOption<JsValue>/JsNullable<JsValue>.
+        let closure: Closure<dyn Fn(JsNullable<JsValue>)> =
+            Closure::new(|_: JsNullable<JsValue>| {});
+        let _narrower: &Closure<dyn Fn(Number)> = closure.upcast();
+
+        let closure: Closure<dyn Fn(JsOption<JsValue>)> = Closure::new(|_: JsOption<JsValue>| {});
+        let _narrower: &Closure<dyn Fn(Number)> = closure.upcast();
+    }
+
+    #[wasm_bindgen_test]
+    fn extern_type_to_wrapped_jsvalue() {
+        fn assert_upcast<T, U: wasm_bindgen::convert::UpcastFrom<T>>() {}
+        assert_upcast::<Number, JsOption<JsValue>>();
+        assert_upcast::<Number, JsNullable<JsValue>>();
+        assert_upcast::<JsString, JsOption<JsValue>>();
+        assert_upcast::<JsString, JsNullable<JsValue>>();
+    }
+
+    #[wasm_bindgen_test]
     fn return_covariance_number_to_nullable() {
         let closure: Closure<dyn Fn() -> Number> = Closure::new(|| Number::from(42));
         let _wider: &Closure<dyn Fn() -> JsNullable<Number>> = closure.upcast();

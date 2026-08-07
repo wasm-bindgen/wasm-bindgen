@@ -20,7 +20,10 @@
   treated as present values under `JsOption<T>`'s strict undefined-only
   semantics. `JsNullable<T>` participates in the same upcast lattice as
   `JsOption<T>` (including contravariant closure argument casts), and
-  additionally upcasts from `Null` and from `JsOption<T>` itself.
+  additionally upcasts from `Null` and from `JsOption<T>` itself. Imported
+  extern types now also upcast into `JsOption<JsValue>` and
+  `JsNullable<JsValue>`, so catch-all nullable closures can be used where a
+  typed callback is expected.
   [#5234](https://github.com/wasm-bindgen/wasm-bindgen/issues/5234)
 
 ### Changed

@@ -1481,11 +1481,24 @@ impl TryToTokens for ast::ImportType {
 
         // Generate UpcastFrom implementations (unless no_upcast is set)
         if !self.no_upcast {
-            // 1. Always generate UpcastFrom<Self> for JsValue
+            // 1. Always generate UpcastFrom<Self> for JsValue, including its
+            // JsOption/JsNullable wrappers (like superclass targets below)
             (quote! {
                 #[automatically_derived]
                 impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
                     for #wasm_bindgen::JsValue
+                #where_clause
+                {
+                }
+                #[automatically_derived]
+                impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
+                    for #wasm_bindgen::sys::JsOption<#wasm_bindgen::JsValue>
+                #where_clause
+                {
+                }
+                #[automatically_derived]
+                impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
+                    for #wasm_bindgen::sys::JsNullable<#wasm_bindgen::JsValue>
                 #where_clause
                 {
                 }
