@@ -158,8 +158,18 @@ fn import_rethrow_critical(module: &mut Module) -> FunctionId {
     func_id
 }
 
-/// Import the `WebAssembly.JSTag` as a Wasm tag.
+/// Import the `WebAssembly.JSTag` as a Wasm tag, reusing an existing import
+/// (e.g. one created by the JSPI transform) if present.
 fn import_externref_tag(module: &mut Module, name: &str) -> TagId {
+    if let Some(tag) = module.imports.iter().find_map(|i| match i.kind {
+        walrus::ImportKind::Tag(t) if i.module == crate::PLACEHOLDER_MODULE && i.name == name => {
+            Some(t)
+        }
+        _ => None,
+    }) {
+        return tag;
+    }
+
     // JSTag has a single externref parameter (the caught exception)
     let tag_ty = module.types.add(&[ValType::Ref(RefType::EXTERNREF)], &[]);
 
@@ -171,6 +181,12 @@ fn import_externref_tag(module: &mut Module, name: &str) -> TagId {
 
 fn import_js_tag(module: &mut Module) -> TagId {
     import_externref_tag(module, "__wbindgen_jstag")
+}
+
+/// Import (or reuse) the `WebAssembly.JSTag` import. Used by the JSPI
+/// transform to catch promise rejections at the suspend point.
+pub(crate) fn get_or_import_js_tag(module: &mut Module) -> TagId {
+    import_js_tag(module)
 }
 
 /// Look up the `__instance_terminated` exported global and return its i32

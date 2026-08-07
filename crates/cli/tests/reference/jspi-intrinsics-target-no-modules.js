@@ -16,36 +16,10 @@ let wasm_bindgen = (function(exports) {
     function __wbg_get_imports() {
         const import0 = {
             __proto__: null,
-            __wbg___wbindgen_jspi_cleanup_485cc4f59821d0c3: function(arg0) {
-                _jspiResolved[arg0 >>> 0] = undefined;
-                _jspiRejected[arg0 >>> 0] = false;
-                _jspiPending[arg0 >>> 0] = undefined;
-            },
-            __wbg___wbindgen_jspi_get_resolved_ae482262158d0e4e: function(arg0) {
-                const ret = _jspiResolved[arg0 >>> 0];
+            __wbg___wbindgen_jspi_suspend_0ba702b1d60015ac: new WebAssembly.Suspending(function(arg0) {
+                const ret = arg0;
                 return ret;
-            },
-            __wbg___wbindgen_jspi_is_rejected_ad8e8b2df7ac1bf8: function(arg0) {
-                const ret = _jspiRejected[arg0 >>> 0];
-                return ret;
-            },
-            __wbg___wbindgen_jspi_set_pending_eb0737ebb950d87d: function(arg0, arg1) {
-                _jspiPending[arg0 >>> 0] = arg1;
-            },
-            __wbg___wbindgen_jspi_suspend_a72c0d026c006e17: new WebAssembly.Suspending(function(arg0) {
-                return _jspiPending[arg0 >>> 0].then(v => { _jspiRejected[arg0 >>> 0] = false; _jspiResolved[arg0 >>> 0] = v; }, e => { _jspiRejected[arg0 >>> 0] = true; _jspiResolved[arg0 >>> 0] = e; });
             }),
-            __wbg___wbindgen_jspi_waker_cleanup_e24dd9d90266971f: function(arg0) {
-                _jspiWakerMap.delete(arg0 >>> 0);
-            },
-            __wbg___wbindgen_jspi_waker_create_ea0ae813d51107c9: function(arg0) {
-                const ret = new Promise(resolve => _jspiWakerMap.set(arg0 >>> 0, resolve));
-                return ret;
-            },
-            __wbg___wbindgen_jspi_waker_wake_18ccfe9f06cb07b3: function(arg0) {
-                const resolve = _jspiWakerMap.get(arg0 >>> 0);
-                resolve && resolve();
-            },
             __wbg___wbindgen_throw_344f42d3211c4765: function(arg0, arg1) {
                 throw new Error(getStringFromWasm0(arg0, arg1));
             },
@@ -58,6 +32,7 @@ let wasm_bindgen = (function(exports) {
                 table.set(offset + 2, true);
                 table.set(offset + 3, false);
             },
+            __wbindgen_jstag: WebAssembly.JSTag,
         };
         return {
             __proto__: null,
@@ -78,11 +53,6 @@ let wasm_bindgen = (function(exports) {
         }
         return cachedUint8ArrayMemory0;
     }
-
-    const _jspiPending = [];
-    const _jspiResolved = [];
-    const _jspiRejected = [];
-    const _jspiWakerMap = new Map();
 
     let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
     cachedTextDecoder.decode();

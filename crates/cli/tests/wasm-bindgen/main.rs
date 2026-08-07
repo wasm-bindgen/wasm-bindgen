@@ -3085,7 +3085,7 @@ fn which(name: &str) -> Option<PathBuf> {
 const JSPI_LIB_RS: &str = r#"
     use wasm_bindgen::prelude::*;
     use js_sys::Promise;
-    use js_sys::futures::jspi::block_on_promise;
+    use js_sys::futures::jspi::{block_on, block_on_promise};
 
     #[wasm_bindgen(inline_js = "
         export function note_drop() { globalThis.__jspi_drops = (globalThis.__jspi_drops | 0) + 1; }
@@ -3164,6 +3164,44 @@ const JSPI_LIB_RS: &str = r#"
         let p = Promise::resolve(&JsValue::UNDEFINED);
         block_on_promise(&p).unwrap_throw();
         panic!("boom after resume");
+    }
+
+    // Rejection path: the suspend wrapper catches the JSTag exception thrown
+    // at the resume point and reports it as `Err` data via the
+    // `__wbindgen_jspi_rejected` flag. Returns the rejection reason (13).
+    #[wasm_bindgen(jspi)]
+    pub fn check_rejection() -> u32 {
+        let p = Promise::reject(&JsValue::from(13u32));
+        match block_on_promise(&p) {
+            Err(v) => v.as_f64().unwrap_or(0.0) as u32,
+            Ok(_) => 0,
+        }
+    }
+
+    // A future that wakes itself synchronously *during* poll (exercising the
+    // pre-created resolver) and returns Pending a few times before resolving.
+    struct SelfWaking { remaining: u32 }
+    impl core::future::Future for SelfWaking {
+        type Output = u32;
+        fn poll(
+            mut self: core::pin::Pin<&mut Self>,
+            cx: &mut core::task::Context<'_>,
+        ) -> core::task::Poll<u32> {
+            if self.remaining == 0 {
+                core::task::Poll::Ready(7)
+            } else {
+                self.remaining -= 1;
+                cx.waker().wake_by_ref();
+                core::task::Poll::Pending
+            }
+        }
+    }
+
+    // Drives a Rust future to completion inside a fiber via `block_on`,
+    // suspending once per pending poll on the waker's promise.
+    #[wasm_bindgen(jspi)]
+    pub fn drive_future() -> u32 {
+        block_on(SelfWaking { remaining: 3 })
     }
 
     // Returns the address of a shadow-stack local, approximating the empty-
@@ -3329,6 +3367,14 @@ describe('jspi runtime', () => {
             assert.match(String(e), /SuspendError|promising/);
         }
         assert.ok(threw, 'misuse_suspend should have thrown');
+    });
+
+    it('returns promise rejections as data', async () => {
+        assert.strictEqual(await wasm.check_rejection(), 13);
+    });
+
+    it('drives a Rust future via block_on with a self-waking waker', async () => {
+        assert.strictEqual(await wasm.drive_future(), 7);
     });
 
     it('resets the SP to the stack top when a fiber entered over live frames completes', async () => {

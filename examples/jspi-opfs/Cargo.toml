@@ -28,3 +28,8 @@ path = "../../crates/web-sys"
 
 [lints]
 workspace = true
+
+# The JSPI suspend wrapper uses exception-handling instructions (try_table);
+# wasm-pack's default wasm-opt invocation rejects them.
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
