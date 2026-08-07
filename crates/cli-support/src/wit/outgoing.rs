@@ -265,11 +265,15 @@ impl InstructionBuilder<'_, '_> {
 
             // `slice_to_array` argument: the macro rewrites a user-facing
             // `&[T]` into a `&Vec<T>` ABI call, which describes as
-            // `Ref(Vector(T))`. The Rust side cloned the slice contents
-            // into a freshly-allocated buffer JS owns and must free. The
-            // wire format matches `Vec<T>` (transferred ownership), but
-            // the JS-visible type is a plain `Array` rather than a typed
-            // array — emit `VectorLoadAsArray` for primitive kinds.
+            // `Ref(Vector(T))`. The JS-visible type is a plain `Array`
+            // rather than a typed array, so emit `VectorLoadAsArray`.
+            //
+            // Ownership depends on the element kind and is decided when
+            // the instruction is rendered (see `VectorLoadAsArray` in
+            // `js/binding.rs`): primitive elements are a *borrow* of the
+            // caller's slice and are never freed, while string/externref
+            // elements arrive in a freshly allocated index buffer that JS
+            // owns and must free.
             //
             // This arm is currently produced exclusively by the
             // `slice_to_array` codegen (`&Box<[T]>` has no `IntoWasmAbi`

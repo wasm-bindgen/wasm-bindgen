@@ -8,6 +8,14 @@ export function __wbg_js_block_slice_u16_4f2e50bc26aab9e1(arg0, arg1) {
     var v0 = Array.from(getArrayU16FromWasm0(arg0, arg1));
     js_block_slice_u16(v0);
 }
+export function __wbg_js_slice_optional_string_as_array_9c9966bff6336022(arg0, arg1) {
+    let v0;
+    if (arg0 !== 0) {
+        v0 = getArrayJsValueFromWasm0(arg0, arg1);
+        wasm.__wbindgen_free(arg0, arg1 * 4, 4);
+    }
+    js_slice_optional_string_as_array(v0);
+}
 export function __wbg_js_slice_optional_u16_as_array_57dd5435097afce2(arg0, arg1) {
     let v0;
     if (arg0 !== 0) {

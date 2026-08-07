@@ -2829,6 +2829,56 @@ fn generated_paths_survive_shadowed_core_alloc_std() {
     project.build();
 }
 
+/// `slice_to_array` only changes codegen for *imported* (`extern "C"`)
+/// function arguments; on exported free functions and `#[wasm_bindgen]`
+/// impl-block methods it is documented as a no-op, since there's no
+/// outgoing-argument conversion for those to redirect. In particular, the
+/// compile-time rejection of `slice_to_array` on a `&mut [T]` argument (it
+/// would silently discard JS's writes, since an owned `Array` has nowhere to
+/// write them back to) must not fire here: on an export, the argument is a
+/// completely ordinary `&mut [T]` all along -- JS gets the usual writable
+/// typed-array view, so there's nothing to warn about, and the attribute
+/// being present at all is a copy/paste artifact rather than user intent.
+#[test]
+fn slice_to_array_is_a_no_op_on_exported_mut_slice_args() {
+    let mut project = Project::new("slice_to_array_is_a_no_op_on_exported_mut_slice_args");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen::prelude::*;
+
+            #[wasm_bindgen]
+            pub fn bump(#[wasm_bindgen(slice_to_array)] xs: &mut [u8]) {
+                for x in xs {
+                    *x += 1;
+                }
+            }
+
+            #[wasm_bindgen]
+            pub struct Doubler;
+
+            #[wasm_bindgen]
+            impl Doubler {
+                #[wasm_bindgen(constructor)]
+                pub fn new() -> Doubler {
+                    Doubler
+                }
+
+                pub fn double(&self, #[wasm_bindgen(slice_to_array)] xs: &mut [u16]) {
+                    for x in xs {
+                        *x *= 2;
+                    }
+                }
+            }
+        "#,
+    );
+
+    // A successful `cargo build` is the assertion: `slice_to_array` on these
+    // `&mut` arguments must stay inert rather than tripping the import-only
+    // rejection.
+    project.build();
+}
+
 /// `slice_to_array` used to name `::std::vec::Vec` in the type it describes
 /// through. `::std::` is an absolute path to the `std` *crate*, so unlike the
 /// shadowing cases above this was not a hygiene problem -- it simply does not
