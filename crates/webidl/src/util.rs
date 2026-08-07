@@ -836,12 +836,15 @@ impl<'src> FirstPassRecord<'src> {
                                 deconflict_names: &HashSet<String>|
          -> Vec<InterfaceMethod<'_>> {
             let mut methods = Vec::new();
-            // Simplified overload naming is only enabled for [WbgGeneric] (the
-            // modern bindgen style), keeping legacy generated names stable.
+            // Simplified overload naming is only enabled for typed-generic
+            // operations ([WbgGeneric] or unstable IDL, matching the signature
+            // expansion rule above), keeping legacy generated names stable.
             let simplify = wbg_generic
-                || disambiguate_against
-                    .iter()
-                    .any(|&idx| is_wbg_generic(actual_signatures[idx].orig.attrs.as_ref()));
+                || unstable
+                || disambiguate_against.iter().any(|&idx| {
+                    let orig = actual_signatures[idx].orig;
+                    orig.stability.is_unstable() || is_wbg_generic(orig.attrs.as_ref())
+                });
             let rust_names =
                 compute_rust_names(disambiguate_against, &actual_signatures, js_name, simplify);
             for &sig_idx in sig_indices {
