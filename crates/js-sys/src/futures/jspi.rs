@@ -132,31 +132,16 @@ pub fn block_on_promise(promise: &Promise) -> Result<JsValue, JsValue> {
     let id = alloc_id();
     __wbindgen_jspi_set_pending(id, promise);
     suspend(id);
-    // At this point `__stack_pointer` is guaranteed to hold the correct value
-    // for this fiber, regardless of how many other fibers ran while this one
-    // was suspended.  The invariant is maintained entirely in JS, not by any
-    // Rust/LLVM trick.  The execution sequence is:
-    //
-    //   1. `suspend(id)` calls `__wbindgen_jspi_suspend(id)`.
-    //   2. The CLI-generated JS for that import (all `#[wasm_bindgen(suspending)]`
-    //      imports are wrapped) runs:
-    //
-    //        async function(...args) {
-    //            const __sp = wasm.__stack_pointer.value;   // ← save
-    //            try { return await __inner(...args); }      // ← fiber suspends
-    //            finally { wasm.__stack_pointer.value = __sp; } // ← restore
-    //        }
-    //
-    //   3. The `finally` block executes on the JS microtask queue BEFORE the
-    //      `WebAssembly.Suspending` mechanism delivers the resolved value back
-    //      to wasm.  The fiber does not run a single wasm instruction between
-    //      the `finally` restore and the next Rust statement here.
-    //
-    //   4. Therefore, everything that follows — `__wbindgen_jspi_is_rejected`, `release_id`
-    //      (which calls `Vec::push` and may trigger `malloc`), and any call in
-    //      the user's code after `block_on_promise` returns — all execute with
-    //      the correct stack pointer, even after deep recursion or concurrent
-    //      fiber interleaving.
+    // At this point the shadow stack is guaranteed to hold the correct
+    // contents for this fiber, regardless of how many other fibers ran while
+    // this one was suspended.  The wasm-bindgen CLI instruments every
+    // `#[wasm_bindgen(suspending)]` import with an in-wasm wrapper that
+    // evacuates the fiber's live shadow-stack region to a heap buffer before
+    // suspending and copies it back — restoring `__stack_pointer` from a wasm
+    // local, which JSPI preserves — as the very first instructions after the
+    // fiber resumes (see `cli-support/src/transforms/jspi.rs`).  Everything
+    // that follows here therefore executes with the correct shadow stack,
+    // even after deep recursion or concurrent fiber interleaving.
     let rejected = __wbindgen_jspi_is_rejected(id);
     let result = __wbindgen_jspi_get_resolved(id);
     __wbindgen_jspi_cleanup(id);
@@ -170,9 +155,9 @@ pub fn block_on_promise(promise: &Promise) -> Result<JsValue, JsValue> {
 
 // `__wbindgen_jspi_suspend` must not be inlined into `block_on_promise` so that
 // the two functions' wasm shadow-stack frames are distinct.  This is not
-// load-bearing for SP correctness (the JS wrapper handles that), but it
-// keeps the generated wasm readable and the call graph unambiguous for
-// future analysis.
+// load-bearing for correctness (the CLI's in-wasm suspending wrapper handles
+// the shadow stack), but it keeps the generated wasm readable and the call
+// graph unambiguous for future analysis.
 #[inline(never)]
 fn suspend(id: u32) {
     __wbindgen_jspi_suspend(id);

@@ -43,9 +43,6 @@ pub struct Bindgen {
     split_linked_modules: bool,
     generate_reset_state: bool,
     force_enable_abort_handler: bool,
-    /// Number of wasm memory pages (64 KiB each) to allocate for each
-    /// JSPI fiber's shadow stack. Defaults to 1 (64 KiB).
-    pub jspi_stack_pages: u32,
 }
 
 pub struct Output {
@@ -121,7 +118,6 @@ impl Bindgen {
             split_linked_modules: false,
             generate_reset_state: false,
             force_enable_abort_handler: false,
-            jspi_stack_pages: 1,
         }
     }
 
@@ -304,11 +300,6 @@ impl Bindgen {
         self
     }
 
-    pub fn jspi_stack_pages(&mut self, pages: u32) -> &mut Bindgen {
-        self.jspi_stack_pages = pages.max(1);
-        self
-    }
-
     pub fn reset_state_function(&mut self, generate_reset_state: bool) -> &mut Bindgen {
         self.generate_reset_state = generate_reset_state;
         self
@@ -482,6 +473,17 @@ impl Bindgen {
             multivalue::run(&mut module)
                 .context("failed to transform return pointers into multi-value Wasm")?;
         }
+
+        // Instrument JSPI exports and suspending imports with the in-wasm
+        // shadow-stack save/restore wrappers. This must run after the
+        // externref/multi-value passes (which repoint export items) and
+        // before the catch-wrapper pass (so a caught JS exception from a
+        // suspending import still restores the shadow stack via the
+        // wrapper before unwinding further). The transform is target
+        // agnostic: on emscripten it operates against emscripten's
+        // `__stack_pointer` in exactly the same way, with no interaction
+        // with emscripten's own JSPI machinery.
+        run_jspi_transform(&mut module)?;
 
         // Generate Wasm catch wrappers for imports with #[wasm_bindgen(catch)].
         // This runs after externref processing so that we have access to the
@@ -844,6 +846,27 @@ impl Output {
 
         Ok(())
     }
+}
+
+/// Instrument `#[wasm_bindgen(jspi)]` exports and `#[wasm_bindgen(suspending)]`
+/// imports with in-wasm shadow-stack management. See `transforms::jspi`.
+fn run_jspi_transform(module: &mut Module) -> Result<(), Error> {
+    let mut aux = module
+        .customs
+        .delete_typed::<wit::WasmBindgenAux>()
+        .expect("aux section should exist");
+    let wit = module
+        .customs
+        .delete_typed::<wit::NonstandardWitSection>()
+        .expect("wit section should exist");
+
+    let result = transforms::jspi::run(module, &mut aux, &wit)
+        .context("failed to instrument module for JSPI");
+
+    module.customs.add(*wit);
+    module.customs.add(*aux);
+
+    result
 }
 
 /// Run the exception-handling transforms: catch wrappers for imports marked

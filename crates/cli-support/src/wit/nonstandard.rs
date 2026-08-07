@@ -72,6 +72,12 @@ pub struct WasmBindgenAux {
     pub stack_pointer: Option<walrus::GlobalId>,
     pub thread_destroy: Option<walrus::FunctionId>,
 
+    /// `__wbindgen_malloc`/`__wbindgen_free`, recorded when JSPI is in use so
+    /// the JSPI transform can evacuate fiber shadow stacks around suspensions
+    /// (the exports themselves are removed by `unexport_intrinsics`).
+    pub jspi_malloc: Option<walrus::FunctionId>,
+    pub jspi_free: Option<walrus::FunctionId>,
+
     /// The imported JSTag for catching JavaScript exceptions in Wasm.
     /// When this is `Some`, all imports with `catch` use Wasm catch wrappers
     /// instead of JS `handleError` wrappers.
@@ -575,6 +581,12 @@ impl walrus::CustomSection for WasmBindgenAux {
             roots.push_global(id);
         }
         if let Some(id) = self.thread_destroy {
+            roots.push_func(id);
+        }
+        if let Some(id) = self.jspi_malloc {
+            roots.push_func(id);
+        }
+        if let Some(id) = self.jspi_free {
             roots.push_func(id);
         }
         if let Some(id) = self.js_tag {

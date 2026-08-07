@@ -30,10 +30,13 @@
   wraps them with `WebAssembly.promising`, `#[wasm_bindgen(suspending)]` on imports
   wraps them with `WebAssembly.Suspending`, and `js_sys::futures::jspi::{block_on,
   block_on_promise}` let plain (non-`async`) Rust suspend a fiber while a JS
-  `Promise` settles. Each fiber gets an isolated shadow stack (sized with
-  `--jspi-stack-pages`) with a guard band that turns an overflow into a thrown
-  `RangeError` instead of silent corruption. The `jspi` API is gated behind the
-  `js_sys_unstable_apis` cfg and is not yet supported on the emscripten target.
+  `Promise` settles. Fibers run on the full main shadow stack: the module is
+  instrumented so a suspending fiber's live stack region is evacuated to the
+  heap and restored on resume, so concurrent fibers cannot corrupt each other
+  and no stack sizing is required. All targets are supported, including
+  emscripten (using the same instrumentation, independent of emscripten's own
+  JSPI machinery). The `jspi` API is gated behind the `js_sys_unstable_apis`
+  cfg.
   [#5193](https://github.com/wasm-bindgen/wasm-bindgen/pull/5193)
 
 ### Changed
