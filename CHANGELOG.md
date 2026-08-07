@@ -22,6 +22,15 @@
   reachable through `__deps`. Requires an emscripten with `__export`/`__force`
   symbol-attribute support.
 
+* Updated WebGPU bindings to the August 2026 spec, including the new
+  `GPUCommandEncoder::copy_buffer_to_buffer` overloads and `setImmediates`.
+  [#5246](https://github.com/wasm-bindgen/wasm-bindgen/pull/5246)
+
+* Unstable API overload names now elide name tokens shared by every overload
+  variant: `LockManager::request_with_callback` is now `request`, and
+  `request_with_options_and_callback` is now `request_with_options`.
+  [#5246](https://github.com/wasm-bindgen/wasm-bindgen/pull/5246)
+
 ### Fixed
 
 * The `name` property of the JS error thrown for `panic=unwind` is now set from

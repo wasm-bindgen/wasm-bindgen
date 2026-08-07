@@ -290,6 +290,456 @@ extern "C" {
     ) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUComputePassEncoder",
+        js_name = "setImmediates"
+    )]
+    #[doc = "The `setImmediates()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUComputePassEncoder/setImmediates)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuComputePassEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_immediates_with_buffer_source(
+        this: &GpuComputePassEncoder,
+        range_offset: u32,
+        data: &::js_sys::Object,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUComputePassEncoder",
+        js_name = "setImmediates"
+    )]
+    #[doc = "The `setImmediates()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUComputePassEncoder/setImmediates)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuComputePassEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_immediates_with_u8_slice(
+        this: &GpuComputePassEncoder,
+        range_offset: u32,
+        data: &mut [u8],
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUComputePassEncoder",
+        js_name = "setImmediates"
+    )]
+    #[doc = "The `setImmediates()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUComputePassEncoder/setImmediates)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuComputePassEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_immediates_with_u8_array(
+        this: &GpuComputePassEncoder,
+        range_offset: u32,
+        data: &::js_sys::Uint8Array,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUComputePassEncoder",
+        js_name = "setImmediates"
+    )]
+    #[doc = "The `setImmediates()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUComputePassEncoder/setImmediates)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuComputePassEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_immediates_with_buffer_source_and_u32(
+        this: &GpuComputePassEncoder,
+        range_offset: u32,
+        data: &::js_sys::Object,
+        data_offset: u32,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUComputePassEncoder",
+        js_name = "setImmediates"
+    )]
+    #[doc = "The `setImmediates()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUComputePassEncoder/setImmediates)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuComputePassEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_immediates_with_u8_slice_and_u32(
+        this: &GpuComputePassEncoder,
+        range_offset: u32,
+        data: &mut [u8],
+        data_offset: u32,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUComputePassEncoder",
+        js_name = "setImmediates"
+    )]
+    #[doc = "The `setImmediates()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUComputePassEncoder/setImmediates)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuComputePassEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_immediates_with_u8_array_and_u32(
+        this: &GpuComputePassEncoder,
+        range_offset: u32,
+        data: &::js_sys::Uint8Array,
+        data_offset: u32,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUComputePassEncoder",
+        js_name = "setImmediates"
+    )]
+    #[doc = "The `setImmediates()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUComputePassEncoder/setImmediates)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuComputePassEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_immediates_with_buffer_source_and_f64(
+        this: &GpuComputePassEncoder,
+        range_offset: u32,
+        data: &::js_sys::Object,
+        data_offset: f64,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUComputePassEncoder",
+        js_name = "setImmediates"
+    )]
+    #[doc = "The `setImmediates()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUComputePassEncoder/setImmediates)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuComputePassEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_immediates_with_u8_slice_and_f64(
+        this: &GpuComputePassEncoder,
+        range_offset: u32,
+        data: &mut [u8],
+        data_offset: f64,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUComputePassEncoder",
+        js_name = "setImmediates"
+    )]
+    #[doc = "The `setImmediates()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUComputePassEncoder/setImmediates)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuComputePassEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_immediates_with_u8_array_and_f64(
+        this: &GpuComputePassEncoder,
+        range_offset: u32,
+        data: &::js_sys::Uint8Array,
+        data_offset: f64,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUComputePassEncoder",
+        js_name = "setImmediates"
+    )]
+    #[doc = "The `setImmediates()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUComputePassEncoder/setImmediates)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuComputePassEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_immediates_with_buffer_source_and_u32_and_u32(
+        this: &GpuComputePassEncoder,
+        range_offset: u32,
+        data: &::js_sys::Object,
+        data_offset: u32,
+        data_size: u32,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUComputePassEncoder",
+        js_name = "setImmediates"
+    )]
+    #[doc = "The `setImmediates()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUComputePassEncoder/setImmediates)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuComputePassEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_immediates_with_u8_slice_and_u32_and_u32(
+        this: &GpuComputePassEncoder,
+        range_offset: u32,
+        data: &mut [u8],
+        data_offset: u32,
+        data_size: u32,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUComputePassEncoder",
+        js_name = "setImmediates"
+    )]
+    #[doc = "The `setImmediates()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUComputePassEncoder/setImmediates)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuComputePassEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_immediates_with_u8_array_and_u32_and_u32(
+        this: &GpuComputePassEncoder,
+        range_offset: u32,
+        data: &::js_sys::Uint8Array,
+        data_offset: u32,
+        data_size: u32,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUComputePassEncoder",
+        js_name = "setImmediates"
+    )]
+    #[doc = "The `setImmediates()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUComputePassEncoder/setImmediates)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuComputePassEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_immediates_with_buffer_source_and_f64_and_u32(
+        this: &GpuComputePassEncoder,
+        range_offset: u32,
+        data: &::js_sys::Object,
+        data_offset: f64,
+        data_size: u32,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUComputePassEncoder",
+        js_name = "setImmediates"
+    )]
+    #[doc = "The `setImmediates()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUComputePassEncoder/setImmediates)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuComputePassEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_immediates_with_u8_slice_and_f64_and_u32(
+        this: &GpuComputePassEncoder,
+        range_offset: u32,
+        data: &mut [u8],
+        data_offset: f64,
+        data_size: u32,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUComputePassEncoder",
+        js_name = "setImmediates"
+    )]
+    #[doc = "The `setImmediates()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUComputePassEncoder/setImmediates)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuComputePassEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_immediates_with_u8_array_and_f64_and_u32(
+        this: &GpuComputePassEncoder,
+        range_offset: u32,
+        data: &::js_sys::Uint8Array,
+        data_offset: f64,
+        data_size: u32,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUComputePassEncoder",
+        js_name = "setImmediates"
+    )]
+    #[doc = "The `setImmediates()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUComputePassEncoder/setImmediates)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuComputePassEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_immediates_with_buffer_source_and_u32_and_f64(
+        this: &GpuComputePassEncoder,
+        range_offset: u32,
+        data: &::js_sys::Object,
+        data_offset: u32,
+        data_size: f64,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUComputePassEncoder",
+        js_name = "setImmediates"
+    )]
+    #[doc = "The `setImmediates()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUComputePassEncoder/setImmediates)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuComputePassEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_immediates_with_u8_slice_and_u32_and_f64(
+        this: &GpuComputePassEncoder,
+        range_offset: u32,
+        data: &mut [u8],
+        data_offset: u32,
+        data_size: f64,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUComputePassEncoder",
+        js_name = "setImmediates"
+    )]
+    #[doc = "The `setImmediates()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUComputePassEncoder/setImmediates)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuComputePassEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_immediates_with_u8_array_and_u32_and_f64(
+        this: &GpuComputePassEncoder,
+        range_offset: u32,
+        data: &::js_sys::Uint8Array,
+        data_offset: u32,
+        data_size: f64,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUComputePassEncoder",
+        js_name = "setImmediates"
+    )]
+    #[doc = "The `setImmediates()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUComputePassEncoder/setImmediates)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuComputePassEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_immediates_with_buffer_source_and_f64_and_f64(
+        this: &GpuComputePassEncoder,
+        range_offset: u32,
+        data: &::js_sys::Object,
+        data_offset: f64,
+        data_size: f64,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUComputePassEncoder",
+        js_name = "setImmediates"
+    )]
+    #[doc = "The `setImmediates()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUComputePassEncoder/setImmediates)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuComputePassEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_immediates_with_u8_slice_and_f64_and_f64(
+        this: &GpuComputePassEncoder,
+        range_offset: u32,
+        data: &mut [u8],
+        data_offset: f64,
+        data_size: f64,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "GPUComputePassEncoder",
+        js_name = "setImmediates"
+    )]
+    #[doc = "The `setImmediates()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUComputePassEncoder/setImmediates)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuComputePassEncoder`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_immediates_with_u8_array_and_f64_and_f64(
+        this: &GpuComputePassEncoder,
+        range_offset: u32,
+        data: &::js_sys::Uint8Array,
+        data_offset: f64,
+        data_size: f64,
+    ) -> Result<(), JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
         method,
         js_class = "GPUComputePassEncoder",
         js_name = "insertDebugMarker"
