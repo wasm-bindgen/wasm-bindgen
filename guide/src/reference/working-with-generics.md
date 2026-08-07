@@ -135,9 +135,9 @@ container whose element type only matters to Rust's type checker. Use
 the concrete marshalling is the point, e.g. a `log<T>` that should pass a `u32`
 as a number rather than boxing it.
 
-`generic_per_mono` also rejects a number of shapes that erasure accepts (lifetime
-parameters, `&mut T`, generic `slice_to_array` element types, and others); those
-are listed on
+`generic_per_mono` also rejects a number of shapes that erasure accepts
+(generic parameters on the imported *type*, `&mut T`, generic `slice_to_array`
+element types, and others); those are listed on
 [its own page](./attributes/on-js-imports/generic_per_mono.md#unsupported-shapes).
 
 ## The ErasableGeneric Trait

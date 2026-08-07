@@ -6,10 +6,6 @@ use wasm_bindgen::prelude::*;
 // function below exercises one of those aborting paths.
 #[wasm_bindgen]
 extern "C" {
-    // Lifetime parameters are not supported.
-    #[wasm_bindgen(generic_per_mono)]
-    fn with_lifetime<'a, T>(x: T);
-
     // `generic_per_mono` requires at least one type parameter.
     #[wasm_bindgen(generic_per_mono)]
     fn without_type_param(x: u32);
@@ -105,6 +101,19 @@ extern "C" {
 
     #[wasm_bindgen(method, generic_per_mono)]
     fn get<T>(this: &Holder<T>) -> T;
+}
+
+// Lifetime parameters on the *function* are supported (see
+// `generic_import_ref.rs` / `generic_import_lifetime.rs` for passing cases),
+// but the same class-level rejection above also applies when the function's
+// lifetime parameter is what parameterises the receiver/return class type,
+// since that also needs the erasure machinery's hoisting.
+#[wasm_bindgen]
+extern "C" {
+    type LifetimeHolder<'a>;
+
+    #[wasm_bindgen(method, generic_per_mono)]
+    fn get_lifetime<'a, T>(this: &'a LifetimeHolder<'a>) -> T;
 }
 
 // The rejections below happen while *parsing* the block rather than while

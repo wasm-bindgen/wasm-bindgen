@@ -2585,8 +2585,17 @@ impl ast::ImportFunction {
     /// satisfy them. They also reach the monomorphised shim, whose ABI signature
     /// may project associated types off a bounded parameter.
     ///
+    /// Lifetime parameters on the function (e.g. `fn f<'a, T>(x: &'a T)`) are
+    /// supported: they carry no runtime information (lifetimes are erased before
+    /// the wasm ABI boundary), so the work is just redeclaring them, with their
+    /// bounds, on the monomorphised shim below — a nested item, which inherits
+    /// none of the wrapper's generics — and, for a method whose receiver names
+    /// one (`this: &'a Foo`), binding the receiver as `&'a self`.
+    ///
     /// Not (yet) supported, and rejected with a diagnostic:
-    /// - lifetime parameters, and class-level generic parameters;
+    /// - generic parameters belonging to the imported *class*, whether a type
+    ///   (`this: &Holder<T>`) or a lifetime (`this: &Holder<'a>`), since the
+    ///   generated `impl` block would have to be parameterised to carry them;
     /// - a mutable reference to a generic type parameter (`&mut T`), or a
     ///   reference to one nested inside another type (e.g. `Option<&T>`);
     /// - a bare generic type parameter, or a reference to one (`&T`), as the
@@ -2619,13 +2628,6 @@ impl ast::ImportFunction {
         };
 
         // --- Generic-parameter guards (opt-in path, so bailing is safe) ---
-        if self.generics.lifetimes().next().is_some() {
-            bail_span!(
-                self.rust_name,
-                "generic_per_mono imports cannot have lifetime parameters yet; \
-                 use the type-erasure generic path instead"
-            );
-        }
         let type_params: Vec<&syn::Ident> =
             self.generics.type_params().map(|tp| &tp.ident).collect();
         if type_params.is_empty() {
@@ -2634,6 +2636,7 @@ impl ast::ImportFunction {
                 "generic_per_mono requires at least one type parameter"
             );
         }
+        let lifetime_params = generics::lifetime_params(&self.generics);
 
         // --- Determine the receiver/class shape (mirrors the normal path) ---
         let mut class = None;
@@ -2653,8 +2656,19 @@ impl ast::ImportFunction {
             }
         }
         // Class-level generics require the erasure machinery (`fn_class_generics`).
+        // This covers a type parameter (`this: &Holder<T>`) or a lifetime
+        // (`this: &Holder<'a>`) of the function appearing in the receiver/return
+        // *class* type's own argument list — either way the generated `impl`
+        // block would have to be parameterised, which this path does not do.
+        //
+        // Note `class` is the referent, with the receiver's outer `&` already
+        // stripped at parse time, so a lifetime written on the reference itself
+        // (`this: &'a Holder`) is deliberately not caught here: that one is
+        // supported, and is handled by binding the receiver as `&'a self` below.
         if let Some(c) = &class {
-            if generics::uses_generic_params(c, &type_params) {
+            if generics::uses_generic_params(c, &type_params)
+                || generics::uses_lifetime_params(c, &lifetime_params)
+            {
                 bail_span!(
                     self.rust_name,
                     "generic_per_mono does not support class-level generic parameters yet; \
@@ -2983,21 +2997,57 @@ impl ast::ImportFunction {
             quote! { #[doc = #doc_comment] }
         };
         let generic_params = &self.generics.params;
-        // The shim redeclares the wrapper's type parameters, so it needs their
-        // inline bounds too: its signature names ABI types projected off them
-        // (`<T::Assoc as IntoWasmAbi>::Abi`), which only resolve under the bound.
-        // Defaults are dropped here: they are meaningless on a nested item, and
-        // rustc's `invalid_type_param_default` future-compatibility lint already
-        // rejects them on the wrapper's own parameter list, so per-mono codegen
-        // deliberately does not add a check of its own.
-        let shim_generic_params = generics::type_params_with_bounds(&self.generics);
+        // The shim redeclares the wrapper's type *and* lifetime parameters,
+        // since it's a nested item and inherits none of the wrapper's generics.
+        // Type params need their inline bounds too: its signature names ABI
+        // types projected off them (`<T::Assoc as IntoWasmAbi>::Abi`), which
+        // only resolve under the bound. Defaults are dropped here: they are
+        // meaningless on a nested item, and rustc's `invalid_type_param_default`
+        // future-compatibility lint already rejects them on the wrapper's own
+        // parameter list, so per-mono codegen deliberately does not add a check
+        // of its own.
+        //
+        // Lifetime params carry their inline bounds (`<'a: 'b>`) across too.
+        // Unlike the type-param bounds above this is not currently load-bearing:
+        // every type the shim names in a `where` predicate is also named in an
+        // argument- or return-position projection, and the implied bounds that
+        // position grants are enough to prove the predicate well-formed on their
+        // own. It is done anyway because the alternative is a silent dependency
+        // on that coincidence — an inline `<'a: 'b>` has no carrier in the
+        // `where` clause, so dropping it here makes the shim's declaration say
+        // something weaker than the wrapper's, and any future change that puts a
+        // lifetime-relating type in a predicate without a matching projection
+        // (`E0478: lifetime bound not satisfied`) would surface as an error in
+        // generated code the user never wrote.
+        let shim_generic_params: Vec<TokenStream> =
+            generics::lifetime_params_with_bounds(&self.generics)
+                .into_iter()
+                .chain(generics::type_params_with_bounds(&self.generics))
+                .collect();
         let where_clause = if where_bounds.is_empty() {
             quote! {}
         } else {
             quote! { where #(#where_bounds),* }
         };
+        // Bind the receiver at whatever lifetime the declaration named it with
+        // (`this: &'a Foo` -> `&'a self`). The argument loop above marshals the
+        // receiver as `<&'a Foo as IntoWasmAbi>::into_abi(self)`, so a plain
+        // `&self` would give `self` an anonymous, caller-chosen lifetime that
+        // rustc cannot prove outlives `'a` — "lifetime may not live long
+        // enough", reported on the `#[wasm_bindgen]` attribute. An elided `'_`
+        // is dropped rather than forwarded: it is not a name `&'_ self` can be
+        // bound at, and it means the same thing as the elided `&self`.
         let me = if is_method {
-            quote! { &self, }
+            let recv_lifetime = self
+                .function
+                .arguments
+                .first()
+                .and_then(|arg| match get_ty(&arg.pat_type.ty) {
+                    syn::Type::Reference(r) => r.lifetime.as_ref(),
+                    _ => None,
+                })
+                .filter(|lt| lt.ident != "_");
+            quote! { & #recv_lifetime self, }
         } else {
             quote!()
         };
