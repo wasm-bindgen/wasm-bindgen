@@ -84,6 +84,40 @@ Relaxed bounds are the exception: `T: ?Sized` is not supported on any
 `wasm-bindgen` generic — erased or per-monomorphisation — and is reported as
 `unsupported in wasm-bindgen generics`.
 
+## Lifetime parameters
+
+Lifetime parameters on the function are supported, including lifetime bounds
+(`T: 'a`) and lifetime-outlives predicates (`'a: 'b`):
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(generic_per_mono)]
+    fn log_ref<'a, T>(value: &'a T);
+}
+```
+
+A lifetime on a method's receiver works too, and ties the borrow of the
+receiver to the rest of the call:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    type Widget;
+
+    #[wasm_bindgen(method, generic_per_mono)]
+    fn set<'a, T>(this: &'a Widget, value: &'a T);
+}
+```
+
+Lifetimes carry no runtime information — they are erased before values cross
+the wasm ABI — so this imposes no restriction beyond what plain Rust already
+requires of the signature. The one shape that is *not* supported is a lifetime
+belonging to the **class** itself, i.e. an imported type declared with its own
+lifetime parameter (`type Holder<'a>`, used as `this: &Holder<'a>`), since that
+needs the same hoisting machinery class-level type parameters do; see
+[Unsupported shapes](#unsupported-shapes).
+
 ## Other attributes
 
 `generic_per_mono` composes with the usual import attributes — `method`,
@@ -139,8 +173,11 @@ These are rejected at compile time with a diagnostic pointing at the offending
 declaration. Each generally keeps working on the type-erasure path, so the fix is
 usually to drop `generic_per_mono`:
 
-* **Lifetime parameters**, and generic parameters on the imported *type*
-  (class-level generics).
+* **Generic parameters on the imported *type*** (class-level generics),
+  whether a type parameter (`this: &Holder<T>`) or a lifetime
+  (`this: &Holder<'a>`). Lifetime parameters on the *function* itself —
+  including on a method's receiver, `this: &'a Holder` — are supported; see
+  [Lifetime parameters](#lifetime-parameters).
 * **A mutable reference to a type parameter** (`&mut T`, or `&mut Vec<T>`, or
   any other `&mut` whose referent mentions a type parameter), and a reference to
   a type parameter **nested inside another type** (e.g. `Option<&T>`). A bare
