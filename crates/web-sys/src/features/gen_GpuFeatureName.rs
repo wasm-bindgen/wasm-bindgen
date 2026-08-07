@@ -33,4 +33,5 @@ pub enum GpuFeatureName {
     TextureFormatsTier2 = "texture-formats-tier2",
     PrimitiveIndex = "primitive-index",
     TextureComponentSwizzle = "texture-component-swizzle",
+    SubgroupSizeControl = "subgroup-size-control",
 }

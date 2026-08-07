@@ -98,7 +98,7 @@ function getUint8ArrayMemory0() {
 
 class PanicError extends Error {}
 Object.defineProperty(PanicError.prototype, 'name', {
-    value: PanicError.name,
+    value: 'PanicError',
 });
 
 let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });

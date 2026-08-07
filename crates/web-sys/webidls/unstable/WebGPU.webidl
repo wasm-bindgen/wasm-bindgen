@@ -1,5 +1,5 @@
 // https://gpuweb.github.io/gpuweb/#idl-index
-// 12 February 2026
+// 2 August 2026
 
 interface mixin GPUObjectBase {
     attribute USVString label;
@@ -17,6 +17,7 @@ interface GPUSupportedLimits {
     readonly attribute unsigned long maxTextureArrayLayers;
     readonly attribute unsigned long maxBindGroups;
     readonly attribute unsigned long maxBindGroupsPlusVertexBuffers;
+    readonly attribute unsigned long maxImmediateSize;
     readonly attribute unsigned long maxBindingsPerBindGroup;
     readonly attribute unsigned long maxDynamicUniformBuffersPerPipelineLayout;
     readonly attribute unsigned long maxDynamicStorageBuffersPerPipelineLayout;
@@ -133,6 +134,7 @@ enum GPUFeatureName {
     "texture-formats-tier2",
     "primitive-index",
     "texture-component-swizzle",
+    "subgroup-size-control",
 };
 
 [Exposed=(Window, Worker), SecureContext]
@@ -609,6 +611,7 @@ GPUPipelineLayout includes GPUObjectBase;
 dictionary GPUPipelineLayoutDescriptor
          : GPUObjectDescriptorBase {
     required sequence<GPUBindGroupLayout?> bindGroupLayouts;
+    GPUSize32 immediateSize = 0;
 };
 
 [Exposed=(Window, Worker), SecureContext]
@@ -970,11 +973,11 @@ interface GPUCommandEncoder {
     GPURenderPassEncoder beginRenderPass(GPURenderPassDescriptor descriptor);
     GPUComputePassEncoder beginComputePass(optional GPUComputePassDescriptor descriptor = {});
 
-    // This overload changes other signatures (see #4508)
-    // undefined copyBufferToBuffer(
-    //     GPUBuffer source,
-    //     GPUBuffer destination,
-    //     optional GPUSize64 size);
+    [Throws]
+    undefined copyBufferToBuffer(
+        GPUBuffer source,
+        GPUBuffer destination,
+        optional GPUSize64 size);
 
     [Throws]
     undefined copyBufferToBuffer(
@@ -1033,6 +1036,10 @@ interface mixin GPUBindingCommandsMixin {
         [AllowShared] Uint32Array dynamicOffsetsData,
         GPUSize64 dynamicOffsetsDataStart,
         GPUSize32 dynamicOffsetsDataLength);
+
+    [Throws]
+    undefined setImmediates(GPUSize32 rangeOffset, AllowSharedBufferSource data,
+        optional GPUSize64 dataOffset = 0, optional GPUSize64 dataSize);
 };
 
 interface mixin GPUDebugCommandsMixin {

@@ -17,6 +17,11 @@ extern "C" {
     fn js_slice_string_as_array(v: &[String]);
     #[wasm_bindgen(slice_to_array)]
     fn js_slice_optional_u16_as_array(v: Option<&[u16]>);
+    // `Option` + an externref-shaped element kind. This is the one
+    // combination where the JS loader takes its owned-buffer branch,
+    // so it is the only case that pins that arm's codegen.
+    #[wasm_bindgen(slice_to_array)]
+    fn js_slice_optional_string_as_array(v: Option<&[String]>);
 }
 
 // Block-level form: the attribute applies to every imported fn in the
@@ -37,6 +42,9 @@ pub fn driver() {
 
     js_slice_optional_u16_as_array(Some(&v));
     js_slice_optional_u16_as_array(None);
+
+    js_slice_optional_string_as_array(Some(&s));
+    js_slice_optional_string_as_array(None);
 
     js_block_slice_u16(&v);
 }

@@ -14,6 +14,9 @@
   `ArrayBuffer`. Requires TypeScript 5.7+.
   [#5263](https://github.com/wasm-bindgen/wasm-bindgen/pull/5263)
 
+* Added `riscv64gc-unknown-linux-gnu` release artifacts.
+  [#5265](https://github.com/wasm-bindgen/wasm-bindgen/pull/5265)
+
 ### Changed
 
 * Emscripten output now marks public exports (free functions, classes, enums,
@@ -25,7 +28,23 @@
   reachable through `__deps`. Requires an emscripten with `__export`/`__force`
   symbol-attribute support.
 
+* Updated WebGPU bindings to the August 2026 spec, including the new
+  `GPUCommandEncoder::copy_buffer_to_buffer` overloads and `setImmediates`.
+  [#5246](https://github.com/wasm-bindgen/wasm-bindgen/pull/5246)
+
+* Unstable API overload names now elide name tokens shared by every overload
+  variant: `LockManager::request_with_callback` is now `request`, and
+  `request_with_options_and_callback` is now `request_with_options`.
+  [#5246](https://github.com/wasm-bindgen/wasm-bindgen/pull/5246)
+
 ### Fixed
+
+* The `name` property of the JS error thrown for `panic=unwind` is now set from
+  a string literal instead of `PanicError.name`, so it survives minification.
+  [#5260](https://github.com/wasm-bindgen/wasm-bindgen/issues/5260)
+
+* Fixed Emscripten builds using pthreads failing to link.
+  [#5254](https://github.com/wasm-bindgen/wasm-bindgen/pull/5254)
 
 * `__wbg_load` in web targets now throws a clear error including the HTTP
   status and URL when given a non-ok fetch `Response`, instead of surfacing a
@@ -38,6 +57,12 @@
   `memory access out of bounds`; poisoned instances can instead report
   `Module terminated`.
   [#5244](https://github.com/wasm-bindgen/wasm-bindgen/pull/5244)
+
+* `slice_to_array` on a `&mut` slice (which silently discarded JS's writes) or
+  on a slice with a generic element type is now a compile error, and strings
+  and arrays received by JS (e.g. a `Vec<String>` return value) no longer make
+  a redundant copy of the freshly built value.
+  [#5261](https://github.com/wasm-bindgen/wasm-bindgen/pull/5261)
 
 * Fixed `async` imports with non-JS-handle resolved types (e.g.
   `async fn f() -> u32;`) silently producing garbage since 0.2.109: the

@@ -72,6 +72,30 @@ fresh JS string.
   type — `&[ExportedT]` remains unsupported. Use `Vec<ExportedT>` to
   transfer ownership of a sequence of exported struct values to JS.
 * It does **not** change the semantics of owned `Vec<T>`. Owned vectors
-  passed by value continue to use their existing wire format.
+  passed by value continue to use their existing wire format. Because
+  `Vec<T>` is not slice-shaped, `slice_to_array` is a silent no-op on
+  such an argument (as it is on any other non-slice argument, such as
+  the `this` receiver of a method).
 * It does **not** affect the default `&[T]` (zero-copy typed-array view)
   behaviour for functions where `slice_to_array` was not opted into.
+* It does **not** work with a generic element type. `&[T]` for a type
+  parameter `T` is rejected at compile time, because
+  `VectorRefIntoWasmAbi` is implemented per concrete ABI shape and no
+  bound the caller can write makes an arbitrary `T` satisfy it. The
+  element type must be concrete, e.g. `&[u16]`. A concrete element type
+  in a generic function is fine — it is the element type that has to be
+  concrete, not the function. Note that `slice_to_array` is inheritable
+  from the enclosing `extern "C"` block, so a generic function in such a
+  block must not take a `&[T]` argument.
+* It **cannot** be combined with a `&mut` slice, and the combination is
+  rejected at compile time. `slice_to_array` hands JS an owned `Array`
+  copied out of linear memory, so there is nowhere for JS's writes to
+  that `Array` to go — they would be discarded when the call returns,
+  whereas a plain `&mut [T]` argument gives JS a typed-array *view*
+  whose writes do land in the caller's buffer. Since that difference is
+  invisible at runtime, it is an error rather than a silent no-op. Use
+  `&[T]` if JS only needs to read the elements, or drop
+  `slice_to_array` for that argument to keep the writable view. This
+  matters most when `slice_to_array` is inherited from the enclosing
+  `extern "C"` block, where the attribute is nowhere near the argument
+  it would have applied to.

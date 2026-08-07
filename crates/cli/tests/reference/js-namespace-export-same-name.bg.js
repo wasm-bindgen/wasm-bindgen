@@ -21,7 +21,7 @@ export class NamespaceConsumer {
      */
     get bar_points() {
         const ret = wasm.namespaceconsumer_bar_points(this.__wbg_ptr);
-        var v1 = getArrayJsValueFromWasm0(ret[0], ret[1]).slice();
+        var v1 = getArrayJsValueFromWasm0(ret[0], ret[1]);
         wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
         return v1;
     }
@@ -40,7 +40,7 @@ export class NamespaceConsumer {
         const ptr0 = passArrayJsValueToWasm0(points, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
         const ret = wasm.namespaceconsumer_duplicate_bar_points(this.__wbg_ptr, ptr0, len0);
-        var v2 = getArrayJsValueFromWasm0(ret[0], ret[1]).slice();
+        var v2 = getArrayJsValueFromWasm0(ret[0], ret[1]);
         wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
         return v2;
     }
@@ -52,7 +52,7 @@ export class NamespaceConsumer {
         const ptr0 = passArrayJsValueToWasm0(points, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
         const ret = wasm.namespaceconsumer_duplicate_foo_points(this.__wbg_ptr, ptr0, len0);
-        var v2 = getArrayJsValueFromWasm0(ret[0], ret[1]).slice();
+        var v2 = getArrayJsValueFromWasm0(ret[0], ret[1]);
         wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
         return v2;
     }
@@ -68,7 +68,7 @@ export class NamespaceConsumer {
      */
     get foo_points() {
         const ret = wasm.namespaceconsumer_foo_points(this.__wbg_ptr);
-        var v1 = getArrayJsValueFromWasm0(ret[0], ret[1]).slice();
+        var v1 = getArrayJsValueFromWasm0(ret[0], ret[1]);
         wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
         return v1;
     }

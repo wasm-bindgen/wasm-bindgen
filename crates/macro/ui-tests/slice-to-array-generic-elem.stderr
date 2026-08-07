@@ -1,0 +1,23 @@
+error: `slice_to_array` requires a concrete slice element type (e.g. `&[u16]`); a type parameter cannot work here because `VectorRefIntoWasmAbi` is implemented per concrete ABI shape — drop `slice_to_array`, or take the argument by value
+  --> ui-tests/slice-to-array-generic-elem.rs:14:22
+   |
+14 |     fn direct<T>(xs: &[T]);
+   |                      ^^^^
+
+error: `slice_to_array` requires a concrete slice element type (e.g. `&[u16]`); a type parameter cannot work here because `VectorRefIntoWasmAbi` is implemented per concrete ABI shape — drop `slice_to_array`, or take the argument by value
+  --> ui-tests/slice-to-array-generic-elem.rs:18:24
+   |
+18 |     fn optional<T>(xs: Option<&[T]>);
+   |                        ^^^^^^^^^^^^
+
+error: `slice_to_array` requires a concrete slice element type (e.g. `&[u16]`); a type parameter cannot work here because `VectorRefIntoWasmAbi` is implemented per concrete ABI shape — drop `slice_to_array`, or take the argument by value
+  --> ui-tests/slice-to-array-generic-elem.rs:23:22
+   |
+23 |     fn nested<T>(xs: &[Option<T>]);
+   |                      ^^^^^^^^^^^^
+
+error: `slice_to_array` requires a concrete slice element type (e.g. `&[u16]`); a type parameter cannot work here because `VectorRefIntoWasmAbi` is implemented per concrete ABI shape — drop `slice_to_array`, or take the argument by value
+  --> ui-tests/slice-to-array-generic-elem.rs:35:25
+   |
+35 |     fn per_block<T>(xs: &[T]);
+   |                         ^^^^

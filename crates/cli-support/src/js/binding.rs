@@ -1823,7 +1823,16 @@ fn instruction(
             let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
             let i = js.tmp();
             let free = js.cx.wasm_export_of(*free);
-            js.prelude(&format!("var v{i} = {f}({ptr}, {len}).slice();"));
+            // String/externref loaders return a fresh value, so only the
+            // primitive typed-array *view* needs copying before the free.
+            match kind {
+                VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_) => {
+                    js.prelude(&format!("var v{i} = {f}({ptr}, {len});"));
+                }
+                _ => {
+                    js.prelude(&format!("var v{i} = {f}({ptr}, {len}).slice();"));
+                }
+            }
             js.prelude(&format!(
                 "{free}({ptr}, {len} * {size}, {size});",
                 size = kind.size()
@@ -1875,7 +1884,15 @@ fn instruction(
             let free = js.cx.wasm_export_of(*free);
             js.prelude(&format!("let v{i};"));
             js.prelude(&format!("if ({ptr} !== 0) {{"));
-            js.prelude(&format!("v{i} = {f}({ptr}, {len}).slice();"));
+            // Same fresh-value vs view distinction as `VectorLoad` above.
+            match kind {
+                VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_) => {
+                    js.prelude(&format!("v{i} = {f}({ptr}, {len});"));
+                }
+                _ => {
+                    js.prelude(&format!("v{i} = {f}({ptr}, {len}).slice();"));
+                }
+            }
             js.prelude(&format!(
                 "{free}({ptr}, {len} * {size}, {size});",
                 size = kind.size()
@@ -1897,7 +1914,7 @@ fn instruction(
             match kind {
                 VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_) => {
                     let free = js.cx.wasm_export_of(*free);
-                    js.prelude(&format!("v{i} = {f}({ptr}, {len}).slice();"));
+                    js.prelude(&format!("v{i} = {f}({ptr}, {len});"));
                     js.prelude(&format!(
                         "{free}({ptr}, {len} * {size}, {size});",
                         size = kind.size()
