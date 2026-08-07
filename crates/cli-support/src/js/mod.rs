@@ -5472,7 +5472,11 @@ addToLibrary({
             }
             ContextAdapterKind::Import(core) => {
                 // When js_tag is set, all catch imports use wasm catch wrappers
-                // instead of the JS handleError wrapper
+                // instead of the JS handleError wrapper. Suspending imports
+                // never use handleError: their `catch` handling is the
+                // in-wasm rejection protocol (see `transforms::jspi`), and a
+                // synchronous throw from the import surfaces at the suspend
+                // point the same way a rejection does.
                 let has_wasm_catch = self.aux.js_tag.is_some();
 
                 // `code` here is `(args) { body }` (no leading `function`
@@ -5480,7 +5484,7 @@ addToLibrary({
                 // they need a function expression in the middle of the
                 // outer body; the final value we store is itself a function
                 // literal, so we strip the keyword once at the end.
-                let code = if catch && !has_wasm_catch {
+                let code = if catch && !has_wasm_catch && !is_suspending {
                     self.expose_handle_error()?;
                     // The catch path of `handleError` returns undefined, which
                     // would trap converting to `i64` at the JS -> Wasm

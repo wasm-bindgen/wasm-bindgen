@@ -18,6 +18,8 @@ export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly compute: () => number;
     readonly do_work: () => void;
+    readonly __wbindgen_malloc: (a: number, b: number) => number;
+    readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_start: () => void;
 }

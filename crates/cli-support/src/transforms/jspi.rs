@@ -27,15 +27,15 @@
 //!   exception delivered at the resume point (e.g. a rejected promise)
 //!   unwinds over a restored shadow stack.
 //!
-//! - The `__wbindgen_jspi_suspend` intrinsic backing
-//!   `js_sys::futures::jspi::block_on_promise` additionally catches
+//! - Suspending imports also marked `catch` (including the
+//!   `__wbindgen_jspi_suspend` intrinsic backing
+//!   `js_sys::futures::jspi::block_on_promise`) additionally catch
 //!   `WebAssembly.JSTag` exceptions — JSPI throws a rejected promise's reason
-//!   into wasm at the resume point — and converts them to data: the reason
+//!   into wasm at the resume point — and convert them to data: the reason
 //!   becomes the return value and the `__wbindgen_jspi_rejected` flag in
 //!   linear memory is set. Fulfillment stores 0. Both stores are in-fiber at
-//!   resume, so reading the flag after the call is race-free. The JS side of
-//!   the intrinsic is an identity function: `WebAssembly.Suspending` performs
-//!   the promise resolution itself.
+//!   resume, so reading the flag after the call is race-free, and the macro
+//!   marshals it into the `Result` return.
 //!
 //! The suspending-import entries in `implements` are repointed at the
 //! wrappers so that the later catch-wrapper pass wraps *outside* them:
@@ -98,35 +98,16 @@ pub fn run(
         }
     }
 
-    // The wasm-level import shims of `#[wasm_bindgen(suspending)]` imports,
-    // noting which one is the `block_on_promise` suspend intrinsic. The
-    // wasm-level import name is the mangled shim symbol, so identify the
-    // intrinsic via the aux import map, which is keyed by the inner
-    // `AdapterKind::Import` adapter that the `implements` shim adapter calls.
+    // The wasm-level import shims of `#[wasm_bindgen(suspending)]` imports.
+    // Imports also marked `catch` get the rejection-to-data protocol: the
+    // JSTag exception thrown at the resume point for a rejected promise is
+    // caught in-wasm and reported through the `__wbindgen_jspi_rejected`
+    // flag, with the rejection reason as the returned value.
     let suspending_imports = wit
         .implements
         .iter()
         .filter(|(_, _, adapter)| aux.imports_with_suspending.contains(adapter))
-        .map(|(_, func, adapter)| {
-            let inner = wit.adapters.get(adapter).and_then(|a| match &a.kind {
-                AdapterKind::Local { instructions } => {
-                    instructions.iter().find_map(|i| match i.instr {
-                        Instruction::CallAdapter(inner) => Some(inner),
-                        _ => None,
-                    })
-                }
-                _ => None,
-            });
-            let is_intrinsic = inner.is_some_and(|inner| {
-                matches!(
-                    aux.import_map.get(&inner),
-                    Some(crate::wit::AuxImport::Intrinsic(
-                        crate::intrinsic::Intrinsic::JspiSuspend
-                    ))
-                )
-            });
-            (*func, is_intrinsic)
-        })
+        .map(|(_, func, adapter)| (*func, aux.imports_with_catch.contains(adapter)))
         .collect::<Vec<_>>();
 
     if jspi_exports.is_empty() && suspending_imports.is_empty() {
@@ -211,13 +192,13 @@ pub fn run(
 
     let restore = make_restore_helper(module, ctx);
 
-    // The rejection protocol for the suspend intrinsic, if it's in use.
-    let has_intrinsic = suspending_imports.iter().any(|(_, i)| *i);
-    let rejection = if has_intrinsic {
+    // The rejection protocol for `catch`-marked suspending imports, if any.
+    let has_catch = suspending_imports.iter().any(|(_, c)| *c);
+    let rejection = if has_catch {
         let addr = aux.jspi_rejected.ok_or_else(|| {
             anyhow!(
                 "could not locate the `__wbindgen_jspi_rejected` flag static; \
-                 it is defined by `js_sys::futures::jspi`"
+                 it is defined by the wasm-bindgen runtime"
             )
         })?;
         let js_tag = crate::transforms::catch_handler::get_or_import_js_tag(module);
@@ -229,22 +210,20 @@ pub fn run(
     };
 
     let mut wrappers = HashMap::new();
-    for (import, is_intrinsic) in suspending_imports {
+    for (import, catch) in suspending_imports {
         if wrappers.contains_key(&import) {
             continue;
         }
-        let rejection = if is_intrinsic {
+        let rejection = if catch {
             // The rejection arm stores the caught JSTag payload (externref)
-            // into the result local, which requires the externref ABI end to
-            // end (guaranteed by the reference-types requirement above).
+            // into the result local, so the return ABI must be a single
+            // externref (guaranteed by the macro, which marshals suspending
+            // returns as `JsValue`).
             let ty = module.types.get(module.funcs.get(import).ty());
-            if ty.params() != [ValType::Ref(RefType::EXTERNREF)]
-                || ty.results() != [ValType::Ref(RefType::EXTERNREF)]
-            {
+            if ty.results() != [ValType::Ref(RefType::EXTERNREF)] {
                 bail!(
-                    "unexpected ABI for the JSPI suspend intrinsic: expected \
-                     (externref) -> externref, found {:?} -> {:?}",
-                    ty.params(),
+                    "unexpected ABI for a `catch` suspending import: expected \
+                     an externref return, found {:?}",
                     ty.results()
                 );
             }
@@ -535,7 +514,7 @@ fn push_align(body: &mut InstrSeqBuilder, ty: ValType) {
 ///     (global.set $__jspi_stack_base (load [base - 16]))
 ///     block $done (result ...)
 ///         block $catch_all (result exnref)
-///             ;; only for the suspend intrinsic:
+///             ;; only for `catch` suspending imports:
 ///             block $rejected (result externref)
 ///                 try_table (result ...) (catch $__wbindgen_jstag $rejected)
 ///                                        (catch_all_ref $catch_all)
@@ -550,7 +529,7 @@ fn push_align(body: &mut InstrSeqBuilder, ty: ValType) {
 ///                 local.get <results>...
 ///                 br $done
 ///             end
-///             ;; rejected (intrinsic only): the reason is the result
+///             ;; rejected (`catch` only): the reason is the result
 ///             local.set <result>
 ///             local.get $base $len $buf
 ///             call $__jspi_restore
@@ -675,7 +654,7 @@ fn wrap_suspending(
         seq.br(done_seq);
     }
 
-    // Rejection path (intrinsic only): the caught reason is the result.
+    // Rejection path (`catch` only): the caught reason is the result.
     if let (Some(rejection), Some(rejected_seq)) = (rejection, rejected_seq) {
         let mut seq = builder.instr_seq(catch_all_seq);
         seq.instr(ir::Block { seq: rejected_seq });

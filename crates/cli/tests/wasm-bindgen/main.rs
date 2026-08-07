@@ -3178,6 +3178,32 @@ const JSPI_LIB_RS: &str = r#"
         }
     }
 
+    #[wasm_bindgen(inline_js = "
+        export function get_text() { return new Promise(r => setTimeout(() => r('hello world'), 1)); }
+        export function flaky(ok) { return ok ? Promise.resolve(41) : Promise.reject(new Error('nope')); }
+    ")]
+    extern "C" {
+        // Non-externref return: marshalled to String in Rust post-resume.
+        #[wasm_bindgen(suspending)]
+        fn get_text() -> String;
+        // catch + suspending: rejections surface as `Err` data.
+        #[wasm_bindgen(catch, suspending)]
+        fn flaky(ok: bool) -> Result<u32, JsValue>;
+    }
+
+    #[wasm_bindgen(jspi)]
+    pub fn fetch_text_len() -> u32 {
+        get_text().len() as u32
+    }
+
+    #[wasm_bindgen(jspi)]
+    pub fn try_flaky(ok: bool) -> u32 {
+        match flaky(ok) {
+            Ok(v) => v + 1,
+            Err(_) => 13,
+        }
+    }
+
     // A future that wakes itself synchronously *during* poll (exercising the
     // pre-created resolver) and returns Pending a few times before resolving.
     struct SelfWaking { remaining: u32 }
@@ -3371,6 +3397,15 @@ describe('jspi runtime', () => {
 
     it('returns promise rejections as data', async () => {
         assert.strictEqual(await wasm.check_rejection(), 13);
+    });
+
+    it('marshals non-externref suspending returns post-resume', async () => {
+        assert.strictEqual(await wasm.fetch_text_len(), 11);
+    });
+
+    it('catch + suspending surfaces fulfillment and rejection as Result', async () => {
+        assert.strictEqual(await wasm.try_flaky(true), 42);
+        assert.strictEqual(await wasm.try_flaky(false), 13);
     });
 
     it('drives a Rust future via block_on with a self-waking waker', async () => {

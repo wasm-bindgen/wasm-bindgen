@@ -59,18 +59,40 @@ const result = await compute();   // Promise<number>
 Marks an imported JS function as suspending: wasm-bindgen wraps the import shim
 with `new WebAssembly.Suspending(...)` so that calling it from within a
 `#[wasm_bindgen(jspi)]` export suspends the fiber while the returned `Promise`
-is pending.
+is pending. The declared return type is the type the promise *resolves to* —
+the suspended call returns the settled value directly:
 
 ```rust
 use wasm_bindgen::prelude::*;
-use js_sys::Promise;
 
 #[wasm_bindgen]
 extern "C" {
+    // JS: async function fetch_data() { ...; return "text"; }
     #[wasm_bindgen(suspending)]
-    fn fetch_data() -> Promise;
+    fn fetch_data() -> String;
 }
 ```
+
+Return values are marshalled *after* the fiber resumes (the settled value
+arrives as a raw JS value and is converted with the same ABI semantics as any
+other import return), so all `FromWasmAbi` return types work — strings,
+numbers, `Option<T>`, `Vec<T>`, imported JS types, etc.
+
+`catch` composes with `suspending` exactly like it does elsewhere: a rejected
+promise (or a synchronous throw from the JS function) surfaces as `Err` with
+the rejection reason:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(catch, suspending)]
+    fn fallible_fetch() -> Result<String, JsValue>;
+}
+```
+
+Without `catch`, a rejection is an uncaught exception at the suspend point
+(and terminates the instance when the abort handler is enabled), mirroring
+non-`catch` synchronous imports.
 
 ## `block_on_promise` — await a single `Promise`
 
@@ -147,6 +169,16 @@ that never suspends costs nothing beyond the `WebAssembly.promising` wrapper.
 This scheme is target independent: on `--target emscripten` the same
 instrumentation operates against emscripten's stack pointer, with no
 interaction with (or requirement for) emscripten's own JSPI/Asyncify support.
+
+## Requirements
+
+JSPI support requires **reference types** (enabled by default since Rust
+1.82) and a runtime with **exception handling** support — the instrumented
+module uses `try_table` and `WebAssembly.JSTag` to restore the shadow stack
+on unwinding and to surface promise rejections as `Result` data. Every
+JSPI-capable engine ships both. Note that post-processing tools need EH
+enabled too (e.g. `wasm-opt --enable-exceptions`, or disable `wasm-opt` in
+`wasm-pack` builds).
 
 ## Full example — OPFS file system
 

@@ -7,12 +7,17 @@ export async function drive(promise) {
     return ret;
 }
 
-export const __wbg___wbindgen_jspi_suspend_0ba702b1d60015ac = new WebAssembly.Suspending(function(arg0) {
+export const __wbg___wbindgen_jspi_suspend_747b367c12c10e32 = new WebAssembly.Suspending(function(arg0) {
     const ret = arg0;
     return ret;
 });
 export function __wbg___wbindgen_throw_344f42d3211c4765(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
+}
+export function __wbindgen_cast_0000000000000000(arg0) {
+    // Cast intrinsic for `Externref -> Externref`.
+    const ret = arg0;
+    return ret;
 }
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;
