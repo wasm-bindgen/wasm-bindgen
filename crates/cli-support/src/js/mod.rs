@@ -6622,6 +6622,7 @@ addToLibrary({
                             &mut sink,
                             Some(&mut new_refs),
                             &self.qualified_to_identifier,
+                            false,
                         );
                     }
                 }
@@ -6650,12 +6651,15 @@ addToLibrary({
                     AuxDynamicUnionVariant::Literal(s) => s.clone(),
                     AuxDynamicUnionVariant::Type(ty) => {
                         let mut ts = String::new();
+                        // Dynamic union aliases are shared between argument
+                        // and return positions, so keep bare typed arrays.
                         adapter2ts(
                             ty,
                             TypePosition::Return,
                             &mut ts,
                             None,
                             &self.qualified_to_identifier,
+                            false,
                         );
                         ts
                     }
