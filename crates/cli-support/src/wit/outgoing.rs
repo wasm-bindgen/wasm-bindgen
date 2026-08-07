@@ -1020,4 +1020,3 @@ fn scalar_by_shared_ref_set_is_exactly_the_scalars() {
         ],
     );
 }
-
