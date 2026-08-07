@@ -379,7 +379,11 @@ fn wrap_import(module: &mut Module, import: FunctionId, ctx: JspiContext) -> Fun
     body.global_set(ctx.sp);
     body.local_get(base).global_set(ctx.base);
     // Mark the fiber as having suspended so its exit resets the SP to the
-    // empty-stack top (see `wrap_export`).
+    // empty-stack top (see `wrap_export`). This is unconditionally correct:
+    // JSPI performs promise resolution on the Suspending function's return
+    // value, so even a non-Promise return suspends for at least one
+    // microtask tick — reaching here always means the fiber suspended and
+    // its entry-time callers unwound.
     body.i32_const(1).global_set(ctx.suspended);
     body.local_get(buf).local_get(len);
     align_const(&mut body);

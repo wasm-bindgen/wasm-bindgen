@@ -24,8 +24,9 @@
 //!
 //! ## Browser support
 //! - Chrome 137+ (enabled by default; 119–136 behind a flag/origin trial)
-//! - Firefox 150+ (`javascript.options.wasm_js_promise_integration = true`)
-//! - Safari 18.4+ (Develop ▸ Feature Flags)
+//! - Firefox 153+ (enabled by default; 150–152 behind
+//!   `javascript.options.wasm_js_promise_integration`)
+//! - Safari Technology Preview 238+ (not yet in stable Safari)
 //!
 //! See [`index.html`](../index.html) for the full setup and live demo.
 

@@ -26,6 +26,11 @@
 //! }
 //! ```
 
+// The `suspending` attribute on the internal bridge import generates an
+// experimental-status deprecation warning; this module is already opted in
+// via `js_sys_unstable_apis`, so silence it here.
+#![allow(deprecated)]
+
 use crate::Promise;
 use alloc::boxed::Box;
 use alloc::sync::Arc;

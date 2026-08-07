@@ -648,6 +648,20 @@ impl ToTokens for ast::StructField {
 
 impl TryToTokens for ast::Export {
     fn try_to_tokens(self: &ast::Export, into: &mut TokenStream) -> Result<(), Diagnostic> {
+        if self.function.jspi {
+            (quote_spanned! {
+                self.function.name_span =>
+                const _: () = {
+                    #[deprecated(note = "JSPI support is experimental and subject to change; \
+                        `#[wasm_bindgen(jspi)]` requires a runtime with WebAssembly \
+                        JS Promise Integration enabled")]
+                    const fn jspi_is_experimental() {}
+                    jspi_is_experimental();
+                };
+            })
+            .to_tokens(into);
+        }
+
         let generated_name = self.rust_symbol();
         let export_name = self.export_name();
         let mut args = vec![];
@@ -2071,6 +2085,20 @@ impl ToTokens for ast::DynamicUnion {
 
 impl TryToTokens for ast::ImportFunction {
     fn try_to_tokens(&self, tokens: &mut TokenStream) -> Result<(), Diagnostic> {
+        if self.suspending {
+            (quote_spanned! {
+                self.function.name_span =>
+                const _: () = {
+                    #[deprecated(note = "JSPI support is experimental and subject to change; \
+                        `#[wasm_bindgen(suspending)]` requires a runtime with WebAssembly \
+                        JS Promise Integration enabled")]
+                    const fn suspending_is_experimental() {}
+                    suspending_is_experimental();
+                };
+            })
+            .to_tokens(tokens);
+        }
+
         let mut class = None;
         let mut is_constructor = false;
         let mut is_method = false;

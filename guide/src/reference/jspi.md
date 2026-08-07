@@ -7,18 +7,26 @@ browser APIs from ordinary Rust code, with no `async` call chain required.
 
 [jspi-spec]: https://github.com/WebAssembly/js-promise-integration
 
-## Browser support
+> **Experimental.** JSPI support in wasm-bindgen is experimental and subject to
+> change. Using `#[wasm_bindgen(jspi)]` or `#[wasm_bindgen(suspending)]` emits
+> a compiler warning noting this status (silence it with `#[allow(deprecated)]`
+> once acknowledged), and the `js_sys::futures::jspi` runtime API is gated
+> behind the `js_sys_unstable_apis` cfg.
 
-| Browser           | Enabled by default | Behind a flag |
+## Runtime support
+
+| Runtime           | Enabled by default | Behind a flag |
 |-------------------|--------------------|---------------|
 | Chrome / Chromium | 137                | 119–136 (`#enable-experimental-webassembly-jspi`, or origin trial) |
-| Firefox           | —                  | 150 (`javascript.options.wasm_js_promise_integration`) |
-| Safari            | —                  | 18.4 (Develop ▸ Feature Flags) |
-| Node.js           | —                  | 24 (`--experimental-wasm-jspi`) |
+| Firefox           | 153                | 150–152 (`javascript.options.wasm_js_promise_integration`) |
+| Safari            | Technology Preview 238 | — |
+| Node.js           | 25                 | 24 (`--experimental-wasm-jspi`) |
 
-JSPI shipped *enabled by default* in **Chrome 137**; earlier versions
-(from 119 through 136) required the experimental-WebAssembly-JSPI flag or an
-origin trial. JSPI also requires a **secure context** (HTTPS or `localhost`).
+JSPI shipped *enabled by default* in **Chrome 137** (119–136 required the
+experimental-WebAssembly-JSPI flag or an origin trial), **Firefox 153**, and
+**Node.js 25**. Safari support has landed in Safari Technology Preview 238 but
+has not yet reached a stable Safari release. JSPI also requires a **secure
+context** (HTTPS or `localhost`).
 
 ## Attributes
 
@@ -151,7 +159,8 @@ exports, multiple sequential `block_on_promise` calls, cross-context
 ## Testing
 
 JSPI exports require a JSPI-capable runtime. Chrome has JSPI enabled by default
-since **v137** (Node.js needs `--experimental-wasm-jspi` on v24), and CI runs
+since **v137** and Node.js since **v25** (v24 needs `--experimental-wasm-jspi`),
+and CI runs
 all three JSPI examples automatically via the Playwright test suite using a
 Chrome channel new enough to have it on by default.
 
