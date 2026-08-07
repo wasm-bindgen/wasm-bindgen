@@ -23,6 +23,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryFilterOptions`*"]
     #[wasm_bindgen(method, setter = "entryType")]
     pub fn set_entry_type(this: &PerformanceEntryFilterOptions, val: &str);
+    #[doc = "Change the `entryType` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryFilterOptions`*"]
+    #[wasm_bindgen(method, setter = "entryType")]
+    pub fn set_entry_type_js_string(this: &PerformanceEntryFilterOptions, val: &::js_sys::JsString);
     #[doc = "Get the `initiatorType` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryFilterOptions`*"]
@@ -35,6 +40,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryFilterOptions`*"]
     #[wasm_bindgen(method, setter = "initiatorType")]
     pub fn set_initiator_type(this: &PerformanceEntryFilterOptions, val: &str);
+    #[doc = "Change the `initiatorType` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryFilterOptions`*"]
+    #[wasm_bindgen(method, setter = "initiatorType")]
+    pub fn set_initiator_type_js_string(
+        this: &PerformanceEntryFilterOptions,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `name` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryFilterOptions`*"]
@@ -45,6 +58,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryFilterOptions`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &PerformanceEntryFilterOptions, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryFilterOptions`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &PerformanceEntryFilterOptions, val: &::js_sys::JsString);
 }
 impl PerformanceEntryFilterOptions {
     #[doc = "Construct a new `PerformanceEntryFilterOptions`."]

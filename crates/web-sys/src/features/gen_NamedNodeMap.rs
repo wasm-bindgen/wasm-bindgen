@@ -32,6 +32,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Attr`, `NamedNodeMap`*"]
     pub fn get_named_item(this: &NamedNodeMap, name: &str) -> Option<Attr>;
     #[cfg(feature = "Attr")]
+    #[wasm_bindgen(method, js_class = "NamedNodeMap", js_name = "getNamedItem")]
+    #[doc = "The `getNamedItem()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/NamedNodeMap/getNamedItem)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Attr`, `NamedNodeMap`*"]
+    pub fn get_named_item_with_js_string(
+        this: &NamedNodeMap,
+        name: &::js_sys::JsString,
+    ) -> Option<Attr>;
+    #[cfg(feature = "Attr")]
     #[wasm_bindgen(method, js_class = "NamedNodeMap", js_name = "getNamedItemNS")]
     #[doc = "The `getNamedItemNS()` method."]
     #[doc = ""]
@@ -42,6 +53,18 @@ extern "C" {
         this: &NamedNodeMap,
         namespace_uri: Option<&str>,
         local_name: &str,
+    ) -> Option<Attr>;
+    #[cfg(feature = "Attr")]
+    #[wasm_bindgen(method, js_class = "NamedNodeMap", js_name = "getNamedItemNS")]
+    #[doc = "The `getNamedItemNS()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/NamedNodeMap/getNamedItemNS)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Attr`, `NamedNodeMap`*"]
+    pub fn get_named_item_ns_with_opt_js_string_and_js_string(
+        this: &NamedNodeMap,
+        namespace_uri: Option<&::js_sys::JsString>,
+        local_name: &::js_sys::JsString,
     ) -> Option<Attr>;
     #[cfg(feature = "Attr")]
     #[wasm_bindgen(method, js_class = "NamedNodeMap")]
@@ -60,6 +83,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Attr`, `NamedNodeMap`*"]
     pub fn remove_named_item(this: &NamedNodeMap, name: &str) -> Result<Attr, JsValue>;
     #[cfg(feature = "Attr")]
+    #[wasm_bindgen(catch, method, js_class = "NamedNodeMap", js_name = "removeNamedItem")]
+    #[doc = "The `removeNamedItem()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/NamedNodeMap/removeNamedItem)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Attr`, `NamedNodeMap`*"]
+    pub fn remove_named_item_with_js_string(
+        this: &NamedNodeMap,
+        name: &::js_sys::JsString,
+    ) -> Result<Attr, JsValue>;
+    #[cfg(feature = "Attr")]
     #[wasm_bindgen(
         catch,
         method,
@@ -75,6 +109,23 @@ extern "C" {
         this: &NamedNodeMap,
         namespace_uri: Option<&str>,
         local_name: &str,
+    ) -> Result<Attr, JsValue>;
+    #[cfg(feature = "Attr")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "NamedNodeMap",
+        js_name = "removeNamedItemNS"
+    )]
+    #[doc = "The `removeNamedItemNS()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/NamedNodeMap/removeNamedItemNS)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Attr`, `NamedNodeMap`*"]
+    pub fn remove_named_item_ns_with_opt_js_string_and_js_string(
+        this: &NamedNodeMap,
+        namespace_uri: Option<&::js_sys::JsString>,
+        local_name: &::js_sys::JsString,
     ) -> Result<Attr, JsValue>;
     #[cfg(feature = "Attr")]
     #[wasm_bindgen(catch, method, js_class = "NamedNodeMap", js_name = "setNamedItem")]
@@ -99,6 +150,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Attr`, `NamedNodeMap`*"]
     pub fn get_with_name(this: &NamedNodeMap, name: &str) -> Option<Attr>;
+    #[cfg(feature = "Attr")]
+    #[wasm_bindgen(method, js_class = "NamedNodeMap", indexing_getter)]
+    #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
+    #[doc = ""]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Attr`, `NamedNodeMap`*"]
+    pub fn get_with_js_string(this: &NamedNodeMap, name: &::js_sys::JsString) -> Option<Attr>;
     #[cfg(feature = "Attr")]
     #[wasm_bindgen(method, js_class = "NamedNodeMap", indexing_getter)]
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]

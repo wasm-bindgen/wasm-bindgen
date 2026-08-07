@@ -334,6 +334,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PointerEventInit`*"]
     #[wasm_bindgen(method, setter = "pointerType")]
     pub fn set_pointer_type(this: &PointerEventInit, val: &str);
+    #[doc = "Change the `pointerType` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PointerEventInit`*"]
+    #[wasm_bindgen(method, setter = "pointerType")]
+    pub fn set_pointer_type_js_string(this: &PointerEventInit, val: &::js_sys::JsString);
     #[doc = "Get the `pressure` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PointerEventInit`*"]

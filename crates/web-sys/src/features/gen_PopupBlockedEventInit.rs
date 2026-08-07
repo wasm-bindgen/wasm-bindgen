@@ -52,6 +52,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEventInit`*"]
     #[wasm_bindgen(method, setter = "popupWindowFeatures")]
     pub fn set_popup_window_features(this: &PopupBlockedEventInit, val: &str);
+    #[doc = "Change the `popupWindowFeatures` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEventInit`*"]
+    #[wasm_bindgen(method, setter = "popupWindowFeatures")]
+    pub fn set_popup_window_features_js_string(
+        this: &PopupBlockedEventInit,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `popupWindowName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEventInit`*"]
@@ -62,6 +70,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEventInit`*"]
     #[wasm_bindgen(method, setter = "popupWindowName")]
     pub fn set_popup_window_name(this: &PopupBlockedEventInit, val: &str);
+    #[doc = "Change the `popupWindowName` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEventInit`*"]
+    #[wasm_bindgen(method, setter = "popupWindowName")]
+    pub fn set_popup_window_name_js_string(this: &PopupBlockedEventInit, val: &::js_sys::JsString);
     #[doc = "Get the `popupWindowURI` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEventInit`*"]
@@ -72,6 +85,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEventInit`*"]
     #[wasm_bindgen(method, setter = "popupWindowURI")]
     pub fn set_popup_window_uri(this: &PopupBlockedEventInit, val: Option<&str>);
+    #[doc = "Change the `popupWindowURI` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEventInit`*"]
+    #[wasm_bindgen(method, setter = "popupWindowURI")]
+    pub fn set_popup_window_uri_opt_js_string(
+        this: &PopupBlockedEventInit,
+        val: Option<&::js_sys::JsString>,
+    );
     #[cfg(feature = "Window")]
     #[doc = "Get the `requestingWindow` field of this object."]
     #[doc = ""]

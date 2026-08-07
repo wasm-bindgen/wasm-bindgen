@@ -433,6 +433,21 @@ extern "C" {
         key_system: &str,
         supported_configurations: &::wasm_bindgen::JsValue,
     ) -> ::js_sys::Promise;
+    #[wasm_bindgen(
+        method,
+        js_class = "Navigator",
+        js_name = "requestMediaKeySystemAccess"
+    )]
+    #[doc = "The `requestMediaKeySystemAccess()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/requestMediaKeySystemAccess)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
+    pub fn request_media_key_system_access_with_js_string(
+        this: &Navigator,
+        key_system: &::js_sys::JsString,
+        supported_configurations: &::wasm_bindgen::JsValue,
+    ) -> ::js_sys::Promise;
     #[cfg(feature = "VrServiceTest")]
     #[wasm_bindgen(method, js_class = "Navigator", js_name = "requestVRServiceTest")]
     #[doc = "The `requestVRServiceTest()` method."]
@@ -448,6 +463,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
     pub fn send_beacon(this: &Navigator, url: &str) -> Result<bool, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Navigator", js_name = "sendBeacon")]
+    #[doc = "The `sendBeacon()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
+    pub fn send_beacon_with_js_string(
+        this: &Navigator,
+        url: &::js_sys::JsString,
+    ) -> Result<bool, JsValue>;
     #[cfg(feature = "Blob")]
     #[wasm_bindgen(catch, method, js_class = "Navigator", js_name = "sendBeacon")]
     #[doc = "The `sendBeacon()` method."]
@@ -458,6 +483,18 @@ extern "C" {
     pub fn send_beacon_with_opt_blob(
         this: &Navigator,
         url: &str,
+        data: Option<&Blob>,
+    ) -> Result<bool, JsValue>;
+    #[cfg(feature = "Blob")]
+    #[wasm_bindgen(catch, method, js_class = "Navigator", js_name = "sendBeacon")]
+    #[doc = "The `sendBeacon()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`, `Navigator`*"]
+    pub fn send_beacon_with_js_string_and_opt_blob(
+        this: &Navigator,
+        url: &::js_sys::JsString,
         data: Option<&Blob>,
     ) -> Result<bool, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Navigator", js_name = "sendBeacon")]
@@ -477,6 +514,17 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
+    pub fn send_beacon_with_js_string_and_opt_buffer_source(
+        this: &Navigator,
+        url: &::js_sys::JsString,
+        data: Option<&::js_sys::Object>,
+    ) -> Result<bool, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Navigator", js_name = "sendBeacon")]
+    #[doc = "The `sendBeacon()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
     pub fn send_beacon_with_opt_u8_array(
         this: &Navigator,
         url: &str,
@@ -488,9 +536,31 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
+    pub fn send_beacon_with_js_string_and_opt_u8_slice(
+        this: &Navigator,
+        url: &::js_sys::JsString,
+        data: Option<&mut [u8]>,
+    ) -> Result<bool, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Navigator", js_name = "sendBeacon")]
+    #[doc = "The `sendBeacon()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
     pub fn send_beacon_with_opt_js_u8_array(
         this: &Navigator,
         url: &str,
+        data: Option<&::js_sys::Uint8Array>,
+    ) -> Result<bool, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Navigator", js_name = "sendBeacon")]
+    #[doc = "The `sendBeacon()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
+    pub fn send_beacon_with_js_string_and_opt_u8_array(
+        this: &Navigator,
+        url: &::js_sys::JsString,
         data: Option<&::js_sys::Uint8Array>,
     ) -> Result<bool, JsValue>;
     #[cfg(feature = "FormData")]
@@ -505,6 +575,18 @@ extern "C" {
         url: &str,
         data: Option<&FormData>,
     ) -> Result<bool, JsValue>;
+    #[cfg(feature = "FormData")]
+    #[wasm_bindgen(catch, method, js_class = "Navigator", js_name = "sendBeacon")]
+    #[doc = "The `sendBeacon()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FormData`, `Navigator`*"]
+    pub fn send_beacon_with_js_string_and_opt_form_data(
+        this: &Navigator,
+        url: &::js_sys::JsString,
+        data: Option<&FormData>,
+    ) -> Result<bool, JsValue>;
     #[cfg(feature = "UrlSearchParams")]
     #[wasm_bindgen(catch, method, js_class = "Navigator", js_name = "sendBeacon")]
     #[doc = "The `sendBeacon()` method."]
@@ -515,6 +597,18 @@ extern "C" {
     pub fn send_beacon_with_opt_url_search_params(
         this: &Navigator,
         url: &str,
+        data: Option<&UrlSearchParams>,
+    ) -> Result<bool, JsValue>;
+    #[cfg(feature = "UrlSearchParams")]
+    #[wasm_bindgen(catch, method, js_class = "Navigator", js_name = "sendBeacon")]
+    #[doc = "The `sendBeacon()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Navigator`, `UrlSearchParams`*"]
+    pub fn send_beacon_with_js_string_and_opt_url_search_params(
+        this: &Navigator,
+        url: &::js_sys::JsString,
         data: Option<&UrlSearchParams>,
     ) -> Result<bool, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Navigator", js_name = "sendBeacon")]
@@ -528,6 +622,17 @@ extern "C" {
         url: &str,
         data: Option<&str>,
     ) -> Result<bool, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Navigator", js_name = "sendBeacon")]
+    #[doc = "The `sendBeacon()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
+    pub fn send_beacon_with_js_string_and_opt_js_string(
+        this: &Navigator,
+        url: &::js_sys::JsString,
+        data: Option<&::js_sys::JsString>,
+    ) -> Result<bool, JsValue>;
     #[cfg(feature = "ReadableStream")]
     #[wasm_bindgen(catch, method, js_class = "Navigator", js_name = "sendBeacon")]
     #[doc = "The `sendBeacon()` method."]
@@ -538,6 +643,18 @@ extern "C" {
     pub fn send_beacon_with_opt_readable_stream(
         this: &Navigator,
         url: &str,
+        data: Option<&ReadableStream>,
+    ) -> Result<bool, JsValue>;
+    #[cfg(feature = "ReadableStream")]
+    #[wasm_bindgen(catch, method, js_class = "Navigator", js_name = "sendBeacon")]
+    #[doc = "The `sendBeacon()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Navigator`, `ReadableStream`*"]
+    pub fn send_beacon_with_js_string_and_opt_readable_stream(
+        this: &Navigator,
+        url: &::js_sys::JsString,
         data: Option<&ReadableStream>,
     ) -> Result<bool, JsValue>;
     #[wasm_bindgen(method, js_class = "Navigator")]
@@ -590,6 +707,23 @@ extern "C" {
         catch,
         method,
         js_class = "Navigator",
+        js_name = "registerContentHandler"
+    )]
+    #[doc = "The `registerContentHandler()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/registerContentHandler)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
+    pub fn register_content_handler_with_js_string_and_js_string_and_js_string(
+        this: &Navigator,
+        mime_type: &::js_sys::JsString,
+        url: &::js_sys::JsString,
+        title: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "Navigator",
         js_name = "registerProtocolHandler"
     )]
     #[doc = "The `registerProtocolHandler()` method."]
@@ -602,6 +736,23 @@ extern "C" {
         scheme: &str,
         url: &str,
         title: &str,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "Navigator",
+        js_name = "registerProtocolHandler"
+    )]
+    #[doc = "The `registerProtocolHandler()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/registerProtocolHandler)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
+    pub fn register_protocol_handler_with_js_string_and_js_string_and_js_string(
+        this: &Navigator,
+        scheme: &::js_sys::JsString,
+        url: &::js_sys::JsString,
+        title: &::js_sys::JsString,
     ) -> Result<(), JsValue>;
     #[wasm_bindgen(method, js_class = "Navigator", js_name = "taintEnabled")]
     #[doc = "The `taintEnabled()` method."]

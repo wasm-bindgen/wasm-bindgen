@@ -52,6 +52,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AuthenticatorSelectionCriteria`*"]
     #[wasm_bindgen(method, setter = "residentKey")]
     pub fn set_resident_key(this: &AuthenticatorSelectionCriteria, val: &str);
+    #[doc = "Change the `residentKey` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AuthenticatorSelectionCriteria`*"]
+    #[wasm_bindgen(method, setter = "residentKey")]
+    pub fn set_resident_key_js_string(
+        this: &AuthenticatorSelectionCriteria,
+        val: &::js_sys::JsString,
+    );
     #[cfg(feature = "UserVerificationRequirement")]
     #[doc = "Get the `userVerification` field of this object."]
     #[doc = ""]

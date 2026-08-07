@@ -40,6 +40,15 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "allowedServices")]
+    pub fn set_allowed_services_js_string(this: &AllowedBluetoothDevice, val: &::js_sys::JsString);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `allowedServices` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AllowedBluetoothDevice`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "allowedServices")]
     pub fn set_allowed_services_str_sequence(
         this: &AllowedBluetoothDevice,
         val: &[::js_sys::JsString],
@@ -62,6 +71,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "deviceId")]
     pub fn set_device_id(this: &AllowedBluetoothDevice, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `deviceId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AllowedBluetoothDevice`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "deviceId")]
+    pub fn set_device_id_js_string(this: &AllowedBluetoothDevice, val: &::js_sys::JsString);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `mayUseGATT` field of this object."]
     #[doc = ""]

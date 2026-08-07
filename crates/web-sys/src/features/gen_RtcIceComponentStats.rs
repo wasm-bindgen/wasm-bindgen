@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceComponentStats`*"]
     #[wasm_bindgen(method, setter = "id")]
     pub fn set_id(this: &RtcIceComponentStats, val: &str);
+    #[doc = "Change the `id` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceComponentStats`*"]
+    #[wasm_bindgen(method, setter = "id")]
+    pub fn set_id_js_string(this: &RtcIceComponentStats, val: &::js_sys::JsString);
     #[doc = "Get the `timestamp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceComponentStats`*"]
@@ -92,6 +97,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceComponentStats`*"]
     #[wasm_bindgen(method, setter = "transportId")]
     pub fn set_transport_id(this: &RtcIceComponentStats, val: &str);
+    #[doc = "Change the `transportId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceComponentStats`*"]
+    #[wasm_bindgen(method, setter = "transportId")]
+    pub fn set_transport_id_js_string(this: &RtcIceComponentStats, val: &::js_sys::JsString);
 }
 impl RtcIceComponentStats {
     #[doc = "Construct a new `RtcIceComponentStats`."]

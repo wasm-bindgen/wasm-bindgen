@@ -84,4 +84,15 @@ extern "C" {
         type_: &str,
         event_init_dict: &SpeechSynthesisEventInit,
     ) -> Result<SpeechSynthesisEvent, JsValue>;
+    #[cfg(feature = "SpeechSynthesisEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "SpeechSynthesisEvent")]
+    #[doc = "The `new SpeechSynthesisEvent(..)` constructor, creating a new instance of `SpeechSynthesisEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesisEvent/SpeechSynthesisEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechSynthesisEvent`, `SpeechSynthesisEventInit`*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+        event_init_dict: &SpeechSynthesisEventInit,
+    ) -> Result<SpeechSynthesisEvent, JsValue>;
 }

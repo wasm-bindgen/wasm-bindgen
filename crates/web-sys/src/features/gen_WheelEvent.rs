@@ -54,6 +54,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WheelEvent`*"]
     pub fn new(type_: &str) -> Result<WheelEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "WheelEvent")]
+    #[doc = "The `new WheelEvent(..)` constructor, creating a new instance of `WheelEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/WheelEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WheelEvent`*"]
+    pub fn new_with_js_string(type_: &::js_sys::JsString) -> Result<WheelEvent, JsValue>;
     #[cfg(feature = "WheelEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "WheelEvent")]
     #[doc = "The `new WheelEvent(..)` constructor, creating a new instance of `WheelEvent`."]
@@ -63,6 +70,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WheelEvent`, `WheelEventInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &WheelEventInit,
+    ) -> Result<WheelEvent, JsValue>;
+    #[cfg(feature = "WheelEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "WheelEvent")]
+    #[doc = "The `new WheelEvent(..)` constructor, creating a new instance of `WheelEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/WheelEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WheelEvent`, `WheelEventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &WheelEventInit,
     ) -> Result<WheelEvent, JsValue>;
 }

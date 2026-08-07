@@ -32,6 +32,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `TextTrackCueList`, `VttCue`*"]
     pub fn get_cue_by_id(this: &TextTrackCueList, id: &str) -> Option<VttCue>;
     #[cfg(feature = "VttCue")]
+    #[wasm_bindgen(method, js_class = "TextTrackCueList", js_name = "getCueById")]
+    #[doc = "The `getCueById()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TextTrackCueList/getCueById)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TextTrackCueList`, `VttCue`*"]
+    pub fn get_cue_by_id_with_js_string(
+        this: &TextTrackCueList,
+        id: &::js_sys::JsString,
+    ) -> Option<VttCue>;
+    #[cfg(feature = "VttCue")]
     #[wasm_bindgen(method, js_class = "TextTrackCueList", indexing_getter)]
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]

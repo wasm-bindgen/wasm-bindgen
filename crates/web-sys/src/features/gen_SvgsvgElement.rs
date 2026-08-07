@@ -228,6 +228,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgsvgElement`*"]
     pub fn get_element_by_id(this: &SvgsvgElement, element_id: &str) -> Option<Element>;
+    #[wasm_bindgen(method, js_class = "SVGSVGElement", js_name = "getElementById")]
+    #[doc = "The `getElementById()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGSVGElement/getElementById)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgsvgElement`*"]
+    pub fn get_element_by_id_with_js_string(
+        this: &SvgsvgElement,
+        element_id: &::js_sys::JsString,
+    ) -> Option<Element>;
     #[wasm_bindgen(method, js_class = "SVGSVGElement", js_name = "pauseAnimations")]
     #[doc = "The `pauseAnimations()` method."]
     #[doc = ""]

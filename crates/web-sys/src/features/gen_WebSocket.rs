@@ -137,7 +137,24 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebSocket`*"]
+    pub fn new_with_js_string(url: &::js_sys::JsString) -> Result<WebSocket, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "WebSocket")]
+    #[doc = "The `new WebSocket(..)` constructor, creating a new instance of `WebSocket`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebSocket`*"]
     pub fn new_with_str(url: &str, protocols: &str) -> Result<WebSocket, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "WebSocket")]
+    #[doc = "The `new WebSocket(..)` constructor, creating a new instance of `WebSocket`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebSocket`*"]
+    pub fn new_with_js_string_and_js_string(
+        url: &::js_sys::JsString,
+        protocols: &::js_sys::JsString,
+    ) -> Result<WebSocket, JsValue>;
     #[wasm_bindgen(catch, constructor, js_class = "WebSocket")]
     #[doc = "The `new WebSocket(..)` constructor, creating a new instance of `WebSocket`."]
     #[doc = ""]
@@ -146,6 +163,16 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebSocket`*"]
     pub fn new_with_str_sequence(
         url: &str,
+        protocols: &::wasm_bindgen::JsValue,
+    ) -> Result<WebSocket, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "WebSocket")]
+    #[doc = "The `new WebSocket(..)` constructor, creating a new instance of `WebSocket`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebSocket`*"]
+    pub fn new_with_js_string_and_str_sequence(
+        url: &::js_sys::JsString,
         protocols: &::wasm_bindgen::JsValue,
     ) -> Result<WebSocket, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "WebSocket")]
@@ -173,6 +200,17 @@ extern "C" {
         code: u16,
         reason: &str,
     ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WebSocket", js_name = "close")]
+    #[doc = "The `close()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebSocket`*"]
+    pub fn close_with_code_and_js_string(
+        this: &WebSocket,
+        code: u16,
+        reason: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "WebSocket", js_name = "send")]
     #[doc = "The `send()` method."]
     #[doc = ""]
@@ -180,6 +218,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebSocket`*"]
     pub fn send_with_str(this: &WebSocket, data: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WebSocket", js_name = "send")]
+    #[doc = "The `send()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/send)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebSocket`*"]
+    pub fn send_with_js_string(this: &WebSocket, data: &::js_sys::JsString) -> Result<(), JsValue>;
     #[cfg(feature = "Blob")]
     #[wasm_bindgen(catch, method, js_class = "WebSocket", js_name = "send")]
     #[doc = "The `send()` method."]

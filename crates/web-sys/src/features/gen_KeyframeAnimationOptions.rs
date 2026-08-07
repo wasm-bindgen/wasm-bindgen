@@ -80,6 +80,15 @@ extern "C" {
     #[wasm_bindgen(method, setter = "duration")]
     pub fn set_duration_str(this: &KeyframeAnimationOptions, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `duration` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyframeAnimationOptions`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "duration")]
+    pub fn set_duration_js_string(this: &KeyframeAnimationOptions, val: &::js_sys::JsString);
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `easing` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyframeAnimationOptions`*"]
@@ -97,6 +106,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "easing")]
     pub fn set_easing(this: &KeyframeAnimationOptions, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `easing` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyframeAnimationOptions`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "easing")]
+    pub fn set_easing_js_string(this: &KeyframeAnimationOptions, val: &::js_sys::JsString);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `endDelay` field of this object."]
     #[doc = ""]
@@ -234,6 +252,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "id")]
     pub fn set_id(this: &KeyframeAnimationOptions, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `id` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyframeAnimationOptions`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "id")]
+    pub fn set_id_js_string(this: &KeyframeAnimationOptions, val: &::js_sys::JsString);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AnimationTimeline")]
     #[doc = "Get the `timeline` field of this object."]

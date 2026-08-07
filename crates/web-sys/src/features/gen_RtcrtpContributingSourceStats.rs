@@ -23,6 +23,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcrtpContributingSourceStats`*"]
     #[wasm_bindgen(method, setter = "id")]
     pub fn set_id(this: &RtcrtpContributingSourceStats, val: &str);
+    #[doc = "Change the `id` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcrtpContributingSourceStats`*"]
+    #[wasm_bindgen(method, setter = "id")]
+    pub fn set_id_js_string(this: &RtcrtpContributingSourceStats, val: &::js_sys::JsString);
     #[doc = "Get the `timestamp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcrtpContributingSourceStats`*"]
@@ -67,6 +72,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcrtpContributingSourceStats`*"]
     #[wasm_bindgen(method, setter = "inboundRtpStreamId")]
     pub fn set_inbound_rtp_stream_id(this: &RtcrtpContributingSourceStats, val: &str);
+    #[doc = "Change the `inboundRtpStreamId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcrtpContributingSourceStats`*"]
+    #[wasm_bindgen(method, setter = "inboundRtpStreamId")]
+    pub fn set_inbound_rtp_stream_id_js_string(
+        this: &RtcrtpContributingSourceStats,
+        val: &::js_sys::JsString,
+    );
 }
 impl RtcrtpContributingSourceStats {
     #[doc = "Construct a new `RtcrtpContributingSourceStats`."]

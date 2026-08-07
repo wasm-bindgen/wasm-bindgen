@@ -50,6 +50,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WebGlContextEventInit`*"]
     #[wasm_bindgen(method, setter = "statusMessage")]
     pub fn set_status_message(this: &WebGlContextEventInit, val: &str);
+    #[doc = "Change the `statusMessage` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebGlContextEventInit`*"]
+    #[wasm_bindgen(method, setter = "statusMessage")]
+    pub fn set_status_message_js_string(this: &WebGlContextEventInit, val: &::js_sys::JsString);
 }
 impl WebGlContextEventInit {
     #[doc = "Construct a new `WebGlContextEventInit`."]

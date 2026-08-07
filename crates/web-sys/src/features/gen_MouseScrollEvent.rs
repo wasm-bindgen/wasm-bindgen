@@ -47,9 +47,38 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MouseScrollEvent`*"]
+    pub fn init_mouse_scroll_event_with_js_string(
+        this: &MouseScrollEvent,
+        type_: &::js_sys::JsString,
+    );
+    #[wasm_bindgen(
+        method,
+        js_class = "MouseScrollEvent",
+        js_name = "initMouseScrollEvent"
+    )]
+    #[doc = "The `initMouseScrollEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseScrollEvent`*"]
     pub fn init_mouse_scroll_event_with_can_bubble(
         this: &MouseScrollEvent,
         type_: &str,
+        can_bubble: bool,
+    );
+    #[wasm_bindgen(
+        method,
+        js_class = "MouseScrollEvent",
+        js_name = "initMouseScrollEvent"
+    )]
+    #[doc = "The `initMouseScrollEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseScrollEvent`*"]
+    pub fn init_mouse_scroll_event_with_js_string_and_can_bubble(
+        this: &MouseScrollEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
     );
     #[wasm_bindgen(
@@ -68,6 +97,22 @@ extern "C" {
         can_bubble: bool,
         cancelable: bool,
     );
+    #[wasm_bindgen(
+        method,
+        js_class = "MouseScrollEvent",
+        js_name = "initMouseScrollEvent"
+    )]
+    #[doc = "The `initMouseScrollEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseScrollEvent`*"]
+    pub fn init_mouse_scroll_event_with_js_string_and_can_bubble_and_cancelable(
+        this: &MouseScrollEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+        cancelable: bool,
+    );
     #[cfg(feature = "Window")]
     #[wasm_bindgen(
         method,
@@ -82,6 +127,24 @@ extern "C" {
     pub fn init_mouse_scroll_event_with_can_bubble_and_cancelable_and_view(
         this: &MouseScrollEvent,
         type_: &str,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(
+        method,
+        js_class = "MouseScrollEvent",
+        js_name = "initMouseScrollEvent"
+    )]
+    #[doc = "The `initMouseScrollEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseScrollEvent`, `Window`*"]
+    pub fn init_mouse_scroll_event_with_js_string_and_can_bubble_and_cancelable_and_view(
+        this: &MouseScrollEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
         cancelable: bool,
         view: Option<&Window>,
@@ -116,9 +179,48 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MouseScrollEvent`, `Window`*"]
+    pub fn init_mouse_scroll_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail(
+        this: &MouseScrollEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(
+        method,
+        js_class = "MouseScrollEvent",
+        js_name = "initMouseScrollEvent"
+    )]
+    #[doc = "The `initMouseScrollEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseScrollEvent`, `Window`*"]
     pub fn init_mouse_scroll_event_with_can_bubble_and_cancelable_and_view_and_detail_and_screen_x(
         this: &MouseScrollEvent,
         type_: &str,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        screen_x: i32,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(
+        method,
+        js_class = "MouseScrollEvent",
+        js_name = "initMouseScrollEvent"
+    )]
+    #[doc = "The `initMouseScrollEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseScrollEvent`, `Window`*"]
+    pub fn init_mouse_scroll_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail_and_screen_x(
+        this: &MouseScrollEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
         cancelable: bool,
         view: Option<&Window>,
@@ -157,9 +259,52 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MouseScrollEvent`, `Window`*"]
+    pub fn init_mouse_scroll_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail_and_screen_x_and_screen_y(
+        this: &MouseScrollEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        screen_x: i32,
+        screen_y: i32,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(
+        method,
+        js_class = "MouseScrollEvent",
+        js_name = "initMouseScrollEvent"
+    )]
+    #[doc = "The `initMouseScrollEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseScrollEvent`, `Window`*"]
     pub fn init_mouse_scroll_event_with_can_bubble_and_cancelable_and_view_and_detail_and_screen_x_and_screen_y_and_client_x(
         this: &MouseScrollEvent,
         type_: &str,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        screen_x: i32,
+        screen_y: i32,
+        client_x: i32,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(
+        method,
+        js_class = "MouseScrollEvent",
+        js_name = "initMouseScrollEvent"
+    )]
+    #[doc = "The `initMouseScrollEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseScrollEvent`, `Window`*"]
+    pub fn init_mouse_scroll_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail_and_screen_x_and_screen_y_and_client_x(
+        this: &MouseScrollEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
         cancelable: bool,
         view: Option<&Window>,
@@ -202,9 +347,56 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MouseScrollEvent`, `Window`*"]
+    pub fn init_mouse_scroll_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail_and_screen_x_and_screen_y_and_client_x_and_client_y(
+        this: &MouseScrollEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        screen_x: i32,
+        screen_y: i32,
+        client_x: i32,
+        client_y: i32,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(
+        method,
+        js_class = "MouseScrollEvent",
+        js_name = "initMouseScrollEvent"
+    )]
+    #[doc = "The `initMouseScrollEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseScrollEvent`, `Window`*"]
     pub fn init_mouse_scroll_event_with_can_bubble_and_cancelable_and_view_and_detail_and_screen_x_and_screen_y_and_client_x_and_client_y_and_ctrl_key(
         this: &MouseScrollEvent,
         type_: &str,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        screen_x: i32,
+        screen_y: i32,
+        client_x: i32,
+        client_y: i32,
+        ctrl_key: bool,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(
+        method,
+        js_class = "MouseScrollEvent",
+        js_name = "initMouseScrollEvent"
+    )]
+    #[doc = "The `initMouseScrollEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseScrollEvent`, `Window`*"]
+    pub fn init_mouse_scroll_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail_and_screen_x_and_screen_y_and_client_x_and_client_y_and_ctrl_key(
+        this: &MouseScrollEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
         cancelable: bool,
         view: Option<&Window>,
@@ -251,9 +443,60 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MouseScrollEvent`, `Window`*"]
+    pub fn init_mouse_scroll_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail_and_screen_x_and_screen_y_and_client_x_and_client_y_and_ctrl_key_and_alt_key(
+        this: &MouseScrollEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        screen_x: i32,
+        screen_y: i32,
+        client_x: i32,
+        client_y: i32,
+        ctrl_key: bool,
+        alt_key: bool,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(
+        method,
+        js_class = "MouseScrollEvent",
+        js_name = "initMouseScrollEvent"
+    )]
+    #[doc = "The `initMouseScrollEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseScrollEvent`, `Window`*"]
     pub fn init_mouse_scroll_event_with_can_bubble_and_cancelable_and_view_and_detail_and_screen_x_and_screen_y_and_client_x_and_client_y_and_ctrl_key_and_alt_key_and_shift_key(
         this: &MouseScrollEvent,
         type_: &str,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        screen_x: i32,
+        screen_y: i32,
+        client_x: i32,
+        client_y: i32,
+        ctrl_key: bool,
+        alt_key: bool,
+        shift_key: bool,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(
+        method,
+        js_class = "MouseScrollEvent",
+        js_name = "initMouseScrollEvent"
+    )]
+    #[doc = "The `initMouseScrollEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseScrollEvent`, `Window`*"]
+    pub fn init_mouse_scroll_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail_and_screen_x_and_screen_y_and_client_x_and_client_y_and_ctrl_key_and_alt_key_and_shift_key(
+        this: &MouseScrollEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
         cancelable: bool,
         view: Option<&Window>,
@@ -304,9 +547,64 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MouseScrollEvent`, `Window`*"]
+    pub fn init_mouse_scroll_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail_and_screen_x_and_screen_y_and_client_x_and_client_y_and_ctrl_key_and_alt_key_and_shift_key_and_meta_key(
+        this: &MouseScrollEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        screen_x: i32,
+        screen_y: i32,
+        client_x: i32,
+        client_y: i32,
+        ctrl_key: bool,
+        alt_key: bool,
+        shift_key: bool,
+        meta_key: bool,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(
+        method,
+        js_class = "MouseScrollEvent",
+        js_name = "initMouseScrollEvent"
+    )]
+    #[doc = "The `initMouseScrollEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseScrollEvent`, `Window`*"]
     pub fn init_mouse_scroll_event_with_can_bubble_and_cancelable_and_view_and_detail_and_screen_x_and_screen_y_and_client_x_and_client_y_and_ctrl_key_and_alt_key_and_shift_key_and_meta_key_and_button(
         this: &MouseScrollEvent,
         type_: &str,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        screen_x: i32,
+        screen_y: i32,
+        client_x: i32,
+        client_y: i32,
+        ctrl_key: bool,
+        alt_key: bool,
+        shift_key: bool,
+        meta_key: bool,
+        button: i16,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(
+        method,
+        js_class = "MouseScrollEvent",
+        js_name = "initMouseScrollEvent"
+    )]
+    #[doc = "The `initMouseScrollEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseScrollEvent`, `Window`*"]
+    pub fn init_mouse_scroll_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail_and_screen_x_and_screen_y_and_client_x_and_client_y_and_ctrl_key_and_alt_key_and_shift_key_and_meta_key_and_button(
+        this: &MouseScrollEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
         cancelable: bool,
         view: Option<&Window>,
@@ -361,9 +659,68 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `EventTarget`, `MouseScrollEvent`, `Window`*"]
+    pub fn init_mouse_scroll_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail_and_screen_x_and_screen_y_and_client_x_and_client_y_and_ctrl_key_and_alt_key_and_shift_key_and_meta_key_and_button_and_related_target(
+        this: &MouseScrollEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        screen_x: i32,
+        screen_y: i32,
+        client_x: i32,
+        client_y: i32,
+        ctrl_key: bool,
+        alt_key: bool,
+        shift_key: bool,
+        meta_key: bool,
+        button: i16,
+        related_target: Option<&EventTarget>,
+    );
+    #[cfg(all(feature = "EventTarget", feature = "Window",))]
+    #[wasm_bindgen(
+        method,
+        js_class = "MouseScrollEvent",
+        js_name = "initMouseScrollEvent"
+    )]
+    #[doc = "The `initMouseScrollEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `EventTarget`, `MouseScrollEvent`, `Window`*"]
     pub fn init_mouse_scroll_event_with_can_bubble_and_cancelable_and_view_and_detail_and_screen_x_and_screen_y_and_client_x_and_client_y_and_ctrl_key_and_alt_key_and_shift_key_and_meta_key_and_button_and_related_target_and_axis(
         this: &MouseScrollEvent,
         type_: &str,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        screen_x: i32,
+        screen_y: i32,
+        client_x: i32,
+        client_y: i32,
+        ctrl_key: bool,
+        alt_key: bool,
+        shift_key: bool,
+        meta_key: bool,
+        button: i16,
+        related_target: Option<&EventTarget>,
+        axis: i32,
+    );
+    #[cfg(all(feature = "EventTarget", feature = "Window",))]
+    #[wasm_bindgen(
+        method,
+        js_class = "MouseScrollEvent",
+        js_name = "initMouseScrollEvent"
+    )]
+    #[doc = "The `initMouseScrollEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseScrollEvent/initMouseScrollEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `EventTarget`, `MouseScrollEvent`, `Window`*"]
+    pub fn init_mouse_scroll_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail_and_screen_x_and_screen_y_and_client_x_and_client_y_and_ctrl_key_and_alt_key_and_shift_key_and_meta_key_and_button_and_related_target_and_axis(
+        this: &MouseScrollEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
         cancelable: bool,
         view: Option<&Window>,

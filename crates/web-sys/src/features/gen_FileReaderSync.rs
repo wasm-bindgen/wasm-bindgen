@@ -89,4 +89,16 @@ extern "C" {
         blob: &Blob,
         encoding: &str,
     ) -> Result<::alloc::string::String, JsValue>;
+    #[cfg(feature = "Blob")]
+    #[wasm_bindgen(catch, method, js_class = "FileReaderSync", js_name = "readAsText")]
+    #[doc = "The `readAsText()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileReaderSync/readAsText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`, `FileReaderSync`*"]
+    pub fn read_as_text_with_js_string(
+        this: &FileReaderSync,
+        blob: &Blob,
+        encoding: &::js_sys::JsString,
+    ) -> Result<::alloc::string::String, JsValue>;
 }

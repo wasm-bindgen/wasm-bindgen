@@ -70,4 +70,19 @@ extern "C" {
         type_: &str,
         event_init_dict: &XrReferenceSpaceEventInit,
     ) -> Result<XrReferenceSpaceEvent, JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "XrReferenceSpaceEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "XRReferenceSpaceEvent")]
+    #[doc = "The `new XrReferenceSpaceEvent(..)` constructor, creating a new instance of `XrReferenceSpaceEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XRReferenceSpaceEvent/XRReferenceSpaceEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `XrReferenceSpaceEvent`, `XrReferenceSpaceEventInit`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+        event_init_dict: &XrReferenceSpaceEventInit,
+    ) -> Result<XrReferenceSpaceEvent, JsValue>;
 }

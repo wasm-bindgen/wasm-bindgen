@@ -38,6 +38,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CookieStore`*"]
     pub fn delete_with_name(this: &CookieStore, name: &str) -> ::js_sys::Promise;
+    #[wasm_bindgen(method, js_class = "CookieStore", js_name = "delete")]
+    #[doc = "The `delete()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CookieStore/delete)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieStore`*"]
+    pub fn delete_with_js_string(
+        this: &CookieStore,
+        name: &::js_sys::JsString,
+    ) -> ::js_sys::Promise;
     #[cfg(feature = "CookieStoreDeleteOptions")]
     #[wasm_bindgen(method, js_class = "CookieStore", js_name = "delete")]
     #[doc = "The `delete()` method."]
@@ -56,6 +66,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CookieStore`*"]
     pub fn get_with_name(this: &CookieStore, name: &str) -> ::js_sys::Promise;
+    #[wasm_bindgen(method, js_class = "CookieStore", js_name = "get")]
+    #[doc = "The `get()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CookieStore/get)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieStore`*"]
+    pub fn get_with_js_string(this: &CookieStore, name: &::js_sys::JsString) -> ::js_sys::Promise;
     #[wasm_bindgen(method, js_class = "CookieStore")]
     #[doc = "The `get()` method."]
     #[doc = ""]
@@ -87,6 +104,16 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CookieStore/getAll)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CookieStore`*"]
+    pub fn get_all_with_js_string(
+        this: &CookieStore,
+        name: &::js_sys::JsString,
+    ) -> ::js_sys::Promise;
+    #[wasm_bindgen(method, js_class = "CookieStore", js_name = "getAll")]
+    #[doc = "The `getAll()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CookieStore/getAll)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieStore`*"]
     pub fn get_all(this: &CookieStore) -> ::js_sys::Promise;
     #[cfg(feature = "CookieStoreGetOptions")]
     #[wasm_bindgen(method, js_class = "CookieStore", js_name = "getAll")]
@@ -109,6 +136,17 @@ extern "C" {
         this: &CookieStore,
         name: &str,
         value: &str,
+    ) -> ::js_sys::Promise;
+    #[wasm_bindgen(method, js_class = "CookieStore", js_name = "set")]
+    #[doc = "The `set()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CookieStore/set)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieStore`*"]
+    pub fn set_with_js_string_and_js_string(
+        this: &CookieStore,
+        name: &::js_sys::JsString,
+        value: &::js_sys::JsString,
     ) -> ::js_sys::Promise;
     #[cfg(feature = "CookieInit")]
     #[wasm_bindgen(method, js_class = "CookieStore", js_name = "set")]

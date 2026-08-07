@@ -25,6 +25,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaKeySystemMediaCapability`*"]
     #[wasm_bindgen(method, setter = "contentType")]
     pub fn set_content_type(this: &MediaKeySystemMediaCapability, val: &str);
+    #[doc = "Change the `contentType` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaKeySystemMediaCapability`*"]
+    #[wasm_bindgen(method, setter = "contentType")]
+    pub fn set_content_type_js_string(
+        this: &MediaKeySystemMediaCapability,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `robustness` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaKeySystemMediaCapability`*"]
@@ -35,6 +43,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaKeySystemMediaCapability`*"]
     #[wasm_bindgen(method, setter = "robustness")]
     pub fn set_robustness(this: &MediaKeySystemMediaCapability, val: &str);
+    #[doc = "Change the `robustness` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaKeySystemMediaCapability`*"]
+    #[wasm_bindgen(method, setter = "robustness")]
+    pub fn set_robustness_js_string(this: &MediaKeySystemMediaCapability, val: &::js_sys::JsString);
 }
 impl MediaKeySystemMediaCapability {
     #[doc = "Construct a new `MediaKeySystemMediaCapability`."]

@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RsaOaepParams`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &RsaOaepParams, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RsaOaepParams`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &RsaOaepParams, val: &::js_sys::JsString);
     #[doc = "Get the `label` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RsaOaepParams`*"]

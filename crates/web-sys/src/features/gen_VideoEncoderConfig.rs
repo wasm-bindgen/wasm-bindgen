@@ -100,6 +100,15 @@ extern "C" {
     #[wasm_bindgen(method, setter = "codec")]
     pub fn set_codec(this: &VideoEncoderConfig, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `codec` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoEncoderConfig`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "codec")]
+    pub fn set_codec_js_string(this: &VideoEncoderConfig, val: &::js_sys::JsString);
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `contentHint` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `VideoEncoderConfig`*"]
@@ -117,6 +126,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "contentHint")]
     pub fn set_content_hint(this: &VideoEncoderConfig, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `contentHint` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoEncoderConfig`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "contentHint")]
+    pub fn set_content_hint_js_string(this: &VideoEncoderConfig, val: &::js_sys::JsString);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `displayHeight` field of this object."]
     #[doc = ""]
@@ -247,6 +265,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "scalabilityMode")]
     pub fn set_scalability_mode(this: &VideoEncoderConfig, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `scalabilityMode` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoEncoderConfig`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "scalabilityMode")]
+    pub fn set_scalability_mode_js_string(this: &VideoEncoderConfig, val: &::js_sys::JsString);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `width` field of this object."]
     #[doc = ""]

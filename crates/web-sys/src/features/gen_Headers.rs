@@ -53,6 +53,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
     pub fn append(this: &Headers, name: &str, value: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Headers", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Headers/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
+    pub fn append_with_js_string_and_js_string(
+        this: &Headers,
+        name: &::js_sys::JsString,
+        value: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Headers")]
     #[doc = "The `delete()` method."]
     #[doc = ""]
@@ -60,6 +71,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
     pub fn delete(this: &Headers, name: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Headers", js_name = "delete")]
+    #[doc = "The `delete()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Headers/delete)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
+    pub fn delete_with_js_string(this: &Headers, name: &::js_sys::JsString) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Headers", js_name = "forEach")]
     #[doc = "The `forEach()` method."]
     #[doc = ""]
@@ -74,6 +92,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
     pub fn get(this: &Headers, name: &str) -> Result<Option<::alloc::string::String>, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Headers", js_name = "get")]
+    #[doc = "The `get()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Headers/get)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
+    pub fn get_with_js_string(
+        this: &Headers,
+        name: &::js_sys::JsString,
+    ) -> Result<Option<::alloc::string::String>, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Headers")]
     #[doc = "The `has()` method."]
     #[doc = ""]
@@ -81,6 +109,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
     pub fn has(this: &Headers, name: &str) -> Result<bool, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Headers", js_name = "has")]
+    #[doc = "The `has()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Headers/has)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
+    pub fn has_with_js_string(this: &Headers, name: &::js_sys::JsString) -> Result<bool, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Headers")]
     #[doc = "The `set()` method."]
     #[doc = ""]
@@ -88,6 +123,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
     pub fn set(this: &Headers, name: &str, value: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Headers", js_name = "set")]
+    #[doc = "The `set()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Headers/set)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
+    pub fn set_with_js_string_and_js_string(
+        this: &Headers,
+        name: &::js_sys::JsString,
+        value: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(method, js_class = "Headers")]
     #[doc = "The `entries()` method."]
     #[doc = ""]

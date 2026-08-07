@@ -49,6 +49,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ShadowRoot`*"]
     pub fn set_inner_html(this: &ShadowRoot, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "ShadowRoot", js_name = "innerHTML")]
+    #[doc = "Setter for the `innerHTML` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot/innerHTML)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ShadowRoot`*"]
+    pub fn set_inner_html_js_string(this: &ShadowRoot, value: &::js_sys::JsString);
     #[cfg(feature = "Element")]
     #[wasm_bindgen(method, getter, js_class = "ShadowRoot", js_name = "activeElement")]
     #[doc = "Getter for the `activeElement` field of this object."]
@@ -135,6 +142,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`, `ShadowRoot`*"]
     pub fn get_element_by_id(this: &ShadowRoot, element_id: &str) -> Option<Element>;
+    #[cfg(feature = "Element")]
+    #[wasm_bindgen(method, js_class = "ShadowRoot", js_name = "getElementById")]
+    #[doc = "The `getElementById()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot/getElementById)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`, `ShadowRoot`*"]
+    pub fn get_element_by_id_with_js_string(
+        this: &ShadowRoot,
+        element_id: &::js_sys::JsString,
+    ) -> Option<Element>;
     #[cfg(feature = "HtmlCollection")]
     #[wasm_bindgen(method, js_class = "ShadowRoot", js_name = "getElementsByClassName")]
     #[doc = "The `getElementsByClassName()` method."]
@@ -144,6 +162,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlCollection`, `ShadowRoot`*"]
     pub fn get_elements_by_class_name(this: &ShadowRoot, class_names: &str) -> HtmlCollection;
     #[cfg(feature = "HtmlCollection")]
+    #[wasm_bindgen(method, js_class = "ShadowRoot", js_name = "getElementsByClassName")]
+    #[doc = "The `getElementsByClassName()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot/getElementsByClassName)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlCollection`, `ShadowRoot`*"]
+    pub fn get_elements_by_class_name_with_js_string(
+        this: &ShadowRoot,
+        class_names: &::js_sys::JsString,
+    ) -> HtmlCollection;
+    #[cfg(feature = "HtmlCollection")]
     #[wasm_bindgen(method, js_class = "ShadowRoot", js_name = "getElementsByTagName")]
     #[doc = "The `getElementsByTagName()` method."]
     #[doc = ""]
@@ -151,6 +180,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlCollection`, `ShadowRoot`*"]
     pub fn get_elements_by_tag_name(this: &ShadowRoot, local_name: &str) -> HtmlCollection;
+    #[cfg(feature = "HtmlCollection")]
+    #[wasm_bindgen(method, js_class = "ShadowRoot", js_name = "getElementsByTagName")]
+    #[doc = "The `getElementsByTagName()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot/getElementsByTagName)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlCollection`, `ShadowRoot`*"]
+    pub fn get_elements_by_tag_name_with_js_string(
+        this: &ShadowRoot,
+        local_name: &::js_sys::JsString,
+    ) -> HtmlCollection;
     #[cfg(feature = "HtmlCollection")]
     #[wasm_bindgen(method, js_class = "ShadowRoot", js_name = "getElementsByTagNameNS")]
     #[doc = "The `getElementsByTagNameNS()` method."]
@@ -162,6 +202,18 @@ extern "C" {
         this: &ShadowRoot,
         namespace: Option<&str>,
         local_name: &str,
+    ) -> HtmlCollection;
+    #[cfg(feature = "HtmlCollection")]
+    #[wasm_bindgen(method, js_class = "ShadowRoot", js_name = "getElementsByTagNameNS")]
+    #[doc = "The `getElementsByTagNameNS()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot/getElementsByTagNameNS)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlCollection`, `ShadowRoot`*"]
+    pub fn get_elements_by_tag_name_ns_with_opt_js_string_and_js_string(
+        this: &ShadowRoot,
+        namespace: Option<&::js_sys::JsString>,
+        local_name: &::js_sys::JsString,
     ) -> HtmlCollection;
     #[cfg(feature = "Element")]
     #[wasm_bindgen(method, js_class = "ShadowRoot", js_name = "elementFromPoint")]

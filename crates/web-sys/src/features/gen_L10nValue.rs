@@ -30,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `L10nValue`*"]
     #[wasm_bindgen(method, setter = "value")]
     pub fn set_value(this: &L10nValue, val: Option<&str>);
+    #[doc = "Change the `value` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `L10nValue`*"]
+    #[wasm_bindgen(method, setter = "value")]
+    pub fn set_value_opt_js_string(this: &L10nValue, val: Option<&::js_sys::JsString>);
 }
 impl L10nValue {
     #[doc = "Construct a new `L10nValue`."]

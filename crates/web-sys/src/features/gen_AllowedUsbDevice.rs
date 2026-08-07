@@ -51,6 +51,15 @@ extern "C" {
     #[wasm_bindgen(method, setter = "serialNumber")]
     pub fn set_serial_number(this: &AllowedUsbDevice, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `serialNumber` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AllowedUsbDevice`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "serialNumber")]
+    pub fn set_serial_number_js_string(this: &AllowedUsbDevice, val: &::js_sys::JsString);
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `vendorId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AllowedUsbDevice`*"]

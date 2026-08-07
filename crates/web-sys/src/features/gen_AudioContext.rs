@@ -204,6 +204,20 @@ extern "C" {
         sink_id: &str,
     ) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_class = "AudioContext", js_name = "setSinkId")]
+    #[doc = "The `setSinkId()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/setSinkId)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AudioContext`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_sink_id_with_js_string(
+        this: &AudioContext,
+        sink_id: &::js_sys::JsString,
+    ) -> ::js_sys::Promise<::js_sys::Undefined>;
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AudioSinkOptions")]
     #[wasm_bindgen(method, js_class = "AudioContext", js_name = "setSinkId")]
     #[doc = "The `setSinkId()` method."]

@@ -29,6 +29,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConstrainDomStringParameters`*"]
     #[wasm_bindgen(method, setter = "exact")]
+    pub fn set_exact_js_string(this: &ConstrainDomStringParameters, val: &::js_sys::JsString);
+    #[doc = "Change the `exact` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConstrainDomStringParameters`*"]
+    #[wasm_bindgen(method, setter = "exact")]
     pub fn set_exact_str_sequence(
         this: &ConstrainDomStringParameters,
         val: &::wasm_bindgen::JsValue,
@@ -48,6 +53,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConstrainDomStringParameters`*"]
     #[wasm_bindgen(method, setter = "ideal")]
     pub fn set_ideal_str(this: &ConstrainDomStringParameters, val: &str);
+    #[doc = "Change the `ideal` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConstrainDomStringParameters`*"]
+    #[wasm_bindgen(method, setter = "ideal")]
+    pub fn set_ideal_js_string(this: &ConstrainDomStringParameters, val: &::js_sys::JsString);
     #[doc = "Change the `ideal` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConstrainDomStringParameters`*"]

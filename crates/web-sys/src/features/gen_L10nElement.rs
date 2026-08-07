@@ -30,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
     #[wasm_bindgen(method, setter = "l10nAttrs")]
     pub fn set_l10n_attrs(this: &L10nElement, val: Option<&str>);
+    #[doc = "Change the `l10nAttrs` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
+    #[wasm_bindgen(method, setter = "l10nAttrs")]
+    pub fn set_l10n_attrs_opt_js_string(this: &L10nElement, val: Option<&::js_sys::JsString>);
     #[doc = "Get the `l10nId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
@@ -40,6 +45,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
     #[wasm_bindgen(method, setter = "l10nId")]
     pub fn set_l10n_id(this: &L10nElement, val: &str);
+    #[doc = "Change the `l10nId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
+    #[wasm_bindgen(method, setter = "l10nId")]
+    pub fn set_l10n_id_js_string(this: &L10nElement, val: &::js_sys::JsString);
     #[doc = "Get the `localName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
@@ -50,6 +60,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
     #[wasm_bindgen(method, setter = "localName")]
     pub fn set_local_name(this: &L10nElement, val: &str);
+    #[doc = "Change the `localName` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
+    #[wasm_bindgen(method, setter = "localName")]
+    pub fn set_local_name_js_string(this: &L10nElement, val: &::js_sys::JsString);
     #[doc = "Get the `namespaceURI` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
@@ -60,6 +75,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
     #[wasm_bindgen(method, setter = "namespaceURI")]
     pub fn set_namespace_uri(this: &L10nElement, val: &str);
+    #[doc = "Change the `namespaceURI` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
+    #[wasm_bindgen(method, setter = "namespaceURI")]
+    pub fn set_namespace_uri_js_string(this: &L10nElement, val: &::js_sys::JsString);
     #[doc = "Get the `type` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
@@ -70,6 +90,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
     #[wasm_bindgen(method, setter = "type")]
     pub fn set_type(this: &L10nElement, val: Option<&str>);
+    #[doc = "Change the `type` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
+    #[wasm_bindgen(method, setter = "type")]
+    pub fn set_type_opt_js_string(this: &L10nElement, val: Option<&::js_sys::JsString>);
 }
 impl L10nElement {
     #[doc = "Construct a new `L10nElement`."]

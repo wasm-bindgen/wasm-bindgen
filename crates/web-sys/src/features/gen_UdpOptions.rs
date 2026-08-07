@@ -30,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `UdpOptions`*"]
     #[wasm_bindgen(method, setter = "localAddress")]
     pub fn set_local_address(this: &UdpOptions, val: &str);
+    #[doc = "Change the `localAddress` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `UdpOptions`*"]
+    #[wasm_bindgen(method, setter = "localAddress")]
+    pub fn set_local_address_js_string(this: &UdpOptions, val: &::js_sys::JsString);
     #[doc = "Get the `localPort` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UdpOptions`*"]
@@ -60,6 +65,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `UdpOptions`*"]
     #[wasm_bindgen(method, setter = "remoteAddress")]
     pub fn set_remote_address(this: &UdpOptions, val: &str);
+    #[doc = "Change the `remoteAddress` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `UdpOptions`*"]
+    #[wasm_bindgen(method, setter = "remoteAddress")]
+    pub fn set_remote_address_js_string(this: &UdpOptions, val: &::js_sys::JsString);
     #[doc = "Get the `remotePort` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UdpOptions`*"]

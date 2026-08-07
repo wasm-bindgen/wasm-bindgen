@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityValidationResult`*"]
     #[wasm_bindgen(method, setter = "contents")]
     pub fn set_contents(this: &RtcIdentityValidationResult, val: &str);
+    #[doc = "Change the `contents` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIdentityValidationResult`*"]
+    #[wasm_bindgen(method, setter = "contents")]
+    pub fn set_contents_js_string(this: &RtcIdentityValidationResult, val: &::js_sys::JsString);
     #[doc = "Get the `identity` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityValidationResult`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityValidationResult`*"]
     #[wasm_bindgen(method, setter = "identity")]
     pub fn set_identity(this: &RtcIdentityValidationResult, val: &str);
+    #[doc = "Change the `identity` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIdentityValidationResult`*"]
+    #[wasm_bindgen(method, setter = "identity")]
+    pub fn set_identity_js_string(this: &RtcIdentityValidationResult, val: &::js_sys::JsString);
 }
 impl RtcIdentityValidationResult {
     #[doc = "Construct a new `RtcIdentityValidationResult`."]

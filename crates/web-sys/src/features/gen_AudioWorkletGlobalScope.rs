@@ -68,4 +68,19 @@ extern "C" {
         name: &str,
         processor_ctor: &::js_sys::Function,
     );
+    #[wasm_bindgen(
+        method,
+        js_class = "AudioWorkletGlobalScope",
+        js_name = "registerProcessor"
+    )]
+    #[doc = "The `registerProcessor()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletGlobalScope/registerProcessor)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AudioWorkletGlobalScope`*"]
+    pub fn register_processor_with_js_string(
+        this: &AudioWorkletGlobalScope,
+        name: &::js_sys::JsString,
+        processor_ctor: &::js_sys::Function,
+    );
 }

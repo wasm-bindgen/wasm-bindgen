@@ -30,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DnsCacheEntry`*"]
     #[wasm_bindgen(method, setter = "family")]
     pub fn set_family(this: &DnsCacheEntry, val: &str);
+    #[doc = "Change the `family` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DnsCacheEntry`*"]
+    #[wasm_bindgen(method, setter = "family")]
+    pub fn set_family_js_string(this: &DnsCacheEntry, val: &::js_sys::JsString);
     #[doc = "Get the `hostaddr` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DnsCacheEntry`*"]
@@ -50,6 +55,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DnsCacheEntry`*"]
     #[wasm_bindgen(method, setter = "hostname")]
     pub fn set_hostname(this: &DnsCacheEntry, val: &str);
+    #[doc = "Change the `hostname` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DnsCacheEntry`*"]
+    #[wasm_bindgen(method, setter = "hostname")]
+    pub fn set_hostname_js_string(this: &DnsCacheEntry, val: &::js_sys::JsString);
     #[doc = "Get the `trr` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DnsCacheEntry`*"]

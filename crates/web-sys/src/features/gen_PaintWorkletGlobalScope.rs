@@ -32,4 +32,19 @@ extern "C" {
         name: &str,
         paint_ctor: &::js_sys::Function,
     );
+    #[wasm_bindgen(
+        method,
+        js_class = "PaintWorkletGlobalScope",
+        js_name = "registerPaint"
+    )]
+    #[doc = "The `registerPaint()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaintWorkletGlobalScope/registerPaint)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PaintWorkletGlobalScope`*"]
+    pub fn register_paint_with_js_string(
+        this: &PaintWorkletGlobalScope,
+        name: &::js_sys::JsString,
+        paint_ctor: &::js_sys::Function,
+    );
 }

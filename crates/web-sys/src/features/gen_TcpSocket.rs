@@ -138,6 +138,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TcpSocket`*"]
     pub fn new(host: &str, port: u16) -> Result<TcpSocket, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "TCPSocket")]
+    #[doc = "The `new TcpSocket(..)` constructor, creating a new instance of `TcpSocket`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TCPSocket/TCPSocket)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TcpSocket`*"]
+    pub fn new_with_js_string(host: &::js_sys::JsString, port: u16) -> Result<TcpSocket, JsValue>;
     #[cfg(feature = "SocketOptions")]
     #[wasm_bindgen(catch, constructor, js_class = "TCPSocket")]
     #[doc = "The `new TcpSocket(..)` constructor, creating a new instance of `TcpSocket`."]
@@ -147,6 +154,18 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SocketOptions`, `TcpSocket`*"]
     pub fn new_with_options(
         host: &str,
+        port: u16,
+        options: &SocketOptions,
+    ) -> Result<TcpSocket, JsValue>;
+    #[cfg(feature = "SocketOptions")]
+    #[wasm_bindgen(catch, constructor, js_class = "TCPSocket")]
+    #[doc = "The `new TcpSocket(..)` constructor, creating a new instance of `TcpSocket`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TCPSocket/TCPSocket)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SocketOptions`, `TcpSocket`*"]
+    pub fn new_with_js_string_and_options(
+        host: &::js_sys::JsString,
         port: u16,
         options: &SocketOptions,
     ) -> Result<TcpSocket, JsValue>;
@@ -171,6 +190,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TcpSocket`*"]
     pub fn send_with_str(this: &TcpSocket, data: &str) -> Result<bool, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "TCPSocket", js_name = "send")]
+    #[doc = "The `send()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TCPSocket/send)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TcpSocket`*"]
+    pub fn send_with_js_string(
+        this: &TcpSocket,
+        data: &::js_sys::JsString,
+    ) -> Result<bool, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "TCPSocket", js_name = "send")]
     #[doc = "The `send()` method."]
     #[doc = ""]

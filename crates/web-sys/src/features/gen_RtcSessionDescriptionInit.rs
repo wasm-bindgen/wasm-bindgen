@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcSessionDescriptionInit`*"]
     #[wasm_bindgen(method, setter = "sdp")]
     pub fn set_sdp(this: &RtcSessionDescriptionInit, val: &str);
+    #[doc = "Change the `sdp` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcSessionDescriptionInit`*"]
+    #[wasm_bindgen(method, setter = "sdp")]
+    pub fn set_sdp_js_string(this: &RtcSessionDescriptionInit, val: &::js_sys::JsString);
     #[cfg(feature = "RtcSdpType")]
     #[doc = "Get the `type` field of this object."]
     #[doc = ""]

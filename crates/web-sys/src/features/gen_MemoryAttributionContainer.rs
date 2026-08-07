@@ -33,6 +33,15 @@ extern "C" {
     #[wasm_bindgen(method, setter = "id")]
     pub fn set_id(this: &MemoryAttributionContainer, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `id` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MemoryAttributionContainer`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "id")]
+    pub fn set_id_js_string(this: &MemoryAttributionContainer, val: &::js_sys::JsString);
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `src` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MemoryAttributionContainer`*"]
@@ -50,6 +59,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "src")]
     pub fn set_src(this: &MemoryAttributionContainer, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `src` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MemoryAttributionContainer`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "src")]
+    pub fn set_src_js_string(this: &MemoryAttributionContainer, val: &::js_sys::JsString);
 }
 #[cfg(web_sys_unstable_apis)]
 impl MemoryAttributionContainer {

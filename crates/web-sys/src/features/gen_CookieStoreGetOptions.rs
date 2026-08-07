@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CookieStoreGetOptions`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &CookieStoreGetOptions, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieStoreGetOptions`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &CookieStoreGetOptions, val: &::js_sys::JsString);
     #[doc = "Get the `url` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CookieStoreGetOptions`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CookieStoreGetOptions`*"]
     #[wasm_bindgen(method, setter = "url")]
     pub fn set_url(this: &CookieStoreGetOptions, val: &str);
+    #[doc = "Change the `url` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieStoreGetOptions`*"]
+    #[wasm_bindgen(method, setter = "url")]
+    pub fn set_url_js_string(this: &CookieStoreGetOptions, val: &::js_sys::JsString);
 }
 impl CookieStoreGetOptions {
     #[doc = "Construct a new `CookieStoreGetOptions`."]

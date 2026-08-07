@@ -58,6 +58,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
     #[wasm_bindgen(method, setter = "body")]
     pub fn set_body_opt_str(this: &RequestInit, val: Option<&str>);
+    #[doc = "Change the `body` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
+    #[wasm_bindgen(method, setter = "body")]
+    pub fn set_body_opt_js_string(this: &RequestInit, val: Option<&::js_sys::JsString>);
     #[cfg(feature = "ReadableStream")]
     #[doc = "Change the `body` field of this object."]
     #[doc = ""]
@@ -124,6 +129,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
     #[wasm_bindgen(method, setter = "integrity")]
     pub fn set_integrity(this: &RequestInit, val: &str);
+    #[doc = "Change the `integrity` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
+    #[wasm_bindgen(method, setter = "integrity")]
+    pub fn set_integrity_js_string(this: &RequestInit, val: &::js_sys::JsString);
     #[doc = "Get the `method` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
@@ -134,6 +144,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
     #[wasm_bindgen(method, setter = "method")]
     pub fn set_method(this: &RequestInit, val: &str);
+    #[doc = "Change the `method` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
+    #[wasm_bindgen(method, setter = "method")]
+    pub fn set_method_js_string(this: &RequestInit, val: &::js_sys::JsString);
     #[cfg(feature = "RequestMode")]
     #[doc = "Get the `mode` field of this object."]
     #[doc = ""]
@@ -191,6 +206,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
     #[wasm_bindgen(method, setter = "referrer")]
     pub fn set_referrer(this: &RequestInit, val: &str);
+    #[doc = "Change the `referrer` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
+    #[wasm_bindgen(method, setter = "referrer")]
+    pub fn set_referrer_js_string(this: &RequestInit, val: &::js_sys::JsString);
     #[cfg(feature = "ReferrerPolicy")]
     #[doc = "Get the `referrerPolicy` field of this object."]
     #[doc = ""]

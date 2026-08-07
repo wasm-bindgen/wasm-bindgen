@@ -316,6 +316,160 @@ extern "C" {
         urls_6: &str,
         urls_7: &str,
     ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        variadic,
+        js_class = "WorkerGlobalScope",
+        js_name = "importScripts"
+    )]
+    #[doc = "The `importScripts()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/importScripts)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn import_scripts_with_js_string(
+        this: &WorkerGlobalScope,
+        urls: &::js_sys::Array,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WorkerGlobalScope",
+        js_name = "importScripts"
+    )]
+    #[doc = "The `importScripts()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/importScripts)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn import_scripts_with_js_string_0(this: &WorkerGlobalScope) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WorkerGlobalScope",
+        js_name = "importScripts"
+    )]
+    #[doc = "The `importScripts()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/importScripts)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn import_scripts_with_js_string_1(
+        this: &WorkerGlobalScope,
+        urls_1: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WorkerGlobalScope",
+        js_name = "importScripts"
+    )]
+    #[doc = "The `importScripts()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/importScripts)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn import_scripts_with_js_string_2(
+        this: &WorkerGlobalScope,
+        urls_1: &::js_sys::JsString,
+        urls_2: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WorkerGlobalScope",
+        js_name = "importScripts"
+    )]
+    #[doc = "The `importScripts()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/importScripts)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn import_scripts_with_js_string_3(
+        this: &WorkerGlobalScope,
+        urls_1: &::js_sys::JsString,
+        urls_2: &::js_sys::JsString,
+        urls_3: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WorkerGlobalScope",
+        js_name = "importScripts"
+    )]
+    #[doc = "The `importScripts()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/importScripts)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn import_scripts_with_js_string_4(
+        this: &WorkerGlobalScope,
+        urls_1: &::js_sys::JsString,
+        urls_2: &::js_sys::JsString,
+        urls_3: &::js_sys::JsString,
+        urls_4: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WorkerGlobalScope",
+        js_name = "importScripts"
+    )]
+    #[doc = "The `importScripts()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/importScripts)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn import_scripts_with_js_string_5(
+        this: &WorkerGlobalScope,
+        urls_1: &::js_sys::JsString,
+        urls_2: &::js_sys::JsString,
+        urls_3: &::js_sys::JsString,
+        urls_4: &::js_sys::JsString,
+        urls_5: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WorkerGlobalScope",
+        js_name = "importScripts"
+    )]
+    #[doc = "The `importScripts()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/importScripts)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn import_scripts_with_js_string_6(
+        this: &WorkerGlobalScope,
+        urls_1: &::js_sys::JsString,
+        urls_2: &::js_sys::JsString,
+        urls_3: &::js_sys::JsString,
+        urls_4: &::js_sys::JsString,
+        urls_5: &::js_sys::JsString,
+        urls_6: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WorkerGlobalScope",
+        js_name = "importScripts"
+    )]
+    #[doc = "The `importScripts()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/importScripts)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn import_scripts_with_js_string_7(
+        this: &WorkerGlobalScope,
+        urls_1: &::js_sys::JsString,
+        urls_2: &::js_sys::JsString,
+        urls_3: &::js_sys::JsString,
+        urls_4: &::js_sys::JsString,
+        urls_5: &::js_sys::JsString,
+        urls_6: &::js_sys::JsString,
+        urls_7: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope")]
     #[doc = "The `atob()` method."]
     #[doc = ""]
@@ -323,6 +477,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
     pub fn atob(this: &WorkerGlobalScope, atob: &str) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope", js_name = "atob")]
+    #[doc = "The `atob()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/atob)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn atob_with_js_string(
+        this: &WorkerGlobalScope,
+        atob: &::js_sys::JsString,
+    ) -> Result<::alloc::string::String, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope")]
     #[doc = "The `btoa()` method."]
     #[doc = ""]
@@ -330,6 +494,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
     pub fn btoa(this: &WorkerGlobalScope, btoa: &str) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope", js_name = "btoa")]
+    #[doc = "The `btoa()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/btoa)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn btoa_with_js_string(
+        this: &WorkerGlobalScope,
+        btoa: &::js_sys::JsString,
+    ) -> Result<::alloc::string::String, JsValue>;
     #[wasm_bindgen(method, js_class = "WorkerGlobalScope", js_name = "clearInterval")]
     #[doc = "The `clearInterval()` method."]
     #[doc = ""]
@@ -1047,6 +1221,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
     pub fn fetch_with_str(this: &WorkerGlobalScope, input: &str) -> ::js_sys::Promise;
+    #[wasm_bindgen(method, js_class = "WorkerGlobalScope", js_name = "fetch")]
+    #[doc = "The `fetch()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/fetch)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn fetch_with_js_string(
+        this: &WorkerGlobalScope,
+        input: &::js_sys::JsString,
+    ) -> ::js_sys::Promise;
     #[cfg(all(feature = "Request", feature = "RequestInit",))]
     #[wasm_bindgen(method, js_class = "WorkerGlobalScope", js_name = "fetch")]
     #[doc = "The `fetch()` method."]
@@ -1069,6 +1253,18 @@ extern "C" {
     pub fn fetch_with_str_and_init(
         this: &WorkerGlobalScope,
         input: &str,
+        init: &RequestInit,
+    ) -> ::js_sys::Promise;
+    #[cfg(feature = "RequestInit")]
+    #[wasm_bindgen(method, js_class = "WorkerGlobalScope", js_name = "fetch")]
+    #[doc = "The `fetch()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/fetch)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RequestInit`, `WorkerGlobalScope`*"]
+    pub fn fetch_with_js_string_and_init(
+        this: &WorkerGlobalScope,
+        input: &::js_sys::JsString,
         init: &RequestInit,
     ) -> ::js_sys::Promise;
     #[wasm_bindgen(method, js_class = "WorkerGlobalScope", js_name = "queueMicrotask")]
@@ -1229,6 +1425,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
     pub fn set_interval_with_str(this: &WorkerGlobalScope, handler: &str) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope", js_name = "setInterval")]
+    #[doc = "The `setInterval()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/setInterval)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn set_interval_with_js_string(
+        this: &WorkerGlobalScope,
+        handler: &::js_sys::JsString,
+    ) -> Result<i32, JsValue>;
     #[wasm_bindgen(
         catch,
         method,
@@ -1354,6 +1560,140 @@ extern "C" {
     pub fn set_interval_with_str_and_timeout_and_unused_7(
         this: &WorkerGlobalScope,
         handler: &str,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+        unused_3: &::wasm_bindgen::JsValue,
+        unused_4: &::wasm_bindgen::JsValue,
+        unused_5: &::wasm_bindgen::JsValue,
+        unused_6: &::wasm_bindgen::JsValue,
+        unused_7: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        variadic,
+        js_class = "WorkerGlobalScope",
+        js_name = "setInterval"
+    )]
+    #[doc = "The `setInterval()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/setInterval)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn set_interval_with_js_string_and_timeout_and_unused(
+        this: &WorkerGlobalScope,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused: &::js_sys::Array,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope", js_name = "setInterval")]
+    #[doc = "The `setInterval()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/setInterval)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn set_interval_with_js_string_and_timeout_and_unused_0(
+        this: &WorkerGlobalScope,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope", js_name = "setInterval")]
+    #[doc = "The `setInterval()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/setInterval)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn set_interval_with_js_string_and_timeout_and_unused_1(
+        this: &WorkerGlobalScope,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope", js_name = "setInterval")]
+    #[doc = "The `setInterval()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/setInterval)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn set_interval_with_js_string_and_timeout_and_unused_2(
+        this: &WorkerGlobalScope,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope", js_name = "setInterval")]
+    #[doc = "The `setInterval()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/setInterval)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn set_interval_with_js_string_and_timeout_and_unused_3(
+        this: &WorkerGlobalScope,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+        unused_3: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope", js_name = "setInterval")]
+    #[doc = "The `setInterval()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/setInterval)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn set_interval_with_js_string_and_timeout_and_unused_4(
+        this: &WorkerGlobalScope,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+        unused_3: &::wasm_bindgen::JsValue,
+        unused_4: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope", js_name = "setInterval")]
+    #[doc = "The `setInterval()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/setInterval)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn set_interval_with_js_string_and_timeout_and_unused_5(
+        this: &WorkerGlobalScope,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+        unused_3: &::wasm_bindgen::JsValue,
+        unused_4: &::wasm_bindgen::JsValue,
+        unused_5: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope", js_name = "setInterval")]
+    #[doc = "The `setInterval()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/setInterval)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn set_interval_with_js_string_and_timeout_and_unused_6(
+        this: &WorkerGlobalScope,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+        unused_3: &::wasm_bindgen::JsValue,
+        unused_4: &::wasm_bindgen::JsValue,
+        unused_5: &::wasm_bindgen::JsValue,
+        unused_6: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope", js_name = "setInterval")]
+    #[doc = "The `setInterval()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/setInterval)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn set_interval_with_js_string_and_timeout_and_unused_7(
+        this: &WorkerGlobalScope,
+        handler: &::js_sys::JsString,
         timeout: i32,
         unused_1: &::wasm_bindgen::JsValue,
         unused_2: &::wasm_bindgen::JsValue,
@@ -1514,6 +1854,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
     pub fn set_timeout_with_str(this: &WorkerGlobalScope, handler: &str) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope", js_name = "setTimeout")]
+    #[doc = "The `setTimeout()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/setTimeout)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn set_timeout_with_js_string(
+        this: &WorkerGlobalScope,
+        handler: &::js_sys::JsString,
+    ) -> Result<i32, JsValue>;
     #[wasm_bindgen(
         catch,
         method,
@@ -1639,6 +1989,140 @@ extern "C" {
     pub fn set_timeout_with_str_and_timeout_and_unused_7(
         this: &WorkerGlobalScope,
         handler: &str,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+        unused_3: &::wasm_bindgen::JsValue,
+        unused_4: &::wasm_bindgen::JsValue,
+        unused_5: &::wasm_bindgen::JsValue,
+        unused_6: &::wasm_bindgen::JsValue,
+        unused_7: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        variadic,
+        js_class = "WorkerGlobalScope",
+        js_name = "setTimeout"
+    )]
+    #[doc = "The `setTimeout()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/setTimeout)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn set_timeout_with_js_string_and_timeout_and_unused(
+        this: &WorkerGlobalScope,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused: &::js_sys::Array,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope", js_name = "setTimeout")]
+    #[doc = "The `setTimeout()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/setTimeout)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn set_timeout_with_js_string_and_timeout_and_unused_0(
+        this: &WorkerGlobalScope,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope", js_name = "setTimeout")]
+    #[doc = "The `setTimeout()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/setTimeout)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn set_timeout_with_js_string_and_timeout_and_unused_1(
+        this: &WorkerGlobalScope,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope", js_name = "setTimeout")]
+    #[doc = "The `setTimeout()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/setTimeout)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn set_timeout_with_js_string_and_timeout_and_unused_2(
+        this: &WorkerGlobalScope,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope", js_name = "setTimeout")]
+    #[doc = "The `setTimeout()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/setTimeout)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn set_timeout_with_js_string_and_timeout_and_unused_3(
+        this: &WorkerGlobalScope,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+        unused_3: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope", js_name = "setTimeout")]
+    #[doc = "The `setTimeout()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/setTimeout)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn set_timeout_with_js_string_and_timeout_and_unused_4(
+        this: &WorkerGlobalScope,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+        unused_3: &::wasm_bindgen::JsValue,
+        unused_4: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope", js_name = "setTimeout")]
+    #[doc = "The `setTimeout()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/setTimeout)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn set_timeout_with_js_string_and_timeout_and_unused_5(
+        this: &WorkerGlobalScope,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+        unused_3: &::wasm_bindgen::JsValue,
+        unused_4: &::wasm_bindgen::JsValue,
+        unused_5: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope", js_name = "setTimeout")]
+    #[doc = "The `setTimeout()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/setTimeout)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn set_timeout_with_js_string_and_timeout_and_unused_6(
+        this: &WorkerGlobalScope,
+        handler: &::js_sys::JsString,
+        timeout: i32,
+        unused_1: &::wasm_bindgen::JsValue,
+        unused_2: &::wasm_bindgen::JsValue,
+        unused_3: &::wasm_bindgen::JsValue,
+        unused_4: &::wasm_bindgen::JsValue,
+        unused_5: &::wasm_bindgen::JsValue,
+        unused_6: &::wasm_bindgen::JsValue,
+    ) -> Result<i32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope", js_name = "setTimeout")]
+    #[doc = "The `setTimeout()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/setTimeout)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn set_timeout_with_js_string_and_timeout_and_unused_7(
+        this: &WorkerGlobalScope,
+        handler: &::js_sys::JsString,
         timeout: i32,
         unused_1: &::wasm_bindgen::JsValue,
         unused_2: &::wasm_bindgen::JsValue,

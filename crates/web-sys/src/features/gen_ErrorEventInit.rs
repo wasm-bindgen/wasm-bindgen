@@ -70,6 +70,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ErrorEventInit`*"]
     #[wasm_bindgen(method, setter = "filename")]
     pub fn set_filename(this: &ErrorEventInit, val: &str);
+    #[doc = "Change the `filename` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ErrorEventInit`*"]
+    #[wasm_bindgen(method, setter = "filename")]
+    pub fn set_filename_js_string(this: &ErrorEventInit, val: &::js_sys::JsString);
     #[doc = "Get the `lineno` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ErrorEventInit`*"]
@@ -90,6 +95,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ErrorEventInit`*"]
     #[wasm_bindgen(method, setter = "message")]
     pub fn set_message(this: &ErrorEventInit, val: &str);
+    #[doc = "Change the `message` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ErrorEventInit`*"]
+    #[wasm_bindgen(method, setter = "message")]
+    pub fn set_message_js_string(this: &ErrorEventInit, val: &::js_sys::JsString);
 }
 impl ErrorEventInit {
     #[doc = "Construct a new `ErrorEventInit`."]

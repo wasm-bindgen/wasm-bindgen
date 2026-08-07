@@ -32,6 +32,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BaseComputedKeyframe`*"]
     #[wasm_bindgen(method, setter = "easing")]
     pub fn set_easing(this: &BaseComputedKeyframe, val: &str);
+    #[doc = "Change the `easing` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BaseComputedKeyframe`*"]
+    #[wasm_bindgen(method, setter = "easing")]
+    pub fn set_easing_js_string(this: &BaseComputedKeyframe, val: &::js_sys::JsString);
     #[doc = "Get the `offset` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `BaseComputedKeyframe`*"]

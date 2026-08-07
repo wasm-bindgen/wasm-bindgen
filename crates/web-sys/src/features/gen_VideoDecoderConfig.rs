@@ -33,6 +33,15 @@ extern "C" {
     #[wasm_bindgen(method, setter = "codec")]
     pub fn set_codec(this: &VideoDecoderConfig, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `codec` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoDecoderConfig`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "codec")]
+    pub fn set_codec_js_string(this: &VideoDecoderConfig, val: &::js_sys::JsString);
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `codedHeight` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `VideoDecoderConfig`*"]

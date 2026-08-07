@@ -40,6 +40,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoConfiguration`*"]
     #[wasm_bindgen(method, setter = "contentType")]
     pub fn set_content_type(this: &VideoConfiguration, val: &str);
+    #[doc = "Change the `contentType` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoConfiguration`*"]
+    #[wasm_bindgen(method, setter = "contentType")]
+    pub fn set_content_type_js_string(this: &VideoConfiguration, val: &::js_sys::JsString);
     #[doc = "Get the `framerate` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `VideoConfiguration`*"]
@@ -50,6 +55,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoConfiguration`*"]
     #[wasm_bindgen(method, setter = "framerate")]
     pub fn set_framerate(this: &VideoConfiguration, val: &str);
+    #[doc = "Change the `framerate` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoConfiguration`*"]
+    #[wasm_bindgen(method, setter = "framerate")]
+    pub fn set_framerate_js_string(this: &VideoConfiguration, val: &::js_sys::JsString);
     #[doc = "Get the `height` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `VideoConfiguration`*"]

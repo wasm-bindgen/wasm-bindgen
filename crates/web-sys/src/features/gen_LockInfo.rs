@@ -33,6 +33,15 @@ extern "C" {
     #[wasm_bindgen(method, setter = "clientId")]
     pub fn set_client_id(this: &LockInfo, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `clientId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `LockInfo`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "clientId")]
+    pub fn set_client_id_js_string(this: &LockInfo, val: &::js_sys::JsString);
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "LockMode")]
     #[doc = "Get the `mode` field of this object."]
     #[doc = ""]
@@ -70,6 +79,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &LockInfo, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `LockInfo`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &LockInfo, val: &::js_sys::JsString);
 }
 #[cfg(web_sys_unstable_apis)]
 impl LockInfo {

@@ -40,6 +40,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HttpConnectionElement`*"]
     #[wasm_bindgen(method, setter = "host")]
     pub fn set_host(this: &HttpConnectionElement, val: &str);
+    #[doc = "Change the `host` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HttpConnectionElement`*"]
+    #[wasm_bindgen(method, setter = "host")]
+    pub fn set_host_js_string(this: &HttpConnectionElement, val: &::js_sys::JsString);
     #[doc = "Get the `idle` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HttpConnectionElement`*"]

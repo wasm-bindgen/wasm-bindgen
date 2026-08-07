@@ -51,6 +51,15 @@ extern "C" {
     #[wasm_bindgen(method, setter = "id")]
     pub fn set_id(this: &SaveFilePickerOptions, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `id` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SaveFilePickerOptions`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "id")]
+    pub fn set_id_js_string(this: &SaveFilePickerOptions, val: &::js_sys::JsString);
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "WellKnownDirectory")]
     #[doc = "Get the `startIn` field of this object."]
     #[doc = ""]
@@ -119,6 +128,18 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "suggestedName")]
     pub fn set_suggested_name(this: &SaveFilePickerOptions, val: Option<&str>);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `suggestedName` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SaveFilePickerOptions`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "suggestedName")]
+    pub fn set_suggested_name_opt_js_string(
+        this: &SaveFilePickerOptions,
+        val: Option<&::js_sys::JsString>,
+    );
 }
 #[cfg(web_sys_unstable_apis)]
 impl SaveFilePickerOptions {

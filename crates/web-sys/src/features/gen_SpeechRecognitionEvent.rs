@@ -69,6 +69,15 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SpeechRecognitionEvent`*"]
     pub fn new(type_: &str) -> Result<SpeechRecognitionEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "SpeechRecognitionEvent")]
+    #[doc = "The `new SpeechRecognitionEvent(..)` constructor, creating a new instance of `SpeechRecognitionEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognitionEvent/SpeechRecognitionEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechRecognitionEvent`*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+    ) -> Result<SpeechRecognitionEvent, JsValue>;
     #[cfg(feature = "SpeechRecognitionEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "SpeechRecognitionEvent")]
     #[doc = "The `new SpeechRecognitionEvent(..)` constructor, creating a new instance of `SpeechRecognitionEvent`."]
@@ -78,6 +87,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SpeechRecognitionEvent`, `SpeechRecognitionEventInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &SpeechRecognitionEventInit,
+    ) -> Result<SpeechRecognitionEvent, JsValue>;
+    #[cfg(feature = "SpeechRecognitionEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "SpeechRecognitionEvent")]
+    #[doc = "The `new SpeechRecognitionEvent(..)` constructor, creating a new instance of `SpeechRecognitionEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognitionEvent/SpeechRecognitionEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechRecognitionEvent`, `SpeechRecognitionEventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &SpeechRecognitionEventInit,
     ) -> Result<SpeechRecognitionEvent, JsValue>;
 }

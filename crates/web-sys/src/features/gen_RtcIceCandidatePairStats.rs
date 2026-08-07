@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
     #[wasm_bindgen(method, setter = "id")]
     pub fn set_id(this: &RtcIceCandidatePairStats, val: &str);
+    #[doc = "Change the `id` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
+    #[wasm_bindgen(method, setter = "id")]
+    pub fn set_id_js_string(this: &RtcIceCandidatePairStats, val: &::js_sys::JsString);
     #[doc = "Get the `timestamp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
@@ -124,6 +129,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
     #[wasm_bindgen(method, setter = "localCandidateId")]
     pub fn set_local_candidate_id(this: &RtcIceCandidatePairStats, val: &str);
+    #[doc = "Change the `localCandidateId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
+    #[wasm_bindgen(method, setter = "localCandidateId")]
+    pub fn set_local_candidate_id_js_string(
+        this: &RtcIceCandidatePairStats,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `nominated` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
@@ -176,6 +189,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
     #[wasm_bindgen(method, setter = "remoteCandidateId")]
     pub fn set_remote_candidate_id(this: &RtcIceCandidatePairStats, val: &str);
+    #[doc = "Change the `remoteCandidateId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
+    #[wasm_bindgen(method, setter = "remoteCandidateId")]
+    pub fn set_remote_candidate_id_js_string(
+        this: &RtcIceCandidatePairStats,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `selected` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
@@ -208,6 +229,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
     #[wasm_bindgen(method, setter = "transportId")]
     pub fn set_transport_id(this: &RtcIceCandidatePairStats, val: &str);
+    #[doc = "Change the `transportId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
+    #[wasm_bindgen(method, setter = "transportId")]
+    pub fn set_transport_id_js_string(this: &RtcIceCandidatePairStats, val: &::js_sys::JsString);
     #[doc = "Get the `writable` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]

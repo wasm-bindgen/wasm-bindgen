@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CheckerboardReport`*"]
     #[wasm_bindgen(method, setter = "log")]
     pub fn set_log(this: &CheckerboardReport, val: &str);
+    #[doc = "Change the `log` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CheckerboardReport`*"]
+    #[wasm_bindgen(method, setter = "log")]
+    pub fn set_log_js_string(this: &CheckerboardReport, val: &::js_sys::JsString);
     #[cfg(feature = "CheckerboardReason")]
     #[doc = "Get the `reason` field of this object."]
     #[doc = ""]

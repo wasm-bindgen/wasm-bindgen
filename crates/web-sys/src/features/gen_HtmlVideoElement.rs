@@ -77,6 +77,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlVideoElement`*"]
     pub fn set_poster(this: &HtmlVideoElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLVideoElement", js_name = "poster")]
+    #[doc = "Setter for the `poster` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement/poster)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlVideoElement`*"]
+    pub fn set_poster_js_string(this: &HtmlVideoElement, value: &::js_sys::JsString);
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(
         method,

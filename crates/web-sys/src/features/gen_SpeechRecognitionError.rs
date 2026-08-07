@@ -44,6 +44,15 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SpeechRecognitionError`*"]
     pub fn new(type_: &str) -> Result<SpeechRecognitionError, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "SpeechRecognitionError")]
+    #[doc = "The `new SpeechRecognitionError(..)` constructor, creating a new instance of `SpeechRecognitionError`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognitionError/SpeechRecognitionError)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechRecognitionError`*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+    ) -> Result<SpeechRecognitionError, JsValue>;
     #[cfg(feature = "SpeechRecognitionErrorInit")]
     #[wasm_bindgen(catch, constructor, js_class = "SpeechRecognitionError")]
     #[doc = "The `new SpeechRecognitionError(..)` constructor, creating a new instance of `SpeechRecognitionError`."]
@@ -53,6 +62,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SpeechRecognitionError`, `SpeechRecognitionErrorInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &SpeechRecognitionErrorInit,
+    ) -> Result<SpeechRecognitionError, JsValue>;
+    #[cfg(feature = "SpeechRecognitionErrorInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "SpeechRecognitionError")]
+    #[doc = "The `new SpeechRecognitionError(..)` constructor, creating a new instance of `SpeechRecognitionError`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognitionError/SpeechRecognitionError)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechRecognitionError`, `SpeechRecognitionErrorInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &SpeechRecognitionErrorInit,
     ) -> Result<SpeechRecognitionError, JsValue>;
 }

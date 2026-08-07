@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WidevineCdmManifest`*"]
     #[wasm_bindgen(method, setter = "description")]
     pub fn set_description(this: &WidevineCdmManifest, val: &str);
+    #[doc = "Change the `description` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WidevineCdmManifest`*"]
+    #[wasm_bindgen(method, setter = "description")]
+    pub fn set_description_js_string(this: &WidevineCdmManifest, val: &::js_sys::JsString);
     #[doc = "Get the `name` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WidevineCdmManifest`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WidevineCdmManifest`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &WidevineCdmManifest, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WidevineCdmManifest`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &WidevineCdmManifest, val: &::js_sys::JsString);
     #[doc = "Get the `version` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WidevineCdmManifest`*"]
@@ -40,6 +50,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WidevineCdmManifest`*"]
     #[wasm_bindgen(method, setter = "version")]
     pub fn set_version(this: &WidevineCdmManifest, val: &str);
+    #[doc = "Change the `version` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WidevineCdmManifest`*"]
+    #[wasm_bindgen(method, setter = "version")]
+    pub fn set_version_js_string(this: &WidevineCdmManifest, val: &::js_sys::JsString);
     #[doc = "Get the `x-cdm-codecs` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WidevineCdmManifest`*"]
@@ -50,6 +65,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WidevineCdmManifest`*"]
     #[wasm_bindgen(method, setter = "x-cdm-codecs")]
     pub fn set_x_cdm_codecs(this: &WidevineCdmManifest, val: &str);
+    #[doc = "Change the `x-cdm-codecs` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WidevineCdmManifest`*"]
+    #[wasm_bindgen(method, setter = "x-cdm-codecs")]
+    pub fn set_x_cdm_codecs_js_string(this: &WidevineCdmManifest, val: &::js_sys::JsString);
     #[doc = "Get the `x-cdm-host-versions` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WidevineCdmManifest`*"]
@@ -60,6 +80,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WidevineCdmManifest`*"]
     #[wasm_bindgen(method, setter = "x-cdm-host-versions")]
     pub fn set_x_cdm_host_versions(this: &WidevineCdmManifest, val: &str);
+    #[doc = "Change the `x-cdm-host-versions` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WidevineCdmManifest`*"]
+    #[wasm_bindgen(method, setter = "x-cdm-host-versions")]
+    pub fn set_x_cdm_host_versions_js_string(this: &WidevineCdmManifest, val: &::js_sys::JsString);
     #[doc = "Get the `x-cdm-interface-versions` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WidevineCdmManifest`*"]
@@ -70,6 +95,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WidevineCdmManifest`*"]
     #[wasm_bindgen(method, setter = "x-cdm-interface-versions")]
     pub fn set_x_cdm_interface_versions(this: &WidevineCdmManifest, val: &str);
+    #[doc = "Change the `x-cdm-interface-versions` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WidevineCdmManifest`*"]
+    #[wasm_bindgen(method, setter = "x-cdm-interface-versions")]
+    pub fn set_x_cdm_interface_versions_js_string(
+        this: &WidevineCdmManifest,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `x-cdm-module-versions` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WidevineCdmManifest`*"]
@@ -80,6 +113,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `WidevineCdmManifest`*"]
     #[wasm_bindgen(method, setter = "x-cdm-module-versions")]
     pub fn set_x_cdm_module_versions(this: &WidevineCdmManifest, val: &str);
+    #[doc = "Change the `x-cdm-module-versions` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WidevineCdmManifest`*"]
+    #[wasm_bindgen(method, setter = "x-cdm-module-versions")]
+    pub fn set_x_cdm_module_versions_js_string(
+        this: &WidevineCdmManifest,
+        val: &::js_sys::JsString,
+    );
 }
 impl WidevineCdmManifest {
     #[doc = "Construct a new `WidevineCdmManifest`."]

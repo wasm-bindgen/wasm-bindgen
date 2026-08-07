@@ -60,6 +60,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `TransitionEventInit`*"]
     #[wasm_bindgen(method, setter = "propertyName")]
     pub fn set_property_name(this: &TransitionEventInit, val: &str);
+    #[doc = "Change the `propertyName` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TransitionEventInit`*"]
+    #[wasm_bindgen(method, setter = "propertyName")]
+    pub fn set_property_name_js_string(this: &TransitionEventInit, val: &::js_sys::JsString);
     #[doc = "Get the `pseudoElement` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TransitionEventInit`*"]
@@ -70,6 +75,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `TransitionEventInit`*"]
     #[wasm_bindgen(method, setter = "pseudoElement")]
     pub fn set_pseudo_element(this: &TransitionEventInit, val: &str);
+    #[doc = "Change the `pseudoElement` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TransitionEventInit`*"]
+    #[wasm_bindgen(method, setter = "pseudoElement")]
+    pub fn set_pseudo_element_js_string(this: &TransitionEventInit, val: &::js_sys::JsString);
 }
 impl TransitionEventInit {
     #[doc = "Construct a new `TransitionEventInit`."]

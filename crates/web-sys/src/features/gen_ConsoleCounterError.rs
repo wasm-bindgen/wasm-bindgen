@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleCounterError`*"]
     #[wasm_bindgen(method, setter = "error")]
     pub fn set_error(this: &ConsoleCounterError, val: &str);
+    #[doc = "Change the `error` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleCounterError`*"]
+    #[wasm_bindgen(method, setter = "error")]
+    pub fn set_error_js_string(this: &ConsoleCounterError, val: &::js_sys::JsString);
     #[doc = "Get the `label` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleCounterError`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleCounterError`*"]
     #[wasm_bindgen(method, setter = "label")]
     pub fn set_label(this: &ConsoleCounterError, val: &str);
+    #[doc = "Change the `label` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleCounterError`*"]
+    #[wasm_bindgen(method, setter = "label")]
+    pub fn set_label_js_string(this: &ConsoleCounterError, val: &::js_sys::JsString);
 }
 impl ConsoleCounterError {
     #[doc = "Construct a new `ConsoleCounterError`."]

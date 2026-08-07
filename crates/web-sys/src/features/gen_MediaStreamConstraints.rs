@@ -54,6 +54,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaStreamConstraints`*"]
     #[wasm_bindgen(method, setter = "peerIdentity")]
     pub fn set_peer_identity(this: &MediaStreamConstraints, val: Option<&str>);
+    #[doc = "Change the `peerIdentity` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaStreamConstraints`*"]
+    #[wasm_bindgen(method, setter = "peerIdentity")]
+    pub fn set_peer_identity_opt_js_string(
+        this: &MediaStreamConstraints,
+        val: Option<&::js_sys::JsString>,
+    );
     #[doc = "Get the `picture` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaStreamConstraints`*"]

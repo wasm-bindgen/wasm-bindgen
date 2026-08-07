@@ -64,6 +64,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcConfiguration`*"]
     #[wasm_bindgen(method, setter = "peerIdentity")]
     pub fn set_peer_identity(this: &RtcConfiguration, val: Option<&str>);
+    #[doc = "Change the `peerIdentity` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcConfiguration`*"]
+    #[wasm_bindgen(method, setter = "peerIdentity")]
+    pub fn set_peer_identity_opt_js_string(
+        this: &RtcConfiguration,
+        val: Option<&::js_sys::JsString>,
+    );
 }
 impl RtcConfiguration {
     #[doc = "Construct a new `RtcConfiguration`."]

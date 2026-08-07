@@ -34,4 +34,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTitleElement`*"]
     pub fn set_text(this: &HtmlTitleElement, value: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, setter, js_class = "HTMLTitleElement", js_name = "text")]
+    #[doc = "Setter for the `text` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTitleElement/text)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTitleElement`*"]
+    pub fn set_text_js_string(
+        this: &HtmlTitleElement,
+        value: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
 }

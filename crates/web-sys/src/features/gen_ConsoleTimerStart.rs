@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleTimerStart`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &ConsoleTimerStart, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleTimerStart`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &ConsoleTimerStart, val: &::js_sys::JsString);
 }
 impl ConsoleTimerStart {
     #[doc = "Construct a new `ConsoleTimerStart`."]

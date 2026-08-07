@@ -40,6 +40,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AudioConfiguration`*"]
     #[wasm_bindgen(method, setter = "channels")]
     pub fn set_channels(this: &AudioConfiguration, val: &str);
+    #[doc = "Change the `channels` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AudioConfiguration`*"]
+    #[wasm_bindgen(method, setter = "channels")]
+    pub fn set_channels_js_string(this: &AudioConfiguration, val: &::js_sys::JsString);
     #[doc = "Get the `contentType` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AudioConfiguration`*"]
@@ -50,6 +55,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AudioConfiguration`*"]
     #[wasm_bindgen(method, setter = "contentType")]
     pub fn set_content_type(this: &AudioConfiguration, val: &str);
+    #[doc = "Change the `contentType` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AudioConfiguration`*"]
+    #[wasm_bindgen(method, setter = "contentType")]
+    pub fn set_content_type_js_string(this: &AudioConfiguration, val: &::js_sys::JsString);
     #[doc = "Get the `samplerate` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AudioConfiguration`*"]

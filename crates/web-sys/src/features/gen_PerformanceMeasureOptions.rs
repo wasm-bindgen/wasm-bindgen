@@ -76,6 +76,15 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "end")]
+    pub fn set_end_js_string(this: &PerformanceMeasureOptions, val: &::js_sys::JsString);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `end` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PerformanceMeasureOptions`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "end")]
     pub fn set_end_f64(this: &PerformanceMeasureOptions, val: f64);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `start` field of this object."]
@@ -95,6 +104,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "start")]
     pub fn set_start(this: &PerformanceMeasureOptions, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `start` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PerformanceMeasureOptions`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "start")]
+    pub fn set_start_js_string(this: &PerformanceMeasureOptions, val: &::js_sys::JsString);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `start` field of this object."]
     #[doc = ""]

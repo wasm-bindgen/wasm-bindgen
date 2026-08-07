@@ -139,6 +139,22 @@ extern "C" {
         this: &Range,
         fragment: &str,
     ) -> Result<DocumentFragment, JsValue>;
+    #[cfg(feature = "DocumentFragment")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "Range",
+        js_name = "createContextualFragment"
+    )]
+    #[doc = "The `createContextualFragment()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Range/createContextualFragment)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentFragment`, `Range`*"]
+    pub fn create_contextual_fragment_with_js_string(
+        this: &Range,
+        fragment: &::js_sys::JsString,
+    ) -> Result<DocumentFragment, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Range", js_name = "deleteContents")]
     #[doc = "The `deleteContents()` method."]
     #[doc = ""]

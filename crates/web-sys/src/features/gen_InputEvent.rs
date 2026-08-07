@@ -54,6 +54,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `InputEvent`*"]
     pub fn new(type_: &str) -> Result<InputEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "InputEvent")]
+    #[doc = "The `new InputEvent(..)` constructor, creating a new instance of `InputEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/InputEvent/InputEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `InputEvent`*"]
+    pub fn new_with_js_string(type_: &::js_sys::JsString) -> Result<InputEvent, JsValue>;
     #[cfg(feature = "InputEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "InputEvent")]
     #[doc = "The `new InputEvent(..)` constructor, creating a new instance of `InputEvent`."]
@@ -63,6 +70,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `InputEvent`, `InputEventInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &InputEventInit,
+    ) -> Result<InputEvent, JsValue>;
+    #[cfg(feature = "InputEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "InputEvent")]
+    #[doc = "The `new InputEvent(..)` constructor, creating a new instance of `InputEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/InputEvent/InputEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `InputEvent`, `InputEventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &InputEventInit,
     ) -> Result<InputEvent, JsValue>;
     #[wasm_bindgen(method, js_class = "InputEvent", js_name = "getTargetRanges")]

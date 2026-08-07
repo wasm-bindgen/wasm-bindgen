@@ -154,6 +154,17 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn set_label(this: &GpuTexture, value: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(method, setter, js_class = "GPUTexture", js_name = "label")]
+    #[doc = "Setter for the `label` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUTexture/label)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuTexture`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn set_label_js_string(this: &GpuTexture, value: &::js_sys::JsString);
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuTextureView")]
     #[wasm_bindgen(catch, method, js_class = "GPUTexture", js_name = "createView")]
     #[doc = "The `createView()` method."]

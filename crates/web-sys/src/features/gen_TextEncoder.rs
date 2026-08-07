@@ -44,4 +44,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TextEncoder`*"]
     pub fn encode_with_input(this: &TextEncoder, input: &str) -> ::alloc::vec::Vec<u8>;
+    #[wasm_bindgen(method, js_class = "TextEncoder", js_name = "encode")]
+    #[doc = "The `encode()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TextEncoder/encode)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TextEncoder`*"]
+    pub fn encode_with_js_string(
+        this: &TextEncoder,
+        input: &::js_sys::JsString,
+    ) -> ::alloc::vec::Vec<u8>;
 }

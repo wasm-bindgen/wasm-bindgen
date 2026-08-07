@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityAssertionResult`*"]
     #[wasm_bindgen(method, setter = "assertion")]
     pub fn set_assertion(this: &RtcIdentityAssertionResult, val: &str);
+    #[doc = "Change the `assertion` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIdentityAssertionResult`*"]
+    #[wasm_bindgen(method, setter = "assertion")]
+    pub fn set_assertion_js_string(this: &RtcIdentityAssertionResult, val: &::js_sys::JsString);
     #[cfg(feature = "RtcIdentityProviderDetails")]
     #[doc = "Get the `idp` field of this object."]
     #[doc = ""]

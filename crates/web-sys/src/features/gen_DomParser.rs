@@ -35,4 +35,16 @@ extern "C" {
         str: &str,
         type_: SupportedType,
     ) -> Result<Document, JsValue>;
+    #[cfg(all(feature = "Document", feature = "SupportedType",))]
+    #[wasm_bindgen(catch, method, js_class = "DOMParser", js_name = "parseFromString")]
+    #[doc = "The `parseFromString()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMParser/parseFromString)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Document`, `DomParser`, `SupportedType`*"]
+    pub fn parse_from_string_with_js_string(
+        this: &DomParser,
+        str: &::js_sys::JsString,
+        type_: SupportedType,
+    ) -> Result<Document, JsValue>;
 }

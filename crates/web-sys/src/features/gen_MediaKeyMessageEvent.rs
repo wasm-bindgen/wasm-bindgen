@@ -54,4 +54,15 @@ extern "C" {
         type_: &str,
         event_init_dict: &MediaKeyMessageEventInit,
     ) -> Result<MediaKeyMessageEvent, JsValue>;
+    #[cfg(feature = "MediaKeyMessageEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "MediaKeyMessageEvent")]
+    #[doc = "The `new MediaKeyMessageEvent(..)` constructor, creating a new instance of `MediaKeyMessageEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaKeyMessageEvent/MediaKeyMessageEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaKeyMessageEvent`, `MediaKeyMessageEventInit`*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+        event_init_dict: &MediaKeyMessageEventInit,
+    ) -> Result<MediaKeyMessageEvent, JsValue>;
 }

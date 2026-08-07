@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `TreeCellInfo`*"]
     #[wasm_bindgen(method, setter = "childElt")]
     pub fn set_child_elt(this: &TreeCellInfo, val: &str);
+    #[doc = "Change the `childElt` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TreeCellInfo`*"]
+    #[wasm_bindgen(method, setter = "childElt")]
+    pub fn set_child_elt_js_string(this: &TreeCellInfo, val: &::js_sys::JsString);
     #[doc = "Get the `row` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TreeCellInfo`*"]

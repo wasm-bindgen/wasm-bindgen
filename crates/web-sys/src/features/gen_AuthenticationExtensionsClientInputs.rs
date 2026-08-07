@@ -25,6 +25,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsClientInputs`*"]
     #[wasm_bindgen(method, setter = "appid")]
     pub fn set_appid(this: &AuthenticationExtensionsClientInputs, val: &str);
+    #[doc = "Change the `appid` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsClientInputs`*"]
+    #[wasm_bindgen(method, setter = "appid")]
+    pub fn set_appid_js_string(
+        this: &AuthenticationExtensionsClientInputs,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `appidExclude` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsClientInputs`*"]
@@ -37,6 +45,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsClientInputs`*"]
     #[wasm_bindgen(method, setter = "appidExclude")]
     pub fn set_appid_exclude(this: &AuthenticationExtensionsClientInputs, val: &str);
+    #[doc = "Change the `appidExclude` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsClientInputs`*"]
+    #[wasm_bindgen(method, setter = "appidExclude")]
+    pub fn set_appid_exclude_js_string(
+        this: &AuthenticationExtensionsClientInputs,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `credProps` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsClientInputs`*"]

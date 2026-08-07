@@ -49,6 +49,15 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ExtendableCookieChangeEvent`*"]
     pub fn new(type_: &str) -> Result<ExtendableCookieChangeEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "ExtendableCookieChangeEvent")]
+    #[doc = "The `new ExtendableCookieChangeEvent(..)` constructor, creating a new instance of `ExtendableCookieChangeEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ExtendableCookieChangeEvent/ExtendableCookieChangeEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ExtendableCookieChangeEvent`*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+    ) -> Result<ExtendableCookieChangeEvent, JsValue>;
     #[cfg(feature = "ExtendableCookieChangeEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "ExtendableCookieChangeEvent")]
     #[doc = "The `new ExtendableCookieChangeEvent(..)` constructor, creating a new instance of `ExtendableCookieChangeEvent`."]
@@ -58,6 +67,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ExtendableCookieChangeEvent`, `ExtendableCookieChangeEventInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &ExtendableCookieChangeEventInit,
+    ) -> Result<ExtendableCookieChangeEvent, JsValue>;
+    #[cfg(feature = "ExtendableCookieChangeEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "ExtendableCookieChangeEvent")]
+    #[doc = "The `new ExtendableCookieChangeEvent(..)` constructor, creating a new instance of `ExtendableCookieChangeEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ExtendableCookieChangeEvent/ExtendableCookieChangeEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ExtendableCookieChangeEvent`, `ExtendableCookieChangeEventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &ExtendableCookieChangeEventInit,
     ) -> Result<ExtendableCookieChangeEvent, JsValue>;
 }

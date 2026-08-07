@@ -30,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RsaHashedImportParams`*"]
     #[wasm_bindgen(method, setter = "hash")]
     pub fn set_hash_str(this: &RsaHashedImportParams, val: &str);
+    #[doc = "Change the `hash` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RsaHashedImportParams`*"]
+    #[wasm_bindgen(method, setter = "hash")]
+    pub fn set_hash_js_string(this: &RsaHashedImportParams, val: &::js_sys::JsString);
 }
 impl RsaHashedImportParams {
     #[doc = "Construct a new `RsaHashedImportParams`."]

@@ -66,6 +66,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Worker`*"]
     pub fn new(script_url: &str) -> Result<Worker, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "Worker")]
+    #[doc = "The `new Worker(..)` constructor, creating a new instance of `Worker`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Worker/Worker)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Worker`*"]
+    pub fn new_with_js_string(script_url: &::js_sys::JsString) -> Result<Worker, JsValue>;
     #[cfg(feature = "WorkerOptions")]
     #[wasm_bindgen(catch, constructor, js_class = "Worker")]
     #[doc = "The `new Worker(..)` constructor, creating a new instance of `Worker`."]
@@ -74,6 +81,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Worker`, `WorkerOptions`*"]
     pub fn new_with_options(script_url: &str, options: &WorkerOptions) -> Result<Worker, JsValue>;
+    #[cfg(feature = "WorkerOptions")]
+    #[wasm_bindgen(catch, constructor, js_class = "Worker")]
+    #[doc = "The `new Worker(..)` constructor, creating a new instance of `Worker`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Worker/Worker)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Worker`, `WorkerOptions`*"]
+    pub fn new_with_js_string_and_options(
+        script_url: &::js_sys::JsString,
+        options: &WorkerOptions,
+    ) -> Result<Worker, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Worker", js_name = "postMessage")]
     #[doc = "The `postMessage()` method."]
     #[doc = ""]

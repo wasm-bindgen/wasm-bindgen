@@ -66,9 +66,30 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet/insertRule)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssStyleSheet`*"]
+    pub fn insert_rule_with_js_string(
+        this: &CssStyleSheet,
+        rule: &::js_sys::JsString,
+    ) -> Result<u32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CSSStyleSheet", js_name = "insertRule")]
+    #[doc = "The `insertRule()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet/insertRule)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssStyleSheet`*"]
     pub fn insert_rule_with_index(
         this: &CssStyleSheet,
         rule: &str,
+        index: u32,
+    ) -> Result<u32, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CSSStyleSheet", js_name = "insertRule")]
+    #[doc = "The `insertRule()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet/insertRule)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssStyleSheet`*"]
+    pub fn insert_rule_with_js_string_and_index(
+        this: &CssStyleSheet,
+        rule: &::js_sys::JsString,
         index: u32,
     ) -> Result<u32, JsValue>;
     #[wasm_bindgen(method, js_class = "CSSStyleSheet")]
@@ -78,6 +99,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssStyleSheet`*"]
     pub fn replace(this: &CssStyleSheet, text: &str) -> ::js_sys::Promise;
+    #[wasm_bindgen(method, js_class = "CSSStyleSheet", js_name = "replace")]
+    #[doc = "The `replace()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet/replace)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssStyleSheet`*"]
+    pub fn replace_with_js_string(
+        this: &CssStyleSheet,
+        text: &::js_sys::JsString,
+    ) -> ::js_sys::Promise;
     #[wasm_bindgen(catch, method, js_class = "CSSStyleSheet", js_name = "replaceSync")]
     #[doc = "The `replaceSync()` method."]
     #[doc = ""]
@@ -85,4 +116,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssStyleSheet`*"]
     pub fn replace_sync(this: &CssStyleSheet, text: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CSSStyleSheet", js_name = "replaceSync")]
+    #[doc = "The `replaceSync()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet/replaceSync)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssStyleSheet`*"]
+    pub fn replace_sync_with_js_string(
+        this: &CssStyleSheet,
+        text: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
 }

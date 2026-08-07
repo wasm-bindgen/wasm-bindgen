@@ -37,6 +37,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
     pub fn set_value(this: &DomTokenList, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "DOMTokenList", js_name = "value")]
+    #[doc = "Setter for the `value` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/value)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn set_value_js_string(this: &DomTokenList, value: &::js_sys::JsString);
     #[wasm_bindgen(catch, method, variadic, js_class = "DOMTokenList")]
     #[doc = "The `add()` method."]
     #[doc = ""]
@@ -135,6 +142,112 @@ extern "C" {
         tokens_6: &str,
         tokens_7: &str,
     ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, variadic, js_class = "DOMTokenList", js_name = "add")]
+    #[doc = "The `add()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/add)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn add_with_js_string(this: &DomTokenList, tokens: &::js_sys::Array)
+        -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DOMTokenList", js_name = "add")]
+    #[doc = "The `add()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/add)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn add_with_js_string_0(this: &DomTokenList) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DOMTokenList", js_name = "add")]
+    #[doc = "The `add()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/add)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn add_with_js_string_1(
+        this: &DomTokenList,
+        tokens_1: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DOMTokenList", js_name = "add")]
+    #[doc = "The `add()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/add)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn add_with_js_string_2(
+        this: &DomTokenList,
+        tokens_1: &::js_sys::JsString,
+        tokens_2: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DOMTokenList", js_name = "add")]
+    #[doc = "The `add()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/add)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn add_with_js_string_3(
+        this: &DomTokenList,
+        tokens_1: &::js_sys::JsString,
+        tokens_2: &::js_sys::JsString,
+        tokens_3: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DOMTokenList", js_name = "add")]
+    #[doc = "The `add()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/add)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn add_with_js_string_4(
+        this: &DomTokenList,
+        tokens_1: &::js_sys::JsString,
+        tokens_2: &::js_sys::JsString,
+        tokens_3: &::js_sys::JsString,
+        tokens_4: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DOMTokenList", js_name = "add")]
+    #[doc = "The `add()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/add)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn add_with_js_string_5(
+        this: &DomTokenList,
+        tokens_1: &::js_sys::JsString,
+        tokens_2: &::js_sys::JsString,
+        tokens_3: &::js_sys::JsString,
+        tokens_4: &::js_sys::JsString,
+        tokens_5: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DOMTokenList", js_name = "add")]
+    #[doc = "The `add()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/add)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn add_with_js_string_6(
+        this: &DomTokenList,
+        tokens_1: &::js_sys::JsString,
+        tokens_2: &::js_sys::JsString,
+        tokens_3: &::js_sys::JsString,
+        tokens_4: &::js_sys::JsString,
+        tokens_5: &::js_sys::JsString,
+        tokens_6: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DOMTokenList", js_name = "add")]
+    #[doc = "The `add()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/add)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn add_with_js_string_7(
+        this: &DomTokenList,
+        tokens_1: &::js_sys::JsString,
+        tokens_2: &::js_sys::JsString,
+        tokens_3: &::js_sys::JsString,
+        tokens_4: &::js_sys::JsString,
+        tokens_5: &::js_sys::JsString,
+        tokens_6: &::js_sys::JsString,
+        tokens_7: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(method, js_class = "DOMTokenList")]
     #[doc = "The `contains()` method."]
     #[doc = ""]
@@ -142,6 +255,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
     pub fn contains(this: &DomTokenList, token: &str) -> bool;
+    #[wasm_bindgen(method, js_class = "DOMTokenList", js_name = "contains")]
+    #[doc = "The `contains()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/contains)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn contains_with_js_string(this: &DomTokenList, token: &::js_sys::JsString) -> bool;
     #[wasm_bindgen(catch, method, js_class = "DOMTokenList", js_name = "forEach")]
     #[doc = "The `forEach()` method."]
     #[doc = ""]
@@ -254,6 +374,114 @@ extern "C" {
         tokens_6: &str,
         tokens_7: &str,
     ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, variadic, js_class = "DOMTokenList", js_name = "remove")]
+    #[doc = "The `remove()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/remove)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn remove_with_js_string(
+        this: &DomTokenList,
+        tokens: &::js_sys::Array,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DOMTokenList", js_name = "remove")]
+    #[doc = "The `remove()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/remove)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn remove_with_js_string_0(this: &DomTokenList) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DOMTokenList", js_name = "remove")]
+    #[doc = "The `remove()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/remove)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn remove_with_js_string_1(
+        this: &DomTokenList,
+        tokens_1: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DOMTokenList", js_name = "remove")]
+    #[doc = "The `remove()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/remove)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn remove_with_js_string_2(
+        this: &DomTokenList,
+        tokens_1: &::js_sys::JsString,
+        tokens_2: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DOMTokenList", js_name = "remove")]
+    #[doc = "The `remove()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/remove)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn remove_with_js_string_3(
+        this: &DomTokenList,
+        tokens_1: &::js_sys::JsString,
+        tokens_2: &::js_sys::JsString,
+        tokens_3: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DOMTokenList", js_name = "remove")]
+    #[doc = "The `remove()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/remove)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn remove_with_js_string_4(
+        this: &DomTokenList,
+        tokens_1: &::js_sys::JsString,
+        tokens_2: &::js_sys::JsString,
+        tokens_3: &::js_sys::JsString,
+        tokens_4: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DOMTokenList", js_name = "remove")]
+    #[doc = "The `remove()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/remove)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn remove_with_js_string_5(
+        this: &DomTokenList,
+        tokens_1: &::js_sys::JsString,
+        tokens_2: &::js_sys::JsString,
+        tokens_3: &::js_sys::JsString,
+        tokens_4: &::js_sys::JsString,
+        tokens_5: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DOMTokenList", js_name = "remove")]
+    #[doc = "The `remove()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/remove)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn remove_with_js_string_6(
+        this: &DomTokenList,
+        tokens_1: &::js_sys::JsString,
+        tokens_2: &::js_sys::JsString,
+        tokens_3: &::js_sys::JsString,
+        tokens_4: &::js_sys::JsString,
+        tokens_5: &::js_sys::JsString,
+        tokens_6: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DOMTokenList", js_name = "remove")]
+    #[doc = "The `remove()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/remove)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn remove_with_js_string_7(
+        this: &DomTokenList,
+        tokens_1: &::js_sys::JsString,
+        tokens_2: &::js_sys::JsString,
+        tokens_3: &::js_sys::JsString,
+        tokens_4: &::js_sys::JsString,
+        tokens_5: &::js_sys::JsString,
+        tokens_6: &::js_sys::JsString,
+        tokens_7: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "DOMTokenList")]
     #[doc = "The `replace()` method."]
     #[doc = ""]
@@ -261,6 +489,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
     pub fn replace(this: &DomTokenList, token: &str, new_token: &str) -> Result<bool, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DOMTokenList", js_name = "replace")]
+    #[doc = "The `replace()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/replace)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn replace_with_js_string_and_js_string(
+        this: &DomTokenList,
+        token: &::js_sys::JsString,
+        new_token: &::js_sys::JsString,
+    ) -> Result<bool, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "DOMTokenList")]
     #[doc = "The `supports()` method."]
     #[doc = ""]
@@ -268,6 +507,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
     pub fn supports(this: &DomTokenList, token: &str) -> Result<bool, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DOMTokenList", js_name = "supports")]
+    #[doc = "The `supports()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/supports)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn supports_with_js_string(
+        this: &DomTokenList,
+        token: &::js_sys::JsString,
+    ) -> Result<bool, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "DOMTokenList")]
     #[doc = "The `toggle()` method."]
     #[doc = ""]
@@ -281,9 +530,30 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/toggle)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn toggle_with_js_string(
+        this: &DomTokenList,
+        token: &::js_sys::JsString,
+    ) -> Result<bool, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DOMTokenList", js_name = "toggle")]
+    #[doc = "The `toggle()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/toggle)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
     pub fn toggle_with_force(
         this: &DomTokenList,
         token: &str,
+        force: bool,
+    ) -> Result<bool, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DOMTokenList", js_name = "toggle")]
+    #[doc = "The `toggle()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/toggle)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn toggle_with_js_string_and_force(
+        this: &DomTokenList,
+        token: &::js_sys::JsString,
         force: bool,
     ) -> Result<bool, JsValue>;
     #[wasm_bindgen(method, js_class = "DOMTokenList", indexing_getter)]

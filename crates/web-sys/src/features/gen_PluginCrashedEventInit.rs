@@ -50,6 +50,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]
     #[wasm_bindgen(method, setter = "browserDumpID")]
     pub fn set_browser_dump_id(this: &PluginCrashedEventInit, val: Option<&str>);
+    #[doc = "Change the `browserDumpID` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]
+    #[wasm_bindgen(method, setter = "browserDumpID")]
+    pub fn set_browser_dump_id_opt_js_string(
+        this: &PluginCrashedEventInit,
+        val: Option<&::js_sys::JsString>,
+    );
     #[doc = "Get the `gmpPlugin` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]
@@ -70,6 +78,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]
     #[wasm_bindgen(method, setter = "pluginDumpID")]
     pub fn set_plugin_dump_id(this: &PluginCrashedEventInit, val: &str);
+    #[doc = "Change the `pluginDumpID` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]
+    #[wasm_bindgen(method, setter = "pluginDumpID")]
+    pub fn set_plugin_dump_id_js_string(this: &PluginCrashedEventInit, val: &::js_sys::JsString);
     #[doc = "Get the `pluginFilename` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]
@@ -80,6 +93,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]
     #[wasm_bindgen(method, setter = "pluginFilename")]
     pub fn set_plugin_filename(this: &PluginCrashedEventInit, val: Option<&str>);
+    #[doc = "Change the `pluginFilename` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]
+    #[wasm_bindgen(method, setter = "pluginFilename")]
+    pub fn set_plugin_filename_opt_js_string(
+        this: &PluginCrashedEventInit,
+        val: Option<&::js_sys::JsString>,
+    );
     #[doc = "Get the `pluginID` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]
@@ -100,6 +121,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]
     #[wasm_bindgen(method, setter = "pluginName")]
     pub fn set_plugin_name(this: &PluginCrashedEventInit, val: &str);
+    #[doc = "Change the `pluginName` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]
+    #[wasm_bindgen(method, setter = "pluginName")]
+    pub fn set_plugin_name_js_string(this: &PluginCrashedEventInit, val: &::js_sys::JsString);
     #[doc = "Get the `submittedCrashReport` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]

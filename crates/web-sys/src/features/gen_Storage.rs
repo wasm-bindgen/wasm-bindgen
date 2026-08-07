@@ -37,6 +37,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Storage`*"]
     pub fn get_item(this: &Storage, key: &str) -> Result<Option<::alloc::string::String>, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Storage", js_name = "getItem")]
+    #[doc = "The `getItem()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Storage/getItem)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Storage`*"]
+    pub fn get_item_with_js_string(
+        this: &Storage,
+        key: &::js_sys::JsString,
+    ) -> Result<Option<::alloc::string::String>, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Storage")]
     #[doc = "The `key()` method."]
     #[doc = ""]
@@ -51,6 +61,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Storage`*"]
     pub fn remove_item(this: &Storage, key: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Storage", js_name = "removeItem")]
+    #[doc = "The `removeItem()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Storage/removeItem)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Storage`*"]
+    pub fn remove_item_with_js_string(
+        this: &Storage,
+        key: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Storage", js_name = "setItem")]
     #[doc = "The `setItem()` method."]
     #[doc = ""]
@@ -58,22 +78,58 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Storage`*"]
     pub fn set_item(this: &Storage, key: &str, value: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Storage", js_name = "setItem")]
+    #[doc = "The `setItem()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Storage/setItem)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Storage`*"]
+    pub fn set_item_with_js_string_and_js_string(
+        this: &Storage,
+        key: &::js_sys::JsString,
+        value: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Storage", indexing_getter)]
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Storage`*"]
     pub fn get(this: &Storage, key: &str) -> Result<Option<::alloc::string::String>, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Storage", indexing_getter)]
+    #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
+    #[doc = ""]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Storage`*"]
+    pub fn get_with_js_string(
+        this: &Storage,
+        key: &::js_sys::JsString,
+    ) -> Result<Option<::alloc::string::String>, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Storage", indexing_setter)]
     #[doc = "Indexing setter. As in the literal Javascript `this[key] = value`."]
     #[doc = ""]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Storage`*"]
     pub fn set(this: &Storage, key: &str, value: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Storage", indexing_setter)]
+    #[doc = "Indexing setter. As in the literal Javascript `this[key] = value`."]
+    #[doc = ""]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Storage`*"]
+    pub fn set_with_js_string_and_js_string(
+        this: &Storage,
+        key: &::js_sys::JsString,
+        value: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Storage", indexing_deleter)]
     #[doc = "Indexing deleter. As in the literal Javascript `delete this[key]`."]
     #[doc = ""]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Storage`*"]
     pub fn delete(this: &Storage, key: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Storage", indexing_deleter)]
+    #[doc = "Indexing deleter. As in the literal Javascript `delete this[key]`."]
+    #[doc = ""]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Storage`*"]
+    pub fn delete_with_js_string(this: &Storage, key: &::js_sys::JsString) -> Result<(), JsValue>;
 }

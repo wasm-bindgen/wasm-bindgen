@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderOptions`*"]
     #[wasm_bindgen(method, setter = "peerIdentity")]
     pub fn set_peer_identity(this: &RtcIdentityProviderOptions, val: &str);
+    #[doc = "Change the `peerIdentity` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderOptions`*"]
+    #[wasm_bindgen(method, setter = "peerIdentity")]
+    pub fn set_peer_identity_js_string(this: &RtcIdentityProviderOptions, val: &::js_sys::JsString);
     #[doc = "Get the `protocol` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderOptions`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderOptions`*"]
     #[wasm_bindgen(method, setter = "protocol")]
     pub fn set_protocol(this: &RtcIdentityProviderOptions, val: &str);
+    #[doc = "Change the `protocol` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderOptions`*"]
+    #[wasm_bindgen(method, setter = "protocol")]
+    pub fn set_protocol_js_string(this: &RtcIdentityProviderOptions, val: &::js_sys::JsString);
     #[doc = "Get the `usernameHint` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderOptions`*"]
@@ -40,6 +50,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderOptions`*"]
     #[wasm_bindgen(method, setter = "usernameHint")]
     pub fn set_username_hint(this: &RtcIdentityProviderOptions, val: &str);
+    #[doc = "Change the `usernameHint` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderOptions`*"]
+    #[wasm_bindgen(method, setter = "usernameHint")]
+    pub fn set_username_hint_js_string(this: &RtcIdentityProviderOptions, val: &::js_sys::JsString);
 }
 impl RtcIdentityProviderOptions {
     #[doc = "Construct a new `RtcIdentityProviderOptions`."]

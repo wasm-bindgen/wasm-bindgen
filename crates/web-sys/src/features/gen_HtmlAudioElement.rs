@@ -35,4 +35,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAudioElement`*"]
     pub fn new_with_src(src: &str) -> Result<HtmlAudioElement, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "Audio")]
+    #[doc = "The `new HtmlAudioElement(..)` constructor, creating a new instance of `HtmlAudioElement`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAudioElement/HTMLAudioElement)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAudioElement`*"]
+    pub fn new_with_js_string(src: &::js_sys::JsString) -> Result<HtmlAudioElement, JsValue>;
 }

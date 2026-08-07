@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PushSubscriptionKeys`*"]
     #[wasm_bindgen(method, setter = "auth")]
     pub fn set_auth(this: &PushSubscriptionKeys, val: &str);
+    #[doc = "Change the `auth` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PushSubscriptionKeys`*"]
+    #[wasm_bindgen(method, setter = "auth")]
+    pub fn set_auth_js_string(this: &PushSubscriptionKeys, val: &::js_sys::JsString);
     #[doc = "Get the `p256dh` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PushSubscriptionKeys`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PushSubscriptionKeys`*"]
     #[wasm_bindgen(method, setter = "p256dh")]
     pub fn set_p256dh(this: &PushSubscriptionKeys, val: &str);
+    #[doc = "Change the `p256dh` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PushSubscriptionKeys`*"]
+    #[wasm_bindgen(method, setter = "p256dh")]
+    pub fn set_p256dh_js_string(this: &PushSubscriptionKeys, val: &::js_sys::JsString);
 }
 impl PushSubscriptionKeys {
     #[doc = "Construct a new `PushSubscriptionKeys`."]

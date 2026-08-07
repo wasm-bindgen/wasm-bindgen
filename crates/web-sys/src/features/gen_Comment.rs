@@ -33,4 +33,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Comment`*"]
     pub fn new_with_data(data: &str) -> Result<Comment, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "Comment")]
+    #[doc = "The `new Comment(..)` constructor, creating a new instance of `Comment`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Comment/Comment)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Comment`*"]
+    pub fn new_with_js_string(data: &::js_sys::JsString) -> Result<Comment, JsValue>;
 }

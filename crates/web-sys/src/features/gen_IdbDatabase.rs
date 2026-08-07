@@ -128,10 +128,35 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `IdbDatabase`, `IdbRequest`*"]
     #[deprecated]
+    pub fn create_mutable_file_with_js_string(
+        this: &IdbDatabase,
+        name: &::js_sys::JsString,
+    ) -> Result<IdbRequest, JsValue>;
+    #[cfg(feature = "IdbRequest")]
+    #[wasm_bindgen(catch, method, js_class = "IDBDatabase", js_name = "createMutableFile")]
+    #[doc = "The `createMutableFile()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase/createMutableFile)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbDatabase`, `IdbRequest`*"]
+    #[deprecated]
     pub fn create_mutable_file_with_type(
         this: &IdbDatabase,
         name: &str,
         type_: &str,
+    ) -> Result<IdbRequest, JsValue>;
+    #[cfg(feature = "IdbRequest")]
+    #[wasm_bindgen(catch, method, js_class = "IDBDatabase", js_name = "createMutableFile")]
+    #[doc = "The `createMutableFile()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase/createMutableFile)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbDatabase`, `IdbRequest`*"]
+    #[deprecated]
+    pub fn create_mutable_file_with_js_string_and_js_string(
+        this: &IdbDatabase,
+        name: &::js_sys::JsString,
+        type_: &::js_sys::JsString,
     ) -> Result<IdbRequest, JsValue>;
     #[cfg(feature = "IdbObjectStore")]
     #[wasm_bindgen(catch, method, js_class = "IDBDatabase", js_name = "createObjectStore")]
@@ -141,6 +166,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `IdbDatabase`, `IdbObjectStore`*"]
     pub fn create_object_store(this: &IdbDatabase, name: &str) -> Result<IdbObjectStore, JsValue>;
+    #[cfg(feature = "IdbObjectStore")]
+    #[wasm_bindgen(catch, method, js_class = "IDBDatabase", js_name = "createObjectStore")]
+    #[doc = "The `createObjectStore()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase/createObjectStore)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbDatabase`, `IdbObjectStore`*"]
+    pub fn create_object_store_with_js_string(
+        this: &IdbDatabase,
+        name: &::js_sys::JsString,
+    ) -> Result<IdbObjectStore, JsValue>;
     #[cfg(all(feature = "IdbObjectStore", feature = "IdbObjectStoreParameters",))]
     #[wasm_bindgen(catch, method, js_class = "IDBDatabase", js_name = "createObjectStore")]
     #[doc = "The `createObjectStore()` method."]
@@ -153,6 +189,18 @@ extern "C" {
         name: &str,
         options: &IdbObjectStoreParameters,
     ) -> Result<IdbObjectStore, JsValue>;
+    #[cfg(all(feature = "IdbObjectStore", feature = "IdbObjectStoreParameters",))]
+    #[wasm_bindgen(catch, method, js_class = "IDBDatabase", js_name = "createObjectStore")]
+    #[doc = "The `createObjectStore()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase/createObjectStore)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbDatabase`, `IdbObjectStore`, `IdbObjectStoreParameters`*"]
+    pub fn create_object_store_with_js_string_and_options(
+        this: &IdbDatabase,
+        name: &::js_sys::JsString,
+        options: &IdbObjectStoreParameters,
+    ) -> Result<IdbObjectStore, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "IDBDatabase", js_name = "deleteObjectStore")]
     #[doc = "The `deleteObjectStore()` method."]
     #[doc = ""]
@@ -160,6 +208,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `IdbDatabase`*"]
     pub fn delete_object_store(this: &IdbDatabase, name: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "IDBDatabase", js_name = "deleteObjectStore")]
+    #[doc = "The `deleteObjectStore()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase/deleteObjectStore)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbDatabase`*"]
+    pub fn delete_object_store_with_js_string(
+        this: &IdbDatabase,
+        name: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[cfg(feature = "IdbTransaction")]
     #[wasm_bindgen(catch, method, js_class = "IDBDatabase", js_name = "transaction")]
     #[doc = "The `transaction()` method."]
@@ -170,6 +228,17 @@ extern "C" {
     pub fn transaction_with_str(
         this: &IdbDatabase,
         store_names: &str,
+    ) -> Result<IdbTransaction, JsValue>;
+    #[cfg(feature = "IdbTransaction")]
+    #[wasm_bindgen(catch, method, js_class = "IDBDatabase", js_name = "transaction")]
+    #[doc = "The `transaction()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase/transaction)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbDatabase`, `IdbTransaction`*"]
+    pub fn transaction_with_js_string(
+        this: &IdbDatabase,
+        store_names: &::js_sys::JsString,
     ) -> Result<IdbTransaction, JsValue>;
     #[cfg(feature = "IdbTransaction")]
     #[wasm_bindgen(catch, method, js_class = "IDBDatabase", js_name = "transaction")]
@@ -192,6 +261,18 @@ extern "C" {
     pub fn transaction_with_str_and_mode(
         this: &IdbDatabase,
         store_names: &str,
+        mode: IdbTransactionMode,
+    ) -> Result<IdbTransaction, JsValue>;
+    #[cfg(all(feature = "IdbTransaction", feature = "IdbTransactionMode",))]
+    #[wasm_bindgen(catch, method, js_class = "IDBDatabase", js_name = "transaction")]
+    #[doc = "The `transaction()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase/transaction)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbDatabase`, `IdbTransaction`, `IdbTransactionMode`*"]
+    pub fn transaction_with_js_string_and_mode(
+        this: &IdbDatabase,
+        store_names: &::js_sys::JsString,
         mode: IdbTransactionMode,
     ) -> Result<IdbTransaction, JsValue>;
     #[cfg(all(feature = "IdbTransaction", feature = "IdbTransactionMode",))]
@@ -224,6 +305,27 @@ extern "C" {
     pub fn transaction_with_str_and_mode_and_options(
         this: &IdbDatabase,
         store_names: &str,
+        mode: IdbTransactionMode,
+        options: &IdbTransactionOptions,
+    ) -> Result<IdbTransaction, JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(all(
+        feature = "IdbTransaction",
+        feature = "IdbTransactionMode",
+        feature = "IdbTransactionOptions",
+    ))]
+    #[wasm_bindgen(catch, method, js_class = "IDBDatabase", js_name = "transaction")]
+    #[doc = "The `transaction()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase/transaction)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbDatabase`, `IdbTransaction`, `IdbTransactionMode`, `IdbTransactionOptions`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn transaction_with_js_string_and_mode_and_options(
+        this: &IdbDatabase,
+        store_names: &::js_sys::JsString,
         mode: IdbTransactionMode,
         options: &IdbTransactionOptions,
     ) -> Result<IdbTransaction, JsValue>;

@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `OpenWindowEventDetail`*"]
     #[wasm_bindgen(method, setter = "features")]
     pub fn set_features(this: &OpenWindowEventDetail, val: &str);
+    #[doc = "Change the `features` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `OpenWindowEventDetail`*"]
+    #[wasm_bindgen(method, setter = "features")]
+    pub fn set_features_js_string(this: &OpenWindowEventDetail, val: &::js_sys::JsString);
     #[cfg(feature = "Node")]
     #[doc = "Get the `frameElement` field of this object."]
     #[doc = ""]
@@ -42,6 +47,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `OpenWindowEventDetail`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &OpenWindowEventDetail, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `OpenWindowEventDetail`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &OpenWindowEventDetail, val: &::js_sys::JsString);
     #[doc = "Get the `url` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `OpenWindowEventDetail`*"]
@@ -52,6 +62,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `OpenWindowEventDetail`*"]
     #[wasm_bindgen(method, setter = "url")]
     pub fn set_url(this: &OpenWindowEventDetail, val: &str);
+    #[doc = "Change the `url` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `OpenWindowEventDetail`*"]
+    #[wasm_bindgen(method, setter = "url")]
+    pub fn set_url_js_string(this: &OpenWindowEventDetail, val: &::js_sys::JsString);
 }
 impl OpenWindowEventDetail {
     #[doc = "Construct a new `OpenWindowEventDetail`."]

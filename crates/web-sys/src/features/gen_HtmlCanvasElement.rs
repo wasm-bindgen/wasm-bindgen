@@ -93,9 +93,30 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`*"]
+    pub fn get_context_with_js_string(
+        this: &HtmlCanvasElement,
+        context_id: &::js_sys::JsString,
+    ) -> Result<Option<::js_sys::Object>, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLCanvasElement", js_name = "getContext")]
+    #[doc = "The `getContext()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`*"]
     pub fn get_context_with_context_options(
         this: &HtmlCanvasElement,
         context_id: &str,
+        context_options: &::wasm_bindgen::JsValue,
+    ) -> Result<Option<::js_sys::Object>, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLCanvasElement", js_name = "getContext")]
+    #[doc = "The `getContext()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`*"]
+    pub fn get_context_with_js_string_and_context_options(
+        this: &HtmlCanvasElement,
+        context_id: &::js_sys::JsString,
         context_options: &::wasm_bindgen::JsValue,
     ) -> Result<Option<::js_sys::Object>, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "HTMLCanvasElement", js_name = "toBlob")]
@@ -122,10 +143,33 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`*"]
+    pub fn to_blob_with_js_string(
+        this: &HtmlCanvasElement,
+        callback: &::js_sys::Function,
+        type_: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLCanvasElement", js_name = "toBlob")]
+    #[doc = "The `toBlob()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`*"]
     pub fn to_blob_with_type_and_encoder_options(
         this: &HtmlCanvasElement,
         callback: &::js_sys::Function,
         type_: &str,
+        encoder_options: &::wasm_bindgen::JsValue,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLCanvasElement", js_name = "toBlob")]
+    #[doc = "The `toBlob()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`*"]
+    pub fn to_blob_with_js_string_and_encoder_options(
+        this: &HtmlCanvasElement,
+        callback: &::js_sys::Function,
+        type_: &::js_sys::JsString,
         encoder_options: &::wasm_bindgen::JsValue,
     ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "HTMLCanvasElement", js_name = "toDataURL")]
@@ -151,9 +195,30 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toDataURL)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`*"]
+    pub fn to_data_url_with_js_string(
+        this: &HtmlCanvasElement,
+        type_: &::js_sys::JsString,
+    ) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLCanvasElement", js_name = "toDataURL")]
+    #[doc = "The `toDataURL()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toDataURL)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`*"]
     pub fn to_data_url_with_type_and_encoder_options(
         this: &HtmlCanvasElement,
         type_: &str,
+        encoder_options: &::wasm_bindgen::JsValue,
+    ) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLCanvasElement", js_name = "toDataURL")]
+    #[doc = "The `toDataURL()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toDataURL)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`*"]
+    pub fn to_data_url_with_js_string_and_encoder_options(
+        this: &HtmlCanvasElement,
+        type_: &::js_sys::JsString,
         encoder_options: &::wasm_bindgen::JsValue,
     ) -> Result<::alloc::string::String, JsValue>;
     #[cfg(feature = "OffscreenCanvas")]

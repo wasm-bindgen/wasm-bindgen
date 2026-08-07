@@ -41,4 +41,15 @@ extern "C" {
         type_: &str,
         event_init_dict: &OfflineAudioCompletionEventInit,
     ) -> Result<OfflineAudioCompletionEvent, JsValue>;
+    #[cfg(feature = "OfflineAudioCompletionEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "OfflineAudioCompletionEvent")]
+    #[doc = "The `new OfflineAudioCompletionEvent(..)` constructor, creating a new instance of `OfflineAudioCompletionEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/OfflineAudioCompletionEvent/OfflineAudioCompletionEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `OfflineAudioCompletionEvent`, `OfflineAudioCompletionEventInit`*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+        event_init_dict: &OfflineAudioCompletionEventInit,
+    ) -> Result<OfflineAudioCompletionEvent, JsValue>;
 }

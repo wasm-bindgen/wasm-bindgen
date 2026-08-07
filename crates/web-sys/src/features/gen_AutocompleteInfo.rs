@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AutocompleteInfo`*"]
     #[wasm_bindgen(method, setter = "addressType")]
     pub fn set_address_type(this: &AutocompleteInfo, val: &str);
+    #[doc = "Change the `addressType` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AutocompleteInfo`*"]
+    #[wasm_bindgen(method, setter = "addressType")]
+    pub fn set_address_type_js_string(this: &AutocompleteInfo, val: &::js_sys::JsString);
     #[doc = "Get the `contactType` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AutocompleteInfo`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AutocompleteInfo`*"]
     #[wasm_bindgen(method, setter = "contactType")]
     pub fn set_contact_type(this: &AutocompleteInfo, val: &str);
+    #[doc = "Change the `contactType` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AutocompleteInfo`*"]
+    #[wasm_bindgen(method, setter = "contactType")]
+    pub fn set_contact_type_js_string(this: &AutocompleteInfo, val: &::js_sys::JsString);
     #[doc = "Get the `fieldName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AutocompleteInfo`*"]
@@ -40,6 +50,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AutocompleteInfo`*"]
     #[wasm_bindgen(method, setter = "fieldName")]
     pub fn set_field_name(this: &AutocompleteInfo, val: &str);
+    #[doc = "Change the `fieldName` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AutocompleteInfo`*"]
+    #[wasm_bindgen(method, setter = "fieldName")]
+    pub fn set_field_name_js_string(this: &AutocompleteInfo, val: &::js_sys::JsString);
     #[doc = "Get the `section` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AutocompleteInfo`*"]
@@ -50,6 +65,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AutocompleteInfo`*"]
     #[wasm_bindgen(method, setter = "section")]
     pub fn set_section(this: &AutocompleteInfo, val: &str);
+    #[doc = "Change the `section` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AutocompleteInfo`*"]
+    #[wasm_bindgen(method, setter = "section")]
+    pub fn set_section_js_string(this: &AutocompleteInfo, val: &::js_sys::JsString);
 }
 impl AutocompleteInfo {
     #[doc = "Construct a new `AutocompleteInfo`."]

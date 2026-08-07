@@ -20,6 +20,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleStackEntry`*"]
     #[wasm_bindgen(method, setter = "asyncCause")]
     pub fn set_async_cause(this: &ConsoleStackEntry, val: Option<&str>);
+    #[doc = "Change the `asyncCause` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleStackEntry`*"]
+    #[wasm_bindgen(method, setter = "asyncCause")]
+    pub fn set_async_cause_opt_js_string(
+        this: &ConsoleStackEntry,
+        val: Option<&::js_sys::JsString>,
+    );
     #[doc = "Get the `columnNumber` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleStackEntry`*"]
@@ -40,6 +48,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleStackEntry`*"]
     #[wasm_bindgen(method, setter = "filename")]
     pub fn set_filename(this: &ConsoleStackEntry, val: &str);
+    #[doc = "Change the `filename` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleStackEntry`*"]
+    #[wasm_bindgen(method, setter = "filename")]
+    pub fn set_filename_js_string(this: &ConsoleStackEntry, val: &::js_sys::JsString);
     #[doc = "Get the `functionName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleStackEntry`*"]
@@ -50,6 +63,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleStackEntry`*"]
     #[wasm_bindgen(method, setter = "functionName")]
     pub fn set_function_name(this: &ConsoleStackEntry, val: &str);
+    #[doc = "Change the `functionName` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleStackEntry`*"]
+    #[wasm_bindgen(method, setter = "functionName")]
+    pub fn set_function_name_js_string(this: &ConsoleStackEntry, val: &::js_sys::JsString);
     #[doc = "Get the `lineNumber` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleStackEntry`*"]

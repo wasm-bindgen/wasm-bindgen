@@ -34,6 +34,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlFrameSetElement`*"]
     pub fn set_cols(this: &HtmlFrameSetElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLFrameSetElement", js_name = "cols")]
+    #[doc = "Setter for the `cols` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFrameSetElement/cols)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFrameSetElement`*"]
+    pub fn set_cols_js_string(this: &HtmlFrameSetElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLFrameSetElement", js_name = "rows")]
     #[doc = "Getter for the `rows` field of this object."]
     #[doc = ""]
@@ -48,6 +55,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlFrameSetElement`*"]
     pub fn set_rows(this: &HtmlFrameSetElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLFrameSetElement", js_name = "rows")]
+    #[doc = "Setter for the `rows` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFrameSetElement/rows)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFrameSetElement`*"]
+    pub fn set_rows_js_string(this: &HtmlFrameSetElement, value: &::js_sys::JsString);
     #[wasm_bindgen(
         method,
         getter,

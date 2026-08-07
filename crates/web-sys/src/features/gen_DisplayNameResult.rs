@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DisplayNameResult`*"]
     #[wasm_bindgen(method, setter = "locale")]
     pub fn set_locale(this: &DisplayNameResult, val: &str);
+    #[doc = "Change the `locale` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DisplayNameResult`*"]
+    #[wasm_bindgen(method, setter = "locale")]
+    pub fn set_locale_js_string(this: &DisplayNameResult, val: &::js_sys::JsString);
     #[doc = "Get the `style` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DisplayNameResult`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DisplayNameResult`*"]
     #[wasm_bindgen(method, setter = "style")]
     pub fn set_style(this: &DisplayNameResult, val: &str);
+    #[doc = "Change the `style` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DisplayNameResult`*"]
+    #[wasm_bindgen(method, setter = "style")]
+    pub fn set_style_js_string(this: &DisplayNameResult, val: &::js_sys::JsString);
     #[doc = "Get the `values` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DisplayNameResult`*"]

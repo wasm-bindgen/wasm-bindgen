@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]
     #[wasm_bindgen(method, setter = "clientData")]
     pub fn set_client_data(this: &RegisterResponse, val: &str);
+    #[doc = "Change the `clientData` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]
+    #[wasm_bindgen(method, setter = "clientData")]
+    pub fn set_client_data_js_string(this: &RegisterResponse, val: &::js_sys::JsString);
     #[doc = "Get the `errorCode` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]
@@ -40,6 +45,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]
     #[wasm_bindgen(method, setter = "errorMessage")]
     pub fn set_error_message(this: &RegisterResponse, val: Option<&str>);
+    #[doc = "Change the `errorMessage` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]
+    #[wasm_bindgen(method, setter = "errorMessage")]
+    pub fn set_error_message_opt_js_string(
+        this: &RegisterResponse,
+        val: Option<&::js_sys::JsString>,
+    );
     #[doc = "Get the `registrationData` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]
@@ -50,6 +63,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]
     #[wasm_bindgen(method, setter = "registrationData")]
     pub fn set_registration_data(this: &RegisterResponse, val: &str);
+    #[doc = "Change the `registrationData` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]
+    #[wasm_bindgen(method, setter = "registrationData")]
+    pub fn set_registration_data_js_string(this: &RegisterResponse, val: &::js_sys::JsString);
     #[doc = "Get the `version` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]
@@ -60,6 +78,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]
     #[wasm_bindgen(method, setter = "version")]
     pub fn set_version(this: &RegisterResponse, val: &str);
+    #[doc = "Change the `version` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]
+    #[wasm_bindgen(method, setter = "version")]
+    pub fn set_version_js_string(this: &RegisterResponse, val: &::js_sys::JsString);
 }
 impl RegisterResponse {
     #[doc = "Construct a new `RegisterResponse`."]

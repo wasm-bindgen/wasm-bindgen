@@ -76,9 +76,40 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/initMutationEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MutationEvent`*"]
+    pub fn init_mutation_event_with_js_string(
+        this: &MutationEvent,
+        type_: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "MutationEvent",
+        js_name = "initMutationEvent"
+    )]
+    #[doc = "The `initMutationEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/initMutationEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MutationEvent`*"]
     pub fn init_mutation_event_with_can_bubble(
         this: &MutationEvent,
         type_: &str,
+        can_bubble: bool,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "MutationEvent",
+        js_name = "initMutationEvent"
+    )]
+    #[doc = "The `initMutationEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/initMutationEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MutationEvent`*"]
+    pub fn init_mutation_event_with_js_string_and_can_bubble(
+        this: &MutationEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
     ) -> Result<(), JsValue>;
     #[wasm_bindgen(
@@ -98,6 +129,23 @@ extern "C" {
         can_bubble: bool,
         cancelable: bool,
     ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "MutationEvent",
+        js_name = "initMutationEvent"
+    )]
+    #[doc = "The `initMutationEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/initMutationEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MutationEvent`*"]
+    pub fn init_mutation_event_with_js_string_and_can_bubble_and_cancelable(
+        this: &MutationEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+        cancelable: bool,
+    ) -> Result<(), JsValue>;
     #[cfg(feature = "Node")]
     #[wasm_bindgen(
         catch,
@@ -113,6 +161,25 @@ extern "C" {
     pub fn init_mutation_event_with_can_bubble_and_cancelable_and_related_node(
         this: &MutationEvent,
         type_: &str,
+        can_bubble: bool,
+        cancelable: bool,
+        related_node: Option<&Node>,
+    ) -> Result<(), JsValue>;
+    #[cfg(feature = "Node")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "MutationEvent",
+        js_name = "initMutationEvent"
+    )]
+    #[doc = "The `initMutationEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/initMutationEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MutationEvent`, `Node`*"]
+    pub fn init_mutation_event_with_js_string_and_can_bubble_and_cancelable_and_related_node(
+        this: &MutationEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
         cancelable: bool,
         related_node: Option<&Node>,
@@ -149,6 +216,26 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/initMutationEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MutationEvent`, `Node`*"]
+    pub fn init_mutation_event_with_js_string_and_can_bubble_and_cancelable_and_related_node_and_js_string(
+        this: &MutationEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+        cancelable: bool,
+        related_node: Option<&Node>,
+        prev_value: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[cfg(feature = "Node")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "MutationEvent",
+        js_name = "initMutationEvent"
+    )]
+    #[doc = "The `initMutationEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/initMutationEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MutationEvent`, `Node`*"]
     pub fn init_mutation_event_with_can_bubble_and_cancelable_and_related_node_and_prev_value_and_new_value(
         this: &MutationEvent,
         type_: &str,
@@ -157,6 +244,27 @@ extern "C" {
         related_node: Option<&Node>,
         prev_value: &str,
         new_value: &str,
+    ) -> Result<(), JsValue>;
+    #[cfg(feature = "Node")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "MutationEvent",
+        js_name = "initMutationEvent"
+    )]
+    #[doc = "The `initMutationEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/initMutationEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MutationEvent`, `Node`*"]
+    pub fn init_mutation_event_with_js_string_and_can_bubble_and_cancelable_and_related_node_and_js_string_and_js_string(
+        this: &MutationEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+        cancelable: bool,
+        related_node: Option<&Node>,
+        prev_value: &::js_sys::JsString,
+        new_value: &::js_sys::JsString,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "Node")]
     #[wasm_bindgen(
@@ -192,6 +300,28 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/initMutationEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MutationEvent`, `Node`*"]
+    pub fn init_mutation_event_with_js_string_and_can_bubble_and_cancelable_and_related_node_and_js_string_and_js_string_and_js_string(
+        this: &MutationEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+        cancelable: bool,
+        related_node: Option<&Node>,
+        prev_value: &::js_sys::JsString,
+        new_value: &::js_sys::JsString,
+        attr_name: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[cfg(feature = "Node")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "MutationEvent",
+        js_name = "initMutationEvent"
+    )]
+    #[doc = "The `initMutationEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/initMutationEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MutationEvent`, `Node`*"]
     pub fn init_mutation_event_with_can_bubble_and_cancelable_and_related_node_and_prev_value_and_new_value_and_attr_name_and_attr_change(
         this: &MutationEvent,
         type_: &str,
@@ -201,6 +331,29 @@ extern "C" {
         prev_value: &str,
         new_value: &str,
         attr_name: &str,
+        attr_change: u16,
+    ) -> Result<(), JsValue>;
+    #[cfg(feature = "Node")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "MutationEvent",
+        js_name = "initMutationEvent"
+    )]
+    #[doc = "The `initMutationEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/initMutationEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MutationEvent`, `Node`*"]
+    pub fn init_mutation_event_with_js_string_and_can_bubble_and_cancelable_and_related_node_and_js_string_and_js_string_and_js_string_and_attr_change(
+        this: &MutationEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+        cancelable: bool,
+        related_node: Option<&Node>,
+        prev_value: &::js_sys::JsString,
+        new_value: &::js_sys::JsString,
+        attr_name: &::js_sys::JsString,
         attr_change: u16,
     ) -> Result<(), JsValue>;
 }

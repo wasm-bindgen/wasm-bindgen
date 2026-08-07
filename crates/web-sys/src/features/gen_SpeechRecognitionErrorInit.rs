@@ -62,6 +62,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SpeechRecognitionErrorInit`*"]
     #[wasm_bindgen(method, setter = "message")]
     pub fn set_message(this: &SpeechRecognitionErrorInit, val: &str);
+    #[doc = "Change the `message` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechRecognitionErrorInit`*"]
+    #[wasm_bindgen(method, setter = "message")]
+    pub fn set_message_js_string(this: &SpeechRecognitionErrorInit, val: &::js_sys::JsString);
 }
 impl SpeechRecognitionErrorInit {
     #[doc = "Construct a new `SpeechRecognitionErrorInit`."]

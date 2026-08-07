@@ -119,4 +119,15 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `IdbObjectStore`, `IdbTransaction`*"]
     pub fn object_store(this: &IdbTransaction, name: &str) -> Result<IdbObjectStore, JsValue>;
+    #[cfg(feature = "IdbObjectStore")]
+    #[wasm_bindgen(catch, method, js_class = "IDBTransaction", js_name = "objectStore")]
+    #[doc = "The `objectStore()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBTransaction/objectStore)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbObjectStore`, `IdbTransaction`*"]
+    pub fn object_store_with_js_string(
+        this: &IdbTransaction,
+        name: &::js_sys::JsString,
+    ) -> Result<IdbObjectStore, JsValue>;
 }

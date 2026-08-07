@@ -38,6 +38,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAllCollection`*"]
     pub fn item_with_name(this: &HtmlAllCollection, name: &str) -> Option<::js_sys::Object>;
+    #[wasm_bindgen(method, js_class = "HTMLAllCollection", js_name = "item")]
+    #[doc = "The `item()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAllCollection/item)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAllCollection`*"]
+    pub fn item_with_js_string(
+        this: &HtmlAllCollection,
+        name: &::js_sys::JsString,
+    ) -> Option<::js_sys::Object>;
     #[wasm_bindgen(method, js_class = "HTMLAllCollection", js_name = "namedItem")]
     #[doc = "The `namedItem()` method."]
     #[doc = ""]
@@ -45,6 +55,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAllCollection`*"]
     pub fn named_item(this: &HtmlAllCollection, name: &str) -> Option<::js_sys::Object>;
+    #[wasm_bindgen(method, js_class = "HTMLAllCollection", js_name = "namedItem")]
+    #[doc = "The `namedItem()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAllCollection/namedItem)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAllCollection`*"]
+    pub fn named_item_with_js_string(
+        this: &HtmlAllCollection,
+        name: &::js_sys::JsString,
+    ) -> Option<::js_sys::Object>;
     #[cfg(feature = "Node")]
     #[wasm_bindgen(method, js_class = "HTMLAllCollection", indexing_getter)]
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
@@ -58,4 +78,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAllCollection`*"]
     pub fn get_with_name(this: &HtmlAllCollection, name: &str) -> Option<::js_sys::Object>;
+    #[wasm_bindgen(method, js_class = "HTMLAllCollection", indexing_getter)]
+    #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
+    #[doc = ""]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAllCollection`*"]
+    pub fn get_with_js_string(
+        this: &HtmlAllCollection,
+        name: &::js_sys::JsString,
+    ) -> Option<::js_sys::Object>;
 }

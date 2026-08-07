@@ -36,4 +36,15 @@ extern "C" {
         type_: &str,
         event_init_dict: &RtcDataChannelEventInit,
     ) -> Result<RtcDataChannelEvent, JsValue>;
+    #[cfg(feature = "RtcDataChannelEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "RTCDataChannelEvent")]
+    #[doc = "The `new RtcDataChannelEvent(..)` constructor, creating a new instance of `RtcDataChannelEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannelEvent/RTCDataChannelEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcDataChannelEvent`, `RtcDataChannelEventInit`*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+        event_init_dict: &RtcDataChannelEventInit,
+    ) -> Result<RtcDataChannelEvent, JsValue>;
 }

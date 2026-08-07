@@ -34,4 +34,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlHeadingElement`*"]
     pub fn set_align(this: &HtmlHeadingElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLHeadingElement", js_name = "align")]
+    #[doc = "Setter for the `align` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLHeadingElement/align)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlHeadingElement`*"]
+    pub fn set_align_js_string(this: &HtmlHeadingElement, value: &::js_sys::JsString);
 }

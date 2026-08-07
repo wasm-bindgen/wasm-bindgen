@@ -60,6 +60,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn set_id(this: &Element, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "Element", js_name = "id")]
+    #[doc = "Setter for the `id` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/id)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn set_id_js_string(this: &Element, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "Element", js_name = "className")]
     #[doc = "Getter for the `className` field of this object."]
     #[doc = ""]
@@ -74,6 +81,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn set_class_name(this: &Element, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "Element", js_name = "className")]
+    #[doc = "Setter for the `className` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/className)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn set_class_name_js_string(this: &Element, value: &::js_sys::JsString);
     #[cfg(feature = "DomTokenList")]
     #[wasm_bindgen(method, getter, js_class = "Element", js_name = "classList")]
     #[doc = "Getter for the `classList` field of this object."]
@@ -178,6 +192,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn set_inner_html(this: &Element, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "Element", js_name = "innerHTML")]
+    #[doc = "Setter for the `innerHTML` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn set_inner_html_js_string(this: &Element, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "Element", js_name = "outerHTML")]
     #[doc = "Getter for the `outerHTML` field of this object."]
     #[doc = ""]
@@ -192,6 +213,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn set_outer_html(this: &Element, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "Element", js_name = "outerHTML")]
+    #[doc = "Setter for the `outerHTML` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/outerHTML)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn set_outer_html_js_string(this: &Element, value: &::js_sys::JsString);
     #[cfg(feature = "ShadowRoot")]
     #[wasm_bindgen(method, getter, js_class = "Element", js_name = "shadowRoot")]
     #[doc = "Getter for the `shadowRoot` field of this object."]
@@ -222,6 +250,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn set_slot(this: &Element, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "Element", js_name = "slot")]
+    #[doc = "Setter for the `slot` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/slot)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn set_slot_js_string(this: &Element, value: &::js_sys::JsString);
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, getter, js_class = "Element", js_name = "scrollTop")]
     #[doc = "Getter for the `scrollTop` field of this object."]
@@ -344,6 +379,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn closest(this: &Element, selector: &str) -> Result<Option<Element>, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "closest")]
+    #[doc = "The `closest()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/closest)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn closest_with_js_string(
+        this: &Element,
+        selector: &::js_sys::JsString,
+    ) -> Result<Option<Element>, JsValue>;
     #[wasm_bindgen(method, js_class = "Element", js_name = "getAttribute")]
     #[doc = "The `getAttribute()` method."]
     #[doc = ""]
@@ -351,6 +396,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn get_attribute(this: &Element, name: &str) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, js_class = "Element", js_name = "getAttribute")]
+    #[doc = "The `getAttribute()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttribute)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn get_attribute_with_js_string(
+        this: &Element,
+        name: &::js_sys::JsString,
+    ) -> Option<::alloc::string::String>;
     #[wasm_bindgen(method, js_class = "Element", js_name = "getAttributeNS")]
     #[doc = "The `getAttributeNS()` method."]
     #[doc = ""]
@@ -361,6 +416,17 @@ extern "C" {
         this: &Element,
         namespace: Option<&str>,
         local_name: &str,
+    ) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, js_class = "Element", js_name = "getAttributeNS")]
+    #[doc = "The `getAttributeNS()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttributeNS)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn get_attribute_ns_with_opt_js_string_and_js_string(
+        this: &Element,
+        namespace: Option<&::js_sys::JsString>,
+        local_name: &::js_sys::JsString,
     ) -> Option<::alloc::string::String>;
     #[wasm_bindgen(method, js_class = "Element", js_name = "getAttributeNames")]
     #[doc = "The `getAttributeNames()` method."]
@@ -378,6 +444,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Attr`, `Element`*"]
     pub fn get_attribute_node(this: &Element, name: &str) -> Option<Attr>;
     #[cfg(feature = "Attr")]
+    #[wasm_bindgen(method, js_class = "Element", js_name = "getAttributeNode")]
+    #[doc = "The `getAttributeNode()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttributeNode)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Attr`, `Element`*"]
+    pub fn get_attribute_node_with_js_string(
+        this: &Element,
+        name: &::js_sys::JsString,
+    ) -> Option<Attr>;
+    #[cfg(feature = "Attr")]
     #[wasm_bindgen(method, js_class = "Element", js_name = "getAttributeNodeNS")]
     #[doc = "The `getAttributeNodeNS()` method."]
     #[doc = ""]
@@ -388,6 +465,18 @@ extern "C" {
         this: &Element,
         namespace_uri: Option<&str>,
         local_name: &str,
+    ) -> Option<Attr>;
+    #[cfg(feature = "Attr")]
+    #[wasm_bindgen(method, js_class = "Element", js_name = "getAttributeNodeNS")]
+    #[doc = "The `getAttributeNodeNS()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttributeNodeNS)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Attr`, `Element`*"]
+    pub fn get_attribute_node_ns_with_opt_js_string_and_js_string(
+        this: &Element,
+        namespace_uri: Option<&::js_sys::JsString>,
+        local_name: &::js_sys::JsString,
     ) -> Option<Attr>;
     #[cfg(feature = "DomRect")]
     #[wasm_bindgen(method, js_class = "Element", js_name = "getBoundingClientRect")]
@@ -414,6 +503,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Element`, `HtmlCollection`*"]
     pub fn get_elements_by_class_name(this: &Element, class_names: &str) -> HtmlCollection;
     #[cfg(feature = "HtmlCollection")]
+    #[wasm_bindgen(method, js_class = "Element", js_name = "getElementsByClassName")]
+    #[doc = "The `getElementsByClassName()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/getElementsByClassName)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`, `HtmlCollection`*"]
+    pub fn get_elements_by_class_name_with_js_string(
+        this: &Element,
+        class_names: &::js_sys::JsString,
+    ) -> HtmlCollection;
+    #[cfg(feature = "HtmlCollection")]
     #[wasm_bindgen(method, js_class = "Element", js_name = "getElementsByTagName")]
     #[doc = "The `getElementsByTagName()` method."]
     #[doc = ""]
@@ -421,6 +521,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`, `HtmlCollection`*"]
     pub fn get_elements_by_tag_name(this: &Element, local_name: &str) -> HtmlCollection;
+    #[cfg(feature = "HtmlCollection")]
+    #[wasm_bindgen(method, js_class = "Element", js_name = "getElementsByTagName")]
+    #[doc = "The `getElementsByTagName()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/getElementsByTagName)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`, `HtmlCollection`*"]
+    pub fn get_elements_by_tag_name_with_js_string(
+        this: &Element,
+        local_name: &::js_sys::JsString,
+    ) -> HtmlCollection;
     #[cfg(feature = "HtmlCollection")]
     #[wasm_bindgen(
         catch,
@@ -438,6 +549,23 @@ extern "C" {
         namespace: Option<&str>,
         local_name: &str,
     ) -> Result<HtmlCollection, JsValue>;
+    #[cfg(feature = "HtmlCollection")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "Element",
+        js_name = "getElementsByTagNameNS"
+    )]
+    #[doc = "The `getElementsByTagNameNS()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/getElementsByTagNameNS)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`, `HtmlCollection`*"]
+    pub fn get_elements_by_tag_name_ns_with_opt_js_string_and_js_string(
+        this: &Element,
+        namespace: Option<&::js_sys::JsString>,
+        local_name: &::js_sys::JsString,
+    ) -> Result<HtmlCollection, JsValue>;
     #[wasm_bindgen(method, js_class = "Element", js_name = "hasAttribute")]
     #[doc = "The `hasAttribute()` method."]
     #[doc = ""]
@@ -445,6 +573,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn has_attribute(this: &Element, name: &str) -> bool;
+    #[wasm_bindgen(method, js_class = "Element", js_name = "hasAttribute")]
+    #[doc = "The `hasAttribute()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/hasAttribute)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn has_attribute_with_js_string(this: &Element, name: &::js_sys::JsString) -> bool;
     #[wasm_bindgen(method, js_class = "Element", js_name = "hasAttributeNS")]
     #[doc = "The `hasAttributeNS()` method."]
     #[doc = ""]
@@ -452,6 +587,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn has_attribute_ns(this: &Element, namespace: Option<&str>, local_name: &str) -> bool;
+    #[wasm_bindgen(method, js_class = "Element", js_name = "hasAttributeNS")]
+    #[doc = "The `hasAttributeNS()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/hasAttributeNS)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn has_attribute_ns_with_opt_js_string_and_js_string(
+        this: &Element,
+        namespace: Option<&::js_sys::JsString>,
+        local_name: &::js_sys::JsString,
+    ) -> bool;
     #[wasm_bindgen(method, js_class = "Element", js_name = "hasAttributes")]
     #[doc = "The `hasAttributes()` method."]
     #[doc = ""]
@@ -477,6 +623,17 @@ extern "C" {
         where_: &str,
         element: &Element,
     ) -> Result<Option<Element>, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "insertAdjacentElement")]
+    #[doc = "The `insertAdjacentElement()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/insertAdjacentElement)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn insert_adjacent_element_with_js_string(
+        this: &Element,
+        where_: &::js_sys::JsString,
+        element: &Element,
+    ) -> Result<Option<Element>, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Element", js_name = "insertAdjacentHTML")]
     #[doc = "The `insertAdjacentHTML()` method."]
     #[doc = ""]
@@ -484,6 +641,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn insert_adjacent_html(this: &Element, position: &str, text: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "insertAdjacentHTML")]
+    #[doc = "The `insertAdjacentHTML()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/insertAdjacentHTML)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn insert_adjacent_html_with_js_string_and_js_string(
+        this: &Element,
+        position: &::js_sys::JsString,
+        text: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Element", js_name = "insertAdjacentText")]
     #[doc = "The `insertAdjacentText()` method."]
     #[doc = ""]
@@ -491,6 +659,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn insert_adjacent_text(this: &Element, where_: &str, data: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "insertAdjacentText")]
+    #[doc = "The `insertAdjacentText()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/insertAdjacentText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn insert_adjacent_text_with_js_string_and_js_string(
+        this: &Element,
+        where_: &::js_sys::JsString,
+        data: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Element")]
     #[doc = "The `matches()` method."]
     #[doc = ""]
@@ -498,6 +677,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn matches(this: &Element, selector: &str) -> Result<bool, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "matches")]
+    #[doc = "The `matches()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/matches)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn matches_with_js_string(
+        this: &Element,
+        selector: &::js_sys::JsString,
+    ) -> Result<bool, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Element", js_name = "querySelector")]
     #[doc = "The `querySelector()` method."]
     #[doc = ""]
@@ -505,6 +694,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn query_selector(this: &Element, selectors: &str) -> Result<Option<Element>, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "querySelector")]
+    #[doc = "The `querySelector()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/querySelector)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn query_selector_with_js_string(
+        this: &Element,
+        selectors: &::js_sys::JsString,
+    ) -> Result<Option<Element>, JsValue>;
     #[cfg(feature = "NodeList")]
     #[wasm_bindgen(catch, method, js_class = "Element", js_name = "querySelectorAll")]
     #[doc = "The `querySelectorAll()` method."]
@@ -513,6 +712,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`, `NodeList`*"]
     pub fn query_selector_all(this: &Element, selectors: &str) -> Result<NodeList, JsValue>;
+    #[cfg(feature = "NodeList")]
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "querySelectorAll")]
+    #[doc = "The `querySelectorAll()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/querySelectorAll)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`, `NodeList`*"]
+    pub fn query_selector_all_with_js_string(
+        this: &Element,
+        selectors: &::js_sys::JsString,
+    ) -> Result<NodeList, JsValue>;
     #[wasm_bindgen(method, js_class = "Element", js_name = "releaseCapture")]
     #[doc = "The `releaseCapture()` method."]
     #[doc = ""]
@@ -534,6 +744,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn remove_attribute(this: &Element, name: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "removeAttribute")]
+    #[doc = "The `removeAttribute()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/removeAttribute)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn remove_attribute_with_js_string(
+        this: &Element,
+        name: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Element", js_name = "removeAttributeNS")]
     #[doc = "The `removeAttributeNS()` method."]
     #[doc = ""]
@@ -544,6 +764,17 @@ extern "C" {
         this: &Element,
         namespace: Option<&str>,
         local_name: &str,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "removeAttributeNS")]
+    #[doc = "The `removeAttributeNS()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/removeAttributeNS)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn remove_attribute_ns_with_opt_js_string_and_js_string(
+        this: &Element,
+        namespace: Option<&::js_sys::JsString>,
+        local_name: &::js_sys::JsString,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "Attr")]
     #[wasm_bindgen(catch, method, js_class = "Element", js_name = "removeAttributeNode")]
@@ -665,6 +896,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn set_attribute(this: &Element, name: &str, value: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "setAttribute")]
+    #[doc = "The `setAttribute()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/setAttribute)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn set_attribute_with_js_string_and_js_string(
+        this: &Element,
+        name: &::js_sys::JsString,
+        value: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Element", js_name = "setAttributeNS")]
     #[doc = "The `setAttributeNS()` method."]
     #[doc = ""]
@@ -676,6 +918,18 @@ extern "C" {
         namespace: Option<&str>,
         name: &str,
         value: &str,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "setAttributeNS")]
+    #[doc = "The `setAttributeNS()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/setAttributeNS)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn set_attribute_ns_with_opt_js_string_and_js_string_and_js_string(
+        this: &Element,
+        namespace: Option<&::js_sys::JsString>,
+        name: &::js_sys::JsString,
+        value: &::js_sys::JsString,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "Attr")]
     #[wasm_bindgen(catch, method, js_class = "Element", js_name = "setAttributeNode")]
@@ -769,9 +1023,30 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/toggleAttribute)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn toggle_attribute_with_js_string(
+        this: &Element,
+        name: &::js_sys::JsString,
+    ) -> Result<bool, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "toggleAttribute")]
+    #[doc = "The `toggleAttribute()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/toggleAttribute)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn toggle_attribute_with_force(
         this: &Element,
         name: &str,
+        force: bool,
+    ) -> Result<bool, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "toggleAttribute")]
+    #[doc = "The `toggleAttribute()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/toggleAttribute)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn toggle_attribute_with_js_string_and_force(
+        this: &Element,
+        name: &::js_sys::JsString,
         force: bool,
     ) -> Result<bool, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Element", js_name = "webkitMatchesSelector")]
@@ -781,6 +1056,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn webkit_matches_selector(this: &Element, selector: &str) -> Result<bool, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "webkitMatchesSelector")]
+    #[doc = "The `webkitMatchesSelector()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/webkitMatchesSelector)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn webkit_matches_selector_with_js_string(
+        this: &Element,
+        selector: &::js_sys::JsString,
+    ) -> Result<bool, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Animation")]
     #[wasm_bindgen(method, js_class = "Element")]
@@ -1049,6 +1334,111 @@ extern "C" {
         nodes_6: &str,
         nodes_7: &str,
     ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, variadic, js_class = "Element", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn after_with_js_string(this: &Element, nodes: &::js_sys::Array) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn after_with_js_string_0(this: &Element) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn after_with_js_string_1(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn after_with_js_string_2(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn after_with_js_string_3(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn after_with_js_string_4(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn after_with_js_string_5(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn after_with_js_string_6(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn after_with_js_string_7(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+        nodes_7: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, variadic, js_class = "Element", js_name = "before")]
     #[doc = "The `before()` method."]
     #[doc = ""]
@@ -1248,6 +1638,111 @@ extern "C" {
         nodes_5: &str,
         nodes_6: &str,
         nodes_7: &str,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, variadic, js_class = "Element", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn before_with_js_string(this: &Element, nodes: &::js_sys::Array) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn before_with_js_string_0(this: &Element) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn before_with_js_string_1(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn before_with_js_string_2(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn before_with_js_string_3(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn before_with_js_string_4(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn before_with_js_string_5(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn before_with_js_string_6(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn before_with_js_string_7(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+        nodes_7: &::js_sys::JsString,
     ) -> Result<(), JsValue>;
     #[wasm_bindgen(method, js_class = "Element")]
     #[doc = "The `remove()` method."]
@@ -1459,6 +1954,114 @@ extern "C" {
         nodes_5: &str,
         nodes_6: &str,
         nodes_7: &str,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, variadic, js_class = "Element", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn replace_with_with_js_string(
+        this: &Element,
+        nodes: &::js_sys::Array,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn replace_with_with_js_string_0(this: &Element) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn replace_with_with_js_string_1(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn replace_with_with_js_string_2(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn replace_with_with_js_string_3(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn replace_with_with_js_string_4(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn replace_with_with_js_string_5(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn replace_with_with_js_string_6(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn replace_with_with_js_string_7(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+        nodes_7: &::js_sys::JsString,
     ) -> Result<(), JsValue>;
     #[cfg(all(feature = "DomPoint", feature = "DomPointInit", feature = "Text",))]
     #[wasm_bindgen(catch, method, js_class = "Element", js_name = "convertPointFromNode")]
@@ -1939,6 +2542,111 @@ extern "C" {
         nodes_6: &str,
         nodes_7: &str,
     ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, variadic, js_class = "Element", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn append_with_js_string(this: &Element, nodes: &::js_sys::Array) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn append_with_js_string_0(this: &Element) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn append_with_js_string_1(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn append_with_js_string_2(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn append_with_js_string_3(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn append_with_js_string_4(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn append_with_js_string_5(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn append_with_js_string_6(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn append_with_js_string_7(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+        nodes_7: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, variadic, js_class = "Element", js_name = "prepend")]
     #[doc = "The `prepend()` method."]
     #[doc = ""]
@@ -2139,6 +2847,111 @@ extern "C" {
         nodes_6: &str,
         nodes_7: &str,
     ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, variadic, js_class = "Element", js_name = "prepend")]
+    #[doc = "The `prepend()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/prepend)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn prepend_with_js_string(this: &Element, nodes: &::js_sys::Array) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "prepend")]
+    #[doc = "The `prepend()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/prepend)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn prepend_with_js_string_0(this: &Element) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "prepend")]
+    #[doc = "The `prepend()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/prepend)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn prepend_with_js_string_1(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "prepend")]
+    #[doc = "The `prepend()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/prepend)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn prepend_with_js_string_2(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "prepend")]
+    #[doc = "The `prepend()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/prepend)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn prepend_with_js_string_3(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "prepend")]
+    #[doc = "The `prepend()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/prepend)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn prepend_with_js_string_4(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "prepend")]
+    #[doc = "The `prepend()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/prepend)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn prepend_with_js_string_5(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "prepend")]
+    #[doc = "The `prepend()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/prepend)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn prepend_with_js_string_6(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Element", js_name = "prepend")]
+    #[doc = "The `prepend()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/prepend)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn prepend_with_js_string_7(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+        nodes_7: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(method, variadic, js_class = "Element", js_name = "replaceChildren")]
     #[doc = "The `replaceChildren()` method."]
     #[doc = ""]
@@ -2329,5 +3142,107 @@ extern "C" {
         nodes_5: &str,
         nodes_6: &str,
         nodes_7: &str,
+    );
+    #[wasm_bindgen(method, variadic, js_class = "Element", js_name = "replaceChildren")]
+    #[doc = "The `replaceChildren()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/replaceChildren)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn replace_children_with_js_string(this: &Element, nodes: &::js_sys::Array);
+    #[wasm_bindgen(method, js_class = "Element", js_name = "replaceChildren")]
+    #[doc = "The `replaceChildren()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/replaceChildren)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn replace_children_with_js_string_0(this: &Element);
+    #[wasm_bindgen(method, js_class = "Element", js_name = "replaceChildren")]
+    #[doc = "The `replaceChildren()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/replaceChildren)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn replace_children_with_js_string_1(this: &Element, nodes_1: &::js_sys::JsString);
+    #[wasm_bindgen(method, js_class = "Element", js_name = "replaceChildren")]
+    #[doc = "The `replaceChildren()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/replaceChildren)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn replace_children_with_js_string_2(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+    );
+    #[wasm_bindgen(method, js_class = "Element", js_name = "replaceChildren")]
+    #[doc = "The `replaceChildren()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/replaceChildren)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn replace_children_with_js_string_3(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+    );
+    #[wasm_bindgen(method, js_class = "Element", js_name = "replaceChildren")]
+    #[doc = "The `replaceChildren()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/replaceChildren)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn replace_children_with_js_string_4(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+    );
+    #[wasm_bindgen(method, js_class = "Element", js_name = "replaceChildren")]
+    #[doc = "The `replaceChildren()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/replaceChildren)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn replace_children_with_js_string_5(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+    );
+    #[wasm_bindgen(method, js_class = "Element", js_name = "replaceChildren")]
+    #[doc = "The `replaceChildren()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/replaceChildren)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn replace_children_with_js_string_6(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+    );
+    #[wasm_bindgen(method, js_class = "Element", js_name = "replaceChildren")]
+    #[doc = "The `replaceChildren()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/replaceChildren)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn replace_children_with_js_string_7(
+        this: &Element,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+        nodes_7: &::js_sys::JsString,
     );
 }

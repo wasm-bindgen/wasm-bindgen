@@ -102,6 +102,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
     pub fn new(type_arg: &str) -> Result<KeyboardEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "KeyboardEvent")]
+    #[doc = "The `new KeyboardEvent(..)` constructor, creating a new instance of `KeyboardEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/KeyboardEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
+    pub fn new_with_js_string(type_arg: &::js_sys::JsString) -> Result<KeyboardEvent, JsValue>;
     #[cfg(feature = "KeyboardEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "KeyboardEvent")]
     #[doc = "The `new KeyboardEvent(..)` constructor, creating a new instance of `KeyboardEvent`."]
@@ -113,6 +120,17 @@ extern "C" {
         type_arg: &str,
         keyboard_event_init_dict: &KeyboardEventInit,
     ) -> Result<KeyboardEvent, JsValue>;
+    #[cfg(feature = "KeyboardEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "KeyboardEvent")]
+    #[doc = "The `new KeyboardEvent(..)` constructor, creating a new instance of `KeyboardEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/KeyboardEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`, `KeyboardEventInit`*"]
+    pub fn new_with_js_string_and_keyboard_event_init_dict(
+        type_arg: &::js_sys::JsString,
+        keyboard_event_init_dict: &KeyboardEventInit,
+    ) -> Result<KeyboardEvent, JsValue>;
     #[wasm_bindgen(method, js_class = "KeyboardEvent", js_name = "getModifierState")]
     #[doc = "The `getModifierState()` method."]
     #[doc = ""]
@@ -120,6 +138,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
     pub fn get_modifier_state(this: &KeyboardEvent, key: &str) -> bool;
+    #[wasm_bindgen(method, js_class = "KeyboardEvent", js_name = "getModifierState")]
+    #[doc = "The `getModifierState()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/getModifierState)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
+    pub fn get_modifier_state_with_js_string(
+        this: &KeyboardEvent,
+        key: &::js_sys::JsString,
+    ) -> bool;
     #[wasm_bindgen(
         catch,
         method,
@@ -132,6 +160,21 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
     pub fn init_keyboard_event(this: &KeyboardEvent, type_arg: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "KeyboardEvent",
+        js_name = "initKeyboardEvent"
+    )]
+    #[doc = "The `initKeyboardEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
+    pub fn init_keyboard_event_with_js_string(
+        this: &KeyboardEvent,
+        type_arg: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(
         catch,
         method,
@@ -159,9 +202,42 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
+    pub fn init_keyboard_event_with_js_string_and_bubbles_arg(
+        this: &KeyboardEvent,
+        type_arg: &::js_sys::JsString,
+        bubbles_arg: bool,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "KeyboardEvent",
+        js_name = "initKeyboardEvent"
+    )]
+    #[doc = "The `initKeyboardEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
     pub fn init_keyboard_event_with_bubbles_arg_and_cancelable_arg(
         this: &KeyboardEvent,
         type_arg: &str,
+        bubbles_arg: bool,
+        cancelable_arg: bool,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "KeyboardEvent",
+        js_name = "initKeyboardEvent"
+    )]
+    #[doc = "The `initKeyboardEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
+    pub fn init_keyboard_event_with_js_string_and_bubbles_arg_and_cancelable_arg(
+        this: &KeyboardEvent,
+        type_arg: &::js_sys::JsString,
         bubbles_arg: bool,
         cancelable_arg: bool,
     ) -> Result<(), JsValue>;
@@ -180,6 +256,25 @@ extern "C" {
     pub fn init_keyboard_event_with_bubbles_arg_and_cancelable_arg_and_view_arg(
         this: &KeyboardEvent,
         type_arg: &str,
+        bubbles_arg: bool,
+        cancelable_arg: bool,
+        view_arg: Option<&Window>,
+    ) -> Result<(), JsValue>;
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "KeyboardEvent",
+        js_name = "initKeyboardEvent"
+    )]
+    #[doc = "The `initKeyboardEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`, `Window`*"]
+    pub fn init_keyboard_event_with_js_string_and_bubbles_arg_and_cancelable_arg_and_view_arg(
+        this: &KeyboardEvent,
+        type_arg: &::js_sys::JsString,
         bubbles_arg: bool,
         cancelable_arg: bool,
         view_arg: Option<&Window>,
@@ -216,6 +311,26 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`, `Window`*"]
+    pub fn init_keyboard_event_with_js_string_and_bubbles_arg_and_cancelable_arg_and_view_arg_and_js_string(
+        this: &KeyboardEvent,
+        type_arg: &::js_sys::JsString,
+        bubbles_arg: bool,
+        cancelable_arg: bool,
+        view_arg: Option<&Window>,
+        key_arg: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "KeyboardEvent",
+        js_name = "initKeyboardEvent"
+    )]
+    #[doc = "The `initKeyboardEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`, `Window`*"]
     pub fn init_keyboard_event_with_bubbles_arg_and_cancelable_arg_and_view_arg_and_key_arg_and_location_arg(
         this: &KeyboardEvent,
         type_arg: &str,
@@ -223,6 +338,27 @@ extern "C" {
         cancelable_arg: bool,
         view_arg: Option<&Window>,
         key_arg: &str,
+        location_arg: u32,
+    ) -> Result<(), JsValue>;
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "KeyboardEvent",
+        js_name = "initKeyboardEvent"
+    )]
+    #[doc = "The `initKeyboardEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`, `Window`*"]
+    pub fn init_keyboard_event_with_js_string_and_bubbles_arg_and_cancelable_arg_and_view_arg_and_js_string_and_location_arg(
+        this: &KeyboardEvent,
+        type_arg: &::js_sys::JsString,
+        bubbles_arg: bool,
+        cancelable_arg: bool,
+        view_arg: Option<&Window>,
+        key_arg: &::js_sys::JsString,
         location_arg: u32,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "Window")]
@@ -259,6 +395,28 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`, `Window`*"]
+    pub fn init_keyboard_event_with_js_string_and_bubbles_arg_and_cancelable_arg_and_view_arg_and_js_string_and_location_arg_and_ctrl_key(
+        this: &KeyboardEvent,
+        type_arg: &::js_sys::JsString,
+        bubbles_arg: bool,
+        cancelable_arg: bool,
+        view_arg: Option<&Window>,
+        key_arg: &::js_sys::JsString,
+        location_arg: u32,
+        ctrl_key: bool,
+    ) -> Result<(), JsValue>;
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "KeyboardEvent",
+        js_name = "initKeyboardEvent"
+    )]
+    #[doc = "The `initKeyboardEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`, `Window`*"]
     pub fn init_keyboard_event_with_bubbles_arg_and_cancelable_arg_and_view_arg_and_key_arg_and_location_arg_and_ctrl_key_and_alt_key(
         this: &KeyboardEvent,
         type_arg: &str,
@@ -266,6 +424,29 @@ extern "C" {
         cancelable_arg: bool,
         view_arg: Option<&Window>,
         key_arg: &str,
+        location_arg: u32,
+        ctrl_key: bool,
+        alt_key: bool,
+    ) -> Result<(), JsValue>;
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "KeyboardEvent",
+        js_name = "initKeyboardEvent"
+    )]
+    #[doc = "The `initKeyboardEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`, `Window`*"]
+    pub fn init_keyboard_event_with_js_string_and_bubbles_arg_and_cancelable_arg_and_view_arg_and_js_string_and_location_arg_and_ctrl_key_and_alt_key(
+        this: &KeyboardEvent,
+        type_arg: &::js_sys::JsString,
+        bubbles_arg: bool,
+        cancelable_arg: bool,
+        view_arg: Option<&Window>,
+        key_arg: &::js_sys::JsString,
         location_arg: u32,
         ctrl_key: bool,
         alt_key: bool,
@@ -306,6 +487,30 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`, `Window`*"]
+    pub fn init_keyboard_event_with_js_string_and_bubbles_arg_and_cancelable_arg_and_view_arg_and_js_string_and_location_arg_and_ctrl_key_and_alt_key_and_shift_key(
+        this: &KeyboardEvent,
+        type_arg: &::js_sys::JsString,
+        bubbles_arg: bool,
+        cancelable_arg: bool,
+        view_arg: Option<&Window>,
+        key_arg: &::js_sys::JsString,
+        location_arg: u32,
+        ctrl_key: bool,
+        alt_key: bool,
+        shift_key: bool,
+    ) -> Result<(), JsValue>;
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "KeyboardEvent",
+        js_name = "initKeyboardEvent"
+    )]
+    #[doc = "The `initKeyboardEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`, `Window`*"]
     pub fn init_keyboard_event_with_bubbles_arg_and_cancelable_arg_and_view_arg_and_key_arg_and_location_arg_and_ctrl_key_and_alt_key_and_shift_key_and_meta_key(
         this: &KeyboardEvent,
         type_arg: &str,
@@ -313,6 +518,31 @@ extern "C" {
         cancelable_arg: bool,
         view_arg: Option<&Window>,
         key_arg: &str,
+        location_arg: u32,
+        ctrl_key: bool,
+        alt_key: bool,
+        shift_key: bool,
+        meta_key: bool,
+    ) -> Result<(), JsValue>;
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "KeyboardEvent",
+        js_name = "initKeyboardEvent"
+    )]
+    #[doc = "The `initKeyboardEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/initKeyboardEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`, `Window`*"]
+    pub fn init_keyboard_event_with_js_string_and_bubbles_arg_and_cancelable_arg_and_view_arg_and_js_string_and_location_arg_and_ctrl_key_and_alt_key_and_shift_key_and_meta_key(
+        this: &KeyboardEvent,
+        type_arg: &::js_sys::JsString,
+        bubbles_arg: bool,
+        cancelable_arg: bool,
+        view_arg: Option<&Window>,
+        key_arg: &::js_sys::JsString,
         location_arg: u32,
         ctrl_key: bool,
         alt_key: bool,

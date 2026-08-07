@@ -80,6 +80,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcDataChannelInit`*"]
     #[wasm_bindgen(method, setter = "protocol")]
     pub fn set_protocol(this: &RtcDataChannelInit, val: &str);
+    #[doc = "Change the `protocol` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcDataChannelInit`*"]
+    #[wasm_bindgen(method, setter = "protocol")]
+    pub fn set_protocol_js_string(this: &RtcDataChannelInit, val: &::js_sys::JsString);
 }
 impl RtcDataChannelInit {
     #[doc = "Construct a new `RtcDataChannelInit`."]

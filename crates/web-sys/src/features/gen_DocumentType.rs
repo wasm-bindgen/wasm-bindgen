@@ -243,6 +243,114 @@ extern "C" {
         nodes_6: &str,
         nodes_7: &str,
     ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, variadic, js_class = "DocumentType", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn after_with_js_string(
+        this: &DocumentType,
+        nodes: &::js_sys::Array,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn after_with_js_string_0(this: &DocumentType) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn after_with_js_string_1(
+        this: &DocumentType,
+        nodes_1: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn after_with_js_string_2(
+        this: &DocumentType,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn after_with_js_string_3(
+        this: &DocumentType,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn after_with_js_string_4(
+        this: &DocumentType,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn after_with_js_string_5(
+        this: &DocumentType,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn after_with_js_string_6(
+        this: &DocumentType,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn after_with_js_string_7(
+        this: &DocumentType,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+        nodes_7: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, variadic, js_class = "DocumentType", js_name = "before")]
     #[doc = "The `before()` method."]
     #[doc = ""]
@@ -446,6 +554,114 @@ extern "C" {
         nodes_5: &str,
         nodes_6: &str,
         nodes_7: &str,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, variadic, js_class = "DocumentType", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn before_with_js_string(
+        this: &DocumentType,
+        nodes: &::js_sys::Array,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn before_with_js_string_0(this: &DocumentType) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn before_with_js_string_1(
+        this: &DocumentType,
+        nodes_1: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn before_with_js_string_2(
+        this: &DocumentType,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn before_with_js_string_3(
+        this: &DocumentType,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn before_with_js_string_4(
+        this: &DocumentType,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn before_with_js_string_5(
+        this: &DocumentType,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn before_with_js_string_6(
+        this: &DocumentType,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn before_with_js_string_7(
+        this: &DocumentType,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+        nodes_7: &::js_sys::JsString,
     ) -> Result<(), JsValue>;
     #[wasm_bindgen(method, js_class = "DocumentType")]
     #[doc = "The `remove()` method."]
@@ -675,5 +891,119 @@ extern "C" {
         nodes_5: &str,
         nodes_6: &str,
         nodes_7: &str,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        variadic,
+        js_class = "DocumentType",
+        js_name = "replaceWith"
+    )]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn replace_with_with_js_string(
+        this: &DocumentType,
+        nodes: &::js_sys::Array,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn replace_with_with_js_string_0(this: &DocumentType) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn replace_with_with_js_string_1(
+        this: &DocumentType,
+        nodes_1: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn replace_with_with_js_string_2(
+        this: &DocumentType,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn replace_with_with_js_string_3(
+        this: &DocumentType,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn replace_with_with_js_string_4(
+        this: &DocumentType,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn replace_with_with_js_string_5(
+        this: &DocumentType,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn replace_with_with_js_string_6(
+        this: &DocumentType,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DocumentType", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn replace_with_with_js_string_7(
+        this: &DocumentType,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+        nodes_7: &::js_sys::JsString,
     ) -> Result<(), JsValue>;
 }

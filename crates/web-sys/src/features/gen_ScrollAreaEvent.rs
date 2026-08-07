@@ -59,6 +59,16 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ScrollAreaEvent/initScrollAreaEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ScrollAreaEvent`*"]
+    pub fn init_scroll_area_event_with_js_string(
+        this: &ScrollAreaEvent,
+        type_: &::js_sys::JsString,
+    );
+    #[wasm_bindgen(method, js_class = "ScrollAreaEvent", js_name = "initScrollAreaEvent")]
+    #[doc = "The `initScrollAreaEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ScrollAreaEvent/initScrollAreaEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ScrollAreaEvent`*"]
     pub fn init_scroll_area_event_with_can_bubble(
         this: &ScrollAreaEvent,
         type_: &str,
@@ -70,9 +80,32 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ScrollAreaEvent/initScrollAreaEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ScrollAreaEvent`*"]
+    pub fn init_scroll_area_event_with_js_string_and_can_bubble(
+        this: &ScrollAreaEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+    );
+    #[wasm_bindgen(method, js_class = "ScrollAreaEvent", js_name = "initScrollAreaEvent")]
+    #[doc = "The `initScrollAreaEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ScrollAreaEvent/initScrollAreaEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ScrollAreaEvent`*"]
     pub fn init_scroll_area_event_with_can_bubble_and_cancelable(
         this: &ScrollAreaEvent,
         type_: &str,
+        can_bubble: bool,
+        cancelable: bool,
+    );
+    #[wasm_bindgen(method, js_class = "ScrollAreaEvent", js_name = "initScrollAreaEvent")]
+    #[doc = "The `initScrollAreaEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ScrollAreaEvent/initScrollAreaEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ScrollAreaEvent`*"]
+    pub fn init_scroll_area_event_with_js_string_and_can_bubble_and_cancelable(
+        this: &ScrollAreaEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
         cancelable: bool,
     );
@@ -97,9 +130,38 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ScrollAreaEvent/initScrollAreaEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ScrollAreaEvent`, `Window`*"]
+    pub fn init_scroll_area_event_with_js_string_and_can_bubble_and_cancelable_and_view(
+        this: &ScrollAreaEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "ScrollAreaEvent", js_name = "initScrollAreaEvent")]
+    #[doc = "The `initScrollAreaEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ScrollAreaEvent/initScrollAreaEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ScrollAreaEvent`, `Window`*"]
     pub fn init_scroll_area_event_with_can_bubble_and_cancelable_and_view_and_detail(
         this: &ScrollAreaEvent,
         type_: &str,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "ScrollAreaEvent", js_name = "initScrollAreaEvent")]
+    #[doc = "The `initScrollAreaEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ScrollAreaEvent/initScrollAreaEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ScrollAreaEvent`, `Window`*"]
+    pub fn init_scroll_area_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail(
+        this: &ScrollAreaEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
         cancelable: bool,
         view: Option<&Window>,
@@ -128,9 +190,42 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ScrollAreaEvent/initScrollAreaEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ScrollAreaEvent`, `Window`*"]
+    pub fn init_scroll_area_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail_and_x(
+        this: &ScrollAreaEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        x: f32,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "ScrollAreaEvent", js_name = "initScrollAreaEvent")]
+    #[doc = "The `initScrollAreaEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ScrollAreaEvent/initScrollAreaEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ScrollAreaEvent`, `Window`*"]
     pub fn init_scroll_area_event_with_can_bubble_and_cancelable_and_view_and_detail_and_x_and_y(
         this: &ScrollAreaEvent,
         type_: &str,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        x: f32,
+        y: f32,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "ScrollAreaEvent", js_name = "initScrollAreaEvent")]
+    #[doc = "The `initScrollAreaEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ScrollAreaEvent/initScrollAreaEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ScrollAreaEvent`, `Window`*"]
+    pub fn init_scroll_area_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail_and_x_and_y(
+        this: &ScrollAreaEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
         cancelable: bool,
         view: Option<&Window>,
@@ -163,9 +258,46 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ScrollAreaEvent/initScrollAreaEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ScrollAreaEvent`, `Window`*"]
+    pub fn init_scroll_area_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail_and_x_and_y_and_width(
+        this: &ScrollAreaEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        x: f32,
+        y: f32,
+        width: f32,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "ScrollAreaEvent", js_name = "initScrollAreaEvent")]
+    #[doc = "The `initScrollAreaEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ScrollAreaEvent/initScrollAreaEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ScrollAreaEvent`, `Window`*"]
     pub fn init_scroll_area_event_with_can_bubble_and_cancelable_and_view_and_detail_and_x_and_y_and_width_and_height(
         this: &ScrollAreaEvent,
         type_: &str,
+        can_bubble: bool,
+        cancelable: bool,
+        view: Option<&Window>,
+        detail: i32,
+        x: f32,
+        y: f32,
+        width: f32,
+        height: f32,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "ScrollAreaEvent", js_name = "initScrollAreaEvent")]
+    #[doc = "The `initScrollAreaEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ScrollAreaEvent/initScrollAreaEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ScrollAreaEvent`, `Window`*"]
+    pub fn init_scroll_area_event_with_js_string_and_can_bubble_and_cancelable_and_view_and_detail_and_x_and_y_and_width_and_height(
+        this: &ScrollAreaEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
         cancelable: bool,
         view: Option<&Window>,

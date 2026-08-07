@@ -40,6 +40,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaTrackSettings`*"]
     #[wasm_bindgen(method, setter = "deviceId")]
     pub fn set_device_id(this: &MediaTrackSettings, val: &str);
+    #[doc = "Change the `deviceId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaTrackSettings`*"]
+    #[wasm_bindgen(method, setter = "deviceId")]
+    pub fn set_device_id_js_string(this: &MediaTrackSettings, val: &::js_sys::JsString);
     #[doc = "Get the `echoCancellation` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaTrackSettings`*"]
@@ -60,6 +65,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaTrackSettings`*"]
     #[wasm_bindgen(method, setter = "facingMode")]
     pub fn set_facing_mode(this: &MediaTrackSettings, val: &str);
+    #[doc = "Change the `facingMode` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaTrackSettings`*"]
+    #[wasm_bindgen(method, setter = "facingMode")]
+    pub fn set_facing_mode_js_string(this: &MediaTrackSettings, val: &::js_sys::JsString);
     #[doc = "Get the `frameRate` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaTrackSettings`*"]

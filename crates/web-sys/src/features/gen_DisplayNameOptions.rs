@@ -30,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DisplayNameOptions`*"]
     #[wasm_bindgen(method, setter = "style")]
     pub fn set_style(this: &DisplayNameOptions, val: &str);
+    #[doc = "Change the `style` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DisplayNameOptions`*"]
+    #[wasm_bindgen(method, setter = "style")]
+    pub fn set_style_js_string(this: &DisplayNameOptions, val: &::js_sys::JsString);
 }
 impl DisplayNameOptions {
     #[doc = "Construct a new `DisplayNameOptions`."]

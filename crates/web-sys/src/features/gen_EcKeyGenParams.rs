@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `EcKeyGenParams`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &EcKeyGenParams, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `EcKeyGenParams`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &EcKeyGenParams, val: &::js_sys::JsString);
     #[doc = "Get the `namedCurve` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `EcKeyGenParams`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `EcKeyGenParams`*"]
     #[wasm_bindgen(method, setter = "namedCurve")]
     pub fn set_named_curve(this: &EcKeyGenParams, val: &str);
+    #[doc = "Change the `namedCurve` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `EcKeyGenParams`*"]
+    #[wasm_bindgen(method, setter = "namedCurve")]
+    pub fn set_named_curve_js_string(this: &EcKeyGenParams, val: &::js_sys::JsString);
 }
 impl EcKeyGenParams {
     #[doc = "Construct a new `EcKeyGenParams`."]

@@ -38,6 +38,18 @@ extern "C" {
     #[wasm_bindgen(method, setter = "attestationObject")]
     pub fn set_attestation_object(this: &AuthenticatorAttestationResponseJson, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `attestationObject` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AuthenticatorAttestationResponseJson`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "attestationObject")]
+    pub fn set_attestation_object_js_string(
+        this: &AuthenticatorAttestationResponseJson,
+        val: &::js_sys::JsString,
+    );
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `authenticatorData` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AuthenticatorAttestationResponseJson`*"]
@@ -57,6 +69,18 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "authenticatorData")]
     pub fn set_authenticator_data(this: &AuthenticatorAttestationResponseJson, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `authenticatorData` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AuthenticatorAttestationResponseJson`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "authenticatorData")]
+    pub fn set_authenticator_data_js_string(
+        this: &AuthenticatorAttestationResponseJson,
+        val: &::js_sys::JsString,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `clientDataJSON` field of this object."]
     #[doc = ""]
@@ -78,6 +102,18 @@ extern "C" {
     #[wasm_bindgen(method, setter = "clientDataJSON")]
     pub fn set_client_data_json(this: &AuthenticatorAttestationResponseJson, val: &str);
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `clientDataJSON` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AuthenticatorAttestationResponseJson`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "clientDataJSON")]
+    pub fn set_client_data_json_js_string(
+        this: &AuthenticatorAttestationResponseJson,
+        val: &::js_sys::JsString,
+    );
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `publicKey` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AuthenticatorAttestationResponseJson`*"]
@@ -97,6 +133,18 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "publicKey")]
     pub fn set_public_key(this: &AuthenticatorAttestationResponseJson, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `publicKey` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AuthenticatorAttestationResponseJson`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "publicKey")]
+    pub fn set_public_key_js_string(
+        this: &AuthenticatorAttestationResponseJson,
+        val: &::js_sys::JsString,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `publicKeyAlgorithm` field of this object."]
     #[doc = ""]

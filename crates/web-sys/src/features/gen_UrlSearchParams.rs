@@ -48,6 +48,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
     pub fn new_with_str(init: &str) -> Result<UrlSearchParams, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "URLSearchParams")]
+    #[doc = "The `new UrlSearchParams(..)` constructor, creating a new instance of `UrlSearchParams`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/URLSearchParams)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
+    pub fn new_with_js_string(init: &::js_sys::JsString) -> Result<UrlSearchParams, JsValue>;
     #[wasm_bindgen(method, js_class = "URLSearchParams")]
     #[doc = "The `append()` method."]
     #[doc = ""]
@@ -55,6 +62,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
     pub fn append(this: &UrlSearchParams, name: &str, value: &str);
+    #[wasm_bindgen(method, js_class = "URLSearchParams", js_name = "append")]
+    #[doc = "The `append()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/append)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
+    pub fn append_with_js_string_and_js_string(
+        this: &UrlSearchParams,
+        name: &::js_sys::JsString,
+        value: &::js_sys::JsString,
+    );
     #[wasm_bindgen(method, js_class = "URLSearchParams")]
     #[doc = "The `delete()` method."]
     #[doc = ""]
@@ -62,6 +80,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
     pub fn delete(this: &UrlSearchParams, name: &str);
+    #[wasm_bindgen(method, js_class = "URLSearchParams", js_name = "delete")]
+    #[doc = "The `delete()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/delete)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
+    pub fn delete_with_js_string(this: &UrlSearchParams, name: &::js_sys::JsString);
     #[wasm_bindgen(catch, method, js_class = "URLSearchParams", js_name = "forEach")]
     #[doc = "The `forEach()` method."]
     #[doc = ""]
@@ -76,6 +101,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
     pub fn get(this: &UrlSearchParams, name: &str) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, js_class = "URLSearchParams", js_name = "get")]
+    #[doc = "The `get()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/get)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
+    pub fn get_with_js_string(
+        this: &UrlSearchParams,
+        name: &::js_sys::JsString,
+    ) -> Option<::alloc::string::String>;
     #[wasm_bindgen(method, js_class = "URLSearchParams", js_name = "getAll")]
     #[doc = "The `getAll()` method."]
     #[doc = ""]
@@ -83,6 +118,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
     pub fn get_all(this: &UrlSearchParams, name: &str) -> ::js_sys::Array;
+    #[wasm_bindgen(method, js_class = "URLSearchParams", js_name = "getAll")]
+    #[doc = "The `getAll()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/getAll)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
+    pub fn get_all_with_js_string(
+        this: &UrlSearchParams,
+        name: &::js_sys::JsString,
+    ) -> ::js_sys::Array;
     #[wasm_bindgen(method, js_class = "URLSearchParams")]
     #[doc = "The `has()` method."]
     #[doc = ""]
@@ -90,6 +135,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
     pub fn has(this: &UrlSearchParams, name: &str) -> bool;
+    #[wasm_bindgen(method, js_class = "URLSearchParams", js_name = "has")]
+    #[doc = "The `has()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/has)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
+    pub fn has_with_js_string(this: &UrlSearchParams, name: &::js_sys::JsString) -> bool;
     #[wasm_bindgen(method, js_class = "URLSearchParams")]
     #[doc = "The `set()` method."]
     #[doc = ""]
@@ -97,6 +149,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
     pub fn set(this: &UrlSearchParams, name: &str, value: &str);
+    #[wasm_bindgen(method, js_class = "URLSearchParams", js_name = "set")]
+    #[doc = "The `set()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/set)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
+    pub fn set_with_js_string_and_js_string(
+        this: &UrlSearchParams,
+        name: &::js_sys::JsString,
+        value: &::js_sys::JsString,
+    );
     #[wasm_bindgen(catch, method, js_class = "URLSearchParams")]
     #[doc = "The `sort()` method."]
     #[doc = ""]

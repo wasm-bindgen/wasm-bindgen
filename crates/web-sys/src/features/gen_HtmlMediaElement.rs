@@ -42,6 +42,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlMediaElement`*"]
     pub fn set_src(this: &HtmlMediaElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLMediaElement", js_name = "src")]
+    #[doc = "Setter for the `src` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/src)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlMediaElement`*"]
+    pub fn set_src_js_string(this: &HtmlMediaElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLMediaElement", js_name = "currentSrc")]
     #[doc = "Getter for the `currentSrc` field of this object."]
     #[doc = ""]
@@ -79,6 +86,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlMediaElement`*"]
     pub fn set_cross_origin(this: &HtmlMediaElement, value: Option<&str>);
+    #[wasm_bindgen(method, setter, js_class = "HTMLMediaElement", js_name = "crossOrigin")]
+    #[doc = "Setter for the `crossOrigin` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/crossOrigin)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlMediaElement`*"]
+    pub fn set_cross_origin_opt_js_string(
+        this: &HtmlMediaElement,
+        value: Option<&::js_sys::JsString>,
+    );
     #[wasm_bindgen(
         method,
         getter,
@@ -105,6 +122,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlMediaElement`*"]
     pub fn set_preload(this: &HtmlMediaElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLMediaElement", js_name = "preload")]
+    #[doc = "Setter for the `preload` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/preload)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlMediaElement`*"]
+    pub fn set_preload_js_string(this: &HtmlMediaElement, value: &::js_sys::JsString);
     #[cfg(feature = "TimeRanges")]
     #[wasm_bindgen(method, getter, js_class = "HTMLMediaElement", js_name = "buffered")]
     #[doc = "Getter for the `buffered` field of this object."]
@@ -417,11 +441,36 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/addTextTrack)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlMediaElement`, `TextTrack`, `TextTrackKind`*"]
+    pub fn add_text_track_with_js_string(
+        this: &HtmlMediaElement,
+        kind: TextTrackKind,
+        label: &::js_sys::JsString,
+    ) -> TextTrack;
+    #[cfg(all(feature = "TextTrack", feature = "TextTrackKind",))]
+    #[wasm_bindgen(method, js_class = "HTMLMediaElement", js_name = "addTextTrack")]
+    #[doc = "The `addTextTrack()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/addTextTrack)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlMediaElement`, `TextTrack`, `TextTrackKind`*"]
     pub fn add_text_track_with_label_and_language(
         this: &HtmlMediaElement,
         kind: TextTrackKind,
         label: &str,
         language: &str,
+    ) -> TextTrack;
+    #[cfg(all(feature = "TextTrack", feature = "TextTrackKind",))]
+    #[wasm_bindgen(method, js_class = "HTMLMediaElement", js_name = "addTextTrack")]
+    #[doc = "The `addTextTrack()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/addTextTrack)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlMediaElement`, `TextTrack`, `TextTrackKind`*"]
+    pub fn add_text_track_with_js_string_and_js_string(
+        this: &HtmlMediaElement,
+        kind: TextTrackKind,
+        label: &::js_sys::JsString,
+        language: &::js_sys::JsString,
     ) -> TextTrack;
     #[wasm_bindgen(method, js_class = "HTMLMediaElement", js_name = "canPlayType")]
     #[doc = "The `canPlayType()` method."]
@@ -430,6 +479,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlMediaElement`*"]
     pub fn can_play_type(this: &HtmlMediaElement, type_: &str) -> ::alloc::string::String;
+    #[wasm_bindgen(method, js_class = "HTMLMediaElement", js_name = "canPlayType")]
+    #[doc = "The `canPlayType()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/canPlayType)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlMediaElement`*"]
+    pub fn can_play_type_with_js_string(
+        this: &HtmlMediaElement,
+        type_: &::js_sys::JsString,
+    ) -> ::alloc::string::String;
     #[wasm_bindgen(catch, method, js_class = "HTMLMediaElement", js_name = "fastSeek")]
     #[doc = "The `fastSeek()` method."]
     #[doc = ""]

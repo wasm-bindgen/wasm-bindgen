@@ -49,6 +49,15 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PaymentMethodChangeEvent`*"]
     pub fn new(type_: &str) -> Result<PaymentMethodChangeEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "PaymentMethodChangeEvent")]
+    #[doc = "The `new PaymentMethodChangeEvent(..)` constructor, creating a new instance of `PaymentMethodChangeEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentMethodChangeEvent/PaymentMethodChangeEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PaymentMethodChangeEvent`*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+    ) -> Result<PaymentMethodChangeEvent, JsValue>;
     #[cfg(feature = "PaymentMethodChangeEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "PaymentMethodChangeEvent")]
     #[doc = "The `new PaymentMethodChangeEvent(..)` constructor, creating a new instance of `PaymentMethodChangeEvent`."]
@@ -58,6 +67,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PaymentMethodChangeEvent`, `PaymentMethodChangeEventInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &PaymentMethodChangeEventInit,
+    ) -> Result<PaymentMethodChangeEvent, JsValue>;
+    #[cfg(feature = "PaymentMethodChangeEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "PaymentMethodChangeEvent")]
+    #[doc = "The `new PaymentMethodChangeEvent(..)` constructor, creating a new instance of `PaymentMethodChangeEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentMethodChangeEvent/PaymentMethodChangeEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PaymentMethodChangeEvent`, `PaymentMethodChangeEventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &PaymentMethodChangeEventInit,
     ) -> Result<PaymentMethodChangeEvent, JsValue>;
 }

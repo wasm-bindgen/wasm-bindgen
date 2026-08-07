@@ -37,6 +37,15 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcPeerConnectionIceEvent`*"]
     pub fn new(type_: &str) -> Result<RtcPeerConnectionIceEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "RTCPeerConnectionIceEvent")]
+    #[doc = "The `new RtcPeerConnectionIceEvent(..)` constructor, creating a new instance of `RtcPeerConnectionIceEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnectionIceEvent/RTCPeerConnectionIceEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcPeerConnectionIceEvent`*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+    ) -> Result<RtcPeerConnectionIceEvent, JsValue>;
     #[cfg(feature = "RtcPeerConnectionIceEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "RTCPeerConnectionIceEvent")]
     #[doc = "The `new RtcPeerConnectionIceEvent(..)` constructor, creating a new instance of `RtcPeerConnectionIceEvent`."]
@@ -46,6 +55,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcPeerConnectionIceEvent`, `RtcPeerConnectionIceEventInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &RtcPeerConnectionIceEventInit,
+    ) -> Result<RtcPeerConnectionIceEvent, JsValue>;
+    #[cfg(feature = "RtcPeerConnectionIceEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "RTCPeerConnectionIceEvent")]
+    #[doc = "The `new RtcPeerConnectionIceEvent(..)` constructor, creating a new instance of `RtcPeerConnectionIceEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnectionIceEvent/RTCPeerConnectionIceEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcPeerConnectionIceEvent`, `RtcPeerConnectionIceEventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &RtcPeerConnectionIceEventInit,
     ) -> Result<RtcPeerConnectionIceEvent, JsValue>;
 }

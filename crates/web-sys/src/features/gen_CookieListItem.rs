@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CookieListItem`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &CookieListItem, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieListItem`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &CookieListItem, val: &::js_sys::JsString);
     #[doc = "Get the `value` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CookieListItem`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CookieListItem`*"]
     #[wasm_bindgen(method, setter = "value")]
     pub fn set_value(this: &CookieListItem, val: &str);
+    #[doc = "Change the `value` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieListItem`*"]
+    #[wasm_bindgen(method, setter = "value")]
+    pub fn set_value_js_string(this: &CookieListItem, val: &::js_sys::JsString);
 }
 impl CookieListItem {
     #[doc = "Construct a new `CookieListItem`."]

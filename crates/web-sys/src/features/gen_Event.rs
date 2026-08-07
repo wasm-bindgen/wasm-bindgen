@@ -109,6 +109,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Event`*"]
     pub fn new(type_: &str) -> Result<Event, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "Event")]
+    #[doc = "The `new Event(..)` constructor, creating a new instance of `Event`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Event/Event)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Event`*"]
+    pub fn new_with_js_string(type_: &::js_sys::JsString) -> Result<Event, JsValue>;
     #[cfg(feature = "EventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "Event")]
     #[doc = "The `new Event(..)` constructor, creating a new instance of `Event`."]
@@ -118,6 +125,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Event`, `EventInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &EventInit,
+    ) -> Result<Event, JsValue>;
+    #[cfg(feature = "EventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "Event")]
+    #[doc = "The `new Event(..)` constructor, creating a new instance of `Event`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Event/Event)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Event`, `EventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &EventInit,
     ) -> Result<Event, JsValue>;
     #[wasm_bindgen(method, js_class = "Event", js_name = "composedPath")]
@@ -140,7 +158,25 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Event/initEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Event`*"]
+    pub fn init_event_with_js_string(this: &Event, type_: &::js_sys::JsString);
+    #[wasm_bindgen(method, js_class = "Event", js_name = "initEvent")]
+    #[doc = "The `initEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Event/initEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Event`*"]
     pub fn init_event_with_bubbles(this: &Event, type_: &str, bubbles: bool);
+    #[wasm_bindgen(method, js_class = "Event", js_name = "initEvent")]
+    #[doc = "The `initEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Event/initEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Event`*"]
+    pub fn init_event_with_js_string_and_bubbles(
+        this: &Event,
+        type_: &::js_sys::JsString,
+        bubbles: bool,
+    );
     #[wasm_bindgen(method, js_class = "Event", js_name = "initEvent")]
     #[doc = "The `initEvent()` method."]
     #[doc = ""]
@@ -150,6 +186,18 @@ extern "C" {
     pub fn init_event_with_bubbles_and_cancelable(
         this: &Event,
         type_: &str,
+        bubbles: bool,
+        cancelable: bool,
+    );
+    #[wasm_bindgen(method, js_class = "Event", js_name = "initEvent")]
+    #[doc = "The `initEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Event/initEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Event`*"]
+    pub fn init_event_with_js_string_and_bubbles_and_cancelable(
+        this: &Event,
+        type_: &::js_sys::JsString,
         bubbles: bool,
         cancelable: bool,
     );

@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateStats`*"]
     #[wasm_bindgen(method, setter = "id")]
     pub fn set_id(this: &RtcIceCandidateStats, val: &str);
+    #[doc = "Change the `id` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateStats`*"]
+    #[wasm_bindgen(method, setter = "id")]
+    pub fn set_id_js_string(this: &RtcIceCandidateStats, val: &::js_sys::JsString);
     #[doc = "Get the `timestamp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateStats`*"]
@@ -52,6 +57,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateStats`*"]
     #[wasm_bindgen(method, setter = "candidateId")]
     pub fn set_candidate_id(this: &RtcIceCandidateStats, val: &str);
+    #[doc = "Change the `candidateId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateStats`*"]
+    #[wasm_bindgen(method, setter = "candidateId")]
+    pub fn set_candidate_id_js_string(this: &RtcIceCandidateStats, val: &::js_sys::JsString);
     #[cfg(feature = "RtcStatsIceCandidateType")]
     #[doc = "Get the `candidateType` field of this object."]
     #[doc = ""]
@@ -74,6 +84,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateStats`*"]
     #[wasm_bindgen(method, setter = "componentId")]
     pub fn set_component_id(this: &RtcIceCandidateStats, val: &str);
+    #[doc = "Change the `componentId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateStats`*"]
+    #[wasm_bindgen(method, setter = "componentId")]
+    pub fn set_component_id_js_string(this: &RtcIceCandidateStats, val: &::js_sys::JsString);
     #[doc = "Get the `ipAddress` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateStats`*"]
@@ -84,6 +99,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateStats`*"]
     #[wasm_bindgen(method, setter = "ipAddress")]
     pub fn set_ip_address(this: &RtcIceCandidateStats, val: &str);
+    #[doc = "Change the `ipAddress` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateStats`*"]
+    #[wasm_bindgen(method, setter = "ipAddress")]
+    pub fn set_ip_address_js_string(this: &RtcIceCandidateStats, val: &::js_sys::JsString);
     #[doc = "Get the `portNumber` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateStats`*"]
@@ -104,6 +124,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateStats`*"]
     #[wasm_bindgen(method, setter = "transport")]
     pub fn set_transport(this: &RtcIceCandidateStats, val: &str);
+    #[doc = "Change the `transport` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateStats`*"]
+    #[wasm_bindgen(method, setter = "transport")]
+    pub fn set_transport_js_string(this: &RtcIceCandidateStats, val: &::js_sys::JsString);
 }
 impl RtcIceCandidateStats {
     #[doc = "Construct a new `RtcIceCandidateStats`."]

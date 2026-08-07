@@ -48,4 +48,19 @@ extern "C" {
         type_: &str,
         event_init_dict: &HidConnectionEventInit,
     ) -> Result<HidConnectionEvent, JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "HidConnectionEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "HIDConnectionEvent")]
+    #[doc = "The `new HidConnectionEvent(..)` constructor, creating a new instance of `HidConnectionEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HIDConnectionEvent/HIDConnectionEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HidConnectionEvent`, `HidConnectionEventInit`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+        event_init_dict: &HidConnectionEventInit,
+    ) -> Result<HidConnectionEvent, JsValue>;
 }

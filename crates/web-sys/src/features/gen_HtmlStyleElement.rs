@@ -48,6 +48,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlStyleElement`*"]
     pub fn set_media(this: &HtmlStyleElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLStyleElement", js_name = "media")]
+    #[doc = "Setter for the `media` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLStyleElement/media)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlStyleElement`*"]
+    pub fn set_media_js_string(this: &HtmlStyleElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLStyleElement", js_name = "type")]
     #[doc = "Getter for the `type` field of this object."]
     #[doc = ""]
@@ -62,6 +69,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlStyleElement`*"]
     pub fn set_type(this: &HtmlStyleElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLStyleElement", js_name = "type")]
+    #[doc = "Setter for the `type` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLStyleElement/type)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlStyleElement`*"]
+    pub fn set_type_js_string(this: &HtmlStyleElement, value: &::js_sys::JsString);
     #[cfg(feature = "StyleSheet")]
     #[wasm_bindgen(method, getter, js_class = "HTMLStyleElement", js_name = "sheet")]
     #[doc = "Getter for the `sheet` field of this object."]

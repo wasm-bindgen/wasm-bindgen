@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateInit`*"]
     #[wasm_bindgen(method, setter = "candidate")]
     pub fn set_candidate(this: &RtcIceCandidateInit, val: &str);
+    #[doc = "Change the `candidate` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateInit`*"]
+    #[wasm_bindgen(method, setter = "candidate")]
+    pub fn set_candidate_js_string(this: &RtcIceCandidateInit, val: &::js_sys::JsString);
     #[doc = "Get the `sdpMLineIndex` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateInit`*"]
@@ -40,6 +45,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateInit`*"]
     #[wasm_bindgen(method, setter = "sdpMid")]
     pub fn set_sdp_mid(this: &RtcIceCandidateInit, val: Option<&str>);
+    #[doc = "Change the `sdpMid` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateInit`*"]
+    #[wasm_bindgen(method, setter = "sdpMid")]
+    pub fn set_sdp_mid_opt_js_string(this: &RtcIceCandidateInit, val: Option<&::js_sys::JsString>);
 }
 impl RtcIceCandidateInit {
     #[doc = "Construct a new `RtcIceCandidateInit`."]

@@ -73,6 +73,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEvent`*"]
     pub fn new(type_: &str) -> Result<PopupBlockedEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "PopupBlockedEvent")]
+    #[doc = "The `new PopupBlockedEvent(..)` constructor, creating a new instance of `PopupBlockedEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PopupBlockedEvent/PopupBlockedEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEvent`*"]
+    pub fn new_with_js_string(type_: &::js_sys::JsString) -> Result<PopupBlockedEvent, JsValue>;
     #[cfg(feature = "PopupBlockedEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "PopupBlockedEvent")]
     #[doc = "The `new PopupBlockedEvent(..)` constructor, creating a new instance of `PopupBlockedEvent`."]
@@ -82,6 +89,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEvent`, `PopupBlockedEventInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &PopupBlockedEventInit,
+    ) -> Result<PopupBlockedEvent, JsValue>;
+    #[cfg(feature = "PopupBlockedEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "PopupBlockedEvent")]
+    #[doc = "The `new PopupBlockedEvent(..)` constructor, creating a new instance of `PopupBlockedEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PopupBlockedEvent/PopupBlockedEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEvent`, `PopupBlockedEventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &PopupBlockedEventInit,
     ) -> Result<PopupBlockedEvent, JsValue>;
 }

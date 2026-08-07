@@ -75,6 +75,15 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEvent`*"]
     pub fn new(type_: &str) -> Result<ExtendableMessageEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "ExtendableMessageEvent")]
+    #[doc = "The `new ExtendableMessageEvent(..)` constructor, creating a new instance of `ExtendableMessageEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ExtendableMessageEvent/ExtendableMessageEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEvent`*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+    ) -> Result<ExtendableMessageEvent, JsValue>;
     #[cfg(feature = "ExtendableMessageEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "ExtendableMessageEvent")]
     #[doc = "The `new ExtendableMessageEvent(..)` constructor, creating a new instance of `ExtendableMessageEvent`."]
@@ -84,6 +93,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEvent`, `ExtendableMessageEventInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &ExtendableMessageEventInit,
+    ) -> Result<ExtendableMessageEvent, JsValue>;
+    #[cfg(feature = "ExtendableMessageEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "ExtendableMessageEvent")]
+    #[doc = "The `new ExtendableMessageEvent(..)` constructor, creating a new instance of `ExtendableMessageEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ExtendableMessageEvent/ExtendableMessageEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEvent`, `ExtendableMessageEventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &ExtendableMessageEventInit,
     ) -> Result<ExtendableMessageEvent, JsValue>;
 }

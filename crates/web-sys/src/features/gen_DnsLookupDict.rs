@@ -40,6 +40,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DnsLookupDict`*"]
     #[wasm_bindgen(method, setter = "error")]
     pub fn set_error(this: &DnsLookupDict, val: &str);
+    #[doc = "Change the `error` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DnsLookupDict`*"]
+    #[wasm_bindgen(method, setter = "error")]
+    pub fn set_error_js_string(this: &DnsLookupDict, val: &::js_sys::JsString);
 }
 impl DnsLookupDict {
     #[doc = "Construct a new `DnsLookupDict`."]

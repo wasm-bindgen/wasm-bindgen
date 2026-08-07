@@ -38,6 +38,15 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MidiOutput`, `MidiOutputMap`*"]
     pub fn get(this: &MidiOutputMap, key: &str) -> Option<MidiOutput>;
+    #[cfg(feature = "MidiOutput")]
+    #[wasm_bindgen(method, js_class = "MIDIOutputMap", js_name = "get")]
+    #[doc = "The `get()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MIDIOutputMap/get)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MidiOutput`, `MidiOutputMap`*"]
+    pub fn get_with_js_string(this: &MidiOutputMap, key: &::js_sys::JsString)
+        -> Option<MidiOutput>;
     #[wasm_bindgen(method, js_class = "MIDIOutputMap")]
     #[doc = "The `has()` method."]
     #[doc = ""]
@@ -45,6 +54,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MidiOutputMap`*"]
     pub fn has(this: &MidiOutputMap, key: &str) -> bool;
+    #[wasm_bindgen(method, js_class = "MIDIOutputMap", js_name = "has")]
+    #[doc = "The `has()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MIDIOutputMap/has)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MidiOutputMap`*"]
+    pub fn has_with_js_string(this: &MidiOutputMap, key: &::js_sys::JsString) -> bool;
     #[wasm_bindgen(method, js_class = "MIDIOutputMap")]
     #[doc = "The `entries()` method."]
     #[doc = ""]

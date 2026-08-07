@@ -30,6 +30,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Clients`*"]
     pub fn get(this: &Clients, id: &str) -> ::js_sys::Promise;
+    #[wasm_bindgen(method, js_class = "Clients", js_name = "get")]
+    #[doc = "The `get()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Clients/get)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Clients`*"]
+    pub fn get_with_js_string(this: &Clients, id: &::js_sys::JsString) -> ::js_sys::Promise;
     #[wasm_bindgen(method, js_class = "Clients", js_name = "matchAll")]
     #[doc = "The `matchAll()` method."]
     #[doc = ""]
@@ -55,4 +62,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Clients`*"]
     pub fn open_window(this: &Clients, url: &str) -> ::js_sys::Promise;
+    #[wasm_bindgen(method, js_class = "Clients", js_name = "openWindow")]
+    #[doc = "The `openWindow()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Clients/openWindow)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Clients`*"]
+    pub fn open_window_with_js_string(
+        this: &Clients,
+        url: &::js_sys::JsString,
+    ) -> ::js_sys::Promise;
 }

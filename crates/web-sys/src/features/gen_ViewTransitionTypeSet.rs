@@ -43,6 +43,20 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn add(this: &ViewTransitionTypeSet, value: &str) -> ViewTransitionTypeSet;
     #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_class = "ViewTransitionTypeSet", js_name = "add")]
+    #[doc = "The `add()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ViewTransitionTypeSet/add)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ViewTransitionTypeSet`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn add_with_js_string(
+        this: &ViewTransitionTypeSet,
+        value: &::js_sys::JsString,
+    ) -> ViewTransitionTypeSet;
+    #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, js_class = "ViewTransitionTypeSet")]
     #[doc = "The `clear()` method."]
     #[doc = ""]
@@ -64,6 +78,17 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn delete(this: &ViewTransitionTypeSet, value: &str) -> bool;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_class = "ViewTransitionTypeSet", js_name = "delete")]
+    #[doc = "The `delete()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ViewTransitionTypeSet/delete)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ViewTransitionTypeSet`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn delete_with_js_string(this: &ViewTransitionTypeSet, value: &::js_sys::JsString) -> bool;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(catch, method, js_class = "ViewTransitionTypeSet", js_name = "forEach")]
     #[doc = "The `forEach()` method."]
@@ -89,6 +114,17 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn has(this: &ViewTransitionTypeSet, value: &str) -> bool;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_class = "ViewTransitionTypeSet", js_name = "has")]
+    #[doc = "The `has()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ViewTransitionTypeSet/has)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ViewTransitionTypeSet`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn has_with_js_string(this: &ViewTransitionTypeSet, value: &::js_sys::JsString) -> bool;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, js_class = "ViewTransitionTypeSet")]
     #[doc = "The `entries()` method."]

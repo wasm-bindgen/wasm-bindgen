@@ -30,6 +30,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaList`*"]
     pub fn set_media_text(this: &MediaList, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "MediaList", js_name = "mediaText")]
+    #[doc = "Setter for the `mediaText` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaList/mediaText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaList`*"]
+    pub fn set_media_text_js_string(this: &MediaList, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "MediaList", js_name = "length")]
     #[doc = "Getter for the `length` field of this object."]
     #[doc = ""]
@@ -44,6 +51,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaList`*"]
     pub fn append_medium(this: &MediaList, new_medium: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "MediaList", js_name = "appendMedium")]
+    #[doc = "The `appendMedium()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaList/appendMedium)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaList`*"]
+    pub fn append_medium_with_js_string(
+        this: &MediaList,
+        new_medium: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "MediaList", js_name = "deleteMedium")]
     #[doc = "The `deleteMedium()` method."]
     #[doc = ""]
@@ -51,6 +68,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaList`*"]
     pub fn delete_medium(this: &MediaList, old_medium: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "MediaList", js_name = "deleteMedium")]
+    #[doc = "The `deleteMedium()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaList/deleteMedium)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaList`*"]
+    pub fn delete_medium_with_js_string(
+        this: &MediaList,
+        old_medium: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(method, js_class = "MediaList")]
     #[doc = "The `item()` method."]
     #[doc = ""]

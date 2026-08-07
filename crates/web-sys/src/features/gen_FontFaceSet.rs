@@ -102,7 +102,28 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FontFaceSet/check)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FontFaceSet`*"]
+    pub fn check_with_js_string(
+        this: &FontFaceSet,
+        font: &::js_sys::JsString,
+    ) -> Result<bool, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "FontFaceSet", js_name = "check")]
+    #[doc = "The `check()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FontFaceSet/check)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FontFaceSet`*"]
     pub fn check_with_text(this: &FontFaceSet, font: &str, text: &str) -> Result<bool, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "FontFaceSet", js_name = "check")]
+    #[doc = "The `check()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FontFaceSet/check)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FontFaceSet`*"]
+    pub fn check_with_js_string_and_js_string(
+        this: &FontFaceSet,
+        font: &::js_sys::JsString,
+        text: &::js_sys::JsString,
+    ) -> Result<bool, JsValue>;
     #[wasm_bindgen(method, js_class = "FontFaceSet")]
     #[doc = "The `clear()` method."]
     #[doc = ""]
@@ -165,7 +186,25 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FontFaceSet/load)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FontFaceSet`*"]
+    pub fn load_with_js_string(this: &FontFaceSet, font: &::js_sys::JsString) -> ::js_sys::Promise;
+    #[wasm_bindgen(method, js_class = "FontFaceSet", js_name = "load")]
+    #[doc = "The `load()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FontFaceSet/load)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FontFaceSet`*"]
     pub fn load_with_text(this: &FontFaceSet, font: &str, text: &str) -> ::js_sys::Promise;
+    #[wasm_bindgen(method, js_class = "FontFaceSet", js_name = "load")]
+    #[doc = "The `load()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FontFaceSet/load)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FontFaceSet`*"]
+    pub fn load_with_js_string_and_js_string(
+        this: &FontFaceSet,
+        font: &::js_sys::JsString,
+        text: &::js_sys::JsString,
+    ) -> ::js_sys::Promise;
     #[cfg(feature = "FontFaceSetIterator")]
     #[wasm_bindgen(method, js_class = "FontFaceSet")]
     #[doc = "The `values()` method."]

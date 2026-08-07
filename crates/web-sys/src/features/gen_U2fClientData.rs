@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `U2fClientData`*"]
     #[wasm_bindgen(method, setter = "challenge")]
     pub fn set_challenge(this: &U2fClientData, val: &str);
+    #[doc = "Change the `challenge` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `U2fClientData`*"]
+    #[wasm_bindgen(method, setter = "challenge")]
+    pub fn set_challenge_js_string(this: &U2fClientData, val: &::js_sys::JsString);
     #[doc = "Get the `origin` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `U2fClientData`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `U2fClientData`*"]
     #[wasm_bindgen(method, setter = "origin")]
     pub fn set_origin(this: &U2fClientData, val: &str);
+    #[doc = "Change the `origin` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `U2fClientData`*"]
+    #[wasm_bindgen(method, setter = "origin")]
+    pub fn set_origin_js_string(this: &U2fClientData, val: &::js_sys::JsString);
     #[doc = "Get the `typ` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `U2fClientData`*"]
@@ -40,6 +50,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `U2fClientData`*"]
     #[wasm_bindgen(method, setter = "typ")]
     pub fn set_typ(this: &U2fClientData, val: &str);
+    #[doc = "Change the `typ` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `U2fClientData`*"]
+    #[wasm_bindgen(method, setter = "typ")]
+    pub fn set_typ_js_string(this: &U2fClientData, val: &::js_sys::JsString);
 }
 impl U2fClientData {
     #[doc = "Construct a new `U2fClientData`."]

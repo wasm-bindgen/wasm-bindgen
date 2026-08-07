@@ -60,6 +60,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaKeySystemConfiguration`*"]
     #[wasm_bindgen(method, setter = "label")]
     pub fn set_label(this: &MediaKeySystemConfiguration, val: &str);
+    #[doc = "Change the `label` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaKeySystemConfiguration`*"]
+    #[wasm_bindgen(method, setter = "label")]
+    pub fn set_label_js_string(this: &MediaKeySystemConfiguration, val: &::js_sys::JsString);
     #[cfg(feature = "MediaKeysRequirement")]
     #[doc = "Get the `persistentState` field of this object."]
     #[doc = ""]

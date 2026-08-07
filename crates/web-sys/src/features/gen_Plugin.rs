@@ -68,6 +68,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MimeType`, `Plugin`*"]
     pub fn named_item(this: &Plugin, name: &str) -> Option<MimeType>;
     #[cfg(feature = "MimeType")]
+    #[wasm_bindgen(method, js_class = "Plugin", js_name = "namedItem")]
+    #[doc = "The `namedItem()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Plugin/namedItem)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MimeType`, `Plugin`*"]
+    pub fn named_item_with_js_string(this: &Plugin, name: &::js_sys::JsString) -> Option<MimeType>;
+    #[cfg(feature = "MimeType")]
     #[wasm_bindgen(method, js_class = "Plugin", indexing_getter)]
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]
@@ -81,4 +89,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MimeType`, `Plugin`*"]
     pub fn get_with_name(this: &Plugin, name: &str) -> Option<MimeType>;
+    #[cfg(feature = "MimeType")]
+    #[wasm_bindgen(method, js_class = "Plugin", indexing_getter)]
+    #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
+    #[doc = ""]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MimeType`, `Plugin`*"]
+    pub fn get_with_js_string(this: &Plugin, name: &::js_sys::JsString) -> Option<MimeType>;
 }

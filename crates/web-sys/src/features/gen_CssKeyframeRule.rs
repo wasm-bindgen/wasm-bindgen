@@ -31,6 +31,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssKeyframeRule`*"]
     pub fn set_key_text(this: &CssKeyframeRule, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "CSSKeyframeRule", js_name = "keyText")]
+    #[doc = "Setter for the `keyText` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSKeyframeRule/keyText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssKeyframeRule`*"]
+    pub fn set_key_text_js_string(this: &CssKeyframeRule, value: &::js_sys::JsString);
     #[cfg(feature = "CssStyleDeclaration")]
     #[wasm_bindgen(method, getter, js_class = "CSSKeyframeRule", js_name = "style")]
     #[doc = "Getter for the `style` field of this object."]

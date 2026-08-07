@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityAssertion`*"]
     #[wasm_bindgen(method, setter = "idp")]
     pub fn set_idp(this: &RtcIdentityAssertion, val: &str);
+    #[doc = "Change the `idp` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIdentityAssertion`*"]
+    #[wasm_bindgen(method, setter = "idp")]
+    pub fn set_idp_js_string(this: &RtcIdentityAssertion, val: &::js_sys::JsString);
     #[doc = "Get the `name` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityAssertion`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityAssertion`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &RtcIdentityAssertion, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIdentityAssertion`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &RtcIdentityAssertion, val: &::js_sys::JsString);
 }
 impl RtcIdentityAssertion {
     #[doc = "Construct a new `RtcIdentityAssertion`."]

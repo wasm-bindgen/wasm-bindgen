@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcCodecStats`*"]
     #[wasm_bindgen(method, setter = "id")]
     pub fn set_id(this: &RtcCodecStats, val: &str);
+    #[doc = "Change the `id` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcCodecStats`*"]
+    #[wasm_bindgen(method, setter = "id")]
+    pub fn set_id_js_string(this: &RtcCodecStats, val: &::js_sys::JsString);
     #[doc = "Get the `timestamp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcCodecStats`*"]
@@ -72,6 +77,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcCodecStats`*"]
     #[wasm_bindgen(method, setter = "codec")]
     pub fn set_codec(this: &RtcCodecStats, val: &str);
+    #[doc = "Change the `codec` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcCodecStats`*"]
+    #[wasm_bindgen(method, setter = "codec")]
+    pub fn set_codec_js_string(this: &RtcCodecStats, val: &::js_sys::JsString);
     #[doc = "Get the `parameters` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcCodecStats`*"]
@@ -82,6 +92,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcCodecStats`*"]
     #[wasm_bindgen(method, setter = "parameters")]
     pub fn set_parameters(this: &RtcCodecStats, val: &str);
+    #[doc = "Change the `parameters` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcCodecStats`*"]
+    #[wasm_bindgen(method, setter = "parameters")]
+    pub fn set_parameters_js_string(this: &RtcCodecStats, val: &::js_sys::JsString);
     #[doc = "Get the `payloadType` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcCodecStats`*"]

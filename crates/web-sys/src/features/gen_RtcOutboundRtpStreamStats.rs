@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
     #[wasm_bindgen(method, setter = "id")]
     pub fn set_id(this: &RtcOutboundRtpStreamStats, val: &str);
+    #[doc = "Change the `id` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
+    #[wasm_bindgen(method, setter = "id")]
+    pub fn set_id_js_string(this: &RtcOutboundRtpStreamStats, val: &::js_sys::JsString);
     #[doc = "Get the `timestamp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
@@ -72,6 +77,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
     #[wasm_bindgen(method, setter = "codecId")]
     pub fn set_codec_id(this: &RtcOutboundRtpStreamStats, val: &str);
+    #[doc = "Change the `codecId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
+    #[wasm_bindgen(method, setter = "codecId")]
+    pub fn set_codec_id_js_string(this: &RtcOutboundRtpStreamStats, val: &::js_sys::JsString);
     #[doc = "Get the `firCount` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
@@ -122,6 +132,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
     #[wasm_bindgen(method, setter = "mediaTrackId")]
     pub fn set_media_track_id(this: &RtcOutboundRtpStreamStats, val: &str);
+    #[doc = "Change the `mediaTrackId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
+    #[wasm_bindgen(method, setter = "mediaTrackId")]
+    pub fn set_media_track_id_js_string(this: &RtcOutboundRtpStreamStats, val: &::js_sys::JsString);
     #[doc = "Get the `mediaType` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
@@ -132,6 +147,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
     #[wasm_bindgen(method, setter = "mediaType")]
     pub fn set_media_type(this: &RtcOutboundRtpStreamStats, val: &str);
+    #[doc = "Change the `mediaType` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
+    #[wasm_bindgen(method, setter = "mediaType")]
+    pub fn set_media_type_js_string(this: &RtcOutboundRtpStreamStats, val: &::js_sys::JsString);
     #[doc = "Get the `nackCount` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
@@ -162,6 +182,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
     #[wasm_bindgen(method, setter = "remoteId")]
     pub fn set_remote_id(this: &RtcOutboundRtpStreamStats, val: &str);
+    #[doc = "Change the `remoteId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
+    #[wasm_bindgen(method, setter = "remoteId")]
+    pub fn set_remote_id_js_string(this: &RtcOutboundRtpStreamStats, val: &::js_sys::JsString);
     #[doc = "Get the `ssrc` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
@@ -172,6 +197,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
     #[wasm_bindgen(method, setter = "ssrc")]
     pub fn set_ssrc(this: &RtcOutboundRtpStreamStats, val: &str);
+    #[doc = "Change the `ssrc` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
+    #[wasm_bindgen(method, setter = "ssrc")]
+    pub fn set_ssrc_js_string(this: &RtcOutboundRtpStreamStats, val: &::js_sys::JsString);
     #[doc = "Get the `transportId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
@@ -182,6 +212,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
     #[wasm_bindgen(method, setter = "transportId")]
     pub fn set_transport_id(this: &RtcOutboundRtpStreamStats, val: &str);
+    #[doc = "Change the `transportId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]
+    #[wasm_bindgen(method, setter = "transportId")]
+    pub fn set_transport_id_js_string(this: &RtcOutboundRtpStreamStats, val: &::js_sys::JsString);
     #[doc = "Get the `bytesSent` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcOutboundRtpStreamStats`*"]

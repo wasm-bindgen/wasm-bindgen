@@ -828,6 +828,9 @@ pub struct DictionaryFieldSetter {
     pub name_suffix: Option<String>,
     /// Whether this setter is deprecated (for backward-compat setters superseded by type-safe ones)
     pub deprecated: bool,
+    /// Whether this setter is a `JsString` expansion of a string type; these
+    /// are excluded from constructor variant generation.
+    pub is_js_string: bool,
 }
 
 #[derive(PartialEq, Eq)]
@@ -1094,10 +1097,11 @@ impl Dictionary {
             is_unsafe: bool,
         }
 
-        // Find the union field (if any) among required fields.
+        // Find the union field (if any) among required fields. `JsString`
+        // expansions don't count towards (or participate in) ctor variants.
         let union_field = fields
             .iter()
-            .find(|f| f.required && f.setter_types.len() > 1);
+            .find(|f| f.required && f.setter_types.iter().filter(|s| !s.is_js_string).count() > 1);
 
         // Helper: build args/calls for a single constructor variant, substituting
         // the given setter for the union field while keeping all fields in order.
@@ -1151,7 +1155,7 @@ impl Dictionary {
                 .setter_types
                 .iter()
                 .enumerate()
-                .filter(|(_, setter)| !setter.deprecated)
+                .filter(|(_, setter)| !setter.deprecated && !setter.is_js_string)
                 .filter_map(|(i, setter)| {
                     // Skip variants whose type duplicates an earlier variant
                     if seen_types.contains(&setter.ty) {

@@ -33,6 +33,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FocusEvent`*"]
     pub fn new(type_arg: &str) -> Result<FocusEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "FocusEvent")]
+    #[doc = "The `new FocusEvent(..)` constructor, creating a new instance of `FocusEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FocusEvent/FocusEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FocusEvent`*"]
+    pub fn new_with_js_string(type_arg: &::js_sys::JsString) -> Result<FocusEvent, JsValue>;
     #[cfg(feature = "FocusEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "FocusEvent")]
     #[doc = "The `new FocusEvent(..)` constructor, creating a new instance of `FocusEvent`."]
@@ -42,6 +49,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FocusEvent`, `FocusEventInit`*"]
     pub fn new_with_focus_event_init_dict(
         type_arg: &str,
+        focus_event_init_dict: &FocusEventInit,
+    ) -> Result<FocusEvent, JsValue>;
+    #[cfg(feature = "FocusEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "FocusEvent")]
+    #[doc = "The `new FocusEvent(..)` constructor, creating a new instance of `FocusEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FocusEvent/FocusEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FocusEvent`, `FocusEventInit`*"]
+    pub fn new_with_js_string_and_focus_event_init_dict(
+        type_arg: &::js_sys::JsString,
         focus_event_init_dict: &FocusEventInit,
     ) -> Result<FocusEvent, JsValue>;
 }

@@ -72,6 +72,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `InputEventInit`*"]
     #[wasm_bindgen(method, setter = "data")]
     pub fn set_data(this: &InputEventInit, val: Option<&str>);
+    #[doc = "Change the `data` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `InputEventInit`*"]
+    #[wasm_bindgen(method, setter = "data")]
+    pub fn set_data_opt_js_string(this: &InputEventInit, val: Option<&::js_sys::JsString>);
     #[cfg(feature = "DataTransfer")]
     #[doc = "Get the `dataTransfer` field of this object."]
     #[doc = ""]
@@ -94,6 +99,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `InputEventInit`*"]
     #[wasm_bindgen(method, setter = "inputType")]
     pub fn set_input_type(this: &InputEventInit, val: &str);
+    #[doc = "Change the `inputType` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `InputEventInit`*"]
+    #[wasm_bindgen(method, setter = "inputType")]
+    pub fn set_input_type_js_string(this: &InputEventInit, val: &::js_sys::JsString);
     #[doc = "Get the `isComposing` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `InputEventInit`*"]

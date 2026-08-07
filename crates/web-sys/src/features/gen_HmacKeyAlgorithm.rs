@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HmacKeyAlgorithm`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &HmacKeyAlgorithm, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HmacKeyAlgorithm`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &HmacKeyAlgorithm, val: &::js_sys::JsString);
     #[cfg(feature = "KeyAlgorithm")]
     #[doc = "Get the `hash` field of this object."]
     #[doc = ""]

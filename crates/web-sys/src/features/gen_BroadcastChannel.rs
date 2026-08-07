@@ -69,6 +69,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `BroadcastChannel`*"]
     pub fn new(channel: &str) -> Result<BroadcastChannel, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "BroadcastChannel")]
+    #[doc = "The `new BroadcastChannel(..)` constructor, creating a new instance of `BroadcastChannel`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BroadcastChannel/BroadcastChannel)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BroadcastChannel`*"]
+    pub fn new_with_js_string(channel: &::js_sys::JsString) -> Result<BroadcastChannel, JsValue>;
     #[wasm_bindgen(method, js_class = "BroadcastChannel")]
     #[doc = "The `close()` method."]
     #[doc = ""]

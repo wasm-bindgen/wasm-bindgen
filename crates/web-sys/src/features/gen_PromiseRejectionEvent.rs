@@ -47,4 +47,15 @@ extern "C" {
         type_: &str,
         event_init_dict: &PromiseRejectionEventInit,
     ) -> Result<PromiseRejectionEvent, JsValue>;
+    #[cfg(feature = "PromiseRejectionEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "PromiseRejectionEvent")]
+    #[doc = "The `new PromiseRejectionEvent(..)` constructor, creating a new instance of `PromiseRejectionEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PromiseRejectionEvent/PromiseRejectionEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PromiseRejectionEvent`, `PromiseRejectionEventInit`*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+        event_init_dict: &PromiseRejectionEventInit,
+    ) -> Result<PromiseRejectionEvent, JsValue>;
 }

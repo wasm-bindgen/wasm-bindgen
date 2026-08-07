@@ -28,6 +28,20 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FileSystemDirectoryHandle`*"]
     pub fn get_directory_handle(this: &FileSystemDirectoryHandle, name: &str) -> ::js_sys::Promise;
+    #[wasm_bindgen(
+        method,
+        js_class = "FileSystemDirectoryHandle",
+        js_name = "getDirectoryHandle"
+    )]
+    #[doc = "The `getDirectoryHandle()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemDirectoryHandle/getDirectoryHandle)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FileSystemDirectoryHandle`*"]
+    pub fn get_directory_handle_with_js_string(
+        this: &FileSystemDirectoryHandle,
+        name: &::js_sys::JsString,
+    ) -> ::js_sys::Promise;
     #[cfg(feature = "FileSystemGetDirectoryOptions")]
     #[wasm_bindgen(
         method,
@@ -44,6 +58,22 @@ extern "C" {
         name: &str,
         options: &FileSystemGetDirectoryOptions,
     ) -> ::js_sys::Promise;
+    #[cfg(feature = "FileSystemGetDirectoryOptions")]
+    #[wasm_bindgen(
+        method,
+        js_class = "FileSystemDirectoryHandle",
+        js_name = "getDirectoryHandle"
+    )]
+    #[doc = "The `getDirectoryHandle()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemDirectoryHandle/getDirectoryHandle)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FileSystemDirectoryHandle`, `FileSystemGetDirectoryOptions`*"]
+    pub fn get_directory_handle_with_js_string_and_options(
+        this: &FileSystemDirectoryHandle,
+        name: &::js_sys::JsString,
+        options: &FileSystemGetDirectoryOptions,
+    ) -> ::js_sys::Promise;
     #[wasm_bindgen(
         method,
         js_class = "FileSystemDirectoryHandle",
@@ -55,6 +85,20 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FileSystemDirectoryHandle`*"]
     pub fn get_file_handle(this: &FileSystemDirectoryHandle, name: &str) -> ::js_sys::Promise;
+    #[wasm_bindgen(
+        method,
+        js_class = "FileSystemDirectoryHandle",
+        js_name = "getFileHandle"
+    )]
+    #[doc = "The `getFileHandle()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemDirectoryHandle/getFileHandle)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FileSystemDirectoryHandle`*"]
+    pub fn get_file_handle_with_js_string(
+        this: &FileSystemDirectoryHandle,
+        name: &::js_sys::JsString,
+    ) -> ::js_sys::Promise;
     #[cfg(feature = "FileSystemGetFileOptions")]
     #[wasm_bindgen(
         method,
@@ -71,6 +115,22 @@ extern "C" {
         name: &str,
         options: &FileSystemGetFileOptions,
     ) -> ::js_sys::Promise;
+    #[cfg(feature = "FileSystemGetFileOptions")]
+    #[wasm_bindgen(
+        method,
+        js_class = "FileSystemDirectoryHandle",
+        js_name = "getFileHandle"
+    )]
+    #[doc = "The `getFileHandle()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemDirectoryHandle/getFileHandle)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FileSystemDirectoryHandle`, `FileSystemGetFileOptions`*"]
+    pub fn get_file_handle_with_js_string_and_options(
+        this: &FileSystemDirectoryHandle,
+        name: &::js_sys::JsString,
+        options: &FileSystemGetFileOptions,
+    ) -> ::js_sys::Promise;
     #[wasm_bindgen(
         method,
         js_class = "FileSystemDirectoryHandle",
@@ -82,6 +142,20 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FileSystemDirectoryHandle`*"]
     pub fn remove_entry(this: &FileSystemDirectoryHandle, name: &str) -> ::js_sys::Promise;
+    #[wasm_bindgen(
+        method,
+        js_class = "FileSystemDirectoryHandle",
+        js_name = "removeEntry"
+    )]
+    #[doc = "The `removeEntry()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemDirectoryHandle/removeEntry)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FileSystemDirectoryHandle`*"]
+    pub fn remove_entry_with_js_string(
+        this: &FileSystemDirectoryHandle,
+        name: &::js_sys::JsString,
+    ) -> ::js_sys::Promise;
     #[cfg(feature = "FileSystemRemoveOptions")]
     #[wasm_bindgen(
         method,
@@ -96,6 +170,22 @@ extern "C" {
     pub fn remove_entry_with_options(
         this: &FileSystemDirectoryHandle,
         name: &str,
+        options: &FileSystemRemoveOptions,
+    ) -> ::js_sys::Promise;
+    #[cfg(feature = "FileSystemRemoveOptions")]
+    #[wasm_bindgen(
+        method,
+        js_class = "FileSystemDirectoryHandle",
+        js_name = "removeEntry"
+    )]
+    #[doc = "The `removeEntry()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemDirectoryHandle/removeEntry)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FileSystemDirectoryHandle`, `FileSystemRemoveOptions`*"]
+    pub fn remove_entry_with_js_string_and_options(
+        this: &FileSystemDirectoryHandle,
+        name: &::js_sys::JsString,
         options: &FileSystemRemoveOptions,
     ) -> ::js_sys::Promise;
     #[wasm_bindgen(method, js_class = "FileSystemDirectoryHandle")]

@@ -30,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
     #[wasm_bindgen(method, setter = "curExternalIfname")]
     pub fn set_cur_external_ifname(this: &NetworkResultOptions, val: &str);
+    #[doc = "Change the `curExternalIfname` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
+    #[wasm_bindgen(method, setter = "curExternalIfname")]
+    pub fn set_cur_external_ifname_js_string(this: &NetworkResultOptions, val: &::js_sys::JsString);
     #[doc = "Get the `curInternalIfname` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
@@ -40,6 +45,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
     #[wasm_bindgen(method, setter = "curInternalIfname")]
     pub fn set_cur_internal_ifname(this: &NetworkResultOptions, val: &str);
+    #[doc = "Change the `curInternalIfname` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
+    #[wasm_bindgen(method, setter = "curInternalIfname")]
+    pub fn set_cur_internal_ifname_js_string(this: &NetworkResultOptions, val: &::js_sys::JsString);
     #[doc = "Get the `dns1` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
@@ -60,6 +70,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
     #[wasm_bindgen(method, setter = "dns1_str")]
     pub fn set_dns1_str(this: &NetworkResultOptions, val: &str);
+    #[doc = "Change the `dns1_str` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
+    #[wasm_bindgen(method, setter = "dns1_str")]
+    pub fn set_dns1_str_js_string(this: &NetworkResultOptions, val: &::js_sys::JsString);
     #[doc = "Get the `dns2` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
@@ -80,6 +95,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
     #[wasm_bindgen(method, setter = "dns2_str")]
     pub fn set_dns2_str(this: &NetworkResultOptions, val: &str);
+    #[doc = "Change the `dns2_str` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
+    #[wasm_bindgen(method, setter = "dns2_str")]
+    pub fn set_dns2_str_js_string(this: &NetworkResultOptions, val: &::js_sys::JsString);
     #[doc = "Get the `enable` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
@@ -110,6 +130,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
     #[wasm_bindgen(method, setter = "flag")]
     pub fn set_flag(this: &NetworkResultOptions, val: &str);
+    #[doc = "Change the `flag` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
+    #[wasm_bindgen(method, setter = "flag")]
+    pub fn set_flag_js_string(this: &NetworkResultOptions, val: &::js_sys::JsString);
     #[doc = "Get the `gateway` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
@@ -130,6 +155,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
     #[wasm_bindgen(method, setter = "gateway_str")]
     pub fn set_gateway_str(this: &NetworkResultOptions, val: &str);
+    #[doc = "Change the `gateway_str` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
+    #[wasm_bindgen(method, setter = "gateway_str")]
+    pub fn set_gateway_str_js_string(this: &NetworkResultOptions, val: &::js_sys::JsString);
     #[doc = "Get the `id` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
@@ -160,6 +190,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
     #[wasm_bindgen(method, setter = "ipAddr")]
     pub fn set_ip_addr(this: &NetworkResultOptions, val: &str);
+    #[doc = "Change the `ipAddr` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
+    #[wasm_bindgen(method, setter = "ipAddr")]
+    pub fn set_ip_addr_js_string(this: &NetworkResultOptions, val: &::js_sys::JsString);
     #[doc = "Get the `ipaddr` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
@@ -180,6 +215,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
     #[wasm_bindgen(method, setter = "ipaddr_str")]
     pub fn set_ipaddr_str(this: &NetworkResultOptions, val: &str);
+    #[doc = "Change the `ipaddr_str` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
+    #[wasm_bindgen(method, setter = "ipaddr_str")]
+    pub fn set_ipaddr_str_js_string(this: &NetworkResultOptions, val: &::js_sys::JsString);
     #[doc = "Get the `lease` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
@@ -200,6 +240,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
     #[wasm_bindgen(method, setter = "macAddr")]
     pub fn set_mac_addr(this: &NetworkResultOptions, val: &str);
+    #[doc = "Change the `macAddr` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
+    #[wasm_bindgen(method, setter = "macAddr")]
+    pub fn set_mac_addr_js_string(this: &NetworkResultOptions, val: &::js_sys::JsString);
     #[doc = "Get the `mask` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
@@ -220,6 +265,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
     #[wasm_bindgen(method, setter = "mask_str")]
     pub fn set_mask_str(this: &NetworkResultOptions, val: &str);
+    #[doc = "Change the `mask_str` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
+    #[wasm_bindgen(method, setter = "mask_str")]
+    pub fn set_mask_str_js_string(this: &NetworkResultOptions, val: &::js_sys::JsString);
     #[doc = "Get the `netId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
@@ -230,6 +280,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
     #[wasm_bindgen(method, setter = "netId")]
     pub fn set_net_id(this: &NetworkResultOptions, val: &str);
+    #[doc = "Change the `netId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
+    #[wasm_bindgen(method, setter = "netId")]
+    pub fn set_net_id_js_string(this: &NetworkResultOptions, val: &::js_sys::JsString);
     #[doc = "Get the `prefixLength` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
@@ -250,6 +305,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
     #[wasm_bindgen(method, setter = "reason")]
     pub fn set_reason(this: &NetworkResultOptions, val: &str);
+    #[doc = "Change the `reason` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
+    #[wasm_bindgen(method, setter = "reason")]
+    pub fn set_reason_js_string(this: &NetworkResultOptions, val: &::js_sys::JsString);
     #[doc = "Get the `reply` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
@@ -260,6 +320,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
     #[wasm_bindgen(method, setter = "reply")]
     pub fn set_reply(this: &NetworkResultOptions, val: &str);
+    #[doc = "Change the `reply` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
+    #[wasm_bindgen(method, setter = "reply")]
+    pub fn set_reply_js_string(this: &NetworkResultOptions, val: &::js_sys::JsString);
     #[doc = "Get the `result` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
@@ -290,6 +355,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
     #[wasm_bindgen(method, setter = "resultReason")]
     pub fn set_result_reason(this: &NetworkResultOptions, val: &str);
+    #[doc = "Change the `resultReason` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
+    #[wasm_bindgen(method, setter = "resultReason")]
+    pub fn set_result_reason_js_string(this: &NetworkResultOptions, val: &::js_sys::JsString);
     #[doc = "Get the `ret` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
@@ -310,6 +380,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
     #[wasm_bindgen(method, setter = "route")]
     pub fn set_route(this: &NetworkResultOptions, val: &str);
+    #[doc = "Change the `route` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
+    #[wasm_bindgen(method, setter = "route")]
+    pub fn set_route_js_string(this: &NetworkResultOptions, val: &::js_sys::JsString);
     #[doc = "Get the `server` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
@@ -330,6 +405,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
     #[wasm_bindgen(method, setter = "server_str")]
     pub fn set_server_str(this: &NetworkResultOptions, val: &str);
+    #[doc = "Change the `server_str` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
+    #[wasm_bindgen(method, setter = "server_str")]
+    pub fn set_server_str_js_string(this: &NetworkResultOptions, val: &::js_sys::JsString);
     #[doc = "Get the `success` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
@@ -350,6 +430,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
     #[wasm_bindgen(method, setter = "topic")]
     pub fn set_topic(this: &NetworkResultOptions, val: &str);
+    #[doc = "Change the `topic` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
+    #[wasm_bindgen(method, setter = "topic")]
+    pub fn set_topic_js_string(this: &NetworkResultOptions, val: &::js_sys::JsString);
     #[doc = "Get the `vendor_str` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
@@ -360,6 +445,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
     #[wasm_bindgen(method, setter = "vendor_str")]
     pub fn set_vendor_str(this: &NetworkResultOptions, val: &str);
+    #[doc = "Change the `vendor_str` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkResultOptions`*"]
+    #[wasm_bindgen(method, setter = "vendor_str")]
+    pub fn set_vendor_str_js_string(this: &NetworkResultOptions, val: &::js_sys::JsString);
 }
 impl NetworkResultOptions {
     #[doc = "Construct a new `NetworkResultOptions`."]

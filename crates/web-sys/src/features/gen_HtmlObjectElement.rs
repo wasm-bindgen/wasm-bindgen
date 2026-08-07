@@ -34,6 +34,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
     pub fn set_data(this: &HtmlObjectElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLObjectElement", js_name = "data")]
+    #[doc = "Setter for the `data` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLObjectElement/data)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
+    pub fn set_data_js_string(this: &HtmlObjectElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLObjectElement", js_name = "type")]
     #[doc = "Getter for the `type` field of this object."]
     #[doc = ""]
@@ -48,6 +55,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
     pub fn set_type(this: &HtmlObjectElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLObjectElement", js_name = "type")]
+    #[doc = "Setter for the `type` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLObjectElement/type)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
+    pub fn set_type_js_string(this: &HtmlObjectElement, value: &::js_sys::JsString);
     #[wasm_bindgen(
         method,
         getter,
@@ -86,6 +100,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
     pub fn set_name(this: &HtmlObjectElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLObjectElement", js_name = "name")]
+    #[doc = "Setter for the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLObjectElement/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
+    pub fn set_name_js_string(this: &HtmlObjectElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLObjectElement", js_name = "useMap")]
     #[doc = "Getter for the `useMap` field of this object."]
     #[doc = ""]
@@ -100,6 +121,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
     pub fn set_use_map(this: &HtmlObjectElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLObjectElement", js_name = "useMap")]
+    #[doc = "Setter for the `useMap` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLObjectElement/useMap)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
+    pub fn set_use_map_js_string(this: &HtmlObjectElement, value: &::js_sys::JsString);
     #[cfg(feature = "HtmlFormElement")]
     #[wasm_bindgen(method, getter, js_class = "HTMLObjectElement", js_name = "form")]
     #[doc = "Getter for the `form` field of this object."]
@@ -122,6 +150,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
     pub fn set_width(this: &HtmlObjectElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLObjectElement", js_name = "width")]
+    #[doc = "Setter for the `width` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLObjectElement/width)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
+    pub fn set_width_js_string(this: &HtmlObjectElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLObjectElement", js_name = "height")]
     #[doc = "Getter for the `height` field of this object."]
     #[doc = ""]
@@ -136,6 +171,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
     pub fn set_height(this: &HtmlObjectElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLObjectElement", js_name = "height")]
+    #[doc = "Setter for the `height` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLObjectElement/height)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
+    pub fn set_height_js_string(this: &HtmlObjectElement, value: &::js_sys::JsString);
     #[cfg(feature = "Document")]
     #[wasm_bindgen(
         method,
@@ -210,6 +252,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
     pub fn set_align(this: &HtmlObjectElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLObjectElement", js_name = "align")]
+    #[doc = "Setter for the `align` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLObjectElement/align)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
+    pub fn set_align_js_string(this: &HtmlObjectElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLObjectElement", js_name = "archive")]
     #[doc = "Getter for the `archive` field of this object."]
     #[doc = ""]
@@ -224,6 +273,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
     pub fn set_archive(this: &HtmlObjectElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLObjectElement", js_name = "archive")]
+    #[doc = "Setter for the `archive` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLObjectElement/archive)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
+    pub fn set_archive_js_string(this: &HtmlObjectElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLObjectElement", js_name = "code")]
     #[doc = "Getter for the `code` field of this object."]
     #[doc = ""]
@@ -238,6 +294,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
     pub fn set_code(this: &HtmlObjectElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLObjectElement", js_name = "code")]
+    #[doc = "Setter for the `code` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLObjectElement/code)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
+    pub fn set_code_js_string(this: &HtmlObjectElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLObjectElement", js_name = "declare")]
     #[doc = "Getter for the `declare` field of this object."]
     #[doc = ""]
@@ -280,6 +343,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
     pub fn set_standby(this: &HtmlObjectElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLObjectElement", js_name = "standby")]
+    #[doc = "Setter for the `standby` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLObjectElement/standby)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
+    pub fn set_standby_js_string(this: &HtmlObjectElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLObjectElement", js_name = "vspace")]
     #[doc = "Getter for the `vspace` field of this object."]
     #[doc = ""]
@@ -308,6 +378,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
     pub fn set_code_base(this: &HtmlObjectElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLObjectElement", js_name = "codeBase")]
+    #[doc = "Setter for the `codeBase` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLObjectElement/codeBase)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
+    pub fn set_code_base_js_string(this: &HtmlObjectElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLObjectElement", js_name = "codeType")]
     #[doc = "Getter for the `codeType` field of this object."]
     #[doc = ""]
@@ -322,6 +399,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
     pub fn set_code_type(this: &HtmlObjectElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLObjectElement", js_name = "codeType")]
+    #[doc = "Setter for the `codeType` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLObjectElement/codeType)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
+    pub fn set_code_type_js_string(this: &HtmlObjectElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLObjectElement", js_name = "border")]
     #[doc = "Getter for the `border` field of this object."]
     #[doc = ""]
@@ -336,6 +420,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
     pub fn set_border(this: &HtmlObjectElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLObjectElement", js_name = "border")]
+    #[doc = "Setter for the `border` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLObjectElement/border)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
+    pub fn set_border_js_string(this: &HtmlObjectElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, js_class = "HTMLObjectElement", js_name = "checkValidity")]
     #[doc = "The `checkValidity()` method."]
     #[doc = ""]
@@ -365,4 +456,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
     pub fn set_custom_validity(this: &HtmlObjectElement, error: &str);
+    #[wasm_bindgen(method, js_class = "HTMLObjectElement", js_name = "setCustomValidity")]
+    #[doc = "The `setCustomValidity()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLObjectElement/setCustomValidity)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlObjectElement`*"]
+    pub fn set_custom_validity_with_js_string(this: &HtmlObjectElement, error: &::js_sys::JsString);
 }

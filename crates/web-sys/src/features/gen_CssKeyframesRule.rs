@@ -31,6 +31,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssKeyframesRule`*"]
     pub fn set_name(this: &CssKeyframesRule, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "CSSKeyframesRule", js_name = "name")]
+    #[doc = "Setter for the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSKeyframesRule/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssKeyframesRule`*"]
+    pub fn set_name_js_string(this: &CssKeyframesRule, value: &::js_sys::JsString);
     #[cfg(feature = "CssRuleList")]
     #[wasm_bindgen(method, getter, js_class = "CSSKeyframesRule", js_name = "cssRules")]
     #[doc = "Getter for the `cssRules` field of this object."]
@@ -46,6 +53,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssKeyframesRule`*"]
     pub fn append_rule(this: &CssKeyframesRule, rule: &str);
+    #[wasm_bindgen(method, js_class = "CSSKeyframesRule", js_name = "appendRule")]
+    #[doc = "The `appendRule()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSKeyframesRule/appendRule)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssKeyframesRule`*"]
+    pub fn append_rule_with_js_string(this: &CssKeyframesRule, rule: &::js_sys::JsString);
     #[wasm_bindgen(method, js_class = "CSSKeyframesRule", js_name = "deleteRule")]
     #[doc = "The `deleteRule()` method."]
     #[doc = ""]
@@ -53,6 +67,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssKeyframesRule`*"]
     pub fn delete_rule(this: &CssKeyframesRule, select: &str);
+    #[wasm_bindgen(method, js_class = "CSSKeyframesRule", js_name = "deleteRule")]
+    #[doc = "The `deleteRule()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSKeyframesRule/deleteRule)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssKeyframesRule`*"]
+    pub fn delete_rule_with_js_string(this: &CssKeyframesRule, select: &::js_sys::JsString);
     #[cfg(feature = "CssKeyframeRule")]
     #[wasm_bindgen(method, js_class = "CSSKeyframesRule", js_name = "findRule")]
     #[doc = "The `findRule()` method."]
@@ -61,4 +82,15 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssKeyframeRule`, `CssKeyframesRule`*"]
     pub fn find_rule(this: &CssKeyframesRule, select: &str) -> Option<CssKeyframeRule>;
+    #[cfg(feature = "CssKeyframeRule")]
+    #[wasm_bindgen(method, js_class = "CSSKeyframesRule", js_name = "findRule")]
+    #[doc = "The `findRule()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSKeyframesRule/findRule)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssKeyframeRule`, `CssKeyframesRule`*"]
+    pub fn find_rule_with_js_string(
+        this: &CssKeyframesRule,
+        select: &::js_sys::JsString,
+    ) -> Option<CssKeyframeRule>;
 }

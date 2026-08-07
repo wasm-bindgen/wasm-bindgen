@@ -33,6 +33,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
     pub fn set_domain(this: &HtmlDocument, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLDocument", js_name = "domain")]
+    #[doc = "Setter for the `domain` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/domain)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn set_domain_js_string(this: &HtmlDocument, value: &::js_sys::JsString);
     #[wasm_bindgen(catch, method, getter, js_class = "HTMLDocument", js_name = "cookie")]
     #[doc = "Getter for the `cookie` field of this object."]
     #[doc = ""]
@@ -47,6 +54,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
     pub fn set_cookie(this: &HtmlDocument, value: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, setter, js_class = "HTMLDocument", js_name = "cookie")]
+    #[doc = "Setter for the `cookie` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/cookie)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn set_cookie_js_string(
+        this: &HtmlDocument,
+        value: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(method, getter, js_class = "HTMLDocument", js_name = "designMode")]
     #[doc = "Getter for the `designMode` field of this object."]
     #[doc = ""]
@@ -61,6 +78,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
     pub fn set_design_mode(this: &HtmlDocument, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLDocument", js_name = "designMode")]
+    #[doc = "Setter for the `designMode` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/designMode)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn set_design_mode_js_string(this: &HtmlDocument, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLDocument", js_name = "fgColor")]
     #[doc = "Getter for the `fgColor` field of this object."]
     #[doc = ""]
@@ -75,6 +99,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
     pub fn set_fg_color(this: &HtmlDocument, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLDocument", js_name = "fgColor")]
+    #[doc = "Setter for the `fgColor` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/fgColor)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn set_fg_color_js_string(this: &HtmlDocument, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLDocument", js_name = "linkColor")]
     #[doc = "Getter for the `linkColor` field of this object."]
     #[doc = ""]
@@ -89,6 +120,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
     pub fn set_link_color(this: &HtmlDocument, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLDocument", js_name = "linkColor")]
+    #[doc = "Setter for the `linkColor` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/linkColor)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn set_link_color_js_string(this: &HtmlDocument, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLDocument", js_name = "vlinkColor")]
     #[doc = "Getter for the `vlinkColor` field of this object."]
     #[doc = ""]
@@ -103,6 +141,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
     pub fn set_vlink_color(this: &HtmlDocument, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLDocument", js_name = "vlinkColor")]
+    #[doc = "Setter for the `vlinkColor` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/vlinkColor)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn set_vlink_color_js_string(this: &HtmlDocument, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLDocument", js_name = "alinkColor")]
     #[doc = "Getter for the `alinkColor` field of this object."]
     #[doc = ""]
@@ -117,6 +162,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
     pub fn set_alink_color(this: &HtmlDocument, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLDocument", js_name = "alinkColor")]
+    #[doc = "Setter for the `alinkColor` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/alinkColor)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn set_alink_color_js_string(this: &HtmlDocument, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLDocument", js_name = "bgColor")]
     #[doc = "Getter for the `bgColor` field of this object."]
     #[doc = ""]
@@ -131,6 +183,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
     pub fn set_bg_color(this: &HtmlDocument, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLDocument", js_name = "bgColor")]
+    #[doc = "Setter for the `bgColor` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/bgColor)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn set_bg_color_js_string(this: &HtmlDocument, value: &::js_sys::JsString);
     #[cfg(feature = "HtmlAllCollection")]
     #[wasm_bindgen(method, getter, js_class = "HTMLDocument", js_name = "all")]
     #[doc = "Getter for the `all` field of this object."]
@@ -173,9 +232,30 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/execCommand)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn exec_command_with_js_string(
+        this: &HtmlDocument,
+        command_id: &::js_sys::JsString,
+    ) -> Result<bool, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "execCommand")]
+    #[doc = "The `execCommand()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/execCommand)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
     pub fn exec_command_with_show_ui(
         this: &HtmlDocument,
         command_id: &str,
+        show_ui: bool,
+    ) -> Result<bool, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "execCommand")]
+    #[doc = "The `execCommand()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/execCommand)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn exec_command_with_js_string_and_show_ui(
+        this: &HtmlDocument,
+        command_id: &::js_sys::JsString,
         show_ui: bool,
     ) -> Result<bool, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "execCommand")]
@@ -189,6 +269,18 @@ extern "C" {
         command_id: &str,
         show_ui: bool,
         value: &str,
+    ) -> Result<bool, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "execCommand")]
+    #[doc = "The `execCommand()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/execCommand)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn exec_command_with_js_string_and_show_ui_and_js_string(
+        this: &HtmlDocument,
+        command_id: &::js_sys::JsString,
+        show_ui: bool,
+        value: &::js_sys::JsString,
     ) -> Result<bool, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "HTMLDocument")]
     #[doc = "The `open()` method."]
@@ -210,10 +302,31 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/open)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn open_with_js_string(
+        this: &HtmlDocument,
+        type_: &::js_sys::JsString,
+    ) -> Result<Document, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "open")]
+    #[doc = "The `open()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/open)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
     pub fn open_with_type_and_replace(
         this: &HtmlDocument,
         type_: &str,
         replace: &str,
+    ) -> Result<Document, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "open")]
+    #[doc = "The `open()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/open)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn open_with_js_string_and_js_string(
+        this: &HtmlDocument,
+        type_: &::js_sys::JsString,
+        replace: &::js_sys::JsString,
     ) -> Result<Document, JsValue>;
     #[cfg(feature = "Window")]
     #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "open")]
@@ -235,11 +348,38 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/open)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`, `Window`*"]
+    pub fn open_with_js_string_and_js_string_and_js_string(
+        this: &HtmlDocument,
+        url: &::js_sys::JsString,
+        name: &::js_sys::JsString,
+        features: &::js_sys::JsString,
+    ) -> Result<Option<Window>, JsValue>;
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "open")]
+    #[doc = "The `open()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/open)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`, `Window`*"]
     pub fn open_with_url_and_name_and_features_and_replace(
         this: &HtmlDocument,
         url: &str,
         name: &str,
         features: &str,
+        replace: bool,
+    ) -> Result<Option<Window>, JsValue>;
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "open")]
+    #[doc = "The `open()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/open)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`, `Window`*"]
+    pub fn open_with_js_string_and_js_string_and_js_string_and_replace(
+        this: &HtmlDocument,
+        url: &::js_sys::JsString,
+        name: &::js_sys::JsString,
+        features: &::js_sys::JsString,
         replace: bool,
     ) -> Result<Option<Window>, JsValue>;
     #[wasm_bindgen(
@@ -258,6 +398,21 @@ extern "C" {
         catch,
         method,
         js_class = "HTMLDocument",
+        js_name = "queryCommandEnabled"
+    )]
+    #[doc = "The `queryCommandEnabled()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/queryCommandEnabled)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn query_command_enabled_with_js_string(
+        this: &HtmlDocument,
+        command_id: &::js_sys::JsString,
+    ) -> Result<bool, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "HTMLDocument",
         js_name = "queryCommandIndeterm"
     )]
     #[doc = "The `queryCommandIndeterm()` method."]
@@ -270,6 +425,21 @@ extern "C" {
         catch,
         method,
         js_class = "HTMLDocument",
+        js_name = "queryCommandIndeterm"
+    )]
+    #[doc = "The `queryCommandIndeterm()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/queryCommandIndeterm)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn query_command_indeterm_with_js_string(
+        this: &HtmlDocument,
+        command_id: &::js_sys::JsString,
+    ) -> Result<bool, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "HTMLDocument",
         js_name = "queryCommandState"
     )]
     #[doc = "The `queryCommandState()` method."]
@@ -278,6 +448,21 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
     pub fn query_command_state(this: &HtmlDocument, command_id: &str) -> Result<bool, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "HTMLDocument",
+        js_name = "queryCommandState"
+    )]
+    #[doc = "The `queryCommandState()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/queryCommandState)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn query_command_state_with_js_string(
+        this: &HtmlDocument,
+        command_id: &::js_sys::JsString,
+    ) -> Result<bool, JsValue>;
     #[wasm_bindgen(method, js_class = "HTMLDocument", js_name = "queryCommandSupported")]
     #[doc = "The `queryCommandSupported()` method."]
     #[doc = ""]
@@ -285,6 +470,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
     pub fn query_command_supported(this: &HtmlDocument, command_id: &str) -> bool;
+    #[wasm_bindgen(method, js_class = "HTMLDocument", js_name = "queryCommandSupported")]
+    #[doc = "The `queryCommandSupported()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/queryCommandSupported)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn query_command_supported_with_js_string(
+        this: &HtmlDocument,
+        command_id: &::js_sys::JsString,
+    ) -> bool;
     #[wasm_bindgen(
         catch,
         method,
@@ -299,6 +494,21 @@ extern "C" {
     pub fn query_command_value(
         this: &HtmlDocument,
         command_id: &str,
+    ) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "HTMLDocument",
+        js_name = "queryCommandValue"
+    )]
+    #[doc = "The `queryCommandValue()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/queryCommandValue)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn query_command_value_with_js_string(
+        this: &HtmlDocument,
+        command_id: &::js_sys::JsString,
     ) -> Result<::alloc::string::String, JsValue>;
     #[wasm_bindgen(method, js_class = "HTMLDocument", js_name = "releaseEvents")]
     #[doc = "The `releaseEvents()` method."]
@@ -405,6 +615,112 @@ extern "C" {
         text_6: &str,
         text_7: &str,
     ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, variadic, js_class = "HTMLDocument", js_name = "write")]
+    #[doc = "The `write()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/write)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn write_with_js_string(this: &HtmlDocument, text: &::js_sys::Array)
+        -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "write")]
+    #[doc = "The `write()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/write)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn write_with_js_string_0(this: &HtmlDocument) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "write")]
+    #[doc = "The `write()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/write)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn write_with_js_string_1(
+        this: &HtmlDocument,
+        text_1: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "write")]
+    #[doc = "The `write()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/write)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn write_with_js_string_2(
+        this: &HtmlDocument,
+        text_1: &::js_sys::JsString,
+        text_2: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "write")]
+    #[doc = "The `write()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/write)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn write_with_js_string_3(
+        this: &HtmlDocument,
+        text_1: &::js_sys::JsString,
+        text_2: &::js_sys::JsString,
+        text_3: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "write")]
+    #[doc = "The `write()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/write)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn write_with_js_string_4(
+        this: &HtmlDocument,
+        text_1: &::js_sys::JsString,
+        text_2: &::js_sys::JsString,
+        text_3: &::js_sys::JsString,
+        text_4: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "write")]
+    #[doc = "The `write()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/write)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn write_with_js_string_5(
+        this: &HtmlDocument,
+        text_1: &::js_sys::JsString,
+        text_2: &::js_sys::JsString,
+        text_3: &::js_sys::JsString,
+        text_4: &::js_sys::JsString,
+        text_5: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "write")]
+    #[doc = "The `write()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/write)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn write_with_js_string_6(
+        this: &HtmlDocument,
+        text_1: &::js_sys::JsString,
+        text_2: &::js_sys::JsString,
+        text_3: &::js_sys::JsString,
+        text_4: &::js_sys::JsString,
+        text_5: &::js_sys::JsString,
+        text_6: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "write")]
+    #[doc = "The `write()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/write)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn write_with_js_string_7(
+        this: &HtmlDocument,
+        text_1: &::js_sys::JsString,
+        text_2: &::js_sys::JsString,
+        text_3: &::js_sys::JsString,
+        text_4: &::js_sys::JsString,
+        text_5: &::js_sys::JsString,
+        text_6: &::js_sys::JsString,
+        text_7: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, variadic, js_class = "HTMLDocument")]
     #[doc = "The `writeln()` method."]
     #[doc = ""]
@@ -503,10 +819,133 @@ extern "C" {
         text_6: &str,
         text_7: &str,
     ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        variadic,
+        js_class = "HTMLDocument",
+        js_name = "writeln"
+    )]
+    #[doc = "The `writeln()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/writeln)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn writeln_with_js_string(
+        this: &HtmlDocument,
+        text: &::js_sys::Array,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "writeln")]
+    #[doc = "The `writeln()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/writeln)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn writeln_with_js_string_0(this: &HtmlDocument) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "writeln")]
+    #[doc = "The `writeln()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/writeln)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn writeln_with_js_string_1(
+        this: &HtmlDocument,
+        text_1: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "writeln")]
+    #[doc = "The `writeln()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/writeln)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn writeln_with_js_string_2(
+        this: &HtmlDocument,
+        text_1: &::js_sys::JsString,
+        text_2: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "writeln")]
+    #[doc = "The `writeln()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/writeln)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn writeln_with_js_string_3(
+        this: &HtmlDocument,
+        text_1: &::js_sys::JsString,
+        text_2: &::js_sys::JsString,
+        text_3: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "writeln")]
+    #[doc = "The `writeln()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/writeln)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn writeln_with_js_string_4(
+        this: &HtmlDocument,
+        text_1: &::js_sys::JsString,
+        text_2: &::js_sys::JsString,
+        text_3: &::js_sys::JsString,
+        text_4: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "writeln")]
+    #[doc = "The `writeln()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/writeln)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn writeln_with_js_string_5(
+        this: &HtmlDocument,
+        text_1: &::js_sys::JsString,
+        text_2: &::js_sys::JsString,
+        text_3: &::js_sys::JsString,
+        text_4: &::js_sys::JsString,
+        text_5: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "writeln")]
+    #[doc = "The `writeln()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/writeln)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn writeln_with_js_string_6(
+        this: &HtmlDocument,
+        text_1: &::js_sys::JsString,
+        text_2: &::js_sys::JsString,
+        text_3: &::js_sys::JsString,
+        text_4: &::js_sys::JsString,
+        text_5: &::js_sys::JsString,
+        text_6: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", js_name = "writeln")]
+    #[doc = "The `writeln()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/writeln)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn writeln_with_js_string_7(
+        this: &HtmlDocument,
+        text_1: &::js_sys::JsString,
+        text_2: &::js_sys::JsString,
+        text_3: &::js_sys::JsString,
+        text_4: &::js_sys::JsString,
+        text_5: &::js_sys::JsString,
+        text_6: &::js_sys::JsString,
+        text_7: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "HTMLDocument", indexing_getter)]
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
     pub fn get(this: &HtmlDocument, name: &str) -> Result<::js_sys::Object, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLDocument", indexing_getter)]
+    #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
+    #[doc = ""]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn get_with_js_string(
+        this: &HtmlDocument,
+        name: &::js_sys::JsString,
+    ) -> Result<::js_sys::Object, JsValue>;
 }

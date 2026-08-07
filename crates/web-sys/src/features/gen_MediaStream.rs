@@ -117,6 +117,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaStream`, `MediaStreamTrack`*"]
     pub fn get_track_by_id(this: &MediaStream, track_id: &str) -> Option<MediaStreamTrack>;
+    #[cfg(feature = "MediaStreamTrack")]
+    #[wasm_bindgen(method, js_class = "MediaStream", js_name = "getTrackById")]
+    #[doc = "The `getTrackById()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaStream/getTrackById)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaStream`, `MediaStreamTrack`*"]
+    pub fn get_track_by_id_with_js_string(
+        this: &MediaStream,
+        track_id: &::js_sys::JsString,
+    ) -> Option<MediaStreamTrack>;
     #[wasm_bindgen(method, js_class = "MediaStream", js_name = "getTracks")]
     #[doc = "The `getTracks()` method."]
     #[doc = ""]

@@ -40,6 +40,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpCodecCapability`*"]
     #[wasm_bindgen(method, setter = "mimeType")]
     pub fn set_mime_type(this: &RtcRtpCodecCapability, val: &str);
+    #[doc = "Change the `mimeType` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcRtpCodecCapability`*"]
+    #[wasm_bindgen(method, setter = "mimeType")]
+    pub fn set_mime_type_js_string(this: &RtcRtpCodecCapability, val: &::js_sys::JsString);
     #[doc = "Get the `sdpFmtpLine` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpCodecCapability`*"]
@@ -50,6 +55,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpCodecCapability`*"]
     #[wasm_bindgen(method, setter = "sdpFmtpLine")]
     pub fn set_sdp_fmtp_line(this: &RtcRtpCodecCapability, val: &str);
+    #[doc = "Change the `sdpFmtpLine` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcRtpCodecCapability`*"]
+    #[wasm_bindgen(method, setter = "sdpFmtpLine")]
+    pub fn set_sdp_fmtp_line_js_string(this: &RtcRtpCodecCapability, val: &::js_sys::JsString);
 }
 impl RtcRtpCodecCapability {
     #[doc = "Construct a new `RtcRtpCodecCapability`."]

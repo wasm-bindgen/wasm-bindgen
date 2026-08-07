@@ -37,6 +37,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssRule`*"]
     pub fn set_css_text(this: &CssRule, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "CSSRule", js_name = "cssText")]
+    #[doc = "Setter for the `cssText` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSRule/cssText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssRule`*"]
+    pub fn set_css_text_js_string(this: &CssRule, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "CSSRule", js_name = "parentRule")]
     #[doc = "Getter for the `parentRule` field of this object."]
     #[doc = ""]

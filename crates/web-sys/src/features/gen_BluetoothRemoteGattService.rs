@@ -246,6 +246,25 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn get_characteristic_with_js_string(
+        this: &BluetoothRemoteGattService,
+        characteristic: &::js_sys::JsString,
+    ) -> ::js_sys::Promise<BluetoothRemoteGattCharacteristic>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "BluetoothRemoteGattCharacteristic")]
+    #[wasm_bindgen(
+        method,
+        js_class = "BluetoothRemoteGATTService",
+        js_name = "getCharacteristic"
+    )]
+    #[doc = "The `getCharacteristic()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothRemoteGATTService/getCharacteristic)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BluetoothRemoteGattCharacteristic`, `BluetoothRemoteGattService`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get_characteristic_with_u32(
         this: &BluetoothRemoteGattService,
         characteristic: u32,
@@ -302,6 +321,25 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn get_characteristics_with_js_string(
+        this: &BluetoothRemoteGattService,
+        characteristic: &::js_sys::JsString,
+    ) -> ::js_sys::Promise<::js_sys::Array<BluetoothRemoteGattCharacteristic>>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "BluetoothRemoteGattCharacteristic")]
+    #[wasm_bindgen(
+        method,
+        js_class = "BluetoothRemoteGATTService",
+        js_name = "getCharacteristics"
+    )]
+    #[doc = "The `getCharacteristics()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothRemoteGATTService/getCharacteristics)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BluetoothRemoteGattCharacteristic`, `BluetoothRemoteGattService`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get_characteristics_with_u32(
         this: &BluetoothRemoteGattService,
         characteristic: u32,
@@ -323,6 +361,24 @@ extern "C" {
     pub fn get_included_service_with_str(
         this: &BluetoothRemoteGattService,
         service: &str,
+    ) -> ::js_sys::Promise<BluetoothRemoteGattService>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = "BluetoothRemoteGATTService",
+        js_name = "getIncludedService"
+    )]
+    #[doc = "The `getIncludedService()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothRemoteGATTService/getIncludedService)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BluetoothRemoteGattService`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn get_included_service_with_js_string(
+        this: &BluetoothRemoteGattService,
+        service: &::js_sys::JsString,
     ) -> ::js_sys::Promise<BluetoothRemoteGattService>;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(
@@ -376,6 +432,24 @@ extern "C" {
     pub fn get_included_services_with_str(
         this: &BluetoothRemoteGattService,
         service: &str,
+    ) -> ::js_sys::Promise<::js_sys::Array<BluetoothRemoteGattService>>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = "BluetoothRemoteGATTService",
+        js_name = "getIncludedServices"
+    )]
+    #[doc = "The `getIncludedServices()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothRemoteGATTService/getIncludedServices)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BluetoothRemoteGattService`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn get_included_services_with_js_string(
+        this: &BluetoothRemoteGattService,
+        service: &::js_sys::JsString,
     ) -> ::js_sys::Promise<::js_sys::Array<BluetoothRemoteGattService>>;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(

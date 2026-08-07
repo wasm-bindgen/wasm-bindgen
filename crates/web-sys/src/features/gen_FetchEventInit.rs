@@ -50,6 +50,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FetchEventInit`*"]
     #[wasm_bindgen(method, setter = "clientId")]
     pub fn set_client_id(this: &FetchEventInit, val: Option<&str>);
+    #[doc = "Change the `clientId` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FetchEventInit`*"]
+    #[wasm_bindgen(method, setter = "clientId")]
+    pub fn set_client_id_opt_js_string(this: &FetchEventInit, val: Option<&::js_sys::JsString>);
     #[doc = "Get the `isReload` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FetchEventInit`*"]

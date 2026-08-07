@@ -118,6 +118,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TreeView`*"]
     pub fn perform_action(this: &TreeView, action: &str);
+    #[wasm_bindgen(method, js_class = "TreeView", js_name = "performAction")]
+    #[doc = "The `performAction()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TreeView/performAction)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TreeView`*"]
+    pub fn perform_action_with_js_string(this: &TreeView, action: &::js_sys::JsString);
     #[wasm_bindgen(method, js_class = "TreeView", js_name = "performActionOnRow")]
     #[doc = "The `performActionOnRow()` method."]
     #[doc = ""]
@@ -125,6 +132,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TreeView`*"]
     pub fn perform_action_on_row(this: &TreeView, action: &str, row: i32);
+    #[wasm_bindgen(method, js_class = "TreeView", js_name = "performActionOnRow")]
+    #[doc = "The `performActionOnRow()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TreeView/performActionOnRow)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TreeView`*"]
+    pub fn perform_action_on_row_with_js_string(
+        this: &TreeView,
+        action: &::js_sys::JsString,
+        row: i32,
+    );
     #[wasm_bindgen(method, js_class = "TreeView", js_name = "selectionChanged")]
     #[doc = "The `selectionChanged()` method."]
     #[doc = ""]

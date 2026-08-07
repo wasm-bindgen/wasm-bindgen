@@ -146,6 +146,20 @@ extern "C" {
     #[wasm_bindgen(
         method,
         js_class = "ServiceWorkerContainer",
+        js_name = "getRegistration"
+    )]
+    #[doc = "The `getRegistration()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/getRegistration)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ServiceWorkerContainer`*"]
+    pub fn get_registration_with_js_string(
+        this: &ServiceWorkerContainer,
+        document_url: &::js_sys::JsString,
+    ) -> ::js_sys::Promise;
+    #[wasm_bindgen(
+        method,
+        js_class = "ServiceWorkerContainer",
         js_name = "getRegistrations"
     )]
     #[doc = "The `getRegistrations()` method."]
@@ -169,6 +183,21 @@ extern "C" {
         this: &ServiceWorkerContainer,
         url: &str,
     ) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "ServiceWorkerContainer",
+        js_name = "getScopeForUrl"
+    )]
+    #[doc = "The `getScopeForUrl()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/getScopeForUrl)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ServiceWorkerContainer`*"]
+    pub fn get_scope_for_url_with_js_string(
+        this: &ServiceWorkerContainer,
+        url: &::js_sys::JsString,
+    ) -> Result<::alloc::string::String, JsValue>;
     #[wasm_bindgen(method, js_class = "ServiceWorkerContainer")]
     #[doc = "The `register()` method."]
     #[doc = ""]
@@ -176,6 +205,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ServiceWorkerContainer`*"]
     pub fn register(this: &ServiceWorkerContainer, script_url: &str) -> ::js_sys::Promise;
+    #[wasm_bindgen(method, js_class = "ServiceWorkerContainer", js_name = "register")]
+    #[doc = "The `register()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/register)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ServiceWorkerContainer`*"]
+    pub fn register_with_js_string(
+        this: &ServiceWorkerContainer,
+        script_url: &::js_sys::JsString,
+    ) -> ::js_sys::Promise;
     #[cfg(feature = "RegistrationOptions")]
     #[wasm_bindgen(method, js_class = "ServiceWorkerContainer", js_name = "register")]
     #[doc = "The `register()` method."]
@@ -186,6 +225,18 @@ extern "C" {
     pub fn register_with_options(
         this: &ServiceWorkerContainer,
         script_url: &str,
+        options: &RegistrationOptions,
+    ) -> ::js_sys::Promise;
+    #[cfg(feature = "RegistrationOptions")]
+    #[wasm_bindgen(method, js_class = "ServiceWorkerContainer", js_name = "register")]
+    #[doc = "The `register()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/register)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegistrationOptions`, `ServiceWorkerContainer`*"]
+    pub fn register_with_js_string_and_options(
+        this: &ServiceWorkerContainer,
+        script_url: &::js_sys::JsString,
         options: &RegistrationOptions,
     ) -> ::js_sys::Promise;
 }

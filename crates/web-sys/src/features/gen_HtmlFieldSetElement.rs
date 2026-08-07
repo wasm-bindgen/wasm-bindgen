@@ -56,6 +56,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlFieldSetElement`*"]
     pub fn set_name(this: &HtmlFieldSetElement, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "HTMLFieldSetElement", js_name = "name")]
+    #[doc = "Setter for the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFieldSetElement/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFieldSetElement`*"]
+    pub fn set_name_js_string(this: &HtmlFieldSetElement, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "HTMLFieldSetElement", js_name = "type")]
     #[doc = "Getter for the `type` field of this object."]
     #[doc = ""]
@@ -131,4 +138,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlFieldSetElement`*"]
     pub fn set_custom_validity(this: &HtmlFieldSetElement, error: &str);
+    #[wasm_bindgen(
+        method,
+        js_class = "HTMLFieldSetElement",
+        js_name = "setCustomValidity"
+    )]
+    #[doc = "The `setCustomValidity()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFieldSetElement/setCustomValidity)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFieldSetElement`*"]
+    pub fn set_custom_validity_with_js_string(
+        this: &HtmlFieldSetElement,
+        error: &::js_sys::JsString,
+    );
 }

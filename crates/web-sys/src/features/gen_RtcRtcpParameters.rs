@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtcpParameters`*"]
     #[wasm_bindgen(method, setter = "cname")]
     pub fn set_cname(this: &RtcRtcpParameters, val: &str);
+    #[doc = "Change the `cname` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcRtcpParameters`*"]
+    #[wasm_bindgen(method, setter = "cname")]
+    pub fn set_cname_js_string(this: &RtcRtcpParameters, val: &::js_sys::JsString);
     #[doc = "Get the `reducedSize` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcRtcpParameters`*"]

@@ -60,6 +60,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaKeyNeededEventInit`*"]
     #[wasm_bindgen(method, setter = "initDataType")]
     pub fn set_init_data_type(this: &MediaKeyNeededEventInit, val: &str);
+    #[doc = "Change the `initDataType` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaKeyNeededEventInit`*"]
+    #[wasm_bindgen(method, setter = "initDataType")]
+    pub fn set_init_data_type_js_string(this: &MediaKeyNeededEventInit, val: &::js_sys::JsString);
 }
 impl MediaKeyNeededEventInit {
     #[doc = "Construct a new `MediaKeyNeededEventInit`."]

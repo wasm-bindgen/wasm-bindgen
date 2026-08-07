@@ -53,9 +53,40 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechGrammarList/addFromString)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SpeechGrammarList`*"]
+    pub fn add_from_string_with_js_string(
+        this: &SpeechGrammarList,
+        string: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "SpeechGrammarList",
+        js_name = "addFromString"
+    )]
+    #[doc = "The `addFromString()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechGrammarList/addFromString)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechGrammarList`*"]
     pub fn add_from_string_with_weight(
         this: &SpeechGrammarList,
         string: &str,
+        weight: f32,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "SpeechGrammarList",
+        js_name = "addFromString"
+    )]
+    #[doc = "The `addFromString()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechGrammarList/addFromString)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechGrammarList`*"]
+    pub fn add_from_string_with_js_string_and_weight(
+        this: &SpeechGrammarList,
+        string: &::js_sys::JsString,
         weight: f32,
     ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "SpeechGrammarList", js_name = "addFromURI")]
@@ -71,9 +102,30 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechGrammarList/addFromURI)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SpeechGrammarList`*"]
+    pub fn add_from_uri_with_js_string(
+        this: &SpeechGrammarList,
+        src: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "SpeechGrammarList", js_name = "addFromURI")]
+    #[doc = "The `addFromURI()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechGrammarList/addFromURI)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechGrammarList`*"]
     pub fn add_from_uri_with_weight(
         this: &SpeechGrammarList,
         src: &str,
+        weight: f32,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "SpeechGrammarList", js_name = "addFromURI")]
+    #[doc = "The `addFromURI()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechGrammarList/addFromURI)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechGrammarList`*"]
+    pub fn add_from_uri_with_js_string_and_weight(
+        this: &SpeechGrammarList,
+        src: &::js_sys::JsString,
         weight: f32,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "SpeechGrammar")]

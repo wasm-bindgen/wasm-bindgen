@@ -99,7 +99,24 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMException/DOMException)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomException`*"]
+    pub fn new_with_js_string(message: &::js_sys::JsString) -> Result<DomException, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "DOMException")]
+    #[doc = "The `new DomException(..)` constructor, creating a new instance of `DomException`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMException/DOMException)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomException`*"]
     pub fn new_with_message_and_name(message: &str, name: &str) -> Result<DomException, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "DOMException")]
+    #[doc = "The `new DomException(..)` constructor, creating a new instance of `DomException`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMException/DOMException)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomException`*"]
+    pub fn new_with_js_string_and_js_string(
+        message: &::js_sys::JsString,
+        name: &::js_sys::JsString,
+    ) -> Result<DomException, JsValue>;
 }
 impl DomException {
     #[doc = "The `DOMException.INDEX_SIZE_ERR` const."]

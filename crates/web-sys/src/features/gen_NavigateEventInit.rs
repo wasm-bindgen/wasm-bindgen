@@ -72,6 +72,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NavigateEventInit`*"]
     #[wasm_bindgen(method, setter = "downloadRequest")]
     pub fn set_download_request(this: &NavigateEventInit, val: Option<&str>);
+    #[doc = "Change the `downloadRequest` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NavigateEventInit`*"]
+    #[wasm_bindgen(method, setter = "downloadRequest")]
+    pub fn set_download_request_opt_js_string(
+        this: &NavigateEventInit,
+        val: Option<&::js_sys::JsString>,
+    );
     #[cfg(feature = "FormData")]
     #[doc = "Get the `formData` field of this object."]
     #[doc = ""]

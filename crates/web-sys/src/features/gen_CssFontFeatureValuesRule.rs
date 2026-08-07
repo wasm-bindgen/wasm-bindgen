@@ -43,6 +43,18 @@ extern "C" {
     pub fn set_font_family(this: &CssFontFeatureValuesRule, value: &str);
     #[wasm_bindgen(
         method,
+        setter,
+        js_class = "CSSFontFeatureValuesRule",
+        js_name = "fontFamily"
+    )]
+    #[doc = "Setter for the `fontFamily` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSFontFeatureValuesRule/fontFamily)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssFontFeatureValuesRule`*"]
+    pub fn set_font_family_js_string(this: &CssFontFeatureValuesRule, value: &::js_sys::JsString);
+    #[wasm_bindgen(
+        method,
         getter,
         js_class = "CSSFontFeatureValuesRule",
         js_name = "valueText"
@@ -65,4 +77,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssFontFeatureValuesRule`*"]
     pub fn set_value_text(this: &CssFontFeatureValuesRule, value: &str);
+    #[wasm_bindgen(
+        method,
+        setter,
+        js_class = "CSSFontFeatureValuesRule",
+        js_name = "valueText"
+    )]
+    #[doc = "Setter for the `valueText` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSFontFeatureValuesRule/valueText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssFontFeatureValuesRule`*"]
+    pub fn set_value_text_js_string(this: &CssFontFeatureValuesRule, value: &::js_sys::JsString);
 }

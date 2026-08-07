@@ -50,6 +50,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ToggleEventInit`*"]
     #[wasm_bindgen(method, setter = "newState")]
     pub fn set_new_state(this: &ToggleEventInit, val: &str);
+    #[doc = "Change the `newState` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ToggleEventInit`*"]
+    #[wasm_bindgen(method, setter = "newState")]
+    pub fn set_new_state_js_string(this: &ToggleEventInit, val: &::js_sys::JsString);
     #[doc = "Get the `oldState` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ToggleEventInit`*"]
@@ -60,6 +65,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ToggleEventInit`*"]
     #[wasm_bindgen(method, setter = "oldState")]
     pub fn set_old_state(this: &ToggleEventInit, val: &str);
+    #[doc = "Change the `oldState` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ToggleEventInit`*"]
+    #[wasm_bindgen(method, setter = "oldState")]
+    pub fn set_old_state_js_string(this: &ToggleEventInit, val: &::js_sys::JsString);
 }
 impl ToggleEventInit {
     #[doc = "Construct a new `ToggleEventInit`."]

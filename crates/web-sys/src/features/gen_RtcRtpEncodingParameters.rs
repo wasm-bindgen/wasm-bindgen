@@ -81,6 +81,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpEncodingParameters`*"]
     #[wasm_bindgen(method, setter = "rid")]
     pub fn set_rid(this: &RtcRtpEncodingParameters, val: &str);
+    #[doc = "Change the `rid` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcRtpEncodingParameters`*"]
+    #[wasm_bindgen(method, setter = "rid")]
+    pub fn set_rid_js_string(this: &RtcRtpEncodingParameters, val: &::js_sys::JsString);
     #[cfg(feature = "RtcRtxParameters")]
     #[doc = "Get the `rtx` field of this object."]
     #[doc = ""]
@@ -112,6 +117,18 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "scalabilityMode")]
     pub fn set_scalability_mode(this: &RtcRtpEncodingParameters, val: &str);
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Change the `scalabilityMode` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcRtpEncodingParameters`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, setter = "scalabilityMode")]
+    pub fn set_scalability_mode_js_string(
+        this: &RtcRtpEncodingParameters,
+        val: &::js_sys::JsString,
+    );
     #[doc = "Get the `scaleResolutionDownBy` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpEncodingParameters`*"]

@@ -262,6 +262,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MouseEvent`*"]
     pub fn new(type_arg: &str) -> Result<MouseEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "MouseEvent")]
+    #[doc = "The `new MouseEvent(..)` constructor, creating a new instance of `MouseEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/MouseEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseEvent`*"]
+    pub fn new_with_js_string(type_arg: &::js_sys::JsString) -> Result<MouseEvent, JsValue>;
     #[cfg(feature = "MouseEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "MouseEvent")]
     #[doc = "The `new MouseEvent(..)` constructor, creating a new instance of `MouseEvent`."]
@@ -273,6 +280,17 @@ extern "C" {
         type_arg: &str,
         mouse_event_init_dict: &MouseEventInit,
     ) -> Result<MouseEvent, JsValue>;
+    #[cfg(feature = "MouseEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "MouseEvent")]
+    #[doc = "The `new MouseEvent(..)` constructor, creating a new instance of `MouseEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/MouseEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseEvent`, `MouseEventInit`*"]
+    pub fn new_with_js_string_and_mouse_event_init_dict(
+        type_arg: &::js_sys::JsString,
+        mouse_event_init_dict: &MouseEventInit,
+    ) -> Result<MouseEvent, JsValue>;
     #[wasm_bindgen(method, js_class = "MouseEvent", js_name = "getModifierState")]
     #[doc = "The `getModifierState()` method."]
     #[doc = ""]
@@ -280,6 +298,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MouseEvent`*"]
     pub fn get_modifier_state(this: &MouseEvent, key_arg: &str) -> bool;
+    #[wasm_bindgen(method, js_class = "MouseEvent", js_name = "getModifierState")]
+    #[doc = "The `getModifierState()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/getModifierState)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseEvent`*"]
+    pub fn get_modifier_state_with_js_string(
+        this: &MouseEvent,
+        key_arg: &::js_sys::JsString,
+    ) -> bool;
     #[wasm_bindgen(method, js_class = "MouseEvent", js_name = "initMouseEvent")]
     #[doc = "The `initMouseEvent()` method."]
     #[doc = ""]
@@ -287,6 +315,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MouseEvent`*"]
     pub fn init_mouse_event(this: &MouseEvent, type_arg: &str);
+    #[wasm_bindgen(method, js_class = "MouseEvent", js_name = "initMouseEvent")]
+    #[doc = "The `initMouseEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/initMouseEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseEvent`*"]
+    pub fn init_mouse_event_with_js_string(this: &MouseEvent, type_arg: &::js_sys::JsString);
     #[wasm_bindgen(method, js_class = "MouseEvent", js_name = "initMouseEvent")]
     #[doc = "The `initMouseEvent()` method."]
     #[doc = ""]
@@ -304,9 +339,32 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/initMouseEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MouseEvent`*"]
+    pub fn init_mouse_event_with_js_string_and_can_bubble_arg(
+        this: &MouseEvent,
+        type_arg: &::js_sys::JsString,
+        can_bubble_arg: bool,
+    );
+    #[wasm_bindgen(method, js_class = "MouseEvent", js_name = "initMouseEvent")]
+    #[doc = "The `initMouseEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/initMouseEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseEvent`*"]
     pub fn init_mouse_event_with_can_bubble_arg_and_cancelable_arg(
         this: &MouseEvent,
         type_arg: &str,
+        can_bubble_arg: bool,
+        cancelable_arg: bool,
+    );
+    #[wasm_bindgen(method, js_class = "MouseEvent", js_name = "initMouseEvent")]
+    #[doc = "The `initMouseEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/initMouseEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseEvent`*"]
+    pub fn init_mouse_event_with_js_string_and_can_bubble_arg_and_cancelable_arg(
+        this: &MouseEvent,
+        type_arg: &::js_sys::JsString,
         can_bubble_arg: bool,
         cancelable_arg: bool,
     );
@@ -320,6 +378,20 @@ extern "C" {
     pub fn init_mouse_event_with_can_bubble_arg_and_cancelable_arg_and_view_arg(
         this: &MouseEvent,
         type_arg: &str,
+        can_bubble_arg: bool,
+        cancelable_arg: bool,
+        view_arg: Option<&Window>,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "MouseEvent", js_name = "initMouseEvent")]
+    #[doc = "The `initMouseEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/initMouseEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseEvent`, `Window`*"]
+    pub fn init_mouse_event_with_js_string_and_can_bubble_arg_and_cancelable_arg_and_view_arg(
+        this: &MouseEvent,
+        type_arg: &::js_sys::JsString,
         can_bubble_arg: bool,
         cancelable_arg: bool,
         view_arg: Option<&Window>,
@@ -346,9 +418,40 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/initMouseEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MouseEvent`, `Window`*"]
+    pub fn init_mouse_event_with_js_string_and_can_bubble_arg_and_cancelable_arg_and_view_arg_and_detail_arg(
+        this: &MouseEvent,
+        type_arg: &::js_sys::JsString,
+        can_bubble_arg: bool,
+        cancelable_arg: bool,
+        view_arg: Option<&Window>,
+        detail_arg: i32,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "MouseEvent", js_name = "initMouseEvent")]
+    #[doc = "The `initMouseEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/initMouseEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseEvent`, `Window`*"]
     pub fn init_mouse_event_with_can_bubble_arg_and_cancelable_arg_and_view_arg_and_detail_arg_and_screen_x_arg(
         this: &MouseEvent,
         type_arg: &str,
+        can_bubble_arg: bool,
+        cancelable_arg: bool,
+        view_arg: Option<&Window>,
+        detail_arg: i32,
+        screen_x_arg: i32,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "MouseEvent", js_name = "initMouseEvent")]
+    #[doc = "The `initMouseEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/initMouseEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseEvent`, `Window`*"]
+    pub fn init_mouse_event_with_js_string_and_can_bubble_arg_and_cancelable_arg_and_view_arg_and_detail_arg_and_screen_x_arg(
+        this: &MouseEvent,
+        type_arg: &::js_sys::JsString,
         can_bubble_arg: bool,
         cancelable_arg: bool,
         view_arg: Option<&Window>,
@@ -379,9 +482,44 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/initMouseEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MouseEvent`, `Window`*"]
+    pub fn init_mouse_event_with_js_string_and_can_bubble_arg_and_cancelable_arg_and_view_arg_and_detail_arg_and_screen_x_arg_and_screen_y_arg(
+        this: &MouseEvent,
+        type_arg: &::js_sys::JsString,
+        can_bubble_arg: bool,
+        cancelable_arg: bool,
+        view_arg: Option<&Window>,
+        detail_arg: i32,
+        screen_x_arg: i32,
+        screen_y_arg: i32,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "MouseEvent", js_name = "initMouseEvent")]
+    #[doc = "The `initMouseEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/initMouseEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseEvent`, `Window`*"]
     pub fn init_mouse_event_with_can_bubble_arg_and_cancelable_arg_and_view_arg_and_detail_arg_and_screen_x_arg_and_screen_y_arg_and_client_x_arg(
         this: &MouseEvent,
         type_arg: &str,
+        can_bubble_arg: bool,
+        cancelable_arg: bool,
+        view_arg: Option<&Window>,
+        detail_arg: i32,
+        screen_x_arg: i32,
+        screen_y_arg: i32,
+        client_x_arg: i32,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "MouseEvent", js_name = "initMouseEvent")]
+    #[doc = "The `initMouseEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/initMouseEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseEvent`, `Window`*"]
+    pub fn init_mouse_event_with_js_string_and_can_bubble_arg_and_cancelable_arg_and_view_arg_and_detail_arg_and_screen_x_arg_and_screen_y_arg_and_client_x_arg(
+        this: &MouseEvent,
+        type_arg: &::js_sys::JsString,
         can_bubble_arg: bool,
         cancelable_arg: bool,
         view_arg: Option<&Window>,
@@ -416,9 +554,48 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/initMouseEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MouseEvent`, `Window`*"]
+    pub fn init_mouse_event_with_js_string_and_can_bubble_arg_and_cancelable_arg_and_view_arg_and_detail_arg_and_screen_x_arg_and_screen_y_arg_and_client_x_arg_and_client_y_arg(
+        this: &MouseEvent,
+        type_arg: &::js_sys::JsString,
+        can_bubble_arg: bool,
+        cancelable_arg: bool,
+        view_arg: Option<&Window>,
+        detail_arg: i32,
+        screen_x_arg: i32,
+        screen_y_arg: i32,
+        client_x_arg: i32,
+        client_y_arg: i32,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "MouseEvent", js_name = "initMouseEvent")]
+    #[doc = "The `initMouseEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/initMouseEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseEvent`, `Window`*"]
     pub fn init_mouse_event_with_can_bubble_arg_and_cancelable_arg_and_view_arg_and_detail_arg_and_screen_x_arg_and_screen_y_arg_and_client_x_arg_and_client_y_arg_and_ctrl_key_arg(
         this: &MouseEvent,
         type_arg: &str,
+        can_bubble_arg: bool,
+        cancelable_arg: bool,
+        view_arg: Option<&Window>,
+        detail_arg: i32,
+        screen_x_arg: i32,
+        screen_y_arg: i32,
+        client_x_arg: i32,
+        client_y_arg: i32,
+        ctrl_key_arg: bool,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "MouseEvent", js_name = "initMouseEvent")]
+    #[doc = "The `initMouseEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/initMouseEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseEvent`, `Window`*"]
+    pub fn init_mouse_event_with_js_string_and_can_bubble_arg_and_cancelable_arg_and_view_arg_and_detail_arg_and_screen_x_arg_and_screen_y_arg_and_client_x_arg_and_client_y_arg_and_ctrl_key_arg(
+        this: &MouseEvent,
+        type_arg: &::js_sys::JsString,
         can_bubble_arg: bool,
         cancelable_arg: bool,
         view_arg: Option<&Window>,
@@ -457,9 +634,52 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/initMouseEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MouseEvent`, `Window`*"]
+    pub fn init_mouse_event_with_js_string_and_can_bubble_arg_and_cancelable_arg_and_view_arg_and_detail_arg_and_screen_x_arg_and_screen_y_arg_and_client_x_arg_and_client_y_arg_and_ctrl_key_arg_and_alt_key_arg(
+        this: &MouseEvent,
+        type_arg: &::js_sys::JsString,
+        can_bubble_arg: bool,
+        cancelable_arg: bool,
+        view_arg: Option<&Window>,
+        detail_arg: i32,
+        screen_x_arg: i32,
+        screen_y_arg: i32,
+        client_x_arg: i32,
+        client_y_arg: i32,
+        ctrl_key_arg: bool,
+        alt_key_arg: bool,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "MouseEvent", js_name = "initMouseEvent")]
+    #[doc = "The `initMouseEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/initMouseEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseEvent`, `Window`*"]
     pub fn init_mouse_event_with_can_bubble_arg_and_cancelable_arg_and_view_arg_and_detail_arg_and_screen_x_arg_and_screen_y_arg_and_client_x_arg_and_client_y_arg_and_ctrl_key_arg_and_alt_key_arg_and_shift_key_arg(
         this: &MouseEvent,
         type_arg: &str,
+        can_bubble_arg: bool,
+        cancelable_arg: bool,
+        view_arg: Option<&Window>,
+        detail_arg: i32,
+        screen_x_arg: i32,
+        screen_y_arg: i32,
+        client_x_arg: i32,
+        client_y_arg: i32,
+        ctrl_key_arg: bool,
+        alt_key_arg: bool,
+        shift_key_arg: bool,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "MouseEvent", js_name = "initMouseEvent")]
+    #[doc = "The `initMouseEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/initMouseEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseEvent`, `Window`*"]
+    pub fn init_mouse_event_with_js_string_and_can_bubble_arg_and_cancelable_arg_and_view_arg_and_detail_arg_and_screen_x_arg_and_screen_y_arg_and_client_x_arg_and_client_y_arg_and_ctrl_key_arg_and_alt_key_arg_and_shift_key_arg(
+        this: &MouseEvent,
+        type_arg: &::js_sys::JsString,
         can_bubble_arg: bool,
         cancelable_arg: bool,
         view_arg: Option<&Window>,
@@ -502,9 +722,56 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/initMouseEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MouseEvent`, `Window`*"]
+    pub fn init_mouse_event_with_js_string_and_can_bubble_arg_and_cancelable_arg_and_view_arg_and_detail_arg_and_screen_x_arg_and_screen_y_arg_and_client_x_arg_and_client_y_arg_and_ctrl_key_arg_and_alt_key_arg_and_shift_key_arg_and_meta_key_arg(
+        this: &MouseEvent,
+        type_arg: &::js_sys::JsString,
+        can_bubble_arg: bool,
+        cancelable_arg: bool,
+        view_arg: Option<&Window>,
+        detail_arg: i32,
+        screen_x_arg: i32,
+        screen_y_arg: i32,
+        client_x_arg: i32,
+        client_y_arg: i32,
+        ctrl_key_arg: bool,
+        alt_key_arg: bool,
+        shift_key_arg: bool,
+        meta_key_arg: bool,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "MouseEvent", js_name = "initMouseEvent")]
+    #[doc = "The `initMouseEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/initMouseEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseEvent`, `Window`*"]
     pub fn init_mouse_event_with_can_bubble_arg_and_cancelable_arg_and_view_arg_and_detail_arg_and_screen_x_arg_and_screen_y_arg_and_client_x_arg_and_client_y_arg_and_ctrl_key_arg_and_alt_key_arg_and_shift_key_arg_and_meta_key_arg_and_button_arg(
         this: &MouseEvent,
         type_arg: &str,
+        can_bubble_arg: bool,
+        cancelable_arg: bool,
+        view_arg: Option<&Window>,
+        detail_arg: i32,
+        screen_x_arg: i32,
+        screen_y_arg: i32,
+        client_x_arg: i32,
+        client_y_arg: i32,
+        ctrl_key_arg: bool,
+        alt_key_arg: bool,
+        shift_key_arg: bool,
+        meta_key_arg: bool,
+        button_arg: i16,
+    );
+    #[cfg(feature = "Window")]
+    #[wasm_bindgen(method, js_class = "MouseEvent", js_name = "initMouseEvent")]
+    #[doc = "The `initMouseEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/initMouseEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MouseEvent`, `Window`*"]
+    pub fn init_mouse_event_with_js_string_and_can_bubble_arg_and_cancelable_arg_and_view_arg_and_detail_arg_and_screen_x_arg_and_screen_y_arg_and_client_x_arg_and_client_y_arg_and_ctrl_key_arg_and_alt_key_arg_and_shift_key_arg_and_meta_key_arg_and_button_arg(
+        this: &MouseEvent,
+        type_arg: &::js_sys::JsString,
         can_bubble_arg: bool,
         cancelable_arg: bool,
         view_arg: Option<&Window>,
@@ -529,6 +796,31 @@ extern "C" {
     pub fn init_mouse_event_with_can_bubble_arg_and_cancelable_arg_and_view_arg_and_detail_arg_and_screen_x_arg_and_screen_y_arg_and_client_x_arg_and_client_y_arg_and_ctrl_key_arg_and_alt_key_arg_and_shift_key_arg_and_meta_key_arg_and_button_arg_and_related_target_arg(
         this: &MouseEvent,
         type_arg: &str,
+        can_bubble_arg: bool,
+        cancelable_arg: bool,
+        view_arg: Option<&Window>,
+        detail_arg: i32,
+        screen_x_arg: i32,
+        screen_y_arg: i32,
+        client_x_arg: i32,
+        client_y_arg: i32,
+        ctrl_key_arg: bool,
+        alt_key_arg: bool,
+        shift_key_arg: bool,
+        meta_key_arg: bool,
+        button_arg: i16,
+        related_target_arg: Option<&EventTarget>,
+    );
+    #[cfg(all(feature = "EventTarget", feature = "Window",))]
+    #[wasm_bindgen(method, js_class = "MouseEvent", js_name = "initMouseEvent")]
+    #[doc = "The `initMouseEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/initMouseEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `EventTarget`, `MouseEvent`, `Window`*"]
+    pub fn init_mouse_event_with_js_string_and_can_bubble_arg_and_cancelable_arg_and_view_arg_and_detail_arg_and_screen_x_arg_and_screen_y_arg_and_client_x_arg_and_client_y_arg_and_ctrl_key_arg_and_alt_key_arg_and_shift_key_arg_and_meta_key_arg_and_button_arg_and_related_target_arg(
+        this: &MouseEvent,
+        type_arg: &::js_sys::JsString,
         can_bubble_arg: bool,
         cancelable_arg: bool,
         view_arg: Option<&Window>,

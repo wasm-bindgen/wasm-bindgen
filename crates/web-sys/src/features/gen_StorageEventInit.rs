@@ -50,6 +50,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `StorageEventInit`*"]
     #[wasm_bindgen(method, setter = "key")]
     pub fn set_key(this: &StorageEventInit, val: Option<&str>);
+    #[doc = "Change the `key` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `StorageEventInit`*"]
+    #[wasm_bindgen(method, setter = "key")]
+    pub fn set_key_opt_js_string(this: &StorageEventInit, val: Option<&::js_sys::JsString>);
     #[doc = "Get the `newValue` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StorageEventInit`*"]
@@ -60,6 +65,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `StorageEventInit`*"]
     #[wasm_bindgen(method, setter = "newValue")]
     pub fn set_new_value(this: &StorageEventInit, val: Option<&str>);
+    #[doc = "Change the `newValue` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `StorageEventInit`*"]
+    #[wasm_bindgen(method, setter = "newValue")]
+    pub fn set_new_value_opt_js_string(this: &StorageEventInit, val: Option<&::js_sys::JsString>);
     #[doc = "Get the `oldValue` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StorageEventInit`*"]
@@ -70,6 +80,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `StorageEventInit`*"]
     #[wasm_bindgen(method, setter = "oldValue")]
     pub fn set_old_value(this: &StorageEventInit, val: Option<&str>);
+    #[doc = "Change the `oldValue` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `StorageEventInit`*"]
+    #[wasm_bindgen(method, setter = "oldValue")]
+    pub fn set_old_value_opt_js_string(this: &StorageEventInit, val: Option<&::js_sys::JsString>);
     #[cfg(feature = "Storage")]
     #[doc = "Get the `storageArea` field of this object."]
     #[doc = ""]
@@ -92,6 +107,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `StorageEventInit`*"]
     #[wasm_bindgen(method, setter = "url")]
     pub fn set_url(this: &StorageEventInit, val: &str);
+    #[doc = "Change the `url` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `StorageEventInit`*"]
+    #[wasm_bindgen(method, setter = "url")]
+    pub fn set_url_js_string(this: &StorageEventInit, val: &::js_sys::JsString);
 }
 impl StorageEventInit {
     #[doc = "Construct a new `StorageEventInit`."]

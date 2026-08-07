@@ -30,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ShareData`*"]
     #[wasm_bindgen(method, setter = "text")]
     pub fn set_text(this: &ShareData, val: &str);
+    #[doc = "Change the `text` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ShareData`*"]
+    #[wasm_bindgen(method, setter = "text")]
+    pub fn set_text_js_string(this: &ShareData, val: &::js_sys::JsString);
     #[doc = "Get the `title` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ShareData`*"]
@@ -40,6 +45,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ShareData`*"]
     #[wasm_bindgen(method, setter = "title")]
     pub fn set_title(this: &ShareData, val: &str);
+    #[doc = "Change the `title` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ShareData`*"]
+    #[wasm_bindgen(method, setter = "title")]
+    pub fn set_title_js_string(this: &ShareData, val: &::js_sys::JsString);
     #[doc = "Get the `url` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ShareData`*"]
@@ -50,6 +60,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ShareData`*"]
     #[wasm_bindgen(method, setter = "url")]
     pub fn set_url(this: &ShareData, val: &str);
+    #[doc = "Change the `url` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ShareData`*"]
+    #[wasm_bindgen(method, setter = "url")]
+    pub fn set_url_js_string(this: &ShareData, val: &::js_sys::JsString);
 }
 impl ShareData {
     #[doc = "Construct a new `ShareData`."]

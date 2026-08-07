@@ -56,6 +56,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ResponseInit`*"]
     #[wasm_bindgen(method, setter = "statusText")]
     pub fn set_status_text(this: &ResponseInit, val: &str);
+    #[doc = "Change the `statusText` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ResponseInit`*"]
+    #[wasm_bindgen(method, setter = "statusText")]
+    pub fn set_status_text_js_string(this: &ResponseInit, val: &::js_sys::JsString);
 }
 impl ResponseInit {
     #[doc = "Construct a new `ResponseInit`."]

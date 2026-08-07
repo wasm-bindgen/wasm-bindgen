@@ -31,6 +31,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TrackEvent`*"]
     pub fn new(type_: &str) -> Result<TrackEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "TrackEvent")]
+    #[doc = "The `new TrackEvent(..)` constructor, creating a new instance of `TrackEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TrackEvent/TrackEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TrackEvent`*"]
+    pub fn new_with_js_string(type_: &::js_sys::JsString) -> Result<TrackEvent, JsValue>;
     #[cfg(feature = "TrackEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "TrackEvent")]
     #[doc = "The `new TrackEvent(..)` constructor, creating a new instance of `TrackEvent`."]
@@ -40,6 +47,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `TrackEvent`, `TrackEventInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &TrackEventInit,
+    ) -> Result<TrackEvent, JsValue>;
+    #[cfg(feature = "TrackEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "TrackEvent")]
+    #[doc = "The `new TrackEvent(..)` constructor, creating a new instance of `TrackEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TrackEvent/TrackEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TrackEvent`, `TrackEventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &TrackEventInit,
     ) -> Result<TrackEvent, JsValue>;
 }

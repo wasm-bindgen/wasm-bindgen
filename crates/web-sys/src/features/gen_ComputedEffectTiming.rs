@@ -52,6 +52,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ComputedEffectTiming`*"]
     #[wasm_bindgen(method, setter = "duration")]
     pub fn set_duration_str(this: &ComputedEffectTiming, val: &str);
+    #[doc = "Change the `duration` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ComputedEffectTiming`*"]
+    #[wasm_bindgen(method, setter = "duration")]
+    pub fn set_duration_js_string(this: &ComputedEffectTiming, val: &::js_sys::JsString);
     #[doc = "Get the `easing` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ComputedEffectTiming`*"]
@@ -62,6 +67,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ComputedEffectTiming`*"]
     #[wasm_bindgen(method, setter = "easing")]
     pub fn set_easing(this: &ComputedEffectTiming, val: &str);
+    #[doc = "Change the `easing` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ComputedEffectTiming`*"]
+    #[wasm_bindgen(method, setter = "easing")]
+    pub fn set_easing_js_string(this: &ComputedEffectTiming, val: &::js_sys::JsString);
     #[doc = "Get the `endDelay` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ComputedEffectTiming`*"]

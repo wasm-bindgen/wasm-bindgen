@@ -60,6 +60,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryEventInit`*"]
     #[wasm_bindgen(method, setter = "entryType")]
     pub fn set_entry_type(this: &PerformanceEntryEventInit, val: &str);
+    #[doc = "Change the `entryType` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryEventInit`*"]
+    #[wasm_bindgen(method, setter = "entryType")]
+    pub fn set_entry_type_js_string(this: &PerformanceEntryEventInit, val: &::js_sys::JsString);
     #[doc = "Get the `epoch` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryEventInit`*"]
@@ -80,6 +85,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryEventInit`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &PerformanceEntryEventInit, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryEventInit`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &PerformanceEntryEventInit, val: &::js_sys::JsString);
     #[doc = "Get the `origin` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryEventInit`*"]
@@ -90,6 +100,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryEventInit`*"]
     #[wasm_bindgen(method, setter = "origin")]
     pub fn set_origin(this: &PerformanceEntryEventInit, val: &str);
+    #[doc = "Change the `origin` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryEventInit`*"]
+    #[wasm_bindgen(method, setter = "origin")]
+    pub fn set_origin_js_string(this: &PerformanceEntryEventInit, val: &::js_sys::JsString);
     #[doc = "Get the `startTime` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryEventInit`*"]

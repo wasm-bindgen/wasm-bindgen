@@ -46,4 +46,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WindowClient`*"]
     pub fn navigate(this: &WindowClient, url: &str) -> Result<::js_sys::Promise, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WindowClient", js_name = "navigate")]
+    #[doc = "The `navigate()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WindowClient/navigate)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WindowClient`*"]
+    pub fn navigate_with_js_string(
+        this: &WindowClient,
+        url: &::js_sys::JsString,
+    ) -> Result<::js_sys::Promise, JsValue>;
 }

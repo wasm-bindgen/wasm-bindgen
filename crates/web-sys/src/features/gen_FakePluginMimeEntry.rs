@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FakePluginMimeEntry`*"]
     #[wasm_bindgen(method, setter = "description")]
     pub fn set_description(this: &FakePluginMimeEntry, val: &str);
+    #[doc = "Change the `description` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FakePluginMimeEntry`*"]
+    #[wasm_bindgen(method, setter = "description")]
+    pub fn set_description_js_string(this: &FakePluginMimeEntry, val: &::js_sys::JsString);
     #[doc = "Get the `extension` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FakePluginMimeEntry`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FakePluginMimeEntry`*"]
     #[wasm_bindgen(method, setter = "extension")]
     pub fn set_extension(this: &FakePluginMimeEntry, val: &str);
+    #[doc = "Change the `extension` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FakePluginMimeEntry`*"]
+    #[wasm_bindgen(method, setter = "extension")]
+    pub fn set_extension_js_string(this: &FakePluginMimeEntry, val: &::js_sys::JsString);
     #[doc = "Get the `type` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FakePluginMimeEntry`*"]
@@ -40,6 +50,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FakePluginMimeEntry`*"]
     #[wasm_bindgen(method, setter = "type")]
     pub fn set_type(this: &FakePluginMimeEntry, val: &str);
+    #[doc = "Change the `type` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FakePluginMimeEntry`*"]
+    #[wasm_bindgen(method, setter = "type")]
+    pub fn set_type_js_string(this: &FakePluginMimeEntry, val: &::js_sys::JsString);
 }
 impl FakePluginMimeEntry {
     #[doc = "Construct a new `FakePluginMimeEntry`."]

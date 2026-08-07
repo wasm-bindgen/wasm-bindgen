@@ -30,6 +30,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedString`*"]
     pub fn set_base_val(this: &SvgAnimatedString, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "SVGAnimatedString", js_name = "baseVal")]
+    #[doc = "Setter for the `baseVal` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGAnimatedString/baseVal)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgAnimatedString`*"]
+    pub fn set_base_val_js_string(this: &SvgAnimatedString, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "SVGAnimatedString", js_name = "animVal")]
     #[doc = "Getter for the `animVal` field of this object."]
     #[doc = ""]

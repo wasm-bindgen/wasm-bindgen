@@ -54,6 +54,17 @@ extern "C" {
         namespace_uri: &str,
         local_name: &str,
     ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "XSLTProcessor", js_name = "removeParameter")]
+    #[doc = "The `removeParameter()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XSLTProcessor/removeParameter)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `XsltProcessor`*"]
+    pub fn remove_parameter_with_js_string_and_js_string(
+        this: &XsltProcessor,
+        namespace_uri: &::js_sys::JsString,
+        local_name: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(method, js_class = "XSLTProcessor")]
     #[doc = "The `reset()` method."]
     #[doc = ""]
@@ -71,6 +82,18 @@ extern "C" {
         this: &XsltProcessor,
         namespace_uri: &str,
         local_name: &str,
+        value: &::wasm_bindgen::JsValue,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "XSLTProcessor", js_name = "setParameter")]
+    #[doc = "The `setParameter()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XSLTProcessor/setParameter)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `XsltProcessor`*"]
+    pub fn set_parameter_with_js_string_and_js_string(
+        this: &XsltProcessor,
+        namespace_uri: &::js_sys::JsString,
+        local_name: &::js_sys::JsString,
         value: &::wasm_bindgen::JsValue,
     ) -> Result<(), JsValue>;
     #[cfg(all(feature = "Document", feature = "Node",))]

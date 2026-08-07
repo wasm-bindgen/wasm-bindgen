@@ -70,6 +70,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PushEventInit`*"]
     #[wasm_bindgen(method, setter = "data")]
     pub fn set_data_str(this: &PushEventInit, val: &str);
+    #[doc = "Change the `data` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PushEventInit`*"]
+    #[wasm_bindgen(method, setter = "data")]
+    pub fn set_data_js_string(this: &PushEventInit, val: &::js_sys::JsString);
 }
 impl PushEventInit {
     #[doc = "Construct a new `PushEventInit`."]

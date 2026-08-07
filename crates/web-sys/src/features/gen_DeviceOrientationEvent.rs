@@ -57,6 +57,15 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DeviceOrientationEvent`*"]
     pub fn new(type_: &str) -> Result<DeviceOrientationEvent, JsValue>;
+    #[wasm_bindgen(catch, constructor, js_class = "DeviceOrientationEvent")]
+    #[doc = "The `new DeviceOrientationEvent(..)` constructor, creating a new instance of `DeviceOrientationEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DeviceOrientationEvent/DeviceOrientationEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DeviceOrientationEvent`*"]
+    pub fn new_with_js_string(
+        type_: &::js_sys::JsString,
+    ) -> Result<DeviceOrientationEvent, JsValue>;
     #[cfg(feature = "DeviceOrientationEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "DeviceOrientationEvent")]
     #[doc = "The `new DeviceOrientationEvent(..)` constructor, creating a new instance of `DeviceOrientationEvent`."]
@@ -66,6 +75,17 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DeviceOrientationEvent`, `DeviceOrientationEventInit`*"]
     pub fn new_with_event_init_dict(
         type_: &str,
+        event_init_dict: &DeviceOrientationEventInit,
+    ) -> Result<DeviceOrientationEvent, JsValue>;
+    #[cfg(feature = "DeviceOrientationEventInit")]
+    #[wasm_bindgen(catch, constructor, js_class = "DeviceOrientationEvent")]
+    #[doc = "The `new DeviceOrientationEvent(..)` constructor, creating a new instance of `DeviceOrientationEvent`."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DeviceOrientationEvent/DeviceOrientationEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DeviceOrientationEvent`, `DeviceOrientationEventInit`*"]
+    pub fn new_with_js_string_and_event_init_dict(
+        type_: &::js_sys::JsString,
         event_init_dict: &DeviceOrientationEventInit,
     ) -> Result<DeviceOrientationEvent, JsValue>;
     #[wasm_bindgen(
@@ -79,6 +99,20 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DeviceOrientationEvent`*"]
     pub fn init_device_orientation_event(this: &DeviceOrientationEvent, type_: &str);
+    #[wasm_bindgen(
+        method,
+        js_class = "DeviceOrientationEvent",
+        js_name = "initDeviceOrientationEvent"
+    )]
+    #[doc = "The `initDeviceOrientationEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DeviceOrientationEvent/initDeviceOrientationEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DeviceOrientationEvent`*"]
+    pub fn init_device_orientation_event_with_js_string(
+        this: &DeviceOrientationEvent,
+        type_: &::js_sys::JsString,
+    );
     #[wasm_bindgen(
         method,
         js_class = "DeviceOrientationEvent",
@@ -104,9 +138,40 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DeviceOrientationEvent/initDeviceOrientationEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DeviceOrientationEvent`*"]
+    pub fn init_device_orientation_event_with_js_string_and_can_bubble(
+        this: &DeviceOrientationEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+    );
+    #[wasm_bindgen(
+        method,
+        js_class = "DeviceOrientationEvent",
+        js_name = "initDeviceOrientationEvent"
+    )]
+    #[doc = "The `initDeviceOrientationEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DeviceOrientationEvent/initDeviceOrientationEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DeviceOrientationEvent`*"]
     pub fn init_device_orientation_event_with_can_bubble_and_cancelable(
         this: &DeviceOrientationEvent,
         type_: &str,
+        can_bubble: bool,
+        cancelable: bool,
+    );
+    #[wasm_bindgen(
+        method,
+        js_class = "DeviceOrientationEvent",
+        js_name = "initDeviceOrientationEvent"
+    )]
+    #[doc = "The `initDeviceOrientationEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DeviceOrientationEvent/initDeviceOrientationEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DeviceOrientationEvent`*"]
+    pub fn init_device_orientation_event_with_js_string_and_can_bubble_and_cancelable(
+        this: &DeviceOrientationEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
         cancelable: bool,
     );
@@ -137,9 +202,44 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DeviceOrientationEvent/initDeviceOrientationEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DeviceOrientationEvent`*"]
+    pub fn init_device_orientation_event_with_js_string_and_can_bubble_and_cancelable_and_alpha(
+        this: &DeviceOrientationEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+        cancelable: bool,
+        alpha: Option<f64>,
+    );
+    #[wasm_bindgen(
+        method,
+        js_class = "DeviceOrientationEvent",
+        js_name = "initDeviceOrientationEvent"
+    )]
+    #[doc = "The `initDeviceOrientationEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DeviceOrientationEvent/initDeviceOrientationEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DeviceOrientationEvent`*"]
     pub fn init_device_orientation_event_with_can_bubble_and_cancelable_and_alpha_and_beta(
         this: &DeviceOrientationEvent,
         type_: &str,
+        can_bubble: bool,
+        cancelable: bool,
+        alpha: Option<f64>,
+        beta: Option<f64>,
+    );
+    #[wasm_bindgen(
+        method,
+        js_class = "DeviceOrientationEvent",
+        js_name = "initDeviceOrientationEvent"
+    )]
+    #[doc = "The `initDeviceOrientationEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DeviceOrientationEvent/initDeviceOrientationEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DeviceOrientationEvent`*"]
+    pub fn init_device_orientation_event_with_js_string_and_can_bubble_and_cancelable_and_alpha_and_beta(
+        this: &DeviceOrientationEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
         cancelable: bool,
         alpha: Option<f64>,
@@ -174,9 +274,48 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DeviceOrientationEvent/initDeviceOrientationEvent)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DeviceOrientationEvent`*"]
+    pub fn init_device_orientation_event_with_js_string_and_can_bubble_and_cancelable_and_alpha_and_beta_and_gamma(
+        this: &DeviceOrientationEvent,
+        type_: &::js_sys::JsString,
+        can_bubble: bool,
+        cancelable: bool,
+        alpha: Option<f64>,
+        beta: Option<f64>,
+        gamma: Option<f64>,
+    );
+    #[wasm_bindgen(
+        method,
+        js_class = "DeviceOrientationEvent",
+        js_name = "initDeviceOrientationEvent"
+    )]
+    #[doc = "The `initDeviceOrientationEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DeviceOrientationEvent/initDeviceOrientationEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DeviceOrientationEvent`*"]
     pub fn init_device_orientation_event_with_can_bubble_and_cancelable_and_alpha_and_beta_and_gamma_and_absolute(
         this: &DeviceOrientationEvent,
         type_: &str,
+        can_bubble: bool,
+        cancelable: bool,
+        alpha: Option<f64>,
+        beta: Option<f64>,
+        gamma: Option<f64>,
+        absolute: bool,
+    );
+    #[wasm_bindgen(
+        method,
+        js_class = "DeviceOrientationEvent",
+        js_name = "initDeviceOrientationEvent"
+    )]
+    #[doc = "The `initDeviceOrientationEvent()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DeviceOrientationEvent/initDeviceOrientationEvent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DeviceOrientationEvent`*"]
+    pub fn init_device_orientation_event_with_js_string_and_can_bubble_and_cancelable_and_alpha_and_beta_and_gamma_and_absolute(
+        this: &DeviceOrientationEvent,
+        type_: &::js_sys::JsString,
         can_bubble: bool,
         cancelable: bool,
         alpha: Option<f64>,

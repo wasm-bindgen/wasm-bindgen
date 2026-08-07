@@ -205,6 +205,18 @@ extern "C" {
         direction: &str,
         granularity: &str,
     ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Selection", js_name = "modify")]
+    #[doc = "The `modify()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Selection/modify)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Selection`*"]
+    pub fn modify_with_js_string_and_js_string_and_js_string(
+        this: &Selection,
+        alter: &::js_sys::JsString,
+        direction: &::js_sys::JsString,
+        granularity: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Selection", js_name = "removeAllRanges")]
     #[doc = "The `removeAllRanges()` method."]
     #[doc = ""]

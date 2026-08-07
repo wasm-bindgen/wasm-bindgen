@@ -40,6 +40,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FilePropertyBag`*"]
     #[wasm_bindgen(method, setter = "type")]
     pub fn set_type(this: &FilePropertyBag, val: &str);
+    #[doc = "Change the `type` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FilePropertyBag`*"]
+    #[wasm_bindgen(method, setter = "type")]
+    pub fn set_type_js_string(this: &FilePropertyBag, val: &::js_sys::JsString);
 }
 impl FilePropertyBag {
     #[doc = "Construct a new `FilePropertyBag`."]

@@ -32,6 +32,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
     pub fn set_data(this: &CharacterData, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "CharacterData", js_name = "data")]
+    #[doc = "Setter for the `data` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/data)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn set_data_js_string(this: &CharacterData, value: &::js_sys::JsString);
     #[wasm_bindgen(method, getter, js_class = "CharacterData", js_name = "length")]
     #[doc = "Getter for the `length` field of this object."]
     #[doc = ""]
@@ -72,6 +79,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
     pub fn append_data(this: &CharacterData, data: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "appendData")]
+    #[doc = "The `appendData()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/appendData)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn append_data_with_js_string(
+        this: &CharacterData,
+        data: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "deleteData")]
     #[doc = "The `deleteData()` method."]
     #[doc = ""]
@@ -86,6 +103,17 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
     pub fn insert_data(this: &CharacterData, offset: u32, data: &str) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "insertData")]
+    #[doc = "The `insertData()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/insertData)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn insert_data_with_js_string(
+        this: &CharacterData,
+        offset: u32,
+        data: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "replaceData")]
     #[doc = "The `replaceData()` method."]
     #[doc = ""]
@@ -97,6 +125,18 @@ extern "C" {
         offset: u32,
         count: u32,
         data: &str,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "replaceData")]
+    #[doc = "The `replaceData()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/replaceData)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn replace_data_with_js_string(
+        this: &CharacterData,
+        offset: u32,
+        count: u32,
+        data: &::js_sys::JsString,
     ) -> Result<(), JsValue>;
     #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "substringData")]
     #[doc = "The `substringData()` method."]
@@ -313,6 +353,114 @@ extern "C" {
         nodes_6: &str,
         nodes_7: &str,
     ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, variadic, js_class = "CharacterData", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn after_with_js_string(
+        this: &CharacterData,
+        nodes: &::js_sys::Array,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn after_with_js_string_0(this: &CharacterData) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn after_with_js_string_1(
+        this: &CharacterData,
+        nodes_1: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn after_with_js_string_2(
+        this: &CharacterData,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn after_with_js_string_3(
+        this: &CharacterData,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn after_with_js_string_4(
+        this: &CharacterData,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn after_with_js_string_5(
+        this: &CharacterData,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn after_with_js_string_6(
+        this: &CharacterData,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "after")]
+    #[doc = "The `after()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/after)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn after_with_js_string_7(
+        this: &CharacterData,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+        nodes_7: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
     #[wasm_bindgen(
         catch,
         method,
@@ -528,6 +676,120 @@ extern "C" {
         nodes_5: &str,
         nodes_6: &str,
         nodes_7: &str,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        variadic,
+        js_class = "CharacterData",
+        js_name = "before"
+    )]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn before_with_js_string(
+        this: &CharacterData,
+        nodes: &::js_sys::Array,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn before_with_js_string_0(this: &CharacterData) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn before_with_js_string_1(
+        this: &CharacterData,
+        nodes_1: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn before_with_js_string_2(
+        this: &CharacterData,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn before_with_js_string_3(
+        this: &CharacterData,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn before_with_js_string_4(
+        this: &CharacterData,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn before_with_js_string_5(
+        this: &CharacterData,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn before_with_js_string_6(
+        this: &CharacterData,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "before")]
+    #[doc = "The `before()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/before)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn before_with_js_string_7(
+        this: &CharacterData,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+        nodes_7: &::js_sys::JsString,
     ) -> Result<(), JsValue>;
     #[wasm_bindgen(method, js_class = "CharacterData")]
     #[doc = "The `remove()` method."]
@@ -757,5 +1019,119 @@ extern "C" {
         nodes_5: &str,
         nodes_6: &str,
         nodes_7: &str,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        variadic,
+        js_class = "CharacterData",
+        js_name = "replaceWith"
+    )]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn replace_with_with_js_string(
+        this: &CharacterData,
+        nodes: &::js_sys::Array,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn replace_with_with_js_string_0(this: &CharacterData) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn replace_with_with_js_string_1(
+        this: &CharacterData,
+        nodes_1: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn replace_with_with_js_string_2(
+        this: &CharacterData,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn replace_with_with_js_string_3(
+        this: &CharacterData,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn replace_with_with_js_string_4(
+        this: &CharacterData,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn replace_with_with_js_string_5(
+        this: &CharacterData,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn replace_with_with_js_string_6(
+        this: &CharacterData,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+    ) -> Result<(), JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "replaceWith")]
+    #[doc = "The `replaceWith()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/replaceWith)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn replace_with_with_js_string_7(
+        this: &CharacterData,
+        nodes_1: &::js_sys::JsString,
+        nodes_2: &::js_sys::JsString,
+        nodes_3: &::js_sys::JsString,
+        nodes_4: &::js_sys::JsString,
+        nodes_5: &::js_sys::JsString,
+        nodes_6: &::js_sys::JsString,
+        nodes_7: &::js_sys::JsString,
     ) -> Result<(), JsValue>;
 }

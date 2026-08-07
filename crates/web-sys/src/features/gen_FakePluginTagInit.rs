@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
     #[wasm_bindgen(method, setter = "description")]
     pub fn set_description(this: &FakePluginTagInit, val: &str);
+    #[doc = "Change the `description` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
+    #[wasm_bindgen(method, setter = "description")]
+    pub fn set_description_js_string(this: &FakePluginTagInit, val: &::js_sys::JsString);
     #[doc = "Get the `fileName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
@@ -30,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
     #[wasm_bindgen(method, setter = "fileName")]
     pub fn set_file_name(this: &FakePluginTagInit, val: &str);
+    #[doc = "Change the `fileName` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
+    #[wasm_bindgen(method, setter = "fileName")]
+    pub fn set_file_name_js_string(this: &FakePluginTagInit, val: &::js_sys::JsString);
     #[doc = "Get the `fullPath` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
@@ -40,6 +50,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
     #[wasm_bindgen(method, setter = "fullPath")]
     pub fn set_full_path(this: &FakePluginTagInit, val: &str);
+    #[doc = "Change the `fullPath` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
+    #[wasm_bindgen(method, setter = "fullPath")]
+    pub fn set_full_path_js_string(this: &FakePluginTagInit, val: &::js_sys::JsString);
     #[doc = "Get the `handlerURI` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
@@ -50,6 +65,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
     #[wasm_bindgen(method, setter = "handlerURI")]
     pub fn set_handler_uri(this: &FakePluginTagInit, val: &str);
+    #[doc = "Change the `handlerURI` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
+    #[wasm_bindgen(method, setter = "handlerURI")]
+    pub fn set_handler_uri_js_string(this: &FakePluginTagInit, val: &::js_sys::JsString);
     #[doc = "Get the `mimeEntries` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
@@ -70,6 +90,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
     #[wasm_bindgen(method, setter = "name")]
     pub fn set_name(this: &FakePluginTagInit, val: &str);
+    #[doc = "Change the `name` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
+    #[wasm_bindgen(method, setter = "name")]
+    pub fn set_name_js_string(this: &FakePluginTagInit, val: &::js_sys::JsString);
     #[doc = "Get the `niceName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
@@ -80,6 +105,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
     #[wasm_bindgen(method, setter = "niceName")]
     pub fn set_nice_name(this: &FakePluginTagInit, val: &str);
+    #[doc = "Change the `niceName` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
+    #[wasm_bindgen(method, setter = "niceName")]
+    pub fn set_nice_name_js_string(this: &FakePluginTagInit, val: &::js_sys::JsString);
     #[doc = "Get the `sandboxScript` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
@@ -90,6 +120,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
     #[wasm_bindgen(method, setter = "sandboxScript")]
     pub fn set_sandbox_script(this: &FakePluginTagInit, val: &str);
+    #[doc = "Change the `sandboxScript` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
+    #[wasm_bindgen(method, setter = "sandboxScript")]
+    pub fn set_sandbox_script_js_string(this: &FakePluginTagInit, val: &::js_sys::JsString);
     #[doc = "Get the `version` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
@@ -100,6 +135,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
     #[wasm_bindgen(method, setter = "version")]
     pub fn set_version(this: &FakePluginTagInit, val: &str);
+    #[doc = "Change the `version` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
+    #[wasm_bindgen(method, setter = "version")]
+    pub fn set_version_js_string(this: &FakePluginTagInit, val: &::js_sys::JsString);
 }
 impl FakePluginTagInit {
     #[doc = "Construct a new `FakePluginTagInit`."]

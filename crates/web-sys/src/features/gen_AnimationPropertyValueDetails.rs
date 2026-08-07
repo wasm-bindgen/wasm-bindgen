@@ -35,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AnimationPropertyValueDetails`*"]
     #[wasm_bindgen(method, setter = "easing")]
     pub fn set_easing(this: &AnimationPropertyValueDetails, val: &str);
+    #[doc = "Change the `easing` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AnimationPropertyValueDetails`*"]
+    #[wasm_bindgen(method, setter = "easing")]
+    pub fn set_easing_js_string(this: &AnimationPropertyValueDetails, val: &::js_sys::JsString);
     #[doc = "Get the `offset` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AnimationPropertyValueDetails`*"]
@@ -55,6 +60,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AnimationPropertyValueDetails`*"]
     #[wasm_bindgen(method, setter = "value")]
     pub fn set_value(this: &AnimationPropertyValueDetails, val: &str);
+    #[doc = "Change the `value` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AnimationPropertyValueDetails`*"]
+    #[wasm_bindgen(method, setter = "value")]
+    pub fn set_value_js_string(this: &AnimationPropertyValueDetails, val: &::js_sys::JsString);
 }
 impl AnimationPropertyValueDetails {
     #[cfg(feature = "CompositeOperation")]

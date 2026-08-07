@@ -46,6 +46,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcSessionDescription`*"]
     pub fn set_sdp(this: &RtcSessionDescription, value: &str);
+    #[wasm_bindgen(method, setter, js_class = "RTCSessionDescription", js_name = "sdp")]
+    #[doc = "Setter for the `sdp` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCSessionDescription/sdp)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcSessionDescription`*"]
+    pub fn set_sdp_js_string(this: &RtcSessionDescription, value: &::js_sys::JsString);
     #[wasm_bindgen(catch, constructor, js_class = "RTCSessionDescription")]
     #[doc = "The `new RtcSessionDescription(..)` constructor, creating a new instance of `RtcSessionDescription`."]
     #[doc = ""]

@@ -20,6 +20,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HttpConnInfo`*"]
     #[wasm_bindgen(method, setter = "protocolVersion")]
     pub fn set_protocol_version(this: &HttpConnInfo, val: &str);
+    #[doc = "Change the `protocolVersion` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HttpConnInfo`*"]
+    #[wasm_bindgen(method, setter = "protocolVersion")]
+    pub fn set_protocol_version_js_string(this: &HttpConnInfo, val: &::js_sys::JsString);
     #[doc = "Get the `rtt` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HttpConnInfo`*"]
