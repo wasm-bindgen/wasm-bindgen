@@ -2,7 +2,7 @@ use core::borrow::Borrow;
 use core::ops::{Deref, DerefMut};
 use core::panic::AssertUnwindSafe;
 
-use crate::sys::JsOption;
+use crate::sys::{JsNullable, JsOption};
 use crate::{describe::*, JsCast};
 use crate::{ErasableGeneric, JsValue};
 
@@ -517,6 +517,12 @@ macro_rules! impl_tuple_upcast {
         {
         }
         impl<$($T: JsGeneric,)+ $($Target: JsGeneric,)+> UpcastFrom<($($T,)+)> for JsOption<($($Target,)+)>
+        where
+            $($Target: JsGeneric + UpcastFrom<$T>,)+
+            $($T: JsGeneric,)+
+        {
+        }
+        impl<$($T: JsGeneric,)+ $($Target: JsGeneric,)+> UpcastFrom<($($T,)+)> for JsNullable<($($Target,)+)>
         where
             $($Target: JsGeneric + UpcastFrom<$T>,)+
             $($T: JsGeneric,)+

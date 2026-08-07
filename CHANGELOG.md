@@ -18,7 +18,9 @@
   types nested inside generics (e.g. `Promise<GpuError?>` from
   `GPUDevice.popErrorScope()`), fixing spec-defined `null` resolutions being
   treated as present values under `JsOption<T>`'s strict undefined-only
-  semantics.
+  semantics. `JsNullable<T>` participates in the same upcast lattice as
+  `JsOption<T>` (including contravariant closure argument casts), and
+  additionally upcasts from `Null` and from `JsOption<T>` itself.
   [#5234](https://github.com/wasm-bindgen/wasm-bindgen/issues/5234)
 
 ### Changed

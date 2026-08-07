@@ -1816,6 +1816,10 @@ macro_rules! impl_tuple_covariance {
         where
             $(Target: UpcastFrom<$T>,)+
         {}
+        impl<$($T,)+ Target> UpcastFrom<ArrayTuple<($($T,)+)>> for JsNullable<Array<Target>>
+        where
+            $(Target: UpcastFrom<$T>,)+
+        {}
     };
 }
 
@@ -1832,6 +1836,7 @@ impl_tuple_covariance!([T1 T2 T3 T4 T5 T6 T7 T8] [Target1 Target2 Target3 Target
 impl<T: JsTuple, U: JsTuple> UpcastFrom<ArrayTuple<T>> for ArrayTuple<U> where U: UpcastFrom<T> {}
 impl<T: JsTuple> UpcastFrom<ArrayTuple<T>> for JsValue {}
 impl<T: JsTuple> UpcastFrom<ArrayTuple<T>> for JsOption<JsValue> {}
+impl<T: JsTuple> UpcastFrom<ArrayTuple<T>> for JsNullable<JsValue> {}
 
 /// Iterator returned by `Array::into_iter`
 #[derive(Debug, Clone)]
@@ -4578,8 +4583,10 @@ extern "C" {
 // Basic UpcastFrom impls for Function<T>
 impl<T: JsFunction> UpcastFrom<Function<T>> for JsValue {}
 impl<T: JsFunction> UpcastFrom<Function<T>> for JsOption<JsValue> {}
+impl<T: JsFunction> UpcastFrom<Function<T>> for JsNullable<JsValue> {}
 impl<T: JsFunction> UpcastFrom<Function<T>> for Object {}
 impl<T: JsFunction> UpcastFrom<Function<T>> for JsOption<Object> {}
+impl<T: JsFunction> UpcastFrom<Function<T>> for JsNullable<Object> {}
 
 // Blanket trait for Function upcast
 // Function<T> upcasts to Function<U> when the underlying fn type T upcasts to U.

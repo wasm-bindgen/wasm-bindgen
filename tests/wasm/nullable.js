@@ -69,3 +69,9 @@ exports.test_nullable_exports = () => {
     wasm.rust_take_nullable_null(undefined);
     wasm.rust_take_nullable_value(789);
 };
+
+exports.call_with_null_undefined_and_value = (f) => {
+    f(null);
+    f(undefined);
+    f(321);
+};

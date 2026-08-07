@@ -45,6 +45,8 @@ extern "C" {
     fn take_js_nullable_value(val: JsNullable<Number>);
 
     fn test_js_nullable_exports();
+
+    fn call_with_null_undefined_and_value(f: &Closure<dyn FnMut(JsNullable<Number>)>);
 }
 
 #[wasm_bindgen_test]
@@ -509,4 +511,94 @@ fn test_option_vs_js_option_compat() {
 
     // Option<i32> Some(7) -> passes 7 to JS, no default.
     test_value(Some(7), 7);
+}
+
+// Closure variance with JsNullable arguments: JsNullable participates in the
+// same contravariant argument casts as JsOption.
+mod nullable_closure_variance {
+    use super::*;
+    use std::cell::Cell;
+    use std::rc::Rc;
+
+    #[wasm_bindgen_test]
+    fn arg_contravariance_jsvalue_to_nullable() {
+        let closure: Closure<dyn Fn(JsValue)> = Closure::new(|_: JsValue| {});
+        let _narrower: &Closure<dyn Fn(JsNullable<Number>)> = closure.upcast();
+    }
+
+    #[wasm_bindgen_test]
+    fn arg_contravariance_nullable_jsvalue_to_nullable_number() {
+        let closure: Closure<dyn Fn(JsNullable<JsValue>)> =
+            Closure::new(|_: JsNullable<JsValue>| {});
+        let _narrower: &Closure<dyn Fn(JsNullable<Number>)> = closure.upcast();
+    }
+
+    #[wasm_bindgen_test]
+    fn arg_contravariance_nullable_to_option() {
+        // JsNullable emptiness (null | undefined) is a superset of JsOption
+        // emptiness (undefined), so a JsNullable-accepting closure can be used
+        // where a JsOption-accepting one is expected -- but not vice versa.
+        let closure: Closure<dyn Fn(JsNullable<Number>)> = Closure::new(|_: JsNullable<Number>| {});
+        let _narrower: &Closure<dyn Fn(JsOption<Number>)> = closure.upcast();
+    }
+
+    #[wasm_bindgen_test]
+    fn arg_contravariance_nullable_jsvalue_to_i32() {
+        let closure: Closure<dyn Fn(JsNullable<JsValue>)> =
+            Closure::new(|_: JsNullable<JsValue>| {});
+        let _narrower: &Closure<dyn Fn(i32)> = closure.upcast();
+    }
+
+    #[wasm_bindgen_test]
+    fn return_covariance_number_to_nullable() {
+        let closure: Closure<dyn Fn() -> Number> = Closure::new(|| Number::from(42));
+        let _wider: &Closure<dyn Fn() -> JsNullable<Number>> = closure.upcast();
+    }
+
+    #[wasm_bindgen_test]
+    fn function_to_nullable_jsvalue() {
+        fn assert_upcast<T, U: wasm_bindgen::convert::UpcastFrom<T>>() {}
+        assert_upcast::<js_sys::Function<fn() -> JsValue>, JsNullable<JsValue>>();
+        assert_upcast::<js_sys::Function<fn() -> JsValue>, JsNullable<Object>>();
+        assert_upcast::<js_sys::Function<fn(JsNullable<Number>) -> JsValue>, JsNullable<JsValue>>();
+    }
+
+    #[wasm_bindgen_test]
+    fn invoke_nullable_arg_closure() {
+        let calls = Rc::new(Cell::new((0u32, 0u32)));
+        let calls2 = calls.clone();
+        let closure: Closure<dyn FnMut(JsNullable<Number>)> =
+            Closure::new(move |val: JsNullable<Number>| {
+                let (empty, present) = calls2.get();
+                match val.into_option() {
+                    None => calls2.set((empty + 1, present)),
+                    Some(num) => {
+                        assert_eq!(num.value_of(), 321.0);
+                        calls2.set((empty, present + 1));
+                    }
+                }
+            });
+        call_with_null_undefined_and_value(&closure);
+        // null and undefined are both empty; 321 is present.
+        assert_eq!(calls.get(), (2, 1));
+    }
+
+    #[wasm_bindgen_test]
+    fn invoke_upcast_jsvalue_closure_as_nullable() {
+        let calls = Rc::new(Cell::new((0u32, 0u32, 0u32)));
+        let calls2 = calls.clone();
+        let closure: Closure<dyn FnMut(JsValue)> = Closure::new(move |val: JsValue| {
+            let (nulls, undefs, values) = calls2.get();
+            if val.is_null() {
+                calls2.set((nulls + 1, undefs, values));
+            } else if val.is_undefined() {
+                calls2.set((nulls, undefs + 1, values));
+            } else {
+                calls2.set((nulls, undefs, values + 1));
+            }
+        });
+        call_with_null_undefined_and_value(closure.upcast());
+        // The raw JsValue view distinguishes null from undefined.
+        assert_eq!(calls.get(), (1, 1, 1));
+    }
 }
