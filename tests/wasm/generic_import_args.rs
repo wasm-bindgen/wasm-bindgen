@@ -85,8 +85,7 @@ fn generic_per_mono_catch_throw_path() {
     // A JS `throw` must surface as `Err`, not as a trap or a garbage `Ok`.
     let err = try_get::<u32>(0).unwrap_err();
     assert!(
-        err.as_string().unwrap_or_default().contains("boom")
-            || format!("{err:?}").contains("boom"),
+        err.as_string().unwrap_or_default().contains("boom") || format!("{err:?}").contains("boom"),
         "expected the thrown Error to survive as the Err payload, got {err:?}"
     );
 
