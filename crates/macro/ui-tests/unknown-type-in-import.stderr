@@ -10,7 +10,12 @@ help: you might be missing a type parameter
   |               +++
 
 error[E0412]: cannot find type `A` in this scope
- --> ui-tests/unknown-type-in-import.rs:6:19
+ --> ui-tests/unknown-type-in-import.rs:6:12
   |
+3 | #[wasm_bindgen]
+  | --------------- in this procedural macro expansion
+...
 6 |     pub fn foo(a: A);
-  |                   ^ not found in this scope
+  |            ^^^ not found in this scope
+  |
+  = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
