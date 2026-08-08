@@ -126,13 +126,13 @@ fn internal_error(_msg: &str) -> ! {
 static HEAP_SLAB: __rt::ThreadLocalWrapper<RefCell<Slab>> =
     __rt::ThreadLocalWrapper(RefCell::new(Slab::new()));
 
-#[no_mangle]
+#[unsafe(export_name = "__externref_table_alloc")]
 pub extern "C" fn __externref_table_alloc() -> u32 {
     // Table indices are always 32-bit, even on wasm64.
     HEAP_SLAB.0.borrow_mut().alloc() as u32
 }
 
-#[no_mangle]
+#[unsafe(export_name = "__externref_table_dealloc")]
 pub extern "C" fn __externref_table_dealloc(idx: u32) {
     let idx = idx as usize;
     if idx < __rt::JSIDX_RESERVED as usize {
@@ -146,7 +146,7 @@ pub extern "C" fn __externref_table_dealloc(idx: u32) {
     HEAP_SLAB.0.borrow_mut().dealloc(idx)
 }
 
-#[no_mangle]
+#[unsafe(export_name = "__externref_drop_slice")]
 pub unsafe extern "C" fn __externref_drop_slice(ptr: WasmPtr<JsValue>, len: WasmWord) {
     let ptr = ptr.into_ptr();
     let len = len.into_usize();

@@ -677,7 +677,7 @@ impl<T: ?Sized> BorrowMut<T> for RcRefMut<T> {
     }
 }
 
-#[no_mangle]
+#[unsafe(export_name = "__wbindgen_malloc")]
 pub extern "C" fn __wbindgen_malloc(size: WasmWord, align: WasmWord) -> WasmPtr<u8> {
     let size = size.into_usize();
     let align = align.into_usize();
@@ -697,7 +697,7 @@ pub extern "C" fn __wbindgen_malloc(size: WasmWord, align: WasmWord) -> WasmPtr<
     malloc_failure();
 }
 
-#[no_mangle]
+#[unsafe(export_name = "__wbindgen_realloc")]
 pub unsafe extern "C" fn __wbindgen_realloc(
     ptr: WasmPtr<u8>,
     old_size: WasmWord,
@@ -738,7 +738,7 @@ fn malloc_failure() -> ! {
     }
 }
 
-#[no_mangle]
+#[unsafe(export_name = "__wbindgen_free")]
 pub unsafe extern "C" fn __wbindgen_free(ptr: WasmPtr<u8>, size: WasmWord, align: WasmWord) {
     let size = size.into_usize();
     // This happens for zero-length slices, and in that case `ptr` is
@@ -793,7 +793,8 @@ pub fn link_mem_intrinsics() {
 #[cfg_attr(target_feature = "atomics", thread_local)]
 static GLOBAL_EXNDATA: ThreadLocalWrapper<Cell<[u32; 2]>> = ThreadLocalWrapper(Cell::new([0; 2]));
 
-#[no_mangle]
+#[allow(non_upper_case_globals)]
+#[unsafe(export_name = "__instance_terminated")]
 pub static mut __instance_terminated: u32 = 0;
 
 fn no_op() {}
@@ -802,7 +803,8 @@ pub static NO_OP_PTR: fn() = no_op;
 
 /// Stores the Wasm indirect-function-table index of the registered hard-abort
 /// callback.  Zero means no callback is registered.
-#[no_mangle]
+#[allow(non_upper_case_globals)]
+#[unsafe(export_name = "__abort_handler")]
 pub static mut __abort_handler: fn() = NO_OP_PTR;
 
 /// Register a callback invoked when a hard abort (instance termination) occurs.
@@ -841,7 +843,7 @@ pub fn schedule_reinit() {
     crate::__wbindgen_reinit();
 }
 
-#[no_mangle]
+#[unsafe(export_name = "__wbindgen_exn_store")]
 pub unsafe extern "C" fn __wbindgen_exn_store(idx: u32) {
     debug_assert_eq!(GLOBAL_EXNDATA.0.get()[0], 0);
     GLOBAL_EXNDATA.0.set([1, idx]);
