@@ -17,8 +17,8 @@ export function __wbg_get_b0096ab6db85c3a1(arg0) {
     const ret = arg0.get();
     return ret;
 }
-export function __wbg_my_function_2652ada790ab5788() {
-    b.my_function();
+export function __wbg_my_function_a1fb416215f1cd28() {
+    a.my_function();
 }
 export function __wbg_new_625e056221ff6a6e(arg0) {
     const ret = new _default(arg0);
