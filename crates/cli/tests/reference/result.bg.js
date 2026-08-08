@@ -37,11 +37,11 @@ export function result_void() {
         throw takeFromExternrefTable0(ret[0]);
     }
 }
-export function __wbg_Error_92b29b0548f8b746(arg0, arg1) {
+export function __wbg_Error_408e67f47ca7b58b(arg0, arg1) {
     const ret = Error(getStringFromWasm0(arg0, arg1));
     return ret;
 }
-export function __wbg___wbindgen_throw_344f42d3211c4765(arg0, arg1) {
+export function __wbg___wbindgen_throw_bb96b2010945f0bc(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbindgen_cast_0000000000000000(arg0) {
