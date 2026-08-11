@@ -1,7 +1,8 @@
 //! Runtime coverage for `#[wasm_bindgen(generic_per_mono)]` on every
 //! *method-shaped* import: constructors, instance methods, static methods,
-//! getters and setters (plain, `structural` and `final`), and the `indexing_*`
-//! operations.
+//! getters and setters (plain, `structural` and `final`), the `indexing_*`
+//! operations, and methods on a class with its own generic parameters
+//! (`this: &TypedCell<T>`).
 //!
 //! `crates/cli/tests/reference/generic-import.rs` pins the JS these emit, but a
 //! snapshot cannot catch a binding that is internally consistent and still
@@ -70,6 +71,27 @@ extern "C" {
     // the *index* position.
     #[wasm_bindgen(method, structural, indexing_deleter, generic_per_mono)]
     fn delete_indexed<T>(this: &Widget, prop: T);
+
+    // Class-level generics: the type parameter appears in the *class's* own
+    // argument list (`this: &TypedCell<T>`), so `T` is hoisted off the method
+    // onto a parameterised `impl<T> TypedCell<T>` block. The handle impls
+    // carry no erasure bound, so `T` may be an ordinary Rust type; per-mono
+    // then marshals each `value: T` at its concrete type.
+    type TypedCell<T>;
+
+    #[wasm_bindgen(constructor, generic_per_mono)]
+    fn new<T>(value: T) -> TypedCell<T>;
+
+    #[wasm_bindgen(method, generic_per_mono, js_name = get)]
+    fn get<T>(this: &TypedCell<T>) -> T;
+
+    #[wasm_bindgen(method, generic_per_mono, js_name = set)]
+    fn set<T>(this: &TypedCell<T>, value: T);
+
+    // A method-level parameter (`U`) alongside the hoisted class parameter:
+    // `U` stays on the method while `T` moves to the impl header.
+    #[wasm_bindgen(method, generic_per_mono, js_name = describeWith)]
+    fn describe_with<T, U>(this: &TypedCell<T>, label: U) -> String;
 
     #[wasm_bindgen(js_name = widgetValue)]
     fn widget_value(w: &Widget) -> JsValue;
@@ -195,6 +217,29 @@ fn generic_per_mono_indexing_getter_and_setter() {
     assert!(widget_has_prop(&w, "a"));
     assert!(widget_has_prop(&w, "b"));
     assert!(!widget_has_prop(&w, "c"));
+}
+
+#[wasm_bindgen_test]
+fn generic_per_mono_class_level_type_param() {
+    // `TypedCell<u32>` and `TypedCell<String>` are distinct Rust types sharing
+    // one JS class; each method call still marshals at its concrete type.
+    let a = TypedCell::new(7u32);
+    assert_eq!(a.get(), 7);
+    a.set(9u32);
+    assert_eq!(a.get(), 9);
+
+    let b = TypedCell::new(String::from("hi"));
+    assert_eq!(b.get(), "hi");
+    b.set(String::from("bye"));
+    assert_eq!(b.get(), "bye");
+}
+
+#[wasm_bindgen_test]
+fn generic_per_mono_class_and_method_level_params() {
+    let c = TypedCell::new(1.5f64);
+    // `U` monomorphises independently of the hoisted `T`.
+    assert_eq!(c.describe_with(1u32), "1:number:1.5");
+    assert_eq!(c.describe_with(String::from("y")), "y:number:1.5");
 }
 
 #[wasm_bindgen_test]

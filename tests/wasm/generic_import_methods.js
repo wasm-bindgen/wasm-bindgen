@@ -48,6 +48,29 @@ class Widget {
 
 exports.Widget = Widget;
 
+// One JS class serving every `TypedCell<T>` instantiation: the class parameter
+// is phantom on the JS side, while method arguments and returns cross at each
+// monomorphisation's concrete type.
+class TypedCell {
+  constructor(value) {
+    this._value = value;
+  }
+
+  get() {
+    return this._value;
+  }
+
+  set(value) {
+    this._value = value;
+  }
+
+  describeWith(label) {
+    return label + ":" + typeof this._value + ":" + this._value;
+  }
+}
+
+exports.TypedCell = TypedCell;
+
 // Inspection helpers. These are deliberately plain (non-generic) imports so
 // that a bug in the generic per-monomorphisation path cannot also corrupt the
 // assertions themselves.

@@ -6,6 +6,9 @@
 //!   the caller. A copy would produce identical-looking glue.
 //! - `&mut dyn FnMut`: must be invoked the expected number of times, with the
 //!   reentrancy guard released afterwards.
+//! - closure arguments whose signature mentions a type parameter
+//!   (`&dyn Fn(T) -> R`, `&mut dyn FnMut(T)`): each monomorphisation crosses
+//!   at its own concrete types in both directions.
 //! - non-async `catch` with a *generic* `Ok`: the success value is marshalled at
 //!   each monomorphisation's concrete type while the error stays `JsValue`; the
 //!   throwing path is a different unwrap from the async one covered elsewhere.
@@ -55,6 +58,16 @@ extern "C" {
     // view.
     #[wasm_bindgen(generic_per_mono, js_name = sumSlice)]
     fn sum_slice<T>(xs: &[T]) -> f64;
+
+    // Closure arguments whose *signature* mentions a type parameter: the
+    // trait object gets a single higher-ranked `WasmDescribe` bound, and its
+    // describe impl's own where-clauses (`args: FromWasmAbi`,
+    // `R: ReturnWasmAbi`) then surface per monomorphisation.
+    #[wasm_bindgen(generic_per_mono, js_name = mapWith)]
+    fn map_with<T, R>(f: &dyn Fn(T) -> R, x: T) -> R;
+
+    #[wasm_bindgen(generic_per_mono, js_name = feedCallback)]
+    fn feed_callback<T>(f: &mut dyn FnMut(T));
 }
 
 #[wasm_bindgen_test]
@@ -89,6 +102,22 @@ fn generic_per_mono_mut_closure_is_invoked() {
         with_callback(&mut bump, 2.0f64);
     }
     assert_eq!(count, 2);
+}
+
+#[wasm_bindgen_test]
+fn generic_per_mono_generic_closure_signature() {
+    // `&dyn Fn` with the type parameter in both argument and return position.
+    assert_eq!(map_with(&|v: u32| v * 2, 21u32), 42);
+    assert_eq!(map_with(&|v: f64| format!("v={v}"), 1.5f64), "v=1.5");
+
+    // `&mut dyn FnMut` capturing state, at two element types.
+    let mut sum = 0u32;
+    feed_callback(&mut |v: u32| sum += v);
+    assert_eq!(sum, 6);
+
+    let mut joined = String::new();
+    feed_callback(&mut |v: f64| joined.push_str(&format!("{v},")));
+    assert_eq!(joined, "1,2,3,");
 }
 
 #[wasm_bindgen_test]

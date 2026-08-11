@@ -33,3 +33,17 @@ class Scaler {
 }
 
 exports.Scaler = Scaler;
+
+// Class with a Rust-side lifetime parameter (`type Tagged<'a>`): invisible
+// here, it is purely a Rust borrow-tracking concern.
+class Tagged {
+  constructor(tag) {
+    this._tag = tag;
+  }
+
+  tagWith(x) {
+    return this._tag + ":" + x;
+  }
+}
+
+exports.Tagged = Tagged;

@@ -45,6 +45,16 @@ exports.describeAny = function (x) {
   return typeof x + ":" + x;
 };
 
+exports.mapWith = function (f, x) {
+  return f(x);
+};
+
+exports.feedCallback = function (f) {
+  f(1);
+  f(2);
+  f(3);
+};
+
 exports.sumSlice = function (xs) {
   let total = 0;
   for (const v of xs) {

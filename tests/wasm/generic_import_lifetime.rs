@@ -55,6 +55,18 @@ extern "C" {
     // borrows together for the duration of the call.
     #[wasm_bindgen(method, generic_per_mono, js_name = scaleRef)]
     fn scale_ref<'a, T>(this: &'a Scaler, x: &'a T) -> f64;
+
+    // A lifetime belonging to the *class* itself (`type Tagged<'a>`): the
+    // class names it in its own argument list, so it is hoisted onto the impl
+    // header (`impl<'a> Tagged<'a>`) exactly like a class-level type
+    // parameter.
+    type Tagged<'a>;
+
+    #[wasm_bindgen(constructor, generic_per_mono)]
+    fn new<'a, T>(tag: &'a T) -> Tagged<'a>;
+
+    #[wasm_bindgen(method, generic_per_mono, js_name = tagWith)]
+    fn tag_with<'a, T>(this: &'a Tagged<'a>, x: T) -> String;
 }
 
 #[wasm_bindgen_test]
@@ -102,4 +114,13 @@ fn generic_per_mono_receiver_lifetime_shared_with_argument() {
     assert_eq!(scaler.scale_ref(&x), 70.0);
     let y = JsValue::from(1.25f64);
     assert_eq!(scaler.scale_ref(&y), 12.5);
+}
+
+#[wasm_bindgen_test]
+fn generic_per_mono_class_level_lifetime() {
+    let v = JsValue::from(3u32);
+    // `Tagged<'_>` borrows `v` for as long as the handle lives.
+    let t = Tagged::new(&v);
+    assert_eq!(t.tag_with(4u32), "3:4");
+    assert_eq!(t.tag_with(String::from("s")), "3:s");
 }

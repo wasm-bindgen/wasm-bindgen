@@ -126,7 +126,7 @@ There are two ways a generic import can be bound, and they suit different jobs:
 | JS bindings generated       | One, shared by all instantiations             | One per monomorphisation                                            |
 | How `T` crosses the ABI     | Boxed to `JsValue` (via `ErasableGeneric`)    | At its concrete type (`u32` as a number, `String` as a string)      |
 | What `T` can be             | JS types (`JsGeneric`): `Array`, `Promise`, … | Any type wasm-bindgen can marshal, including Rust primitives        |
-| Generic imported *types*    | Yes — `type ListNode<T>`                      | No, function-level type parameters only                             |
+| Generic imported *types*    | Yes — `type ListNode<T>`                      | Yes — hoisted onto a parameterised `impl` block                     |
 | Code size                   | Constant                                      | Grows with the number of instantiations                             |
 
 Use erasure when you are modelling a JS generic — `Array<T>`, `Promise<T>`, a
@@ -136,8 +136,8 @@ the concrete marshalling is the point, e.g. a `log<T>` that should pass a `u32`
 as a number rather than boxing it.
 
 `generic_per_mono` also rejects a number of shapes that erasure accepts
-(generic parameters on the imported *type*, `&mut T`, generic `slice_to_array`
-element types, and others); those are listed on
+(`&mut T`, generic `slice_to_array` element types, and others); those are
+listed on
 [its own page](./attributes/on-js-imports/generic_per_mono.md#unsupported-shapes).
 
 ## The ErasableGeneric Trait

@@ -111,11 +111,42 @@ extern "C" {
 
 Lifetimes carry no runtime information — they are erased before values cross
 the wasm ABI — so this imposes no restriction beyond what plain Rust already
-requires of the signature. The one shape that is *not* supported is a lifetime
-belonging to the **class** itself, i.e. an imported type declared with its own
-lifetime parameter (`type Holder<'a>`, used as `this: &Holder<'a>`), since that
-needs the same hoisting machinery class-level type parameters do; see
-[Unsupported shapes](#unsupported-shapes).
+requires of the signature. A lifetime belonging to the **class** itself
+(`type Holder<'a>`, used as `this: &Holder<'a>`) is hoisted onto the generated
+`impl` block, exactly like a class-level type parameter; see
+[Class-level generics](#class-level-generics).
+
+## Class-level generics
+
+A generic parameter belonging to the imported *type* itself is supported: when
+the receiver or return class names one of the function's parameters in the
+class's own argument list (`this: &Cell<T>`, or a constructor returning
+`Cell<T>`), that parameter is hoisted off the method onto a parameterised
+`impl` block (`impl<T> Cell<T>`), reusing the same partition the erasure path
+performs:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    type Cell<T>;
+
+    #[wasm_bindgen(constructor, generic_per_mono)]
+    fn new<T>(value: T) -> Cell<T>;
+
+    #[wasm_bindgen(method, generic_per_mono)]
+    fn get<T>(this: &Cell<T>) -> T;
+}
+
+let cell = Cell::new(42u32); // Cell<u32>
+let v: u32 = cell.get();     // crosses as a number
+```
+
+Unlike on the erasure path, the class parameter does not have to be a JS type:
+the handle impls carry no erasure bound, so `Cell<u32>` is a perfectly good
+type, and each method call marshals its arguments and return value at that
+monomorphisation's concrete types. Bounds declared on the function — inline or
+in a `where` clause — are carried on the generated method rather than the
+`impl` header, which constrains exactly the same set of instantiations.
 
 ## Other attributes
 
@@ -172,18 +203,15 @@ These are rejected at compile time with a diagnostic pointing at the offending
 declaration. Each generally keeps working on the type-erasure path, so the fix is
 usually to drop `generic_per_mono`:
 
-* **Generic parameters on the imported *type*** (class-level generics),
-  whether a type parameter (`this: &Holder<T>`) or a lifetime
-  (`this: &Holder<'a>`). Lifetime parameters on the *function* itself —
-  including on a method's receiver, `this: &'a Holder` — are supported; see
-  [Lifetime parameters](#lifetime-parameters).
 * **A mutable reference to a type parameter** (`&mut T`, or `&mut Vec<T>`, or
   any other `&mut` whose referent mentions a type parameter), and a reference to
   a type parameter **nested inside another type** (e.g. `Option<&T>`). A bare
   `&T` *is* supported, and mutable references to *concrete* types (e.g.
   `&mut [u16]`, `&mut dyn FnMut(u32)`) bind exactly as they do on the
-  non-generic import path — the restriction is only about references to type
-  parameters.
+  non-generic import path. Closure trait objects are the other exception: a
+  closure argument whose *signature* mentions a type parameter
+  (`&dyn Fn(T) -> R`, `&mut dyn FnMut(T)`) is supported, with each
+  monomorphisation crossing at its concrete types.
 * **Returning a reference.**
 * **A bare type parameter, or a reference to one (`&T`), as the `variadic`
   argument**, since it may monomorphise to a scalar, which is not spreadable.

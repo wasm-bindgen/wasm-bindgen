@@ -9,6 +9,13 @@
   info to a separate `*_bg.debug.wasm` file. Use `--debug-info-url` to set
   the recorded URL for the debug info. [#5279](https://github.com/wasm-bindgen/wasm-bindgen/pull/5279)
 
+* `#[wasm_bindgen(generic_per_mono)]` now supports class-level generics —
+  type and lifetime parameters of the imported *type* itself
+  (`this: &Cell<T>`), hoisted onto a parameterised `impl` block — and closure
+  arguments whose signature mentions a type parameter (`&dyn Fn(T) -> R`,
+  `&mut dyn FnMut(T)`).
+  [#5285](https://github.com/wasm-bindgen/wasm-bindgen/pull/5285)
+
 ### Changed
 
 * Setting `js_namespace` on both an `extern "C"` block and an item inside it
