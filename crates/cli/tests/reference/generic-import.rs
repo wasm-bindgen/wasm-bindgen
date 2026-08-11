@@ -49,6 +49,17 @@ extern "C" {
     #[wasm_bindgen(generic_per_mono, js_name = logRef)]
     fn log_ref<T>(x: &T);
 
+    // A shared slice with a *generic* element type. `&[T]` takes the same
+    // route as `&T` above (an HRTB `for<'a> &'a [T]: IntoWasmAbi` bound), so
+    // each element type marshals as its own typed-array view.
+    #[wasm_bindgen(generic_per_mono, js_name = logGenericSlice)]
+    fn log_generic_slice<T>(xs: &[T]);
+
+    // ...including as the `variadic` argument, which the non-sequence variadic
+    // diagnostic explicitly recommends.
+    #[wasm_bindgen(generic_per_mono, variadic, js_name = spreadGeneric)]
+    fn spread_generic<T>(first: u32, rest: &[T]);
+
     // `catch` produces a `handleError`-wrapped shim.
     #[wasm_bindgen(generic_per_mono, catch, js_name = tryLog)]
     fn try_log<T>(x: T) -> Result<(), JsValue>;
@@ -275,6 +286,10 @@ pub async fn run(widget: &Widget) -> Result<(), JsValue> {
     log_generic(1u32);
     log_generic(2.0f64);
     log_generic(String::from("three"));
+    // `&str` and `String` are distinct wire protocols behind the same JS
+    // string: a borrowed (ptr, len) pair with no free vs an owned buffer the
+    // shim frees.
+    log_generic("four");
 
     let _ = identity(3u32);
     let _ = identity(4.0f64);
@@ -287,6 +302,10 @@ pub async fn run(widget: &Widget) -> Result<(), JsValue> {
     log_ref(&13u32);
     log_ref(&14.0f64);
     log_ref(&JsValue::from("fifteen"));
+
+    log_generic_slice(&[16u32, 17]);
+    log_generic_slice(&[18.5f64]);
+    spread_generic(19, &[20u32, 21]);
 
     try_log(7u32)?;
 

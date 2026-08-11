@@ -11,6 +11,11 @@
 //!   throwing path is a different unwrap from the async one covered elsewhere.
 //! - `Option<T>` in the declared signature: composes the `Option` hole and
 //!   `isLikeNone` handling with per-monomorphisation descriptor generation.
+//! - one bare `T` across `&str`/`String`/`u32`: three wire protocols behind
+//!   two JS-visible types, so a shim marshalling the wrong one produces a
+//!   wrong *value*, not a crash.
+//! - `&[T]` with a generic element type: takes the `&T` HRTB route rather
+//!   than the concrete-slice route, both as a plain and a `variadic` argument.
 
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
@@ -36,6 +41,20 @@ extern "C" {
 
     #[wasm_bindgen(generic_per_mono, js_name = optDescribe)]
     fn opt_describe<T>(x: Option<T>) -> String;
+
+    // One import across the three string/number wire shapes: `&str` crosses as
+    // a borrowed (ptr, len) pair with no free, `String` as an owned buffer the
+    // shim frees, `u32` as a plain scalar. JS reports `typeof` plus the value,
+    // so marshalling the wrong wire form surfaces as a mismatched value.
+    #[wasm_bindgen(generic_per_mono, js_name = describeAny)]
+    fn describe_any<T>(x: T) -> String;
+
+    // A shared slice with a *generic* element type: `&[T]` takes the `&T`
+    // HRTB route (`for<'a> &'a [T]: IntoWasmAbi`) rather than the
+    // concrete-slice route, and each element type gets its own typed-array
+    // view.
+    #[wasm_bindgen(generic_per_mono, js_name = sumSlice)]
+    fn sum_slice<T>(xs: &[T]) -> f64;
 }
 
 #[wasm_bindgen_test]
@@ -118,6 +137,12 @@ extern "C" {
     // instantiation rather than on the declaration.
     #[wasm_bindgen(generic_per_mono, variadic, js_name = variadicJoin)]
     fn variadic_join<T>(first: u32, rest: Vec<T>) -> String;
+
+    // The same JS function fed from a borrowed generic-element slice instead
+    // of an owned `Vec<T>` — the other sequence shape the non-sequence
+    // variadic diagnostic recommends.
+    #[wasm_bindgen(generic_per_mono, variadic, js_name = variadicJoin)]
+    fn variadic_join_slice<T>(first: u32, rest: &[T]) -> String;
 }
 
 #[wasm_bindgen_test]
@@ -129,4 +154,25 @@ fn generic_per_mono_variadic_actually_spreads() {
     // A second monomorphisation, and the empty case.
     assert_eq!(variadic_join(8, vec![1.5f64, 2.5]), "8:2:1.5|2.5");
     assert_eq!(variadic_join::<u32>(9, vec![]), "9:0:");
+}
+
+#[wasm_bindgen_test]
+fn generic_per_mono_string_and_number_wire_shapes() {
+    assert_eq!(describe_any("borrowed"), "string:borrowed");
+    assert_eq!(describe_any(String::from("owned")), "string:owned");
+    assert_eq!(describe_any(42u32), "number:42");
+}
+
+#[wasm_bindgen_test]
+fn generic_per_mono_generic_element_slice() {
+    assert_eq!(sum_slice(&[1u32, 2, 3]), 6.0);
+    assert_eq!(sum_slice(&[1.5f64, 2.5]), 4.0);
+    assert_eq!(sum_slice::<u32>(&[]), 0.0);
+}
+
+#[wasm_bindgen_test]
+fn generic_per_mono_variadic_slice_spreads() {
+    assert_eq!(variadic_join_slice(7, &[1u32, 2, 3]), "7:3:1|2|3");
+    assert_eq!(variadic_join_slice(8, &[1.5f64]), "8:1:1.5");
+    assert_eq!(variadic_join_slice::<u32>(9, &[]), "9:0:");
 }

@@ -40,3 +40,15 @@ exports.variadicJoin = function (first, ...rest) {
   // `rest` would be `[[1,2,3]]` and this would produce "0:1,2,3" with length 1.
   return first + ":" + rest.length + ":" + rest.join("|");
 };
+
+exports.describeAny = function (x) {
+  return typeof x + ":" + x;
+};
+
+exports.sumSlice = function (xs) {
+  let total = 0;
+  for (const v of xs) {
+    total += v;
+  }
+  return total;
+};
