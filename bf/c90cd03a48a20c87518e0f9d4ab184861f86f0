@@ -1,0 +1,47 @@
+crates/macro-support/src/codegen.rs
+  s_84d29a51f15e6e::t_740974ac6f2cc3 931
+  s_84d29a51f15e6e::t_b14d00d8602566 932-934
+crates/cli/tests/reference/jspi-target-bundler.bg.js
+  s_84d29a51f15e6e::t_7808a96fc55ec7 18
+crates/cli/tests/reference/jspi-target-web.js
+  s_84d29a51f15e6e::t_14fa374a6c0d64 23
+crates/cli/tests/reference/jspi-target-web.wat
+  s_84d29a51f15e6e::t_103085b296715a 11
+guide/src/reference/jspi.md
+  s_84d29a51f15e6e::t_213203a6ab3f1b 153-155
+  s_84d29a51f15e6e::t_46d76750cd61c0 156
+  s_84d29a51f15e6e::t_b6831a0aa9ecb2 151-152
+  s_84d29a51f15e6e::t_d55f922088c5f5 157-159
+crates/cli/tests/reference/jspi-intrinsics-target-bundler.bg.js
+  s_84d29a51f15e6e::t_caccd011596a3a 17
+crates/cli/tests/reference/jspi-target-bundler.wat
+  s_84d29a51f15e6e::t_d9bbdd1c1d7661 11
+crates/cli/tests/reference/jspi-intrinsics-target-no-modules.wat
+  s_84d29a51f15e6e::t_2460e060c65343 6
+crates/cli/tests/reference/jspi-intrinsics-target-no-modules.js
+  s_84d29a51f15e6e::t_9f74642e0763b5 26
+crates/cli/tests/reference/jspi-intrinsics-target-bundler.wat
+  s_84d29a51f15e6e::t_e469e7876d1749 6
+crates/macro-support/src/parser.rs
+  s_84d29a51f15e6e::t_ec4a639f865530 1608-1609
+crates/cli-support/src/js/mod.rs
+  s_84d29a51f15e6e::t_65b9dd4ae41e60 6542-6556
+crates/js-sys/src/futures/jspi.rs
+  s_84d29a51f15e6e::t_b6641ac489e3c9 13-18,49-55,62-67,100-264
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "bfc90cd03a48a20c87518e0f9d4ab184861f86f0",
+  "prompts": {},
+  "sessions": {
+    "s_84d29a51f15e6e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_00da284edffemDNQI0Emqn4qwK",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
