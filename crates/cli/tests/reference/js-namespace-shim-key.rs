@@ -72,27 +72,6 @@ mod item_level_other {
     }
 }
 
-// An item-level `js_namespace` overrides the block-level one, so the resolved
-// namespaces (and shims) differ even though the blocks agree.
-mod override_block {
-    use wasm_bindgen::prelude::*;
-
-    #[wasm_bindgen(js_namespace = ["zeta"])]
-    extern "C" {
-        #[wasm_bindgen(js_namespace = ["eta"])]
-        pub fn debug(s: &str);
-    }
-}
-
-mod override_none {
-    use wasm_bindgen::prelude::*;
-
-    #[wasm_bindgen(js_namespace = ["zeta"])]
-    extern "C" {
-        pub fn debug(s: &str);
-    }
-}
-
 // Nested namespaces: `["a", "b"]` and `["a"]` must stay distinct.
 mod nested_deep {
     use wasm_bindgen::prelude::*;
@@ -144,9 +123,6 @@ pub fn exported() {
 
     item_level::info("delta");
     item_level_other::info("epsilon");
-
-    override_block::debug("eta");
-    override_none::debug("zeta");
 
     nested_deep::c("deep");
     nested_shallow::c("shallow");

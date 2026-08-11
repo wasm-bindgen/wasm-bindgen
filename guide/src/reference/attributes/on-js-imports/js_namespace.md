@@ -66,4 +66,16 @@ extern "C" {
 }
 ```
 
-`js_namespace = …` on an individual item takes precedence over the outer block's `js_namespace = …`.
+`js_namespace` may be set on the outer block or on an individual item, but
+not both at once. Nested paths belong in a single attribute:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = ["window", "document"])]
+    fn write(s: &str);
+}
+```
+
+Writing `js_namespace` on both the block and an item inside it is a compile
+error; put the full path on whichever side is clearer.
