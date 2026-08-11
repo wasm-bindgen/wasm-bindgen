@@ -1,0 +1,19 @@
+crates/js-sys/src/futures/mod.rs
+  s_c3d611c0c39aab::t_b12847e13b9c11 360
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "e05f65bcf509e2ac3b321f8be482aa5ae292f365",
+  "prompts": {},
+  "sessions": {
+    "s_c3d611c0c39aab": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_00dcf8d62ffeN67rBCjNMsyMPe",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
