@@ -1,0 +1,43 @@
+CHANGELOG.md
+  s_84d29a51f15e6e::t_fd8988f93499b6 47-52
+crates/cli/tests/reference/jspi-async.bg.js
+  s_84d29a51f15e6e::t_036186ad4593e4 1-110
+crates/cli/tests/reference/jspi-async.d.ts
+  s_84d29a51f15e6e::t_865096d519d8f4 1-10
+crates/cli/tests/reference/jspi-async.js
+  s_84d29a51f15e6e::t_1bb387692b8e74 1-9
+crates/cli/tests/reference/jspi-async.rs
+  s_84d29a51f15e6e::t_056e30bceae7a0 1-20
+crates/cli/tests/reference/jspi-async.wat
+  s_84d29a51f15e6e::t_5ea378bba79eca 1-30
+crates/cli/tests/wasm-bindgen/reference.rs
+  s_84d29a51f15e6e::t_f00b3cdeb609b9 221-223,226,233-244
+crates/futures/src/lib.rs
+  s_84d29a51f15e6e::t_24db1979b9e3c2 16-18
+crates/js-sys/src/futures/jspi.rs
+  s_84d29a51f15e6e::t_a55b68aede22be 3-4,6-11,25,28,32,111,115-119,131-132
+crates/macro-support/src/codegen.rs
+  s_84d29a51f15e6e::t_740974ac6f2cc3 887-891,901-906,941-951
+crates/macro-support/src/parser.rs
+  s_84d29a51f15e6e::t_ec4a639f865530 1608-1609
+examples/jspi/src/lib.rs
+  s_84d29a51f15e6e::t_ff2dc5b767e42d 21-23
+guide/src/reference/jspi.md
+  s_84d29a51f15e6e::t_213203a6ab3f1b 3-5,120,122-126,132-134,138-149
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "646361bfda8b30ba61dcd8ba767769c9f4fabaec",
+  "prompts": {},
+  "sessions": {
+    "s_84d29a51f15e6e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_00da284edffemDNQI0Emqn4qwK",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
