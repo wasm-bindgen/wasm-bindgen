@@ -50,6 +50,13 @@
   concurrency composes at the promise level (promises are eager;
   `Promise::all`/`race`), and Rust `Future`s are awaited via
   `block_on_promise(&future_to_promise(fut))` on the ordinary executor.
+  `js_sys::futures::jspi::spawn_local` complements it executor-side: it runs
+  a future like `spawn_local`, but each poll is entered through a
+  `WebAssembly.promising` boundary, so sync code reached from the task may
+  itself suspend; a suspension parks only that task's poll. On the same
+  mechanism, `#[wasm_bindgen(jspi)]` composes with `async fn` exports (via
+  `jspi::future_to_promise`): the JS contract is identical to a plain async
+  export, but the body's whole call tree may suspend.
   Suspending imports declare the type the promise resolves
   to; the settled value is marshalled post-resume with standard ABI semantics,
   and `catch` surfaces rejections as `Err` data. Fibers run on the full main

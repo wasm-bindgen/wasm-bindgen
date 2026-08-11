@@ -1598,18 +1598,6 @@ fn function_from_decl(
         (decl_name.unraw().to_string(), decl_name.span())
     };
 
-    let is_async = sig.asyncness.is_some();
-    let is_jspi = opts.jspi().is_some();
-    if is_async && is_jspi {
-        if let Some(span) = opts.jspi() {
-            return Err(Diagnostic::span_error(
-                *span,
-                "`jspi` and `async` are mutually exclusive.\n\
-                use `block_on_promise` from a jspi function to call async code.",
-            ));
-        }
-    }
-
     Ok((
         ast::Function {
             name_span,
@@ -1617,8 +1605,8 @@ fn function_from_decl(
             rust_attrs: attrs,
             rust_vis: vis,
             r#unsafe: sig.unsafety.is_some(),
-            r#async: is_async,
-            jspi: is_jspi,
+            r#async: sig.asyncness.is_some(),
+            jspi: opts.jspi().is_some(),
             generate_typescript: opts.skip_typescript().is_none(),
             generate_jsdoc: opts.skip_jsdoc().is_none(),
             variadic: opts.variadic().is_some(),

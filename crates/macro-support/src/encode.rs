@@ -246,7 +246,11 @@ fn shared_function<'a>(func: &'a ast::Function, _intern: &'a Interner) -> Functi
     Function {
         args,
         asyncness: func.r#async,
-        jspi: func.jspi,
+        // A jspi async export is an ordinary async export to the CLI (the
+        // returned `Promise` comes from `jspi::future_to_promise`, not from
+        // `WebAssembly.promising` wrapping of the export itself); the jspi
+        // flag only selects the macro-side scheduling of the body.
+        jspi: func.jspi && !func.r#async,
         name: &func.name,
         generate_typescript: func.generate_typescript,
         generate_jsdoc: func.generate_jsdoc,

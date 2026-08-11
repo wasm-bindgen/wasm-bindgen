@@ -62,6 +62,10 @@
 
 use crate::wit::{AdapterKind, Instruction, NonstandardWitSection, WasmBindgenAux};
 use anyhow::{anyhow, bail, Error};
+
+/// The raw wasm export name of the `jspi::spawn_local` poll trampoline in
+/// `js_sys::futures::jspi`.
+pub const TASK_POLL_EXPORT: &str = "__wbg_jspi_task_poll";
 use std::collections::HashMap;
 use walrus::ir::{self, BinaryOp, MemArg, UnaryOp, Value};
 use walrus::{
@@ -95,6 +99,44 @@ pub fn run(
                     anyhow!("jspi export adapter never calls the underlying function")
                 })?;
             jspi_exports.push(export_id);
+        }
+    }
+
+    // The `jspi::spawn_local` poll trampoline is a raw export from js-sys,
+    // recognized by name. When `spawn_local` is used it needs exactly the
+    // jspi-export treatment (the in-wasm fiber wrapper; the spawn
+    // intrinsics' JS shims wrap it with `WebAssembly.promising`). When it
+    // is not, the export is deleted so the module carries no JSPI
+    // instrumentation — a build on the `js_sys_unstable_apis` cfg that
+    // never touches `spawn_local` must keep running on engines without
+    // exnref/JSPI.
+    //
+    // Usage is signalled by the presence of the `__wbindgen_jspi_spawn_first`
+    // import (matched under the hashed shim rename applied during import
+    // binding): it is called only from `spawn_local` itself, so the linker
+    // only retains it when a live `spawn_local` call exists. No such signal
+    // can be read off the rest of the spawn machinery — the trampoline
+    // export roots the wake path (including the `__wbindgen_jspi_spawn_poll`
+    // import and the table-rooted waker vtable) in every linked module.
+    let task_poll_export = module
+        .exports
+        .iter()
+        .find(|e| e.name == TASK_POLL_EXPORT)
+        .map(|e| e.id());
+    if let Some(export_id) = task_poll_export {
+        let spawn_used = module
+            .imports
+            .iter()
+            .any(|i| i.name.contains("__wbindgen_jspi_spawn_first"));
+        if spawn_used {
+            jspi_exports.push(export_id);
+        } else {
+            // The trampoline was the only root of the spawn machinery, so
+            // unexporting it is enough: the `gc_module_and_adapters` pass
+            // that follows this transform prunes the orphaned functions,
+            // the intrinsic import, and its adapters (so no JS shim is
+            // emitted either).
+            module.exports.delete(export_id);
         }
     }
 

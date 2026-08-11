@@ -3089,9 +3089,11 @@ const JSPI_LIB_RS: &str = r#"
 
     #[wasm_bindgen(inline_js = "
         export function note_drop() { globalThis.__jspi_drops = (globalThis.__jspi_drops | 0) + 1; }
+        export function note_spawn(v) { (globalThis.__jspi_spawns ??= []).push(v); }
     ")]
     extern "C" {
         fn note_drop();
+        fn note_spawn(v: u32);
     }
 
     // Increments a JS-side counter when dropped, so tests can prove destructors
@@ -3279,6 +3281,47 @@ const JSPI_LIB_RS: &str = r#"
             Ok(JsValue::from(SelfWaking { remaining: 3 }.await))
         });
         block_on_promise(&promise).unwrap().as_f64().unwrap() as u32
+    }
+
+    // Sync helper that suspends: only callable where the poll runs on a
+    // fiber — i.e. from a `jspi::spawn_local` task, not plain `spawn_local`.
+    fn sync_add_one(p: &js_sys::Promise) -> u32 {
+        block_on_promise(p).unwrap().as_f64().unwrap() as u32 + 1
+    }
+
+    // A task whose poll hits a suspending sync call: the poll parks
+    // mid-frame on its fiber until `gate` settles.
+    #[wasm_bindgen]
+    pub fn spawn_suspending(gate: js_sys::Promise) {
+        js_sys::futures::jspi::spawn_local(async move {
+            note_spawn(sync_add_one(&gate));
+        });
+    }
+
+    // A jspi async export: the same JS contract as a plain async export
+    // (the caller receives a Promise), but the body is scheduled via
+    // `jspi::spawn_local`, so sync callees may suspend mid-poll.
+    #[wasm_bindgen(jspi)]
+    pub async fn async_mixed(a: js_sys::Promise, gate: js_sys::Promise) -> u32 {
+        let x = js_sys::futures::JsFuture::from(a).await.unwrap()
+            .as_f64().unwrap() as u32;
+        x + sync_add_one(&gate)
+    }
+
+    // An ordinary `spawn_local` future on the plain microtask executor:
+    // `steps` awaits (one queue poll each), then invokes `done`. Its
+    // progress while jspi tasks sit suspended is the proof that a
+    // suspended poll parks only its own task, not the executor.
+    #[wasm_bindgen]
+    pub fn spawn_ordinary(steps: u32, done: js_sys::Function) {
+        wasm_bindgen_futures::spawn_local(async move {
+            for i in 0..steps {
+                let p = js_sys::Promise::resolve(&JsValue::from(i));
+                js_sys::futures::JsFuture::from(p).await.unwrap();
+                note_spawn(1000 + i);
+            }
+            done.call0(&JsValue::NULL).unwrap();
+        });
     }
 
     // Returns the address of a shadow-stack local, approximating the empty-
@@ -3488,6 +3531,30 @@ describe('jspi runtime', () => {
 
     it('awaits a Rust future from sync jspi code via future_to_promise', async () => {
         assert.strictEqual(await wasm.drive_future(), 7);
+    });
+
+    it('a jspi async export mixes .await with sync suspension', async () => {
+        let resolveGate;
+        const gate = new Promise(r => { resolveGate = r; });
+        const p = wasm.async_mixed(Promise.resolve(30), gate);
+        setTimeout(() => resolveGate(11), 0);
+        assert.strictEqual(await p, 42);
+    });
+
+    it('suspended polls park only their task: the executor keeps polling', async () => {
+        globalThis.__jspi_spawns = [];
+        let resolve1, resolve2;
+        const gate1 = new Promise(r => { resolve1 = r; });
+        const gate2 = new Promise(r => { resolve2 = r; });
+        // Two tasks REALLY suspended mid-poll, in parallel.
+        wasm.spawn_suspending(gate1);
+        wasm.spawn_suspending(gate2);
+        // An ordinary future on the plain executor whose multi-poll
+        // progress is the ONLY thing that unblocks them — resolved out of
+        // order. If a suspended poll stalled the executor, this deadlocks.
+        wasm.spawn_ordinary(2, () => { resolve2(20); resolve1(10); });
+        await new Promise(r => setTimeout(r, 0));
+        assert.deepStrictEqual(globalThis.__jspi_spawns, [1000, 1001, 21, 11]);
     });
 
     it('resets the SP to the stack top when a fiber entered over live frames completes', async () => {

@@ -16,5 +16,8 @@ pub use js_sys::futures::{future_to_promise, future_to_promise_typed, spawn_loca
 #[cfg(feature = "futures-core-03-stream")]
 pub use js_sys::futures::stream;
 
+#[cfg(js_sys_unstable_apis)]
+pub use js_sys::futures::jspi;
+
 pub use js_sys;
 pub use wasm_bindgen;

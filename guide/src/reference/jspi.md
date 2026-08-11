@@ -148,17 +148,53 @@ let value = block_on_promise(&wasm_bindgen_futures::future_to_promise(fut));
 The future is polled by the normal executor on the event loop while the fiber
 waits — no separate runtime is involved.
 
-### Suspending under the async executor
+### Suspending under the async executor: `jspi::spawn_local`
 
-`async` and JSPI compose in principle: a suspending call in sync code is,
-from an executor's perspective, just a poll that hasn't returned yet. The
-*current* microtask executor, however, polls tasks on a plain activation with
-no fiber underneath, so calling `block_on_promise` from code being polled (a
-plain `async fn` export, `spawn_local`, or a future passed to
-`future_to_promise`) fails with a `SuspendError` at runtime today. A future
-executor revision can lift this by polling on promising activations. Until
-then, suspending calls belong in sync code reached from a `jspi` export
-(`#[wasm_bindgen(jspi)]` on an `async fn` is likewise rejected for now).
+`async` and JSPI compose: a suspending call in sync code is, from an
+executor's perspective, just a poll that hasn't returned yet. What decides
+whether it works is how the poll is *entered*. The plain microtask executor
+polls tasks on a plain activation with no fiber underneath, so calling
+`block_on_promise` from code being polled (a plain `async fn` export,
+`spawn_local`, or a future passed to `future_to_promise`) fails with a
+`SuspendError` at runtime.
+
+`js_sys::futures::jspi::spawn_local` is the executor entry that grants the
+capability: it runs a future like `spawn_local`, but each poll is entered
+through a `WebAssembly.promising` boundary, so the task's whole call tree —
+including sync callees — may suspend:
+
+```rust
+js_sys::futures::jspi::spawn_local(async move {
+    let x = JsFuture::from(fetch_thing()).await;  // ordinary await
+    let y = sync_helper_that_suspends();          // block_on_promise inside
+    // ...
+});
+```
+
+A suspension parks only that task's poll: the microtask queue, other tasks,
+and the event loop all continue, and a wake arriving while the poll is
+suspended re-polls after it returns. The stall unit is the task — futures
+*joined inside* the task cannot be polled while a sync callee has it
+suspended, which is the usual "don't block in async" trade made explicit.
+
+### `#[wasm_bindgen(jspi)]` on `async fn` — suspendable async exports
+
+The same capability for exports. A jspi async export has the identical JS
+contract to a plain async export — the caller receives a `Promise` — but the
+body is scheduled via `jspi::spawn_local` (through
+`jspi::future_to_promise`), so its whole call tree may suspend:
+
+```rust
+#[wasm_bindgen(jspi)]
+pub async fn process() -> u32 {
+    let x = JsFuture::from(fetch_thing()).await;  // ordinary await
+    sync_helper_that_suspends(x)                  // block_on_promise inside
+}
+```
+
+Note the export itself is *not* wrapped with `WebAssembly.promising` — the
+task carries the capability and the promise is an ordinary one. Prefer plain
+`async fn` unless the body actually reaches suspending sync code.
 
 ## Shadow-stack management
 

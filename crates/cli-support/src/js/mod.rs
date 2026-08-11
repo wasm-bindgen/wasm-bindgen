@@ -6539,6 +6539,34 @@ addToLibrary({
                 assert_eq!(args.len(), 1);
                 args[0].clone()
             }
+
+            // Schedules a `jspi::spawn_local` task poll on the microtask
+            // queue, entered through `WebAssembly.promising` of the raw
+            // task-poll trampoline export (which the jspi transform has
+            // given the in-wasm fiber wrapper), so the poll runs on a fresh
+            // fiber and may suspend. The promise is deliberately dropped —
+            // completion and re-poll bookkeeping live wasm-side, and a
+            // panic surfaces as an unhandled rejection like any spawned
+            // task failure.
+            // `JspiSpawnFirst` is the same operation reached only from
+            // `spawn_local`'s initial schedule; being a separate import, its
+            // presence in the linked module is the CLI's signal that
+            // `spawn_local` is actually used (the wake path's
+            // `JspiSpawnPoll` is rooted by the trampoline itself, so its
+            // presence proves nothing).
+            Intrinsic::JspiSpawnPoll | Intrinsic::JspiSpawnFirst => {
+                assert_eq!(args.len(), 1);
+                if !self.globals.contains("let __wbg_jspi_task_poll_promising;") {
+                    self.global("let __wbg_jspi_task_poll_promising;");
+                }
+                format!(
+                    "Promise.resolve().then(() => \
+                     (__wbg_jspi_task_poll_promising ??= \
+                     WebAssembly.promising(wasm.{}))({}))",
+                    crate::transforms::jspi::TASK_POLL_EXPORT,
+                    args[0]
+                )
+            }
         };
         Ok(expr)
     }
