@@ -23,7 +23,7 @@ let wasm_bindgen = (function(exports) {
                 const ret = arg0;
                 return ret;
             }),
-            __wbg___wbindgen_throw_344f42d3211c4765: function(arg0, arg1) {
+            __wbg___wbindgen_throw_bb96b2010945f0bc: function(arg0, arg1) {
                 throw new Error(getStringFromWasm0(arg0, arg1));
             },
             __wbindgen_cast_0000000000000000: function(arg0) {

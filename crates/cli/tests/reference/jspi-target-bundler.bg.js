@@ -15,7 +15,7 @@ export async function compute() {
 export async function do_work() {
     await (__wbg_jspi_do_work ??= WebAssembly.promising(wasm.do_work))();
 }
-export function __wbg___wbindgen_throw_344f42d3211c4765(arg0, arg1) {
+export function __wbg___wbindgen_throw_bb96b2010945f0bc(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 
