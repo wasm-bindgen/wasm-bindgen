@@ -1,0 +1,39 @@
+crates/cli/tests/reference/jspi-async.bg.js
+  s_84d29a51f15e6e::t_159d26b1786efd 1-110
+crates/cli/tests/reference/jspi-async.d.ts
+  s_84d29a51f15e6e::t_5f865522e3b9e4 1-10
+crates/cli/tests/reference/jspi-async.js
+  s_84d29a51f15e6e::t_ac89ce51334452 1-9
+crates/cli/tests/reference/jspi-async.wat
+  s_84d29a51f15e6e::t_cb5102737c2dd6 1-30
+crates/futures/src/lib.rs
+  s_d81c25f9b802ed::t_2da413630097ea 16-18
+crates/js-sys/src/futures/jspi.rs
+  s_d81c25f9b802ed::t_5eb7682ca5cfb5 3-4,6-11,25,28,32,111,115-119,131-132
+crates/macro-support/src/codegen.rs
+  s_d81c25f9b802ed::t_73150ec8ccd4fa 887-891,901-906,941-951
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "5635787920ff4878874bd52a79f26b851289ce04",
+  "prompts": {},
+  "sessions": {
+    "s_84d29a51f15e6e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_00da284edffemDNQI0Emqn4qwK",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    },
+    "s_d81c25f9b802ed": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_00d21f8b4ffe7c6wvU645ChoeC",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
