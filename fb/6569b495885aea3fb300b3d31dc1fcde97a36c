@@ -1,0 +1,19 @@
+crates/macro-support/src/codegen.rs
+  s_44753193dc9ad8::t_b07c6b816cdcd5 2662-2676,2740-2756,2803-2822,3024-3035,3165-3166,3173-3205,3207
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "fb6569b495885aea3fb300b3d31dc1fcde97a36c",
+  "prompts": {},
+  "sessions": {
+    "s_44753193dc9ad8": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_00d59631affeCbu34S0ClicenB",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
