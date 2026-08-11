@@ -1,0 +1,37 @@
+crates/js-sys/src/futures/jspi.rs
+  s_84d29a51f15e6e::t_a55b68aede22be 8-11
+crates/cli/tests/reference/jspi-intrinsics-target-no-modules.js
+  s_84d29a51f15e6e::t_9f74642e0763b5 26
+crates/cli/tests/reference/jspi-intrinsics-target-no-modules.wat
+  s_84d29a51f15e6e::t_2460e060c65343 6
+crates/cli/tests/reference/jspi-intrinsics-target-bundler.wat
+  s_84d29a51f15e6e::t_e469e7876d1749 6
+crates/cli/tests/reference/jspi-target-bundler.wat
+  s_84d29a51f15e6e::t_d9bbdd1c1d7661 11
+crates/cli/tests/reference/jspi-target-web.js
+  s_84d29a51f15e6e::t_14fa374a6c0d64 23
+crates/cli/tests/reference/jspi-target-bundler.bg.js
+  s_84d29a51f15e6e::t_7808a96fc55ec7 18
+crates/cli/tests/reference/jspi-intrinsics-target-bundler.bg.js
+  s_84d29a51f15e6e::t_caccd011596a3a 17
+crates/macro-support/src/codegen.rs
+  s_84d29a51f15e6e::t_740974ac6f2cc3 947
+crates/cli/tests/reference/jspi-target-web.wat
+  s_84d29a51f15e6e::t_103085b296715a 11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "895b82efee0ee640908494f0575cf0074a73f4e0",
+  "prompts": {},
+  "sessions": {
+    "s_84d29a51f15e6e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_00da284edffemDNQI0Emqn4qwK",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
