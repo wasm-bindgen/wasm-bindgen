@@ -1,0 +1,35 @@
+guide/src/reference/jspi.md
+  s_84d29a51f15e6e::t_213203a6ab3f1b 3-5,120,122-124,128-133,137-145
+  s_84d29a51f15e6e::t_bb60dfa43de769 146-148
+crates/js-sys/src/futures/jspi.rs
+  s_84d29a51f15e6e::t_a55b68aede22be 3-4,6-11,25,28,32
+CHANGELOG.md
+  s_84d29a51f15e6e::t_fd8988f93499b6 47-52
+  s_d81c25f9b802ed::t_d5dd4564381fa4 53
+examples/jspi/src/lib.rs
+  s_84d29a51f15e6e::t_ff2dc5b767e42d 21-23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "1a6a4af20acfe288dc922c6286ea9fbc9ef5ebd2",
+  "prompts": {},
+  "sessions": {
+    "s_84d29a51f15e6e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_00da284edffemDNQI0Emqn4qwK",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    },
+    "s_d81c25f9b802ed": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_00d21f8b4ffe7c6wvU645ChoeC",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
