@@ -505,6 +505,16 @@ impl<'a> Context<'a> {
         } else {
             String::new()
         };
+        // Class expressions are passed to jsifier as an `=`-prefixed string
+        // snippet, which it emits as `var <id> = class <id> {...};` (an
+        // `export var` under MODULARIZE=instance). A live class value would be
+        // emitted as a `class` *declaration*, and `export class` crashes
+        // emcc's acorn-optimizer ExportNamedDeclaration handling.
+        let value = if value.trim_start().starts_with("class ") {
+            Cow::Owned(format!("{:?}", format!("={value}")))
+        } else {
+            Cow::Borrowed(value)
+        };
         self.emscripten_library(&format!(
             "addToLibrary({{\n    ${identifier}: {value},\n    \
              ${identifier}__deps: [{}]{postset_field}{export_attrs}\n}});",
@@ -1774,17 +1784,27 @@ if (require('worker_threads').isMainThread) {{
         // function bodies, so we have to enumerate explicitly. We union
         // `adapter_deps` with `emscripten_global_deps` so symbols that are
         // *only* declared globally (e.g. `$heap`) are also pulled in.
+        // References below use the identifiers emcc's `assignWasmExports`
+        // receiving code binds at the top level for every wasm export (see
+        // `wasm_export_ref`). `_initialize` is only referenced when the module
+        // actually exports it, since its receiving binding otherwise doesn't
+        // exist. It runs static constructors on --no-entry builds.
+        let initialize_logic = if self.module.exports.iter().any(|e| e.name == "_initialize") {
+            format!("{}();", emscripten_mangle("_initialize"))
+        } else {
+            String::new()
+        };
+        let start_logic = if needs_manual_start {
+            format!("{}();", emscripten_mangle("__wbindgen_start"))
+        } else {
+            String::new()
+        };
+
         let init_deps: BTreeSet<&str> = std::iter::once("addOnInit")
             .chain(self.adapter_deps.iter().map(String::as_str))
             .chain(self.emscripten_global_deps.iter().map(String::as_str))
             .collect();
         let init_dep_refs: Vec<String> = init_deps.iter().map(|d| format!("'${d}'")).collect();
-
-        let start_logic = if needs_manual_start {
-            "wasmExports['__wbindgen_start']();"
-        } else {
-            ""
-        };
 
         // `__force` keeps `$initBindgen` (and, via its `__deps`, every global
         // helper) in the build even though no compiled code references it.
@@ -1799,11 +1819,7 @@ if (require('worker_threads').isMainThread) {{
                 $initBindgen__postset: 'addOnInit(initBindgen);',
                 $initBindgen__force: true,
                 $initBindgen: () => {{
-                    // Call emscripten's _initialize to run static constructors
-                    // (needed for --no-entry builds)
-                    if (wasmExports['_initialize']) {{
-                        wasmExports['_initialize']();
-                    }}
+                    {initialize_logic}
                     {start_logic}
                     {classes_and_exports}
                 }}
@@ -6841,13 +6857,17 @@ addToLibrary({
     }
 
     /// JS expression that reaches a wasm export by name, honoring the output
-    /// mode. The emscripten target reaches exports through emscripten's own
-    /// `wasmExports` object using bracket (string-literal) access, which is the
-    /// form emcc's DCE graph and import/export minifier track and rename in
-    /// lockstep; other modes use the local `wasm` binding.
+    /// mode. The emscripten target never reads `wasmExports['name']` inline in
+    /// inner functions — emcc's metadce/minify export tracking doesn't reliably
+    /// cover name-keyed accesses there across versions. Instead it references
+    /// the identifier emcc's own top-level receiving code (`assignWasmExports`)
+    /// binds for every wasm export: the asmjs-mangled name. Those bindings are
+    /// the canonical DCE-graph pairs (kept iff used, dropped together with the
+    /// wasm export otherwise) and are renamed by the import/export minifier in
+    /// lockstep with the wasm. Other modes use the local `wasm` binding.
     fn wasm_export_ref(&self, name: &str) -> String {
         if matches!(self.config.mode, OutputMode::Emscripten) {
-            format!("wasmExports['{name}']")
+            emscripten_mangle(name)
         } else {
             format!("wasm.{name}")
         }
@@ -7482,6 +7502,19 @@ fn define_namespace_export(
         define_namespace_export(&mut ns.ns, export_name, &ns_path[1..], export)?;
     }
     Ok(())
+}
+
+/// Mirror of emscripten's `shared.asmjs_mangle`: the JS identifier emcc's
+/// top-level receiving code (`assignWasmExports`) binds a wasm export to.
+/// Internal symbols keep their name; everything else is prefixed with `_`.
+fn emscripten_mangle(name: &str) -> String {
+    match name {
+        "memory" | "__indirect_function_table" | "__asyncify_data" | "__asyncify_state" => {
+            name.to_string()
+        }
+        _ if name.starts_with("dynCall_") => name.to_string(),
+        _ => format!("_{name}"),
+    }
 }
 
 /// Returns a string to tack on to the end of an expression to access a

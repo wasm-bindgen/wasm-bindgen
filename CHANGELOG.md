@@ -7,6 +7,19 @@
 
 ### Changed
 
+* Emscripten glue no longer reads `wasmExports['name']` inline inside inner
+  functions. It now references the asmjs-mangled identifiers emcc's own
+  top-level `assignWasmExports` receiving code binds for every wasm export
+  (e.g. `___wbindgen_malloc`, `___wbindgen_externrefs`), which are the
+  canonical DCE-graph pairs: wasm-metadce keeps exactly the exports the
+  included glue uses (previously internal exports and the externref table
+  could be stripped or left unrenamed by the import/export minifier at `-O2`,
+  breaking at runtime). Hoisted classes are now emitted as `=`-prefixed
+  string value snippets so jsifier declares them as
+  `export var Class = class Class {...}` instead of an `export class`
+  declaration, which crashes emcc's acorn-optimizer under
+  `-sMODULARIZE=instance`.
+
 ### Fixed
 
 ### Removed
