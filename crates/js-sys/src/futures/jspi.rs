@@ -1,11 +1,14 @@
 //! JSPI (JS Promise Integration) runtime support for wasm-bindgen.
 //!
-//! This module provides two primitives:
+//! The runtime primitive is [`block_on_promise`]: suspend the current WASM
+//! fiber until a specific JavaScript [`Promise`] settles.
 //!
-//! - [`block_on_promise`] — suspends a WASM fiber until a specific JavaScript
-//!   [`Promise`] settles (low-level).
-//! - [`block_on`] — drives an arbitrary `async` Rust [`Future`] to completion
-//!   inside a JSPI fiber, using a JS-Promise-backed waker (high-level).
+//! It is the complete programming model. Promises are eager, so concurrency
+//! is expressed at the promise level — start several calls, then suspend on
+//! each (or on a `Promise::all` / `Promise::race` combination). A Rust
+//! `Future` is awaited by scheduling it on the ordinary microtask executor
+//! and suspending on its completion:
+//! `block_on_promise(&future_to_promise(fut))`.
 //!
 //! The runtime state is minimal by construction. The single bridge import,
 //! `__wbindgen_jspi_suspend`, is a plain `#[wasm_bindgen(catch, suspending)]`
@@ -19,15 +22,14 @@
 //!
 //! ## Usage
 //!
-//! Mark exports that call `block_on` or `block_on_promise` with
-//! `#[wasm_bindgen(jspi)]`:
+//! Mark exports that call `block_on_promise` with `#[wasm_bindgen(jspi)]`:
 //!
 //! ```rust,ignore
-//! use js_sys::futures::jspi::block_on;
+//! use js_sys::futures::jspi::block_on_promise;
 //!
 //! #[wasm_bindgen(jspi)]
 //! pub fn do_work() {
-//!     let result = block_on(some_async_fn()).unwrap_throw();
+//!     let result = block_on_promise(&some_promise()).unwrap_throw();
 //!     // ...
 //! }
 //! ```
@@ -37,13 +39,8 @@
 // via `js_sys_unstable_apis`, so silence it here.
 #![allow(deprecated)]
 
-use crate::{Function, Promise};
-use alloc::boxed::Box;
-use alloc::sync::Arc;
-use core::future::Future;
-use core::task::{Context, Poll, Waker};
+use crate::Promise;
 use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsCast;
 
 #[wasm_bindgen(raw_module = "__wbindgen_placeholder__")]
 extern "C" {
@@ -80,67 +77,4 @@ pub fn block_on_promise(promise: &Promise) -> Result<JsValue, JsValue> {
 #[inline(never)]
 fn suspend(promise: &Promise) -> Result<JsValue, JsValue> {
     __wbindgen_jspi_suspend(promise)
-}
-
-// ─── Waker ───────────────────────────────────────────────────────────────────
-
-/// A waker backed by the `resolve` function of a JS `Promise` the fiber
-/// suspends on: waking resolves the promise, which resumes the fiber.
-struct JspiWaker {
-    resolve: Function,
-}
-
-// SAFETY: `Waker::from(Arc<W>)` requires `Send + Sync`, but JSPI fibers are
-// single-threaded — the waker is only ever created, woken, and dropped on
-// the one wasm thread (JSPI is not supported with threads).
-unsafe impl Send for JspiWaker {}
-unsafe impl Sync for JspiWaker {}
-
-impl alloc::task::Wake for JspiWaker {
-    fn wake(self: Arc<Self>) {
-        self.wake_by_ref();
-    }
-
-    fn wake_by_ref(self: &Arc<Self>) {
-        let _ = self.resolve.call0(&JsValue::UNDEFINED);
-    }
-}
-
-// ─── High-level primitive: drive a Rust Future ───────────────────────────────
-
-/// Drive `fut` to completion inside a JSPI fiber.
-///
-/// Each time the future returns [`Poll::Pending`], the fiber suspends on a
-/// fresh JS `Promise` whose `resolve` function backs the waker. The promise
-/// (and its resolver) is created *before* polling, so a `wake()` that fires
-/// synchronously during the poll has already resolved the promise by the
-/// time the fiber suspends on it, and the fiber resumes on the next
-/// microtask tick.
-///
-/// Nested calls are safe: every poll iteration owns its own promise/resolver
-/// pair, held as ordinary Rust values.
-///
-/// **Must only be called from a function marked `#[wasm_bindgen(jspi)]`.**
-pub fn block_on<F: Future>(fut: F) -> F::Output {
-    let mut fut = Box::pin(fut);
-
-    loop {
-        // Create the promise/resolver pair before polling so that a
-        // synchronous wake() during poll resolves a live promise.
-        let mut resolve_slot: Option<Function> = None;
-        let promise: Promise = Promise::new(&mut |resolve, _reject| {
-            resolve_slot = Some(resolve.unchecked_into());
-        });
-        let resolve = resolve_slot.expect_throw("Promise executor did not run synchronously");
-        let waker: Waker = Arc::new(JspiWaker { resolve }).into();
-        let mut cx = Context::from_waker(&waker);
-
-        match fut.as_mut().poll(&mut cx) {
-            Poll::Ready(val) => return val,
-            Poll::Pending => {
-                // Ignore the resolved value — we only care about being woken.
-                let _ = block_on_promise(&promise);
-            }
-        }
-    }
 }

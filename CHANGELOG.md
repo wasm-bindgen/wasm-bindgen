@@ -44,9 +44,13 @@
 
 * Added JSPI (JS Promise Integration) support: `#[wasm_bindgen(jspi)]` on exports
   wraps them with `WebAssembly.promising`, `#[wasm_bindgen(suspending)]` on imports
-  wraps them with `WebAssembly.Suspending`, and `js_sys::futures::jspi::{block_on,
-  block_on_promise}` let plain (non-`async`) Rust suspend a fiber while a JS
-  `Promise` settles. Suspending imports declare the type the promise resolves
+  wraps them with `WebAssembly.Suspending`, and
+  `js_sys::futures::jspi::block_on_promise` lets plain (non-`async`) Rust
+  suspend a fiber while a JS `Promise` settles — the complete primitive:
+  concurrency composes at the promise level (promises are eager;
+  `Promise::all`/`race`), and Rust `Future`s are awaited via
+  `block_on_promise(&future_to_promise(fut))` on the ordinary executor.
+  Suspending imports declare the type the promise resolves
   to; the settled value is marshalled post-resume with standard ABI semantics,
   and `catch` surfaces rejections as `Err` data. Fibers run on the full main
   shadow stack: the module is instrumented so a suspending fiber's live stack

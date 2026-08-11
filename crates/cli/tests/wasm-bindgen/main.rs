@@ -3085,7 +3085,7 @@ fn which(name: &str) -> Option<PathBuf> {
 const JSPI_LIB_RS: &str = r#"
     use wasm_bindgen::prelude::*;
     use js_sys::Promise;
-    use js_sys::futures::jspi::{block_on, block_on_promise};
+    use js_sys::futures::jspi::block_on_promise;
 
     #[wasm_bindgen(inline_js = "
         export function note_drop() { globalThis.__jspi_drops = (globalThis.__jspi_drops | 0) + 1; }
@@ -3270,11 +3270,15 @@ const JSPI_LIB_RS: &str = r#"
         }
     }
 
-    // Drives a Rust future to completion inside a fiber via `block_on`,
-    // suspending once per pending poll on the waker's promise.
+    // A Rust future awaited from sync jspi code: scheduled on the ordinary
+    // microtask executor via `future_to_promise`, with the fiber suspending
+    // on the completion promise.
     #[wasm_bindgen(jspi)]
     pub fn drive_future() -> u32 {
-        block_on(SelfWaking { remaining: 3 })
+        let promise = wasm_bindgen_futures::future_to_promise(async {
+            Ok(JsValue::from(SelfWaking { remaining: 3 }.await))
+        });
+        block_on_promise(&promise).unwrap().as_f64().unwrap() as u32
     }
 
     // Returns the address of a shadow-stack local, approximating the empty-
@@ -3341,6 +3345,9 @@ fn run_jspi_test(name: &str, wasm_bindgen_args: &str, panic_unwind: bool, descri
                 [dependencies]
                 wasm-bindgen = {{ path = '{repo}' }}
                 js-sys = {{ path = '{repo}/crates/js-sys' }}
+                # Async jspi exports expand to the internal executor via the
+                # `wasm_bindgen_futures` path, like all async exports.
+                wasm-bindgen-futures = {{ path = '{repo}/crates/futures' }}
 
                 [lib]
                 crate-type = ['cdylib']
@@ -3479,7 +3486,7 @@ describe('jspi runtime', () => {
         assert.deepStrictEqual(r, [42, 13, 13, 1210]);
     });
 
-    it('drives a Rust future via block_on with a self-waking waker', async () => {
+    it('awaits a Rust future from sync jspi code via future_to_promise', async () => {
         assert.strictEqual(await wasm.drive_future(), 7);
     });
 

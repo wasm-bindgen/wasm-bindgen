@@ -1,8 +1,8 @@
 # JSPI — JS Promise Integration
 
-[WebAssembly JS Promise Integration (JSPI)][jspi-spec] lets plain (non-`async`)
-Rust functions suspend the WASM fiber while a JS `Promise` resolves, then resume
-— without blocking the event loop.  The result: you can call fully Promise-based
+[WebAssembly JS Promise Integration (JSPI)][jspi-spec] lets Rust functions
+suspend the WASM fiber while a JS `Promise` resolves, then resume — without
+blocking the event loop.  The result: you can call fully Promise-based
 browser APIs from ordinary Rust code, with no `async` call chain required.
 
 [jspi-spec]: https://github.com/WebAssembly/js-promise-integration
@@ -117,30 +117,48 @@ pub fn fetch_and_return() -> String {
 `#[wasm_bindgen(jspi)]` export — each call suspends once and resumes when the
 corresponding `Promise` resolves.
 
-## `block_on` — drive a Rust `Future`
+## Concurrency and Rust futures — no async machinery required
 
-`js_sys::futures::jspi::block_on<F: Future>` runs a Rust `Future` to
-completion inside a JSPI-suspended export.  It spins a minimal executor backed
-by JSPI — each time the future returns `Poll::Pending` the fiber suspends, and
-each time the internal waker fires the fiber resumes and polls again.
+`block_on_promise` is the complete programming model, because promises are
+*eager*: the JS work starts when the call is made, not when you wait on it.
+Start several calls, then suspend:
 
 ```rust
-use js_sys::futures::jspi::block_on;
-use wasm_bindgen::prelude::*;
-
 #[wasm_bindgen(jspi)]
-pub fn run() {
-    block_on(async {
-        // Use .await as normal
-        let result = some_rust_future().await;
-        // ...
-    });
+pub fn build_page() -> String {
+    let a = fetch_text("/header.html");   // both requests already in flight
+    let b = fetch_text("/body.html");
+    let header = block_on_promise(&a).unwrap_throw();
+    let body = block_on_promise(&b).unwrap_throw();   // often settled already
+    // ...
 }
 ```
 
-Use `block_on_promise` when you hold a bare `js_sys::Promise`; use `block_on`
-when you have a `Future` (e.g. returned from a `wasm_bindgen_futures`-based
-helper or assembled with Rust async combinators).
+Combinator semantics come from the promise level, where JS already has them:
+suspend once on `Promise::all`, `Promise::race`, `Promise::any`, or
+`Promise::all_settled`.
+
+To await a Rust `Future` from sync jspi code, schedule it on the ordinary
+microtask executor and suspend on its completion promise:
+
+```rust
+let value = block_on_promise(&wasm_bindgen_futures::future_to_promise(fut));
+```
+
+The future is polled by the normal executor on the event loop while the fiber
+waits — no separate runtime is involved.
+
+### Suspending under the async executor
+
+`async` and JSPI compose in principle: a suspending call in sync code is,
+from an executor's perspective, just a poll that hasn't returned yet. The
+*current* microtask executor, however, polls tasks on a plain activation with
+no fiber underneath, so calling `block_on_promise` from code being polled (a
+plain `async fn` export, `spawn_local`, or a future passed to
+`future_to_promise`) fails with a `SuspendError` at runtime today. A future
+executor revision can lift this by polling on promising activations. Until
+then, suspending calls belong in sync code reached from a `jspi` export
+(`#[wasm_bindgen(jspi)]` on an `async fn` is likewise rejected for now).
 
 ## Shadow-stack management
 
