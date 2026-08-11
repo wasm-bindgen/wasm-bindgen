@@ -1,0 +1,29 @@
+crates/cli/tests/reference/exported-class-wrap-matrix.js
+  s_f118260ae88eb5::t_27c8d3a10dd337 8
+crates/cli/tests/reference/extends-rust.js
+  s_f118260ae88eb5::t_f5b6276846da6c 8
+crates/cli/tests/reference/js-namespace-export-same-name.js
+  s_f118260ae88eb5::t_9f9812c36f3aff 8
+crates/cli/tests/reference/js-namespace-export.js
+  s_f118260ae88eb5::t_6724c772ca5949 8
+crates/cli/tests/reference/private.js
+  s_f118260ae88eb5::t_34db9ab1e865b2 8
+crates/cli/tests/reference/reexport.js
+  s_f118260ae88eb5::t_0fd67323d8a17d 8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "c4435c477dfd659c37be03187121dcdf7fabba07",
+  "prompts": {},
+  "sessions": {
+    "s_f118260ae88eb5": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_011bb193affe72YYjBWt9Hyhrx",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
