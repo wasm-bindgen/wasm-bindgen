@@ -49,7 +49,7 @@ export function __wbg_new_typed_1824d93f294193e5(arg0, arg1) {
             const a = state0.a;
             state0.a = 0;
             try {
-                return wasm_bindgen_0000000000000035___convert__closures_____invoke___js_sys_0000000000000036___Function_fn_wasm_bindgen_0000000000000035___JsValue_____wasm_bindgen_0000000000000035___sys__Undefined___js_sys_0000000000000036___Function_fn_wasm_bindgen_0000000000000035___JsValue_____wasm_bindgen_0000000000000035___sys__Undefined_______true_(a, state0.b, arg0, arg1);
+                return wasm_bindgen_0000000000000039___convert__closures_____invoke___js_sys_000000000000003a___Function_fn_wasm_bindgen_0000000000000039___JsValue_____wasm_bindgen_0000000000000039___sys__Undefined___js_sys_000000000000003a___Function_fn_wasm_bindgen_0000000000000039___JsValue_____wasm_bindgen_0000000000000039___sys__Undefined_______true_(a, state0.b, arg0, arg1);
             } finally {
                 state0.a = a;
             }
@@ -78,7 +78,7 @@ export function __wbg_run_5aa314612b150933(arg0, arg1, arg2) {
             const a = state0.a;
             state0.a = 0;
             try {
-                return wasm_bindgen_0000000000000035___convert__closures_____invoke___bool__true_(a, state0.b, );
+                return wasm_bindgen_0000000000000039___convert__closures_____invoke___bool__true_(a, state0.b, );
             } finally {
                 state0.a = a;
             }
@@ -124,18 +124,18 @@ export function __wbg_then_6ec10ae38b3e92f7(arg0, arg1) {
     return ret;
 }
 export function __wbindgen_generic_0000000000000000(arg0, arg1) {
-    // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [Externref], shim_idx: 57, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, wasm_bindgen_0000000000000035___convert__closures_____invoke___wasm_bindgen_0000000000000035___JsValue__core_0000000000000037___result__Result_____wasm_bindgen_0000000000000035___JsError___true_);
+    // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [Externref], shim_idx: 61, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
+    const ret = makeMutClosure(arg0, arg1, wasm_bindgen_0000000000000039___convert__closures_____invoke___wasm_bindgen_0000000000000039___JsValue__core_000000000000003b___result__Result_____wasm_bindgen_0000000000000039___JsError___true_);
     return ret;
 }
 export function __wbindgen_generic_0000000000000001(arg0, arg1) {
-    // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [String], shim_idx: 58, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, wasm_bindgen_0000000000000035___convert__closures_____invoke___alloc_0000000000000038___string__String__core_0000000000000037___result__Result_____wasm_bindgen_0000000000000035___JsError___true_);
+    // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [String], shim_idx: 62, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
+    const ret = makeMutClosure(arg0, arg1, wasm_bindgen_0000000000000039___convert__closures_____invoke___alloc_000000000000003c___string__String__core_000000000000003b___result__Result_____wasm_bindgen_0000000000000039___JsError___true_);
     return ret;
 }
 export function __wbindgen_generic_0000000000000002(arg0, arg1) {
-    // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [U32], shim_idx: 59, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, wasm_bindgen_0000000000000035___convert__closures_____invoke___u32__core_0000000000000037___result__Result_____wasm_bindgen_0000000000000035___JsError___true_);
+    // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [U32], shim_idx: 63, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
+    const ret = makeMutClosure(arg0, arg1, wasm_bindgen_0000000000000039___convert__closures_____invoke___u32__core_000000000000003b___result__Result_____wasm_bindgen_0000000000000039___JsError___true_);
     return ret;
 }
 export function __wbindgen_generic_0000000000000003(arg0, arg1) {
@@ -225,7 +225,15 @@ export function __wbindgen_generic_0000000000000013(arg0, arg1, arg2) {
     // generic import `logBlockSlice`: [Ref(Vector(U16)), U32] -> Unit
     logBlockSlice(v0, arg2 >>> 0);
 }
-export function __wbindgen_generic_0000000000000014(arg0, arg1, arg2) {
+export function __wbindgen_generic_0000000000000014(arg0, arg1) {
+    // generic import `logGenericSlice`: [Ref(Slice(F64))] -> Unit
+    logGenericSlice(getArrayF64FromWasm0(arg0, arg1));
+}
+export function __wbindgen_generic_0000000000000015(arg0, arg1) {
+    // generic import `logGenericSlice`: [Ref(Slice(U32))] -> Unit
+    logGenericSlice(getArrayU32FromWasm0(arg0, arg1));
+}
+export function __wbindgen_generic_0000000000000016(arg0, arg1, arg2) {
     let v0;
     if (arg0 !== 0) {
         v0 = Array.from(getArrayU16FromWasm0(arg0, arg1));
@@ -233,7 +241,7 @@ export function __wbindgen_generic_0000000000000014(arg0, arg1, arg2) {
     // generic import `logOptSlice`: [Option(Ref(Vector(U16))), U32] -> Unit
     logOptSlice(v0, arg2 >>> 0);
 }
-export function __wbindgen_generic_0000000000000015(arg0, arg1, arg2) {
+export function __wbindgen_generic_0000000000000017(arg0, arg1, arg2) {
     let v0;
     if (arg0 !== 0) {
         v0 = getArrayJsValueFromWasm0(arg0, arg1);
@@ -242,39 +250,43 @@ export function __wbindgen_generic_0000000000000015(arg0, arg1, arg2) {
     // generic import `logOptStrSlice`: [Option(Ref(Vector(NamedExternref("string")))), U32] -> Unit
     logOptStrSlice(v0, arg2 >>> 0);
 }
-export function __wbindgen_generic_0000000000000016(arg0) {
+export function __wbindgen_generic_0000000000000018(arg0) {
     // generic import `logRef`: [Ref(Externref)] -> Unit
     logRef(arg0);
 }
-export function __wbindgen_generic_0000000000000017(arg0) {
+export function __wbindgen_generic_0000000000000019(arg0) {
     // generic import `logRef`: [Ref(F64)] -> Unit
     logRef(arg0);
 }
-export function __wbindgen_generic_0000000000000018(arg0) {
+export function __wbindgen_generic_000000000000001a(arg0) {
     // generic import `logRef`: [Ref(U32)] -> Unit
     logRef(arg0 >>> 0);
 }
-export function __wbindgen_generic_0000000000000019(arg0, arg1, arg2) {
+export function __wbindgen_generic_000000000000001b(arg0, arg1, arg2) {
     var v0 = Array.from(getArrayU16FromWasm0(arg0, arg1));
     // generic import `logSlice`: [Ref(Vector(U16)), F64] -> Unit
     logSlice(v0, arg2);
 }
-export function __wbindgen_generic_000000000000001a(arg0, arg1, arg2) {
+export function __wbindgen_generic_000000000000001c(arg0, arg1, arg2) {
     var v0 = Array.from(getArrayU16FromWasm0(arg0, arg1));
     // generic import `logSlice`: [Ref(Vector(U16)), U32] -> Unit
     logSlice(v0, arg2 >>> 0);
 }
-export function __wbindgen_generic_000000000000001b(arg0, arg1, arg2) {
+export function __wbindgen_generic_000000000000001d(arg0, arg1, arg2) {
     var v0 = getArrayJsValueFromWasm0(arg0, arg1);
     wasm.__wbindgen_free(arg0, arg1 * 4, 4);
     // generic import `logStrSlice`: [Ref(Vector(NamedExternref("string"))), U32] -> Unit
     logStrSlice(v0, arg2 >>> 0);
 }
-export function __wbindgen_generic_000000000000001c(arg0) {
+export function __wbindgen_generic_000000000000001e(arg0) {
     // generic import `log`: [F64] -> Unit
     log(arg0);
 }
-export function __wbindgen_generic_000000000000001d(arg0, arg1) {
+export function __wbindgen_generic_000000000000001f(arg0, arg1) {
+    // generic import `log`: [Ref(String)] -> Unit
+    log(getStringFromWasm0(arg0, arg1));
+}
+export function __wbindgen_generic_0000000000000020(arg0, arg1) {
     let deferred0_0;
     let deferred0_1;
     try {
@@ -286,121 +298,125 @@ export function __wbindgen_generic_000000000000001d(arg0, arg1) {
         wasm.__wbindgen_free(deferred0_0, deferred0_1, 1);
     }
 }
-export function __wbindgen_generic_000000000000001e(arg0) {
+export function __wbindgen_generic_0000000000000021(arg0) {
     // generic import `log`: [U32] -> Unit
     log(arg0 >>> 0);
 }
-export function __wbindgen_generic_000000000000001f(arg0) {
+export function __wbindgen_generic_0000000000000022(arg0) {
     // generic import `console.log`: [U32] -> Unit
     console.log(arg0 >>> 0);
 }
-export function __wbindgen_generic_0000000000000020(arg0, arg1) {
+export function __wbindgen_generic_0000000000000023(arg0, arg1) {
     // generic import `mix`: [U32, F64] -> Unit
     mix(arg0 >>> 0, arg1);
 }
-export function __wbindgen_generic_0000000000000021(arg0, arg1) {
+export function __wbindgen_generic_0000000000000024(arg0, arg1) {
     // generic import `mix`: [U32, U32] -> Unit
     mix(arg0 >>> 0, arg1 >>> 0);
 }
-export function __wbindgen_generic_0000000000000022(arg0) {
+export function __wbindgen_generic_0000000000000025(arg0) {
     // generic import `new`: [F64] -> Externref
     const ret = new Widget(arg0);
     return ret;
 }
-export function __wbindgen_generic_0000000000000023(arg0) {
+export function __wbindgen_generic_0000000000000026(arg0) {
     // generic import `new`: [U32] -> Externref
     const ret = new Widget(arg0 >>> 0);
     return ret;
 }
-export function __wbindgen_generic_0000000000000024(arg0) {
+export function __wbindgen_generic_0000000000000027(arg0) {
     // generic import `of`: [F64] -> Externref
     const ret = Widget.of(arg0);
     return ret;
 }
-export function __wbindgen_generic_0000000000000025(arg0) {
+export function __wbindgen_generic_0000000000000028(arg0) {
     // generic import `of`: [U32] -> Externref
     const ret = Widget.of(arg0 >>> 0);
     return ret;
 }
-export function __wbindgen_generic_0000000000000026(arg0, arg1) {
+export function __wbindgen_generic_0000000000000029(arg0, arg1) {
     // generic import `pair`: [U32, F64] -> Unit
     pair(arg0 >>> 0, arg1);
 }
-export function __wbindgen_generic_0000000000000027(arg0, arg1) {
+export function __wbindgen_generic_000000000000002a(arg0, arg1) {
     // generic import `set`: [Ref(Externref), F64] -> Unit
     arg0.set(arg1);
 }
-export function __wbindgen_generic_0000000000000028(arg0, arg1) {
+export function __wbindgen_generic_000000000000002b(arg0, arg1) {
     // generic import `set`: [Ref(Externref), U32] -> Unit
     arg0.set(arg1 >>> 0);
 }
-export function __wbindgen_generic_0000000000000029(arg0, arg1, arg2, arg3) {
+export function __wbindgen_generic_000000000000002c(arg0, arg1, arg2, arg3) {
     // generic import `set_indexed`: [Ref(Externref), Ref(String), U32] -> Unit
     arg0[getStringFromWasm0(arg1, arg2)] = arg3 >>> 0;
 }
-export function __wbindgen_generic_000000000000002a(arg0, arg1) {
+export function __wbindgen_generic_000000000000002d(arg0, arg1) {
     // generic import `set_tag`: [Ref(Externref), F64] -> Unit
     arg0.tag = arg1;
 }
-export function __wbindgen_generic_000000000000002b(arg0, arg1) {
+export function __wbindgen_generic_000000000000002e(arg0, arg1) {
     // generic import `set_value`: [Ref(Externref), U32] -> Unit
     arg0.value = arg1 >>> 0;
 }
-export function __wbindgen_generic_000000000000002c(arg0, arg1) {
+export function __wbindgen_generic_000000000000002f(arg0, arg1, arg2) {
+    // generic import `spreadGeneric`: [U32, Ref(Slice(U32))] -> Unit
+    spreadGeneric(arg0 >>> 0, ...(getArrayU32FromWasm0(arg1, arg2)));
+}
+export function __wbindgen_generic_0000000000000030(arg0, arg1) {
     var v0 = getArrayU32FromWasm0(arg0, arg1).slice();
     wasm.__wbindgen_free(arg0, arg1 * 4, 4);
     // generic import `sumItems`: [Vector(U32)] -> F64
     const ret = sumItems(v0);
     return ret;
 }
-export function __wbindgen_generic_000000000000002d(arg0) {
+export function __wbindgen_generic_0000000000000031(arg0) {
     // generic import `tag`: [Ref(Externref)] -> U32
     const ret = arg0.tag;
     return ret;
 }
-export function __wbindgen_generic_000000000000002e() { return handleError(function (arg0) {
+export function __wbindgen_generic_0000000000000032() { return handleError(function (arg0) {
     // generic import `tryGet`: [U32] -> F64
     const ret = tryGet(arg0 >>> 0);
     return ret;
 }, arguments); }
-export function __wbindgen_generic_000000000000002f() { return handleError(function (arg0) {
+export function __wbindgen_generic_0000000000000033() { return handleError(function (arg0) {
     // generic import `tryGet`: [U32] -> U32
     const ret = tryGet(arg0 >>> 0);
     return ret;
 }, arguments); }
-export function __wbindgen_generic_0000000000000030() { return handleError(function (arg0) {
+export function __wbindgen_generic_0000000000000034() { return handleError(function (arg0) {
     // generic import `tryLog`: [U32] -> Unit
     tryLog(arg0 >>> 0);
 }, arguments); }
-export function __wbindgen_generic_0000000000000031(arg0) {
+export function __wbindgen_generic_0000000000000035(arg0) {
     // generic import `value`: [Ref(Externref)] -> F64
     const ret = arg0.value;
     return ret;
 }
-export function __wbindgen_generic_0000000000000032(arg0) {
+export function __wbindgen_generic_0000000000000036(arg0) {
     // generic import `value`: [Ref(Externref)] -> U32
     const ret = arg0.value;
     return ret;
 }
-export function __wbindgen_generic_0000000000000033(arg0, arg1, arg2) {
+export function __wbindgen_generic_0000000000000037(arg0, arg1, arg2) {
     var v0 = getArrayU32FromWasm0(arg1, arg2).slice();
     wasm.__wbindgen_free(arg1, arg2 * 4, 4);
     // generic import `variadicLog`: [U32, Vector(U32)] -> Unit
     variadicLog(arg0 >>> 0, ...(v0));
 }
-export function __wbindgen_generic_0000000000000034(arg0, arg1, arg2) {
+export function __wbindgen_generic_0000000000000038(arg0, arg1, arg2) {
     try {
         var state0 = {a: arg0, b: arg1};
         var cb0 = (arg0) => {
             const a = state0.a;
             state0.a = 0;
             try {
-                return wasm_bindgen_0000000000000035___convert__closures_____invoke___u32______true_(a, state0.b, arg0);
+                return wasm_bindgen_0000000000000039___convert__closures_____invoke___u32______true_(a, state0.b, arg0);
             } finally {
                 state0.a = a;
             }
         };
-        // generic import `withCallback`: [RefMut(Function(Function { arguments: [U32], shim_idx: 60, ret: Unit, inner_ret: Some(Unit) })), U32] -> Unit
+        // generic import `withCallback`: [RefMut(Function(Function { arguments: [U32], shim_idx: 64, ret: Unit, inner_ret: Some(Unit) })), U32] -> Unit
         withCallback(cb0, arg2 >>> 0);
     } finally {
         state0.a = 0;
@@ -415,37 +431,37 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
 }
-function wasm_bindgen_0000000000000035___convert__closures_____invoke___bool__true_(arg0, arg1) {
-    const ret = wasm.wasm_bindgen_0000000000000035___convert__closures_____invoke___bool__true_(arg0, arg1);
+function wasm_bindgen_0000000000000039___convert__closures_____invoke___bool__true_(arg0, arg1) {
+    const ret = wasm.wasm_bindgen_0000000000000039___convert__closures_____invoke___bool__true_(arg0, arg1);
     return ret !== 0;
 }
 
-function wasm_bindgen_0000000000000035___convert__closures_____invoke___wasm_bindgen_0000000000000035___JsValue__core_0000000000000037___result__Result_____wasm_bindgen_0000000000000035___JsError___true_(arg0, arg1, arg2) {
-    const ret = wasm.wasm_bindgen_0000000000000035___convert__closures_____invoke___wasm_bindgen_0000000000000035___JsValue__core_0000000000000037___result__Result_____wasm_bindgen_0000000000000035___JsError___true_(arg0, arg1, arg2);
+function wasm_bindgen_0000000000000039___convert__closures_____invoke___wasm_bindgen_0000000000000039___JsValue__core_000000000000003b___result__Result_____wasm_bindgen_0000000000000039___JsError___true_(arg0, arg1, arg2) {
+    const ret = wasm.wasm_bindgen_0000000000000039___convert__closures_____invoke___wasm_bindgen_0000000000000039___JsValue__core_000000000000003b___result__Result_____wasm_bindgen_0000000000000039___JsError___true_(arg0, arg1, arg2);
     if (ret[1]) {
         throw takeFromExternrefTable0(ret[0]);
     }
 }
 
-function wasm_bindgen_0000000000000035___convert__closures_____invoke___js_sys_0000000000000036___Function_fn_wasm_bindgen_0000000000000035___JsValue_____wasm_bindgen_0000000000000035___sys__Undefined___js_sys_0000000000000036___Function_fn_wasm_bindgen_0000000000000035___JsValue_____wasm_bindgen_0000000000000035___sys__Undefined_______true_(arg0, arg1, arg2, arg3) {
-    wasm.wasm_bindgen_0000000000000035___convert__closures_____invoke___js_sys_0000000000000036___Function_fn_wasm_bindgen_0000000000000035___JsValue_____wasm_bindgen_0000000000000035___sys__Undefined___js_sys_0000000000000036___Function_fn_wasm_bindgen_0000000000000035___JsValue_____wasm_bindgen_0000000000000035___sys__Undefined_______true_(arg0, arg1, arg2, arg3);
+function wasm_bindgen_0000000000000039___convert__closures_____invoke___js_sys_000000000000003a___Function_fn_wasm_bindgen_0000000000000039___JsValue_____wasm_bindgen_0000000000000039___sys__Undefined___js_sys_000000000000003a___Function_fn_wasm_bindgen_0000000000000039___JsValue_____wasm_bindgen_0000000000000039___sys__Undefined_______true_(arg0, arg1, arg2, arg3) {
+    wasm.wasm_bindgen_0000000000000039___convert__closures_____invoke___js_sys_000000000000003a___Function_fn_wasm_bindgen_0000000000000039___JsValue_____wasm_bindgen_0000000000000039___sys__Undefined___js_sys_000000000000003a___Function_fn_wasm_bindgen_0000000000000039___JsValue_____wasm_bindgen_0000000000000039___sys__Undefined_______true_(arg0, arg1, arg2, arg3);
 }
 
-function wasm_bindgen_0000000000000035___convert__closures_____invoke___u32______true_(arg0, arg1, arg2) {
-    wasm.wasm_bindgen_0000000000000035___convert__closures_____invoke___u32______true_(arg0, arg1, arg2);
+function wasm_bindgen_0000000000000039___convert__closures_____invoke___u32______true_(arg0, arg1, arg2) {
+    wasm.wasm_bindgen_0000000000000039___convert__closures_____invoke___u32______true_(arg0, arg1, arg2);
 }
 
-function wasm_bindgen_0000000000000035___convert__closures_____invoke___u32__core_0000000000000037___result__Result_____wasm_bindgen_0000000000000035___JsError___true_(arg0, arg1, arg2) {
-    const ret = wasm.wasm_bindgen_0000000000000035___convert__closures_____invoke___u32__core_0000000000000037___result__Result_____wasm_bindgen_0000000000000035___JsError___true_(arg0, arg1, arg2);
+function wasm_bindgen_0000000000000039___convert__closures_____invoke___u32__core_000000000000003b___result__Result_____wasm_bindgen_0000000000000039___JsError___true_(arg0, arg1, arg2) {
+    const ret = wasm.wasm_bindgen_0000000000000039___convert__closures_____invoke___u32__core_000000000000003b___result__Result_____wasm_bindgen_0000000000000039___JsError___true_(arg0, arg1, arg2);
     if (ret[1]) {
         throw takeFromExternrefTable0(ret[0]);
     }
 }
 
-function wasm_bindgen_0000000000000035___convert__closures_____invoke___alloc_0000000000000038___string__String__core_0000000000000037___result__Result_____wasm_bindgen_0000000000000035___JsError___true_(arg0, arg1, arg2) {
+function wasm_bindgen_0000000000000039___convert__closures_____invoke___alloc_000000000000003c___string__String__core_000000000000003b___result__Result_____wasm_bindgen_0000000000000039___JsError___true_(arg0, arg1, arg2) {
     const ptr0 = passStringToWasm0(arg2, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.wasm_bindgen_0000000000000035___convert__closures_____invoke___alloc_0000000000000038___string__String__core_0000000000000037___result__Result_____wasm_bindgen_0000000000000035___JsError___true_(arg0, arg1, ptr0, len0);
+    const ret = wasm.wasm_bindgen_0000000000000039___convert__closures_____invoke___alloc_000000000000003c___string__String__core_000000000000003b___result__Result_____wasm_bindgen_0000000000000039___JsError___true_(arg0, arg1, ptr0, len0);
     if (ret[1]) {
         throw takeFromExternrefTable0(ret[0]);
     }
@@ -526,6 +542,11 @@ function debugString(val) {
     return className;
 }
 
+function getArrayF64FromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    return getFloat64ArrayMemory0().subarray(ptr / 8, ptr / 8 + len);
+}
+
 function getArrayJsValueFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     const mem = getDataViewMemory0();
@@ -553,6 +574,14 @@ function getDataViewMemory0() {
         cachedDataViewMemory0 = new DataView(wasm.memory.buffer);
     }
     return cachedDataViewMemory0;
+}
+
+let cachedFloat64ArrayMemory0 = null;
+function getFloat64ArrayMemory0() {
+    if (cachedFloat64ArrayMemory0 === null || cachedFloat64ArrayMemory0.byteLength === 0) {
+        cachedFloat64ArrayMemory0 = new Float64Array(wasm.memory.buffer);
+    }
+    return cachedFloat64ArrayMemory0;
 }
 
 function getStringFromWasm0(ptr, len) {
