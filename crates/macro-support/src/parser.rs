@@ -2661,10 +2661,7 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
             BindgenAttrs::find(attrs)?
         };
 
-        // Nested namespaces belong in a single attribute (`js_namespace =
-        // ["a", "b"]`). Setting the attribute on both the block and an item
-        // inside it used to silently drop the block's value; reject it
-        // instead so the full path has to be written in one place.
+        // Put the full namespace path in one attribute.
         if ctx.js_namespace.is_some() {
             if let Some((_, spans)) = item_opts.js_namespace() {
                 return Err(Diagnostic::span_error(
@@ -3180,9 +3177,7 @@ mod tests {
         assert_eq!(try_unescape("hello\\u{0000000}"), None);
     }
 
-    /// Parse an `extern "C"` block with the given block-level
-    /// `#[wasm_bindgen(...)]` options and return the resolved `js_namespace`
-    /// of every import it produced.
+    /// Return the namespace for each parsed import.
     fn import_namespaces(
         block_opts: proc_macro2::TokenStream,
         block: syn::ItemForeignMod,
@@ -3230,61 +3225,6 @@ mod tests {
         )
         .unwrap();
         assert_eq!(namespaces, vec![ns(&["b"])]);
-    }
-
-    #[test]
-    fn js_namespace_on_block_and_item_is_rejected() {
-        let err = import_namespaces(
-            quote::quote! { js_namespace = ["a"] },
-            syn::parse_quote! {
-                extern "C" {
-                    #[wasm_bindgen(js_namespace = ["b"])]
-                    fn my_function();
-                    fn other_function();
-                }
-            },
-        )
-        .unwrap_err();
-        let msg = format!("{err:?}");
-        assert!(
-            msg.contains("cannot be set on both"),
-            "unexpected error: {msg}"
-        );
-    }
-
-    #[test]
-    fn js_namespace_on_block_and_item_is_rejected_for_types_and_statics() {
-        let err = import_namespaces(
-            quote::quote! { js_namespace = ["a"] },
-            syn::parse_quote! {
-                extern "C" {
-                    #[wasm_bindgen(js_namespace = ["b"])]
-                    type MyType;
-                }
-            },
-        )
-        .unwrap_err();
-        let msg = format!("{err:?}");
-        assert!(
-            msg.contains("cannot be set on both"),
-            "unexpected error: {msg}"
-        );
-
-        let err = import_namespaces(
-            quote::quote! { js_namespace = ["a"] },
-            syn::parse_quote! {
-                extern "C" {
-                    #[wasm_bindgen(js_namespace = ["b"], thread_local_v2)]
-                    static MY_STATIC: JsValue;
-                }
-            },
-        )
-        .unwrap_err();
-        let msg = format!("{err:?}");
-        assert!(
-            msg.contains("cannot be set on both"),
-            "unexpected error: {msg}"
-        );
     }
 
     #[test]

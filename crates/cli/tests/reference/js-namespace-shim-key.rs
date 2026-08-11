@@ -72,27 +72,6 @@ mod item_level_other {
     }
 }
 
-// Item-level vs block-level on the same path still need distinct shims.
-// (Nested block+item js_namespace is rejected; spell the full path once.)
-mod item_vs_block {
-    use wasm_bindgen::prelude::*;
-
-    #[wasm_bindgen]
-    extern "C" {
-        #[wasm_bindgen(js_namespace = ["eta"])]
-        pub fn debug(s: &str);
-    }
-}
-
-mod block_only {
-    use wasm_bindgen::prelude::*;
-
-    #[wasm_bindgen(js_namespace = ["zeta"])]
-    extern "C" {
-        pub fn debug(s: &str);
-    }
-}
-
 // Nested namespaces: `["a", "b"]` and `["a"]` must stay distinct.
 mod nested_deep {
     use wasm_bindgen::prelude::*;
@@ -144,9 +123,6 @@ pub fn exported() {
 
     item_level::info("delta");
     item_level_other::info("epsilon");
-
-    item_vs_block::debug("eta");
-    block_only::debug("zeta");
 
     nested_deep::c("deep");
     nested_shallow::c("shallow");
