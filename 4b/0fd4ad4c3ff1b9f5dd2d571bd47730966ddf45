@@ -1,0 +1,31 @@
+crates/cli/tests/reference/generic-import.bg.js
+  s_a409d33af635c5::t_2a696ac834b5e4 52,81,127-128,132-133,137-138,228-236,244,253,257,261,265,270,275,281,285-289,301,305,309,313,317,322,327,332,337,341,345,349,353,357,361-365,372,377,382,387,391,396,401,407,414,419,434-435,439-440,446-447,450-451,454-455,461,464,545-549,579-586
+crates/cli/tests/reference/generic-import.rs
+  s_c3d611c0c39aab::t_fe995acf7115aa 52-62,289-292,306-309
+crates/cli/tests/reference/generic-import.wat
+  s_a409d33af635c5::t_79f88a7bd91dc4 80-101,104-117,123-128,138-154
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "4b0fd4ad4c3ff1b9f5dd2d571bd47730966ddf45",
+  "prompts": {},
+  "sessions": {
+    "s_a409d33af635c5": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_011ba6251ffeZ0ByRd00fWr7Pq",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    },
+    "s_c3d611c0c39aab": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_00dcf8d62ffeN67rBCjNMsyMPe",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
