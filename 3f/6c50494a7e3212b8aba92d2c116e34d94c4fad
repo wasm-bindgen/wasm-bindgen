@@ -1,0 +1,35 @@
+crates/js-sys/src/futures/jspi.rs
+  s_84d29a51f15e6e::t_b6641ac489e3c9 13-18,49-55,62-67,100-271
+crates/cli-support/src/js/mod.rs
+  s_84d29a51f15e6e::t_65b9dd4ae41e60 6542-6561
+guide/src/reference/jspi.md
+  s_84d29a51f15e6e::t_b6831a0aa9ecb2 151-152
+  s_84d29a51f15e6e::t_19431666bb846a 160-162
+  s_84d29a51f15e6e::t_46d76750cd61c0 156
+  s_84d29a51f15e6e::t_213203a6ab3f1b 153-155
+  s_84d29a51f15e6e::t_d55f922088c5f5 157-159
+  s_84d29a51f15e6e::t_a39d5115c4ff34 163-165
+crates/macro-support/src/codegen.rs
+  s_84d29a51f15e6e::t_b14d00d8602566 932-934
+  s_84d29a51f15e6e::t_f364f327a3475b 935-937
+  s_84d29a51f15e6e::t_740974ac6f2cc3 931
+  s_84d29a51f15e6e::t_4dae12bbc3c3d7 938-940
+crates/macro-support/src/parser.rs
+  s_84d29a51f15e6e::t_ec4a639f865530 1608-1609
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "3f6c50494a7e3212b8aba92d2c116e34d94c4fad",
+  "prompts": {},
+  "sessions": {
+    "s_84d29a51f15e6e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_00da284edffemDNQI0Emqn4qwK",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
