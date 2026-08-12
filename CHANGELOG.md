@@ -9,6 +9,12 @@
   info to a separate `*_bg.debug.wasm` file. Use `--debug-info-url` to set
   the recorded URL for the debug info. [#5279](https://github.com/wasm-bindgen/wasm-bindgen/pull/5279)
 
+* `generic_per_mono` imports now support argument-position `impl Trait`
+  (including nested, e.g. `Vec<impl Trait>`), which is desugared into a
+  synthesized named type parameter with the same bound; see
+  [the guide](https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/generic_per_mono.html)
+  for the supported surface and the shapes that are rejected.
+
 * Added an experimental `--experimental-memory-discard` flag which replaces an
   `env.__wbindgen_memory_discard` function import with a local trampoline
   containing the `memory.discard` instruction from the memory-control
