@@ -1106,6 +1106,16 @@ impl<'a>
         }
         let assert_no_shim = opts.assert_no_shim().is_some();
         let suspending = opts.suspending().is_some();
+        if suspending && wasm.r#async {
+            if let Some(span) = opts.suspending() {
+                return Err(Diagnostic::span_error(
+                    *span,
+                    "`suspending` cannot be combined with `async`: a suspending \
+                     import returns the settled value directly, so declare a \
+                     plain `fn` with the resolved type as its return type",
+                ));
+            }
+        }
         if wasm.jspi {
             if let Some(span) = opts.jspi() {
                 return Err(Diagnostic::span_error(

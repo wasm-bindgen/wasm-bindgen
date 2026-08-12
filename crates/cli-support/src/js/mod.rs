@@ -6556,14 +6556,20 @@ addToLibrary({
             // presence proves nothing).
             Intrinsic::JspiSpawnPoll | Intrinsic::JspiSpawnFirst => {
                 assert_eq!(args.len(), 1);
-                if !self.globals.contains("let __wbg_jspi_task_poll_promising;") {
-                    self.global("let __wbg_jspi_task_poll_promising;");
-                }
+                // The promising cache variable must be its own library
+                // symbol on emscripten (module-scope `let`s aren't
+                // preserved there); the `intrinsic` helper handles both.
+                let cache = "__wbg_jspi_task_poll_promising";
+                let decl = if matches!(self.config.mode, OutputMode::Emscripten) {
+                    Cow::Borrowed("undefined")
+                } else {
+                    Cow::Owned(format!("let {cache};"))
+                };
+                self.intrinsic(Cow::Borrowed(cache), Some(cache), decl, &[]);
+                let trampoline = self.wasm_export_ref(crate::transforms::jspi::TASK_POLL_EXPORT);
                 format!(
                     "Promise.resolve().then(() => \
-                     (__wbg_jspi_task_poll_promising ??= \
-                     WebAssembly.promising(wasm.{}))({}))",
-                    crate::transforms::jspi::TASK_POLL_EXPORT,
+                     ({cache} ??= WebAssembly.promising({trampoline}))({}))",
                     args[0]
                 )
             }
