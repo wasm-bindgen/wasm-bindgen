@@ -15,6 +15,10 @@
 
 ### Fixed
 
+* Fixed `js_namespace` exports missing from the bundler target's entry module
+  re-export list, making namespaces unreachable when importing the package.
+  [#5267](https://github.com/wasm-bindgen/wasm-bindgen/issues/5267)
+
 ### Removed
 
 ## [0.2.127](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.126...0.2.127)
