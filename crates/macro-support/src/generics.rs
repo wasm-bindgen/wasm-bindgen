@@ -346,6 +346,37 @@ pub(crate) fn references_generic_param(ty: &syn::Type, generic_names: &Vec<&Iden
     visitor.found
 }
 
+/// Visitor that finds the first `impl Trait` type appearing anywhere within a
+/// type, including when nested inside other types (e.g. `&impl Trait`,
+/// `Vec<impl Trait>`).
+struct ImplTraitVisitor<'ast> {
+    found: Option<&'ast syn::TypeImplTrait>,
+}
+
+impl<'ast> Visit<'ast> for ImplTraitVisitor<'ast> {
+    fn visit_type_impl_trait(&mut self, i: &'ast syn::TypeImplTrait) {
+        if self.found.is_none() {
+            self.found = Some(i);
+        }
+        // Keep recursing in case a bound itself nests another `impl Trait`
+        // (not legal today, but cheap to keep general).
+        syn::visit::visit_type_impl_trait(self, i);
+    }
+}
+
+/// Returns the first `impl Trait` type found anywhere within `ty`, if any.
+///
+/// Argument-position `impl Trait` desugars to an anonymous generic type
+/// parameter, so it never shows up in `fn.generics` — there is no name for it
+/// to be declared under. This lets callers give it its own diagnostic instead
+/// of falling through to a "requires at least one type parameter" check,
+/// which would be misleading: there *is* one, it's just anonymous.
+pub(crate) fn find_impl_trait(ty: &syn::Type) -> Option<&syn::TypeImplTrait> {
+    let mut visitor = ImplTraitVisitor { found: None };
+    visitor.visit_type(ty);
+    visitor.found
+}
+
 pub(crate) fn uses_lifetime_params(ty: &syn::Type, lifetime_params: &[&syn::Lifetime]) -> bool {
     !used_lifetimes_in_type(ty, lifetime_params).is_empty()
 }
@@ -1104,5 +1135,26 @@ mod tests {
             "Foo<Box<dyn Iterator<Item = T>>>",
             &["T"]
         ));
+    }
+
+    #[test]
+    fn find_impl_trait_detects_top_level_and_nested() {
+        use super::find_impl_trait;
+
+        let ty: syn::Type = syn::parse_quote!(impl Clone);
+        assert!(find_impl_trait(&ty).is_some());
+
+        let ty: syn::Type = syn::parse_quote!(&impl Clone);
+        assert!(find_impl_trait(&ty).is_some());
+
+        let ty: syn::Type = syn::parse_quote!(Vec<impl Clone>);
+        assert!(find_impl_trait(&ty).is_some());
+
+        // No `impl Trait` anywhere → nothing found.
+        let ty: syn::Type = syn::parse_quote!(Vec<T>);
+        assert!(find_impl_trait(&ty).is_none());
+
+        let ty: syn::Type = syn::parse_quote!(dyn Clone);
+        assert!(find_impl_trait(&ty).is_none());
     }
 }

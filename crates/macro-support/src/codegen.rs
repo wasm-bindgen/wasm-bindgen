@@ -2663,6 +2663,25 @@ impl ast::ImportFunction {
         };
 
         // --- Generic-parameter guards (opt-in path, so bailing is safe) ---
+        //
+        // `impl Trait` in argument position desugars to an anonymous generic
+        // type parameter, so a function like `fn f(x: impl Clone)` genuinely
+        // has one — it just has no name, and so never shows up in
+        // `self.generics`. Check for it before the "at least one type
+        // parameter" guard below, which would otherwise fire for exactly this
+        // shape with a misleading message (there *is* a type parameter).
+        // Per-mono codegen has no shim slot for an anonymous parameter yet,
+        // so this stays unsupported, just with its own diagnostic.
+        for arg in &self.function.arguments {
+            if let Some(impl_trait) = generics::find_impl_trait(&arg.pat_type.ty) {
+                bail_span!(
+                    impl_trait,
+                    "generic_per_mono does not support `impl Trait` in argument position yet; \
+                     name the type parameter explicitly (e.g. `fn f<T: Trait>(x: T)`) or use \
+                     the type-erasure generic path instead"
+                );
+            }
+        }
         let type_params: Vec<&syn::Ident> =
             self.generics.type_params().map(|tp| &tp.ident).collect();
         if type_params.is_empty() {
