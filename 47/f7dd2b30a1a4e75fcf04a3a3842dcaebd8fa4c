@@ -1,0 +1,23 @@
+examples/jspi-fetch-streams/Cargo.toml
+  s_794ddcb24bfbd6::t_ad9062487cf917 12
+examples/jspi-opfs/Cargo.toml
+  s_794ddcb24bfbd6::t_80168563ff7855 12
+examples/jspi/Cargo.toml
+  s_794ddcb24bfbd6::t_8779b9a2a92eb8 12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "47f7dd2b30a1a4e75fcf04a3a3842dcaebd8fa4c",
+  "prompts": {},
+  "sessions": {
+    "s_794ddcb24bfbd6": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_008e3a990ffeTmlniZgjGGWUHR",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
