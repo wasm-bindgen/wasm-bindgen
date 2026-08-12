@@ -20,6 +20,9 @@
 //! | `opfs_has(path) → bool` | `true` if the file exists |
 //! | `opfs_delete(path)` | delete the file at `path` |
 
+// JSPI is experimental: acknowledge the #[wasm_bindgen(jspi)]/(suspending) status warning.
+#![allow(deprecated)]
+
 use js_sys::futures::jspi::block_on_promise;
 use wasm_bindgen::prelude::*;
 use web_sys::{

@@ -29,6 +29,9 @@
 //!
 //! See [`index.html`](../index.html) for the full setup and live demo.
 
+// JSPI is experimental: acknowledge the #[wasm_bindgen(jspi)]/(suspending) status warning.
+#![allow(deprecated)]
+
 use js_sys::Promise;
 use wasm_bindgen::prelude::*;
 
