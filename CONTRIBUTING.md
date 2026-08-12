@@ -27,7 +27,7 @@ To inspect failed generated tests for `just test-wasm-bindgen`, set `WASM_BINDGE
 
 Update fixtures:
 
-- `just test-cli-overwrite` - Run CLI tests overwriting reference tests
+- `just test-cli-overwrite` - Run CLI tests overwriting reference tests (must be run with the latest `stable` Rust toolchain, matching CI, or you will get spurious unrelated diffs)
 - `just test-ui-overwrite` - Overwrite UI test outputs
 
 ## Release Process
