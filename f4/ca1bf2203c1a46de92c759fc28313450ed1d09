@@ -1,0 +1,23 @@
+examples/jspi-fetch-streams/src/lib.rs
+  s_794ddcb24bfbd6::t_07320e7ad4292d 24-26
+examples/jspi-opfs/src/lib.rs
+  s_794ddcb24bfbd6::t_f3d4d98d44bba8 23-25
+examples/jspi/src/lib.rs
+  s_794ddcb24bfbd6::t_c0b444dd86912a 32-34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "f4ca1bf2203c1a46de92c759fc28313450ed1d09",
+  "prompts": {},
+  "sessions": {
+    "s_794ddcb24bfbd6": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_008e3a990ffeTmlniZgjGGWUHR",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
