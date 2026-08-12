@@ -233,7 +233,7 @@ setDot(reqDot, supportsRequestStreaming ? 'ok' : 'dim');
 
 let ready = false;
 if (!jspiOk) {
-    err('WebAssembly.Suspending not available — Chrome 137+, Firefox 150+, Safari 18.4+ required.');
+    err('WebAssembly.Suspending not available — Chrome 137+, Firefox 153+, or Safari Technology Preview 238+ required.');
 } else {
     await init();
     setDot(wasmDot, 'ok');
@@ -259,7 +259,7 @@ document.getElementById('btn-fetch-stream').onclick = () => guard(async () => {
 // ── Demo ②: read a JavaScript ReadableStream from Rust ───────────────────────
 
 document.getElementById('btn-read-stream').onclick = () => guard(async () => {
-    // Build a synthetic stream with 3 chunks of known sizes: 5 + 8 + 3 = 16 bytes.
+    // Build a synthetic stream with 3 chunks of known sizes: 5 + 8 + 5 = 18 bytes.
     const payloads = [
         new Uint8Array([0x52, 0x75, 0x73, 0x74, 0x20]),       // "Rust "  (5 B)
         new Uint8Array([0x2b, 0x20, 0x4a, 0x53, 0x50, 0x49, 0x20, 0x3d]), // "+ JSPI =" (8 B)

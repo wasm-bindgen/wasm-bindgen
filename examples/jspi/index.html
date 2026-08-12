@@ -52,9 +52,9 @@ async function run() {
         err("");
         err("Required browsers:");
         err("  • Chrome 137+  (enabled by default; 119–136 behind a flag)");
-        err("  • Firefox 150+  →  set javascript.options.wasm_js_promise_integration");
-        err("                      to true in about:config");
-        err("  • Safari 18.4+");
+        err("  • Firefox 153+  (150–152: set javascript.options.wasm_js_promise_integration");
+        err("                      to true in about:config)");
+        err("  • Safari Technology Preview 238+ (no stable Safari release yet)");
         return;
     }
     log("✓  WebAssembly.Suspending available");
@@ -114,9 +114,8 @@ async function run() {
     // every level on the way back up.
     //
     // This validates that __stack_pointer is correctly restored before ANY Rust
-    // code runs after a suspension — including the Vec::push inside
-    // block_on_promise's own release_id() call and the explicit allocations in
-    // the user code.  With a wrong SP those allocations would corrupt memory.
+    // code runs after a suspension — the explicit allocations at every level
+    // of the return path would corrupt memory with a wrong SP.
     //
     // Expected: deep_alloc(N) = 1000 + N*(N+1)/2  →  deep_alloc(20) = 1210
     log("Demo 4: deep recursion + post-resume allocation (deep_alloc(20)) …");
