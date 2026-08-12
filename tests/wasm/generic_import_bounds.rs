@@ -66,6 +66,18 @@ extern "C" {
     where
         U: Copy;
 
+    // Argument-position `impl Trait`: desugars into a synthesized named type
+    // parameter with the same bound, so it exercises the identical
+    // bound-carrying machinery as `record_inline` above, just declared the
+    // sugared way with no named type parameter of its own.
+    #[wasm_bindgen(generic_per_mono, js_name = record)]
+    fn record_impl_trait(x: impl Copy + Clone);
+
+    // `impl Trait` mixed with a real, named, bounded type parameter in the
+    // same signature.
+    #[wasm_bindgen(generic_per_mono, js_name = sum)]
+    fn sum_impl_trait_mixed<U: Copy>(a: impl Copy, b: U) -> f64;
+
     // The bound's associated type appears in argument and return position, so
     // the bound has to reach the shim for `T::Wire`'s ABI to resolve.
     #[wasm_bindgen(generic_per_mono, js_name = echo)]
@@ -156,6 +168,20 @@ fn generic_import_where_bound() {
 fn generic_import_inline_and_where_bounds() {
     assert_eq!(sum_bounded(2u32, 3u32), 5.0);
     assert_eq!(sum_bounded(2.5f64, 4u8), 6.5);
+}
+
+#[wasm_bindgen_test]
+fn generic_import_impl_trait_bound() {
+    let _ = take_log();
+    record_impl_trait(21u32);
+    record_impl_trait(22.5f64);
+    assert_eq!(take_log(), "21,22.5");
+}
+
+#[wasm_bindgen_test]
+fn generic_import_impl_trait_mixed_with_named_bound() {
+    assert_eq!(sum_impl_trait_mixed(2u32, 3u32), 5.0);
+    assert_eq!(sum_impl_trait_mixed(2.5f64, 4u8), 6.5);
 }
 
 #[wasm_bindgen_test]

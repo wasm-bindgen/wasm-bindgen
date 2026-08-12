@@ -5,6 +5,12 @@
 
 ### Added
 
+* `generic_per_mono` imports now support argument-position `impl Trait`
+  (including nested, e.g. `Vec<impl Trait>`), which is desugared into a
+  synthesized named type parameter with the same bound; see
+  [the guide](https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/generic_per_mono.html)
+  for the supported surface and the shapes that are rejected.
+
 * Added sixteen concrete `impl IntoWasmAbi for &T` impls, one per built-in
   scalar type. `&T` arguments where `T` is a scalar are now accepted in
   imported function signatures; previously only `&JsValue` and the concrete

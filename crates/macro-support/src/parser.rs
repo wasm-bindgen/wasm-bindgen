@@ -1084,7 +1084,17 @@ impl<'a>
         // (raised in codegen): there the user named a specific function and the
         // request cannot be honoured, so silence would hide a real mistake.
         let fn_generic_per_mono = opts.generic_per_mono().is_some();
-        let is_generic = self.sig.generics.type_params().next().is_some();
+        // A named type parameter isn't the only way a signature is generic:
+        // argument-position `impl Trait` desugars to an anonymous one that
+        // never appears in `self.sig.generics`, so it has to be checked for
+        // separately, or a bare-`impl Trait` function would look non-generic
+        // to the block-level flag above (despite `generic_per_mono` fully
+        // supporting it; see `codegen::try_to_tokens_generic`).
+        let is_generic = self.sig.generics.type_params().next().is_some()
+            || self.sig.inputs.iter().any(|arg| match arg {
+                syn::FnArg::Typed(pat_type) => crate::generics::has_impl_trait(&pat_type.ty),
+                syn::FnArg::Receiver(_) => false,
+            });
         let generic_per_mono = fn_generic_per_mono || (block_generic_per_mono && is_generic);
 
         // Both of the following are rejected here rather than in cli-support so

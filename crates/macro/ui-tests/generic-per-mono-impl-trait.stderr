@@ -1,0 +1,90 @@
+error[E0277]: the trait bound `u32: Marker` is not satisfied
+  --> ui-tests/generic-per-mono-impl-trait.rs:38:21
+   |
+38 |     bare_impl_trait(1u32);
+   |     --------------- ^^^^ the trait `Marker` is not implemented for `u32`
+   |     |
+   |     required by a bound introduced by this call
+   |
+help: this trait has no implementations, consider adding one
+  --> ui-tests/generic-per-mono-impl-trait.rs:10:1
+   |
+10 | trait Marker {}
+   | ^^^^^^^^^^^^
+note: required by a bound in `bare_impl_trait`
+  --> ui-tests/generic-per-mono-impl-trait.rs:18:32
+   |
+18 |     fn bare_impl_trait(x: impl Marker);
+   |                                ^^^^^^ required by this bound in `bare_impl_trait`
+
+error[E0277]: the trait bound `u32: Marker` is not satisfied
+  --> ui-tests/generic-per-mono-impl-trait.rs:42:32
+   |
+42 |     impl_trait_with_type_param(1u32, 2u32);
+   |     -------------------------- ^^^^ the trait `Marker` is not implemented for `u32`
+   |     |
+   |     required by a bound introduced by this call
+   |
+help: this trait has no implementations, consider adding one
+  --> ui-tests/generic-per-mono-impl-trait.rs:10:1
+   |
+10 | trait Marker {}
+   | ^^^^^^^^^^^^
+note: required by a bound in `impl_trait_with_type_param`
+  --> ui-tests/generic-per-mono-impl-trait.rs:22:46
+   |
+22 |     fn impl_trait_with_type_param<T>(x: impl Marker, y: T);
+   |                                              ^^^^^^ required by this bound in `impl_trait_with_type_param`
+
+error[E0277]: the trait bound `u32: Marker` is not satisfied
+  --> ui-tests/generic-per-mono-impl-trait.rs:46:23
+   |
+46 |     nested_impl_trait(vec![1u32], 2u32);
+   |     ----------------- ^^^^^^^^^^ the trait `Marker` is not implemented for `u32`
+   |     |
+   |     required by a bound introduced by this call
+   |
+help: this trait has no implementations, consider adding one
+  --> ui-tests/generic-per-mono-impl-trait.rs:10:1
+   |
+10 | trait Marker {}
+   | ^^^^^^^^^^^^
+note: required by a bound in `nested_impl_trait`
+  --> ui-tests/generic-per-mono-impl-trait.rs:26:41
+   |
+26 |     fn nested_impl_trait<T>(x: Vec<impl Marker>, y: T);
+   |                                         ^^^^^^ required by this bound in `nested_impl_trait`
+
+error[E0277]: the trait bound `u32: Marker` is not satisfied
+  --> ui-tests/generic-per-mono-impl-trait.rs:50:25
+   |
+50 |     two_impl_trait_args(1u32, 2u32);
+   |     ------------------- ^^^^ the trait `Marker` is not implemented for `u32`
+   |     |
+   |     required by a bound introduced by this call
+   |
+help: this trait has no implementations, consider adding one
+  --> ui-tests/generic-per-mono-impl-trait.rs:10:1
+   |
+10 | trait Marker {}
+   | ^^^^^^^^^^^^
+note: required by a bound in `two_impl_trait_args`
+  --> ui-tests/generic-per-mono-impl-trait.rs:31:36
+   |
+31 |     fn two_impl_trait_args(x: impl Marker, y: impl Iterator);
+   |                                    ^^^^^^ required by this bound in `two_impl_trait_args`
+
+error[E0277]: `u32` is not an iterator
+  --> ui-tests/generic-per-mono-impl-trait.rs:50:31
+   |
+50 |     two_impl_trait_args(1u32, 2u32);
+   |     -------------------       ^^^^ `u32` is not an iterator
+   |     |
+   |     required by a bound introduced by this call
+   |
+   = help: the trait `Iterator` is not implemented for `u32`
+note: required by a bound in `two_impl_trait_args`
+  --> ui-tests/generic-per-mono-impl-trait.rs:31:52
+   |
+31 |     fn two_impl_trait_args(x: impl Marker, y: impl Iterator);
+   |                                                    ^^^^^^^^ required by this bound in `two_impl_trait_args`
