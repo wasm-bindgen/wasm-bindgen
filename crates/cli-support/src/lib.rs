@@ -36,6 +36,7 @@ pub struct Bindgen {
     remove_name_section: bool,
     remove_producers_section: bool,
     omit_default_module_path: bool,
+    ts_typed_array_buffers: bool,
     emit_start: bool,
     externref: bool,
     multi_value: bool,
@@ -115,6 +116,7 @@ impl Bindgen {
             multi_value,
             encode_into: EncodeInto::Test,
             omit_default_module_path: true,
+            ts_typed_array_buffers: false,
             split_linked_modules: false,
             generate_reset_state: false,
             force_enable_abort_handler: false,
@@ -292,6 +294,11 @@ impl Bindgen {
 
     pub fn omit_default_module_path(&mut self, omit_default_module_path: bool) -> &mut Bindgen {
         self.omit_default_module_path = omit_default_module_path;
+        self
+    }
+
+    pub fn ts_typed_array_buffers(&mut self, ts_typed_array_buffers: bool) -> &mut Bindgen {
+        self.ts_typed_array_buffers = ts_typed_array_buffers;
         self
     }
 
