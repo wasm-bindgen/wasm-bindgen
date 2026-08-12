@@ -107,9 +107,9 @@ pub fn run(
     // jspi-export treatment (the in-wasm fiber wrapper; the spawn
     // intrinsics' JS shims wrap it with `WebAssembly.promising`). When it
     // is not, the export is deleted so the module carries no JSPI
-    // instrumentation — a build on the `js_sys_unstable_apis` cfg that
-    // never touches `spawn_local` must keep running on engines without
-    // exnref/JSPI.
+    // instrumentation — a build with js-sys's `experimental-jspi` feature
+    // that never touches `spawn_local` must keep running on engines
+    // without exnref/JSPI.
     //
     // Usage is signalled by the presence of the `__wbindgen_jspi_spawn_first`
     // import (matched under the hashed shim rename applied during import
@@ -131,12 +131,30 @@ pub fn run(
         if spawn_used {
             jspi_exports.push(export_id);
         } else {
-            // The trampoline was the only root of the spawn machinery, so
-            // unexporting it is enough: the `gc_module_and_adapters` pass
-            // that follows this transform prunes the orphaned functions,
-            // the intrinsic import, and its adapters (so no JS shim is
-            // emitted either).
             module.exports.delete(export_id);
+            // Unexporting the trampoline orphans the poll path, but the wake
+            // path (waker vtable → `wake` → `__wbindgen_jspi_spawn_poll`)
+            // stays reachable through the vtable's element-segment entries
+            // whenever the function table is otherwise live, so GC alone
+            // cannot drop the spawn import. Replace any spawn imports with
+            // unreachable local stubs: they can never be called (waking
+            // requires a poll to have run), the imports disappear from the
+            // module, and `gc_module_and_adapters` then prunes their
+            // adapters so no JS shims are emitted either.
+            let spawn_imports = module
+                .imports
+                .iter()
+                .filter(|i| i.name.contains("__wbindgen_jspi_spawn_"))
+                .filter_map(|i| match i.kind {
+                    walrus::ImportKind::Function(f) => Some(f),
+                    _ => None,
+                })
+                .collect::<Vec<_>>();
+            for func in spawn_imports {
+                module.replace_imported_func(func, |(body, _)| {
+                    body.unreachable();
+                })?;
+            }
         }
     }
 

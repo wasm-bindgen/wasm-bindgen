@@ -3387,10 +3387,10 @@ fn run_jspi_test(name: &str, wasm_bindgen_args: &str, panic_unwind: bool, descri
 
                 [dependencies]
                 wasm-bindgen = {{ path = '{repo}' }}
-                js-sys = {{ path = '{repo}/crates/js-sys' }}
+                js-sys = {{ path = '{repo}/crates/js-sys', features = ['experimental-jspi'] }}
                 # Async jspi exports expand to the internal executor via the
                 # `wasm_bindgen_futures` path, like all async exports.
-                wasm-bindgen-futures = {{ path = '{repo}/crates/futures' }}
+                wasm-bindgen-futures = {{ path = '{repo}/crates/futures', features = ['experimental-jspi'] }}
 
                 [lib]
                 crate-type = ['cdylib']
@@ -3405,17 +3405,12 @@ fn run_jspi_test(name: &str, wasm_bindgen_args: &str, panic_unwind: bool, descri
         ),
     );
 
-    // `js_sys::futures::jspi` is gated behind the `js_sys_unstable_apis` cfg.
     if panic_unwind {
         project
             .cargo_cmd
             .env("RUSTUP_TOOLCHAIN", "nightly")
-            .env("RUSTFLAGS", "--cfg=js_sys_unstable_apis -Cpanic=unwind")
+            .env("RUSTFLAGS", "-Cpanic=unwind")
             .arg("-Zbuild-std=std,panic_unwind");
-    } else {
-        project
-            .cargo_cmd
-            .env("RUSTFLAGS", "--cfg=js_sys_unstable_apis");
     }
 
     let out_dir = project.wasm_bindgen(wasm_bindgen_args).unwrap();

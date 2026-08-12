@@ -1,4 +1,3 @@
-#![cfg(js_sys_unstable_apis)]
 //! # JSPI + OPFS Example
 //!
 //! Demonstrates using JSPI to call the normally-async
@@ -39,12 +38,10 @@ fn opfs_root() -> FileSystemDirectoryHandle {
 
     let global = js_sys::global(); // Object<JsValue>
     let navigator: JsValue = js_sys::Reflect::get(&global, &js_sys::JsString::from("navigator"))
-        .expect_throw("Reflect.get failed on global")
         .expect_throw("no navigator in global scope");
     let navigator_obj = navigator.unchecked_ref::<js_sys::Object>();
     let storage: web_sys::StorageManager =
         js_sys::Reflect::get(navigator_obj, &js_sys::JsString::from("storage"))
-            .expect_throw("Reflect.get failed on navigator")
             .expect_throw("no storage on navigator")
             .dyn_into()
             .expect_throw("expected StorageManager");

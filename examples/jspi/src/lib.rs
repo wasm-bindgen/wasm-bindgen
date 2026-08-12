@@ -1,4 +1,3 @@
-#![cfg(js_sys_unstable_apis)]
 //! # JSPI (JS Promise Integration) Example
 //!
 //! WebAssembly JSPI lets **non-async** Rust code suspend a WASM fiber while
@@ -49,9 +48,9 @@ use js_sys::futures::jspi::block_on_promise;
 #[wasm_bindgen(jspi)]
 pub fn do_sleep(ms: u32) {
     let promise = Promise::new(&mut |resolve, _reject| {
-        // `resolve` is a typed `Function<fn(T) -> Undefined>` when
-        // js_sys_unstable_apis is active; coerce to plain &Function for
-        // set_timeout_with_callback_and_timeout_and_arguments_0.
+        // Coerce to a plain `&Function` for
+        // set_timeout_with_callback_and_timeout_and_arguments_0 (under the
+        // js_sys_unstable_apis cfg `resolve` is a typed `Function<...>`).
         let resolve_fn: &js_sys::Function = wasm_bindgen::JsCast::unchecked_ref(&resolve);
         web_sys::window()
             .expect_throw("no window")
@@ -131,7 +130,7 @@ fn read_first(s: &[u8]) -> u8 {
 /// local — as the very first instructions after resume.  By the time any Rust
 /// instruction executes after `block_on_promise` returns, the whole stack is
 /// already correct — even after 20 nested frames and even when the very next
-/// operation (`release_id` → `Vec::push` → `malloc`) allocates from the heap.
+/// operation allocates from the heap.
 ///
 /// ## Expected return value
 ///
@@ -155,10 +154,8 @@ fn deep_alloc_inner(depth: u32) -> u32 {
         // Deepest frame: suspend the fiber.
         let promise = Promise::resolve(&JsValue::UNDEFINED);
         block_on_promise(&promise).unwrap_throw();
-        // First thing after resume: heap-allocate.  `block_on_promise` itself
-        // calls `release_id` → `Vec::push` internally, so the very first post-
-        // resume instruction is already an allocation.  This additional Vec
-        // is a second, explicit heap allocation at the deepest call depth.
+        // First thing after resume: an explicit heap allocation at the
+        // deepest call depth, exercising malloc against the restored SP.
         let v: Vec<u32> = vec![1000];
         v[0] // base value
     } else {

@@ -9,7 +9,7 @@ version = "0.0.0"
 crate-type = ["cdylib"]
 
 [dependencies]
-js-sys = { path = "../../crates/js-sys" }
+js-sys = { path = "../../crates/js-sys", features = ["experimental-jspi"] }
 wasm-bindgen = { path = "../../" }
 
 [dependencies.web-sys]

@@ -31,6 +31,10 @@ unsafe-eval = []
 # Pulls in `futures-util` directly so this keeps working under
 # `default-features = false`.
 futures-core-03-stream = ["dep:futures-util", "dep:futures-core"]
+# Enables the experimental JSPI (JS Promise Integration) runtime API:
+# `js_sys::futures::jspi` and the `WebAssembly.Suspending` / `promising`
+# bindings. Experimental and exempt from semver guarantees.
+experimental-jspi = []
 
 [dependencies]
 cfg-if = "1.0.0"

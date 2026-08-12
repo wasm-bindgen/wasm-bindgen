@@ -10,8 +10,11 @@ browser APIs from ordinary Rust code, with no `async` call chain required.
 > **Experimental.** JSPI support in wasm-bindgen is experimental and subject to
 > change. Using `#[wasm_bindgen(jspi)]` or `#[wasm_bindgen(suspending)]` emits
 > a compiler warning noting this status (silence it with `#[allow(deprecated)]`
-> once acknowledged), and the `js_sys::futures::jspi` runtime API is gated
-> behind the `js_sys_unstable_apis` cfg.
+> once acknowledged). The `js_sys::futures::jspi` runtime API is gated behind
+> the `experimental-jspi` Cargo feature on `js-sys` — and on
+> `wasm-bindgen-futures` for `#[wasm_bindgen(jspi)] async fn` exports, which
+> expand to `wasm_bindgen_futures::jspi::future_to_promise`. These features
+> are exempt from semver guarantees.
 
 ## Runtime support
 
@@ -233,6 +236,11 @@ on unwinding and to surface promise rejections as `Result` data. Every
 JSPI-capable engine ships both. Note that post-processing tools need EH
 enabled too (e.g. `wasm-opt --enable-exceptions`, or disable `wasm-opt` in
 `wasm-pack` builds).
+
+JSPI is not supported together with **threads/atomics** (shared memories):
+JSPI itself is a single-threaded proposal, and the fiber state the
+instrumentation maintains is per-instance. Building with both enabled is
+rejected by the CLI.
 
 ## Full example — OPFS file system
 

@@ -32,7 +32,7 @@
 
 extern crate alloc;
 
-#[cfg(js_sys_unstable_apis)]
+#[cfg(feature = "experimental-jspi")]
 pub mod jspi;
 
 use crate::Promise;

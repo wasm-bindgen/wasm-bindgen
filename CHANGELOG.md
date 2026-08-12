@@ -67,8 +67,9 @@
   of emscripten's own JSPI machinery); reference types and an
   exception-handling-capable engine are required (all JSPI engines qualify).
   The feature is experimental: using the attributes emits a compiler warning
-  noting the experimental status, and the `js_sys::futures::jspi` API is gated
-  behind the `js_sys_unstable_apis` cfg.
+  noting the experimental status, and the `js_sys::futures::jspi` runtime API
+  is gated behind the semver-exempt `experimental-jspi` Cargo feature on
+  `js-sys` (and on `wasm-bindgen-futures` for `jspi` async exports).
   [#5193](https://github.com/wasm-bindgen/wasm-bindgen/pull/5193)
 
 ### Changed
