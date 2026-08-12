@@ -90,18 +90,11 @@ impl GenericImportMeta {
     /// to tell a genuine shim-key collision apart from the same import simply
     /// being declared twice.
     ///
-    /// `AuxImport` derives neither `PartialEq` nor `Hash`, and adding them
-    /// would mean deriving them transitively across every payload type it
-    /// carries, so its `Debug` rendering stands in instead. That is sound
-    /// here: `AuxImport` and everything it holds derive `Debug` structurally,
-    /// so equal renderings mean structurally equal values. It is a comparison,
-    /// never a lookup key, so the cost is paid only on a key clash.
-    ///
     /// `display` is deliberately excluded. It is derived from the same data
     /// this identity already covers and exists purely for diagnostics.
-    fn identity(&self) -> (String, AdapterJsImportKind, bool, bool) {
+    fn identity(&self) -> (&AuxImport, AdapterJsImportKind, bool, bool) {
         (
-            format!("{:?}", self.aux_import),
+            &self.aux_import,
             self.adapter_kind,
             self.catch,
             self.variadic,
