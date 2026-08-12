@@ -1,0 +1,21 @@
+crates/cli-support/src/js/mod.rs
+  s_c3d611c0c39aab::t_47e61c87a5fb4a 6559-6569,6572
+crates/macro-support/src/parser.rs
+  s_c3d611c0c39aab::t_a756fb71c95cb5 1109-1118
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "4ddd75572716c25ffa7f8b590be302a339cc2786",
+  "prompts": {},
+  "sessions": {
+    "s_c3d611c0c39aab": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_00dcf8d62ffeN67rBCjNMsyMPe",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
