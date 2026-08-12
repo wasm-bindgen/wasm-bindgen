@@ -20,6 +20,12 @@
   declaration, which crashes emcc's acorn-optimizer under
   `-sMODULARIZE=instance`.
 
+* Setting `js_namespace` on both an `extern "C"` block and an item inside it
+  is now a hard error. Nested paths must be written in a single attribute,
+  e.g. `js_namespace = ["a", "b"]`. The previous behavior silently dropped
+  the block-level namespace.
+  [#4324](https://github.com/wasm-bindgen/wasm-bindgen/issues/4324)
+
 ### Fixed
 
 ### Removed

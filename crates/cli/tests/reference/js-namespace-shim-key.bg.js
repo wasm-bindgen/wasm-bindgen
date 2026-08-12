@@ -10,12 +10,6 @@ export function __wbg_c_27eb6c8c34a36e09(arg0, arg1) {
 export function __wbg_c_62f7c495c0da1f6c(arg0, arg1) {
     a.b.c(getStringFromWasm0(arg0, arg1));
 }
-export function __wbg_debug_8a4a9026c85569a7(arg0, arg1) {
-    zeta.debug(getStringFromWasm0(arg0, arg1));
-}
-export function __wbg_debug_feebc9df6d1ce7c8(arg0, arg1) {
-    eta.debug(getStringFromWasm0(arg0, arg1));
-}
 export function __wbg_info_219b4a73877b158f(arg0, arg1) {
     epsilon.info(getStringFromWasm0(arg0, arg1));
 }

@@ -38,8 +38,8 @@ function __wbg_get_imports() {
             const ret = arg0.get();
             return ret;
         },
-        __wbg_my_function_2652ada790ab5788: function() {
-            b.my_function();
+        __wbg_my_function_a1fb416215f1cd28: function() {
+            a.my_function();
         },
         __wbg_new_625e056221ff6a6e: function(arg0) {
             const ret = new _default(arg0);

@@ -11,7 +11,7 @@
   (import "./reference_test_bg.js" "__wbg___wbindgen_throw_bb96b2010945f0bc" (func (;0;) (type 2)))
   (import "./reference_test_bg.js" "__wbg_catch_me_687c8ac1b7535045" (func (;1;) (type 8)))
   (import "./reference_test_bg.js" "__wbg_get_b0096ab6db85c3a1" (func (;2;) (type 0)))
-  (import "./reference_test_bg.js" "__wbg_my_function_2652ada790ab5788" (func (;3;) (type 8)))
+  (import "./reference_test_bg.js" "__wbg_my_function_a1fb416215f1cd28" (func (;3;) (type 8)))
   (import "./reference_test_bg.js" "__wbg_new_625e056221ff6a6e" (func (;4;) (type 3)))
   (import "./reference_test_bg.js" "__wbg_no_catch_be4131677910f8cc" (func (;5;) (type 8)))
   (import "./reference_test_bg.js" "__wbg_reload_9304512f393dbf03" (func (;6;) (type 8)))

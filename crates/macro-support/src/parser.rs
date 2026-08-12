@@ -2661,6 +2661,17 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
             BindgenAttrs::find(attrs)?
         };
 
+        // Put the full namespace path in one attribute.
+        if ctx.js_namespace.is_some() {
+            if let Some((_, spans)) = item_opts.js_namespace() {
+                return Err(Diagnostic::span_error(
+                    spans[0],
+                    "`js_namespace` cannot be set on both an `extern` block and an item \
+                     inside it; write the full path on one of them, e.g. \
+                     `js_namespace = [\"a\", \"b\"]`",
+                ));
+            }
+        }
         let js_namespace = item_opts
             .js_namespace()
             .map(|(s, _)| s)
@@ -3164,5 +3175,69 @@ mod tests {
         assert_eq!(try_unescape("hello\\u{0}").unwrap(), "hello\0");
         assert_eq!(try_unescape("hello\\u{000000}").unwrap(), "hello\0");
         assert_eq!(try_unescape("hello\\u{0000000}"), None);
+    }
+
+    /// Return the namespace for each parsed import.
+    fn import_namespaces(
+        block_opts: proc_macro2::TokenStream,
+        block: syn::ItemForeignMod,
+    ) -> Result<Vec<Option<Vec<String>>>, super::Diagnostic> {
+        use super::{ast, BindgenAttrs, MacroParse};
+
+        let opts: BindgenAttrs = syn::parse2(block_opts).unwrap();
+        let mut program = ast::Program::default();
+        block.macro_parse(&mut program, opts)?;
+        Ok(program
+            .imports
+            .into_iter()
+            .map(|import| import.js_namespace)
+            .collect())
+    }
+
+    fn ns(segments: &[&str]) -> Option<Vec<String>> {
+        Some(segments.iter().map(|s| s.to_string()).collect())
+    }
+
+    #[test]
+    fn js_namespace_only_on_block() {
+        let namespaces = import_namespaces(
+            quote::quote! { js_namespace = ["a"] },
+            syn::parse_quote! {
+                extern "C" {
+                    fn my_function();
+                }
+            },
+        )
+        .unwrap();
+        assert_eq!(namespaces, vec![ns(&["a"])]);
+    }
+
+    #[test]
+    fn js_namespace_only_on_item() {
+        let namespaces = import_namespaces(
+            quote::quote! {},
+            syn::parse_quote! {
+                extern "C" {
+                    #[wasm_bindgen(js_namespace = ["b"])]
+                    fn my_function();
+                }
+            },
+        )
+        .unwrap();
+        assert_eq!(namespaces, vec![ns(&["b"])]);
+    }
+
+    #[test]
+    fn js_namespace_absent_everywhere() {
+        let namespaces = import_namespaces(
+            quote::quote! {},
+            syn::parse_quote! {
+                extern "C" {
+                    fn my_function();
+                }
+            },
+        )
+        .unwrap();
+        assert_eq!(namespaces, vec![None]);
     }
 }
