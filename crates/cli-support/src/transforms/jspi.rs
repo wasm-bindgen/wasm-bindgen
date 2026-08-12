@@ -267,9 +267,11 @@ pub fn run(
                  it is defined by the wasm-bindgen runtime"
             )
         })?;
+        // The JS glue wires `WebAssembly.JSTag` up to any present tag import
+        // (see `generate_jstag_import`); `aux.js_tag` is deliberately left
+        // unset — it means "catch imports use wasm catch wrappers", which is
+        // the catch-wrapper transform's decision, not ours.
         let js_tag = crate::transforms::catch_handler::get_or_import_js_tag(module);
-        // Ensure the JS glue wires `WebAssembly.JSTag` up to the import.
-        aux.js_tag = Some(js_tag);
         Some(Rejection { js_tag, addr })
     } else {
         None

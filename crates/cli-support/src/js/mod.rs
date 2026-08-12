@@ -4907,17 +4907,17 @@ if (require('worker_threads').isMainThread) {{
     }
 
     /// Generate the import for `WebAssembly.JSTag` if it was used.
+    ///
+    /// The tag import is created by the catch-wrapper transform and/or the
+    /// JSPI transform's rejection protocol, so it is located by name rather
+    /// than through `aux.js_tag` — that field means "catch imports use wasm
+    /// catch wrappers" and is only set by the catch-wrapper transform.
     fn generate_jstag_import(&mut self) {
-        let Some(js_tag) = self.aux.js_tag else {
-            return;
-        };
-
-        // Find the import ID for the JSTag
         let import_id = self.module.imports.iter().find_map(|import| {
-            let walrus::ImportKind::Tag(tag_id) = import.kind else {
+            let walrus::ImportKind::Tag(_) = import.kind else {
                 return None;
             };
-            if tag_id == js_tag {
+            if import.module == PLACEHOLDER_MODULE && import.name == "__wbindgen_jstag" {
                 Some(import.id())
             } else {
                 None
