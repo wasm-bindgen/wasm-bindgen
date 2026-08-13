@@ -163,23 +163,6 @@ As always, when holding lifetimes over a reentrancy point — a borrow live
 across `block_on_promise` or a suspending import call — care must be taken
 that reentrant code cannot observe or contend with the borrowed state.
 
-## Shadow-stack management
-
-wasm-bindgen instruments the module so that a suspending fiber's live
-shadow-stack region is evacuated to the heap and restored on resume. For
-users this means:
-
-- Fibers run on the ordinary main shadow stack at its full size — no
-  per-fiber stack size to tune, no overflow guard; deep recursion behaves
-  exactly as in non-JSPI code.
-- Memory cost is proportional to the live stack depth at each suspension,
-  paid only when a suspension actually happens, and returned to the Rust
-  allocator on resume. An export that never suspends costs nothing beyond
-  the `WebAssembly.promising` wrapper.
-- The scheme is target independent: `--target emscripten` uses the same
-  instrumentation, with no interaction with (or requirement for)
-  emscripten's own JSPI/Asyncify support.
-
 ## Requirements
 
 JSPI support requires **reference types** (enabled by default since Rust
@@ -249,3 +232,38 @@ This cannot easily be a compile error: "is this function only ever reached
 from a `jspi` export?" is a whole-program reachability property, not a local
 one. If you see a `SuspendError`, check that every path reaching the
 suspending import originates in a `jspi` export.
+
+## Shadow Stack Management
+
+On suspension the shadow stack is saved into the heap, and restored back
+onto the stack on resume. Each `#[wasm_bindgen(jspi)]` export records the
+shadow-stack watermark at entry — its *base* — and each
+`#[wasm_bindgen(suspending)]` call copies the live region `[SP, base)` out
+to a heap allocation and resets SP to the base before suspending. The first
+instructions after resume copy the region back to its original address and
+restore SP from a wasm local (which JSPI preserves), so interior stack
+pointers remain fully valid. This is correct by construction: a `Promise`
+resumption is always dispatched from the JS event loop, with an empty wasm
+stack, so the restored region has the stack to itself — the address range is
+time-multiplexed, and the only live data in it at any moment belongs to the
+currently executing stack.
+
+Reentrancy adds one wrinkle: a promising export can be entered over live
+frames (a sync export calls into JS, which calls the promising export),
+giving it a stack offset — its base sits partway down the stack. The offset
+is simply maintained; if the export then suspends, those leading frames
+unwind while it is pending, and after resume the region above its base is
+dead stack space, reclaimed when the promising call finally exits. There are
+thus two kinds of exit: a promising exit that never suspended, which may
+have a live parent stack region above it from reentrancy; and a promising
+exit that did suspend, which — by definition of being resumed from the JS
+event loop — has no live stack above it, only the dead stack space, which
+must be bumped off on exit.
+
+Since the unsuspended exit requires no stack shift while the resumed exit
+does, the difference is tracked with an internal `__jspi_suspended` global —
+zeroed at entry, set on every resume, consulted at exit — which is correct
+under single-threading for the current promising execution. And "resumed"
+implies "really suspended" exactly, because JSPI performs promise resolution
+on every `Suspending` return — even a non-`Promise` return suspends for a
+tick.
