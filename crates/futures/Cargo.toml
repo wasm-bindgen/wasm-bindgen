@@ -23,10 +23,6 @@ wasm-bindgen = { path = "../..", version = "=0.2.127", default-features = false 
 [features]
 default = ["std"]
 futures-core-03-stream = ["js-sys/futures-core-03-stream"]
-# Enables the experimental JSPI runtime API re-export (`jspi`), used by
-# `#[wasm_bindgen(jspi)] async fn` exports. Experimental and exempt from
-# semver guarantees.
-experimental-jspi = ["js-sys/experimental-jspi"]
 std = ["wasm-bindgen/std", "js-sys/std"]
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]

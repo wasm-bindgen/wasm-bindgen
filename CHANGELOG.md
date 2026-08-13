@@ -42,14 +42,14 @@
   typed callback is expected.
   [#5234](https://github.com/wasm-bindgen/wasm-bindgen/issues/5234)
 
-* Added experimental JSPI (JS Promise Integration) support, behind the
-  `experimental-jspi` Cargo feature on `js-sys` (and `wasm-bindgen-futures`).
+* Added experimental JSPI (JS Promise Integration) support: using it emits a
+  compiler warning noting the experimental status.
   Supports `#[wasm_bindgen(jspi)]` on exports (sync or `async`), within which
   a `#[wasm_bindgen(suspending)]` import call can suspend to the JS event
-  loop until its `Promise` settles. `js_sys::futures::jspi` also provides
-  `block_on_promise` to suspend on any `Promise` inside a synchronous
-  function, and `spawn_local` to drive a future while also supporting
-  synchronous JSPI suspensions.
+  loop until its `Promise` settles. `js_sys::futures::jspi_block_on_promise`
+  also suspends on any `Promise` inside a synchronous function, while
+  `spawn_local` is context-aware: tasks spawned from within a JSPI context
+  support synchronous JSPI suspensions throughout their call trees.
   Compatible with `catch` (rejections as `Err`), `async`, and
   `panic=unwind`.
   [#5193](https://github.com/wasm-bindgen/wasm-bindgen/pull/5193)

@@ -102,54 +102,44 @@ pub fn run(
         }
     }
 
-    // The `jspi::spawn_local` poll trampoline is a raw export from js-sys,
-    // recognized by name. When `spawn_local` is used it needs exactly the
-    // jspi-export treatment (the in-wasm fiber wrapper; the spawn
-    // intrinsics' JS shims wrap it with `WebAssembly.promising`). When it
-    // is not, the export is deleted so the module carries no JSPI
-    // instrumentation — a build with js-sys's `experimental-jspi` feature
-    // that never touches `spawn_local` must keep running on engines
+    // The spawn-machinery signal is attribute-driven: `spawn_local` polls
+    // can only ever be promising-entered if the ambient JSPI context can be
+    // set, and the base case for the context is a `#[wasm_bindgen(jspi)]`
+    // export (promising-entered polls then inherit it transitively). So the
+    // poll trampoline — a raw js-sys export recognized by name — is kept and
+    // given the jspi-export treatment exactly when the module has jspi
+    // exports and links the spawn intrinsics; otherwise it is deleted and
+    // the spawn intrinsics are stubbed, so a module that never uses the
+    // attributes carries no JSPI machinery and keeps running on engines
     // without exnref/JSPI.
     //
-    // Usage is signalled by the presence of the `__wbindgen_jspi_spawn_first`
-    // import (matched under the hashed shim rename applied during import
-    // binding): it is called only from `spawn_local` itself, so the linker
-    // only retains it when a live `spawn_local` call exists. No such signal
-    // can be read off the rest of the spawn machinery — the trampoline
-    // export roots the wake path (including the `__wbindgen_jspi_spawn_poll`
-    // import and the table-rooted waker vtable) in every linked module.
+    // Stubbing rather than GC: the wake path (waker vtable → `wake` →
+    // `__wbindgen_jspi_spawn_poll`) stays reachable through the vtable's
+    // element-segment entries whenever the function table is otherwise
+    // live. The stubs can never be called (waking requires a poll to have
+    // run, and the ambient context is constant-false without jspi exports);
+    // replacing the imports with unreachable local functions removes them
+    // from the module, and `gc_module_and_adapters` then prunes their
+    // adapters so no JS shims are emitted either.
+    let spawn_imports = module
+        .imports
+        .iter()
+        .filter(|i| i.name.contains("__wbindgen_jspi_spawn_"))
+        .filter_map(|i| match i.kind {
+            walrus::ImportKind::Function(f) => Some(f),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
     let task_poll_export = module
         .exports
         .iter()
         .find(|e| e.name == TASK_POLL_EXPORT)
         .map(|e| e.id());
     if let Some(export_id) = task_poll_export {
-        let spawn_used = module
-            .imports
-            .iter()
-            .any(|i| i.name.contains("__wbindgen_jspi_spawn_first"));
-        if spawn_used {
+        if !jspi_exports.is_empty() && !spawn_imports.is_empty() {
             jspi_exports.push(export_id);
         } else {
             module.exports.delete(export_id);
-            // Unexporting the trampoline orphans the poll path, but the wake
-            // path (waker vtable → `wake` → `__wbindgen_jspi_spawn_poll`)
-            // stays reachable through the vtable's element-segment entries
-            // whenever the function table is otherwise live, so GC alone
-            // cannot drop the spawn import. Replace any spawn imports with
-            // unreachable local stubs: they can never be called (waking
-            // requires a poll to have run), the imports disappear from the
-            // module, and `gc_module_and_adapters` then prunes their
-            // adapters so no JS shims are emitted either.
-            let spawn_imports = module
-                .imports
-                .iter()
-                .filter(|i| i.name.contains("__wbindgen_jspi_spawn_"))
-                .filter_map(|i| match i.kind {
-                    walrus::ImportKind::Function(f) => Some(f),
-                    _ => None,
-                })
-                .collect::<Vec<_>>();
             for func in spawn_imports {
                 module.replace_imported_func(func, |(body, _)| {
                     body.unreachable();
@@ -170,7 +160,25 @@ pub fn run(
         .map(|(_, func, adapter)| (*func, aux.imports_with_catch.contains(adapter)))
         .collect::<Vec<_>>();
 
+    // The ambient-context probe backing context-aware `spawn_local`. It is
+    // always rewritten in-wasm — constant `false` when no JSPI
+    // instrumentation is present, `__jspi_stack_base != 0` otherwise — so no
+    // JS shim is ever emitted for it.
+    let in_context_import = module
+        .imports
+        .iter()
+        .find(|i| i.name.contains("__wbindgen_jspi_in_context"))
+        .and_then(|i| match i.kind {
+            walrus::ImportKind::Function(f) => Some(f),
+            _ => None,
+        });
+
     if jspi_exports.is_empty() && suspending_imports.is_empty() {
+        if let Some(func) = in_context_import {
+            module.replace_imported_func(func, |(body, _)| {
+                body.i32_const(0);
+            })?;
+        }
         return Ok(());
     }
 
@@ -242,6 +250,19 @@ pub fn run(
         free,
         ptr_ty,
     };
+
+    // The ambient-context probe: a JSPI context is on the stack iff the
+    // innermost fiber base is nonzero.
+    if let Some(func) = in_context_import {
+        module.replace_imported_func(func, |(body, _)| {
+            body.global_get(base);
+            match ptr_ty {
+                ValType::I64 => body.unop(UnaryOp::I64Eqz),
+                _ => body.unop(UnaryOp::I32Eqz),
+            };
+            body.unop(UnaryOp::I32Eqz);
+        })?;
+    }
 
     for export_id in jspi_exports {
         let inner = match module.exports.get(export_id).item {

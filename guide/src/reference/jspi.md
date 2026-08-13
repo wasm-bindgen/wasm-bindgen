@@ -8,13 +8,9 @@ browser APIs from ordinary Rust code, with no `async` call chain required.
 [jspi-spec]: https://github.com/WebAssembly/js-promise-integration
 
 > **Experimental.** JSPI support in wasm-bindgen is experimental and subject to
-> change. Using `#[wasm_bindgen(jspi)]` or `#[wasm_bindgen(suspending)]` emits
-> a compiler warning noting this status (silence it with `#[allow(deprecated)]`
-> once acknowledged). The `js_sys::futures::jspi` runtime API is gated behind
-> the `experimental-jspi` Cargo feature on `js-sys` — and on
-> `wasm-bindgen-futures` for `#[wasm_bindgen(jspi)] async fn` exports, which
-> expand to `wasm_bindgen_futures::jspi::future_to_promise`. These features
-> are exempt from semver guarantees.
+> change. Using `#[wasm_bindgen(jspi)]`, `#[wasm_bindgen(suspending)]`, or
+> `jspi_block_on_promise` emits a compiler warning noting this status
+> (silence it with `#[allow(deprecated)]` once acknowledged).
 
 ## Runtime support
 
@@ -31,7 +27,7 @@ browser APIs from ordinary Rust code, with no `async` call chain required.
 
 Marks a Rust export as suspendable: JS callers receive a `Promise`, and the
 TypeScript signature reflects `Promise<T>`. Anywhere in the export's call
-tree, a `#[wasm_bindgen(suspending)]` import call or `block_on_promise` can
+tree, a `#[wasm_bindgen(suspending)]` import call or `jspi_block_on_promise` can
 suspend to the JS event loop.
 
 ```rust
@@ -39,7 +35,7 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(jspi)]
 pub fn compute() -> u32 {
-    // May call suspending imports / block_on_promise() internally
+    // May call suspending imports / jspi_block_on_promise() internally
     42
 }
 ```
@@ -92,21 +88,22 @@ Without `catch`, a rejection unwinds — running destructors under
 (or terminates the instance when the abort handler is enabled), mirroring
 non-`catch` synchronous imports.
 
-## `block_on_promise` — await a single `Promise`
+## `jspi_block_on_promise` — await a single `Promise`
 
-`js_sys::futures::jspi::block_on_promise` suspends the fiber until the given
-`Promise` settles, returning the resolved value as `Ok` or the rejection
-reason as `Err`. It can be called any number of times within a `jspi` export.
+`js_sys::futures::jspi_block_on_promise` (re-exported from
+`wasm-bindgen-futures`) suspends until the given `Promise` settles, returning
+the resolved value as `Ok` or the rejection reason as `Err`. It can be called
+any number of times within a `jspi` export.
 
 ```rust
-use js_sys::futures::jspi::block_on_promise;
+use js_sys::futures::jspi_block_on_promise;
 use js_sys::Promise;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(jspi)]
 pub fn fetch_and_return() -> String {
     let promise: Promise = some_async_js_api();
-    let value = block_on_promise(&promise).expect_throw("fetch failed");
+    let value = jspi_block_on_promise(&promise).expect_throw("fetch failed");
     value.as_string().unwrap_or_default()
 }
 ```
@@ -119,25 +116,33 @@ is awaited by scheduling it on the ordinary executor and suspending on its
 completion promise:
 
 ```rust
-let value = block_on_promise(&wasm_bindgen_futures::future_to_promise(fut));
+let value = jspi_block_on_promise(&wasm_bindgen_futures::future_to_promise(fut));
 ```
 
-## `jspi::spawn_local` — suspending under the async executor
+## Async tasks inherit the JSPI context
 
-Calling `block_on_promise` from code polled by the plain microtask executor
-(a plain `async fn` export, `spawn_local`, or `future_to_promise`) fails with
-a `SuspendError`: those polls have no fiber underneath.
-`js_sys::futures::jspi::spawn_local` runs a future like `spawn_local`, but
-grants the whole call tree — including sync callees — the ability to
-suspend:
+There is no executor-side API: `spawn_local` is context-aware. When called
+from within a JSPI context — a `#[wasm_bindgen(jspi)]` export, or a task
+itself spawned from one — the task's polls are entered through a
+`WebAssembly.promising` boundary, so the whole call tree — including sync
+callees — may suspend:
 
 ```rust
-js_sys::futures::jspi::spawn_local(async move {
-    let x = JsFuture::from(fetch_thing()).await;  // ordinary await
-    let y = sync_helper_that_suspends();          // block_on_promise inside
-    // ...
-});
+#[wasm_bindgen(jspi)]
+pub fn start_background_work() {
+    wasm_bindgen_futures::spawn_local(async move {
+        let x = JsFuture::from(fetch_thing()).await;  // ordinary await
+        let y = sync_helper_that_suspends();          // jspi_block_on_promise inside
+        // ...
+    });
+}
 ```
+
+The capability is inherited transitively down the spawn tree, and applies
+equally to `future_to_promise` (which spawns internally). Library code using
+plain `spawn_local` gains suspendability automatically when reached from a
+JSPI context; outside one, `jspi_block_on_promise` in a task fails with a
+`SuspendError`, since those polls have no suspendable stack underneath.
 
 A suspension parks only that task's poll: the microtask queue, other tasks,
 and the event loop all continue. If a poll unwinds — a panic under
@@ -145,8 +150,9 @@ and the event loop all continue. If a poll unwinds — a panic under
 — destructors run, only that task is abandoned, and the failure surfaces as
 an unhandled promise rejection carrying the original reason.
 
-`#[wasm_bindgen(jspi)] async fn` exports are scheduled through this same
-mechanism.
+`#[wasm_bindgen(jspi)] async fn` exports are entered from JS, outside any
+JSPI context, so their bodies' polls are promising-entered unconditionally
+rather than by inheritance.
 
 ## Reentrancy
 
@@ -160,7 +166,7 @@ point, since other exports, fibers, and tasks run while the fiber is
 suspended.
 
 As always, when holding lifetimes over a reentrancy point — a borrow live
-across `block_on_promise` or a suspending import call — care must be taken
+across `jspi_block_on_promise` or a suspending import call — care must be taken
 that reentrant code cannot observe or contend with the borrowed state.
 
 ## Requirements
@@ -178,7 +184,7 @@ rejected by the CLI.
 ## Full example — OPFS file system
 
 The `jspi-opfs` example demonstrates all four patterns: `#[wasm_bindgen(jspi)]`
-exports, multiple sequential `block_on_promise` calls, cross-context
+exports, multiple sequential `jspi_block_on_promise` calls, cross-context
 `navigator.storage`, and testing with Playwright.
 
 [View the jspi-opfs example](../examples/jspi-opfs.md)

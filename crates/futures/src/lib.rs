@@ -16,8 +16,13 @@ pub use js_sys::futures::{future_to_promise, future_to_promise_typed, spawn_loca
 #[cfg(feature = "futures-core-03-stream")]
 pub use js_sys::futures::stream;
 
-#[cfg(feature = "experimental-jspi")]
-pub use js_sys::futures::jspi;
+#[cfg(not(target_feature = "atomics"))]
+#[allow(deprecated)]
+pub use js_sys::futures::jspi_block_on_promise;
+
+#[cfg(not(target_feature = "atomics"))]
+#[doc(hidden)]
+pub use js_sys::futures::__jspi_future_to_promise;
 
 pub use js_sys;
 pub use wasm_bindgen;

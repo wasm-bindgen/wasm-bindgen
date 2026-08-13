@@ -3083,9 +3083,10 @@ fn which(name: &str) -> Option<PathBuf> {
 /// Shared library for the JSPI runtime tests. Mirrors the `jspi` example but
 /// trimmed to the functions the Node harness drives directly.
 const JSPI_LIB_RS: &str = r#"
+    #![allow(deprecated)]
     use wasm_bindgen::prelude::*;
     use js_sys::Promise;
-    use js_sys::futures::jspi::block_on_promise;
+    use js_sys::futures::jspi_block_on_promise as block_on_promise;
 
     #[wasm_bindgen(inline_js = "
         export function note_drop() { globalThis.__jspi_drops = (globalThis.__jspi_drops | 0) + 1; }
@@ -3344,23 +3345,35 @@ const JSPI_LIB_RS: &str = r#"
     }
 
     // Sync helper that suspends: only callable where the poll runs on a
-    // fiber — i.e. from a `jspi::spawn_local` task, not plain `spawn_local`.
+    // fiber — i.e. from a task spawned within a JSPI context.
     fn sync_add_one(p: &js_sys::Promise) -> u32 {
         block_on_promise(p).unwrap().as_f64().unwrap() as u32 + 1
     }
 
-    // A task whose poll hits a suspending sync call: the poll parks
-    // mid-frame on its fiber until `gate` settles.
-    #[wasm_bindgen]
+    // Context inheritance: a *plain* `spawn_local` from inside a jspi
+    // export spawns a promising-entered task, whose poll may park
+    // mid-frame on a suspending sync call until `gate` settles.
+    #[wasm_bindgen(jspi)]
     pub fn spawn_suspending(gate: js_sys::Promise) {
-        js_sys::futures::jspi::spawn_local(async move {
+        wasm_bindgen_futures::spawn_local(async move {
             note_spawn(sync_add_one(&gate));
         });
     }
 
+    // Transitive inheritance: a task spawned from a promising-entered
+    // poll is itself promising-entered, two levels deep.
+    #[wasm_bindgen(jspi)]
+    pub fn spawn_nested(gate: js_sys::Promise) {
+        wasm_bindgen_futures::spawn_local(async move {
+            wasm_bindgen_futures::spawn_local(async move {
+                note_spawn(sync_add_one(&gate) + 100);
+            });
+        });
+    }
+
     // A jspi async export: the same JS contract as a plain async export
-    // (the caller receives a Promise), but the body is scheduled via
-    // `jspi::spawn_local`, so sync callees may suspend mid-poll.
+    // (the caller receives a Promise), but the body's polls are
+    // promising-entered, so sync callees may suspend mid-poll.
     #[wasm_bindgen(jspi)]
     pub async fn async_mixed(a: js_sys::Promise, gate: js_sys::Promise) -> u32 {
         let x = js_sys::futures::JsFuture::from(a).await.unwrap()
@@ -3384,7 +3397,7 @@ const JSPI_LIB_RS: &str = r#"
     }
 
     // `Err` from a jspi async export rejects the returned promise, through
-    // `jspi::future_to_promise`'s reject path.
+    // the internal promising `future_to_promise` reject path.
     #[wasm_bindgen(jspi)]
     pub async fn async_fallible(ok: bool) -> Result<u32, JsValue> {
         let p = Promise::resolve(&JsValue::UNDEFINED);
@@ -3479,10 +3492,10 @@ fn run_jspi_test(name: &str, wasm_bindgen_args: &str, panic_unwind: bool, descri
 
                 [dependencies]
                 wasm-bindgen = {{ path = '{repo}' }}
-                js-sys = {{ path = '{repo}/crates/js-sys', features = ['experimental-jspi'] }}
+                js-sys = {{ path = '{repo}/crates/js-sys' }}
                 # Async jspi exports expand to the internal executor via the
                 # `wasm_bindgen_futures` path, like all async exports.
-                wasm-bindgen-futures = {{ path = '{repo}/crates/futures', features = ['experimental-jspi'] }}
+                wasm-bindgen-futures = {{ path = '{repo}/crates/futures' }}
 
                 [lib]
                 crate-type = ['cdylib']
@@ -3642,12 +3655,23 @@ describe('jspi runtime', () => {
         assert.strictEqual(await p, 42);
     });
 
+    it('context inheritance is transitive across nested spawns', async () => {
+        globalThis.__jspi_spawns = [];
+        let resolve3;
+        const gate3 = new Promise(r => { resolve3 = r; });
+        wasm.spawn_nested(gate3);
+        setTimeout(() => resolve3(7), 0);
+        await new Promise(r => setTimeout(r, 10));
+        assert.deepStrictEqual(globalThis.__jspi_spawns, [108]);
+    });
+
     it('suspended polls park only their task: the executor keeps polling', async () => {
         globalThis.__jspi_spawns = [];
         let resolve1, resolve2;
         const gate1 = new Promise(r => { resolve1 = r; });
         const gate2 = new Promise(r => { resolve2 = r; });
-        // Two tasks REALLY suspended mid-poll, in parallel.
+        // Two tasks REALLY suspended mid-poll, in parallel — spawned with
+        // plain spawn_local from inside a jspi export (context inheritance).
         wasm.spawn_suspending(gate1);
         wasm.spawn_suspending(gate2);
         // An ordinary future on the plain executor whose multi-poll

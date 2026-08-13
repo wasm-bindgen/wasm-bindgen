@@ -90,6 +90,7 @@ intrinsics! {
         PanicError = "__wbindgen_panic_error",
         Reinit = "__wbindgen_reinit",
         JspiSuspend = "__wbindgen_jspi_suspend",
+        JspiInContext = "__wbindgen_jspi_in_context",
         JspiSpawnPoll = "__wbindgen_jspi_spawn_poll",
         JspiSpawnFirst = "__wbindgen_jspi_spawn_first",
     }

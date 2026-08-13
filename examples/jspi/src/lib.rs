@@ -17,7 +17,7 @@
 //!    with `new WebAssembly.Suspending(...)` by the generated glue.
 //! 2. Exports marked `#[wasm_bindgen(jspi)]` are automatically wrapped with
 //!    `WebAssembly.promising` via a lazy cache in the generated glue.
-//! 3. Inside Rust, [`block_on_promise`] from `js_sys::futures::jspi` suspends
+//! 3. Inside Rust, [`jspi_block_on_promise`] from `js_sys::futures` suspends
 //!    the fiber on the pending `Promise` and returns the resolved value after
 //!    the fiber resumes.
 //!
@@ -35,7 +35,7 @@
 use js_sys::Promise;
 use wasm_bindgen::prelude::*;
 
-use js_sys::futures::jspi::block_on_promise;
+use js_sys::futures::jspi_block_on_promise as block_on_promise;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Example: non-async sleep

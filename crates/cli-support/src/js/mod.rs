@@ -6540,20 +6540,26 @@ addToLibrary({
                 args[0].clone()
             }
 
-            // Schedules a `jspi::spawn_local` task poll on the microtask
-            // queue, entered through `WebAssembly.promising` of the raw
-            // task-poll trampoline export (which the jspi transform has
-            // given the in-wasm fiber wrapper), so the poll runs on a fresh
-            // fiber and may suspend. The promise is deliberately dropped —
+            // The ambient-context probe is always rewritten in-wasm by the
+            // jspi transform (a `__jspi_stack_base` read, or constant 0), so
+            // this shim is never emitted in practice; keep a semantically
+            // equivalent fallback regardless.
+            Intrinsic::JspiInContext => {
+                assert_eq!(args.len(), 0);
+                "0".to_string()
+            }
+
+            // Schedules a promising-entered task poll on the microtask
+            // queue, through `WebAssembly.promising` of the raw task-poll
+            // trampoline export (which the jspi transform has given the
+            // in-wasm fiber wrapper), so the poll runs on a fresh
+            // suspendable stack. The promise is deliberately dropped —
             // completion and re-poll bookkeeping live wasm-side, and a
             // panic surfaces as an unhandled rejection like any spawned
-            // task failure.
-            // `JspiSpawnFirst` is the same operation reached only from
-            // `spawn_local`'s initial schedule; being a separate import, its
-            // presence in the linked module is the CLI's signal that
-            // `spawn_local` is actually used (the wake path's
-            // `JspiSpawnPoll` is rooted by the trampoline itself, so its
-            // presence proves nothing).
+            // task failure. `JspiSpawnFirst` is the same operation reached
+            // only from the initial schedule. In modules without jspi
+            // exports both intrinsics are stubbed out in-wasm and these
+            // shims are never emitted.
             Intrinsic::JspiSpawnPoll | Intrinsic::JspiSpawnFirst => {
                 assert_eq!(args.len(), 1);
                 // The promising cache variable must be its own library

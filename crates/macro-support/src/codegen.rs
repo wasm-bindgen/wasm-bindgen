@@ -930,12 +930,12 @@ impl TryToTokens for ast::Export {
                 }
             } else if self.function.jspi {
                 // Identical contract to a plain async export (JS receives a
-                // `Promise`), but the body is scheduled via
-                // `jspi::spawn_local`: each poll is entered through a
-                // `WebAssembly.promising` boundary, so sync callees may
-                // suspend with `block_on_promise`.
+                // `Promise`), but the body's polls are promising-entered
+                // unconditionally (the export is called from JS, where the
+                // ambient JSPI context is never set), so sync callees may
+                // suspend with `jspi_block_on_promise`.
                 call = quote! {
-                    #futures::jspi::future_to_promise(async move {
+                    #futures::__jspi_future_to_promise(async move {
                         #call
                     }).into()
                 }

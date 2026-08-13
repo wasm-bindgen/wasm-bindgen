@@ -9037,7 +9037,6 @@ pub mod WebAssembly {
     }
 
     // WebAssembly.Suspending / WebAssembly.promising (JSPI — JS Promise Integration)
-    #[cfg(feature = "experimental-jspi")]
     #[wasm_bindgen]
     extern "C" {
         /// A `WebAssembly.Suspending` object wraps a JavaScript async function
