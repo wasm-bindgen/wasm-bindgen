@@ -3168,6 +3168,34 @@ const JSPI_LIB_RS: &str = r#"
         panic!("boom after resume");
     }
 
+    // A rejected non-`catch` suspending import: the exception unwinds through
+    // Rust frames — running destructors under panic=unwind — and rejects the
+    // promising call's promise with the original reason.
+    #[wasm_bindgen(jspi)]
+    pub fn reject_no_catch() -> u32 {
+        let _g = DropGuard;
+        always_rejects()
+    }
+
+    // The async-form analog: the rejection unwinds out of a
+    // promising-entered poll; the trampoline's dropped promise surfaces it
+    // as an unhandled rejection and the task is abandoned.
+    #[wasm_bindgen(jspi)]
+    pub async fn async_reject_no_catch() -> u32 {
+        let _g = DropGuard;
+        always_rejects()
+    }
+
+    // The async-form analog of `panic_after_resume`: a panic in a poll after
+    // a suspend/resume, with a `DropGuard` live across the suspension.
+    #[wasm_bindgen(jspi)]
+    pub async fn async_panic_after_resume() {
+        let _g = DropGuard;
+        let p = Promise::resolve(&JsValue::UNDEFINED);
+        block_on_promise(&p).unwrap_throw();
+        panic!("boom in poll");
+    }
+
     // Rejection path: the suspend wrapper catches the JSTag exception thrown
     // at the resume point and reports it as `Err` data via the
     // `__wbindgen_jspi_rejected` flag. Returns the rejection reason (13).
@@ -3186,6 +3214,7 @@ const JSPI_LIB_RS: &str = r#"
         export function throws_sync() { throw new Error('sync boom'); }
         export function plain_throw(msg) { throw new Error(msg); }
         export function plain_ok(v) { return v + 1; }
+        export function always_rejects() { return Promise.reject(new Error('nocatch nope')); }
     ")]
     extern "C" {
         // Non-externref return: marshalled to String in Rust post-resume.
@@ -3205,6 +3234,11 @@ const JSPI_LIB_RS: &str = r#"
         fn plain_throw(msg: &str) -> Result<u32, JsValue>;
         #[wasm_bindgen(catch)]
         fn plain_ok(v: u32) -> Result<u32, JsValue>;
+        // Non-`catch` suspending import whose promise always rejects: the
+        // JSTag exception is rethrown at the resume point (over a restored
+        // shadow stack) and unwinds through the Rust frames.
+        #[wasm_bindgen(suspending)]
+        fn always_rejects() -> u32;
     }
 
     #[wasm_bindgen(jspi)]
@@ -3734,6 +3768,51 @@ describe('jspi with panic=unwind', () => {
         let threw = false;
         try { await wasm.misuse_suspend(); } catch (e) { threw = true; }
         assert.ok(threw, 'misuse_suspend should still throw after an unwound fiber');
+    });
+
+    it('a rejected non-catch suspending import unwinds destructors and rejects the promise', async () => {
+        globalThis.__jspi_drops = 0;
+        await assert.rejects(() => wasm.reject_no_catch(), /nocatch nope/);
+        assert.ok((globalThis.__jspi_drops | 0) >= 1, 'DropGuard must run on foreign-exception unwind');
+        assert.strictEqual(await wasm.deep_alloc(20), 1210);
+    });
+
+    it('catch still surfaces Err with unwind EH frames live, in fibers and polls', async () => {
+        assert.strictEqual(await wasm.try_flaky(false), 13);
+        assert.strictEqual(await wasm.async_try_flaky(false), 113);
+    });
+
+    // A spawned poll's promise is deliberately dropped, so an unwind out of
+    // it is *specified* to surface as an unhandled rejection. Observe it
+    // with the runner's own listeners parked, or node:test would attribute
+    // the rejection to the running test and fail it.
+    async function expectUnhandled(trigger) {
+        const saved = process.rawListeners('unhandledRejection');
+        process.removeAllListeners('unhandledRejection');
+        try {
+            const seen = new Promise(r => process.once('unhandledRejection', r));
+            trigger();
+            return await seen;
+        } finally {
+            for (const l of saved) process.on('unhandledRejection', l);
+        }
+    }
+
+    it('a rejected non-catch suspending import mid-poll surfaces as an unhandled rejection', async () => {
+        globalThis.__jspi_drops = 0;
+        const err = await expectUnhandled(() => wasm.async_reject_no_catch());
+        assert.match(String(err), /nocatch nope/);
+        assert.ok((globalThis.__jspi_drops | 0) >= 1, 'DropGuard must run when the poll unwinds');
+        // Only that task is abandoned: fibers and polls still work.
+        assert.strictEqual(await wasm.async_try_flaky(true), 142);
+    });
+
+    it('a panic mid-poll after resume runs destructors and abandons only that task', async () => {
+        globalThis.__jspi_drops = 0;
+        await expectUnhandled(() => wasm.async_panic_after_resume());
+        assert.ok((globalThis.__jspi_drops | 0) >= 1, 'DropGuard must run across the suspend on unwind');
+        assert.strictEqual(await wasm.deep_alloc(20), 1210);
+        assert.strictEqual(await wasm.async_fallible(true), 9);
     });
 });
 "#,

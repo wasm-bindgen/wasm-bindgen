@@ -223,8 +223,14 @@ fn task_waker(task: Rc<SpawnedTask>) -> Waker {
 /// otherwise the export is deleted, so builds that never touch
 /// `spawn_local` contain no JSPI instrumentation (and keep running on
 /// engines without exnref/JSPI support).
+///
+/// `extern "C-unwind"`: an unwind must be able to escape the poll — a panic
+/// under panic=unwind, or a rethrown rejection of a non-`catch` suspending
+/// import — to reject the promising call's promise. Plain `extern "C"` is
+/// nounwind, whose `panic_cannot_unwind` guard would abort the whole
+/// instance instead of abandoning the one task.
 #[no_mangle]
-pub extern "C" fn __wbg_jspi_task_poll(task: u32) {
+pub extern "C-unwind" fn __wbg_jspi_task_poll(task: u32) {
     let task = unsafe { Rc::from_raw(task as *const SpawnedTask) };
     SpawnedTask::poll(&task);
 }

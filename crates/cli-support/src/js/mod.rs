@@ -6567,9 +6567,27 @@ addToLibrary({
                 };
                 self.intrinsic(Cow::Borrowed(cache), Some(cache), decl, &[]);
                 let trampoline = self.wasm_export_ref(crate::transforms::jspi::TASK_POLL_EXPORT);
+                // The promise is dropped, so a poll that unwinds (a panic, or
+                // a rethrown rejection of a non-`catch` suspending import)
+                // surfaces as an unhandled rejection. When the catch-wrapper
+                // transform is active it re-tags JS exceptions against
+                // `__wbindgen_wrapped_jstag`; unwrap those so the rejection
+                // carries the original reason, exactly as `__wbg_handle_catch`
+                // does for glue-wrapped exports.
+                let unwrap = if self.aux.wrapped_js_tag.is_some()
+                    && !matches!(self.config.mode, OutputMode::Emscripten)
+                {
+                    ".catch(e => {\n\
+                         if (e instanceof WebAssembly.Exception && e.is(__wbindgen_wrapped_jstag)) \
+                             throw e.getArg(__wbindgen_wrapped_jstag, 0);\n\
+                         throw e;\n\
+                     })"
+                } else {
+                    ""
+                };
                 format!(
                     "Promise.resolve().then(() => \
-                     ({cache} ??= WebAssembly.promising({trampoline}))({}))",
+                     ({cache} ??= WebAssembly.promising({trampoline}))({})){unwrap}",
                     args[0]
                 )
             }
