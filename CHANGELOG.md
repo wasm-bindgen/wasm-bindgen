@@ -42,34 +42,16 @@
   typed callback is expected.
   [#5234](https://github.com/wasm-bindgen/wasm-bindgen/issues/5234)
 
-* Added JSPI (JS Promise Integration) support: `#[wasm_bindgen(jspi)]` on exports
-  wraps them with `WebAssembly.promising`, `#[wasm_bindgen(suspending)]` on imports
-  wraps them with `WebAssembly.Suspending`, and
-  `js_sys::futures::jspi::block_on_promise` lets plain (non-`async`) Rust
-  suspend a fiber while a JS `Promise` settles — the complete primitive:
-  concurrency composes at the promise level (promises are eager;
-  `Promise::all`/`race`), and Rust `Future`s are awaited via
-  `block_on_promise(&future_to_promise(fut))` on the ordinary executor.
-  `js_sys::futures::jspi::spawn_local` complements it executor-side: it runs
-  a future like `spawn_local`, but each poll is entered through a
-  `WebAssembly.promising` boundary, so sync code reached from the task may
-  itself suspend; a suspension parks only that task's poll. On the same
-  mechanism, `#[wasm_bindgen(jspi)]` composes with `async fn` exports (via
-  `jspi::future_to_promise`): the JS contract is identical to a plain async
-  export, but the body's whole call tree may suspend.
-  Suspending imports declare the type the promise resolves
-  to; the settled value is marshalled post-resume with standard ABI semantics,
-  and `catch` surfaces rejections as `Err` data. Fibers run on the full main
-  shadow stack: the module is instrumented so a suspending fiber's live stack
-  region is evacuated to the heap and restored on resume, so concurrent fibers
-  cannot corrupt each other and no stack sizing is required. All targets are
-  supported, including emscripten (using the same instrumentation, independent
-  of emscripten's own JSPI machinery); reference types and an
-  exception-handling-capable engine are required (all JSPI engines qualify).
-  The feature is experimental: using the attributes emits a compiler warning
-  noting the experimental status, and the `js_sys::futures::jspi` runtime API
-  is gated behind the semver-exempt `experimental-jspi` Cargo feature on
-  `js-sys` (and on `wasm-bindgen-futures` for `jspi` async exports).
+* Added experimental JSPI (JS Promise Integration) support, behind the
+  `experimental-jspi` Cargo feature on `js-sys` (and `wasm-bindgen-futures`).
+  Supports `#[wasm_bindgen(jspi)]` on exports (sync or `async`), within which
+  a `#[wasm_bindgen(suspending)]` import call can suspend to the JS event
+  loop until its `Promise` settles. `js_sys::futures::jspi` also provides
+  `block_on_promise` to suspend on any `Promise` inside a synchronous
+  function, and `spawn_local` to drive a future while also supporting
+  synchronous JSPI suspensions.
+  Compatible with `catch` (rejections as `Err`), `async`, and
+  `panic=unwind`.
   [#5193](https://github.com/wasm-bindgen/wasm-bindgen/pull/5193)
 
 ### Changed
