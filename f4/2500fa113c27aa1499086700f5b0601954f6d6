@@ -1,0 +1,33 @@
+crates/js-sys/src/futures/mod.rs
+  s_794ddcb24bfbd6::t_de11e7febb72f4 35-40,97-106,115-119,123-143
+examples/jspi-fetch-streams/Cargo.toml
+  s_794ddcb24bfbd6::t_984ae5bded575b 12
+examples/jspi-fetch-streams/src/lib.rs
+  s_794ddcb24bfbd6::t_126009f9988478 27
+examples/jspi-opfs/Cargo.toml
+  s_794ddcb24bfbd6::t_b7f04ee2d9e7dc 12
+examples/jspi-opfs/src/lib.rs
+  s_794ddcb24bfbd6::t_0dbf7841d89b8f 26
+examples/jspi/Cargo.toml
+  s_794ddcb24bfbd6::t_16c53d9427181a 12
+examples/jspi/src/lib.rs
+  s_794ddcb24bfbd6::t_2cf50f47222944 20,38
+guide/src/reference/jspi.md
+  s_794ddcb24bfbd6::t_485fcfe1a267c4 11-13,30,38,91,93-96,99,106,119,122,124-128,131-138,141-146,153-155,169,187
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "f42500fa113c27aa1499086700f5b0601954f6d6",
+  "prompts": {},
+  "sessions": {
+    "s_794ddcb24bfbd6": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_008e3a990ffeTmlniZgjGGWUHR",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
