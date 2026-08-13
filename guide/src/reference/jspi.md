@@ -81,6 +81,10 @@ arrives as a raw JS value and is converted with the same ABI semantics as any
 other import return), so all `FromWasmAbi` return types work — strings,
 numbers, `Option<T>`, `Vec<T>`, imported JS types, etc.
 
+Because the settled value is returned directly, a suspending import is always
+declared as a plain `fn` — combining `suspending` with `async` is a compile
+error.
+
 `catch` composes with `suspending` exactly like it does elsewhere: a rejected
 promise (or a synchronous throw from the JS function) surfaces as `Err` with
 the rejection reason:
@@ -180,6 +184,12 @@ suspended re-polls after it returns. The stall unit is the task — futures
 *joined inside* the task cannot be polled while a sync callee has it
 suspended, which is the usual "don't block in async" trade made explicit.
 
+If a poll unwinds — a panic under `panic=unwind`, or the rethrown rejection
+of a non-`catch` suspending import — destructors run, only that task is
+abandoned, and the failure surfaces as an unhandled promise rejection
+carrying the original reason (like an exception from a plain `spawn_local`
+task). Other tasks, fibers, and the executor are unaffected.
+
 ### `#[wasm_bindgen(jspi)]` on `async fn` — suspendable async exports
 
 The same capability for exports. A jspi async export has the identical JS
@@ -198,6 +208,19 @@ pub async fn process() -> u32 {
 Note the export itself is *not* wrapped with `WebAssembly.promising` — the
 task carries the capability and the promise is an ordinary one. Prefer plain
 `async fn` unless the body actually reaches suspending sync code.
+
+## Reentrancy
+
+wasm-bindgen permits reentrancy — JS called through an import may
+synchronously call back into wasm exports — and this can break Rust
+invariants (e.g. a `RefCell` borrow or `static mut` access held across the
+import call). JSPI is no different in this respect, and fully supports
+reentrancy: every suspension point is additionally a reentrancy point, since
+other exports, fibers, and tasks run while the fiber is suspended.
+
+As always, when holding lifetimes over a reentrancy point — a borrow live
+across `block_on_promise` or a suspending import call — care must be taken
+that reentrant code cannot observe or contend with the borrowed state.
 
 ## Shadow-stack management
 
