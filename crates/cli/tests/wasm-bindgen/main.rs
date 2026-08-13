@@ -3075,7 +3075,7 @@ fn which(name: &str) -> Option<PathBuf> {
 
 // ─── JSPI (JS Promise Integration) runtime tests ─────────────────────────────
 //
-// These build a JSPI module and run it under Node with `--experimental-wasm-jspi`
+// These build a JSPI module and run it under a JSPI-capable Node
 // (Node ≥ 24; CI's `test_native` job pins 24.15). They exercise the interaction
 // between JSPI stack switching and the in-wasm exception-handling / abort-handler
 // machinery, which is reasoned about statically elsewhere but only proven here.
@@ -3184,6 +3184,8 @@ const JSPI_LIB_RS: &str = r#"
         export function get_text() { return new Promise(r => setTimeout(() => r('hello world'), 1)); }
         export function flaky(ok) { return ok ? Promise.resolve(41) : Promise.reject(new Error('nope')); }
         export function throws_sync() { throw new Error('sync boom'); }
+        export function plain_throw(msg) { throw new Error(msg); }
+        export function plain_ok(v) { return v + 1; }
     ")]
     extern "C" {
         // Non-externref return: marshalled to String in Rust post-resume.
@@ -3196,6 +3198,13 @@ const JSPI_LIB_RS: &str = r#"
         // shim, so it ticks and surfaces as `Err` like a rejection.
         #[wasm_bindgen(catch, suspending)]
         fn throws_sync() -> Result<u32, JsValue>;
+        // Plain (non-suspending) `catch` imports: the ordinary exception
+        // machinery (handleError, or wasm catch wrappers under the abort
+        // handler), exercised under fibers.
+        #[wasm_bindgen(catch)]
+        fn plain_throw(msg: &str) -> Result<u32, JsValue>;
+        #[wasm_bindgen(catch)]
+        fn plain_ok(v: u32) -> Result<u32, JsValue>;
     }
 
     #[wasm_bindgen(jspi)]
@@ -3217,6 +3226,23 @@ const JSPI_LIB_RS: &str = r#"
             Ok(v) => v,
             Err(_) => 27,
         }
+    }
+
+    // Plain-`catch` (non-suspending) imports under a fiber: the exception
+    // machinery must work both before and after a suspension.
+    #[wasm_bindgen(jspi)]
+    pub fn catch_plain_around_suspend() -> u32 {
+        let a = match plain_throw("before suspend") {
+            Err(_) => 1,
+            Ok(_) => 0,
+        };
+        let p = Promise::resolve(&JsValue::UNDEFINED);
+        block_on_promise(&p).unwrap_throw();
+        let b = match plain_throw("after suspend") {
+            Err(_) => 2,
+            Ok(_) => 0,
+        };
+        a + b + plain_ok(1).unwrap_throw()
     }
 
     // jspi methods on exported classes emit `async` class methods.
@@ -3308,6 +3334,34 @@ const JSPI_LIB_RS: &str = r#"
         x + sync_add_one(&gate)
     }
 
+    // The same `catch` matrix inside a promising-entered poll: a suspending
+    // import's rejection and a plain-catch throw both surface as `Err` data
+    // mid-poll.
+    #[wasm_bindgen(jspi)]
+    pub async fn async_try_flaky(ok: bool) -> u32 {
+        let plain = match plain_throw("in poll") {
+            Err(_) => 100,
+            Ok(_) => 0,
+        };
+        plain + match flaky(ok) {
+            Ok(v) => v + 1,
+            Err(_) => 13,
+        }
+    }
+
+    // `Err` from a jspi async export rejects the returned promise, through
+    // `jspi::future_to_promise`'s reject path.
+    #[wasm_bindgen(jspi)]
+    pub async fn async_fallible(ok: bool) -> Result<u32, JsValue> {
+        let p = Promise::resolve(&JsValue::UNDEFINED);
+        block_on_promise(&p).unwrap_throw();
+        if ok {
+            Ok(9)
+        } else {
+            Err(JsValue::from_str("async fiber says no"))
+        }
+    }
+
     // An ordinary `spawn_local` future on the plain microtask executor:
     // `steps` awaits (one queue poll each), then invokes `done`. Its
     // progress while jspi tasks sit suspended is the proof that a
@@ -3346,33 +3400,37 @@ const JSPI_LIB_RS: &str = r#"
     }
 "#;
 
-/// Returns true if the `node` on `PATH` exposes JSPI (`WebAssembly.Suspending`)
-/// under `--experimental-wasm-jspi`. Older Node either rejects the flag (≤ 20)
-/// or lacks the API (22), in which case the JSPI runtime tests skip.
-fn node_supports_jspi() -> bool {
-    std::process::Command::new("node")
-        .args([
-            "--experimental-wasm-jspi",
-            "-e",
-            "process.exit(typeof WebAssembly.Suspending === 'function' ? 0 : 1)",
-        ])
-        .output()
-        .map(|o| o.status.success())
-        .unwrap_or(false)
+/// Returns the node flags under which the `node` on `PATH` exposes JSPI
+/// (`WebAssembly.Suspending`): none on Node 25+ (JSPI on by default; newer
+/// Node removes the flag entirely), `--experimental-wasm-jspi` on Node 24.
+/// `None` (skip) on older Node, which either rejects the flag (≤ 20) or
+/// lacks the API (22).
+fn node_jspi_flags() -> Option<&'static [&'static str]> {
+    const PROBE: &str = "process.exit(typeof WebAssembly.Suspending === 'function' ? 0 : 1)";
+    const FLAGGED: &[&str] = &["--experimental-wasm-jspi"];
+    for flags in [&[] as &[&str], FLAGGED] {
+        let supported = std::process::Command::new("node")
+            .args(flags)
+            .args(["-e", PROBE])
+            .output()
+            .map(|o| o.status.success())
+            .unwrap_or(false);
+        if supported {
+            return Some(flags);
+        }
+    }
+    None
 }
 
 /// Builds the JSPI test project, writes a `node:test` harness wrapping
-/// `describe_body`, and asserts it passes under `node --experimental-wasm-jspi`.
+/// `describe_body`, and asserts it passes under a JSPI-capable `node`.
 /// Each test must pass a unique `name`. Pass `panic_unwind` to build with
 /// nightly `-Cpanic=unwind -Zbuild-std`, which emits modern EH instructions.
 fn run_jspi_test(name: &str, wasm_bindgen_args: &str, panic_unwind: bool, describe_body: &str) {
-    if !node_supports_jspi() {
-        eprintln!(
-            "skipping {name}: the `node` on PATH lacks JSPI \
-             (needs Node >= 24 run with --experimental-wasm-jspi)"
-        );
+    let Some(node_flags) = node_jspi_flags() else {
+        eprintln!("skipping {name}: the `node` on PATH lacks JSPI (needs Node >= 24)");
         return;
-    }
+    };
 
     let mut project = Project::new(name);
     project.file("src/lib.rs", JSPI_LIB_RS).file(
@@ -3449,7 +3507,7 @@ function isTerminated() {{
     .unwrap();
 
     Command::new("node")
-        .arg("--experimental-wasm-jspi")
+        .args(node_flags)
         .arg("--test")
         .arg("test_jspi.js")
         .current_dir(&out_dir)
@@ -3502,6 +3560,20 @@ describe('jspi runtime', () => {
 
     it('catch + suspending converts synchronous throws into Err', async () => {
         assert.strictEqual(await wasm.try_sync_throw(), 27);
+    });
+
+    it('plain catch imports work before and after a suspension', async () => {
+        assert.strictEqual(await wasm.catch_plain_around_suspend(), 5);
+    });
+
+    it('catch works for suspending and plain imports inside a promising-entered poll', async () => {
+        assert.strictEqual(await wasm.async_try_flaky(true), 142);
+        assert.strictEqual(await wasm.async_try_flaky(false), 113);
+    });
+
+    it('Result-returning jspi async exports reject the promise with Err', async () => {
+        assert.strictEqual(await wasm.async_fallible(true), 9);
+        await assert.rejects(() => wasm.async_fallible(false), /async fiber says no/);
     });
 
     it('supports jspi methods on classes', async () => {
@@ -3613,6 +3685,14 @@ describe('jspi under --force-enable-abort-handler', () => {
         assert.strictEqual(await wasm.do_sleep(), 42);
         const r = await Promise.all([wasm.deep_alloc(20), wasm.deep_alloc(20), wasm.deep_alloc(20)]);
         assert.deepStrictEqual(r, [1210, 1210, 1210]);
+    });
+
+    // Under the abort handler, plain catch imports take the wasm-catch-wrapper
+    // path (rather than handleError); the wrapper's EH frame must behave across
+    // the fiber's suspension.
+    it('plain catch imports use wasm catch wrappers correctly under fibers', async () => {
+        assert.strictEqual(await wasm.catch_plain_around_suspend(), 5);
+        assert.strictEqual(await wasm.async_try_flaky(false), 113);
     });
 
     it('rejects (rather than hangs or corrupts) when a fiber panics after resume', async () => {
