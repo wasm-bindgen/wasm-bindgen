@@ -25,8 +25,6 @@ browser APIs from ordinary Rust code, with no `async` call chain required.
 | Safari            | Technology Preview 238 | — |
 | Node.js           | 25                 | 24 (`--experimental-wasm-jspi`) |
 
-JSPI also requires a **secure context** (HTTPS or `localhost`).
-
 ## Attributes
 
 ### `#[wasm_bindgen(jspi)]` on exports
@@ -229,8 +227,9 @@ PREBUILT_EXAMPLES=1 pnpm exec playwright test -g "jspi"
 
 ### Manual testing
 
-Serve the built output from any static HTTP server over `localhost` or HTTPS
-and open `index.html`.
+Serve the built output from any static HTTP server and open `index.html`
+(the OPFS example needs a secure context — `localhost` or HTTPS — for
+`navigator.storage`).
 
 ```sh
 cd examples/dist/jspi-opfs

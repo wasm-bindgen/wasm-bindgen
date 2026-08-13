@@ -12,7 +12,8 @@ from plain (non-`async`) Rust functions.
 [opfs]: https://developer.mozilla.org/en-US/docs/Web/API/File_System_API/Origin_private_file_system
 
 **Requirements:** Chrome 137+ (or 119–136 behind a flag), Firefox 153+, or
-Safari Technology Preview 238+; secure context (HTTPS or `localhost`).
+Safari Technology Preview 238+; a secure context (HTTPS or `localhost`) for
+the OPFS API itself.
 
 ## `Cargo.toml`
 
