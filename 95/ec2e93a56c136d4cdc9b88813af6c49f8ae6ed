@@ -1,0 +1,19 @@
+crates/cli/tests/wasm-bindgen/main.rs
+  s_794ddcb24bfbd6::t_7f3488b1053965 3476-3482,3489,3575,3711,3742,3777,3855-3889
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "95ec2e93a56c136d4cdc9b88813af6c49f8ae6ed",
+  "prompts": {},
+  "sessions": {
+    "s_794ddcb24bfbd6": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_008e3a990ffeTmlniZgjGGWUHR",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
