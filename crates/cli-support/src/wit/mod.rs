@@ -96,6 +96,33 @@ pub fn process(
     cx.find_exn_store();
     cx.find_destroy_closure();
 
+    // The JSPI transform (`transforms::jspi`) needs `__wbindgen_malloc`/
+    // `__wbindgen_free` to evacuate fiber shadow stacks around suspensions,
+    // and the address of the `__wbindgen_jspi_rejected` flag static to report
+    // promise rejections. Record them before `unexport_intrinsics` removes
+    // their exports.
+    if !cx.aux.imports_with_suspending.is_empty() || cx.aux.export_map.values().any(|e| e.jspi) {
+        cx.aux.jspi_malloc = Some(cx.malloc()?);
+        cx.aux.jspi_free = Some(cx.free()?);
+        cx.aux.jspi_rejected = cx
+            .module
+            .exports
+            .iter()
+            .find(|e| e.name == "__wbindgen_jspi_rejected")
+            .and_then(|e| match e.item {
+                walrus::ExportItem::Global(g) => Some(g),
+                _ => None,
+            })
+            .and_then(|g| match &cx.module.globals.get(g).kind {
+                walrus::GlobalKind::Local(walrus::ConstExpr::Value(v)) => match *v {
+                    walrus::ir::Value::I32(v) => Some(v as u32 as u64),
+                    walrus::ir::Value::I64(v) => Some(v as u64),
+                    _ => None,
+                },
+                _ => None,
+            });
+    }
+
     cx.verify()?;
 
     cx.unexport_intrinsics();
@@ -708,6 +735,7 @@ impl<'a> Context<'a> {
                 comments: concatenate_comments(&export.comments),
                 args,
                 asyncness: export.function.asyncness,
+                jspi: export.function.jspi,
                 kind,
                 js_namespace: export
                     .js_namespace
@@ -766,6 +794,7 @@ impl<'a> Context<'a> {
             structural,
             function,
             assert_no_shim,
+            suspending,
         } = function;
         let generate_typescript = import.generate_typescript;
         let (import_id, _id) = match self.function_imports.get(shim) {
@@ -885,6 +914,9 @@ impl<'a> Context<'a> {
         }
         if assert_no_shim {
             self.aux.imports_with_assert_no_shim.insert(adapter);
+        }
+        if suspending {
+            self.aux.imports_with_suspending.insert(adapter);
         }
 
         self.aux.import_map.insert(id, aux_import);
@@ -1281,6 +1313,7 @@ impl<'a> Context<'a> {
                     debug_name: format!("getter for `{}::{}`", struct_.name, field.name),
                     args: None,
                     asyncness: false,
+                    jspi: false,
                     comments: concatenate_comments(&field.comments),
                     kind: AuxExportKind::Method {
                         class: qualified_name.clone(),
@@ -1316,6 +1349,7 @@ impl<'a> Context<'a> {
                     debug_name: format!("setter for `{}::{}`", struct_.name, field.name),
                     args: None,
                     asyncness: false,
+                    jspi: false,
                     comments: concatenate_comments(&field.comments),
                     kind: AuxExportKind::Method {
                         class: qualified_name.clone(),

@@ -195,6 +195,11 @@ pub struct Context<'a> {
     /// before generating each import and diffing afterwards.
     emscripten_import_deps: BTreeMap<ImportId, BTreeSet<String>>,
 
+    /// Emscripten-only: per-import `__postset` snippets, e.g. rewrapping a
+    /// `#[wasm_bindgen(suspending)]` import with `WebAssembly.Suspending` at
+    /// module evaluation time.
+    emscripten_import_postsets: BTreeMap<ImportId, String>,
+
     /// `true` when the module's memory is a memory64 (wasm64) memory.
     memory64: bool,
 
@@ -204,6 +209,18 @@ pub struct Context<'a> {
     /// from a subclass — avoiding a spurious extra Rust allocation that
     /// would otherwise be leaked.
     super_skip_sentinel_emitted: bool,
+
+    /// Set to `true` while generating code for a JSPI-enabled export adapter.
+    /// Consumed by `binding.rs` `Invocation::Core::generate()` to wrap the
+    /// raw `wasm.fn(args)` call with a `WebAssembly.promising` lazy cache.
+    pub(crate) current_adapter_jspi: bool,
+
+    /// Set to `true` while generating the shim body for a
+    /// `#[wasm_bindgen(suspending)]` import.  Consumed by `binding.rs` to
+    /// ensure void-returning shims still emit `return <call>` — required
+    /// because `WebAssembly.Suspending` must receive the Promise back from
+    /// the wrapper function.
+    pub(crate) current_adapter_suspending: bool,
 }
 
 /// Definition of a module export
@@ -358,8 +375,11 @@ impl<'a> Context<'a> {
             adapter_deps: Default::default(),
             emscripten_global_deps: Default::default(),
             emscripten_import_deps: Default::default(),
+            emscripten_import_postsets: Default::default(),
             memory64,
             super_skip_sentinel_emitted: false,
+            current_adapter_jspi: false,
+            current_adapter_suspending: false,
         })
     }
 
@@ -1137,6 +1157,9 @@ impl<'a> Context<'a> {
                     "  {name}__deps: [{}],\n",
                     formatted_deps.join(", ")
                 ));
+            }
+            if let Some(postset) = self.emscripten_import_postsets.get(id) {
+                imports.push_str(&format!("  {name}__postset: {postset:?},\n"));
             }
             imports.push_str("});\n\n");
         }
@@ -4884,17 +4907,17 @@ if (require('worker_threads').isMainThread) {{
     }
 
     /// Generate the import for `WebAssembly.JSTag` if it was used.
+    ///
+    /// The tag import is created by the catch-wrapper transform and/or the
+    /// JSPI transform's rejection protocol, so it is located by name rather
+    /// than through `aux.js_tag` — that field means "catch imports use wasm
+    /// catch wrappers" and is only set by the catch-wrapper transform.
     fn generate_jstag_import(&mut self) {
-        let Some(js_tag) = self.aux.js_tag else {
-            return;
-        };
-
-        // Find the import ID for the JSTag
         let import_id = self.module.imports.iter().find_map(|import| {
-            let walrus::ImportKind::Tag(tag_id) = import.kind else {
+            let walrus::ImportKind::Tag(_) = import.kind else {
                 return None;
             };
-            if tag_id == js_tag {
+            if import.module == PLACEHOLDER_MODULE && import.name == "__wbindgen_jstag" {
                 Some(import.id())
             } else {
                 None
@@ -5156,12 +5179,21 @@ addToLibrary({
         let catch = self.aux.imports_with_catch.contains(&id);
         let needs_jstag_wrap =
             self.aux.legacy_exception_handling && matches!(kind, ContextAdapterKind::Import(_));
+        // Compute before builder borrows self mutably.
+        let is_suspending = matches!(kind, ContextAdapterKind::Import(_))
+            && self.aux.imports_with_suspending.contains(&id);
+
         if let ContextAdapterKind::Import(core) = kind {
-            if !catch && !needs_jstag_wrap && self.attempt_direct_import(core, instrs)? {
+            // Suspending imports must never take the direct-import path: they
+            // need the `WebAssembly.Suspending` wrapper emitted below.
+            if !catch
+                && !needs_jstag_wrap
+                && !is_suspending
+                && self.attempt_direct_import(core, instrs)?
+            {
                 return Ok(());
             }
         }
-
         // Construct a JS shim builder, and configure it based on the kind of
         // export that we're generating.
         let mut builder = binding::Builder::new(self);
@@ -5172,6 +5204,7 @@ addToLibrary({
         builder.catch(catch);
         let mut args = &None;
         let mut asyncness = false;
+        let mut jspi = false;
         let mut variadic = false;
         let mut generate_jsdoc = false;
         let mut ret_ty_override = &None;
@@ -5180,6 +5213,7 @@ addToLibrary({
             ContextAdapterKind::Export(export) => {
                 args = &export.args;
                 asyncness = export.asyncness;
+                jspi = export.jspi;
                 variadic = export.variadic;
                 generate_jsdoc = export.generate_jsdoc;
                 ret_ty_override = &export.fn_ret_ty_override;
@@ -5218,6 +5252,16 @@ addToLibrary({
             ContextAdapterKind::Export(e) => format!("`{}`", e.debug_name),
             ContextAdapterKind::Adapter => format!("adapter {}", id.0),
         };
+        // Set the JSPI flag on the context so `Invocation::Core::generate()`
+        // wraps the raw wasm call with `WebAssembly.promising`. Only *sync*
+        // jspi exports are promising-wrapped: an async jspi export keeps the
+        // plain async-export JS contract (its activation only roots the JSPI
+        // context in-wasm, via the fiber wrapper the jspi transform applies
+        // to every jspi export).
+        builder.cx.current_adapter_jspi = jspi && !asyncness;
+
+        builder.cx.current_adapter_suspending = is_suspending;
+
         // Process the `binding` and generate a bunch of JS/TypeScript/etc.
         let binding::JsFunction {
             ts_sig,
@@ -5230,6 +5274,7 @@ addToLibrary({
             might_be_optional_field,
             catch,
             log_error,
+            jspi_async,
         } = builder
             .process(
                 adapter,
@@ -5243,6 +5288,10 @@ addToLibrary({
                 ret_desc,
             )
             .with_context(|| "failed to generates bindings for ".to_string() + &debug_name)?;
+
+        // Reset per-adapter flags after processing.
+        self.current_adapter_jspi = false;
+        self.current_adapter_suspending = false;
 
         self.typescript_refs.extend(ts_refs);
 
@@ -5314,10 +5363,11 @@ addToLibrary({
                             (String::new(), None)
                         };
 
+                        let async_kw = if jspi_async { "async " } else { "" };
                         if matches!(self.config.mode, OutputMode::Emscripten) {
                             // Hoist into a library symbol (namespaced functions
                             // are hoisted privately and wired via their root).
-                            let value = format!("function {identifier}{code}");
+                            let value = format!("{async_kw}function {identifier}{code}");
                             self.hoist_emscripten_export_with_tree(
                                 &identifier,
                                 &value,
@@ -5330,7 +5380,7 @@ addToLibrary({
                                 None,
                             )?;
                         } else {
-                            let definition = format!("function {identifier}{code}\n");
+                            let definition = format!("{async_kw}function {identifier}{code}\n");
                             define_export(
                                 &mut self.exports,
                                 name,
@@ -5368,6 +5418,9 @@ addToLibrary({
                         let mut prefix = String::new();
                         if receiver.is_static() {
                             prefix += "static ";
+                        }
+                        if jspi_async {
+                            prefix += "async ";
                         }
                         let ts = match kind {
                             AuxExportedMethodKind::Method => ts_sig,
@@ -5423,7 +5476,11 @@ addToLibrary({
             }
             ContextAdapterKind::Import(core) => {
                 // When js_tag is set, all catch imports use wasm catch wrappers
-                // instead of the JS handleError wrapper
+                // instead of the JS handleError wrapper. Suspending imports
+                // never use handleError: their `catch` handling is the
+                // in-wasm rejection protocol (see `transforms::jspi`), and a
+                // synchronous throw from the import surfaces at the suspend
+                // point the same way a rejection does.
                 let has_wasm_catch = self.aux.js_tag.is_some();
 
                 // `code` here is `(args) { body }` (no leading `function`
@@ -5431,7 +5488,7 @@ addToLibrary({
                 // they need a function expression in the middle of the
                 // outer body; the final value we store is itself a function
                 // literal, so we strip the keyword once at the end.
-                let code = if catch && !has_wasm_catch {
+                let code = if catch && !has_wasm_catch && !is_suspending {
                     self.expose_handle_error()?;
                     // The catch path of `handleError` returns undefined, which
                     // would trap converting to `i64` at the JS -> Wasm
@@ -5475,8 +5532,50 @@ addToLibrary({
                     }
                 }
 
-                self.wasm_import_definitions
-                    .insert(core, ImportDefinition::Function(code));
+                // If this import is marked `#[wasm_bindgen(suspending)]`, wrap
+                // it with `WebAssembly.Suspending` so that calling it from WASM
+                // suspends the current fiber until the returned Promise
+                // settles. All shadow-stack management is instrumented into
+                // the wasm module itself (see `transforms::jspi`), so the only
+                // JS wrapper logic is converting a synchronous throw into a
+                // rejection: a sync throw would otherwise propagate into wasm
+                // *without* a suspension tick, breaking the invariant that
+                // reaching the post-call restore implies the fiber suspended
+                // (and making sync throws behave differently from
+                // rejections).
+                //
+                // Emscripten JS libraries are evaluated at compile time by the
+                // jsifier, where a `WebAssembly.Suspending` instance cannot be
+                // stringified into the output. Emit the plain function symbol
+                // and rewrap it via a `__postset`, which runs at module
+                // evaluation time before `wasmImports` is assembled.
+                let import_def = if self.aux.imports_with_suspending.contains(&id) {
+                    if matches!(self.config.mode, OutputMode::Emscripten) {
+                        let name = self.module.imports.get(core).name.clone();
+                        self.emscripten_import_postsets.insert(
+                            core,
+                            format!(
+                                "var __wbg_inner_{name} = {name}; \
+                                 {name} = new WebAssembly.Suspending(function(...args) {{ \
+                                     try {{ return __wbg_inner_{name}.apply(this, args); }} \
+                                     catch (e) {{ return Promise.reject(e); }} \
+                                 }});"
+                            ),
+                        );
+                        ImportDefinition::Function(code)
+                    } else {
+                        ImportDefinition::Expression(format!(
+                            "((__inner) => new WebAssembly.Suspending(function(...args) {{\n\
+                                 try {{ return __inner.apply(this, args); }}\n\
+                                 catch (e) {{ return Promise.reject(e); }}\n\
+                             }}))(function{code})"
+                        ))
+                    }
+                } else {
+                    ImportDefinition::Function(code)
+                };
+
+                self.wasm_import_definitions.insert(core, import_def);
             }
             ContextAdapterKind::Adapter => {
                 assert!(!catch);
@@ -6431,6 +6530,76 @@ addToLibrary({
             Intrinsic::Reinit => {
                 assert_eq!(args.len(), 0);
                 "__wbg_reinit_scheduled = true".to_string()
+            }
+
+            // Identity: the shim hands the pending Promise straight back to
+            // `WebAssembly.Suspending`, which awaits it and resumes the fiber
+            // with the settled value as the import's externref return value.
+            // A rejection is thrown into wasm as a `WebAssembly.JSTag`
+            // exception, which the in-wasm wrapper generated by
+            // `transforms::jspi` catches and records in the
+            // `__wbindgen_jspi_rejected` linear-memory flag.
+            Intrinsic::JspiSuspend => {
+                assert_eq!(args.len(), 1);
+                args[0].clone()
+            }
+
+            // The ambient-context probe is always rewritten in-wasm by the
+            // jspi transform (a `__jspi_stack_base` read, or constant 0), so
+            // this shim is never emitted in practice; keep a semantically
+            // equivalent fallback regardless.
+            Intrinsic::JspiInContext => {
+                assert_eq!(args.len(), 0);
+                "0".to_string()
+            }
+
+            // Schedules a promising-entered task poll on the microtask
+            // queue, through `WebAssembly.promising` of the raw task-poll
+            // trampoline export (which the jspi transform has given the
+            // in-wasm fiber wrapper), so the poll runs on a fresh
+            // suspendable stack. The promise is deliberately dropped —
+            // completion and re-poll bookkeeping live wasm-side, and a
+            // panic surfaces as an unhandled rejection like any spawned
+            // task failure. `JspiSpawnFirst` is the same operation reached
+            // only from the initial schedule. In modules without jspi
+            // exports both intrinsics are stubbed out in-wasm and these
+            // shims are never emitted.
+            Intrinsic::JspiSpawnPoll | Intrinsic::JspiSpawnFirst => {
+                assert_eq!(args.len(), 1);
+                // The promising cache variable must be its own library
+                // symbol on emscripten (module-scope `let`s aren't
+                // preserved there); the `intrinsic` helper handles both.
+                let cache = "__wbg_jspi_task_poll_promising";
+                let decl = if matches!(self.config.mode, OutputMode::Emscripten) {
+                    Cow::Borrowed("undefined")
+                } else {
+                    Cow::Owned(format!("let {cache};"))
+                };
+                self.intrinsic(Cow::Borrowed(cache), Some(cache), decl, &[]);
+                let trampoline = self.wasm_export_ref(crate::transforms::jspi::TASK_POLL_EXPORT);
+                // The promise is dropped, so a poll that unwinds (a panic, or
+                // a rethrown rejection of a non-`catch` suspending import)
+                // surfaces as an unhandled rejection. When the catch-wrapper
+                // transform is active it re-tags JS exceptions against
+                // `__wbindgen_wrapped_jstag`; unwrap those so the rejection
+                // carries the original reason, exactly as `__wbg_handle_catch`
+                // does for glue-wrapped exports.
+                let unwrap = if self.aux.wrapped_js_tag.is_some()
+                    && !matches!(self.config.mode, OutputMode::Emscripten)
+                {
+                    ".catch(e => {\n\
+                         if (e instanceof WebAssembly.Exception && e.is(__wbindgen_wrapped_jstag)) \
+                             throw e.getArg(__wbindgen_wrapped_jstag, 0);\n\
+                         throw e;\n\
+                     })"
+                } else {
+                    ""
+                };
+                format!(
+                    "Promise.resolve().then(() => \
+                     ({cache} ??= WebAssembly.promising({trampoline}))({})){unwrap}",
+                    args[0]
+                )
             }
         };
         Ok(expr)

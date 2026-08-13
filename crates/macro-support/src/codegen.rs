@@ -648,6 +648,20 @@ impl ToTokens for ast::StructField {
 
 impl TryToTokens for ast::Export {
     fn try_to_tokens(self: &ast::Export, into: &mut TokenStream) -> Result<(), Diagnostic> {
+        if self.function.jspi {
+            (quote_spanned! {
+                self.function.name_span =>
+                const _: () = {
+                    #[deprecated(note = "JSPI support is experimental and subject to change; \
+                        `#[wasm_bindgen(jspi)]` requires a runtime with WebAssembly \
+                        JS Promise Integration enabled")]
+                    const fn jspi_is_experimental() {}
+                    jspi_is_experimental();
+                };
+            })
+            .to_tokens(into);
+        }
+
         let generated_name = self.rust_symbol();
         let export_name = self.export_name();
         let mut args = vec![];
@@ -2071,6 +2085,20 @@ impl ToTokens for ast::DynamicUnion {
 
 impl TryToTokens for ast::ImportFunction {
     fn try_to_tokens(&self, tokens: &mut TokenStream) -> Result<(), Diagnostic> {
+        if self.suspending {
+            (quote_spanned! {
+                self.function.name_span =>
+                const _: () = {
+                    #[deprecated(note = "JSPI support is experimental and subject to change; \
+                        `#[wasm_bindgen(suspending)]` requires a runtime with WebAssembly \
+                        JS Promise Integration enabled")]
+                    const fn suspending_is_experimental() {}
+                    suspending_is_experimental();
+                };
+            })
+            .to_tokens(tokens);
+        }
+
         let mut class = None;
         let mut is_constructor = false;
         let mut is_method = false;
@@ -2276,6 +2304,16 @@ impl TryToTokens for ast::ImportFunction {
                 let ty = if self.function.r#async {
                     maybe_async_wrapped = parse_quote!(#promise<#original_ty>);
                     &maybe_async_wrapped
+                } else if self.suspending {
+                    // A suspending import's settled value arrives as the raw
+                    // externref return of the call (the JS shim hands the
+                    // Promise straight to `WebAssembly.Suspending`, so no
+                    // shim-side return conversion can ever see the settled
+                    // value). The ABI is therefore always a `JsValue`, and
+                    // the declared return type is converted in Rust after
+                    // the fiber resumes.
+                    maybe_async_wrapped = parse_quote!(#wasm_bindgen::JsValue);
+                    &maybe_async_wrapped
                 } else {
                     original_ty
                 };
@@ -2308,6 +2346,39 @@ impl TryToTokens for ast::ImportFunction {
                     } else {
                         convert_ret = quote! { #convert_ret.expect("uncaught exception") };
                     };
+                } else if self.suspending {
+                    // Convert the settled value to the declared return type
+                    // post-resume via a cast adapter (`wbg_cast`), which
+                    // routes the conversion through a CLI-generated JS shim
+                    // with the standard descriptor-driven ABI semantics —
+                    // the same conversion any other import return would get,
+                    // just executed after the fiber resumes instead of in
+                    // the (pre-settlement) import shim. With `catch`, a
+                    // rejection is reported by the in-wasm suspend wrapper
+                    // through the `__wbindgen_jspi_rejected` flag, with the
+                    // rejection reason as the returned value.
+                    let convert_ok = quote! {
+                        #wasm_bindgen::__rt::wbg_cast::<#wasm_bindgen::JsValue, #original_ty>(__wbg_settled)
+                    };
+                    let body = if self.catch {
+                        quote! {
+                            if #wasm_bindgen::__rt::jspi_rejected() {
+                                Err(__wbg_settled)
+                            } else {
+                                Ok(#convert_ok)
+                            }
+                        }
+                    } else {
+                        convert_ok
+                    };
+                    convert_ret = quote! {
+                        {
+                            let __wbg_settled =
+                                <#wasm_bindgen::JsValue as #wasm_bindgen::convert::FromWasmAbi>
+                                    ::from_abi(#ret_ident.join());
+                            #body
+                        }
+                    };
                 }
             }
             None => {
@@ -2326,6 +2397,25 @@ impl TryToTokens for ast::ImportFunction {
                     } else {
                         quote! { #future.expect("uncaught exception"); }
                     };
+                } else if self.suspending && self.catch {
+                    // Even with no declared return value the error channel
+                    // needs the settled value: the rejection reason arrives
+                    // as the import's externref return.
+                    abi_ret = quote! {
+                        #wasm_bindgen::convert::WasmRet<<#wasm_bindgen::JsValue as #wasm_bindgen::convert::FromWasmAbi>::Abi>
+                    };
+                    convert_ret = quote! {
+                        {
+                            let __wbg_settled =
+                                <#wasm_bindgen::JsValue as #wasm_bindgen::convert::FromWasmAbi>
+                                    ::from_abi(#ret_ident.join());
+                            if #wasm_bindgen::__rt::jspi_rejected() {
+                                Err(__wbg_settled)
+                            } else {
+                                Ok(())
+                            }
+                        }
+                    };
                 } else {
                     abi_ret = quote! { () };
                     convert_ret = quote! { () };
@@ -2334,7 +2424,7 @@ impl TryToTokens for ast::ImportFunction {
         }
 
         let mut exceptional_ret = quote!();
-        if self.catch && !self.function.r#async {
+        if self.catch && !self.function.r#async && !self.suspending {
             convert_ret = quote! { Ok(#convert_ret) };
             exceptional_ret = quote! {
                 #wasm_bindgen::__rt::take_last_exception()?;
@@ -2868,11 +2958,15 @@ impl TryToTokens for DescribeImport<'_> {
         let inform_ret = {
             let wasm_bindgen = self.wasm_bindgen;
             let describe = quote! { #wasm_bindgen::describe::WasmDescribe };
-            if f.function.r#async {
+            if f.function.r#async || (f.suspending && (f.js_ret.is_some() || f.catch)) {
                 // An `async` import hands back a `Promise` handle regardless of
                 // its declared return type, which never reaches the ABI: the
                 // resolved value is converted separately when the returned
-                // `JsFuture` is awaited. So describe an externref.
+                // `JsFuture` is awaited. A `suspending` import likewise
+                // receives the settled value as a raw externref return (the
+                // shim hands the Promise to `WebAssembly.Suspending` and the
+                // conversion happens in Rust post-resume). So describe an
+                // externref.
                 quote! { <#wasm_bindgen::JsValue as #describe>::describe(); }
             } else if let Some(t) = &f.js_ret {
                 let t = generics::generic_to_concrete(

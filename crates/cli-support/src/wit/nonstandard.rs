@@ -42,6 +42,7 @@ pub struct WasmBindgenAux {
     pub imports_with_catch: HashSet<AdapterId>,
     pub imports_with_variadic: HashSet<AdapterId>,
     pub imports_with_assert_no_shim: HashSet<AdapterId>,
+    pub imports_with_suspending: HashSet<AdapterId>,
 
     /// Auxiliary information to go into JS/TypeScript bindings describing the
     /// exported enums from Rust.
@@ -70,6 +71,18 @@ pub struct WasmBindgenAux {
     pub destroy_closure: Option<walrus::FunctionId>,
     pub stack_pointer: Option<walrus::GlobalId>,
     pub thread_destroy: Option<walrus::FunctionId>,
+
+    /// `__wbindgen_malloc`/`__wbindgen_free`, recorded when JSPI is in use so
+    /// the JSPI transform can evacuate fiber shadow stacks around suspensions
+    /// (the exports themselves are removed by `unexport_intrinsics`).
+    pub jspi_malloc: Option<walrus::FunctionId>,
+    pub jspi_free: Option<walrus::FunctionId>,
+
+    /// Linear-memory address of `js_sys::futures::jspi::__wbindgen_jspi_rejected`,
+    /// the flag the JSPI suspend wrapper writes in-fiber at every resume to
+    /// report whether the awaited promise rejected. Recorded from the exported
+    /// address global before `unexport_intrinsics` removes it.
+    pub jspi_rejected: Option<u64>,
 
     /// The imported JSTag for catching JavaScript exceptions in Wasm.
     /// When this is `Some`, all imports with `catch` use Wasm catch wrappers
@@ -110,6 +123,9 @@ pub struct AuxExport {
     pub args: Option<Vec<AuxFunctionArgumentData>>,
     /// Whether this is an async function, to configure the TypeScript return value.
     pub asyncness: bool,
+    /// Whether this export should be wrapped with `WebAssembly.promising` so
+    /// it returns a JS Promise and can suspend via JSPI.
+    pub jspi: bool,
     /// What kind of function this is and where it shows up
     pub kind: AuxExportKind,
     /// The namespace to export the item through, if any
@@ -571,6 +587,12 @@ impl walrus::CustomSection for WasmBindgenAux {
             roots.push_global(id);
         }
         if let Some(id) = self.thread_destroy {
+            roots.push_func(id);
+        }
+        if let Some(id) = self.jspi_malloc {
+            roots.push_func(id);
+        }
+        if let Some(id) = self.jspi_free {
             roots.push_func(id);
         }
         if let Some(id) = self.js_tag {
