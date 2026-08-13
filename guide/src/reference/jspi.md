@@ -214,9 +214,11 @@ task carries the capability and the promise is an ordinary one. Prefer plain
 wasm-bindgen permits reentrancy — JS called through an import may
 synchronously call back into wasm exports — and this can break Rust
 invariants (e.g. a `RefCell` borrow or `static mut` access held across the
-import call). JSPI is no different in this respect, and fully supports
-reentrancy: every suspension point is additionally a reentrancy point, since
-other exports, fibers, and tasks run while the fiber is suspended.
+import call). JSPI is no different in this respect: reentrancy is fully
+supported — multiple in-flight JSPI suspensions operate on separate stacks
+without conflict — and every suspension point is additionally a reentrancy
+point, since other exports, fibers, and tasks run while the fiber is
+suspended.
 
 As always, when holding lifetimes over a reentrancy point — a borrow live
 across `block_on_promise` or a suspending import call — care must be taken
