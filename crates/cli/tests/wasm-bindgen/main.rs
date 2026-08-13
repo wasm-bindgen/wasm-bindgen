@@ -3473,14 +3473,20 @@ fn node_jspi_flags() -> Option<&'static [&'static str]> {
 /// `describe_body`, and asserts it passes under a JSPI-capable `node`.
 /// Each test must pass a unique `name`. Pass `panic_unwind` to build with
 /// nightly `-Cpanic=unwind -Zbuild-std`, which emits modern EH instructions.
-fn run_jspi_test(name: &str, wasm_bindgen_args: &str, panic_unwind: bool, describe_body: &str) {
+fn run_jspi_test(
+    name: &str,
+    lib_rs: &str,
+    wasm_bindgen_args: &str,
+    panic_unwind: bool,
+    describe_body: &str,
+) {
     let Some(node_flags) = node_jspi_flags() else {
         eprintln!("skipping {name}: the `node` on PATH lacks JSPI (needs Node >= 24)");
         return;
     };
 
     let mut project = Project::new(name);
-    project.file("src/lib.rs", JSPI_LIB_RS).file(
+    project.file("src/lib.rs", lib_rs).file(
         "Cargo.toml",
         &format!(
             "
@@ -3566,6 +3572,7 @@ function isTerminated() {{
 fn jspi_runtime_basics() {
     run_jspi_test(
         "jspi_runtime_basics",
+        JSPI_LIB_RS,
         "--target nodejs",
         false,
         r#"
@@ -3701,6 +3708,7 @@ describe('jspi runtime', () => {
 fn jspi_abort_handler_suspend_misuse() {
     run_jspi_test(
         "jspi_abort_handler_suspend_misuse",
+        JSPI_LIB_RS,
         "--target nodejs --force-enable-abort-handler",
         false,
         r#"
@@ -3731,6 +3739,7 @@ describe('jspi misuse under --force-enable-abort-handler', () => {
 fn jspi_abort_handler_happy_and_panic() {
     run_jspi_test(
         "jspi_abort_handler_happy_and_panic",
+        JSPI_LIB_RS,
         "--target nodejs --force-enable-abort-handler",
         false,
         r#"
@@ -3765,6 +3774,7 @@ describe('jspi under --force-enable-abort-handler', () => {
 fn jspi_panic_unwind() {
     run_jspi_test(
         "jspi_panic_unwind",
+        JSPI_LIB_RS,
         "--target nodejs",
         true,
         r#"
@@ -3837,6 +3847,41 @@ describe('jspi with panic=unwind', () => {
         assert.ok((globalThis.__jspi_drops | 0) >= 1, 'DropGuard must run across the suspend on unwind');
         assert.strictEqual(await wasm.deep_alloc(20), 1210);
         assert.strictEqual(await wasm.async_fallible(true), 9);
+    });
+});
+"#,
+    );
+}
+
+#[test]
+fn jspi_async_only_module() {
+    // Regression test: a module whose ONLY jspi usage is `async fn` exports
+    // must still keep the spawn machinery (the trampoline signal is "any
+    // jspi export", sync or async — async jspi exports root the context for
+    // their internal spawn, so stubbing the intrinsics would trap on the
+    // first call).
+    run_jspi_test(
+        "jspi_async_only_module",
+        r#"
+    #![allow(deprecated)]
+    use wasm_bindgen::prelude::*;
+    use js_sys::futures::jspi_block_on_promise;
+
+    fn sync_double(p: &js_sys::Promise) -> u32 {
+        jspi_block_on_promise(p).unwrap().as_f64().unwrap() as u32 * 2
+    }
+
+    #[wasm_bindgen(jspi)]
+    pub async fn async_double(p: js_sys::Promise) -> u32 {
+        sync_double(&p)
+    }
+"#,
+        "--target nodejs",
+        false,
+        r#"
+describe('jspi async-only module', () => {
+    it('an async jspi export roots the context for its own spawn', async () => {
+        assert.strictEqual(await wasm.async_double(Promise.resolve(21)), 42);
     });
 });
 "#,

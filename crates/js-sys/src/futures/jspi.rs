@@ -210,8 +210,9 @@ pub extern "C-unwind" fn __wbg_jspi_task_poll(task: u32) {
 
 /// Runs a `Future<Output = ()>` with every poll entered through a
 /// `WebAssembly.promising` boundary, so the task's whole call tree may
-/// suspend. Backs `spawn_local` when called within a JSPI context, and
-/// `#[wasm_bindgen(jspi)] async fn` exports unconditionally.
+/// suspend. Backs `spawn_local` when called within a JSPI context —
+/// including the rooted activation of a `#[wasm_bindgen(jspi)] async fn`
+/// export.
 ///
 /// A suspension parks only this task's poll; the microtask queue, other
 /// tasks, and the event loop continue. A wake arriving while the poll is
@@ -226,29 +227,4 @@ where
         state: Cell::new(State::Scheduled),
     });
     __wbindgen_jspi_spawn_first(Rc::into_raw(task) as u32);
-}
-
-/// `future_to_promise`, but with the future's polls promising-entered
-/// unconditionally. Backs `#[wasm_bindgen(jspi)] async fn` exports, which
-/// are entered from JS where the ambient context is never set.
-pub fn future_to_promise_promising<F>(future: F) -> Promise
-where
-    F: Future<Output = Result<JsValue, JsValue>> + 'static,
-{
-    let mut future = Some(future);
-
-    Promise::new_typed(&mut move |resolve, reject| {
-        let future = future.take().unwrap_throw();
-
-        spawn_promising(async move {
-            match future.await {
-                Ok(val) => {
-                    resolve.call(&JsValue::UNDEFINED, (&val,)).unwrap_throw();
-                }
-                Err(val) => {
-                    reject.call(&JsValue::UNDEFINED, (&val,)).unwrap_throw();
-                }
-            }
-        });
-    })
 }

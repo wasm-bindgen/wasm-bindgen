@@ -35,10 +35,6 @@ extern crate alloc;
 #[cfg(not(target_feature = "atomics"))]
 mod jspi;
 
-#[cfg(not(target_feature = "atomics"))]
-#[doc(hidden)]
-pub use jspi::future_to_promise_promising as __jspi_future_to_promise;
-
 use crate::Promise;
 use alloc::rc::Rc;
 use core::cell::RefCell;

@@ -928,17 +928,6 @@ impl TryToTokens for ast::Export {
                         #call
                     })
                 }
-            } else if self.function.jspi {
-                // Identical contract to a plain async export (JS receives a
-                // `Promise`), but the body's polls are promising-entered
-                // unconditionally (the export is called from JS, where the
-                // ambient JSPI context is never set), so sync callees may
-                // suspend with `jspi_block_on_promise`.
-                call = quote! {
-                    #futures::__jspi_future_to_promise(async move {
-                        #call
-                    }).into()
-                }
             } else {
                 call = quote! {
                     #futures::future_to_promise(async move {

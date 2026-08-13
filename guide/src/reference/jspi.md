@@ -150,9 +150,9 @@ and the event loop all continue. If a poll unwinds — a panic under
 — destructors run, only that task is abandoned, and the failure surfaces as
 an unhandled promise rejection carrying the original reason.
 
-`#[wasm_bindgen(jspi)] async fn` exports are entered from JS, outside any
-JSPI context, so their bodies' polls are promising-entered unconditionally
-rather than by inheritance.
+`#[wasm_bindgen(jspi)] async fn` exports work by the same inheritance: the
+attribute roots a JSPI context on the export's activation, which the body's
+internal spawn then inherits.
 
 ## Reentrancy
 

@@ -20,9 +20,5 @@ pub use js_sys::futures::stream;
 #[allow(deprecated)]
 pub use js_sys::futures::jspi_block_on_promise;
 
-#[cfg(not(target_feature = "atomics"))]
-#[doc(hidden)]
-pub use js_sys::futures::__jspi_future_to_promise;
-
 pub use js_sys;
 pub use wasm_bindgen;

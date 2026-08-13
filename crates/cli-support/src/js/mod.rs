@@ -5252,9 +5252,13 @@ addToLibrary({
             ContextAdapterKind::Export(e) => format!("`{}`", e.debug_name),
             ContextAdapterKind::Adapter => format!("adapter {}", id.0),
         };
-        // Set JSPI flag on the context so `Invocation::Core::generate()` can
-        // wrap the raw WASM call with `WebAssembly.promising`.
-        builder.cx.current_adapter_jspi = jspi;
+        // Set the JSPI flag on the context so `Invocation::Core::generate()`
+        // wraps the raw wasm call with `WebAssembly.promising`. Only *sync*
+        // jspi exports are promising-wrapped: an async jspi export keeps the
+        // plain async-export JS contract (its activation only roots the JSPI
+        // context in-wasm, via the fiber wrapper the jspi transform applies
+        // to every jspi export).
+        builder.cx.current_adapter_jspi = jspi && !asyncness;
 
         builder.cx.current_adapter_suspending = is_suspending;
 

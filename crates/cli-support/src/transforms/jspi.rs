@@ -428,10 +428,14 @@ fn const_zero(ty: ValType) -> ConstExpr {
 ///     end)
 /// ```
 ///
-/// This runs inside the fiber that `WebAssembly.promising` creates, so the
-/// base is published exactly when the fiber starts executing and restored
-/// exactly when it completes or suspends, with no window for interleaved
-/// microtasks. The node makes `prev` reachable from the suspend wrapper:
+/// For sync jspi exports this runs inside the fiber that
+/// `WebAssembly.promising` creates, so the base is published exactly when
+/// the fiber starts executing and restored exactly when it completes or
+/// suspends, with no window for interleaved microtasks. Async jspi exports
+/// get the same wrapper on their plain activation: it roots the JSPI
+/// context (for the internal `spawn_local`'s inheritance probe) and exits
+/// by the never-suspended path — the activation itself only schedules.
+/// The node makes `prev` reachable from the suspend wrapper:
 /// suspension restores `__jspi_stack_base := prev` because the fiber's
 /// segment leaves the stack, keeping the global equal to the innermost
 /// fiber segment actually on the stack at all times (concurrent fibers
