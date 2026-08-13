@@ -12,6 +12,11 @@ use core::sync::atomic::Ordering::SeqCst;
 use core::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
 use wasm_bindgen::prelude::*;
 
+#[cfg(target_arch = "wasm32")]
+use core::arch::wasm32 as wasm;
+#[cfg(target_arch = "wasm64")]
+use core::arch::wasm64 as wasm;
+
 const SLEEPING: i32 = 0;
 const AWAKE: i32 = 1;
 
@@ -38,7 +43,7 @@ impl AtomicWaker {
         // the corresponding `waitAsync` that was waiting for the transition
         // from SLEEPING to AWAKE.
         unsafe {
-            core::arch::wasm32::memory_atomic_notify(
+            wasm::memory_atomic_notify(
                 self.state.as_ptr(),
                 1, // Number of threads to notify
             );
