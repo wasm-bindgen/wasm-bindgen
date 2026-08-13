@@ -15,6 +15,9 @@
 
 ### Fixed
 
+* Fix `js-sys` wasm64 build with `atomics` feature.
+  [#5274](https://github.com/wasm-bindgen/wasm-bindgen/issues/5274)
+
 ### Removed
 
 ## [0.2.127](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.126...0.2.127)
