@@ -3895,7 +3895,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
     #[cfg(all(feature = "unsafe-eval", js_sys_unstable_apis))]
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, generic_per_mono)]
     pub fn new_with_args<T: JsFunction = fn() -> JsValue>(args: &str, body: &str) -> Function<T>;
 
     // Next major: deprecate
@@ -3908,7 +3908,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
     #[cfg(feature = "unsafe-eval")]
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, generic_per_mono)]
     pub fn new_with_args_typed<T: JsFunction = fn() -> JsValue>(
         args: &str,
         body: &str,
@@ -3935,7 +3935,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
     #[cfg(all(feature = "unsafe-eval", js_sys_unstable_apis))]
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, generic_per_mono)]
     pub fn new_no_args<T: JsFunction = fn() -> JsValue>(body: &str) -> Function<T>;
 
     // Next major: deprecate
@@ -3943,14 +3943,14 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function)
     #[cfg(feature = "unsafe-eval")]
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, generic_per_mono)]
     pub fn new_no_args_typed<T: JsFunction = fn() -> JsValue>(body: &str) -> Function<T>;
 
     /// The `apply()` method calls a function with a given this value, and arguments provided as an array
     /// (or an array-like object).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply)
-    #[wasm_bindgen(method, catch)]
+    #[wasm_bindgen(method, catch, generic_per_mono)]
     pub fn apply<T: JsFunction = fn() -> JsValue>(
         this: &Function<T>,
         context: &JsValue,
@@ -3964,7 +3964,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
+    #[wasm_bindgen(method, catch, js_name = call, generic_per_mono)]
     pub fn call0<Ret: JsGeneric, F: JsFunction<Ret = Ret> = fn() -> JsValue>(
         this: &Function<F>,
         context: &JsValue,
@@ -3977,7 +3977,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
+    #[wasm_bindgen(method, catch, js_name = call, generic_per_mono)]
     pub fn call1<
         Ret: JsGeneric,
         Arg1: JsGeneric,
@@ -3995,7 +3995,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
+    #[wasm_bindgen(method, catch, js_name = call, generic_per_mono)]
     pub fn call2<
         Ret: JsGeneric,
         Arg1: JsGeneric,
@@ -4018,7 +4018,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
+    #[wasm_bindgen(method, catch, js_name = call, generic_per_mono)]
     pub fn call3<
         Ret: JsGeneric,
         Arg1: JsGeneric,
@@ -4044,7 +4044,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
+    #[wasm_bindgen(method, catch, js_name = call, generic_per_mono)]
     pub fn call4<
         Ret: JsGeneric,
         Arg1: JsGeneric,
@@ -4073,7 +4073,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
+    #[wasm_bindgen(method, catch, js_name = call, generic_per_mono)]
     pub fn call5<
         Ret: JsGeneric,
         Arg1: JsGeneric,
@@ -4106,7 +4106,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
+    #[wasm_bindgen(method, catch, js_name = call, generic_per_mono)]
     pub fn call6<
         Ret: JsGeneric,
         Arg1: JsGeneric,
@@ -4142,7 +4142,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
+    #[wasm_bindgen(method, catch, js_name = call, generic_per_mono)]
     pub fn call7<
         Ret: JsGeneric,
         Arg1: JsGeneric,
@@ -4189,7 +4189,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
-    #[wasm_bindgen(method, catch, js_name = call)]
+    #[wasm_bindgen(method, catch, js_name = call, generic_per_mono)]
     pub fn call8<
         Ret: JsGeneric,
         Arg1: JsGeneric,
@@ -4241,7 +4241,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[deprecated]
     #[allow(deprecated)]
-    #[wasm_bindgen(method, catch, js_name = call)]
+    #[wasm_bindgen(method, catch, js_name = call, generic_per_mono)]
     pub fn call9<
         Ret: JsGeneric,
         Arg1: JsGeneric,
@@ -4293,7 +4293,7 @@ extern "C" {
     #[cfg(not(js_sys_unstable_apis))]
     #[deprecated(note = "Use `Function::bind0` instead.")]
     #[allow(deprecated)]
-    #[wasm_bindgen(method, js_name = bind)]
+    #[wasm_bindgen(method, js_name = bind, generic_per_mono)]
     pub fn bind<T: JsFunction = fn() -> JsValue>(
         this: &Function<T>,
         context: &JsValue,
@@ -4305,7 +4305,7 @@ extern "C" {
     /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
-    #[wasm_bindgen(method, js_name = bind)]
+    #[wasm_bindgen(method, js_name = bind, generic_per_mono)]
     pub fn bind0<T: JsFunction = fn() -> JsValue>(
         this: &Function<T>,
         context: &JsValue,
@@ -4317,7 +4317,7 @@ extern "C" {
     /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
-    #[wasm_bindgen(method, js_name = bind)]
+    #[wasm_bindgen(method, js_name = bind, generic_per_mono)]
     pub fn bind1<
         Ret: JsGeneric,
         Arg1: JsGeneric,
@@ -4334,7 +4334,7 @@ extern "C" {
     /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
-    #[wasm_bindgen(method, js_name = bind)]
+    #[wasm_bindgen(method, js_name = bind, generic_per_mono)]
     pub fn bind2<
         Ret: JsGeneric,
         Arg1: JsGeneric,
@@ -4353,7 +4353,7 @@ extern "C" {
     /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
-    #[wasm_bindgen(method, js_name = bind)]
+    #[wasm_bindgen(method, js_name = bind, generic_per_mono)]
     pub fn bind3<
         Ret: JsGeneric,
         Arg1: JsGeneric,
@@ -4378,7 +4378,7 @@ extern "C" {
     /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
-    #[wasm_bindgen(method, js_name = bind)]
+    #[wasm_bindgen(method, js_name = bind, generic_per_mono)]
     pub fn bind4<
         Ret: JsGeneric,
         Arg1: JsGeneric,
@@ -4406,7 +4406,7 @@ extern "C" {
     /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
-    #[wasm_bindgen(method, js_name = bind)]
+    #[wasm_bindgen(method, js_name = bind, generic_per_mono)]
     pub fn bind5<
         Ret: JsGeneric,
         Arg1: JsGeneric,
@@ -4437,7 +4437,7 @@ extern "C" {
     /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
-    #[wasm_bindgen(method, js_name = bind)]
+    #[wasm_bindgen(method, js_name = bind, generic_per_mono)]
     pub fn bind6<
         Ret: JsGeneric,
         Arg1: JsGeneric,
@@ -4472,7 +4472,7 @@ extern "C" {
     /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
-    #[wasm_bindgen(method, js_name = bind)]
+    #[wasm_bindgen(method, js_name = bind, generic_per_mono)]
     pub fn bind7<
         Ret: JsGeneric,
         Arg1: JsGeneric,
@@ -4518,7 +4518,7 @@ extern "C" {
     /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
-    #[wasm_bindgen(method, js_name = bind)]
+    #[wasm_bindgen(method, js_name = bind, generic_per_mono)]
     pub fn bind8<
         Ret: JsGeneric,
         Arg1: JsGeneric,
@@ -4570,7 +4570,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
     #[deprecated]
     #[allow(deprecated)]
-    #[wasm_bindgen(method, js_name = bind)]
+    #[wasm_bindgen(method, js_name = bind, generic_per_mono)]
     pub fn bind9<
         Ret: JsGeneric,
         Arg1: JsGeneric,
@@ -4618,7 +4618,7 @@ extern "C" {
     /// The length property indicates the number of arguments expected by the function.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/length)
-    #[wasm_bindgen(method, getter)]
+    #[wasm_bindgen(method, getter, generic_per_mono)]
     pub fn length<T: JsFunction = fn() -> JsValue>(this: &Function<T>) -> u32;
 
     /// A Function object's read-only name property indicates the function's
@@ -4626,14 +4626,14 @@ extern "C" {
     /// created anonymously.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name)
-    #[wasm_bindgen(method, getter)]
+    #[wasm_bindgen(method, getter, generic_per_mono)]
     pub fn name<T: JsFunction = fn() -> JsValue>(this: &Function<T>) -> JsString;
 
     /// The `toString()` method returns a string representing the source code of the function.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/toString)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method, js_name = toString)]
+    #[wasm_bindgen(method, js_name = toString, generic_per_mono)]
     pub fn to_string<T: JsFunction = fn() -> JsValue>(this: &Function<T>) -> JsString;
 }
 
@@ -4796,7 +4796,9 @@ pub trait JsArgs<T: JsFunction> {
 }
 
 // Manual impl for 0-arg
-impl<Ret: JsGeneric, F: JsFunction<Ret = Ret>> JsArgs<F> for () {
+impl<Ret: JsGeneric + wasm_bindgen::convert::FromWasmAbi, F: JsFunction<Ret = Ret>> JsArgs<F>
+    for ()
+{
     type BindOutput = Function<F>;
 
     #[inline]
@@ -4812,7 +4814,13 @@ impl<Ret: JsGeneric, F: JsFunction<Ret = Ret>> JsArgs<F> for () {
 
 macro_rules! impl_js_args {
     ($arity:literal $trait:ident $bind_output:ident [$($A:ident)+] [$($idx:tt)+] $call:ident $bind:ident) => {
-        impl<Ret: JsGeneric, $($A: JsGeneric,)+ F: $trait<Ret = Ret, $($A = $A,)*>> JsArgs<F> for ($(&$A,)+)
+        impl<
+                Ret: JsGeneric + wasm_bindgen::convert::FromWasmAbi,
+                $($A: JsGeneric + wasm_bindgen::describe::WasmDescribe,)+
+                F: $trait<Ret = Ret, $($A = $A,)*>,
+            > JsArgs<F> for ($(&$A,)+)
+        where
+            $(for<'a> &'a $A: wasm_bindgen::convert::IntoWasmAbi,)+
         {
             type BindOutput = Function<<F as $trait>::$bind_output>;
 
