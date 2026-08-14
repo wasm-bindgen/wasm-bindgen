@@ -249,6 +249,61 @@ fn typed_entries_iterator() {
     assert_eq!(count, 2);
 }
 
+// `for_each`/`try_for_each` above are only exercised at `T = JsValue`
+// (through `set2vec`); cover a concrete non-`JsValue` `T` too, and
+// `try_for_each`'s `catch`/short-circuit-on-error behaviour, which isn't
+// covered at all otherwise.
+#[wasm_bindgen_test]
+fn typed_for_each() {
+    let set: Set<JsString> = Set::new_typed();
+    set.add(&JsString::from("a"));
+    set.add(&JsString::from("b"));
+
+    let mut seen: Vec<String> = Vec::new();
+    #[cfg(not(js_sys_unstable_apis))]
+    set.for_each(&mut |value: JsString, _, _| seen.push(value.as_string().unwrap()));
+    #[cfg(js_sys_unstable_apis)]
+    set.for_each(&mut |value: JsString| seen.push(value.as_string().unwrap()));
+
+    seen.sort();
+    assert_eq!(seen, vec!["a".to_string(), "b".to_string()]);
+}
+
+#[wasm_bindgen_test]
+fn typed_try_for_each_ok() {
+    let set: Set<JsString> = Set::new_typed();
+    set.add(&JsString::from("a"));
+    set.add(&JsString::from("b"));
+
+    let mut count = 0u32;
+    let result = set.try_for_each(&mut |_value: JsString| {
+        count += 1;
+        Ok(())
+    });
+    assert!(result.is_ok());
+    assert_eq!(count, 2);
+}
+
+#[wasm_bindgen_test]
+fn typed_try_for_each_error() {
+    let set: Set<JsString> = Set::new_typed();
+    set.add(&JsString::from("a"));
+    set.add(&JsString::from("b"));
+    set.add(&JsString::from("c"));
+
+    let mut seen: Vec<String> = Vec::new();
+    let result = set.try_for_each(&mut |value: JsString| {
+        seen.push(value.as_string().unwrap());
+        if seen.len() == 2 {
+            return Err(JsError::new("stop"));
+        }
+        Ok(())
+    });
+    assert!(result.is_err());
+    // `forEach` stops iterating as soon as the callback throws.
+    assert_eq!(seen.len(), 2);
+}
+
 #[wasm_bindgen_test]
 fn new_from_iterable() {
     let arr: Array<JsString> = Array::of(&[

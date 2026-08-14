@@ -8161,7 +8161,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, generic_per_mono)]
     pub fn new<T>() -> Set<T>;
 
     // Next major: deprecate
@@ -8169,48 +8169,48 @@ extern "C" {
     /// primitive values or object references.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set)
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, generic_per_mono)]
     pub fn new_typed<T>() -> Set<T>;
 
     /// The [`Set`] object lets you store unique values of any type, whether
     /// primitive values or object references.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set)
-    #[wasm_bindgen(constructor, js_name = new)]
+    #[wasm_bindgen(constructor, js_name = new, generic_per_mono)]
     pub fn new_empty<T>() -> Set<T>;
 
     /// The [`Set`] object lets you store unique values of any type, whether
     /// primitive values or object references.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set)
-    #[wasm_bindgen(constructor, js_name = new)]
+    #[wasm_bindgen(constructor, js_name = new, generic_per_mono)]
     pub fn new_from_items<T>(items: &[T]) -> Set<T>;
 
     /// The [`Set`] object lets you store unique values of any type, whether
     /// primitive values or object references.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set)
-    #[wasm_bindgen(constructor, js_name = new, catch)]
+    #[wasm_bindgen(constructor, js_name = new, catch, generic_per_mono)]
     pub fn new_from_iterable<T, I: Iterable<Item = T>>(iterable: I) -> Result<Set<T>, JsValue>;
 
     /// The `add()` method appends a new element with a specified value to the
     /// end of a [`Set`] object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/add)
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn add<T>(this: &Set<T>, value: &T) -> Set<T>;
 
     /// The `clear()` method removes all elements from a [`Set`] object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/clear)
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn clear<T>(this: &Set<T>);
 
     /// The `delete()` method removes the specified element from a [`Set`]
     /// object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/delete)
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn delete<T>(this: &Set<T>, value: &T) -> bool;
 
     /// The `forEach()` method executes a provided function once for each value
@@ -8218,7 +8218,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/forEach)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method, js_name = forEach)]
+    #[wasm_bindgen(method, js_name = forEach, generic_per_mono)]
     pub fn for_each<T>(this: &Set<T>, callback: &mut dyn FnMut(T, T, Set<T>));
 
     /// The `forEach()` method executes a provided function once for each value
@@ -8226,14 +8226,14 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/forEach)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, js_name = forEach)]
+    #[wasm_bindgen(method, js_name = forEach, generic_per_mono)]
     pub fn for_each<T>(this: &Set<T>, callback: &mut dyn FnMut(T));
 
     /// The `forEach()` method executes a provided function once for each value
     /// in the Set object, in insertion order.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/forEach)
-    #[wasm_bindgen(method, js_name = forEach, catch)]
+    #[wasm_bindgen(method, js_name = forEach, catch, generic_per_mono)]
     pub fn try_for_each<T>(
         this: &Set<T>,
         callback: &mut dyn FnMut(T) -> Result<(), JsError>,
@@ -8243,63 +8243,63 @@ extern "C" {
     /// the specified value exists in a [`Set`] object or not.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/has)
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn has<T>(this: &Set<T>, value: &T) -> bool;
 
     /// The size accessor property returns the number of elements in a [`Set`]
     /// object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/Set/size)
-    #[wasm_bindgen(method, getter)]
+    #[wasm_bindgen(method, getter, generic_per_mono)]
     pub fn size<T>(this: &Set<T>) -> u32;
 
     /// The `union()` method returns a new set containing elements which are in
     /// either or both of this set and the given set.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/union)
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn union<T>(this: &Set<T>, other: &Set<T>) -> Set<T>;
 
     /// The `intersection()` method returns a new set containing elements which are
     /// in both this set and the given set.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/intersection)
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn intersection<T>(this: &Set<T>, other: &Set<T>) -> Set<T>;
 
     /// The `difference()` method returns a new set containing elements which are
     /// in this set but not in the given set.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/difference)
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn difference<T>(this: &Set<T>, other: &Set<T>) -> Set<T>;
 
     /// The `symmetricDifference()` method returns a new set containing elements
     /// which are in either this set or the given set, but not in both.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/symmetricDifference)
-    #[wasm_bindgen(method, js_name = symmetricDifference)]
+    #[wasm_bindgen(method, js_name = symmetricDifference, generic_per_mono)]
     pub fn symmetric_difference<T>(this: &Set<T>, other: &Set<T>) -> Set<T>;
 
     /// The `isSubsetOf()` method returns a boolean indicating whether all elements
     /// of this set are in the given set.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/isSubsetOf)
-    #[wasm_bindgen(method, js_name = isSubsetOf)]
+    #[wasm_bindgen(method, js_name = isSubsetOf, generic_per_mono)]
     pub fn is_subset_of<T>(this: &Set<T>, other: &Set<T>) -> bool;
 
     /// The `isSupersetOf()` method returns a boolean indicating whether all elements
     /// of the given set are in this set.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/isSupersetOf)
-    #[wasm_bindgen(method, js_name = isSupersetOf)]
+    #[wasm_bindgen(method, js_name = isSupersetOf, generic_per_mono)]
     pub fn is_superset_of<T>(this: &Set<T>, other: &Set<T>) -> bool;
 
     /// The `isDisjointFrom()` method returns a boolean indicating whether this set
     /// has no elements in common with the given set.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/isDisjointFrom)
-    #[wasm_bindgen(method, js_name = isDisjointFrom)]
+    #[wasm_bindgen(method, js_name = isDisjointFrom, generic_per_mono)]
     pub fn is_disjoint_from<T>(this: &Set<T>, other: &Set<T>) -> bool;
 }
 
@@ -8324,7 +8324,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/entries)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn entries<T>(set: &Set<T>) -> Iterator;
 
     /// The `entries()` method returns a new Iterator object that contains an
@@ -8335,7 +8335,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/entries)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, js_name = entries)]
+    #[wasm_bindgen(method, js_name = entries, generic_per_mono)]
     pub fn entries<T: JsGeneric>(set: &Set<T>) -> Iterator<ArrayTuple<(T, T)>>;
 
     // Next major: deprecate
@@ -8346,7 +8346,7 @@ extern "C" {
     /// for its key and value here, so that an array [value, value] is returned.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/entries)
-    #[wasm_bindgen(method, js_name = entries)]
+    #[wasm_bindgen(method, js_name = entries, generic_per_mono)]
     pub fn entries_typed<T: JsGeneric>(set: &Set<T>) -> Iterator<ArrayTuple<(T, T)>>;
 
     /// The `keys()` method is an alias for this method (for similarity with
@@ -8354,14 +8354,14 @@ extern "C" {
     /// of Set elements.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/values)
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn keys<T>(set: &Set<T>) -> Iterator<T>;
 
     /// The `values()` method returns a new Iterator object that contains the
     /// values for each element in the Set object in insertion order.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/values)
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn values<T>(set: &Set<T>) -> Iterator<T>;
 }
 
@@ -8557,34 +8557,34 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, generic_per_mono)]
     pub fn new<T = Object>() -> WeakSet<T>;
 
     // Next major: deprecate
     /// The `WeakSet` object lets you store weakly held objects in a collection.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet)
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, generic_per_mono)]
     pub fn new_typed<T = Object>() -> WeakSet<T>;
 
     /// The `has()` method returns a boolean indicating whether an object exists
     /// in a WeakSet or not.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet/has)
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn has<T>(this: &WeakSet<T>, value: &T) -> bool;
 
     /// The `add()` method appends a new object to the end of a WeakSet object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet/add)
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn add<T>(this: &WeakSet<T>, value: &T) -> WeakSet<T>;
 
     /// The `delete()` method removes the specified element from a WeakSet
     /// object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakSet/delete)
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn delete<T>(this: &WeakSet<T>, value: &T) -> bool;
 }
 
