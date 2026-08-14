@@ -555,6 +555,24 @@ fn concat() {
     assert_eq!(to_rust(&new_array), array![Number; 1, 2, 3, 4, 5, 6]);
 }
 
+// `concat`'s two arguments (`this: &Array<T>`, `array: &Array<U>`) each name a
+// *different* type parameter of the *same* generic imported type — unlike
+// every other class-generic method converted so far, where every argument
+// mentioning a type parameter shares the receiver's own `T`. Exercise it at a
+// genuinely different `T`/`U` pair (`U: Upcast<T>`, not `U == T`) to confirm
+// the two are kept independent rather than accidentally unified.
+#[wasm_bindgen_test]
+fn concat_distinct_element_types() {
+    let numbers: Array<Number> = js_array![Number; 1, 2, 3];
+    let values: Array<JsValue> = js_array![JsValue; JsValue::from("a"), JsValue::from("b")];
+
+    let combined: Array<JsValue> = values.concat(&numbers);
+    assert_eq!(combined.length(), 5);
+    assert_eq!(to_rust(&combined)[0].as_string().unwrap(), "a");
+    assert_eq!(to_rust(&combined)[1].as_string().unwrap(), "b");
+    assert_eq!(to_rust(&combined)[2].as_f64().unwrap(), 1.0);
+}
+
 #[wasm_bindgen_test]
 fn length() {
     let characters = js_array![Number; 8, 5, 4, 3, 1, 2];

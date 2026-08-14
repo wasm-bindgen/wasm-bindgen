@@ -700,7 +700,7 @@ extern "C" {
     /// does not change the existing arrays, but instead returns a new array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat)
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn concat<T, U: Upcast<T>>(this: &Array<T>, array: &Array<U>) -> Array<T>;
 
     /// The `concat()` method is used to merge two or more arrays. This method
