@@ -2639,6 +2639,29 @@ impl ast::ImportFunction {
     /// none of the wrapper's generics — and, for a method whose receiver names
     /// one (`this: &'a Foo`), binding the receiver as `&'a self`.
     ///
+    /// A raw `&dyn Fn(...)`/`&mut dyn FnMut(...)` trait-object argument whose
+    /// own call signature mentions a type parameter (e.g.
+    /// `predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool`, the shape
+    /// `Array::for_each`/`Array::every` use in `js-sys`) is also supported, by
+    /// combining the classic path's `detect_raw_fn_trait_obj` — which already
+    /// rewrites the wrapper parameter to `&(impl Fn(..) + MaybeUnwindSafe)` /
+    /// `&mut (impl FnMut(..) + MaybeUnwindSafe)` and the ABI type to the raw
+    /// dyn trait object — with per-mono's own machinery: since the
+    /// monomorphised shim is a genuine generic `fn`, not an erased one, the
+    /// closure's *concrete* argument/return types are simply written down
+    /// verbatim in its signature (no textual substitution needed), and the
+    /// fully generic `IntoWasmAbi`/`WasmDescribe` impl for `&dyn Fn`/`&mut dyn
+    /// FnMut` in `src/convert/closures.rs` — the same impl a concrete closure
+    /// argument already relies on — does the rest. The only new work is the
+    /// `where` bound that impl requires on a closure argument/return type that
+    /// mentions a type parameter (`FromWasmAbi` for an argument, since a
+    /// closure's arguments cross the ABI JS-to-Rust; `ReturnWasmAbi` for the
+    /// return). This composes with class-level generics: a hoisted class type
+    /// parameter used inside the closure's own signature (`Array<T>` above)
+    /// works the same way, since it is still just `T` in scope. A concrete
+    /// (non-generic) `&dyn Fn`/`&mut dyn FnMut` argument is unaffected and
+    /// keeps going through the plain `IntoWasmAbi` path below, unchanged.
+    ///
     /// Not (yet) supported, and rejected with a diagnostic:
     /// - a mutable reference to a generic type parameter (`&mut T`), or a
     ///   reference to one nested inside another type (e.g. `Option<&T>`);
@@ -2650,7 +2673,11 @@ impl ast::ImportFunction {
     /// - `slice_to_array` on a slice whose element type mentions a type
     ///   parameter;
     /// - `reexport` and `assert_no_shim`, neither of which has a well-defined
-    ///   meaning when one shim is manufactured per monomorphisation.
+    ///   meaning when one shim is manufactured per monomorphisation;
+    /// - a closure trait object mentioning a type parameter *nested* inside
+    ///   another type (e.g. `Option<&mut dyn FnMut(T)>`, `Box<dyn FnMut(T)>`) —
+    ///   only a bare `&dyn Fn(...)`/`&mut dyn FnMut(...)` at the top of the
+    ///   argument is supported.
     ///
     /// Const generic parameters never reach here: `validate_generics` in the
     /// parser rejects them for *every* wasm-bindgen generic, erased or not.
@@ -2837,6 +2864,113 @@ impl ast::ImportFunction {
             // type parameter (see `ast::ImportType`'s codegen), so the plain
             // `<#ty as IntoWasmAbi>::Abi` projection below just works.
             let is_receiver = i == 0 && is_method;
+
+            // A raw `&dyn Fn(...)` / `&mut dyn FnMut(...)` trait-object
+            // argument whose own call signature mentions one of the function's
+            // (or hoisted class's) type parameters — e.g.
+            // `predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool`.
+            //
+            // This mirrors what `detect_raw_fn_trait_obj` already does for the
+            // ordinary (non-generic) import path: the wrapper parameter becomes
+            // `&(impl Fn(..) + MaybeUnwindSafe)` / `&mut (impl FnMut(..) +
+            // MaybeUnwindSafe)`, using the declared (still-generic) signature, so
+            // callers write an ordinary Rust closure and get `UnwindSafe`
+            // enforcement under `panic = "unwind"`. The ABI type is the raw
+            // `&dyn Fn(..)` / `&mut dyn FnMut(..)` trait object, still naming the
+            // type parameter — unlike the type-erasure path, this is a real
+            // generic parameter of the monomorphised shim (redeclared below as
+            // one of `shim_generic_params`), not a placeholder that needs
+            // boxing to `JsValue`, so writing it down verbatim is enough: rustc
+            // monomorphises the shim, and the closure-invoke machinery in
+            // `src/convert/closures.rs` (the `closures!` macro) already has a
+            // fully generic `IntoWasmAbi`/`WasmDescribe` impl for `&dyn Fn`/`&mut
+            // dyn FnMut` over any argument/return types, concrete or not — the
+            // same impl the ordinary import path relies on for a concrete
+            // closure. All that's needed here is the `where` bound the impl
+            // requires: `FromWasmAbi` on every closure argument type that
+            // mentions a type parameter (closure arguments cross the ABI
+            // JS-to-Rust) and `ReturnWasmAbi` on its return type if that does
+            // too (see `WasmDescribe for dyn Fn(..) -> R` in `closures.rs`).
+            let mut handled_as_generic_closure = false;
+            if !is_receiver {
+                if let Some((is_mut, fn_bounds)) = detect_raw_fn_trait_obj(ty) {
+                    if let Some((inputs, ret)) = fn_trait_bound_sig(fn_bounds) {
+                        let sig_uses_generics = inputs
+                            .iter()
+                            .any(|input| generics::uses_generic_params(input, &type_params))
+                            || generics::uses_generic_params(&ret, &type_params);
+                        if sig_uses_generics {
+                            for input in &inputs {
+                                if generics::uses_generic_params(input, &type_params) {
+                                    where_bounds.push(quote! {
+                                        #input: #wasm_bindgen::convert::FromWasmAbi
+                                    });
+                                }
+                            }
+                            if generics::uses_generic_params(&ret, &type_params) {
+                                where_bounds.push(quote! {
+                                    #ret: #wasm_bindgen::convert::ReturnWasmAbi
+                                });
+                            }
+
+                            let amp = if is_mut {
+                                quote! { &mut }
+                            } else {
+                                quote! { & }
+                            };
+                            wrapper_args.push(quote! {
+                                #name: #amp (impl #fn_bounds + #wasm_bindgen::__rt::marker::MaybeUnwindSafe)
+                            });
+                            let abi_ty = quote! { #amp dyn #fn_bounds };
+                            let abi =
+                                quote! { <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi };
+                            let (args, names) = splat(wasm_bindgen, &name, &abi, Span::call_site());
+                            shim_abi_args.extend(args);
+                            arg_conversions.push(quote! {
+                                let #name = <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>
+                                    ::into_abi(#name as #amp dyn #fn_bounds);
+                                let (#(#names),*) = <#abi as #wasm_bindgen::convert::WasmAbi>::split(#name);
+                            });
+                            all_prim_names.extend(names);
+                            describe_args.push(quote! {
+                                <#abi_ty as #wasm_bindgen::describe::WasmDescribe>::describe();
+                            });
+                            handled_as_generic_closure = true;
+                        }
+                    }
+                }
+
+                // A closure trait object mentioning a type parameter *nested*
+                // inside another type (`Option<&mut dyn FnMut(T)>`, `Box<dyn
+                // FnMut(T)>`, ...) is not the shape handled above — that one
+                // only fires for a bare `&dyn Fn(...)`/`&mut dyn FnMut(...)` at
+                // the top of the argument. Left alone, such an argument would
+                // either get rejected later by the generic-reference checks
+                // below with a confusing message (if it happens to also
+                // contain a `&`), or fall through to the fully-concrete path
+                // and fail far away from here with an opaque "doesn't
+                // implement `IntoWasmAbi`" error (e.g. `Box<dyn FnMut(T)>`,
+                // which never implements it, generic or not). Reject it here,
+                // at the offending nested type's own span, instead.
+                if !handled_as_generic_closure {
+                    if let Some(nested) = find_nested_generic_closure(ty, &type_params) {
+                        bail_span!(
+                            nested,
+                            "generic_per_mono only supports a `&dyn Fn(...)`/`&mut dyn \
+                             FnMut(...)` closure argument whose signature mentions a type \
+                             parameter at the top level of the argument, not nested inside \
+                             another type (e.g. `Option<&mut dyn FnMut(T)>` or `Box<dyn \
+                             FnMut(T)>`); pull the closure out into its own argument, or use a \
+                             concrete (non-generic) closure signature and the type-erasure \
+                             generic path instead"
+                        );
+                    }
+                }
+            }
+            if handled_as_generic_closure {
+                continue;
+            }
+
             if !is_receiver && generics::uses_generic_params(ty, &type_params) {
                 // A bare, shared reference to a generic type parameter (`&T`)
                 // is supported: the referent's schema is emitted via `REF`
@@ -4358,6 +4492,11 @@ fn slice_to_array_rewrite(
 ///
 /// This is used by the import function codegen to auto-inject `MaybeUnwindSafe`
 /// bounds for closure arguments, ensuring unwind safety when `panic = "unwind"`.
+/// Both the classic (`ast::ImportFunction::try_to_tokens`) and per-monomorphisation
+/// (`try_to_tokens_generic`) codegen paths share this one detector — the latter
+/// additionally checks whether `fn_trait_bounds`' own signature mentions a type
+/// parameter, via [`fn_trait_bound_sig`], to decide whether the closure itself
+/// needs monomorphising or can go through the plain (already-shared) path below.
 fn detect_raw_fn_trait_obj(
     ty: &syn::Type,
 ) -> Option<(
@@ -4390,4 +4529,108 @@ fn detect_raw_fn_trait_obj(
         }
     }
     None
+}
+
+/// Extracts the argument types and return type from a `Fn`/`FnMut(...) -> R`
+/// trait bound's parenthesized generic arguments (`Fn(A, B) -> R` parses as a
+/// path segment named `Fn` whose arguments are `syn::PathArguments::Parenthesized`,
+/// not the usual angle-bracketed form).
+///
+/// Returns `None` only if `bounds` somehow has no such bound, which does not
+/// happen for anything `detect_raw_fn_trait_obj` returned — it already checked
+/// for exactly this shape — so callers that got `fn_bounds` from there can
+/// treat a `None` here as unreachable in practice.
+fn fn_trait_bound_sig(
+    bounds: &syn::punctuated::Punctuated<syn::TypeParamBound, syn::token::Plus>,
+) -> Option<(Vec<syn::Type>, syn::Type)> {
+    for bound in bounds {
+        let syn::TypeParamBound::Trait(tb) = bound else {
+            continue;
+        };
+        let Some(seg) = tb.path.segments.last() else {
+            continue;
+        };
+        let syn::PathArguments::Parenthesized(args) = &seg.arguments else {
+            continue;
+        };
+        let inputs = args.inputs.iter().cloned().collect();
+        let ret = match &args.output {
+            syn::ReturnType::Type(_, ty) => (**ty).clone(),
+            syn::ReturnType::Default => parse_quote!(()),
+        };
+        return Some((inputs, ret));
+    }
+    None
+}
+
+/// Finds a `dyn Fn(..)`/`dyn FnMut(..)` trait object anywhere within `ty`
+/// whose own call signature (its arguments or return type) mentions one of
+/// `type_params`, for diagnosing an unsupported *nesting* of such a closure
+/// (`Option<&mut dyn FnMut(T)>`, `Box<dyn FnMut(T)>`, a tuple element, ...).
+///
+/// The one shape that per-mono codegen *does* support — a bare `&dyn
+/// Fn(...)`/`&mut dyn FnMut(...)` at the very top of the argument type — is
+/// detected by `detect_raw_fn_trait_obj` and handled before this function is
+/// ever called, so a match here always means an unsupported nesting.
+///
+/// This does not attempt to be a fully general "visit every type" traversal
+/// (`syn::visit::Visit` would need a bespoke override for parenthesized path
+/// arguments anyway, since the default visitor does not descend into `Fn(A) ->
+/// B` sugar); it only recurses through the handful of container shapes a
+/// wasm-bindgen import signature can plausibly nest a closure inside.
+fn find_nested_generic_closure<'a>(
+    ty: &'a syn::Type,
+    type_params: &Vec<&syn::Ident>,
+) -> Option<&'a syn::Type> {
+    match ty {
+        syn::Type::TraitObject(obj) => {
+            for bound in &obj.bounds {
+                let syn::TypeParamBound::Trait(tb) = bound else {
+                    continue;
+                };
+                let Some(seg) = tb.path.segments.last() else {
+                    continue;
+                };
+                let syn::PathArguments::Parenthesized(args) = &seg.arguments else {
+                    continue;
+                };
+                let sig_uses_generics = args
+                    .inputs
+                    .iter()
+                    .any(|input| generics::uses_generic_params(input, type_params))
+                    || matches!(
+                        &args.output,
+                        syn::ReturnType::Type(_, ret)
+                            if generics::uses_generic_params(ret, type_params)
+                    );
+                if sig_uses_generics {
+                    return Some(ty);
+                }
+            }
+            None
+        }
+        syn::Type::Reference(r) => find_nested_generic_closure(&r.elem, type_params),
+        syn::Type::Paren(p) => find_nested_generic_closure(&p.elem, type_params),
+        syn::Type::Group(g) => find_nested_generic_closure(&g.elem, type_params),
+        syn::Type::Array(a) => find_nested_generic_closure(&a.elem, type_params),
+        syn::Type::Slice(s) => find_nested_generic_closure(&s.elem, type_params),
+        syn::Type::Tuple(t) => t
+            .elems
+            .iter()
+            .find_map(|elem| find_nested_generic_closure(elem, type_params)),
+        syn::Type::Path(syn::TypePath { qself: None, path }) => {
+            path.segments.iter().find_map(|seg| match &seg.arguments {
+                syn::PathArguments::AngleBracketed(args) => {
+                    args.args.iter().find_map(|arg| match arg {
+                        syn::GenericArgument::Type(t) => {
+                            find_nested_generic_closure(t, type_params)
+                        }
+                        _ => None,
+                    })
+                }
+                _ => None,
+            })
+        }
+        _ => None,
+    }
 }

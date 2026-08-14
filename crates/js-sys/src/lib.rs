@@ -716,7 +716,7 @@ extern "C" {
     /// **Note:** Consider using [`Array::try_every`] if the predicate might throw an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/every)
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn every<T>(this: &Array<T>, predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool) -> bool;
 
     /// The `every()` method tests whether all elements in the array pass the test
@@ -898,7 +898,7 @@ extern "C" {
     /// **Note:** Consider using [`Array::try_for_each`] if the callback might throw an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach)
-    #[wasm_bindgen(method, js_name = forEach)]
+    #[wasm_bindgen(method, js_name = forEach, generic_per_mono)]
     pub fn for_each<T: JsGeneric>(this: &Array<T>, callback: &mut dyn FnMut(T, u32, Array<T>));
 
     /// The `forEach()` method executes a provided function once for each array element. _(Fallible variation)_

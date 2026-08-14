@@ -16,9 +16,22 @@
   `Generator<T>`/`AsyncGenerator<T>`, `Map<K, V>`, and `PropertyDescriptor<T>`
   — to `generic_per_mono`, so arguments and return values for these methods
   marshal at their concrete monomorphised type instead of through `JsValue`
-  erasure. Methods that take a JS callback (`&mut dyn FnMut`, e.g.
-  `Array::for_each`/`map`/`filter`/`reduce`) are unchanged for now:
-  `generic_per_mono` does not yet support closure arguments.
+  erasure. Most methods that take a JS callback (`&mut dyn FnMut`, e.g.
+  `Array::map`/`filter`/`reduce`) are unchanged for now, pending broader
+  conversion; `Array::for_each`/`every` are converted below, now that
+  `generic_per_mono` supports a closure argument.
+
+* `#[wasm_bindgen(generic_per_mono)]` now supports a raw `&dyn
+  Fn(...)`/`&mut dyn FnMut(...)` trait-object argument whose own call
+  signature — not just the rest of the import's signature — mentions a type
+  parameter, e.g. `predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool`, the
+  shape `Array::for_each`/`Array::every` use in `js-sys` and which are now
+  converted to it. Each monomorphisation gets its own copy of the
+  closure-invoke machinery, describing the closure's concrete argument and
+  return types; the wrapper parameter is `&(impl Fn(..) + MaybeUnwindSafe)` /
+  `&mut (impl FnMut(..) + MaybeUnwindSafe)`, exactly as for a concrete closure
+  argument on the non-generic import path. See
+  [Closure arguments](https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/generic_per_mono.html#closure-arguments).
 
 ### Changed
 

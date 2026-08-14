@@ -91,6 +91,22 @@ extern "C" {
     // generated shim to forward, so per-mono codegen rejects it.
     #[wasm_bindgen(generic_per_mono)]
     fn tuple_pattern_arg<T>((a, b): (u32, u32), x: T);
+
+    // A raw `&dyn Fn(...)`/`&mut dyn FnMut(...)` trait-object argument whose
+    // signature mentions a type parameter *is* now supported (see
+    // `generic_import_closures.rs`), but only at the top level of the
+    // argument. Nested inside another type — here a `Box`, which never
+    // implements `IntoWasmAbi` for a boxed `dyn FnMut` regardless of
+    // genericness — it is rejected with its own diagnostic rather than the
+    // opaque "doesn't implement `IntoWasmAbi`" this would otherwise surface
+    // as, far from the actual problem.
+    #[wasm_bindgen(generic_per_mono)]
+    fn boxed_generic_closure<T>(f: Box<dyn FnMut(T)>);
+
+    // Same rejection through an `Option<&mut dyn FnMut(T)>`, which also has a
+    // reference nested inside another type.
+    #[wasm_bindgen(generic_per_mono)]
+    fn option_generic_closure<T>(f: Option<&mut dyn FnMut(T)>);
 }
 
 // Class-level generics on the imported type (`this: &Holder<T>`, or a class

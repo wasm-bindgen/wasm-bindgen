@@ -147,6 +147,50 @@ The receiver argument itself needs no additional trait bound for this: an
 imported type implements `IntoWasmAbi`/`WasmDescribe` unconditionally over its
 type parameter(s), regardless of what `T` is.
 
+## Closure arguments
+
+A raw `&dyn Fn(...)`/`&mut dyn FnMut(...)` trait-object argument is supported,
+including when its own call signature — not just the rest of the import's
+signature — mentions a type parameter. This is the shape `js-sys` uses for
+`Array::for_each`/`Array::every`:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    type Array<T>;
+
+    #[wasm_bindgen(method, js_name = forEach, generic_per_mono)]
+    fn for_each<T>(this: &Array<T>, callback: &mut dyn FnMut(T, u32, Array<T>));
+
+    #[wasm_bindgen(method, generic_per_mono)]
+    fn every<T>(this: &Array<T>, predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool) -> bool;
+}
+```
+
+The wrapper parameter becomes `&(impl Fn(..) + MaybeUnwindSafe)` /
+`&mut (impl FnMut(..) + MaybeUnwindSafe)`, exactly as it does for a *concrete*
+closure argument on the non-generic import path — an ordinary Rust closure is
+all a caller needs to write:
+
+```rust
+arr.for_each(&mut |value, index, arr| {
+    // `value: T`, `index: u32`, `arr: Array<T>` — all monomorphised at
+    // whatever `T` this particular `Array<T>` was.
+});
+```
+
+Each monomorphisation gets its own copy of the closure-invoke machinery,
+describing the closure's *concrete* argument and return types, the same way it
+already does for every other generic argument on this path. The closure's own
+argument types and return type may independently mention a type parameter —
+including one hoisted from the class, as `T`/`Array<T>` are above — and
+multiple closure arguments in one signature are each handled on their own.
+
+The one restriction is that the closure has to be at the top level of the
+argument: nested inside another type, e.g. `Option<&mut dyn FnMut(T)>` or
+`Box<dyn FnMut(T)>`, it is not supported — see
+[Unsupported shapes](#unsupported-shapes).
+
 ## Other attributes
 
 `generic_per_mono` composes with the usual import attributes — `method`,
@@ -231,6 +275,12 @@ usually to drop `generic_per_mono`:
   `unsupported pattern in generic_per_mono imported function`. The generated
   per-monomorphisation shim has to forward each argument by name, so it needs a
   binding it can name. Give the argument a single identifier instead.
+* **A closure trait object mentioning a type parameter, nested inside another
+  type** (`Option<&mut dyn FnMut(T)>`, `Box<dyn FnMut(T)>`, a tuple element,
+  ...). See [Closure arguments](#closure-arguments): only a bare `&dyn
+  Fn(...)`/`&mut dyn FnMut(...)` at the top of the argument is supported. Pull
+  the closure out into its own argument, or give it a concrete (non-generic)
+  signature.
 
 **Const generic parameters** are also rejected, but not by `generic_per_mono`:
 `wasm-bindgen` does not support them on *any* generic import, erased or not, and
