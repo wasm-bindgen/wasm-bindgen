@@ -8,4 +8,14 @@ version = "0.0.0"
 # time 0.3.46 requires Rust 1.88
 time = "=0.3.45"
 
+# icu_*'s 2.3.0 release requires Rust 1.88 (pulled in transitively via
+# ureq -> url -> idna -> idna_adapter)
+icu_collections = "=2.2.0"
+icu_locale_core = "=2.2.0"
+icu_normalizer = "=2.2.0"
+icu_normalizer_data = "=2.2.0"
+icu_properties = "=2.2.0"
+icu_properties_data = "=2.2.0"
+icu_provider = "=2.2.0"
+
 wasm-bindgen-cli = { path = "../../cli" }
