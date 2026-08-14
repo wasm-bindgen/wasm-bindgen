@@ -112,11 +112,40 @@ extern "C" {
 
 Lifetimes carry no runtime information — they are erased before values cross
 the wasm ABI — so this imposes no restriction beyond what plain Rust already
-requires of the signature. The one shape that is *not* supported is a lifetime
-belonging to the **class** itself, i.e. an imported type declared with its own
-lifetime parameter (`type Holder<'a>`, used as `this: &Holder<'a>`), since that
-needs the same hoisting machinery class-level type parameters do; see
-[Unsupported shapes](#unsupported-shapes).
+requires of the signature.
+
+## Class-level generics
+
+A method (or constructor, or self-returning static method) on an imported type
+that is itself generic — `this: &Holder<T>`, the shape `js-sys` types like
+`Array<T>` and `Iterator<T>` use — is also supported. The type parameter is
+hoisted out of the wrapper function's own generic parameter list and onto the
+enclosing `impl` block instead, so a declaration like:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    type Holder<T>;
+
+    #[wasm_bindgen(method, generic_per_mono)]
+    fn get<T>(this: &Holder<T>) -> T;
+}
+```
+
+expands to `impl<T> Holder<T> { fn get(&self) -> T { .. } }` rather than a
+generic method on a non-generic `impl Holder`.
+
+This also applies to a constructor, or a static method whose return type is
+the class (e.g. `fn of<T>(value: T) -> Container<T>`), since those are impl'd
+on the *return* type's class the same way a method is impl'd on its
+receiver's class.
+
+A lifetime belonging to the class itself (`type Holder<'a>`, used as
+`this: &Holder<'a>`) is supported the same way.
+
+The receiver argument itself needs no additional trait bound for this: an
+imported type implements `IntoWasmAbi`/`WasmDescribe` unconditionally over its
+type parameter(s), regardless of what `T` is.
 
 ## Other attributes
 
@@ -173,11 +202,6 @@ These are rejected at compile time with a diagnostic pointing at the offending
 declaration. Each generally keeps working on the type-erasure path, so the fix is
 usually to drop `generic_per_mono`:
 
-* **Generic parameters on the imported *type*** (class-level generics),
-  whether a type parameter (`this: &Holder<T>`) or a lifetime
-  (`this: &Holder<'a>`). Lifetime parameters on the *function* itself —
-  including on a method's receiver, `this: &'a Holder` — are supported; see
-  [Lifetime parameters](#lifetime-parameters).
 * **A mutable reference to a type parameter** (`&mut T`, or `&mut Vec<T>`, or
   any other `&mut` whose referent mentions a type parameter), and a reference to
   a type parameter **nested inside another type** (e.g. `Option<&T>`). A bare

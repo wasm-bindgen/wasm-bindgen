@@ -2614,6 +2614,18 @@ impl ast::ImportFunction {
     /// resolved value is converted inside `JsFuture<T>`), and `slice_to_array`
     /// for slices with a concrete element type.
     ///
+    /// Generic parameters belonging to the imported *class* itself, whether a
+    /// type (`this: &Holder<T>`) or a lifetime (`this: &Holder<'a>`), are also
+    /// supported: they are hoisted (via the same `get_fn_generics` machinery
+    /// the type-erasure path uses) out of the wrapper `fn`'s own generic
+    /// parameter list and onto the enclosing `impl` block, so
+    /// `fn push<T>(this: &Array<T>, value: &T)` becomes
+    /// `impl<T> Array<T> { fn push(&self, value: &T) { .. } }` rather than a
+    /// generic method on a non-generic `impl Array`. The receiver argument
+    /// itself needs no bound for this: imported types implement
+    /// `IntoWasmAbi`/`WasmDescribe` unconditionally over their type
+    /// parameter(s).
+    ///
     /// User-written trait bounds, both inline (`fn f<T: Trait>`) and in a `where`
     /// clause (including higher-ranked predicates), are part of the declared
     /// contract and are carried through to the generated wrapper, so callers must
@@ -2628,9 +2640,6 @@ impl ast::ImportFunction {
     /// one (`this: &'a Foo`), binding the receiver as `&'a self`.
     ///
     /// Not (yet) supported, and rejected with a diagnostic:
-    /// - generic parameters belonging to the imported *class*, whether a type
-    ///   (`this: &Holder<T>`) or a lifetime (`this: &Holder<'a>`), since the
-    ///   generated `impl` block would have to be parameterised to carry them;
     /// - a mutable reference to a generic type parameter (`&mut T`), or a
     ///   reference to one nested inside another type (e.g. `Option<&T>`);
     /// - a bare generic type parameter, or a reference to one (`&T`), as the
@@ -2690,8 +2699,6 @@ impl ast::ImportFunction {
                 "generic_per_mono requires at least one type parameter"
             );
         }
-        let lifetime_params = generics::lifetime_params(&self.generics);
-
         // --- Determine the receiver/class shape (mirrors the normal path) ---
         let mut class = None;
         let mut is_method = false;
@@ -2709,27 +2716,36 @@ impl ast::ImportFunction {
                 class = Some(get_ty(self.js_ret.as_ref().unwrap()).clone());
             }
         }
-        // Class-level generics require the erasure machinery (`fn_class_generics`).
-        // This covers a type parameter (`this: &Holder<T>`) or a lifetime
-        // (`this: &Holder<'a>`) of the function appearing in the receiver/return
-        // *class* type's own argument list — either way the generated `impl`
-        // block would have to be parameterised, which this path does not do.
+        // Class-level generics (`this: &Holder<T>`, or a class lifetime like
+        // `this: &Holder<'a>`) are supported by reusing the same hoisting
+        // machinery as the type-erasure path (`get_fn_generics`): any type or
+        // lifetime parameter that appears in the receiver/return *class*
+        // type's own argument list is "hoisted" out of the wrapper `fn`'s own
+        // generic parameter list and onto the enclosing `impl` block instead,
+        // so `Array<T>::for_each` becomes `impl<T> Array<T> { fn for_each(&self, ..) }`
+        // rather than a generic method on a non-generic `impl Array`.
         //
         // Note `class` is the referent, with the receiver's outer `&` already
         // stripped at parse time, so a lifetime written on the reference itself
-        // (`this: &'a Holder`) is deliberately not caught here: that one is
-        // supported, and is handled by binding the receiver as `&'a self` below.
-        if let Some(c) = &class {
-            if generics::uses_generic_params(c, &type_params)
-                || generics::uses_lifetime_params(c, &lifetime_params)
-            {
-                bail_span!(
-                    self.rust_name,
-                    "generic_per_mono does not support class-level generic parameters yet; \
-                     use the type-erasure generic path instead"
-                );
-            }
-        }
+        // (`this: &'a Holder`) is not a class-level lifetime: that one is
+        // handled separately below, by binding the receiver as `&'a self`.
+        let fn_class_generics = self.get_fn_generics()?;
+        // Every original bound (inline or `where`) on every type parameter,
+        // whether it ends up hoisted onto the `impl` or stays on the wrapper
+        // `fn`, needs to survive somewhere now that the parameter declarations
+        // below are bare identifiers rather than `self.generics.params`
+        // verbatim (which is what used to carry inline bounds through). Both
+        // the wrapper `fn` and the monomorphised shim below share this single
+        // `where_bounds` list, so attaching every bound to it — regardless of
+        // which generic list its parameter is declared on — is sufficient:
+        // a method's `where` clause may freely restate or add bounds on its
+        // enclosing `impl`'s own generic parameters.
+        let mut where_bounds: Vec<TokenStream> = fn_class_generics
+            .class_bounds
+            .iter()
+            .chain(fn_class_generics.fn_bounds.iter())
+            .map(|b| b.to_token_stream())
+            .collect();
 
         // A `variadic` import splats its final argument (`...arg`) on the JS
         // side, which requires that argument to be iterable at runtime.
@@ -2786,20 +2802,12 @@ impl ast::ImportFunction {
         // mention a type parameter (bounding concrete types would be a trivial
         // bound, which is an error on stable).
         //
-        // The user's own bounds are part of the declared signature's contract, so
-        // they are carried through verbatim ahead of the synthesized ones: callers
-        // are then held to them by rustc, and any associated type they unlock
-        // (e.g. `T::Assoc` in an argument) resolves in both the wrapper and the
-        // monomorphised shim. Inline bounds (`fn f<T: Trait>`) ride along with the
-        // parameter list; `where` predicates have no such carrier and are
-        // collected here.
-        let mut where_bounds: Vec<TokenStream> = self
-            .generics
-            .where_clause
-            .iter()
-            .flat_map(|where_clause| where_clause.predicates.iter())
-            .map(ToTokens::to_token_stream)
-            .collect();
+        // The user's own bounds (both inline `fn f<T: Trait>` and `where`) are
+        // part of the declared signature's contract and were already collected
+        // into `where_bounds` above (via `fn_class_generics`), ahead of the
+        // synthesized ones added below: callers are then held to them by rustc,
+        // and any associated type they unlock (e.g. `T::Assoc` in an argument)
+        // resolves in both the wrapper and the monomorphised shim.
         let mut wrapper_args = Vec::new();
         let mut shim_abi_args = Vec::new();
         let mut all_prim_names = Vec::new();
@@ -2821,7 +2829,15 @@ impl ast::ImportFunction {
                 ),
             };
 
-            if generics::uses_generic_params(ty, &type_params) {
+            // The receiver of a method on a class-generic type (`this: &Array<T>`)
+            // is skipped here: it always names the class's own type parameter(s)
+            // rather than a bare `&T`, which the checks below would otherwise
+            // reject. No bound is needed for it either — imported generic types
+            // implement `IntoWasmAbi`/`WasmDescribe` unconditionally over their
+            // type parameter (see `ast::ImportType`'s codegen), so the plain
+            // `<#ty as IntoWasmAbi>::Abi` projection below just works.
+            let is_receiver = i == 0 && is_method;
+            if !is_receiver && generics::uses_generic_params(ty, &type_params) {
                 // A bare, shared reference to a generic type parameter (`&T`)
                 // is supported: the referent's schema is emitted via `REF`
                 // (`WasmDescribe for &T`), and the value is marshalled by the
@@ -3048,7 +3064,20 @@ impl ast::ImportFunction {
             let doc_comment = &self.doc_comment;
             quote! { #[doc = #doc_comment] }
         };
-        let generic_params = &self.generics.params;
+        // The wrapper `fn`'s own generic parameter list is only the params
+        // that were *not* hoisted onto the enclosing `impl` block by
+        // `fn_class_generics` above (bare idents — their bounds all live in
+        // `where_bounds`, attached to `where_clause` below). When every type
+        // parameter is class-level (the common case for a plain accessor like
+        // `Array<T>::push`), this is empty and the method itself is not
+        // generic at all.
+        let fn_lifetime_params = &fn_class_generics.fn_lifetime_params;
+        let fn_generic_params = &fn_class_generics.fn_generic_params;
+        let generic_params = if fn_lifetime_params.is_empty() && fn_generic_params.is_empty() {
+            quote! {}
+        } else {
+            quote! { <#(#fn_lifetime_params,)* #(#fn_generic_params),*> }
+        };
         // The shim redeclares the wrapper's type *and* lifetime parameters,
         // since it's a nested item and inherits none of the wrapper's generics.
         // Type params need their inline bounds too: its signature names ABI
@@ -3162,7 +3191,7 @@ impl ast::ImportFunction {
             #[allow(clippy::all, clippy::nursery, clippy::pedantic, clippy::restriction)]
             #(#attrs)*
             #doc
-            #vis #maybe_async #maybe_unsafe fn #rust_name <#generic_params> (#me #(#wrapper_args),*) #ret #where_clause {
+            #vis #maybe_async #maybe_unsafe fn #rust_name #generic_params (#me #(#wrapper_args),*) #ret #where_clause {
                 #shim
 
                 unsafe {
@@ -3177,18 +3206,41 @@ impl ast::ImportFunction {
         };
 
         if let Some(class) = class {
+            let has_class_generics = !fn_class_generics.class_generic_params.is_empty()
+                || !fn_class_generics.class_lifetime_params.is_empty()
+                || !fn_class_generics.class_bound_lifetime_params.is_empty();
             // Strip any generic arguments from the class type's last path
-            // segment so we impl on the bare class (class generics are rejected
-            // above, so this only removes defaulted/elided arguments).
-            let mut class = class;
-            if let syn::Type::Path(syn::TypePath { qself: None, path }) = &mut class {
+            // segment: either they're defaulted/elided (no class generics
+            // involved), or they're about to be re-added below with the
+            // hoisted params/exprs in the right (possibly renamed) form.
+            let mut bare_class = class;
+            if let syn::Type::Path(syn::TypePath { qself: None, path }) = &mut bare_class {
                 if let Some(segment) = path.segments.last_mut() {
                     segment.arguments = syn::PathArguments::None;
                 }
             }
+            let class_impl_def = if !has_class_generics {
+                quote! { impl #bare_class }
+            } else {
+                let class_lifetime_params = &fn_class_generics.class_lifetime_params;
+                let class_bound_lifetime_params = &fn_class_generics.class_bound_lifetime_params;
+                let class_generic_params = &fn_class_generics.class_generic_params;
+                let class_generic_exprs = &fn_class_generics.class_generic_exprs;
+                let impl_where_clause = if fn_class_generics.class_bounds.is_empty() {
+                    quote! {}
+                } else {
+                    let class_bounds = fn_class_generics.class_bounds.iter();
+                    quote! { where #(#class_bounds),* }
+                };
+                quote! {
+                    impl<#(#class_lifetime_params,)* #(#class_bound_lifetime_params,)* #(#class_generic_params),*>
+                        #bare_class<#(#class_lifetime_params,)* #(#class_generic_exprs),*>
+                    #impl_where_clause
+                }
+            };
             quote! {
                 #[automatically_derived]
-                impl #class {
+                #class_impl_def {
                     #invocation
                 }
             }

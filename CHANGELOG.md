@@ -5,6 +5,21 @@
 
 ### Added
 
+* `#[wasm_bindgen(generic_per_mono)]` now supports a method (or constructor, or
+  self-returning static method) on an imported type that is itself generic
+  (`this: &Holder<T>`), hoisting the class's type parameter (or lifetime) onto
+  the enclosing `impl` block instead of rejecting the declaration. See
+  [Class-level generics](https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/generic_per_mono.html#class-level-generics).
+
+* Converted a substantial, closure-free subset of `js-sys`'s generic surface —
+  `Array<T>`'s indexing/mutation methods, `Iterator<T>`/`AsyncIterator<T>`,
+  `Generator<T>`/`AsyncGenerator<T>`, `Map<K, V>`, and `PropertyDescriptor<T>`
+  — to `generic_per_mono`, so arguments and return values for these methods
+  marshal at their concrete monomorphised type instead of through `JsValue`
+  erasure. Methods that take a JS callback (`&mut dyn FnMut`, e.g.
+  `Array::for_each`/`map`/`filter`/`reduce`) are unchanged for now:
+  `generic_per_mono` does not yet support closure arguments.
+
 ### Changed
 
 * Setting `js_namespace` on both an `extern "C"` block and an item inside it
