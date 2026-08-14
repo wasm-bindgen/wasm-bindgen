@@ -5280,7 +5280,7 @@ extern "C" {
     /// })
     /// ```
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/forEach)
-    #[wasm_bindgen(method, js_name = forEach)]
+    #[wasm_bindgen(method, js_name = forEach, generic_per_mono)]
     pub fn for_each<K, V>(this: &Map<K, V>, callback: &mut dyn FnMut(V, K));
 
     /// The `forEach()` method executes a provided function once per each
@@ -5297,7 +5297,7 @@ extern "C" {
     /// **Note:** Consider using [`Map::try_for_each`] if the callback might throw an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/forEach)
-    #[wasm_bindgen(method, js_name = forEach, catch)]
+    #[wasm_bindgen(method, js_name = forEach, catch, generic_per_mono)]
     pub fn try_for_each<K, V>(
         this: &Map<K, V>,
         callback: &mut dyn FnMut(V, K) -> Result<(), JsError>,

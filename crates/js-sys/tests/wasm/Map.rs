@@ -1,5 +1,5 @@
 use js_sys::*;
-use wasm_bindgen::{JsCast, JsValue};
+use wasm_bindgen::{JsCast, JsError, JsValue};
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen_test]
@@ -229,6 +229,47 @@ fn typed_try_for_each() {
         keys.push(key);
     });
     assert_eq!(keys.len(), 2);
+}
+
+// `Map<K, V>::try_for_each`'s closure signature mentions *both* of the
+// class's hoisted type parameters (K and V), independent of each other and
+// both distinct from the concrete `JsValue` used elsewhere in this test
+// file's `for_each` coverage above.
+#[wasm_bindgen_test]
+fn typed_try_for_each_ok() {
+    let map: Map<JsString, Number> = Map::new_typed();
+    map.set(&JsString::from("a"), &Number::from(1));
+    map.set(&JsString::from("b"), &Number::from(2));
+
+    let mut total = 0.0;
+    let result = map.try_for_each(&mut |value: Number, key: JsString| {
+        total += value.value_of();
+        if key == "b" && value.value_of() != 2.0 {
+            return Err(JsError::new("mismatched value"));
+        }
+        Ok(())
+    });
+    assert!(result.is_ok());
+    assert_eq!(total, 3.0);
+}
+
+#[wasm_bindgen_test]
+fn typed_try_for_each_error() {
+    let map: Map<JsString, Number> = Map::new_typed();
+    map.set(&JsString::from("a"), &Number::from(1));
+    map.set(&JsString::from("b"), &Number::from(2));
+
+    let mut seen = Vec::new();
+    let result = map.try_for_each(&mut |value: Number, key: JsString| {
+        seen.push(key.as_string().unwrap());
+        if value.value_of() == 2.0 {
+            return Err(JsError::new("stop at b"));
+        }
+        Ok(())
+    });
+    assert!(result.is_err());
+    // `forEach` stops iterating as soon as the callback throws.
+    assert_eq!(seen, vec!["a".to_string(), "b".to_string()]);
 }
 
 #[wasm_bindgen_test]
