@@ -72,7 +72,14 @@ pub fn run(
     let externref_table = aux.externref_table;
     let table_alloc = aux.externref_alloc;
     let exn_store = aux.exn_store;
-    if !aux.imports_with_catch.is_empty() {
+    // `catch` on a suspending import is handled by the JSPI transform's
+    // rejection protocol instead of a catch wrapper, so it doesn't require
+    // the exception-store intrinsics.
+    let has_catch_wrappers = aux
+        .imports_with_catch
+        .iter()
+        .any(|a| !aux.imports_with_suspending.contains(a));
+    if has_catch_wrappers {
         if externref_table.is_none() {
             anyhow::bail!("externref table required for catch wrappers");
         }
@@ -115,7 +122,9 @@ pub fn run(
 
     // Generate wrappers for each import with catch
     for (_import_id, func_id, adapter_id) in wit.implements.iter() {
-        let wrapper_kind = if aux.imports_with_catch.contains(adapter_id) {
+        let wrapper_kind = if aux.imports_with_catch.contains(adapter_id)
+            && !aux.imports_with_suspending.contains(adapter_id)
+        {
             WrapperKind::CatchWrapper
         } else if let Some(rethrow_critical) = rethrow_critical {
             WrapperKind::Aborting { rethrow_critical }
@@ -158,8 +167,18 @@ fn import_rethrow_critical(module: &mut Module) -> FunctionId {
     func_id
 }
 
-/// Import the `WebAssembly.JSTag` as a Wasm tag.
+/// Import the `WebAssembly.JSTag` as a Wasm tag, reusing an existing import
+/// (e.g. one created by the JSPI transform) if present.
 fn import_externref_tag(module: &mut Module, name: &str) -> TagId {
+    if let Some(tag) = module.imports.iter().find_map(|i| match i.kind {
+        walrus::ImportKind::Tag(t) if i.module == crate::PLACEHOLDER_MODULE && i.name == name => {
+            Some(t)
+        }
+        _ => None,
+    }) {
+        return tag;
+    }
+
     // JSTag has a single externref parameter (the caught exception)
     let tag_ty = module.types.add(&[ValType::Ref(RefType::EXTERNREF)], &[]);
 
@@ -171,6 +190,12 @@ fn import_externref_tag(module: &mut Module, name: &str) -> TagId {
 
 fn import_js_tag(module: &mut Module) -> TagId {
     import_externref_tag(module, "__wbindgen_jstag")
+}
+
+/// Import (or reuse) the `WebAssembly.JSTag` import. Used by the JSPI
+/// transform to catch promise rejections at the suspend point.
+pub(crate) fn get_or_import_js_tag(module: &mut Module) -> TagId {
+    import_js_tag(module)
 }
 
 /// Look up the `__instance_terminated` exported global and return its i32

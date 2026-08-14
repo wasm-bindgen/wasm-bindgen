@@ -129,6 +129,10 @@ macro_rules! attrgen {
 
             // For testing purposes only.
             (assert_no_shim, false, AssertNoShim(Span)),
+
+            // JSPI attributes
+            (jspi, false, Jspi(Span)),
+            (suspending, false, Suspending(Span)),
         }
     };
 }
@@ -1101,6 +1105,25 @@ impl<'a>
             }
         }
         let assert_no_shim = opts.assert_no_shim().is_some();
+        let suspending = opts.suspending().is_some();
+        if suspending && wasm.r#async {
+            if let Some(span) = opts.suspending() {
+                return Err(Diagnostic::span_error(
+                    *span,
+                    "`suspending` cannot be combined with `async`: a suspending \
+                     import returns the settled value directly, so declare a \
+                     plain `fn` with the resolved type as its return type",
+                ));
+            }
+        }
+        if wasm.jspi {
+            if let Some(span) = opts.jspi() {
+                return Err(Diagnostic::span_error(
+                    *span,
+                    "`jspi` can only be used on exported functions, not imports",
+                ));
+            }
+        }
 
         let mut doc_comment = String::new();
         // Extract the doc comments from our list of attributes.
@@ -1146,6 +1169,7 @@ impl<'a>
         let ret = ast::ImportKind::Function(ast::ImportFunction {
             function: wasm,
             assert_no_shim,
+            suspending,
             kind,
             js_ret,
             catch,
@@ -1592,6 +1616,7 @@ fn function_from_decl(
             rust_vis: vis,
             r#unsafe: sig.unsafety.is_some(),
             r#async: sig.asyncness.is_some(),
+            jspi: opts.jspi().is_some(),
             generate_typescript: opts.skip_typescript().is_none(),
             generate_jsdoc: opts.skip_jsdoc().is_none(),
             variadic: opts.variadic().is_some(),
@@ -2147,6 +2172,34 @@ impl MacroParse<&ClassMarker> for &mut syn::ImplItemFn {
             let kind = operation_kind(&opts);
             ast::MethodKind::Operation(ast::Operation { is_static, kind })
         };
+
+        if function.jspi {
+            match &method_kind {
+                ast::MethodKind::Constructor => {
+                    if let Some(span) = opts.jspi() {
+                        return Err(Diagnostic::span_error(
+                            *span,
+                            "`jspi` cannot be used on constructors",
+                        ));
+                    }
+                }
+                ast::MethodKind::Operation(ast::Operation { kind, .. }) => match kind {
+                    ast::OperationKind::Getter(_)
+                    | ast::OperationKind::Setter(_)
+                    | ast::OperationKind::IndexingGetter
+                    | ast::OperationKind::IndexingSetter
+                    | ast::OperationKind::IndexingDeleter => {
+                        if let Some(span) = opts.jspi() {
+                            return Err(Diagnostic::span_error(
+                                *span,
+                                "`jspi` cannot be used on getters or setters",
+                            ));
+                        }
+                    }
+                    _ => {}
+                },
+            }
+        }
 
         // Validate that js_namespace is not used on methods
         if let Some((_, span)) = opts.js_namespace() {

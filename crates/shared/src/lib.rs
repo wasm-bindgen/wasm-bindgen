@@ -13,7 +13,7 @@ pub mod tys;
 // This gets changed whenever our schema changes.
 // At this time versions of wasm-bindgen and wasm-bindgen-cli are required to have the exact same
 // SCHEMA_VERSION in order to work together.
-pub const SCHEMA_VERSION: &str = "0.2.122";
+pub const SCHEMA_VERSION: &str = "0.2.123";
 
 #[macro_export]
 macro_rules! shared_api {
@@ -69,6 +69,7 @@ macro_rules! shared_api {
             catch: bool,
             variadic: bool,
             assert_no_shim: bool,
+            suspending: bool,
             method: Option<MethodData<'a>>,
             structural: bool,
             function: Function<'a>,
@@ -170,6 +171,7 @@ macro_rules! shared_api {
         struct Function<'a> {
             args: Vec<FunctionArgumentData<'a>>,
             asyncness: bool,
+            jspi: bool,
             name: &'a str,
             generate_typescript: bool,
             generate_jsdoc: bool,

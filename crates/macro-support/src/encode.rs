@@ -246,6 +246,13 @@ fn shared_function<'a>(func: &'a ast::Function, _intern: &'a Interner) -> Functi
     Function {
         args,
         asyncness: func.r#async,
+        // Reported truthfully alongside `asyncness`: every jspi export is a
+        // JSPI context root (the CLI wraps its activation with the in-wasm
+        // fiber wrapper), while only sync jspi exports are additionally
+        // promising-wrapped in JS. An async jspi export keeps the plain
+        // async-export JS contract; its internal `spawn_local` inherits the
+        // context from the rooted activation.
+        jspi: func.jspi,
         name: &func.name,
         generate_typescript: func.generate_typescript,
         generate_jsdoc: func.generate_jsdoc,
@@ -382,6 +389,7 @@ fn shared_import_function<'a>(
         catch: i.catch,
         method,
         assert_no_shim: i.assert_no_shim,
+        suspending: i.suspending,
         structural: i.structural,
         function: shared_function(&i.function, intern),
         variadic: i.variadic,
