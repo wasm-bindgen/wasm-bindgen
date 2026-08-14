@@ -6950,7 +6950,7 @@ extern "C" {
     /// **Note:** Consider using [`Object::try_assign`] to support error handling.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign)
-    #[wasm_bindgen(static_method_of = Object)]
+    #[wasm_bindgen(static_method_of = Object, generic_per_mono)]
     pub fn assign<T>(target: &Object<T>, source: &Object<T>) -> Object<T>;
 
     // Next major: deprecate
@@ -6961,7 +6961,7 @@ extern "C" {
     /// **Note:** Consider using [`Object::try_assign`] to support error handling.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign)
-    #[wasm_bindgen(static_method_of = Object, js_name = assign, catch)]
+    #[wasm_bindgen(static_method_of = Object, js_name = assign, catch, generic_per_mono)]
     pub fn try_assign<T>(target: &Object<T>, source: &Object<T>) -> Result<Object<T>, JsValue>;
 
     /// The `Object.assign()` method is used to copy the values of all enumerable
@@ -6996,21 +6996,21 @@ extern "C" {
     /// will return the target object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign)
-    #[wasm_bindgen(static_method_of = Object, js_name = assign, catch, variadic)]
+    #[wasm_bindgen(static_method_of = Object, js_name = assign, catch, variadic, generic_per_mono)]
     pub fn assign_many<T>(target: &Object<T>, sources: &[Object<T>]) -> Result<Object<T>, JsValue>;
 
     /// The constructor property returns a reference to the `Object` constructor
     /// function that created the instance object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/constructor)
-    #[wasm_bindgen(method, getter)]
+    #[wasm_bindgen(method, getter, generic_per_mono)]
     pub fn constructor<T>(this: &Object<T>) -> Function;
 
     /// The `Object.create()` method creates a new object, using an existing
     /// object to provide the newly created object's prototype.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create)
-    #[wasm_bindgen(static_method_of = Object)]
+    #[wasm_bindgen(static_method_of = Object, generic_per_mono)]
     pub fn create<T>(prototype: &Object<T>) -> Object<T>;
 
     /// The static method `Object.defineProperty()` defines a new
@@ -7021,7 +7021,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(static_method_of = Object, js_name = defineProperty)]
+    #[wasm_bindgen(static_method_of = Object, js_name = defineProperty, generic_per_mono)]
     pub fn define_property<T>(obj: &Object<T>, prop: &JsValue, descriptor: &Object) -> Object<T>;
 
     /// The static method `Object.defineProperty()` defines a new
@@ -7030,7 +7030,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(static_method_of = Object, js_name = defineProperty, catch)]
+    #[wasm_bindgen(static_method_of = Object, js_name = defineProperty, catch, generic_per_mono)]
     pub fn define_property<T>(
         obj: &Object<T>,
         prop: &JsString,
@@ -7043,7 +7043,7 @@ extern "C" {
     /// property on an object, and returns the object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty)
-    #[wasm_bindgen(static_method_of = Object, js_name = defineProperty, catch)]
+    #[wasm_bindgen(static_method_of = Object, js_name = defineProperty, catch, generic_per_mono)]
     pub fn define_property_str<T>(
         obj: &Object<T>,
         prop: &JsString,
@@ -7055,7 +7055,7 @@ extern "C" {
     /// property on an object, and returns the object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty)
-    #[wasm_bindgen(static_method_of = Object, js_name = defineProperty, catch)]
+    #[wasm_bindgen(static_method_of = Object, js_name = defineProperty, catch, generic_per_mono)]
     pub fn define_property_symbol<T>(
         obj: &Object<T>,
         prop: &Symbol,
@@ -7069,7 +7069,7 @@ extern "C" {
     /// **Note:** Consider using [`Object::try_define_properties`] to support typing and error handling.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperties)
-    #[wasm_bindgen(static_method_of = Object, js_name = defineProperties)]
+    #[wasm_bindgen(static_method_of = Object, js_name = defineProperties, generic_per_mono)]
     pub fn define_properties<T>(obj: &Object<T>, props: &Object) -> Object<T>;
 
     /// The `Object.defineProperties()` method defines new or modifies
@@ -7078,7 +7078,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperties)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(static_method_of = Object, js_name = defineProperties, catch)]
+    #[wasm_bindgen(static_method_of = Object, js_name = defineProperties, catch, generic_per_mono)]
     pub fn try_define_properties<T>(
         obj: &Object<T>,
         props: &Object<PropertyDescriptor<T>>,
@@ -7105,7 +7105,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(static_method_of = Object, js_name = entries, catch)]
+    #[wasm_bindgen(static_method_of = Object, js_name = entries, catch, generic_per_mono)]
     pub fn entries<T: JsGeneric>(
         object: &Object<T>,
     ) -> Result<Array<ArrayTuple<(JsString, T)>>, JsValue>;
@@ -7118,7 +7118,7 @@ extern "C" {
     /// prototype chain as well).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries)
-    #[wasm_bindgen(static_method_of = Object, js_name = entries, catch)]
+    #[wasm_bindgen(static_method_of = Object, js_name = entries, catch, generic_per_mono)]
     pub fn entries_typed<T: JsGeneric>(
         object: &Object<T>,
     ) -> Result<Array<ArrayTuple<(JsString, T)>>, JsValue>;
@@ -7130,7 +7130,7 @@ extern "C" {
     /// the prototype from being changed. The method returns the passed object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze)
-    #[wasm_bindgen(static_method_of = Object)]
+    #[wasm_bindgen(static_method_of = Object, generic_per_mono)]
     pub fn freeze<T>(value: &Object<T>) -> Object<T>;
 
     /// The `Object.fromEntries()` method transforms a list of key-value pairs
@@ -7148,7 +7148,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/fromEntries)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(static_method_of = Object, catch, js_name = fromEntries)]
+    #[wasm_bindgen(static_method_of = Object, catch, js_name = fromEntries, generic_per_mono)]
     pub fn from_entries<T: JsGeneric, I: Iterable<Item = ArrayTuple<(JsString, T)>>>(
         entries: &I,
     ) -> Result<Object<T>, JsValue>;
@@ -7158,7 +7158,7 @@ extern "C" {
     /// into an object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/fromEntries)
-    #[wasm_bindgen(static_method_of = Object, catch, js_name = fromEntries)]
+    #[wasm_bindgen(static_method_of = Object, catch, js_name = fromEntries, generic_per_mono)]
     pub fn from_entries_typed<T: JsGeneric, I: Iterable<Item = ArrayTuple<(JsString, T)>>>(
         entries: &I,
     ) -> Result<Object<T>, JsValue>;
@@ -7170,7 +7170,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyDescriptor)]
+    #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyDescriptor, generic_per_mono)]
     pub fn get_own_property_descriptor<T>(obj: &Object<T>, prop: &JsValue) -> JsValue;
 
     /// The `Object.getOwnPropertyDescriptor()` method returns a
@@ -7180,7 +7180,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyDescriptor, catch)]
+    #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyDescriptor, catch, generic_per_mono)]
     pub fn get_own_property_descriptor<T>(
         obj: &Object<T>,
         prop: &JsString,
@@ -7193,7 +7193,7 @@ extern "C" {
     /// of a given object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor)
-    #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyDescriptor, catch)]
+    #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyDescriptor, catch, generic_per_mono)]
     pub fn get_own_property_descriptor_str<T>(
         obj: &Object<T>,
         prop: &JsString,
@@ -7205,7 +7205,7 @@ extern "C" {
     /// of a given object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor)
-    #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyDescriptor, catch)]
+    #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyDescriptor, catch, generic_per_mono)]
     pub fn get_own_property_descriptor_symbol<T>(
         obj: &Object<T>,
         prop: &Symbol,
@@ -7216,7 +7216,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptors)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyDescriptors)]
+    #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyDescriptors, generic_per_mono)]
     pub fn get_own_property_descriptors<T>(obj: &Object<T>) -> JsValue;
 
     /// The `Object.getOwnPropertyDescriptors()` method returns all own
@@ -7224,7 +7224,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptors)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyDescriptors, catch)]
+    #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyDescriptors, catch, generic_per_mono)]
     pub fn get_own_property_descriptors<T>(
         obj: &Object<T>,
     ) -> Result<Object<PropertyDescriptor<T>>, JsValue>;
@@ -7235,7 +7235,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyNames)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyNames)]
+    #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyNames, generic_per_mono)]
     pub fn get_own_property_names<T>(obj: &Object<T>) -> Array;
 
     /// The `Object.getOwnPropertyNames()` method returns an array of
@@ -7244,7 +7244,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyNames)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyNames, catch)]
+    #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyNames, catch, generic_per_mono)]
     pub fn get_own_property_names<T>(obj: &Object<T>) -> Result<Array<JsString>, JsValue>;
 
     /// The `Object.getOwnPropertySymbols()` method returns an array of
@@ -7252,7 +7252,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertySymbols)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertySymbols)]
+    #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertySymbols, generic_per_mono)]
     pub fn get_own_property_symbols<T>(obj: &Object<T>) -> Array;
 
     /// The `Object.getOwnPropertySymbols()` method returns an array of
@@ -7260,7 +7260,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertySymbols)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertySymbols, catch)]
+    #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertySymbols, catch, generic_per_mono)]
     pub fn get_own_property_symbols<T>(obj: &Object<T>) -> Result<Array<Symbol>, JsValue>;
 
     /// The `Object.getPrototypeOf()` method returns the prototype
@@ -7278,7 +7278,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwnProperty)
     #[deprecated(note = "Use `Object::hasOwn` instead.")]
     #[allow(deprecated)]
-    #[wasm_bindgen(method, js_name = hasOwnProperty)]
+    #[wasm_bindgen(method, js_name = hasOwnProperty, generic_per_mono)]
     pub fn has_own_property<T>(this: &Object<T>, property: &JsValue) -> bool;
 
     /// The `Object.hasOwn()` method returns a boolean indicating whether the
@@ -7287,7 +7287,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwn)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(static_method_of = Object, js_name = hasOwn)]
+    #[wasm_bindgen(static_method_of = Object, js_name = hasOwn, generic_per_mono)]
     pub fn has_own<T>(instance: &Object<T>, property: &JsValue) -> bool;
 
     /// The `Object.hasOwn()` method returns a boolean indicating whether the
@@ -7296,7 +7296,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwn)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(static_method_of = Object, js_name = hasOwn, catch)]
+    #[wasm_bindgen(static_method_of = Object, js_name = hasOwn, catch, generic_per_mono)]
     pub fn has_own<T>(instance: &Object<T>, property: &JsString) -> Result<bool, JsValue>;
 
     // Next major: deprecate
@@ -7305,7 +7305,7 @@ extern "C" {
     /// opposed to inheriting it).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwn)
-    #[wasm_bindgen(static_method_of = Object, js_name = hasOwn, catch)]
+    #[wasm_bindgen(static_method_of = Object, js_name = hasOwn, catch, generic_per_mono)]
     pub fn has_own_str<T>(instance: &Object<T>, property: &JsString) -> Result<bool, JsValue>;
 
     /// The `Object.hasOwn()` method returns a boolean indicating whether the
@@ -7313,7 +7313,7 @@ extern "C" {
     /// opposed to inheriting it).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwn)
-    #[wasm_bindgen(static_method_of = Object, js_name = hasOwn, catch)]
+    #[wasm_bindgen(static_method_of = Object, js_name = hasOwn, catch, generic_per_mono)]
     pub fn has_own_symbol<T>(instance: &Object<T>, property: &Symbol) -> Result<bool, JsValue>;
 
     /// The `Object.is()` method determines whether two values are the same value.
@@ -7326,26 +7326,26 @@ extern "C" {
     /// (whether it can have new properties added to it).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/isExtensible)
-    #[wasm_bindgen(static_method_of = Object, js_name = isExtensible)]
+    #[wasm_bindgen(static_method_of = Object, js_name = isExtensible, generic_per_mono)]
     pub fn is_extensible<T>(object: &Object<T>) -> bool;
 
     /// The `Object.isFrozen()` determines if an object is frozen.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/isFrozen)
-    #[wasm_bindgen(static_method_of = Object, js_name = isFrozen)]
+    #[wasm_bindgen(static_method_of = Object, js_name = isFrozen, generic_per_mono)]
     pub fn is_frozen<T>(object: &Object<T>) -> bool;
 
     /// The `Object.isSealed()` method determines if an object is sealed.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/isSealed)
-    #[wasm_bindgen(static_method_of = Object, js_name = isSealed)]
+    #[wasm_bindgen(static_method_of = Object, js_name = isSealed, generic_per_mono)]
     pub fn is_sealed<T>(object: &Object<T>) -> bool;
 
     /// The `isPrototypeOf()` method checks if an object exists in another
     /// object's prototype chain.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/isPrototypeOf)
-    #[wasm_bindgen(method, js_name = isPrototypeOf)]
+    #[wasm_bindgen(method, js_name = isPrototypeOf, generic_per_mono)]
     pub fn is_prototype_of<T>(this: &Object<T>, value: &JsValue) -> bool;
 
     /// The `Object.keys()` method returns an array of a given object's property
@@ -7353,7 +7353,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(static_method_of = Object)]
+    #[wasm_bindgen(static_method_of = Object, generic_per_mono)]
     pub fn keys<T>(object: &Object<T>) -> Array;
 
     /// The `Object.keys()` method returns an array of a given object's property
@@ -7361,7 +7361,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(static_method_of = Object)]
+    #[wasm_bindgen(static_method_of = Object, generic_per_mono)]
     pub fn keys<T>(object: &Object<T>) -> Array<JsString>;
 
     /// The [`Object`] constructor creates an object wrapper.
@@ -7376,7 +7376,7 @@ extern "C" {
     /// The [`Object`] constructor creates an object wrapper.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object)
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, generic_per_mono)]
     pub fn new_typed<T>() -> Object<T>;
 
     /// The `Object.preventExtensions()` method prevents new properties from
@@ -7384,14 +7384,14 @@ extern "C" {
     /// object).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/preventExtensions)
-    #[wasm_bindgen(static_method_of = Object, js_name = preventExtensions)]
+    #[wasm_bindgen(static_method_of = Object, js_name = preventExtensions, generic_per_mono)]
     pub fn prevent_extensions<T>(object: &Object<T>);
 
     /// The `propertyIsEnumerable()` method returns a Boolean indicating
     /// whether the specified property is enumerable.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/propertyIsEnumerable)
-    #[wasm_bindgen(method, js_name = propertyIsEnumerable)]
+    #[wasm_bindgen(method, js_name = propertyIsEnumerable, generic_per_mono)]
     pub fn property_is_enumerable<T>(this: &Object<T>, property: &JsValue) -> bool;
 
     /// The `Object.seal()` method seals an object, preventing new properties
@@ -7400,7 +7400,7 @@ extern "C" {
     /// long as they are writable.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/seal)
-    #[wasm_bindgen(static_method_of = Object)]
+    #[wasm_bindgen(static_method_of = Object, generic_per_mono)]
     pub fn seal<T>(value: &Object<T>) -> Object<T>;
 
     /// The `Object.setPrototypeOf()` method sets the prototype (i.e., the
@@ -7410,7 +7410,7 @@ extern "C" {
     /// **Note:** Consider using [`Object::try_set_prototype_of`] to support errors.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/setPrototypeOf)
-    #[wasm_bindgen(static_method_of = Object, js_name = setPrototypeOf)]
+    #[wasm_bindgen(static_method_of = Object, js_name = setPrototypeOf, generic_per_mono)]
     pub fn set_prototype_of<T>(object: &Object<T>, prototype: &Object) -> Object<T>;
 
     /// The `Object.setPrototypeOf()` method sets the prototype (i.e., the
@@ -7418,7 +7418,7 @@ extern "C" {
     /// object or `null`.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/setPrototypeOf)
-    #[wasm_bindgen(static_method_of = Object, js_name = setPrototypeOf, catch)]
+    #[wasm_bindgen(static_method_of = Object, js_name = setPrototypeOf, catch, generic_per_mono)]
     pub fn try_set_prototype_of<T>(
         object: &Object<T>,
         prototype: &Object,
@@ -7429,27 +7429,27 @@ extern "C" {
     /// locale-specific purposes.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toLocaleString)
-    #[wasm_bindgen(method, js_name = toLocaleString)]
+    #[wasm_bindgen(method, js_name = toLocaleString, generic_per_mono)]
     pub fn to_locale_string<T>(this: &Object<T>) -> JsString;
 
     // Next major: deprecate
     /// The `toString()` method returns a string representing the object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toString)
-    #[wasm_bindgen(method, js_name = toString)]
+    #[wasm_bindgen(method, js_name = toString, generic_per_mono)]
     pub fn to_string<T>(this: &Object<T>) -> JsString;
 
     /// The `toString()` method returns a string representing the object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toString)
-    #[wasm_bindgen(method, js_name = toString)]
+    #[wasm_bindgen(method, js_name = toString, generic_per_mono)]
     pub fn to_js_string<T>(this: &Object<T>) -> JsString;
 
     /// The `valueOf()` method returns the primitive value of the
     /// specified object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/valueOf)
-    #[wasm_bindgen(method, js_name = valueOf)]
+    #[wasm_bindgen(method, js_name = valueOf, generic_per_mono)]
     pub fn value_of<T>(this: &Object<T>) -> Object;
 
     /// The `Object.values()` method returns an array of a given object's own
@@ -7461,7 +7461,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/values)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(static_method_of = Object)]
+    #[wasm_bindgen(static_method_of = Object, generic_per_mono)]
     pub fn values<T>(object: &Object<T>) -> Array<T>;
 
     /// The `Object.values()` method returns an array of a given object's own
@@ -7471,7 +7471,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/values)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(static_method_of = Object, catch, js_name = values)]
+    #[wasm_bindgen(static_method_of = Object, catch, js_name = values, generic_per_mono)]
     pub fn values<T>(object: &Object<T>) -> Result<Array<T>, JsValue>;
 
     // Next major: deprecate
@@ -7482,7 +7482,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/values)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(static_method_of = Object, catch, js_name = values)]
+    #[wasm_bindgen(static_method_of = Object, catch, js_name = values, generic_per_mono)]
     pub fn try_values<T>(object: &Object<T>) -> Result<Array<T>, JsValue>;
 }
 
@@ -7604,7 +7604,7 @@ pub mod Reflect {
         /// arguments as specified.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/apply)
-        #[wasm_bindgen(js_namespace = Reflect, catch)]
+        #[wasm_bindgen(js_namespace = Reflect, catch, generic_per_mono)]
         pub fn apply<T: JsFunction = fn() -> JsValue>(
             target: &Function<T>,
             this_argument: &JsValue,
@@ -7617,7 +7617,7 @@ pub mod Reflect {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/construct)
         #[cfg(not(js_sys_unstable_apis))]
-        #[wasm_bindgen(js_namespace = Reflect, catch)]
+        #[wasm_bindgen(js_namespace = Reflect, catch, generic_per_mono)]
         pub fn construct<T: JsFunction = fn() -> JsValue>(
             target: &Function<T>,
             arguments_list: &Array,
@@ -7629,7 +7629,7 @@ pub mod Reflect {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/construct)
         #[cfg(js_sys_unstable_apis)]
-        #[wasm_bindgen(js_namespace = Reflect, catch)]
+        #[wasm_bindgen(js_namespace = Reflect, catch, generic_per_mono)]
         pub fn construct<T: JsFunction = fn() -> JsValue>(
             target: &Function<T>,
             arguments_list: &ArrayTuple, // DOTO: <A1, A2, A3, A4, A5, A6, A7, A8>,
@@ -7652,7 +7652,7 @@ pub mod Reflect {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/defineProperty)
         #[cfg(not(js_sys_unstable_apis))]
-        #[wasm_bindgen(js_namespace = Reflect, js_name = defineProperty, catch)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = defineProperty, catch, generic_per_mono)]
         pub fn define_property<T>(
             target: &Object<T>,
             property_key: &JsValue,
@@ -7664,7 +7664,7 @@ pub mod Reflect {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/defineProperty)
         #[cfg(js_sys_unstable_apis)]
-        #[wasm_bindgen(js_namespace = Reflect, js_name = defineProperty, catch)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = defineProperty, catch, generic_per_mono)]
         pub fn define_property<T>(
             target: &Object<T>,
             property_key: &JsValue,
@@ -7675,7 +7675,7 @@ pub mod Reflect {
         /// `Object.defineProperty()` but returns a `Boolean`.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/defineProperty)
-        #[wasm_bindgen(js_namespace = Reflect, js_name = defineProperty, catch)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = defineProperty, catch, generic_per_mono)]
         pub fn define_property_str<T>(
             target: &Object<T>,
             property_key: &JsString,
@@ -7686,14 +7686,14 @@ pub mod Reflect {
         /// properties.  It is like the `delete` operator as a function.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/deleteProperty)
-        #[wasm_bindgen(js_namespace = Reflect, js_name = deleteProperty, catch)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = deleteProperty, catch, generic_per_mono)]
         pub fn delete_property<T>(target: &Object<T>, key: &JsValue) -> Result<bool, JsValue>;
 
         /// The static `Reflect.deleteProperty()` method allows to delete
         /// properties.  It is like the `delete` operator as a function.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/deleteProperty)
-        #[wasm_bindgen(js_namespace = Reflect, js_name = deleteProperty, catch)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = deleteProperty, catch, generic_per_mono)]
         pub fn delete_property_str<T>(target: &Object<T>, key: &JsString) -> Result<bool, JsValue>;
 
         /// The static `Reflect.get()` method works like getting a property from
@@ -7709,21 +7709,21 @@ pub mod Reflect {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/get)
         #[cfg(js_sys_unstable_apis)]
-        #[wasm_bindgen(js_namespace = Reflect, catch)]
+        #[wasm_bindgen(js_namespace = Reflect, catch, generic_per_mono)]
         pub fn get<T>(target: &Object<T>, key: &JsString) -> Result<Option<T>, JsValue>;
 
         /// The static `Reflect.get()` method works like getting a property from
         /// an object (`target[propertyKey]`) as a function.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/get)
-        #[wasm_bindgen(js_namespace = Reflect, js_name = get, catch)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = get, catch, generic_per_mono)]
         pub fn get_str<T>(target: &Object<T>, key: &JsString) -> Result<Option<T>, JsValue>;
 
         /// The static `Reflect.get()` method works like getting a property from
         /// an object (`target[propertyKey]`) as a function.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/get)
-        #[wasm_bindgen(js_namespace = Reflect, js_name = get, catch)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = get, catch, generic_per_mono)]
         pub fn get_symbol<T>(target: &Object<T>, key: &Symbol) -> Result<JsValue, JsValue>;
 
         /// The same as [`get`](fn.get.html)
@@ -7741,7 +7741,7 @@ pub mod Reflect {
         /// of the given property if it exists on the object, `undefined` otherwise.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/getOwnPropertyDescriptor)
-        #[wasm_bindgen(js_namespace = Reflect, js_name = getOwnPropertyDescriptor, catch)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = getOwnPropertyDescriptor, catch, generic_per_mono)]
         pub fn get_own_property_descriptor<T>(
             target: &Object<T>,
             property_key: &JsValue,
@@ -7752,7 +7752,7 @@ pub mod Reflect {
         /// of the given property if it exists on the object, `undefined` otherwise.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/getOwnPropertyDescriptor)
-        #[wasm_bindgen(js_namespace = Reflect, js_name = getOwnPropertyDescriptor, catch)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = getOwnPropertyDescriptor, catch, generic_per_mono)]
         pub fn get_own_property_descriptor_str<T>(
             target: &Object<T>,
             property_key: &JsString,
@@ -7799,14 +7799,14 @@ pub mod Reflect {
         /// function.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/has)
-        #[wasm_bindgen(js_namespace = Reflect, js_name = has, catch)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = has, catch, generic_per_mono)]
         pub fn has_str<T>(target: &Object<T>, property_key: &JsString) -> Result<bool, JsValue>;
 
         /// The static `Reflect.has()` method works like the in operator as a
         /// function.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/has)
-        #[wasm_bindgen(js_namespace = Reflect, js_name = has, catch)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = has, catch, generic_per_mono)]
         pub fn has_symbol<T>(target: &Object<T>, property_key: &Symbol) -> Result<bool, JsValue>;
 
         /// The static `Reflect.isExtensible()` method determines if an object is
@@ -7814,7 +7814,7 @@ pub mod Reflect {
         /// similar to `Object.isExtensible()`, but with some differences.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/isExtensible)
-        #[wasm_bindgen(js_namespace = Reflect, js_name = isExtensible, catch)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = isExtensible, catch, generic_per_mono)]
         pub fn is_extensible<T>(target: &Object<T>) -> Result<bool, JsValue>;
 
         /// The static `Reflect.ownKeys()` method returns an array of the
@@ -7830,7 +7830,7 @@ pub mod Reflect {
         /// `Object.preventExtensions()`, but with some differences.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/preventExtensions)
-        #[wasm_bindgen(js_namespace = Reflect, js_name = preventExtensions, catch)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = preventExtensions, catch, generic_per_mono)]
         pub fn prevent_extensions<T>(target: &Object<T>) -> Result<bool, JsValue>;
 
         /// The static `Reflect.set()` method works like setting a
@@ -7850,7 +7850,7 @@ pub mod Reflect {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/set)
         #[cfg(js_sys_unstable_apis)]
-        #[wasm_bindgen(js_namespace = Reflect, catch)]
+        #[wasm_bindgen(js_namespace = Reflect, catch, generic_per_mono)]
         pub fn set<T>(
             target: &Object<T>,
             property_key: &JsString,
@@ -7862,7 +7862,7 @@ pub mod Reflect {
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/set)
         #[cfg(js_sys_unstable_apis)]
-        #[wasm_bindgen(js_namespace = Reflect, catch)]
+        #[wasm_bindgen(js_namespace = Reflect, catch, generic_per_mono)]
         pub fn set_symbol<T>(
             target: &Object<T>,
             property_key: &Symbol,
@@ -7874,7 +7874,7 @@ pub mod Reflect {
         /// property on an object.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/set)
-        #[wasm_bindgen(js_namespace = Reflect, js_name = set, catch)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = set, catch, generic_per_mono)]
         pub fn set_str<T>(
             target: &Object<T>,
             property_key: &JsString,
@@ -7917,7 +7917,7 @@ pub mod Reflect {
         /// object to another object or to null.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/setPrototypeOf)
-        #[wasm_bindgen(js_namespace = Reflect, js_name = setPrototypeOf, catch)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = setPrototypeOf, catch, generic_per_mono)]
         pub fn set_prototype_of<T>(
             target: &Object<T>,
             prototype: &JsValue,

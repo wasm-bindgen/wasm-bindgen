@@ -206,6 +206,26 @@ fn define_properties() {
     assert!(foo.has_own_property(&"car".into()));
 }
 
+// No prior coverage at all: unlike `define_properties` above, `props` here is
+// `&Object<PropertyDescriptor<T>>` — a nested generic imported type.
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen_test]
+fn try_define_properties() {
+    let obj: Object<Number> = Object::new_typed();
+    let props: Object<js_sys::PropertyDescriptor<Number>> = Object::new_typed();
+    let descriptor = js_sys::PropertyDescriptor::new_value(&Number::from(42));
+    Reflect::set_str(&props, &"bar".into(), &descriptor).unwrap();
+
+    let result = Object::try_define_properties(&obj, &props).unwrap();
+    assert_eq!(
+        Reflect::get_str(&result, &"bar".into())
+            .unwrap()
+            .unwrap()
+            .value_of(),
+        42.0
+    );
+}
+
 #[wasm_bindgen_test]
 fn entries() {
     #[cfg(not(js_sys_unstable_apis))]
@@ -520,4 +540,80 @@ fn from_entries_typed() {
         Reflect::get_str(&obj, &"baz".into()).unwrap().unwrap(),
         "qux"
     );
+}
+
+// The following cover generic_per_mono conversions with no prior coverage at
+// all in this file: `try_assign`, `constructor`, `get_own_property_descriptor_str`,
+// `get_own_property_descriptor_symbol`, `has_own_str`, `try_set_prototype_of`,
+// `to_js_string`, `try_values`.
+
+#[wasm_bindgen_test]
+fn try_assign() {
+    let a = JsString::from("a");
+    let target = Object::new();
+    let src = Object::new();
+    Reflect::set(src.as_ref(), &a, &JsString::from("value").into()).unwrap();
+
+    let res = Object::try_assign(&target, &src).unwrap();
+    assert!(Object::is(target.as_ref(), res.as_ref()));
+    assert_eq!(
+        Reflect::get_str(target.as_ref(), &a).unwrap().unwrap(),
+        JsValue::from("value")
+    );
+}
+
+#[wasm_bindgen_test]
+fn constructor() {
+    let ctor = foo_42().constructor();
+    assert_eq!(ctor.name(), "Object");
+}
+
+#[wasm_bindgen_test]
+fn get_own_property_descriptor_str() {
+    let descriptor = Object::get_own_property_descriptor_str(&foo_42(), &"foo".into()).unwrap();
+    assert_eq!(descriptor.get_value().unwrap(), 42);
+}
+
+// `Object::get_own_property_descriptor_symbol` always takes a `&Symbol` (it
+// has no `not(js_sys_unstable_apis)` overload accepting `&JsValue`), but the
+// test helper's `symbol_key()` only returns an actual `Symbol` under
+// `js_sys_unstable_apis`.
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen_test]
+fn get_own_property_descriptor_symbol() {
+    let descriptor =
+        Object::get_own_property_descriptor_symbol(&map_with_symbol_key(), &symbol_key()).unwrap();
+    assert_eq!(descriptor.get_value().unwrap(), 42);
+}
+
+#[wasm_bindgen_test]
+fn has_own_str() {
+    assert!(Object::has_own_str(&foo_42(), &"foo".into()).unwrap());
+    assert!(!Object::has_own_str(&foo_42(), &"bar".into()).unwrap());
+}
+
+#[wasm_bindgen_test]
+fn try_set_prototype_of() {
+    let a = foo_42();
+    let b = foo_42();
+    let res = Object::try_set_prototype_of(&a, b.upcast()).unwrap();
+    assert!(Object::is(a.as_ref(), res.as_ref()));
+    assert!(b.is_prototype_of(&a.into()));
+}
+
+#[wasm_bindgen_test]
+fn to_js_string() {
+    assert_eq!(Object::new().to_js_string(), "[object Object]");
+}
+
+// `try_values` only exists pre-unstable-API (the unstable `values` already
+// returns a `Result` itself, so there is no separate fallible variant).
+#[cfg(not(js_sys_unstable_apis))]
+#[wasm_bindgen_test]
+fn try_values() {
+    let values = Object::try_values(&foo_42()).unwrap();
+    assert_eq!(values.length(), 1);
+    values.for_each(&mut |x, _, _| {
+        assert_eq!(x, 42);
+    });
 }
