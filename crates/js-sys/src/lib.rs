@@ -2536,7 +2536,7 @@ extern "C" {
     /// keys for each index in the array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/keys)
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn keys<T>(this: &Array<T>) -> Iterator<T>;
 
     /// The `entries()` method returns a new Array Iterator object that contains
@@ -2544,7 +2544,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/entries)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     #[deprecated(note = "recommended to use `Array::entries_typed` instead for typing")]
     #[allow(deprecated)]
     pub fn entries<T>(this: &Array<T>) -> Iterator<T>;
@@ -2554,7 +2554,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/entries)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn entries<T: JsGeneric>(this: &Array<T>) -> Iterator<ArrayTuple<(Number, T)>>;
 
     // Next major: deprecate
@@ -2562,14 +2562,14 @@ extern "C" {
     /// the key/value pairs for each index in the array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/entries)
-    #[wasm_bindgen(method, js_name = entries)]
+    #[wasm_bindgen(method, js_name = entries, generic_per_mono)]
     pub fn entries_typed<T: JsGeneric>(this: &Array<T>) -> Iterator<ArrayTuple<(Number, T)>>;
 
     /// The `values()` method returns a new Array Iterator object that
     /// contains the values for each index in the array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/values)
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn values<T>(this: &Array<T>) -> Iterator<T>;
 }
 
