@@ -13222,7 +13222,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, generic_per_mono)]
     pub fn new<T: JsGeneric>(
         cb: &mut dyn FnMut(Function<fn(T) -> Undefined>, Function<fn(JsValue) -> Undefined>),
     ) -> Promise<T>;
@@ -13231,7 +13231,7 @@ extern "C" {
     /// Creates a new `Promise` with the provided executor `cb`
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, generic_per_mono)]
     pub fn new_typed<T: Promising + JsGeneric>(
         cb: &mut dyn FnMut(Function<fn(T) -> Undefined>, Function<fn(JsValue) -> Undefined>),
     ) -> Promise<<T as Promising>::Resolution>;

@@ -17,6 +17,25 @@ fn promise_inheritance() {
     let _: &Object = promise.as_ref();
 }
 
+// `Promise::new`/`Promise::new_typed`'s executor is a raw `&mut dyn FnMut`
+// (not a `ScopedClosure`), so it fits the closure-argument shape and was
+// converted to generic_per_mono; `promise_inheritance` above only exercises
+// it at the default `T = JsValue`. Exercise a genuinely non-default `T`
+// (`Number`) and actually call `resolve` and await the result, rather than
+// just constructing the `Promise`.
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen_test]
+async fn test_promise_new_typed_resolves_non_default_type() {
+    let promise: Promise<Number> = Promise::new_typed(&mut |resolve, _reject| {
+        resolve
+            .call1(&JsValue::UNDEFINED, &Number::from(42.0))
+            .unwrap();
+    });
+    let result = JsFuture::from(promise).await.unwrap();
+    let number: Number = result.unchecked_into();
+    assert_eq!(number.value_of(), 42.0);
+}
+
 #[wasm_bindgen(module = "tests/wasm/Promise.js")]
 extern "C" {
     #[wasm_bindgen(extends = Object)]
