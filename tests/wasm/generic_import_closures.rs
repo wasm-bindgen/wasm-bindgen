@@ -36,15 +36,6 @@ extern "C" {
 
     // A shared (non-`mut`) `&dyn Fn`, with two distinct type parameters: one
     // in the closure's argument, a different one in its return.
-    //
-    // The outer return here is deliberately a bare `U`, not `Vec<U>`: a
-    // `Vec<U>` return whose `U` differs from another type parameter used
-    // elsewhere in the signature (e.g. the `T` in `xs: Vec<T>` below) trips a
-    // pre-existing bug in `generic_per_mono`'s general return-type handling
-    // that has nothing to do with closures — reproducible with no closure
-    // argument at all. That is out of scope for this change; `fold_values`
-    // below covers the realistic "map over a `Vec<T>`" shape without hitting
-    // it, by folding down to a single `U` instead of collecting a `Vec<U>`.
     #[wasm_bindgen(generic_per_mono, js_name = transformValue)]
     fn transform_value<T, U>(x: T, f: &dyn Fn(T) -> U) -> U;
 
@@ -57,6 +48,15 @@ extern "C" {
         mapper: &dyn Fn(T) -> U,
         reducer: &mut dyn FnMut(U, U) -> U,
     ) -> U;
+
+    // The realistic "map a `Vec<T>` to a `Vec<U>`" shape: the *outer*
+    // function's return (`Vec<U>`) mentions a type parameter that differs
+    // from the one used in its argument (`Vec<T>`), independent of the
+    // closure argument mentioning a type parameter too. `Array::map` in
+    // `js-sys` has this same "argument `T`, return a differently-typed
+    // container of `U`" shape.
+    #[wasm_bindgen(generic_per_mono, js_name = mapValues)]
+    fn map_values<T, U>(xs: Vec<T>, mapper: &dyn Fn(T) -> U) -> Vec<U>;
 
     // The `Array<T>::for_each`/`Array<T>::every` shape itself: a closure
     // argument mentioning the *class's* hoisted type parameter, composing
@@ -139,6 +139,17 @@ fn generic_per_mono_multiple_generic_closures() {
     let words = vec!["a".to_string(), "bcd".to_string(), "ef".to_string()];
     let longest = fold_values(words, 0u32, &|s| s.len() as u32, &mut |a, b| a.max(b));
     assert_eq!(longest, 3);
+}
+
+#[wasm_bindgen_test]
+fn generic_per_mono_map_values_returns_generic_vec() {
+    let out = map_values(vec![1u32, 2, 3], &|x| x * 10);
+    assert_eq!(out, vec![10u32, 20, 30]);
+
+    // A second monomorphisation, with `T` and `U` both different from above
+    // (and from each other).
+    let out = map_values(vec!["a".to_string(), "bb".to_string()], &|s| s.len() as u32);
+    assert_eq!(out, vec![1u32, 2]);
 }
 
 #[wasm_bindgen_test]

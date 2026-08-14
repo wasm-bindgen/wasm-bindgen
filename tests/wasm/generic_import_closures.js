@@ -26,6 +26,10 @@ exports.foldValues = function (xs, init, mapper, reducer) {
   return acc;
 };
 
+exports.mapValues = function (xs, mapper) {
+  return xs.map(mapper);
+};
+
 class Bucket {
   constructor(items) {
     this.items = items;
