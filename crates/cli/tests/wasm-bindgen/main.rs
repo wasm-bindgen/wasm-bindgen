@@ -111,23 +111,8 @@ impl Project {
     }
 
     fn wasm_bindgen(&mut self, args: &str) -> anyhow::Result<PathBuf> {
-        let output = self.root.join("pkg").join({
-            let mut hasher = DefaultHasher::new();
-            args.hash(&mut hasher);
-            hasher.finish().to_string()
-        });
-        fs::create_dir_all(&output).unwrap();
-        wasm_bindgen_cli::wasm_bindgen::run_cli_with_args(
-            [
-                "wasm-bindgen".as_ref(),
-                "--out-dir".as_ref(),
-                output.as_os_str(),
-                self.build().as_os_str(),
-            ]
-            .into_iter()
-            .chain(args.split_whitespace().map(str::as_ref)),
-        )?;
-        Ok(output)
+        let wasm = self.build();
+        run_wasm_bindgen(&wasm, &self.root.join("pkg"), args)
     }
 
     fn dep(&mut self, line: &str) -> &mut Project {
@@ -180,6 +165,35 @@ impl Project {
 
         built
     }
+}
+
+/// Run the `wasm-bindgen` CLI (in-process) against an already-built `wasm`
+/// artifact, writing its output below `pkg_root` in a directory keyed by a
+/// hash of `args` (so distinct flag combinations against the same artifact
+/// don't clobber each other's output).
+///
+/// This is split out from [`Project::wasm_bindgen`] so callers that build
+/// their `wasm` artifact some other way (e.g. as part of a batched Cargo
+/// workspace shared across many tests, see `reference::REFERENCE_WORKSPACE`)
+/// can reuse the exact same post-processing logic.
+fn run_wasm_bindgen(wasm: &Path, pkg_root: &Path, args: &str) -> anyhow::Result<PathBuf> {
+    let output = pkg_root.join({
+        let mut hasher = DefaultHasher::new();
+        args.hash(&mut hasher);
+        hasher.finish().to_string()
+    });
+    fs::create_dir_all(&output).unwrap();
+    wasm_bindgen_cli::wasm_bindgen::run_cli_with_args(
+        [
+            "wasm-bindgen".as_ref(),
+            "--out-dir".as_ref(),
+            output.as_os_str(),
+            wasm.as_os_str(),
+        ]
+        .into_iter()
+        .chain(args.split_whitespace().map(str::as_ref)),
+    )?;
+    Ok(output)
 }
 
 #[test]
