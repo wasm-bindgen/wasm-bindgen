@@ -2136,6 +2136,39 @@ fn test_array_try_map_error() {
     assert!(result.is_err());
 }
 
+// `flat_map`/`try_flat_map`'s callback returns `Vec<U>`, a sequence rather
+// than a scalar `U`, which is otherwise untested at a concrete (non-`JsValue`)
+// `T`/`U` pair by the plain `flat_map` test above.
+#[wasm_bindgen_test]
+fn test_array_flat_map_typed() {
+    let arr: Array<TestItem> = Array::new_typed();
+    arr.push(&TestItem::new(1, &JsString::from("a")));
+    arr.push(&TestItem::new(2, &JsString::from("b")));
+
+    let mapped: Array<JsString> =
+        arr.flat_map(&mut |val: TestItem, _, _| vec![val.name(), val.name().to_upper_case()]);
+    assert_eq!(mapped.length(), 4);
+    assert_eq!(unwrap_get!(mapped, 0), "a");
+    assert_eq!(unwrap_get!(mapped, 1), "A");
+    assert_eq!(unwrap_get!(mapped, 2), "b");
+    assert_eq!(unwrap_get!(mapped, 3), "B");
+}
+
+#[wasm_bindgen_test]
+fn test_array_try_flat_map() {
+    let arr: Array<TestItem> = Array::new_typed();
+    arr.push(&TestItem::new(1, &JsString::from("a")));
+    arr.push(&TestItem::new(2, &JsString::from("b")));
+
+    let result: Result<Array<JsString>, JsValue> =
+        arr.try_flat_map(&mut |val: TestItem, _| vec![val.name(), val.name()]);
+    assert!(result.is_ok());
+    let mapped = result.unwrap();
+    assert_eq!(mapped.length(), 4);
+    assert_eq!(unwrap_get!(mapped, 0), "a");
+    assert_eq!(unwrap_get!(mapped, 2), "b");
+}
+
 #[wasm_bindgen_test]
 fn test_array_try_reduce() {
     let arr: Array<Number> = Array::new_typed();
@@ -2170,6 +2203,22 @@ fn test_array_try_reduce_error() {
         &initial,
     );
     assert!(result.is_err());
+}
+
+// `try_reduce`'s `T` (the element) and `A` (the accumulator) are two
+// independent type parameters that both appear inside the closure's own
+// signature; exercise them at genuinely different concrete types (`TestItem`
+// and `u32`) rather than the same type as the tests above.
+#[wasm_bindgen_test]
+fn test_array_try_reduce_distinct_element_and_accumulator_types() {
+    let arr: Array<TestItem> = Array::new_typed();
+    arr.push(&TestItem::new(1, &JsString::from("a")));
+    arr.push(&TestItem::new(2, &JsString::from("b")));
+    arr.push(&TestItem::new(3, &JsString::from("c")));
+
+    let result: Result<u32, JsValue> =
+        arr.try_reduce(&mut |acc: u32, val: TestItem, _| Ok(acc + val.id()), &0u32);
+    assert_eq!(result.unwrap(), 6);
 }
 
 #[wasm_bindgen_test]

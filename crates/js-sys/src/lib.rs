@@ -723,7 +723,7 @@ extern "C" {
     /// implemented by the provided function. _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/every)
-    #[wasm_bindgen(method, js_name = every, catch)]
+    #[wasm_bindgen(method, js_name = every, catch, generic_per_mono)]
     pub fn try_every<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsError>,
@@ -742,7 +742,7 @@ extern "C" {
     /// **Note:** Consider using [`Array::try_filter`] if the predicate might throw an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn filter<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool,
@@ -752,7 +752,7 @@ extern "C" {
     /// test implemented by the provided function. _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter)
-    #[wasm_bindgen(method, js_name = filter, catch)]
+    #[wasm_bindgen(method, js_name = filter, catch, generic_per_mono)]
     pub fn try_filter<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsError>,
@@ -763,7 +763,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn find<T>(this: &Array<T>, predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool) -> T;
 
     /// The `find()` method returns the value of the first element in the array that satisfies
@@ -771,7 +771,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn find<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool,
@@ -781,7 +781,7 @@ extern "C" {
     ///  the provided testing function. Otherwise `undefined` is returned. _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find)
-    #[wasm_bindgen(method, js_name = find, catch)]
+    #[wasm_bindgen(method, js_name = find, catch, generic_per_mono)]
     pub fn try_find<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsError>,
@@ -793,7 +793,7 @@ extern "C" {
     /// **Note:** Consider using [`Array::try_find_index`] if the predicate might throw an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findIndex)
-    #[wasm_bindgen(method, js_name = findIndex)]
+    #[wasm_bindgen(method, js_name = findIndex, generic_per_mono)]
     pub fn find_index<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool,
@@ -803,7 +803,7 @@ extern "C" {
     /// satisfies the provided testing function. Otherwise -1 is returned. _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findIndex)
-    #[wasm_bindgen(method, js_name = findIndex, catch)]
+    #[wasm_bindgen(method, js_name = findIndex, catch, generic_per_mono)]
     pub fn try_find_index<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsError>,
@@ -815,7 +815,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findLast)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method, js_name = findLast)]
+    #[wasm_bindgen(method, js_name = findLast, generic_per_mono)]
     pub fn find_last<T>(this: &Array<T>, predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool) -> T;
 
     /// The `findLast()` method of Array instances iterates the array in reverse order
@@ -826,7 +826,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findLast)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, js_name = findLast)]
+    #[wasm_bindgen(method, js_name = findLast, generic_per_mono)]
     pub fn find_last<T>(this: &Array<T>, predicate: &mut dyn FnMut(T, u32) -> bool) -> Option<T>;
 
     /// The `findLast()` method of Array instances iterates the array in reverse order
@@ -834,7 +834,7 @@ extern "C" {
     /// If no elements satisfy the testing function, undefined is returned. _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findLast)
-    #[wasm_bindgen(method, js_name = findLast, catch)]
+    #[wasm_bindgen(method, js_name = findLast, catch, generic_per_mono)]
     pub fn try_find_last<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsError>,
@@ -847,7 +847,7 @@ extern "C" {
     /// **Note:** Consider using [`Array::try_find_last_index`] if the predicate might throw an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findLastIndex)
-    #[wasm_bindgen(method, js_name = findLastIndex)]
+    #[wasm_bindgen(method, js_name = findLastIndex, generic_per_mono)]
     pub fn find_last_index<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T, u32, Array<T>) -> bool,
@@ -858,7 +858,7 @@ extern "C" {
     /// If no elements satisfy the testing function, -1 is returned. _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findLastIndex)
-    #[wasm_bindgen(method, js_name = findLastIndex, catch)]
+    #[wasm_bindgen(method, js_name = findLastIndex, catch, generic_per_mono)]
     pub fn try_find_last_index<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T, u32) -> Result<bool, JsError>,
@@ -877,7 +877,7 @@ extern "C" {
     /// **Note:** Consider using [`Array::try_flat_map`] for safer fallible handling.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flatMap)
-    #[wasm_bindgen(method, js_name = flatMap)]
+    #[wasm_bindgen(method, js_name = flatMap, generic_per_mono)]
     pub fn flat_map<T, U>(
         this: &Array<T>,
         callback: &mut dyn FnMut(T, u32, Array<T>) -> Vec<U>,
@@ -887,7 +887,7 @@ extern "C" {
     /// the result into a new array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flatMap)
-    #[wasm_bindgen(method, js_name = flatMap, catch)]
+    #[wasm_bindgen(method, js_name = flatMap, catch, generic_per_mono)]
     pub fn try_flat_map<T, U>(
         this: &Array<T>,
         callback: &mut dyn FnMut(T, u32) -> Vec<U>,
@@ -904,7 +904,7 @@ extern "C" {
     /// The `forEach()` method executes a provided function once for each array element. _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach)
-    #[wasm_bindgen(method, js_name = forEach, catch)]
+    #[wasm_bindgen(method, js_name = forEach, catch, generic_per_mono)]
     pub fn try_for_each<T>(
         this: &Array<T>,
         callback: &mut dyn FnMut(T, u32) -> Result<(), JsError>,
@@ -976,7 +976,7 @@ extern "C" {
     /// **Note:** Consider using [`Array::try_map`] for safer fallible handling.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn map<T, U>(this: &Array<T>, predicate: &mut dyn FnMut(T, u32, Array<T>) -> U)
         -> Array<U>;
 
@@ -988,7 +988,7 @@ extern "C" {
     /// _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map)
-    #[wasm_bindgen(method, js_name = map, catch)]
+    #[wasm_bindgen(method, js_name = map, catch, generic_per_mono)]
     pub fn try_map<T, U>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T, u32) -> Result<U, JsError>,
@@ -1076,7 +1076,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn reduce<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(JsValue, T, u32, Array<T>) -> JsValue,
@@ -1088,7 +1088,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn reduce<T, A>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(A, T, u32, Array<T>) -> A,
@@ -1099,7 +1099,7 @@ extern "C" {
     /// the array (from left to right) to reduce it to a single value. _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/Reduce)
-    #[wasm_bindgen(method, js_name = reduce, catch)]
+    #[wasm_bindgen(method, js_name = reduce, catch, generic_per_mono)]
     pub fn try_reduce<T, A>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(A, T, u32) -> Result<A, JsError>,
@@ -1111,7 +1111,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/ReduceRight)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method, js_name = reduceRight)]
+    #[wasm_bindgen(method, js_name = reduceRight, generic_per_mono)]
     pub fn reduce_right<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(JsValue, T, u32, Array<T>) -> JsValue,
@@ -1123,7 +1123,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/ReduceRight)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, js_name = reduceRight)]
+    #[wasm_bindgen(method, js_name = reduceRight, generic_per_mono)]
     pub fn reduce_right<T, A>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(A, T, u32, Array<T>) -> A,
@@ -1134,7 +1134,7 @@ extern "C" {
     /// of the array (from right-to-left) to reduce it to a single value. _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/ReduceRight)
-    #[wasm_bindgen(method, js_name = reduceRight, catch)]
+    #[wasm_bindgen(method, js_name = reduceRight, catch, generic_per_mono)]
     pub fn try_reduce_right<T, A>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(JsValue, T, u32) -> Result<A, JsError>,
@@ -1218,14 +1218,14 @@ extern "C" {
     /// **Note:** Consider using [`Array::try_some`] if the predicate might throw an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some)
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn some<T>(this: &Array<T>, predicate: &mut dyn FnMut(T) -> bool) -> bool;
 
     /// The `some()` method tests whether at least one element in the array passes the test implemented
     /// by the provided function. _(Fallible variation)_
     /// Note: This method returns false for any condition put on an empty array.
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/some)
-    #[wasm_bindgen(method, js_name = some, catch)]
+    #[wasm_bindgen(method, js_name = some, catch, generic_per_mono)]
     pub fn try_some<T>(
         this: &Array<T>,
         predicate: &mut dyn FnMut(T) -> Result<bool, JsError>,
@@ -1247,13 +1247,13 @@ extern "C" {
     /// **Note:** Consider using [`Array::try_sort_by`] if the predicate might throw an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort)
-    #[wasm_bindgen(method, js_name = sort)]
+    #[wasm_bindgen(method, js_name = sort, generic_per_mono)]
     pub fn sort_by<T>(this: &Array<T>, compare_fn: &mut dyn FnMut(T, T) -> i32) -> Array<T>;
 
     /// The `sort()` method with a custom compare function. _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort)
-    #[wasm_bindgen(method, js_name = sort, catch)]
+    #[wasm_bindgen(method, js_name = sort, catch, generic_per_mono)]
     pub fn try_sort_by<T>(
         this: &Array<T>,
         compare_fn: &mut dyn FnMut(T, T) -> Result<i32, JsError>,
@@ -1314,13 +1314,13 @@ extern "C" {
     /// **Note:** Consider using [`Array::try_to_sorted_by`] if the predicate might throw an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSorted)
-    #[wasm_bindgen(method, js_name = toSorted)]
+    #[wasm_bindgen(method, js_name = toSorted, generic_per_mono)]
     pub fn to_sorted_by<T>(this: &Array<T>, compare_fn: &mut dyn FnMut(T, T) -> i32) -> Array<T>;
 
     /// The `toSorted()` method with a custom compare function. _(Fallible variation)_
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toSorted)
-    #[wasm_bindgen(method, js_name = toSorted, catch)]
+    #[wasm_bindgen(method, js_name = toSorted, catch, generic_per_mono)]
     pub fn try_to_sorted_by<T>(
         this: &Array<T>,
         compare_fn: &mut dyn FnMut(T, T) -> Result<i32, JsError>,
