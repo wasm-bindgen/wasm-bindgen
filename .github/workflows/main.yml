@@ -53,6 +53,9 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
       with:
         components: clippy,rustfmt
+    - uses: Swatinem/rust-cache@v2
+      with:
+        cache-workspace-crates: "true"
     - run: cargo clippy --no-deps --all --all-features -- -D warnings
 
   # Run `cargo clippy` over all Wasm crates
@@ -65,6 +68,9 @@ jobs:
       with:
         targets: wasm32-unknown-unknown
         components: clippy,rustfmt
+    - uses: Swatinem/rust-cache@v2
+      with:
+        cache-workspace-crates: "true"
     - run: >
         cargo clippy --no-deps --all --all-features
         --target wasm32-unknown-unknown
@@ -89,6 +95,10 @@ jobs:
       with:
         targets: wasm32-unknown-unknown
         components: clippy
+    - uses: Swatinem/rust-cache@v2
+      with:
+        key: ${{ matrix.name }}
+        cache-workspace-crates: "true"
     - run: >
         cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown
         -p wasm-bindgen
@@ -120,6 +130,10 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: wasm32-unknown-unknown
+    - uses: Swatinem/rust-cache@v2
+      with:
+        key: ${{ matrix.runs.name }}
+        cache-workspace-crates: "true"
     - uses: actions/setup-node@v7
       with:
         node-version: '20'
@@ -143,6 +157,10 @@ jobs:
       with:
         targets: wasm32-unknown-unknown
         components: rust-src
+    - uses: Swatinem/rust-cache@v2
+      with:
+        key: ${{ matrix.envs.name }}
+        cache-workspace-crates: "true"
     - uses: actions/setup-node@v7
       with:
         node-version: '20'
@@ -158,6 +176,9 @@ jobs:
     - uses: dtolnay/rust-toolchain@nightly
       with:
         components: rust-src
+    - uses: Swatinem/rust-cache@v2
+      with:
+        cache-workspace-crates: "true"
     - uses: actions/setup-node@v7
       with:
         node-version: '24'
@@ -178,6 +199,9 @@ jobs:
       with:
         targets: wasm32-unknown-unknown
         components: rust-src
+    - uses: Swatinem/rust-cache@v2
+      with:
+        cache-workspace-crates: "true"
     # Legacy EH is the path that buys back Node 20+ support: wasm-bindgen
     # polyfills `WebAssembly.JSTag` on the JS side, so the legacy `try`/`catch`
     # instructions (supported since Node 18) are sufficient — no host
@@ -204,6 +228,9 @@ jobs:
       with:
         targets: wasm32-unknown-unknown
         components: rust-src
+    - uses: Swatinem/rust-cache@v2
+      with:
+        cache-workspace-crates: "true"
     # TODO: drop back to Node 22 LTS once 22.22.3 ships (2026-05-13, modern EH backport).
     - uses: actions/setup-node@v7
       with:
@@ -219,6 +246,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-emscripten
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-workspace-crates: "true"
       - name: Setup Emscripten SDK
         uses: mymindstorm/setup-emsdk@v16
         with:
@@ -279,6 +309,9 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: wasm32-unknown-unknown,wasm32-wasip1
+    - uses: Swatinem/rust-cache@v2
+      with:
+        cache-workspace-crates: "true"
     # The cli termination tests build with `-Cpanic=unwind` which since
     # rust-lang/rust#156061 produces modern (exnref) EH by default. That needs
     # Node 22.22.3+ on the 22 LTS line (or 24.15.0+) to validate.
@@ -354,6 +387,10 @@ jobs:
       with:
         targets: wasm32-unknown-unknown
         components: rustfmt
+    - uses: Swatinem/rust-cache@v2
+      with:
+        key: ${{ matrix.runs.name }}
+        cache-workspace-crates: "true"
     - uses: actions/setup-node@v7
       with:
         node-version: '20'
@@ -365,6 +402,9 @@ jobs:
     steps:
     - uses: actions/checkout@v7
     - uses: dtolnay/rust-toolchain@1.88
+    - uses: Swatinem/rust-cache@v2
+      with:
+        cache-workspace-crates: "true"
     - run: cargo test -p wasm-bindgen-macro
     - run: cargo test -p wasm-bindgen-test-macro
 
@@ -376,6 +416,9 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
       with:
         components: rustfmt
+    - uses: Swatinem/rust-cache@v2
+      with:
+        cache-workspace-crates: "true"
     - run: cd crates/web-sys && cargo run --release --package wasm-bindgen-webidl -- webidls src/features ./Cargo.toml
     - run: git diff --exit-code
 
@@ -390,6 +433,9 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: wasm32-unknown-unknown
+    - uses: Swatinem/rust-cache@v2
+      with:
+        cache-workspace-crates: "true"
     - run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -s -- -f
     - run: |
         cargo install --path crates/cli --debug
@@ -437,6 +483,9 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: wasm32-unknown-unknown
+    - uses: Swatinem/rust-cache@v2
+      with:
+        cache-workspace-crates: "true"
     - run: cargo build --manifest-path benchmarks/Cargo.toml --release --target wasm32-unknown-unknown
     - run: cargo run -p wasm-bindgen-cli -- target/wasm32-unknown-unknown/release/wasm_bindgen_benchmark.wasm --out-dir benchmarks/pkg --target web
     - uses: actions/upload-artifact@v7
@@ -452,6 +501,9 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: x86_64-unknown-linux-musl
+    - uses: Swatinem/rust-cache@v2
+      with:
+        cache-workspace-crates: "true"
     - run: sudo apt update -y && sudo apt install musl-tools -y
     - run: |
         cargo build --manifest-path crates/cli/Cargo.toml --target x86_64-unknown-linux-musl --features vendored-openssl --release
@@ -471,6 +523,9 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: aarch64-unknown-linux-gnu
+    - uses: Swatinem/rust-cache@v2
+      with:
+        cache-workspace-crates: "true"
     - run: sudo apt update -y && sudo apt install gcc-aarch64-linux-gnu -y
     - run: |
         cargo build --manifest-path crates/cli/Cargo.toml --target aarch64-unknown-linux-gnu --features vendored-openssl --release
@@ -492,6 +547,9 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: aarch64-unknown-linux-musl
+    - uses: Swatinem/rust-cache@v2
+      with:
+        cache-workspace-crates: "true"
     - run: sudo apt update -y && sudo apt install musl-tools -y
     - run: |
         cargo build --manifest-path crates/cli/Cargo.toml --target aarch64-unknown-linux-musl --features vendored-openssl --release
@@ -508,6 +566,9 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: riscv64gc-unknown-linux-gnu
+    - uses: Swatinem/rust-cache@v2
+      with:
+        cache-workspace-crates: "true"
     - run: sudo apt update -y && sudo apt install gcc-riscv64-linux-gnu -y
     - run: |
         cargo build --manifest-path crates/cli/Cargo.toml --target riscv64gc-unknown-linux-gnu --features vendored-openssl --release
@@ -529,6 +590,9 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: x86_64-apple-darwin
+    - uses: Swatinem/rust-cache@v2
+      with:
+        cache-workspace-crates: "true"
     - run: cargo build --manifest-path crates/cli/Cargo.toml --target x86_64-apple-darwin --release
       env:
         MACOSX_DEPLOYMENT_TARGET: 10.7
@@ -543,6 +607,9 @@ jobs:
     steps:
     - uses: actions/checkout@v7
     - uses: dtolnay/rust-toolchain@stable
+    - uses: Swatinem/rust-cache@v2
+      with:
+        cache-workspace-crates: "true"
     - run: |
         cargo build --manifest-path crates/cli/Cargo.toml --release
       env:
@@ -558,6 +625,9 @@ jobs:
     steps:
     - uses: actions/checkout@v7
     - uses: dtolnay/rust-toolchain@stable
+    - uses: Swatinem/rust-cache@v2
+      with:
+        cache-workspace-crates: "true"
     - run: cargo build --manifest-path crates/cli/Cargo.toml --release
       env:
         RUSTFLAGS: -Ctarget-feature=+crt-static
@@ -586,6 +656,9 @@ jobs:
     steps:
     - uses: actions/checkout@v7
     - uses: dtolnay/rust-toolchain@nightly
+    - uses: Swatinem/rust-cache@v2
+      with:
+        cache-workspace-crates: "true"
     - run: cargo doc --no-deps --features 'serde-serialize'
     - run: cargo doc --no-deps --manifest-path crates/js-sys/Cargo.toml
     - run: cargo doc --no-deps --manifest-path crates/web-sys/Cargo.toml --all-features
@@ -624,6 +697,10 @@ jobs:
       with:
         toolchain: ${{ matrix.rust }}
         targets: ${{ matrix.target }}
+    - uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: crates/msrv/resolver
+        key: ${{ matrix.rust }}-${{ matrix.target }}-${{ matrix.features }}
     - run: cargo build --target ${{ matrix.target }} ${{ matrix.features }}
 
   msrv-lib:
@@ -650,6 +727,10 @@ jobs:
       with:
         toolchain: ${{ matrix.rust }}
         targets: ${{ matrix.target }}
+    - uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: crates/msrv/lib
+        key: ${{ matrix.rust }}-${{ matrix.target }}-${{ matrix.features }}
     - run: cargo build --target ${{ matrix.target }} ${{ matrix.features }}
 
   msrv-cli:
@@ -661,6 +742,9 @@ jobs:
     steps:
     - uses: actions/checkout@v7
     - uses: dtolnay/rust-toolchain@1.86
+    - uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: crates/msrv/cli
     - run: cargo build
 
 

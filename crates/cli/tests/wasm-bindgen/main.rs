@@ -10,12 +10,20 @@
 //! it is largely based off actually running `cargo build` at test time which is
 //! quite expensive, so it's recommended that this test suite doesn't become too
 //! large!
+//!
+//! Most of these tests don't need their own `cargo build` subprocess: see
+//! `fixtures` for the shared, batched workspace that the majority of plain
+//! (default toolchain/target, no extra `RUSTFLAGS`) tests build against
+//! instead. Tests that need something more exotic (a custom toolchain,
+//! target, or `RUSTFLAGS`) still use `Project` directly.
 
 mod diagnostics;
+mod fixtures;
 mod npm;
 mod reference;
 
 use assert_cmd::Command;
+use fixtures::fixture;
 use predicates::str;
 use std::collections::HashSet;
 use std::env;
@@ -209,57 +217,19 @@ fn version_useful() {
 
 #[test]
 fn works_on_empty_project() {
-    Project::new("works_on_empty_project")
-        .file(
-            "src/lib.rs",
-            r#"
-            "#,
-        )
-        .wasm_bindgen("")
-        .unwrap();
+    fixture("works_on_empty_project").wasm_bindgen("").unwrap();
 }
 
 #[test]
 fn namespace_global_and_noglobal_works() {
-    Project::new("namespace_global_and_noglobal_works")
-        .file(
-            "src/lib.rs",
-            r#"
-                use wasm_bindgen::prelude::*;
-                #[wasm_bindgen(module = "fs")]
-                extern "C" {
-                    #[wasm_bindgen(js_namespace = window)]
-                    fn t1();
-                }
-                #[wasm_bindgen]
-                extern "C" {
-                    #[wasm_bindgen(js_namespace = window)]
-                    fn t2();
-                }
-                #[wasm_bindgen]
-                pub fn test() {
-                    t1();
-                    t2();
-                }
-            "#,
-        )
+    fixture("namespace_global_and_noglobal_works")
         .wasm_bindgen("")
         .unwrap();
 }
 
 #[test]
 fn one_export_works() {
-    Project::new("one_export_works")
-        .file(
-            "src/lib.rs",
-            r#"
-                use wasm_bindgen::prelude::*;
-                #[wasm_bindgen]
-                pub fn foo() {}
-            "#,
-        )
-        .wasm_bindgen("")
-        .unwrap();
+    fixture("one_export_works").wasm_bindgen("").unwrap();
 }
 
 fn assert_no_placeholder_imports(wasm: &Path) {
@@ -344,40 +314,7 @@ fn wasi_target_has_no_placeholder_imports_panic_unwind() {
 
 #[test]
 fn bin_crate_works() {
-    let out_dir = Project::new("bin_crate_works")
-        .file(
-            "src/main.rs",
-            r#"
-                use wasm_bindgen::prelude::*;
-                #[wasm_bindgen]
-                extern "C" {
-                    #[wasm_bindgen(js_namespace = console)]
-                    fn log(data: &str);
-                }
-
-                fn main() {
-                    log("hello, world");
-                }
-            "#,
-        )
-        .file(
-            "Cargo.toml",
-            &format!(
-                "
-                    [package]
-                    name = \"bin_crate_works\"
-                    authors = []
-                    version = \"1.0.0\"
-                    edition = '2021'
-
-                    [dependencies]
-                    wasm-bindgen = {{ path = '{}' }}
-
-                    [workspace]
-                ",
-                REPO_ROOT.display(),
-            ),
-        )
+    let out_dir = fixture("bin_crate_works")
         .wasm_bindgen("--target nodejs")
         .unwrap();
 
@@ -391,42 +328,8 @@ fn bin_crate_works() {
 
 #[test]
 fn bin_crate_works_without_name_section() {
-    let mut project = Project::new("bin_crate_works_without_name_section");
-    project
-        .file(
-            "src/main.rs",
-            r#"
-            use wasm_bindgen::prelude::*;
-            #[wasm_bindgen]
-            extern "C" {
-                #[wasm_bindgen(js_namespace = console)]
-                fn log(data: &str);
-            }
-
-            fn main() {
-                log("hello, world");
-            }
-        "#,
-        )
-        .file(
-            "Cargo.toml",
-            &format!(
-                "
-                    [package]
-                    name = \"bin_crate_works_without_name_section\"
-                    authors = []
-                    version = \"1.0.0\"
-                    edition = '2021'
-
-                    [dependencies]
-                    wasm-bindgen = {{ path = '{}' }}
-
-                    [workspace]
-                ",
-                REPO_ROOT.display(),
-            ),
-        );
-    let wasm = &*project.build();
+    let project = fixture("bin_crate_works_without_name_section");
+    let wasm = &*project.wasm().unwrap();
 
     // Remove the name section from the module.
     // This simulates a situation like #3362 where it fails to parse because one of
@@ -475,12 +378,7 @@ fn bin_crate_works_without_name_section() {
 
 #[test]
 fn default_module_path_target_web() {
-    let out_dir = Project::new("default_module_path_target_web")
-        .file(
-            "src/lib.rs",
-            r#"
-            "#,
-        )
+    let out_dir = fixture("default_module_path_target_web")
         .wasm_bindgen("--target web")
         .unwrap();
 
@@ -507,12 +405,7 @@ async function __wbg_init(module_or_path) {
 
 #[test]
 fn default_module_path_target_no_modules() {
-    let out_dir = Project::new("default_module_path_target_no_modules")
-        .file(
-            "src/lib.rs",
-            r#"
-            "#,
-        )
+    let out_dir = fixture("default_module_path_target_no_modules")
         .wasm_bindgen("--target no-modules")
         .unwrap();
 
@@ -525,12 +418,7 @@ fn default_module_path_target_no_modules() {
 
 #[test]
 fn omit_default_module_path_target_web() {
-    let out_dir = Project::new("omit_default_module_path_target_web")
-        .file(
-            "src/lib.rs",
-            r#"
-            "#,
-        )
+    let out_dir = fixture("omit_default_module_path_target_web")
         .wasm_bindgen("--target web --omit-default-module-path")
         .unwrap();
 
@@ -557,12 +445,7 @@ async function __wbg_init(module_or_path) {
 
 #[test]
 fn omit_default_module_path_target_no_modules() {
-    let out_dir = Project::new("omit_default_module_path_target_no_modules")
-        .file(
-            "src/lib.rs",
-            r#"
-            "#,
-        )
+    let out_dir = fixture("omit_default_module_path_target_no_modules")
         .wasm_bindgen("--target no-modules --omit-default-module-path")
         .unwrap();
 
@@ -589,68 +472,21 @@ fn omit_default_module_path_target_no_modules() {
 
 #[test]
 fn function_table_preserved() {
-    Project::new("function_table_preserved")
-        .file(
-            "src/lib.rs",
-            r#"
-                use wasm_bindgen::prelude::*;
-
-                #[wasm_bindgen]
-                pub fn bar() {
-                    Closure::wrap(Box::new(|| {}) as Box<dyn Fn()>);
-                }
-            "#,
-        )
+    fixture("function_table_preserved")
         .wasm_bindgen("")
         .unwrap();
 }
 
 #[test]
 fn function_table_preserved_for_stack_closures() {
-    Project::new("function_table_preserved_for_stack_closures")
-        .file(
-            "src/lib.rs",
-            r#"
-                use wasm_bindgen::prelude::*;
-
-                #[wasm_bindgen]
-                extern "C" {
-                    fn take_closure(closure: &dyn Fn());
-                }
-
-                #[wasm_bindgen]
-                pub extern fn pass_closure() {
-                    take_closure(&|| {
-                        // Noop, just ensure that the compilation succeeds.
-                        // See https://github.com/wasm-bindgen/wasm-bindgen/issues/4119.
-                    });
-                }
-            "#,
-        )
+    fixture("function_table_preserved_for_stack_closures")
         .wasm_bindgen("")
         .unwrap();
 }
 
 #[test]
 fn constructor_cannot_return_option_struct() {
-    Project::new("constructor_cannot_return_option_struct")
-        .file(
-            "src/lib.rs",
-            r#"
-                use wasm_bindgen::prelude::*;
-
-                #[wasm_bindgen]
-                pub struct Foo(());
-
-                #[wasm_bindgen]
-                impl Foo {
-                    #[wasm_bindgen(constructor)]
-                    pub fn new() -> Option<Foo> {
-                        Some(Foo(()))
-                    }
-                }
-            "#,
-        )
+    fixture("constructor_cannot_return_option_struct")
         .wasm_bindgen("--target web")
         .unwrap_err();
 }
@@ -2042,55 +1878,9 @@ describe('reinit auto-detection (no --experimental-reset-state-function)', () =>
 /// Tests that schedule_reinit() works under panic=abort builds.
 #[test]
 fn reinit_panic_abort() {
-    let mut project = Project::new("reinit_panic_abort");
-    project
-        .file(
-            "src/lib.rs",
-            r#"
-                use wasm_bindgen::prelude::*;
-
-                static mut COUNTER: u32 = 0;
-
-                #[wasm_bindgen]
-                pub fn get_counter() -> u32 { unsafe { COUNTER } }
-
-                #[wasm_bindgen]
-                pub fn increment_counter() -> u32 {
-                    unsafe { COUNTER += 1; COUNTER }
-                }
-
-                #[wasm_bindgen]
-                pub fn simple_add(a: u32, b: u32) -> u32 { a + b }
-
-                #[wasm_bindgen]
-                pub fn signal_reinit() {
-                    wasm_bindgen::handler::schedule_reinit();
-                }
-            "#,
-        )
-        .file(
-            "Cargo.toml",
-            &format!(
-                "
-                [package]
-                name = \"reinit_panic_abort\"
-                authors = []
-                version = \"1.0.0\"
-                edition = '2021'
-
-                [dependencies]
-                wasm-bindgen = {{ path = '{}' }}
-
-                [lib]
-                crate-type = ['cdylib']
-
-                [workspace]
-            ",
-                REPO_ROOT.display(),
-            ),
-        );
-
-    let out_dir = project.wasm_bindgen("--target nodejs").unwrap();
+    let out_dir = fixture("reinit_panic_abort")
+        .wasm_bindgen("--target nodejs")
+        .unwrap();
 
     fs::write(
         out_dir.join("test_reinit_abort.js"),
@@ -2159,28 +1949,7 @@ describe('schedule_reinit under panic=abort', () => {
 
 #[test]
 fn multiple_start_functions() {
-    let out_dir = Project::new("multiple_start_functions")
-        .file(
-            "src/lib.rs",
-            r#"
-                use wasm_bindgen::prelude::*;
-                #[wasm_bindgen]
-                extern "C" {
-                    #[wasm_bindgen(js_namespace = console)]
-                    fn log(data: &str);
-                }
-
-                #[wasm_bindgen(start)]
-                fn start1() {
-                    log("start1");
-                }
-
-                #[wasm_bindgen(start)]
-                fn start2() {
-                    log("start2");
-                }
-            "#,
-        )
+    let out_dir = fixture("multiple_start_functions")
         .wasm_bindgen("--target nodejs")
         .unwrap();
 
@@ -2196,28 +1965,7 @@ fn multiple_start_functions() {
 
 #[test]
 fn private_start_function() {
-    let out_dir = Project::new("private_start_function")
-        .file(
-            "src/lib.rs",
-            r#"
-                use wasm_bindgen::prelude::*;
-                #[wasm_bindgen]
-                extern "C" {
-                    #[wasm_bindgen(js_namespace = console)]
-                    fn log(data: &str);
-                }
-
-                #[wasm_bindgen(start, private)]
-                fn my_start() {
-                    log("started");
-                }
-
-                #[wasm_bindgen]
-                pub fn greet() -> String {
-                    "hello".to_string()
-                }
-            "#,
-        )
+    let out_dir = fixture("private_start_function")
         .wasm_bindgen("--target nodejs")
         .unwrap();
 
@@ -2237,34 +1985,7 @@ fn private_start_function() {
 
 #[test]
 fn private_namespaced_classes_export_actual_ts_identifier() {
-    let mut project = Project::new("private_namespaced_classes_export_actual_ts_identifier");
-    let out_dir = project
-        .file(
-            "src/lib.rs",
-            r#"
-                use wasm_bindgen::prelude::*;
-
-                #[wasm_bindgen(private, js_namespace = foo, js_name = "Point")]
-                pub struct FooPoint {
-                    pub x: i32,
-                }
-
-                #[wasm_bindgen(private, js_namespace = bar, js_name = "Point")]
-                pub struct BarPoint {
-                    pub y: i32,
-                }
-
-                #[wasm_bindgen(js_namespace = foo)]
-                pub fn make_foo() -> FooPoint {
-                    FooPoint { x: 1 }
-                }
-
-                #[wasm_bindgen(js_namespace = bar)]
-                pub fn make_bar() -> BarPoint {
-                    BarPoint { y: 2 }
-                }
-            "#,
-        )
+    let out_dir = fixture("private_namespaced_classes_export_actual_ts_identifier")
         .wasm_bindgen("")
         .unwrap();
 
@@ -2292,66 +2013,18 @@ fn emscripten_namespaced_exports_valid_ts() {
     // require the mangled identifier as the disambiguator inside the
     // namespace shape), plus a namespaced enum and free function (same
     // emission path).
-    let mut project = Project::new("emscripten_namespaced_exports_valid_ts");
-    project.file(
-        "src/lib.rs",
-        r#"
-            use wasm_bindgen::prelude::*;
-
-            // Original repro: deep namespace, struct + impl, constructor + method.
-            #[wasm_bindgen(js_namespace = ["app", "math"])]
-            pub struct Calc {
-                value: i32,
-            }
-
-            #[wasm_bindgen(js_namespace = ["app", "math"])]
-            impl Calc {
-                #[wasm_bindgen(constructor)]
-                pub fn new(initial: i32) -> Calc {
-                    Calc { value: initial }
-                }
-                pub fn double(&self) -> i32 {
-                    self.value * 2
-                }
-            }
-
-            // Same-`js_name` across namespaces must not collide.
-            #[wasm_bindgen(js_namespace = foo, js_name = "Point")]
-            pub struct FooPoint {
-                pub x: i32,
-            }
-
-            #[wasm_bindgen(js_namespace = bar, js_name = "Point")]
-            pub struct BarPoint {
-                pub y: i32,
-            }
-
-            // Namespaced enum + free function share the namespaced-export
-            // emission path; cover them in the same fixture.
-            #[wasm_bindgen(js_namespace = ["app", "math"])]
-            pub enum Op {
-                Add = 0,
-                Sub = 1,
-            }
-
-            #[wasm_bindgen(js_namespace = ["app", "math"])]
-            pub fn pi() -> f64 {
-                3.14
-            }
-        "#,
-    );
-
-    let built = project.build();
+    let project = fixture("emscripten_namespaced_exports_valid_ts");
+    let built = project.wasm().unwrap();
     let mut module = ModuleConfig::new().parse_file(&built).unwrap();
     module.customs.add(RawCustomSection {
         name: "__wasm_bindgen_emscripten_marker".into(),
         data: vec![1],
     });
 
-    let emscripten_wasm = project.root.join("emscripten_input.wasm");
+    let emscripten_wasm = project.root().unwrap().join("emscripten_input.wasm");
     module.emit_wasm_file(&emscripten_wasm).unwrap();
 
-    let out_dir = project.root.join("pkg-emscripten");
+    let out_dir = project.root().unwrap().join("pkg-emscripten");
     fs::create_dir_all(&out_dir).unwrap();
     wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
         "wasm-bindgen".as_ref(),
@@ -2538,67 +2211,17 @@ fn emscripten_namespaced_exports_valid_ts() {
 fn emscripten_exports_hoisted_to_library_symbols() {
     // Clean exports are hoisted into top-level `addToLibrary` symbols carrying
     // `__export`/`__force` attributes so emscripten emits them itself.
-    let mut project = Project::new("emscripten_exports_hoisted_to_library_symbols");
-    project.file(
-        "src/lib.rs",
-        r#"
-            use wasm_bindgen::prelude::*;
-
-            #[wasm_bindgen]
-            pub fn add(a: i32, b: i32) -> i32 {
-                a + b
-            }
-
-            #[wasm_bindgen]
-            pub enum Color {
-                Red = 0,
-                Green = 1,
-            }
-
-            // A private class must stay module-internal: hoisted, but not
-            // attached to Module nor self-registered as a public export.
-            #[wasm_bindgen(private)]
-            pub struct Secret {
-                value: i32,
-            }
-
-            #[wasm_bindgen]
-            impl Secret {
-                #[wasm_bindgen(constructor)]
-                pub fn new() -> Secret {
-                    Secret { value: 0 }
-                }
-            }
-
-            #[wasm_bindgen]
-            pub struct Counter {
-                value: i32,
-            }
-
-            #[wasm_bindgen]
-            impl Counter {
-                #[wasm_bindgen(constructor)]
-                pub fn new(start: i32) -> Counter {
-                    Counter { value: start }
-                }
-                pub fn inc(&mut self) -> i32 {
-                    self.value += 1;
-                    self.value
-                }
-            }
-        "#,
-    );
-
-    let built = project.build();
+    let project = fixture("emscripten_exports_hoisted_to_library_symbols");
+    let built = project.wasm().unwrap();
     let mut module = ModuleConfig::new().parse_file(&built).unwrap();
     module.customs.add(RawCustomSection {
         name: "__wasm_bindgen_emscripten_marker".into(),
         data: vec![1],
     });
-    let emscripten_wasm = project.root.join("emscripten_input.wasm");
+    let emscripten_wasm = project.root().unwrap().join("emscripten_input.wasm");
     module.emit_wasm_file(&emscripten_wasm).unwrap();
 
-    let out_dir = project.root.join("pkg-emscripten");
+    let out_dir = project.root().unwrap().join("pkg-emscripten");
     fs::create_dir_all(&out_dir).unwrap();
     wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
         "wasm-bindgen".as_ref(),
@@ -2711,40 +2334,17 @@ fn emscripten_user_imports_are_prefixed() {
     // the user's JS. They're prefixed with `__wbg_` so arbitrary names (e.g. a
     // function literally called `Module`) can't collide with emcc globals. The
     // public export (`run`) stays unprefixed.
-    let mut project = Project::new("emscripten_user_imports_are_prefixed");
-    project.file(
-        "src/lib.rs",
-        r#"
-            use wasm_bindgen::prelude::*;
-
-            // A name that would collide with emscripten's runtime if unprefixed.
-            #[wasm_bindgen(module = "imports")]
-            extern "C" {
-                fn Module() -> i32;
-            }
-
-            #[wasm_bindgen(inline_js = "export function snippet_value() { return 7; }")]
-            extern "C" {
-                fn snippet_value() -> i32;
-            }
-
-            #[wasm_bindgen]
-            pub fn run() -> i32 {
-                Module() + snippet_value()
-            }
-        "#,
-    );
-
-    let built = project.build();
+    let project = fixture("emscripten_user_imports_are_prefixed");
+    let built = project.wasm().unwrap();
     let mut module = ModuleConfig::new().parse_file(&built).unwrap();
     module.customs.add(RawCustomSection {
         name: "__wasm_bindgen_emscripten_marker".into(),
         data: vec![1],
     });
-    let emscripten_wasm = project.root.join("emscripten_input.wasm");
+    let emscripten_wasm = project.root().unwrap().join("emscripten_input.wasm");
     module.emit_wasm_file(&emscripten_wasm).unwrap();
 
-    let out_dir = project.root.join("pkg-emscripten");
+    let out_dir = project.root().unwrap().join("pkg-emscripten");
     fs::create_dir_all(&out_dir).unwrap();
     wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
         "wasm-bindgen".as_ref(),
@@ -2787,60 +2387,11 @@ fn emscripten_user_imports_are_prefixed() {
 
 #[test]
 fn generated_paths_survive_shadowed_core_alloc_std() {
-    let mut project = Project::new("generated_paths_survive_shadowed_core_alloc_std");
-    project.dep("wasm-bindgen-futures = { path = '{root}/crates/futures' }");
-    project.file(
-        "src/lib.rs",
-        r#"
-            use wasm_bindgen::prelude::*;
-
-            // User items shadowing the crate names the expansion relies on. In
-            // 2018+ a `mod core` in scope wins over the extern-prelude `core`,
-            // so any unqualified `core::`/`alloc::`/`std::` path in generated
-            // code resolves in here and fails to compile.
-            mod core { pub mod mem {} pub mod option {} pub mod borrow {} pub mod marker {} }
-            mod alloc { pub mod vec {} }
-            mod std { pub mod vec {} }
-
-            // Imported type: exercises the phantom-data, `to_js` and
-            // `RefFromWasmAbi` (`ManuallyDrop`) shapes.
-            #[wasm_bindgen]
-            extern "C" {
-                type Widget;
-                #[wasm_bindgen(constructor)]
-                fn new() -> Widget;
-                #[wasm_bindgen(method)]
-                fn tap(this: &Widget);
-
-                // `slice_to_array` names `alloc::vec::Vec` in the describe type
-                // and `core::option::Option` in the ABI conversion.
-                #[wasm_bindgen(slice_to_array)]
-                fn take_slice(xs: &[u32]);
-                #[wasm_bindgen(slice_to_array)]
-                fn take_opt_slice(xs: Option<&[u32]>);
-            }
-
-            // Exported fn taking `&T` in an `async` body: exercises the
-            // `borrow::Borrow` anchor shape.
-            #[wasm_bindgen]
-            pub struct Held { pub v: u32 }
-
-            #[wasm_bindgen]
-            pub async fn hold(h: &Held) -> u32 { h.v }
-
-            #[wasm_bindgen]
-            pub fn go() {
-                let w = Widget::new();
-                w.tap();
-                take_slice(&[1u32, 2]);
-                take_opt_slice(None);
-                take_opt_slice(Some(&[3u32]));
-            }
-        "#,
-    );
-
-    // A successful `cargo build` is the assertion.
-    project.build();
+    // A successful `cargo build` (as part of the shared batched workspace) is
+    // the assertion.
+    fixture("generated_paths_survive_shadowed_core_alloc_std")
+        .wasm()
+        .unwrap();
 }
 
 /// `slice_to_array` only changes codegen for *imported* (`extern "C"`)
@@ -2855,42 +2406,12 @@ fn generated_paths_survive_shadowed_core_alloc_std() {
 /// being present at all is a copy/paste artifact rather than user intent.
 #[test]
 fn slice_to_array_is_a_no_op_on_exported_mut_slice_args() {
-    let mut project = Project::new("slice_to_array_is_a_no_op_on_exported_mut_slice_args");
-    project.file(
-        "src/lib.rs",
-        r#"
-            use wasm_bindgen::prelude::*;
-
-            #[wasm_bindgen]
-            pub fn bump(#[wasm_bindgen(slice_to_array)] xs: &mut [u8]) {
-                for x in xs {
-                    *x += 1;
-                }
-            }
-
-            #[wasm_bindgen]
-            pub struct Doubler;
-
-            #[wasm_bindgen]
-            impl Doubler {
-                #[wasm_bindgen(constructor)]
-                pub fn new() -> Doubler {
-                    Doubler
-                }
-
-                pub fn double(&self, #[wasm_bindgen(slice_to_array)] xs: &mut [u16]) {
-                    for x in xs {
-                        *x *= 2;
-                    }
-                }
-            }
-        "#,
-    );
-
-    // A successful `cargo build` is the assertion: `slice_to_array` on these
-    // `&mut` arguments must stay inert rather than tripping the import-only
-    // rejection.
-    project.build();
+    // A successful `cargo build` (as part of the shared batched workspace) is
+    // the assertion: `slice_to_array` on these `&mut` arguments must stay
+    // inert rather than tripping the import-only rejection.
+    fixture("slice_to_array_is_a_no_op_on_exported_mut_slice_args")
+        .wasm()
+        .unwrap();
 }
 
 /// `slice_to_array` used to name `::std::vec::Vec` in the type it describes
@@ -2904,6 +2425,14 @@ fn slice_to_array_works_in_a_no_std_crate() {
     // Written out rather than going through `dep`, because the point of the test
     // is `default-features = false` and `Project` seeds a plain `wasm-bindgen`
     // dependency that would collide with a second entry for the same key.
+    //
+    // This can't join the shared batched workspace (see `fixtures.rs`)
+    // either: Cargo unifies feature selection for a given path dependency
+    // across every member built in the same `cargo build --workspace`
+    // invocation, so as soon as any other member depends on `wasm-bindgen`
+    // with default features, this crate's `default-features = false` would
+    // get silently overridden and `std`'s `#[panic_handler]` would collide
+    // with this crate's own one.
     project.file(
         "Cargo.toml",
         &format!(

@@ -7,7 +7,7 @@
 //! emitted, and the failure surfaces when `wasm-bindgen` walks the encoded
 //! `Aux*` data and tries to wire up class references.
 
-use crate::Project;
+use crate::fixture;
 
 macro_rules! assert_contains {
     ($haystack:expr, $needle:literal) => {
@@ -29,26 +29,7 @@ macro_rules! assert_contains {
 /// namespace the struct uses so the fix is mechanical.
 #[test]
 fn missing_js_namespace_on_impl_suggests_struct_namespace() {
-    let err = Project::new("missing_js_namespace_on_impl_suggests_struct_namespace")
-        .file(
-            "src/lib.rs",
-            r#"
-                use wasm_bindgen::prelude::*;
-
-                #[wasm_bindgen(js_name = "Foo", js_namespace = ns)]
-                pub struct FooImpl;
-
-                // Deliberately missing `js_namespace = ns` on the impl. The
-                // impl macro can't see the struct's attrs cross-invocation
-                // so the namespace must be repeated here for the emitted
-                // wasm symbol to round-trip through cli-support correctly.
-                #[wasm_bindgen(js_class = "Foo")]
-                impl FooImpl {
-                    #[wasm_bindgen(constructor)]
-                    pub fn new() -> FooImpl { FooImpl }
-                }
-            "#,
-        )
+    let err = fixture("missing_js_namespace_on_impl_suggests_struct_namespace")
         .wasm_bindgen("")
         .unwrap_err()
         .to_string();
@@ -66,22 +47,7 @@ fn missing_js_namespace_on_impl_suggests_struct_namespace() {
 /// every segment so the user can copy-paste it onto the impl block.
 #[test]
 fn missing_js_namespace_on_impl_nested_namespace() {
-    let err = Project::new("missing_js_namespace_on_impl_nested_namespace")
-        .file(
-            "src/lib.rs",
-            r#"
-                use wasm_bindgen::prelude::*;
-
-                #[wasm_bindgen(js_name = "Foo", js_namespace = ["a", "b"])]
-                pub struct FooImpl;
-
-                #[wasm_bindgen(js_class = "Foo")]
-                impl FooImpl {
-                    #[wasm_bindgen(constructor)]
-                    pub fn new() -> FooImpl { FooImpl }
-                }
-            "#,
-        )
+    let err = fixture("missing_js_namespace_on_impl_nested_namespace")
         .wasm_bindgen("")
         .unwrap_err()
         .to_string();
@@ -94,22 +60,7 @@ fn missing_js_namespace_on_impl_nested_namespace() {
 /// closest candidate appears first.
 #[test]
 fn typo_in_js_class_suggests_nearest_struct() {
-    let err = Project::new("typo_in_js_class_suggests_nearest_struct")
-        .file(
-            "src/lib.rs",
-            r#"
-                use wasm_bindgen::prelude::*;
-
-                #[wasm_bindgen]
-                pub struct Counter { value: i32 }
-
-                #[wasm_bindgen(js_class = "Countr")]
-                impl Counter {
-                    #[wasm_bindgen(constructor)]
-                    pub fn new() -> Counter { Counter { value: 0 } }
-                }
-            "#,
-        )
+    let err = fixture("typo_in_js_class_suggests_nearest_struct")
         .wasm_bindgen("")
         .unwrap_err()
         .to_string();

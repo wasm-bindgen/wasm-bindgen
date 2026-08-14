@@ -1,4 +1,4 @@
-use crate::{Project, REPO_ROOT};
+use crate::fixture;
 
 macro_rules! assert_matches {
     ($haystack:expr, $needle:literal) => {
@@ -14,24 +14,7 @@ macro_rules! assert_matches {
 
 #[test]
 fn no_modules_rejects_npm() {
-    let err = Project::new("no_modules_rejects_npm")
-        .file(
-            "src/lib.rs",
-            r#"
-                use wasm_bindgen::prelude::*;
-
-                #[wasm_bindgen(module = "foo")]
-                extern {
-                    fn foo();
-                }
-
-                #[wasm_bindgen(start)]
-                fn main() {
-                    foo();
-                }
-            "#,
-        )
-        .file("package.json", "")
+    let err = fixture("no_modules_rejects_npm")
         .wasm_bindgen("--no-modules")
         .unwrap_err()
         .to_string();
@@ -44,100 +27,14 @@ fn no_modules_rejects_npm() {
 
 #[test]
 fn more_package_json_fields_ignored() {
-    Project::new("more_package_json_fields_ignored")
-        .file(
-            "src/lib.rs",
-            r#"
-                use wasm_bindgen::prelude::*;
-
-                #[wasm_bindgen(module = "foo")]
-                extern {
-                    fn foo();
-                }
-
-                #[wasm_bindgen(start)]
-                fn main() {
-                    foo();
-                }
-            "#,
-        )
-        .file(
-            "package.json",
-            r#"
-                {
-                    "name": "foo",
-                    "dependencies": {}
-                }
-            "#,
-        )
+    fixture("more_package_json_fields_ignored")
         .wasm_bindgen("")
         .unwrap();
 }
 
 #[test]
 fn npm_conflict_rejected() {
-    let err = Project::new("npm_conflict_rejected")
-        .dep("bar = { path = 'bar' }")
-        .file(
-            "src/lib.rs",
-            r#"
-                use wasm_bindgen::prelude::*;
-
-                #[wasm_bindgen(module = "bar")]
-                extern {
-                    fn foo();
-                }
-
-                #[wasm_bindgen(start)]
-                fn main() {
-                    foo();
-                    bar::foo();
-                }
-            "#,
-        )
-        .file(
-            "package.json",
-            r#"
-                {
-                    "dependencies": {"bar": "0.0.0"}
-                }
-            "#,
-        )
-        .file(
-            "bar/Cargo.toml",
-            &format!(
-                r#"
-                [package]
-                name = "bar"
-                authors = []
-                version = "1.0.0"
-                edition = '2021'
-
-                [dependencies]
-                wasm-bindgen = {{ path = '{}' }}
-            "#,
-                REPO_ROOT.display()
-            ),
-        )
-        .file(
-            "bar/src/lib.rs",
-            r#"
-                use wasm_bindgen::prelude::*;
-
-                #[wasm_bindgen(module = "bar")]
-                extern {
-                    pub fn foo();
-                }
-            "#,
-        )
-        .file(
-            "bar/package.json",
-            r#"
-                {
-                    "dependencies": {"bar": "1.0.0"}
-                }
-            "#,
-        )
+    let err = fixture("npm_conflict_rejected")
         .wasm_bindgen("")
         .unwrap_err()
         .to_string();
