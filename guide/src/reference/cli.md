@@ -80,6 +80,21 @@ sections. See [debug information] for more.
 
 [debug information]: debug-info.html
 
+### `--split-debug-info`
+
+Write the DWARF debug info to a separate `<name>_bg.debug.wasm` file next to
+the main `<name>_bg.wasm` file. The main file gets an `external_debug_info`
+custom section that holds the URL of the debug info file. This flag
+implies `--keep-debug`. See [debug information] for more.
+
+### `--debug-info-url <URL>`
+
+Set the URL that `--split-debug-info` records in the main file. The default
+is the file name of the debug info file, which resolves relative to the URL
+of the main file. Give an absolute URL if you debug with VS Code: its
+debugger cannot resolve a relative URL. This option requires
+`--split-debug-info`.
+
 ### `--browser`
 
 When generating bundler-compatible code (see the section on [deployment]) this

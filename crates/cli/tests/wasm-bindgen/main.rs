@@ -3270,6 +3270,113 @@ fn slice_to_array_works_in_a_no_std_crate() {
     project.build();
 }
 
+#[test]
+fn split_debug_info() {
+    /// Collect the name and data of each custom section in a Wasm module.
+    fn custom_sections(wasm: &[u8]) -> Vec<(String, Vec<u8>)> {
+        wasmparser::Parser::new(0)
+            .parse_all(wasm)
+            .filter_map(|payload| match payload.unwrap() {
+                Payload::CustomSection(s) => Some((s.name().to_string(), s.data().to_vec())),
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// Get the contents of the code section of a Wasm module.
+    fn code_section(wasm: &[u8]) -> Vec<u8> {
+        wasmparser::Parser::new(0)
+            .parse_all(wasm)
+            .find_map(|payload| match payload.unwrap() {
+                Payload::CodeSectionStart { range, .. } => Some(wasm[range].to_vec()),
+                _ => None,
+            })
+            .expect("no code section")
+    }
+
+    /// Encode a string as a Wasm name string: a LEB128 length, then the
+    /// UTF-8 bytes.
+    fn name_string(s: &str) -> Vec<u8> {
+        assert!(s.len() < 128);
+        let mut bytes = vec![s.len() as u8];
+        bytes.extend_from_slice(s.as_bytes());
+        bytes
+    }
+
+    /// Get the data of the `external_debug_info` custom section, if the
+    /// module has one.
+    fn external_debug_info(wasm: &[u8]) -> Option<Vec<u8>> {
+        let sections = custom_sections(wasm)
+            .into_iter()
+            .filter(|(name, _)| name == "external_debug_info")
+            .collect::<Vec<_>>();
+        assert!(sections.len() <= 1);
+        sections.into_iter().next().map(|(_, data)| data)
+    }
+
+    let mut project = Project::new("split_debug_info");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen::prelude::*;
+
+            #[wasm_bindgen]
+            pub fn add(a: u32, b: u32) -> u32 {
+                a + b
+            }
+        "#,
+    );
+
+    // `--split-debug-info` writes the debug info to a second file and
+    // records that file's name in the main module by default.
+    let out_dir = project
+        .wasm_bindgen("--target web --split-debug-info")
+        .unwrap();
+    let main = fs::read(out_dir.join("split_debug_info_bg.wasm")).unwrap();
+    let debug = fs::read(out_dir.join("split_debug_info_bg.debug.wasm")).unwrap();
+    wasmparser::validate(&main).unwrap();
+
+    let main_sections = custom_sections(&main);
+    assert!(
+        main_sections
+            .iter()
+            .all(|(name, _)| !name.starts_with(".debug_")),
+        "main module must not contain DWARF sections"
+    );
+    assert_eq!(
+        external_debug_info(&main),
+        Some(name_string("split_debug_info_bg.debug.wasm"))
+    );
+
+    // The debug file keeps the DWARF sections and the code section, and
+    // does not point at itself.
+    assert_eq!(external_debug_info(&debug), None);
+    assert_eq!(code_section(&main), code_section(&debug));
+
+    // `--debug-info-url` changes the recorded URL, not the file name.
+    let url = "http://localhost:5173/app_bg.debug.wasm";
+    let out_dir = project
+        .wasm_bindgen(&format!(
+            "--target web --split-debug-info --debug-info-url {url}"
+        ))
+        .unwrap();
+    let main = fs::read(out_dir.join("split_debug_info_bg.wasm")).unwrap();
+    assert!(out_dir.join("split_debug_info_bg.debug.wasm").is_file());
+    assert_eq!(external_debug_info(&main), Some(name_string(url)));
+
+    // `--debug-info-url` requires `--split-debug-info`.
+    assert!(project
+        .wasm_bindgen("--target web --debug-info-url http://localhost/app.wasm")
+        .is_err());
+
+    // Without `--split-debug-info`, the DWARF stays embedded and no debug
+    // file or `external_debug_info` section appears.
+    let out_dir = project.wasm_bindgen("--target web --keep-debug").unwrap();
+    let main = fs::read(out_dir.join("split_debug_info_bg.wasm")).unwrap();
+    assert!(!out_dir.join("split_debug_info_bg.debug.wasm").exists());
+    assert_eq!(external_debug_info(&main), None);
+}
+
 /// Look up an executable on `PATH`. Used so the test can opportunistically
 /// validate the generated .d.ts with `tsc` without hard-requiring it.
 fn which(name: &str) -> Option<PathBuf> {
