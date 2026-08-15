@@ -127,6 +127,11 @@ macro_rules! attrgen {
             (unchecked_optional_param_type, true, OptionalParamType(Span, String, Span)),
             (param_description, true, ParamDesc(Span, String, Span)),
 
+            // Opt-in to the experimental per-monomorphisation generic import
+            // codegen path (interpreter-discovered, marker-terminated) instead
+            // of the type-erasure path.
+            (generic_per_mono, true, GenericPerMono(Span)),
+
             // For testing purposes only.
             (assert_no_shim, false, AssertNoShim(Span)),
 
@@ -914,6 +919,7 @@ impl<'a>
         BindgenAttrs,
         &'a Option<ast::ImportModule>,
         bool,
+        bool,
         Option<&'a [String]>,
     )> for syn::ForeignItemFn
 {
@@ -921,10 +927,11 @@ impl<'a>
 
     fn convert(
         mut self,
-        (program, opts, module, block_slice_to_array, js_namespace): (
+        (program, opts, module, block_slice_to_array, block_generic_per_mono, js_namespace): (
             &ast::Program,
             BindgenAttrs,
             &'a Option<ast::ImportModule>,
+            bool,
             bool,
             Option<&'a [String]>,
         ),
@@ -1061,6 +1068,60 @@ impl<'a>
             ));
         }
 
+        let assert_no_shim = opts.assert_no_shim();
+        // `generic_per_mono` is inherited from the enclosing `extern "C"` block,
+        // optionally OR'd with a fn-level attribute, exactly like
+        // `slice_to_array` above.
+        //
+        // A block-level flag applies only to the functions it *can* apply to:
+        // the per-monomorphisation path needs at least one type parameter, so a
+        // non-generic function in the block silently keeps the ordinary
+        // single-shim path. This mirrors `slice_to_array`, which is likewise a
+        // no-op on an argument that isn't slice-shaped, and it means a block can
+        // mix generic and non-generic imports without having to be split up.
+        //
+        // Writing the attribute *on* a non-generic function is still an error
+        // (raised in codegen): there the user named a specific function and the
+        // request cannot be honoured, so silence would hide a real mistake.
+        let fn_generic_per_mono = opts.generic_per_mono().is_some();
+        let is_generic = self.sig.generics.type_params().next().is_some();
+        let generic_per_mono = fn_generic_per_mono || (block_generic_per_mono && is_generic);
+
+        // Both of the following are rejected here rather than in cli-support so
+        // the diagnostic points at the declaration instead of surfacing after a
+        // successful compile with no span to blame.
+        if generic_per_mono {
+            // Per-monomorphisation codegen manufactures one shim per concrete
+            // instantiation, so "has no shim" can never hold.
+            if let Some(span) = assert_no_shim {
+                return Err(Diagnostic::span_error(
+                    *span,
+                    "`assert_no_shim` cannot be used with `generic_per_mono`, which always \
+                     generates one shim per monomorphisation",
+                ));
+            }
+            // The generic-import binding metadata (`GenericImportMeta`) does not
+            // carry `suspending`, so a suspending per-mono import would silently
+            // lose its JSPI treatment.
+            if let Some(span) = opts.suspending() {
+                return Err(Diagnostic::span_error(
+                    *span,
+                    "`suspending` cannot be used with `generic_per_mono`; use the \
+                     type-erasure generic path for suspending imports",
+                ));
+            }
+            // Reexport names a single descriptor shim, and a per-monomorphisation
+            // import has no single shim to name.
+            if opts.reexport().is_some() {
+                return Err(Diagnostic::span_error(
+                    self.sig.ident.span(),
+                    "`reexport` cannot be used with `generic_per_mono`, because one binding is \
+                     manufactured per monomorphisation and there is no single shim to reexport; \
+                     remove the reexport or use the type-erasure generic path",
+                ));
+            }
+        }
+
         let shim = {
             let ns = match kind {
                 ast::ImportFunctionKind::Normal => (0, "n"),
@@ -1104,7 +1165,7 @@ impl<'a>
                 return Err(Diagnostic::span_error(*span, msg));
             }
         }
-        let assert_no_shim = opts.assert_no_shim().is_some();
+        let assert_no_shim = assert_no_shim.is_some();
         let suspending = opts.suspending().is_some();
         if suspending && wasm.r#async {
             if let Some(span) = opts.suspending() {
@@ -1182,6 +1243,7 @@ impl<'a>
             wasm_bindgen_futures: program.wasm_bindgen_futures.clone(),
             js_sys: program.js_sys.clone(),
             generics: self.sig.generics,
+            generic_per_mono,
         });
         opts.check_used();
 
@@ -2657,11 +2719,13 @@ impl MacroParse<BindgenAttrs> for syn::ItemForeignMod {
             .map_err(|e| errors.push(e))
             .unwrap_or_default();
         let slice_to_array = opts.slice_to_array().is_some();
+        let generic_per_mono = opts.generic_per_mono().is_some();
         for item in self.items.into_iter() {
             let ctx = ForeignItemCtx {
                 module: module.clone(),
                 js_namespace: js_namespace.clone(),
                 slice_to_array,
+                generic_per_mono,
             };
             if let Err(e) = item.macro_parse(program, ctx) {
                 errors.push(e);
@@ -2680,6 +2744,17 @@ struct ForeignItemCtx {
     /// function inside the `extern "C"` block. Per-fn / per-arg
     /// `slice_to_array` ORs on top of this.
     slice_to_array: bool,
+    /// Block-level `generic_per_mono` flag inherited by every *generic* foreign
+    /// function inside the `extern "C"` block, opting them onto the
+    /// per-monomorphisation codegen path. A per-fn `generic_per_mono` ORs on
+    /// top of this.
+    ///
+    /// Like `slice_to_array`, this is a no-op where it cannot apply: the
+    /// per-mono path requires at least one type parameter, so a non-generic
+    /// function in the block keeps the ordinary single-shim path instead of
+    /// being rejected. That lets one block hold both generic and non-generic
+    /// imports.
+    generic_per_mono: bool,
 }
 
 impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
@@ -2732,6 +2807,7 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
             .map(|s| s.0);
         let module = ctx.module;
         let block_slice_to_array = ctx.slice_to_array;
+        let block_generic_per_mono = ctx.generic_per_mono;
         let reexport = item_opts.reexport().cloned();
 
         // Symbol-form `js_name` on a free imported function only makes sense
@@ -2763,6 +2839,7 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
                 item_opts,
                 &module,
                 block_slice_to_array,
+                block_generic_per_mono,
                 js_namespace.as_deref(),
             ))?,
             syn::ForeignItem::Type(t) => t.convert((program, item_opts))?,

@@ -73,6 +73,12 @@ macro_rules! shared_api {
             method: Option<MethodData<'a>>,
             structural: bool,
             function: Function<'a>,
+            // Whether this import uses the per-monomorphisation generic path
+            // (`#[wasm_bindgen(generic_per_mono)]`) and is therefore bound per
+            // concrete instantiation via the `__wbindgen_describe_generic_import`
+            // marker rather than a single named descriptor shim. (Type-erasure
+            // generic imports do not set this; they bind like normal imports.)
+            generic_per_mono: bool,
         }
 
         struct MethodData<'a> {

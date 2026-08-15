@@ -233,6 +233,9 @@ pub struct ImportFunction {
     pub js_sys: Path,
     /// Generic parameters as validated simple type parameters for this function
     pub generics: syn::Generics,
+    /// Opt-in to the experimental per-monomorphisation generic import codegen
+    /// path (interpreter-discovered, marker-terminated) instead of type erasure.
+    pub generic_per_mono: bool,
 }
 
 /// The type of a function being imported

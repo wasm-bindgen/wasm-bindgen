@@ -5849,10 +5849,16 @@ addToLibrary({
                     Some(pair) => pair,
                     None => bail!("a function with no arguments cannot be variadic"),
                 };
+                // Parenthesize the splatted argument. This is not required:
+                // spread takes an `AssignmentExpression`, so a compound
+                // expression already binds the way we want and `...arg >>> 0`
+                // *is* `...(arg >>> 0)`. The parentheses are kept only because
+                // they make the grouping explicit to a reader of the generated
+                // JS, which is otherwise easy to misread.
                 if !args.is_empty() {
-                    format!("{}, ...{last_arg}", args.join(", "))
+                    format!("{}, ...({last_arg})", args.join(", "))
                 } else {
-                    format!("...{last_arg}")
+                    format!("...({last_arg})")
                 }
             })
         };
@@ -5961,6 +5967,9 @@ addToLibrary({
                 assert!(!variadic);
                 assert_eq!(args.len(), 1);
 
+                // Emitted through the shared generic-import pipeline as a
+                // `__wbindgen_generic_*` shim, but this particular one is an
+                // identity cast (returns its argument unchanged).
                 writeln!(prelude, "// Cast intrinsic for `{sig_comment}`.")?;
                 Ok(args[0].clone())
             }

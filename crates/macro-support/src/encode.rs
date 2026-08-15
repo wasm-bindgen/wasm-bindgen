@@ -393,6 +393,11 @@ fn shared_import_function<'a>(
         structural: i.structural,
         function: shared_function(&i.function, intern),
         variadic: i.variadic,
+        // Only imports that opted into the per-monomorphisation path are bound
+        // via the `__wbindgen_describe_generic_import` marker rather than a
+        // single named descriptor shim. Type-erasure generic imports keep the
+        // normal binding path.
+        generic_per_mono: i.generic_per_mono,
     })
 }
 

@@ -49,7 +49,7 @@ export const __wbg_try_fetch_f9048591b2d6944b = ((__inner) => new WebAssembly.Su
     const ret = try_fetch();
     return ret;
 });
-export function __wbindgen_cast_0000000000000000(arg0, arg1) {
+export function __wbindgen_generic_0000000000000000(arg0, arg1) {
     // Cast intrinsic for `Externref -> String`.
     const ret = arg1;
     const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
@@ -57,7 +57,7 @@ export function __wbindgen_cast_0000000000000000(arg0, arg1) {
     getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
     getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
 }
-export function __wbindgen_cast_0000000000000001(arg0) {
+export function __wbindgen_generic_0000000000000001(arg0) {
     // Cast intrinsic for `Externref -> U32`.
     const ret = arg0;
     return ret;

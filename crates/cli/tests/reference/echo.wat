@@ -23,7 +23,7 @@
   (import "./reference_test_bg.js" "__wbg___wbindgen_throw_bb96b2010945f0bc" (func (;2;) (type 10)))
   (import "./reference_test_bg.js" "__wbg_foo_new" (func (;3;) (type 13)))
   (import "./reference_test_bg.js" "__wbg_foo_unwrap" (func (;4;) (type 0)))
-  (import "./reference_test_bg.js" "__wbindgen_cast_0000000000000000" (func (;5;) (type 7)))
+  (import "./reference_test_bg.js" "__wbindgen_generic_0000000000000000" (func (;5;) (type 7)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;6;) (type 18)))
   (table $__wbindgen_externrefs (;0;) 1024 externref)
   (memory (;0;) 17)
