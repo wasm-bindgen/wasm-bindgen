@@ -13253,7 +13253,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(static_method_of = Promise, js_name = all)]
+    #[wasm_bindgen(static_method_of = Promise, js_name = all, generic_per_mono)]
     pub fn all<I: Iterable>(obj: &I) -> Promise<Array<<I::Item as Promising>::Resolution>>
     where
         I::Item: Promising;
@@ -13265,7 +13265,7 @@ extern "C" {
     /// reason of the first promise that rejects.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all)
-    #[wasm_bindgen(static_method_of = Promise, js_name = all)]
+    #[wasm_bindgen(static_method_of = Promise, js_name = all, generic_per_mono)]
     pub fn all_iterable<I: Iterable>(obj: &I) -> Promise<Array<<I::Item as Promising>::Resolution>>
     where
         I::Item: Promising;
@@ -13285,7 +13285,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(static_method_of = Promise, js_name = allSettled)]
+    #[wasm_bindgen(static_method_of = Promise, js_name = allSettled, generic_per_mono)]
     pub fn all_settled<I: Iterable>(
         obj: &I,
     ) -> Promise<Array<PromiseState<<I::Item as Promising>::Resolution>>>
@@ -13298,7 +13298,7 @@ extern "C" {
     /// fulfilled or rejected or when the iterable argument contains no promises.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled)
-    #[wasm_bindgen(static_method_of = Promise, js_name = allSettled)]
+    #[wasm_bindgen(static_method_of = Promise, js_name = allSettled, generic_per_mono)]
     pub fn all_settled_iterable<I: Iterable>(
         obj: &I,
     ) -> Promise<Array<PromiseState<<I::Item as Promising>::Resolution>>>
@@ -13322,7 +13322,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/any)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(static_method_of = Promise, js_name = any)]
+    #[wasm_bindgen(static_method_of = Promise, js_name = any, generic_per_mono)]
     pub fn any<I: Iterable>(obj: &I) -> Promise<<I::Item as Promising>::Resolution>
     where
         I::Item: Promising;
@@ -13334,7 +13334,7 @@ extern "C" {
     /// `AggregateError` if all promises in the iterable rejected.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/any)
-    #[wasm_bindgen(static_method_of = Promise, js_name = any)]
+    #[wasm_bindgen(static_method_of = Promise, js_name = any, generic_per_mono)]
     pub fn any_iterable<I: Iterable>(obj: &I) -> Promise<<I::Item as Promising>::Resolution>
     where
         I::Item: Promising;
@@ -13354,7 +13354,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/race)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(static_method_of = Promise, js_name = race)]
+    #[wasm_bindgen(static_method_of = Promise, js_name = race, generic_per_mono)]
     pub fn race<I: Iterable>(obj: &I) -> Promise<<I::Item as Promising>::Resolution>
     where
         I::Item: Promising;
@@ -13365,7 +13365,7 @@ extern "C" {
     /// rejects, with the value or reason from that promise.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/race)
-    #[wasm_bindgen(static_method_of = Promise, js_name = race)]
+    #[wasm_bindgen(static_method_of = Promise, js_name = race, generic_per_mono)]
     pub fn race_iterable<I: Iterable>(obj: &I) -> Promise<<I::Item as Promising>::Resolution>
     where
         I::Item: Promising;
@@ -13383,7 +13383,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/reject)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(static_method_of = Promise, js_name = reject)]
+    #[wasm_bindgen(static_method_of = Promise, js_name = reject, generic_per_mono)]
     pub fn reject<T>(obj: &JsValue) -> Promise<T>;
 
     // Next major: deprecate
@@ -13391,7 +13391,7 @@ extern "C" {
     /// rejected with the given reason.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/reject)
-    #[wasm_bindgen(static_method_of = Promise, js_name = reject)]
+    #[wasm_bindgen(static_method_of = Promise, js_name = reject, generic_per_mono)]
     pub fn reject_typed<T>(obj: &JsValue) -> Promise<T>;
 
     /// The `Promise.resolve(value)` method returns a `Promise` object that is
@@ -13401,7 +13401,7 @@ extern "C" {
     /// state; otherwise the returned promise will be fulfilled with the value.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/resolve)
-    #[wasm_bindgen(static_method_of = Promise, js_name = resolve)]
+    #[wasm_bindgen(static_method_of = Promise, js_name = resolve, generic_per_mono)]
     pub fn resolve<U: Promising>(obj: &U) -> Promise<U::Resolution>;
 
     /// The `catch()` method returns a `Promise` and deals with rejected cases
@@ -13498,7 +13498,7 @@ extern "C" {
     /// `catch()` handlers.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/finally)
-    #[wasm_bindgen(method)]
+    #[wasm_bindgen(method, generic_per_mono)]
     pub fn finally<T>(this: &Promise<T>, cb: &ScopedClosure<dyn FnMut()>) -> Promise<JsValue>;
 }
 
