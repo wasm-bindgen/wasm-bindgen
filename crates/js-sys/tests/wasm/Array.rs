@@ -573,6 +573,38 @@ fn concat_distinct_element_types() {
     assert_eq!(to_rust(&combined)[2].as_f64().unwrap(), 1.0);
 }
 
+// `concat_many` was missing `js_name = concat` (every other `_many` sibling —
+// `push_many`, `splice_many`, `unshift_many` — points its `js_name` back at
+// the base method): without it, the generated binding called a nonexistent
+// `arg0.concat_many(...)` on the JS side, so this method could not have
+// worked for *any* caller, `generic_per_mono` or not. Fixed alongside
+// converting it, since it made writing a passing test for the conversion
+// impossible otherwise; also adds `variadic`, matching `Array.prototype
+// .concat(...arrays)`'s real JS signature (`push_many`/`splice_many`/
+// `unshift_many` are all `variadic` too).
+#[wasm_bindgen_test]
+fn concat_many() {
+    let arr1 = js_array![Number; 1, 2];
+    let arr2 = js_array![Number; 3, 4];
+    let arr3 = js_array![Number; 5, 6];
+
+    let new_array = arr1.concat_many(&[arr2, arr3]);
+    assert_eq!(to_rust(&new_array), array![Number; 1, 2, 3, 4, 5, 6]);
+}
+
+#[wasm_bindgen_test]
+fn concat_many_distinct_element_types() {
+    let values: Array<JsValue> = js_array![JsValue; JsValue::from("a")];
+    let numbers: Array<Number> = js_array![Number; 1, 2];
+    let more_numbers: Array<Number> = js_array![Number; 3];
+
+    let combined: Array<JsValue> = values.concat_many(&[numbers, more_numbers]);
+    assert_eq!(combined.length(), 4);
+    assert_eq!(to_rust(&combined)[0].as_string().unwrap(), "a");
+    assert_eq!(to_rust(&combined)[1].as_f64().unwrap(), 1.0);
+    assert_eq!(to_rust(&combined)[3].as_f64().unwrap(), 3.0);
+}
+
 #[wasm_bindgen_test]
 fn length() {
     let characters = js_array![Number; 8, 5, 4, 3, 1, 2];
