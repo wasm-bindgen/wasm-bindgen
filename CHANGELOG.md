@@ -33,6 +33,34 @@
   argument on the non-generic import path. See
   [Closure arguments](https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/generic_per_mono.html#closure-arguments).
 
+* Finished converting `js-sys`'s generic surface to `generic_per_mono`, now
+  that closures are supported: the rest of `Array<T>`'s closure-taking
+  methods (`every`/`filter`/`find*`/`flat_map`/`for_each`/`map`/`reduce*`/
+  `some`/`sort_by`/`to_sorted_by`, and their `try_*` fallible variants) and
+  its previously-missed `keys`/`entries`/`entries_typed`/`values` iterator
+  methods; `Map<K, V>`'s and `Set<T>`'s `for_each`/`try_for_each`
+  (independently monomorphising *two* hoisted class parameters inside one
+  closure, for `Map`); `Set<T>` and `WeakSet<T>` in full, which had no prior
+  conversions at all; `Function<F>`'s `call0`..`call9`/`bind`/`bind0`..
+  `bind9`/`apply`/`length`/`name`/`toString`; `Object`'s and `Reflect`'s
+  generic static methods; and `Promise<T>`'s static combinators
+  (`all`/`any`/`race`/`allSettled`/`resolve`/`reject`) and `finally`.
+  `Array::concat`/`concat_many` are converted too — despite naming a
+  *second*, independent type parameter on another instantiation of the same
+  generic imported type (`array: &Array<U>`/`&[Array<U>]`), rather than the
+  receiver's own `T`, this already fits the existing "bare shared reference
+  to a generic imported type" support with no macro changes, since
+  `Array<U>` implements `IntoWasmAbi`/`WasmDescribe` unconditionally over
+  `U` regardless of position. (`concat_many` was also missing `js_name =
+  concat` and `variadic`, a pre-existing bug unrelated to `generic_per_mono`
+  that made the method unusable for any caller; fixed alongside converting
+  it.) Left unconverted, needing macro features beyond what's landed:
+  `Array::from`/`from_iterable`/`from_iterable_map`/`from_async`/
+  `from_async_map` (an `Iterable`/`AsyncIterable` bound projected through an
+  associated type *and* a closure bound on that projection) and
+  `ArrayTuple`'s tuple-indexed accessors (a class generic over a tuple type
+  with a `JsTuple` bound, rather than a plain type parameter).
+
 ### Changed
 
 * Setting `js_namespace` on both an `extern "C"` block and an item inside it
