@@ -50,7 +50,7 @@ function __wbg_get_imports() {
             const ret = try_fetch();
             return ret;
         }),
-        __wbindgen_cast_0000000000000000: function(arg0, arg1) {
+        __wbindgen_generic_0000000000000000: function(arg0, arg1) {
             // Cast intrinsic for `Externref -> String`.
             const ret = arg1;
             const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
@@ -58,7 +58,7 @@ function __wbg_get_imports() {
             getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
             getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
         },
-        __wbindgen_cast_0000000000000001: function(arg0) {
+        __wbindgen_generic_0000000000000001: function(arg0) {
             // Cast intrinsic for `Externref -> U32`.
             const ret = arg0;
             return ret;
