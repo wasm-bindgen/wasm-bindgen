@@ -80,22 +80,6 @@
   reachable through `__deps`. Requires an emscripten with `__export`/`__force`
   symbol-attribute support.
 
-* Casts are now bound through the same pipeline as `generic_per_mono` imports,
-  which both discover their monomorphisations through one shared descriptor
-  marker. Two internal names changed as a result: the marker import
-  `__wbindgen_describe_cast` is now `__wbindgen_describe_generic_import`, and the
-  cast shims emitted into the JS glue are named `__wbindgen_generic_N` instead of
-  `__wbindgen_cast_N`. Both are internal details of the generated output, but the
-  latter is visible in the emitted JS and will change the output of anyone
-  matching on those names.
-
-  The cast *descriptor wire format* changed to match: a cast descriptor now
-  begins with an extra `inform(0)`, the zero-length shim key that marks it as the
-  degenerate generic import. This is purely internal, but it is why the runtime
-  and CLI have to be upgraded in lockstep (see the schema version bump above) —
-  an old CLI reading a new cast descriptor would misinterpret the leading length
-  prefix as a descriptor tag.
-
 * Updated WebGPU bindings to the August 2026 spec, including the new
   `GPUCommandEncoder::copy_buffer_to_buffer` overloads and `setImmediates`.
   [#5246](https://github.com/wasm-bindgen/wasm-bindgen/pull/5246)
@@ -104,6 +88,7 @@
   variant: `LockManager::request_with_callback` is now `request`, and
   `request_with_options_and_callback` is now `request_with_options`.
   [#5246](https://github.com/wasm-bindgen/wasm-bindgen/pull/5246)
+
 ### Fixed
 
 * The `name` property of the JS error thrown for `panic=unwind` is now set from
