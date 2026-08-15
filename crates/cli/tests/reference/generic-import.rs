@@ -43,9 +43,9 @@ extern "C" {
     #[wasm_bindgen(generic_per_mono, js_name = neverCalled)]
     fn never_called<T>(x: T);
 
-    // A bare shared reference to a generic type parameter (`&T`). Copyable
-    // referents (`&u32`, `&f64`) marshal by value; `&JsValue` marshals as an
-    // externref. Each instantiation gets its own per-mono shim.
+    // A bare shared reference to a generic type parameter (`&T`). `&JsValue`
+    // marshals as an externref, JS handle referents by handle index. Each
+    // instantiation gets its own per-mono shim.
     #[wasm_bindgen(generic_per_mono, js_name = logRef)]
     fn log_ref<T>(x: &T);
 
@@ -123,21 +123,17 @@ extern "C" {
     fn with_callback<T>(f: &mut dyn FnMut(u32), other: T);
 }
 
-// The blanket `impl<T: ScalarIntoWasmAbi> IntoWasmAbi for &T` enables `&scalar`
-// arguments for *every* import, not just `generic_per_mono` ones. This block is
-// an ordinary non-generic import, so it binds through one named `__wbg_*` shim
-// and pins the wire form of each scalar passed by reference.
+// The by-value wire form of each scalar, pinned through an ordinary
+// non-generic import. `i128`/`u128` span multiple ABI prims, so they are the
+// case most likely to be marshalled wrongly, and `f32` is the remaining float
+// width.
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(js_name = takeScalarRefs)]
-    fn take_scalar_refs(a: &u32, b: &i8, c: &bool, d: &char, e: &f64, f: &i64, g: &isize);
+    #[wasm_bindgen(js_name = takeScalars)]
+    fn take_scalars(a: u32, b: i8, c: bool, d: char, e: f64, f: i64, g: isize);
 
-    // `i128`/`u128` span multiple ABI prims, so `Ref(..)` of them is the case
-    // most likely to be marshalled wrongly, and `f32` is the remaining float
-    // width. `scalar_into_wasm_abi_matches_outgoing_ref` guards which types are
-    // in the set, not how they cross.
-    #[wasm_bindgen(js_name = takeWideScalarRefs)]
-    fn take_wide_scalar_refs(a: &i128, b: &u128, c: &f32);
+    #[wasm_bindgen(js_name = takeWideScalars)]
+    fn take_wide_scalars(a: i128, b: u128, c: f32);
 }
 
 // `slice_to_array` is inheritable from the enclosing block and applies to every
@@ -262,23 +258,6 @@ extern "C" {
     fn delete_indexed<T>(this: &Widget, prop: T);
 }
 
-// The blanket `impl<T: ScalarIntoWasmAbi> IntoWasmAbi for &T` also satisfies
-// `ReturnWasmAbi`, so it widens what *exported* functions may return, not just
-// what imports may take. Writing `-> &u32` directly is still rejected by the
-// macro ("cannot return a borrowed ref with #[wasm_bindgen]"), but that guard is
-// necessarily syntactic — a proc macro cannot resolve a type alias — so the
-// alias form below reaches the ABI layer and returns the pointee by copy.
-//
-// Pinned here because it is reachable from ordinary user code and silent: there
-// is no diagnostic either way, so a change in the emitted ABI would otherwise go
-// unnoticed.
-type ScalarRef = &'static u32;
-
-#[wasm_bindgen]
-pub fn return_scalar_ref_via_alias() -> ScalarRef {
-    &42
-}
-
 #[wasm_bindgen]
 pub async fn run(widget: &Widget) -> Result<(), JsValue> {
     log_generic(1u32);
@@ -297,8 +276,6 @@ pub async fn run(widget: &Widget) -> Result<(), JsValue> {
 
     pair(1u32, 2.0f64);
 
-    log_ref(&13u32);
-    log_ref(&14.0f64);
     log_ref(&JsValue::from("fifteen"));
 
     log_generic_slice(&[16u32, 17]);
@@ -339,8 +316,8 @@ pub async fn run(widget: &Widget) -> Result<(), JsValue> {
     let mut seen = 0u32;
     with_callback(&mut |v| seen += v, 29u32);
 
-    take_scalar_refs(&1u32, &2i8, &true, &'c', &3.0f64, &4i64, &5isize);
-    take_wide_scalar_refs(&1i128, &2u128, &3.0f32);
+    take_scalars(13u32, 2i8, true, 'c', 14.0f64, 4i64, 5isize);
+    take_wide_scalars(1i128, 2u128, 3.0f32);
 
     let _ = sum_items(vec![1u32, 2u32]);
 

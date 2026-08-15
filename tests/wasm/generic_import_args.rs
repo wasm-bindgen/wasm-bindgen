@@ -160,7 +160,8 @@ fn generic_per_mono_variadic_actually_spreads() {
 fn generic_per_mono_string_and_number_wire_shapes() {
     assert_eq!(describe_any("borrowed"), "string:borrowed");
     assert_eq!(describe_any(String::from("owned")), "string:owned");
-    assert_eq!(describe_any(42u32), "number:42");
+    assert_eq!(describe_any(13u32), "number:13");
+    assert_eq!(describe_any(14.0f64), "number:14");
 }
 
 #[wasm_bindgen_test]

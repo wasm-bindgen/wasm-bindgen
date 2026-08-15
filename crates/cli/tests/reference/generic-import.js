@@ -5,5 +5,5 @@ import { __wbg_set_wasm } from "./reference_test_bg.js";
 __wbg_set_wasm(wasm);
 wasm.__wbindgen_start();
 export {
-    return_scalar_ref_via_alias, run
+    run
 } from "./reference_test_bg.js";
