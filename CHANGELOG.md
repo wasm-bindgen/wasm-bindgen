@@ -80,13 +80,6 @@
   reachable through `__deps`. Requires an emscripten with `__export`/`__force`
   symbol-attribute support.
 
-* **The schema version was bumped**, so the `wasm-bindgen` runtime crate and the
-  `wasm-bindgen` CLI must be updated together. A mismatched pair now fails with
-  an explicit schema-version error instead of producing wrong output. This
-  affects every user, not just users of the new features below, because the
-  `#[wasm_bindgen]`-emitted metadata gained a field (`generic_per_mono` on
-  imported functions).
-
 * Casts are now bound through the same pipeline as `generic_per_mono` imports,
   which both discover their monomorphisations through one shared descriptor
   marker. Two internal names changed as a result: the marker import
