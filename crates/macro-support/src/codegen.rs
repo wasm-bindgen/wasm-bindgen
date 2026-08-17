@@ -3137,16 +3137,20 @@ impl ast::ImportFunction {
             let doc_comment = &self.doc_comment;
             quote! { #[doc = #doc_comment] }
         };
-        let generic_params = &self.generics.params;
         // The shim redeclares the wrapper's type *and* lifetime parameters,
         // since it's a nested item and inherits none of the wrapper's generics.
         // Type params need their inline bounds too: its signature names ABI
         // types projected off them (`<T::Assoc as IntoWasmAbi>::Abi`), which
-        // only resolve under the bound. Defaults are dropped here: they are
-        // meaningless on a nested item, and rustc's `invalid_type_param_default`
-        // future-compatibility lint already rejects them on the wrapper's own
-        // parameter list, so per-mono codegen deliberately does not add a check
-        // of its own.
+        // only resolve under the bound. Defaults are dropped here, and reused
+        // below for the wrapper's own parameter list too: a type-parameter
+        // default is only meaningful on a type/trait definition, never on a
+        // fn (nested or not) — rustc's `invalid_type_param_default`
+        // future-compatibility lint denies it unconditionally, so keeping it
+        // on either item's declaration is just a guaranteed compile error with
+        // no behavioural upside. The ordinary (type-erasure) import path
+        // already drops defaults the same way when it re-declares the
+        // wrapper's generics (see `FnClassGenerics::fn_generic_params`, which
+        // is `Vec<&syn::Ident>` — bare names, no bounds or defaults).
         //
         // Lifetime params carry their inline bounds (`<'a: 'b>`) across too.
         // Unlike the type-param bounds above this is not currently load-bearing:
@@ -3251,7 +3255,7 @@ impl ast::ImportFunction {
             #[allow(clippy::all, clippy::nursery, clippy::pedantic, clippy::restriction)]
             #(#attrs)*
             #doc
-            #vis #maybe_async #maybe_unsafe fn #rust_name <#generic_params> (#me #(#wrapper_args),*) #ret #where_clause {
+            #vis #maybe_async #maybe_unsafe fn #rust_name <#(#shim_generic_params),*> (#me #(#wrapper_args),*) #ret #where_clause {
                 #shim
 
                 unsafe {

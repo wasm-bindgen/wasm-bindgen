@@ -34,6 +34,18 @@ extern "C" {
     #[wasm_bindgen(generic_per_mono, js_name = sumItems)]
     fn sum_items<T: IntoIterator<Item = u32>>(xs: T) -> f64;
 
+    // A bound generic import with a *default* type parameter
+    // (`T: Bound = Default`), the shape real-world imports like
+    // `Atomics::add<T: TypedArray = Int32Array>` use so callers who always
+    // instantiate the same way don't have to write a turbofish. A type-param
+    // default is inert on any Rust fn item, nested or not — rustc's
+    // `invalid_type_param_default` future-compatibility lint denies it
+    // unconditionally — so it must be dropped from both the manufactured shim
+    // and the wrapper's own re-declared generics, exactly as the type-erasure
+    // path already drops it.
+    #[wasm_bindgen(generic_per_mono, js_name = sumItemsDefaulted)]
+    fn sum_items_defaulted<T: IntoIterator<Item = u32> = Vec<u32>>(xs: T) -> f64;
+
     // Declared but never instantiated. A `generic_per_mono` import with no
     // monomorphisations is what any library crate hits for the imports its
     // consumers do not call, and it takes a different path: the binding table
@@ -320,6 +332,7 @@ pub async fn run(widget: &Widget) -> Result<(), JsValue> {
     take_wide_scalars(1i128, 2u128, 3.0f32);
 
     let _ = sum_items(vec![1u32, 2u32]);
+    let _ = sum_items_defaulted(vec![3u32, 4u32]);
 
     // `never_called` is deliberately not instantiated here.
 
