@@ -29,8 +29,9 @@ const wrap = method => {{
     }};
 }};
 
-// save original `console.log`
+// save original `console.log` and `console.error`
 global.__wbgtest_og_console_log = console.log;
+global.__wbgtest_og_console_error = console.error;
 // override `console.log` and `console.error` etc... before we import tests to
 // ensure they're bound correctly in wasm. This'll allow us to intercept
 // all these calls and capture the output of tests
@@ -148,7 +149,7 @@ pub fn execute(
                 exit(0);
             })
             .catch(e => {
-                console.error(e);
+                global.__wbgtest_og_console_error(e);
                 exit(1);
             });
     ",
