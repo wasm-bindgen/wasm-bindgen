@@ -111,11 +111,70 @@ extern "C" {
 
 Lifetimes carry no runtime information — they are erased before values cross
 the wasm ABI — so this imposes no restriction beyond what plain Rust already
-requires of the signature. The one shape that is *not* supported is a lifetime
-belonging to the **class** itself, i.e. an imported type declared with its own
-lifetime parameter (`type Holder<'a>`, used as `this: &Holder<'a>`), since that
-needs the same hoisting machinery class-level type parameters do; see
-[Unsupported shapes](#unsupported-shapes).
+requires of the signature. A lifetime belonging to the **class** itself works
+too; see [Class-level generics](#class-level-generics).
+
+## Class-level generics
+
+A *class-level* generic is a type or lifetime parameter of the function that
+also parameterises the receiver/return **class** type itself, rather than only
+appearing in an ordinary argument or return position. This is the shape used
+throughout `js-sys` (`Array<T>`, `Map<K, V>`, `Promise<T>`, ...): the imported
+*type* is declared with its own generic parameter, and a method, constructor,
+or static method that returns the class ties one of its own generics to it:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    type Holder<T>;
+
+    #[wasm_bindgen(constructor, generic_per_mono)]
+    fn new<T>(value: T) -> Holder<T>;
+
+    #[wasm_bindgen(method, generic_per_mono)]
+    fn get<T>(this: &Holder<T>) -> T;
+}
+
+let holder = Holder::new(42u32);
+let value: u32 = holder.get();
+```
+
+The function's own type parameter that the class type's argument list uses
+(`T` in `Holder<T>` above) is *hoisted* off the wrapper function's own
+parameter list and onto the generated `impl` block's header instead — the
+`impl` above the constructor and `get` becomes `impl<T> Holder<T>`, rather
+than a bare `impl Holder`. A function parameter that is not part of the class's
+own argument list (an ordinary, non-hoisted type parameter, or one used only in
+an argument/return position) stays on the function as usual, so the two kinds
+compose in a single signature:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    type Holder<T>;
+
+    // `T` is hoisted (it parameterises the receiver); `U` stays on `combine`.
+    #[wasm_bindgen(method, generic_per_mono)]
+    fn combine<T, U>(this: &Holder<T>, other: U);
+}
+```
+
+A lifetime belonging to the class works the same way:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    type LifetimeHolder<'a>;
+
+    #[wasm_bindgen(method, generic_per_mono)]
+    fn get<'a, T>(this: &'a LifetimeHolder<'a>) -> T;
+}
+```
+
+This composes with the constructor and self-returning static method (e.g.
+`static_method_of = Holder`) shapes the same way it composes with an ordinary
+instance method, mirroring how `Array::new`/`Array::of` return `Array<T>` in
+`js-sys`.
 
 ## Other attributes
 
@@ -172,11 +231,6 @@ These are rejected at compile time with a diagnostic pointing at the offending
 declaration. Each generally keeps working on the type-erasure path, so the fix is
 usually to drop `generic_per_mono`:
 
-* **Generic parameters on the imported *type*** (class-level generics),
-  whether a type parameter (`this: &Holder<T>`) or a lifetime
-  (`this: &Holder<'a>`). Lifetime parameters on the *function* itself —
-  including on a method's receiver, `this: &'a Holder` — are supported; see
-  [Lifetime parameters](#lifetime-parameters).
 * **A mutable reference to a type parameter** (`&mut T`, or `&mut Vec<T>`, or
   any other `&mut` whose referent mentions a type parameter), and a reference to
   a type parameter **nested inside another type** (e.g. `Option<&T>`). A bare

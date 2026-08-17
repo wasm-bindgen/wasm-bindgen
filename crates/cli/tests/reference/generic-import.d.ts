@@ -1,4 +1,4 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export function run(widget: any): Promise<void>;
+export function run(widget: any, lifetime_holder: any): Promise<void>;
