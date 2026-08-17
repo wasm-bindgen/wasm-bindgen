@@ -93,30 +93,12 @@ extern "C" {
     fn tuple_pattern_arg<T>((a, b): (u32, u32), x: T);
 }
 
-// Class-level generics on the imported type need the erasure machinery
-// (`fn_class_generics`), so a `generic_per_mono` method on a generic imported
-// type is rejected. Kept in its own block so the `type Holder<T>` declaration
-// can't interfere with the diagnostics above.
-#[wasm_bindgen]
-extern "C" {
-    type Holder<T>;
-
-    #[wasm_bindgen(method, generic_per_mono)]
-    fn get<T>(this: &Holder<T>) -> T;
-}
-
-// Lifetime parameters on the *function* are supported (see
-// `generic_import_ref.rs` / `generic_import_lifetime.rs` for passing cases),
-// but the same class-level rejection above also applies when the function's
-// lifetime parameter is what parameterises the receiver/return class type,
-// since that also needs the erasure machinery's hoisting.
-#[wasm_bindgen]
-extern "C" {
-    type LifetimeHolder<'a>;
-
-    #[wasm_bindgen(method, generic_per_mono)]
-    fn get_lifetime<'a, T>(this: &'a LifetimeHolder<'a>) -> T;
-}
+// Class-level generics on the imported type (`Holder<T>` / `LifetimeHolder<'a>`
+// used as a method receiver, constructor return, or self-returning static
+// method return) are now supported by hoisting the relevant function generics
+// onto the `impl` block's own header — see
+// `pass-tests/generic-per-mono-class-generics.rs` and
+// `crates/cli/tests/reference/generic-import.rs` for passing coverage.
 
 // The rejections below happen while *parsing* the block rather than while
 // generating its tokens, and a parse failure aborts the whole block, swallowing

@@ -259,7 +259,59 @@ extern "C" {
 }
 
 #[wasm_bindgen]
-pub async fn run(widget: &Widget) -> Result<(), JsValue> {
+extern "C" {
+    // A class-level generic imported type: `T` parameterises the imported
+    // *type* itself (the shape used throughout `js-sys`, e.g. `Array<T>`,
+    // rather than only the method's own signature). This is exercised
+    // through all three of the hoisting entry points `get_fn_generics`
+    // recognises: a constructor and a self-returning static method (both
+    // via `class_return_path`), and an ordinary instance method (whose
+    // receiver is the class).
+    type Holder<T>;
+
+    // Constructor returning the parameterised class. The generated `impl`
+    // block becomes `impl<T> Holder<T>` rather than a bare `impl Holder`,
+    // hoisting `T` off the constructor's own parameter list. Two
+    // instantiations below prove distinct per-mono shims for the
+    // constructor path.
+    #[wasm_bindgen(constructor, generic_per_mono, js_class = "Holder")]
+    fn new_holder<T>(value: T) -> Holder<T>;
+
+    // Instance method: `T` is hoisted from the receiver `&Holder<T>` and
+    // reused for the return type (mirrors `Array::at`/`Array::get`). Two
+    // instantiations each get their own manufactured shim.
+    #[wasm_bindgen(method, generic_per_mono, js_class = "Holder", js_name = get)]
+    fn holder_get<T>(this: &Holder<T>) -> T;
+
+    // Self-returning static method (mirrors `Array::of`): `class_return_path`
+    // retargets the `impl` block to the return type's class the same way it
+    // does for the constructor above.
+    #[wasm_bindgen(static_method_of = Holder, generic_per_mono, js_name = of)]
+    fn holder_of<T>(value: T) -> Holder<T>;
+
+    // A hoisted class-level parameter (`T`, from the receiver) mixed with an
+    // additional, non-hoisted function-only parameter (`U`): proves the
+    // split between `class_generic_params` and `fn_generic_params` in
+    // `get_fn_generics` works, and both still marshal correctly.
+    #[wasm_bindgen(method, generic_per_mono, js_class = "Holder", js_name = combine)]
+    fn holder_combine<T, U>(this: &Holder<T>, other: U);
+}
+
+#[wasm_bindgen]
+extern "C" {
+    // A class-level *lifetime* parameter, rather than a type parameter.
+    type LifetimeHolder<'a>;
+
+    // The receiver's own lifetime `'a` is also the generic argument to the
+    // class (`&'a LifetimeHolder<'a>`), so it is hoisted onto the `impl`
+    // block's own header the same way a class-level type parameter is,
+    // rather than staying on `get`'s own declaration.
+    #[wasm_bindgen(method, generic_per_mono, js_class = "LifetimeHolder", js_name = get)]
+    fn lifetime_holder_get<'a, T>(this: &'a LifetimeHolder<'a>) -> T;
+}
+
+#[wasm_bindgen]
+pub async fn run(widget: &Widget, lifetime_holder: &LifetimeHolder<'_>) -> Result<(), JsValue> {
     log_generic(1u32);
     log_generic(2.0f64);
     log_generic(String::from("three"));
@@ -347,6 +399,28 @@ pub async fn run(widget: &Widget) -> Result<(), JsValue> {
     let _: u32 = widget.get("k");
     widget.set_indexed("k", 27u32);
     widget.delete_indexed("k");
+
+    // Two instantiations of the class-level-generic constructor.
+    let holder_u32 = Holder::new_holder(34u32);
+    let holder_string = Holder::new_holder(String::from("thirty-five"));
+
+    // Two instantiations of the class-level-generic instance method.
+    let _: u32 = holder_u32.holder_get();
+    let _: String = holder_string.holder_get();
+
+    // Two instantiations of the class-level-generic self-returning static
+    // method.
+    let _ = Holder::holder_of(36u32);
+    let _ = Holder::holder_of(String::from("thirty-seven"));
+
+    // The hoisted class-level `T` mixed with a non-hoisted function-only
+    // `U`, called with distinct `T`/`U` combinations.
+    holder_u32.holder_combine(38.0f64);
+    holder_string.holder_combine(39u32);
+
+    // The class-level *lifetime* parameter case.
+    let _: u32 = lifetime_holder.lifetime_holder_get();
+    let _: String = lifetime_holder.lifetime_holder_get();
 
     Ok(())
 }
