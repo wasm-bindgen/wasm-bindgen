@@ -5,6 +5,10 @@
 
 ### Added
 
+* Added `--split-debug-info` to the CLI. This option extracts the DWARF debug
+  info to a separate `*_bg.debug.wasm` file. Use `--debug-info-url` to set
+  the recorded URL for the debug info. [#5279](https://github.com/wasm-bindgen/wasm-bindgen/pull/5279)
+
 ### Changed
 
 * Setting `js_namespace` on both an `extern "C"` block and an item inside it

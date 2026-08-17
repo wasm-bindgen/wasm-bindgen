@@ -72,6 +72,19 @@ struct Args {
     keep_debug: bool,
     #[arg(
         long,
+        help = "Write DWARF debug info to a separate `*_bg.debug.wasm` file (implies `--keep-debug`)"
+    )]
+    split_debug_info: bool,
+    #[arg(
+        long,
+        value_name = "URL",
+        requires = "split_debug_info",
+        help = "URL of the split debug info file, recorded in the main Wasm file\n\
+                (defaults to the file name of the debug info file)"
+    )]
+    debug_info_url: Option<String>,
+    #[arg(
+        long,
         value_name = "MODE",
         help = "Whether or not to use TextEncoder#encodeInto",
         value_parser = ["test", "always", "never"]
@@ -161,6 +174,7 @@ fn rmain(args: &Args) -> Result<(), Error> {
         .demangle(!args.no_demangle)
         .keep_lld_exports(args.keep_lld_exports)
         .keep_debug(args.keep_debug)
+        .split_debug_info(args.split_debug_info)
         .remove_name_section(args.remove_name_section)
         .remove_producers_section(args.remove_producers_section)
         .typescript(!args.no_typescript)
@@ -171,6 +185,9 @@ fn rmain(args: &Args) -> Result<(), Error> {
         .reset_state_function(args.generate_reset_state)
         .force_enable_abort_handler(args.force_enable_abort_handler);
 
+    if let Some(ref url) = args.debug_info_url {
+        b.debug_info_url(url);
+    }
     if let Some(ref name) = args.no_modules_global {
         b.no_modules_global(name)?;
     }
