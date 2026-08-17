@@ -59,14 +59,14 @@ extern "C" {
 
 #[wasm_bindgen_test]
 fn generic_per_mono_named_lifetime_ref() {
-    assert_eq!(take_ref_lifetime(&JsValue::from(5u32)), 6.0);
-    assert_eq!(take_ref_lifetime(&JsValue::from(2.5f64)), 3.5);
+    assert_eq!(take_ref_lifetime(&5u32), 6.0);
+    assert_eq!(take_ref_lifetime(&2.5f64), 3.5);
 }
 
 #[wasm_bindgen_test]
 fn generic_per_mono_lifetime_bound_on_type_param() {
-    assert_eq!(double_ref(&JsValue::from(4u32)), JsValue::from(8u32));
-    assert_eq!(double_ref(&JsValue::from(1.5f64)), JsValue::from(3.0f64));
+    assert_eq!(double_ref(&4u32), 8u32);
+    assert_eq!(double_ref(&1.5f64), 3.0f64);
 }
 
 #[wasm_bindgen_test]
@@ -98,8 +98,8 @@ fn generic_per_mono_named_lifetime_on_receiver() {
 #[wasm_bindgen_test]
 fn generic_per_mono_receiver_lifetime_shared_with_argument() {
     let scaler = Scaler::new(10.0);
-    let x = JsValue::from(7u32);
+    let x = 7u32;
     assert_eq!(scaler.scale_ref(&x), 70.0);
-    let y = JsValue::from(1.25f64);
+    let y = 1.25f64;
     assert_eq!(scaler.scale_ref(&y), 12.5);
 }

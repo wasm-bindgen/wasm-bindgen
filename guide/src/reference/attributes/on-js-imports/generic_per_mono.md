@@ -74,14 +74,54 @@ extern "C" {
 Note that a bound only constrains which types the import can be *called* with; it
 cannot make a type marshallable. Combining a higher-ranked bound with a `&T`
 argument is a common way to write a declaration that compiles but can never be
-called: `&T` additionally requires an `IntoWasmAbi` impl for the reference,
-which exists only for `JsValue` and imported JS types, so a bound such as
+called: `&T` additionally requires `for<'a> &'a T: IntoWasmAbi`, which only
+holds for a fixed set of types (the primitive scalars, `JsValue`, imported JS
+handle types, `&str` and `&[T]`), so a bound such as
 `for<'a> &'a T: IntoIterator<Item = &'a u32>` leaves no type that satisfies both.
 See [Note on `&T` arguments](#note-on-t-arguments).
 
 Relaxed bounds are the exception: `T: ?Sized` is not supported on any
 `wasm-bindgen` generic — erased or per-monomorphisation — and is reported as
 `unsupported in wasm-bindgen generics`.
+
+## `impl Trait` arguments
+
+Argument-position `impl Trait` is supported. It is desugared into a synthesized
+named type parameter with the same bound before any other codegen runs, so it
+is monomorphised exactly like a type parameter you named yourself — the two are
+interchangeable:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console, generic_per_mono)]
+    fn log(value: impl core::fmt::Debug);
+}
+
+log(42u32);
+log("hello");
+```
+
+is equivalent to writing `fn log<T: core::fmt::Debug>(value: T)`. This also
+means a function can have a type parameter without appearing to: `impl Trait`
+counts towards the "at least one type parameter" requirement even though it
+never appears in the function's own generic parameter list.
+
+`impl Trait` can be mixed with named type parameters, nested inside another
+type (`Vec<impl Trait>`), and repeated — each occurrence gets its own
+synthesized parameter:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(generic_per_mono)]
+    fn mix<T>(label: T, values: Vec<impl Clone>);
+}
+```
+
+Bounds on a synthesized parameter are enforced exactly as if you had written
+them out by hand: a caller that violates one gets a diagnostic pointing at the
+`impl Trait` in the declaration, the same as it would for an explicit bound.
 
 ## Lifetime parameters
 
@@ -236,7 +276,8 @@ different signatures.
 ## Note on `&T` arguments
 
 A bare `&T` argument is supported, and requires the referent to satisfy the bound
-`wasm-bindgen` needs to marshal it — `JsValue` or a JS handle type. Passing
-`&SomeStruct` for a plain Rust struct, or `&u32` for a scalar, is rejected,
-since there is no `&T` ABI representation for them; take the value by value, or
-pass a JS type.
+`wasm-bindgen` needs to marshal it — either one of the built-in scalar types
+(`i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `i64`, `u64`, `i128`, `u128`, `isize`,
+`usize`, `f32`, `f64`, `bool`, `char`) or a JS handle type. Passing `&SomeStruct`
+for a plain Rust struct is rejected, since there is no ABI representation for it;
+take it by value, or pass a JS type.

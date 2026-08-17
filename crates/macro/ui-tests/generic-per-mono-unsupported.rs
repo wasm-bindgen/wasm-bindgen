@@ -6,24 +6,12 @@ use wasm_bindgen::prelude::*;
 // function below exercises one of those aborting paths.
 #[wasm_bindgen]
 extern "C" {
-    // `generic_per_mono` requires at least one type parameter.
+    // `generic_per_mono` requires at least one type parameter. Argument-position
+    // `impl Trait` (see `generic-per-mono-impl-trait.rs` for the supported case)
+    // counts as one, since it desugars to an anonymous type parameter, so it
+    // does not satisfy this check on its own.
     #[wasm_bindgen(generic_per_mono)]
     fn without_type_param(x: u32);
-
-    // Argument-position `impl Trait` desugars to an anonymous type
-    // parameter, so this function does have one; it's just nameless, and
-    // never shows up in `without_type_param`'s check above. It gets its own
-    // diagnostic rather than a misleading "at least one type parameter" one.
-    #[wasm_bindgen(generic_per_mono)]
-    fn impl_trait_arg(x: impl Clone);
-
-    // Same rejection when `impl Trait` is mixed with a real, named type
-    // parameter, or nested inside another type.
-    #[wasm_bindgen(generic_per_mono)]
-    fn impl_trait_arg_with_type_param<T>(x: impl Clone, y: T);
-
-    #[wasm_bindgen(generic_per_mono)]
-    fn nested_impl_trait_arg<T>(x: Vec<impl Clone>, y: T);
 
     // A bare shared reference to a generic type parameter (`&T`) *is* now
     // supported, but a mutable reference (`&mut T`) is not.

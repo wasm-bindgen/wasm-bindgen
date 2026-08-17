@@ -899,3 +899,33 @@ pub unsafe fn js_value_vector_from_abi<T: TryFromJsValue>(
     }
     result.into_boxed_slice()
 }
+
+// `&T` for a scalar `T` is passed to JS by copying the value; the wire is
+// identical to passing `T` by value. Each of these is a concrete, non-generic
+// impl (rather than one blanket impl gated by a marker trait) precisely
+// because the set has to stay a fixed list: every type here must also be
+// accepted by `is_scalar_by_shared_ref` in
+// `crates/cli-support/src/wit/outgoing.rs`, and it wouldn't be safe to widen
+// this to "every `Copy + IntoWasmAbi` type" (e.g. a `#[wasm_bindgen]` struct
+// that happens to derive `Copy` still has an identity and an owner: handing
+// JS `&T` would silently give it a *distinct* copy with its own `free()`
+// obligation).
+//
+// If you add or remove a type here, update `is_scalar_by_shared_ref` to
+// match, and add the type to the `scalar-ref-args` reference test —
+// otherwise `&NewType` compiles here and then fails in the CLI with
+// "unsupported type behind a reference". That reference test binds every
+// type in this list, so it is what catches the omission.
+macro_rules! ref_into_wasm_abi_for_scalar {
+    ($($t:ty)*) => ($(
+        impl IntoWasmAbi for &$t {
+            type Abi = <$t as IntoWasmAbi>::Abi;
+
+            #[inline]
+            fn into_abi(self) -> Self::Abi {
+                (*self).into_abi()
+            }
+        }
+    )*)
+}
+ref_into_wasm_abi_for_scalar!(i8 u8 i16 u16 i32 u32 i64 u64 i128 u128 isize usize f32 f64 bool char);

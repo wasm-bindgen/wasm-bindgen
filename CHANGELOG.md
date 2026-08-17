@@ -5,6 +5,46 @@
 
 ### Added
 
+* `generic_per_mono` imports now support argument-position `impl Trait`
+  (including nested, e.g. `Vec<impl Trait>`), which is desugared into a
+  synthesized named type parameter with the same bound; see
+  [the guide](https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/generic_per_mono.html)
+  for the supported surface and the shapes that are rejected.
+
+* Added sixteen concrete `impl IntoWasmAbi for &T` impls, one per built-in
+  scalar type. `&T` arguments where `T` is a scalar are now accepted in
+  imported function signatures; previously only `&JsValue` and the concrete
+  slice/string references were. The scalar set is `i8`, `u8`, `i16`, `u16`,
+  `i32`, `u32`, `i64`, `u64`, `i128`, `u128`, `isize`, `usize`, `f32`, `f64`,
+  `bool` and `char`. JS cannot hold a reference into linear memory, so the value
+  is copied across and the wire is identical to passing `T` by value.
+
+  The impl set is deliberately a fixed list of concrete types rather than a
+  generic impl gated by some `Copy`-like bound: a `#[wasm_bindgen]` struct that
+  happens to derive `Copy` still has an identity and an owner, so handing JS
+  `&T` for it would silently give JS a *distinct* copy carrying its own
+  `free()` obligation. Keeping the list concrete and fixed also keeps it in
+  lockstep with the types the CLI can actually bind behind a reference, with no
+  new trait needed to express that.
+
+  This is fully additive for downstream crates: a hand-written
+  `impl IntoWasmAbi for &MyConcreteType` still compiles alongside these — which
+  is why the macro-generated impls for imported types, and hence all of
+  `js-sys`/`web-sys`, are unaffected.
+
+  One side effect worth knowing about: because each impl is on a concrete `&T`,
+  it also widens what *exported* functions may return. Writing `-> &u32`
+  directly is still rejected, but that guard is necessarily syntactic — a proc
+  macro cannot resolve a type alias — so a return type that reaches `&u32`
+  through an alias (`type R = &'static u32;`) now compiles where it previously
+  did not, and returns the pointed-to value by copy. That is the sensible
+  behaviour, and the emitted ABI is pinned by the `generic-import` reference
+  test.
+
+  Passing `&T` for a non-scalar `T` is now a trait error at the import
+  declaration instead of an abort partway through `wasm-bindgen` after the build
+  has already succeeded.
+
 ### Changed
 
 * Setting `js_namespace` on both an `extern "C"` block and an item inside it

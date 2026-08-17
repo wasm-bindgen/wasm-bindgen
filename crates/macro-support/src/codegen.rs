@@ -2305,9 +2305,9 @@ impl TryToTokens for ast::ImportFunction {
             // such error in an `extern "C"` block lands on the block's
             // `#[wasm_bindgen]` attribute instead — N identical errors with no
             // indication of which argument is at fault. `&T` arguments make this
-            // routine rather than exotic: `&T: IntoWasmAbi` exists only for
-            // `&JsValue`, JS handle types and the concrete slice/string
-            // references, so any `&SomeStruct` argument fails here.
+            // routine rather than exotic: `&T: IntoWasmAbi` only exists for a
+            // fixed list of scalar `T` (see `ref_into_wasm_abi_for_scalar!` in
+            // `src/convert/impls.rs`), so any `&SomeStruct` argument fails here.
             let abi_span = arg.pat_type.ty.span();
             let abi = quote_spanned! { abi_span =>
                 <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi
@@ -2702,7 +2702,12 @@ impl ast::ImportFunction {
     /// (including a generic `-> T`), `catch`, `variadic`, `async` (including a
     /// generic `-> T`, since the value crossing the ABI is the `Promise` and the
     /// resolved value is converted inside `JsFuture<T>`), and `slice_to_array`
-    /// for slices with a concrete element type.
+    /// for slices with a concrete element type. Argument-position `impl Trait`
+    /// (e.g. `fn f(x: impl Clone)`, including nested, e.g. `Vec<impl Clone>`)
+    /// is also supported: it is desugared into a synthesized named type
+    /// parameter with the same bounds before any of the above logic runs, so
+    /// it is monomorphised exactly like a type parameter the user named
+    /// themselves.
     ///
     /// User-written trait bounds, both inline (`fn f<T: Trait>`) and in a `where`
     /// clause (including higher-ranked predicates), are part of the declared
@@ -2754,26 +2759,44 @@ impl ast::ImportFunction {
 
         // --- Generic-parameter guards (opt-in path, so bailing is safe) ---
         //
-        // `impl Trait` in argument position desugars to an anonymous generic
-        // type parameter, so a function like `fn f(x: impl Clone)` genuinely
-        // has one — it just has no name, and so never shows up in
-        // `self.generics`. Check for it before the "at least one type
-        // parameter" guard below, which would otherwise fire for exactly this
-        // shape with a misleading message (there *is* a type parameter).
-        // Per-mono codegen has no shim slot for an anonymous parameter yet,
-        // so this stays unsupported, just with its own diagnostic.
-        for arg in &self.function.arguments {
-            if let Some(impl_trait) = generics::find_impl_trait(&arg.pat_type.ty) {
-                bail_span!(
-                    impl_trait,
-                    "generic_per_mono does not support `impl Trait` in argument position yet; \
-                     name the type parameter explicitly (e.g. `fn f<T: Trait>(x: T)`) or use \
-                     the type-erasure generic path instead"
-                );
-            }
-        }
-        let type_params: Vec<&syn::Ident> =
-            self.generics.type_params().map(|tp| &tp.ident).collect();
+        // Argument-position `impl Trait` desugars to an anonymous generic
+        // type parameter: a function like `fn f(x: impl Clone)` genuinely has
+        // one, it just has no name, so it never shows up in `self.generics`.
+        // Per-mono codegen needs a real name for every type parameter it
+        // monomorphises over — one shows up in `where` bounds, the shim's own
+        // generic parameter list, and the `breaks_if_inlined::<..>`
+        // turbofish — so give each occurrence one: rewrite every `impl
+        // Trait` argument type into a synthesized named type parameter
+        // carrying the same bounds, exactly what a user would otherwise have
+        // to write by hand (`fn f<T: Trait>(x: T)`). This has to happen
+        // before `type_params` is computed below, since an argument whose
+        // *only* type parameter is an `impl Trait` would otherwise look like
+        // it has none.
+        //
+        // `arg_types` replaces `arg.pat_type.ty` as the source of truth for
+        // every argument's type for the rest of this function.
+        let mut synthesized_params: Vec<syn::GenericParam> = Vec::new();
+        let arg_types: Vec<syn::Type> = self
+            .function
+            .arguments
+            .iter()
+            .map(|arg| {
+                let mut ty = (*arg.pat_type.ty).clone();
+                generics::desugar_impl_trait(&mut ty, &mut synthesized_params);
+                ty
+            })
+            .collect();
+        let synthesized_type_idents = synthesized_params.iter().map(|p| match p {
+            syn::GenericParam::Type(tp) => &tp.ident,
+            _ => unreachable!("desugar_impl_trait only synthesizes type parameters"),
+        });
+
+        let type_params: Vec<&syn::Ident> = self
+            .generics
+            .type_params()
+            .map(|tp| &tp.ident)
+            .chain(synthesized_type_idents)
+            .collect();
         if type_params.is_empty() {
             bail_span!(
                 self.rust_name,
@@ -2832,8 +2855,7 @@ impl ast::ImportFunction {
         // shape that marshals to a JS array for *every* monomorphisation. A bare
         // `T` can be `u32`; `Option<T>`, `Box<T>` and `T::Item` are no better.
         if self.variadic {
-            if let Some(last) = self.function.arguments.last() {
-                let ty = &last.pat_type.ty;
+            if let Some(ty) = arg_types.last() {
                 if generics::uses_generic_params(ty, &type_params) && !is_spreadable_sequence(ty) {
                     bail_span!(
                         ty,
@@ -2896,7 +2918,8 @@ impl ast::ImportFunction {
         let mut arg_conversions = Vec::new();
         let mut describe_args = Vec::new();
         for (i, arg) in self.function.arguments.iter().enumerate() {
-            let ty = &*arg.pat_type.ty;
+            // Rewritten to desugar any `impl Trait`; see `arg_types` above.
+            let ty = &arg_types[i];
             let name = match &*arg.pat_type.pat {
                 syn::Pat::Ident(syn::PatIdent {
                     by_ref: None,
@@ -2916,7 +2939,8 @@ impl ast::ImportFunction {
                 // is supported: the referent's schema is emitted via `REF`
                 // (`WasmDescribe for &T`), and the value is marshalled by the
                 // referent-generic `IntoWasmAbi` impls (`&Handle`, `&JsValue`,
-                // `&str`, `&[T]`). Because
+                // `&str`, `&[T]`, and the fixed list of concrete `&T` scalar
+                // impls in `ref_into_wasm_abi_for_scalar!`). Because
                 // the shim names `<&T as IntoWasmAbi>::Abi` under a late-bound
                 // elided lifetime, the required bound is higher-ranked over
                 // the referent rather than `&T: IntoWasmAbi`.
@@ -2943,7 +2967,7 @@ impl ast::ImportFunction {
                     });
                 } else if generics::references_generic_param(ty, &type_params) {
                     bail_span!(
-                        arg.pat_type.ty,
+                        ty,
                         "generic_per_mono only supports a bare shared reference to a generic \
                          type parameter (`&T`); mutable references (`&mut T`) and references \
                          nested inside another type (e.g. `Option<&T>`) are not supported — \
@@ -3137,7 +3161,14 @@ impl ast::ImportFunction {
             let doc_comment = &self.doc_comment;
             quote! { #[doc = #doc_comment] }
         };
-        let generic_params = &self.generics.params;
+        // Includes any type parameters synthesized above from argument-position
+        // `impl Trait`, so the wrapper fn itself declares them by name — this is
+        // the un-desugared equivalent of what the user wrote.
+        let generic_params = {
+            let mut params = self.generics.params.clone();
+            params.extend(synthesized_params.iter().cloned());
+            params
+        };
         // The shim redeclares the wrapper's type *and* lifetime parameters,
         // since it's a nested item and inherits none of the wrapper's generics.
         // Type params need their inline bounds too: its signature names ABI
@@ -3164,6 +3195,7 @@ impl ast::ImportFunction {
             generics::lifetime_params_with_bounds(&self.generics)
                 .into_iter()
                 .chain(generics::type_params_with_bounds(&self.generics))
+                .chain(synthesized_params.iter().map(|p| quote! { #p }))
                 .collect();
         let where_clause = if where_bounds.is_empty() {
             quote! {}
