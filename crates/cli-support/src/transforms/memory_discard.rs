@@ -228,4 +228,43 @@ mod tests {
         let err = run(&mut module, true).unwrap_err().to_string();
         assert!(err.contains("must have type [i64 i64] -> []"), "{err}");
     }
+
+    #[test]
+    fn errors_without_a_memory() {
+        // The import is present (and the flag is enabled), but the module
+        // declares no memory at all, so `wasm_conventions::get_memory` should
+        // fail and that failure should propagate out of `run`.
+        let mut module = parse_wat(
+            r#"
+            (module
+                (import "env" "__wbindgen_memory_discard" (func (param i32 i32)))
+            )
+        "#,
+        );
+
+        let err = run(&mut module, true).unwrap_err().to_string();
+        assert!(err.contains("does not have a memory"), "{err}");
+    }
+
+    #[test]
+    fn errors_with_multiple_memories() {
+        // Build the module via the walrus API directly rather than `.wat`,
+        // since the text format's multi-memory syntax requires enabling a
+        // wasm proposal `wat::parse_str` doesn't have turned on by default.
+        let mut config = walrus::ModuleConfig::new();
+        config.generate_producers_section(false);
+        let mut module = walrus::Module::with_config(config);
+
+        module.memories.add_local(false, false, 1, None, None);
+        module.memories.add_local(false, false, 1, None, None);
+
+        let ty = module.types.add(&[ValType::I32, ValType::I32], &[]);
+        module.add_import_func(IMPORT_MODULE, IMPORT_NAME, ty);
+
+        let err = run(&mut module, true).unwrap_err().to_string();
+        assert!(
+            err.contains("expected a single memory, found multiple"),
+            "{err}"
+        );
+    }
 }
