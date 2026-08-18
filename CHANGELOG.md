@@ -19,12 +19,7 @@
   parameters: an imported *type* that is itself generic (`type Holder<T>`),
   used as a method receiver (`this: &Holder<T>`), or as the return type of a
   constructor or self-returning static method (`fn new<T>(value: T) ->
-  Holder<T>`). This is the shape used throughout `js-sys` (`Array<T>`,
-  `Map<K, V>`, `Promise<T>`, ...). A class-level type parameter or lifetime is
-  hoisted onto the generated `impl` block's own header instead of staying on
-  the wrapper function, and composes with an additional, non-hoisted
-  function-only generic parameter in the same signature. See
-  [Class-level generics](https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/generic_per_mono.html#class-level-generics)
+  Holder<T>`). See [Class-level generics](https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/generic_per_mono.html#class-level-generics)
   in the guide.
 
 ### Changed
