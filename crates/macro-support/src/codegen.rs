@@ -1176,10 +1176,23 @@ impl TryToTokens for ast::ImportType {
         let (impl_generics, ty_generics, where_clause) = self.generics.split_for_impl();
 
         let type_params_with_bounds = generics::type_params_with_bounds(&self.generics);
-        let impl_generics_with_lifetime_a = if type_params_with_bounds.is_empty() {
-            quote! { <'a> }
-        } else {
-            quote! { <'a, #(#type_params_with_bounds),*> }
+        let lifetime_params = generics::lifetime_params(&self.generics);
+        // The reference impls below (`&'__wbg_ref #rust_name #ty_generics`)
+        // need to declare the type's *own* lifetime params on the impl
+        // header, not just a fresh reference lifetime and the type params:
+        // `ty_generics` re-emits every one of the type's lifetime arguments,
+        // so leaving them undeclared here is an undeclared-lifetime error
+        // (E0261) unless the type happens to have no lifetimes of its own.
+        //
+        // The reference lifetime itself is a fresh `'__wbg_ref` rather than
+        // `'a`, precisely so that it can never accidentally unify with one of
+        // the type's own lifetime params of the same name (e.g. a type
+        // declared as `Holder<'a, T>`): reusing `'a` there would force the
+        // type's lifetime to be exactly as long as the borrow of `&self`,
+        // which is unsound in general and, combined with a hoisted type
+        // parameter elsewhere, surfaces as E0521 against the generated code.
+        let impl_generics_with_lifetime_a = quote! {
+            <'__wbg_ref, #(#lifetime_params,)* #(#type_params_with_bounds),*>
         };
 
         // For struct definitions, we need generics with defaults, so use params directly
@@ -1192,7 +1205,6 @@ impl TryToTokens for ast::ImportType {
 
         let phantom;
         let phantom_init;
-        let lifetime_params = generics::lifetime_params(&self.generics);
 
         // For `From<JsValue>`, only include lifetime params so type params
         // fall back to their defaults and callers don't need turbofish.
@@ -1318,7 +1330,7 @@ impl TryToTokens for ast::ImportType {
                 }
 
                 #[automatically_derived]
-                impl #impl_generics_with_lifetime_a OptionIntoWasmAbi for &'a #rust_name #ty_generics #where_clause {
+                impl #impl_generics_with_lifetime_a OptionIntoWasmAbi for &'__wbg_ref #rust_name #ty_generics #where_clause {
                     #[inline]
                     fn none() -> Self::Abi {
                         0
@@ -1345,8 +1357,8 @@ impl TryToTokens for ast::ImportType {
                 }
 
                 #[automatically_derived]
-                impl #impl_generics_with_lifetime_a IntoWasmAbi for &'a #rust_name #ty_generics #where_clause {
-                    type Abi = <&'a JsValue as IntoWasmAbi>::Abi;
+                impl #impl_generics_with_lifetime_a IntoWasmAbi for &'__wbg_ref #rust_name #ty_generics #where_clause {
+                    type Abi = <&'__wbg_ref JsValue as IntoWasmAbi>::Abi;
 
                     #[inline]
                     fn into_abi(self) -> Self::Abi {
