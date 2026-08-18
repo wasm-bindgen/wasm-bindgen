@@ -2,11 +2,13 @@
     var elem = document.querySelector('#output');
     window.mergedLibrary = {};
 
-    window.wasmExports = {
-        __wbindgen_start: () => {},
-        __wbg_wasmbindgentestcontext_free: () => {},
-        __wbg_interval_free: () => {}
-    };
+    // Glue references wasm exports through the asmjs-mangled identifiers
+    // that emcc's `assignWasmExports` receiving code binds at the top level.
+    window.wasmExports = {};
+    window.___wbindgen_start = () => {};
+    window.__initialize = () => {};
+    window.___wbg_wasmbindgentestcontext_free = () => {};
+    window.___wbg_interval_free = () => {};
     window.cachedTextEncoder = { encodeInto: () => {} };
     window.cachedTextDecoder = { decode: () => {} };
     window.Module = {};
@@ -75,8 +77,11 @@
             if (typeof Module.hello !== 'function') {
                 return { status: false, e: 'test result: hello() is not found in Module' };
             }
-            if (typeof Module.Interval !== 'function') {
-                return { status: false, e: 'test result: Interval is not found in Module' };
+            // Classes are `=`-prefixed string snippets (jsifier emits them as
+            // `var Interval = class Interval {...};`) so they never become
+            // `export class` declarations.
+            if (typeof Module.Interval !== 'string' || !Module.Interval.startsWith('=class ')) {
+                return { status: false, e: 'test result: Interval is not a class value snippet' };
             }
             // The hoisted exports must carry both attributes so emscripten
             // emits them as named ESM exports under -sMODULARIZE=instance.

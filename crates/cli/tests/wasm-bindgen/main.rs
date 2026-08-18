@@ -2815,10 +2815,13 @@ fn emscripten_exports_hoisted_to_library_symbols() {
         lib.contains("$add__postset: \"Module['add'] = add;\""),
         "add should attach to Module via __postset:\n{lib}"
     );
-    // Class + its finalization registry hoisted to library symbols.
+    // Class + its finalization registry hoisted to library symbols. Classes
+    // are `=`-prefixed string snippets so jsifier emits `var Counter = class
+    // Counter {...}` rather than an `export class` declaration (which crashes
+    // emcc's acorn-optimizer).
     assert!(
-        lib.contains("$Counter: class Counter"),
-        "Counter should be a hoisted library class:\n{lib}"
+        lib.contains(r#"$Counter: "=class Counter"#),
+        "Counter should be a hoisted string-snippet library class:\n{lib}"
     );
     assert!(
         lib.contains("$CounterFinalization:"),
@@ -2874,7 +2877,7 @@ fn emscripten_exports_hoisted_to_library_symbols() {
     );
     // A private class is hoisted but must NOT be exposed as a public export.
     assert!(
-        lib.contains("$Secret: class Secret"),
+        lib.contains(r#"$Secret: "=class Secret"#),
         "private class should still be hoisted as a library symbol:\n{lib}"
     );
     assert!(
