@@ -3377,6 +3377,94 @@ fn split_debug_info() {
     assert_eq!(external_debug_info(&main), None);
 }
 
+#[test]
+fn experimental_memory_discard() {
+    /// Whether a module contains a `memory.discard` instruction in any local
+    /// function body.
+    fn has_memory_discard(module: &walrus::Module) -> bool {
+        use walrus::ir::{dfs_in_order, Instr, Visitor};
+        use walrus::FunctionKind;
+
+        struct Scan(bool);
+        impl<'instr> Visitor<'instr> for Scan {
+            fn visit_instr(&mut self, instr: &Instr, _: &walrus::InstrLocId) {
+                if matches!(instr, Instr::MemoryDiscard(_)) {
+                    self.0 = true;
+                }
+            }
+        }
+
+        let mut scan = Scan(false);
+        for func in module.funcs.iter() {
+            if let FunctionKind::Local(local) = &func.kind {
+                dfs_in_order(&mut scan, local, local.entry_block());
+            }
+        }
+        scan.0
+    }
+
+    let mut project = Project::new("experimental_memory_discard");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen::prelude::*;
+
+            #[link(wasm_import_module = "env")]
+            extern "C" {
+                #[link_name = "__wbindgen_memory_discard"]
+                fn __wbindgen_memory_discard(addr: usize, len: usize);
+            }
+
+            #[wasm_bindgen]
+            pub fn purge(addr: usize, len: usize) {
+                unsafe { __wbindgen_memory_discard(addr, len) }
+            }
+        "#,
+    );
+
+    // Without the flag, the import is left dangling and `wasm-bindgen` must
+    // hard-error rather than emit a module with an unresolvable import.
+    let err = project
+        .wasm_bindgen("--target web")
+        .expect_err("should fail without --experimental-memory-discard");
+    assert!(
+        format!("{err:#}").contains("--experimental-memory-discard"),
+        "{err:#}"
+    );
+
+    // With the flag, the import is replaced by a local `memory.discard`
+    // trampoline and no longer appears in the import section.
+    let out_dir = project
+        .wasm_bindgen("--target web --experimental-memory-discard")
+        .unwrap_or_else(|e| panic!("{e:#}"));
+    let wasm = out_dir.join("experimental_memory_discard_bg.wasm");
+    let module = ModuleConfig::new().parse_file(&wasm).unwrap();
+
+    assert!(
+        module
+            .imports
+            .iter()
+            .all(|i| !(i.module == "env" && i.name == "__wbindgen_memory_discard")),
+        "`__wbindgen_memory_discard` import should have been removed"
+    );
+    assert!(
+        has_memory_discard(&module),
+        "output module should contain a `memory.discard` instruction"
+    );
+
+    // The emitted `memory.discard` instruction only validates against an
+    // engine/parser that understands the memory-control proposal.
+    let bytes = fs::read(&wasm).unwrap();
+    assert!(
+        wasmparser::validate(&bytes).is_err(),
+        "plain validation should reject `memory.discard` without the feature"
+    );
+    let features = wasmparser::WasmFeatures::default() | wasmparser::WasmFeatures::MEMORY_CONTROL;
+    wasmparser::Validator::new_with_features(features)
+        .validate_all(&bytes)
+        .expect("module should validate once memory-control is enabled");
+}
+
 /// Look up an executable on `PATH`. Used so the test can opportunistically
 /// validate the generated .d.ts with `tsc` without hard-requiring it.
 fn which(name: &str) -> Option<PathBuf> {

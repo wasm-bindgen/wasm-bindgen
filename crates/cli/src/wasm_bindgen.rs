@@ -111,6 +111,12 @@ struct Args {
         help = "Enable abort handler even if building with panic=abort. Does nothing when panic=unwind."
     )]
     force_enable_abort_handler: bool,
+    #[arg(
+        long = "experimental-memory-discard",
+        help = "Replace an `env.__wbindgen_memory_discard` import with a `memory.discard`\n\
+                trampoline from the wasm memory-control proposal (experimental)"
+    )]
+    experimental_memory_discard: bool,
     // The options below are deprecated. They're still parsed for backwards compatibility,
     // but we don't want to show them in `--help` to avoid distracting users.
     #[arg(long, hide = true)]
@@ -183,7 +189,8 @@ fn rmain(args: &Args) -> Result<(), Error> {
         .split_linked_modules(args.split_linked_modules)
         .reference_types(args.reference_types)
         .reset_state_function(args.generate_reset_state)
-        .force_enable_abort_handler(args.force_enable_abort_handler);
+        .force_enable_abort_handler(args.force_enable_abort_handler)
+        .memory_discard(args.experimental_memory_discard);
 
     if let Some(ref url) = args.debug_info_url {
         b.debug_info_url(url);

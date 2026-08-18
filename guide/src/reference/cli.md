@@ -139,3 +139,17 @@ already contains the exception-handling instructions it relies on. A
 nothing for `panic=unwind` builds.
 
 See [Handling Aborts](./handling-aborts.md) for the `set_on_abort` API.
+
+### `--experimental-memory-discard`
+
+Replaces an `env.__wbindgen_memory_discard` function import with a local
+trampoline containing the `memory.discard` instruction from the wasm
+memory-control proposal, allowing custom allocators to release physical pages
+back to the host.
+
+This feature is experimental and subject to change: the emitted instruction
+requires an engine supporting the memory-control proposal, and the import
+contract WILL change as the proposal evolves.
+
+See [Releasing Memory with `memory.discard`](./memory-discard.md) for the
+import contract.
