@@ -326,7 +326,7 @@ extern "C" {
     pub fn set_immediates_with_u8_slice(
         this: &GpuComputePassEncoder,
         range_offset: u32,
-        data: &mut [u8],
+        data: &[u8],
     ) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(
@@ -387,7 +387,7 @@ extern "C" {
     pub fn set_immediates_with_u8_slice_and_u32(
         this: &GpuComputePassEncoder,
         range_offset: u32,
-        data: &mut [u8],
+        data: &[u8],
         data_offset: u32,
     ) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
@@ -450,7 +450,7 @@ extern "C" {
     pub fn set_immediates_with_u8_slice_and_f64(
         this: &GpuComputePassEncoder,
         range_offset: u32,
-        data: &mut [u8],
+        data: &[u8],
         data_offset: f64,
     ) -> Result<(), JsValue>;
     #[cfg(web_sys_unstable_apis)]
@@ -514,7 +514,7 @@ extern "C" {
     pub fn set_immediates_with_u8_slice_and_u32_and_u32(
         this: &GpuComputePassEncoder,
         range_offset: u32,
-        data: &mut [u8],
+        data: &[u8],
         data_offset: u32,
         data_size: u32,
     ) -> Result<(), JsValue>;
@@ -580,7 +580,7 @@ extern "C" {
     pub fn set_immediates_with_u8_slice_and_f64_and_u32(
         this: &GpuComputePassEncoder,
         range_offset: u32,
-        data: &mut [u8],
+        data: &[u8],
         data_offset: f64,
         data_size: u32,
     ) -> Result<(), JsValue>;
@@ -646,7 +646,7 @@ extern "C" {
     pub fn set_immediates_with_u8_slice_and_u32_and_f64(
         this: &GpuComputePassEncoder,
         range_offset: u32,
-        data: &mut [u8],
+        data: &[u8],
         data_offset: u32,
         data_size: f64,
     ) -> Result<(), JsValue>;
@@ -712,7 +712,7 @@ extern "C" {
     pub fn set_immediates_with_u8_slice_and_f64_and_f64(
         this: &GpuComputePassEncoder,
         range_offset: u32,
-        data: &mut [u8],
+        data: &[u8],
         data_offset: f64,
         data_size: f64,
     ) -> Result<(), JsValue>;
