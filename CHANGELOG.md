@@ -27,6 +27,20 @@
 
 ### Fixed
 
+* An inline lifetime bound on a generic import (`fn f<'a: 'b, 'b, T>(..)`) is no
+  longer dropped from the generated wrapper. Previously the bound was lost while
+  the generated shim still declared it, so calling the import failed with
+  "lifetime may not live long enough" reported against generated code.
+
+* A type-parameter default on a `#[wasm_bindgen(generic_per_mono)]` import is no
+  longer silently ignored. It has no meaning there (every instantiation gets its
+  own shim, so there is no single one to default) and rustc's own
+  `invalid_type_param_default` lint cannot see it, since nothing of the original
+  signature survives expansion; it is now rejected with the same
+  `defaults for generic parameters are not allowed here` diagnostic rustc gives.
+  Defaults on the type-erasure generic path are unaffected, where they remain
+  meaningful.
+
 * Fix `js-sys` wasm64 build with `atomics` feature.
   [#5274](https://github.com/wasm-bindgen/wasm-bindgen/issues/5274)
 

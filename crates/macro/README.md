@@ -9,8 +9,19 @@ Testing of this macro is done through "ui tests" in the `ui-tests` subdirectory
 of this crate. Each Rust file in this folder is compiled with the `wasm_bindgen`
 crate, and the `*.stderr` file sitting next to it is the asserted output of the
 compiler. If the output matches, the test passes, and if the output doesn't
-match the test fails. Note that it is also considered a failure if a test
-actually compiles successfully.
+match the test fails. Note that for these tests it is also considered a failure
+if a test actually compiles successfully.
+
+There is also a `pass-tests` subdirectory for the opposite assertion: each Rust
+file there must compile *successfully*, with no `*.stderr` file. Use it to pin
+that a supported shape keeps working, especially one whose generated code is
+easy to break (for example the generic import paths, where a mistake in codegen
+surfaces as a rustc error against code the user never wrote). Note that a
+`#[wasm_bindgen(generic_per_mono)]` import only generates code when it is
+actually instantiated, so a pass test needs a call site, not just the
+declaration.
+
+Both directories are registered in `tests/ui.rs`.
 
 To add a test:
 

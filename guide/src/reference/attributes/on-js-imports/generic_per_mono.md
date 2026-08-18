@@ -41,8 +41,15 @@ which the erasure path does not allow.
 
 Reach for `generic_per_mono` when you want one Rust signature to serve several
 *Rust* types and you care about how they marshal. Reach for the default erasure
-path when you are modelling JS generics (`Array<T>`, `Promise<T>`) and want a
-single binding for all of them.
+path when you are modelling a JS generic *container* (`Array<T>`, `Promise<T>`)
+and want a single binding shared by every element type.
+
+Note that this is a choice about the *element* marshalling, not about whether the
+class itself may be generic: `generic_per_mono` does support a generic imported
+type, including as a method receiver or constructor return
+(see [Class-level generics](#class-level-generics)). The question is whether you
+want one shim per element type (`generic_per_mono`) or one shim for all of them
+(erasure).
 
 The trade-off is code size: one JS shim and one descriptor per instantiation. A
 generic import instantiated at a dozen types produces a dozen shims, so prefer
@@ -176,6 +183,37 @@ This composes with the constructor and self-returning static method (e.g.
 instance method, mirroring how `Array::new`/`Array::of` return `Array<T>` in
 `js-sys`.
 
+A static method that is *not* the constructor and does not return the class is
+not tied to the class's parameters at all, so it binds against the class's own
+parameter defaults, exactly as it does on the erasure path.
+
+### What can be hoisted
+
+The function's generics are *hoisted* onto the generated `impl` block's own
+header, so each generic argument of the class type has to be something that
+header can name and that the self type can then determine. In practice each
+argument must be a generic parameter of the function, either bare (`&Holder<T>`)
+or composed in a way that still determines it (`&Holder<Option<T>>`). The
+following are rejected up front, rather than left to fail as a confusing rustc
+error against generated code:
+
+* **An argument list mentioning none of the function's generics**
+  (`&Holder<u32>`). There is nothing to hoist, so the wrapper would end up in an
+  `impl` block for the class's defaults rather than for `Holder<u32>`. Drop the
+  arguments (`&Holder`) to bind the defaults deliberately.
+* **An argument that mentions a parameter without determining it**
+  (`&Holder<T::Assoc>`, or a constructor returning `Holder<T::Assoc>`). Hoisting
+  `T` would leave it unconstrained by the self type.
+* **A lifetime argument the function does not itself declare**
+  (`&Holder<'static, T>`, `&Holder<'_, T>`). Name it as a lifetime parameter of
+  the function instead (`fn f<'a, T>(this: &'a Holder<'a, T>)`).
+* **A class type parameterised by both a lifetime and a type parameter**
+  (`&'a Holder<'a, T>`) — not supported *yet*. The manufactured shim staticizes
+  the lifetimes of its concrete ABI types, which forces the receiver's `'a` to
+  outlive `'static` once a hoisted type parameter also has to resolve through it.
+  A class lifetime on its own works, as long as the type parameters stay off the
+  class type (`fn f<'a, T>(this: &'a LifetimeHolder<'a>, v: T)`).
+
 ## Other attributes
 
 `generic_per_mono` composes with the usual import attributes — `method`,
@@ -265,6 +303,17 @@ usually to drop `generic_per_mono`:
 `wasm-bindgen` does not support them on *any* generic import, erased or not, and
 reports `unsupported in wasm-bindgen generics`. Dropping `generic_per_mono` will
 not help.
+
+**Type-parameter defaults** (`fn f<T = JsValue>(x: T)`) are rejected with
+`defaults for generic parameters are not allowed here` — the same diagnostic
+rustc gives for a default on any ordinary function. On the erasure path a default
+is meaningful, because it picks the single concrete type the one shared binding is
+generated for; under `generic_per_mono` there is no single instantiation to pick,
+since every instantiation gets its own shim. The error is reported by
+`wasm-bindgen` rather than rustc only because nothing of the original signature
+survives macro expansion, so rustc's own deny-by-default
+`invalid_type_param_default` lint never sees it. Drop the default, or use the
+erasure path if you wanted it to mean something.
 
 ### Colliding imports
 
