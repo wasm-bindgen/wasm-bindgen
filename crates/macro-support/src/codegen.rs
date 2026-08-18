@@ -3768,35 +3768,14 @@ impl ast::ImportFunction {
             }
         }
 
-        // A class type parameterised by *both* a lifetime and a type parameter,
-        // where both are hoisted, is not supported yet. The manufactured shim
-        // staticizes the lifetimes of its concrete ABI types, which forces the
-        // class's `'a` to outlive `'static` once the hoisted type parameter
-        // also has to be resolved through it — surfacing as `E0521: borrowed
-        // data escapes outside of function` plus "implementation of
-        // `IntoWasmAbi` is not general enough" against generated code. A class
-        // lifetime on its own (`&'a Holder<'a>`, with any type parameters
-        // staying on the function) does work.
-        //
-        // Both hoisted-lifetime buckets count: a lifetime nested inside a type
-        // argument (`&Holder<T, &'a u32>`) lands in `class_bound_lifetime_params`
-        // rather than `class_lifetime_params`, but it is declared on the same
-        // impl header and carries the same hazard.
-        //
-        // Like the undeclared-lifetime check above, this is not receiver-only:
-        // the constructor route reaches an identically-shaped `impl`.
-        if !(fn_class_generics.class_lifetime_params.is_empty()
-            && fn_class_generics.class_bound_lifetime_params.is_empty())
-            && !fn_class_generics.class_generic_params.is_empty()
-        {
-            bail_span!(
-                self.rust_name,
-                "generic_per_mono does not support a class type parameterised by both a lifetime \
-                 and a type parameter of the function (e.g. `&'a Holder<'a, T>`) yet; keep the \
-                 type parameter off the class type (e.g. `fn f<'a, T>(this: &'a Holder<'a>, v: \
-                 T)`) or use the type-erasure generic path instead"
-            );
-        }
+        // A class type parameterised by *both* a lifetime and a type parameter
+        // can be hoisted safely: the reference-conversion impls (`&T`'s
+        // `IntoWasmAbi`/`OptionIntoWasmAbi`) declare the type's own lifetime
+        // params separately from the fresh `'__wbg_ref` reference lifetime
+        // (see `impl_generics_with_lifetime_a`), so the class's own lifetime
+        // is never forced to unify with — and therefore never forced to
+        // outlive — the borrow of `&self`. Without that unification there is
+        // no `E0521` to guard against here.
 
         // The remaining two checks are receiver-only. For a constructor or
         // static method the class comes from the return type, where stripping

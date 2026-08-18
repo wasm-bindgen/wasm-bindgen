@@ -63,6 +63,41 @@ extern "C" {
 
 #[wasm_bindgen]
 extern "C" {
+    // A class type parameterised by *both* a lifetime and a type parameter of
+    // the function, with both hoisted onto the same `impl` header. This used
+    // to be rejected: the `&'a #rust_name` reference-conversion impls
+    // (`IntoWasmAbi`, `OptionIntoWasmAbi`) reused the same `'a` for both the
+    // reference lifetime and the class's own lifetime, so the two were forced
+    // to unify — and once a hoisted type parameter also had to resolve
+    // through that impl, the unification forced the class's `'a` to outlive
+    // `'static` (E0521 against generated code). Fixed by declaring the type's
+    // own lifetimes separately from a fresh, never-colliding reference
+    // lifetime (`'__wbg_ref`) in `impl_generics_with_lifetime_a`.
+    type LtHolder<'a, T>;
+
+    #[wasm_bindgen(method, generic_per_mono, js_name = get)]
+    fn class_lifetime_and_type_param<'a, T>(this: &'a LtHolder<'a, T>) -> T;
+
+    // Same shape reached through the constructor route (`class_return_path`)
+    // rather than a method receiver.
+    #[wasm_bindgen(constructor, generic_per_mono)]
+    fn new_class_lifetime_and_type_param<'a, T>(v: &'a T) -> LtHolder<'a, T>;
+}
+
+#[wasm_bindgen]
+extern "C" {
+    type Pair2<A, B>;
+
+    // A lifetime nested *inside* a class type argument (rather than a direct
+    // class-lifetime argument) lands in the bound-only-lifetime bucket
+    // instead, but is declared on the same `impl` header alongside the
+    // hoisted type parameter and previously hit the same hazard.
+    #[wasm_bindgen(method, generic_per_mono, js_name = get)]
+    fn nested_class_lifetime_and_type_param<'a, T>(this: &Pair2<T, &'a u32>) -> u32;
+}
+
+#[wasm_bindgen]
+extern "C" {
     // Two class-level generic parameters (mirrors `Map<K, V>`).
     type Pair<K, V>;
 
@@ -200,6 +235,21 @@ fn use_holder(holder_u32: &Holder<u32>, holder_string: &Holder<String>) {
 fn use_lifetime_holder<'a>(holder: &'a LifetimeHolder<'a>) {
     let _: u32 = holder.get_lifetime();
     let _: String = holder.get_lifetime();
+}
+
+fn use_lt_holder<'a>(
+    holder_u32: &'a LtHolder<'a, u32>,
+    holder_string: &'a LtHolder<'a, String>,
+    value: &'a JsValue,
+) {
+    let _: u32 = holder_u32.class_lifetime_and_type_param();
+    let _: String = holder_string.class_lifetime_and_type_param();
+
+    let _: LtHolder<'a, JsValue> = LtHolder::new_class_lifetime_and_type_param(value);
+}
+
+fn use_pair2<'a>(pair: &Pair2<u32, &'a u32>) {
+    let _: u32 = pair.nested_class_lifetime_and_type_param();
 }
 
 fn use_pair(pair: &Pair<u32, String>, flipped: &Pair<String, u32>, same: &Pair<u32, u32>) {
