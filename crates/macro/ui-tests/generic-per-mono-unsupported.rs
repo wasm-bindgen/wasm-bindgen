@@ -157,6 +157,36 @@ extern "C" {
     // `LifetimeHolder` in `pass-tests/generic-per-mono-class-generics.rs`.
     #[wasm_bindgen(method, generic_per_mono, js_name = get)]
     fn class_lifetime_and_type_param<'a, T>(this: &'a LtHolder<'a, T>) -> T;
+
+    // Both lifetime rejections apply to every hoisting shape, not just a method
+    // receiver. A constructor or self-returning static method reaches an
+    // identically-parameterised `impl` through `class_return_path`, which
+    // decides whether to hoist by inspecting only the *type* arguments — so a
+    // lifetime argument that cannot be hoisted would otherwise slip past and
+    // leave the self type a lifetime argument short.
+    #[wasm_bindgen(constructor, generic_per_mono)]
+    fn new_foreign_class_lifetime<T>(v: T) -> LtHolder<'static, T>;
+
+    #[wasm_bindgen(static_method_of = LtHolder, generic_per_mono, js_name = of)]
+    fn static_foreign_class_lifetime<T>(v: T) -> LtHolder<'static, T>;
+
+    #[wasm_bindgen(constructor, generic_per_mono)]
+    fn new_class_lifetime_and_type_param<'a, T>(v: &'a T) -> LtHolder<'a, T>;
+}
+
+#[wasm_bindgen]
+extern "C" {
+    type Pair2<A, B>;
+
+    // A lifetime nested *inside* a class type argument is hoisted into the
+    // bound-only-lifetime bucket rather than the class-lifetime one, because
+    // the argument's own tokens already carry it and re-emitting it as a
+    // separate leading argument would give the self type the wrong arity. It is
+    // still declared on the same `impl` header as the hoisted type parameter,
+    // though, so it carries the same hazard as the direct form and is rejected
+    // by the same check.
+    #[wasm_bindgen(method, generic_per_mono, js_name = get)]
+    fn nested_class_lifetime_and_type_param<'a, T>(this: &Pair2<T, &'a u32>) -> u32;
 }
 
 // The rejections below happen while *parsing* the block rather than while

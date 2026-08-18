@@ -107,7 +107,27 @@ extern "C" {
     fn boxed_where_bound<T>(this: &Boxed<T>) -> u32
     where
         T: Clone;
+
+    // The shape that makes the hoisted bound *load-bearing on the shim*: the
+    // shim's ABI signature projects an associated type off the hoisted
+    // parameter (`<T::Item as IntoWasmAbi>::Abi`), which only resolves with
+    // `T: IntoIterator` in scope. The shim is a nested item and inherits
+    // nothing from the `impl` header the bound was hoisted onto, so it has to
+    // be restated on the shim's own `where` clause; without that this is
+    // `E0220` against generated code. `boxed_where_bound` above does not catch
+    // it, because its hoisted parameter never reaches the shim's signature.
+    #[wasm_bindgen(method, generic_per_mono, js_name = first)]
+    fn boxed_where_projection<T>(this: &Boxed<T>, v: T::Item) -> u32
+    where
+        T: IntoIterator;
+
+    // The same bound written inline. This already worked (the shim's own
+    // parameter list re-emits inline bounds via `type_params_with_bounds`), and
+    // pins that the two spellings stay equivalent.
+    #[wasm_bindgen(method, generic_per_mono, js_name = first)]
+    fn boxed_inline_projection<T: IntoIterator>(this: &Boxed<T>, v: T::Item) -> u32;
 }
+
 
 #[wasm_bindgen]
 extern "C" {
@@ -188,10 +208,16 @@ fn use_pair(pair: &Pair<u32, String>, flipped: &Pair<String, u32>, same: &Pair<u
     let _: u32 = same.pair_both();
 }
 
-fn use_boxed(boxed: &Boxed<u32>, nested: &Boxed<Option<u32>>) {
+fn use_boxed(
+    boxed: &Boxed<u32>,
+    nested: &Boxed<Option<u32>>,
+    projected: &Boxed<Vec<String>>,
+) {
     let _: u32 = boxed.boxed_tag();
     let _: u32 = nested.boxed_nested_get();
     let _: u32 = boxed.boxed_where_bound();
+    let _: u32 = projected.boxed_where_projection(String::from("hi"));
+    let _: u32 = projected.boxed_inline_projection(String::from("hi"));
 }
 
 fn use_fallible() -> Result<(), JsValue> {
