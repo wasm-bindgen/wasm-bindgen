@@ -148,80 +148,62 @@ error: generic_per_mono does not support a lifetime argument on the class type t
 150 |     fn elided_class_lifetime<T>(this: &LtHolder<'_, T>, v: T);
     |                                                 ^^
 
-error: generic_per_mono does not support a class type parameterised by both a lifetime and a type parameter of the function (e.g. `&'a Holder<'a, T>`) yet; keep the type parameter off the class type (e.g. `fn f<'a, T>(this: &'a Holder<'a>, v: T)`) or use the type-erasure generic path instead
-   --> ui-tests/generic-per-mono-unsupported.rs:159:8
-    |
-159 |     fn class_lifetime_and_type_param<'a, T>(this: &'a LtHolder<'a, T>) -> T;
-    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 error: generic_per_mono does not support a lifetime argument on the class type that the function does not itself declare; name it as a lifetime parameter of the function (e.g. `fn f<'a, T>(this: &'a Holder<'a, T>)`) or use the type-erasure generic path instead
-   --> ui-tests/generic-per-mono-unsupported.rs:168:56
+   --> ui-tests/generic-per-mono-unsupported.rs:166:56
     |
-168 |     fn new_foreign_class_lifetime<T>(v: T) -> LtHolder<'static, T>;
+166 |     fn new_foreign_class_lifetime<T>(v: T) -> LtHolder<'static, T>;
     |                                                        ^^^^^^^
 
 error: generic_per_mono does not support a lifetime argument on the class type that the function does not itself declare; name it as a lifetime parameter of the function (e.g. `fn f<'a, T>(this: &'a Holder<'a, T>)`) or use the type-erasure generic path instead
-   --> ui-tests/generic-per-mono-unsupported.rs:171:59
+   --> ui-tests/generic-per-mono-unsupported.rs:169:59
     |
-171 |     fn static_foreign_class_lifetime<T>(v: T) -> LtHolder<'static, T>;
+169 |     fn static_foreign_class_lifetime<T>(v: T) -> LtHolder<'static, T>;
     |                                                           ^^^^^^^
 
-error: generic_per_mono does not support a class type parameterised by both a lifetime and a type parameter of the function (e.g. `&'a Holder<'a, T>`) yet; keep the type parameter off the class type (e.g. `fn f<'a, T>(this: &'a Holder<'a>, v: T)`) or use the type-erasure generic path instead
-   --> ui-tests/generic-per-mono-unsupported.rs:174:8
-    |
-174 |     fn new_class_lifetime_and_type_param<'a, T>(v: &'a T) -> LtHolder<'a, T>;
-    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-error: generic_per_mono does not support a class type parameterised by both a lifetime and a type parameter of the function (e.g. `&'a Holder<'a, T>`) yet; keep the type parameter off the class type (e.g. `fn f<'a, T>(this: &'a Holder<'a>, v: T)`) or use the type-erasure generic path instead
-   --> ui-tests/generic-per-mono-unsupported.rs:189:8
-    |
-189 |     fn nested_class_lifetime_and_type_param<'a, T>(this: &Pair2<T, &'a u32>) -> u32;
-    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 error: `assert_no_shim` cannot be used with `generic_per_mono`, which always generates one shim per monomorphisation
-   --> ui-tests/generic-per-mono-unsupported.rs:200:38
+   --> ui-tests/generic-per-mono-unsupported.rs:180:38
     |
-200 |     #[wasm_bindgen(generic_per_mono, assert_no_shim)]
+180 |     #[wasm_bindgen(generic_per_mono, assert_no_shim)]
     |                                      ^^^^^^^^^^^^^^
 
 error: `reexport` cannot be used with `generic_per_mono`, because one binding is manufactured per monomorphisation and there is no single shim to reexport; remove the reexport or use the type-erasure generic path
-   --> ui-tests/generic-per-mono-unsupported.rs:206:8
+   --> ui-tests/generic-per-mono-unsupported.rs:186:8
     |
-206 |     fn reexported<T>(x: T);
+186 |     fn reexported<T>(x: T);
     |        ^^^^^^^^^^
 
 error: unsupported in wasm-bindgen generics
-   --> ui-tests/generic-per-mono-unsupported.rs:212:22
+   --> ui-tests/generic-per-mono-unsupported.rs:192:22
     |
-212 |     fn const_generic<const N: usize, T>(x: T);
+192 |     fn const_generic<const N: usize, T>(x: T);
     |                      ^^^^^^^^^^^^^^
 
 error: unsupported in wasm-bindgen generics
-   --> ui-tests/generic-per-mono-unsupported.rs:219:30
+   --> ui-tests/generic-per-mono-unsupported.rs:199:30
     |
-219 |     fn unsized_type_param<T: ?Sized>(x: &T);
+199 |     fn unsized_type_param<T: ?Sized>(x: &T);
     |                              ^
 
 error: `slice_to_array` requires a concrete slice element type (e.g. `&[u16]`); a type parameter cannot work here because `VectorRefIntoWasmAbi` is implemented per concrete ABI shape — drop `slice_to_array`, or take the argument by value
-   --> ui-tests/generic-per-mono-unsupported.rs:227:43
+   --> ui-tests/generic-per-mono-unsupported.rs:207:43
     |
-227 |     fn slice_to_array_generic_elem<T>(xs: &[T], other: T);
+207 |     fn slice_to_array_generic_elem<T>(xs: &[T], other: T);
     |                                           ^^^^
 
 error: `slice_to_array` requires a concrete slice element type (e.g. `&[u16]`); a type parameter cannot work here because `VectorRefIntoWasmAbi` is implemented per concrete ABI shape — drop `slice_to_array`, or take the argument by value
-   --> ui-tests/generic-per-mono-unsupported.rs:231:42
+   --> ui-tests/generic-per-mono-unsupported.rs:211:42
     |
-231 |     fn slice_to_array_nested_elem<T>(xs: &[Vec<T>], other: T);
+211 |     fn slice_to_array_nested_elem<T>(xs: &[Vec<T>], other: T);
     |                                          ^^^^^^^^^
 
 error: `slice_to_array` requires a concrete slice element type (e.g. `&[u16]`); a type parameter cannot work here because `VectorRefIntoWasmAbi` is implemented per concrete ABI shape — drop `slice_to_array`, or take the argument by value
-   --> ui-tests/generic-per-mono-unsupported.rs:235:42
+   --> ui-tests/generic-per-mono-unsupported.rs:215:42
     |
-235 |     fn slice_to_array_option_elem<T>(xs: Option<&[T]>, other: T);
+215 |     fn slice_to_array_option_elem<T>(xs: Option<&[T]>, other: T);
     |                                          ^^^^^^^^^^^^
 
 error: `slice_to_array` requires a concrete slice element type (e.g. `&[u16]`); a type parameter cannot work here because `VectorRefIntoWasmAbi` is implemented per concrete ABI shape — drop `slice_to_array`, or take the argument by value
-   --> ui-tests/generic-per-mono-unsupported.rs:242:50
+   --> ui-tests/generic-per-mono-unsupported.rs:222:50
     |
-242 |     fn erased_slice_to_array_generic_elem<T>(xs: &[T]);
+222 |     fn erased_slice_to_array_generic_elem<T>(xs: &[T]);
     |                                                  ^^^^
