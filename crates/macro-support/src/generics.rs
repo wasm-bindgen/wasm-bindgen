@@ -207,12 +207,22 @@ pub(crate) fn lifetime_params_with_bounds(
         .collect()
 }
 
-/// Obtain the generic bounds, both inline and where clauses together
+/// Obtain the generic bounds, both inline and where clauses together.
+///
+/// Inline bounds are reified into `where` predicates because a generated item
+/// does not necessarily have a parameter-list slot to carry them: the wrapper
+/// method declares only the parameters that were not hoisted onto its
+/// enclosing `impl` block, so an inline bound on a hoisted parameter has
+/// nowhere else to go. This covers *lifetime* parameters as well as type
+/// parameters — an inline `<'a: 'b>` has no other carrier, and dropping it
+/// makes the wrapper's declaration strictly weaker than the shim it calls
+/// (which redeclares its lifetimes with bounds intact), i.e. an
+/// `E0478`/"lifetime may not live long enough" against generated code.
 pub(crate) fn generic_bounds<'a>(generics: &'a syn::Generics) -> Vec<Cow<'a, syn::WherePredicate>> {
     let mut bounds = Vec::new();
     for param in &generics.params {
-        if let syn::GenericParam::Type(type_param) = param {
-            if !type_param.bounds.is_empty() {
+        match param {
+            syn::GenericParam::Type(type_param) if !type_param.bounds.is_empty() => {
                 let ident = &type_param.ident;
                 let predicate = syn::WherePredicate::Type(syn::PredicateType {
                     lifetimes: None,
@@ -222,6 +232,15 @@ pub(crate) fn generic_bounds<'a>(generics: &'a syn::Generics) -> Vec<Cow<'a, syn
                 });
                 bounds.push(Cow::Owned(predicate));
             }
+            syn::GenericParam::Lifetime(lifetime_param) if !lifetime_param.bounds.is_empty() => {
+                let predicate = syn::WherePredicate::Lifetime(syn::PredicateLifetime {
+                    lifetime: lifetime_param.lifetime.clone(),
+                    colon_token: syn::Token![:](proc_macro2::Span::call_site()),
+                    bounds: lifetime_param.bounds.clone(),
+                });
+                bounds.push(Cow::Owned(predicate));
+            }
+            _ => {}
         }
     }
     if let Some(where_clause) = &generics.where_clause {

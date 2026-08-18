@@ -2547,29 +2547,10 @@ impl TryToTokens for ast::ImportFunction {
                     segment.arguments = syn::PathArguments::None;
                 }
             }
-            let has_class_generics = !fn_class_generics.class_generic_params.is_empty()
-                || !fn_class_generics.class_lifetime_params.is_empty()
-                || !fn_class_generics.class_bound_lifetime_params.is_empty();
-            if (!is_method && !is_constructor && !is_self_returning_static) || !has_class_generics {
-                // For static functions not the constructor/self-returning, we impl on generic default
-                class_impl_def = Some(quote! { impl #class });
-            } else {
-                // Type lifetimes: appear on impl AND passed to type
-                let class_lifetime_params = &fn_class_generics.class_lifetime_params;
-                // Bound-only lifetimes: appear on impl but NOT passed to type
-                let class_bound_lifetime_params = &fn_class_generics.class_bound_lifetime_params;
-                let class_generic_params = &fn_class_generics.class_generic_params;
-                let class_generic_exprs = &fn_class_generics.class_generic_exprs;
-                let impl_where_clause = if !fn_class_generics.class_bounds.is_empty() {
-                    let class_bounds = fn_class_generics.class_bounds.iter();
-                    quote! { where #(#class_bounds),* }
-                } else {
-                    quote! {}
-                };
-                class_impl_def = Some(
-                    quote! { impl<#(#class_lifetime_params,)* #(#class_bound_lifetime_params,)* #(#class_generic_params),*> #class <#(#class_lifetime_params,)* #(#class_generic_exprs),*> #impl_where_clause },
-                );
-            }
+            // A static method that is neither the constructor nor self-returning
+            // impls on the class's own parameter defaults instead of hoisting.
+            let hoist = is_method || is_constructor || is_self_returning_static;
+            class_impl_def = Some(fn_class_generics.class_impl_def(&class, hoist));
         };
 
         // Function-level lifetime params
@@ -2781,21 +2762,47 @@ impl ast::ImportFunction {
             );
         }
 
+        // A type-parameter default has no meaning here — every instantiation
+        // gets its own shim, so there is no single one to pick a default for —
+        // and unlike the type-erasure path (which gives defaults meaning via
+        // `concrete_defaults`) per-mono codegen just drops them.
+        //
+        // Normally rustc's deny-by-default `invalid_type_param_default` lint
+        // would catch this on the user's behalf, but nothing of the original
+        // signature survives expansion: the wrapper's parameter list is built
+        // from bare idents and the shim's from `type_params_with_bounds`, so
+        // neither re-emits the default and the lint never fires. Reproduce
+        // rustc's own diagnostic verbatim rather than letting it pass silently.
+        for type_param in self.generics.type_params() {
+            if type_param.default.is_some() {
+                bail_span!(
+                    type_param,
+                    "defaults for generic parameters are not allowed here"
+                );
+            }
+        }
+
         // --- Determine the receiver/class shape (mirrors the normal path) ---
         let mut class = None;
         let mut is_method = false;
+        let mut is_constructor = false;
+        let mut is_self_returning_static = false;
         if let ast::ImportFunctionKind::Method { ty, kind, .. } = &self.kind {
             class = Some(get_ty(ty).clone());
-            if let ast::MethodKind::Operation(ast::Operation {
-                is_static: false, ..
-            }) = kind
-            {
-                is_method = true;
+            match kind {
+                ast::MethodKind::Constructor => is_constructor = true,
+                ast::MethodKind::Operation(ast::Operation {
+                    is_static: false, ..
+                }) => is_method = true,
+                _ => {}
             }
             // Constructors and self-returning static methods impl on the return
             // type's class so the manufactured JS binding attaches correctly.
             if self.class_return_path().is_some() {
                 class = Some(get_ty(self.js_ret.as_ref().unwrap()).clone());
+                if !is_constructor {
+                    is_self_returning_static = true;
+                }
             }
         }
         // Class-level generics (a type parameter or lifetime of the function
@@ -2808,6 +2815,120 @@ impl ast::ImportFunction {
         // `get_fn_generics` and its use at the bottom of this function, where
         // the (possibly parameterised) `impl` block is assembled.
         let fn_class_generics = self.get_fn_generics()?;
+
+        // Not every class argument list *can* be hoisted, and the ones that
+        // cannot must be rejected here rather than left to fall through: the
+        // `impl` assembly below strips the class type's arguments before
+        // parameterising it, so an argument list that contributed nothing to
+        // hoist is silently dropped and the wrapper ends up in an `impl` block
+        // for the wrong self type. That surfaces as a confusing error against
+        // generated code the user never wrote, pointed at the `#[wasm_bindgen]`
+        // attribute.
+        //
+        // This applies only to a class taken from a *method receiver*. For a
+        // constructor or static method the class comes from the return type,
+        // where stripping the arguments and binding the class's own defaults
+        // (`impl Promise` for a `-> Promise<T::Resolution>`) is the established,
+        // working behaviour shared with the type-erasure path: `class_return_path`
+        // already declines to hoist a non-constraining argument list, and the
+        // resulting inherent method is perfectly valid — it simply hangs off the
+        // defaulted class. Rejecting it here would break real imports, e.g.
+        // `js_sys::Promise::new_typed<T: Promising>(..) -> Promise<<T as
+        // Promising>::Resolution>`.
+        if let (Some(class_ty), true) = (&class, is_method) {
+            if let syn::Type::Path(syn::TypePath { path, .. }) = class_ty {
+                if let Some(syn::PathSegment {
+                    arguments: syn::PathArguments::AngleBracketed(gen_args),
+                    ..
+                }) = path.segments.last()
+                {
+                    // A lifetime argument the function does not itself declare
+                    // (`&Holder<'static, T>`, `&Holder<'_, T>`) is not a
+                    // parameter that can be hoisted onto the `impl` header, and
+                    // dropping it leaves the self type a lifetime argument short
+                    // (`E0726: implicit elided lifetime not allowed here`).
+                    let fn_lifetimes = generics::lifetime_params(&self.generics);
+                    for gen_arg in gen_args.args.iter() {
+                        if let syn::GenericArgument::Lifetime(lt) = gen_arg {
+                            if !fn_lifetimes.contains(&lt) {
+                                bail_span!(
+                                    lt,
+                                    "generic_per_mono does not support a lifetime argument on the \
+                                     class type that the function does not itself declare; name it \
+                                     as a lifetime parameter of the function (e.g. \
+                                     `fn f<'a, T>(this: &'a Holder<'a, T>)`) or use the \
+                                     type-erasure generic path instead"
+                                );
+                            }
+                        }
+                    }
+
+                    // Every type argument mentions no generic parameter of the
+                    // function, so there is nothing to hoist and the `impl`
+                    // block would be built for the class's own parameter
+                    // defaults instead of the class type as written
+                    // (`impl Holder` for a declared `&Holder<u32>`, i.e. a
+                    // receiver type mismatch on the generated method).
+                    if !fn_class_generics.class_generic_exprs.is_empty()
+                        && !fn_class_generics.has_class_generics()
+                    {
+                        bail_span!(
+                            self.rust_name,
+                            "generic_per_mono does not support a class type whose generic \
+                             arguments mention none of the function's own generic parameters; \
+                             either name one of them in the class type (e.g. \
+                             `fn f<T>(this: &Holder<T>)`) or drop the arguments to bind the \
+                             class's defaults (e.g. `fn f<T>(this: &Holder, v: T)`)"
+                        );
+                    }
+
+                    // A type argument that mentions a parameter without
+                    // *constraining* it — `&Holder<T::Assoc>` — hoists `T` onto
+                    // the `impl` header without the self type ever determining
+                    // it, which is `E0207: the type parameter `T` is not
+                    // constrained`. `class_return_path` already applies this
+                    // check for the constructor/self-returning-static shape;
+                    // a method receiver needs it too.
+                    let fn_params: Vec<&Ident> = generics::generic_params(&self.generics)
+                        .iter()
+                        .map(|p| p.0)
+                        .collect();
+                    if !generics::args_are_constraining_for(&gen_args.args, &fn_params) {
+                        bail_span!(
+                            self.rust_name,
+                            "generic_per_mono requires each generic argument of the class type to \
+                             be a bare generic parameter of the function (e.g. `&Holder<T>`); an \
+                             argument like `&Holder<T::Assoc>` mentions `T` without determining \
+                             it, so the generated `impl` block cannot constrain it — use the \
+                             type-erasure generic path instead"
+                        );
+                    }
+
+                    // A class type parameterised by *both* a lifetime and a type
+                    // parameter, where both are hoisted, is not supported yet.
+                    // The manufactured shim staticizes the lifetimes of its
+                    // concrete ABI types, which forces the receiver's `'a` to
+                    // outlive `'static` once the hoisted type parameter also has
+                    // to be resolved through it — surfacing as `E0521: borrowed
+                    // data escapes outside of function` plus "implementation of
+                    // `IntoWasmAbi` is not general enough" against generated
+                    // code. A class lifetime on its own (`&'a Holder<'a>`, with
+                    // any type parameters staying on the function) does work.
+                    if !fn_class_generics.class_lifetime_params.is_empty()
+                        && !fn_class_generics.class_generic_params.is_empty()
+                    {
+                        bail_span!(
+                            self.rust_name,
+                            "generic_per_mono does not support a class type parameterised by both \
+                             a lifetime and a type parameter of the function (e.g. \
+                             `&'a Holder<'a, T>`) yet; keep the type parameter off the class type \
+                             (e.g. `fn f<'a, T>(this: &'a Holder<'a>, v: T)`) or use the \
+                             type-erasure generic path instead"
+                        );
+                    }
+                }
+            }
+        }
 
         // A `variadic` import splats its final argument (`...arg`) on the JS
         // side, which requires that argument to be iterable at runtime.
@@ -2876,19 +2997,22 @@ impl ast::ImportFunction {
         // that stay on the function (`fn_class_generics.fn_generic_params`) —
         // anything hoisted onto the enclosing `impl` block's own header
         // (`class_generic_params`) has no parameter-list slot left on the
-        // wrapper to carry an inline bound. So both kinds of bound —
-        // non-hoisted (`fn_bounds`) and hoisted (`class_bounds`) — are
-        // collected here as plain `where` predicates instead; a method may
-        // freely reference its enclosing `impl`'s generic parameters in its
-        // own `where` clause without redeclaring them, so this is valid even
-        // for the hoisted ones. `get_fn_generics` already derived both lists
-        // from the combination of inline and `where`-clause bounds on
-        // `self.generics` (`generics::generic_bounds`), so nothing further
-        // needs collecting from `self.generics` directly here.
+        // wrapper to carry an inline bound. So the non-hoisted bounds are
+        // collected here as plain `where` predicates instead. `get_fn_generics`
+        // already derived this list from the combination of inline and
+        // `where`-clause bounds on `self.generics`
+        // (`generics::generic_bounds`), so nothing further needs collecting
+        // from `self.generics` directly here.
+        //
+        // The hoisted bounds (`class_bounds`) deliberately do *not* appear
+        // here: they are emitted as predicates on the `impl` header itself by
+        // `class_impl_def` below. A predicate on the method's `where` clause
+        // would be accepted but would not *constrain* an impl-header
+        // parameter, leaving anything hoisted transitively out of a bound as
+        // an unconstrained impl parameter (E0207).
         let mut where_bounds: Vec<TokenStream> = fn_class_generics
             .fn_bounds
             .iter()
-            .chain(fn_class_generics.class_bounds.iter())
             .map(|b| b.to_token_stream())
             .collect();
         let mut wrapper_args = Vec::new();
@@ -3142,12 +3266,14 @@ impl ast::ImportFunction {
         // non-hoisted parameters: anything the class type's argument list
         // uses (`class_generic_params` / `class_lifetime_params` /
         // `class_bound_lifetime_params`) moves onto the `impl` block's own
-        // header instead, assembled below. These are bare idents with no
-        // inline bounds attached (any inline bound on a hoisted parameter
-        // was already folded into `where_bounds` above; a non-hoisted
-        // parameter's inline bound is carried as a synthesized `where`
-        // predicate the same way, via `add_fn_bound`/`generic_bounds` inside
-        // `get_fn_generics`).
+        // header instead, assembled below. These are bare idents/lifetimes with
+        // no inline bounds attached: every inline bound, on a hoisted parameter
+        // or not, was reified into a `where` predicate by
+        // `generics::generic_bounds` inside `get_fn_generics` and has already
+        // been emitted — a non-hoisted one into `where_bounds` above, a hoisted
+        // one onto the `impl` header via `class_impl_def`. Type-param defaults
+        // cannot appear at all — they are rejected up front; see the note on the
+        // shim's parameter list below.
         let fn_generic_params = &fn_class_generics.fn_generic_params;
         let fn_lifetime_params = &fn_class_generics.fn_lifetime_params;
         let generic_params = quote! { #(#fn_lifetime_params,)* #(#fn_generic_params),* };
@@ -3155,24 +3281,22 @@ impl ast::ImportFunction {
         // since it's a nested item and inherits none of the wrapper's generics.
         // Type params need their inline bounds too: its signature names ABI
         // types projected off them (`<T::Assoc as IntoWasmAbi>::Abi`), which
-        // only resolve under the bound. Defaults are dropped here: they are
-        // meaningless on a nested item, and rustc's `invalid_type_param_default`
-        // future-compatibility lint already rejects them on the wrapper's own
-        // parameter list, so per-mono codegen deliberately does not add a check
-        // of its own.
+        // only resolve under the bound.
         //
-        // Lifetime params carry their inline bounds (`<'a: 'b>`) across too.
-        // Unlike the type-param bounds above this is not currently load-bearing:
-        // every type the shim names in a `where` predicate is also named in an
-        // argument- or return-position projection, and the implied bounds that
-        // position grants are enough to prove the predicate well-formed on their
-        // own. It is done anyway because the alternative is a silent dependency
-        // on that coincidence — an inline `<'a: 'b>` has no carrier in the
-        // `where` clause, so dropping it here makes the shim's declaration say
-        // something weaker than the wrapper's, and any future change that puts a
-        // lifetime-relating type in a predicate without a matching projection
-        // (`E0478: lifetime bound not satisfied`) would surface as an error in
-        // generated code the user never wrote.
+        // Type-param *defaults* are not carried here, and cannot reach this
+        // point: they are rejected up front with rustc's own "defaults for
+        // generic parameters are not allowed here", since neither this list nor
+        // the wrapper's re-emits them and so rustc's deny-by-default
+        // `invalid_type_param_default` lint would never fire.
+        //
+        // Lifetime params carry their inline bounds (`<'a: 'b>`) across too, and
+        // here that is load-bearing in both directions: the shim needs them so a
+        // `where` predicate that relates two lifetimes stays provable, and the
+        // wrapper needs them so its own declaration is not strictly weaker than
+        // the shim it calls. The wrapper has no parameter-list slot for a
+        // hoisted parameter's inline bound, so it carries lifetime bounds as
+        // synthesized `where` predicates instead — see `generics::generic_bounds`,
+        // which reifies inline lifetime bounds for exactly this reason.
         let shim_generic_params: Vec<TokenStream> =
             generics::lifetime_params_with_bounds(&self.generics)
                 .into_iter()
@@ -3288,30 +3412,11 @@ impl ast::ImportFunction {
                     segment.arguments = syn::PathArguments::None;
                 }
             }
-            // Only reach for the parameterised `impl<..> Class<..>` form when
-            // there is actually something to hoist onto it — mirrors the
-            // erasure path's `has_class_generics` gate. `get_fn_generics`
-            // itself only ever populates these for a method receiver,
-            // constructor, or self-returning static method (see its own
-            // `class`/`class_return_path` detection), so this is equivalent
-            // to also checking `is_method || is_constructor ||
-            // is_self_returning_static` the way the erasure path spells it
-            // out explicitly.
-            let has_class_generics = !fn_class_generics.class_generic_params.is_empty()
-                || !fn_class_generics.class_lifetime_params.is_empty()
-                || !fn_class_generics.class_bound_lifetime_params.is_empty();
-            let class_impl_def = if !has_class_generics {
-                quote! { impl #class }
-            } else {
-                let class_lifetime_params = &fn_class_generics.class_lifetime_params;
-                let class_bound_lifetime_params = &fn_class_generics.class_bound_lifetime_params;
-                let class_generic_params = &fn_class_generics.class_generic_params;
-                let class_generic_exprs = &fn_class_generics.class_generic_exprs;
-                quote! {
-                    impl<#(#class_lifetime_params,)* #(#class_bound_lifetime_params,)* #(#class_generic_params),*>
-                        #class <#(#class_lifetime_params,)* #(#class_generic_exprs),*>
-                }
-            };
+            // Same gate as the type-erasure path, spelled out the same way: a
+            // static method that is neither the constructor nor self-returning
+            // impls on the class's own parameter defaults.
+            let hoist = is_method || is_constructor || is_self_returning_static;
+            let class_impl_def = fn_class_generics.class_impl_def(&class, hoist);
             quote! {
                 #[automatically_derived]
                 #class_impl_def {
@@ -3362,6 +3467,57 @@ impl<'a> FnClassGenerics<'a> {
             self.fn_bounds.push(Cow::Owned(bound));
         }
     }
+
+    /// Whether anything was hoisted onto the enclosing `impl` block's own
+    /// generic header, i.e. whether the parameterised `impl<..> Class<..>`
+    /// form is needed at all rather than a bare `impl Class`.
+    fn has_class_generics(&self) -> bool {
+        !self.class_generic_params.is_empty()
+            || !self.class_lifetime_params.is_empty()
+            || !self.class_bound_lifetime_params.is_empty()
+    }
+
+    /// Assembles the `impl` header that the generated wrapper method is
+    /// emitted into, shared by the type-erasure and per-monomorphisation
+    /// paths so the two cannot drift apart.
+    ///
+    /// `class` must already have had the generic arguments stripped from its
+    /// last path segment; any that need to survive are re-emitted here from
+    /// `class_generic_exprs` (which is in declaration order, unlike the
+    /// alphabetically-ordered `class_generic_params` set).
+    ///
+    /// `hoist` must be false for shapes that cannot carry class-level
+    /// generics — a static method that is neither a constructor nor
+    /// self-returning — which impl on the class's own parameter defaults
+    /// instead.
+    fn class_impl_def(&self, class: &syn::Type, hoist: bool) -> TokenStream {
+        if !hoist || !self.has_class_generics() {
+            return quote! { impl #class };
+        }
+        // Type lifetimes: appear on the impl AND are passed to the type.
+        let class_lifetime_params = &self.class_lifetime_params;
+        // Bound-only lifetimes: appear on the impl but are NOT passed to the type.
+        let class_bound_lifetime_params = &self.class_bound_lifetime_params;
+        let class_generic_params = &self.class_generic_params;
+        let class_generic_exprs = &self.class_generic_exprs;
+        // Bounds on hoisted parameters have to become *impl-level* predicates.
+        // A predicate left on the wrapper method's own `where` clause does not
+        // constrain a parameter declared on the impl header (RFC 447), so
+        // anything hoisted transitively out of a bound — `Ret` in
+        // `F: JsFunction<Ret = Ret>`, say — would otherwise be an unconstrained
+        // impl parameter, i.e. an E0207 reported against generated code.
+        let impl_where_clause = if self.class_bounds.is_empty() {
+            quote! {}
+        } else {
+            let class_bounds = self.class_bounds.iter();
+            quote! { where #(#class_bounds),* }
+        };
+        quote! {
+            impl<#(#class_lifetime_params,)* #(#class_bound_lifetime_params,)* #(#class_generic_params),*>
+                #class <#(#class_lifetime_params,)* #(#class_generic_exprs),*>
+            #impl_where_clause
+        }
+    }
 }
 
 impl ast::ImportFunction {
@@ -3377,23 +3533,6 @@ impl ast::ImportFunction {
         // Extract lifetime parameters
         let all_lifetime_params = generics::lifetime_params(&self.generics);
         let mut fn_lifetime_params: Vec<&syn::Lifetime> = all_lifetime_params.clone();
-
-        let mut where_predicates: Vec<Cow<syn::WherePredicate>> = Vec::new();
-        for param in &self.generics.params {
-            if let syn::GenericParam::Type(type_param) = param {
-                if !type_param.bounds.is_empty() {
-                    let ident = &type_param.ident;
-                    let bounds = type_param.bounds.clone();
-                    let predicate = syn::WherePredicate::Type(syn::PredicateType {
-                        lifetimes: None,
-                        bounded_ty: syn::parse_quote!(#ident),
-                        colon_token: syn::Token![:](proc_macro2::Span::call_site()),
-                        bounds,
-                    });
-                    where_predicates.push(Cow::Owned(predicate));
-                }
-            }
-        }
 
         let mut class_bounds = Vec::new();
         let mut fn_bounds = generics::generic_bounds(&self.generics);
@@ -3451,9 +3590,22 @@ impl ast::ImportFunction {
                     class_generic_params =
                         generics::used_generic_params(ty, &fn_generic_params, class_generic_params);
 
-                    // Also find lifetimes used in class generic expressions
+                    // Also find lifetimes used *inside* this class generic
+                    // expression (e.g. `Holder<&'a u32>`). These go in the
+                    // bound-only bucket: `class_lifetime_params` is re-emitted
+                    // as a *leading generic argument* of the self type, but a
+                    // lifetime nested in a type argument is already carried by
+                    // that argument's own tokens. Adding it again as a separate
+                    // argument would give the self type the wrong arity
+                    // (`impl<'a, T> Holder<'a, &'a u32>` for a one-parameter
+                    // `Holder`). It still has to appear on the impl *header*,
+                    // hence the bound-only bucket.
                     let used_lifetimes = generics::used_lifetimes_in_type(ty, &all_lifetime_params);
-                    class_lifetime_params_set.extend(used_lifetimes);
+                    for lt in used_lifetimes {
+                        if !class_lifetime_params_set.contains(&lt) {
+                            class_bound_lifetime_params_set.insert(lt);
+                        }
+                    }
                 }
 
                 // Transitively hoist generic params and lifetimes that are used in bounds OF already-hoisted params.
@@ -3560,11 +3712,17 @@ impl ast::ImportFunction {
             .filter(|lt| class_lifetime_params_set.contains(*lt))
             .collect();
 
-        // Convert class_bound_lifetime_params_set to Vec, maintaining order from original params
+        // Convert class_bound_lifetime_params_set to Vec, maintaining order from
+        // original params. The two buckets are both emitted on the impl header,
+        // so a lifetime in both would be declared twice; the type-argument
+        // bucket wins since it also has to be passed to the type.
         let class_bound_lifetime_params: Vec<syn::Lifetime> = all_lifetime_params
             .iter()
             .copied()
-            .filter(|lt| class_bound_lifetime_params_set.contains(*lt))
+            .filter(|lt| {
+                class_bound_lifetime_params_set.contains(*lt)
+                    && !class_lifetime_params_set.contains(*lt)
+            })
             .cloned()
             .collect();
 
