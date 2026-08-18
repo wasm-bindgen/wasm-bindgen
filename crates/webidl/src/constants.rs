@@ -110,6 +110,7 @@ pub(crate) static IMMUTABLE_SLICE_WHITELIST: Lazy<BTreeSet<&'static str>> = Lazy
         "send",
         // WebGPU
         "setBindGroup",
+        "setImmediates",
         "writeBuffer",
         "writeTexture",
         // AudioBuffer
