@@ -91,7 +91,7 @@ pub extern "C" fn greet(a: &str) -> String {
     format!("Hello, {}!", a)
 }
 
-#[export_name = "greet"]
+#[unsafe(export_name = "greet")]
 pub extern "C" fn __wasm_bindgen_generated_greet(
     arg0_ptr: *const u8,
     arg0_len: usize,

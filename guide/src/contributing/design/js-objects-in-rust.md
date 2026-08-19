@@ -91,7 +91,7 @@ pub fn foo(a: &JsValue) {
     // ...
 }
 
-#[export_name = "foo"]
+#[unsafe(export_name = "foo")]
 pub extern "C" fn __wasm_bindgen_generated_foo(arg0: u32) {
     let arg0 = unsafe {
         ManuallyDrop::new(JsValue::__from_idx(arg0))
@@ -188,7 +188,7 @@ pub fn foo(a: JsValue) {
     // ...
 }
 
-#[export_name = "foo"]
+#[unsafe(export_name = "foo")]
 pub extern "C" fn __wasm_bindgen_generated_foo(arg0: u32) {
     let arg0 = unsafe {
         JsValue::__from_idx(arg0)
