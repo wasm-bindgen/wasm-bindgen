@@ -54,11 +54,72 @@ extern "C" {
 
 #[wasm_bindgen]
 extern "C" {
+    // A class type whose argument list is (partly or wholly) *concrete* rather
+    // than a hoisted parameter of the function. `class_generic_exprs` carries
+    // every type argument verbatim, so `class_impl_def` re-emits the list as
+    // written; without that the arguments would be dropped and the wrapper
+    // would land on the class's own parameter defaults (`impl Concrete`), a
+    // receiver-type mismatch on the generated method.
+    type Concrete<A, B>;
+
+    // Mixed: `u32` is concrete, `T` is hoisted, so the header is `impl<T>
+    // Concrete<u32, T>`.
+    #[wasm_bindgen(method, generic_per_mono, js_name = get)]
+    fn mixed_concrete_class_arg<T>(this: &Concrete<u32, T>) -> T;
+
+    // Fully concrete: nothing is hoisted, so the header has no parameters of
+    // its own and is simply `impl Concrete<u32, String>`. The function's own
+    // `T` stays on the method, which is what makes this a per-mono import at
+    // all.
+    #[wasm_bindgen(method, generic_per_mono, js_name = get)]
+    fn concrete_class_arg<T>(this: &Concrete<u32, String>, v: T);
+
+    // The same, reached through the constructor route (`class_return_path`)
+    // rather than a method receiver: a concrete argument list is vacuously
+    // "constraining", so the return type is used as the class and its
+    // arguments are re-emitted the same way.
+    #[wasm_bindgen(constructor, generic_per_mono)]
+    fn new_concrete<T>(v: T) -> Concrete<u32, String>;
+}
+
+#[wasm_bindgen]
+extern "C" {
     // A class-level *lifetime* parameter, rather than a type parameter.
     type LifetimeHolder<'a>;
 
     #[wasm_bindgen(method, generic_per_mono, js_name = get)]
     fn get_lifetime<'a, T>(this: &'a LifetimeHolder<'a>) -> T;
+}
+
+#[wasm_bindgen]
+extern "C" {
+    // A class lifetime not literally named `'a`. The reference-conversion
+    // impls re-emit the type's full argument list, so they have to *declare*
+    // the type's own lifetime params rather than assuming a single `'a`;
+    // otherwise this is an undeclared lifetime (E0261) against generated code.
+    type Tagged<'x>;
+
+    #[wasm_bindgen(method, generic_per_mono, js_name = get)]
+    fn tagged_get<'x, T>(this: &'x Tagged<'x>) -> T;
+}
+
+#[wasm_bindgen]
+extern "C" {
+    // More than one class lifetime argument. This is where the impl header's
+    // deduplicated `class_lifetime_params` and the positional
+    // `class_lifetime_args` passed to the self type genuinely diverge — the
+    // declaration order below is deliberately reversed relative to the
+    // receiver's argument list, and `TwoLifetimes<'b, 'a>` must not come back
+    // out as `TwoLifetimes<'a, 'b>`.
+    type TwoLifetimes<'a, 'b>;
+
+    #[wasm_bindgen(method, generic_per_mono, js_name = get)]
+    fn two_lifetimes_get<'a, 'b, T>(this: &'a TwoLifetimes<'b, 'a>) -> T;
+
+    // The same lifetime used for both arguments: the header binds it once
+    // while the self type still takes two arguments.
+    #[wasm_bindgen(method, generic_per_mono, js_name = both)]
+    fn two_lifetimes_same<'a, T>(this: &'a TwoLifetimes<'a, 'a>) -> T;
 }
 
 #[wasm_bindgen]
@@ -163,7 +224,6 @@ extern "C" {
     fn boxed_inline_projection<T: IntoIterator>(this: &Boxed<T>, v: T::Item) -> u32;
 }
 
-
 #[wasm_bindgen]
 extern "C" {
     type Defaulted<T>;
@@ -232,9 +292,28 @@ fn use_holder(holder_u32: &Holder<u32>, holder_string: &Holder<String>) {
     holder_string.combine(4u32);
 }
 
+fn use_concrete(mixed: &Concrete<u32, String>) {
+    let _: String = mixed.mixed_concrete_class_arg();
+    mixed.concrete_class_arg(1u32);
+    mixed.concrete_class_arg(String::from("hi"));
+
+    let _: Concrete<u32, String> = Concrete::new_concrete(2u32);
+    let _: Concrete<u32, String> = Concrete::new_concrete(String::from("bye"));
+}
+
 fn use_lifetime_holder<'a>(holder: &'a LifetimeHolder<'a>) {
     let _: u32 = holder.get_lifetime();
     let _: String = holder.get_lifetime();
+}
+
+fn use_tagged<'x>(tagged: &'x Tagged<'x>) {
+    let _: u32 = tagged.tagged_get();
+    let _: String = tagged.tagged_get();
+}
+
+fn use_two_lifetimes<'a, 'b>(two: &'a TwoLifetimes<'b, 'a>, same: &'a TwoLifetimes<'a, 'a>) {
+    let _: u32 = two.two_lifetimes_get();
+    let _: String = same.two_lifetimes_same();
 }
 
 fn use_lt_holder<'a>(
@@ -258,11 +337,7 @@ fn use_pair(pair: &Pair<u32, String>, flipped: &Pair<String, u32>, same: &Pair<u
     let _: u32 = same.pair_both();
 }
 
-fn use_boxed(
-    boxed: &Boxed<u32>,
-    nested: &Boxed<Option<u32>>,
-    projected: &Boxed<Vec<String>>,
-) {
+fn use_boxed(boxed: &Boxed<u32>, nested: &Boxed<Option<u32>>, projected: &Boxed<Vec<String>>) {
     let _: u32 = boxed.boxed_tag();
     let _: u32 = nested.boxed_nested_get();
     let _: u32 = boxed.boxed_where_bound();

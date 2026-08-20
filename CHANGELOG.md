@@ -22,6 +22,12 @@
   Holder<T>`). See [Class-level generics](https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/generic_per_mono.html#class-level-generics)
   in the guide.
 
+* A generic imported type used as a method receiver or a constructor's return
+  type may now carry concrete generic arguments (`this: &Holder<u32>`,
+  `this: &Holder<u32, T>`). The arguments are re-emitted as written, so the
+  generated method hangs off `impl Holder<u32>` rather than the class's own
+  parameter defaults.
+
 ### Changed
 
 * Setting `js_namespace` on both an `extern "C"` block and an item inside it
@@ -31,6 +37,15 @@
   [#4324](https://github.com/wasm-bindgen/wasm-bindgen/issues/4324)
 
 ### Fixed
+
+* The generated `&T` handle conversions (`IntoWasmAbi`/`OptionIntoWasmAbi`) for
+  an imported type with lifetime parameters (`type Holder<'a, T>`) no longer
+  reuse `'a` for the reference itself. Previously the impl header declared only
+  a fresh `'a` plus the type's *type* parameters, so a type whose lifetime was
+  not literally named `'a` failed with `E0261` against generated code, and one
+  that was named `'a` had its lifetime forced to unify with the borrow of
+  `&self` — surfacing as `E0521` whenever a generic method also had to resolve
+  through the same impl.
 
 * An inline lifetime bound on a generic import (`fn f<'a: 'b, 'b, T>(..)`) is no
   longer dropped from the generated wrapper. Previously the bound was lost while

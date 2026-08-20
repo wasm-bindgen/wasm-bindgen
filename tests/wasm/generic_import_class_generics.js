@@ -75,6 +75,10 @@ class Pair {
     return this._v;
   }
 
+  key() {
+    return this._k;
+  }
+
   // `pair_swap` on the Rust side declares its own generics in reversed order
   // (`<V, K>` against `&Pair<V, K>`), so its return type `K` names the same
   // *positional* slot (`_v`) as `get`'s `V` does. It's still the same

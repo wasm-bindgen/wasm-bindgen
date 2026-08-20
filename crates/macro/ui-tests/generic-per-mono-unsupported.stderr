@@ -124,13 +124,7 @@ error: defaults for generic parameters are not allowed here
 107 |     fn bounded_type_param_default<T: Into<JsValue> = JsValue>(x: T);
     |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-error: generic_per_mono does not support a class type whose generic arguments mention none of the function's own generic parameters; either name one of them in the class type (e.g. `fn f<T>(this: &Holder<T>)`) or drop the arguments to bind the class's defaults (e.g. `fn f<T>(this: &Holder, v: T)`)
-   --> ui-tests/generic-per-mono-unsupported.rs:135:8
-    |
-135 |     fn concrete_class_arg<T>(this: &Holder<u32>, v: T);
-    |        ^^^^^^^^^^^^^^^^^^
-
-error: generic_per_mono requires each generic argument of the class type to be a bare generic parameter of the function (e.g. `&Holder<T>`); an argument like `&Holder<T::Assoc>` mentions `T` without determining it, so the generated `impl` block cannot constrain it — use the type-erasure generic path instead
+error: generic_per_mono requires each generic argument of the class type to be either concrete or to determine a generic parameter of the function (e.g. `&Holder<u32>`, `&Holder<T>`, `&Holder<Option<T>>`); an argument like `&Holder<T::Assoc>` mentions `T` without determining it, so the generated `impl` block cannot constrain it — use the type-erasure generic path instead
    --> ui-tests/generic-per-mono-unsupported.rs:140:8
     |
 140 |     fn non_constraining_class_arg<T: IntoIterator>(this: &Holder<T::Item>) -> u32;

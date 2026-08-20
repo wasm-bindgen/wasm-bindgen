@@ -95,6 +95,26 @@ extern "C" {
     #[wasm_bindgen(method, generic_per_mono, js_name = both)]
     fn pair_both<T>(this: &Pair<T, T>) -> T;
 
+    // A *concrete* class argument mixed with a hoisted one: `u32` is carried
+    // through as written while `V` is hoisted, so the generated header is
+    // `impl<V> Pair<u32, V>` — the method exists only for pairs keyed by a
+    // `u32`.
+    #[wasm_bindgen(method, generic_per_mono, js_name = get)]
+    fn pair_u32_key_get<V>(this: &Pair<u32, V>) -> V;
+
+    // A *fully* concrete class argument list: nothing is hoisted, so the
+    // header is the bare `impl Pair<u32, String>` and only the function's own
+    // `T` is monomorphised. Dropping the arguments instead would bind the
+    // class's own parameter defaults (`Pair<JsValue, JsValue>`), and the
+    // receiver below would not type-check against the generated method.
+    #[wasm_bindgen(method, generic_per_mono, js_name = key)]
+    fn pair_concrete_key<T>(this: &Pair<u32, String>, witness: T) -> u32;
+
+    // The same fully concrete list reached through the constructor route
+    // (`class_return_path`) rather than through a receiver.
+    #[wasm_bindgen(constructor, generic_per_mono)]
+    fn new_concrete_pair<T>(k: u32, v: T) -> Pair<u32, String>;
+
     type Boxed<T>;
 
     #[wasm_bindgen(constructor, generic_per_mono)]
@@ -180,10 +200,7 @@ fn generic_per_mono_class_generic_mixed_hoisted_and_non_hoisted_param() {
 
     let holder_string = Holder::new(String::from("x"));
     holder_string.combine(String::from("y"));
-    assert_eq!(
-        holder_combined(holder_string.as_ref()),
-        JsValue::from("y")
-    );
+    assert_eq!(holder_combined(holder_string.as_ref()), JsValue::from("y"));
 }
 
 #[wasm_bindgen_test]
@@ -234,6 +251,24 @@ fn generic_per_mono_class_two_generic_params() {
     // The same parameter used twice (`Pair<T, T>`).
     let same = Pair::new_pair(3u32, 3u32);
     assert_eq!(same.pair_both(), 3u32);
+}
+
+#[wasm_bindgen_test]
+fn generic_per_mono_class_concrete_generic_arguments() {
+    let pair = Pair::new_pair(1u32, String::from("one"));
+
+    // Mixed: the concrete `u32` key is re-emitted verbatim, `V` is hoisted.
+    assert_eq!(pair.pair_u32_key_get(), "one");
+
+    // Fully concrete receiver, two distinct monomorphisations of the
+    // function's own (non-hoisted) parameter.
+    assert_eq!(pair.pair_concrete_key(0u32), 1u32);
+    assert_eq!(pair.pair_concrete_key(String::from("witness")), 1u32);
+
+    // Fully concrete return type on the constructor route.
+    let built = Pair::new_concrete_pair(2u32, String::from("two"));
+    assert_eq!(built.pair_concrete_key(0u32), 2u32);
+    assert_eq!(built.pair_get(), "two");
 }
 
 #[wasm_bindgen_test]
