@@ -166,7 +166,8 @@ extern "C" {
 }
 ```
 
-A lifetime belonging to the class works the same way:
+A lifetime belonging to the class works the same way, on its own or alongside a
+hoisted type parameter:
 
 ```rust
 #[wasm_bindgen]
@@ -175,6 +176,11 @@ extern "C" {
 
     #[wasm_bindgen(method, generic_per_mono)]
     fn get<'a, T>(this: &'a LifetimeHolder<'a>) -> T;
+
+    type LtHolder<'a, T>;
+
+    #[wasm_bindgen(method, generic_per_mono, js_name = get)]
+    fn lt_get<'a, T>(this: &'a LtHolder<'a, T>) -> T;
 }
 ```
 
@@ -191,28 +197,28 @@ parameter defaults, exactly as it does on the erasure path.
 
 The function's generics are *hoisted* onto the generated `impl` block's own
 header, so each generic argument of the class type has to be something that
-header can name and that the self type can then determine. In practice each
-argument must be a generic parameter of the function, either bare (`&Holder<T>`)
-or composed in a way that still determines it (`&Holder<Option<T>>`). The
-following are rejected up front, rather than left to fail as a confusing rustc
-error against generated code:
+header can name and that the self type can then determine. Each argument may
+be:
 
-* **An argument list mentioning none of the function's generics**
-  (`&Holder<u32>`). There is nothing to hoist, so the wrapper would end up in an
-  `impl` block for the class's defaults rather than for `Holder<u32>`. Drop the
-  arguments (`&Holder`) to bind the defaults deliberately.
+* a generic parameter of the function, either bare (`&Holder<T>`) or composed in
+  a way that still determines it (`&Holder<Option<T>>`);
+* a lifetime parameter of the function (`&'a Holder<'a, T>`);
+* concrete (`&Holder<u32>`). There is nothing to hoist for it — it is re-emitted
+  as written, so the method lands on `impl Holder<u32>` and exists only for that
+  instantiation of the class.
+
+These mix freely within one argument list: `&Pair<u32, T>` gives
+`impl<T> Pair<u32, T>`.
+
+The following are rejected up front, rather than left to fail as a confusing
+rustc error against generated code:
+
 * **An argument that mentions a parameter without determining it**
   (`&Holder<T::Assoc>`, or a constructor returning `Holder<T::Assoc>`). Hoisting
   `T` would leave it unconstrained by the self type.
 * **A lifetime argument the function does not itself declare**
   (`&Holder<'static, T>`, `&Holder<'_, T>`). Name it as a lifetime parameter of
   the function instead (`fn f<'a, T>(this: &'a Holder<'a, T>)`).
-* **A class type parameterised by both a lifetime and a type parameter**
-  (`&'a Holder<'a, T>`) — not supported *yet*. The manufactured shim staticizes
-  the lifetimes of its concrete ABI types, which forces the receiver's `'a` to
-  outlive `'static` once a hoisted type parameter also has to resolve through it.
-  A class lifetime on its own works, as long as the type parameters stay off the
-  class type (`fn f<'a, T>(this: &'a LifetimeHolder<'a>, v: T)`).
 
 ## Other attributes
 

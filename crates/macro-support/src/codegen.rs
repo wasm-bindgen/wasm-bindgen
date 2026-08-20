@@ -2845,13 +2845,13 @@ impl ast::ImportFunction {
         // here and reused when the `impl` is assembled at the bottom.
         let hoist = is_method || is_constructor || is_self_returning_static;
 
-        // Not every class argument list *can* be hoisted, and the ones that
-        // cannot must be rejected here rather than left to fall through, since
-        // the `impl` assembly below strips the class type's arguments before
-        // parameterising it. See `validate_class_shape`.
+        // Not every class argument list *can* be reproduced on the generated
+        // `impl` header, and the ones that cannot must be rejected here rather
+        // than left to fall through as a rustc error against generated code.
+        // See `validate_class_shape`.
         if hoist {
             if let Some(class_ty) = &class {
-                self.validate_class_shape(class_ty, &fn_class_generics, is_method)?;
+                self.validate_class_shape(class_ty, is_method)?;
             }
         }
 
@@ -3440,7 +3440,7 @@ impl<'a> FnClassGenerics<'a> {
     /// self-returning — which impl on the class's own parameter defaults
     /// instead.
     fn class_impl_def(&self, class: &syn::Type, hoist: bool) -> TokenStream {
-        if !hoist || !self.has_class_generics() {
+        if !hoist {
             return quote! { impl #class };
         }
         // Type lifetimes: declared on the impl (deduplicated, since a header
@@ -3448,18 +3448,38 @@ impl<'a> FnClassGenerics<'a> {
         // written — `Holder<'b, 'a>` must not come back out as `Holder<'a, 'b>`,
         // and `Holder<'a, 'a>` must not collapse to a single argument).
         //
-        // The two lists can only diverge for a class type carrying more than
-        // one lifetime argument, which no import can express today: the
-        // `type Foo<'a, 'b>;` declaration is itself rejected before any of this
-        // runs. Keeping the header and the self type on separate lists costs
-        // nothing and means the invariant holds if that ever changes, rather
-        // than silently reordering the self type's arguments.
+        // The two lists diverge as soon as a class type carries more than one
+        // lifetime argument, which a multi-lifetime declaration (`type Foo<'a,
+        // 'b>;`) expresses directly — the reference-conversion impls declare
+        // the type's own lifetime params (see `impl_generics_with_lifetime_a`),
+        // so that declaration compiles. Keeping the header and the self type on
+        // separate lists is therefore load-bearing, not merely defensive.
         let class_lifetime_params = &self.class_lifetime_params;
         let class_lifetime_args = &self.class_lifetime_args;
         // Bound-only lifetimes: appear on the impl but are NOT passed to the type.
         let class_bound_lifetime_params = &self.class_bound_lifetime_params;
         let class_generic_params = &self.class_generic_params;
         let class_generic_exprs = &self.class_generic_exprs;
+
+        if !self.has_class_generics() {
+            // Nothing of the function's own generics is hoisted, so the impl
+            // header stays empty — but the class type may still carry a fully
+            // concrete argument list (`&Holder<u32>`), and that list has to be
+            // re-emitted regardless. `class` arrives with its arguments already
+            // stripped, so dropping them here would target the class's own
+            // parameter *defaults* (`impl Holder`) rather than the type as
+            // written, i.e. a receiver-type mismatch on the generated method.
+            //
+            // With no arguments at all, the bare `impl Holder` *is* the type as
+            // written, and binding the defaults is the intended behaviour.
+            if class_lifetime_args.is_empty() && class_generic_exprs.is_empty() {
+                return quote! { impl #class };
+            }
+            return quote! {
+                impl #class <#(#class_lifetime_args,)* #(#class_generic_exprs),*>
+            };
+        }
+
         // Bounds on hoisted parameters have to become *impl-level* predicates.
         // A predicate left on the wrapper method's own `where` clause does not
         // constrain a parameter declared on the impl header (RFC 447), so
@@ -3721,14 +3741,9 @@ impl ast::ImportFunction {
     /// `class` is the type the wrapper will be emitted into an `impl` block
     /// for: the receiver's type for a method, or the return type for a
     /// constructor or self-returning static method. `is_method` distinguishes
-    /// the two, because the last two checks apply only to the receiver form —
-    /// see the comment on each.
-    fn validate_class_shape(
-        &self,
-        class: &syn::Type,
-        fn_class_generics: &FnClassGenerics,
-        is_method: bool,
-    ) -> Result<(), Diagnostic> {
+    /// the two, because the last check applies only to the receiver form — see
+    /// the comment on it.
+    fn validate_class_shape(&self, class: &syn::Type, is_method: bool) -> Result<(), Diagnostic> {
         let syn::Type::Path(syn::TypePath { path, .. }) = class else {
             return Ok(());
         };
@@ -3777,35 +3792,24 @@ impl ast::ImportFunction {
         // outlive — the borrow of `&self`. Without that unification there is
         // no `E0521` to guard against here.
 
-        // The remaining two checks are receiver-only. For a constructor or
-        // static method the class comes from the return type, where stripping
-        // the arguments and binding the class's own defaults (`impl Promise`
-        // for a `-> Promise<T::Resolution>`) is the established, working
-        // behaviour shared with the type-erasure path: `class_return_path`
-        // already declines to hoist a non-constraining argument list, and the
-        // resulting inherent method is perfectly valid — it simply hangs off
-        // the defaulted class. Rejecting it here would break real imports, e.g.
+        // An argument list that hoists nothing is fine either way: a fully
+        // concrete one (`&Holder<u32>`) is re-emitted verbatim by
+        // `class_impl_def`, so the wrapper still lands on `impl Holder<u32>`
+        // rather than on the class's own parameter defaults.
+
+        // The remaining check is receiver-only. For a constructor or static
+        // method the class comes from the return type, where stripping the
+        // arguments and binding the class's own defaults (`impl Promise` for a
+        // `-> Promise<T::Resolution>`) is the established, working behaviour
+        // shared with the type-erasure path: `class_return_path` already
+        // declines to hoist a non-constraining argument list, so the arguments
+        // never reach `class_impl_def` at all and the resulting inherent method
+        // is perfectly valid — it simply hangs off the defaulted class.
+        // Rejecting it here would break real imports, e.g.
         // `js_sys::Promise::new_typed<T: Promising>(..) -> Promise<<T as
         // Promising>::Resolution>`.
         if !is_method {
             return Ok(());
-        }
-
-        // Every type argument mentions no generic parameter of the function, so
-        // there is nothing to hoist and the `impl` block would be built for the
-        // class's own parameter defaults instead of the class type as written
-        // (`impl Holder` for a declared `&Holder<u32>`, i.e. a receiver type
-        // mismatch on the generated method).
-        if !fn_class_generics.class_generic_exprs.is_empty()
-            && !fn_class_generics.has_class_generics()
-        {
-            bail_span!(
-                self.rust_name,
-                "generic_per_mono does not support a class type whose generic arguments mention \
-                 none of the function's own generic parameters; either name one of them in the \
-                 class type (e.g. `fn f<T>(this: &Holder<T>)`) or drop the arguments to bind the \
-                 class's defaults (e.g. `fn f<T>(this: &Holder, v: T)`)"
-            );
         }
 
         // A type argument that mentions a parameter without *constraining* it —
@@ -3821,8 +3825,9 @@ impl ast::ImportFunction {
         if !generics::args_are_constraining_for(&gen_args.args, &fn_params) {
             bail_span!(
                 self.rust_name,
-                "generic_per_mono requires each generic argument of the class type to be a bare \
-                 generic parameter of the function (e.g. `&Holder<T>`); an argument like \
+                "generic_per_mono requires each generic argument of the class type to be either \
+                 concrete or to determine a generic parameter of the function (e.g. \
+                 `&Holder<u32>`, `&Holder<T>`, `&Holder<Option<T>>`); an argument like \
                  `&Holder<T::Assoc>` mentions `T` without determining it, so the generated `impl` \
                  block cannot constrain it — use the type-erasure generic path instead"
             );

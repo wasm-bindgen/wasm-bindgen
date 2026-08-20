@@ -114,25 +114,25 @@ extern "C" {
 // `pass-tests/generic-per-mono-class-generics.rs` and
 // `crates/cli/tests/reference/generic-import.rs` for passing coverage.
 //
-// Not every class argument list can be hoisted, though. The generated `impl`
-// block strips the class type's arguments before re-parameterising it from the
-// hoisted params, so an argument list that yields nothing to hoist — or yields
-// a param the self type cannot constrain — would silently land the wrapper in
-// an `impl` block for the wrong self type. Each of those is rejected up front
-// instead, since otherwise the user sees a rustc error (E0308 / E0207 / E0726)
-// against generated code they never wrote, spanned at the `#[wasm_bindgen]`
-// attribute. These are codegen-time diagnostics, so they get their own block
-// (see the note below about parse-time failures masking codegen ones).
+// Not every class argument list can be reproduced on that header, though. The
+// generated `impl` block strips the class type's arguments and rebuilds them
+// from the hoisted params, so an argument list that yields a param the self
+// type cannot constrain — or a lifetime nothing can declare — would silently
+// land the wrapper in an `impl` block for the wrong self type. Each of those is
+// rejected up front instead, since otherwise the user sees a rustc error
+// (E0207 / E0261 / E0726) against generated code they never wrote, spanned at
+// the `#[wasm_bindgen]` attribute. These are codegen-time diagnostics, so they
+// get their own block (see the note below about parse-time failures masking
+// codegen ones).
+//
+// (A fully concrete argument list (`&Holder<u32>`) used to be rejected here too
+// — it hoists nothing, so the `impl` bound the class's own defaults instead of
+// the type as written. The arguments are now re-emitted verbatim, so see
+// `concrete_class_arg` in `pass-tests/generic-per-mono-class-generics.rs`.)
 #[wasm_bindgen]
 extern "C" {
     type Holder<T>;
     type LtHolder<'a, T>;
-
-    // Every generic argument of the class type is concrete, so nothing is
-    // hoisted and the `impl` block would bind the class's own parameter
-    // defaults (`impl Holder`) rather than `Holder<u32>` as written.
-    #[wasm_bindgen(method, generic_per_mono, js_name = get)]
-    fn concrete_class_arg<T>(this: &Holder<u32>, v: T);
 
     // `T::Assoc` mentions `T` without determining it, so hoisting `T` onto the
     // `impl` header leaves it unconstrained by the self type (E0207).
