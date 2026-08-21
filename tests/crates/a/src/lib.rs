@@ -10,3 +10,19 @@ extern "C" {
 pub fn test() {
     foo();
 }
+
+#[wasm_bindgen(private)]
+pub struct Dupe {
+    pub factor: u32,
+}
+
+#[wasm_bindgen]
+impl Dupe {
+    pub fn apply(&self, x: u32) -> u32 {
+        x * self.factor
+    }
+}
+
+pub fn make_dupe() -> Dupe {
+    Dupe { factor: 3 }
+}

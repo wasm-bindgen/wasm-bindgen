@@ -222,6 +222,35 @@ impl Descriptor {
         }
     }
 
+    /// Visit every struct/enum/externref type name embedded in this
+    /// descriptor tree, so callers can rewrite names to their final JS
+    /// identities (see `Context::resolve_descriptor` in `wit`).
+    pub fn visit_named_types_mut<E>(
+        &mut self,
+        f: &mut impl FnMut(&mut String) -> Result<(), E>,
+    ) -> Result<(), E> {
+        match self {
+            Descriptor::Function(function) => function.visit_named_types_mut(f),
+            Descriptor::Closure(closure) => closure.function.visit_named_types_mut(f),
+            Descriptor::Ref(d)
+            | Descriptor::RefMut(d)
+            | Descriptor::Slice(d)
+            | Descriptor::Vector(d)
+            | Descriptor::Option(d)
+            | Descriptor::Result(d) => d.visit_named_types_mut(f),
+            Descriptor::NamedExternref(name)
+            | Descriptor::Enum { name, .. }
+            | Descriptor::RustStruct(name) => f(name),
+            Descriptor::DynamicUnion { variant_types, .. } => {
+                for d in variant_types {
+                    d.visit_named_types_mut(f)?;
+                }
+                Ok(())
+            }
+            _ => Ok(()),
+        }
+    }
+
     pub fn unwrap_function(self) -> Function {
         match self {
             Descriptor::Function(f) => *f,
@@ -305,6 +334,21 @@ fn vector_kind_accepts_memory64_scalar_descriptors() {
 }
 
 impl Function {
+    /// See [`Descriptor::visit_named_types_mut`].
+    pub fn visit_named_types_mut<E>(
+        &mut self,
+        f: &mut impl FnMut(&mut String) -> Result<(), E>,
+    ) -> Result<(), E> {
+        for d in &mut self.arguments {
+            d.visit_named_types_mut(f)?;
+        }
+        self.ret.visit_named_types_mut(f)?;
+        if let Some(d) = &mut self.inner_ret {
+            d.visit_named_types_mut(f)?;
+        }
+        Ok(())
+    }
+
     fn decode(data: &mut &[u32]) -> Function {
         let shim_idx = get(data);
         let arguments = (0..get(data))

@@ -676,11 +676,15 @@ impl Export {
             None => shared::free_function_export_name(&fn_name),
         };
 
-        if let Some(ns) = &self.js_namespace {
+        let name = if let Some(ns) = &self.js_namespace {
             format!("{}__{base_name}", ns.join("__"))
         } else {
             base_name
-        }
+        };
+        // Mangled with the per-crate hash so that same-named exports from
+        // different crates (or crate versions) link cleanly; cli-support
+        // restores the canonical name once the export is matched.
+        crate::hash::crate_mangled_symbol(&name)
     }
 }
 
