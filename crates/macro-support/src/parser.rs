@@ -77,7 +77,7 @@ macro_rules! attrgen {
             (constructor, false, Constructor(Span)),
             (method, false, Method(Span)),
             (r#this, false, This(Span)),
-            (static_method_of, false, StaticMethodOf(Span, Ident)),
+            (static_method_of, false, StaticMethodOf(Span, syn::TypePath)),
             (js_namespace, false, JsNamespace(Span, JsNamespace, Vec<Span>)),
             (module, true, Module(Span, String, Span)),
             (raw_module, true, RawModule(Span, String, Span)),
@@ -397,6 +397,21 @@ impl Parse for BindgenAttr {
                     input.parse::<AnyIdent>()?.0
                 };
                 return Ok(BindgenAttr::$variant(attr_span, ident))
+            });
+
+            (@parser $variant:ident(Span, syn::TypePath)) => ({
+                input.parse::<Token![=]>()?;
+                // Preserve the string-literal spelling accepted by the former
+                // identifier parser while also allowing generic arguments.
+                let path = if input.peek(syn::LitStr) {
+                    let litstr = input.parse::<syn::LitStr>()?;
+                    syn::parse_str::<syn::TypePath>(&litstr.value()).map_err(|e| {
+                        syn::Error::new(litstr.span(), format!("expected a type path: {e}"))
+                    })?
+                } else {
+                    input.parse()?
+                };
+                return Ok(BindgenAttr::$variant(attr_span, path));
             });
 
             (@parser $variant:ident(Span, Option<String>)) => ({
@@ -1012,19 +1027,9 @@ impl<'a>
             let class = opts
                 .js_class()
                 .map(|p| p.0.into())
-                .unwrap_or_else(|| cls.unraw().to_string());
+                .unwrap_or_else(|| cls.path.segments.last().unwrap().ident.unraw().to_string());
 
-            let ty = syn::Type::Path(syn::TypePath {
-                qself: None,
-                path: syn::Path {
-                    leading_colon: None,
-                    segments: std::iter::once(syn::PathSegment {
-                        ident: cls.clone(),
-                        arguments: syn::PathArguments::None,
-                    })
-                    .collect(),
-                },
-            });
+            let ty = syn::Type::Path(cls.clone());
 
             let kind = ast::MethodKind::Operation(ast::Operation {
                 is_static: true,

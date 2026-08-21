@@ -1,0 +1,19 @@
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+extern "C" {
+    type External<T>;
+}
+
+mod foreign {
+    #[allow(unused_imports)]
+    pub(crate) use super::External;
+}
+
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(method, generic_per_mono)]
+    fn external_method<T>(this: &foreign::External<T>);
+}
+
+fn main() {}
