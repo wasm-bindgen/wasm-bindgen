@@ -133,6 +133,7 @@ extern "C" {
 extern "C" {
     type Holder<T>;
     type LtHolder<'a, T>;
+    type StaticLifetimeHolder<'a>;
 
     // `T::Assoc` mentions `T` without determining it, so hoisting `T` onto the
     // `impl` header leaves it unconstrained by the self type (E0207).
@@ -142,6 +143,11 @@ extern "C" {
     // An elided lifetime cannot be declared on the generated impl header.
     #[wasm_bindgen(method, generic_per_mono, js_name = get)]
     fn elided_class_lifetime<T>(this: &LtHolder<'_, T>, v: T);
+
+    // A bare static class path has no arguments to hoist. Supply the required
+    // lifetime explicitly with `static_method_of = StaticLifetimeHolder<'a>`.
+    #[wasm_bindgen(static_method_of = StaticLifetimeHolder, generic_per_mono)]
+    fn static_lifetime_class<T>(value: T);
 
     // (A class type parameterised by *both* a lifetime and a type parameter,
     // with both hoisted, used to be rejected here too — see

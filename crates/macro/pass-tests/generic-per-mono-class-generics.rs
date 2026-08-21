@@ -91,6 +91,23 @@ extern "C" {
     fn get_lifetime<'a, T>(this: &'a LifetimeHolder<'a>) -> T;
 }
 
+// An explicit static class path carries the arguments needed to form the
+// inherent impl even when the imported type belongs to a different extern block.
+#[wasm_bindgen]
+extern "C" {
+    type ExternalLifetimeHolder<'a>;
+}
+
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(
+        static_method_of = ExternalLifetimeHolder<'a>,
+        generic_per_mono,
+        js_name = create
+    )]
+    fn external_lifetime_create<'a, T>(value: T);
+}
+
 #[wasm_bindgen]
 extern "C" {
     // A class lifetime not literally named `'a`. The reference-conversion
@@ -250,6 +267,17 @@ extern "C" {
     // rejected as an unhoistable class argument list.
     #[wasm_bindgen(constructor, generic_per_mono)]
     fn new_defaulted<T: IntoIterator>(v: u32) -> Defaulted<T::Item>;
+
+    // A non-constraining constructor return is deliberately left on the
+    // imported type's defaults. Its declaration bound must use those defaults
+    // too, rather than the discarded `T::Item` return argument, which would
+    // otherwise leave `T` undeclared on the generated inherent impl.
+    type DefaultedBounded<T: Clone>;
+
+    #[wasm_bindgen(constructor, generic_per_mono)]
+    fn new_defaulted_bounded<T: IntoIterator>(v: u32) -> DefaultedBounded<T::Item>
+    where
+        T::Item: Clone;
 }
 
 #[wasm_bindgen]
@@ -282,6 +310,127 @@ extern "C" {
     // the predicate on their own, and dropping `'a: 'b` goes unnoticed.
     #[wasm_bindgen(method, generic_per_mono, js_name = take)]
     fn take_bounded<'a: 'b, 'b, T: AsRef<JsValue>>(this: &Bounded, a: &'a T, b: &'b T);
+}
+
+trait HasAssociatedType {
+    type Output;
+}
+
+trait TakesType<T> {}
+
+trait Relates<V> {
+    type Output;
+}
+
+trait Output {
+    type Item;
+}
+
+trait HasItem {
+    type Item;
+}
+
+trait HasReferenceOutput {
+    type Output;
+}
+
+#[wasm_bindgen]
+extern "C" {
+    // Bounds from the imported type declaration must be reinstated on a
+    // generated inherent impl, even when the method does not repeat them.
+    type BoundedHolder<T: Clone>;
+
+    #[wasm_bindgen(method, generic_per_mono, js_name = get)]
+    fn bounded_holder_get<T>(this: &BoundedHolder<T>) -> T;
+
+    // The same requirement applies to declaration-level lifetime bounds.
+    type LifetimeBoundedHolder<'a: 'b, 'b, T>;
+
+    #[wasm_bindgen(method, generic_per_mono, js_name = get)]
+    fn lifetime_bounded_holder_get<'a, 'b, T>(
+        this: &LifetimeBoundedHolder<'a, 'b, T>,
+    ) -> T;
+
+    type GenericBoundHolder<F>;
+
+    // `U` in an ordinary trait argument is not constrained by the class's
+    // self type and must remain a function parameter, while an associated-type
+    // equality does constrain `U` and belongs on the impl.
+    #[wasm_bindgen(method, generic_per_mono, js_name = assoc)]
+    fn associated_type_bound<F, U>(this: &GenericBoundHolder<F>, value: U)
+    where
+        F: HasAssociatedType<Output = U>;
+
+    #[wasm_bindgen(method, generic_per_mono, js_name = ordinary)]
+    fn ordinary_trait_argument<F, U>(this: &GenericBoundHolder<F>, value: U)
+    where
+        F: TakesType<U>;
+
+    // An equality RHS is not safe to hoist when its predicate also has an
+    // ordinary function-level trait argument.
+    #[wasm_bindgen(method, generic_per_mono, js_name = mixed)]
+    fn mixed_associated_type_bound<F, U, V>(this: &GenericBoundHolder<F>, value: V)
+    where
+        F: Relates<V, Output = U>;
+
+    // A projection in an equality RHS does not determine its base parameter.
+    #[wasm_bindgen(method, generic_per_mono, js_name = projected)]
+    fn projected_associated_type_bound<F, U>(this: &GenericBoundHolder<F>)
+    where
+        F: Output<Item = U::Item>,
+        U: HasItem;
+
+    // An equality RHS that depends on a function lifetime stays on the method:
+    // moving it to the impl loses the argument's implied `U: 'a` bound.
+    #[wasm_bindgen(method, generic_per_mono, js_name = reference)]
+    fn reference_associated_type_bound<'a, F, U>(
+        this: &GenericBoundHolder<F>,
+        value: &'a U,
+    ) where
+        F: HasReferenceOutput<Output = &'a U>;
+
+    // Omitted imported-type defaults are substituted through earlier arguments
+    // before their declaration bounds are emitted on the generated impl.
+    type DefaultedBoundedHolder<T: Clone, U: Clone = Vec<T>>;
+
+    #[wasm_bindgen(method, generic_per_mono, js_name = defaulted)]
+    fn defaulted_bounded_holder<X>(this: &DefaultedBoundedHolder<u32>, value: X);
+
+    // Substitution is simultaneous: swapping class arguments must not recurse
+    // indefinitely while propagating the declaration's `K: Clone` bound.
+    type SwappedBoundedPair<K: Clone, V>;
+
+    #[wasm_bindgen(method, generic_per_mono, js_name = swap)]
+    fn swapped_bounded_pair<V, K>(this: &SwappedBoundedPair<V, K>, value: u32);
+
+    // The lookup for declaration bounds uses the Rust receiver type, not its
+    // independent JS class name.
+    type RenamedBoundedHolder<T: Clone>;
+
+    #[wasm_bindgen(method, js_class = RenamedHolder, generic_per_mono, js_name = get)]
+    fn renamed_bounded_holder_get<T>(this: &RenamedBoundedHolder<T>) -> T;
+
+    // Class-return matching uses the Rust type identity, not the JS class name.
+    type RenamedConstructed<T>;
+
+    #[wasm_bindgen(constructor, js_class = RenamedJs, generic_per_mono)]
+    fn renamed_new<T>(value: T) -> RenamedConstructed<T>;
+
+    #[wasm_bindgen(
+        static_method_of = RenamedConstructed,
+        js_class = RenamedJs,
+        generic_per_mono,
+        js_name = of
+    )]
+    fn renamed_of<T>(value: T) -> RenamedConstructed<T>;
+
+    // A qualified path to this module's imported type retains its declaration
+    // bounds without matching unrelated `module::Type` names.
+    type CrateBoundedHolder<T: Clone>;
+
+    #[wasm_bindgen(method, generic_per_mono, js_name = get)]
+    fn crate_bounded_holder_get<T>(this: &self::CrateBoundedHolder<T>) -> T;
+
 }
 
 fn use_holder(holder_u32: &Holder<u32>, holder_string: &Holder<String>) {
@@ -369,6 +518,12 @@ fn use_fallible() -> Result<(), JsValue> {
 
 fn use_bounded<'a: 'b, 'b>(bounded: &Bounded, a: &'a JsValue, b: &'b JsValue) {
     bounded.take_bounded(a, b);
+}
+
+fn use_renamed_bounded(holder: &RenamedBoundedHolder<u32>) {
+    let _: u32 = holder.renamed_bounded_holder_get();
+    let _: RenamedConstructed<u32> = RenamedConstructed::renamed_new(1u32);
+    let _: RenamedConstructed<String> = RenamedConstructed::renamed_of(String::from("renamed"));
 }
 
 trait HasReturn {

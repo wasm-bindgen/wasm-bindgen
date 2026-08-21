@@ -502,18 +502,6 @@ pub(crate) fn uses_lifetime_params(ty: &syn::Type, lifetime_params: &[&syn::Life
     !used_lifetimes_in_type(ty, lifetime_params).is_empty()
 }
 
-/// Find all lifetimes from the given set that are used in type param bounds
-pub(crate) fn used_lifetimes_in_bounds<'a>(
-    bounds: &syn::punctuated::Punctuated<syn::TypeParamBound, syn::token::Plus>,
-    lifetime_params: &'a [&'a syn::Lifetime],
-) -> BTreeSet<syn::Lifetime> {
-    let mut visitor = LifetimeVisitor::new(lifetime_params);
-    for bound in bounds {
-        syn::visit::Visit::visit_type_param_bound(&mut visitor, bound);
-    }
-    visitor.into_found()
-}
-
 pub(crate) fn used_generic_params<'a>(
     ty: &'a syn::Type,
     generic_names: &'a Vec<&Ident>,
@@ -551,7 +539,7 @@ pub(crate) fn args_are_constraining_for(
 ) -> bool {
     for arg in args {
         match arg {
-            syn::GenericArgument::Type(ty) if !type_is_constraining(ty, generic_names) => {
+            syn::GenericArgument::Type(ty) if !type_is_constraining_for(ty, generic_names) => {
                 return false;
             }
             // Associated type bindings (`Trait<Item = T>`) project through the
@@ -573,7 +561,7 @@ pub(crate) fn args_are_constraining_for(
 /// A type is "constraining" for the fn generics it contains iff every
 /// occurrence of any `generic_names` ident within it is in a constraining
 /// position. See [`args_are_constraining_for`] for the rules.
-fn type_is_constraining(ty: &syn::Type, generic_names: &[&Ident]) -> bool {
+pub(crate) fn type_is_constraining_for(ty: &syn::Type, generic_names: &[&Ident]) -> bool {
     match ty {
         syn::Type::Path(type_path) => {
             // QSelf -> projection like `<T as Trait>::Assoc`. Any fn generic
@@ -632,15 +620,15 @@ fn type_is_constraining(ty: &syn::Type, generic_names: &[&Ident]) -> bool {
             }
             true
         }
-        syn::Type::Reference(r) => type_is_constraining(&r.elem, generic_names),
-        syn::Type::Array(a) => type_is_constraining(&a.elem, generic_names),
-        syn::Type::Slice(s) => type_is_constraining(&s.elem, generic_names),
-        syn::Type::Group(g) => type_is_constraining(&g.elem, generic_names),
-        syn::Type::Paren(p) => type_is_constraining(&p.elem, generic_names),
+        syn::Type::Reference(r) => type_is_constraining_for(&r.elem, generic_names),
+        syn::Type::Array(a) => type_is_constraining_for(&a.elem, generic_names),
+        syn::Type::Slice(s) => type_is_constraining_for(&s.elem, generic_names),
+        syn::Type::Group(g) => type_is_constraining_for(&g.elem, generic_names),
+        syn::Type::Paren(p) => type_is_constraining_for(&p.elem, generic_names),
         syn::Type::Tuple(t) => t
             .elems
             .iter()
-            .all(|e| type_is_constraining(e, generic_names)),
+            .all(|e| type_is_constraining_for(e, generic_names)),
         // Pointer / BareFn / TraitObject / ImplTrait / Infer / Never / Macro:
         // any fn-generic mention here is non-constraining (fn-ptr, dyn, impl
         // Trait are explicitly non-constraining per RFC 0447; the rest are
