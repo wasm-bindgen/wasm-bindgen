@@ -33,10 +33,26 @@ extern "C" {
     #[wasm_bindgen(method, generic_per_mono, js_name = get)]
     fn get<T>(this: &Holder<T>) -> T;
 
+    // A property accessor takes a different JS binding route than an ordinary
+    // method while still hoisting `T` from the parameterised receiver.
+    #[wasm_bindgen(method, getter, generic_per_mono, js_name = value)]
+    fn holder_property<T>(this: &Holder<T>) -> T;
+
     // Self-returning static method: `class_return_path` retargets the `impl`
     // block the same way it does for the constructor above.
     #[wasm_bindgen(static_method_of = Holder, generic_per_mono, js_name = of)]
     fn holder_of<T>(value: T) -> Holder<T>;
+
+    // The default generic-erasure path shares class-impl assembly with
+    // `generic_per_mono`; exercise it at runtime so that refactor cannot only
+    // be validated by the per-monomorphisation tests below.
+    type ErasedHolder<T>;
+
+    #[wasm_bindgen(constructor)]
+    fn new_erased_holder<T>(value: T) -> ErasedHolder<T>;
+
+    #[wasm_bindgen(method, js_name = get)]
+    fn erased_holder_get<T>(this: &ErasedHolder<T>) -> T;
 
     // A hoisted class-level parameter (`T`) mixed with an additional,
     // non-hoisted function-only parameter (`U`).
@@ -74,6 +90,11 @@ extern "C" {
 
     #[wasm_bindgen(method, generic_per_mono, js_name = get)]
     fn lt_holder_get<'a, T>(this: &'a LtHolder<'a, T>) -> T;
+
+    // This reaches `class_return_path` with both a class lifetime and type
+    // parameter, unlike the `Holder<T>` static method above.
+    #[wasm_bindgen(static_method_of = LtHolder, generic_per_mono, js_name = of)]
+    fn lt_holder_of<'a, T>(value: &'a T) -> LtHolder<'a, T>;
 
     // Two class-level generic parameters (mirrors `Map<K, V>`).
     type Pair<K, V>;
@@ -170,12 +191,14 @@ extern "C" {
 fn generic_per_mono_class_generic_constructor_and_get() {
     let holder_u32 = Holder::new(7u32);
     assert_eq!(holder_u32.get(), 7u32);
+    assert_eq!(holder_u32.holder_property(), 7u32);
     assert_eq!(holder_value(holder_u32.as_ref()), JsValue::from(7u32));
 
     // A second monomorphisation must produce a distinct shim, not reuse the
     // first.
     let holder_string = Holder::new(String::from("hi"));
     assert_eq!(holder_string.get(), "hi");
+    assert_eq!(holder_string.holder_property(), "hi");
     assert_eq!(holder_value(holder_string.as_ref()), JsValue::from("hi"));
 }
 
@@ -190,6 +213,17 @@ fn generic_per_mono_class_generic_static_self_returning_method() {
     let holder_string = Holder::holder_of(String::from("s"));
     assert_eq!(holder_string.get(), "s");
     assert!(holder_is_from_static(holder_string.as_ref()));
+}
+
+#[wasm_bindgen_test]
+fn generic_erased_class_generic_constructor_and_method() {
+    // The ordinary generic-erasure path requires every concrete type to share
+    // the imported generic's erased representation, which is `JsValue` here.
+    let holder_number = ErasedHolder::new_erased_holder(JsValue::from(6u32));
+    assert_eq!(holder_number.erased_holder_get(), JsValue::from(6u32));
+
+    let holder_string = ErasedHolder::new_erased_holder(JsValue::from("erased"));
+    assert_eq!(holder_string.erased_holder_get(), JsValue::from("erased"));
 }
 
 #[wasm_bindgen_test]
@@ -230,6 +264,10 @@ fn generic_per_mono_class_lifetime_and_type_param() {
     // hoist at a second, non-handle-shaped `T`.
     let holder_u32: &LtHolder<'_, u32> = holder.unchecked_ref();
     assert_eq!(holder_u32.lt_holder_get(), 11u32);
+
+    let static_holder = LtHolder::lt_holder_of(&value);
+    let static_value: JsValue = static_holder.lt_holder_get();
+    assert_eq!(static_value, JsValue::from(11u32));
 }
 
 #[wasm_bindgen_test]

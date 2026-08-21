@@ -1172,11 +1172,12 @@ impl TryToTokens for ast::ImportType {
             }
         };
 
-        let class_generic_params = generics::generic_params(&self.generics);
-        let (impl_generics, ty_generics, where_clause) = self.generics.split_for_impl();
+        let mut declaration_generics = self.generics.clone();
+        generics::move_lifetime_bounds_to_where(&mut declaration_generics);
+        let class_generic_params = generics::generic_params(&declaration_generics);
+        let (impl_generics, ty_generics, where_clause) = declaration_generics.split_for_impl();
 
-        let type_params_with_bounds = generics::type_params_with_bounds(&self.generics);
-        let lifetime_params = generics::lifetime_params(&self.generics);
+        let lifetime_args = generics::lifetime_args(&declaration_generics);
         // The reference impls below (`&'__wbg_ref #rust_name #ty_generics`)
         // need to declare the type's *own* lifetime params on the impl
         // header, not just a fresh reference lifetime and the type params:
@@ -1184,22 +1185,22 @@ impl TryToTokens for ast::ImportType {
         // so leaving them undeclared here is an undeclared-lifetime error
         // (E0261) unless the type happens to have no lifetimes of its own.
         //
-        // The reference lifetime itself is a fresh `'__wbg_ref` rather than
-        // `'a`, precisely so that it can never accidentally unify with one of
-        // the type's own lifetime params of the same name (e.g. a type
-        // declared as `Holder<'a, T>`): reusing `'a` there would force the
-        // type's lifetime to be exactly as long as the borrow of `&self`,
-        // which is unsound in general and, combined with a hoisted type
-        // parameter elsewhere, surfaces as E0521 against the generated code.
-        let impl_generics_with_lifetime_a = quote! {
-            <'__wbg_ref, #(#lifetime_params,)* #(#type_params_with_bounds),*>
-        };
+        // Keep the normalized structured declarations and only prepend a fresh
+        // borrow lifetime. Reassembling this header from lifetime names loses
+        // bounds such as `'a: 'b`.
+        let reference_lifetime = generics::fresh_lifetime(&declaration_generics, "__wbg_ref");
+        let mut reference_generics = declaration_generics.clone();
+        reference_generics.params.insert(
+            0,
+            syn::GenericParam::Lifetime(syn::LifetimeParam::new(reference_lifetime.clone())),
+        );
+        let (reference_impl_generics, _, _) = reference_generics.split_for_impl();
 
         // For struct definitions, we need generics with defaults, so use params directly
-        let struct_generics = if self.generics.params.is_empty() {
+        let struct_generics = if declaration_generics.params.is_empty() {
             quote! {}
         } else {
-            let params = &self.generics.params;
+            let params = &declaration_generics.params;
             quote! { <#params> }
         };
 
@@ -1208,15 +1209,27 @@ impl TryToTokens for ast::ImportType {
 
         // For `From<JsValue>`, only include lifetime params so type params
         // fall back to their defaults and callers don't need turbofish.
-        let from_jsvalue_generics = if lifetime_params.is_empty() {
+        let lifetime_declarations = generics::lifetime_params_with_bounds(&declaration_generics);
+        let from_jsvalue_generics = if lifetime_declarations.is_empty() {
             quote! {}
         } else {
-            quote! { <#(#lifetime_params),*> }
+            quote! { <#(#lifetime_declarations),*> }
+        };
+        let from_jsvalue_lifetime_predicates: Vec<_> = declaration_generics
+            .where_clause
+            .iter()
+            .flat_map(|clause| clause.predicates.iter())
+            .filter(|predicate| matches!(predicate, syn::WherePredicate::Lifetime(_)))
+            .collect();
+        let from_jsvalue_where_clause = if from_jsvalue_lifetime_predicates.is_empty() {
+            quote! {}
+        } else {
+            quote! { where #(#from_jsvalue_lifetime_predicates),* }
         };
 
-        if !class_generic_params.is_empty() || !lifetime_params.is_empty() {
+        if !class_generic_params.is_empty() || !lifetime_args.is_empty() {
             let generic_param_names: Vec<_> = class_generic_params.iter().map(|p| p.0).collect();
-            let lifetime_refs = lifetime_params.iter().map(|lt| quote! { &#lt () });
+            let lifetime_refs = lifetime_args.iter().map(|lt| quote! { &#lt () });
             // Via `#wasm_bindgen::__rt::core`, not a bare `::core`: this is
             // expanded with call-site hygiene into the user's own module, where a
             // user item named `core` shadows the extern-prelude entry, and a
@@ -1252,14 +1265,13 @@ impl TryToTokens for ast::ImportType {
         let into_js_generic_impl = if no_into_js_generic {
             quote! {}
         } else {
-            let mut clause =
-                self.generics
-                    .where_clause
-                    .clone()
-                    .unwrap_or_else(|| syn::WhereClause {
-                        where_token: Default::default(),
-                        predicates: Default::default(),
-                    });
+            let mut clause = declaration_generics
+                .where_clause
+                .clone()
+                .unwrap_or_else(|| syn::WhereClause {
+                    where_token: Default::default(),
+                    predicates: Default::default(),
+                });
             let self_ty_generics = &ty_generics;
             let self_ty: syn::Type = syn::parse_quote!(#rust_name #self_ty_generics);
             let wasm_bindgen_path: syn::Path = syn::parse_quote!(#wasm_bindgen);
@@ -1330,7 +1342,7 @@ impl TryToTokens for ast::ImportType {
                 }
 
                 #[automatically_derived]
-                impl #impl_generics_with_lifetime_a OptionIntoWasmAbi for &'__wbg_ref #rust_name #ty_generics #where_clause {
+                impl #reference_impl_generics OptionIntoWasmAbi for &#reference_lifetime #rust_name #ty_generics #where_clause {
                     #[inline]
                     fn none() -> Self::Abi {
                         0
@@ -1357,8 +1369,8 @@ impl TryToTokens for ast::ImportType {
                 }
 
                 #[automatically_derived]
-                impl #impl_generics_with_lifetime_a IntoWasmAbi for &'__wbg_ref #rust_name #ty_generics #where_clause {
-                    type Abi = <&'__wbg_ref JsValue as IntoWasmAbi>::Abi;
+                impl #reference_impl_generics IntoWasmAbi for &#reference_lifetime #rust_name #ty_generics #where_clause {
+                    type Abi = <&#reference_lifetime JsValue as IntoWasmAbi>::Abi;
 
                     #[inline]
                     fn into_abi(self) -> Self::Abi {
@@ -1414,7 +1426,7 @@ impl TryToTokens for ast::ImportType {
                 // Only include lifetime params here; type params use their
                 // defaults so callers don't need turbofish annotations.
                 #[automatically_derived]
-                impl #from_jsvalue_generics From<JsValue> for #rust_name #from_jsvalue_generics {
+                impl #from_jsvalue_generics From<JsValue> for #rust_name #from_jsvalue_generics #from_jsvalue_where_clause {
                     #[inline]
                     fn from(obj: JsValue) -> Self {
                         #rust_name {
@@ -1551,7 +1563,7 @@ impl TryToTokens for ast::ImportType {
 
             // 2. For non-generic types: generate identity upcast (UpcastFrom<Self> for Self, UpcastFrom<Self> for JsOption<Self>/JsNullable<Self>)
             // 3. For generic types: generate structural covariance
-            let type_params: Vec<_> = self.generics.type_params().collect();
+            let type_params: Vec<_> = declaration_generics.type_params().collect();
             if type_params.is_empty() {
                 // Identity impls for non-generic (or lifetime-only) types.
                 // Always use #ty_generics so that lifetime params are included.
@@ -1579,7 +1591,7 @@ impl TryToTokens for ast::ImportType {
             } else {
                 // Structural covariance impl for generic types
                 // Build impl generics: all original params plus a Target param for each
-                let mut impl_generics_extended = self.generics.clone();
+                let mut impl_generics_extended = declaration_generics.clone();
                 let target_param_names: Vec<syn::Ident> = type_params
                     .iter()
                     .enumerate()
@@ -1602,14 +1614,13 @@ impl TryToTokens for ast::ImportType {
                     .collect();
 
                 // Build where clause: Target: UpcastFrom<T>
-                let mut where_clause_extended =
-                    self.generics
-                        .where_clause
-                        .clone()
-                        .unwrap_or_else(|| syn::WhereClause {
-                            where_token: Default::default(),
-                            predicates: Default::default(),
-                        });
+                let mut where_clause_extended = declaration_generics
+                    .where_clause
+                    .clone()
+                    .unwrap_or_else(|| syn::WhereClause {
+                        where_token: Default::default(),
+                        predicates: Default::default(),
+                    });
 
                 for (type_param, target_name) in type_params.iter().zip(&target_param_names) {
                     let param_ident = &type_param.ident;
@@ -1621,7 +1632,7 @@ impl TryToTokens for ast::ImportType {
                 let (impl_generics_split, _, _) = impl_generics_extended.split_for_impl();
 
                 // Build target ty_generics: lifetime params forwarded, type params replaced
-                let target_lifetime_params = generics::lifetime_params(&self.generics);
+                let target_lifetime_params = generics::lifetime_args(&declaration_generics);
                 let target_ty_generics =
                     quote! { <#(#target_lifetime_params,)* #(#target_param_names),*> };
 
@@ -2721,9 +2732,7 @@ impl ast::ImportFunction {
     /// one (`this: &'a Foo`), binding the receiver as `&'a self`.
     ///
     /// Not (yet) supported, and rejected with a diagnostic:
-    /// - a class type parameterised by both a lifetime and a type parameter of
-    ///   the function, plus the three other unhoistable class argument lists
-    ///   `validate_class_shape` documents;
+    /// - class argument lists `validate_class_shape` cannot faithfully hoist;
     /// - a mutable reference to a generic type parameter (`&mut T`), or a
     ///   reference to one nested inside another type (e.g. `Option<&T>`);
     /// - a bare generic type parameter, or a reference to one (`&T`), as the
@@ -3451,7 +3460,7 @@ impl<'a> FnClassGenerics<'a> {
         // The two lists diverge as soon as a class type carries more than one
         // lifetime argument, which a multi-lifetime declaration (`type Foo<'a,
         // 'b>;`) expresses directly — the reference-conversion impls declare
-        // the type's own lifetime params (see `impl_generics_with_lifetime_a`),
+        // the type's own lifetime params (see `reference_impl_generics`),
         // so that declaration compiles. Keeping the header and the self type on
         // separate lists is therefore load-bearing, not merely defensive.
         let class_lifetime_params = &self.class_lifetime_params;
@@ -3511,7 +3520,7 @@ impl ast::ImportFunction {
             .collect();
 
         // Extract lifetime parameters
-        let all_lifetime_params = generics::lifetime_params(&self.generics);
+        let all_lifetime_params = generics::lifetime_args(&self.generics);
         let mut fn_lifetime_params: Vec<&syn::Lifetime> = all_lifetime_params.clone();
 
         let mut class_bounds = Vec::new();
@@ -3655,6 +3664,27 @@ impl ast::ImportFunction {
                                 }
                             }
                         }
+
+                        // A lifetime predicate which mentions a class lifetime
+                        // also belongs on the impl header. Hoist any other
+                        // function lifetimes it relates so the predicate does
+                        // not leave the wrapper referring to an undeclared
+                        // lifetime after the class lifetime moves to the impl.
+                        if let syn::WherePredicate::Lifetime(_) = bound.as_ref() {
+                            let class_lifetimes: Vec<&syn::Lifetime> = class_lifetime_params_set
+                                .iter()
+                                .chain(class_bound_lifetime_params_set.iter())
+                                .collect();
+                            if !generics::used_lifetimes_in_predicate(bound, &class_lifetimes)
+                                .is_empty()
+                            {
+                                let used = generics::used_lifetimes_in_predicate(
+                                    bound,
+                                    &remaining_fn_lifetimes,
+                                );
+                                lifetimes_to_add.extend(used);
+                            }
+                        }
                     }
 
                     if params_to_add.is_empty() && lifetimes_to_add.is_empty() {
@@ -3685,9 +3715,19 @@ impl ast::ImportFunction {
 
                 // hoist function where bounds on class generic params
                 fn_bounds.retain(|bound| {
-                    if generics::generics_predicate_uses(bound, &class_generic_params_refs)
-                        && !generics::generics_predicate_uses(bound, &fn_generic_params)
-                    {
+                    let class_lifetimes: Vec<&syn::Lifetime> = class_lifetime_params_set
+                        .iter()
+                        .chain(class_bound_lifetime_params_set.iter())
+                        .collect();
+                    let uses_class_params =
+                        generics::generics_predicate_uses(bound, &class_generic_params_refs)
+                            || !generics::used_lifetimes_in_predicate(bound, &class_lifetimes)
+                                .is_empty();
+                    let uses_fn_params =
+                        generics::generics_predicate_uses(bound, &fn_generic_params)
+                            || !generics::used_lifetimes_in_predicate(bound, &fn_lifetime_params)
+                                .is_empty();
+                    if uses_class_params && !uses_fn_params {
                         class_bounds.push(bound.clone());
                         false
                     } else {
@@ -3755,23 +3795,19 @@ impl ast::ImportFunction {
             return Ok(());
         };
 
-        // A lifetime argument the function does not itself declare
-        // (`Holder<'static, T>`, `Holder<'_, T>`) is not a parameter that can
+        // An elided lifetime argument on the class type (`Holder<'_, T>`) is
+        // not a parameter that can
         // be hoisted onto the `impl` header. The argument itself survives into
         // the self type (`class_lifetime_args` re-emits it verbatim), but
-        // nothing declares it there, so it is either an undeclared lifetime
-        // (`E0261`) or, for `'_`, an elided one in a position that forbids
-        // elision (`E0726`).
+        // nothing declares it there, so it is an elided lifetime in a position
+        // that forbids elision (`E0726`). A concrete `'static` argument needs
+        // no declaration and is preserved in the self type.
         //
         // This applies to every hoisting shape, not just a receiver:
-        // `class_return_path` decides whether to retarget the `impl` at the
-        // return type using `args_are_constraining_for`, which considers only
-        // *type* arguments, so a constructor returning `Holder<'static, T>`
-        // reaches the same broken `impl` by a different route.
-        let fn_lifetimes = generics::lifetime_params(&self.generics);
+        let fn_lifetimes = generics::lifetime_args(&self.generics);
         for gen_arg in gen_args.args.iter() {
             if let syn::GenericArgument::Lifetime(lt) = gen_arg {
-                if !fn_lifetimes.contains(&lt) {
+                if lt.ident != "static" && !fn_lifetimes.contains(&lt) {
                     bail_span!(
                         lt,
                         "generic_per_mono does not support a lifetime argument on the class type \
@@ -3786,8 +3822,7 @@ impl ast::ImportFunction {
         // A class type parameterised by *both* a lifetime and a type parameter
         // can be hoisted safely: the reference-conversion impls (`&T`'s
         // `IntoWasmAbi`/`OptionIntoWasmAbi`) declare the type's own lifetime
-        // params separately from the fresh `'__wbg_ref` reference lifetime
-        // (see `impl_generics_with_lifetime_a`), so the class's own lifetime
+        // params separately from the fresh reference lifetime, so the class's own lifetime
         // is never forced to unify with — and therefore never forced to
         // outlive — the borrow of `&self`. Without that unification there is
         // no `E0521` to guard against here.
@@ -3974,7 +4009,7 @@ impl TryToTokens for DescribeImport<'_> {
             return Ok(());
         }
         let fn_class_generics = f.get_fn_generics()?;
-        let fn_lifetime_params = generics::lifetime_params(&f.generics);
+        let fn_lifetime_params = generics::lifetime_args(&f.generics);
         let argtys = f
             .function
             .arguments

@@ -133,7 +133,7 @@ extern "C" {
     // through that impl, the unification forced the class's `'a` to outlive
     // `'static` (E0521 against generated code). Fixed by declaring the type's
     // own lifetimes separately from a fresh, never-colliding reference
-    // lifetime (`'__wbg_ref`) in `impl_generics_with_lifetime_a`.
+    // lifetime in the generated conversion impls.
     type LtHolder<'a, T>;
 
     #[wasm_bindgen(method, generic_per_mono, js_name = get)]
@@ -143,6 +143,18 @@ extern "C" {
     // rather than a method receiver.
     #[wasm_bindgen(constructor, generic_per_mono)]
     fn new_class_lifetime_and_type_param<'a, T>(v: &'a T) -> LtHolder<'a, T>;
+
+    // A concrete `'static` class argument does not need a lifetime declaration
+    // on the generated `impl` header. It must survive in the self type for all
+    // three class-wrapper routes.
+    #[wasm_bindgen(method, generic_per_mono, js_name = get_static)]
+    fn static_lifetime_get<T>(this: &LtHolder<'static, T>) -> T;
+
+    #[wasm_bindgen(constructor, generic_per_mono)]
+    fn new_static_lifetime<T>(v: T) -> LtHolder<'static, T>;
+
+    #[wasm_bindgen(static_method_of = LtHolder, generic_per_mono, js_name = of_static)]
+    fn static_lifetime_of<T>(v: T) -> LtHolder<'static, T>;
 }
 
 #[wasm_bindgen]
@@ -319,12 +331,16 @@ fn use_two_lifetimes<'a, 'b>(two: &'a TwoLifetimes<'b, 'a>, same: &'a TwoLifetim
 fn use_lt_holder<'a>(
     holder_u32: &'a LtHolder<'a, u32>,
     holder_string: &'a LtHolder<'a, String>,
+    static_holder: &LtHolder<'static, u32>,
     value: &'a JsValue,
 ) {
     let _: u32 = holder_u32.class_lifetime_and_type_param();
     let _: String = holder_string.class_lifetime_and_type_param();
 
     let _: LtHolder<'a, JsValue> = LtHolder::new_class_lifetime_and_type_param(value);
+    let _: u32 = static_holder.static_lifetime_get();
+    let _: LtHolder<'static, u32> = LtHolder::new_static_lifetime(1u32);
+    let _: LtHolder<'static, String> = LtHolder::static_lifetime_of(String::from("static"));
 }
 
 fn use_pair2<'a>(pair: &Pair2<u32, &'a u32>) {
@@ -353,6 +369,74 @@ fn use_fallible() -> Result<(), JsValue> {
 
 fn use_bounded<'a: 'b, 'b>(bounded: &Bounded, a: &'a JsValue, b: &'b JsValue) {
     bounded.take_bounded(a, b);
+}
+
+trait HasReturn {
+    type Return;
+}
+
+#[wasm_bindgen]
+extern "C" {
+    // Inline bounds on the imported type declaration itself must be normalized
+    // into predicates for every generated conversion impl, not only per-mono
+    // shims.
+    type TypeLifetimeBounds<'a: 'b, 'b, T>;
+
+    #[wasm_bindgen(method, generic_per_mono, js_name = get)]
+    fn type_lifetime_bounds_get<'a: 'b, 'b, T>(
+        this: &'a TypeLifetimeBounds<'a, 'b, T>,
+    ) -> T;
+
+    // The generated borrow lifetime must be fresh even when a user deliberately
+    // chooses the old internal spelling.
+    type RefNamed<'__wbg_ref, T>;
+
+    #[wasm_bindgen(method, generic_per_mono, js_name = get)]
+    fn ref_named_get<'__wbg_ref, T>(
+        this: &'__wbg_ref RefNamed<'__wbg_ref, T>,
+    ) -> T;
+
+    type LifetimeBounded<'a>;
+
+    // `'a` is hoisted with the class type. Its outlives predicate must follow
+    // it to the generated impl, along with the related `'b` lifetime.
+    #[wasm_bindgen(method, generic_per_mono, js_name = take)]
+    fn take_class_lifetime_bound<'a: 'b, 'b, T: AsRef<JsValue>>(
+        this: &'a LifetimeBounded<'a>,
+        value: &'b T,
+    );
+
+    type TransitiveBounded<F>;
+
+    // `R` is not in the class type directly; it must be hoisted because the
+    // bound on class parameter `F` uses it as an associated-type binding.
+    #[wasm_bindgen(method, generic_per_mono, js_name = get)]
+    fn transitive_bound<F, R>(this: &TransitiveBounded<F>) -> R
+    where
+        F: HasReturn<Return = R>;
+}
+
+fn use_class_lifetime_bound<'a: 'b, 'b>(
+    holder: &'a LifetimeBounded<'a>,
+    value: &'b JsValue,
+) {
+    holder.take_class_lifetime_bound(value);
+}
+
+fn use_type_lifetime_bounds<'a: 'b, 'b>(
+    holder: &'a TypeLifetimeBounds<'a, 'b, u32>,
+    named: &'a RefNamed<'a, String>,
+) {
+    let _: u32 = holder.type_lifetime_bounds_get();
+    let _: String = named.ref_named_get();
+}
+
+fn use_transitive_bound<F, R>(holder: &TransitiveBounded<F>) -> R
+where
+    F: HasReturn<Return = R>,
+    R: wasm_bindgen::convert::FromWasmAbi,
+{
+    holder.transitive_bound()
 }
 
 fn main() {}

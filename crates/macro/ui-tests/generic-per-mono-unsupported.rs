@@ -117,7 +117,7 @@ extern "C" {
 // Not every class argument list can be reproduced on that header, though. The
 // generated `impl` block strips the class type's arguments and rebuilds them
 // from the hoisted params, so an argument list that yields a param the self
-// type cannot constrain — or a lifetime nothing can declare — would silently
+// type cannot constrain — or an elided lifetime the header cannot declare — would silently
 // land the wrapper in an `impl` block for the wrong self type. Each of those is
 // rejected up front instead, since otherwise the user sees a rustc error
 // (E0207 / E0261 / E0726) against generated code they never wrote, spanned at
@@ -139,34 +139,15 @@ extern "C" {
     #[wasm_bindgen(method, generic_per_mono, js_name = get)]
     fn non_constraining_class_arg<T: IntoIterator>(this: &Holder<T::Item>) -> u32;
 
-    // A lifetime argument on the class type that the function does not itself
-    // declare cannot be hoisted, and dropping it leaves the self type a
-    // lifetime argument short (E0726).
-    #[wasm_bindgen(method, generic_per_mono, js_name = get)]
-    fn foreign_class_lifetime<T>(this: &LtHolder<'static, T>, v: T);
-
-    // Likewise for an elided one.
+    // An elided lifetime cannot be declared on the generated impl header.
     #[wasm_bindgen(method, generic_per_mono, js_name = get)]
     fn elided_class_lifetime<T>(this: &LtHolder<'_, T>, v: T);
 
-    // The undeclared-lifetime rejections above apply to every hoisting shape,
-    // not just a method receiver. A constructor or self-returning static
-    // method reaches an identically-parameterised `impl` through
-    // `class_return_path`, which decides whether to hoist by inspecting only
-    // the *type* arguments — so a lifetime argument that cannot be hoisted
-    // would otherwise slip past and leave the self type a lifetime argument
-    // short.
-    //
     // (A class type parameterised by *both* a lifetime and a type parameter,
     // with both hoisted, used to be rejected here too — see
     // `class_lifetime_and_type_param` and friends in
     // `pass-tests/generic-per-mono-class-generics.rs` for why that shape is
     // now supported instead.)
-    #[wasm_bindgen(constructor, generic_per_mono)]
-    fn new_foreign_class_lifetime<T>(v: T) -> LtHolder<'static, T>;
-
-    #[wasm_bindgen(static_method_of = LtHolder, generic_per_mono, js_name = of)]
-    fn static_foreign_class_lifetime<T>(v: T) -> LtHolder<'static, T>;
 }
 
 // The rejections below happen while *parsing* the block rather than while
