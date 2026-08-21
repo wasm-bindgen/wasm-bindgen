@@ -301,3 +301,104 @@ fn generic_per_mono_genuine_collision_is_reported() {
     // the user recognises.
     assert_contains!(&err, "console.log");
 }
+
+/// Same-named exports from different crates no longer collide at link time
+/// (their wasm shims carry a per-crate hash), so a genuine JS-level name
+/// collision is reported by cli-support instead of surfacing as a cryptic
+/// wasm-ld duplicate-symbol failure. Structs/enums are checked up front and
+/// the hint offers `#[wasm_bindgen(private)]` as an out.
+#[test]
+fn duplicate_public_class_across_crates_errors() {
+    let err = Project::new("duplicate_public_class_across_crates_errors")
+        .file("dupe-a/Cargo.toml", &dep_crate_toml("dupe-a"))
+        .file(
+            "dupe-a/src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+                #[wasm_bindgen]
+                pub struct Widget { pub id: u32 }
+                pub fn touch() -> u32 { Widget { id: 1 }.id }
+            "#,
+        )
+        .file("dupe-b/Cargo.toml", &dep_crate_toml("dupe-b"))
+        .file(
+            "dupe-b/src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+                #[wasm_bindgen]
+                pub struct Widget { pub id: u32 }
+                pub fn touch() -> u32 { Widget { id: 2 }.id }
+            "#,
+        )
+        .dep("dupe-a = { path = 'dupe-a' }")
+        .dep("dupe-b = { path = 'dupe-b' }")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+                #[wasm_bindgen]
+                pub fn touch_both() -> u32 { dupe_a::touch() + dupe_b::touch() }
+            "#,
+        )
+        .wasm_bindgen("")
+        .unwrap_err()
+        .to_string();
+
+    assert_contains!(&err, "the name `Widget` is exported multiple times");
+    assert_contains!(&err, "#[wasm_bindgen(private)]");
+}
+
+/// Functions have no `private` form, so the collision is caught when the
+/// second export's canonical name is restored.
+#[test]
+fn duplicate_public_function_across_crates_errors() {
+    let err = Project::new("duplicate_public_function_across_crates_errors")
+        .file("fn-dupe-a/Cargo.toml", &dep_crate_toml("fn-dupe-a"))
+        .file(
+            "fn-dupe-a/src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+                #[wasm_bindgen]
+                pub fn overlap() -> u32 { 1 }
+            "#,
+        )
+        .file("fn-dupe-b/Cargo.toml", &dep_crate_toml("fn-dupe-b"))
+        .file(
+            "fn-dupe-b/src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+                #[wasm_bindgen]
+                pub fn overlap() -> u32 { 2 }
+            "#,
+        )
+        .dep("fn-dupe-a = { path = 'fn-dupe-a' }")
+        .dep("fn-dupe-b = { path = 'fn-dupe-b' }")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+                #[wasm_bindgen]
+                pub fn touch_both() -> u32 { fn_dupe_a::overlap() + fn_dupe_b::overlap() }
+            "#,
+        )
+        .wasm_bindgen("")
+        .unwrap_err()
+        .to_string();
+
+    assert_contains!(&err, "the name `overlap` is exported by multiple crates");
+}
+
+fn dep_crate_toml(name: &str) -> String {
+    format!(
+        r#"
+            [package]
+            name = "{name}"
+            version = "0.0.0"
+            edition = "2021"
+
+            [dependencies]
+            wasm-bindgen = {{ path = '{repo}' }}
+        "#,
+        repo = crate::REPO_ROOT.display(),
+    )
+}

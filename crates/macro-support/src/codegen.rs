@@ -222,9 +222,15 @@ impl ToTokens for ast::Struct {
         let name_str = self.qualified_name.to_string();
         let name_len = name_str.chars().count() as u32;
         let name_chars: Vec<u32> = name_str.chars().map(|c| c as u32).collect();
+        // The Rust idents stay canonical so rustc diagnostics read cleanly;
+        // only the wasm symbols carry the per-crate hash.
         let new_fn = Ident::new(&shared::new_function(&name_str), Span::call_site());
+        let new_fn_symbol = crate::hash::crate_mangled_symbol(&shared::new_function(&name_str));
         let free_fn = Ident::new(&shared::free_function(&name_str), Span::call_site());
+        let free_fn_symbol = crate::hash::crate_mangled_symbol(&shared::free_function(&name_str));
         let unwrap_fn = Ident::new(&shared::unwrap_function(&name_str), Span::call_site());
+        let unwrap_fn_symbol =
+            crate::hash::crate_mangled_symbol(&shared::unwrap_function(&name_str));
         let wasm_bindgen = &self.wasm_bindgen;
         let class_abi = quote! {
             #wasm_bindgen::__rt::WasmPtr<#wasm_bindgen::__rt::WasmRefCell<#name>>
@@ -289,6 +295,7 @@ impl ToTokens for ast::Struct {
                     #[link(wasm_import_module = "__wbindgen_placeholder__")]
                     #[cfg(all(target_family = "wasm", not(target_os = "wasi")))]
                     extern "C" {
+                        #[link_name = #new_fn_symbol]
                         fn #new_fn(ptr: #class_abi) -> u32;
                     }
 
@@ -310,7 +317,7 @@ impl ToTokens for ast::Struct {
             #[automatically_derived]
             const _: () = {
                 #wasm_bindgen::__wbindgen_coverage! {
-                #[no_mangle]
+                #[export_name = #free_fn_symbol]
                 #[doc(hidden)]
                 // `allow_delayed` is whether it's ok to not actually free the `ptr` immediately
                 // if it's still borrowed.
@@ -398,6 +405,7 @@ impl ToTokens for ast::Struct {
                     #[link(wasm_import_module = "__wbindgen_placeholder__")]
                     #[cfg(all(target_family = "wasm", not(target_os = "wasi")))]
                     extern "C" {
+                        #[link_name = #unwrap_fn_symbol]
                         fn #unwrap_fn(ptr: u32) -> #class_abi;
                     }
 
@@ -502,6 +510,10 @@ impl ToTokens for ast::Struct {
                     &shared::upcast_function(&name_str, &parent_qualified),
                     Span::call_site(),
                 );
+                let upcast_fn_symbol = crate::hash::crate_mangled_symbol(&shared::upcast_function(
+                    &name_str,
+                    &parent_qualified,
+                ));
                 (quote! {
                     #[automatically_derived]
                     impl #wasm_bindgen::__rt::core::convert::AsRef<#field_ty> for #name {
@@ -514,7 +526,7 @@ impl ToTokens for ast::Struct {
                     #[cfg(all(target_family = "wasm", not(target_os = "wasi")))]
                     #[automatically_derived]
                     const _: () = {
-                        #[no_mangle]
+                        #[export_name = #upcast_fn_symbol]
                         #[doc(hidden)]
                         pub unsafe extern "C-unwind" fn #upcast_fn(ptr: u32) -> u32 {
                             use #wasm_bindgen::__rt::alloc::rc::Rc;
@@ -550,8 +562,12 @@ impl ToTokens for ast::StructField {
         let rust_name = &self.rust_name;
         let struct_name = &self.struct_name;
         let ty = &self.ty;
+        // The Rust idents stay canonical so rustc diagnostics read cleanly;
+        // only the wasm symbols carry the per-crate hash.
         let getter = &self.getter;
         let setter = &self.setter;
+        let getter_symbol = crate::hash::crate_mangled_symbol(&getter.to_string());
+        let setter_symbol = crate::hash::crate_mangled_symbol(&setter.to_string());
 
         let maybe_assert_copy = if self.getter_with_clone.is_some() {
             quote! {}
@@ -581,7 +597,7 @@ impl ToTokens for ast::StructField {
             #[automatically_derived]
             const _: () = {
                 #wasm_bindgen::__wbindgen_coverage! {
-                #[cfg_attr(all(target_family = "wasm", not(target_os = "wasi")), no_mangle)]
+                #[cfg_attr(all(target_family = "wasm", not(target_os = "wasi")), export_name = #getter_symbol)]
                 #[doc(hidden)]
                 pub unsafe extern "C-unwind" fn #getter(js: #struct_abi)
                     -> #wasm_bindgen::convert::WasmRet<<#ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi>
@@ -602,8 +618,12 @@ impl ToTokens for ast::StructField {
         })
         .to_tokens(tokens);
 
+        // The describe function is named after the wasm symbol, not the
+        // Rust ident, since cli-support matches descriptors to shims by
+        // stripping the `__wbindgen_describe_` prefix.
+        let getter_descriptor = Ident::new(&getter_symbol, Span::call_site());
         Descriptor {
-            ident: getter,
+            ident: &getter_descriptor,
             inner: quote! {
                 <#ty as WasmDescribe>::describe();
             },
@@ -629,7 +649,7 @@ impl ToTokens for ast::StructField {
             #[automatically_derived]
             const _: () = {
                 #wasm_bindgen::__wbindgen_coverage! {
-                #[no_mangle]
+                #[export_name = #setter_symbol]
                 #[doc(hidden)]
                 pub unsafe extern "C-unwind" fn #setter(
                     js: #struct_abi,
@@ -2085,7 +2105,9 @@ impl ToTokens for ast::DynamicUnion {
         // Generate descriptor exports for each type variant so cli-support can look them up
         for (idx, ty) in type_variants.iter().enumerate() {
             let descriptor_name = Ident::new(
-                &shared::dynamic_union_variant(name_str, idx as u32),
+                &crate::hash::crate_mangled_symbol(&shared::dynamic_union_variant(
+                    name_str, idx as u32,
+                )),
                 Span::call_site(),
             );
             Descriptor {
