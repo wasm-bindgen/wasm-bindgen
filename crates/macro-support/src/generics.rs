@@ -184,12 +184,11 @@ pub(crate) fn type_params_with_bounds(generics: &syn::Generics) -> Vec<proc_macr
         .collect()
 }
 
-/// Returns a vector of token streams representing generic lifetime parameters
-/// with their inline bounds. For example, `<'a: 'b, 'b>` returns
-/// `[quote!('a: 'b), quote!('b)]`. This is useful for redeclaring lifetime
-/// parameters on a nested item (e.g. a monomorphised shim `fn`), which does
-/// not inherit the enclosing function's generics and must repeat them
-/// (including their bounds) explicitly.
+/// Returns lifetime declarations with their inline bounds. For example,
+/// `<'a: 'b, 'b>` returns `[quote!('a: 'b), quote!('b)]`.
+///
+/// This does not include predicates from a `where` clause. Callers that emit
+/// a new generic scope must carry those predicates separately.
 pub(crate) fn lifetime_params_with_bounds(
     generics: &syn::Generics,
 ) -> Vec<proc_macro2::TokenStream> {
@@ -249,6 +248,33 @@ pub(crate) fn generic_bounds<'a>(generics: &'a syn::Generics) -> Vec<Cow<'a, syn
     bounds
 }
 
+/// Moves inline lifetime bounds to the `where` clause.
+///
+/// Rust accepts inline lifetime bounds in some input positions that
+/// wasm-bindgen transforms into struct and impl declarations where only the
+/// predicate form is accepted. Normalizing before emitting a new item keeps
+/// every generated scope well-formed.
+pub(crate) fn move_lifetime_bounds_to_where(generics: &mut syn::Generics) {
+    let mut predicates = Vec::new();
+    for param in &mut generics.params {
+        let syn::GenericParam::Lifetime(param) = param else {
+            continue;
+        };
+        if param.bounds.is_empty() {
+            continue;
+        }
+        predicates.push(syn::WherePredicate::Lifetime(syn::PredicateLifetime {
+            lifetime: param.lifetime.clone(),
+            colon_token: syn::Token![:](proc_macro2::Span::call_site()),
+            bounds: std::mem::take(&mut param.bounds),
+        }));
+        param.colon_token = None;
+    }
+    if !predicates.is_empty() {
+        generics.make_where_clause().predicates.extend(predicates);
+    }
+}
+
 /// Replace specified lifetime parameters with 'static.
 /// This is used when generating concrete ABI types for extern blocks,
 /// which cannot have lifetime parameters from the outer scope.
@@ -279,20 +305,43 @@ pub(crate) fn generic_param_names(generics: &syn::Generics) -> Vec<&Ident> {
     generics.type_params().map(|tp| &tp.ident).collect()
 }
 
-/// Obtain all lifetime parameters from generics
-pub(crate) fn lifetime_params(generics: &syn::Generics) -> Vec<&syn::Lifetime> {
+/// Obtain lifetime arguments/names from generics.
+///
+/// These are valid in type argument positions, but do not carry the inline
+/// bounds required when declaring an `impl` or function generic header.
+pub(crate) fn lifetime_args(generics: &syn::Generics) -> Vec<&syn::Lifetime> {
     generics.lifetimes().map(|lp| &lp.lifetime).collect()
+}
+
+/// Generate a lifetime name that does not collide with the source generics.
+pub(crate) fn fresh_lifetime(generics: &syn::Generics, base: &str) -> syn::Lifetime {
+    let mut suffix = 0;
+    loop {
+        let name = if suffix == 0 {
+            base.to_owned()
+        } else {
+            format!("{base}_{suffix}")
+        };
+        if generics
+            .lifetimes()
+            .all(|param| param.lifetime.ident != name)
+        {
+            return syn::Lifetime::new(&format!("'{name}"), proc_macro2::Span::call_site());
+        }
+        suffix += 1;
+    }
 }
 
 /// Obtain both lifetime and type parameter names from generics
 pub(crate) fn all_param_names(generics: &syn::Generics) -> (Vec<&syn::Lifetime>, Vec<&Ident>) {
-    (lifetime_params(generics), generic_param_names(generics))
+    (lifetime_args(generics), generic_param_names(generics))
 }
 
 /// Helper visitor for lifetime usage detection in types
 pub struct LifetimeVisitor<'a> {
     lifetime_params: &'a [&'a syn::Lifetime],
     found_set: BTreeSet<syn::Lifetime>,
+    bound_lifetime_names: Vec<Ident>,
 }
 
 impl<'a> LifetimeVisitor<'a> {
@@ -300,19 +349,62 @@ impl<'a> LifetimeVisitor<'a> {
         Self {
             lifetime_params,
             found_set: BTreeSet::new(),
+            bound_lifetime_names: Vec::new(),
         }
     }
 
     pub fn into_found(self) -> BTreeSet<syn::Lifetime> {
         self.found_set
     }
+
+    fn push_bound_lifetimes(&mut self, lifetimes: Option<&syn::BoundLifetimes>) -> usize {
+        let start = self.bound_lifetime_names.len();
+        if let Some(lifetimes) = lifetimes {
+            self.bound_lifetime_names
+                .extend(lifetimes.lifetimes.iter().filter_map(|param| match param {
+                    syn::GenericParam::Lifetime(param) => Some(param.lifetime.ident.clone()),
+                    _ => None,
+                }));
+        }
+        start
+    }
 }
 
 impl<'ast> syn::visit::Visit<'ast> for LifetimeVisitor<'_> {
     fn visit_lifetime(&mut self, lifetime: &'ast syn::Lifetime) {
-        if self.lifetime_params.contains(&lifetime) {
+        if !self
+            .bound_lifetime_names
+            .iter()
+            .rev()
+            .any(|ident| ident == &lifetime.ident)
+            && self.lifetime_params.contains(&lifetime)
+        {
             self.found_set.insert(lifetime.clone());
         }
+    }
+
+    fn visit_bound_lifetimes(&mut self, lifetimes: &'ast syn::BoundLifetimes) {
+        let start = self.push_bound_lifetimes(Some(lifetimes));
+        syn::visit::visit_bound_lifetimes(self, lifetimes);
+        self.bound_lifetime_names.truncate(start);
+    }
+
+    fn visit_predicate_type(&mut self, predicate: &'ast syn::PredicateType) {
+        let start = self.push_bound_lifetimes(predicate.lifetimes.as_ref());
+        syn::visit::visit_predicate_type(self, predicate);
+        self.bound_lifetime_names.truncate(start);
+    }
+
+    fn visit_trait_bound(&mut self, bound: &'ast syn::TraitBound) {
+        let start = self.push_bound_lifetimes(bound.lifetimes.as_ref());
+        syn::visit::visit_trait_bound(self, bound);
+        self.bound_lifetime_names.truncate(start);
+    }
+
+    fn visit_type_bare_fn(&mut self, bare_fn: &'ast syn::TypeBareFn) {
+        let start = self.push_bound_lifetimes(bare_fn.lifetimes.as_ref());
+        syn::visit::visit_type_bare_fn(self, bare_fn);
+        self.bound_lifetime_names.truncate(start);
     }
 }
 
@@ -323,6 +415,16 @@ pub(crate) fn used_lifetimes_in_type<'a>(
 ) -> BTreeSet<syn::Lifetime> {
     let mut visitor = LifetimeVisitor::new(lifetime_params);
     syn::visit::Visit::visit_type(&mut visitor, ty);
+    visitor.into_found()
+}
+
+/// Find all lifetimes from the given set that are used in a where predicate.
+pub(crate) fn used_lifetimes_in_predicate<'a>(
+    predicate: &syn::WherePredicate,
+    lifetime_params: &'a [&'a syn::Lifetime],
+) -> BTreeSet<syn::Lifetime> {
+    let mut visitor = LifetimeVisitor::new(lifetime_params);
+    syn::visit::Visit::visit_where_predicate(&mut visitor, predicate);
     visitor.into_found()
 }
 
@@ -976,6 +1078,31 @@ mod tests {
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].to_string(), quote::quote!('a: 'b).to_string());
         assert_eq!(result[1].to_string(), quote::quote!('b).to_string());
+    }
+
+    #[test]
+    fn test_fresh_lifetime_avoids_source_names() {
+        let generics: syn::Generics = syn::parse_quote!(<'__wbg_ref, '__wbg_ref_1, T>);
+        let lifetime = crate::generics::fresh_lifetime(&generics, "__wbg_ref");
+        assert_eq!(lifetime.to_string(), "'__wbg_ref_2");
+    }
+
+    #[test]
+    fn test_lifetime_visitor_respects_hrtb_binders() {
+        let outer_a: syn::Lifetime = syn::parse_quote!('a);
+        let outer_b: syn::Lifetime = syn::parse_quote!('b);
+        let lifetime_params = [&outer_a, &outer_b];
+
+        let shadowing: syn::WherePredicate = syn::parse_quote!(for<'a> &'a T: Clone);
+        assert!(
+            crate::generics::used_lifetimes_in_predicate(&shadowing, &lifetime_params).is_empty()
+        );
+
+        let outer: syn::WherePredicate = syn::parse_quote!('a: 'b);
+        let used = crate::generics::used_lifetimes_in_predicate(&outer, &lifetime_params);
+        assert_eq!(used.len(), 2);
+        assert!(used.contains(&outer_a));
+        assert!(used.contains(&outer_b));
     }
 
     #[test]

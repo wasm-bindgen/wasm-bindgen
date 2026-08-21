@@ -13,6 +13,10 @@ class Holder {
     return this._value;
   }
 
+  get value() {
+    return this._value;
+  }
+
   static of(value) {
     const h = new Holder(value);
     h._fromStatic = true;
@@ -28,6 +32,18 @@ class Holder {
 }
 
 exports.Holder = Holder;
+
+class ErasedHolder {
+  constructor(value) {
+    this._value = value;
+  }
+
+  get() {
+    return this._value;
+  }
+}
+
+exports.ErasedHolder = ErasedHolder;
 
 // Deliberately plain (non-generic) inspection helpers, so a bug in the
 // generic per-monomorphisation path cannot also corrupt the assertions.
@@ -60,6 +76,10 @@ class LtHolder {
 
   get() {
     return this._value;
+  }
+
+  static of(value) {
+    return new LtHolder(value);
   }
 }
 

@@ -216,9 +216,10 @@ rustc error against generated code:
 * **An argument that mentions a parameter without determining it**
   (`&Holder<T::Assoc>`, or a constructor returning `Holder<T::Assoc>`). Hoisting
   `T` would leave it unconstrained by the self type.
-* **A lifetime argument the function does not itself declare**
-  (`&Holder<'static, T>`, `&Holder<'_, T>`). Name it as a lifetime parameter of
-  the function instead (`fn f<'a, T>(this: &'a Holder<'a, T>)`).
+* **An elided lifetime argument** (`&Holder<'_, T>`), which cannot be declared
+  on the generated `impl` header. A concrete `'static` lifetime is supported;
+  name any other lifetime as a parameter of the function instead
+  (`fn f<'a, T>(this: &'a Holder<'a, T>)`).
 
 ## Other attributes
 
