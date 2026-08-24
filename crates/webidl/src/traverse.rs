@@ -13,7 +13,7 @@ impl TraverseType for Type {
     {
         match self {
             Type::Array(x) => x.traverse_type(f),
-            Type::BareFn(x) => x.traverse_type(f),
+            Type::FnPtr(x) => x.traverse_type(f),
             Type::Group(x) => x.traverse_type(f),
             Type::Paren(x) => x.traverse_type(f),
             Type::Path(x) => x.traverse_type(f),
@@ -35,7 +35,7 @@ impl TraverseType for syn::TypeArray {
     }
 }
 
-impl TraverseType for syn::TypeBareFn {
+impl TraverseType for syn::TypeFnPtr {
     fn traverse_type<F>(&self, f: &mut F)
     where
         F: FnMut(&Ident),
@@ -156,8 +156,8 @@ impl TraverseType for syn::ParenthesizedGenericArguments {
     where
         F: FnMut(&Ident),
     {
-        for ty in self.inputs.iter() {
-            ty.traverse_type(f);
+        for arg in self.inputs.iter() {
+            arg.ty.traverse_type(f);
         }
 
         self.output.traverse_type(f);
