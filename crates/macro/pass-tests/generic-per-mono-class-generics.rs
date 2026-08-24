@@ -92,14 +92,11 @@ extern "C" {
 }
 
 // An explicit static class path carries the arguments needed to form the
-// inherent impl even when the imported type belongs to a different extern block.
+// inherent impl for a generic imported type.
 #[wasm_bindgen]
 extern "C" {
     type ExternalLifetimeHolder<'a>;
-}
 
-#[wasm_bindgen]
-extern "C" {
     #[wasm_bindgen(
         static_method_of = ExternalLifetimeHolder<'a>,
         generic_per_mono,

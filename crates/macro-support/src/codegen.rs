@@ -203,13 +203,16 @@ fn imported_class_generics<'a>(
     function: &ast::ImportFunction,
     types: &HashMap<String, &'a ast::ImportType>,
 ) -> Result<Option<&'a syn::Generics>, Diagnostic> {
-    let ast::ImportFunctionKind::Method { ty, .. } = &function.kind else {
+    let ast::ImportFunctionKind::Method {
+        ty: class_ty, kind, ..
+    } = &function.kind
+    else {
         return Ok(None);
     };
     let ty = function
         .class_return_path()
         .and_then(|_| function.js_ret.as_ref().map(get_ty))
-        .unwrap_or_else(|| get_ty(ty));
+        .unwrap_or_else(|| get_ty(class_ty));
     let syn::Type::Path(syn::TypePath { qself: None, path }) = ty else {
         return Ok(None);
     };
@@ -217,19 +220,19 @@ fn imported_class_generics<'a>(
     if let Some(ty) = local_name.and_then(|ident| types.get(&ident.unraw().to_string())) {
         return Ok(Some(&ty.generics));
     }
-    let is_explicit_static_class = matches!(
-        &function.kind,
-        ast::ImportFunctionKind::Method {
-            kind: ast::MethodKind::Operation(ast::Operation {
-                is_static: true,
-                ..
-            }),
+    if matches!(
+        kind,
+        ast::MethodKind::Operation(ast::Operation {
+            is_static: true,
             ..
-        }
-    ) && function.class_return_path().is_none();
-    if class_path_arguments(ty).is_some_and(|arguments| !arguments.is_empty())
-        && !is_explicit_static_class
-    {
+        })
+    ) {
+        bail_span!(
+            class_ty,
+            "generic_per_mono requires a static method's imported class type to be declared in the same `#[wasm_bindgen] extern` block"
+        );
+    }
+    if class_path_arguments(ty).is_some_and(|arguments| !arguments.is_empty()) {
         bail_span!(
             path,
             "generic_per_mono requires a generic imported class type to be declared in the same `#[wasm_bindgen] extern` block"
@@ -2936,7 +2939,7 @@ impl ast::ImportFunction {
         let mut fn_class_generics = self.get_fn_generics()?;
         if let (Some(class), Some(class_generics)) = (&class, class_generics) {
             let mut class_with_defaults = class.clone();
-            if !is_method && class_return_path.is_none() {
+            if is_constructor && class_return_path.is_none() {
                 // `class_return_path` rejected a non-constraining constructor
                 // return such as `Holder<T::Item>`. `get_fn_generics` then
                 // emits `impl Holder`, which selects the imported type's
@@ -2973,10 +2976,10 @@ impl ast::ImportFunction {
 
         if !hoist && class.is_some() {
             match class_generics {
-                // A bare class path needs no declaration metadata to form
-                // `impl Class`. If the external class actually has required
-                // parameters, rustc will reject that path directly.
-                None => {}
+                None => bail_span!(
+                    class.as_ref().unwrap(),
+                    "generic_per_mono requires a static method's imported class type to be declared in the same `#[wasm_bindgen] extern` block"
+                ),
                 Some(generics)
                     if generics.params.iter().any(|parameter| {
                         !matches!(parameter, syn::GenericParam::Type(parameter) if parameter.default.is_some())
