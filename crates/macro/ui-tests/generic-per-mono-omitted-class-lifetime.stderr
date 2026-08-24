@@ -1,0 +1,5 @@
+error: generic_per_mono does not support an omitted lifetime argument on the class type; name it as a lifetime parameter of the function (e.g. `fn get<'a, T, U>(this: &'a Holder<'a, T>) -> U`) or use the type-erasure generic path instead
+  --> ui-tests/generic-per-mono-omitted-class-lifetime.rs:10:26
+   |
+10 |     fn get<T, U>(this: &Holder<T>) -> U;
+   |                          ^^^^^^^^^

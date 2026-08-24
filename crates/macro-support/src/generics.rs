@@ -522,12 +522,12 @@ pub(crate) fn used_generic_params<'a>(
 /// Constraining positions (for a param appearing somewhere inside):
 ///   - Bare: `T`
 ///   - As a type argument of a nominal path `Foo<..., T, ...>` (recursive)
-///   - Under references, arrays, slices, tuples, parens (recursive)
+///   - Under pointers, references, arrays, slices, tuples, bare function types,
+///     parens, and ordinary trait generic arguments (recursive)
 ///
 /// Non-constraining positions:
 ///   - Under a QSelf / projection: `<T as Trait>::X` or `T::X`
-///   - Inside a `fn(T) -> U` / `dyn Fn(T)` / `impl Fn(T)` — function-pointer
-///     and trait-object / `impl Trait` slots do not constrain.
+///   - Inside `dyn Fn(T)` / `impl Fn(T)` parenthesized trait syntax.
 ///   - Inside an associated-type binding's RHS (those project through the
 ///     outer trait, so they are not injective).
 ///
@@ -620,6 +620,7 @@ pub(crate) fn type_is_constraining_for(ty: &syn::Type, generic_names: &[&Ident])
             }
             true
         }
+        syn::Type::Ptr(p) => type_is_constraining_for(&p.elem, generic_names),
         syn::Type::Reference(r) => type_is_constraining_for(&r.elem, generic_names),
         syn::Type::Array(a) => type_is_constraining_for(&a.elem, generic_names),
         syn::Type::Slice(s) => type_is_constraining_for(&s.elem, generic_names),
@@ -629,10 +630,45 @@ pub(crate) fn type_is_constraining_for(ty: &syn::Type, generic_names: &[&Ident])
             .elems
             .iter()
             .all(|e| type_is_constraining_for(e, generic_names)),
-        // Pointer / BareFn / TraitObject / ImplTrait / Infer / Never / Macro:
-        // any fn-generic mention here is non-constraining (fn-ptr, dyn, impl
-        // Trait are explicitly non-constraining per RFC 0447; the rest are
-        // handled conservatively).
+        syn::Type::BareFn(f) => {
+            f.inputs
+                .iter()
+                .all(|input| type_is_constraining_for(&input.ty, generic_names))
+                && match &f.output {
+                    syn::ReturnType::Default => true,
+                    syn::ReturnType::Type(_, ty) => type_is_constraining_for(ty, generic_names),
+                }
+        }
+        syn::Type::TraitObject(object) => object.bounds.iter().all(|bound| match bound {
+            syn::TypeParamBound::Trait(bound) => {
+                bound
+                    .path
+                    .segments
+                    .iter()
+                    .all(|segment| match &segment.arguments {
+                        syn::PathArguments::None => true,
+                        syn::PathArguments::AngleBracketed(arguments) => {
+                            args_are_constraining_for(&arguments.args, generic_names)
+                        }
+                        syn::PathArguments::Parenthesized(arguments) => {
+                            !arguments
+                                .inputs
+                                .iter()
+                                .any(|input| type_mentions_any(input, generic_names))
+                                && match &arguments.output {
+                                    syn::ReturnType::Default => true,
+                                    syn::ReturnType::Type(_, ty) => {
+                                        !type_mentions_any(ty, generic_names)
+                                    }
+                                }
+                        }
+                    })
+            }
+            syn::TypeParamBound::Lifetime(_) => true,
+            _ => false,
+        }),
+        // ImplTrait / Infer / Never / Macro and future forms are handled
+        // conservatively when they mention a function generic.
         _ => !type_mentions_any(ty, generic_names),
     }
 }
@@ -1254,9 +1290,16 @@ mod tests {
     }
 
     #[test]
-    fn hoist_gate_rejects_fn_ptr_and_fn_sugar() {
-        // `fn(T) -> U` and `Fn(T) -> U` sugar are both non-constraining slots.
-        assert!(!args_are_constraining("Foo<fn(T) -> i32>", &["T"]));
+    fn hoist_gate_accepts_pointer_fn_and_trait_object_shapes() {
+        assert!(args_are_constraining("Foo<*const T>", &["T"]));
+        assert!(args_are_constraining("Foo<fn(T) -> i32>", &["T"]));
+        assert!(args_are_constraining("Foo<Box<dyn Marker<T>>>", &["T"]));
+    }
+
+    #[test]
+    fn hoist_gate_rejects_fn_sugar() {
+        // Parenthesized `Fn(T) -> U` trait syntax is not treated as an ordinary
+        // nominal generic argument list.
         assert!(!args_are_constraining("Foo<Box<dyn Fn(T) -> i32>>", &["T"]));
         // Return-position of the parenthesized sugar also counts.
         assert!(!args_are_constraining("Foo<Box<dyn Fn(i32) -> T>>", &["T"]));

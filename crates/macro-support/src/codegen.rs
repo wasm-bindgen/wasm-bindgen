@@ -213,14 +213,7 @@ fn imported_class_generics<'a>(
     let syn::Type::Path(syn::TypePath { qself: None, path }) = ty else {
         return Ok(None);
     };
-    let local_name = match path.segments.len() {
-        1 if path.leading_colon.is_none() => path.segments.last().map(|segment| &segment.ident),
-        2 if path.leading_colon.is_none() => {
-            let first = &path.segments.first().unwrap().ident;
-            (first == "self").then(|| &path.segments.last().unwrap().ident)
-        }
-        _ => None,
-    };
+    let local_name = local_path_ident(path);
     if let Some(ty) = local_name.and_then(|ident| types.get(&ident.unraw().to_string())) {
         return Ok(Some(&ty.generics));
     }
@@ -243,6 +236,19 @@ fn imported_class_generics<'a>(
         );
     }
     Ok(None)
+}
+
+fn local_path_ident(path: &syn::Path) -> Option<&Ident> {
+    if path.leading_colon.is_some() {
+        return None;
+    }
+    match path.segments.len() {
+        1 => path.segments.last().map(|segment| &segment.ident),
+        2 if path.segments.first()?.ident == "self" => {
+            path.segments.last().map(|segment| &segment.ident)
+        }
+        _ => None,
+    }
 }
 
 impl TryToTokens for ast::LinkToModule {
@@ -2626,6 +2632,10 @@ impl ast::ImportFunction {
 
         let mut class_impl_def = None;
         if let Some((_, class)) = class {
+            let explicit_static_class_generics = !is_method
+                && !is_constructor
+                && !is_self_returning_static
+                && class_path_arguments(class).is_some_and(|arguments| !arguments.is_empty());
             let mut class = class.clone();
             if let syn::Type::Path(syn::TypePath {
                 qself: None,
@@ -2636,9 +2646,13 @@ impl ast::ImportFunction {
                     segment.arguments = syn::PathArguments::None;
                 }
             }
-            // A static method that is neither the constructor nor self-returning
-            // impls on the class's own parameter defaults instead of hoisting.
-            let hoist = is_method || is_constructor || is_self_returning_static;
+            // Explicit `static_method_of = Class<T>` arguments select the impl
+            // just as a receiver or self-returning static does. Only a bare
+            // static class path binds the imported type's own defaults.
+            let hoist = is_method
+                || is_constructor
+                || is_self_returning_static
+                || explicit_static_class_generics;
             class_impl_def = Some(fn_class_generics.class_impl_def(&class, hoist));
         };
 
@@ -2959,10 +2973,10 @@ impl ast::ImportFunction {
 
         if !hoist && class.is_some() {
             match class_generics {
-                None => bail_span!(
-                    class.as_ref().unwrap(),
-                    "generic_per_mono requires a static method's imported class type to be declared in the same `#[wasm_bindgen] extern` block; write its generic arguments in `static_method_of = ...`"
-                ),
+                // A bare class path needs no declaration metadata to form
+                // `impl Class`. If the external class actually has required
+                // parameters, rustc will reject that path directly.
+                None => {}
                 Some(generics)
                     if generics.params.iter().any(|parameter| {
                         !matches!(parameter, syn::GenericParam::Type(parameter) if parameter.default.is_some())
@@ -3746,6 +3760,16 @@ impl<'a> FnClassGenerics<'a> {
                     lifetime_replacements
                         .insert(parameter.lifetime.ident.clone(), lifetime.clone());
                 }
+                (syn::GenericParam::Lifetime(_), _) => {
+                    let syn::Type::Path(syn::TypePath { path, .. }) = class else {
+                        unreachable!("class_path_arguments accepted a non-path class")
+                    };
+                    let segment = path.segments.last().unwrap();
+                    bail_span!(
+                        segment,
+                        "generic_per_mono does not support an omitted lifetime argument on the class type; name it as a lifetime parameter of the function (e.g. `fn get<'a, T, U>(this: &'a Holder<'a, T>) -> U`) or use the type-erasure generic path instead"
+                    );
+                }
                 // Omitted type arguments use the default added by the parser.
                 (syn::GenericParam::Type(parameter), None) if parameter.default.is_some() => {
                     let mut default = parameter.default.clone().unwrap();
@@ -4347,6 +4371,7 @@ impl ast::ImportFunction {
         };
 
         let seg = path.segments.last()?;
+        let return_class = local_path_ident(path)?;
         let class_ty = get_ty(class_ty);
         let syn::Type::Path(syn::TypePath {
             qself: None,
@@ -4355,15 +4380,10 @@ impl ast::ImportFunction {
         else {
             return None;
         };
-        let class_seg = class_path.segments.last()?;
-        // `static_method_of` stores only an identifier, so a multi-segment
-        // return path such as `other::Foo` cannot be proven to be that class.
-        if !is_constructor
-            && (path.leading_colon.is_some()
-                || path.segments.len() != 1
-                || class_path.segments.len() != 1
-                || seg.ident != class_seg.ident)
-        {
+        let declared_class = local_path_ident(class_path)?;
+        // A `self::Foo` return is the same local imported class as `Foo`, while
+        // an absolute or module-qualified path cannot be proven equivalent.
+        if !is_constructor && return_class != declared_class {
             return None;
         }
 
@@ -4396,10 +4416,7 @@ impl ast::ImportFunction {
     }
 
     fn validate_unhoisted_class_return_lifetimes(&self) -> Result<(), Diagnostic> {
-        let ast::ImportFunctionKind::Method {
-            class: class_name, ..
-        } = &self.kind
-        else {
+        let ast::ImportFunctionKind::Method { ty: class_ty, .. } = &self.kind else {
             return Ok(());
         };
         let Some(ret_ty) = &self.js_ret else {
@@ -4411,7 +4428,20 @@ impl ast::ImportFunction {
         let Some(segment) = path.segments.last() else {
             return Ok(());
         };
-        if segment.ident.unraw() != class_name.as_str() {
+        let syn::Type::Path(syn::TypePath {
+            qself: None,
+            path: class_path,
+        }) = get_ty(class_ty)
+        else {
+            return Ok(());
+        };
+        let Some(return_class) = local_path_ident(path) else {
+            return Ok(());
+        };
+        let Some(declared_class) = local_path_ident(class_path) else {
+            return Ok(());
+        };
+        if return_class != declared_class {
             return Ok(());
         }
         let syn::PathArguments::AngleBracketed(arguments) = &segment.arguments else {
