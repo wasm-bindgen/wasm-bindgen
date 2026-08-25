@@ -1,5 +1,0 @@
-error: generic_per_mono requires a generic imported class type to be declared in the same `#[wasm_bindgen] extern` block
-  --> ui-tests/generic-per-mono-unresolved-class.rs:16:34
-   |
-16 |     fn external_method<T>(this: &foreign::External<T>);
-   |                                  ^^^^^^^^^^^^^^^^^^^^

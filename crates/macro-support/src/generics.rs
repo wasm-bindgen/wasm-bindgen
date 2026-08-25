@@ -78,6 +78,24 @@ impl<'a, 'b> GenericNameVisitor<'a, 'b> {
             found_set,
         }
     }
+
+    fn generic_param(&self, ident: &Ident) -> Option<&Ident> {
+        self.generic_params
+            .iter()
+            .copied()
+            .find(|param| *param == ident)
+    }
+
+    fn record_generic_param(&mut self, ident: &Ident) -> bool {
+        let Some(param) = self.generic_param(ident).cloned() else {
+            return false;
+        };
+        // Keep the declaration's span when this identifier is later emitted as
+        // a generated generic parameter, so rustc suggestions target the
+        // declaration rather than an occurrence in a type argument.
+        self.found_set.insert(param);
+        true
+    }
 }
 
 impl<'a, 'b> Visit<'a> for GenericNameVisitor<'a, 'b> {
@@ -95,14 +113,11 @@ impl<'a, 'b> Visit<'a> for GenericNameVisitor<'a, 'b> {
 
             if let Some(first_segment) = type_path.path.segments.first() {
                 if type_path.path.segments.len() == 1 && first_segment.arguments.is_empty() {
-                    if self.generic_params.contains(&&first_segment.ident) {
-                        self.found_set.insert(first_segment.ident.clone());
+                    if self.record_generic_param(&first_segment.ident) {
                         return;
                     }
                 } else {
-                    if self.generic_params.contains(&&first_segment.ident) {
-                        self.found_set.insert(first_segment.ident.clone());
-                    }
+                    self.record_generic_param(&first_segment.ident);
 
                     syn::visit::visit_path_arguments(self, &first_segment.arguments);
 
@@ -120,9 +135,7 @@ impl<'a, 'b> Visit<'a> for GenericNameVisitor<'a, 'b> {
 
     fn visit_path(&mut self, path: &'a syn::Path) {
         if let Some(first_segment) = path.segments.first() {
-            if self.generic_params.contains(&&first_segment.ident) {
-                self.found_set.insert(first_segment.ident.clone());
-            }
+            self.record_generic_param(&first_segment.ident);
         }
 
         for segment in &path.segments {

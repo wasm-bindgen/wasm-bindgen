@@ -82,7 +82,7 @@ impl TryToTokens for ast::Program {
 
             let result = match &i.kind {
                 ast::ImportKind::Function(function) if function.generic_per_mono => {
-                    let class_generics = imported_class_generics(function, &types)?;
+                    let class_generics = imported_class_generics(function, &types);
                     function.try_to_tokens_with_class_generics(tokens, class_generics)
                 }
                 _ => i.kind.try_to_tokens(tokens),
@@ -202,43 +202,21 @@ impl TryToTokens for ast::Program {
 fn imported_class_generics<'a>(
     function: &ast::ImportFunction,
     types: &HashMap<String, &'a ast::ImportType>,
-) -> Result<Option<&'a syn::Generics>, Diagnostic> {
-    let ast::ImportFunctionKind::Method {
-        ty: class_ty, kind, ..
-    } = &function.kind
-    else {
-        return Ok(None);
+) -> Option<&'a syn::Generics> {
+    let ast::ImportFunctionKind::Method { ty: class_ty, .. } = &function.kind else {
+        return None;
     };
     let ty = function
         .class_return_path()
         .and_then(|_| function.js_ret.as_ref().map(get_ty))
         .unwrap_or_else(|| get_ty(class_ty));
     let syn::Type::Path(syn::TypePath { qself: None, path }) = ty else {
-        return Ok(None);
+        return None;
     };
     let local_name = local_path_ident(path);
-    if let Some(ty) = local_name.and_then(|ident| types.get(&ident.unraw().to_string())) {
-        return Ok(Some(&ty.generics));
-    }
-    if matches!(
-        kind,
-        ast::MethodKind::Operation(ast::Operation {
-            is_static: true,
-            ..
-        })
-    ) {
-        bail_span!(
-            class_ty,
-            "generic_per_mono requires a static method's imported class type to be declared in the same `#[wasm_bindgen] extern` block"
-        );
-    }
-    if class_path_arguments(ty).is_some_and(|arguments| !arguments.is_empty()) {
-        bail_span!(
-            path,
-            "generic_per_mono requires a generic imported class type to be declared in the same `#[wasm_bindgen] extern` block"
-        );
-    }
-    Ok(None)
+    local_name
+        .and_then(|ident| types.get(&ident.unraw().to_string()))
+        .map(|ty| &ty.generics)
 }
 
 fn local_path_ident(path: &syn::Path) -> Option<&Ident> {
@@ -2976,10 +2954,9 @@ impl ast::ImportFunction {
 
         if !hoist && class.is_some() {
             match class_generics {
-                None => bail_span!(
-                    class.as_ref().unwrap(),
-                    "generic_per_mono requires a static method's imported class type to be declared in the same `#[wasm_bindgen] extern` block"
-                ),
+                // Without declaration metadata, let rustc validate whether the
+                // bare class path can use its imported type's defaults.
+                None => {}
                 Some(generics)
                     if generics.params.iter().any(|parameter| {
                         !matches!(parameter, syn::GenericParam::Type(parameter) if parameter.default.is_some())

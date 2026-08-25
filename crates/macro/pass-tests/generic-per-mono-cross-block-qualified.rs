@@ -2,7 +2,7 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
-    type External<T>;
+    type External<T: Clone>;
 }
 
 mod foreign {
@@ -13,7 +13,7 @@ mod foreign {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(method, generic_per_mono)]
-    fn external_method<T>(this: &foreign::External<T>);
+    fn external_method<T: Clone>(this: &foreign::External<T>);
 }
 
 fn main() {}

@@ -1,5 +1,0 @@
-error: generic_per_mono requires a static method's imported class type to be declared in the same `#[wasm_bindgen] extern` block
-  --> ui-tests/generic-per-mono-cross-block-static.rs:12:39
-   |
-12 |     #[wasm_bindgen(static_method_of = External, generic_per_mono)]
-   |                                       ^^^^^^^^
