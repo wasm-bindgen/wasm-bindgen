@@ -187,6 +187,43 @@ extern "C" {
     fn fallible_get<T>(this: &Fallible<T>) -> T;
 }
 
+// Descriptors only exist on wasm targets. Keep this class absent while leaving
+// its method ungated to ensure the generated descriptor follows the class gate.
+#[wasm_bindgen(module = "tests/wasm/generic_import_class_generics.js")]
+extern "C" {
+    #[cfg_attr(all(), cfg(any()))]
+    type Absent<T>;
+
+    #[wasm_bindgen(method)]
+    fn absent<T>(this: &Absent<T>);
+}
+
+// The two method declarations intentionally have identical base shim
+// identities. Their class gates must keep descriptor deduplication from letting
+// the disabled declaration suppress the active one.
+#[wasm_bindgen(module = "tests/wasm/generic_import_class_generics.js")]
+extern "C" {
+    #[cfg(any())]
+    #[wasm_bindgen(js_name = ErasedHolder)]
+    type DescriptorDedup<T>;
+
+    #[wasm_bindgen(method, js_class = ErasedHolder, js_name = get)]
+    fn descriptor_dedup_get<T>(this: &DescriptorDedup<T>) -> T;
+}
+
+#[wasm_bindgen(module = "tests/wasm/generic_import_class_generics.js")]
+extern "C" {
+    #[cfg(not(any()))]
+    #[wasm_bindgen(js_name = ErasedHolder)]
+    type DescriptorDedup<T>;
+
+    #[wasm_bindgen(constructor, js_class = ErasedHolder)]
+    fn new_descriptor_dedup<T>(value: T) -> DescriptorDedup<T>;
+
+    #[wasm_bindgen(method, js_class = ErasedHolder, js_name = get)]
+    fn descriptor_dedup_get<T>(this: &DescriptorDedup<T>) -> T;
+}
+
 #[wasm_bindgen_test]
 fn generic_per_mono_class_generic_constructor_and_get() {
     let holder_u32 = Holder::new(7u32);
@@ -224,6 +261,12 @@ fn generic_erased_class_generic_constructor_and_method() {
 
     let holder_string = ErasedHolder::new_erased_holder(JsValue::from("erased"));
     assert_eq!(holder_string.erased_holder_get(), JsValue::from("erased"));
+}
+
+#[wasm_bindgen_test]
+fn conditional_class_descriptor_dedup() {
+    let holder = DescriptorDedup::new_descriptor_dedup(JsValue::from(12u32));
+    assert_eq!(holder.descriptor_dedup_get(), JsValue::from(12u32));
 }
 
 #[wasm_bindgen_test]

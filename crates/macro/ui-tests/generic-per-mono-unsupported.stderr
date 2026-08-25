@@ -124,21 +124,21 @@ error: defaults for generic parameters are not allowed here
 107 |     fn bounded_type_param_default<T: Into<JsValue> = JsValue>(x: T);
     |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-error: generic_per_mono requires each generic argument of the class type to be either concrete or to determine a generic parameter of the function (e.g. `&Holder<u32>`, `&Holder<T>`, `&Holder<Option<T>>`); an argument like `&Holder<T::Assoc>` mentions `T` without determining it, so the generated `impl` block cannot constrain it — use the type-erasure generic path instead
+error: wasm-bindgen requires each generic argument of an impl class type to be either concrete or to determine a generic parameter of the function (e.g. `&Holder<u32>`, `&Holder<T>`, `&Holder<Option<T>>`); an argument like `&Holder<T::Assoc>` mentions `T` without determining it, so the generated `impl` block cannot constrain it
    --> ui-tests/generic-per-mono-unsupported.rs:141:8
     |
 141 |     fn non_constraining_class_arg<T: IntoIterator>(this: &Holder<T::Item>) -> u32;
     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-error: generic_per_mono does not support a lifetime argument on the class type that the function does not itself declare; name it as a lifetime parameter of the function (e.g. `fn f<'a, T>(this: &'a Holder<'a, T>)`) or use the type-erasure generic path instead
+error: wasm-bindgen does not support a lifetime argument on the class type that the function does not itself declare; name it as a lifetime parameter of the function (e.g. `fn f<'a, T>(this: &'a Holder<'a, T>)`)
    --> ui-tests/generic-per-mono-unsupported.rs:145:49
     |
 145 |     fn elided_class_lifetime<T>(this: &LtHolder<'_, T>, v: T);
     |                                                 ^^
 
-error: generic_per_mono requires static methods on imported classes with required generic parameters to write those arguments in `static_method_of = ...`
+error: imported classes with lifetime parameters require explicit lifetime arguments on generated impls; name the lifetime as a function parameter (e.g. `fn get<'a, T, U>(this: &'a Holder<'a, T>) -> U`)
    --> ui-tests/generic-per-mono-unsupported.rs:149:39
-   |
+    |
 149 |     #[wasm_bindgen(static_method_of = StaticLifetimeHolder, generic_per_mono)]
     |                                       ^^^^^^^^^^^^^^^^^^^^
 

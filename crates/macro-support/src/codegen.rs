@@ -43,16 +43,24 @@ impl TryToTokens for ast::Program {
         for s in self.structs.iter() {
             s.to_tokens(tokens);
         }
-        let mut types = HashMap::new();
+        let mut types: HashMap<String, Vec<&ast::ImportType>> = HashMap::new();
         for i in self.imports.iter() {
             if let ast::ImportKind::Type(t) = &i.kind {
-                types.insert(t.rust_name.unraw().to_string(), t);
+                types
+                    .entry(t.rust_name.unraw().to_string())
+                    .or_default()
+                    .push(t);
             }
         }
         for i in self.imports.iter() {
+            let class_contexts = match &i.kind {
+                ast::ImportKind::Function(function) => imported_class_generics(function, &types),
+                _ => Vec::new(),
+            };
             DescribeImport {
                 kind: &i.kind,
                 wasm_bindgen: &self.wasm_bindgen,
+                class_cfg_attrs: cfg_union_attrs(&class_contexts),
             }
             .try_to_tokens(tokens)?;
 
@@ -69,21 +77,52 @@ impl TryToTokens for ast::Program {
                                 continue;
                             }
                         };
-                        let rust_name = &ns.rust_name;
-                        (quote! {
-                            #[automatically_derived]
-                            impl #rust_name { #kind }
-                        })
-                        .to_tokens(tokens);
+                        let function_cfg_attrs = match &i.kind {
+                            ast::ImportKind::Function(function) => {
+                                crate::cfg_gate_attrs(&function.function.rust_attrs)
+                            }
+                            _ => Vec::new(),
+                        };
+                        for candidate in ns {
+                            let candidate_cfg_attrs = crate::cfg_gate_attrs(&candidate.attrs);
+                            let rust_name = &candidate.rust_name;
+                            (quote! {
+                                #(#function_cfg_attrs)*
+                                #(#candidate_cfg_attrs)*
+                                #[automatically_derived]
+                                impl #rust_name { #kind }
+                            })
+                            .to_tokens(tokens);
+                        }
                         continue;
                     }
                 }
             }
 
             let result = match &i.kind {
-                ast::ImportKind::Function(function) if function.generic_per_mono => {
-                    let class_generics = imported_class_generics(function, &types);
-                    function.try_to_tokens_with_class_generics(tokens, class_generics)
+                ast::ImportKind::Function(function) => {
+                    let mut result = Ok(());
+                    for (class_generics, class_cfg_attrs) in class_contexts {
+                        if let Err(error) = function.try_to_tokens_with_class_generics(
+                            tokens,
+                            class_generics,
+                            &class_cfg_attrs,
+                        ) {
+                            let function_cfg_attrs =
+                                crate::cfg_gate_attrs(&function.function.rust_attrs);
+                            if class_cfg_attrs.is_empty() && function_cfg_attrs.is_empty() {
+                                result = Err(error);
+                                break;
+                            }
+                            quote! {
+                                #(#function_cfg_attrs)*
+                                #(#class_cfg_attrs)*
+                                #error
+                            }
+                            .to_tokens(tokens);
+                        }
+                    }
+                    result
                 }
                 _ => i.kind.try_to_tokens(tokens),
             };
@@ -201,35 +240,103 @@ impl TryToTokens for ast::Program {
 
 fn imported_class_generics<'a>(
     function: &ast::ImportFunction,
-    types: &HashMap<String, &'a ast::ImportType>,
-) -> Option<&'a syn::Generics> {
-    let ast::ImportFunctionKind::Method { ty: class_ty, .. } = &function.kind else {
-        return None;
+    types: &HashMap<String, Vec<&'a ast::ImportType>>,
+) -> Vec<(Option<&'a syn::Generics>, Vec<syn::Attribute>)> {
+    let ast::ImportFunctionKind::Method {
+        ty: class_ty, kind, ..
+    } = &function.kind
+    else {
+        return vec![(None, Vec::new())];
     };
-    let ty = function
-        .class_return_path()
-        .and_then(|_| function.js_ret.as_ref().map(get_ty))
-        .unwrap_or_else(|| get_ty(class_ty));
-    let syn::Type::Path(syn::TypePath { qself: None, path }) = ty else {
-        return None;
+    let syn::Type::Path(syn::TypePath { qself: None, path }) = get_ty(class_ty) else {
+        return vec![(None, Vec::new())];
     };
-    let local_name = local_path_ident(path);
-    local_name
-        .and_then(|ident| types.get(&ident.unraw().to_string()))
-        .map(|ty| &ty.generics)
+    let is_constructor = matches!(kind, ast::MethodKind::Constructor);
+    let is_local_path = path.leading_colon.is_none()
+        && (path.segments.len() == 1
+            || path
+                .segments
+                .first()
+                .is_some_and(|segment| segment.ident == "self" || segment.ident == "crate"));
+    if !is_constructor && !is_local_path {
+        return vec![(None, Vec::new())];
+    }
+    let Some(local_name) = path.segments.last().map(|segment| &segment.ident) else {
+        return vec![(None, Vec::new())];
+    };
+    let Some(candidates) = types.get(&local_name.unraw().to_string()) else {
+        return vec![(None, Vec::new())];
+    };
+    candidates
+        .iter()
+        .map(|candidate| {
+            (
+                Some(&candidate.generics),
+                crate::cfg_gate_attrs(&candidate.attrs),
+            )
+        })
+        .collect()
 }
 
-fn local_path_ident(path: &syn::Path) -> Option<&Ident> {
-    if path.leading_colon.is_some() {
-        return None;
-    }
-    match path.segments.len() {
-        1 => path.segments.last().map(|segment| &segment.ident),
-        2 if path.segments.first()?.ident == "self" => {
-            path.segments.last().map(|segment| &segment.ident)
+fn cfg_union_attrs(
+    contexts: &[(Option<&syn::Generics>, Vec<syn::Attribute>)],
+) -> Vec<syn::Attribute> {
+    let mut alternatives = Vec::new();
+    for (_, attrs) in contexts {
+        if attrs.is_empty() {
+            return Vec::new();
         }
-        _ => None,
+        let conditions = attrs.iter().filter_map(|attr| match &attr.meta {
+            syn::Meta::List(list) if list.path.is_ident("cfg") => Some(&list.tokens),
+            _ => None,
+        });
+        alternatives.push(quote! { all(#(#conditions),*) });
     }
+    if alternatives.is_empty() {
+        Vec::new()
+    } else {
+        vec![syn::parse_quote! { #[cfg(any(#(#alternatives),*))] }]
+    }
+}
+
+fn same_class_path(left: &syn::Path, right: &syn::Path) -> bool {
+    if left.leading_colon.is_some() != right.leading_colon.is_some() {
+        return false;
+    }
+    let left = left
+        .segments
+        .iter()
+        .skip(usize::from(
+            left.leading_colon.is_none()
+                && left.segments.len() > 1
+                && left
+                    .segments
+                    .first()
+                    .is_some_and(|segment| segment.ident == "self"),
+        ))
+        .collect::<Vec<_>>();
+    let right = right
+        .segments
+        .iter()
+        .skip(usize::from(
+            right.leading_colon.is_none()
+                && right.segments.len() > 1
+                && right
+                    .segments
+                    .first()
+                    .is_some_and(|segment| segment.ident == "self"),
+        ))
+        .collect::<Vec<_>>();
+    left.len() == right.len()
+        && left
+            .iter()
+            .zip(&right)
+            .enumerate()
+            .all(|(index, (left_segment, right_segment))| {
+                left_segment.ident == right_segment.ident
+                    && (index + 1 == left.len()
+                        || left_segment.arguments == right_segment.arguments)
+            })
 }
 
 impl TryToTokens for ast::LinkToModule {
@@ -1161,6 +1268,7 @@ impl TryToTokens for ast::ImportType {
         let vis = &self.vis;
         let rust_name = &self.rust_name;
         let attrs = &self.attrs;
+        let cfg_attrs = crate::cfg_gate_attrs(attrs);
         let doc_comment = match &self.doc_comment {
             None => "",
             Some(comment) => comment,
@@ -1349,6 +1457,7 @@ impl TryToTokens for ast::ImportType {
                 #phantom
             }
 
+            #(#cfg_attrs)*
             #[automatically_derived]
             const _: () = {
                 use #wasm_bindgen::convert::TryFromJsValue;
@@ -1532,6 +1641,7 @@ impl TryToTokens for ast::ImportType {
 
         if !no_promising {
             (quote! {
+                #(#cfg_attrs)*
                 #[automatically_derived]
                 impl #impl_generics #wasm_bindgen::sys::Promising for #rust_name #ty_generics #where_clause {
                     type Resolution = #rust_name #ty_generics;
@@ -1542,6 +1652,7 @@ impl TryToTokens for ast::ImportType {
 
         if !no_deref {
             (quote! {
+                #(#cfg_attrs)*
                 #[automatically_derived]
                 impl #impl_generics #wasm_bindgen::__rt::core::ops::Deref for #rust_name #ty_generics #where_clause {
                     type Target = #internal_obj;
@@ -1557,6 +1668,7 @@ impl TryToTokens for ast::ImportType {
 
         for superclass in self.extends.iter() {
             (quote! {
+                #(#cfg_attrs)*
                 #[automatically_derived]
                 impl #impl_generics From<#rust_name #ty_generics> for #superclass #where_clause {
                     #[inline]
@@ -1566,6 +1678,7 @@ impl TryToTokens for ast::ImportType {
                     }
                 }
 
+                #(#cfg_attrs)*
                 #[automatically_derived]
                 impl #impl_generics AsRef<#superclass> for #rust_name #ty_generics #where_clause {
                     #[inline]
@@ -1583,18 +1696,21 @@ impl TryToTokens for ast::ImportType {
             // 1. Always generate UpcastFrom<Self> for JsValue, including its
             // JsOption/JsNullable wrappers (like superclass targets below)
             (quote! {
+                #(#cfg_attrs)*
                 #[automatically_derived]
                 impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
                     for #wasm_bindgen::JsValue
                 #where_clause
                 {
                 }
+                #(#cfg_attrs)*
                 #[automatically_derived]
                 impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
                     for #wasm_bindgen::sys::JsOption<#wasm_bindgen::JsValue>
                 #where_clause
                 {
                 }
+                #(#cfg_attrs)*
                 #[automatically_derived]
                 impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
                     for #wasm_bindgen::sys::JsNullable<#wasm_bindgen::JsValue>
@@ -1611,18 +1727,21 @@ impl TryToTokens for ast::ImportType {
                 // Identity impls for non-generic (or lifetime-only) types.
                 // Always use #ty_generics so that lifetime params are included.
                 (quote! {
+                    #(#cfg_attrs)*
                     #[automatically_derived]
                     impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
                         for #rust_name #ty_generics
                     #where_clause
                     {
                     }
+                    #(#cfg_attrs)*
                     #[automatically_derived]
                     impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
                         for #wasm_bindgen::sys::JsOption<#rust_name #ty_generics>
                     #where_clause
                     {
                     }
+                    #(#cfg_attrs)*
                     #[automatically_derived]
                     impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
                         for #wasm_bindgen::sys::JsNullable<#rust_name #ty_generics>
@@ -1681,18 +1800,21 @@ impl TryToTokens for ast::ImportType {
 
                 // Structural covariance - Type<Target0, Target1, ...> can be upcast from Type<T1, T2, ...>
                 (quote! {
+                    #(#cfg_attrs)*
                     #[automatically_derived]
                     impl #impl_generics_split #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
                         for #rust_name #target_ty_generics
                     #where_clause_extended
                     {
                     }
+                    #(#cfg_attrs)*
                     #[automatically_derived]
                     impl #impl_generics_split #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
                         for #wasm_bindgen::sys::JsOption<#rust_name #target_ty_generics>
                     #where_clause_extended
                     {
                     }
+                    #(#cfg_attrs)*
                     #[automatically_derived]
                     impl #impl_generics_split #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
                         for #wasm_bindgen::sys::JsNullable<#rust_name #target_ty_generics>
@@ -1706,18 +1828,21 @@ impl TryToTokens for ast::ImportType {
             // 4. For each superclass in extends, generate UpcastFrom<Self> for superclass
             for superclass in self.extends.iter() {
                 (quote! {
+                    #(#cfg_attrs)*
                     #[automatically_derived]
                     impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
                         for #superclass
                     #where_clause
                     {
                     }
+                    #(#cfg_attrs)*
                     #[automatically_derived]
                     impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
                         for #wasm_bindgen::sys::JsOption<#superclass>
                     #where_clause
                     {
                     }
+                    #(#cfg_attrs)*
                     #[automatically_derived]
                     impl #impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
                         for #wasm_bindgen::sys::JsNullable<#superclass>
@@ -2169,7 +2294,7 @@ impl ToTokens for ast::DynamicUnion {
 
 impl TryToTokens for ast::ImportFunction {
     fn try_to_tokens(&self, tokens: &mut TokenStream) -> Result<(), Diagnostic> {
-        self.try_to_tokens_with_class_generics(tokens, None)
+        self.try_to_tokens_with_class_generics(tokens, None, &[])
     }
 }
 
@@ -2178,6 +2303,7 @@ impl ast::ImportFunction {
         &self,
         tokens: &mut TokenStream,
         class_generics: Option<&syn::Generics>,
+        class_cfg_attrs: &[syn::Attribute],
     ) -> Result<(), Diagnostic> {
         if self.suspending {
             (quote_spanned! {
@@ -2194,12 +2320,13 @@ impl ast::ImportFunction {
         }
 
         if self.generic_per_mono {
-            return self.try_to_tokens_generic(tokens, class_generics);
+            return self.try_to_tokens_generic(tokens, class_generics, class_cfg_attrs);
         }
         let mut class = None;
         let mut is_constructor = false;
         let mut is_method = false;
         let mut is_self_returning_static = false;
+        let mut explicit_static_class_generics = false;
         if let ast::ImportFunctionKind::Method {
             class: class_name,
             ty,
@@ -2215,10 +2342,15 @@ impl ast::ImportFunction {
                 }) => is_method = true,
                 _ => {}
             };
+            explicit_static_class_generics = !is_method
+                && !is_constructor
+                && class_path_arguments(get_ty(ty)).is_some_and(|arguments| !arguments.is_empty());
             // For constructors and static methods whose return type matches the
             // class (e.g. `Array::of<T>() -> Array<T>`), override the class type
             // to use the return type so class-level generics get hoisted.
-            if self.class_return_path().is_some() {
+            if self.class_return_path().is_some()
+                && (is_constructor || !explicit_static_class_generics)
+            {
                 class = Some((class_name, get_ty(self.js_ret.as_ref().unwrap())));
                 if !is_constructor {
                     is_self_returning_static = true;
@@ -2238,6 +2370,18 @@ impl ast::ImportFunction {
         let mut arguments = Vec::new();
 
         let mut fn_class_generics = self.get_fn_generics()?;
+        let hoist = is_method
+            || is_constructor
+            || is_self_returning_static
+            || explicit_static_class_generics;
+        if hoist {
+            if let Some((_, class)) = class {
+                self.validate_class_shape(class, is_method || explicit_static_class_generics)?;
+            }
+        }
+        if let (Some((_, class)), Some(class_generics)) = (class, class_generics) {
+            fn_class_generics.add_class_bounds(class_generics, class, &[])?;
+        }
         let (fn_lifetime_param_names, fn_generic_param_names) =
             generics::all_param_names(&self.generics);
 
@@ -2613,10 +2757,6 @@ impl ast::ImportFunction {
 
         let mut class_impl_def = None;
         if let Some((_, class)) = class {
-            let explicit_static_class_generics = !is_method
-                && !is_constructor
-                && !is_self_returning_static
-                && class_path_arguments(class).is_some_and(|arguments| !arguments.is_empty());
             let mut class = class.clone();
             if let syn::Type::Path(syn::TypePath {
                 qself: None,
@@ -2630,10 +2770,6 @@ impl ast::ImportFunction {
             // Explicit `static_method_of = Class<T>` arguments select the impl
             // just as a receiver or self-returning static does. Only a bare
             // static class path binds the imported type's own defaults.
-            let hoist = is_method
-                || is_constructor
-                || is_self_returning_static
-                || explicit_static_class_generics;
             class_impl_def = Some(fn_class_generics.class_impl_def(&class, hoist));
         };
 
@@ -2686,7 +2822,10 @@ impl ast::ImportFunction {
         };
 
         if let Some(class_impl_def) = class_impl_def {
+            let function_cfg_attrs = crate::cfg_gate_attrs(attrs);
             quote! {
+                #(#function_cfg_attrs)*
+                #(#class_cfg_attrs)*
                 #[automatically_derived]
                 #class_impl_def {
                     #invocation
@@ -2814,6 +2953,7 @@ impl ast::ImportFunction {
         &self,
         tokens: &mut TokenStream,
         class_generics: Option<&syn::Generics>,
+        class_cfg_attrs: &[syn::Attribute],
     ) -> Result<(), Diagnostic> {
         let wasm_bindgen = &self.wasm_bindgen;
         let wasm_bindgen_futures = &self.wasm_bindgen_futures;
@@ -2883,6 +3023,7 @@ impl ast::ImportFunction {
         let mut is_method = false;
         let mut is_constructor = false;
         let mut is_self_returning_static = false;
+        let mut explicit_static_class_generics = false;
         let class_return_path = self.class_return_path();
         if let ast::ImportFunctionKind::Method { ty, kind, .. } = &self.kind {
             class = Some(get_ty(ty).clone());
@@ -2893,9 +3034,12 @@ impl ast::ImportFunction {
                 }) => is_method = true,
                 _ => {}
             }
+            explicit_static_class_generics = !is_method
+                && !is_constructor
+                && class_path_arguments(get_ty(ty)).is_some_and(|arguments| !arguments.is_empty());
             // Constructors and self-returning static methods impl on the return
             // type's class so the manufactured JS binding attaches correctly.
-            if class_return_path.is_some() {
+            if class_return_path.is_some() && (is_constructor || !explicit_static_class_generics) {
                 class = Some(get_ty(self.js_ret.as_ref().unwrap()).clone());
                 if !is_constructor {
                     is_self_returning_static = true;
@@ -2932,7 +3076,12 @@ impl ast::ImportFunction {
                     }
                 }
             }
-            fn_class_generics.add_class_bounds(class_generics, &class_with_defaults)?;
+            let shim_lifetimes = generics::lifetime_args(&self.generics);
+            fn_class_generics.add_class_bounds(
+                class_generics,
+                &class_with_defaults,
+                &shim_lifetimes,
+            )?;
         }
 
         // Whether the wrapper's enclosing `impl` block can carry class-level
@@ -2940,13 +3089,6 @@ impl ast::ImportFunction {
         // self-returning impls on the class's own parameter defaults instead,
         // so there is nothing to hoist and nothing to validate. Spelled once
         // here and reused when the `impl` is assembled at the bottom.
-        let explicit_static_class_generics = !is_method
-            && !is_constructor
-            && !is_self_returning_static
-            && class
-                .as_ref()
-                .and_then(class_path_arguments)
-                .is_some_and(|arguments| !arguments.is_empty());
         let hoist = is_method
             || is_constructor
             || is_self_returning_static
@@ -2977,7 +3119,7 @@ impl ast::ImportFunction {
         // See `validate_class_shape`.
         if hoist {
             if let Some(class_ty) = &class {
-                self.validate_class_shape(class_ty, is_method)?;
+                self.validate_class_shape(class_ty, is_method || explicit_static_class_generics)?;
             }
         }
 
@@ -3486,7 +3628,10 @@ impl ast::ImportFunction {
             // `hoist` is the same gate the type-erasure path applies, computed
             // once above where the class shape is determined and validated.
             let class_impl_def = fn_class_generics.class_impl_def(&class, hoist);
+            let function_cfg_attrs = crate::cfg_gate_attrs(attrs);
             quote! {
+                #(#function_cfg_attrs)*
+                #(#class_cfg_attrs)*
                 #[automatically_derived]
                 #class_impl_def {
                     #invocation
@@ -3504,6 +3649,7 @@ impl ast::ImportFunction {
 struct DescribeImport<'a> {
     kind: &'a ast::ImportKind,
     wasm_bindgen: &'a syn::Path,
+    class_cfg_attrs: Vec<syn::Attribute>,
 }
 
 // Extracted impl block info given class generics and function-level method generics
@@ -3692,20 +3838,55 @@ fn class_argument_has_inferred_type(ty: &syn::Type) -> bool {
     visitor.found
 }
 
-fn predicate_has_bound_lifetimes(predicate: &syn::WherePredicate) -> bool {
-    struct Visitor {
-        found: bool,
+fn predicate_binds_replacement_lifetime(
+    predicate: &syn::WherePredicate,
+    type_replacements: &BTreeMap<Ident, syn::Type>,
+    lifetime_replacements: &BTreeMap<Ident, syn::Lifetime>,
+    additional_replacements: &[&syn::Lifetime],
+) -> bool {
+    struct Visitor<'a> {
+        replacements: &'a BTreeSet<Ident>,
+        conflict: bool,
     }
 
-    impl<'ast> syn::visit::Visit<'ast> for Visitor {
-        fn visit_bound_lifetimes(&mut self, _: &'ast syn::BoundLifetimes) {
-            self.found = true;
+    impl<'ast> syn::visit::Visit<'ast> for Visitor<'_> {
+        fn visit_bound_lifetimes(&mut self, lifetimes: &'ast syn::BoundLifetimes) {
+            self.conflict |= lifetimes.lifetimes.iter().any(|parameter| {
+                matches!(
+                    parameter,
+                    syn::GenericParam::Lifetime(parameter)
+                        if self.replacements.contains(&parameter.lifetime.ident)
+                )
+            });
+            syn::visit::visit_bound_lifetimes(self, lifetimes);
         }
     }
 
-    let mut visitor = Visitor { found: false };
+    let mut replacements = lifetime_replacements
+        .values()
+        .chain(additional_replacements.iter().copied())
+        .map(|lifetime| lifetime.ident.clone())
+        .collect::<BTreeSet<_>>();
+    struct ReplacementVisitor<'a>(&'a mut BTreeSet<Ident>);
+
+    impl<'ast> syn::visit::Visit<'ast> for ReplacementVisitor<'_> {
+        fn visit_lifetime(&mut self, lifetime: &'ast syn::Lifetime) {
+            if lifetime.ident != "static" && lifetime.ident != "_" {
+                self.0.insert(lifetime.ident.clone());
+            }
+        }
+    }
+
+    let mut replacement_visitor = ReplacementVisitor(&mut replacements);
+    for replacement in type_replacements.values() {
+        syn::visit::Visit::visit_type(&mut replacement_visitor, replacement);
+    }
+    let mut visitor = Visitor {
+        replacements: &replacements,
+        conflict: false,
+    };
     syn::visit::Visit::visit_where_predicate(&mut visitor, predicate);
-    visitor.found
+    visitor.conflict
 }
 
 impl<'a> FnClassGenerics<'a> {
@@ -3720,6 +3901,7 @@ impl<'a> FnClassGenerics<'a> {
         &mut self,
         class_generics: &syn::Generics,
         class: &syn::Type,
+        additional_conflicting_lifetimes: &[&syn::Lifetime],
     ) -> Result<(), Diagnostic> {
         let Some(arguments) = class_path_arguments(class) else {
             return Ok(());
@@ -3747,7 +3929,7 @@ impl<'a> FnClassGenerics<'a> {
                     let segment = path.segments.last().unwrap();
                     bail_span!(
                         segment,
-                        "generic_per_mono does not support an omitted lifetime argument on the class type; name it as a lifetime parameter of the function (e.g. `fn get<'a, T, U>(this: &'a Holder<'a, T>) -> U`) or use the type-erasure generic path instead"
+                        "imported classes with lifetime parameters require explicit lifetime arguments on generated impls; name the lifetime as a function parameter (e.g. `fn get<'a, T, U>(this: &'a Holder<'a, T>) -> U`)"
                     );
                 }
                 // Omitted type arguments use the default added by the parser.
@@ -3760,7 +3942,7 @@ impl<'a> FnClassGenerics<'a> {
                     ) {
                         bail_span!(
                             class,
-                            "generic_per_mono cannot substitute a projected imported-type default for a non-path class argument"
+                            "wasm-bindgen cannot substitute a projected imported-type default for a non-path class argument"
                         );
                     }
                     type_replacements.insert(parameter.ident.clone(), default);
@@ -3774,16 +3956,21 @@ impl<'a> FnClassGenerics<'a> {
             .map(Cow::into_owned)
             .collect::<Vec<_>>();
         for mut bound in bounds {
-            if !lifetime_replacements.is_empty() && predicate_has_bound_lifetimes(&bound) {
+            if predicate_binds_replacement_lifetime(
+                &bound,
+                &type_replacements,
+                &lifetime_replacements,
+                additional_conflicting_lifetimes,
+            ) {
                 bail_span!(
                     class,
-                    "generic_per_mono does not support lifetime substitution in imported-type bounds with higher-ranked lifetimes"
+                    "an imported-class bound conflicts with a function lifetime of the same name"
                 );
             }
             if !substitute_class_predicate(&mut bound, &type_replacements, &lifetime_replacements) {
                 bail_span!(
                     class,
-                    "generic_per_mono cannot substitute an imported-type bound that projects a non-path class argument"
+                    "wasm-bindgen cannot substitute an imported-type bound that projects a non-path class argument"
                 );
             }
             if !self.class_bounds.contains(&bound) {
@@ -4201,11 +4388,14 @@ impl ast::ImportFunction {
     ///
     /// `class` is the type the wrapper will be emitted into an `impl` block
     /// for: the receiver's type for a method, or the return type for a
-    /// constructor or self-returning static method. `is_method` distinguishes
-    /// the two, because the last check applies only to the receiver form — see
-    /// the comment on it.
-    fn validate_class_shape(&self, class: &syn::Type, is_method: bool) -> Result<(), Diagnostic> {
-        let syn::Type::Path(syn::TypePath { path, .. }) = class else {
+    /// constructor or self-returning static method. The final check applies
+    /// whenever the class arguments are emitted directly on the impl header.
+    fn validate_class_shape(
+        &self,
+        class: &syn::Type,
+        require_constraining_arguments: bool,
+    ) -> Result<(), Diagnostic> {
+        let syn::Type::Path(syn::TypePath { qself: None, path }) = class else {
             return Ok(());
         };
         let Some(syn::PathSegment {
@@ -4231,10 +4421,9 @@ impl ast::ImportFunction {
                 if lt.ident != "static" && !fn_lifetimes.contains(&lt) {
                     bail_span!(
                         lt,
-                        "generic_per_mono does not support a lifetime argument on the class type \
+                        "wasm-bindgen does not support a lifetime argument on the class type \
                          that the function does not itself declare; name it as a lifetime \
-                         parameter of the function (e.g. `fn f<'a, T>(this: &'a Holder<'a, T>)`) \
-                         or use the type-erasure generic path instead"
+                         parameter of the function (e.g. `fn f<'a, T>(this: &'a Holder<'a, T>)`)"
                     );
                 }
             }
@@ -4242,13 +4431,13 @@ impl ast::ImportFunction {
                 if class_argument_has_elided_lifetime(ty) {
                     bail_span!(
                         ty,
-                        "generic_per_mono does not support elided lifetimes in class type arguments; name the lifetime as a function parameter"
+                        "wasm-bindgen does not support elided lifetimes in class type arguments; name the lifetime as a function parameter"
                     );
                 }
                 if class_argument_has_inferred_type(ty) {
                     bail_span!(
                         ty,
-                        "generic_per_mono does not support inferred (`_`) class type arguments; use a concrete type or named function type parameter"
+                        "wasm-bindgen does not support inferred (`_`) class type arguments; use a concrete type or named function type parameter"
                     );
                 }
             }
@@ -4267,8 +4456,9 @@ impl ast::ImportFunction {
         // `class_impl_def`, so the wrapper still lands on `impl Holder<u32>`
         // rather than on the class's own parameter defaults.
 
-        // The remaining check is receiver-only. For a constructor or static
-        // method the class comes from the return type, where stripping the
+        // A constructor or inferred self-returning static method can decline
+        // to hoist a non-constraining return and bind the class defaults instead.
+        // In those cases the class comes from the return type, where stripping the
         // arguments and binding the class's own defaults (`impl Promise` for a
         // `-> Promise<T::Resolution>`) is the established, working behaviour
         // shared with the type-erasure path: `class_return_path` already
@@ -4278,7 +4468,7 @@ impl ast::ImportFunction {
         // Rejecting it here would break real imports, e.g.
         // `js_sys::Promise::new_typed<T: Promising>(..) -> Promise<<T as
         // Promising>::Resolution>`.
-        if !is_method {
+        if !require_constraining_arguments {
             return Ok(());
         }
 
@@ -4295,11 +4485,11 @@ impl ast::ImportFunction {
         if !generics::args_are_constraining_for(&gen_args.args, &fn_params) {
             bail_span!(
                 self.rust_name,
-                "generic_per_mono requires each generic argument of the class type to be either \
+                "wasm-bindgen requires each generic argument of an impl class type to be either \
                  concrete or to determine a generic parameter of the function (e.g. \
                  `&Holder<u32>`, `&Holder<T>`, `&Holder<Option<T>>`); an argument like \
                  `&Holder<T::Assoc>` mentions `T` without determining it, so the generated `impl` \
-                 block cannot constrain it — use the type-erasure generic path instead"
+                 block cannot constrain it"
             );
         }
 
@@ -4351,20 +4541,17 @@ impl ast::ImportFunction {
         };
 
         let seg = path.segments.last()?;
-        let return_class = local_path_ident(path)?;
-        let class_ty = get_ty(class_ty);
-        let syn::Type::Path(syn::TypePath {
-            qself: None,
-            path: class_path,
-        }) = class_ty
-        else {
-            return None;
-        };
-        let declared_class = local_path_ident(class_path)?;
-        // A `self::Foo` return is the same local imported class as `Foo`, while
-        // an absolute or module-qualified path cannot be proven equivalent.
-        if !is_constructor && return_class != declared_class {
-            return None;
+        if !is_constructor {
+            let syn::Type::Path(syn::TypePath {
+                qself: None,
+                path: class_path,
+            }) = get_ty(class_ty)
+            else {
+                return None;
+            };
+            if !same_class_path(path, class_path) {
+                return None;
+            }
         }
 
         // Only hoist fn generics onto the class impl header when every fn
@@ -4396,7 +4583,10 @@ impl ast::ImportFunction {
     }
 
     fn validate_unhoisted_class_return_lifetimes(&self) -> Result<(), Diagnostic> {
-        let ast::ImportFunctionKind::Method { ty: class_ty, .. } = &self.kind else {
+        let ast::ImportFunctionKind::Method {
+            ty: class_ty, kind, ..
+        } = &self.kind
+        else {
             return Ok(());
         };
         let Some(ret_ty) = &self.js_ret else {
@@ -4415,13 +4605,7 @@ impl ast::ImportFunction {
         else {
             return Ok(());
         };
-        let Some(return_class) = local_path_ident(path) else {
-            return Ok(());
-        };
-        let Some(declared_class) = local_path_ident(class_path) else {
-            return Ok(());
-        };
-        if return_class != declared_class {
+        if !matches!(kind, ast::MethodKind::Constructor) && !same_class_path(path, class_path) {
             return Ok(());
         }
         let syn::PathArguments::AngleBracketed(arguments) = &segment.arguments else {
@@ -4483,6 +4667,8 @@ impl TryToTokens for DescribeImport<'_> {
         // us the `#[no_mangle]` naming, the wasm-only `#[cfg]` gate, and the
         // `DESCRIPTORS_EMITTED` dedup for free.
         if f.generic_per_mono {
+            let mut attrs = f.function.rust_attrs.clone();
+            attrs.extend(self.class_cfg_attrs.iter().cloned());
             Descriptor {
                 ident: &f.shim,
                 inner: quote! {
@@ -4492,7 +4678,7 @@ impl TryToTokens for DescribeImport<'_> {
                     <() as WasmDescribe>::describe();
                     <() as WasmDescribe>::describe();
                 },
-                attrs: f.function.rust_attrs.clone(),
+                attrs,
                 wasm_bindgen: self.wasm_bindgen,
             }
             .to_tokens(tokens);
@@ -4544,6 +4730,8 @@ impl TryToTokens for DescribeImport<'_> {
         let inform_ret =
             import_describe_ret(self.wasm_bindgen, concrete_ret.as_ref(), ret_is_externref);
 
+        let mut attrs = f.function.rust_attrs.clone();
+        attrs.extend(self.class_cfg_attrs.iter().cloned());
         Descriptor {
             ident: &f.shim,
             inner: quote! {
@@ -4554,7 +4742,7 @@ impl TryToTokens for DescribeImport<'_> {
                 #inform_ret
                 #inform_ret
             },
-            attrs: f.function.rust_attrs.clone(),
+            attrs,
             wasm_bindgen: self.wasm_bindgen,
         }
         .to_tokens(tokens);

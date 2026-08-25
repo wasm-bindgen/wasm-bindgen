@@ -213,13 +213,18 @@ These mix freely within one argument list: `&Pair<u32, T>` gives
 The following are rejected up front, rather than left to fail as a confusing
 rustc error against generated code:
 
-* **An argument that mentions a parameter without determining it**
-  (`&Holder<T::Assoc>`, or a constructor returning `Holder<T::Assoc>`). Hoisting
-  `T` would leave it unconstrained by the self type.
+* **An impl class argument that mentions a parameter without determining it**
+  (`&Holder<T::Assoc>`, or `static_method_of = Holder<T::Assoc>`). Hoisting `T`
+  would leave it unconstrained by the self type.
 * **An elided lifetime argument** (`&Holder<'_, T>`), which cannot be declared
   on the generated `impl` header. A concrete `'static` lifetime is supported;
   name any other lifetime as a parameter of the function instead
   (`fn f<'a, T>(this: &'a Holder<'a, T>)`).
+
+A constructor or inferred self-returning static method whose return is
+`Holder<T::Assoc>` is not rejected. Its return arguments cannot determine `T`,
+so the method remains on the imported class's default specialization instead
+of being hoisted.
 
 ## Other attributes
 
