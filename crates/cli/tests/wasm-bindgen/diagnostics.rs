@@ -351,6 +351,87 @@ fn duplicate_public_class_across_crates_errors() {
     assert_contains!(&err, "#[wasm_bindgen(private)]");
 }
 
+#[test]
+fn external_private_type_ref_binds_to_public_collision() {
+    let out_dir = Project::new("external_private_type_ref_binds_to_public_collision")
+        .file("public-widget/Cargo.toml", &dep_crate_toml("public-widget"))
+        .file(
+            "public-widget/src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                pub struct Widget { pub public_value: u32 }
+
+                #[wasm_bindgen]
+                pub enum Mode { Public = 1 }
+
+                pub fn make() -> Widget { Widget { public_value: 1 } }
+                pub fn mode() -> Mode { Mode::Public }
+            "#,
+        )
+        .file(
+            "private-widget/Cargo.toml",
+            &dep_crate_toml("private-widget"),
+        )
+        .file(
+            "private-widget/src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen(private)]
+                pub struct Widget { pub private_value: u32 }
+
+                #[wasm_bindgen(private)]
+                pub enum Mode { Private = 2 }
+
+                pub fn make() -> Widget { Widget { private_value: 2 } }
+                pub fn mode() -> Mode { Mode::Private }
+            "#,
+        )
+        .dep("public-widget = { path = 'public-widget' }")
+        .dep("private-widget = { path = 'private-widget' }")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                pub fn make_public_widget() -> public_widget::Widget {
+                    public_widget::make()
+                }
+
+                #[wasm_bindgen]
+                pub fn make_private_widget() -> private_widget::Widget {
+                    private_widget::make()
+                }
+
+                #[wasm_bindgen]
+                pub fn public_mode() -> public_widget::Mode {
+                    public_widget::mode()
+                }
+
+                #[wasm_bindgen]
+                pub fn private_mode() -> private_widget::Mode {
+                    private_widget::mode()
+                }
+            "#,
+        )
+        .wasm_bindgen("--target web")
+        .unwrap();
+    let js =
+        fs::read_to_string(out_dir.join("external_private_type_ref_binds_to_public_collision.js"))
+            .unwrap();
+    let dts = fs::read_to_string(
+        out_dir.join("external_private_type_ref_binds_to_public_collision.d.ts"),
+    )
+    .unwrap();
+
+    assert_contains!(&js, "return Widget2.__wrap(ret);");
+    assert_contains!(&dts, "export function make_private_widget(): Widget2;");
+    assert_contains!(&dts, "export function private_mode(): Mode2;");
+}
+
 /// Functions have no `private` form, so the collision is caught when the
 /// second export's canonical name is restored.
 #[test]

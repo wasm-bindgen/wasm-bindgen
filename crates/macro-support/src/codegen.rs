@@ -222,6 +222,9 @@ impl ToTokens for ast::Struct {
         let name_str = self.qualified_name.to_string();
         let name_len = name_str.chars().count() as u32;
         let name_chars: Vec<u32> = name_str.chars().map(|c| c as u32).collect();
+        let unique_crate_identifier = crate::hash::unique_crate_identifier();
+        let unique_crate_identifier_len = unique_crate_identifier.chars().count() as u32;
+        let unique_crate_identifier_chars = unique_crate_identifier.chars().map(|c| c as u32);
         // The Rust idents stay canonical so rustc diagnostics read cleanly;
         // only the wasm symbols carry the per-crate hash.
         let new_fn = Ident::new(&shared::new_function(&name_str), Span::call_site());
@@ -250,6 +253,8 @@ impl ToTokens for ast::Struct {
                     inform(RUST_STRUCT);
                     inform(#name_len);
                     #(inform(#name_chars);)*
+                    inform(#unique_crate_identifier_len);
+                    #(inform(#unique_crate_identifier_chars);)*
                 }
             }
 
@@ -3817,6 +3822,9 @@ impl ToTokens for ast::Enum {
         let name_str = shared::qualified_name(self.js_namespace.as_deref(), &self.js_name);
         let name_len = name_str.chars().count() as u32;
         let name_chars = name_str.chars().map(|c| c as u32);
+        let unique_crate_identifier = crate::hash::unique_crate_identifier();
+        let unique_crate_identifier_len = unique_crate_identifier.chars().count() as u32;
+        let unique_crate_identifier_chars = unique_crate_identifier.chars().map(|c| c as u32);
         let hole = &self.hole;
         let underlying = if self.signed {
             quote! { i32 }
@@ -3876,6 +3884,8 @@ impl ToTokens for ast::Enum {
                     inform(#name_len);
                     #(inform(#name_chars);)*
                     inform(#hole);
+                    inform(#unique_crate_identifier_len);
+                    #(inform(#unique_crate_identifier_chars);)*
                 }
             }
 
