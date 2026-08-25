@@ -3094,22 +3094,24 @@ impl ast::ImportFunction {
             || is_self_returning_static
             || explicit_static_class_generics;
 
-        if !hoist && class.is_some() {
-            match class_generics {
-                // Without declaration metadata, let rustc validate whether the
-                // bare class path can use its imported type's defaults.
-                None => {}
-                Some(generics)
-                    if generics.params.iter().any(|parameter| {
-                        !matches!(parameter, syn::GenericParam::Type(parameter) if parameter.default.is_some())
-                    }) =>
-                {
-                    bail_span!(
-                        class.as_ref().unwrap(),
-                        "generic_per_mono requires static methods on imported classes with required generic parameters to write those arguments in `static_method_of = ...`"
-                    );
+        if !hoist {
+            if let Some(class) = &class {
+                match class_generics {
+                    // Without declaration metadata, let rustc validate whether the
+                    // bare class path can use its imported type's defaults.
+                    None => {}
+                    Some(generics)
+                        if generics.params.iter().any(|parameter| {
+                            !matches!(parameter, syn::GenericParam::Type(parameter) if parameter.default.is_some())
+                        }) =>
+                    {
+                        bail_span!(
+                            class,
+                            "generic_per_mono requires static methods on imported classes with required generic parameters to write those arguments in `static_method_of = ...`"
+                        );
+                    }
+                    Some(_) => {}
                 }
-                Some(_) => {}
             }
         }
 
