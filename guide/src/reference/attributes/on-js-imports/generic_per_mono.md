@@ -83,6 +83,45 @@ Relaxed bounds are the exception: `T: ?Sized` is not supported on any
 `wasm-bindgen` generic — erased or per-monomorphisation — and is reported as
 `unsupported in wasm-bindgen generics`.
 
+## `impl Trait` arguments
+
+Argument-position `impl Trait` is supported. It is desugared into a synthesized
+named type parameter with the same bound before any other codegen runs, so it
+is monomorphised exactly like a type parameter you named yourself — the two are
+interchangeable:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console, generic_per_mono)]
+    fn log(value: impl core::fmt::Debug);
+}
+
+log(42u32);
+log("hello");
+```
+
+is equivalent to writing `fn log<T: core::fmt::Debug>(value: T)`. This also
+means a function can have a type parameter without appearing to: `impl Trait`
+counts towards the "at least one type parameter" requirement even though it
+never appears in the function's own generic parameter list.
+
+`impl Trait` can be mixed with named type parameters, nested inside another
+type (`Vec<impl Trait>`), and repeated — each occurrence gets its own
+synthesized parameter:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(generic_per_mono)]
+    fn mix<T>(label: T, values: Vec<impl Clone>);
+}
+```
+
+Bounds on a synthesized parameter are enforced exactly as if you had written
+them out by hand: a caller that violates one gets a diagnostic pointing at the
+`impl Trait` in the declaration, the same as it would for an explicit bound.
+
 ## Lifetime parameters
 
 Lifetime parameters on the function are supported, including lifetime bounds

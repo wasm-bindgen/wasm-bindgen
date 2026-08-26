@@ -359,35 +359,95 @@ pub(crate) fn references_generic_param(ty: &syn::Type, generic_names: &Vec<&Iden
     visitor.found
 }
 
-/// Visitor that finds the first `impl Trait` type appearing anywhere within a
-/// type, including when nested inside other types (e.g. `&impl Trait`,
+/// Visitor that detects whether an `impl Trait` type appears anywhere within
+/// a type, including when nested inside other types (e.g. `&impl Trait`,
 /// `Vec<impl Trait>`).
-struct ImplTraitVisitor<'ast> {
-    found: Option<&'ast syn::TypeImplTrait>,
+struct ImplTraitPresenceVisitor {
+    found: bool,
 }
 
-impl<'ast> Visit<'ast> for ImplTraitVisitor<'ast> {
+impl<'ast> Visit<'ast> for ImplTraitPresenceVisitor {
     fn visit_type_impl_trait(&mut self, i: &'ast syn::TypeImplTrait) {
-        if self.found.is_none() {
-            self.found = Some(i);
-        }
+        self.found = true;
         // Keep recursing in case a bound itself nests another `impl Trait`
         // (not legal today, but cheap to keep general).
         syn::visit::visit_type_impl_trait(self, i);
     }
 }
 
-/// Returns the first `impl Trait` type found anywhere within `ty`, if any.
+/// Returns `true` if `ty` contains an `impl Trait` type at any nesting depth.
 ///
 /// Argument-position `impl Trait` desugars to an anonymous generic type
-/// parameter, so it never shows up in `fn.generics` — there is no name for it
-/// to be declared under. This lets callers give it its own diagnostic instead
-/// of falling through to a "requires at least one type parameter" check,
-/// which would be misleading: there *is* one, it's just anonymous.
-pub(crate) fn find_impl_trait(ty: &syn::Type) -> Option<&syn::TypeImplTrait> {
-    let mut visitor = ImplTraitVisitor { found: None };
+/// parameter, so it never shows up in `fn.generics` — callers that need to
+/// know whether a signature is "generic" at all (e.g. deciding whether a
+/// block-level `generic_per_mono` applies) have to check argument types
+/// directly rather than `fn.generics.type_params()`.
+pub(crate) fn has_impl_trait(ty: &syn::Type) -> bool {
+    let mut visitor = ImplTraitPresenceVisitor { found: false };
     visitor.visit_type(ty);
     visitor.found
+}
+
+/// Visitor that rewrites every `impl Trait` type it finds (including nested,
+/// e.g. `Vec<impl Trait>`) into a synthesized, named type parameter, pushing
+/// one [`syn::GenericParam::Type`] per occurrence — carrying the `impl
+/// Trait`'s own bounds — onto `params`.
+///
+/// Argument-position `impl Trait` desugars to an anonymous generic type
+/// parameter that never appears in `fn.generics`, so there is no name for
+/// `generic_per_mono` codegen to hang a `where` bound, shim generic
+/// parameter, or `breaks_if_inlined::<..>` turbofish argument off of. This
+/// visitor "un-desugars" it back into the named form a user would otherwise
+/// have to write by hand (`fn f<T: Trait>(x: T)`), giving each occurrence a
+/// synthesized, hygienic name so the rest of per-mono codegen can treat it
+/// exactly like any other type parameter.
+struct ImplTraitDesugar<'a> {
+    params: &'a mut Vec<syn::GenericParam>,
+}
+
+impl<'a> VisitMut for ImplTraitDesugar<'a> {
+    fn visit_type_mut(&mut self, ty: &mut syn::Type) {
+        let syn::Type::ImplTrait(impl_trait) = ty else {
+            // Keep recursing to reach a nested `impl Trait` (e.g. inside
+            // `Vec<impl Trait>` or a tuple).
+            visit_mut::visit_type_mut(self, ty);
+            return;
+        };
+        // Spanned at the original `impl Trait` so a bound that fails to hold
+        // (e.g. `T: IntoWasmAbi`) points back at the user's own type rather
+        // than at generated code.
+        let ident = Ident::new(
+            &format!("__WasmBindgenImplTrait{}", self.params.len()),
+            syn::spanned::Spanned::span(&*impl_trait),
+        );
+        self.params.push(syn::GenericParam::Type(syn::TypeParam {
+            attrs: Vec::new(),
+            ident: ident.clone(),
+            colon_token: Some(Default::default()),
+            bounds: impl_trait.bounds.clone(),
+            eq_token: None,
+            default: None,
+        }));
+        *ty = syn::Type::Path(syn::TypePath {
+            qself: None,
+            path: ident.into(),
+        });
+        // The replacement is a bare type-parameter path, which has nothing
+        // left to recurse into.
+    }
+}
+
+/// Rewrites every `impl Trait` type appearing within `ty` (at any nesting
+/// depth) into a synthesized, named type parameter, appending one generic
+/// parameter per occurrence to `params`. `ty` is left unchanged if it
+/// contains no `impl Trait`.
+///
+/// `params` is threaded across every argument of a single function so that
+/// synthesized names stay unique across the whole signature; pass the same
+/// `Vec` for each call.
+pub(crate) fn desugar_impl_trait(ty: &mut syn::Type, params: &mut Vec<syn::GenericParam>) {
+    let mut visitor = ImplTraitDesugar { params };
+    visitor.visit_type_mut(ty);
 }
 
 pub(crate) fn uses_lifetime_params(ty: &syn::Type, lifetime_params: &[&syn::Lifetime]) -> bool {
@@ -587,6 +647,8 @@ pub(crate) fn generic_to_concrete<'a>(
 
 #[cfg(test)]
 mod tests {
+    use quote::ToTokens;
+
     #[test]
     fn test_generic_name_visitor() {
         let t_ident = syn::Ident::new("T", proc_macro2::Span::call_site());
@@ -1151,23 +1213,68 @@ mod tests {
     }
 
     #[test]
-    fn find_impl_trait_detects_top_level_and_nested() {
-        use super::find_impl_trait;
+    fn desugar_impl_trait_rewrites_top_level_and_nested() {
+        use super::desugar_impl_trait;
 
-        let ty: syn::Type = syn::parse_quote!(impl Clone);
-        assert!(find_impl_trait(&ty).is_some());
+        // Top-level `impl Trait` becomes a bare synthesized type-parameter path.
+        let mut ty: syn::Type = syn::parse_quote!(impl Clone);
+        let mut params = Vec::new();
+        desugar_impl_trait(&mut ty, &mut params);
+        assert_eq!(params.len(), 1);
+        let syn::GenericParam::Type(tp) = &params[0] else {
+            panic!("expected a synthesized type parameter");
+        };
+        assert_eq!(tp.bounds.to_token_stream().to_string(), "Clone");
+        // The type was rewritten to a bare path naming the synthesized param.
+        assert_eq!(ty.to_token_stream().to_string(), tp.ident.to_string());
 
-        let ty: syn::Type = syn::parse_quote!(&impl Clone);
-        assert!(find_impl_trait(&ty).is_some());
+        // Nested `impl Trait` (e.g. `Vec<impl Trait>`) is rewritten in place
+        // without disturbing the rest of the type.
+        let mut ty: syn::Type = syn::parse_quote!(Vec<impl Clone>);
+        let mut params = Vec::new();
+        desugar_impl_trait(&mut ty, &mut params);
+        assert_eq!(params.len(), 1);
+        let syn::GenericParam::Type(tp) = &params[0] else {
+            panic!("expected a synthesized type parameter");
+        };
+        assert_eq!(
+            ty.to_token_stream().to_string(),
+            format!("Vec < {} >", tp.ident)
+        );
 
-        let ty: syn::Type = syn::parse_quote!(Vec<impl Clone>);
-        assert!(find_impl_trait(&ty).is_some());
+        // A type with no `impl Trait` is left completely unchanged and no
+        // params are synthesized.
+        let mut ty: syn::Type = syn::parse_quote!(Vec<T>);
+        let original = ty.to_token_stream().to_string();
+        let mut params = Vec::new();
+        desugar_impl_trait(&mut ty, &mut params);
+        assert!(params.is_empty());
+        assert_eq!(ty.to_token_stream().to_string(), original);
 
-        // No `impl Trait` anywhere → nothing found.
-        let ty: syn::Type = syn::parse_quote!(Vec<T>);
-        assert!(find_impl_trait(&ty).is_none());
+        // Multiple occurrences in one type each get a distinct name, and
+        // names stay unique across repeated calls sharing one `params` list
+        // (mirroring how one function's multiple arguments are processed).
+        let mut ty: syn::Type = syn::parse_quote!((impl Clone, impl Iterator));
+        let mut params = Vec::new();
+        desugar_impl_trait(&mut ty, &mut params);
+        assert_eq!(params.len(), 2);
+        let names: Vec<String> = params
+            .iter()
+            .map(|p| match p {
+                syn::GenericParam::Type(tp) => tp.ident.to_string(),
+                _ => panic!("expected a type parameter"),
+            })
+            .collect();
+        assert_ne!(names[0], names[1]);
 
-        let ty: syn::Type = syn::parse_quote!(dyn Clone);
-        assert!(find_impl_trait(&ty).is_none());
+        let mut ty2: syn::Type = syn::parse_quote!(impl Debug);
+        desugar_impl_trait(&mut ty2, &mut params);
+        assert_eq!(params.len(), 3);
+        // The third synthesized name must not collide with the first two.
+        let third = match &params[2] {
+            syn::GenericParam::Type(tp) => tp.ident.to_string(),
+            _ => panic!("expected a type parameter"),
+        };
+        assert!(!names.contains(&third));
     }
 }

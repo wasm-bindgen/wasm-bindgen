@@ -1,173 +1,155 @@
 error: generic_per_mono requires at least one type parameter
-  --> ui-tests/generic-per-mono-unsupported.rs:11:8
+  --> ui-tests/generic-per-mono-unsupported.rs:14:8
    |
-11 |     fn without_type_param(x: u32);
+14 |     fn without_type_param(x: u32);
    |        ^^^^^^^^^^^^^^^^^^
 
-error: generic_per_mono does not support `impl Trait` in argument position yet; name the type parameter explicitly (e.g. `fn f<T: Trait>(x: T)`) or use the type-erasure generic path instead
-  --> ui-tests/generic-per-mono-unsupported.rs:18:26
-   |
-18 |     fn impl_trait_arg(x: impl Clone);
-   |                          ^^^^^^^^^^
-
-error: generic_per_mono does not support `impl Trait` in argument position yet; name the type parameter explicitly (e.g. `fn f<T: Trait>(x: T)`) or use the type-erasure generic path instead
-  --> ui-tests/generic-per-mono-unsupported.rs:23:45
-   |
-23 |     fn impl_trait_arg_with_type_param<T>(x: impl Clone, y: T);
-   |                                             ^^^^^^^^^^
-
-error: generic_per_mono does not support `impl Trait` in argument position yet; name the type parameter explicitly (e.g. `fn f<T: Trait>(x: T)`) or use the type-erasure generic path instead
-  --> ui-tests/generic-per-mono-unsupported.rs:26:40
-   |
-26 |     fn nested_impl_trait_arg<T>(x: Vec<impl Clone>, y: T);
-   |                                        ^^^^^^^^^^
-
 error: generic_per_mono only supports a bare shared reference to a generic type parameter (`&T`); mutable references (`&mut T`) and references nested inside another type (e.g. `Option<&T>`) are not supported — take the argument by value or use the type-erasure generic path
-  --> ui-tests/generic-per-mono-unsupported.rs:31:33
+  --> ui-tests/generic-per-mono-unsupported.rs:19:33
    |
-31 |     fn mut_ref_to_generic<T>(x: &mut T);
+19 |     fn mut_ref_to_generic<T>(x: &mut T);
    |                                 ^^^^^^
 
 error: generic_per_mono only supports a bare shared reference to a generic type parameter (`&T`); mutable references (`&mut T`) and references nested inside another type (e.g. `Option<&T>`) are not supported — take the argument by value or use the type-erasure generic path
-  --> ui-tests/generic-per-mono-unsupported.rs:36:36
+  --> ui-tests/generic-per-mono-unsupported.rs:24:36
    |
-36 |     fn nested_ref_to_generic<T>(x: Option<&T>);
+24 |     fn nested_ref_to_generic<T>(x: Option<&T>);
    |                                    ^^^^^^^^^^
 
 error: cannot return references in #[wasm_bindgen] imports yet
-  --> ui-tests/generic-per-mono-unsupported.rs:40:31
+  --> ui-tests/generic-per-mono-unsupported.rs:28:31
    |
-40 |     fn return_ref<T>(x: T) -> &JsValue;
+28 |     fn return_ref<T>(x: T) -> &JsValue;
    |                               ^^^^^^^^
+
+error: generic_per_mono requires the `variadic` argument to be a sequence when it mentions a type parameter, because it is spread with `...` on the JS side and must be iterable for every monomorphisation; use `Vec<T>`, `[T; N]` or `&[T]`, or the type-erasure generic path instead
+  --> ui-tests/generic-per-mono-unsupported.rs:33:45
+   |
+33 |     fn variadic_scalar<T>(first: u32, rest: T);
+   |                                             ^
+
+error: generic_per_mono requires the `variadic` argument to be a sequence when it mentions a type parameter, because it is spread with `...` on the JS side and must be iterable for every monomorphisation; use `Vec<T>`, `[T; N]` or `&[T]`, or the type-erasure generic path instead
+  --> ui-tests/generic-per-mono-unsupported.rs:38:42
+   |
+38 |     fn variadic_ref<T>(first: u32, rest: &T);
+   |                                          ^^
 
 error: generic_per_mono requires the `variadic` argument to be a sequence when it mentions a type parameter, because it is spread with `...` on the JS side and must be iterable for every monomorphisation; use `Vec<T>`, `[T; N]` or `&[T]`, or the type-erasure generic path instead
   --> ui-tests/generic-per-mono-unsupported.rs:45:45
    |
-45 |     fn variadic_scalar<T>(first: u32, rest: T);
-   |                                             ^
-
-error: generic_per_mono requires the `variadic` argument to be a sequence when it mentions a type parameter, because it is spread with `...` on the JS side and must be iterable for every monomorphisation; use `Vec<T>`, `[T; N]` or `&[T]`, or the type-erasure generic path instead
-  --> ui-tests/generic-per-mono-unsupported.rs:50:42
-   |
-50 |     fn variadic_ref<T>(first: u32, rest: &T);
-   |                                          ^^
-
-error: generic_per_mono requires the `variadic` argument to be a sequence when it mentions a type parameter, because it is spread with `...` on the JS side and must be iterable for every monomorphisation; use `Vec<T>`, `[T; N]` or `&[T]`, or the type-erasure generic path instead
-  --> ui-tests/generic-per-mono-unsupported.rs:57:45
-   |
-57 |     fn variadic_option<T>(first: u32, rest: Option<T>);
+45 |     fn variadic_option<T>(first: u32, rest: Option<T>);
    |                                             ^^^^^^^^^
 
 error: generic_per_mono requires the `variadic` argument to be a sequence when it mentions a type parameter, because it is spread with `...` on the JS side and must be iterable for every monomorphisation; use `Vec<T>`, `[T; N]` or `&[T]`, or the type-erasure generic path instead
-  --> ui-tests/generic-per-mono-unsupported.rs:60:42
+  --> ui-tests/generic-per-mono-unsupported.rs:48:42
    |
-60 |     fn variadic_box<T>(first: u32, rest: Box<T>);
+48 |     fn variadic_box<T>(first: u32, rest: Box<T>);
    |                                          ^^^^^^
 
 error: generic_per_mono requires the `variadic` argument to be a sequence when it mentions a type parameter, because it is spread with `...` on the JS side and must be iterable for every monomorphisation; use `Vec<T>`, `[T; N]` or `&[T]`, or the type-erasure generic path instead
-  --> ui-tests/generic-per-mono-unsupported.rs:63:58
+  --> ui-tests/generic-per-mono-unsupported.rs:51:58
    |
-63 |     fn variadic_assoc<T: IntoIterator>(first: u32, rest: T::Item);
+51 |     fn variadic_assoc<T: IntoIterator>(first: u32, rest: T::Item);
    |                                                          ^^^^^^^
 
 error: the error type of a `catch` import must be `JsValue`, not a type parameter; only the `Ok` type is monomorphised
-  --> ui-tests/generic-per-mono-unsupported.rs:68:54
+  --> ui-tests/generic-per-mono-unsupported.rs:56:54
    |
-68 |     fn catch_generic_err<T>(x: T) -> Result<JsValue, T>;
+56 |     fn catch_generic_err<T>(x: T) -> Result<JsValue, T>;
    |                                                      ^
 
 error: generic_per_mono only supports a bare shared reference to a generic type parameter (`&T`); mutable references (`&mut T`) and references nested inside another type (e.g. `Option<&T>`) are not supported — take the argument by value or use the type-erasure generic path
-  --> ui-tests/generic-per-mono-unsupported.rs:73:40
+  --> ui-tests/generic-per-mono-unsupported.rs:61:40
    |
-73 |     fn mut_ref_to_nested_generic<T>(x: &mut Vec<T>);
+61 |     fn mut_ref_to_nested_generic<T>(x: &mut Vec<T>);
    |                                        ^^^^^^^^^^^
 
 error: generic_per_mono only supports a bare shared reference to a generic type parameter (`&T`); mutable references (`&mut T`) and references nested inside another type (e.g. `Option<&T>`) are not supported — take the argument by value or use the type-erasure generic path
-  --> ui-tests/generic-per-mono-unsupported.rs:79:33
+  --> ui-tests/generic-per-mono-unsupported.rs:67:33
    |
-79 |     fn ref_ref_to_generic<T>(x: &&T);
+67 |     fn ref_ref_to_generic<T>(x: &&T);
    |                                 ^^^
 
 error: generic_per_mono only supports a bare shared reference to a generic type parameter (`&T`); mutable references (`&mut T`) and references nested inside another type (e.g. `Option<&T>`) are not supported — take the argument by value or use the type-erasure generic path
-  --> ui-tests/generic-per-mono-unsupported.rs:82:40
+  --> ui-tests/generic-per-mono-unsupported.rs:70:40
    |
-82 |     fn tuple_with_ref_to_generic<T>(x: (T, &T));
+70 |     fn tuple_with_ref_to_generic<T>(x: (T, &T));
    |                                        ^^^^^^^
 
 error: generic_per_mono only supports a bare shared reference to a generic type parameter (`&T`); mutable references (`&mut T`) and references nested inside another type (e.g. `Option<&T>`) are not supported — take the argument by value or use the type-erasure generic path
-  --> ui-tests/generic-per-mono-unsupported.rs:85:39
+  --> ui-tests/generic-per-mono-unsupported.rs:73:39
    |
-85 |     fn array_of_refs_to_generic<T>(x: [&T; 2]);
+73 |     fn array_of_refs_to_generic<T>(x: [&T; 2]);
    |                                       ^^^^^^^
 
 error: generic_per_mono only supports a bare shared reference to a generic type parameter (`&T`); mutable references (`&mut T`) and references nested inside another type (e.g. `Option<&T>`) are not supported — take the argument by value or use the type-erasure generic path
-  --> ui-tests/generic-per-mono-unsupported.rs:88:35
+  --> ui-tests/generic-per-mono-unsupported.rs:76:35
    |
-88 |     fn boxed_ref_to_generic<T>(x: Box<&T>);
+76 |     fn boxed_ref_to_generic<T>(x: Box<&T>);
    |                                   ^^^^^^^
 
 error: unsupported pattern in generic_per_mono imported function
-  --> ui-tests/generic-per-mono-unsupported.rs:93:29
+  --> ui-tests/generic-per-mono-unsupported.rs:81:29
    |
-93 |     fn tuple_pattern_arg<T>((a, b): (u32, u32), x: T);
+81 |     fn tuple_pattern_arg<T>((a, b): (u32, u32), x: T);
    |                             ^^^^^^
 
 error: generic_per_mono does not support class-level generic parameters yet; use the type-erasure generic path instead
-   --> ui-tests/generic-per-mono-unsupported.rs:105:8
-    |
-105 |     fn get<T>(this: &Holder<T>) -> T;
-    |        ^^^
+  --> ui-tests/generic-per-mono-unsupported.rs:93:8
+   |
+93 |     fn get<T>(this: &Holder<T>) -> T;
+   |        ^^^
 
 error: generic_per_mono does not support class-level generic parameters yet; use the type-erasure generic path instead
-   --> ui-tests/generic-per-mono-unsupported.rs:118:8
+   --> ui-tests/generic-per-mono-unsupported.rs:106:8
     |
-118 |     fn get_lifetime<'a, T>(this: &'a LifetimeHolder<'a>) -> T;
+106 |     fn get_lifetime<'a, T>(this: &'a LifetimeHolder<'a>) -> T;
     |        ^^^^^^^^^^^^
 
 error: `assert_no_shim` cannot be used with `generic_per_mono`, which always generates one shim per monomorphisation
-   --> ui-tests/generic-per-mono-unsupported.rs:129:38
+   --> ui-tests/generic-per-mono-unsupported.rs:117:38
     |
-129 |     #[wasm_bindgen(generic_per_mono, assert_no_shim)]
+117 |     #[wasm_bindgen(generic_per_mono, assert_no_shim)]
     |                                      ^^^^^^^^^^^^^^
 
 error: `reexport` cannot be used with `generic_per_mono`, because one binding is manufactured per monomorphisation and there is no single shim to reexport; remove the reexport or use the type-erasure generic path
-   --> ui-tests/generic-per-mono-unsupported.rs:135:8
+   --> ui-tests/generic-per-mono-unsupported.rs:123:8
     |
-135 |     fn reexported<T>(x: T);
+123 |     fn reexported<T>(x: T);
     |        ^^^^^^^^^^
 
 error: unsupported in wasm-bindgen generics
-   --> ui-tests/generic-per-mono-unsupported.rs:141:22
+   --> ui-tests/generic-per-mono-unsupported.rs:129:22
     |
-141 |     fn const_generic<const N: usize, T>(x: T);
+129 |     fn const_generic<const N: usize, T>(x: T);
     |                      ^^^^^^^^^^^^^^
 
 error: unsupported in wasm-bindgen generics
-   --> ui-tests/generic-per-mono-unsupported.rs:148:30
+   --> ui-tests/generic-per-mono-unsupported.rs:136:30
     |
-148 |     fn unsized_type_param<T: ?Sized>(x: &T);
+136 |     fn unsized_type_param<T: ?Sized>(x: &T);
     |                              ^
 
 error: `slice_to_array` requires a concrete slice element type (e.g. `&[u16]`); a type parameter cannot work here because `VectorRefIntoWasmAbi` is implemented per concrete ABI shape — drop `slice_to_array`, or take the argument by value
-   --> ui-tests/generic-per-mono-unsupported.rs:156:43
+   --> ui-tests/generic-per-mono-unsupported.rs:144:43
     |
-156 |     fn slice_to_array_generic_elem<T>(xs: &[T], other: T);
+144 |     fn slice_to_array_generic_elem<T>(xs: &[T], other: T);
     |                                           ^^^^
 
 error: `slice_to_array` requires a concrete slice element type (e.g. `&[u16]`); a type parameter cannot work here because `VectorRefIntoWasmAbi` is implemented per concrete ABI shape — drop `slice_to_array`, or take the argument by value
-   --> ui-tests/generic-per-mono-unsupported.rs:160:42
+   --> ui-tests/generic-per-mono-unsupported.rs:148:42
     |
-160 |     fn slice_to_array_nested_elem<T>(xs: &[Vec<T>], other: T);
+148 |     fn slice_to_array_nested_elem<T>(xs: &[Vec<T>], other: T);
     |                                          ^^^^^^^^^
 
 error: `slice_to_array` requires a concrete slice element type (e.g. `&[u16]`); a type parameter cannot work here because `VectorRefIntoWasmAbi` is implemented per concrete ABI shape — drop `slice_to_array`, or take the argument by value
-   --> ui-tests/generic-per-mono-unsupported.rs:164:42
+   --> ui-tests/generic-per-mono-unsupported.rs:152:42
     |
-164 |     fn slice_to_array_option_elem<T>(xs: Option<&[T]>, other: T);
+152 |     fn slice_to_array_option_elem<T>(xs: Option<&[T]>, other: T);
     |                                          ^^^^^^^^^^^^
 
 error: `slice_to_array` requires a concrete slice element type (e.g. `&[u16]`); a type parameter cannot work here because `VectorRefIntoWasmAbi` is implemented per concrete ABI shape — drop `slice_to_array`, or take the argument by value
-   --> ui-tests/generic-per-mono-unsupported.rs:171:50
+   --> ui-tests/generic-per-mono-unsupported.rs:159:50
     |
-171 |     fn erased_slice_to_array_generic_elem<T>(xs: &[T]);
+159 |     fn erased_slice_to_array_generic_elem<T>(xs: &[T]);
     |                                                  ^^^^

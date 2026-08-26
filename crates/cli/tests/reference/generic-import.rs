@@ -26,6 +26,23 @@ extern "C" {
     #[wasm_bindgen(generic_per_mono, js_name = pair)]
     fn pair<T, U>(a: T, b: U);
 
+    // Argument-position `impl Trait` desugars into a synthesized named type
+    // parameter with the same bounds, so it takes the identical per-mono path
+    // as a real named generic parameter — pinned here to prove it produces
+    // the same shape of manufactured binding as `log_generic` above, with no
+    // named type parameter of its own.
+    #[wasm_bindgen(generic_per_mono, js_name = logImplTrait)]
+    fn log_impl_trait(x: impl Clone);
+
+    // `impl Trait` mixed with a real, named type parameter in the same
+    // signature; each gets its own synthesized/declared generic slot.
+    #[wasm_bindgen(generic_per_mono, js_name = mixImplTrait)]
+    fn mix_impl_trait<T>(label: T, value: impl Clone);
+
+    // `impl Trait` nested inside another type (`Vec<impl Trait>`).
+    #[wasm_bindgen(generic_per_mono, js_name = logNestedImplTrait)]
+    fn log_nested_impl_trait(xs: Vec<impl Clone>);
+
     // A trait-bounded generic import. The bound has to be re-emitted onto the
     // manufactured shim for `T::Item` to resolve, which is the most intricate
     // part of the per-monomorphisation codegen and is otherwise pinned only by
@@ -164,6 +181,13 @@ extern "C" {
     // lets a block mix the two.
     #[wasm_bindgen(js_name = blockNotGeneric)]
     fn block_not_generic(x: u32);
+
+    // A bare `impl Trait` argument with no named type parameter of its own.
+    // The block flag detects this as generic (it desugars to an anonymous
+    // type parameter) and applies per-mono codegen without repeating the
+    // attribute, exactly like `block_inherited` above.
+    #[wasm_bindgen(js_name = blockInheritedImplTrait)]
+    fn block_inherited_impl_trait(x: impl Clone);
 }
 
 // `js_namespace` resolves the JS import the same way it does for a non-generic
@@ -194,6 +218,11 @@ extern "C" {
     // prove distinct per-mono shims for the method path.
     #[wasm_bindgen(method, generic_per_mono, js_class = "Widget", js_name = set)]
     fn set<T>(this: &Widget, value: T);
+
+    // `impl Trait` on a method argument: the receiver is untouched and the
+    // synthesized type parameter behaves like any other method-level generic.
+    #[wasm_bindgen(method, generic_per_mono, js_class = "Widget", js_name = setImplTrait)]
+    fn set_impl_trait(this: &Widget, value: impl Clone);
 
     // A generic method taking a bare shared reference `&T`. Here `T`
     // monomorphises to the JS-handle `Widget`, so `&Widget` marshals via the
@@ -276,6 +305,13 @@ pub async fn run(widget: &Widget) -> Result<(), JsValue> {
 
     pair(1u32, 2.0f64);
 
+    log_impl_trait(1u32);
+    log_impl_trait(2.0f64);
+    mix_impl_trait(3u32, 4u32);
+    mix_impl_trait(4.0f64, 5u32);
+    log_nested_impl_trait(vec![5u32]);
+    log_nested_impl_trait(vec![6.0f64]);
+
     log_ref(&JsValue::from("fifteen"));
 
     log_generic_slice(&[16u32, 17]);
@@ -299,6 +335,8 @@ pub async fn run(widget: &Widget) -> Result<(), JsValue> {
     block_inherited(21.0f64);
     let _: f64 = block_inherited_two(22, 23.0f64);
     block_not_generic(24);
+    block_inherited_impl_trait(25u32);
+    block_inherited_impl_trait(26.0f64);
 
     ns_log(23u32);
     ns_deep_log(24.0f64);
@@ -329,6 +367,9 @@ pub async fn run(widget: &Widget) -> Result<(), JsValue> {
 
     widget.set(10u32);
     widget.set(11.0f64);
+
+    widget.set_impl_trait(12u32);
+    widget.set_impl_trait(13.0f64);
 
     widget.attach(widget);
 
