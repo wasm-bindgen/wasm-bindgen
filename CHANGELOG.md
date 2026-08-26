@@ -17,6 +17,16 @@
 
 ### Changed
 
+* Export shim symbols are now mangled with a per-crate hash, so identically
+  named exports from different crates (or two versions of one crate) no
+  longer fail the link with duplicate-symbol errors; the CLI restores the
+  canonical names in the final module. Same-named `#[wasm_bindgen(private)]`
+  structs/enums now coexist (numbered `Name`, `Name2`, ... internally in the
+  generated bindings), while genuinely conflicting public exports are
+  reported as a wasm-bindgen error instead of a wasm-ld failure. Requires
+  matching `wasm-bindgen` and CLI versions (schema bump).
+  [#2247](https://github.com/wasm-bindgen/wasm-bindgen/issues/2247)
+
 * Setting `js_namespace` on both an `extern "C"` block and an item inside it
   is now a hard error. Nested paths must be written in a single attribute,
   e.g. `js_namespace = ["a", "b"]`. The previous behavior silently dropped

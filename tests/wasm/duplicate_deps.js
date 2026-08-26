@@ -15,3 +15,7 @@ exports.foo = function(a) {
   assert.strictEqual(a, next);
   next = null;
 };
+
+exports.call_apply = function(dupe, x) {
+  return dupe.apply(x) + dupe.factor;
+};
