@@ -4293,3 +4293,61 @@ describe('jspi async-only module', () => {
 "#,
     );
 }
+
+#[test]
+fn stripped_custom_section_errors_helpfully() {
+    // Post-processing tools (e.g. `llvm-objcopy --strip-all`, which since
+    // LLVM 23 removes all custom sections) can strip `__wasm_bindgen_unstable`
+    // from a module before the CLI runs. The module still contains all the
+    // wasm-bindgen shims, so this must produce an actionable error rather
+    // than the confusing "import of `X` doesn't have an adapter listed".
+    let mut project = Project::new("stripped_custom_section_errors_helpfully");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen::prelude::*;
+
+            #[wasm_bindgen]
+            extern "C" {
+                fn alert(s: &str);
+            }
+
+            #[wasm_bindgen]
+            pub fn greet() {
+                alert("hi");
+            }
+        "#,
+    );
+
+    let built = project.build();
+    let mut module = ModuleConfig::new().parse_file(&built).unwrap();
+    while module
+        .customs
+        .remove_raw("__wasm_bindgen_unstable")
+        .is_some()
+    {}
+    let stripped = project.root.join("stripped.wasm");
+    module.emit_wasm_file(&stripped).unwrap();
+
+    let out_dir = project.root.join("pkg-stripped");
+    fs::create_dir_all(&out_dir).unwrap();
+    let err = wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
+        "wasm-bindgen".as_ref(),
+        "--target".as_ref(),
+        "web".as_ref(),
+        "--out-dir".as_ref(),
+        out_dir.as_os_str(),
+        stripped.as_os_str(),
+    ])
+    .unwrap_err();
+
+    let err = format!("{err:#}");
+    assert!(
+        err.contains("`__wasm_bindgen_unstable` custom section is missing"),
+        "expected an actionable missing-section error, got: {err}"
+    );
+    assert!(
+        err.contains("strip"),
+        "error should point at custom-section stripping, got: {err}"
+    );
+}
