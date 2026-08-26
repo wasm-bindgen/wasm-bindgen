@@ -54,6 +54,11 @@
 * Fix `js-sys` wasm64 build with `atomics` feature.
   [#5274](https://github.com/wasm-bindgen/wasm-bindgen/issues/5274)
 
+* Declare `initSync` in the generated TypeScript definitions for
+  `--target no-modules`, matching the `wasm_bindgen.initSync` function that
+  the JS output already exposes.
+  [#5284](https://github.com/wasm-bindgen/wasm-bindgen/issues/5284)
+
 ### Removed
 
 ## [0.2.127](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.126...0.2.127)
