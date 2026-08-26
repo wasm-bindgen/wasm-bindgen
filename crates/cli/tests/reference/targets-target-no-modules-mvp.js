@@ -2,6 +2,8 @@ let wasm_bindgen = (function(exports) {
     let script_src;
     if (typeof document !== 'undefined' && document.currentScript !== null) {
         script_src = new URL(document.currentScript.src, location.href).toString();
+    } else if(self && self.location && self.location.href) {
+        script_src = new URL(self.location.href).toString();
     }
 
     /**
