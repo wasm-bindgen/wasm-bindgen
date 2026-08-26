@@ -262,7 +262,7 @@ fn one_export_works() {
         .unwrap();
 }
 
-/// A `generic_per_mono` import declared in an upstream crate must still bind
+/// A `experimental_generic_mono` import declared in an upstream crate must still bind
 /// when that crate's `extern "C"` block contains *nothing else*.
 ///
 /// The crate's `#[link_section = "__wasm_bindgen_unstable"]` AST metadata lives
@@ -278,8 +278,8 @@ fn one_export_works() {
 /// non-LTO build — `lto = true` merges everything and masks the problem
 /// entirely, which is why this regressed without CI noticing.
 #[test]
-fn cross_crate_generic_per_mono_only_block() {
-    let mut project = Project::new("cross_crate_generic_per_mono_only_block");
+fn cross_crate_experimental_generic_mono_only_block() {
+    let mut project = Project::new("cross_crate_experimental_generic_mono_only_block");
     project
         .dep("upstream_generic = { path = 'upstream_generic' }")
         .file(
@@ -307,7 +307,7 @@ fn cross_crate_generic_per_mono_only_block() {
                 use wasm_bindgen::prelude::*;
                 #[wasm_bindgen]
                 extern "C" {
-                    #[wasm_bindgen(generic_per_mono)]
+                    #[wasm_bindgen(experimental_generic_mono)]
                     pub fn shared_log<T>(x: T);
                 }
             "#,
@@ -326,7 +326,8 @@ fn cross_crate_generic_per_mono_only_block() {
 
     let out_dir = project.wasm_bindgen("--target web").unwrap();
     let js =
-        fs::read_to_string(out_dir.join("cross_crate_generic_per_mono_only_block.js")).unwrap();
+        fs::read_to_string(out_dir.join("cross_crate_experimental_generic_mono_only_block.js"))
+            .unwrap();
 
     // One manufactured shim per monomorphisation, each calling the upstream
     // import. `u32` crosses as a number, `&str` as a (ptr, len) pair.
@@ -361,8 +362,8 @@ fn cross_crate_generic_per_mono_only_block() {
 /// same applies to any prelude crate name, so `alloc` and `std` are shadowed here
 /// too to keep the whole expansion honest.
 #[test]
-fn generic_per_mono_shim_paths_survive_shadowing() {
-    let mut project = Project::new("generic_per_mono_shim_paths_survive_shadowing");
+fn experimental_generic_mono_shim_paths_survive_shadowing() {
+    let mut project = Project::new("experimental_generic_mono_shim_paths_survive_shadowing");
     project.file(
         "src/lib.rs",
         r#"
@@ -376,18 +377,18 @@ fn generic_per_mono_shim_paths_survive_shadowing() {
             #[wasm_bindgen]
             extern "C" {
                 // Covers the `WasmRet<..>`-returning shim shape.
-                #[wasm_bindgen(generic_per_mono)]
+                #[wasm_bindgen(experimental_generic_mono)]
                 fn echo<T>(x: T) -> T;
                 // Covers the unit-returning shim shape, which builds its marker
                 // call as a statement rather than a tail expression.
-                #[wasm_bindgen(generic_per_mono)]
+                #[wasm_bindgen(experimental_generic_mono)]
                 fn sink<T>(x: T);
                 // Covers the `slice_to_array` rewrite, which names both
                 // `alloc::vec::Vec` (in the describe type) and `core::option::Option`
                 // (in the ABI conversion for the `Option<&[T]>` shape).
-                #[wasm_bindgen(generic_per_mono, slice_to_array)]
+                #[wasm_bindgen(experimental_generic_mono, slice_to_array)]
                 fn take_slice<T>(xs: &[u32], t: T);
-                #[wasm_bindgen(generic_per_mono, slice_to_array)]
+                #[wasm_bindgen(experimental_generic_mono, slice_to_array)]
                 fn take_opt_slice<T>(xs: Option<&[u32]>, t: T);
             }
 
@@ -420,8 +421,8 @@ fn generic_per_mono_shim_paths_survive_shadowing() {
 /// controls, so pin it: if it ever stops holding, this fails at the point the
 /// toolchain changes rather than in a user's bug report.
 #[test]
-fn generic_per_mono_unsafe_op_in_unsafe_fn() {
-    let mut project = Project::new("generic_per_mono_unsafe_op_in_unsafe_fn");
+fn experimental_generic_mono_unsafe_op_in_unsafe_fn() {
+    let mut project = Project::new("experimental_generic_mono_unsafe_op_in_unsafe_fn");
     project.file(
         "src/lib.rs",
         r#"
@@ -432,15 +433,15 @@ fn generic_per_mono_unsafe_op_in_unsafe_fn() {
             #[wasm_bindgen]
             extern "C" {
                 // Covers the `WasmRet<..>`-returning shim shape.
-                #[wasm_bindgen(generic_per_mono)]
+                #[wasm_bindgen(experimental_generic_mono)]
                 fn echo<T>(x: T) -> T;
                 // Covers the unit-returning shim shape, which builds its marker
                 // call as a statement rather than a tail expression.
-                #[wasm_bindgen(generic_per_mono)]
+                #[wasm_bindgen(experimental_generic_mono)]
                 fn sink<T>(x: T);
                 // Covers the `slice_to_array` rewrite, whose ABI conversion is
                 // spliced into the same unsafe body.
-                #[wasm_bindgen(generic_per_mono, slice_to_array)]
+                #[wasm_bindgen(experimental_generic_mono, slice_to_array)]
                 fn take_slice<T>(xs: &[u32], t: T);
             }
 

@@ -1,6 +1,6 @@
 //! Runtime coverage for a bare shared reference to a generic type parameter
 //! (`&T`) in a per-monomorphisation generic import
-//! (`#[wasm_bindgen(generic_per_mono)]`).
+//! (`#[wasm_bindgen(experimental_generic_mono)]`).
 //!
 //! Each instantiation exercises a distinct referent shape:
 //! - `&RefThing`: a JS-handle type, marshalled by handle index.
@@ -18,11 +18,11 @@ extern "C" {
 
     // `&T` where `T` monomorphises to a JS-handle type: marshalled via the
     // handle's `IntoWasmAbi for &RefThing` impl.
-    #[wasm_bindgen(generic_per_mono, js_name = readRefThing)]
+    #[wasm_bindgen(experimental_generic_mono, js_name = readRefThing)]
     fn read_ref_thing<T>(x: &T) -> f64;
 
     // `&T` where `T` monomorphises to `JsValue`: marshalled as an externref.
-    #[wasm_bindgen(generic_per_mono, js_name = echoRef)]
+    #[wasm_bindgen(experimental_generic_mono, js_name = echoRef)]
     fn echo_ref<T>(x: &T) -> JsValue;
 }
 

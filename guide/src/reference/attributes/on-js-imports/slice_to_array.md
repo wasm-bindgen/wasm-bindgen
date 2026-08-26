@@ -82,7 +82,7 @@ fresh JS string.
   parameter `T` is rejected at compile time, because
   `VectorRefIntoWasmAbi` is implemented per concrete ABI shape and no
   bound the caller can write makes an arbitrary `T` satisfy it. This
-  applies on both the type-erasure generic path and `generic_per_mono`.
+  applies on both the type-erasure generic path and `experimental_generic_mono`.
   The element type must be concrete, e.g. `&[u16]`. A concrete element type
   in a generic function is fine — it is the element type that has to be
   concrete, not the function. Note that `slice_to_array` is inheritable

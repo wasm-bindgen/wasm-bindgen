@@ -129,7 +129,7 @@ fn typo_in_js_class_suggests_nearest_struct() {
 // behaviour is exercised by `typo_in_js_class_suggests_nearest_struct`
 // above, so we deliberately don't duplicate the integration test here.
 
-/// Two `generic_per_mono` imports that agree on everything else and differ only
+/// Two `experimental_generic_mono` imports that agree on everything else and differ only
 /// in `js_namespace` must get distinct shim keys, and both must bind.
 ///
 /// The key is `__wbg_<wasm.name>_<ShortHash(ns, sig tokens, module, cfg attrs)>`
@@ -140,8 +140,8 @@ fn typo_in_js_class_suggests_nearest_struct() {
 /// so their `sig` token streams are byte-identical (`fn log<T>(x: T)`) and every
 /// other hashed input agrees, which is exactly the case that used to fail.
 #[test]
-fn generic_per_mono_js_namespace_does_not_collide_on_the_shim_key() {
-    let out_dir = Project::new("generic_per_mono_js_namespace_shim_key")
+fn experimental_generic_mono_js_namespace_does_not_collide_on_the_shim_key() {
+    let out_dir = Project::new("experimental_generic_mono_js_namespace_shim_key")
         .file(
             "src/lib.rs",
             r#"
@@ -154,7 +154,7 @@ fn generic_per_mono_js_namespace_does_not_collide_on_the_shim_key() {
                     use wasm_bindgen::prelude::*;
                     #[wasm_bindgen]
                     extern "C" {
-                        #[wasm_bindgen(js_namespace = a, generic_per_mono)]
+                        #[wasm_bindgen(js_namespace = a, experimental_generic_mono)]
                         pub fn log<T>(x: T);
                     }
                 }
@@ -163,7 +163,7 @@ fn generic_per_mono_js_namespace_does_not_collide_on_the_shim_key() {
                     use wasm_bindgen::prelude::*;
                     #[wasm_bindgen]
                     extern "C" {
-                        #[wasm_bindgen(js_namespace = b, generic_per_mono)]
+                        #[wasm_bindgen(js_namespace = b, experimental_generic_mono)]
                         pub fn log<T>(x: T);
                     }
                 }
@@ -177,7 +177,8 @@ fn generic_per_mono_js_namespace_does_not_collide_on_the_shim_key() {
         )
         .wasm_bindgen("--target web")
         .unwrap();
-    let js = fs::read_to_string(out_dir.join("generic_per_mono_js_namespace_shim_key.js")).unwrap();
+    let js = fs::read_to_string(out_dir.join("experimental_generic_mono_js_namespace_shim_key.js"))
+        .unwrap();
 
     // Both namespaces must actually be bound; if the two imports still shared a
     // key one of them would be silently dropped (or the build would fail).
@@ -185,7 +186,7 @@ fn generic_per_mono_js_namespace_does_not_collide_on_the_shim_key() {
     assert_contains!(&js, "b.log(");
 }
 
-/// The same `generic_per_mono` import declared twice must deduplicate, not
+/// The same `experimental_generic_mono` import declared twice must deduplicate, not
 /// abort the build.
 ///
 /// Two byte-identical declarations in two modules of one crate necessarily
@@ -201,8 +202,8 @@ fn generic_per_mono_js_namespace_does_not_collide_on_the_shim_key() {
 /// Note `ShortHash` mixes in `CARGO_PKG_NAME`/`CARGO_PKG_VERSION`, so the
 /// cross-crate form of this never collided; it has to be one crate to bite.
 #[test]
-fn generic_per_mono_identical_imports_deduplicate() {
-    let out_dir = Project::new("generic_per_mono_identical_imports_deduplicate")
+fn experimental_generic_mono_identical_imports_deduplicate() {
+    let out_dir = Project::new("experimental_generic_mono_identical_imports_deduplicate")
         .file(
             "src/lib.rs",
             r#"
@@ -215,7 +216,7 @@ fn generic_per_mono_identical_imports_deduplicate() {
                     use wasm_bindgen::prelude::*;
                     #[wasm_bindgen]
                     extern "C" {
-                        #[wasm_bindgen(js_namespace = console, generic_per_mono)]
+                        #[wasm_bindgen(js_namespace = console, experimental_generic_mono)]
                         pub fn log<T>(x: T);
                     }
                 }
@@ -224,7 +225,7 @@ fn generic_per_mono_identical_imports_deduplicate() {
                     use wasm_bindgen::prelude::*;
                     #[wasm_bindgen]
                     extern "C" {
-                        #[wasm_bindgen(js_namespace = console, generic_per_mono)]
+                        #[wasm_bindgen(js_namespace = console, experimental_generic_mono)]
                         pub fn log<T>(x: T);
                     }
                 }
@@ -240,8 +241,10 @@ fn generic_per_mono_identical_imports_deduplicate() {
         )
         .wasm_bindgen("--target web")
         .unwrap();
-    let js = fs::read_to_string(out_dir.join("generic_per_mono_identical_imports_deduplicate.js"))
-        .unwrap();
+    let js = fs::read_to_string(
+        out_dir.join("experimental_generic_mono_identical_imports_deduplicate.js"),
+    )
+    .unwrap();
 
     // Both monomorphisations bind, through the one shared entry.
     assert_contains!(&js, "console.log(");
@@ -257,8 +260,8 @@ fn generic_per_mono_identical_imports_deduplicate() {
 /// one would silently mis-bind every monomorphisation of the other, so this
 /// has to stay an error -- the dedup above must not swallow it.
 #[test]
-fn generic_per_mono_genuine_collision_is_reported() {
-    let err = Project::new("generic_per_mono_genuine_collision_is_reported")
+fn experimental_generic_mono_genuine_collision_is_reported() {
+    let err = Project::new("experimental_generic_mono_genuine_collision_is_reported")
         .file(
             "src/lib.rs",
             r#"
@@ -268,7 +271,7 @@ fn generic_per_mono_genuine_collision_is_reported() {
                     use wasm_bindgen::prelude::*;
                     #[wasm_bindgen]
                     extern "C" {
-                        #[wasm_bindgen(js_namespace = console, generic_per_mono)]
+                        #[wasm_bindgen(js_namespace = console, experimental_generic_mono)]
                         pub fn log<T>(xs: Vec<T>);
                     }
                 }
@@ -280,7 +283,7 @@ fn generic_per_mono_genuine_collision_is_reported() {
                         // Differs from `one::log` only in `variadic`, which is
                         // not hashed into the shim key and leaves the signature
                         // tokens byte-identical.
-                        #[wasm_bindgen(js_namespace = console, generic_per_mono, variadic)]
+                        #[wasm_bindgen(js_namespace = console, experimental_generic_mono, variadic)]
                         pub fn log<T>(xs: Vec<T>);
                     }
                 }

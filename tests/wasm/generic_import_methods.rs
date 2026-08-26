@@ -1,4 +1,4 @@
-//! Runtime coverage for `#[wasm_bindgen(generic_per_mono)]` on every
+//! Runtime coverage for `#[wasm_bindgen(experimental_generic_mono)]` on every
 //! *method-shaped* import: constructors, instance methods, static methods,
 //! getters and setters (plain, `structural` and `final`), and the `indexing_*`
 //! operations.
@@ -16,59 +16,59 @@ use wasm_bindgen_test::*;
 extern "C" {
     type Widget;
 
-    // `constructor` + `generic_per_mono`: `class_return_path()` retargets the
+    // `constructor` + `experimental_generic_mono`: `class_return_path()` retargets the
     // generated `impl` block to the *return* type's class, so the manufactured
     // binding attaches to `new Widget(..)`.
-    #[wasm_bindgen(constructor, generic_per_mono)]
+    #[wasm_bindgen(constructor, experimental_generic_mono)]
     fn new<T>(value: T) -> Widget;
 
     // Instance method. Two instantiations prove distinct per-mono shims on the
     // method path.
-    #[wasm_bindgen(method, generic_per_mono, js_name = set)]
+    #[wasm_bindgen(method, experimental_generic_mono, js_name = set)]
     fn set<T>(this: &Widget, value: T);
 
     // `&T` in a method argument, monomorphised at a JS-handle type, so the
     // handle's `IntoWasmAbi for &Widget` impl is what marshals it.
-    #[wasm_bindgen(method, generic_per_mono, js_name = attach)]
+    #[wasm_bindgen(method, experimental_generic_mono, js_name = attach)]
     fn attach<T>(this: &Widget, other: &T);
 
     // Static method.
-    #[wasm_bindgen(static_method_of = Widget, generic_per_mono, js_name = of)]
+    #[wasm_bindgen(static_method_of = Widget, experimental_generic_mono, js_name = of)]
     fn of<T>(value: T) -> Widget;
 
     // Getter with a generic *return*: every monomorphisation reads the same JS
     // property but marshals the result at its own concrete type.
-    #[wasm_bindgen(method, getter, generic_per_mono, js_name = value)]
+    #[wasm_bindgen(method, getter, experimental_generic_mono, js_name = value)]
     fn value<T>(this: &Widget) -> T;
 
-    #[wasm_bindgen(method, setter, generic_per_mono, js_name = value)]
+    #[wasm_bindgen(method, setter, experimental_generic_mono, js_name = value)]
     fn set_value<T>(this: &Widget, v: T);
 
     // `structural` accessors read/write the property directly on the receiver
     // rather than through a captured descriptor.
-    #[wasm_bindgen(method, getter, structural, generic_per_mono, js_name = tag)]
+    #[wasm_bindgen(method, getter, structural, experimental_generic_mono, js_name = tag)]
     fn tag<T>(this: &Widget) -> T;
 
-    #[wasm_bindgen(method, setter, structural, generic_per_mono, js_name = tag)]
+    #[wasm_bindgen(method, setter, structural, experimental_generic_mono, js_name = tag)]
     fn set_tag<T>(this: &Widget, v: T);
 
     // `final` captures the property descriptor from `Widget.prototype` once, at
     // instantiation time, and invokes it with `.call(receiver)`. Getting the
     // receiver wrong here is exactly the silent failure a snapshot cannot see.
-    #[wasm_bindgen(method, getter, final, generic_per_mono, js_name = kind)]
+    #[wasm_bindgen(method, getter, final, experimental_generic_mono, js_name = kind)]
     fn kind<T>(this: &Widget) -> T;
 
     // `indexing_*` emit `obj[prop]`, `obj[prop] = val` and `delete obj[prop]`,
     // and always require `structural` + `method`.
-    #[wasm_bindgen(method, structural, indexing_getter, generic_per_mono)]
+    #[wasm_bindgen(method, structural, indexing_getter, experimental_generic_mono)]
     fn get<T>(this: &Widget, prop: &str) -> T;
 
-    #[wasm_bindgen(method, structural, indexing_setter, generic_per_mono)]
+    #[wasm_bindgen(method, structural, indexing_setter, experimental_generic_mono)]
     fn set_indexed<T>(this: &Widget, prop: &str, val: T);
 
     // The deleter has no value parameter, so its type parameter appears only in
     // the *index* position.
-    #[wasm_bindgen(method, structural, indexing_deleter, generic_per_mono)]
+    #[wasm_bindgen(method, structural, indexing_deleter, experimental_generic_mono)]
     fn delete_indexed<T>(this: &Widget, prop: T);
 
     #[wasm_bindgen(js_name = widgetValue)]
@@ -86,7 +86,7 @@ extern "C" {
 }
 
 #[wasm_bindgen_test]
-fn generic_per_mono_constructor() {
+fn experimental_generic_mono_constructor() {
     let a = Widget::new(7u32);
     assert_eq!(widget_value(&a), JsValue::from(7u32));
     // The constructor ran, rather than the argument being handed to some other
@@ -100,7 +100,7 @@ fn generic_per_mono_constructor() {
 }
 
 #[wasm_bindgen_test]
-fn generic_per_mono_method_receives_correct_receiver_and_value() {
+fn experimental_generic_mono_method_receives_correct_receiver_and_value() {
     let a = Widget::new(0u32);
     let b = Widget::new(0u32);
 
@@ -116,7 +116,7 @@ fn generic_per_mono_method_receives_correct_receiver_and_value() {
 }
 
 #[wasm_bindgen_test]
-fn generic_per_mono_method_with_handle_ref_arg() {
+fn experimental_generic_mono_method_with_handle_ref_arg() {
     let host = Widget::new(0u32);
     let guest = Widget::new(42u32);
 
@@ -128,7 +128,7 @@ fn generic_per_mono_method_with_handle_ref_arg() {
 }
 
 #[wasm_bindgen_test]
-fn generic_per_mono_static_method() {
+fn experimental_generic_mono_static_method() {
     let a = Widget::of(5u32);
     assert_eq!(widget_value(&a), JsValue::from(5u32));
     // `of` sets a distinct `_kind`, so this fails if the call was routed to the
@@ -140,7 +140,7 @@ fn generic_per_mono_static_method() {
 }
 
 #[wasm_bindgen_test]
-fn generic_per_mono_getter_and_setter() {
+fn experimental_generic_mono_getter_and_setter() {
     let w = Widget::new(1u32);
 
     // Generic return, marshalled at each concrete type.
@@ -158,7 +158,7 @@ fn generic_per_mono_getter_and_setter() {
 }
 
 #[wasm_bindgen_test]
-fn generic_per_mono_structural_getter_and_setter() {
+fn experimental_generic_mono_structural_getter_and_setter() {
     let w = Widget::new(0u32);
 
     w.set_tag(3u32);
@@ -170,7 +170,7 @@ fn generic_per_mono_structural_getter_and_setter() {
 }
 
 #[wasm_bindgen_test]
-fn generic_per_mono_final_getter_resolves_against_the_receiver() {
+fn experimental_generic_mono_final_getter_resolves_against_the_receiver() {
     // `final` captures `Widget.prototype`'s descriptor once and invokes it with
     // `.call(receiver)`. Two receivers with different `_kind` values prove the
     // captured getter is applied to the argument rather than to a fixed object.
@@ -182,7 +182,7 @@ fn generic_per_mono_final_getter_resolves_against_the_receiver() {
 }
 
 #[wasm_bindgen_test]
-fn generic_per_mono_indexing_getter_and_setter() {
+fn experimental_generic_mono_indexing_getter_and_setter() {
     let w = Widget::new(0u32);
 
     w.set_indexed("a", 1u32);
@@ -198,7 +198,7 @@ fn generic_per_mono_indexing_getter_and_setter() {
 }
 
 #[wasm_bindgen_test]
-fn generic_per_mono_indexing_deleter() {
+fn experimental_generic_mono_indexing_deleter() {
     let w = Widget::new(0u32);
 
     widget_set_prop(&w, "gone", &JsValue::from(1u32));

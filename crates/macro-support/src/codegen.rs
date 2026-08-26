@@ -2822,7 +2822,7 @@ impl ast::ImportFunction {
         if type_params.is_empty() {
             bail_span!(
                 self.rust_name,
-                "generic_per_mono requires at least one type parameter"
+                "experimental_generic_mono requires at least one type parameter"
             );
         }
         let lifetime_params = generics::lifetime_params(&self.generics);
@@ -2860,7 +2860,7 @@ impl ast::ImportFunction {
             {
                 bail_span!(
                     self.rust_name,
-                    "generic_per_mono does not support class-level generic parameters yet; \
+                    "experimental_generic_mono does not support class-level generic parameters yet; \
                      use the type-erasure generic path instead"
                 );
             }
@@ -2881,7 +2881,7 @@ impl ast::ImportFunction {
                 if generics::uses_generic_params(ty, &type_params) && !is_spreadable_sequence(ty) {
                     bail_span!(
                         ty,
-                        "generic_per_mono requires the `variadic` argument to be a sequence when \
+                        "experimental_generic_mono requires the `variadic` argument to be a sequence when \
                          it mentions a type parameter, because it is spread with `...` on the JS \
                          side and must be iterable for every monomorphisation; use `Vec<T>`, \
                          `[T; N]` or `&[T]`, or the type-erasure generic path instead"
@@ -2952,7 +2952,7 @@ impl ast::ImportFunction {
                 syn::Pat::Wild(_) => Ident::new(&format!("__genarg_{i}"), Span::call_site()),
                 _ => bail_span!(
                     arg.pat_type.pat,
-                    "unsupported pattern in generic_per_mono imported function",
+                    "unsupported pattern in experimental_generic_mono imported function",
                 ),
             };
 
@@ -2989,7 +2989,7 @@ impl ast::ImportFunction {
                 } else if generics::references_generic_param(ty, &type_params) {
                     bail_span!(
                         ty,
-                        "generic_per_mono only supports a bare shared reference to a generic \
+                        "experimental_generic_mono only supports a bare shared reference to a generic \
                          type parameter (`&T`); mutable references (`&mut T`) and references \
                          nested inside another type (e.g. `Option<&T>`) are not supported — \
                          take the argument by value or use the type-erasure generic path"
@@ -3700,7 +3700,7 @@ impl TryToTokens for DescribeImport<'_> {
         // archive member out of an rlib if something in the link references one
         // of its symbols. The monomorphised shim is instantiated in the
         // *downstream* crate's CGU, so it does not reference anything here — an
-        // upstream `extern "C"` block containing only `generic_per_mono`
+        // upstream `extern "C"` block containing only `experimental_generic_mono`
         // imports would leave no referenced symbol at all, the member would
         // never be pulled, and the crate's AST metadata would silently go
         // missing. The CLI then fails with "generic import monomorphisation
@@ -4237,7 +4237,7 @@ fn respan(input: TokenStream, span: &dyn ToTokens) -> TokenStream {
 /// async-import tests all resolve to `JsValue`/`JsString`.
 ///
 /// Both import codegen paths must agree here — [`DescribeImport`] for ordinary
-/// imports and [`ImportFunction::try_to_tokens_generic`] for `generic_per_mono`
+/// imports and [`ImportFunction::try_to_tokens_generic`] for `experimental_generic_mono`
 /// ones. They used to carry separate copies of this logic with a "keep the two in
 /// sync" comment; this helper is what makes that drift impossible.
 fn import_describe_ret(

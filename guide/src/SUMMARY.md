@@ -77,7 +77,7 @@
       - [`catch`](./reference/attributes/on-js-imports/catch.md)
       - [`constructor`](./reference/attributes/on-js-imports/constructor.md)
       - [`extends`](./reference/attributes/on-js-imports/extends.md)
-      - [`generic_per_mono`](./reference/attributes/on-js-imports/generic_per_mono.md)
+      - [`experimental_generic_mono`](./reference/attributes/on-js-imports/experimental_generic_mono.md)
       - [`getter` and `setter`](./reference/attributes/on-js-imports/getter-and-setter.md)
       - [`final`](./reference/attributes/on-js-imports/final.md)
       - [`indexing_getter`, `indexing_setter`, and `indexing_deleter`](./reference/attributes/on-js-imports/indexing-getter-setter-deleter.md)

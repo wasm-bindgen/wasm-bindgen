@@ -1,7 +1,7 @@
 use wasm_bindgen::prelude::*;
 
 // Trait bounds declared on a per-monomorphisation generic import
-// (`#[wasm_bindgen(generic_per_mono)]`) are part of its contract: they are
+// (`#[wasm_bindgen(experimental_generic_mono)]`) are part of its contract: they are
 // carried through codegen, so a caller that violates one is rejected, and the
 // diagnostic points at the user's own bound. Both an inline bound and a `where`
 // predicate are exercised, since they reach the generated wrapper by different
@@ -19,18 +19,18 @@ trait Marker {}
 
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn inline_bound<T: Marker>(x: T);
 
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn where_bound<T>(x: T)
     where
         T: Marker;
 
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn iter_bound<T: Iterator>(x: T);
 
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn iter_item_bound<T>(x: T)
     where
         T: IntoIterator<Item = String>;

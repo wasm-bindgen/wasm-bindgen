@@ -1,7 +1,7 @@
 use wasm_bindgen::prelude::*;
 
 // Argument-position `impl Trait` in a per-monomorphisation generic import
-// (`#[wasm_bindgen(generic_per_mono)]`) is desugared into a synthesized named
+// (`#[wasm_bindgen(experimental_generic_mono)]`) is desugared into a synthesized named
 // type parameter with the same bounds, exactly as if the user had written it
 // out by hand (`fn f<T: Trait>(x: T)`). The declarations below all take that
 // path silently; only the call sites at the bottom, which violate the
@@ -14,20 +14,20 @@ extern "C" {
     // A bare `impl Trait` argument on a function with no named type
     // parameter of its own: this is the shape `generic-per-mono-unsupported.rs`
     // notes would otherwise look like it has none.
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn bare_impl_trait(x: impl Marker);
 
     // `impl Trait` mixed with a real, named type parameter.
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn impl_trait_with_type_param<T>(x: impl Marker, y: T);
 
     // `impl Trait` nested inside another type.
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn nested_impl_trait<T>(x: Vec<impl Marker>, y: T);
 
     // Two `impl Trait` arguments in the same function, each with a different
     // bound: both need their own synthesized parameter with distinct names.
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn two_impl_trait_args(x: impl Marker, y: impl Iterator);
 }
 

@@ -37,7 +37,7 @@ pub struct WasmBindgenAux {
     /// Comments to emit above a manufactured import's generated JS body.
     ///
     /// Bindings that wasm-bindgen synthesises rather than names after a Rust item
-    /// — currently `generic_per_mono` monomorphisations, which are emitted as
+    /// — currently `experimental_generic_mono` monomorphisations, which are emitted as
     /// `__wbindgen_generic_<hash>` — carry no hint in their name about which
     /// import or which instantiation they correspond to. Two instantiations can
     /// even have byte-identical bodies while differing in wasm signature, so the

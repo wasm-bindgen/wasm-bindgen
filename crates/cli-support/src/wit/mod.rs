@@ -83,7 +83,7 @@ struct Context<'a> {
 /// interpreted monomorphisation.
 ///
 /// Note there is deliberately no `assert_no_shim`: the macro rejects
-/// `assert_no_shim` combined with `generic_per_mono` at parse time, so it is
+/// `assert_no_shim` combined with `experimental_generic_mono` at parse time, so it is
 /// always `false` on this path and `bind_generic_imports` passes the constant
 /// through to `finish_import_binding` (which still needs the parameter for the
 /// normal import path).
@@ -648,7 +648,7 @@ impl<'a> Context<'a> {
                         .import_comments
                         .insert(id, format!("generic import `{display}`: {mono}"));
                     // `assert_no_shim` and `suspending` are rejected in
-                    // combination with `generic_per_mono` by the macro (see
+                    // combination with `experimental_generic_mono` by the macro (see
                     // `parser.rs`), so both are always false on this path.
                     self.finish_import_binding(id, aux_import, catch, variadic, false, false);
                 }
@@ -1354,7 +1354,7 @@ impl<'a> Context<'a> {
             // reaches the CLI from an older or hand-built macro.
             if import.reexport.is_some() {
                 bail!(
-                    "#[wasm_bindgen] `generic_per_mono` imports cannot be reexported; \
+                    "#[wasm_bindgen] `experimental_generic_mono` imports cannot be reexported; \
                      remove the reexport or use the type-erasure generic path"
                 );
             }
@@ -1438,7 +1438,7 @@ impl<'a> Context<'a> {
                     if previous.identity() != meta.identity() {
                         let previous = &previous.display;
                         bail!(
-                            "two `generic_per_mono` imports collided on the shim key `{shim}`: \
+                            "two `experimental_generic_mono` imports collided on the shim key `{shim}`: \
                              `{previous}` and `{display}`.\n\
                              \n\
                              This happens when two generic imports have the same Rust function \
