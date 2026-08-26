@@ -1,5 +1,5 @@
 //! Runtime coverage for user-written trait bounds on a per-monomorphisation
-//! generic import (`#[wasm_bindgen(generic_per_mono)]`).
+//! generic import (`#[wasm_bindgen(experimental_generic_mono)]`).
 //!
 //! Bounds are part of the declared signature's contract, so they must be carried
 //! through codegen rather than dropped. Two routes are exercised, because they
@@ -51,17 +51,17 @@ extern "C" {
     fn take_log() -> String;
 
     // Inline bound.
-    #[wasm_bindgen(generic_per_mono, js_name = record)]
+    #[wasm_bindgen(experimental_generic_mono, js_name = record)]
     fn record_inline<T: Copy + Clone>(x: T);
 
     // `where` predicate.
-    #[wasm_bindgen(generic_per_mono, js_name = record)]
+    #[wasm_bindgen(experimental_generic_mono, js_name = record)]
     fn record_where<T>(x: T)
     where
         T: Clone;
 
     // Inline and `where` bounds on the same signature, across two parameters.
-    #[wasm_bindgen(generic_per_mono, js_name = sum)]
+    #[wasm_bindgen(experimental_generic_mono, js_name = sum)]
     fn sum_bounded<T: Copy, U>(a: T, b: U) -> f64
     where
         U: Copy;
@@ -70,23 +70,23 @@ extern "C" {
     // parameter with the same bound, so it exercises the identical
     // bound-carrying machinery as `record_inline` above, just declared the
     // sugared way with no named type parameter of its own.
-    #[wasm_bindgen(generic_per_mono, js_name = record)]
+    #[wasm_bindgen(experimental_generic_mono, js_name = record)]
     fn record_impl_trait(x: impl Copy + Clone);
 
     // `impl Trait` mixed with a real, named, bounded type parameter in the
     // same signature.
-    #[wasm_bindgen(generic_per_mono, js_name = sum)]
+    #[wasm_bindgen(experimental_generic_mono, js_name = sum)]
     fn sum_impl_trait_mixed<U: Copy>(a: impl Copy, b: U) -> f64;
 
     // The bound's associated type appears in argument and return position, so
     // the bound has to reach the shim for `T::Wire`'s ABI to resolve.
-    #[wasm_bindgen(generic_per_mono, js_name = echo)]
+    #[wasm_bindgen(experimental_generic_mono, js_name = echo)]
     fn echo_wire<T>(x: T::Wire) -> T::Wire
     where
         T: Wire;
 
     // Higher-ranked `where` predicate.
-    #[wasm_bindgen(generic_per_mono, js_name = echo)]
+    #[wasm_bindgen(experimental_generic_mono, js_name = echo)]
     fn echo_hrtb<T>(x: T) -> T
     where
         for<'a> &'a T: Clone,
@@ -97,27 +97,27 @@ extern "C" {
     // Inline bound on a real trait whose path carries an associated-type
     // binding. `T` is named nowhere else in the signature, so callers turbofish
     // and the binding is what makes the argument's type concrete.
-    #[wasm_bindgen(generic_per_mono, js_name = record)]
+    #[wasm_bindgen(experimental_generic_mono, js_name = record)]
     fn record_iter_item<T: Iterator<Item = u32>>(x: T::Item);
 
     // The same trait as a `where` predicate, with the projection left open in
     // both argument and return position: the bound has to reach the shim for
     // `T::Item`'s ABI to resolve there.
-    #[wasm_bindgen(generic_per_mono, js_name = echo)]
+    #[wasm_bindgen(experimental_generic_mono, js_name = echo)]
     fn echo_iter_item<T>(x: T::Item) -> T::Item
     where
         T: Iterator;
 
     // Only `ExactSizeIterator` is named, so `T::Item` resolves through its
     // `Iterator` supertrait rather than the bound's own trait.
-    #[wasm_bindgen(generic_per_mono, js_name = echo)]
+    #[wasm_bindgen(experimental_generic_mono, js_name = echo)]
     fn echo_exact_size_item<T>(x: T::Item) -> T::Item
     where
         T: ExactSizeIterator;
 
     // A predicate whose bounded type is a projection rather than a bare
     // parameter, next to the bound that makes the projection nameable.
-    #[wasm_bindgen(generic_per_mono, js_name = echo)]
+    #[wasm_bindgen(experimental_generic_mono, js_name = echo)]
     fn echo_cloneable_item<T>(x: T::Item) -> T::Item
     where
         T: Iterator,
@@ -127,12 +127,12 @@ extern "C" {
     // user's bounds and the synthesized `IntoWasmAbi`/`WasmDescribe` ones land
     // on the same parameter. `AsRef<[u32]>` also puts a plain type argument
     // (rather than an associated-type binding) in a bound path.
-    #[wasm_bindgen(generic_per_mono, js_name = sumAll)]
+    #[wasm_bindgen(experimental_generic_mono, js_name = sumAll)]
     fn sum_all<T: IntoIterator<Item = u32> + AsRef<[u32]>>(xs: T) -> f64;
 
     // Higher-ranked predicate over a real trait: it is the *reference* that must
     // be iterable, which `T: IntoIterator` alone would not give.
-    #[wasm_bindgen(generic_per_mono, js_name = sumAll)]
+    #[wasm_bindgen(experimental_generic_mono, js_name = sumAll)]
     fn sum_all_by_ref<T>(xs: T) -> f64
     where
         for<'a> &'a T: IntoIterator;

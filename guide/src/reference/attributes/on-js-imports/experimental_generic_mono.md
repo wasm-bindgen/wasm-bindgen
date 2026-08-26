@@ -1,4 +1,4 @@
-# `generic_per_mono`
+# `experimental_generic_mono`
 
 > **⚠️ Experimental.** This attribute is experimental and its behaviour may
 > change, or it may be removed, in any release. The set of supported signature
@@ -14,7 +14,7 @@ generated works for all instantiations. That is described in
 [Working with wasm-bindgen Generics](../../working-with-generics.md), and it is
 why `T` normally has to be a JS type (`JsGeneric`) rather than a Rust one.
 
-`generic_per_mono` opts a single import out of erasure. Instead of one erased
+`experimental_generic_mono` opts a single import out of erasure. Instead of one erased
 binding, `wasm-bindgen` generates **one binding per monomorphisation**, each with
 its own descriptor, so arguments and return values are marshalled at their
 concrete types:
@@ -24,7 +24,7 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(js_namespace = console, generic_per_mono)]
+    #[wasm_bindgen(js_namespace = console, experimental_generic_mono)]
     fn log<T>(value: T);
 }
 
@@ -39,7 +39,7 @@ which the erasure path does not allow.
 
 ## When to use it
 
-Reach for `generic_per_mono` when you want one Rust signature to serve several
+Reach for `experimental_generic_mono` when you want one Rust signature to serve several
 *Rust* types and you care about how they marshal. Reach for the default erasure
 path when you are modelling JS generics (`Array<T>`, `Promise<T>`) and want a
 single binding for all of them.
@@ -59,12 +59,12 @@ predicates all work:
 ```rust
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn sum_items<T>(items: T) -> f64
     where
         T: IntoIterator<Item = u32>;
 
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn double<T>(value: T) -> T
     where
         for<'a> &'a T: core::ops::Add<&'a T, Output = T>;
@@ -93,7 +93,7 @@ interchangeable:
 ```rust
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(js_namespace = console, generic_per_mono)]
+    #[wasm_bindgen(js_namespace = console, experimental_generic_mono)]
     fn log(value: impl core::fmt::Debug);
 }
 
@@ -113,7 +113,7 @@ synthesized parameter:
 ```rust
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn mix<T>(label: T, values: Vec<impl Clone>);
 }
 ```
@@ -130,7 +130,7 @@ Lifetime parameters on the function are supported, including lifetime bounds
 ```rust
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn log_ref<'a, T>(value: &'a T);
 }
 ```
@@ -143,7 +143,7 @@ receiver to the rest of the call:
 extern "C" {
     type Widget;
 
-    #[wasm_bindgen(method, generic_per_mono)]
+    #[wasm_bindgen(method, experimental_generic_mono)]
     fn set<'a, T>(this: &'a Widget, value: &'a T);
 }
 ```
@@ -158,7 +158,7 @@ needs the same hoisting machinery class-level type parameters do; see
 
 ## Other attributes
 
-`generic_per_mono` composes with the usual import attributes — `method`,
+`experimental_generic_mono` composes with the usual import attributes — `method`,
 `static_method_of`, `constructor`, `getter`, `setter`, `structural`, `final`,
 `indexing_getter`, `indexing_setter`, `indexing_deleter`, `js_namespace`,
 `js_name`, `catch`, `variadic`, and `slice_to_array` — and the resulting JS
@@ -172,18 +172,18 @@ rejected, see [Unsupported shapes](#unsupported-shapes).
 ```rust
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     async fn round_trip<T>(value: T) -> T;
 }
 ```
 
 ## Applying it to a whole block
 
-`generic_per_mono` can also go on the `extern "C"` block, which every function in
+`experimental_generic_mono` can also go on the `extern "C"` block, which every function in
 the block then inherits:
 
 ```rust
-#[wasm_bindgen(generic_per_mono)]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     fn log_one<T>(x: T);
     fn log_two<T>(a: u32, b: T) -> T;
@@ -195,21 +195,21 @@ least one type parameter, so a non-generic import in the block is left alone and
 binds through the ordinary single shim. A block can therefore mix the two freely:
 
 ```rust
-#[wasm_bindgen(generic_per_mono)]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     fn log_generic<T>(x: T); // per-monomorphisation
     fn log_u32(x: u32);      // ordinary import, unaffected
 }
 ```
 
-Writing `generic_per_mono` directly on a non-generic function is still an error,
+Writing `experimental_generic_mono` directly on a non-generic function is still an error,
 since there you asked for something that cannot be done.
 
 ## Unsupported shapes
 
 These are rejected at compile time with a diagnostic pointing at the offending
 declaration. Each generally keeps working on the type-erasure path, so the fix is
-usually to drop `generic_per_mono`:
+usually to drop `experimental_generic_mono`:
 
 * **Generic parameters on the imported *type*** (class-level generics),
   whether a type parameter (`this: &Holder<T>`) or a lifetime
@@ -242,20 +242,20 @@ usually to drop `generic_per_mono`:
   rejected rather than silently ignored.
 * **An argument whose pattern is not a plain name or `_`** (for example a tuple
   pattern such as `fn f<T>((a, b): (u32, u32), x: T)`), reported as
-  `unsupported pattern in generic_per_mono imported function`. The generated
+  `unsupported pattern in experimental_generic_mono imported function`. The generated
   per-monomorphisation shim has to forward each argument by name, so it needs a
   binding it can name. Give the argument a single identifier instead.
 
-**Const generic parameters** are also rejected, but not by `generic_per_mono`:
+**Const generic parameters** are also rejected, but not by `experimental_generic_mono`:
 `wasm-bindgen` does not support them on *any* generic import, erased or not, and
-reports `unsupported in wasm-bindgen generics`. Dropping `generic_per_mono` will
+reports `unsupported in wasm-bindgen generics`. Dropping `experimental_generic_mono` will
 not help.
 
 ### Colliding imports
 
 Everything above is reported by the macro, at compile time. One failure is
 reported later, by the `wasm-bindgen` CLI, because it cannot be detected until
-the whole module is linked: two `generic_per_mono` imports that agree on every
+the whole module is linked: two `experimental_generic_mono` imports that agree on every
 input to the shim key and differ *only* in an attribute that the key does not
 hash.
 

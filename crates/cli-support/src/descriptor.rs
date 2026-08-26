@@ -21,7 +21,7 @@ pub enum GenericImportKey {
     /// AST metadata: it is bound as JS that returns its single argument
     /// unchanged.
     Cast,
-    /// A `#[wasm_bindgen(generic_per_mono)]` import. The string is the shim key
+    /// A `#[wasm_bindgen(experimental_generic_mono)]` import. The string is the shim key
     /// identifying which generic-import AST entry supplies the JS binding
     /// metadata (name, kind, namespace, catch, ...).
     Shim(String),

@@ -1,95 +1,95 @@
 use wasm_bindgen::prelude::*;
 
 // The experimental per-monomorphisation generic import path
-// (`#[wasm_bindgen(generic_per_mono)]`) rejects a handful of shapes with a
+// (`#[wasm_bindgen(experimental_generic_mono)]`) rejects a handful of shapes with a
 // clear diagnostic, deferring them to the type-erasure generic path. Each
 // function below exercises one of those aborting paths.
 #[wasm_bindgen]
 extern "C" {
-    // `generic_per_mono` requires at least one type parameter. Argument-position
+    // `experimental_generic_mono` requires at least one type parameter. Argument-position
     // `impl Trait` (see `generic-per-mono-impl-trait.rs` for the supported case)
     // counts as one, since it desugars to an anonymous type parameter, so it
     // does not satisfy this check on its own.
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn without_type_param(x: u32);
 
     // A bare shared reference to a generic type parameter (`&T`) *is* now
     // supported, but a mutable reference (`&mut T`) is not.
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn mut_ref_to_generic<T>(x: &mut T);
 
     // Nor is a reference to a generic parameter nested inside another type
     // (e.g. `Option<&T>`).
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn nested_ref_to_generic<T>(x: Option<&T>);
 
     // Returning a reference is not supported.
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn return_ref<T>(x: T) -> &JsValue;
 
     // A bare generic type parameter cannot be the `variadic` argument, since it
     // may monomorphise to a non-iterable scalar.
-    #[wasm_bindgen(generic_per_mono, variadic)]
+    #[wasm_bindgen(experimental_generic_mono, variadic)]
     fn variadic_scalar<T>(first: u32, rest: T);
 
     // Nor can a reference to one: `&T` crosses the ABI as whatever `T` does, so
     // it is just as unspreadable.
-    #[wasm_bindgen(generic_per_mono, variadic)]
+    #[wasm_bindgen(experimental_generic_mono, variadic)]
     fn variadic_ref<T>(first: u32, rest: &T);
 
     // Nor any other non-sequence container. These are rejected by the same
     // allow-list: `Option<T>` is `undefined` or a bare value, `Box<T>` marshals
     // as its pointee, and an associated type is whatever the bound resolves it
     // to — none of which is iterable for every monomorphisation.
-    #[wasm_bindgen(generic_per_mono, variadic)]
+    #[wasm_bindgen(experimental_generic_mono, variadic)]
     fn variadic_option<T>(first: u32, rest: Option<T>);
 
-    #[wasm_bindgen(generic_per_mono, variadic)]
+    #[wasm_bindgen(experimental_generic_mono, variadic)]
     fn variadic_box<T>(first: u32, rest: Box<T>);
 
-    #[wasm_bindgen(generic_per_mono, variadic)]
+    #[wasm_bindgen(experimental_generic_mono, variadic)]
     fn variadic_assoc<T: IntoIterator>(first: u32, rest: T::Item);
 
     // `catch` hard-codes the error type to `JsValue` and monomorphises only the
     // `Ok` type, so a type parameter in the error position is rejected.
-    #[wasm_bindgen(generic_per_mono, catch)]
+    #[wasm_bindgen(experimental_generic_mono, catch)]
     fn catch_generic_err<T>(x: T) -> Result<JsValue, T>;
 
     // The rejection is on *any* `&mut` whose referent mentions a type
     // parameter, not just a bare `&mut T`.
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn mut_ref_to_nested_generic<T>(x: &mut Vec<T>);
 
     // The four further nested-reference shapes `references_generic_param`
     // documents. Each has a reference to `T` somewhere inside a larger type, so
     // none of them is a *top-level* shared ref and all need the erasure path.
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn ref_ref_to_generic<T>(x: &&T);
 
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn tuple_with_ref_to_generic<T>(x: (T, &T));
 
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn array_of_refs_to_generic<T>(x: [&T; 2]);
 
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn boxed_ref_to_generic<T>(x: Box<&T>);
 
     // An argument whose pattern is not a plain ident or `_` has no name for the
     // generated shim to forward, so per-mono codegen rejects it.
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn tuple_pattern_arg<T>((a, b): (u32, u32), x: T);
 }
 
 // Class-level generics on the imported type need the erasure machinery
-// (`fn_class_generics`), so a `generic_per_mono` method on a generic imported
+// (`fn_class_generics`), so a `experimental_generic_mono` method on a generic imported
 // type is rejected. Kept in its own block so the `type Holder<T>` declaration
 // can't interfere with the diagnostics above.
 #[wasm_bindgen]
 extern "C" {
     type Holder<T>;
 
-    #[wasm_bindgen(method, generic_per_mono)]
+    #[wasm_bindgen(method, experimental_generic_mono)]
     fn get<T>(this: &Holder<T>) -> T;
 }
 
@@ -102,7 +102,7 @@ extern "C" {
 extern "C" {
     type LifetimeHolder<'a>;
 
-    #[wasm_bindgen(method, generic_per_mono)]
+    #[wasm_bindgen(method, experimental_generic_mono)]
     fn get_lifetime<'a, T>(this: &'a LifetimeHolder<'a>) -> T;
 }
 
@@ -114,25 +114,25 @@ extern "C" {
 extern "C" {
     // `assert_no_shim` asserts that no shim is generated, which per-mono codegen
     // can never satisfy: it manufactures one shim per monomorphisation.
-    #[wasm_bindgen(generic_per_mono, assert_no_shim)]
+    #[wasm_bindgen(experimental_generic_mono, assert_no_shim)]
     fn asserted_no_shim<T>(x: T);
 
     // `reexport` names a single descriptor shim, and a per-mono import has no
     // single shim to name.
-    #[wasm_bindgen(generic_per_mono, reexport)]
+    #[wasm_bindgen(experimental_generic_mono, reexport)]
     fn reexported<T>(x: T);
 
     // Const generic parameters are rejected by `validate_generics` for *every*
     // wasm-bindgen generic, erased or per-mono, so this surfaces as the shared
     // "unsupported in wasm-bindgen generics" error rather than a per-mono one.
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn const_generic<const N: usize, T>(x: T);
 
     // A `?Sized` bound relaxes an implicit bound rather than adding one, which
     // `validate_generics` rejects for *every* wasm-bindgen generic. Like the
     // const-generic case above this is the shared parse-time error, not a
     // per-mono one -- the erasure path already covers the same message.
-    #[wasm_bindgen(generic_per_mono)]
+    #[wasm_bindgen(experimental_generic_mono)]
     fn unsized_type_param<T: ?Sized>(x: &T);
 
     // `slice_to_array` needs a concrete element type: `VectorRefIntoWasmAbi` is
@@ -140,20 +140,20 @@ extern "C" {
     // also a parse-time rejection, so it belongs in this block: leaving it in the
     // codegen-time block above would abort that block and swallow every
     // diagnostic in it.
-    #[wasm_bindgen(generic_per_mono, slice_to_array)]
+    #[wasm_bindgen(experimental_generic_mono, slice_to_array)]
     fn slice_to_array_generic_elem<T>(xs: &[T], other: T);
 
     // Also rejected when only nested inside the element type...
-    #[wasm_bindgen(generic_per_mono, slice_to_array)]
+    #[wasm_bindgen(experimental_generic_mono, slice_to_array)]
     fn slice_to_array_nested_elem<T>(xs: &[Vec<T>], other: T);
 
     // ...and through the `Option<&[T]>` form.
-    #[wasm_bindgen(generic_per_mono, slice_to_array)]
+    #[wasm_bindgen(experimental_generic_mono, slice_to_array)]
     fn slice_to_array_option_elem<T>(xs: Option<&[T]>, other: T);
 }
 
 // `slice_to_array` is inherited from the enclosing block, and the same rejection
-// applies on the type-erasure generic path, which has no `generic_per_mono`.
+// applies on the type-erasure generic path, which has no `experimental_generic_mono`.
 #[wasm_bindgen(slice_to_array)]
 extern "C" {
     fn erased_slice_to_array_generic_elem<T>(xs: &[T]);

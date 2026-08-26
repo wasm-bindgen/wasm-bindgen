@@ -9,11 +9,21 @@
   info to a separate `*_bg.debug.wasm` file. Use `--debug-info-url` to set
   the recorded URL for the debug info. [#5279](https://github.com/wasm-bindgen/wasm-bindgen/pull/5279)
 
-* `generic_per_mono` imports now support argument-position `impl Trait`
-  (including nested, e.g. `Vec<impl Trait>`), which is desugared into a
-  synthesized named type parameter with the same bound; see
-  [the guide](https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/generic_per_mono.html)
-  for the supported surface and the shapes that are rejected.
+* Added `#[wasm_bindgen(experimental_generic_mono)]` for imported functions,
+  which binds a generic import once per monomorphisation instead of erasing
+  its type parameters to `JsValue`. It can be applied to an individual import
+  or to a whole `extern "C"` block, which every generic function in the block
+  then inherits. Each instantiation gets its own descriptor, so arguments and
+  return values are marshalled at their concrete types (a `u32` crosses as a
+  number, a `String` as a string) rather than being boxed. Trait bounds,
+  `where` predicates (including higher-ranked ones), associated-type
+  projections, lifetime parameters, argument-position `impl Trait`, `async`,
+  `catch`, and `slice_to_array` are all supported; see
+  [the guide](https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/experimental_generic_mono.html)
+  for the supported surface and the shapes that are rejected. The attribute
+  is experimental and may change as it stabilizes.
+  [#5230](https://github.com/wasm-bindgen/wasm-bindgen/pull/5230)
+  [#5272](https://github.com/wasm-bindgen/wasm-bindgen/pull/5272)
 
 * Added an experimental `--experimental-memory-discard` flag which replaces an
   `env.__wbindgen_memory_discard` function import with a local trampoline
@@ -52,18 +62,6 @@
 
 * [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
   to `web-sys` [#5247](https://github.com/wasm-bindgen/wasm-bindgen/pull/5247)
-
-* Added `#[wasm_bindgen(generic_per_mono)]` for imported functions, which binds a
-  generic import once per monomorphisation instead of erasing its type
-  parameters to `JsValue`. It can be applied to an individual import or to a
-  whole `extern "C"` block, which every function in the block then inherits.
-  Each instantiation gets its own descriptor, so
-  arguments and return values are marshalled at their concrete types (a `u32`
-  crosses as a number, a `String` as a string) rather than being boxed. Trait
-  bounds, `where` predicates (including higher-ranked ones), associated-type
-  projections, lifetime parameters, `async`, `catch`, and `slice_to_array` are
-  all supported; see [the guide](https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/generic_per_mono.html)
-  for the supported surface and the shapes that are rejected.
 
 * Added `riscv64gc-unknown-linux-gnu` release artifacts.
   [#5265](https://github.com/wasm-bindgen/wasm-bindgen/pull/5265)

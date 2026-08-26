@@ -2169,7 +2169,7 @@ impl Invocation {
                     *guard = ExportGuard::None;
                 }
                 // Label manufactured bindings whose name says nothing about what
-                // they bind. A `generic_per_mono` monomorphisation is emitted as
+                // they bind. A `experimental_generic_mono` monomorphisation is emitted as
                 // `__wbindgen_generic_<hash>`, so without this the glue is a wall of
                 // near-identical anonymous shims.
                 if let Some(comment) = cx.aux.import_comments.get(id) {

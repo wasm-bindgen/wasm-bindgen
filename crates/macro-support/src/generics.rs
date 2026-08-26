@@ -380,7 +380,7 @@ impl<'ast> Visit<'ast> for ImplTraitPresenceVisitor {
 /// Argument-position `impl Trait` desugars to an anonymous generic type
 /// parameter, so it never shows up in `fn.generics` — callers that need to
 /// know whether a signature is "generic" at all (e.g. deciding whether a
-/// block-level `generic_per_mono` applies) have to check argument types
+/// block-level `experimental_generic_mono` applies) have to check argument types
 /// directly rather than `fn.generics.type_params()`.
 pub(crate) fn has_impl_trait(ty: &syn::Type) -> bool {
     let mut visitor = ImplTraitPresenceVisitor { found: false };
@@ -395,7 +395,7 @@ pub(crate) fn has_impl_trait(ty: &syn::Type) -> bool {
 ///
 /// Argument-position `impl Trait` desugars to an anonymous generic type
 /// parameter that never appears in `fn.generics`, so there is no name for
-/// `generic_per_mono` codegen to hang a `where` bound, shim generic
+/// `experimental_generic_mono` codegen to hang a `where` bound, shim generic
 /// parameter, or `breaks_if_inlined::<..>` turbofish argument off of. This
 /// visitor "un-desugars" it back into the named form a user would otherwise
 /// have to write by hand (`fn f<T: Trait>(x: T)`), giving each occurrence a

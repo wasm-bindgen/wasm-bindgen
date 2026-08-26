@@ -130,7 +130,7 @@ macro_rules! attrgen {
             // Opt-in to the experimental per-monomorphisation generic import
             // codegen path (interpreter-discovered, marker-terminated) instead
             // of the type-erasure path.
-            (generic_per_mono, true, GenericPerMono(Span)),
+            (experimental_generic_mono, true, GenericPerMono(Span)),
 
             // For testing purposes only.
             (assert_no_shim, false, AssertNoShim(Span)),
@@ -1069,7 +1069,7 @@ impl<'a>
         }
 
         let assert_no_shim = opts.assert_no_shim();
-        // `generic_per_mono` is inherited from the enclosing `extern "C"` block,
+        // `experimental_generic_mono` is inherited from the enclosing `extern "C"` block,
         // optionally OR'd with a fn-level attribute, exactly like
         // `slice_to_array` above.
         //
@@ -1083,12 +1083,12 @@ impl<'a>
         // Writing the attribute *on* a non-generic function is still an error
         // (raised in codegen): there the user named a specific function and the
         // request cannot be honoured, so silence would hide a real mistake.
-        let fn_generic_per_mono = opts.generic_per_mono().is_some();
+        let fn_generic_per_mono = opts.experimental_generic_mono().is_some();
         // A named type parameter isn't the only way a signature is generic:
         // argument-position `impl Trait` desugars to an anonymous one that
         // never appears in `self.sig.generics`, so it has to be checked for
         // separately, or a bare-`impl Trait` function would look non-generic
-        // to the block-level flag above (despite `generic_per_mono` fully
+        // to the block-level flag above (despite `experimental_generic_mono` fully
         // supporting it; see `codegen::try_to_tokens_generic`).
         let is_generic = self.sig.generics.type_params().next().is_some()
             || self.sig.inputs.iter().any(|arg| match arg {
@@ -1106,7 +1106,7 @@ impl<'a>
             if let Some(span) = assert_no_shim {
                 return Err(Diagnostic::span_error(
                     *span,
-                    "`assert_no_shim` cannot be used with `generic_per_mono`, which always \
+                    "`assert_no_shim` cannot be used with `experimental_generic_mono`, which always \
                      generates one shim per monomorphisation",
                 ));
             }
@@ -1116,7 +1116,7 @@ impl<'a>
             if let Some(span) = opts.suspending() {
                 return Err(Diagnostic::span_error(
                     *span,
-                    "`suspending` cannot be used with `generic_per_mono`; use the \
+                    "`suspending` cannot be used with `experimental_generic_mono`; use the \
                      type-erasure generic path for suspending imports",
                 ));
             }
@@ -1125,7 +1125,7 @@ impl<'a>
             if opts.reexport().is_some() {
                 return Err(Diagnostic::span_error(
                     self.sig.ident.span(),
-                    "`reexport` cannot be used with `generic_per_mono`, because one binding is \
+                    "`reexport` cannot be used with `experimental_generic_mono`, because one binding is \
                      manufactured per monomorphisation and there is no single shim to reexport; \
                      remove the reexport or use the type-erasure generic path",
                 ));
@@ -2729,7 +2729,7 @@ impl MacroParse<BindgenAttrs> for syn::ItemForeignMod {
             .map_err(|e| errors.push(e))
             .unwrap_or_default();
         let slice_to_array = opts.slice_to_array().is_some();
-        let generic_per_mono = opts.generic_per_mono().is_some();
+        let generic_per_mono = opts.experimental_generic_mono().is_some();
         for item in self.items.into_iter() {
             let ctx = ForeignItemCtx {
                 module: module.clone(),
@@ -2754,9 +2754,9 @@ struct ForeignItemCtx {
     /// function inside the `extern "C"` block. Per-fn / per-arg
     /// `slice_to_array` ORs on top of this.
     slice_to_array: bool,
-    /// Block-level `generic_per_mono` flag inherited by every *generic* foreign
+    /// Block-level `experimental_generic_mono` flag inherited by every *generic* foreign
     /// function inside the `extern "C"` block, opting them onto the
-    /// per-monomorphisation codegen path. A per-fn `generic_per_mono` ORs on
+    /// per-monomorphisation codegen path. A per-fn `experimental_generic_mono` ORs on
     /// top of this.
     ///
     /// Like `slice_to_array`, this is a no-op where it cannot apply: the
