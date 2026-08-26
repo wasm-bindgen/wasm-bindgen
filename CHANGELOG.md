@@ -71,6 +71,11 @@
   could remove.
   [#5292](https://github.com/wasm-bindgen/wasm-bindgen/issues/5292)
 
+* Fix `--no-modules-global` being ignored: the custom global name is now used
+  for the generated JS binding and TypeScript declarations, and the name is
+  validated as a JS identifier.
+  [#5286](https://github.com/wasm-bindgen/wasm-bindgen/issues/5286)
+
 ### Removed
 
 ## [0.2.127](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.126...0.2.127)
