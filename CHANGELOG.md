@@ -58,6 +58,11 @@
   `--target no-modules`, matching the `wasm_bindgen.initSync` function that
   the JS output already exposes.
   [#5284](https://github.com/wasm-bindgen/wasm-bindgen/issues/5284)
+* Removed the last panicking code paths from `externref` table management:
+  `RefCell::borrow_mut()` embedded panic location data (including the source
+  path string) in `.rodata` of optimized builds, which not even `wasm-opt`
+  could remove.
+  [#5292](https://github.com/wasm-bindgen/wasm-bindgen/issues/5292)
 
 ### Removed
 
