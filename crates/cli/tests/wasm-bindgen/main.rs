@@ -3029,7 +3029,7 @@ fn emscripten_jspi_codegen() {
         "compute should hoist as an async library function:\n{lib}"
     );
     assert!(
-        lib.contains("WebAssembly.promising(wasmExports['do_work'])"),
+        lib.contains("WebAssembly.promising(_do_work)"),
         "do_work should call through WebAssembly.promising:\n{lib}"
     );
     assert!(
