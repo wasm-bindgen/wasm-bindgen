@@ -127,6 +127,25 @@ On the no-modules target, `link_to!` won't work if used outside of a document,
 e.g. inside a worker. This is because it's impossible to figure out what the
 URL of the linked module is without a reference point like `import.meta.url`.
 
+### `--ts-typed-array-buffers`
+
+Since TypeScript 5.7, typed arrays are generic over their backing buffer, and a
+bare `Uint8Array` means `Uint8Array<ArrayBufferLike>`. Several web APIs (e.g.
+`new Blob([...])`, `BlobPart`) only accept views over a non-shared
+`ArrayBuffer`.
+
+Owned typed-array return values (Rust `Vec<u8>`, `Box<[u8]>`, and friends) are
+always copied out of the Wasm memory into a fresh, non-shared `ArrayBuffer`, so
+with this flag enabled the generated TypeScript declares them as
+`Uint8Array<ArrayBuffer>` (and similar for the other typed arrays), allowing
+them to flow into such APIs without a cast.
+
+Argument types keep the bare `Uint8Array` form, since callers may legitimately
+pass views into shared memory.
+
+This flag is off by default because the generic syntax is a type error for
+consumers on TypeScript 5.6 and earlier.
+
 ### `--force-enable-abort-handler`
 
 Emits the hard-abort detection and abort-handler machinery even when building
