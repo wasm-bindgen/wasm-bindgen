@@ -2772,6 +2772,7 @@ if (require('worker_threads').isMainThread) {{
                         );
                         continue;
                     }
+                    self.export_name_list.push(export_name.clone());
                     let definition = if !existing {
                         format!("const {identifier} = {{}};\n{ns_dst}")
                     } else {

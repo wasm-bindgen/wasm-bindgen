@@ -5,5 +5,5 @@ import { __wbg_set_wasm } from "./reference_test_bg.js";
 __wbg_set_wasm(wasm);
 wasm.__wbindgen_start();
 export {
-    Color, Rectangle, regular_function
+    Color, Rectangle, default, math, models, regular_function, types, utils
 } from "./reference_test_bg.js";

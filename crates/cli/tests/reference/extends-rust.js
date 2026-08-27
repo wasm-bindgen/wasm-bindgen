@@ -5,5 +5,5 @@ import { __wbg_set_wasm } from "./reference_test_bg.js";
 __wbg_set_wasm(wasm);
 wasm.__wbindgen_start();
 export {
-    InheritanceParent, inheritance_borrow_parent, InheritanceChild, InheritanceGrandchild
+    InheritanceParent, inheritance_borrow_parent, ns, InheritanceChild, InheritanceGrandchild
 } from "./reference_test_bg.js";

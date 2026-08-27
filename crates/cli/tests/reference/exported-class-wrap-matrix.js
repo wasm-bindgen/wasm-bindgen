@@ -5,5 +5,5 @@ import { __wbg_set_wasm } from "./reference_test_bg.js";
 __wbg_set_wasm(wasm);
 wasm.__wbindgen_start();
 export {
-    Animal, Dog, Reserve, Vehicle, makeAnimal, makeBase, makeCar, makeDerived, makeDog, makeHabitat, makeReserve, makeVehicle, makeWidget, readAnimals, readBases, readCars, readDeriveds, readDog, readDogs, readHabitats, readReserves, readVehicles, readWidget, readWidgets, Car
+    Animal, Dog, Reserve, Vehicle, garden, makeAnimal, makeBase, makeCar, makeDerived, makeDog, makeHabitat, makeReserve, makeVehicle, makeWidget, nsa, readAnimals, readBases, readCars, readDeriveds, readDog, readDogs, readHabitats, readReserves, readVehicles, readWidget, readWidgets, wild, zoo, Car
 } from "./reference_test_bg.js";

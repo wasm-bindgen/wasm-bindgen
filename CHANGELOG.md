@@ -64,6 +64,10 @@
 
 ### Fixed
 
+* Fixed `js_namespace` exports missing from the bundler target's entry module
+  re-export list, making namespaces unreachable when importing the package.
+  [#5267](https://github.com/wasm-bindgen/wasm-bindgen/issues/5267)
+
 * The CLI now reports an actionable error when the `__wasm_bindgen_unstable`
   custom section is missing from a module that still contains wasm-bindgen
   shims (e.g. stripped by `llvm-objcopy --strip-all`, which removes all custom
