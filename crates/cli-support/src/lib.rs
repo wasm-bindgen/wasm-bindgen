@@ -243,6 +243,9 @@ impl Bindgen {
     }
 
     pub fn no_modules_global(&mut self, name: &str) -> Result<&mut Bindgen, Error> {
+        if !wasm_bindgen_shared::identifier::is_valid_ident(name) {
+            bail!("`--no-modules-global` must be a valid JS identifier, got `{name}`");
+        }
         match &mut self.mode {
             OutputMode::NoModules { global } => *global = name.to_string(),
             _ => bail!("can only specify `--no-modules-global` with `--target no-modules`"),
