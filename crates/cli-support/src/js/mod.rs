@@ -1276,25 +1276,44 @@ impl<'a> Context<'a> {
         let setup_function_declaration;
         let mut sync_init_function = String::new();
         let declare_or_export;
+
+        let init_sync_fn = format!(
+            "\
+            /**\n\
+            * Instantiates the given `module`, which can either be bytes or\n\
+            * a precompiled `WebAssembly.Module`.\n\
+            *\n\
+            * @param {{{{ module: SyncInitInput{memory_param}{stack_size} }}}} module - Passing `SyncInitInput` directly is deprecated.\n\
+            {memory_doc}\
+            *\n\
+            * @returns {{InitOutput}}\n\
+            */\n\
+            export function initSync(module: {{ module: SyncInitInput{memory_param}{stack_size} }} | SyncInitInput{memory_param}): InitOutput;\n\
+            "
+        );
+
         if self.config.mode.no_modules() {
             declare_or_export = "declare";
             setup_function_declaration = "declare function wasm_bindgen";
+
+            // `initSync` is attached to the `wasm_bindgen` function object at
+            // runtime, so declare it in a namespace that merges with the
+            // `declare function wasm_bindgen` below.
+            sync_init_function.push_str(&format!(
+                "\
+                declare type SyncInitInput = BufferSource | WebAssembly.Module;\n\n\
+                declare namespace wasm_bindgen {{\n\
+                {init_sync_fn}\
+                }}\n\n\
+                "
+            ));
         } else {
             declare_or_export = "export";
 
             sync_init_function.push_str(&format!(
                 "\
-                {declare_or_export} type SyncInitInput = BufferSource | WebAssembly.Module;\n\n\
-                /**\n\
-                * Instantiates the given `module`, which can either be bytes or\n\
-                * a precompiled `WebAssembly.Module`.\n\
-                *\n\
-                * @param {{{{ module: SyncInitInput{memory_param}{stack_size} }}}} module - Passing `SyncInitInput` directly is deprecated.\n\
-                {memory_doc}\
-                *\n\
-                * @returns {{InitOutput}}\n\
-                */\n\
-                export function initSync(module: {{ module: SyncInitInput{memory_param}{stack_size} }} | SyncInitInput{memory_param}): InitOutput;\n\n\
+                export type SyncInitInput = BufferSource | WebAssembly.Module;\n\n\
+                {init_sync_fn}\n\
                 "
             ));
 

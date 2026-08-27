@@ -61,6 +61,10 @@
 * Fix `js-sys` wasm64 build with `atomics` feature.
   [#5274](https://github.com/wasm-bindgen/wasm-bindgen/issues/5274)
 
+* Declare `initSync` in the generated TypeScript definitions for
+  `--target no-modules`, matching the `wasm_bindgen.initSync` function that
+  the JS output already exposes.
+  [#5284](https://github.com/wasm-bindgen/wasm-bindgen/issues/5284)
 * Removed the last panicking code paths from `externref` table management:
   `RefCell::borrow_mut()` embedded panic location data (including the source
   path string) in `.rodata` of optimized builds, which not even `wasm-opt`
