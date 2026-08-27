@@ -148,4 +148,4 @@ This replaces the need for `compileStreaming` and platform-specific Wasm-loading
 If you'd like to deploy compiled WebAssembly to NPM, then the tool for the job
 is [`wasm-pack`]. More information on this coming soon!
 
-[`wasm-pack`]: https://rustwasm.github.io/docs/wasm-pack/
+[`wasm-pack`]: https://wasm-bindgen.github.io/wasm-pack/book/

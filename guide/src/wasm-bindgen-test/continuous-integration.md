@@ -17,7 +17,7 @@ addons:
   chrome : stable
 
 install:
-  - curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+  - curl https://wasm-bindgen.github.io/wasm-pack/installer/init.sh -sSf | sh
 
 script:
 
@@ -66,7 +66,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+        run: curl https://wasm-bindgen.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - run: cargo test
       - run: wasm-pack test --headless --chrome
