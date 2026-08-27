@@ -853,6 +853,64 @@ fn constructor_cannot_return_option_struct() {
         .unwrap_err();
 }
 
+/// The externref table management in `src/externref.rs` must not pull in any
+/// panicking infrastructure in optimized builds: `RefCell::borrow_mut()`'s
+/// `#[track_caller]` panic path materializes a `core::panic::Location`
+/// (including the full source path string) in `.rodata`, which not even
+/// `wasm-opt` can remove (data segments are never GC'd). With debug assertions
+/// disabled no `externref.rs` location data may remain in the compiled wasm.
+#[test]
+fn externref_table_ops_have_no_panic_location_data() {
+    let mut project = Project::new("externref_no_panic_location_data");
+    project
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+                #[wasm_bindgen]
+                pub fn take(v: JsValue) -> JsValue {
+                    v
+                }
+            "#,
+        )
+        .file(
+            "Cargo.toml",
+            &format!(
+                "
+                    [package]
+                    name = \"externref_no_panic_location_data\"
+                    authors = []
+                    version = \"1.0.0\"
+                    edition = '2021'
+
+                    [dependencies]
+                    wasm-bindgen = {{ path = '{}' }}
+
+                    [lib]
+                    crate-type = ['cdylib']
+
+                    [workspace]
+
+                    [profile.dev]
+                    opt-level = 's'
+                    debug = false
+                    debug-assertions = false
+                    overflow-checks = false
+                    codegen-units = 1
+                ",
+                REPO_ROOT.display(),
+            ),
+        );
+    let wasm = project.build().to_owned();
+
+    let bytes = fs::read(&wasm).unwrap();
+    let needle = b"src/externref.rs";
+    assert!(
+        !bytes.windows(needle.len()).any(|w| w == needle),
+        "optimized wasm embeds panic location data for src/externref.rs"
+    );
+}
+
 /// Shared Rust source for termination / reset-state tests.
 const TERMINATION_LIB_RS: &str = r#"
                 use wasm_bindgen::prelude::*;
@@ -4291,5 +4349,63 @@ describe('jspi async-only module', () => {
     });
 });
 "#,
+    );
+}
+
+#[test]
+fn stripped_custom_section_errors_helpfully() {
+    // Post-processing tools (e.g. `llvm-objcopy --strip-all`, which since
+    // LLVM 23 removes all custom sections) can strip `__wasm_bindgen_unstable`
+    // from a module before the CLI runs. The module still contains all the
+    // wasm-bindgen shims, so this must produce an actionable error rather
+    // than the confusing "import of `X` doesn't have an adapter listed".
+    let mut project = Project::new("stripped_custom_section_errors_helpfully");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen::prelude::*;
+
+            #[wasm_bindgen]
+            extern "C" {
+                fn alert(s: &str);
+            }
+
+            #[wasm_bindgen]
+            pub fn greet() {
+                alert("hi");
+            }
+        "#,
+    );
+
+    let built = project.build();
+    let mut module = ModuleConfig::new().parse_file(&built).unwrap();
+    while module
+        .customs
+        .remove_raw("__wasm_bindgen_unstable")
+        .is_some()
+    {}
+    let stripped = project.root.join("stripped.wasm");
+    module.emit_wasm_file(&stripped).unwrap();
+
+    let out_dir = project.root.join("pkg-stripped");
+    fs::create_dir_all(&out_dir).unwrap();
+    let err = wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
+        "wasm-bindgen".as_ref(),
+        "--target".as_ref(),
+        "web".as_ref(),
+        "--out-dir".as_ref(),
+        out_dir.as_os_str(),
+        stripped.as_os_str(),
+    ])
+    .unwrap_err();
+
+    let err = format!("{err:#}");
+    assert!(
+        err.contains("`__wasm_bindgen_unstable` custom section is missing"),
+        "expected an actionable missing-section error, got: {err}"
+    );
+    assert!(
+        err.contains("strip"),
+        "error should point at custom-section stripping, got: {err}"
     );
 }

@@ -38,6 +38,7 @@ pub struct Bindgen {
     remove_name_section: bool,
     remove_producers_section: bool,
     omit_default_module_path: bool,
+    ts_typed_array_buffers: bool,
     emit_start: bool,
     externref: bool,
     multi_value: bool,
@@ -122,6 +123,7 @@ impl Bindgen {
             multi_value,
             encode_into: EncodeInto::Test,
             omit_default_module_path: true,
+            ts_typed_array_buffers: false,
             split_linked_modules: false,
             generate_reset_state: false,
             force_enable_abort_handler: false,
@@ -241,6 +243,9 @@ impl Bindgen {
     }
 
     pub fn no_modules_global(&mut self, name: &str) -> Result<&mut Bindgen, Error> {
+        if !wasm_bindgen_shared::identifier::is_valid_ident(name) {
+            bail!("`--no-modules-global` must be a valid JS identifier, got `{name}`");
+        }
         match &mut self.mode {
             OutputMode::NoModules { global } => *global = name.to_string(),
             _ => bail!("can only specify `--no-modules-global` with `--target no-modules`"),
@@ -310,6 +315,11 @@ impl Bindgen {
 
     pub fn omit_default_module_path(&mut self, omit_default_module_path: bool) -> &mut Bindgen {
         self.omit_default_module_path = omit_default_module_path;
+        self
+    }
+
+    pub fn ts_typed_array_buffers(&mut self, ts_typed_array_buffers: bool) -> &mut Bindgen {
+        self.ts_typed_array_buffers = ts_typed_array_buffers;
         self
     }
 

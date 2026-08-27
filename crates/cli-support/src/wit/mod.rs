@@ -2833,6 +2833,37 @@ to open an issue at https://github.com/wasm-bindgen/wasm-bindgen/issues!
             ret.push(<decode::Program as decode::Decode>::decode_all(next));
         }
     }
+
+    // If the module clearly went through the wasm-bindgen macro (shim imports
+    // or descriptor exports are present) but no programs were found, the
+    // custom section was stripped by some post-link processing. Give an
+    // actionable error now rather than a confusing missing-adapter error
+    // later.
+    if ret.is_empty() {
+        let has_shims = module
+            .imports
+            .iter()
+            .any(|i| i.module == PLACEHOLDER_MODULE)
+            || module
+                .exports
+                .iter()
+                .any(|e| e.name.starts_with("__wbindgen_describe"));
+        if has_shims {
+            bail!(
+                "the `__wasm_bindgen_unstable` custom section is missing, but the module \
+                 still contains wasm-bindgen shims
+
+This section carries the metadata wasm-bindgen needs to process the module, and
+is usually lost by running a post-processing tool that strips custom sections,
+such as `llvm-objcopy --strip-all` (which removes all custom sections since
+LLVM 23) or `wasm-strip`, on the module before `wasm-bindgen`.
+
+Make sure `wasm-bindgen` runs on the Wasm file directly produced by the linker,
+before any such stripping tool."
+            );
+        }
+    }
+
     Ok(ret)
 }
 

@@ -1,22 +1,22 @@
-declare namespace wasm_bindgen {
+declare namespace custom_global {
     /* tslint:disable */
     /* eslint-disable */
 
-    export function add_that_might_fail(a: number, b: number): number;
+    export function add(a: number, b: number): number;
 
 }
 declare type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 declare interface InitOutput {
     readonly memory: WebAssembly.Memory;
-    readonly add_that_might_fail: (a: number, b: number) => number;
+    readonly add: (a: number, b: number) => number;
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_start: () => void;
 }
 
 declare type SyncInitInput = BufferSource | WebAssembly.Module;
 
-declare namespace wasm_bindgen {
+declare namespace custom_global {
     /**
      * Instantiates the given `module`, which can either be bytes or
      * a precompiled `WebAssembly.Module`.
@@ -36,4 +36,4 @@ declare namespace wasm_bindgen {
  *
  * @returns {Promise<InitOutput>}
  */
-declare function wasm_bindgen (module_or_path?: { module_or_path: InitInput | Promise<InitInput> } | InitInput | Promise<InitInput>): Promise<InitOutput>;
+declare function custom_global (module_or_path?: { module_or_path: InitInput | Promise<InitInput> } | InitInput | Promise<InitInput>): Promise<InitOutput>;

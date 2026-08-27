@@ -920,15 +920,16 @@ impl<'a> Context<'a> {
 
         let mut ts = String::new();
 
-        if self.config.mode.no_modules() {
-            let mut iife = "
-            let wasm_bindgen = (function(exports) {
+        if let OutputMode::NoModules { global } = &self.config.mode {
+            let mut iife = format!(
+                "
+            let {global} = (function(exports) {{
             let script_src;
-            if (typeof document !== 'undefined' && document.currentScript !== null) {
+            if (typeof document !== 'undefined' && document.currentScript !== null) {{
                 script_src = new URL(document.currentScript.src, location.href).toString();
-            }
+            }}
             "
-            .to_owned();
+            );
             iife.push_str(&self.globals);
             iife.push_str(
                 "
@@ -937,7 +938,7 @@ impl<'a> Context<'a> {
                 ",
             );
             self.globals = iife;
-            ts = String::from("declare namespace wasm_bindgen {\n");
+            ts = format!("declare namespace {global} {{\n");
             ts.push_str(&self.typescript);
             ts.push_str("\n}");
         } else if matches!(self.config.mode, OutputMode::Emscripten) {
@@ -1276,29 +1277,45 @@ impl<'a> Context<'a> {
         let setup_function_declaration;
         let mut sync_init_function = String::new();
         let declare_or_export;
-        if self.config.mode.no_modules() {
+        let init_sync_fn = format!(
+            "\
+            /**\n\
+            * Instantiates the given `module`, which can either be bytes or\n\
+            * a precompiled `WebAssembly.Module`.\n\
+            *\n\
+            * @param {{{{ module: SyncInitInput{memory_param}{stack_size} }}}} module - Passing `SyncInitInput` directly is deprecated.\n\
+            {memory_doc}\
+            *\n\
+            * @returns {{InitOutput}}\n\
+            */\n\
+            export function initSync(module: {{ module: SyncInitInput{memory_param}{stack_size} }} | SyncInitInput{memory_param}): InitOutput;\n\
+            "
+        );
+
+        if let OutputMode::NoModules { global } = &self.config.mode {
             declare_or_export = "declare";
-            setup_function_declaration = "declare function wasm_bindgen";
+            setup_function_declaration = format!("declare function {global}");
+
+            // `initSync` is attached to the init function object at runtime.
+            sync_init_function.push_str(&format!(
+                "\
+                declare type SyncInitInput = BufferSource | WebAssembly.Module;\n\n\
+                declare namespace {global} {{\n\
+                {init_sync_fn}\
+                }}\n\n\
+                "
+            ));
         } else {
             declare_or_export = "export";
 
             sync_init_function.push_str(&format!(
                 "\
-                {declare_or_export} type SyncInitInput = BufferSource | WebAssembly.Module;\n\n\
-                /**\n\
-                * Instantiates the given `module`, which can either be bytes or\n\
-                * a precompiled `WebAssembly.Module`.\n\
-                *\n\
-                * @param {{{{ module: SyncInitInput{memory_param}{stack_size} }}}} module - Passing `SyncInitInput` directly is deprecated.\n\
-                {memory_doc}\
-                *\n\
-                * @returns {{InitOutput}}\n\
-                */\n\
-                export function initSync(module: {{ module: SyncInitInput{memory_param}{stack_size} }} | SyncInitInput{memory_param}): InitOutput;\n\n\
+                export type SyncInitInput = BufferSource | WebAssembly.Module;\n\n\
+                {init_sync_fn}\n\
                 "
             ));
 
-            setup_function_declaration = "export default function __wbg_init";
+            setup_function_declaration = "export default function __wbg_init".to_string();
         }
         Ok(format!(
             "\n\
@@ -6801,6 +6818,7 @@ addToLibrary({
                             &mut sink,
                             Some(&mut new_refs),
                             &self.qualified_to_identifier,
+                            false,
                         );
                     }
                 }
@@ -6829,12 +6847,15 @@ addToLibrary({
                     AuxDynamicUnionVariant::Literal(s) => s.clone(),
                     AuxDynamicUnionVariant::Type(ty) => {
                         let mut ts = String::new();
+                        // Dynamic union aliases are shared between argument
+                        // and return positions, so keep bare typed arrays.
                         adapter2ts(
                             ty,
                             TypePosition::Return,
                             &mut ts,
                             None,
                             &self.qualified_to_identifier,
+                            false,
                         );
                         ts
                     }

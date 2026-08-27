@@ -55,8 +55,30 @@
   re-export list, making namespaces unreachable when importing the package.
   [#5267](https://github.com/wasm-bindgen/wasm-bindgen/issues/5267)
 
+* The CLI now reports an actionable error when the `__wasm_bindgen_unstable`
+  custom section is missing from a module that still contains wasm-bindgen
+  shims (e.g. stripped by `llvm-objcopy --strip-all`, which removes all custom
+  sections since LLVM 23), instead of the confusing
+  ``import of `X` doesn't have an adapter listed``.
+  [#5268](https://github.com/wasm-bindgen/wasm-bindgen/issues/5268)
+
 * Fix `js-sys` wasm64 build with `atomics` feature.
   [#5274](https://github.com/wasm-bindgen/wasm-bindgen/issues/5274)
+
+* Declare `initSync` in the generated TypeScript definitions for
+  `--target no-modules`, matching the `wasm_bindgen.initSync` function that
+  the JS output already exposes.
+  [#5284](https://github.com/wasm-bindgen/wasm-bindgen/issues/5284)
+* Removed the last panicking code paths from `externref` table management:
+  `RefCell::borrow_mut()` embedded panic location data (including the source
+  path string) in `.rodata` of optimized builds, which not even `wasm-opt`
+  could remove.
+  [#5292](https://github.com/wasm-bindgen/wasm-bindgen/issues/5292)
+
+* Fix `--no-modules-global` being ignored: the custom global name is now used
+  for the generated JS binding and TypeScript declarations, and the name is
+  validated as a JS identifier.
+  [#5286](https://github.com/wasm-bindgen/wasm-bindgen/issues/5286)
 
 ### Removed
 
@@ -96,6 +118,12 @@
   Compatible with `catch` (rejections as `Err`), `async`, and
   `panic=unwind`.
   [#5193](https://github.com/wasm-bindgen/wasm-bindgen/pull/5193)
+
+* Added a `--ts-typed-array-buffers` CLI flag to declare owned typed-array
+  return values (e.g. `Vec<u8>`) as `Uint8Array<ArrayBuffer>` in generated
+  TypeScript, since they are always copied into a fresh, non-shared
+  `ArrayBuffer`. Requires TypeScript 5.7+.
+  [#5263](https://github.com/wasm-bindgen/wasm-bindgen/pull/5263)
 
 ### Changed
 

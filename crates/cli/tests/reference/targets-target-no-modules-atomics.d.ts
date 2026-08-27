@@ -15,6 +15,21 @@ declare interface InitOutput {
     readonly __wbindgen_start: (a: number) => void;
 }
 
+declare type SyncInitInput = BufferSource | WebAssembly.Module;
+
+declare namespace wasm_bindgen {
+    /**
+     * Instantiates the given `module`, which can either be bytes or
+     * a precompiled `WebAssembly.Module`.
+     *
+     * @param {{ module: SyncInitInput, memory?: WebAssembly.Memory, thread_stack_size?: number }} module - Passing `SyncInitInput` directly is deprecated.
+     * @param {WebAssembly.Memory} memory - Deprecated.
+     *
+     * @returns {InitOutput}
+     */
+    export function initSync(module: { module: SyncInitInput, memory?: WebAssembly.Memory, thread_stack_size?: number } | SyncInitInput, memory?: WebAssembly.Memory): InitOutput;
+}
+
 /**
  * If `module_or_path` is {RequestInfo} or {URL}, makes a request and
  * for everything else, calls `WebAssembly.instantiate` directly.
