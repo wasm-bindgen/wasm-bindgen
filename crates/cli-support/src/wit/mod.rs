@@ -510,9 +510,11 @@ impl<'a> Context<'a> {
                          function signature; this is a wasm-bindgen bug, please report it"
                     ),
                 };
-                // No defining crate context here (monomorphisations are
-                // discovered globally), so this only rejects references to
-                // ambiguous all-`private` names.
+                // Struct/enum references carry their defining crate in the
+                // descriptor, so they resolve here even though
+                // monomorphisations are discovered globally; only
+                // `NamedExternref` references can still hit the ambiguity
+                // check.
                 self.resolve_descriptor_function(&mut signature)?;
                 let sig_comment = match &key {
                     GenericImportKey::Cast => {
@@ -2104,6 +2106,10 @@ impl<'a> Context<'a> {
                     bare,
                 );
                 let parent_qualified = parent.clone();
+                // The macro only records the parent's JS name, not its
+                // defining crate, so this resolves against the current
+                // program's crate: a cross-crate `extends` of a renamed
+                // `private` parent is not covered by the descriptor fix.
                 self.resolve_item_ref(&mut parent, None)
                     .with_context(|| format!("resolving the parent class of `{qualified_name}`"))?;
                 let upcast = self.mangled(&wasm_bindgen_shared::upcast_function(

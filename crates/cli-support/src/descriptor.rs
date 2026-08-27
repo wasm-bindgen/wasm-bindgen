@@ -252,6 +252,10 @@ impl Descriptor {
             | Descriptor::Vector(d)
             | Descriptor::Option(d)
             | Descriptor::Result(d) => d.visit_named_types_mut(f),
+            // An externref has no defining crate, so a JS type whose name
+            // matches an ambiguous all-`private` struct/enum name still hits
+            // the ambiguity check even though it never refers to the Rust
+            // type.
             Descriptor::NamedExternref(name) => f(name, None),
             Descriptor::Enum {
                 name,
