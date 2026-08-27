@@ -426,10 +426,10 @@ impl<'a> VisitMut for ImplTraitDesugar<'a> {
             ident: ident.clone(),
             colon_token: Some(Default::default()),
             bounds: impl_trait.bounds.clone(),
-            eq_token: None,
             default: None,
         }));
         *ty = syn::Type::Path(syn::TypePath {
+            attrs: Vec::new(),
             qself: None,
             path: ident.into(),
         });
@@ -594,7 +594,7 @@ fn type_is_constraining(ty: &syn::Type, generic_names: &[&Ident]) -> bool {
             .elems
             .iter()
             .all(|e| type_is_constraining(e, generic_names)),
-        // Pointer / BareFn / TraitObject / ImplTrait / Infer / Never / Macro:
+        // Pointer / FnPtr / TraitObject / ImplTrait / Infer / Never / Macro:
         // any fn-generic mention here is non-constraining (fn-ptr, dyn, impl
         // Trait are explicitly non-constraining per RFC 0447; the rest are
         // handled conservatively).
