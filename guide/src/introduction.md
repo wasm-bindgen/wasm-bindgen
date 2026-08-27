@@ -40,4 +40,4 @@ publishing Rust-compiled-to-WebAssembly on NPM!
 [hello-online]: https://webassembly.studio/?f=gzubao6tg3
 [rustwasm]: https://rustwasm.github.io/
 [gol]: https://rustwasm.github.io/docs/book/
-[wasm-pack]: https://rustwasm.github.io/docs/wasm-pack/
+[wasm-pack]: https://wasm-bindgen.github.io/wasm-pack/book/
