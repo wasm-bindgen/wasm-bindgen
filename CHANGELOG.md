@@ -16,7 +16,7 @@
   e.g. `js_namespace = ["a", "b"]`. The previous behavior silently dropped
   the block-level namespace.
   [#4324](https://github.com/wasm-bindgen/wasm-bindgen/issues/4324)
-* Changed WebGPU `setImmediates` APIs to take immutable u8 slice
+* Changed WebGPU `setImmediates` APIs to take immutable u8 slice.
   [#5289](https://github.com/wasm-bindgen/wasm-bindgen/pull/5289)
 
 ### Fixed
