@@ -51,6 +51,13 @@
 
 ### Fixed
 
+* The CLI now reports an actionable error when the `__wasm_bindgen_unstable`
+  custom section is missing from a module that still contains wasm-bindgen
+  shims (e.g. stripped by `llvm-objcopy --strip-all`, which removes all custom
+  sections since LLVM 23), instead of the confusing
+  ``import of `X` doesn't have an adapter listed``.
+  [#5268](https://github.com/wasm-bindgen/wasm-bindgen/issues/5268)
+
 * Fix `js-sys` wasm64 build with `atomics` feature.
   [#5274](https://github.com/wasm-bindgen/wasm-bindgen/issues/5274)
 
