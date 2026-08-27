@@ -54,6 +54,12 @@
 * Fix `js-sys` wasm64 build with `atomics` feature.
   [#5274](https://github.com/wasm-bindgen/wasm-bindgen/issues/5274)
 
+* Removed the last panicking code paths from `externref` table management:
+  `RefCell::borrow_mut()` embedded panic location data (including the source
+  path string) in `.rodata` of optimized builds, which not even `wasm-opt`
+  could remove.
+  [#5292](https://github.com/wasm-bindgen/wasm-bindgen/issues/5292)
+
 ### Removed
 
 ## [0.2.127](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.126...0.2.127)

@@ -853,6 +853,64 @@ fn constructor_cannot_return_option_struct() {
         .unwrap_err();
 }
 
+/// The externref table management in `src/externref.rs` must not pull in any
+/// panicking infrastructure in optimized builds: `RefCell::borrow_mut()`'s
+/// `#[track_caller]` panic path materializes a `core::panic::Location`
+/// (including the full source path string) in `.rodata`, which not even
+/// `wasm-opt` can remove (data segments are never GC'd). With debug assertions
+/// disabled no `externref.rs` location data may remain in the compiled wasm.
+#[test]
+fn externref_table_ops_have_no_panic_location_data() {
+    let mut project = Project::new("externref_no_panic_location_data");
+    project
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+                #[wasm_bindgen]
+                pub fn take(v: JsValue) -> JsValue {
+                    v
+                }
+            "#,
+        )
+        .file(
+            "Cargo.toml",
+            &format!(
+                "
+                    [package]
+                    name = \"externref_no_panic_location_data\"
+                    authors = []
+                    version = \"1.0.0\"
+                    edition = '2021'
+
+                    [dependencies]
+                    wasm-bindgen = {{ path = '{}' }}
+
+                    [lib]
+                    crate-type = ['cdylib']
+
+                    [workspace]
+
+                    [profile.dev]
+                    opt-level = 's'
+                    debug = false
+                    debug-assertions = false
+                    overflow-checks = false
+                    codegen-units = 1
+                ",
+                REPO_ROOT.display(),
+            ),
+        );
+    let wasm = project.build().to_owned();
+
+    let bytes = fs::read(&wasm).unwrap();
+    let needle = b"src/externref.rs";
+    assert!(
+        !bytes.windows(needle.len()).any(|w| w == needle),
+        "optimized wasm embeds panic location data for src/externref.rs"
+    );
+}
+
 /// Shared Rust source for termination / reset-state tests.
 const TERMINATION_LIB_RS: &str = r#"
                 use wasm_bindgen::prelude::*;

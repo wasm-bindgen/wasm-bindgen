@@ -128,8 +128,14 @@ static HEAP_SLAB: __rt::ThreadLocalWrapper<RefCell<Slab>> =
 
 #[no_mangle]
 pub extern "C" fn __externref_table_alloc() -> u32 {
+    // usage of `try_borrow_mut` thwarts panicking infrastructure (including
+    // `#[track_caller]` location data) in optimized builds
+    //
     // Table indices are always 32-bit, even on wasm64.
-    HEAP_SLAB.0.borrow_mut().alloc() as u32
+    match HEAP_SLAB.0.try_borrow_mut() {
+        Ok(mut slab) => slab.alloc() as u32,
+        Err(_) => internal_error("slab already borrowed"),
+    }
 }
 
 #[no_mangle]
@@ -143,7 +149,10 @@ pub extern "C" fn __externref_table_dealloc(idx: u32) {
     unsafe {
         __wbindgen_externref_table_set_null(idx as u32);
     }
-    HEAP_SLAB.0.borrow_mut().dealloc(idx)
+    match HEAP_SLAB.0.try_borrow_mut() {
+        Ok(mut slab) => slab.dealloc(idx),
+        Err(_) => internal_error("slab already borrowed"),
+    }
 }
 
 #[no_mangle]
@@ -158,5 +167,8 @@ pub unsafe extern "C" fn __externref_drop_slice(ptr: WasmPtr<JsValue>, len: Wasm
 // Implementation of `__wbindgen_externref_heap_live_count` for when we are using
 // `externref` instead of the JS `heap`.
 pub fn __wbindgen_externref_heap_live_count() -> u32 {
-    HEAP_SLAB.0.borrow_mut().live_count()
+    match HEAP_SLAB.0.try_borrow_mut() {
+        Ok(slab) => slab.live_count(),
+        Err(_) => internal_error("slab already borrowed"),
+    }
 }
