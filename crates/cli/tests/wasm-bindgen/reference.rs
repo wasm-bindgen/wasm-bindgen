@@ -48,7 +48,7 @@
 //! // FLAGS: --target=nodejs
 //! ```
 
-use crate::Project;
+use crate::{run_wasm_bindgen, Project, REPO_ROOT, TARGET_DIR};
 use anyhow::Result;
 use assert_cmd::Command;
 use regex::Regex;
@@ -98,9 +98,9 @@ impl Sanitizer {
     }
 
     fn sanitize(&mut self, s: &str) -> String {
-        // Cast descriptors for closures contain unstable function indices, so we need to sanitize the hash.
-        let s = self.sanitize_one(s, regex!(r"__wbindgen_cast_[0-9a-f]{16}"), |idx| {
-            format!("__wbindgen_cast_{idx:016x}")
+        // Generic-import/cast descriptors for closures contain unstable function indices, so we need to sanitize the hash.
+        let s = self.sanitize_one(s, regex!(r"__wbindgen_generic_[0-9a-f]{16}"), |idx| {
+            format!("__wbindgen_generic_{idx:016x}")
         });
 
         // `h...` are mangled generic function names with unstable type IDs.
@@ -225,7 +225,7 @@ fn runtest(
     ) {
         return Ok(());
     }
-    runtest_with_opts(test, None, |_| ())
+    runtest_batched(test)
 }
 
 #[test]
@@ -344,17 +344,6 @@ fn runtest_with_opts(
     f: impl FnOnce(&mut Command),
 ) -> Result<()> {
     let contents = fs::read_to_string(&test)?;
-
-    // parse target declarations
-    let mut all_flags: Vec<_> = contents
-        .lines()
-        .filter_map(|l| l.strip_prefix("// FLAGS: "))
-        .map(|l| l.trim())
-        .collect();
-    if all_flags.is_empty() {
-        all_flags.push("");
-    }
-
     let stem = test.file_stem().unwrap().to_str().unwrap();
 
     let mut name = stem.replace('-', "_") + "_reftest";
@@ -380,6 +369,194 @@ fn runtest_with_opts(
 
     project.file_link("src/lib.rs", &test);
 
+    // These tests each use a distinct nightly toolchain/`RUSTFLAGS`/`-Zbuild-std`
+    // combination, so unlike `runtest_batched` there's no benefit to sharing a
+    // single Cargo invocation across tests here -- each one is already the only
+    // test using its particular flags.
+    let wasm = project.build();
+    let pkg_root = project.root.join("pkg");
+    compare_reference_output(&test, stem, suffix, &wasm, &pkg_root)
+}
+
+/// Every "plain" reference test -- default (stable) toolchain, default
+/// `wasm32-unknown-unknown` target, no extra `RUSTFLAGS` -- is compiled as a
+/// member of one shared Cargo workspace built with a single `cargo build`,
+/// rather than each test spawning its own `cargo build` subprocess.
+///
+/// This matters because every `cargo build` invocation has to take an
+/// exclusive lock on Cargo's package cache and on the shared target
+/// directory before it can even check whether anything needs rebuilding
+/// (`Blocking waiting for file lock on package cache` / `... build
+/// directory`). With ~50 reference tests each spawning their own `cargo
+/// build`, those invocations end up almost entirely serialized on that lock
+/// regardless of test-harness parallelism, and the effect is much worse right
+/// after `wasm-bindgen`'s own source changes (exactly when you need to bless
+/// the tests), since every one of those processes simultaneously discovers
+/// the shared `wasm-bindgen`/`wasm-bindgen-macro` dependency is stale. Building
+/// everything in one `cargo build --workspace` call instead means Cargo
+/// resolves dependencies and takes that lock exactly once.
+struct ReferenceWorkspace {
+    /// Maps a test file stem (e.g. `"closures"`) to the crate/package name of
+    /// its member in the shared workspace (e.g. `"closures_reftest"`).
+    names: HashMap<String, String>,
+    root: PathBuf,
+}
+
+impl ReferenceWorkspace {
+    fn wasm_path(&self, stem: &str) -> PathBuf {
+        let mut built = TARGET_DIR.to_path_buf();
+        built.push("wasm32-unknown-unknown");
+        built.push("debug");
+        built.push(&self.names[stem]);
+        built.set_extension("wasm");
+        built
+    }
+
+    fn pkg_root(&self, stem: &str) -> PathBuf {
+        self.root.join(&self.names[stem]).join("pkg")
+    }
+}
+
+static REFERENCE_WORKSPACE: LazyLock<Result<ReferenceWorkspace, String>> =
+    LazyLock::new(|| build_reference_workspace().map_err(|e| format!("{e:#}")));
+
+fn build_reference_workspace() -> Result<ReferenceWorkspace> {
+    let root = TARGET_DIR.join("cli-tests").join("reference-workspace");
+    drop(fs::remove_dir_all(&root));
+    fs::create_dir_all(&root)?;
+
+    let mut test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    test_dir.push("tests");
+    test_dir.push("reference");
+
+    let mut names = HashMap::new();
+    let mut members = Vec::new();
+
+    let mut entries: Vec<_> = fs::read_dir(&test_dir)?
+        .map(|e| e.unwrap().path())
+        .filter(|p| p.extension().and_then(|e| e.to_str()) == Some("rs"))
+        .collect();
+    entries.sort();
+
+    for path in entries {
+        let stem = path.file_stem().unwrap().to_str().unwrap().to_owned();
+
+        // These require a nightly toolchain + `-Zbuild-std` with their own
+        // unique `RUSTFLAGS`, so they're built individually by
+        // `runtest_with_opts` instead of joining this shared workspace.
+        if matches!(stem.as_str(), "panic-unwind" | "panic-unwind-legacy") {
+            continue;
+        }
+
+        let name = stem.replace('-', "_") + "_reftest";
+        let member_dir = root.join(&name);
+        fs::create_dir_all(member_dir.join("src"))?;
+
+        let contents = fs::read_to_string(&path)?;
+        let mut deps = "wasm-bindgen = { path = '{root}' }\n\
+             wasm-bindgen-futures = { path = '{root}/crates/futures' }\n"
+            .to_owned();
+        for dep in contents
+            .lines()
+            .filter_map(|l| l.strip_prefix("// DEPENDENCY: "))
+        {
+            deps.push_str(dep);
+            deps.push('\n');
+        }
+        let deps = deps.replace("{root}", REPO_ROOT.to_str().unwrap());
+
+        fs::write(
+            member_dir.join("Cargo.toml"),
+            format!(
+                "[package]\n\
+                 name = \"{name}\"\n\
+                 version = \"1.0.0\"\n\
+                 edition = \"2021\"\n\
+                 \n\
+                 [dependencies]\n\
+                 {deps}\n\
+                 [lib]\n\
+                 crate-type = [\"cdylib\"]\n"
+            ),
+        )?;
+
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(&path, member_dir.join("src/lib.rs"))?;
+        #[cfg(windows)]
+        std::os::windows::fs::symlink_file(&path, member_dir.join("src/lib.rs"))?;
+
+        members.push(name.clone());
+        names.insert(stem, name);
+    }
+
+    let members_toml = members
+        .iter()
+        .map(|m| format!("    \"{m}\",\n"))
+        .collect::<String>();
+    fs::write(
+        root.join("Cargo.toml"),
+        format!(
+            "[workspace]\n\
+             resolver = \"2\"\n\
+             members = [\n\
+             {members_toml}\
+             ]\n\
+             \n\
+             [profile.dev]\n\
+             codegen-units = 1\n"
+        ),
+    )?;
+
+    let output = Command::new("cargo")
+        .current_dir(&root)
+        .arg("build")
+        .arg("--target")
+        .arg("wasm32-unknown-unknown")
+        .env("CARGO_TARGET_DIR", &*TARGET_DIR)
+        .output()?;
+    if !output.status.success() {
+        anyhow::bail!(
+            "failed to build shared reference-test workspace:\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    Ok(ReferenceWorkspace { names, root })
+}
+
+fn runtest_batched(test: PathBuf) -> Result<()> {
+    let workspace = REFERENCE_WORKSPACE
+        .as_ref()
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
+
+    let stem = test.file_stem().unwrap().to_str().unwrap();
+    let wasm = workspace.wasm_path(stem);
+    let pkg_root = workspace.pkg_root(stem);
+    compare_reference_output(&test, stem, None, &wasm, &pkg_root)
+}
+
+/// Runs the `wasm-bindgen` CLI against an already-built `wasm` artifact (once
+/// per `// FLAGS:` comment, or once with default flags if there are none) and
+/// compares its output against the checked-in reference files next to `test`.
+fn compare_reference_output(
+    test: &Path,
+    stem: &str,
+    suffix: Option<&str>,
+    wasm: &Path,
+    pkg_root: &Path,
+) -> Result<()> {
+    let contents = fs::read_to_string(test)?;
+
+    // parse target declarations
+    let mut all_flags: Vec<_> = contents
+        .lines()
+        .filter_map(|l| l.strip_prefix("// FLAGS: "))
+        .map(|l| l.trim())
+        .collect();
+    if all_flags.is_empty() {
+        all_flags.push("");
+    }
+
     for &flags in &all_flags {
         // extract the target from the flags
         let target = flags
@@ -387,9 +564,12 @@ fn runtest_with_opts(
             .find_map(|f| f.strip_prefix("--target="))
             .unwrap_or("bundler");
 
-        let out_dir = project
-            .wasm_bindgen(&format!("{flags} --out-name reference_test"))
-            .unwrap();
+        let out_dir = run_wasm_bindgen(
+            wasm,
+            pkg_root,
+            &format!("{flags} --out-name reference_test"),
+        )
+        .unwrap();
 
         // suffix the file name with the sanitized flags
         let test = if all_flags.len() > 1 {

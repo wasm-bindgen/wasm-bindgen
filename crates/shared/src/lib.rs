@@ -13,7 +13,7 @@ pub mod tys;
 // This gets changed whenever our schema changes.
 // At this time versions of wasm-bindgen and wasm-bindgen-cli are required to have the exact same
 // SCHEMA_VERSION in order to work together.
-pub const SCHEMA_VERSION: &str = "0.2.122";
+pub const SCHEMA_VERSION: &str = "0.2.128";
 
 #[macro_export]
 macro_rules! shared_api {
@@ -69,9 +69,16 @@ macro_rules! shared_api {
             catch: bool,
             variadic: bool,
             assert_no_shim: bool,
+            suspending: bool,
             method: Option<MethodData<'a>>,
             structural: bool,
             function: Function<'a>,
+            // Whether this import uses the per-monomorphisation generic path
+            // (`#[wasm_bindgen(experimental_generic_mono)]`) and is therefore bound per
+            // concrete instantiation via the `__wbindgen_describe_generic_import`
+            // marker rather than a single named descriptor shim. (Type-erasure
+            // generic imports do not set this; they bind like normal imports.)
+            generic_per_mono: bool,
         }
 
         struct MethodData<'a> {
@@ -170,6 +177,7 @@ macro_rules! shared_api {
         struct Function<'a> {
             args: Vec<FunctionArgumentData<'a>>,
             asyncness: bool,
+            jspi: bool,
             name: &'a str,
             generate_typescript: bool,
             generate_jsdoc: bool,
@@ -234,6 +242,28 @@ pub fn qualified_name(js_namespace: Option<&[impl AsRef<str>]>, js_name: &str) -
         }
         _ => js_name.to_string(),
     }
+}
+
+/// Append the per-crate hash to a wasm shim symbol so that identically named
+/// exports from different crates (or different versions of one crate) cannot
+/// collide at link time. The macro emits every export shim under this mangled
+/// name; cli-support recomputes it from the hash carried in
+/// `Program::unique_crate_identifier` and renames the export back to its
+/// canonical name once matched.
+pub fn mangled_symbol(base: &str, crate_hash: &str) -> String {
+    let mut name = base.to_string();
+    name.push('_');
+    name.push_str(crate_hash);
+    name
+}
+
+/// Extract the crate hash from a `unique_crate_identifier`, which is encoded
+/// as `"{crate_name}-{hash}"` (the hash contains no `-`).
+pub fn crate_hash(unique_crate_identifier: &str) -> &str {
+    unique_crate_identifier
+        .rsplit_once('-')
+        .map(|(_, hash)| hash)
+        .unwrap_or(unique_crate_identifier)
 }
 
 pub fn new_function(struct_name: &str) -> String {

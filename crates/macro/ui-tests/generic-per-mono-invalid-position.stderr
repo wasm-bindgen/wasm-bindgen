@@ -1,0 +1,23 @@
+error: invalid attribute experimental_generic_mono in this position
+ --> ui-tests/generic-per-mono-invalid-position.rs:9:16
+  |
+9 | #[wasm_bindgen(experimental_generic_mono)]
+  |                ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: invalid attribute experimental_generic_mono in this position
+  --> ui-tests/generic-per-mono-invalid-position.rs:15:16
+   |
+15 | #[wasm_bindgen(experimental_generic_mono)]
+   |                ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: invalid attribute experimental_generic_mono in this position
+  --> ui-tests/generic-per-mono-invalid-position.rs:23:20
+   |
+23 |     #[wasm_bindgen(experimental_generic_mono)]
+   |                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: invalid attribute experimental_generic_mono in this position
+  --> ui-tests/generic-per-mono-invalid-position.rs:28:20
+   |
+28 |     #[wasm_bindgen(experimental_generic_mono, js_name = someGlobal, thread_local_v2)]
+   |                    ^^^^^^^^^^^^^^^^^^^^^^^^^

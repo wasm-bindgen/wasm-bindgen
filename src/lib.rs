@@ -1320,7 +1320,15 @@ externs! {
         fn __wbindgen_object_drop_ref(idx: u32) -> ();
 
         fn __wbindgen_describe(v: u32) -> ();
-        fn __wbindgen_describe_cast(func: *const (), prims: *const ()) -> *const ();
+        // Marker terminating a descriptor function, signaling to the CLI that
+        // the parent function is a monomorphisation to be discovered,
+        // interpreted, and rewritten to a manufactured JS binding. The
+        // descriptor stream preceding this call carries a length-prefixed
+        // `shim` key followed by the concrete `FUNCTION` signature for this
+        // monomorphisation. A non-empty key identifies which generic-import AST
+        // entry supplies the JS binding metadata; an empty key marks a `wbg_cast`
+        // identity adapter (see `__rt::wbg_cast`).
+        fn __wbindgen_describe_generic_import(func: *const (), prims: *const ()) -> *const ();
     }
 }
 

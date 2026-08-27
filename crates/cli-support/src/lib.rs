@@ -33,6 +33,8 @@ pub struct Bindgen {
     demangle: bool,
     keep_lld_exports: bool,
     keep_debug: bool,
+    split_debug_info: bool,
+    debug_info_url: Option<String>,
     remove_name_section: bool,
     remove_producers_section: bool,
     omit_default_module_path: bool,
@@ -43,11 +45,14 @@ pub struct Bindgen {
     split_linked_modules: bool,
     generate_reset_state: bool,
     force_enable_abort_handler: bool,
+    memory_discard: bool,
 }
 
 pub struct Output {
     module: walrus::Module,
     stem: String,
+    split_debug_info: bool,
+    debug_info_url: Option<String>,
     generated: Generated,
 }
 
@@ -108,6 +113,8 @@ impl Bindgen {
             demangle: true,
             keep_lld_exports: false,
             keep_debug: false,
+            split_debug_info: false,
+            debug_info_url: None,
             remove_name_section: false,
             remove_producers_section: false,
             emit_start: true,
@@ -118,6 +125,7 @@ impl Bindgen {
             split_linked_modules: false,
             generate_reset_state: false,
             force_enable_abort_handler: false,
+            memory_discard: false,
         }
     }
 
@@ -270,6 +278,16 @@ impl Bindgen {
         self
     }
 
+    pub fn split_debug_info(&mut self, split: bool) -> &mut Bindgen {
+        self.split_debug_info = split;
+        self
+    }
+
+    pub fn debug_info_url(&mut self, url: &str) -> &mut Bindgen {
+        self.debug_info_url = Some(url.to_string());
+        self
+    }
+
     pub fn remove_name_section(&mut self, remove: bool) -> &mut Bindgen {
         self.remove_name_section = remove;
         self
@@ -310,6 +328,14 @@ impl Bindgen {
         self
     }
 
+    /// Experimental and subject to change: replace an
+    /// `env.__wbindgen_memory_discard` import with a `memory.discard`
+    /// trampoline from the memory-control proposal.
+    pub fn memory_discard(&mut self, memory_discard: bool) -> &mut Self {
+        self.memory_discard = memory_discard;
+        self
+    }
+
     pub fn generate<P: AsRef<Path>>(&mut self, path: P) -> Result<(), Error> {
         self.generate_output()?.emit(path.as_ref())
     }
@@ -326,6 +352,9 @@ impl Bindgen {
     }
 
     pub fn generate_output(&mut self) -> Result<Output, Error> {
+        if self.debug_info_url.is_some() && !self.split_debug_info {
+            bail!("cannot specify `debug_info_url` without `split_debug_info`");
+        }
         let mut module = match self.input {
             Input::None => bail!("must have an input by now"),
             Input::Module(ref mut m, _) => {
@@ -382,6 +411,9 @@ impl Bindgen {
 
         let thread_count = transforms::threads::run(&mut module)
             .with_context(|| "failed to prepare module for threading")?;
+
+        transforms::memory_discard::run(&mut module, self.memory_discard)
+            .with_context(|| "failed to generate `memory.discard` trampoline")?;
 
         // If requested, turn all mangled symbols into prettier unmangled
         // symbols with the help of `rustc-demangle`.
@@ -474,6 +506,26 @@ impl Bindgen {
                 .context("failed to transform return pointers into multi-value Wasm")?;
         }
 
+        // Detect the exception-handling version before the JSPI transform
+        // runs: the JSPI suspending wrappers contain `try_table`s of their
+        // own, which would otherwise reclassify a `panic=abort` module as
+        // having full (unwinding) exception support.
+        let eh_version =
+            transforms::detect_exception_handling_version(&module, self.force_enable_abort_handler);
+
+        // Instrument JSPI exports and suspending imports with the in-wasm
+        // shadow-stack save/restore wrappers. This must run after the
+        // externref/multi-value passes (which repoint export items) and
+        // before the catch-wrapper pass, which then wraps *outside* the
+        // suspending wrappers (via the repointed `implements` entries) so
+        // that promise rejections are consumed innermost as data while
+        // SuspendError misuse and rethrown exceptions still reach the
+        // abort/catch machinery over a restored shadow stack. The transform
+        // is target agnostic: on emscripten it operates against emscripten's
+        // `__stack_pointer` in exactly the same way, with no interaction
+        // with emscripten's own JSPI machinery.
+        run_jspi_transform(&mut module, self.externref)?;
+
         // Generate Wasm catch wrappers for imports with #[wasm_bindgen(catch)].
         // This runs after externref processing so that we have access to the
         // externref table and allocation function.
@@ -485,7 +537,7 @@ impl Bindgen {
         // `__wbindgen_exn_store`) may be absent. Skip the transform until
         // proper emscripten-mode catch support lands.
         if !matches!(self.mode, OutputMode::Emscripten) {
-            run_exception_handling_transforms(&mut module, self.force_enable_abort_handler)?;
+            run_exception_handling_transforms(&mut module, eh_version)?;
         }
 
         // We've done a whole bunch of transformations to the Wasm module, many
@@ -527,6 +579,8 @@ impl Bindgen {
         Ok(Output {
             module,
             stem: stem.to_string(),
+            split_debug_info: self.split_debug_info,
+            debug_info_url: self.debug_info_url.clone(),
             generated,
         })
     }
@@ -540,7 +594,7 @@ impl Bindgen {
             // include shared memory, so it fails that part of
             // validation!
             .strict_validate(false)
-            .generate_dwarf(self.keep_debug)
+            .generate_dwarf(self.keep_debug || self.split_debug_info)
             .generate_name_section(!self.remove_name_section)
             .generate_producers_section(!self.remove_producers_section)
             .parse(bytes)
@@ -734,6 +788,17 @@ impl Output {
         fs::create_dir_all(out_dir)?;
 
         let wasm_bytes = self.module.emit_wasm();
+        let wasm_bytes = if self.split_debug_info {
+            let debug_name = format!("{wasm_name}.debug.wasm");
+            let url = self.debug_info_url.as_deref().unwrap_or(&debug_name);
+            let main_bytes = split_debug_info(&wasm_bytes, url)?;
+            let debug_path = out_dir.join(&debug_name);
+            fs::write(&debug_path, &wasm_bytes)
+                .with_context(|| format!("failed to write `{}`", debug_path.display()))?;
+            main_bytes
+        } else {
+            wasm_bytes
+        };
         fs::write(&wasm_path, wasm_bytes)
             .with_context(|| format!("failed to write `{}`", wasm_path.display()))?;
 
@@ -837,6 +902,69 @@ impl Output {
     }
 }
 
+/// Remove the `.debug_*` custom sections from an emitted Wasm module and
+/// append an `external_debug_info` custom section that holds `url`.
+///
+/// Ref: https://github.com/WebAssembly/tool-conventions/blob/main/Debugging.md
+fn split_debug_info(wasm: &[u8], url: &str) -> Result<Vec<u8>, Error> {
+    let mut kept = Vec::new();
+    let mut keep_from = 0;
+    let mut section_start = 0;
+    for payload in wasmparser::Parser::new(0).parse_all(wasm) {
+        let payload = payload?;
+        if let wasmparser::Payload::CustomSection(section) = &payload {
+            if section.name().starts_with(".debug_") {
+                kept.push(keep_from..section_start);
+                keep_from = section.range().end;
+            }
+        }
+        if let wasmparser::Payload::Version { range, .. } = &payload {
+            section_start = range.end;
+        } else if let Some((_, range)) = payload.as_section() {
+            section_start = range.end;
+        }
+    }
+    kept.push(keep_from..wasm.len());
+
+    let mut contents = Vec::new();
+    let name = "external_debug_info";
+    leb128::write::unsigned(&mut contents, name.len() as u64)?;
+    contents.extend_from_slice(name.as_bytes());
+    leb128::write::unsigned(&mut contents, url.len() as u64)?;
+    contents.extend_from_slice(url.as_bytes());
+
+    let kept_len: usize = kept.iter().map(|range| range.len()).sum();
+    let mut out = Vec::with_capacity(kept_len + contents.len() + 6);
+    for range in kept {
+        out.extend_from_slice(&wasm[range]);
+    }
+    out.push(0);
+    leb128::write::unsigned(&mut out, contents.len() as u64)?;
+    out.extend_from_slice(&contents);
+    Ok(out)
+}
+
+/// Instrument `#[wasm_bindgen(jspi)]` exports and `#[wasm_bindgen(suspending)]`
+/// imports with in-wasm shadow-stack management. See `transforms::jspi`.
+fn run_jspi_transform(module: &mut Module, externref: bool) -> Result<(), Error> {
+    let mut aux = module
+        .customs
+        .delete_typed::<wit::WasmBindgenAux>()
+        .expect("aux section should exist");
+    let mut wit = module
+        .customs
+        .delete_typed::<wit::NonstandardWitSection>()
+        .expect("wit section should exist");
+
+    let result = transforms::jspi::run(module, &mut aux, &mut wit, externref)
+        .context("failed to instrument module for JSPI");
+
+    module.customs.add(*wit);
+    module.customs.add(*aux);
+
+    result
+}
+
 /// Run the exception-handling transforms: catch wrappers for imports marked
 /// `#[wasm_bindgen(catch)]`, then shadow stack restore wrappers for the exports
 /// a panic can unwind out of.
@@ -846,9 +974,8 @@ impl Output {
 /// `panic=abort` module as `Modern`.
 fn run_exception_handling_transforms(
     module: &mut Module,
-    enable_abort_handler: bool,
+    eh_version: transforms::ExceptionHandlingVersion,
 ) -> Result<(), Error> {
-    let eh_version = transforms::detect_exception_handling_version(module, enable_abort_handler);
     log::debug!("Exception handling version: {eh_version:?}");
 
     if eh_version == transforms::ExceptionHandlingVersion::None {

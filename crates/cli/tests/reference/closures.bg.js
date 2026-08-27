@@ -78,7 +78,7 @@ export function __wbg_static_accessor_WINDOW_e0db14a0eba6a812() {
     const ret = typeof window === 'undefined' ? null : window;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 }
-export function __wbindgen_cast_0000000000000000(arg0, arg1) {
+export function __wbindgen_generic_0000000000000000(arg0, arg1) {
     var state0 = {a: arg0, b: arg1};
     var cb0 = () => {
         const a = state0.a;
@@ -94,12 +94,12 @@ export function __wbindgen_cast_0000000000000000(arg0, arg1) {
     const ret = cb0;
     return ret;
 }
-export function __wbindgen_cast_0000000000000001(arg0, arg1) {
+export function __wbindgen_generic_0000000000000001(arg0, arg1) {
     // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [], shim_idx: 6, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
     const ret = makeMutClosure(arg0, arg1, wasm_bindgen_0000000000000003___convert__closures_____invoke_______true_);
     return ret;
 }
-export function __wbindgen_cast_0000000000000002(arg0, arg1) {
+export function __wbindgen_generic_0000000000000002(arg0, arg1) {
     // Cast intrinsic for `Ref(String) -> Externref`.
     const ret = getStringFromWasm0(arg0, arg1);
     return ret;

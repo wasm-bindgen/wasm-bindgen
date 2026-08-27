@@ -127,8 +127,17 @@ macro_rules! attrgen {
             (unchecked_optional_param_type, true, OptionalParamType(Span, String, Span)),
             (param_description, true, ParamDesc(Span, String, Span)),
 
+            // Opt-in to the experimental per-monomorphisation generic import
+            // codegen path (interpreter-discovered, marker-terminated) instead
+            // of the type-erasure path.
+            (experimental_generic_mono, true, GenericPerMono(Span)),
+
             // For testing purposes only.
             (assert_no_shim, false, AssertNoShim(Span)),
+
+            // JSPI attributes
+            (jspi, false, Jspi(Span)),
+            (suspending, false, Suspending(Span)),
         }
     };
 }
@@ -910,6 +919,7 @@ impl<'a>
         BindgenAttrs,
         &'a Option<ast::ImportModule>,
         bool,
+        bool,
         Option<&'a [String]>,
     )> for syn::ForeignItemFn
 {
@@ -917,10 +927,11 @@ impl<'a>
 
     fn convert(
         mut self,
-        (program, opts, module, block_slice_to_array, js_namespace): (
+        (program, opts, module, block_slice_to_array, block_generic_per_mono, js_namespace): (
             &ast::Program,
             BindgenAttrs,
             &'a Option<ast::ImportModule>,
+            bool,
             bool,
             Option<&'a [String]>,
         ),
@@ -1057,6 +1068,70 @@ impl<'a>
             ));
         }
 
+        let assert_no_shim = opts.assert_no_shim();
+        // `experimental_generic_mono` is inherited from the enclosing `extern "C"` block,
+        // optionally OR'd with a fn-level attribute, exactly like
+        // `slice_to_array` above.
+        //
+        // A block-level flag applies only to the functions it *can* apply to:
+        // the per-monomorphisation path needs at least one type parameter, so a
+        // non-generic function in the block silently keeps the ordinary
+        // single-shim path. This mirrors `slice_to_array`, which is likewise a
+        // no-op on an argument that isn't slice-shaped, and it means a block can
+        // mix generic and non-generic imports without having to be split up.
+        //
+        // Writing the attribute *on* a non-generic function is still an error
+        // (raised in codegen): there the user named a specific function and the
+        // request cannot be honoured, so silence would hide a real mistake.
+        let fn_generic_per_mono = opts.experimental_generic_mono().is_some();
+        // A named type parameter isn't the only way a signature is generic:
+        // argument-position `impl Trait` desugars to an anonymous one that
+        // never appears in `self.sig.generics`, so it has to be checked for
+        // separately, or a bare-`impl Trait` function would look non-generic
+        // to the block-level flag above (despite `experimental_generic_mono` fully
+        // supporting it; see `codegen::try_to_tokens_generic`).
+        let is_generic = self.sig.generics.type_params().next().is_some()
+            || self.sig.inputs.iter().any(|arg| match arg {
+                syn::FnArg::Typed(pat_type) => crate::generics::has_impl_trait(&pat_type.ty),
+                syn::FnArg::Receiver(_) => false,
+            });
+        let generic_per_mono = fn_generic_per_mono || (block_generic_per_mono && is_generic);
+
+        // Both of the following are rejected here rather than in cli-support so
+        // the diagnostic points at the declaration instead of surfacing after a
+        // successful compile with no span to blame.
+        if generic_per_mono {
+            // Per-monomorphisation codegen manufactures one shim per concrete
+            // instantiation, so "has no shim" can never hold.
+            if let Some(span) = assert_no_shim {
+                return Err(Diagnostic::span_error(
+                    *span,
+                    "`assert_no_shim` cannot be used with `experimental_generic_mono`, which always \
+                     generates one shim per monomorphisation",
+                ));
+            }
+            // The generic-import binding metadata (`GenericImportMeta`) does not
+            // carry `suspending`, so a suspending per-mono import would silently
+            // lose its JSPI treatment.
+            if let Some(span) = opts.suspending() {
+                return Err(Diagnostic::span_error(
+                    *span,
+                    "`suspending` cannot be used with `experimental_generic_mono`; use the \
+                     type-erasure generic path for suspending imports",
+                ));
+            }
+            // Reexport names a single descriptor shim, and a per-monomorphisation
+            // import has no single shim to name.
+            if opts.reexport().is_some() {
+                return Err(Diagnostic::span_error(
+                    self.sig.ident.span(),
+                    "`reexport` cannot be used with `experimental_generic_mono`, because one binding is \
+                     manufactured per monomorphisation and there is no single shim to reexport; \
+                     remove the reexport or use the type-erasure generic path",
+                ));
+            }
+        }
+
         let shim = {
             let ns = match kind {
                 ast::ImportFunctionKind::Normal => (0, "n"),
@@ -1100,7 +1175,26 @@ impl<'a>
                 return Err(Diagnostic::span_error(*span, msg));
             }
         }
-        let assert_no_shim = opts.assert_no_shim().is_some();
+        let assert_no_shim = assert_no_shim.is_some();
+        let suspending = opts.suspending().is_some();
+        if suspending && wasm.r#async {
+            if let Some(span) = opts.suspending() {
+                return Err(Diagnostic::span_error(
+                    *span,
+                    "`suspending` cannot be combined with `async`: a suspending \
+                     import returns the settled value directly, so declare a \
+                     plain `fn` with the resolved type as its return type",
+                ));
+            }
+        }
+        if wasm.jspi {
+            if let Some(span) = opts.jspi() {
+                return Err(Diagnostic::span_error(
+                    *span,
+                    "`jspi` can only be used on exported functions, not imports",
+                ));
+            }
+        }
 
         let mut doc_comment = String::new();
         // Extract the doc comments from our list of attributes.
@@ -1146,6 +1240,7 @@ impl<'a>
         let ret = ast::ImportKind::Function(ast::ImportFunction {
             function: wasm,
             assert_no_shim,
+            suspending,
             kind,
             js_ret,
             catch,
@@ -1158,6 +1253,7 @@ impl<'a>
             wasm_bindgen_futures: program.wasm_bindgen_futures.clone(),
             js_sys: program.js_sys.clone(),
             generics: self.sig.generics,
+            generic_per_mono,
         });
         opts.check_used();
 
@@ -1592,6 +1688,7 @@ fn function_from_decl(
             rust_vis: vis,
             r#unsafe: sig.unsafety.is_some(),
             r#async: sig.asyncness.is_some(),
+            jspi: opts.jspi().is_some(),
             generate_typescript: opts.skip_typescript().is_none(),
             generate_jsdoc: opts.skip_jsdoc().is_none(),
             variadic: opts.variadic().is_some(),
@@ -2148,6 +2245,34 @@ impl MacroParse<&ClassMarker> for &mut syn::ImplItemFn {
             ast::MethodKind::Operation(ast::Operation { is_static, kind })
         };
 
+        if function.jspi {
+            match &method_kind {
+                ast::MethodKind::Constructor => {
+                    if let Some(span) = opts.jspi() {
+                        return Err(Diagnostic::span_error(
+                            *span,
+                            "`jspi` cannot be used on constructors",
+                        ));
+                    }
+                }
+                ast::MethodKind::Operation(ast::Operation { kind, .. }) => match kind {
+                    ast::OperationKind::Getter(_)
+                    | ast::OperationKind::Setter(_)
+                    | ast::OperationKind::IndexingGetter
+                    | ast::OperationKind::IndexingSetter
+                    | ast::OperationKind::IndexingDeleter => {
+                        if let Some(span) = opts.jspi() {
+                            return Err(Diagnostic::span_error(
+                                *span,
+                                "`jspi` cannot be used on getters or setters",
+                            ));
+                        }
+                    }
+                    _ => {}
+                },
+            }
+        }
+
         // Validate that js_namespace is not used on methods
         if let Some((_, span)) = opts.js_namespace() {
             return Err(Diagnostic::span_error(
@@ -2604,11 +2729,13 @@ impl MacroParse<BindgenAttrs> for syn::ItemForeignMod {
             .map_err(|e| errors.push(e))
             .unwrap_or_default();
         let slice_to_array = opts.slice_to_array().is_some();
+        let generic_per_mono = opts.experimental_generic_mono().is_some();
         for item in self.items.into_iter() {
             let ctx = ForeignItemCtx {
                 module: module.clone(),
                 js_namespace: js_namespace.clone(),
                 slice_to_array,
+                generic_per_mono,
             };
             if let Err(e) = item.macro_parse(program, ctx) {
                 errors.push(e);
@@ -2627,6 +2754,17 @@ struct ForeignItemCtx {
     /// function inside the `extern "C"` block. Per-fn / per-arg
     /// `slice_to_array` ORs on top of this.
     slice_to_array: bool,
+    /// Block-level `experimental_generic_mono` flag inherited by every *generic* foreign
+    /// function inside the `extern "C"` block, opting them onto the
+    /// per-monomorphisation codegen path. A per-fn `experimental_generic_mono` ORs on
+    /// top of this.
+    ///
+    /// Like `slice_to_array`, this is a no-op where it cannot apply: the
+    /// per-mono path requires at least one type parameter, so a non-generic
+    /// function in the block keeps the ordinary single-shim path instead of
+    /// being rejected. That lets one block hold both generic and non-generic
+    /// imports.
+    generic_per_mono: bool,
 }
 
 impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
@@ -2661,6 +2799,17 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
             BindgenAttrs::find(attrs)?
         };
 
+        // Put the full namespace path in one attribute.
+        if ctx.js_namespace.is_some() {
+            if let Some((_, spans)) = item_opts.js_namespace() {
+                return Err(Diagnostic::span_error(
+                    spans[0],
+                    "`js_namespace` cannot be set on both an `extern` block and an item \
+                     inside it; write the full path on one of them, e.g. \
+                     `js_namespace = [\"a\", \"b\"]`",
+                ));
+            }
+        }
         let js_namespace = item_opts
             .js_namespace()
             .map(|(s, _)| s)
@@ -2668,6 +2817,7 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
             .map(|s| s.0);
         let module = ctx.module;
         let block_slice_to_array = ctx.slice_to_array;
+        let block_generic_per_mono = ctx.generic_per_mono;
         let reexport = item_opts.reexport().cloned();
 
         // Symbol-form `js_name` on a free imported function only makes sense
@@ -2699,6 +2849,7 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
                 item_opts,
                 &module,
                 block_slice_to_array,
+                block_generic_per_mono,
                 js_namespace.as_deref(),
             ))?,
             syn::ForeignItem::Type(t) => t.convert((program, item_opts))?,
@@ -3164,5 +3315,69 @@ mod tests {
         assert_eq!(try_unescape("hello\\u{0}").unwrap(), "hello\0");
         assert_eq!(try_unescape("hello\\u{000000}").unwrap(), "hello\0");
         assert_eq!(try_unescape("hello\\u{0000000}"), None);
+    }
+
+    /// Return the namespace for each parsed import.
+    fn import_namespaces(
+        block_opts: proc_macro2::TokenStream,
+        block: syn::ItemForeignMod,
+    ) -> Result<Vec<Option<Vec<String>>>, super::Diagnostic> {
+        use super::{ast, BindgenAttrs, MacroParse};
+
+        let opts: BindgenAttrs = syn::parse2(block_opts).unwrap();
+        let mut program = ast::Program::default();
+        block.macro_parse(&mut program, opts)?;
+        Ok(program
+            .imports
+            .into_iter()
+            .map(|import| import.js_namespace)
+            .collect())
+    }
+
+    fn ns(segments: &[&str]) -> Option<Vec<String>> {
+        Some(segments.iter().map(|s| s.to_string()).collect())
+    }
+
+    #[test]
+    fn js_namespace_only_on_block() {
+        let namespaces = import_namespaces(
+            quote::quote! { js_namespace = ["a"] },
+            syn::parse_quote! {
+                extern "C" {
+                    fn my_function();
+                }
+            },
+        )
+        .unwrap();
+        assert_eq!(namespaces, vec![ns(&["a"])]);
+    }
+
+    #[test]
+    fn js_namespace_only_on_item() {
+        let namespaces = import_namespaces(
+            quote::quote! {},
+            syn::parse_quote! {
+                extern "C" {
+                    #[wasm_bindgen(js_namespace = ["b"])]
+                    fn my_function();
+                }
+            },
+        )
+        .unwrap();
+        assert_eq!(namespaces, vec![ns(&["b"])]);
+    }
+
+    #[test]
+    fn js_namespace_absent_everywhere() {
+        let namespaces = import_namespaces(
+            quote::quote! {},
+            syn::parse_quote! {
+                extern "C" {
+                    fn my_function();
+                }
+            },
+        )
+        .unwrap();
+        assert_eq!(namespaces, vec![None]);
     }
 }

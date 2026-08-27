@@ -10,6 +10,7 @@ For a complete reference of all generic types and traits, see [js-sys](./types/j
 - [Example](#example)
 - [Defining Generic Import Types](#defining-generic-import-types)
   - [Generic Type Constraints](#generic-type-constraints)
+- [Choosing between the two](#choosing-between-the-two)
 - [The ErasableGeneric Trait](#the-erasablegeneric-trait)
   - [JsGeneric Trait](#jsgeneric-trait)
 - [Upcasting Types](#upcasting-types)
@@ -24,6 +25,8 @@ For a complete reference of all generic types and traits, see [js-sys](./types/j
 Wasm-bindgen generics use **type erasure** to provide rich typing information in Rust while generating efficient JavaScript bindings. Generic parameters exist only in Rust code—they are completely erased in the generated JavaScript.
 
 Currently, all of `js-sys` now supports experimental type erased generics, with `web-sys` still pending.
+
+> Type erasure is the default, and is what the rest of this page describes. An individual *imported function* can opt out of it with [`#[wasm_bindgen(experimental_generic_mono)]`](./attributes/on-js-imports/experimental_generic_mono.md), which generates one binding per monomorphisation instead of one erased binding. That lets a generic import be instantiated at ordinary Rust types (`u32`, `String`, `bool`) — which erasure does not allow, since erasure requires `T` to be a JS type — at the cost of a JS shim per instantiation. See [Choosing between the two](#choosing-between-the-two) below.
 
 > When passing a typed value (e.g., `Array<Number>`) to a function expecting a wider type (e.g., `&Array<JsValue>`), use the [`upcast()`](#upcasting-types) method: `my_array.upcast()`. This is a zero-cost compile-time conversion.
 
@@ -113,6 +116,29 @@ extern "C" {
     fn getValue<T: Promising<Resolution = Number>>(value: T) -> Promise<Number>;
 }
 ```
+
+## Choosing between the two
+
+There are two ways a generic import can be bound, and they suit different jobs:
+
+|                             | Type erasure (default)                        | [`experimental_generic_mono`](./attributes/on-js-imports/experimental_generic_mono.md) |
+| --------------------------- | --------------------------------------------- | ------------------------------------------------------------------- |
+| JS bindings generated       | One, shared by all instantiations             | One per monomorphisation                                            |
+| How `T` crosses the ABI     | Boxed to `JsValue` (via `ErasableGeneric`)    | At its concrete type (`u32` as a number, `String` as a string)      |
+| What `T` can be             | JS types (`JsGeneric`): `Array`, `Promise`, … | Any type wasm-bindgen can marshal, including Rust primitives        |
+| Generic imported *types*    | Yes — `type ListNode<T>`                      | No, function-level type parameters only                             |
+| Code size                   | Constant                                      | Grows with the number of instantiations                             |
+
+Use erasure when you are modelling a JS generic — `Array<T>`, `Promise<T>`, a
+container whose element type only matters to Rust's type checker. Use
+`experimental_generic_mono` when one Rust signature should serve several *Rust* types and
+the concrete marshalling is the point, e.g. a `log<T>` that should pass a `u32`
+as a number rather than boxing it.
+
+`experimental_generic_mono` also rejects a number of shapes that erasure accepts
+(generic parameters on the imported *type*, `&mut T`, generic `slice_to_array`
+element types, and others); those are listed on
+[its own page](./attributes/on-js-imports/experimental_generic_mono.md#unsupported-shapes).
 
 ## The ErasableGeneric Trait
 

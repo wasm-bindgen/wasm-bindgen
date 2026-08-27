@@ -46,3 +46,17 @@ export type { Config };
 ```
 
 The `private` attribute is only supported on structs and enums, not on functions.
+
+## Name collisions
+
+Because private types are not part of the public JavaScript API, multiple
+crates in the same build may each export a private type with the same name
+without colliding. This is useful for crates that use private types as
+implementation details: two versions of such a crate can coexist in one
+dependency graph. When the same name is defined more than once, the private
+copies are numbered (`Config`, `Config2`, `Config3`, ...) in the generated
+bindings.
+
+Exporting the same name publicly from more than one crate remains an error,
+reported by the `wasm-bindgen` CLI with the qualified name (taking
+`js_namespace` into account).

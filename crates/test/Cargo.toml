@@ -33,7 +33,9 @@ serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 # benchmark required end
 
 [target.'cfg(all(target_arch = "wasm32", wasm_bindgen_unstable_test_coverage))'.dependencies]
-minicov = "0.3.8"
+# Pinned: 0.3.9 bundles the LLVM 23.1 profiling runtime (profraw v11), which
+# crashes/mismatches with the LLVM 22 instrumentation of the pinned nightly.
+minicov = "=0.3.8"
 
 [dev-dependencies]
 web-sys = { path = "../web-sys", features = [

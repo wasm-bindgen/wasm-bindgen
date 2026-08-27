@@ -5,13 +5,58 @@
 
 ### Added
 
+* Added `--split-debug-info` to the CLI. This option extracts the DWARF debug
+  info to a separate `*_bg.debug.wasm` file. Use `--debug-info-url` to set
+  the recorded URL for the debug info. [#5279](https://github.com/wasm-bindgen/wasm-bindgen/pull/5279)
+
+* Added `#[wasm_bindgen(experimental_generic_mono)]` for imported functions,
+  which binds a generic import once per monomorphisation instead of erasing
+  its type parameters to `JsValue`. It can be applied to an individual import
+  or to a whole `extern "C"` block, which every generic function in the block
+  then inherits. Each instantiation gets its own descriptor, so arguments and
+  return values are marshalled at their concrete types (a `u32` crosses as a
+  number, a `String` as a string) rather than being boxed. Trait bounds,
+  `where` predicates (including higher-ranked ones), associated-type
+  projections, lifetime parameters, argument-position `impl Trait`, `async`,
+  `catch`, and `slice_to_array` are all supported; see
+  [the guide](https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/experimental_generic_mono.html)
+  for the supported surface and the shapes that are rejected. The attribute
+  is experimental and may change as it stabilizes.
+  [#5230](https://github.com/wasm-bindgen/wasm-bindgen/pull/5230)
+  [#5272](https://github.com/wasm-bindgen/wasm-bindgen/pull/5272)
+
+* Added an experimental `--experimental-memory-discard` flag which replaces an
+  `env.__wbindgen_memory_discard` function import with a local trampoline
+  containing the `memory.discard` instruction from the memory-control
+  proposal, allowing custom allocators to release physical pages back to the
+  host. Experimental and subject to change.
+
 ### Changed
+
+* Export shim symbols are now mangled with a per-crate hash, so identically
+  named exports from different crates (or two versions of one crate) no
+  longer fail the link with duplicate-symbol errors; the CLI restores the
+  canonical names in the final module. Same-named `#[wasm_bindgen(private)]`
+  structs/enums now coexist (numbered `Name`, `Name2`, ... internally in the
+  generated bindings), while genuinely conflicting public exports are
+  reported as a wasm-bindgen error instead of a wasm-ld failure. Requires
+  matching `wasm-bindgen` and CLI versions (schema bump).
+  [#2247](https://github.com/wasm-bindgen/wasm-bindgen/issues/2247)
+
+* Setting `js_namespace` on both an `extern "C"` block and an item inside it
+  is now a hard error. Nested paths must be written in a single attribute,
+  e.g. `js_namespace = ["a", "b"]`. The previous behavior silently dropped
+  the block-level namespace.
+  [#4324](https://github.com/wasm-bindgen/wasm-bindgen/issues/4324)
 
 ### Fixed
 
 * Fixed `js_namespace` exports missing from the bundler target's entry module
   re-export list, making namespaces unreachable when importing the package.
   [#5267](https://github.com/wasm-bindgen/wasm-bindgen/issues/5267)
+
+* Fix `js-sys` wasm64 build with `atomics` feature.
+  [#5274](https://github.com/wasm-bindgen/wasm-bindgen/issues/5274)
 
 ### Removed
 
@@ -39,6 +84,18 @@
   `JsNullable<JsValue>`, so catch-all nullable closures can be used where a
   typed callback is expected.
   [#5234](https://github.com/wasm-bindgen/wasm-bindgen/issues/5234)
+
+* Added experimental JSPI (JS Promise Integration) support: using it emits a
+  compiler warning noting the experimental status.
+  Supports `#[wasm_bindgen(jspi)]` on exports (sync or `async`), within which
+  a `#[wasm_bindgen(suspending)]` import call can suspend to the JS event
+  loop until its `Promise` settles. `js_sys::futures::jspi_block_on_promise`
+  also suspends on any `Promise` inside a synchronous function, while
+  `spawn_local` is context-aware: tasks spawned from within a JSPI context
+  support synchronous JSPI suspensions throughout their call trees.
+  Compatible with `catch` (rejections as `Err`), `async`, and
+  `panic=unwind`.
+  [#5193](https://github.com/wasm-bindgen/wasm-bindgen/pull/5193)
 
 ### Changed
 

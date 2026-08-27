@@ -214,6 +214,9 @@ pub struct ImportFunction {
     /// Causes the Builder (See cli-support::js::binding::Builder) to error out if
     /// it finds itself generating code for a function with this signature
     pub assert_no_shim: bool,
+    /// Whether the import should be wrapped with `WebAssembly.Suspending` so
+    /// that calling it from WASM suspends the current fiber.
+    pub suspending: bool,
     /// The kind of function being imported
     pub kind: ImportFunctionKind,
     /// The shim name to use in the generated code. The 'shim' is a function that appears in
@@ -230,6 +233,9 @@ pub struct ImportFunction {
     pub js_sys: Path,
     /// Generic parameters as validated simple type parameters for this function
     pub generics: syn::Generics,
+    /// Opt-in to the experimental per-monomorphisation generic import codegen
+    /// path (interpreter-discovered, marker-terminated) instead of type erasure.
+    pub generic_per_mono: bool,
 }
 
 /// The type of a function being imported
@@ -460,6 +466,9 @@ pub struct Function {
     pub r#unsafe: bool,
     /// Whether this is an `async` function
     pub r#async: bool,
+    /// Whether this export should be wrapped with `WebAssembly.promising` so
+    /// it returns a JS Promise and can suspend via JSPI.
+    pub jspi: bool,
     /// Whether to generate a typescript definition for this function
     pub generate_typescript: bool,
     /// Whether to generate jsdoc documentation for this function
@@ -667,11 +676,15 @@ impl Export {
             None => shared::free_function_export_name(&fn_name),
         };
 
-        if let Some(ns) = &self.js_namespace {
+        let name = if let Some(ns) = &self.js_namespace {
             format!("{}__{base_name}", ns.join("__"))
         } else {
             base_name
-        }
+        };
+        // Mangled with the per-crate hash so that same-named exports from
+        // different crates (or crate versions) link cleanly; cli-support
+        // restores the canonical name once the export is matched.
+        crate::hash::crate_mangled_symbol(&name)
     }
 }
 

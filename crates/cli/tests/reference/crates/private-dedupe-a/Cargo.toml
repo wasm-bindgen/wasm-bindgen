@@ -1,0 +1,11 @@
+[package]
+authors = ["The wasm-bindgen Developers"]
+edition = "2021"
+name = "private-dedupe-a"
+publish = false
+version = "0.0.0"
+
+[dependencies]
+wasm-bindgen = { path = "../../../../../.." }
+
+[workspace]

@@ -8,7 +8,7 @@
   (import "./reference_test_bg.js" "__wbg___wbindgen_panic_error_f153dd2564290663" (func (;0;) (type 0)))
   (import "./reference_test_bg.js" "__wbg___wbindgen_rethrow_fbd2dcd7d2b9ac5f" (func (;1;) (type 1)))
   (import "./reference_test_bg.js" "__wbg___wbindgen_throw_bb96b2010945f0bc" (func (;2;) (type 3)))
-  (import "./reference_test_bg.js" "__wbindgen_cast_0000000000000000" (func (;3;) (type 2)))
+  (import "./reference_test_bg.js" "__wbindgen_generic_0000000000000000" (func (;3;) (type 2)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;4;) (type 5)))
   (table (;0;) 0 funcref)
   (table $__wbindgen_externrefs (;1;) 1024 externref)

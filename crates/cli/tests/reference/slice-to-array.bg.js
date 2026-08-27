@@ -32,7 +32,7 @@ export function __wbg_js_slice_u16_as_array_f3ff7d1fa16fa117(arg0, arg1) {
     var v0 = Array.from(getArrayU16FromWasm0(arg0, arg1));
     js_slice_u16_as_array(v0);
 }
-export function __wbindgen_cast_0000000000000000(arg0, arg1) {
+export function __wbindgen_generic_0000000000000000(arg0, arg1) {
     // Cast intrinsic for `Ref(String) -> Externref`.
     const ret = getStringFromWasm0(arg0, arg1);
     return ret;

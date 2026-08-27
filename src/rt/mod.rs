@@ -60,23 +60,28 @@ pub fn wbg_cast<From: IntoWasmAbi, To: FromWasmAbi>(value: From) -> To {
     // 2. Since we can't name it to associate with a specific import or
     //    export, we use a different approach. After describing the input
     //    type, this function internally calls a special import recognized
-    //    by the `wasm-bindgen` CLI tool, `__wbindgen_describe_cast`. This
-    //    imported symbol is similar to `__wbindgen_describe` in that it's
-    //    not intended to show up in the final binary but it's merely a
+    //    by the `wasm-bindgen` CLI tool, `__wbindgen_describe_generic_import`.
+    //    This imported symbol is similar to `__wbindgen_describe` in that
+    //    it's not intended to show up in the final binary but it's merely a
     //    signal for `wasm-bindgen` that marks the parent function
-    //    (`breaks_if_inlined`) as a cast descriptor.
+    //    (`breaks_if_inlined`) as a descriptor to be discovered, interpreted,
+    //    and rewritten. A cast is the degenerate case of a generic import:
+    //    the descriptor stream carries an empty (zero-length) shim key, which
+    //    the CLI recognizes as "manufacture an identity adapter" rather than
+    //    looking up JS binding metadata by key.
     //
     // Most of this doesn't actually make sense to happen at runtime! The
     // real magic happens when `wasm-bindgen` comes along and updates our
     // generated code. When `wasm-bindgen` runs it performs a few tasks:
     //
     // * First, it finds all functions that call
-    //   `__wbindgen_describe_cast`. These are all `breaks_if_inlined`
+    //   `__wbindgen_describe_generic_import`. These are all `breaks_if_inlined`
     //   defined below as the symbol isn't called anywhere else.
     // * Next, `wasm-bindgen` executes the `breaks_if_inlined`
     //   monomorphized functions, passing it dummy arguments. This will
     //   execute the function until it reaches the call to
-    //   `__wbindgen_describe_cast`, at which point the interpreter stops.
+    //   `__wbindgen_describe_generic_import`, at which point the interpreter
+    //   stops.
     // * Finally, and probably most heinously, the call to
     //   `breaks_if_inlined` is rewritten to call an otherwise globally
     //   imported function. This globally imported function will simply
@@ -92,6 +97,9 @@ pub fn wbg_cast<From: IntoWasmAbi, To: FromWasmAbi>(value: From) -> To {
         prim3: <From::Abi as WasmAbi>::Prim3,
         prim4: <From::Abi as WasmAbi>::Prim4,
     ) -> WasmRet<To::Abi> {
+        // Empty (zero-length) shim key: a cast is the degenerate generic
+        // import that the CLI turns into an identity adapter.
+        inform(0);
         inform(FUNCTION);
         inform(0);
         inform(1);
@@ -100,7 +108,17 @@ pub fn wbg_cast<From: IntoWasmAbi, To: FromWasmAbi>(value: From) -> To {
         To::describe();
         // Pass all inputs and outputs across the opaque FFI boundary to prevent
         // compiler from removing them as dead code.
-        core::ptr::read(super::__wbindgen_describe_cast(
+        //
+        // SAFETY: this is the shape `describe_generic_import` requires. We are
+        // inside `breaks_if_inlined`, which is `#[inline(never)]` and
+        // monomorphised per `(From, To)`, and this is its single call to the
+        // marker. `func` is this very function, and `prims` points at this
+        // function's own live ABI arguments, so both stay alive across the
+        // opaque boundary. The CLI rewrites this call site to the manufactured
+        // import, whose return type is exactly `To::Abi`; reading the returned
+        // pointer at `To::Abi` (via the `WasmRet<To::Abi>` return type) is
+        // therefore reading it at the one type it is valid for.
+        core::ptr::read(crate::describe::describe_generic_import(
             breaks_if_inlined::<From, To> as _,
             &(prim1, prim2, prim3, prim4) as *const _ as _,
         ) as _)
@@ -795,6 +813,23 @@ static GLOBAL_EXNDATA: ThreadLocalWrapper<Cell<[u32; 2]>> = ThreadLocalWrapper(C
 
 #[no_mangle]
 pub static mut __instance_terminated: u32 = 0;
+
+/// Written in-fiber at every resume by the CLI-generated wrapper around a
+/// `#[wasm_bindgen(catch, suspending)]` import (see
+/// `cli-support/src/transforms/jspi.rs`): 0 when the awaited `Promise`
+/// fulfilled, 1 when it rejected — in which case the rejection reason is the
+/// import's return value. The store happens immediately before the suspend
+/// call returns, so reading it right after is race-free even with arbitrary
+/// fiber interleaving.
+#[no_mangle]
+pub static mut __wbindgen_jspi_rejected: u32 = 0;
+
+/// Whether the just-returned `#[wasm_bindgen(catch, suspending)]` import
+/// call's awaited promise rejected. Used by macro-generated glue.
+#[inline]
+pub fn jspi_rejected() -> bool {
+    unsafe { __wbindgen_jspi_rejected != 0 }
+}
 
 fn no_op() {}
 

@@ -10,7 +10,7 @@
   (type (;8;) (func))
   (import "./reference_test_bg.js" "__wbg_Error_408e67f47ca7b58b" (func (;0;) (type 2)))
   (import "./reference_test_bg.js" "__wbg___wbindgen_throw_bb96b2010945f0bc" (func (;1;) (type 3)))
-  (import "./reference_test_bg.js" "__wbindgen_cast_0000000000000000" (func (;2;) (type 0)))
+  (import "./reference_test_bg.js" "__wbindgen_generic_0000000000000000" (func (;2;) (type 0)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;3;) (type 8)))
   (table $__wbindgen_externrefs (;0;) 1024 externref)
   (memory (;0;) 17)

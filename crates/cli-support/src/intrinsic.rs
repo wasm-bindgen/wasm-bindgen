@@ -15,7 +15,7 @@ macro_rules! intrinsics {
     }) => {
         /// All wasm-bindgen intrinsics that could be depended on by a wasm
         /// module.
-        #[derive(Debug)]
+        #[derive(Debug, Clone, PartialEq, Eq)]
         pub enum Intrinsic {
             $($name,)*
         }
@@ -89,5 +89,9 @@ intrinsics! {
         InitExternrefTable = "__wbindgen_init_externref_table",
         PanicError = "__wbindgen_panic_error",
         Reinit = "__wbindgen_reinit",
+        JspiSuspend = "__wbindgen_jspi_suspend",
+        JspiInContext = "__wbindgen_jspi_in_context",
+        JspiSpawnPoll = "__wbindgen_jspi_spawn_poll",
+        JspiSpawnFirst = "__wbindgen_jspi_spawn_first",
     }
 }

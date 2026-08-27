@@ -80,6 +80,21 @@ sections. See [debug information] for more.
 
 [debug information]: debug-info.html
 
+### `--split-debug-info`
+
+Write the DWARF debug info to a separate `<name>_bg.debug.wasm` file next to
+the main `<name>_bg.wasm` file. The main file gets an `external_debug_info`
+custom section that holds the URL of the debug info file. This flag
+implies `--keep-debug`. See [debug information] for more.
+
+### `--debug-info-url <URL>`
+
+Set the URL that `--split-debug-info` records in the main file. The default
+is the file name of the debug info file, which resolves relative to the URL
+of the main file. Give an absolute URL if you debug with VS Code: its
+debugger cannot resolve a relative URL. This option requires
+`--split-debug-info`.
+
 ### `--browser`
 
 When generating bundler-compatible code (see the section on [deployment]) this
@@ -124,3 +139,17 @@ already contains the exception-handling instructions it relies on. A
 nothing for `panic=unwind` builds.
 
 See [Handling Aborts](./handling-aborts.md) for the `set_on_abort` API.
+
+### `--experimental-memory-discard`
+
+Replaces an `env.__wbindgen_memory_discard` function import with a local
+trampoline containing the `memory.discard` instruction from the wasm
+memory-control proposal, allowing custom allocators to release physical pages
+back to the host.
+
+This feature is experimental and subject to change: the emitted instruction
+requires an engine supporting the memory-control proposal, and the import
+contract WILL change as the proposal evolves.
+
+See [Releasing Memory with `memory.discard`](./memory-discard.md) for the
+import contract.

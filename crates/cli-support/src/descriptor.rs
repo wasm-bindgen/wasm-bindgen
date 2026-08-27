@@ -3,7 +3,34 @@ use std::char;
 use wasm_bindgen_shared::identifier::is_valid_ident;
 use wasm_bindgen_shared::tys::*;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+/// Which kind of per-monomorphisation binding a discovered descriptor function
+/// asks for.
+///
+/// On the wire these are distinguished only by the length of the leading key
+/// string: zero-length means [`Cast`](Self::Cast). Keeping that distinction in
+/// the type rather than as an empty-`String` sentinel means the two cases can't
+/// be confused, and in particular that the "a cast takes exactly one argument"
+/// invariant in `bind_generic_imports` is a property of the `Cast` variant
+/// rather than of an untyped string being empty.
+///
+/// The derived `Ord` orders `Cast` before every `Shim`, which is only used as a
+/// deterministic tie-break; see `bind_generic_imports`.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum GenericImportKey {
+    /// A [`wbg_cast`](wasm_bindgen::__rt::wbg_cast) identity adapter. Needs no
+    /// AST metadata: it is bound as JS that returns its single argument
+    /// unchanged.
+    Cast,
+    /// A `#[wasm_bindgen(experimental_generic_mono)]` import. The string is the shim key
+    /// identifying which generic-import AST entry supplies the JS binding
+    /// metadata (name, kind, namespace, catch, ...).
+    Shim(String),
+}
+
+// `PartialOrd`/`Ord` exist so that a decoded descriptor can be used as a total
+// tie-breaker when sorting (see `bind_generic_imports`). The order itself is
+// arbitrary — it follows variant declaration order — and is not meaningful.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Descriptor {
     I8,
     U8,
@@ -53,7 +80,7 @@ pub enum Descriptor {
     RawPointer,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Function {
     pub arguments: Vec<Descriptor>,
     pub shim_idx: u32,
@@ -61,7 +88,7 @@ pub struct Function {
     pub inner_ret: Option<Descriptor>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Closure {
     pub owned: bool,
     pub function: Function,
@@ -91,6 +118,25 @@ impl Descriptor {
         let descriptor = Descriptor::_decode(&mut data, false);
         assert!(data.is_empty(), "remaining data {data:?}");
         descriptor
+    }
+
+    /// Decode a per-monomorphisation generic-import descriptor stream.
+    ///
+    /// The stream is a length-prefixed `shim` key string (identifying which
+    /// generic-import AST entry supplies the JS binding metadata) followed by
+    /// the concrete `FUNCTION` signature for this monomorphisation. A
+    /// zero-length key on the wire denotes a [`GenericImportKey::Cast`]; the
+    /// wire format is unchanged by that being an enum here.
+    pub fn decode_generic_import(mut data: &[u32]) -> (GenericImportKey, Descriptor) {
+        let key = get_string(&mut data);
+        let descriptor = Descriptor::_decode(&mut data, false);
+        assert!(data.is_empty(), "remaining data {data:?}");
+        let key = if key.is_empty() {
+            GenericImportKey::Cast
+        } else {
+            GenericImportKey::Shim(key)
+        };
+        (key, descriptor)
     }
 
     fn _decode(data: &mut &[u32], clamped: bool) -> Descriptor {
@@ -173,6 +219,35 @@ impl Descriptor {
             NONNULL => Descriptor::NonNull,
             RAW_POINTER => Descriptor::RawPointer,
             other => panic!("unknown descriptor: {other}"),
+        }
+    }
+
+    /// Visit every struct/enum/externref type name embedded in this
+    /// descriptor tree, so callers can rewrite names to their final JS
+    /// identities (see `Context::resolve_descriptor` in `wit`).
+    pub fn visit_named_types_mut<E>(
+        &mut self,
+        f: &mut impl FnMut(&mut String) -> Result<(), E>,
+    ) -> Result<(), E> {
+        match self {
+            Descriptor::Function(function) => function.visit_named_types_mut(f),
+            Descriptor::Closure(closure) => closure.function.visit_named_types_mut(f),
+            Descriptor::Ref(d)
+            | Descriptor::RefMut(d)
+            | Descriptor::Slice(d)
+            | Descriptor::Vector(d)
+            | Descriptor::Option(d)
+            | Descriptor::Result(d) => d.visit_named_types_mut(f),
+            Descriptor::NamedExternref(name)
+            | Descriptor::Enum { name, .. }
+            | Descriptor::RustStruct(name) => f(name),
+            Descriptor::DynamicUnion { variant_types, .. } => {
+                for d in variant_types {
+                    d.visit_named_types_mut(f)?;
+                }
+                Ok(())
+            }
+            _ => Ok(()),
         }
     }
 
@@ -259,6 +334,21 @@ fn vector_kind_accepts_memory64_scalar_descriptors() {
 }
 
 impl Function {
+    /// See [`Descriptor::visit_named_types_mut`].
+    pub fn visit_named_types_mut<E>(
+        &mut self,
+        f: &mut impl FnMut(&mut String) -> Result<(), E>,
+    ) -> Result<(), E> {
+        for d in &mut self.arguments {
+            d.visit_named_types_mut(f)?;
+        }
+        self.ret.visit_named_types_mut(f)?;
+        if let Some(d) = &mut self.inner_ret {
+            d.visit_named_types_mut(f)?;
+        }
+        Ok(())
+    }
+
     fn decode(data: &mut &[u32]) -> Function {
         let shim_idx = get(data);
         let arguments = (0..get(data))

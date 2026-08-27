@@ -32,10 +32,10 @@ use walrus::{ExportId, FunctionId, GlobalId, GlobalKind, LocalFunction, LocalId,
 #[derive(Default)]
 pub struct Interpreter {
     // Function index of the `__wbindgen_describe` and
-    // `__wbindgen_describe_cast` imported functions. We special case this
-    // to know when the environment's imported function is called.
+    // `__wbindgen_describe_generic_import` imported functions. We special case
+    // this to know when the environment's imported function is called.
     describe_id: Option<FunctionId>,
-    describe_cast_id: Option<FunctionId>,
+    describe_generic_import_id: Option<FunctionId>,
 
     // Linear memory mirroring the module's own, used for stack loads/stores
     // during descriptor execution.
@@ -47,7 +47,8 @@ pub struct Interpreter {
     stack_pointer: Option<GlobalId>,
 
     // The stack pointer value at the start of each interpret_descriptor call,
-    // used to validate restoration and to unwind early exits (describe_cast).
+    // used to validate restoration and to unwind early exits
+    // (describe_generic_import).
     stack_pointer_initial: i32,
 
     // Live state of all locally-defined integer globals, snapshotted from the
@@ -183,8 +184,8 @@ impl Interpreter {
             }
             if import.name == "__wbindgen_describe" {
                 ret.describe_id = Some(id);
-            } else if import.name == "__wbindgen_describe_cast" {
-                ret.describe_cast_id = Some(id);
+            } else if import.name == "__wbindgen_describe_generic_import" {
+                ret.describe_generic_import_id = Some(id);
             }
         }
 
@@ -279,10 +280,10 @@ impl Interpreter {
         &self.descriptor
     }
 
-    /// Returns the function id of the `__wbindgen_describe_cast`
+    /// Returns the function id of the `__wbindgen_describe_generic_import`
     /// imported function.
-    pub fn describe_cast_id(&self) -> Option<FunctionId> {
-        self.describe_cast_id
+    pub fn describe_generic_import_id(&self) -> Option<FunctionId> {
+        self.describe_generic_import_id
     }
 
     /// Returns the export id of the `__wbindgen_skip_interpret_calls`.
@@ -521,13 +522,16 @@ impl Frame<'_> {
                         log::trace!("__wbindgen_describe({val})");
                         self.interp.descriptor.push(val as u32);
 
-                    // If this function is calling the `__wbindgen_describe_cast`
-                    // function then it's just a marker for the parent function
-                    // to be treated as a cast.
-                    } else if Some(func) == self.interp.describe_cast_id {
-                        log::trace!("__wbindgen_describe_cast()");
-                        // `__wbindgen_describe_cast` marks the end of the cast
-                        // descriptor. Stop here, ignoring anything on the stack.
+                    // If this function is calling the
+                    // `__wbindgen_describe_generic_import` function then it's
+                    // just a marker terminating a discovered descriptor
+                    // function (a generic import or, with an empty shim key, a
+                    // `wbg_cast` identity adapter).
+                    } else if Some(func) == self.interp.describe_generic_import_id {
+                        log::trace!("__wbindgen_describe_generic_import()");
+                        // `__wbindgen_describe_generic_import` is a sentinel
+                        // marker that terminates a marker-discovered descriptor
+                        // function. Stop here, ignoring anything on the stack.
                         // Restore SP to its entry value since the normal function
                         // epilogue won't run.
                         if let Some(sp) = self.interp.stack_pointer {

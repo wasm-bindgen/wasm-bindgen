@@ -1,11 +1,12 @@
 use crate::decode::{ImportModule, LocalModule};
-use crate::descriptor::{Descriptor, Function};
+use crate::descriptor::{Descriptor, Function, GenericImportKey};
 use crate::descriptors::WasmBindgenDescriptorsSection;
 use crate::intrinsic::Intrinsic;
 use crate::transforms::threads::ThreadCount;
 use crate::{decode, wasm_conventions, Bindgen, PLACEHOLDER_MODULE};
-use anyhow::{anyhow, bail, ensure, Error};
-use std::collections::{BTreeSet, HashMap};
+use anyhow::{anyhow, bail, ensure, Context as _, Error};
+use std::collections::hash_map::Entry;
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::str;
 use walrus::ir::VisitorMut;
 use walrus::{ConstExpr, ElementItems, ExportId, FunctionId, ImportId, MemoryId, Module};
@@ -40,6 +41,78 @@ struct Context<'a> {
     /// when wasm-ld ICF merges invoke functions for different closure types
     /// into the same export.
     export_adapter_sigs: HashMap<AdapterId, (Vec<Descriptor>, Descriptor, Option<Descriptor>)>,
+    /// Owned JS-binding metadata for generic (per-monomorphisation) imports,
+    /// recorded during the AST import pass and keyed by `shim`. The generic
+    /// import discovery pass (`bind_generic_imports`) joins the interpreted
+    /// per-monomorphisation signatures against this table by `shim` to
+    /// manufacture one JS binding per `(shim, signature)`.
+    generic_import_bindings: HashMap<String, GenericImportMeta>,
+    /// Per-monomorphisation generic imports discovered by the interpreter in
+    /// `init`, stashed until after all programs are processed (the AST import
+    /// pass populates `generic_import_bindings`, which the manufacture step
+    /// then joins against by `shim`).
+    pending_generic_imports: HashMap<(GenericImportKey, Descriptor), Vec<FunctionId>>,
+    /// Human-meaningful name to blame in binding-failure diagnostics, for the
+    /// imports manufactured by `bind_generic_imports`. Those are named
+    /// `__wbindgen_generic_N` after a sort index that means nothing to a user, so
+    /// the name to actually report is recorded here as they are created rather
+    /// than recovered by parsing it back out of the walrus function name.
+    generic_import_display_names: HashMap<ImportId, String>,
+    /// Final JS identities for exported structs/enums whose qualified names
+    /// collide across crates, keyed by `(unique_crate_identifier,
+    /// qualified_name)`. Only the colliding `private` definitions appear
+    /// here; anything absent keeps its canonical qualified name.
+    item_identities: HashMap<(String, String), String>,
+    /// Qualified names exported as `private` by multiple crates with no
+    /// public owner. A structural reference to one of these from outside its
+    /// defining crate is ambiguous and reported as an error.
+    ambiguous_items: BTreeSet<String>,
+    /// Exports restored from their mangled symbol to a canonical name, in
+    /// module order; used to re-sort them by final name afterwards (see
+    /// `restore_export_order`).
+    demangled_exports: Vec<ExportId>,
+}
+
+/// Owned JS-binding metadata for a generic import, captured from its decoded
+/// AST entry so it can be applied to each discovered monomorphisation.
+///
+/// The `AuxImport` and `AdapterJsImportKind` fully describe how the JS value is
+/// bound (free function, method, constructor, static, getter, setter,
+/// structural, ...) and are independent of the concrete ABI descriptor, so they
+/// can be determined once (during the AST import pass) and reused for every
+/// interpreted monomorphisation.
+///
+/// Note there is deliberately no `assert_no_shim`: the macro rejects
+/// `assert_no_shim` combined with `experimental_generic_mono` at parse time, so it is
+/// always `false` on this path and `bind_generic_imports` passes the constant
+/// through to `finish_import_binding` (which still needs the parameter for the
+/// normal import path).
+struct GenericImportMeta {
+    aux_import: AuxImport,
+    adapter_kind: AdapterJsImportKind,
+    catch: bool,
+    variadic: bool,
+    /// How to refer to this import in a diagnostic, e.g. `console.log` or
+    /// `mylib.log`. The shim key is a hash, so it is useless for telling the user
+    /// *which* of their imports is involved in a collision.
+    display: String,
+}
+
+impl GenericImportMeta {
+    /// A comparable identity for the JS binding this metadata describes, used
+    /// to tell a genuine shim-key collision apart from the same import simply
+    /// being declared twice.
+    ///
+    /// `display` is deliberately excluded. It is derived from the same data
+    /// this identity already covers and exists purely for diagnostics.
+    fn identity(&self) -> (&AuxImport, AdapterJsImportKind, bool, bool) {
+        (
+            &self.aux_import,
+            self.adapter_kind,
+            self.catch,
+            self.variadic,
+        )
+    }
 }
 
 struct InstructionBuilder<'a, 'b> {
@@ -83,18 +156,64 @@ pub fn process(
         support_start: bindgen.emit_start,
         linked_modules: bindgen.split_linked_modules,
         export_adapter_sigs: Default::default(),
+        generic_import_bindings: Default::default(),
+        pending_generic_imports: Default::default(),
+        generic_import_display_names: Default::default(),
+        item_identities: Default::default(),
+        ambiguous_items: Default::default(),
+        demangled_exports: Default::default(),
     };
     cx.init()?;
+
+    resolve_item_identities(&mut cx, &programs)?;
 
     for program in programs {
         cx.program(program)?;
     }
+
+    // Program context is over; anything processed from here on (e.g. generic
+    // import monomorphisations) has no defining crate to resolve identities
+    // against.
+    cx.unique_crate_identifier = "";
+
+    cx.restore_export_order();
+
+    // All AST import metadata is now recorded; manufacture the per-
+    // monomorphisation generic-import bindings discovered by the interpreter.
+    cx.bind_generic_imports()?;
 
     if !cx.start_found {
         cx.discover_main()?;
     }
     cx.find_exn_store();
     cx.find_destroy_closure();
+
+    // The JSPI transform (`transforms::jspi`) needs `__wbindgen_malloc`/
+    // `__wbindgen_free` to evacuate fiber shadow stacks around suspensions,
+    // and the address of the `__wbindgen_jspi_rejected` flag static to report
+    // promise rejections. Record them before `unexport_intrinsics` removes
+    // their exports.
+    if !cx.aux.imports_with_suspending.is_empty() || cx.aux.export_map.values().any(|e| e.jspi) {
+        cx.aux.jspi_malloc = Some(cx.malloc()?);
+        cx.aux.jspi_free = Some(cx.free()?);
+        cx.aux.jspi_rejected = cx
+            .module
+            .exports
+            .iter()
+            .find(|e| e.name == "__wbindgen_jspi_rejected")
+            .and_then(|e| match e.item {
+                walrus::ExportItem::Global(g) => Some(g),
+                _ => None,
+            })
+            .and_then(|g| match &cx.module.globals.get(g).kind {
+                walrus::GlobalKind::Local(walrus::ConstExpr::Value(v)) => match *v {
+                    walrus::ir::Value::I32(v) => Some(v as u32 as u64),
+                    walrus::ir::Value::I64(v) => Some(v as u64),
+                    _ => None,
+                },
+                _ => None,
+            });
+    }
 
     cx.verify()?;
 
@@ -131,9 +250,16 @@ pub fn process(
         })
         .collect();
 
-    // Sort bare adapters by signature only to avoid machine-specific mangling non-determinism.
+    // Sort bare adapters primarily by signature, to avoid machine-specific
+    // mangling non-determinism, then by export name to make the order total.
+    //
+    // The name tie-break matters: `sort_by` is stable, so without it adapters
+    // with an identical signature keep their *creation* order, which makes this
+    // output depend on the order of unrelated earlier pipeline stages. That is
+    // exactly how moving cast manufacture out of `Context::init` into
+    // `bind_generic_imports` silently reordered several reference snapshots.
     // Resorting with Walrus requires deleting and re-injecting, so we then update the stored ID again.
-    adapter_exports.sort_by(|a, b| a.1.cmp(&b.1));
+    adapter_exports.sort_by(|a, b| a.1.cmp(&b.1).then_with(|| a.2.cmp(&b.2)));
 
     // Build mapping of old to new ExportIds
     let mut old_to_new: std::collections::HashMap<walrus::ExportId, walrus::ExportId> =
@@ -173,6 +299,88 @@ pub fn process(
     let adapters = cx.module.customs.add(cx.adapters);
     let aux = cx.module.customs.add(cx.aux);
     Ok((adapters, aux))
+}
+
+/// Decide the final JS identity of every exported struct/enum up front.
+///
+/// Identically named exports from different crates no longer collide at link
+/// time (their wasm shims carry a per-crate hash), so name collisions are
+/// resolved here instead: a name exported publicly by more than one crate is
+/// an error, while `private` copies are remapped to numbered identities
+/// (`Name`, `Name2`, `Name3`, ...) so any number of them can coexist. Names
+/// defined only once keep their canonical identity and are unaffected.
+fn resolve_item_identities(cx: &mut Context, programs: &[decode::Program]) -> Result<(), Error> {
+    let mut definitions: BTreeMap<String, Vec<(&str, bool)>> = BTreeMap::new();
+    for program in programs {
+        let uci = program.unique_crate_identifier;
+        for struct_ in &program.structs {
+            let qualified =
+                wasm_bindgen_shared::qualified_name(struct_.js_namespace.as_deref(), struct_.name);
+            definitions
+                .entry(qualified)
+                .or_default()
+                .push((uci, struct_.private));
+        }
+        for enum_ in &program.enums {
+            let qualified =
+                wasm_bindgen_shared::qualified_name(enum_.js_namespace.as_deref(), enum_.name);
+            definitions
+                .entry(qualified)
+                .or_default()
+                .push((uci, enum_.private));
+        }
+    }
+    // All names taken so far; grown as identities are assigned so that a
+    // numbered identity can never land on another definition's name.
+    let mut taken: BTreeSet<String> = definitions.keys().cloned().collect();
+    for (name, mut defs) in definitions {
+        // A crate's own programs are one definition: the same item shows up
+        // once per codegen unit its macro expansion landed in.
+        defs.sort();
+        defs.dedup();
+        if defs.len() < 2 {
+            continue;
+        }
+        let public_count = defs.iter().filter(|(_, private)| !private).count();
+        if public_count > 1 {
+            bail!(
+                "the name `{name}` is exported multiple times in this build; \
+                 rename one side with `js_name`/`js_namespace`, or mark copies that \
+                 are not part of your public interface as `#[wasm_bindgen(private)]`"
+            );
+        }
+        // The canonical name goes to the public definition when there is
+        // one, otherwise to the first private definition; remaining private
+        // copies are numbered `Name2`, `Name3`, ... skipping taken names.
+        // Every private definition gets a map entry (even the one keeping
+        // the canonical name) so its own crate's references resolve rather
+        // than hitting the ambiguity check below.
+        let mut canonical_free = public_count == 0;
+        let mut counter = 2u32;
+        for (uci, private) in &defs {
+            if !*private {
+                continue;
+            }
+            let identity = if canonical_free {
+                canonical_free = false;
+                name.clone()
+            } else {
+                loop {
+                    let candidate = format!("{name}{counter}");
+                    counter += 1;
+                    if taken.insert(candidate.clone()) {
+                        break candidate;
+                    }
+                }
+            };
+            cx.item_identities
+                .insert(((*uci).to_string(), name.clone()), identity);
+        }
+        if public_count == 0 {
+            cx.ambiguous_items.insert(name);
+        }
+    }
+    Ok(())
 }
 
 impl<'a> Context<'a> {
@@ -246,54 +454,210 @@ impl<'a> Context<'a> {
         {
             let WasmBindgenDescriptorsSection {
                 descriptors,
-                cast_imports,
+                generic_imports,
             } = *custom;
             // Store all the executed descriptors in our own field so we have
             // access to them while processing programs.
             self.descriptors.extend(descriptors);
 
-            // Sort cast imports by signature for deterministic output.
-            let mut sorted_casts: Vec<_> = cast_imports
-                .into_iter()
-                .map(|(descriptor, orig_func_ids)| {
-                    let signature = descriptor.unwrap_function();
-                    let [arg] = &signature.arguments[..] else {
-                        unreachable!("Cast function must take exactly one argument");
-                    };
-                    let sig_comment = format!("{arg:?} -> {:?}", signature.ret);
-                    (sig_comment, signature, orig_func_ids)
-                })
-                .collect();
-            sorted_casts.sort_by(|a, b| a.0.cmp(&b.0));
-
-            for (idx, (sig_comment, signature, orig_func_ids)) in
-                sorted_casts.into_iter().enumerate()
-            {
-                // Use the sort index for a deterministic import name.
-                let import_name = format!("__wbindgen_cast_{:016x}", idx + 1);
-
-                // Manufacture an import for this cast.
-                let ty = self.module.funcs.get(orig_func_ids[0]).ty();
-                let (import_func_id, import_id) =
-                    self.module
-                        .add_import_func(PLACEHOLDER_MODULE, &import_name, ty);
-                self.module.funcs.get_mut(import_func_id).name = Some(sig_comment.clone());
-                let adapter_id =
-                    self.import_adapter(import_id, signature, AdapterJsImportKind::Normal)?;
-                self.aux
-                    .import_map
-                    .insert(adapter_id, AuxImport::Cast { sig_comment });
-
-                // Mark all original functions for replacement with the new import.
-                duplicate_import_map
-                    .extend(orig_func_ids.into_iter().map(|id| (id, import_func_id)));
-            }
+            // Per-monomorphisation imports discovered via the
+            // `__wbindgen_describe_generic_import` marker — both generic imports
+            // and `wbg_cast` identity adapters (empty shim key) — are
+            // manufactured together in `bind_generic_imports`, after the AST
+            // import pass has recorded the JS-binding metadata that generic
+            // imports need. Stash them until then.
+            self.pending_generic_imports = generic_imports;
         }
 
         self.handle_duplicate_imports(&duplicate_import_map);
 
         self.aux.thread_destroy = self.thread_destroy();
 
+        Ok(())
+    }
+
+    /// Manufacture one JS binding per discovered `(shim, signature)`
+    /// monomorphisation, and rewrite every originating call site to the
+    /// manufactured import.
+    ///
+    /// Both kinds of entry discovered by the shared
+    /// `__wbindgen_describe_generic_import` marker are handled here, sharing one
+    /// sorted list, one index counter and one `__wbindgen_generic_*` naming
+    /// scheme:
+    ///
+    /// * A non-empty `shim` is a generic (per-monomorphisation) import. Its JS
+    ///   binding carries the real import semantics (kind/name/catch/variadic)
+    ///   recovered from the AST entry via `shim`.
+    /// * An empty `shim` is a [`wbg_cast`](wasm_bindgen::__rt::wbg_cast)
+    ///   identity adapter, bound as `AuxImport::Cast` (JS that returns its
+    ///   single argument unchanged); it needs no AST metadata.
+    fn bind_generic_imports(&mut self) -> Result<(), Error> {
+        let pending = std::mem::take(&mut self.pending_generic_imports);
+        if pending.is_empty() {
+            return Ok(());
+        }
+
+        // Deterministic ordering for stable import names/output. Casts and
+        // generic imports share one sorted list and one index counter; each
+        // entry's signature comment doubles as the primary sort key.
+        let mut sorted: Vec<_> = pending
+            .into_iter()
+            .map(|((key, descriptor), orig_func_ids)| {
+                let mut signature = match descriptor {
+                    Descriptor::Function(f) => *f,
+                    other => bail!(
+                        "a per-monomorphisation descriptor decoded to {other:?} rather than a \
+                         function signature; this is a wasm-bindgen bug, please report it"
+                    ),
+                };
+                // No defining crate context here (monomorphisations are
+                // discovered globally), so this only rejects references to
+                // ambiguous all-`private` names.
+                self.resolve_descriptor_function(&mut signature)?;
+                let sig_comment = match &key {
+                    GenericImportKey::Cast => {
+                        // `wbg_cast` is a one-argument identity function, but this
+                        // is a property of the *data*, not of the type: the `Cast`
+                        // variant is chosen purely because the wire carried a
+                        // zero-length shim key, so a corrupt or version-skewed
+                        // module can reach here with any arity. Report it rather
+                        // than panicking — everything else in this closure is
+                        // already fallible.
+                        let [arg] = &signature.arguments[..] else {
+                            bail!(
+                                "a cast descriptor declared {} argument(s), but a cast is an \
+                                 identity function and must take exactly one; this is a \
+                                 wasm-bindgen bug, please report it",
+                                signature.arguments.len()
+                            );
+                        };
+                        format!("{arg:?} -> {:?}", signature.ret)
+                    }
+                    GenericImportKey::Shim(shim) => {
+                        format!("{shim}: {:?} -> {:?}", signature.arguments, signature.ret)
+                    }
+                };
+                Ok((sig_comment, key, signature, orig_func_ids))
+            })
+            .collect::<Result<Vec<_>, Error>>()?;
+        // Sort primarily by `sig_comment` so the user-visible naming and
+        // ordering is driven by the signature, then tie-break on the *whole*
+        // HashMap key (`GenericImportKey` plus the full `Descriptor`).
+        //
+        // The tie-break has to be the full key, not just the shim: `sig_comment`
+        // for a generic import already starts with the shim key, so tie-breaking
+        // on the shim alone can never break a tie the primary key did not. More
+        // importantly `sig_comment` omits `Function::shim_idx` and
+        // `Function::inner_ret`, both of which participate in `Descriptor`'s
+        // `Hash`/`Eq` — so two genuinely distinct map entries can produce an
+        // equal `sig_comment` and, without this, fall through to nondeterministic
+        // `HashMap` iteration order. Today the macro always emits `shim_idx = 0`
+        // and `inner_ret == ret`, but nothing asserts that, so the ordering is
+        // made total regardless.
+        sorted.sort_by(|a, b| {
+            a.0.cmp(&b.0)
+                .then_with(|| a.1.cmp(&b.1))
+                .then_with(|| a.2.cmp(&b.2))
+        });
+
+        let mut duplicate_import_map = HashMap::new();
+        for (idx, (sig_comment, key, signature, orig_func_ids)) in sorted.into_iter().enumerate() {
+            let import_name = format!("__wbindgen_generic_{:016x}", idx + 1);
+            // Every monomorphisation in a group was keyed by an identical
+            // decoded signature, so they must all share one Wasm type; the
+            // manufactured import is given that type and every call site is
+            // rewritten to it, which would produce an invalid module if they
+            // did not. Verify rather than assume.
+            let ty = self.module.funcs.get(orig_func_ids[0]).ty();
+            for &other in &orig_func_ids[1..] {
+                let other_ty = self.module.funcs.get(other).ty();
+                if other_ty != ty {
+                    bail!(
+                        "monomorphisations grouped under `{sig_comment}` do not all have the \
+                         same Wasm type ({ty:?} vs {other_ty:?}), so they cannot share one \
+                         manufactured import; this is a wasm-bindgen bug, please report it"
+                    );
+                }
+            }
+            let (import_func_id, import_id) =
+                self.module
+                    .add_import_func(PLACEHOLDER_MODULE, &import_name, ty);
+            self.module.funcs.get_mut(import_func_id).name = Some(sig_comment.clone());
+
+            // Blame something meaningful if this import fails to bind: the shim
+            // key for a generic import, or the cast's signature for a cast (which
+            // has no user-facing name of its own).
+            self.generic_import_display_names.insert(
+                import_id,
+                match &key {
+                    GenericImportKey::Cast => format!("cast {sig_comment}"),
+                    GenericImportKey::Shim(shim) => shim.clone(),
+                },
+            );
+
+            match key {
+                GenericImportKey::Cast => {
+                    // Identity adapter, no AST metadata required.
+                    let id =
+                        self.import_adapter(import_id, signature, AdapterJsImportKind::Normal)?;
+                    self.aux
+                        .import_map
+                        .insert(id, AuxImport::Cast { sig_comment });
+                }
+                GenericImportKey::Shim(shim) => {
+                    let meta = self.generic_import_bindings.get(&shim).ok_or_else(|| {
+                        // The monomorphised shim was instantiated (so its
+                        // descriptor is in the module), but the `#[wasm_bindgen]`
+                        // AST entry that supplies its JS binding metadata is not.
+                        // In practice that means the declaring crate's
+                        // `__wasm_bindgen_unstable` metadata section did not make it
+                        // into the link — see the anchoring descriptor export in
+                        // `DescribeImport`, which exists precisely to stop wasm-ld
+                        // dropping that archive member.
+                        anyhow::anyhow!(
+                            "a generic import was monomorphised as `{shim}`, but the \
+                             #[wasm_bindgen] metadata describing how to bind it is missing \
+                             from this module.\n\
+                             \n\
+                             This usually means the crate declaring the import did not \
+                             contribute its wasm-bindgen metadata to the link. Check that \
+                             the declaring crate is built with the same wasm-bindgen \
+                             version as this CLI, and that its `extern \"C\"` block is not \
+                             entirely #[cfg]-ed out for this target.\n\
+                             \n\
+                             Otherwise this is a wasm-bindgen bug; please report it at \
+                             https://github.com/wasm-bindgen/wasm-bindgen/issues"
+                        )
+                    })?;
+                    let aux_import = meta.aux_import.clone();
+                    let adapter_kind = meta.adapter_kind;
+                    let catch = meta.catch;
+                    let variadic = meta.variadic;
+                    let display = meta.display.clone();
+
+                    // The generated name is `__wbindgen_generic_<hash>`, which says
+                    // nothing about what this binds. Record the JS target and this
+                    // monomorphisation's concrete signature, which together are what
+                    // distinguish sibling shims — two monomorphisations can have
+                    // byte-identical JS bodies and differ only in their wasm
+                    // signature. The shim key is deliberately left out: it is a hash,
+                    // and `display` already names the import.
+                    let mono = format!("{:?} -> {:?}", signature.arguments, signature.ret);
+                    let id = self.import_adapter(import_id, signature, adapter_kind)?;
+                    self.aux
+                        .import_comments
+                        .insert(id, format!("generic import `{display}`: {mono}"));
+                    // `assert_no_shim` and `suspending` are rejected in
+                    // combination with `experimental_generic_mono` by the macro (see
+                    // `parser.rs`), so both are always false on this path.
+                    self.finish_import_binding(id, aux_import, catch, variadic, false, false);
+                }
+            }
+
+            duplicate_import_map.extend(orig_func_ids.into_iter().map(|f| (f, import_func_id)));
+        }
+
+        self.handle_duplicate_imports(&duplicate_import_map);
         Ok(())
     }
 
@@ -312,6 +676,14 @@ impl<'a> Context<'a> {
     /// The map provided here is a map where the key is a function id to replace
     /// and the value is what to replace it with.
     fn handle_duplicate_imports(&mut self, map: &HashMap<FunctionId, FunctionId>) {
+        // Nothing to replace: skip the full-module instruction walk entirely.
+        // This matters because this pass now runs a second time for generic
+        // imports (`bind_generic_imports`), so avoiding a redundant traversal
+        // when either map is empty keeps large modules cheap.
+        if map.is_empty() {
+            return;
+        }
+
         struct Replace<'a> {
             map: &'a HashMap<FunctionId, FunctionId>,
         }
@@ -491,6 +863,171 @@ impl<'a> Context<'a> {
         Ok(())
     }
 
+    /// The per-crate hash the macro mangled this program's export shim
+    /// symbols with; carried as the suffix of `unique_crate_identifier`.
+    fn crate_hash(&self) -> &str {
+        wasm_bindgen_shared::crate_hash(self.unique_crate_identifier)
+    }
+
+    /// The mangled symbol the macro emitted for a canonical shim name of the
+    /// current program's crate.
+    fn mangled(&self, base: &str) -> String {
+        wasm_bindgen_shared::mangled_symbol(base, self.crate_hash())
+    }
+
+    /// Final JS identity of a struct/enum defined by the current program's
+    /// crate (inherent impls always live in the defining crate, so class
+    /// strings on exports resolve through the same crate identity).
+    fn item_identity(&self, qualified: &str) -> String {
+        self.item_identities
+            .get(&(
+                self.unique_crate_identifier.to_string(),
+                qualified.to_string(),
+            ))
+            .cloned()
+            .unwrap_or_else(|| qualified.to_string())
+    }
+
+    /// Final JS identity of a struct/enum referenced by name, possibly from
+    /// outside its defining crate. Same-crate references resolve through the
+    /// identity map; anything else must have an unambiguous canonical owner.
+    fn resolve_item_ref(&self, qualified: &mut String) -> Result<(), Error> {
+        if let Some(identity) = self.item_identities.get(&(
+            self.unique_crate_identifier.to_string(),
+            qualified.to_string(),
+        )) {
+            *qualified = identity.clone();
+        } else if self.ambiguous_items.contains(qualified.as_str()) {
+            bail!(
+                "`{qualified}` is exported as `#[wasm_bindgen(private)]` by multiple \
+                 crates, so this reference to it by name is ambiguous"
+            );
+        }
+        Ok(())
+    }
+
+    /// Rewrite struct/enum names embedded in a descriptor to their final JS
+    /// identities as seen from the current program's crate.
+    fn resolve_descriptor(&self, descriptor: &mut Descriptor) -> Result<(), Error> {
+        descriptor.visit_named_types_mut(&mut |name| self.resolve_item_ref(name))
+    }
+
+    /// See [`Context::resolve_descriptor`].
+    fn resolve_descriptor_function(&self, function: &mut Function) -> Result<(), Error> {
+        function.visit_named_types_mut(&mut |name| self.resolve_item_ref(name))
+    }
+
+    /// The macro emits every export shim under a crate-hash mangled symbol so
+    /// that same-named exports from different crates link cleanly; restore
+    /// the export's canonical name now that it has been matched. A conflict
+    /// on the canonical name means two crates genuinely exported the same
+    /// JS-visible name (previously a cryptic wasm-ld duplicate-symbol
+    /// failure).
+    fn demangle_export(&mut self, mangled: &str, canonical: &str) -> Result<(), Error> {
+        let Some((export_id, func_id)) = self.function_exports.remove(mangled) else {
+            return Ok(());
+        };
+        if self.function_exports.contains_key(canonical) {
+            bail!(
+                "the name `{canonical}` is exported by multiple crates in this build; \
+                 rename one side with `js_name`/`js_namespace`"
+            );
+        }
+        self.module.exports.get_mut(export_id).name = canonical.to_string();
+        // The name-section entry is the mangled symbol too; restore it so
+        // stack traces and disassembly show the canonical name. Guarded by an
+        // exact match since wasm-ld may have merged identical shims, in which
+        // case the function carries some other export's name.
+        let func = self.module.funcs.get_mut(func_id);
+        if func.name.as_deref() == Some(mangled) {
+            func.name = Some(canonical.to_string());
+        }
+        self.function_exports
+            .insert(canonical.to_string(), (export_id, func_id));
+        self.demangled_exports.push(export_id);
+        Ok(())
+    }
+
+    /// Restore the canonical name of a placeholder-module import emitted
+    /// under a crate-hash mangled symbol (a struct's `new`/`unwrap` shim).
+    /// On a genuine collision (same-named `private` structs) later copies
+    /// keep their mangled name, which is fine: import shim names are
+    /// internal and JS-side glue is wired up per import entry.
+    fn demangle_import(&mut self, mangled: &str, canonical: &str) -> String {
+        let Some(&(import_id, func_id)) = self.function_imports.get(mangled) else {
+            return mangled.to_string();
+        };
+        if self.function_imports.contains_key(canonical) {
+            return mangled.to_string();
+        }
+        self.module.imports.get_mut(import_id).name = canonical.to_string();
+        let func = self.module.funcs.get_mut(func_id);
+        if func.name.as_deref() == Some(mangled) {
+            func.name = Some(canonical.to_string());
+        }
+        self.function_imports.remove(mangled);
+        self.function_imports
+            .insert(canonical.to_string(), (import_id, func_id));
+        canonical.to_string()
+    }
+
+    /// wasm-ld emits exports sorted by symbol name, but that order was
+    /// computed over the mangled symbols; re-sort the demangled exports by
+    /// their final names (within their own positions in the export section)
+    /// so the output is ordered exactly as it would be with unmangled
+    /// symbols, independent of per-crate hash values.
+    fn restore_export_order(&mut self) {
+        let demangled = std::mem::take(&mut self.demangled_exports)
+            .into_iter()
+            .collect::<std::collections::HashSet<_>>();
+        // The positions being re-sorted into, in export-section order.
+        let positions = self
+            .module
+            .exports
+            .iter()
+            .map(|e| e.id())
+            .filter(|id| demangled.contains(id))
+            .collect::<Vec<_>>();
+        let mut entries = positions
+            .iter()
+            .map(|&id| {
+                let export = self.module.exports.get(id);
+                (id, export.name.clone(), export.item)
+            })
+            .collect::<Vec<_>>();
+        entries.sort_by(|a, b| a.1.cmp(&b.1));
+
+        // Moving an entry to another position moves it to another
+        // `ExportId`, so fix up everything that referenced the old one.
+        let mut old_to_new = HashMap::new();
+        for (&position, (old_id, name, item)) in positions.iter().zip(entries) {
+            old_to_new.insert(old_id, position);
+            if let walrus::ExportItem::Function(f) = item {
+                self.function_exports.insert(name.clone(), (position, f));
+            }
+            let export = self.module.exports.get_mut(position);
+            export.name = name;
+            export.item = item;
+        }
+        for (export_id, _) in self.adapters.exports.iter_mut() {
+            if let Some(&new_id) = old_to_new.get(export_id) {
+                *export_id = new_id;
+            }
+        }
+        for adapter in self.adapters.adapters.values_mut() {
+            let AdapterKind::Local { instructions } = &mut adapter.kind else {
+                continue;
+            };
+            for instruction in instructions {
+                if let Instruction::CallExport(export_id) = &mut instruction.instr {
+                    if let Some(&new_id) = old_to_new.get(export_id) {
+                        *export_id = new_id;
+                    }
+                }
+            }
+        }
+    }
+
     fn program(&mut self, program: decode::Program<'a>) -> Result<(), Error> {
         self.unique_crate_identifier = program.unique_crate_identifier;
         let decode::Program {
@@ -584,13 +1121,11 @@ impl<'a> Context<'a> {
     }
 
     fn export(&mut self, export: decode::Export<'_>) -> Result<(), Error> {
-        // The wasm shim symbol emitted by the macro (see
-        // `ast::Export::export_name`) prefixes the `js_namespace` for both
-        // class and free-function exports. Mirror that here so we can find
-        // the descriptor; without the prefix for the class case, two classes
-        // sharing a `js_class` across different `js_namespace`s would
-        // produce identical wasm names and collide at wasm-ld.
-        let wasm_name = match &export.class {
+        // The canonical wasm shim symbol (see `ast::Export::export_name`)
+        // prefixes the `js_namespace` for both class and free-function
+        // exports; the macro emits it mangled with the per-crate hash.
+        // Mirror both here so we can find the descriptor and the export.
+        let canonical_name = match &export.class {
             Some(class) => {
                 let base = struct_function_export_name(class, export.function.name);
                 if let Some(ref ns) = export.js_namespace {
@@ -608,16 +1143,38 @@ impl<'a> Context<'a> {
                 }
             }
         };
+        let wasm_name = self.mangled(&canonical_name);
+
+        // Resolve the class identity up front: when the class was remapped
+        // (a colliding `private` struct), the export's restored wasm name
+        // follows the identity rather than the canonical form.
+        let class_identity = export.class.as_ref().map(|class| {
+            let qualified =
+                wasm_bindgen_shared::qualified_name(export.js_namespace.as_deref(), class);
+            (self.item_identity(&qualified), qualified)
+        });
+        let final_name = match &class_identity {
+            Some((identity, qualified)) if identity != qualified => {
+                struct_function_export_name(identity, export.function.name)
+            }
+            _ => canonical_name,
+        };
+
         let mut descriptor = match self.descriptors.remove(&wasm_name) {
-            None => return Ok(()),
+            None => {
+                self.demangle_export(&wasm_name, &final_name)?;
+                return Ok(());
+            }
             Some(d) => d.unwrap_function(),
         };
+        self.resolve_descriptor_function(&mut descriptor)?;
 
         let Some((export_id, id)) = self.function_exports.get(&wasm_name).copied() else {
             bail!("{wasm_name} symbol is missing, \
                 may be because there are multiple exports with the same name but different signatures, \
                 and discarded by wasm-ld.");
         };
+        self.demangle_export(&wasm_name, &final_name)?;
 
         match export.start {
             decode::StartKind::Public => {
@@ -635,17 +1192,16 @@ impl<'a> Context<'a> {
             decode::MethodKind::Operation(op) if matches!(op.kind, decode::OperationKind::RegularThis)
         );
 
-        let kind = match export.class {
-            Some(class) => {
-                // Carry the namespaced `qualified_name` form (`ns__Foo`) as
-                // the class identity downstream so it matches the key the
-                // struct registered under in `exported_classes`. With just
-                // the bare `class` string, an impl whose struct lives in a
-                // `js_namespace` would not resolve back to its registered
+        let kind = match class_identity {
+            Some((class, _)) => {
+                // Carry the class identity (the namespaced `qualified_name`
+                // form `ns__Foo`, remapped for colliding `private` structs)
+                // downstream so it matches the key the struct registered
+                // under in `exported_classes`. With just the bare `class`
+                // string, an impl whose struct lives in a `js_namespace`
+                // would not resolve back to its registered
                 // `exported_classes` entry and the constructor + methods
                 // would land on a fresh empty entry instead.
-                let class =
-                    wasm_bindgen_shared::qualified_name(export.js_namespace.as_deref(), class);
                 match export.method_kind {
                     decode::MethodKind::Constructor => {
                         verify_constructor_return(&class, &descriptor.ret)?;
@@ -708,6 +1264,7 @@ impl<'a> Context<'a> {
                 comments: concatenate_comments(&export.comments),
                 args,
                 asyncness: export.function.asyncness,
+                jspi: export.function.jspi,
                 kind,
                 js_namespace: export
                     .js_namespace
@@ -766,8 +1323,141 @@ impl<'a> Context<'a> {
             structural,
             function,
             assert_no_shim,
+            suspending,
+            generic_per_mono,
         } = function;
         let generate_typescript = import.generate_typescript;
+
+        // Generic (per-monomorphisation) imports have no single descriptor
+        // shim; each concrete instantiation is discovered by the interpreter
+        // via the `__wbindgen_describe_generic_import` marker. Here we only
+        // record the JS-binding metadata keyed by `shim`, to be applied to each
+        // discovered monomorphisation in `bind_generic_imports`.
+        //
+        // The `AuxImport` / `AdapterJsImportKind` are determined the same way as
+        // for a normal import (the logic below is descriptor-independent), so
+        // methods, constructors, statics, getters, setters and structural
+        // accessors all bind identically to their non-generic counterparts.
+        if generic_per_mono {
+            // The macro still emits a named descriptor export for this shim, but
+            // purely to anchor the defining crate's `__wasm_bindgen_unstable`
+            // section into the link (see `DescribeImport::try_to_tokens`). Its
+            // contents describe a trivial `fn()` rather than the real signature,
+            // so drop it here to make sure it can never be mistaken for one.
+            self.descriptors.remove(shim);
+
+            // Reexport is applied per named descriptor shim in the normal path;
+            // a generic import has no single shim (one binding is manufactured
+            // per monomorphisation), so reexport has no well-defined target.
+            // The macro rejects this combination up front with a span, so this
+            // should be unreachable; kept as belt-and-braces in case an AST
+            // reaches the CLI from an older or hand-built macro.
+            if import.reexport.is_some() {
+                bail!(
+                    "#[wasm_bindgen] `experimental_generic_mono` imports cannot be reexported; \
+                     remove the reexport or use the type-erasure generic path"
+                );
+            }
+            let (aux_import, adapter_kind) = match method {
+                Some(data) => {
+                    let class =
+                        self.determine_import(&import.module, &import.js_namespace, data.class)?;
+                    match data.kind {
+                        decode::MethodKind::Constructor => (
+                            AuxImport::Value(AuxValue::Bare(class)),
+                            AdapterJsImportKind::Constructor,
+                        ),
+                        decode::MethodKind::Operation(op) => {
+                            let (aux, is_method) =
+                                self.determine_import_op(class, &function, structural, op)?;
+                            let kind = if is_method {
+                                AdapterJsImportKind::Method
+                            } else {
+                                AdapterJsImportKind::Normal
+                            };
+                            (aux, kind)
+                        }
+                    }
+                }
+                None => {
+                    let js_import =
+                        self.determine_import(&import.module, &import.js_namespace, function.name)?;
+                    (
+                        AuxImport::Value(AuxValue::Bare(js_import)),
+                        AdapterJsImportKind::Normal,
+                    )
+                }
+            };
+            // The shim key is a hash over `(namespace + js_namespace, signature
+            // tokens, module, cfg_attrs)` and the imported function's
+            // `wasm.name` (which is the `js_name` when one is given). A number of
+            // attributes are still *not* hashed, though: `catch`, `variadic`,
+            // `slice_to_array`, `structural`/`final`, and the getter/setter
+            // accessor kind. Two generic imports that agree on everything hashed
+            // and differ only in one of those therefore land on the same key.
+            //
+            // Two *identical* declarations also land on the same key, which is
+            // benign and must be deduplicated rather than rejected. So compare
+            // the resulting metadata rather than treating any key clash as an
+            // error: silently keeping one of two genuinely different bindings
+            // would mis-bind every monomorphisation of the other, but silently
+            // keeping one of two identical bindings is exactly right.
+            //
+            // The mismatch case is user-reachable, so say what to actually do
+            // about it.
+            //
+            // The display string ends up in a `//` comment in the generated JS
+            // (see `import_comments`), so strip anything that could terminate
+            // that comment and inject executable code. Doing it here covers
+            // every consumer of the string, including the diagnostic below.
+            let display = sanitize_js_comment(&match &import.js_namespace {
+                Some(ns) => format!("{}.{}", ns.join("."), function.name),
+                None => function.name.to_string(),
+            });
+            let meta = GenericImportMeta {
+                aux_import,
+                adapter_kind,
+                catch,
+                variadic,
+                display: display.clone(),
+            };
+            match self.generic_import_bindings.entry(shim.to_string()) {
+                Entry::Vacant(entry) => {
+                    entry.insert(meta);
+                }
+                Entry::Occupied(entry) => {
+                    // Landing on an occupied key is not on its own an error. The
+                    // same import declared in two modules of one crate hashes to
+                    // one key and produces byte-identical metadata; the ordinary
+                    // import path deduplicates that case silently (via
+                    // `function_imports`), and so must this one. Keep the entry
+                    // already installed and let both monomorphisation groups
+                    // resolve through it -- the bindings are the same, so which
+                    // one wins is immaterial.
+                    let previous = entry.get();
+                    if previous.identity() != meta.identity() {
+                        let previous = &previous.display;
+                        bail!(
+                            "two `experimental_generic_mono` imports collided on the shim key `{shim}`: \
+                             `{previous}` and `{display}`.\n\
+                             \n\
+                             This happens when two generic imports have the same Rust function \
+                             name, `js_name`, `js_namespace`, signature and module, and differ \
+                             only in an attribute that does not contribute to the shim key — \
+                             `catch`, `variadic`, `slice_to_array`, `structural`/`final`, or the \
+                             getter/setter accessor kind. Binding both would be ambiguous, \
+                             because a monomorphisation names only this key.\n\
+                             \n\
+                             To fix it, make the two imports distinguishable on the Rust side: \
+                             give them different Rust function names (adding `js_name` to keep \
+                             the JS-visible name), or different signatures."
+                        );
+                    }
+                }
+            }
+            return Ok(());
+        }
+
         let (import_id, _id) = match self.function_imports.get(shim) {
             Some(pair) => *pair,
             None => {
@@ -787,12 +1477,13 @@ impl<'a> Context<'a> {
                 return Ok(());
             }
         };
-        let descriptor = match self.descriptors.remove(shim) {
+        let mut descriptor = match self.descriptors.remove(shim) {
             None => {
                 return Ok(());
             }
             Some(d) => d.unwrap_function(),
         };
+        self.resolve_descriptor_function(&mut descriptor)?;
 
         // Perform two functions here. First we're saving off our adapter
         // signature, indicating what we think our import is going to be. Next
@@ -863,17 +1554,35 @@ impl<'a> Context<'a> {
             }
         };
 
-        // Record this for later as it affects JS binding generation, but note
-        // that this doesn't affect the WebIDL interface at all.
+        self.finish_import_binding(id, aux_import, catch, variadic, assert_no_shim, suspending);
+
+        Ok(())
+    }
+
+    /// Finalize an import binding shared by the normal ([`import_function`])
+    /// and generic ([`bind_generic_imports`]) paths: record the `catch` /
+    /// `variadic` / `assert_no_shim` flags and register the `AuxImport`.
+    ///
+    /// `id` is the import adapter itself (used for the `variadic` flag), while
+    /// `catch`/`assert_no_shim` apply to the most recently generated adapter
+    /// shim (`self.adapters.implements.last()`); this distinction must be kept
+    /// in sync with `js/mod.rs`. Neither of these affects the WebIDL interface.
+    ///
+    /// [`import_function`]: Self::import_function
+    /// [`bind_generic_imports`]: Self::bind_generic_imports
+    fn finish_import_binding(
+        &mut self,
+        id: AdapterId,
+        aux_import: AuxImport,
+        catch: bool,
+        variadic: bool,
+        assert_no_shim: bool,
+        suspending: bool,
+    ) {
         if variadic {
             self.aux.imports_with_variadic.insert(id);
         }
 
-        // Note that `catch`/`assert_no_shim` is applied not to the import
-        // itself but to the adapter shim we generated, so fetch that shim id
-        // and flag it as catch here. This basically just needs to be kept in
-        // sync with `js/mod.rs`.
-        //
         // For `catch` once we see that we'll need an internal intrinsic later
         // for JS glue generation, so be sure to find that here.
         let adapter = self.adapters.implements.last().unwrap().2;
@@ -886,10 +1595,11 @@ impl<'a> Context<'a> {
         if assert_no_shim {
             self.aux.imports_with_assert_no_shim.insert(adapter);
         }
+        if suspending {
+            self.aux.imports_with_suspending.insert(adapter);
+        }
 
         self.aux.import_map.insert(id, aux_import);
-
-        Ok(())
     }
 
     /// The `bool` returned indicates whether the imported value should be
@@ -1025,10 +1735,11 @@ impl<'a> Context<'a> {
             }
         };
 
-        let descriptor = match self.descriptors.remove(static_.shim) {
+        let mut descriptor = match self.descriptors.remove(static_.shim) {
             None => return Ok(()),
             Some(d) => d,
         };
+        self.resolve_descriptor(&mut descriptor)?;
         let optional = matches!(descriptor, Descriptor::Option(_));
 
         // Register the signature of this imported shim
@@ -1182,11 +1893,14 @@ impl<'a> Context<'a> {
         // TypeScript rendering to JS-generation time so that renamed types
         // resolve through `qualified_to_identifier`.
         for idx in 0..dynamic_union.variant_type_cnt {
-            let descriptor_name =
-                wasm_bindgen_shared::dynamic_union_variant(dynamic_union.name, idx);
-            let descriptor = self.descriptors.remove(&descriptor_name).ok_or_else(|| {
+            let descriptor_name = self.mangled(&wasm_bindgen_shared::dynamic_union_variant(
+                dynamic_union.name,
+                idx,
+            ));
+            let mut descriptor = self.descriptors.remove(&descriptor_name).ok_or_else(|| {
                 anyhow!("dynamic union variant descriptor not found: {descriptor_name}")
             })?;
+            self.resolve_descriptor(&mut descriptor)?;
 
             let mut builder = self.instruction_builder(false);
             builder.outgoing(&descriptor)?;
@@ -1222,8 +1936,13 @@ impl<'a> Context<'a> {
         let signed = enum_.signed;
         let qualified_name =
             wasm_bindgen_shared::qualified_name(enum_.js_namespace.as_deref(), enum_.name);
+        // Like structs, colliding `private` enums are remapped to a numbered
+        // identity; downstream code recomputes the qualified identity from
+        // the bare name, so the suffix lives there.
+        let identity = self.item_identity(&qualified_name);
+        let bare_identity = format!("{}{}", enum_.name, &identity[qualified_name.len()..]);
         let aux = AuxEnum {
-            name: enum_.name.to_string(),
+            name: bare_identity,
             comments: concatenate_comments(&enum_.comments),
             variants: enum_
                 .variants
@@ -1247,7 +1966,7 @@ impl<'a> Context<'a> {
         let mut result = Ok(());
         self.aux
             .enums
-            .entry(qualified_name)
+            .entry(identity)
             .and_modify(|existing| {
                 result = Err(anyhow!("duplicate enums:\n{existing:?}\n{aux:?}"));
             })
@@ -1258,16 +1977,31 @@ impl<'a> Context<'a> {
     fn struct_(&mut self, struct_: decode::Struct<'_>) -> Result<(), Error> {
         let qualified_name =
             wasm_bindgen_shared::qualified_name(struct_.js_namespace.as_deref(), struct_.name);
+        // The class identity downstream; remapped to a numbered identity
+        // (`Name2`, `Name3`, ...) when this is a colliding `private` struct
+        // so that any number of same-named private classes can coexist.
+        let identity = self.item_identity(&qualified_name);
         for field in struct_.fields {
-            let getter = wasm_bindgen_shared::struct_field_get(&qualified_name, field.name);
-            let setter = wasm_bindgen_shared::struct_field_set(&qualified_name, field.name);
-            let descriptor = match self.descriptors.remove(&getter) {
+            let getter = self.mangled(&wasm_bindgen_shared::struct_field_get(
+                &qualified_name,
+                field.name,
+            ));
+            let setter = self.mangled(&wasm_bindgen_shared::struct_field_set(
+                &qualified_name,
+                field.name,
+            ));
+            let mut descriptor = match self.descriptors.remove(&getter) {
                 None => continue,
                 Some(d) => d,
             };
+            self.resolve_descriptor(&mut descriptor)?;
 
             // Register a webidl transformation for the getter
             let (getter_id, _) = self.function_exports[&getter];
+            self.demangle_export(
+                &getter,
+                &wasm_bindgen_shared::struct_field_get(&identity, field.name),
+            )?;
             let getter_descriptor = Function {
                 arguments: vec![Descriptor::I32],
                 shim_idx: 0,
@@ -1281,9 +2015,10 @@ impl<'a> Context<'a> {
                     debug_name: format!("getter for `{}::{}`", struct_.name, field.name),
                     args: None,
                     asyncness: false,
+                    jspi: false,
                     comments: concatenate_comments(&field.comments),
                     kind: AuxExportKind::Method {
-                        class: qualified_name.clone(),
+                        class: identity.clone(),
                         name: field.name.to_string(),
                         receiver: AuxReceiverKind::Borrowed,
                         kind: AuxExportedMethodKind::Getter,
@@ -1303,6 +2038,10 @@ impl<'a> Context<'a> {
             }
 
             let (setter_id, _) = self.function_exports[&setter];
+            self.demangle_export(
+                &setter,
+                &wasm_bindgen_shared::struct_field_set(&identity, field.name),
+            )?;
             let setter_descriptor = Function {
                 arguments: vec![Descriptor::I32, descriptor],
                 shim_idx: 0,
@@ -1316,9 +2055,10 @@ impl<'a> Context<'a> {
                     debug_name: format!("setter for `{}::{}`", struct_.name, field.name),
                     args: None,
                     asyncness: false,
+                    jspi: false,
                     comments: concatenate_comments(&field.comments),
                     kind: AuxExportKind::Method {
-                        class: qualified_name.clone(),
+                        class: identity.clone(),
                         name: field.name.to_string(),
                         receiver: AuxReceiverKind::Borrowed,
                         kind: AuxExportedMethodKind::Setter,
@@ -1332,8 +2072,45 @@ impl<'a> Context<'a> {
                 },
             );
         }
+        // The bare-name form of the identity: downstream code recomputes the
+        // qualified identity as `qualified_name(js_namespace, name)`, so the
+        // remapped suffix has to live on the bare name.
+        let bare_identity = format!("{}{}", struct_.name, &identity[qualified_name.len()..]);
+
+        // Restore the canonical (identity-derived) names of the `free` and
+        // `upcast` exports; JS generation and the sp-restore transform
+        // resolve both by recomputing these names from the class identity.
+        let free = self.mangled(&wasm_bindgen_shared::free_function(&qualified_name));
+        self.demangle_export(&free, &wasm_bindgen_shared::free_function(&identity))?;
+
+        let mut parent_identity = None;
+        if struct_.extends.is_some() || struct_.extends_js_class.is_some() {
+            // Mirrors `parent_qualified_name` in JS generation and the
+            // upcast symbol construction in the macro: the parent's bare JS
+            // name is `extends_js_class`, defaulting to the last segment of
+            // the `extends` Rust path.
+            if let Some(bare) = struct_.extends_js_class.or(struct_.extends) {
+                let mut parent = wasm_bindgen_shared::qualified_name(
+                    struct_.extends_js_namespace.as_deref(),
+                    bare,
+                );
+                let parent_qualified = parent.clone();
+                self.resolve_item_ref(&mut parent)
+                    .with_context(|| format!("resolving the parent class of `{qualified_name}`"))?;
+                let upcast = self.mangled(&wasm_bindgen_shared::upcast_function(
+                    &qualified_name,
+                    &parent_qualified,
+                ));
+                self.demangle_export(
+                    &upcast,
+                    &wasm_bindgen_shared::upcast_function(&identity, &parent),
+                )?;
+                parent_identity = Some(parent);
+            }
+        }
+
         let aux = AuxStruct {
-            name: struct_.name.to_string(),
+            name: bare_identity,
             comments: concatenate_comments(&struct_.comments),
             is_inspectable: struct_.is_inspectable,
             generate_typescript: struct_.generate_typescript,
@@ -1343,7 +2120,15 @@ impl<'a> Context<'a> {
                 .map(|ns| ns.iter().map(|s| s.to_string()).collect()),
             private: struct_.private,
             extends: struct_.extends.map(|s| s.to_string()),
-            extends_js_class: struct_.extends_js_class.map(|s| s.to_string()),
+            // The resolved parent identity: `parent_qualified_name` in JS
+            // generation prefers this over `extends`, so a remapped parent
+            // resolves to its final class identity.
+            extends_js_class: parent_identity.map(|parent| {
+                parent
+                    .rsplit_once("__")
+                    .map(|(_, bare)| bare.to_string())
+                    .unwrap_or(parent)
+            }),
             extends_js_namespace: struct_
                 .extends_js_namespace
                 .as_ref()
@@ -1357,22 +2142,28 @@ impl<'a> Context<'a> {
             Descriptor::I32
         };
 
-        let wrap_constructor = wasm_bindgen_shared::new_function(&qualified_name);
+        let wrap_constructor = self.demangle_import(
+            &self.mangled(&wasm_bindgen_shared::new_function(&qualified_name)),
+            &wasm_bindgen_shared::new_function(&identity),
+        );
         self.add_aux_import_to_import_map(
             &wrap_constructor,
             vec![ptr_desc.clone()],
             Descriptor::Externref,
             // Class identity downstream must match the `exported_classes`
-            // key, i.e. `qualified_name`.
-            AuxImport::WrapInExportedClass(qualified_name.to_string()),
+            // key.
+            AuxImport::WrapInExportedClass(identity.clone()),
         )?;
 
-        let unwrap_fn = wasm_bindgen_shared::unwrap_function(&qualified_name);
+        let unwrap_fn = self.demangle_import(
+            &self.mangled(&wasm_bindgen_shared::unwrap_function(&qualified_name)),
+            &wasm_bindgen_shared::unwrap_function(&identity),
+        );
         self.add_aux_import_to_import_map(
             &unwrap_fn,
             vec![Descriptor::Ref(Box::new(Descriptor::Externref))],
             ptr_desc,
-            AuxImport::UnwrapExportedClass(qualified_name.to_string()),
+            AuxImport::UnwrapExportedClass(identity),
         )?;
 
         Ok(())
@@ -1501,7 +2292,9 @@ impl<'a> Context<'a> {
             // phase, but we don't have an implementation for them. We don't
             // need to error about them in this verification pass though,
             // having them lingering in the module is normal.
-            if import.name == "__wbindgen_describe" || import.name == "__wbindgen_describe_cast" {
+            if import.name == "__wbindgen_describe"
+                || import.name == "__wbindgen_describe_generic_import"
+            {
                 continue;
             }
             if implemented.remove(&import.id()).is_none() {
@@ -1565,11 +2358,22 @@ impl<'a> Context<'a> {
         let memory64 = self.memory64();
         self.normalize_memory64_signature(&mut signature, core_id);
 
+        // Name this import in any binding failure below. Imports manufactured by
+        // `bind_generic_imports` are named after a sort index that means nothing
+        // to a user, so use the name recorded for them there.
+        let display_name = self
+            .generic_import_display_names
+            .get(&import_id)
+            .cloned()
+            .unwrap_or_else(|| import_name.clone());
+
         // Process the returned type first to see if it needs an out-pointer. This
         // happens if the results of the incoming arguments translated to Wasm take
         // up more than one type.
         let mut ret = self.instruction_builder(true);
-        ret.incoming(&signature.ret)?;
+        ret.incoming(&signature.ret).with_context(|| {
+            format!("failed to generate a binding for the return value of `{display_name}`")
+        })?;
         let uses_retptr = ret.output.len() > 1;
 
         // Process the argument next, allocating space of the return value if one
@@ -1583,8 +2387,15 @@ impl<'a> Context<'a> {
                 AdapterType::I32
             });
         }
-        for arg in signature.arguments.iter() {
-            args.outgoing(arg)?;
+        for (i, arg) in signature.arguments.iter().enumerate() {
+            // Without this an unsupported type is reported with nothing to locate
+            // it by. Note the closure form keeps the happy path allocation-free.
+            args.outgoing(arg).with_context(|| {
+                format!(
+                    "failed to generate a binding for argument {} of `{display_name}`",
+                    i + 1
+                )
+            })?;
         }
 
         // Build up the list of instructions for our adapter function. We start out
@@ -1686,24 +2497,37 @@ impl<'a> Context<'a> {
         };
         self.normalize_memory64_signature(&mut signature, core_id);
 
+        // Name the export in any binding failure below; see `import_adapter` for
+        // why this context matters.
+        let export_name = self.module.exports.get(export).name.clone();
+
         // Figure out how to translate all the incoming arguments ...
         let mut args = self.instruction_builder(false);
-        for arg in signature.arguments.iter() {
-            args.incoming(arg)?;
+        for (i, arg) in signature.arguments.iter().enumerate() {
+            args.incoming(arg).with_context(|| {
+                format!(
+                    "failed to generate a binding for argument {} of `{export_name}`",
+                    i + 1
+                )
+            })?;
         }
 
         // ... then the returned value being translated back
 
         let inner_ret_output = if let Some(sig_inner_ret) = &signature.inner_ret {
             let mut inner_ret = args.cx.instruction_builder(true);
-            inner_ret.outgoing(sig_inner_ret)?;
+            inner_ret.outgoing(sig_inner_ret).with_context(|| {
+                format!("failed to generate a binding for the return value of `{export_name}`")
+            })?;
             inner_ret.output
         } else {
             vec![]
         };
 
         let mut ret = args.cx.instruction_builder(true);
-        ret.outgoing(&signature.ret)?;
+        ret.outgoing(&signature.ret).with_context(|| {
+            format!("failed to generate a binding for the return value of `{export_name}`")
+        })?;
         let uses_retptr = ret.input.len() > 1;
 
         // Our instruction stream starts out with the return pointer as the first
@@ -2064,6 +2888,19 @@ fn concatenate_comments(comments: &[&str]) -> String {
     comments.join("\n")
 }
 
+/// Make a user-controlled string safe to embed in a generated JS comment.
+///
+/// `js_name`/`js_namespace` are arbitrary strings from an attribute, and the
+/// generic-import machinery echoes them into a `//` line comment in the emitted
+/// `*_bg.js`. A line terminator would close that comment and hand the rest of
+/// the string to the JS parser as code, and `*/` would close a block comment, so
+/// neutralise both. All four of JS's line terminators are covered: `\n`, `\r`,
+/// U+2028 LINE SEPARATOR and U+2029 PARAGRAPH SEPARATOR.
+fn sanitize_js_comment(s: &str) -> String {
+    s.replace(['\n', '\r', '\u{2028}', '\u{2029}'], " ")
+        .replace("*/", "* /")
+}
+
 /// The C struct packing algorithm, in terms of u32.
 struct StructUnpacker {
     next_offset: usize,
@@ -2170,6 +3007,12 @@ mod tests {
             support_start: true,
             linked_modules: false,
             export_adapter_sigs: Default::default(),
+            generic_import_bindings: Default::default(),
+            pending_generic_imports: Default::default(),
+            generic_import_display_names: Default::default(),
+            item_identities: Default::default(),
+            ambiguous_items: Default::default(),
+            demangled_exports: Default::default(),
         };
         cx.discover_main().unwrap();
         cx.start_found

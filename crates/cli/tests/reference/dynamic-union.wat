@@ -16,7 +16,7 @@
   (import "./reference_test_bg.js" "__wbg_exportedstruct_new" (func (;3;) (type 7)))
   (import "./reference_test_bg.js" "__wbg_exportedstruct_unwrap" (func (;4;) (type 1)))
   (import "./reference_test_bg.js" "__wbg_instanceof_ImportedType_fe5eedffdd3920ad" (func (;5;) (type 1)))
-  (import "./reference_test_bg.js" "__wbindgen_cast_0000000000000000" (func (;6;) (type 4)))
+  (import "./reference_test_bg.js" "__wbindgen_generic_0000000000000000" (func (;6;) (type 4)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;7;) (type 10)))
   (table $__wbindgen_externrefs (;0;) 1024 externref)
   (memory (;0;) 17)

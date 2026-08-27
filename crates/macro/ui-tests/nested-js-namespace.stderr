@@ -1,0 +1,17 @@
+error: `js_namespace` cannot be set on both an `extern` block and an item inside it; write the full path on one of them, e.g. `js_namespace = ["a", "b"]`
+ --> ui-tests/nested-js-namespace.rs:5:36
+  |
+5 |     #[wasm_bindgen(js_namespace = ["b"])]
+  |                                    ^^^
+
+error: `js_namespace` cannot be set on both an `extern` block and an item inside it; write the full path on one of them, e.g. `js_namespace = ["a", "b"]`
+ --> ui-tests/nested-js-namespace.rs:8:36
+  |
+8 |     #[wasm_bindgen(js_namespace = ["b"])]
+  |                                    ^^^
+
+error: `js_namespace` cannot be set on both an `extern` block and an item inside it; write the full path on one of them, e.g. `js_namespace = ["a", "b"]`
+  --> ui-tests/nested-js-namespace.rs:11:36
+   |
+11 |     #[wasm_bindgen(js_namespace = ["b"], thread_local_v2)]
+   |                                    ^^^

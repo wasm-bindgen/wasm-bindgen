@@ -72,6 +72,19 @@ struct Args {
     keep_debug: bool,
     #[arg(
         long,
+        help = "Write DWARF debug info to a separate `*_bg.debug.wasm` file (implies `--keep-debug`)"
+    )]
+    split_debug_info: bool,
+    #[arg(
+        long,
+        value_name = "URL",
+        requires = "split_debug_info",
+        help = "URL of the split debug info file, recorded in the main Wasm file\n\
+                (defaults to the file name of the debug info file)"
+    )]
+    debug_info_url: Option<String>,
+    #[arg(
+        long,
         value_name = "MODE",
         help = "Whether or not to use TextEncoder#encodeInto",
         value_parser = ["test", "always", "never"]
@@ -98,6 +111,12 @@ struct Args {
         help = "Enable abort handler even if building with panic=abort. Does nothing when panic=unwind."
     )]
     force_enable_abort_handler: bool,
+    #[arg(
+        long = "experimental-memory-discard",
+        help = "Replace an `env.__wbindgen_memory_discard` import with a `memory.discard`\n\
+                trampoline from the wasm memory-control proposal (experimental)"
+    )]
+    experimental_memory_discard: bool,
     // The options below are deprecated. They're still parsed for backwards compatibility,
     // but we don't want to show them in `--help` to avoid distracting users.
     #[arg(long, hide = true)]
@@ -161,6 +180,7 @@ fn rmain(args: &Args) -> Result<(), Error> {
         .demangle(!args.no_demangle)
         .keep_lld_exports(args.keep_lld_exports)
         .keep_debug(args.keep_debug)
+        .split_debug_info(args.split_debug_info)
         .remove_name_section(args.remove_name_section)
         .remove_producers_section(args.remove_producers_section)
         .typescript(!args.no_typescript)
@@ -169,8 +189,12 @@ fn rmain(args: &Args) -> Result<(), Error> {
         .split_linked_modules(args.split_linked_modules)
         .reference_types(args.reference_types)
         .reset_state_function(args.generate_reset_state)
-        .force_enable_abort_handler(args.force_enable_abort_handler);
+        .force_enable_abort_handler(args.force_enable_abort_handler)
+        .memory_discard(args.experimental_memory_discard);
 
+    if let Some(ref url) = args.debug_info_url {
+        b.debug_info_url(url);
+    }
     if let Some(ref name) = args.no_modules_global {
         b.no_modules_global(name)?;
     }
