@@ -197,12 +197,11 @@ pub(crate) fn type_params_with_bounds(generics: &syn::Generics) -> Vec<proc_macr
         .collect()
 }
 
-/// Returns a vector of token streams representing generic lifetime parameters
-/// with their inline bounds. For example, `<'a: 'b, 'b>` returns
-/// `[quote!('a: 'b), quote!('b)]`. This is useful for redeclaring lifetime
-/// parameters on a nested item (e.g. a monomorphised shim `fn`), which does
-/// not inherit the enclosing function's generics and must repeat them
-/// (including their bounds) explicitly.
+/// Returns lifetime declarations with their inline bounds. For example,
+/// `<'a: 'b, 'b>` returns `[quote!('a: 'b), quote!('b)]`.
+///
+/// This does not include predicates from a `where` clause. Callers that emit
+/// a new generic scope must carry those predicates separately.
 pub(crate) fn lifetime_params_with_bounds(
     generics: &syn::Generics,
 ) -> Vec<proc_macro2::TokenStream> {
@@ -220,12 +219,22 @@ pub(crate) fn lifetime_params_with_bounds(
         .collect()
 }
 
-/// Obtain the generic bounds, both inline and where clauses together
+/// Obtain the generic bounds, both inline and where clauses together.
+///
+/// Inline bounds are reified into `where` predicates because a generated item
+/// does not necessarily have a parameter-list slot to carry them: the wrapper
+/// method declares only the parameters that were not hoisted onto its
+/// enclosing `impl` block, so an inline bound on a hoisted parameter has
+/// nowhere else to go. This covers *lifetime* parameters as well as type
+/// parameters — an inline `<'a: 'b>` has no other carrier, and dropping it
+/// makes the wrapper's declaration strictly weaker than the shim it calls
+/// (which redeclares its lifetimes with bounds intact), i.e. an
+/// `E0478`/"lifetime may not live long enough" against generated code.
 pub(crate) fn generic_bounds<'a>(generics: &'a syn::Generics) -> Vec<Cow<'a, syn::WherePredicate>> {
     let mut bounds = Vec::new();
     for param in &generics.params {
-        if let syn::GenericParam::Type(type_param) = param {
-            if !type_param.bounds.is_empty() {
+        match param {
+            syn::GenericParam::Type(type_param) if !type_param.bounds.is_empty() => {
                 let ident = &type_param.ident;
                 let predicate = syn::WherePredicate::Type(syn::PredicateType {
                     attrs: Vec::new(),
@@ -236,12 +245,50 @@ pub(crate) fn generic_bounds<'a>(generics: &'a syn::Generics) -> Vec<Cow<'a, syn
                 });
                 bounds.push(Cow::Owned(predicate));
             }
+            syn::GenericParam::Lifetime(lifetime_param) if !lifetime_param.bounds.is_empty() => {
+                let predicate = syn::WherePredicate::Lifetime(syn::PredicateLifetime {
+                    attrs: Vec::new(),
+                    lifetime: lifetime_param.lifetime.clone(),
+                    colon_token: syn::Token![:](proc_macro2::Span::call_site()),
+                    bounds: lifetime_param.bounds.clone(),
+                });
+                bounds.push(Cow::Owned(predicate));
+            }
+            _ => {}
         }
     }
     if let Some(where_clause) = &generics.where_clause {
         bounds.extend(where_clause.predicates.iter().map(Cow::Borrowed));
     }
     bounds
+}
+
+/// Moves inline lifetime bounds to the `where` clause.
+///
+/// Rust accepts inline lifetime bounds in some input positions that
+/// wasm-bindgen transforms into struct and impl declarations where only the
+/// predicate form is accepted. Normalizing before emitting a new item keeps
+/// every generated scope well-formed.
+pub(crate) fn move_lifetime_bounds_to_where(generics: &mut syn::Generics) {
+    let mut predicates = Vec::new();
+    for param in &mut generics.params {
+        let syn::GenericParam::Lifetime(param) = param else {
+            continue;
+        };
+        if param.bounds.is_empty() {
+            continue;
+        }
+        predicates.push(syn::WherePredicate::Lifetime(syn::PredicateLifetime {
+            attrs: Vec::new(),
+            lifetime: param.lifetime.clone(),
+            colon_token: syn::Token![:](proc_macro2::Span::call_site()),
+            bounds: std::mem::take(&mut param.bounds),
+        }));
+        param.colon_token = None;
+    }
+    if !predicates.is_empty() {
+        generics.make_where_clause().predicates.extend(predicates);
+    }
 }
 
 /// Replace specified lifetime parameters with 'static.
@@ -274,20 +321,43 @@ pub(crate) fn generic_param_names(generics: &syn::Generics) -> Vec<&Ident> {
     generics.type_params().map(|tp| &tp.ident).collect()
 }
 
-/// Obtain all lifetime parameters from generics
-pub(crate) fn lifetime_params(generics: &syn::Generics) -> Vec<&syn::Lifetime> {
+/// Obtain lifetime arguments/names from generics.
+///
+/// These are valid in type argument positions, but do not carry the inline
+/// bounds required when declaring an `impl` or function generic header.
+pub(crate) fn lifetime_args(generics: &syn::Generics) -> Vec<&syn::Lifetime> {
     generics.lifetimes().map(|lp| &lp.lifetime).collect()
+}
+
+/// Generate a lifetime name that does not collide with the source generics.
+pub(crate) fn fresh_lifetime(generics: &syn::Generics, base: &str) -> syn::Lifetime {
+    let mut suffix = 0;
+    loop {
+        let name = if suffix == 0 {
+            base.to_owned()
+        } else {
+            format!("{base}_{suffix}")
+        };
+        if generics
+            .lifetimes()
+            .all(|param| param.lifetime.ident != name)
+        {
+            return syn::Lifetime::new(&format!("'{name}"), proc_macro2::Span::call_site());
+        }
+        suffix += 1;
+    }
 }
 
 /// Obtain both lifetime and type parameter names from generics
 pub(crate) fn all_param_names(generics: &syn::Generics) -> (Vec<&syn::Lifetime>, Vec<&Ident>) {
-    (lifetime_params(generics), generic_param_names(generics))
+    (lifetime_args(generics), generic_param_names(generics))
 }
 
 /// Helper visitor for lifetime usage detection in types
 pub struct LifetimeVisitor<'a> {
     lifetime_params: &'a [&'a syn::Lifetime],
     found_set: BTreeSet<syn::Lifetime>,
+    bound_lifetime_names: Vec<Ident>,
 }
 
 impl<'a> LifetimeVisitor<'a> {
@@ -295,19 +365,62 @@ impl<'a> LifetimeVisitor<'a> {
         Self {
             lifetime_params,
             found_set: BTreeSet::new(),
+            bound_lifetime_names: Vec::new(),
         }
     }
 
     pub fn into_found(self) -> BTreeSet<syn::Lifetime> {
         self.found_set
     }
+
+    fn push_bound_lifetimes(&mut self, lifetimes: Option<&syn::BoundLifetimes>) -> usize {
+        let start = self.bound_lifetime_names.len();
+        if let Some(lifetimes) = lifetimes {
+            self.bound_lifetime_names
+                .extend(lifetimes.lifetimes.iter().filter_map(|param| match param {
+                    syn::GenericParam::Lifetime(param) => Some(param.lifetime.ident.clone()),
+                    _ => None,
+                }));
+        }
+        start
+    }
 }
 
 impl<'ast> syn::visit::Visit<'ast> for LifetimeVisitor<'_> {
     fn visit_lifetime(&mut self, lifetime: &'ast syn::Lifetime) {
-        if self.lifetime_params.contains(&lifetime) {
+        if !self
+            .bound_lifetime_names
+            .iter()
+            .rev()
+            .any(|ident| ident == &lifetime.ident)
+            && self.lifetime_params.contains(&lifetime)
+        {
             self.found_set.insert(lifetime.clone());
         }
+    }
+
+    fn visit_bound_lifetimes(&mut self, lifetimes: &'ast syn::BoundLifetimes) {
+        let start = self.push_bound_lifetimes(Some(lifetimes));
+        syn::visit::visit_bound_lifetimes(self, lifetimes);
+        self.bound_lifetime_names.truncate(start);
+    }
+
+    fn visit_predicate_type(&mut self, predicate: &'ast syn::PredicateType) {
+        let start = self.push_bound_lifetimes(predicate.lifetimes.as_ref());
+        syn::visit::visit_predicate_type(self, predicate);
+        self.bound_lifetime_names.truncate(start);
+    }
+
+    fn visit_trait_bound(&mut self, bound: &'ast syn::TraitBound) {
+        let start = self.push_bound_lifetimes(bound.lifetimes.as_ref());
+        syn::visit::visit_trait_bound(self, bound);
+        self.bound_lifetime_names.truncate(start);
+    }
+
+    fn visit_type_fn_ptr(&mut self, fn_ptr: &'ast syn::TypeFnPtr) {
+        let start = self.push_bound_lifetimes(fn_ptr.lifetimes.as_ref());
+        syn::visit::visit_type_fn_ptr(self, fn_ptr);
+        self.bound_lifetime_names.truncate(start);
     }
 }
 
@@ -318,6 +431,16 @@ pub(crate) fn used_lifetimes_in_type<'a>(
 ) -> BTreeSet<syn::Lifetime> {
     let mut visitor = LifetimeVisitor::new(lifetime_params);
     syn::visit::Visit::visit_type(&mut visitor, ty);
+    visitor.into_found()
+}
+
+/// Find all lifetimes from the given set that are used in a where predicate.
+pub(crate) fn used_lifetimes_in_predicate<'a>(
+    predicate: &syn::WherePredicate,
+    lifetime_params: &'a [&'a syn::Lifetime],
+) -> BTreeSet<syn::Lifetime> {
+    let mut visitor = LifetimeVisitor::new(lifetime_params);
+    syn::visit::Visit::visit_where_predicate(&mut visitor, predicate);
     visitor.into_found()
 }
 
@@ -455,18 +578,6 @@ pub(crate) fn uses_lifetime_params(ty: &syn::Type, lifetime_params: &[&syn::Life
     !used_lifetimes_in_type(ty, lifetime_params).is_empty()
 }
 
-/// Find all lifetimes from the given set that are used in type param bounds
-pub(crate) fn used_lifetimes_in_bounds<'a>(
-    bounds: &syn::punctuated::Punctuated<syn::TypeParamBound, syn::token::Plus>,
-    lifetime_params: &'a [&'a syn::Lifetime],
-) -> BTreeSet<syn::Lifetime> {
-    let mut visitor = LifetimeVisitor::new(lifetime_params);
-    for bound in bounds {
-        syn::visit::Visit::visit_type_param_bound(&mut visitor, bound);
-    }
-    visitor.into_found()
-}
-
 pub(crate) fn used_generic_params<'a>(
     ty: &'a syn::Type,
     generic_names: &'a Vec<&Ident>,
@@ -487,12 +598,12 @@ pub(crate) fn used_generic_params<'a>(
 /// Constraining positions (for a param appearing somewhere inside):
 ///   - Bare: `T`
 ///   - As a type argument of a nominal path `Foo<..., T, ...>` (recursive)
-///   - Under references, arrays, slices, tuples, parens (recursive)
+///   - Under pointers, references, arrays, slices, tuples, bare function types,
+///     parens, and ordinary trait generic arguments (recursive)
 ///
 /// Non-constraining positions:
 ///   - Under a QSelf / projection: `<T as Trait>::X` or `T::X`
-///   - Inside a `fn(T) -> U` / `dyn Fn(T)` / `impl Fn(T)` — function-pointer
-///     and trait-object / `impl Trait` slots do not constrain.
+///   - Inside `dyn Fn(T)` / `impl Fn(T)` parenthesized trait syntax.
 ///   - Inside an associated-type binding's RHS (those project through the
 ///     outer trait, so they are not injective).
 ///
@@ -504,7 +615,7 @@ pub(crate) fn args_are_constraining_for(
 ) -> bool {
     for arg in args {
         match arg {
-            syn::GenericArgument::Type(ty) if !type_is_constraining(ty, generic_names) => {
+            syn::GenericArgument::Type(ty) if !type_is_constraining_for(ty, generic_names) => {
                 return false;
             }
             // Associated type bindings (`Trait<Item = T>`) project through the
@@ -526,7 +637,7 @@ pub(crate) fn args_are_constraining_for(
 /// A type is "constraining" for the fn generics it contains iff every
 /// occurrence of any `generic_names` ident within it is in a constraining
 /// position. See [`args_are_constraining_for`] for the rules.
-fn type_is_constraining(ty: &syn::Type, generic_names: &[&Ident]) -> bool {
+pub(crate) fn type_is_constraining_for(ty: &syn::Type, generic_names: &[&Ident]) -> bool {
     match ty {
         syn::Type::Path(type_path) => {
             // QSelf -> projection like `<T as Trait>::Assoc`. Any fn generic
@@ -585,19 +696,55 @@ fn type_is_constraining(ty: &syn::Type, generic_names: &[&Ident]) -> bool {
             }
             true
         }
-        syn::Type::Reference(r) => type_is_constraining(&r.elem, generic_names),
-        syn::Type::Array(a) => type_is_constraining(&a.elem, generic_names),
-        syn::Type::Slice(s) => type_is_constraining(&s.elem, generic_names),
-        syn::Type::Group(g) => type_is_constraining(&g.elem, generic_names),
-        syn::Type::Paren(p) => type_is_constraining(&p.elem, generic_names),
+        syn::Type::Ptr(p) => type_is_constraining_for(&p.elem, generic_names),
+        syn::Type::Reference(r) => type_is_constraining_for(&r.elem, generic_names),
+        syn::Type::Array(a) => type_is_constraining_for(&a.elem, generic_names),
+        syn::Type::Slice(s) => type_is_constraining_for(&s.elem, generic_names),
+        syn::Type::Group(g) => type_is_constraining_for(&g.elem, generic_names),
+        syn::Type::Paren(p) => type_is_constraining_for(&p.elem, generic_names),
         syn::Type::Tuple(t) => t
             .elems
             .iter()
-            .all(|e| type_is_constraining(e, generic_names)),
-        // Pointer / FnPtr / TraitObject / ImplTrait / Infer / Never / Macro:
-        // any fn-generic mention here is non-constraining (fn-ptr, dyn, impl
-        // Trait are explicitly non-constraining per RFC 0447; the rest are
-        // handled conservatively).
+            .all(|e| type_is_constraining_for(e, generic_names)),
+        syn::Type::FnPtr(f) => {
+            f.inputs
+                .iter()
+                .all(|input| type_is_constraining_for(&input.ty, generic_names))
+                && match &f.output {
+                    syn::ReturnType::Default => true,
+                    syn::ReturnType::Type(_, ty) => type_is_constraining_for(ty, generic_names),
+                }
+        }
+        syn::Type::TraitObject(object) => object.bounds.iter().all(|bound| match bound {
+            syn::TypeParamBound::Trait(bound) => {
+                bound
+                    .path
+                    .segments
+                    .iter()
+                    .all(|segment| match &segment.arguments {
+                        syn::PathArguments::None => true,
+                        syn::PathArguments::AngleBracketed(arguments) => {
+                            args_are_constraining_for(&arguments.args, generic_names)
+                        }
+                        syn::PathArguments::Parenthesized(arguments) => {
+                            !arguments
+                                .inputs
+                                .iter()
+                                .any(|input| type_mentions_any(&input.ty, generic_names))
+                                && match &arguments.output {
+                                    syn::ReturnType::Default => true,
+                                    syn::ReturnType::Type(_, ty) => {
+                                        !type_mentions_any(ty, generic_names)
+                                    }
+                                }
+                        }
+                    })
+            }
+            syn::TypeParamBound::Lifetime(_) => true,
+            _ => false,
+        }),
+        // ImplTrait / Infer / Never / Macro and future forms are handled
+        // conservatively when they mention a function generic.
         _ => !type_mentions_any(ty, generic_names),
     }
 }
@@ -1036,6 +1183,31 @@ mod tests {
     }
 
     #[test]
+    fn test_fresh_lifetime_avoids_source_names() {
+        let generics: syn::Generics = syn::parse_quote!(<'__wbg_ref, '__wbg_ref_1, T>);
+        let lifetime = crate::generics::fresh_lifetime(&generics, "__wbg_ref");
+        assert_eq!(lifetime.to_string(), "'__wbg_ref_2");
+    }
+
+    #[test]
+    fn test_lifetime_visitor_respects_hrtb_binders() {
+        let outer_a: syn::Lifetime = syn::parse_quote!('a);
+        let outer_b: syn::Lifetime = syn::parse_quote!('b);
+        let lifetime_params = [&outer_a, &outer_b];
+
+        let shadowing: syn::WherePredicate = syn::parse_quote!(for<'a> &'a T: Clone);
+        assert!(
+            crate::generics::used_lifetimes_in_predicate(&shadowing, &lifetime_params).is_empty()
+        );
+
+        let outer: syn::WherePredicate = syn::parse_quote!('a: 'b);
+        let used = crate::generics::used_lifetimes_in_predicate(&outer, &lifetime_params);
+        assert_eq!(used.len(), 2);
+        assert!(used.contains(&outer_a));
+        assert!(used.contains(&outer_b));
+    }
+
+    #[test]
     fn test_staticize_specific_lifetimes() {
         // Test that specified lifetimes in types are replaced with 'static
         let lifetime_a: syn::Lifetime = syn::parse_quote!('a);
@@ -1200,9 +1372,16 @@ mod tests {
     }
 
     #[test]
-    fn hoist_gate_rejects_fn_ptr_and_fn_sugar() {
-        // `fn(T) -> U` and `Fn(T) -> U` sugar are both non-constraining slots.
-        assert!(!args_are_constraining("Foo<fn(T) -> i32>", &["T"]));
+    fn hoist_gate_accepts_pointer_fn_and_trait_object_shapes() {
+        assert!(args_are_constraining("Foo<*const T>", &["T"]));
+        assert!(args_are_constraining("Foo<fn(T) -> i32>", &["T"]));
+        assert!(args_are_constraining("Foo<Box<dyn Marker<T>>>", &["T"]));
+    }
+
+    #[test]
+    fn hoist_gate_rejects_fn_sugar() {
+        // Parenthesized `Fn(T) -> U` trait syntax is not treated as an ordinary
+        // nominal generic argument list.
         assert!(!args_are_constraining("Foo<Box<dyn Fn(T) -> i32>>", &["T"]));
         // Return-position of the parenthesized sugar also counts.
         assert!(!args_are_constraining("Foo<Box<dyn Fn(i32) -> T>>", &["T"]));

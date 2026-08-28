@@ -20,8 +20,44 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use quote::ToTokens;
 use quote::TokenStreamExt;
+use syn::parse::Parser;
 use syn::parse::{Parse, ParseStream, Result as SynResult};
 use syn::Token;
+
+fn cfg_gate_conditions(meta: &syn::Meta) -> Vec<TokenStream> {
+    if meta.path().is_ident("cfg") {
+        return match meta {
+            syn::Meta::List(list) => vec![list.tokens.clone()],
+            _ => Vec::new(),
+        };
+    }
+    let syn::Meta::List(list) = meta else {
+        return Vec::new();
+    };
+    if !list.path.is_ident("cfg_attr") {
+        return Vec::new();
+    }
+    let Ok(args) = syn::punctuated::Punctuated::<syn::Meta, Token![,]>::parse_terminated
+        .parse2(list.tokens.clone())
+    else {
+        return Vec::new();
+    };
+    let mut args = args.iter();
+    let Some(predicate) = args.next() else {
+        return Vec::new();
+    };
+    args.flat_map(cfg_gate_conditions)
+        .map(|condition| quote! { any(not(#predicate), #condition) })
+        .collect()
+}
+
+pub(crate) fn cfg_gate_attrs(attrs: &[syn::Attribute]) -> Vec<syn::Attribute> {
+    attrs
+        .iter()
+        .flat_map(|attr| cfg_gate_conditions(&attr.meta))
+        .map(|condition| syn::parse_quote! { #[cfg(#condition)] })
+        .collect()
+}
 
 /// Takes the parsed input from a `#[wasm_bindgen]` macro and returns the generated bindings
 pub fn expand(attr: TokenStream, input: TokenStream) -> Result<TokenStream, Diagnostic> {
