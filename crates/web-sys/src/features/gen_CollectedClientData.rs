@@ -24,7 +24,7 @@ extern "C" {
     #[doc = "Get the `clientExtensions` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsClientInputs`, `CollectedClientData`*"]
-    #[deprecated]
+    #[deprecated(note = "Removed from the WebAuthn specification")]
     #[wasm_bindgen(method, getter = "clientExtensions")]
     pub fn get_client_extensions(
         this: &CollectedClientData,
@@ -33,7 +33,7 @@ extern "C" {
     #[doc = "Change the `clientExtensions` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsClientInputs`, `CollectedClientData`*"]
-    #[deprecated]
+    #[deprecated(note = "Removed from the WebAuthn specification")]
     #[wasm_bindgen(method, setter = "clientExtensions")]
     pub fn set_client_extensions(
         this: &CollectedClientData,
@@ -52,13 +52,13 @@ extern "C" {
     #[doc = "Get the `hashAlgorithm` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
-    #[deprecated]
+    #[deprecated(note = "Removed from the WebAuthn specification")]
     #[wasm_bindgen(method, getter = "hashAlgorithm")]
     pub fn get_hash_algorithm(this: &CollectedClientData) -> ::alloc::string::String;
     #[doc = "Change the `hashAlgorithm` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
-    #[deprecated]
+    #[deprecated(note = "Removed from the WebAuthn specification")]
     #[wasm_bindgen(method, setter = "hashAlgorithm")]
     pub fn set_hash_algorithm(this: &CollectedClientData, val: &str);
     #[doc = "Get the `origin` field of this object."]
@@ -86,13 +86,13 @@ extern "C" {
     #[doc = "Get the `tokenBindingId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
-    #[deprecated]
+    #[deprecated(note = "Removed from the WebAuthn specification")]
     #[wasm_bindgen(method, getter = "tokenBindingId")]
     pub fn get_token_binding_id(this: &CollectedClientData) -> Option<::alloc::string::String>;
     #[doc = "Change the `tokenBindingId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
-    #[deprecated]
+    #[deprecated(note = "Removed from the WebAuthn specification")]
     #[wasm_bindgen(method, setter = "tokenBindingId")]
     pub fn set_token_binding_id(this: &CollectedClientData, val: &str);
     #[doc = "Get the `type` field of this object."]
@@ -125,7 +125,7 @@ impl CollectedClientData {
         self
     }
     #[cfg(feature = "AuthenticationExtensionsClientInputs")]
-    #[deprecated = "Use `set_client_extensions()` instead."]
+    #[deprecated(note = "Removed from the WebAuthn specification")]
     pub fn client_extensions(&mut self, val: &AuthenticationExtensionsClientInputs) -> &mut Self {
         self.set_client_extensions(val);
         self
@@ -135,7 +135,7 @@ impl CollectedClientData {
         self.set_cross_origin(val);
         self
     }
-    #[deprecated = "Use `set_hash_algorithm()` instead."]
+    #[deprecated(note = "Removed from the WebAuthn specification")]
     pub fn hash_algorithm(&mut self, val: &str) -> &mut Self {
         self.set_hash_algorithm(val);
         self
@@ -151,7 +151,7 @@ impl CollectedClientData {
         self.set_token_binding(val);
         self
     }
-    #[deprecated = "Use `set_token_binding_id()` instead."]
+    #[deprecated(note = "Removed from the WebAuthn specification")]
     pub fn token_binding_id(&mut self, val: &str) -> &mut Self {
         self.set_token_binding_id(val);
         self

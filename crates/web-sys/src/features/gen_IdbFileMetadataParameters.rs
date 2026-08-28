@@ -46,12 +46,12 @@ impl IdbFileMetadataParameters {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[deprecated = "Use `set_last_modified()` instead."]
+    #[deprecated]
     pub fn last_modified(&mut self, val: bool) -> &mut Self {
         self.set_last_modified(val);
         self
     }
-    #[deprecated = "Use `set_size()` instead."]
+    #[deprecated]
     pub fn size(&mut self, val: bool) -> &mut Self {
         self.set_size(val);
         self

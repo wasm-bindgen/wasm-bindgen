@@ -52,7 +52,7 @@ impl IdbIndexParameters {
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret
     }
-    #[deprecated = "Use `set_locale()` instead."]
+    #[deprecated]
     pub fn locale(&mut self, val: Option<&str>) -> &mut Self {
         self.set_locale(val);
         self

@@ -73,7 +73,7 @@ dictionary PublicKeyCredentialCreationOptions {
 
 dictionary PublicKeyCredentialEntity {
     required DOMString    name;
-    [RustDeprecated]
+    [RustDeprecated="Removed from the WebAuthn specification"]
     USVString             icon;
 };
 
@@ -133,13 +133,13 @@ dictionary CollectedClientData {
     required DOMString           type;
     required DOMString           challenge;
     required DOMString           origin;
-    [RustDeprecated]
+    [RustDeprecated="Removed from the WebAuthn specification"]
     required DOMString           hashAlgorithm;
-    [RustDeprecated]
+    [RustDeprecated="Removed from the WebAuthn specification"]
     DOMString                    tokenBindingId;
-    [RustDeprecated]
+    [RustDeprecated="Removed from the WebAuthn specification"]
     AuthenticationExtensionsClientInputs clientExtensions;
-    [RustDeprecated]
+    [RustDeprecated="Removed from the WebAuthn specification"]
     AuthenticationExtensionsAuthenticatorInputs authenticatorExtensions;
     boolean                      crossOrigin;
     TokenBinding                 tokenBinding;

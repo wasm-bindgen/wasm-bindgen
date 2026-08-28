@@ -66,6 +66,13 @@
 
 ### Fixed
 
+* Fixed conflicting deprecation messages on `web-sys` dictionary fields that
+  are themselves deprecated: the deprecated builder-style method no longer
+  points at an equally-deprecated setter, and the WebAuthn fields removed from
+  the specification (such as `PublicKeyCredentialRpEntity`'s `icon`) now state
+  why they are deprecated.
+  [#5302](https://github.com/wasm-bindgen/wasm-bindgen/issues/5302)
+
 * Fixed `js_namespace` exports missing from the bundler target's entry module
   re-export list, making namespaces unreachable when importing the package.
   [#5267](https://github.com/wasm-bindgen/wasm-bindgen/issues/5267)
