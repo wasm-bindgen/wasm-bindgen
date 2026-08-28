@@ -70,7 +70,7 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::I32]
                 )
             }
-            Descriptor::RustStruct(class) => {
+            Descriptor::RustStruct { name: class, .. } => {
                 let ptr_ty = if self.cx.memory64() {
                     AdapterType::F64
                 } else {
@@ -216,7 +216,7 @@ impl InstructionBuilder<'_, '_> {
 
     fn incoming_ref(&mut self, mutable: bool, arg: &Descriptor) -> Result<(), Error> {
         match arg {
-            Descriptor::RustStruct(class) => {
+            Descriptor::RustStruct { name: class, .. } => {
                 let ptr_ty = if self.cx.memory64() {
                     AdapterType::F64
                 } else {
@@ -372,7 +372,7 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::I32],
                 );
             }
-            Descriptor::Enum { name, hole } => {
+            Descriptor::Enum { name, hole, .. } => {
                 self.instruction(
                     &[AdapterType::Enum(name.clone()).option()],
                     Instruction::I32FromOptionEnum { hole: *hole },
@@ -394,7 +394,7 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::I32],
                 );
             }
-            Descriptor::RustStruct(name) => {
+            Descriptor::RustStruct { name, .. } => {
                 let ptr_ty = if self.cx.memory64() {
                     AdapterType::F64
                 } else {

@@ -510,9 +510,11 @@ impl<'a> Context<'a> {
                          function signature; this is a wasm-bindgen bug, please report it"
                     ),
                 };
-                // No defining crate context here (monomorphisations are
-                // discovered globally), so this only rejects references to
-                // ambiguous all-`private` names.
+                // Struct/enum references carry their defining crate in the
+                // descriptor, so they resolve here even though
+                // monomorphisations are discovered globally; only
+                // `NamedExternref` references can still hit the ambiguity
+                // check.
                 self.resolve_descriptor_function(&mut signature)?;
                 let sig_comment = match &key {
                     GenericImportKey::Cast => {
@@ -888,14 +890,19 @@ impl<'a> Context<'a> {
             .unwrap_or_else(|| qualified.to_string())
     }
 
-    /// Final JS identity of a struct/enum referenced by name, possibly from
-    /// outside its defining crate. Same-crate references resolve through the
-    /// identity map; anything else must have an unambiguous canonical owner.
-    fn resolve_item_ref(&self, qualified: &mut String) -> Result<(), Error> {
-        if let Some(identity) = self.item_identities.get(&(
-            self.unique_crate_identifier.to_string(),
-            qualified.to_string(),
-        )) {
+    /// Final JS identity of a struct/enum referenced by name. Rust type
+    /// descriptors carry their defining crate; other named descriptors use
+    /// the current program's crate.
+    fn resolve_item_ref(
+        &self,
+        qualified: &mut String,
+        defining_crate: Option<&str>,
+    ) -> Result<(), Error> {
+        let defining_crate = defining_crate.unwrap_or(self.unique_crate_identifier);
+        if let Some(identity) = self
+            .item_identities
+            .get(&(defining_crate.to_string(), qualified.to_string()))
+        {
             *qualified = identity.clone();
         } else if self.ambiguous_items.contains(qualified.as_str()) {
             bail!(
@@ -909,12 +916,16 @@ impl<'a> Context<'a> {
     /// Rewrite struct/enum names embedded in a descriptor to their final JS
     /// identities as seen from the current program's crate.
     fn resolve_descriptor(&self, descriptor: &mut Descriptor) -> Result<(), Error> {
-        descriptor.visit_named_types_mut(&mut |name| self.resolve_item_ref(name))
+        descriptor.visit_named_types_mut(&mut |name, defining_crate| {
+            self.resolve_item_ref(name, defining_crate)
+        })
     }
 
     /// See [`Context::resolve_descriptor`].
     fn resolve_descriptor_function(&self, function: &mut Function) -> Result<(), Error> {
-        function.visit_named_types_mut(&mut |name| self.resolve_item_ref(name))
+        function.visit_named_types_mut(&mut |name, defining_crate| {
+            self.resolve_item_ref(name, defining_crate)
+        })
     }
 
     /// The macro emits every export shim under a crate-hash mangled symbol so
@@ -2095,7 +2106,11 @@ impl<'a> Context<'a> {
                     bare,
                 );
                 let parent_qualified = parent.clone();
-                self.resolve_item_ref(&mut parent)
+                // The macro only records the parent's JS name, not its
+                // defining crate, so this resolves against the current
+                // program's crate: a cross-crate `extends` of a renamed
+                // `private` parent is not covered by the descriptor fix.
+                self.resolve_item_ref(&mut parent, None)
                     .with_context(|| format!("resolving the parent class of `{qualified_name}`"))?;
                 let upcast = self.mangled(&wasm_bindgen_shared::upcast_function(
                     &qualified_name,
