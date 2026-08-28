@@ -41,8 +41,15 @@ which the erasure path does not allow.
 
 Reach for `experimental_generic_mono` when you want one Rust signature to serve several
 *Rust* types and you care about how they marshal. Reach for the default erasure
-path when you are modelling JS generics (`Array<T>`, `Promise<T>`) and want a
-single binding for all of them.
+path when you are modelling a JS generic *container* (`Array<T>`, `Promise<T>`)
+and want a single binding shared by every element type.
+
+Note that this is a choice about the *element* marshalling, not about whether the
+class itself may be generic: `experimental_generic_mono` does support a generic imported
+type, including as a method receiver or constructor return
+(see [Class-level generics](#class-level-generics)). The question is whether you
+want one shim per element type (`experimental_generic_mono`) or one shim for all of them
+(erasure).
 
 The trade-off is code size: one JS shim and one descriptor per instantiation. A
 generic import instantiated at a dozen types produces a dozen shims, so prefer
@@ -150,11 +157,113 @@ extern "C" {
 
 Lifetimes carry no runtime information — they are erased before values cross
 the wasm ABI — so this imposes no restriction beyond what plain Rust already
-requires of the signature. The one shape that is *not* supported is a lifetime
-belonging to the **class** itself, i.e. an imported type declared with its own
-lifetime parameter (`type Holder<'a>`, used as `this: &Holder<'a>`), since that
-needs the same hoisting machinery class-level type parameters do; see
-[Unsupported shapes](#unsupported-shapes).
+requires of the signature. A lifetime belonging to the **class** itself works
+too; see [Class-level generics](#class-level-generics).
+
+## Class-level generics
+
+A *class-level* generic is a type or lifetime parameter of the function that
+also parameterises the receiver/return **class** type itself, rather than only
+appearing in an ordinary argument or return position. This is the shape used
+throughout `js-sys` (`Array<T>`, `Map<K, V>`, `Promise<T>`, ...): the imported
+*type* is declared with its own generic parameter, and a method, constructor,
+or static method that returns the class ties one of its own generics to it:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    type Holder<T>;
+
+    #[wasm_bindgen(constructor, experimental_generic_mono)]
+    fn new<T>(value: T) -> Holder<T>;
+
+    #[wasm_bindgen(method, experimental_generic_mono)]
+    fn get<T>(this: &Holder<T>) -> T;
+}
+
+let holder = Holder::new(42u32);
+let value: u32 = holder.get();
+```
+
+The function's own type parameter that the class type's argument list uses
+(`T` in `Holder<T>` above) is *hoisted* off the wrapper function's own
+parameter list and onto the generated `impl` block's header instead — the
+`impl` above the constructor and `get` becomes `impl<T> Holder<T>`, rather
+than a bare `impl Holder`. A function parameter that is not part of the class's
+own argument list (an ordinary, non-hoisted type parameter, or one used only in
+an argument/return position) stays on the function as usual, so the two kinds
+compose in a single signature:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    type Holder<T>;
+
+    // `T` is hoisted (it parameterises the receiver); `U` stays on `combine`.
+    #[wasm_bindgen(method, experimental_generic_mono)]
+    fn combine<T, U>(this: &Holder<T>, other: U);
+}
+```
+
+A lifetime belonging to the class works the same way, on its own or alongside a
+hoisted type parameter:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    type LifetimeHolder<'a>;
+
+    #[wasm_bindgen(method, experimental_generic_mono)]
+    fn get<'a, T>(this: &'a LifetimeHolder<'a>) -> T;
+
+    type LtHolder<'a, T>;
+
+    #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
+    fn lt_get<'a, T>(this: &'a LtHolder<'a, T>) -> T;
+}
+```
+
+This composes with the constructor and self-returning static method (e.g.
+`static_method_of = Holder`) shapes the same way it composes with an ordinary
+instance method, mirroring how `Array::new`/`Array::of` return `Array<T>` in
+`js-sys`.
+
+A static method that is *not* the constructor and does not return the class is
+not tied to the class's parameters at all, so it binds against the class's own
+parameter defaults, exactly as it does on the erasure path.
+
+### What can be hoisted
+
+The function's generics are *hoisted* onto the generated `impl` block's own
+header, so each generic argument of the class type has to be something that
+header can name and that the self type can then determine. Each argument may
+be:
+
+* a generic parameter of the function, either bare (`&Holder<T>`) or composed in
+  a way that still determines it (`&Holder<Option<T>>`);
+* a lifetime parameter of the function (`&'a Holder<'a, T>`);
+* concrete (`&Holder<u32>`). There is nothing to hoist for it — it is re-emitted
+  as written, so the method lands on `impl Holder<u32>` and exists only for that
+  instantiation of the class.
+
+These mix freely within one argument list: `&Pair<u32, T>` gives
+`impl<T> Pair<u32, T>`.
+
+The following are rejected up front, rather than left to fail as a confusing
+rustc error against generated code:
+
+* **An impl class argument that mentions a parameter without determining it**
+  (`&Holder<T::Assoc>`, or `static_method_of = Holder<T::Assoc>`). Hoisting `T`
+  would leave it unconstrained by the self type.
+* **An elided lifetime argument** (`&Holder<'_, T>`), which cannot be declared
+  on the generated `impl` header. A concrete `'static` lifetime is supported;
+  name any other lifetime as a parameter of the function instead
+  (`fn f<'a, T>(this: &'a Holder<'a, T>)`).
+
+A constructor or inferred self-returning static method whose return is
+`Holder<T::Assoc>` is not rejected. Its return arguments cannot determine `T`,
+so the method remains on the imported class's default specialization instead
+of being hoisted.
 
 ## Other attributes
 
@@ -211,11 +320,6 @@ These are rejected at compile time with a diagnostic pointing at the offending
 declaration. Each generally keeps working on the type-erasure path, so the fix is
 usually to drop `experimental_generic_mono`:
 
-* **Generic parameters on the imported *type*** (class-level generics),
-  whether a type parameter (`this: &Holder<T>`) or a lifetime
-  (`this: &Holder<'a>`). Lifetime parameters on the *function* itself —
-  including on a method's receiver, `this: &'a Holder` — are supported; see
-  [Lifetime parameters](#lifetime-parameters).
 * **A mutable reference to a type parameter** (`&mut T`, or `&mut Vec<T>`, or
   any other `&mut` whose referent mentions a type parameter), and a reference to
   a type parameter **nested inside another type** (e.g. `Option<&T>`). A bare
@@ -250,6 +354,17 @@ usually to drop `experimental_generic_mono`:
 `wasm-bindgen` does not support them on *any* generic import, erased or not, and
 reports `unsupported in wasm-bindgen generics`. Dropping `experimental_generic_mono` will
 not help.
+
+**Type-parameter defaults** (`fn f<T = JsValue>(x: T)`) are rejected with
+`defaults for generic parameters are not allowed here` — the same diagnostic
+rustc gives for a default on any ordinary function. On the erasure path a default
+is meaningful, because it picks the single concrete type the one shared binding is
+generated for; under `experimental_generic_mono` there is no single instantiation to pick,
+since every instantiation gets its own shim. The error is reported by
+`wasm-bindgen` rather than rustc only because nothing of the original signature
+survives macro expansion, so rustc's own deny-by-default
+`invalid_type_param_default` lint never sees it. Drop the default, or use the
+erasure path if you wanted it to mean something.
 
 ### Colliding imports
 

@@ -20,8 +20,44 @@ use proc_macro2::TokenStream;
 use quote::quote;
 use quote::ToTokens;
 use quote::TokenStreamExt;
+use syn::parse::Parser;
 use syn::parse::{Parse, ParseStream, Result as SynResult};
 use syn::Token;
+
+fn cfg_gate_conditions(meta: &syn::Meta) -> Vec<TokenStream> {
+    if meta.path().is_ident("cfg") {
+        return match meta {
+            syn::Meta::List(list) => vec![list.tokens.clone()],
+            _ => Vec::new(),
+        };
+    }
+    let syn::Meta::List(list) = meta else {
+        return Vec::new();
+    };
+    if !list.path.is_ident("cfg_attr") {
+        return Vec::new();
+    }
+    let Ok(args) = syn::punctuated::Punctuated::<syn::Meta, Token![,]>::parse_terminated
+        .parse2(list.tokens.clone())
+    else {
+        return Vec::new();
+    };
+    let mut args = args.iter();
+    let Some(predicate) = args.next() else {
+        return Vec::new();
+    };
+    args.flat_map(cfg_gate_conditions)
+        .map(|condition| quote! { any(not(#predicate), #condition) })
+        .collect()
+}
+
+pub(crate) fn cfg_gate_attrs(attrs: &[syn::Attribute]) -> Vec<syn::Attribute> {
+    attrs
+        .iter()
+        .flat_map(|attr| cfg_gate_conditions(&attr.meta))
+        .map(|condition| syn::parse_quote! { #[cfg(#condition)] })
+        .collect()
+}
 
 /// Takes the parsed input from a `#[wasm_bindgen]` macro and returns the generated bindings
 pub fn expand(attr: TokenStream, input: TokenStream) -> Result<TokenStream, Diagnostic> {
@@ -31,6 +67,25 @@ pub fn expand(attr: TokenStream, input: TokenStream) -> Result<TokenStream, Diag
     let item = syn::parse2::<syn::Item>(input)?;
     if let syn::Item::Struct(mut s) = item {
         let opts: BindgenAttrs = syn::parse2(attr.clone())?;
+
+        // If the emitted `#[derive(<path>::__rt::BindgenedStruct)]` below
+        // fails to resolve — most commonly because `wasm-bindgen` is not a
+        // direct dependency, so `::wasm_bindgen` is not in the extern
+        // prelude — rustc strips the failed derive and, since
+        // `#[wasm_bindgen(#attr)]` is then no longer an inert derive helper,
+        // falls back to re-invoking this attribute macro on the struct with
+        // identical input, recursing until the recursion limit. The emitted
+        // `__wasm_bindgen_retried` marker attribute survives that round trip
+        // (and is otherwise an inert helper of the derive), letting us detect
+        // the re-invocation and report a proper error instead.
+        if strip_retry_marker(&mut s.attrs) {
+            bail_span!(
+                s.ident,
+                "cannot resolve a path to the `wasm_bindgen` crate: add `wasm-bindgen` \
+                 as a direct dependency, or specify an explicit path with \
+                 `#[wasm_bindgen(wasm_bindgen = path::to::wasm_bindgen)]`"
+            );
+        }
         let wasm_bindgen = opts
             .wasm_bindgen()
             .cloned()
@@ -48,6 +103,7 @@ pub fn expand(attr: TokenStream, input: TokenStream) -> Result<TokenStream, Diag
         let item = quote! {
             #[derive(#wasm_bindgen::__rt::BindgenedStruct)]
             #[wasm_bindgen(#attr)]
+            #[__wasm_bindgen_retried]
             #s
         };
         return Ok(item);
@@ -65,6 +121,14 @@ pub fn expand(attr: TokenStream, input: TokenStream) -> Result<TokenStream, Diag
     parser::check_unused_attrs(&mut tokens);
 
     Ok(tokens)
+}
+
+/// Finds and removes the `#[__wasm_bindgen_retried]` marker attribute left by
+/// a previous expansion attempt whose emitted derive path failed to resolve.
+fn strip_retry_marker(attrs: &mut Vec<syn::Attribute>) -> bool {
+    let before = attrs.len();
+    attrs.retain(|attr| !attr.path().is_ident("__wasm_bindgen_retried"));
+    before != attrs.len()
 }
 
 /// Takes the parsed input from a `wasm_bindgen::link_to` macro and returns the generated link

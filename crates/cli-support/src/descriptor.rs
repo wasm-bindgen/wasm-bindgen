@@ -61,6 +61,7 @@ pub enum Descriptor {
     Enum {
         name: String,
         hole: u32,
+        unique_crate_identifier: String,
     },
     StringEnum {
         name: String,
@@ -71,7 +72,10 @@ pub enum Descriptor {
         name: String,
         variant_types: Vec<Descriptor>,
     },
-    RustStruct(String),
+    RustStruct {
+        name: String,
+        unique_crate_identifier: String,
+    },
     Char,
     Option(Box<Descriptor>),
     Result(Box<Descriptor>),
@@ -180,7 +184,12 @@ impl Descriptor {
             ENUM => {
                 let name = get_string(data);
                 let hole = get(data);
-                Descriptor::Enum { name, hole }
+                let unique_crate_identifier = get_string(data);
+                Descriptor::Enum {
+                    name,
+                    hole,
+                    unique_crate_identifier,
+                }
             }
             STRING_ENUM => {
                 let name = get_string(data);
@@ -207,7 +216,11 @@ impl Descriptor {
             }
             RUST_STRUCT => {
                 let name = get_string(data);
-                Descriptor::RustStruct(name)
+                let unique_crate_identifier = get_string(data);
+                Descriptor::RustStruct {
+                    name,
+                    unique_crate_identifier,
+                }
             }
             NAMED_EXTERNREF => {
                 let name = get_string(data);
@@ -224,10 +237,11 @@ impl Descriptor {
 
     /// Visit every struct/enum/externref type name embedded in this
     /// descriptor tree, so callers can rewrite names to their final JS
-    /// identities (see `Context::resolve_descriptor` in `wit`).
+    /// identities (see `Context::resolve_descriptor` in `wit`). Rust types
+    /// include their defining crate identifier; named externrefs do not.
     pub fn visit_named_types_mut<E>(
         &mut self,
-        f: &mut impl FnMut(&mut String) -> Result<(), E>,
+        f: &mut impl FnMut(&mut String, Option<&str>) -> Result<(), E>,
     ) -> Result<(), E> {
         match self {
             Descriptor::Function(function) => function.visit_named_types_mut(f),
@@ -238,9 +252,20 @@ impl Descriptor {
             | Descriptor::Vector(d)
             | Descriptor::Option(d)
             | Descriptor::Result(d) => d.visit_named_types_mut(f),
-            Descriptor::NamedExternref(name)
-            | Descriptor::Enum { name, .. }
-            | Descriptor::RustStruct(name) => f(name),
+            // An externref has no defining crate, so a JS type whose name
+            // matches an ambiguous all-`private` struct/enum name still hits
+            // the ambiguity check even though it never refers to the Rust
+            // type.
+            Descriptor::NamedExternref(name) => f(name, None),
+            Descriptor::Enum {
+                name,
+                unique_crate_identifier,
+                ..
+            }
+            | Descriptor::RustStruct {
+                name,
+                unique_crate_identifier,
+            } => f(name, Some(unique_crate_identifier)),
             Descriptor::DynamicUnion { variant_types, .. } => {
                 for d in variant_types {
                     d.visit_named_types_mut(f)?;
@@ -337,7 +362,7 @@ impl Function {
     /// See [`Descriptor::visit_named_types_mut`].
     pub fn visit_named_types_mut<E>(
         &mut self,
-        f: &mut impl FnMut(&mut String) -> Result<(), E>,
+        f: &mut impl FnMut(&mut String, Option<&str>) -> Result<(), E>,
     ) -> Result<(), E> {
         for d in &mut self.arguments {
             d.visit_named_types_mut(f)?;

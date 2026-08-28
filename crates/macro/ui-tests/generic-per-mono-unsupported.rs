@@ -79,31 +79,69 @@ extern "C" {
     // generated shim to forward, so per-mono codegen rejects it.
     #[wasm_bindgen(experimental_generic_mono)]
     fn tuple_pattern_arg<T>((a, b): (u32, u32), x: T);
+
+    // A type-parameter default is meaningless under per-mono (there is no single
+    // instantiation to default), and is dropped rather than used the way the
+    // type-erasure path uses it. rustc's own deny-by-default
+    // `invalid_type_param_default` lint cannot catch it here, because neither
+    // the generated wrapper nor the shim re-emits the default — so per-mono
+    // reproduces rustc's diagnostic verbatim instead of ignoring it silently.
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn type_param_default<T = JsValue>(x: T);
+
+    // Including when the parameter also carries bounds: the span covers the
+    // whole parameter, matching rustc.
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn bounded_type_param_default<T: Into<JsValue> = JsValue>(x: T);
 }
 
-// Class-level generics on the imported type need the erasure machinery
-// (`fn_class_generics`), so a `experimental_generic_mono` method on a generic imported
-// type is rejected. Kept in its own block so the `type Holder<T>` declaration
-// can't interfere with the diagnostics above.
+// Class-level generics on the imported type (`Holder<T>` / `LifetimeHolder<'a>`
+// used as a method receiver, constructor return, or self-returning static
+// method return) are now supported by hoisting the relevant function generics
+// onto the `impl` block's own header — see
+// `pass-tests/generic-per-mono-class-generics.rs` and
+// `crates/cli/tests/reference/generic-import.rs` for passing coverage.
+//
+// Not every class argument list can be reproduced on that header, though. The
+// generated `impl` block strips the class type's arguments and rebuilds them
+// from the hoisted params, so an argument list that yields a param the self
+// type cannot constrain — or an elided lifetime the header cannot declare — would silently
+// land the wrapper in an `impl` block for the wrong self type. Each of those is
+// rejected up front instead, since otherwise the user sees a rustc error
+// (E0207 / E0261 / E0726) against generated code they never wrote, spanned at
+// the `#[wasm_bindgen]` attribute. These are codegen-time diagnostics, so they
+// get their own block (see the note below about parse-time failures masking
+// codegen ones).
+//
+// (A fully concrete argument list (`&Holder<u32>`) used to be rejected here too
+// — it hoists nothing, so the `impl` bound the class's own defaults instead of
+// the type as written. The arguments are now re-emitted verbatim, so see
+// `concrete_class_arg` in `pass-tests/generic-per-mono-class-generics.rs`.)
 #[wasm_bindgen]
 extern "C" {
     type Holder<T>;
+    type LtHolder<'a, T>;
+    type StaticLifetimeHolder<'a>;
 
-    #[wasm_bindgen(method, experimental_generic_mono)]
-    fn get<T>(this: &Holder<T>) -> T;
-}
+    // `T::Assoc` mentions `T` without determining it, so hoisting `T` onto the
+    // `impl` header leaves it unconstrained by the self type (E0207).
+    #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
+    fn non_constraining_class_arg<T: IntoIterator>(this: &Holder<T::Item>) -> u32;
 
-// Lifetime parameters on the *function* are supported (see
-// `generic_import_ref.rs` / `generic_import_lifetime.rs` for passing cases),
-// but the same class-level rejection above also applies when the function's
-// lifetime parameter is what parameterises the receiver/return class type,
-// since that also needs the erasure machinery's hoisting.
-#[wasm_bindgen]
-extern "C" {
-    type LifetimeHolder<'a>;
+    // An elided lifetime cannot be declared on the generated impl header.
+    #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
+    fn elided_class_lifetime<T>(this: &LtHolder<'_, T>, v: T);
 
-    #[wasm_bindgen(method, experimental_generic_mono)]
-    fn get_lifetime<'a, T>(this: &'a LifetimeHolder<'a>) -> T;
+    // A bare static class path has no arguments to hoist. Supply the required
+    // lifetime explicitly with `static_method_of = StaticLifetimeHolder<'a>`.
+    #[wasm_bindgen(static_method_of = StaticLifetimeHolder, experimental_generic_mono)]
+    fn static_lifetime_class<T>(value: T);
+
+    // (A class type parameterised by *both* a lifetime and a type parameter,
+    // with both hoisted, used to be rejected here too — see
+    // `class_lifetime_and_type_param` and friends in
+    // `pass-tests/generic-per-mono-class-generics.rs` for why that shape is
+    // now supported instead.)
 }
 
 // The rejections below happen while *parsing* the block rather than while

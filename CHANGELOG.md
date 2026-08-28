@@ -31,6 +31,21 @@
   proposal, allowing custom allocators to release physical pages back to the
   host. Experimental and subject to change.
 
+* `#[wasm_bindgen(experimental_generic_mono)]` now supports class-level generic
+  parameters: an imported *type* that is itself generic (`type Holder<T>`),
+  used as a method receiver (`this: &Holder<T>`), or as the return type of a
+  constructor or self-returning static method (`fn new<T>(value: T) ->
+  Holder<T>`). See [Class-level generics](https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/experimental_generic_mono.html#class-level-generics)
+  in the guide.
+  [#5290](https://github.com/wasm-bindgen/wasm-bindgen/pull/5290)
+
+* A generic imported type used as a method receiver or a constructor's return
+  type may now carry concrete generic arguments (`this: &Holder<u32>`,
+  `this: &Holder<u32, T>`). The arguments are re-emitted as written, so the
+  generated method hangs off `impl Holder<u32>` rather than the class's own
+  parameter defaults.
+  [#5290](https://github.com/wasm-bindgen/wasm-bindgen/pull/5290)
+
 ### Changed
 
 * Export shim symbols are now mangled with a per-crate hash, so identically
@@ -73,6 +88,12 @@
   why they are deprecated.
   [#5302](https://github.com/wasm-bindgen/wasm-bindgen/issues/5302)
 
+* `#[wasm_bindgen]` on a struct now reports an actionable error when the path
+  to the `wasm_bindgen` crate cannot be resolved (e.g. when `wasm-bindgen` is
+  only a transitive dependency through `web-sys`), instead of a confusing
+  recursion limit error.
+  [#5295](https://github.com/wasm-bindgen/wasm-bindgen/issues/5295)
+
 * Fixed `js_namespace` exports missing from the bundler target's entry module
   re-export list, making namespaces unreachable when importing the package.
   [#5267](https://github.com/wasm-bindgen/wasm-bindgen/issues/5267)
@@ -83,6 +104,32 @@
   sections since LLVM 23), instead of the confusing
   ``import of `X` doesn't have an adapter listed``.
   [#5268](https://github.com/wasm-bindgen/wasm-bindgen/issues/5268)
+
+* The generated `&T` handle conversions (`IntoWasmAbi`/`OptionIntoWasmAbi`) for
+  an imported type with lifetime parameters (`type Holder<'a, T>`) no longer
+  reuse `'a` for the reference itself. Previously the impl header declared only
+  a fresh `'a` plus the type's *type* parameters, so a type whose lifetime was
+  not literally named `'a` failed with `E0261` against generated code, and one
+  that was named `'a` had its lifetime forced to unify with the borrow of
+  `&self` — surfacing as `E0521` whenever a generic method also had to resolve
+  through the same impl.
+  [#5290](https://github.com/wasm-bindgen/wasm-bindgen/pull/5290)
+
+* An inline lifetime bound on a generic import (`fn f<'a: 'b, 'b, T>(..)`) is no
+  longer dropped from the generated wrapper. Previously the bound was lost while
+  the generated shim still declared it, so calling the import failed with
+  "lifetime may not live long enough" reported against generated code.
+  [#5290](https://github.com/wasm-bindgen/wasm-bindgen/pull/5290)
+
+* A type-parameter default on a `#[wasm_bindgen(experimental_generic_mono)]` import is no
+  longer silently ignored. It has no meaning there (every instantiation gets its
+  own shim, so there is no single one to default) and rustc's own
+  `invalid_type_param_default` lint cannot see it, since nothing of the original
+  signature survives expansion; it is now rejected with the same
+  `defaults for generic parameters are not allowed here` diagnostic rustc gives.
+  Defaults on the type-erasure generic path are unaffected, where they remain
+  meaningful.
+  [#5290](https://github.com/wasm-bindgen/wasm-bindgen/pull/5290)
 
 * Fix `js-sys` wasm64 build with `atomics` feature.
   [#5274](https://github.com/wasm-bindgen/wasm-bindgen/issues/5274)

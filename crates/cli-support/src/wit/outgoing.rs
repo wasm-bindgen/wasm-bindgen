@@ -119,7 +119,7 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
 
-            Descriptor::RustStruct(class) => {
+            Descriptor::RustStruct { name: class, .. } => {
                 let ptr_ty = if self.cx.memory64() {
                     AdapterType::F64
                 } else {
@@ -452,7 +452,7 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::String.option()],
                 );
             }
-            Descriptor::Enum { name, hole } => {
+            Descriptor::Enum { name, hole, .. } => {
                 self.instruction(
                     &[AdapterType::I32],
                     Instruction::OptionEnumFromI32 { hole: *hole },
@@ -466,7 +466,7 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::StringEnum(name.clone()).option()],
                 );
             }
-            Descriptor::RustStruct(name) => {
+            Descriptor::RustStruct { name, .. } => {
                 let ptr_ty = if self.cx.memory64() {
                     AdapterType::F64
                 } else {
@@ -551,7 +551,7 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Enum { .. }
             | Descriptor::StringEnum { .. }
             | Descriptor::DynamicUnion { .. }
-            | Descriptor::RustStruct(_)
+            | Descriptor::RustStruct { .. }
             | Descriptor::Ref(_)
             | Descriptor::RefMut(_)
             | Descriptor::CachedString

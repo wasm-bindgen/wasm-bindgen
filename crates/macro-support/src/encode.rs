@@ -1,4 +1,3 @@
-use crate::hash::ShortHash;
 use proc_macro2::{Ident, Span};
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
@@ -44,7 +43,6 @@ struct Interner {
     bump: bumpalo::Bump,
     files: RefCell<HashMap<String, LocalFile>>,
     root: PathBuf,
-    crate_name: String,
     has_package_json: Cell<bool>,
 }
 
@@ -60,12 +58,10 @@ impl Interner {
         let root = env::var_os("CARGO_MANIFEST_DIR")
             .expect("should have CARGO_MANIFEST_DIR env var")
             .into();
-        let crate_name = env::var("CARGO_PKG_NAME").expect("should have CARGO_PKG_NAME env var");
         Interner {
             bump: bumpalo::Bump::new(),
             files: RefCell::new(HashMap::new()),
             root,
-            crate_name,
             has_package_json: Cell::new(false),
         }
     }
@@ -121,7 +117,7 @@ impl Interner {
     }
 
     fn unique_crate_identifier(&self) -> String {
-        format!("{}-{}", self.crate_name, ShortHash(0))
+        crate::hash::unique_crate_identifier()
     }
 
     fn check_for_package_json(&self) {
