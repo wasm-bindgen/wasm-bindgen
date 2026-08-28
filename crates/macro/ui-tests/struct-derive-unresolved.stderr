@@ -1,0 +1,5 @@
+error: cannot resolve a path to the `wasm_bindgen` crate: add `wasm-bindgen` as a direct dependency, or specify an explicit path with `#[wasm_bindgen(wasm_bindgen = path::to::wasm_bindgen)]`
+  --> ui-tests/struct-derive-unresolved.rs:10:8
+   |
+10 | struct Foo;
+   |        ^^^

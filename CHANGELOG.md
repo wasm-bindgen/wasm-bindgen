@@ -81,6 +81,12 @@
 
 ### Fixed
 
+* `#[wasm_bindgen]` on a struct now reports an actionable error when the path
+  to the `wasm_bindgen` crate cannot be resolved (e.g. when `wasm-bindgen` is
+  only a transitive dependency through `web-sys`), instead of a confusing
+  recursion limit error.
+  [#5295](https://github.com/wasm-bindgen/wasm-bindgen/issues/5295)
+
 * Fixed `js_namespace` exports missing from the bundler target's entry module
   re-export list, making namespaces unreachable when importing the package.
   [#5267](https://github.com/wasm-bindgen/wasm-bindgen/issues/5267)
