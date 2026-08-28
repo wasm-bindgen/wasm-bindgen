@@ -81,6 +81,13 @@
 
 ### Fixed
 
+* Fixed conflicting deprecation messages on `web-sys` dictionary fields that
+  are themselves deprecated: the deprecated builder-style method no longer
+  points at an equally-deprecated setter, and the WebAuthn fields removed from
+  the specification (such as `PublicKeyCredentialRpEntity`'s `icon`) now state
+  why they are deprecated.
+  [#5302](https://github.com/wasm-bindgen/wasm-bindgen/issues/5302)
+
 * `#[wasm_bindgen]` on a struct now reports an actionable error when the path
   to the `wasm_bindgen` crate cannot be resolved (e.g. when `wasm-bindgen` is
   only a transitive dependency through `web-sys`), instead of a confusing

@@ -13,13 +13,13 @@ extern "C" {
     #[doc = "Get the `icon` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialEntity`*"]
-    #[deprecated]
+    #[deprecated(note = "Removed from the WebAuthn specification")]
     #[wasm_bindgen(method, getter = "icon")]
     pub fn get_icon(this: &PublicKeyCredentialEntity) -> Option<::alloc::string::String>;
     #[doc = "Change the `icon` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialEntity`*"]
-    #[deprecated]
+    #[deprecated(note = "Removed from the WebAuthn specification")]
     #[wasm_bindgen(method, setter = "icon")]
     pub fn set_icon(this: &PublicKeyCredentialEntity, val: &str);
     #[doc = "Get the `name` field of this object."]
@@ -43,7 +43,7 @@ impl PublicKeyCredentialEntity {
         ret.set_name(name);
         ret
     }
-    #[deprecated = "Use `set_icon()` instead."]
+    #[deprecated(note = "Removed from the WebAuthn specification")]
     pub fn icon(&mut self, val: &str) -> &mut Self {
         self.set_icon(val);
         self

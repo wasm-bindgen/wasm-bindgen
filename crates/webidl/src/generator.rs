@@ -987,7 +987,16 @@ impl DictionaryField {
         let name = rust_ident(name);
 
         let setter_name = self.setter_name();
-        let deprecated = format!("Use `{setter_name}()` instead.");
+        // If the field itself is deprecated, carry that deprecation rather
+        // than pointing at the equally-deprecated setter.
+        let deprecated = match &self.deprecated {
+            Some(Some(msg)) => quote!( #[deprecated(note = #msg)] ),
+            Some(None) => quote!( #[deprecated] ),
+            None => {
+                let msg = format!("Use `{setter_name}()` instead.");
+                quote!( #[deprecated = #msg] )
+            }
+        };
 
         // The builder always calls the first setter (via setter_name()),
         // so its parameter type must match. In generics mode (unstable or
@@ -1009,7 +1018,7 @@ impl DictionaryField {
         quote! {
             #unstable_attr
             #cfg_features
-            #[deprecated = #deprecated]
+            #deprecated
             pub fn #name(&mut self, val: #builder_ty) -> &mut Self {
                 self.#setter_name(#shim_args);
                 self

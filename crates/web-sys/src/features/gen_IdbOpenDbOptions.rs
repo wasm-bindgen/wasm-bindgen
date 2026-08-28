@@ -61,12 +61,12 @@ impl IdbOpenDbOptions {
         ret
     }
     #[cfg(feature = "StorageType")]
-    #[deprecated = "Use `set_storage()` instead."]
+    #[deprecated]
     pub fn storage(&mut self, val: StorageType) -> &mut Self {
         self.set_storage(val);
         self
     }
-    #[deprecated = "Use `set_version()` instead."]
+    #[deprecated]
     pub fn version(&mut self, val: f64) -> &mut Self {
         self.set_version(val);
         self
