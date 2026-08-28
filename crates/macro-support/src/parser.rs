@@ -77,7 +77,7 @@ macro_rules! attrgen {
             (constructor, false, Constructor(Span)),
             (method, false, Method(Span)),
             (r#this, false, This(Span)),
-            (static_method_of, false, StaticMethodOf(Span, Ident)),
+            (static_method_of, false, StaticMethodOf(Span, syn::TypePath)),
             (js_namespace, false, JsNamespace(Span, JsNamespace, Vec<Span>)),
             (module, true, Module(Span, String, Span)),
             (raw_module, true, RawModule(Span, String, Span)),
@@ -397,6 +397,21 @@ impl Parse for BindgenAttr {
                     input.parse::<AnyIdent>()?.0
                 };
                 return Ok(BindgenAttr::$variant(attr_span, ident))
+            });
+
+            (@parser $variant:ident(Span, syn::TypePath)) => ({
+                input.parse::<Token![=]>()?;
+                // Preserve the string-literal spelling accepted by the former
+                // identifier parser while also allowing generic arguments.
+                let path = if input.peek(syn::LitStr) {
+                    let litstr = input.parse::<syn::LitStr>()?;
+                    syn::parse_str::<syn::TypePath>(&litstr.value()).map_err(|e| {
+                        syn::Error::new(litstr.span(), format!("expected a type path: {e}"))
+                    })?
+                } else {
+                    input.parse()?
+                };
+                return Ok(BindgenAttr::$variant(attr_span, path));
             });
 
             (@parser $variant:ident(Span, Option<String>)) => ({
@@ -1010,23 +1025,18 @@ impl<'a>
                 kind,
             }
         } else if let Some(cls) = opts.static_method_of() {
+            if cls.qself.is_some() {
+                bail_span!(
+                    cls,
+                    "static_method_of does not support qualified-self projections"
+                );
+            }
             let class = opts
                 .js_class()
                 .map(|p| p.0.into())
-                .unwrap_or_else(|| cls.unraw().to_string());
+                .unwrap_or_else(|| cls.path.segments.last().unwrap().ident.unraw().to_string());
 
-            let ty = syn::Type::Path(syn::TypePath {
-                attrs: Vec::new(),
-                qself: None,
-                path: syn::Path {
-                    leading_colon: None,
-                    segments: std::iter::once(syn::PathSegment {
-                        ident: cls.clone(),
-                        arguments: syn::PathArguments::None,
-                    })
-                    .collect(),
-                },
-            });
+            let ty = syn::Type::Path(cls.clone());
 
             let kind = ast::MethodKind::Operation(ast::Operation {
                 is_static: true,
@@ -1142,10 +1152,8 @@ impl<'a>
             };
             // Include cfg attributes in the hash so that functions with different
             // cfg gates get different shim names, even if their signatures are identical.
-            let cfg_attrs: String = self
-                .attrs
+            let cfg_attrs: String = crate::cfg_gate_attrs(&self.attrs)
                 .iter()
-                .filter(|attr| attr.path().is_ident("cfg"))
                 .map(|attr| attr.to_token_stream().to_string())
                 .collect();
             let data = (
@@ -1277,7 +1285,22 @@ impl ConvertToAst<(&ast::Program, BindgenAttrs)> for syn::ForeignItemType {
         let typescript_type = attrs.typescript_type().map(|s| s.0.to_string());
         let is_type_of = attrs.is_type_of().cloned();
         let unraw_ident = self.ident.unraw();
-        let hash = ShortHash((attrs.js_namespace().map(|(ns, _)| ns.0), &unraw_ident));
+        let cfg_attrs = crate::cfg_gate_attrs(&self.attrs);
+        let namespace = attrs.js_namespace().map(|(ns, _)| ns.0);
+        let hash = if cfg_attrs.is_empty() {
+            ShortHash((namespace, &unraw_ident)).to_string()
+        } else {
+            ShortHash((
+                namespace,
+                &unraw_ident,
+                cfg_attrs
+                    .iter()
+                    .map(ToTokens::to_token_stream)
+                    .map(|tokens| tokens.to_string())
+                    .collect::<String>(),
+            ))
+            .to_string()
+        };
         let shim = format!("__wbg_instanceof_{unraw_ident}_{hash}");
         let mut extends = Vec::new();
         let mut vendor_prefixes = Vec::new();
@@ -2731,6 +2754,7 @@ impl MacroParse<BindgenAttrs> for syn::ItemConst {
 impl MacroParse<BindgenAttrs> for syn::ItemForeignMod {
     fn macro_parse(self, program: &mut ast::Program, opts: BindgenAttrs) -> Result<(), Diagnostic> {
         let mut errors = Vec::new();
+        let import_start = program.imports.len();
         if let Some(other) = self.abi.name.filter(|l| l.value() != "C") {
             errors.push(err_span!(
                 other,
@@ -2754,9 +2778,73 @@ impl MacroParse<BindgenAttrs> for syn::ItemForeignMod {
                 errors.push(e);
             }
         }
+        add_class_cfg_to_function_shims(&mut program.imports[import_start..]);
         Diagnostic::from_vec(errors)?;
         opts.check_used();
         Ok(())
+    }
+}
+
+fn add_class_cfg_to_function_shims(imports: &mut [ast::Import]) {
+    let mut type_cfgs = HashMap::<String, Vec<Vec<String>>>::new();
+    for import in imports.iter() {
+        let ast::ImportKind::Type(type_) = &import.kind else {
+            continue;
+        };
+        let mut cfg = crate::cfg_gate_attrs(&type_.attrs)
+            .iter()
+            .map(ToTokens::to_token_stream)
+            .map(|tokens| tokens.to_string())
+            .collect::<Vec<_>>();
+        cfg.sort();
+        type_cfgs
+            .entry(type_.rust_name.unraw().to_string())
+            .or_default()
+            .push(cfg);
+    }
+
+    for import in imports {
+        let ast::ImportKind::Function(function) = &mut import.kind else {
+            continue;
+        };
+        let ast::ImportFunctionKind::Method { ty, kind, .. } = &function.kind else {
+            continue;
+        };
+        let syn::Type::Path(syn::TypePath {
+            attrs: _,
+            qself: None,
+            path,
+        }) = get_ty(ty)
+        else {
+            continue;
+        };
+        let is_constructor = matches!(kind, ast::MethodKind::Constructor);
+        let is_local_path = path.leading_colon.is_none()
+            && (path.segments.len() == 1
+                || path
+                    .segments
+                    .first()
+                    .is_some_and(|segment| segment.ident == "self" || segment.ident == "crate"));
+        if !is_constructor && !is_local_path {
+            continue;
+        }
+        let Some(name) = path
+            .segments
+            .last()
+            .map(|segment| segment.ident.unraw().to_string())
+        else {
+            continue;
+        };
+        let Some(candidates) = type_cfgs.get_mut(&name) else {
+            continue;
+        };
+        if candidates.iter().any(Vec::is_empty) {
+            continue;
+        }
+        candidates.sort();
+        let old_shim = function.shim.to_string();
+        let hash = ShortHash((&old_shim, &*candidates));
+        function.shim = Ident::new(&format!("{old_shim}_{hash}"), function.shim.span());
     }
 }
 

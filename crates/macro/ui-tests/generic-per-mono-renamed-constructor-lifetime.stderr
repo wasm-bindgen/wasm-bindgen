@@ -1,0 +1,5 @@
+error: experimental_generic_mono cannot use a constructor or self-returning static method whose class return mixes a lifetime argument with a non-constraining type argument; use a fully constraining return class or the type-erasure generic path
+  --> ui-tests/generic-per-mono-renamed-constructor-lifetime.rs:10:38
+   |
+10 |     fn new<'a, T: IntoIterator>() -> Renamed<'a, T::Item>;
+   |                                      ^^^^^^^^^^^^^^^^^^^^

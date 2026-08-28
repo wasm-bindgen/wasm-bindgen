@@ -1,0 +1,5 @@
+error: imported classes with lifetime parameters require explicit lifetime arguments on generated impls; name the lifetime as a function parameter (e.g. `fn get<'a, T, U>(this: &'a Holder<'a, T>) -> U`)
+  --> ui-tests/generic-per-mono-omitted-class-lifetime.rs:10:25
+   |
+10 |     fn get<T, U>(this: &Holder<T>) -> U;
+   |                         ^^^^^^^^^
