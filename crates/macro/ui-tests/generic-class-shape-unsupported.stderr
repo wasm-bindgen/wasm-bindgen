@@ -28,20 +28,32 @@ error: wasm-bindgen does not support a lifetime argument on the class type that 
 28 |     fn erased_elided<T>(this: &LtHolder<'_, T>);
    |                                         ^^
 
-error: an imported-class bound conflicts with a function lifetime of the same name
-  --> ui-tests/generic-class-shape-unsupported.rs:40:49
+error: wasm-bindgen does not support `impl Trait` in class type arguments; name it as a function type parameter (e.g. `fn f<T: Trait>(this: &Holder<T>)`)
+  --> ui-tests/generic-class-shape-unsupported.rs:41:52
    |
-40 |     fn hrtb_conflict<'target, T>(this: &'target HrtbConflict<'target, T>);
+41 |     fn mono_impl_trait_class_arg(this: &ImplHolder<impl Bounded>);
+   |                                                    ^^^^^^^^^^^^
+
+error: wasm-bindgen does not support `impl Trait` in class type arguments; name it as a function type parameter (e.g. `fn f<T: Trait>(this: &Holder<T>)`)
+  --> ui-tests/generic-class-shape-unsupported.rs:44:54
+   |
+44 |     fn erased_impl_trait_class_arg(this: &ImplHolder<impl Bounded>);
+   |                                                      ^^^^^^^^^^^^
+
+error: an imported-class bound conflicts with a function lifetime of the same name
+  --> ui-tests/generic-class-shape-unsupported.rs:56:49
+   |
+56 |     fn hrtb_conflict<'target, T>(this: &'target HrtbConflict<'target, T>);
    |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 error: an imported-class bound conflicts with a function lifetime of the same name
-  --> ui-tests/generic-class-shape-unsupported.rs:48:16
+  --> ui-tests/generic-class-shape-unsupported.rs:64:16
    |
-48 |         this: &HrtbTypeConflict<&'target T>,
+64 |         this: &HrtbTypeConflict<&'target T>,
    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 error: an imported-class bound conflicts with a function lifetime of the same name
-  --> ui-tests/generic-class-shape-unsupported.rs:53:16
+  --> ui-tests/generic-class-shape-unsupported.rs:69:16
    |
-53 |         this: &HrtbTypeConflict<T>,
+69 |         this: &HrtbTypeConflict<T>,
    |                ^^^^^^^^^^^^^^^^^^^

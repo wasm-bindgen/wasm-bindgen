@@ -28,6 +28,22 @@ extern "C" {
     fn erased_elided<T>(this: &LtHolder<'_, T>);
 }
 
+trait Bounded {}
+
+#[wasm_bindgen]
+extern "C" {
+    type ImplHolder<T = JsValue>;
+
+    // `impl Trait` in an argument position desugars to an anonymous function
+    // type parameter, which the generated `impl` header cannot name; the same
+    // applies on the erasure path.
+    #[wasm_bindgen(method, experimental_generic_mono)]
+    fn mono_impl_trait_class_arg(this: &ImplHolder<impl Bounded>);
+
+    #[wasm_bindgen(method)]
+    fn erased_impl_trait_class_arg(this: &ImplHolder<impl Bounded>);
+}
+
 trait LifetimeBound<'a> {}
 
 #[wasm_bindgen]

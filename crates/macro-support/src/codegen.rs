@@ -256,6 +256,10 @@ fn imported_class_generics<'a>(
     else {
         return vec![(None, Vec::new())];
     };
+    // Candidates are matched by the path's final identifier, so a qualified
+    // path is only trusted when it can plausibly name this invocation's own
+    // module. A constructor is exempt: its class comes from its return type,
+    // which must name the imported type for the JS binding to attach at all.
     let is_constructor = matches!(kind, ast::MethodKind::Constructor);
     let is_local_path = path.leading_colon.is_none()
         && (path.segments.len() == 1
@@ -3917,6 +3921,22 @@ fn class_argument_has_inferred_type(ty: &syn::Type) -> bool {
     visitor.found
 }
 
+fn class_argument_has_impl_trait(ty: &syn::Type) -> bool {
+    struct Visitor {
+        found: bool,
+    }
+
+    impl<'ast> syn::visit::Visit<'ast> for Visitor {
+        fn visit_type_impl_trait(&mut self, _: &'ast syn::TypeImplTrait) {
+            self.found = true;
+        }
+    }
+
+    let mut visitor = Visitor { found: false };
+    syn::visit::Visit::visit_type(&mut visitor, ty);
+    visitor.found
+}
+
 fn predicate_binds_replacement_lifetime(
     predicate: &syn::WherePredicate,
     type_replacements: &BTreeMap<Ident, syn::Type>,
@@ -4271,7 +4291,6 @@ impl ast::ImportFunction {
 
                     for bound in &fn_bounds {
                         let mut predicate_params_to_add = BTreeSet::new();
-                        let mut predicate_lifetimes_to_add = BTreeSet::new();
                         // Only process bounds where the bounded type IS a class param
                         // e.g., for `F: JsFunction<Ret = Ret>`, bounded_ty is `F`
                         if let syn::WherePredicate::Type(pred_type) = bound.as_ref() {
@@ -4306,11 +4325,16 @@ impl ast::ImportFunction {
                                                     ) {
                                                         continue;
                                                     }
-                                                    let used = generics::used_lifetimes_in_type(
+                                                    // An equality RHS that depends on a
+                                                    // function lifetime stays on the
+                                                    // method; moving it to the impl loses
+                                                    // the argument's implied bounds.
+                                                    if !generics::used_lifetimes_in_type(
                                                         &binding.ty,
                                                         &remaining_fn_lifetimes,
-                                                    );
-                                                    if !used.is_empty() {
+                                                    )
+                                                    .is_empty()
+                                                    {
                                                         continue;
                                                     }
                                                     let mut found_set = BTreeSet::new();
@@ -4324,7 +4348,6 @@ impl ast::ImportFunction {
                                                         &binding.ty,
                                                     );
                                                     predicate_params_to_add.extend(found_set);
-                                                    predicate_lifetimes_to_add.extend(used);
                                                 }
                                             }
                                         }
@@ -4335,21 +4358,20 @@ impl ast::ImportFunction {
 
                         // A predicate can move to the impl only when every
                         // function parameter it names is determined by an
-                        // associated-type equality. For `F: Rel<V, Output = U>`,
-                        // `V` remains function-level, so `U` must too.
+                        // associated-type equality, and it touches no remaining
+                        // function lifetime. For `F: Rel<V, Output = U>`, `V`
+                        // remains function-level, so `U` must too.
                         let mut predicate_params = BTreeSet::new();
                         let mut visitor = generics::GenericNameVisitor::new(
                             &remaining_fn_params,
                             &mut predicate_params,
                         );
                         syn::visit::Visit::visit_where_predicate(&mut visitor, bound);
-                        let predicate_lifetimes =
-                            generics::used_lifetimes_in_predicate(bound, &remaining_fn_lifetimes);
                         if predicate_params == predicate_params_to_add
-                            && predicate_lifetimes == predicate_lifetimes_to_add
+                            && generics::used_lifetimes_in_predicate(bound, &remaining_fn_lifetimes)
+                                .is_empty()
                         {
                             params_to_add.extend(predicate_params_to_add);
-                            lifetimes_to_add.extend(predicate_lifetimes_to_add);
                         }
 
                         // A lifetime predicate which mentions a class lifetime
@@ -4522,6 +4544,14 @@ impl ast::ImportFunction {
                     bail_span!(
                         ty,
                         "wasm-bindgen does not support inferred (`_`) class type arguments; use a concrete type or named function type parameter"
+                    );
+                }
+                // `impl Trait` desugars to an anonymous parameter of the
+                // function, which the generated `impl` header cannot name.
+                if class_argument_has_impl_trait(ty) {
+                    bail_span!(
+                        ty,
+                        "wasm-bindgen does not support `impl Trait` in class type arguments; name it as a function type parameter (e.g. `fn f<T: Trait>(this: &Holder<T>)`)"
                     );
                 }
             }
