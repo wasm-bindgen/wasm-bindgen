@@ -898,6 +898,7 @@ impl TryToTokens for ast::Export {
             converted_arguments.push(quote! { #ident });
         }
         let syn_unit = syn::Type::Tuple(syn::TypeTuple {
+            attrs: Vec::new(),
             elems: Default::default(),
             paren_token: Default::default(),
         });
@@ -2561,6 +2562,7 @@ impl TryToTokens for ast::ImportFunction {
         if let Some((_, class)) = class {
             let mut class = class.clone();
             if let syn::Type::Path(syn::TypePath {
+                attrs: _,
                 qself: None,
                 ref mut path,
             }) = class
@@ -2684,7 +2686,11 @@ fn is_spreadable_sequence(ty: &syn::Type) -> bool {
     match ty {
         // `[T]` and `[T; N]`.
         syn::Type::Slice(_) | syn::Type::Array(_) => true,
-        syn::Type::Path(syn::TypePath { qself: None, path }) => {
+        syn::Type::Path(syn::TypePath {
+            attrs: _,
+            qself: None,
+            path,
+        }) => {
             let Some(seg) = path.segments.last() else {
                 return false;
             };
@@ -3323,7 +3329,12 @@ impl ast::ImportFunction {
             // segment so we impl on the bare class (class generics are rejected
             // above, so this only removes defaulted/elided arguments).
             let mut class = class;
-            if let syn::Type::Path(syn::TypePath { qself: None, path }) = &mut class {
+            if let syn::Type::Path(syn::TypePath {
+                attrs: _,
+                qself: None,
+                path,
+            }) = &mut class
+            {
                 if let Some(segment) = path.segments.last_mut() {
                     segment.arguments = syn::PathArguments::None;
                 }
@@ -3401,6 +3412,7 @@ impl ast::ImportFunction {
                     let ident = &type_param.ident;
                     let bounds = type_param.bounds.clone();
                     let predicate = syn::WherePredicate::Type(syn::PredicateType {
+                        attrs: Vec::new(),
                         lifetimes: None,
                         bounded_ty: syn::parse_quote!(#ident),
                         colon_token: syn::Token![:](proc_macro2::Span::call_site()),
@@ -3636,6 +3648,7 @@ impl ast::ImportFunction {
 
         let ret_ty = self.js_ret.as_ref()?;
         let syn::Type::Path(syn::TypePath {
+            attrs: _,
             qself: None,
             ref path,
         }) = get_ty(ret_ty)
@@ -4296,7 +4309,12 @@ pub(crate) fn detect_slice_or_option_slice(ty: &syn::Type) -> Option<SliceArg> {
         }
     }
     // `Option<&[T]>` — match shape `Option<...>` and recurse once.
-    if let syn::Type::Path(syn::TypePath { qself: None, path }) = ty {
+    if let syn::Type::Path(syn::TypePath {
+        attrs: _,
+        qself: None,
+        path,
+    }) = ty
+    {
         if let Some(seg) = path.segments.last() {
             if seg.ident == "Option" {
                 if let syn::PathArguments::AngleBracketed(args) = &seg.arguments {
@@ -4326,7 +4344,12 @@ pub(crate) fn detect_slice_or_option_slice(ty: &syn::Type) -> Option<SliceArg> {
 /// `Result` alias or a re-ordered alias will not be recognised, which only means
 /// a diagnostic is skipped.
 fn result_err_ty(ty: &syn::Type) -> Option<&syn::Type> {
-    let syn::Type::Path(syn::TypePath { qself: None, path }) = get_ty(ty) else {
+    let syn::Type::Path(syn::TypePath {
+        attrs: _,
+        qself: None,
+        path,
+    }) = get_ty(ty)
+    else {
         return None;
     };
     let syn::PathArguments::AngleBracketed(args) = &path.segments.last()?.arguments else {

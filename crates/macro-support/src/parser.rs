@@ -993,6 +993,7 @@ impl<'a>
 
             let class_name = match class_ty {
                 syn::Type::Path(syn::TypePath {
+                    attrs: _,
                     qself: None,
                     ref path,
                 }) => path,
@@ -1015,6 +1016,7 @@ impl<'a>
                 .unwrap_or_else(|| cls.unraw().to_string());
 
             let ty = syn::Type::Path(syn::TypePath {
+                attrs: Vec::new(),
                 qself: None,
                 path: syn::Path {
                     leading_colon: None,
@@ -1039,6 +1041,7 @@ impl<'a>
             };
             let class_name = match get_ty(class) {
                 syn::Type::Path(syn::TypePath {
+                    attrs: _,
                     qself: None,
                     ref path,
                 }) => path,
@@ -1306,7 +1309,7 @@ impl ConvertToAst<(&ast::Program, BindgenAttrs)> for syn::ForeignItemType {
             if param.default.is_none() {
                 let generics = generics.get_or_insert_with(|| self.generics.clone());
                 let type_param_mut = generics.type_params_mut().nth(n).unwrap();
-                type_param_mut.default = Some(syn::parse_quote! { JsValue });
+                type_param_mut.default = Some((Default::default(), syn::parse_quote! { JsValue }));
             }
         }
 
@@ -1493,18 +1496,27 @@ impl ConvertToAst<(BindgenAttrs, Vec<FnArgAttrs>)> for syn::ItemFn {
 fn get_self_method(r: syn::Receiver) -> ast::MethodSelf {
     // The tricky part here is that `r` can have many forms. E.g. `self`,
     // `&self`, `&mut self`, `self: Self`, `self: &Self`, `self: &mut Self`,
-    // `self: Box<Self>`, `self: Rc<Self>`, etc.
-    // Luckily, syn always populates the `ty` field with the type of `self`, so
-    // e.g. `&self` gets the type `&Self`. So we only have check whether the
-    // type is a reference or not.
-    match &*r.ty {
-        syn::Type::Reference(ty) => {
-            if ty.mutability.is_some() {
+    // `self: Box<Self>`, `self: Rc<Self>`, etc. The shorthand forms are
+    // covered by `ReceiverKind::Value`/`ReceiverKind::Reference`; for the
+    // `self: Ty` forms we check whether the explicit type is a reference.
+    match &r.kind {
+        syn::ReceiverKind::Reference(_, _, mutability) => {
+            if mutability.is_some() {
                 ast::MethodSelf::RefMutable
             } else {
                 ast::MethodSelf::RefShared
             }
         }
+        syn::ReceiverKind::Typed(_, ty) => match &**ty {
+            syn::Type::Reference(ty) => {
+                if ty.mutability.is_some() {
+                    ast::MethodSelf::RefMutable
+                } else {
+                    ast::MethodSelf::RefShared
+                }
+            }
+            _ => ast::MethodSelf::ByValue,
+        },
         _ => ast::MethodSelf::ByValue,
     }
 }
@@ -1686,7 +1698,7 @@ fn function_from_decl(
             name,
             rust_attrs: attrs,
             rust_vis: vis,
-            r#unsafe: sig.unsafety.is_some(),
+            r#unsafe: matches!(sig.safety, syn::Safety::Unsafe(_)),
             r#async: sig.asyncness.is_some(),
             jspi: opts.jspi().is_some(),
             generate_typescript: opts.skip_typescript().is_none(),
@@ -2037,9 +2049,9 @@ impl<'a> MacroParse<(Option<BindgenAttrs>, &'a mut TokenStream)> for syn::Item {
 
 impl MacroParse<BindgenAttrs> for &mut syn::ItemImpl {
     fn macro_parse(self, program: &mut ast::Program, opts: BindgenAttrs) -> Result<(), Diagnostic> {
-        if self.defaultness.is_some() {
+        if self.modifiers.defaultness.is_some() {
             bail_span!(
-                self.defaultness,
+                self.modifiers.defaultness,
                 "#[wasm_bindgen] default impls are not supported"
             );
         }
@@ -2049,7 +2061,7 @@ impl MacroParse<BindgenAttrs> for &mut syn::ItemImpl {
                 "#[wasm_bindgen] unsafe impls are not supported"
             );
         }
-        if let Some((_, path, _)) = &self.trait_ {
+        if let Some((path, _)) = &self.trait_ {
             bail_span!(path, "#[wasm_bindgen] trait impls are not supported");
         }
         if !self.generics.params.is_empty() {
@@ -2060,6 +2072,7 @@ impl MacroParse<BindgenAttrs> for &mut syn::ItemImpl {
         }
         let name = match get_ty(&self.self_ty) {
             syn::Type::Path(syn::TypePath {
+                attrs: _,
                 qself: None,
                 ref path,
             }) => path,
@@ -2203,7 +2216,7 @@ impl MacroParse<&ClassMarker> for &mut syn::ImplItemFn {
             syn::Visibility::Public(_) => {}
             _ => return Ok(()),
         }
-        if self.defaultness.is_some() {
+        if self.modifiers.defaultness.is_some() {
             panic!("default methods are not supported");
         }
         if self.sig.constness.is_some() {
@@ -2972,6 +2985,7 @@ fn extract_first_ty_param(ty: Option<&syn::Type>) -> Result<Option<syn::Type>, D
     };
     let path = match *get_ty(t) {
         syn::Type::Path(syn::TypePath {
+            attrs: _,
             qself: None,
             ref path,
         }) => path,
@@ -3116,7 +3130,7 @@ fn validate_generic_type_param_bound(bound: &syn::TypeParamBound) -> Result<(), 
     match bound {
         syn::TypeParamBound::Trait(trait_bound) => {
             // Higher-ranked trait bounds (for<'a>) are now supported
-            if let syn::TraitBoundModifier::Maybe(question) = trait_bound.modifier {
+            if let Some(question) = &trait_bound.maybe {
                 bail_generic_unsupported(question)?;
             }
         }

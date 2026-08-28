@@ -1589,7 +1589,8 @@ fn clamped(t: syn::Type) -> syn::Type {
 
     let ident = raw_ident("Clamped");
     let seg = syn::PathSegment { ident, arguments };
-    syn::TypePath {
+    syn::Type::Path(syn::TypePath {
+        attrs: Vec::new(),
         qself: None,
         path: syn::Path {
             leading_colon: Some(Default::default()),
@@ -1597,6 +1598,5 @@ fn clamped(t: syn::Type) -> syn::Type {
                 .into_iter()
                 .collect(),
         },
-    }
-    .into()
+    })
 }

@@ -16,7 +16,7 @@ once_cell = "1.12"
 proc-macro2 = "1.0"
 quote = '1.0'
 sourcefile = "0.2"
-syn = { version = '2.0', features = ['extra-traits', 'full'] }
+syn = { version = '3.0', features = ['extra-traits', 'full'] }
 weedle = "0.13.1"
 
 [lints]

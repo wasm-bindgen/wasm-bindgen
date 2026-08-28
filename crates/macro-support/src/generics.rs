@@ -159,7 +159,7 @@ impl<'a, 'b> Visit<'a> for GenericNameVisitor<'a, 'b> {
                 syn::PathArguments::Parenthesized(args) => {
                     // Handle function syntax like FnMut(T) -> Result<R, JsValue>
                     for input in &args.inputs {
-                        syn::visit::visit_type(self, input);
+                        syn::visit::visit_type(self, &input.ty);
                     }
                     if let syn::ReturnType::Type(_, return_type) = &args.output {
                         syn::visit::visit_type(self, return_type);
@@ -175,7 +175,7 @@ impl<'a, 'b> Visit<'a> for GenericNameVisitor<'a, 'b> {
 pub(crate) fn generic_params(generics: &syn::Generics) -> Vec<(&Ident, Option<&syn::Type>)> {
     generics
         .type_params()
-        .map(|tp| (&tp.ident, tp.default.as_ref()))
+        .map(|tp| (&tp.ident, tp.default.as_ref().map(|(_, ty)| ty)))
         .collect()
 }
 
@@ -228,6 +228,7 @@ pub(crate) fn generic_bounds<'a>(generics: &'a syn::Generics) -> Vec<Cow<'a, syn
             if !type_param.bounds.is_empty() {
                 let ident = &type_param.ident;
                 let predicate = syn::WherePredicate::Type(syn::PredicateType {
+                    attrs: Vec::new(),
                     lifetimes: None,
                     bounded_ty: syn::parse_quote!(#ident),
                     colon_token: syn::Token![:](proc_macro2::Span::call_site()),
@@ -425,10 +426,10 @@ impl<'a> VisitMut for ImplTraitDesugar<'a> {
             ident: ident.clone(),
             colon_token: Some(Default::default()),
             bounds: impl_trait.bounds.clone(),
-            eq_token: None,
             default: None,
         }));
         *ty = syn::Type::Path(syn::TypePath {
+            attrs: Vec::new(),
             qself: None,
             path: ident.into(),
         });
@@ -570,7 +571,7 @@ fn type_is_constraining(ty: &syn::Type, generic_names: &[&Ident]) -> bool {
                         // `Fn(T) -> U` sugar: function-pointer-like,
                         // non-constraining.
                         for input in &p.inputs {
-                            if type_mentions_any(input, generic_names) {
+                            if type_mentions_any(&input.ty, generic_names) {
                                 return false;
                             }
                         }
@@ -593,7 +594,7 @@ fn type_is_constraining(ty: &syn::Type, generic_names: &[&Ident]) -> bool {
             .elems
             .iter()
             .all(|e| type_is_constraining(e, generic_names)),
-        // Pointer / BareFn / TraitObject / ImplTrait / Infer / Never / Macro:
+        // Pointer / FnPtr / TraitObject / ImplTrait / Infer / Never / Macro:
         // any fn-generic mention here is non-constraining (fn-ptr, dyn, impl
         // Trait are explicitly non-constraining per RFC 0447; the rest are
         // handled conservatively).
@@ -1126,7 +1127,11 @@ mod tests {
     fn args_are_constraining(ty_src: &str, params: &[&str]) -> bool {
         let ty: syn::Type = syn::parse_str(ty_src).expect("valid type");
         let path = match ty {
-            syn::Type::Path(syn::TypePath { qself: None, path }) => path,
+            syn::Type::Path(syn::TypePath {
+                attrs: _,
+                qself: None,
+                path,
+            }) => path,
             _ => panic!("test helper expects a bare path type"),
         };
         let seg = path.segments.last().expect("at least one segment");

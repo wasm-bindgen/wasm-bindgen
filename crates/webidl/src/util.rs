@@ -48,7 +48,8 @@ where
 
 /// Take a type and create an immutable shared reference to that type.
 pub(crate) fn shared_ref(ty: syn::Type, mutable: bool) -> syn::Type {
-    syn::TypeReference {
+    syn::Type::Reference(syn::TypeReference {
+        attrs: Vec::new(),
         and_token: Default::default(),
         lifetime: None,
         mutability: if mutable {
@@ -57,8 +58,7 @@ pub(crate) fn shared_ref(ty: syn::Type, mutable: bool) -> syn::Type {
             None
         },
         elem: Box::new(ty),
-    }
-    .into()
+    })
 }
 
 /// Fix case of identifiers like `HTMLBRElement` or `texImage2D`
@@ -169,11 +169,11 @@ pub fn webidl_const_v_to_backend_const_v(v: &ConstValueLit) -> ConstValue {
 
 /// From `T` create `[T]`.
 pub(crate) fn slice_ty(t: syn::Type) -> syn::Type {
-    syn::TypeSlice {
+    syn::Type::Slice(syn::TypeSlice {
+        attrs: Vec::new(),
         bracket_token: Default::default(),
         elem: Box::new(t),
-    }
-    .into()
+    })
 }
 
 /// From `T` create `alloc::Vec<T>`.
@@ -195,8 +195,11 @@ pub(crate) fn vec_ty(t: syn::Type) -> syn::Type {
         ident: raw_ident("Vec"),
         arguments,
     });
-    let ty = syn::TypePath { qself: None, path };
-    ty.into()
+    syn::Type::Path(syn::TypePath {
+        attrs: Vec::new(),
+        qself: None,
+        path,
+    })
 }
 
 /// From `T` create `Option<T>`
@@ -211,8 +214,11 @@ pub(crate) fn option_ty(t: syn::Type) -> syn::Type {
     let ident = raw_ident("Option");
     let seg = syn::PathSegment { ident, arguments };
     let path: syn::Path = seg.into();
-    let ty = syn::TypePath { qself: None, path };
-    ty.into()
+    syn::Type::Path(syn::TypePath {
+        attrs: Vec::new(),
+        qself: None,
+        path,
+    })
 }
 
 /// From `T` create `::js_sys::JsNullable<T>`
@@ -233,8 +239,11 @@ pub(crate) fn js_nullable_ty(t: syn::Type) -> syn::Type {
         leading_colon: Some(Default::default()),
         segments: FromIterator::from_iter(vec![syn::PathSegment::from(raw_ident("js_sys")), seg]),
     };
-    let ty = syn::TypePath { qself: None, path };
-    ty.into()
+    syn::Type::Path(syn::TypePath {
+        attrs: Vec::new(),
+        qself: None,
+        path,
+    })
 }
 
 /// Check if a type is `::wasm_bindgen::JsValue`
@@ -274,7 +283,11 @@ pub(crate) fn generic_ty(base: syn::Type, type_arg: syn::Type) -> syn::Type {
             });
     }
 
-    syn::Type::Path(syn::TypePath { qself: None, path })
+    syn::Type::Path(syn::TypePath {
+        attrs: Vec::new(),
+        qself: None,
+        path,
+    })
 }
 
 /// Direction of data flow across the JS/Wasm boundary.
