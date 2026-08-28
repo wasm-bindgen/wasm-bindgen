@@ -31,6 +31,25 @@ pub fn expand(attr: TokenStream, input: TokenStream) -> Result<TokenStream, Diag
     let item = syn::parse2::<syn::Item>(input)?;
     if let syn::Item::Struct(mut s) = item {
         let opts: BindgenAttrs = syn::parse2(attr.clone())?;
+
+        // If the emitted `#[derive(<path>::__rt::BindgenedStruct)]` below
+        // fails to resolve — most commonly because `wasm-bindgen` is not a
+        // direct dependency, so `::wasm_bindgen` is not in the extern
+        // prelude — rustc strips the failed derive and, since
+        // `#[wasm_bindgen(#attr)]` is then no longer an inert derive helper,
+        // falls back to re-invoking this attribute macro on the struct with
+        // identical input, recursing until the recursion limit. The emitted
+        // `__wasm_bindgen_retried` marker attribute survives that round trip
+        // (and is otherwise an inert helper of the derive), letting us detect
+        // the re-invocation and report a proper error instead.
+        if strip_retry_marker(&mut s.attrs) {
+            bail_span!(
+                s.ident,
+                "cannot resolve a path to the `wasm_bindgen` crate: add `wasm-bindgen` \
+                 as a direct dependency, or specify an explicit path with \
+                 `#[wasm_bindgen(wasm_bindgen = path::to::wasm_bindgen)]`"
+            );
+        }
         let wasm_bindgen = opts
             .wasm_bindgen()
             .cloned()
@@ -48,6 +67,7 @@ pub fn expand(attr: TokenStream, input: TokenStream) -> Result<TokenStream, Diag
         let item = quote! {
             #[derive(#wasm_bindgen::__rt::BindgenedStruct)]
             #[wasm_bindgen(#attr)]
+            #[__wasm_bindgen_retried]
             #s
         };
         return Ok(item);
@@ -65,6 +85,14 @@ pub fn expand(attr: TokenStream, input: TokenStream) -> Result<TokenStream, Diag
     parser::check_unused_attrs(&mut tokens);
 
     Ok(tokens)
+}
+
+/// Finds and removes the `#[__wasm_bindgen_retried]` marker attribute left by
+/// a previous expansion attempt whose emitted derive path failed to resolve.
+fn strip_retry_marker(attrs: &mut Vec<syn::Attribute>) -> bool {
+    let before = attrs.len();
+    attrs.retain(|attr| !attr.path().is_ident("__wasm_bindgen_retried"));
+    before != attrs.len()
 }
 
 /// Takes the parsed input from a `wasm_bindgen::link_to` macro and returns the generated link
