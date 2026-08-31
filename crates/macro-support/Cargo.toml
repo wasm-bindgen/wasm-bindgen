@@ -7,7 +7,7 @@ homepage = "https://wasm-bindgen.github.io/wasm-bindgen/"
 include = ["/LICENSE-*", "/src"]
 license = "MIT OR Apache-2.0"
 name = "wasm-bindgen-macro-support"
-repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/macro-support"
+repository = "https://github.com/wasm-bindgen/wasm-bindgen/tree/main/crates/macro-support"
 rust-version = "1.77"
 version = "0.2.127"
 
