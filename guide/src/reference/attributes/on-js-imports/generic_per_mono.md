@@ -133,6 +133,7 @@ or static method that returns the class ties one of its own generics to it:
 ```rust
 #[wasm_bindgen]
 extern "C" {
+    #[wasm_bindgen(generic_per_mono)]
     type Holder<T>;
 
     #[wasm_bindgen(constructor, generic_per_mono)]
@@ -146,6 +147,12 @@ let holder = Holder::new(42u32);
 let value: u32 = holder.get();
 ```
 
+The attribute on the imported type is required independently of the attribute
+on each generic method. It marks the class as participating in the experimental
+per-monomorphisation model. A generic method on a marked class must also use
+`generic_per_mono`; mixing a marked class with the type-erasure path is rejected
+at compile time.
+
 The function's own type parameter that the class type's argument list uses
 (`T` in `Holder<T>` above) is *hoisted* off the wrapper function's own
 parameter list and onto the generated `impl` block's header instead — the
@@ -155,9 +162,16 @@ own argument list (an ordinary, non-hoisted type parameter, or one used only in
 an argument/return position) stays on the function as usual, so the two kinds
 compose in a single signature:
 
+Bounds and `cfg` attributes from a class declaration in the same extern block
+are inherited when the class is written as `Holder` or `self::Holder`. Longer
+qualified paths may resolve to an unrelated same-named type, so they are
+treated as external references; repeat any required bounds and `cfg`
+attributes on the function using them.
+
 ```rust
 #[wasm_bindgen]
 extern "C" {
+    #[wasm_bindgen(generic_per_mono)]
     type Holder<T>;
 
     // `T` is hoisted (it parameterises the receiver); `U` stays on `combine`.
@@ -172,11 +186,13 @@ hoisted type parameter:
 ```rust
 #[wasm_bindgen]
 extern "C" {
+    #[wasm_bindgen(generic_per_mono)]
     type LifetimeHolder<'a>;
 
     #[wasm_bindgen(method, generic_per_mono)]
     fn get<'a, T>(this: &'a LifetimeHolder<'a>) -> T;
 
+    #[wasm_bindgen(generic_per_mono)]
     type LtHolder<'a, T>;
 
     #[wasm_bindgen(method, generic_per_mono, js_name = get)]

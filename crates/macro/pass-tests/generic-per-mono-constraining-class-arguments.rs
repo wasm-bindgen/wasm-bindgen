@@ -5,6 +5,7 @@ trait Marker<T> {}
 #[wasm_bindgen]
 extern "C" {
     type Value;
+    #[wasm_bindgen(generic_per_mono)]
     type Shaped<T>;
 
     // These all determine `T` from the impl self type and therefore satisfy

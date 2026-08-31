@@ -3,6 +3,7 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
     type Value;
+    #[wasm_bindgen(generic_per_mono)]
     type Qualified<T = JsValue>;
 
     // `self::Qualified` names the same local imported class as `Qualified` and

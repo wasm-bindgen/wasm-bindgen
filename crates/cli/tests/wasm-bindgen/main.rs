@@ -123,11 +123,33 @@ impl Project {
 
     fn build(&mut self) -> PathBuf {
         if !self.built {
-            if !self.root.join("Cargo.toml").is_file() {
-                self.file(
-                    "Cargo.toml",
-                    &format!(
-                        "
+            self.prepare_build();
+            self.cargo_cmd.assert().success();
+
+            self.built = true;
+        }
+
+        let mut built = TARGET_DIR.to_path_buf();
+        built.push(&self.target);
+        built.push("debug");
+        built.push(&self.name);
+        built.set_extension("wasm");
+
+        built
+    }
+
+    fn compile_error(&mut self) -> String {
+        self.prepare_build();
+        let assert = self.cargo_cmd.assert().failure();
+        String::from_utf8_lossy(&assert.get_output().stderr).into_owned()
+    }
+
+    fn prepare_build(&mut self) {
+        if !self.root.join("Cargo.toml").is_file() {
+            self.file(
+                "Cargo.toml",
+                &format!(
+                    "
                         [package]
                         name = \"{}\"
                         authors = []
@@ -145,25 +167,13 @@ impl Project {
                         [profile.dev]
                         codegen-units = 1
                     ",
-                        self.name,
-                        self.deps.replace("{root}", REPO_ROOT.to_str().unwrap())
-                    ),
-                );
-            }
-
-            self.cargo_cmd.arg("--target").arg(&self.target);
-            self.cargo_cmd.assert().success();
-
-            self.built = true;
+                    self.name,
+                    self.deps.replace("{root}", REPO_ROOT.to_str().unwrap())
+                ),
+            );
         }
 
-        let mut built = TARGET_DIR.to_path_buf();
-        built.push(&self.target);
-        built.push("debug");
-        built.push(&self.name);
-        built.set_extension("wasm");
-
-        built
+        self.cargo_cmd.arg("--target").arg(&self.target);
     }
 }
 

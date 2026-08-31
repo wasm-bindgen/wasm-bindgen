@@ -7,7 +7,7 @@
 //! emitted, and the failure surfaces when `wasm-bindgen` walks the encoded
 //! `Aux*` data and tries to wire up class references.
 
-use crate::Project;
+use crate::{Project, REPO_ROOT};
 use std::fs;
 
 macro_rules! assert_contains {
@@ -300,4 +300,367 @@ fn generic_per_mono_genuine_collision_is_reported() {
     // The shim key is a hash, so the message has to name the imports in terms
     // the user recognises.
     assert_contains!(&err, "console.log");
+}
+
+#[test]
+fn generic_per_mono_class_requires_type_opt_in() {
+    let err = Project::new("generic_per_mono_class_requires_type_opt_in")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                extern "C" {
+                    pub type Holder<T>;
+                }
+
+                #[wasm_bindgen]
+                extern "C" {
+                    #[wasm_bindgen(method, generic_per_mono)]
+                    pub fn get<T>(this: &Holder<T>) -> T;
+                }
+
+                #[wasm_bindgen]
+                pub fn run(holder: &Holder<JsValue>) -> JsValue {
+                    holder.get()
+                }
+            "#,
+        )
+        .compile_error();
+
+    assert_contains!(&err, "SupportsPerMonoGenericImport");
+    assert_contains!(&err, "Holder<T>");
+    assert_contains!(&err, "must use the type-erasure path");
+}
+
+#[test]
+fn generic_per_mono_type_rejects_erased_generic_method() {
+    let err = Project::new("generic_per_mono_type_rejects_erased_generic_method")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                extern "C" {
+                    #[wasm_bindgen(generic_per_mono)]
+                    pub type Holder<T>;
+                }
+
+                #[wasm_bindgen]
+                extern "C" {
+                    #[wasm_bindgen(method)]
+                    pub fn get<T>(this: &Holder<T>) -> T;
+                }
+
+                #[wasm_bindgen]
+                pub fn run(holder: &Holder<JsValue>) -> JsValue {
+                    holder.get()
+                }
+            "#,
+        )
+        .compile_error();
+
+    assert_contains!(&err, "SupportsErasedGenericImport");
+    assert_contains!(&err, "Holder<T>");
+    assert_contains!(&err, "must use `generic_per_mono`");
+}
+
+#[test]
+fn generic_per_mono_policy_uses_rust_type_identity() {
+    let err = Project::new("generic_per_mono_policy_uses_rust_type_identity")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                extern "C" {
+                    #[wasm_bindgen(generic_per_mono, js_name = Shared)]
+                    pub type Marked<T>;
+
+                    #[wasm_bindgen(js_name = Shared)]
+                    pub type Unmarked<T>;
+                }
+
+                #[wasm_bindgen]
+                extern "C" {
+                    #[wasm_bindgen(method, js_class = Shared, generic_per_mono)]
+                    pub fn get<T>(this: &Unmarked<T>) -> T;
+                }
+
+                #[wasm_bindgen]
+                pub fn run(value: &Unmarked<JsValue>) -> JsValue {
+                    value.get()
+                }
+            "#,
+        )
+        .compile_error();
+
+    assert_contains!(&err, "SupportsPerMonoGenericImport");
+    assert_contains!(&err, "Unmarked<T>");
+}
+
+#[test]
+fn generic_per_mono_disabled_policy_does_not_affect_active_declaration() {
+    let err = Project::new("disabled_type_policy_does_not_affect_active_declaration")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                extern "C" {
+                    #[cfg(any())]
+                    #[wasm_bindgen(generic_per_mono)]
+                    pub type Holder<T>;
+
+                    pub type Holder<T>;
+                }
+
+                #[wasm_bindgen]
+                extern "C" {
+                    #[wasm_bindgen(method, generic_per_mono)]
+                    pub fn get<T>(this: &Holder<T>) -> T;
+                }
+
+                #[wasm_bindgen]
+                pub fn run(value: &Holder<JsValue>) -> JsValue {
+                    value.get()
+                }
+            "#,
+        )
+        .compile_error();
+
+    assert_contains!(&err, "SupportsPerMonoGenericImport");
+    assert_contains!(&err, "Holder<T>");
+}
+
+#[test]
+fn generic_per_mono_inherited_active_class_cfg_rejects_erased_method() {
+    let err = Project::new("generic_per_mono_inherited_active_class_cfg_rejects_erased_method")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                extern "C" {
+                    #[cfg(all())]
+                    #[wasm_bindgen(generic_per_mono)]
+                    pub type Holder<T>;
+
+                    #[wasm_bindgen(method)]
+                    pub fn get<T>(this: &Holder<T>) -> T;
+                }
+
+                #[wasm_bindgen]
+                pub fn run(value: &Holder<JsValue>) -> JsValue {
+                    value.get()
+                }
+            "#,
+        )
+        .compile_error();
+
+    assert_contains!(&err, "marked `generic_per_mono` must also use");
+}
+
+#[test]
+fn generic_per_mono_class_default_still_requires_type_opt_in() {
+    let err = Project::new("generic_class_default_still_requires_type_opt_in")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                extern "C" {
+                    pub type Holder<T>;
+                }
+
+                #[wasm_bindgen]
+                extern "C" {
+                    #[wasm_bindgen(method, generic_per_mono)]
+                    pub fn get<T>(this: &Holder) -> T;
+                }
+
+                #[wasm_bindgen]
+                pub fn run(value: &Holder) -> JsValue {
+                    value.get()
+                }
+            "#,
+        )
+        .compile_error();
+
+    assert_contains!(&err, "SupportsPerMonoGenericImport");
+    assert_contains!(&err, "Holder");
+}
+
+#[test]
+fn generic_per_mono_uninstantiated_method_still_requires_type_opt_in() {
+    let err = Project::new("generic_per_mono_uninstantiated_method_still_requires_type_opt_in")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                extern "C" {
+                    pub type Holder<T>;
+                }
+
+                #[wasm_bindgen]
+                extern "C" {
+                    #[wasm_bindgen(method, generic_per_mono)]
+                    pub fn get<T>(this: &Holder<T>) -> T;
+                }
+
+                #[wasm_bindgen]
+                pub fn run() {}
+            "#,
+        )
+        .compile_error();
+
+    assert_contains!(&err, "SupportsPerMonoGenericImport");
+    assert_contains!(&err, "Holder<T>");
+}
+
+#[test]
+fn generic_per_mono_unrelated_or_disabled_markers_do_not_reject_erased_imports() {
+    Project::new("unrelated_or_disabled_markers_do_not_reject_erased_imports")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                extern "C" {
+                    #[wasm_bindgen(generic_per_mono, js_name = Shared)]
+                    pub type Marked<T>;
+
+                    #[wasm_bindgen(js_name = Shared)]
+                    pub type Unmarked<T>;
+
+                    #[wasm_bindgen(generic_per_mono)]
+                    pub type DisabledHolder<T>;
+
+                    pub type DisabledUnmarked<T>;
+
+                    #[cfg(all())]
+                    #[wasm_bindgen(generic_per_mono)]
+                    pub type GatedMarked<T>;
+                }
+
+                #[wasm_bindgen]
+                extern "C" {
+                    #[wasm_bindgen(method, js_class = Shared)]
+                    pub fn get<T>(this: &Unmarked<T>) -> T;
+
+                    #[cfg(any())]
+                    #[wasm_bindgen(method)]
+                    pub fn disabled<T>(this: &DisabledHolder<T>) -> T;
+
+                    #[cfg(any())]
+                    #[wasm_bindgen(method, generic_per_mono)]
+                    pub fn disabled_per_mono<T>(this: &DisabledUnmarked<T>) -> T;
+
+                    #[wasm_bindgen(method, generic_per_mono)]
+                    pub fn gated_per_mono<T>(this: &GatedMarked<T>) -> T;
+                }
+
+                #[wasm_bindgen]
+                pub fn run(value: &Unmarked<JsValue>) -> JsValue {
+                    value.get()
+                }
+            "#,
+        )
+        .wasm_bindgen("")
+        .unwrap();
+}
+
+#[test]
+fn generic_per_mono_policy_is_independent_of_js_class_override() {
+    Project::new("generic_per_mono_policy_is_independent_of_js_class_override")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                extern "C" {
+                    #[wasm_bindgen(generic_per_mono, js_name = Actual)]
+                    pub type Renamed<T>;
+                }
+
+                #[wasm_bindgen]
+                extern "C" {
+                    #[wasm_bindgen(method, js_class = Different, generic_per_mono)]
+                    pub fn get<T>(this: &Renamed<T>) -> T;
+                }
+
+                #[wasm_bindgen]
+                pub fn run(value: &Renamed<JsValue>) -> JsValue {
+                    value.get()
+                }
+            "#,
+        )
+        .wasm_bindgen("")
+        .unwrap();
+}
+
+#[test]
+fn generic_per_mono_cross_crate_policy_is_checked_during_compile() {
+    let mut project = Project::new("generic_per_mono_cross_crate_policy_is_checked_during_compile");
+    project
+        .dep("upstream = { path = 'upstream' }")
+        .file(
+            "upstream/Cargo.toml",
+            &format!(
+                r#"
+                    [package]
+                    name = "upstream"
+                    authors = []
+                    version = "1.0.0"
+                    edition = "2021"
+
+                    [dependencies]
+                    wasm-bindgen = {{ path = '{}' }}
+                "#,
+                REPO_ROOT.display(),
+            ),
+        )
+        .file(
+            "upstream/src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                extern "C" {
+                    #[wasm_bindgen(generic_per_mono)]
+                    pub type Holder<T>;
+                }
+
+                #[wasm_bindgen]
+                extern "C" {
+                    #[wasm_bindgen(method)]
+                    pub fn get<T>(this: &Holder<T>) -> T;
+                }
+            "#,
+        )
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen]
+                pub fn run(value: &upstream::Holder<JsValue>) -> JsValue {
+                    value.get()
+                }
+            "#,
+        );
+
+    let err = project.compile_error();
+    assert_contains!(&err, "SupportsErasedGenericImport");
+    assert_contains!(&err, "Holder<T>");
 }

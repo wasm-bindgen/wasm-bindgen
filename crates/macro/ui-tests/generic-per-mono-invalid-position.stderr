@@ -1,23 +1,23 @@
 error: invalid attribute generic_per_mono in this position
- --> ui-tests/generic-per-mono-invalid-position.rs:9:16
+ --> ui-tests/generic-per-mono-invalid-position.rs:8:16
   |
-9 | #[wasm_bindgen(generic_per_mono)]
+8 | #[wasm_bindgen(generic_per_mono)]
   |                ^^^^^^^^^^^^^^^^
 
 error: invalid attribute generic_per_mono in this position
-  --> ui-tests/generic-per-mono-invalid-position.rs:15:16
+  --> ui-tests/generic-per-mono-invalid-position.rs:14:16
    |
-15 | #[wasm_bindgen(generic_per_mono)]
+14 | #[wasm_bindgen(generic_per_mono)]
    |                ^^^^^^^^^^^^^^^^
 
 error: invalid attribute generic_per_mono in this position
-  --> ui-tests/generic-per-mono-invalid-position.rs:23:20
+  --> ui-tests/generic-per-mono-invalid-position.rs:27:20
    |
-23 |     #[wasm_bindgen(generic_per_mono)]
+27 |     #[wasm_bindgen(generic_per_mono, js_name = someGlobal, thread_local_v2)]
    |                    ^^^^^^^^^^^^^^^^
 
-error: invalid attribute generic_per_mono in this position
-  --> ui-tests/generic-per-mono-invalid-position.rs:28:20
+error: generic_per_mono on an imported type requires at least one generic parameter
+  --> ui-tests/generic-per-mono-invalid-position.rs:34:20
    |
-28 |     #[wasm_bindgen(generic_per_mono, js_name = someGlobal, thread_local_v2)]
+34 |     #[wasm_bindgen(generic_per_mono)]
    |                    ^^^^^^^^^^^^^^^^

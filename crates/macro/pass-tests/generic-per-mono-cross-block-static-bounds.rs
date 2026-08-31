@@ -2,6 +2,7 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
+    #[wasm_bindgen(generic_per_mono)]
     type ExternalBounded<T: Clone>;
 }
 

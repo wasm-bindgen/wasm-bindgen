@@ -2,6 +2,7 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
+    #[wasm_bindgen(generic_per_mono)]
     type Renamed<'a, T = JsValue>;
 
     // The Rust class identity, not its independent JS name, must select the

@@ -1296,6 +1296,15 @@ impl ConvertToAst<(&ast::Program, BindgenAttrs)> for syn::ForeignItemType {
         let no_upcast = attrs.no_upcast().is_some();
         let no_promising = attrs.no_promising().is_some();
         let no_into_js_generic = attrs.no_into_js_generic().is_some();
+        let generic_per_mono = attrs.generic_per_mono().copied();
+        if let Some(span) = generic_per_mono {
+            if self.generics.params.is_empty() {
+                return Err(Diagnostic::span_error(
+                    span,
+                    "generic_per_mono on an imported type requires at least one generic parameter",
+                ));
+            }
+        }
         for (used, attr) in attrs.attrs.iter() {
             match attr {
                 BindgenAttr::Extends(_, e) => {
@@ -1341,6 +1350,7 @@ impl ConvertToAst<(&ast::Program, BindgenAttrs)> for syn::ForeignItemType {
             no_into_js_generic,
             wasm_bindgen: program.wasm_bindgen.clone(),
             generics: generics.unwrap_or(self.generics),
+            generic_per_mono: generic_per_mono.is_some(),
         }))
     }
 }

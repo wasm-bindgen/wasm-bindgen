@@ -102,11 +102,13 @@ impl TryToTokens for ast::Program {
             let result = match &i.kind {
                 ast::ImportKind::Function(function) => {
                     let mut result = Ok(());
-                    for (class_generics, class_cfg_attrs) in class_contexts {
+                    for (class_generics, class_cfg_attrs, class_generic_per_mono) in class_contexts
+                    {
                         if let Err(error) = function.try_to_tokens_with_class_generics(
                             tokens,
                             class_generics,
                             &class_cfg_attrs,
+                            class_generic_per_mono,
                         ) {
                             let function_cfg_attrs =
                                 crate::cfg_gate_attrs(&function.function.rust_attrs);
@@ -241,31 +243,31 @@ impl TryToTokens for ast::Program {
 fn imported_class_generics<'a>(
     function: &ast::ImportFunction,
     types: &HashMap<String, Vec<&'a ast::ImportType>>,
-) -> Vec<(Option<&'a syn::Generics>, Vec<syn::Attribute>)> {
-    let ast::ImportFunctionKind::Method {
-        ty: class_ty, kind, ..
-    } = &function.kind
-    else {
-        return vec![(None, Vec::new())];
+) -> Vec<(Option<&'a syn::Generics>, Vec<syn::Attribute>, bool)> {
+    let ast::ImportFunctionKind::Method { ty: class_ty, .. } = &function.kind else {
+        return vec![(None, Vec::new(), false)];
     };
     let syn::Type::Path(syn::TypePath { qself: None, path }) = get_ty(class_ty) else {
-        return vec![(None, Vec::new())];
+        return vec![(None, Vec::new(), false)];
     };
-    let is_constructor = matches!(kind, ast::MethodKind::Constructor);
+    // Only these forms unambiguously name a type declaration in this macro
+    // input. A longer qualified path may resolve to an unrelated same-named
+    // type, so borrowing local bounds or cfg attributes would be incorrect.
     let is_local_path = path.leading_colon.is_none()
         && (path.segments.len() == 1
-            || path
-                .segments
-                .first()
-                .is_some_and(|segment| segment.ident == "self" || segment.ident == "crate"));
-    if !is_constructor && !is_local_path {
-        return vec![(None, Vec::new())];
+            || (path.segments.len() == 2
+                && path
+                    .segments
+                    .first()
+                    .is_some_and(|segment| segment.ident == "self")));
+    if !is_local_path {
+        return vec![(None, Vec::new(), false)];
     }
     let Some(local_name) = path.segments.last().map(|segment| &segment.ident) else {
-        return vec![(None, Vec::new())];
+        return vec![(None, Vec::new(), false)];
     };
     let Some(candidates) = types.get(&local_name.unraw().to_string()) else {
-        return vec![(None, Vec::new())];
+        return vec![(None, Vec::new(), false)];
     };
     candidates
         .iter()
@@ -273,16 +275,17 @@ fn imported_class_generics<'a>(
             (
                 Some(&candidate.generics),
                 crate::cfg_gate_attrs(&candidate.attrs),
+                candidate.generic_per_mono,
             )
         })
         .collect()
 }
 
 fn cfg_union_attrs(
-    contexts: &[(Option<&syn::Generics>, Vec<syn::Attribute>)],
+    contexts: &[(Option<&syn::Generics>, Vec<syn::Attribute>, bool)],
 ) -> Vec<syn::Attribute> {
     let mut alternatives = Vec::new();
-    for (_, attrs) in contexts {
+    for (_, attrs, _) in contexts {
         if attrs.is_empty() {
             return Vec::new();
         }
@@ -1448,6 +1451,22 @@ impl TryToTokens for ast::ImportType {
             }
         };
 
+        let erased_generic_support = quote! {
+            impl #impl_generics #wasm_bindgen::__rt::marker::SupportsErasedGenericImport
+                for #rust_name #ty_generics #where_clause {}
+        };
+        let per_mono_generic_support = quote! {
+            impl #impl_generics #wasm_bindgen::__rt::marker::SupportsPerMonoGenericImport
+                for #rust_name #ty_generics #where_clause {}
+        };
+        let generic_import_support = if declaration_generics.params.is_empty() {
+            quote! { #erased_generic_support #per_mono_generic_support }
+        } else if self.generic_per_mono {
+            per_mono_generic_support
+        } else {
+            erased_generic_support
+        };
+
         (quote! {
             #(#attrs)*
             #doc
@@ -1467,6 +1486,8 @@ impl TryToTokens for ast::ImportType {
                 use #wasm_bindgen::describe::WasmDescribe;
                 use #wasm_bindgen::{JsValue, JsCast};
                 use #wasm_bindgen::__rt::{core, marker::ErasableGeneric};
+
+                #generic_import_support
 
                 #[automatically_derived]
                 impl #impl_generics WasmDescribe for #rust_name #ty_generics #where_clause {
@@ -2294,7 +2315,7 @@ impl ToTokens for ast::DynamicUnion {
 
 impl TryToTokens for ast::ImportFunction {
     fn try_to_tokens(&self, tokens: &mut TokenStream) -> Result<(), Diagnostic> {
-        self.try_to_tokens_with_class_generics(tokens, None, &[])
+        self.try_to_tokens_with_class_generics(tokens, None, &[], false)
     }
 }
 
@@ -2304,6 +2325,7 @@ impl ast::ImportFunction {
         tokens: &mut TokenStream,
         class_generics: Option<&syn::Generics>,
         class_cfg_attrs: &[syn::Attribute],
+        class_generic_per_mono: bool,
     ) -> Result<(), Diagnostic> {
         if self.suspending {
             (quote_spanned! {
@@ -2320,7 +2342,12 @@ impl ast::ImportFunction {
         }
 
         if self.generic_per_mono {
-            return self.try_to_tokens_generic(tokens, class_generics, class_cfg_attrs);
+            return self.try_to_tokens_generic(
+                tokens,
+                class_generics,
+                class_cfg_attrs,
+                class_generic_per_mono,
+            );
         }
         let mut class = None;
         let mut is_constructor = false;
@@ -2379,9 +2406,17 @@ impl ast::ImportFunction {
                 self.validate_class_shape(class, is_method || explicit_static_class_generics)?;
             }
         }
+        if class_generic_per_mono && self.generics.type_params().next().is_some() {
+            bail_span!(
+                self.rust_name,
+                "generic imports on an imported type marked `generic_per_mono` must also use \
+                 `#[wasm_bindgen(generic_per_mono)]`"
+            );
+        }
         if let (Some((_, class)), Some(class_generics)) = (class, class_generics) {
             fn_class_generics.add_class_bounds(class_generics, class, &[])?;
         }
+        let class_policy_check = self.imported_class_policy_check(class.map(|(_, class)| class));
         let (fn_lifetime_param_names, fn_generic_param_names) =
             generics::all_param_names(&self.generics);
 
@@ -2808,6 +2843,7 @@ impl ast::ImportFunction {
             #(#attrs)*
             #doc
             #vis #maybe_async #maybe_unsafe fn #rust_name #impl_generics (#me #(#arguments),*) #ret #where_clause {
+                #class_policy_check
                 #extern_fn
 
                 unsafe {
@@ -2954,6 +2990,7 @@ impl ast::ImportFunction {
         tokens: &mut TokenStream,
         class_generics: Option<&syn::Generics>,
         class_cfg_attrs: &[syn::Attribute],
+        class_generic_per_mono: bool,
     ) -> Result<(), Diagnostic> {
         let wasm_bindgen = &self.wasm_bindgen;
         let wasm_bindgen_futures = &self.wasm_bindgen_futures;
@@ -2995,6 +3032,16 @@ impl ast::ImportFunction {
             bail_span!(
                 self.rust_name,
                 "generic_per_mono requires at least one type parameter"
+            );
+        }
+
+        if !class_generic_per_mono
+            && class_generics.is_some_and(|generics| !generics.params.is_empty())
+        {
+            bail_span!(
+                self.rust_name,
+                "generic imported classes used by `generic_per_mono` imports must also be \
+                 marked `#[wasm_bindgen(generic_per_mono)]`"
             );
         }
 
@@ -3083,6 +3130,7 @@ impl ast::ImportFunction {
                 &shim_lifetimes,
             )?;
         }
+        let class_policy_check = self.imported_class_policy_check(class.as_ref());
 
         // Whether the wrapper's enclosing `impl` block can carry class-level
         // generics at all. A static method that is neither the constructor nor
@@ -3604,6 +3652,7 @@ impl ast::ImportFunction {
             #(#attrs)*
             #doc
             #vis #maybe_async #maybe_unsafe fn #rust_name <#generic_params> (#me #(#wrapper_args),*) #ret #where_clause {
+                #class_policy_check
                 #shim
 
                 unsafe {
@@ -3644,6 +3693,23 @@ impl ast::ImportFunction {
             invocation.to_tokens(tokens);
         }
         Ok(())
+    }
+
+    fn imported_class_policy_check(&self, class: Option<&syn::Type>) -> TokenStream {
+        let Some(class) = class else {
+            return TokenStream::new();
+        };
+        if self.generics.type_params().next().is_none() {
+            return TokenStream::new();
+        }
+
+        let wasm_bindgen = &self.wasm_bindgen;
+        let check = if self.generic_per_mono {
+            quote! { #wasm_bindgen::__rt::marker::CheckSupportsPerMonoGenericImport<#class> }
+        } else {
+            quote! { #wasm_bindgen::__rt::marker::CheckSupportsErasedGenericImport<#class> }
+        };
+        quote_spanned! { self.rust_name.span() => let _: #check; }
     }
 }
 

@@ -37,6 +37,28 @@ pub struct CheckSupportsInstanceProperty<T: SupportsInstanceProperty>(T);
 pub trait SupportsStaticProperty {}
 pub struct CheckSupportsStaticProperty<T: SupportsStaticProperty>(T);
 
+#[cfg_attr(
+    wbg_diagnostic,
+    diagnostic::on_unimplemented(
+        message = "generic imports on `{Self}` must use `generic_per_mono`",
+        label = "this imported class is marked `generic_per_mono`",
+        note = "add `generic_per_mono` to the imported function or remove it from the imported type"
+    )
+)]
+pub trait SupportsErasedGenericImport {}
+pub struct CheckSupportsErasedGenericImport<T: SupportsErasedGenericImport>(T);
+
+#[cfg_attr(
+    wbg_diagnostic,
+    diagnostic::on_unimplemented(
+        message = "generic imports on `{Self}` must use the type-erasure path",
+        label = "this imported class is not marked `generic_per_mono`",
+        note = "remove `generic_per_mono` from the imported function or add it to the imported type"
+    )
+)]
+pub trait SupportsPerMonoGenericImport {}
+pub struct CheckSupportsPerMonoGenericImport<T: SupportsPerMonoGenericImport>(T);
+
 #[cfg(all(
     feature = "std",
     all(target_family = "wasm", not(target_os = "wasi")),

@@ -25,6 +25,7 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
+    #[wasm_bindgen(generic_per_mono)]
     type Holder<T>;
 
     // Constructor returning the parameterised class: the generated `impl`
@@ -60,6 +61,7 @@ extern "C" {
     // written; without that the arguments would be dropped and the wrapper
     // would land on the class's own parameter defaults (`impl Concrete`), a
     // receiver-type mismatch on the generated method.
+    #[wasm_bindgen(generic_per_mono)]
     type Concrete<A, B>;
 
     // Mixed: `u32` is concrete, `T` is hoisted, so the header is `impl<T>
@@ -85,6 +87,7 @@ extern "C" {
 #[wasm_bindgen]
 extern "C" {
     // A class-level *lifetime* parameter, rather than a type parameter.
+    #[wasm_bindgen(generic_per_mono)]
     type LifetimeHolder<'a>;
 
     #[wasm_bindgen(method, generic_per_mono, js_name = get)]
@@ -95,6 +98,7 @@ extern "C" {
 // inherent impl even when the imported type belongs to a different extern block.
 #[wasm_bindgen]
 extern "C" {
+    #[wasm_bindgen(generic_per_mono)]
     type ExternalLifetimeHolder<'a>;
 }
 
@@ -114,6 +118,7 @@ extern "C" {
     // impls re-emit the type's full argument list, so they have to *declare*
     // the type's own lifetime params rather than assuming a single `'a`;
     // otherwise this is an undeclared lifetime (E0261) against generated code.
+    #[wasm_bindgen(generic_per_mono)]
     type Tagged<'x>;
 
     #[wasm_bindgen(method, generic_per_mono, js_name = get)]
@@ -128,6 +133,7 @@ extern "C" {
     // declaration order below is deliberately reversed relative to the
     // receiver's argument list, and `TwoLifetimes<'b, 'a>` must not come back
     // out as `TwoLifetimes<'a, 'b>`.
+    #[wasm_bindgen(generic_per_mono)]
     type TwoLifetimes<'a, 'b>;
 
     #[wasm_bindgen(method, generic_per_mono, js_name = get)]
@@ -151,6 +157,7 @@ extern "C" {
     // `'static` (E0521 against generated code). Fixed by declaring the type's
     // own lifetimes separately from a fresh, never-colliding reference
     // lifetime in the generated conversion impls.
+    #[wasm_bindgen(generic_per_mono)]
     type LtHolder<'a, T>;
 
     #[wasm_bindgen(method, generic_per_mono, js_name = get)]
@@ -176,6 +183,7 @@ extern "C" {
 
 #[wasm_bindgen]
 extern "C" {
+    #[wasm_bindgen(generic_per_mono)]
     type Pair2<A, B>;
 
     // A lifetime nested *inside* a class type argument (rather than a direct
@@ -189,6 +197,7 @@ extern "C" {
 #[wasm_bindgen]
 extern "C" {
     // Two class-level generic parameters (mirrors `Map<K, V>`).
+    #[wasm_bindgen(generic_per_mono)]
     type Pair<K, V>;
 
     #[wasm_bindgen(method, generic_per_mono, js_name = get)]
@@ -210,6 +219,7 @@ extern "C" {
 
 #[wasm_bindgen]
 extern "C" {
+    #[wasm_bindgen(generic_per_mono)]
     type Boxed<T>;
 
     // A hoisted class-level parameter that appears in no argument or return
@@ -255,6 +265,7 @@ extern "C" {
 
 #[wasm_bindgen]
 extern "C" {
+    #[wasm_bindgen(generic_per_mono)]
     type Defaulted<T>;
 
     // A constructor whose return type's argument does not *determine* the
@@ -272,6 +283,7 @@ extern "C" {
     // imported type's defaults. Its declaration bound must use those defaults
     // too, rather than the discarded `T::Item` return argument, which would
     // otherwise leave `T` undeclared on the generated inherent impl.
+    #[wasm_bindgen(generic_per_mono)]
     type DefaultedBounded<T: Clone>;
 
     #[wasm_bindgen(constructor, generic_per_mono)]
@@ -282,6 +294,7 @@ extern "C" {
 
 #[wasm_bindgen]
 extern "C" {
+    #[wasm_bindgen(generic_per_mono)]
     type Fallible<T>;
 
     // `catch` + constructor + class generics: the `Result` is unwrapped at
@@ -338,12 +351,14 @@ trait HasReferenceOutput {
 extern "C" {
     // Bounds from the imported type declaration must be reinstated on a
     // generated inherent impl, even when the method does not repeat them.
+    #[wasm_bindgen(generic_per_mono)]
     type BoundedHolder<T: Clone>;
 
     #[wasm_bindgen(method, generic_per_mono, js_name = get)]
     fn bounded_holder_get<T>(this: &BoundedHolder<T>) -> T;
 
     // The same requirement applies to declaration-level lifetime bounds.
+    #[wasm_bindgen(generic_per_mono)]
     type LifetimeBoundedHolder<'a: 'b, 'b, T>;
 
     #[wasm_bindgen(method, generic_per_mono, js_name = get)]
@@ -351,6 +366,7 @@ extern "C" {
         this: &LifetimeBoundedHolder<'a, 'b, T>,
     ) -> T;
 
+    #[wasm_bindgen(generic_per_mono)]
     type GenericBoundHolder<F>;
 
     // `U` in an ordinary trait argument is not constrained by the class's
@@ -391,6 +407,7 @@ extern "C" {
 
     // Omitted imported-type defaults are substituted through earlier arguments
     // before their declaration bounds are emitted on the generated impl.
+    #[wasm_bindgen(generic_per_mono)]
     type DefaultedBoundedHolder<T: Clone, U: Clone = Vec<T>>;
 
     #[wasm_bindgen(method, generic_per_mono, js_name = defaulted)]
@@ -398,6 +415,7 @@ extern "C" {
 
     // Substitution is simultaneous: swapping class arguments must not recurse
     // indefinitely while propagating the declaration's `K: Clone` bound.
+    #[wasm_bindgen(generic_per_mono)]
     type SwappedBoundedPair<K: Clone, V>;
 
     #[wasm_bindgen(method, generic_per_mono, js_name = swap)]
@@ -405,12 +423,14 @@ extern "C" {
 
     // The lookup for declaration bounds uses the Rust receiver type, not its
     // independent JS class name.
+    #[wasm_bindgen(generic_per_mono)]
     type RenamedBoundedHolder<T: Clone>;
 
     #[wasm_bindgen(method, js_class = RenamedHolder, generic_per_mono, js_name = get)]
     fn renamed_bounded_holder_get<T>(this: &RenamedBoundedHolder<T>) -> T;
 
     // Class-return matching uses the Rust type identity, not the JS class name.
+    #[wasm_bindgen(generic_per_mono)]
     type RenamedConstructed<T>;
 
     #[wasm_bindgen(constructor, js_class = RenamedJs, generic_per_mono)]
@@ -426,6 +446,7 @@ extern "C" {
 
     // A qualified path to this module's imported type retains its declaration
     // bounds without matching unrelated `module::Type` names.
+    #[wasm_bindgen(generic_per_mono)]
     type CrateBoundedHolder<T: Clone>;
 
     #[wasm_bindgen(method, generic_per_mono, js_name = get)]
@@ -535,6 +556,7 @@ extern "C" {
     // Inline bounds on the imported type declaration itself must be normalized
     // into predicates for every generated conversion impl, not only per-mono
     // shims.
+    #[wasm_bindgen(generic_per_mono)]
     type TypeLifetimeBounds<'a: 'b, 'b, T>;
 
     #[wasm_bindgen(method, generic_per_mono, js_name = get)]
@@ -544,6 +566,7 @@ extern "C" {
 
     // The generated borrow lifetime must be fresh even when a user deliberately
     // chooses the old internal spelling.
+    #[wasm_bindgen(generic_per_mono)]
     type RefNamed<'__wbg_ref, T>;
 
     #[wasm_bindgen(method, generic_per_mono, js_name = get)]
@@ -551,6 +574,7 @@ extern "C" {
         this: &'__wbg_ref RefNamed<'__wbg_ref, T>,
     ) -> T;
 
+    #[wasm_bindgen(generic_per_mono)]
     type LifetimeBounded<'a>;
 
     // `'a` is hoisted with the class type. Its outlives predicate must follow
@@ -561,6 +585,7 @@ extern "C" {
         value: &'b T,
     );
 
+    #[wasm_bindgen(generic_per_mono)]
     type TransitiveBounded<F>;
 
     // `R` is not in the class type directly; it must be hoisted because the

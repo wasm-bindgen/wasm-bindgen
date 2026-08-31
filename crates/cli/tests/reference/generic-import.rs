@@ -267,6 +267,7 @@ extern "C" {
     // recognises: a constructor and a self-returning static method (both
     // via `class_return_path`), and an ordinary instance method (whose
     // receiver is the class).
+    #[wasm_bindgen(generic_per_mono)]
     type Holder<T>;
 
     // Constructor returning the parameterised class. The generated `impl`
@@ -300,6 +301,7 @@ extern "C" {
 #[wasm_bindgen]
 extern "C" {
     // A class-level *lifetime* parameter, rather than a type parameter.
+    #[wasm_bindgen(generic_per_mono)]
     type LifetimeHolder<'a>;
 
     // The receiver's own lifetime `'a` is also the generic argument to the

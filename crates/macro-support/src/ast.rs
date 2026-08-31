@@ -382,6 +382,9 @@ pub struct ImportType {
     pub wasm_bindgen: Path,
     /// Validated generics
     pub generics: syn::Generics,
+    /// Opt-in to use this imported type as a class in per-monomorphisation
+    /// generic imports.
+    pub generic_per_mono: bool,
 }
 
 /// The metadata for a String Enum

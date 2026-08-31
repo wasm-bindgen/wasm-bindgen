@@ -5,43 +5,43 @@ error: static_method_of does not support qualified-self projections
   |                                       ^^^^^^^^^^^^^^^^^^^^^^^
 
 error: wasm-bindgen requires each generic argument of an impl class type to be either concrete or to determine a generic parameter of the function (e.g. `&Holder<u32>`, `&Holder<T>`, `&Holder<Option<T>>`); an argument like `&Holder<T::Assoc>` mentions `T` without determining it, so the generated `impl` block cannot constrain it
-  --> ui-tests/generic-class-shape-unsupported.rs:19:8
+  --> ui-tests/generic-class-shape-unsupported.rs:21:8
    |
-19 |     fn erased_projection<T: IntoIterator>();
+21 |     fn erased_projection<T: IntoIterator>();
    |        ^^^^^^^^^^^^^^^^^
 
 error: wasm-bindgen requires each generic argument of an impl class type to be either concrete or to determine a generic parameter of the function (e.g. `&Holder<u32>`, `&Holder<T>`, `&Holder<Option<T>>`); an argument like `&Holder<T::Assoc>` mentions `T` without determining it, so the generated `impl` block cannot constrain it
-  --> ui-tests/generic-class-shape-unsupported.rs:22:8
+  --> ui-tests/generic-class-shape-unsupported.rs:24:8
    |
-22 |     fn mono_projection<T: IntoIterator>();
+24 |     fn mono_projection<T: IntoIterator>();
    |        ^^^^^^^^^^^^^^^
 
 error: wasm-bindgen does not support inferred (`_`) class type arguments; use a concrete type or named function type parameter
-  --> ui-tests/generic-class-shape-unsupported.rs:24:46
+  --> ui-tests/generic-class-shape-unsupported.rs:26:46
    |
-24 |     #[wasm_bindgen(static_method_of = Holder<_>)]
+26 |     #[wasm_bindgen(static_method_of = Holder<_>)]
    |                                              ^
 
 error: wasm-bindgen does not support a lifetime argument on the class type that the function does not itself declare; name it as a lifetime parameter of the function (e.g. `fn f<'a, T>(this: &'a Holder<'a, T>)`)
-  --> ui-tests/generic-class-shape-unsupported.rs:28:41
+  --> ui-tests/generic-class-shape-unsupported.rs:30:41
    |
-28 |     fn erased_elided<T>(this: &LtHolder<'_, T>);
+30 |     fn erased_elided<T>(this: &LtHolder<'_, T>);
    |                                         ^^
 
 error: an imported-class bound conflicts with a function lifetime of the same name
-  --> ui-tests/generic-class-shape-unsupported.rs:40:49
+  --> ui-tests/generic-class-shape-unsupported.rs:43:49
    |
-40 |     fn hrtb_conflict<'target, T>(this: &'target HrtbConflict<'target, T>);
+43 |     fn hrtb_conflict<'target, T>(this: &'target HrtbConflict<'target, T>);
    |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 error: an imported-class bound conflicts with a function lifetime of the same name
-  --> ui-tests/generic-class-shape-unsupported.rs:48:16
+  --> ui-tests/generic-class-shape-unsupported.rs:52:16
    |
-48 |         this: &HrtbTypeConflict<&'target T>,
+52 |         this: &HrtbTypeConflict<&'target T>,
    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 error: an imported-class bound conflicts with a function lifetime of the same name
-  --> ui-tests/generic-class-shape-unsupported.rs:53:16
+  --> ui-tests/generic-class-shape-unsupported.rs:57:16
    |
-53 |         this: &HrtbTypeConflict<T>,
+57 |         this: &HrtbTypeConflict<T>,
    |                ^^^^^^^^^^^^^^^^^^^

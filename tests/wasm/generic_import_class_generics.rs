@@ -20,6 +20,7 @@ use wasm_bindgen_test::*;
 
 #[wasm_bindgen(module = "tests/wasm/generic_import_class_generics.js")]
 extern "C" {
+    #[wasm_bindgen(generic_per_mono)]
     type Holder<T>;
 
     // Constructor returning the parameterised class: `class_return_path`
@@ -70,6 +71,7 @@ extern "C" {
     fn holder_combined(h: &JsValue) -> JsValue;
 
     // A class-level *lifetime* parameter, rather than a type parameter.
+    #[wasm_bindgen(generic_per_mono)]
     type LifetimeHolder<'a>;
 
     #[wasm_bindgen(constructor)]
@@ -83,6 +85,7 @@ extern "C" {
 
     // A class parameterised by *both* a lifetime and a type parameter of the
     // function, with both hoisted onto the same `impl` header.
+    #[wasm_bindgen(generic_per_mono)]
     type LtHolder<'a, T>;
 
     #[wasm_bindgen(constructor, generic_per_mono)]
@@ -97,6 +100,7 @@ extern "C" {
     fn lt_holder_of<'a, T>(value: &'a T) -> LtHolder<'a, T>;
 
     // Two class-level generic parameters (mirrors `Map<K, V>`).
+    #[wasm_bindgen(generic_per_mono)]
     type Pair<K, V>;
 
     #[wasm_bindgen(constructor, generic_per_mono)]
@@ -136,6 +140,7 @@ extern "C" {
     #[wasm_bindgen(constructor, generic_per_mono)]
     fn new_concrete_pair<T>(k: u32, v: T) -> Pair<u32, String>;
 
+    #[wasm_bindgen(generic_per_mono)]
     type Boxed<T>;
 
     #[wasm_bindgen(constructor, generic_per_mono)]
@@ -175,6 +180,7 @@ extern "C" {
     #[wasm_bindgen(method, generic_per_mono, js_name = first)]
     fn boxed_inline_projection<T: IntoIterator>(this: &Boxed<T>, v: T::Item) -> u32;
 
+    #[wasm_bindgen(generic_per_mono)]
     type Fallible<T>;
 
     // `catch` + constructor + class generics: the `Result` is unwrapped at

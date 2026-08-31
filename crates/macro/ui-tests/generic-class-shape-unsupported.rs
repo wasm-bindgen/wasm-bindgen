@@ -12,7 +12,9 @@ extern "C" {
 
 #[wasm_bindgen]
 extern "C" {
+    #[wasm_bindgen(generic_per_mono)]
     type Holder<T = JsValue>;
+    #[wasm_bindgen(generic_per_mono)]
     type LtHolder<'a, T>;
 
     #[wasm_bindgen(static_method_of = Holder<T::Item>)]
@@ -32,6 +34,7 @@ trait LifetimeBound<'a> {}
 
 #[wasm_bindgen]
 extern "C" {
+    #[wasm_bindgen(generic_per_mono)]
     type HrtbConflict<'class, T>
     where
         for<'target> &'class T: LifetimeBound<'target>;
@@ -39,6 +42,7 @@ extern "C" {
     #[wasm_bindgen(method, generic_per_mono)]
     fn hrtb_conflict<'target, T>(this: &'target HrtbConflict<'target, T>);
 
+    #[wasm_bindgen(generic_per_mono)]
     type HrtbTypeConflict<T>
     where
         for<'target> T: LifetimeBound<'target>;

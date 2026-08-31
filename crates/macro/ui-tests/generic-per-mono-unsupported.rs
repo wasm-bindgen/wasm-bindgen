@@ -131,8 +131,11 @@ extern "C" {
 // `concrete_class_arg` in `pass-tests/generic-per-mono-class-generics.rs`.)
 #[wasm_bindgen]
 extern "C" {
+    #[wasm_bindgen(generic_per_mono)]
     type Holder<T>;
+    #[wasm_bindgen(generic_per_mono)]
     type LtHolder<'a, T>;
+    #[wasm_bindgen(generic_per_mono)]
     type StaticLifetimeHolder<'a>;
 
     // `T::Assoc` mentions `T` without determining it, so hoisting `T` onto the
