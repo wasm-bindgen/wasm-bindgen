@@ -5,7 +5,8 @@
 //! - `&mut [u16]`: must be a live view into wasm memory, so JS's writes reach
 //!   the caller. A copy would produce identical-looking glue.
 //! - `&mut dyn FnMut`: must be invoked the expected number of times, with the
-//!   reentrancy guard released afterwards.
+//!   reentrancy guard released afterwards, including when its own signature is
+//!   generic.
 //! - non-async `catch` with a *generic* `Ok`: the success value is marshalled at
 //!   each monomorphisation's concrete type while the error stays `JsValue`; the
 //!   throwing path is a different unwrap from the async one covered elsewhere.
@@ -29,6 +30,9 @@ extern "C" {
 
     #[wasm_bindgen(experimental_generic_mono, js_name = withCallback)]
     fn with_callback<T>(f: &mut dyn FnMut(u32), times: T);
+
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn transform<T, U>(value: T, f: &mut dyn FnMut(T) -> U) -> U;
 
     #[wasm_bindgen(experimental_generic_mono, catch, js_name = tryGet)]
     fn try_get<T>(key: u32) -> Result<T, JsValue>;
@@ -89,6 +93,15 @@ fn experimental_generic_mono_mut_closure_is_invoked() {
         with_callback(&mut bump, 2.0f64);
     }
     assert_eq!(count, 2);
+}
+
+#[wasm_bindgen_test]
+fn experimental_generic_mono_callback_signature() {
+    let mut double = |value: u32| value * 2;
+    assert_eq!(transform(3u32, &mut double), 6);
+
+    let mut label = |value: f64| format!("value:{value}");
+    assert_eq!(transform(2.5f64, &mut label), "value:2.5");
 }
 
 #[wasm_bindgen_test]
