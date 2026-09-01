@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(
         extends = "::js_sys::Object",
@@ -52,7 +52,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn delete(this: &HighlightRegistry, key: &str) -> bool;
+    pub fn delete<S0: ::wasm_bindgen::JsStringLike>(this: &HighlightRegistry, key: S0) -> bool;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Highlight")]
     #[wasm_bindgen(catch, method, js_class = "HighlightRegistry", js_name = "forEach")]
@@ -79,7 +79,10 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn get(this: &HighlightRegistry, key: &str) -> Option<Highlight>;
+    pub fn get<S0: ::wasm_bindgen::JsStringLike>(
+        this: &HighlightRegistry,
+        key: S0,
+    ) -> Option<Highlight>;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, js_class = "HighlightRegistry")]
     #[doc = "The `has()` method."]
@@ -90,7 +93,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn has(this: &HighlightRegistry, key: &str) -> bool;
+    pub fn has<S0: ::wasm_bindgen::JsStringLike>(this: &HighlightRegistry, key: S0) -> bool;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "HighlightHitResult")]
     #[wasm_bindgen(
@@ -143,7 +146,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn set(this: &HighlightRegistry, key: &str, value: &Highlight) -> HighlightRegistry;
+    pub fn set<S0: ::wasm_bindgen::JsStringLike>(
+        this: &HighlightRegistry,
+        key: S0,
+        value: &Highlight,
+    ) -> HighlightRegistry;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "Highlight")]
     #[wasm_bindgen(method, js_class = "HighlightRegistry")]

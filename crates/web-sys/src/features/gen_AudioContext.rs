@@ -2,7 +2,7 @@
 #![allow(clippy::all)]
 use super::*;
 use wasm_bindgen::prelude::*;
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(
         vendor_prefix = "webkit",
@@ -199,9 +199,9 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn set_sink_id_with_str(
+    pub fn set_sink_id_with_str<S0: ::wasm_bindgen::JsStringLike>(
         this: &AudioContext,
-        sink_id: &str,
+        sink_id: S0,
     ) -> ::js_sys::Promise<::js_sys::Undefined>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AudioSinkOptions")]

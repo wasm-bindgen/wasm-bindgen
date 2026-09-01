@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(
         extends = "::js_sys::Object",
@@ -36,7 +36,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "attestationObject")]
-    pub fn set_attestation_object(this: &AuthenticatorAssertionResponseJson, val: &str);
+    pub fn set_attestation_object<S0: ::wasm_bindgen::JsStringLike>(
+        this: &AuthenticatorAssertionResponseJson,
+        val: S0,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `authenticatorData` field of this object."]
     #[doc = ""]
@@ -56,7 +59,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "authenticatorData")]
-    pub fn set_authenticator_data(this: &AuthenticatorAssertionResponseJson, val: &str);
+    pub fn set_authenticator_data<S0: ::wasm_bindgen::JsStringLike>(
+        this: &AuthenticatorAssertionResponseJson,
+        val: S0,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `clientDataJSON` field of this object."]
     #[doc = ""]
@@ -76,7 +82,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "clientDataJSON")]
-    pub fn set_client_data_json(this: &AuthenticatorAssertionResponseJson, val: &str);
+    pub fn set_client_data_json<S0: ::wasm_bindgen::JsStringLike>(
+        this: &AuthenticatorAssertionResponseJson,
+        val: S0,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `signature` field of this object."]
     #[doc = ""]
@@ -94,7 +103,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "signature")]
-    pub fn set_signature(this: &AuthenticatorAssertionResponseJson, val: &str);
+    pub fn set_signature<S0: ::wasm_bindgen::JsStringLike>(
+        this: &AuthenticatorAssertionResponseJson,
+        val: S0,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `userHandle` field of this object."]
     #[doc = ""]
@@ -114,7 +126,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "userHandle")]
-    pub fn set_user_handle(this: &AuthenticatorAssertionResponseJson, val: &str);
+    pub fn set_user_handle<S0: ::wasm_bindgen::JsStringLike>(
+        this: &AuthenticatorAssertionResponseJson,
+        val: S0,
+    );
 }
 #[cfg(web_sys_unstable_apis)]
 impl AuthenticatorAssertionResponseJson {
@@ -124,7 +139,15 @@ impl AuthenticatorAssertionResponseJson {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new(authenticator_data: &str, client_data_json: &str, signature: &str) -> Self {
+    pub fn new<
+        S0: ::wasm_bindgen::JsStringLike,
+        S1: ::wasm_bindgen::JsStringLike,
+        S2: ::wasm_bindgen::JsStringLike,
+    >(
+        authenticator_data: S0,
+        client_data_json: S1,
+        signature: S2,
+    ) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_authenticator_data(authenticator_data);
@@ -134,31 +157,31 @@ impl AuthenticatorAssertionResponseJson {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_attestation_object()` instead."]
-    pub fn attestation_object(&mut self, val: &str) -> &mut Self {
+    pub fn attestation_object<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_attestation_object(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_authenticator_data()` instead."]
-    pub fn authenticator_data(&mut self, val: &str) -> &mut Self {
+    pub fn authenticator_data<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_authenticator_data(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_client_data_json()` instead."]
-    pub fn client_data_json(&mut self, val: &str) -> &mut Self {
+    pub fn client_data_json<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_client_data_json(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_signature()` instead."]
-    pub fn signature(&mut self, val: &str) -> &mut Self {
+    pub fn signature<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_signature(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_user_handle()` instead."]
-    pub fn user_handle(&mut self, val: &str) -> &mut Self {
+    pub fn user_handle<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_user_handle(val);
         self
     }

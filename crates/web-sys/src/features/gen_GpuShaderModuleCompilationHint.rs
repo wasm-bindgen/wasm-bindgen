@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(
         extends = "::js_sys::Object",
@@ -34,7 +34,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "entryPoint")]
-    pub fn set_entry_point(this: &GpuShaderModuleCompilationHint, val: &str);
+    pub fn set_entry_point<S0: ::wasm_bindgen::JsStringLike>(
+        this: &GpuShaderModuleCompilationHint,
+        val: S0,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuPipelineLayout")]
     #[doc = "Get the `layout` field of this object."]
@@ -77,7 +80,7 @@ impl GpuShaderModuleCompilationHint {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new(entry_point: &str) -> Self {
+    pub fn new<S0: ::wasm_bindgen::JsStringLike>(entry_point: S0) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_entry_point(entry_point);
@@ -85,7 +88,7 @@ impl GpuShaderModuleCompilationHint {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_entry_point()` instead."]
-    pub fn entry_point(&mut self, val: &str) -> &mut Self {
+    pub fn entry_point<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_entry_point(val);
         self
     }

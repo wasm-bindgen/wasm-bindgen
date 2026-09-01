@@ -3,7 +3,7 @@ pub mod console {
     #![allow(clippy::all)]
     use super::super::*;
     use wasm_bindgen::prelude::*;
-    #[wasm_bindgen]
+    #[wasm_bindgen(experimental_generic_mono)]
     extern "C" {
         #[wasm_bindgen(js_namespace = "console")]
         #[doc = "The `console.assert()` function."]

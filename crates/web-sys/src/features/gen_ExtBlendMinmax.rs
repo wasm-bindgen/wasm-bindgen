@@ -2,7 +2,7 @@
 #![allow(clippy::all)]
 use super::*;
 use wasm_bindgen::prelude::*;
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     # [wasm_bindgen (is_type_of = | _ | false , extends = "::js_sys::Object" , js_name = "EXT_blend_minmax" , typescript_type = "EXT_blend_minmax")]
     #[derive(Debug, Clone, PartialEq, Eq)]

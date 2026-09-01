@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(extends = "::js_sys::Object", js_name = "DirectoryPickerOptions")]
     #[derive(Debug, Clone, PartialEq, Eq)]
@@ -31,7 +31,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "id")]
-    pub fn set_id(this: &DirectoryPickerOptions, val: &str);
+    pub fn set_id<S0: ::wasm_bindgen::JsStringLike>(this: &DirectoryPickerOptions, val: S0);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "FileSystemPermissionMode")]
     #[doc = "Get the `mode` field of this object."]
@@ -98,7 +98,7 @@ impl DirectoryPickerOptions {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_id()` instead."]
-    pub fn id(&mut self, val: &str) -> &mut Self {
+    pub fn id<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_id(val);
         self
     }

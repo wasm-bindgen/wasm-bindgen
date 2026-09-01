@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(
         extends = "Event",
@@ -42,7 +42,9 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new(type_: &str) -> Result<KeyFrameRequestEvent, JsValue>;
+    pub fn new<S0: ::wasm_bindgen::JsStringLike>(
+        type_: S0,
+    ) -> Result<KeyFrameRequestEvent, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(catch, constructor, js_class = "KeyFrameRequestEvent")]
     #[doc = "The `new KeyFrameRequestEvent(..)` constructor, creating a new instance of `KeyFrameRequestEvent`."]
@@ -53,5 +55,8 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new_with_rid(type_: &str, rid: &str) -> Result<KeyFrameRequestEvent, JsValue>;
+    pub fn new_with_rid<S0: ::wasm_bindgen::JsStringLike, S1: ::wasm_bindgen::JsStringLike>(
+        type_: S0,
+        rid: S1,
+    ) -> Result<KeyFrameRequestEvent, JsValue>;
 }

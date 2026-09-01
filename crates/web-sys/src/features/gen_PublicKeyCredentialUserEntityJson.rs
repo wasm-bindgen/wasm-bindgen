@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(
         extends = "::js_sys::Object",
@@ -34,7 +34,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "displayName")]
-    pub fn set_display_name(this: &PublicKeyCredentialUserEntityJson, val: &str);
+    pub fn set_display_name<S0: ::wasm_bindgen::JsStringLike>(
+        this: &PublicKeyCredentialUserEntityJson,
+        val: S0,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `id` field of this object."]
     #[doc = ""]
@@ -52,7 +55,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "id")]
-    pub fn set_id(this: &PublicKeyCredentialUserEntityJson, val: &str);
+    pub fn set_id<S0: ::wasm_bindgen::JsStringLike>(
+        this: &PublicKeyCredentialUserEntityJson,
+        val: S0,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `name` field of this object."]
     #[doc = ""]
@@ -70,7 +76,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "name")]
-    pub fn set_name(this: &PublicKeyCredentialUserEntityJson, val: &str);
+    pub fn set_name<S0: ::wasm_bindgen::JsStringLike>(
+        this: &PublicKeyCredentialUserEntityJson,
+        val: S0,
+    );
 }
 #[cfg(web_sys_unstable_apis)]
 impl PublicKeyCredentialUserEntityJson {
@@ -80,7 +89,15 @@ impl PublicKeyCredentialUserEntityJson {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new(display_name: &str, id: &str, name: &str) -> Self {
+    pub fn new<
+        S0: ::wasm_bindgen::JsStringLike,
+        S1: ::wasm_bindgen::JsStringLike,
+        S2: ::wasm_bindgen::JsStringLike,
+    >(
+        display_name: S0,
+        id: S1,
+        name: S2,
+    ) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_display_name(display_name);
@@ -90,19 +107,19 @@ impl PublicKeyCredentialUserEntityJson {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_display_name()` instead."]
-    pub fn display_name(&mut self, val: &str) -> &mut Self {
+    pub fn display_name<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_display_name(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_id()` instead."]
-    pub fn id(&mut self, val: &str) -> &mut Self {
+    pub fn id<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_id(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_name()` instead."]
-    pub fn name(&mut self, val: &str) -> &mut Self {
+    pub fn name<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_name(val);
         self
     }

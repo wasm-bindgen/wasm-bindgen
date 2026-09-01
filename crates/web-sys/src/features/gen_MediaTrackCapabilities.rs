@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(extends = "::js_sys::Object", js_name = "MediaTrackCapabilities")]
     #[derive(Debug, Clone, PartialEq, Eq)]
@@ -111,7 +111,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "deviceId")]
-    pub fn set_device_id(this: &MediaTrackCapabilities, val: &str);
+    pub fn set_device_id<S0: ::wasm_bindgen::JsStringLike>(this: &MediaTrackCapabilities, val: S0);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `echoCancellation` field of this object."]
     #[doc = ""]
@@ -189,7 +189,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "groupId")]
-    pub fn set_group_id(this: &MediaTrackCapabilities, val: &str);
+    pub fn set_group_id<S0: ::wasm_bindgen::JsStringLike>(this: &MediaTrackCapabilities, val: S0);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "ULongRange")]
     #[doc = "Get the `height` field of this object."]
@@ -372,7 +372,7 @@ impl MediaTrackCapabilities {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_device_id()` instead."]
-    pub fn device_id(&mut self, val: &str) -> &mut Self {
+    pub fn device_id<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_device_id(val);
         self
     }
@@ -397,7 +397,7 @@ impl MediaTrackCapabilities {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_group_id()` instead."]
-    pub fn group_id(&mut self, val: &str) -> &mut Self {
+    pub fn group_id<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_group_id(val);
         self
     }

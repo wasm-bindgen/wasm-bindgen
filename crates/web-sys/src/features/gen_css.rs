@@ -3,12 +3,12 @@ pub mod css {
     #![allow(clippy::all)]
     use super::super::*;
     use wasm_bindgen::prelude::*;
-    #[wasm_bindgen]
+    #[wasm_bindgen(experimental_generic_mono)]
     extern "C" {
         #[wasm_bindgen(js_name = "CSS")]
         pub type JsNamespaceCss;
     }
-    #[wasm_bindgen]
+    #[wasm_bindgen(experimental_generic_mono)]
     extern "C" {
         #[cfg(web_sys_unstable_apis)]
         #[cfg(feature = "HighlightRegistry")]

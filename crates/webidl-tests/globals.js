@@ -761,3 +761,70 @@ global.UpcastTest = class UpcastTest {
     return obj.value;
   }
 };
+
+// String generics test classes: every value must arrive as a JS string
+// primitive regardless of the Rust-side shape it was passed as.
+global.GenericStrings = class GenericStrings {
+  constructor() {
+    this._title = '';
+    this._nickname = null;
+  }
+  get title() {
+    return this._title;
+  }
+  set title(v) {
+    strictEqual(typeof v, 'string');
+    this._title = v;
+  }
+  get nickname() {
+    return this._nickname;
+  }
+  set nickname(v) {
+    if (v !== null && v !== undefined) strictEqual(typeof v, 'string');
+    this._nickname = v ?? null;
+  }
+  echo(v) {
+    strictEqual(typeof v, 'string');
+    return v;
+  }
+  join(a, b, n) {
+    strictEqual(typeof a, 'string');
+    strictEqual(typeof b, 'string');
+    return a + b + n;
+  }
+  maybe(v) {
+    if (v === null || v === undefined) return null;
+    strictEqual(typeof v, 'string');
+    return v;
+  }
+  tryEcho(v) {
+    if (v === 'boom') throw new Error('boom');
+    return v;
+  }
+  static echoStatic(v) {
+    strictEqual(typeof v, 'string');
+    return v;
+  }
+  describeDict(dict) {
+    strictEqual(typeof dict.label, 'string');
+    if (dict.note !== undefined) strictEqual(typeof dict.note, 'string');
+    return dict.label + ':' + (dict.note ?? 'none');
+  }
+};
+
+global.PlainStrings = class PlainStrings {
+  constructor() {
+    this._title = '';
+  }
+  get title() {
+    return this._title;
+  }
+  set title(v) {
+    strictEqual(typeof v, 'string');
+    this._title = v;
+  }
+  echo(v) {
+    strictEqual(typeof v, 'string');
+    return v;
+  }
+};

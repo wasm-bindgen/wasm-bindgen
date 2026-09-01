@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(
         extends = "EventTarget",
@@ -141,9 +141,9 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn get_descriptor_with_str(
+    pub fn get_descriptor_with_str<S0: ::wasm_bindgen::JsStringLike>(
         this: &BluetoothRemoteGattCharacteristic,
-        descriptor: &str,
+        descriptor: S0,
     ) -> ::js_sys::Promise<BluetoothRemoteGattDescriptor>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "BluetoothRemoteGattDescriptor")]
@@ -197,9 +197,9 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn get_descriptors_with_str(
+    pub fn get_descriptors_with_str<S0: ::wasm_bindgen::JsStringLike>(
         this: &BluetoothRemoteGattCharacteristic,
-        descriptor: &str,
+        descriptor: S0,
     ) -> ::js_sys::Promise<::js_sys::Array<BluetoothRemoteGattDescriptor>>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "BluetoothRemoteGattDescriptor")]

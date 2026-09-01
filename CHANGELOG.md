@@ -31,6 +31,13 @@
   `experimental_generic_mono` imports that accept or return any string shape
   at its native wire format.
 
+* `web-sys` APIs generated with typed generics (unstable APIs, `[WbgGeneric]`
+  declarations, and everything in `next_unstable` mode) now bind string
+  argument positions generically with the `JsStringLike` bound, so callers
+  pass `&str`, `String`, `js_sys::JsString` or `&js_sys::JsString`, each
+  crossing at its native wire format. Generated extern blocks carry
+  `experimental_generic_mono` to bind each instantiation per-monomorphisation.
+
 * Added an experimental `--experimental-memory-discard` flag which replaces an
   `env.__wbindgen_memory_discard` function import with a local trampoline
   containing the `memory.discard` instruction from the memory-control

@@ -2,7 +2,7 @@
 #![allow(clippy::all)]
 use super::*;
 use wasm_bindgen::prelude::*;
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(
         extends = "::js_sys::Object",
@@ -47,7 +47,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "attestation")]
-    pub fn set_attestation(this: &PublicKeyCredentialRequestOptions, val: &str);
+    pub fn set_attestation<S0: ::wasm_bindgen::JsStringLike>(
+        this: &PublicKeyCredentialRequestOptions,
+        val: S0,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `attestationFormats` field of this object."]
     #[doc = ""]
@@ -212,7 +215,7 @@ impl PublicKeyCredentialRequestOptions {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_attestation()` instead."]
-    pub fn attestation(&mut self, val: &str) -> &mut Self {
+    pub fn attestation<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_attestation(val);
         self
     }

@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(
         extends = "::js_sys::Object",
@@ -41,7 +41,10 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn add(this: &ViewTransitionTypeSet, value: &str) -> ViewTransitionTypeSet;
+    pub fn add<S0: ::wasm_bindgen::JsStringLike>(
+        this: &ViewTransitionTypeSet,
+        value: S0,
+    ) -> ViewTransitionTypeSet;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, js_class = "ViewTransitionTypeSet")]
     #[doc = "The `clear()` method."]
@@ -63,7 +66,10 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn delete(this: &ViewTransitionTypeSet, value: &str) -> bool;
+    pub fn delete<S0: ::wasm_bindgen::JsStringLike>(
+        this: &ViewTransitionTypeSet,
+        value: S0,
+    ) -> bool;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(catch, method, js_class = "ViewTransitionTypeSet", js_name = "forEach")]
     #[doc = "The `forEach()` method."]
@@ -88,7 +94,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn has(this: &ViewTransitionTypeSet, value: &str) -> bool;
+    pub fn has<S0: ::wasm_bindgen::JsStringLike>(this: &ViewTransitionTypeSet, value: S0) -> bool;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, js_class = "ViewTransitionTypeSet")]
     #[doc = "The `entries()` method."]

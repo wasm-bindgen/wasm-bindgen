@@ -2,7 +2,7 @@
 #![allow(clippy::all)]
 use super::*;
 use wasm_bindgen::prelude::*;
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(extends = "::js_sys::Object", js_name = "RTCRtpEncodingParameters")]
     #[derive(Debug, Clone, PartialEq, Eq)]
@@ -111,7 +111,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "scalabilityMode")]
-    pub fn set_scalability_mode(this: &RtcRtpEncodingParameters, val: &str);
+    pub fn set_scalability_mode<S0: ::wasm_bindgen::JsStringLike>(
+        this: &RtcRtpEncodingParameters,
+        val: S0,
+    );
     #[doc = "Get the `scaleResolutionDownBy` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpEncodingParameters`*"]
@@ -183,7 +186,7 @@ impl RtcRtpEncodingParameters {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_scalability_mode()` instead."]
-    pub fn scalability_mode(&mut self, val: &str) -> &mut Self {
+    pub fn scalability_mode<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_scalability_mode(val);
         self
     }

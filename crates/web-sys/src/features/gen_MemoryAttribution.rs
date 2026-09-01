@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(extends = "::js_sys::Object", js_name = "MemoryAttribution")]
     #[derive(Debug, Clone, PartialEq, Eq)]
@@ -51,7 +51,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "scope")]
-    pub fn set_scope(this: &MemoryAttribution, val: &str);
+    pub fn set_scope<S0: ::wasm_bindgen::JsStringLike>(this: &MemoryAttribution, val: S0);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `url` field of this object."]
     #[doc = ""]
@@ -69,7 +69,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "url")]
-    pub fn set_url(this: &MemoryAttribution, val: &str);
+    pub fn set_url<S0: ::wasm_bindgen::JsStringLike>(this: &MemoryAttribution, val: S0);
 }
 #[cfg(web_sys_unstable_apis)]
 impl MemoryAttribution {
@@ -93,13 +93,13 @@ impl MemoryAttribution {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_scope()` instead."]
-    pub fn scope(&mut self, val: &str) -> &mut Self {
+    pub fn scope<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_scope(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_url()` instead."]
-    pub fn url(&mut self, val: &str) -> &mut Self {
+    pub fn url<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_url(val);
         self
     }

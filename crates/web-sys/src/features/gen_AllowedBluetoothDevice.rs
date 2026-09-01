@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(extends = "::js_sys::Object", js_name = "AllowedBluetoothDevice")]
     #[derive(Debug, Clone, PartialEq, Eq)]
@@ -31,7 +31,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "allowedServices")]
-    pub fn set_allowed_services(this: &AllowedBluetoothDevice, val: &str);
+    pub fn set_allowed_services<S0: ::wasm_bindgen::JsStringLike>(
+        this: &AllowedBluetoothDevice,
+        val: S0,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `allowedServices` field of this object."]
     #[doc = ""]
@@ -61,7 +64,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "deviceId")]
-    pub fn set_device_id(this: &AllowedBluetoothDevice, val: &str);
+    pub fn set_device_id<S0: ::wasm_bindgen::JsStringLike>(this: &AllowedBluetoothDevice, val: S0);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `mayUseGATT` field of this object."]
     #[doc = ""]
@@ -89,7 +92,11 @@ impl AllowedBluetoothDevice {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new(allowed_services: &str, device_id: &str, may_use_gatt: bool) -> Self {
+    pub fn new<S0: ::wasm_bindgen::JsStringLike, S1: ::wasm_bindgen::JsStringLike>(
+        allowed_services: S0,
+        device_id: S1,
+        may_use_gatt: bool,
+    ) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_allowed_services(allowed_services);
@@ -103,9 +110,9 @@ impl AllowedBluetoothDevice {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new_with_str_sequence(
+    pub fn new_with_str_sequence<S0: ::wasm_bindgen::JsStringLike>(
         allowed_services: &[::js_sys::JsString],
-        device_id: &str,
+        device_id: S0,
         may_use_gatt: bool,
     ) -> Self {
         #[allow(unused_mut)]
@@ -117,13 +124,13 @@ impl AllowedBluetoothDevice {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_allowed_services()` instead."]
-    pub fn allowed_services(&mut self, val: &str) -> &mut Self {
+    pub fn allowed_services<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_allowed_services(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_device_id()` instead."]
-    pub fn device_id(&mut self, val: &str) -> &mut Self {
+    pub fn device_id<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_device_id(val);
         self
     }

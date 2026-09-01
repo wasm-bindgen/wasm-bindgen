@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(
         extends = "::js_sys::Object",
@@ -62,7 +62,10 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn get(this: &BluetoothServiceDataMap, key: &str) -> Option<::js_sys::DataView>;
+    pub fn get<S0: ::wasm_bindgen::JsStringLike>(
+        this: &BluetoothServiceDataMap,
+        key: S0,
+    ) -> Option<::js_sys::DataView>;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, js_class = "BluetoothServiceDataMap")]
     #[doc = "The `has()` method."]
@@ -73,7 +76,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn has(this: &BluetoothServiceDataMap, key: &str) -> bool;
+    pub fn has<S0: ::wasm_bindgen::JsStringLike>(this: &BluetoothServiceDataMap, key: S0) -> bool;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, js_class = "BluetoothServiceDataMap")]
     #[doc = "The `entries()` method."]

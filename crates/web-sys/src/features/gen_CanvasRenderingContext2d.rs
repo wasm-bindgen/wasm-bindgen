@@ -2,7 +2,7 @@
 #![allow(clippy::all)]
 use super::*;
 use wasm_bindgen::prelude::*;
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(
         extends = "::js_sys::Object",
@@ -1348,10 +1348,10 @@ extern "C" {
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/createPattern)"]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CanvasPattern`, `CanvasRenderingContext2d`, `VideoFrame`*"]
-    pub fn create_pattern_with_video_frame(
+    pub fn create_pattern_with_video_frame<S0: ::wasm_bindgen::JsStringLike>(
         this: &CanvasRenderingContext2d,
         image: &VideoFrame,
-        repetition: &str,
+        repetition: S0,
     ) -> Result<Option<CanvasPattern>, JsValue>;
     #[cfg(feature = "CanvasGradient")]
     #[wasm_bindgen(

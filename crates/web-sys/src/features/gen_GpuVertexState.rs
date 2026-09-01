@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(extends = "::js_sys::Object", js_name = "GPUVertexState")]
     #[derive(Debug, Clone, PartialEq, Eq)]
@@ -49,7 +49,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "entryPoint")]
-    pub fn set_entry_point(this: &GpuVertexState, val: &str);
+    pub fn set_entry_point<S0: ::wasm_bindgen::JsStringLike>(this: &GpuVertexState, val: S0);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuShaderModule")]
     #[doc = "Get the `module` field of this object."]
@@ -116,7 +116,7 @@ impl GpuVertexState {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_entry_point()` instead."]
-    pub fn entry_point(&mut self, val: &str) -> &mut Self {
+    pub fn entry_point<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_entry_point(val);
         self
     }

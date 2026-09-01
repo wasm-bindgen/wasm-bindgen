@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(extends = "::js_sys::Object", js_name = "RegistrationResponseJSON")]
     #[derive(Debug, Clone, PartialEq, Eq)]
@@ -33,7 +33,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "authenticatorAttachment")]
-    pub fn set_authenticator_attachment(this: &RegistrationResponseJson, val: &str);
+    pub fn set_authenticator_attachment<S0: ::wasm_bindgen::JsStringLike>(
+        this: &RegistrationResponseJson,
+        val: S0,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AuthenticationExtensionsClientOutputsJson")]
     #[doc = "Get the `clientExtensionResults` field of this object."]
@@ -76,7 +79,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "id")]
-    pub fn set_id(this: &RegistrationResponseJson, val: &str);
+    pub fn set_id<S0: ::wasm_bindgen::JsStringLike>(this: &RegistrationResponseJson, val: S0);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `rawId` field of this object."]
     #[doc = ""]
@@ -94,7 +97,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "rawId")]
-    pub fn set_raw_id(this: &RegistrationResponseJson, val: &str);
+    pub fn set_raw_id<S0: ::wasm_bindgen::JsStringLike>(this: &RegistrationResponseJson, val: S0);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AuthenticatorAttestationResponseJson")]
     #[doc = "Get the `response` field of this object."]
@@ -135,7 +138,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "type")]
-    pub fn set_type(this: &RegistrationResponseJson, val: &str);
+    pub fn set_type<S0: ::wasm_bindgen::JsStringLike>(this: &RegistrationResponseJson, val: S0);
 }
 #[cfg(web_sys_unstable_apis)]
 impl RegistrationResponseJson {
@@ -149,12 +152,16 @@ impl RegistrationResponseJson {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new(
+    pub fn new<
+        S0: ::wasm_bindgen::JsStringLike,
+        S1: ::wasm_bindgen::JsStringLike,
+        S2: ::wasm_bindgen::JsStringLike,
+    >(
         client_extension_results: &AuthenticationExtensionsClientOutputsJson,
-        id: &str,
-        raw_id: &str,
+        id: S0,
+        raw_id: S1,
         response: &AuthenticatorAttestationResponseJson,
-        type_: &str,
+        type_: S2,
     ) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
@@ -167,7 +174,10 @@ impl RegistrationResponseJson {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_authenticator_attachment()` instead."]
-    pub fn authenticator_attachment(&mut self, val: &str) -> &mut Self {
+    pub fn authenticator_attachment<S0: ::wasm_bindgen::JsStringLike>(
+        &mut self,
+        val: S0,
+    ) -> &mut Self {
         self.set_authenticator_attachment(val);
         self
     }
@@ -183,13 +193,13 @@ impl RegistrationResponseJson {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_id()` instead."]
-    pub fn id(&mut self, val: &str) -> &mut Self {
+    pub fn id<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_id(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_raw_id()` instead."]
-    pub fn raw_id(&mut self, val: &str) -> &mut Self {
+    pub fn raw_id<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_raw_id(val);
         self
     }
@@ -202,7 +212,7 @@ impl RegistrationResponseJson {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_type()` instead."]
-    pub fn type_(&mut self, val: &str) -> &mut Self {
+    pub fn type_<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_type(val);
         self
     }

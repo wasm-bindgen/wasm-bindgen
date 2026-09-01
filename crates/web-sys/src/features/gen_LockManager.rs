@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(
         extends = "::js_sys::Object",
@@ -43,9 +43,9 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn request(
+    pub fn request<S0: ::wasm_bindgen::JsStringLike>(
         this: &LockManager,
-        name: &str,
+        name: S0,
         callback: &::js_sys::Function<fn(::js_sys::JsNullable<Lock>) -> ::js_sys::Promise>,
     ) -> ::js_sys::Promise;
     #[cfg(web_sys_unstable_apis)]
@@ -59,9 +59,9 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn request_with_options(
+    pub fn request_with_options<S0: ::wasm_bindgen::JsStringLike>(
         this: &LockManager,
-        name: &str,
+        name: S0,
         options: &LockOptions,
         callback: &::js_sys::Function<fn(::js_sys::JsNullable<Lock>) -> ::js_sys::Promise>,
     ) -> ::js_sys::Promise;

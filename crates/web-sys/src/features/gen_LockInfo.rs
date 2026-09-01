@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(extends = "::js_sys::Object", js_name = "LockInfo")]
     #[derive(Debug, Clone, PartialEq, Eq)]
@@ -31,7 +31,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "clientId")]
-    pub fn set_client_id(this: &LockInfo, val: &str);
+    pub fn set_client_id<S0: ::wasm_bindgen::JsStringLike>(this: &LockInfo, val: S0);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "LockMode")]
     #[doc = "Get the `mode` field of this object."]
@@ -69,7 +69,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "name")]
-    pub fn set_name(this: &LockInfo, val: &str);
+    pub fn set_name<S0: ::wasm_bindgen::JsStringLike>(this: &LockInfo, val: S0);
 }
 #[cfg(web_sys_unstable_apis)]
 impl LockInfo {
@@ -86,7 +86,7 @@ impl LockInfo {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_client_id()` instead."]
-    pub fn client_id(&mut self, val: &str) -> &mut Self {
+    pub fn client_id<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_client_id(val);
         self
     }
@@ -99,7 +99,7 @@ impl LockInfo {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_name()` instead."]
-    pub fn name(&mut self, val: &str) -> &mut Self {
+    pub fn name<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_name(val);
         self
     }

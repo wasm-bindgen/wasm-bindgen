@@ -2,7 +2,7 @@
 #![allow(clippy::all)]
 use super::*;
 use wasm_bindgen::prelude::*;
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(
         extends = "EventTarget",
@@ -221,9 +221,9 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn transaction_with_str_and_mode_and_options(
+    pub fn transaction_with_str_and_mode_and_options<S0: ::wasm_bindgen::JsStringLike>(
         this: &IdbDatabase,
-        store_names: &str,
+        store_names: S0,
         mode: IdbTransactionMode,
         options: &IdbTransactionOptions,
     ) -> Result<IdbTransaction, JsValue>;
