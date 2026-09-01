@@ -1,0 +1,1097 @@
+CHANGELOG.md
+  s_ac7fb576486525::t_8b0dfcca858448 41-45
+crates/web-sys/src/features/gen_AesCbcParams.rs
+  s_b34d432186975d::t_e08ae40b7069fc 18-22
+crates/web-sys/src/features/gen_AesCtrParams.rs
+  s_b34d432186975d::t_73c51fa220d4d8 18-22
+crates/web-sys/src/features/gen_AesDerivedKeyParams.rs
+  s_b34d432186975d::t_2ce4e98c9efab2 18-22
+crates/web-sys/src/features/gen_AesGcmParams.rs
+  s_b34d432186975d::t_609914a5cf5781 18-22
+crates/web-sys/src/features/gen_AesKeyAlgorithm.rs
+  s_b34d432186975d::t_469abd362bbec8 18-22
+crates/web-sys/src/features/gen_AesKeyGenParams.rs
+  s_b34d432186975d::t_63927ef20ec134 18-22
+crates/web-sys/src/features/gen_Algorithm.rs
+  s_b34d432186975d::t_6041fcde5767ae 18-22
+crates/web-sys/src/features/gen_AllowedBluetoothDevice.rs
+  s_b34d432186975d::t_348d969e5c1fdc 60-68
+crates/web-sys/src/features/gen_AllowedUsbDevice.rs
+  s_b34d432186975d::t_709b1cf9c3dec7 45-53
+crates/web-sys/src/features/gen_Animation.rs
+  s_b34d432186975d::t_1d44311cfaeab2 27-33
+crates/web-sys/src/features/gen_AnimationEvent.rs
+  s_b34d432186975d::t_17853f56f1980a 27-33,48-54
+crates/web-sys/src/features/gen_AnimationEventInit.rs
+  s_b34d432186975d::t_1ce5943f233326 48-52,73-77
+crates/web-sys/src/features/gen_AnimationPropertyDetails.rs
+  s_b34d432186975d::t_5553fd7922567e 18-22,53-57
+crates/web-sys/src/features/gen_AnimationPropertyValueDetails.rs
+  s_b34d432186975d::t_bea16f38d0d123 33-38,59-63
+crates/web-sys/src/features/gen_Attr.rs
+  s_b34d432186975d::t_00f66410b1df1e 28-34,42-48,63-69,77-83,91-97
+crates/web-sys/src/features/gen_AttributeNameValue.rs
+  s_b34d432186975d::t_6a9d62ce5ab79c 18-22,33-37
+crates/web-sys/src/features/gen_AudioConfiguration.rs
+  s_b34d432186975d::t_fa87de3db5ed3e 38-42,53-57
+crates/web-sys/src/features/gen_AudioDecoderConfig.rs
+  s_b34d432186975d::t_48c3b5b7c7086f 27-35
+crates/web-sys/src/features/gen_AudioEncoderConfig.rs
+  s_b34d432186975d::t_8d400eef6b97db 74-82
+crates/web-sys/src/features/gen_AudioTrack.rs
+  s_b34d432186975d::t_02141c1a3ea255 26-32,40-46,54-60,68-74
+crates/web-sys/src/features/gen_AuthenticationExtensionsClientInputs.rs
+  s_b34d432186975d::t_9cf0f50e924d4f 23-29,42-48
+crates/web-sys/src/features/gen_AuthenticationExtensionsDevicePublicKeyInputs.rs
+  s_b34d432186975d::t_754bdf7bbb77ce 32-42
+crates/web-sys/src/features/gen_AuthenticationExtensionsLargeBlobInputs.rs
+  s_b34d432186975d::t_c38af559bafc39 33-39
+crates/web-sys/src/features/gen_AuthenticationResponseJson.rs
+  s_b34d432186975d::t_5bf64301c734e1 29-39,86-94,113-121,163-171
+crates/web-sys/src/features/gen_AuthenticatorAssertionResponseJson.rs
+  s_b34d432186975d::t_d5a6bd37557659 32-42,66-76,100-110,132-141,165-175
+crates/web-sys/src/features/gen_AuthenticatorAttestationResponseJson.rs
+  s_b34d432186975d::t_5f8d7cdcbec036 32-42,66-76,100-110,134-144
+crates/web-sys/src/features/gen_AuthenticatorSelectionCriteria.rs
+  s_b34d432186975d::t_6024cabf07059d 50-56
+crates/web-sys/src/features/gen_AutocompleteInfo.rs
+  s_b34d432186975d::t_2017af8369bf38 18-22,33-37,48-52,63-67
+crates/web-sys/src/features/gen_BaseComputedKeyframe.rs
+  s_b34d432186975d::t_ebf94efd331de8 30-34
+crates/web-sys/src/features/gen_BaseKeyframe.rs
+  s_b34d432186975d::t_0134781ade5c78 30-34
+crates/web-sys/src/features/gen_BasicCardResponse.rs
+  s_b34d432186975d::t_56cab507c33fae 30-34,45-50,61-65,76-80,91-95
+crates/web-sys/src/features/gen_BeforeUnloadEvent.rs
+  s_b34d432186975d::t_c3a3574e99647c 32-43
+crates/web-sys/src/features/gen_Blob.rs
+  s_b34d432186975d::t_c354dcb3ef1744 33-39
+crates/web-sys/src/features/gen_BlobPropertyBag.rs
+  s_b34d432186975d::t_74b0978a82bdd9 30-34
+crates/web-sys/src/features/gen_BluetoothAdvertisingEvent.rs
+  s_b34d432186975d::t_c1ffa7d46834fc 74-89
+crates/web-sys/src/features/gen_BluetoothAdvertisingEventInit.rs
+  s_b34d432186975d::t_542e95890991bf 147-155
+crates/web-sys/src/features/gen_BluetoothDevice.rs
+  s_b34d432186975d::t_57ff2cbe55ad9b 36-46,58-68
+crates/web-sys/src/features/gen_BluetoothLeScanFilterInit.rs
+  s_b34d432186975d::t_f8f6c7cb4b9118 45-53,72-82
+crates/web-sys/src/features/gen_BluetoothPermissionDescriptor.rs
+  s_b34d432186975d::t_a57cca8c3ec6d6 68-78
+crates/web-sys/src/features/gen_BluetoothRemoteGattCharacteristic.rs
+  s_b34d432186975d::t_c6dca2f03a2a4c 58-73
+crates/web-sys/src/features/gen_BluetoothRemoteGattDescriptor.rs
+  s_b34d432186975d::t_7b422724eb5fcd 59-74
+crates/web-sys/src/features/gen_BluetoothRemoteGattService.rs
+  s_b34d432186975d::t_385520313ed767 58-73
+crates/web-sys/src/features/gen_BluetoothUuid.rs
+  s_b34d432186975d::t_abdc82ffa3d728 39-53,76-92,103-117,140-156,167-181,204-220,230-244
+crates/web-sys/src/features/gen_BroadcastChannel.rs
+  s_b34d432186975d::t_d479dcbefc2515 27-33
+crates/web-sys/src/features/gen_BrowserElementDownloadOptions.rs
+  s_b34d432186975d::t_abca1d57cc4d9c 21-27,38-44
+crates/web-sys/src/features/gen_BrowserElementExecuteScriptOptions.rs
+  s_b34d432186975d::t_17e9342e5bca07 22-28,39-45
+crates/web-sys/src/features/gen_CacheBatchOperation.rs
+  s_b34d432186975d::t_27d10484768d8a 54-58
+crates/web-sys/src/features/gen_CacheQueryOptions.rs
+  s_b34d432186975d::t_14ae2871b03c77 18-22
+crates/web-sys/src/features/gen_CanvasRenderingContext2d.rs
+  s_b34d432186975d::t_a955584cbc50b6 71-85,243-254,327-338,363-374,519-530,555-566,591-602,627-638
+crates/web-sys/src/features/gen_CaretStateChangedEventInit.rs
+  s_b34d432186975d::t_ab28653dfdc435 107-113
+crates/web-sys/src/features/gen_CharacterData.rs
+  s_b34d432186975d::t_0db069fc94c8f2 28-34,119-129
+crates/web-sys/src/features/gen_CheckerboardReport.rs
+  s_b34d432186975d::t_2e65db125222cd 18-22
+crates/web-sys/src/features/gen_ChromeFilePropertyBag.rs
+  s_b34d432186975d::t_c1c6cd3c344752 38-42,63-67
+crates/web-sys/src/features/gen_Client.rs
+  s_b34d432186975d::t_0b8836c73e5ff6 26-32,56-62
+crates/web-sys/src/features/gen_CloseEvent.rs
+  s_b34d432186975d::t_2af323ac30ddbb 41-47
+crates/web-sys/src/features/gen_CloseEventInit.rs
+  s_b34d432186975d::t_fce04fb80efda3 58-62
+crates/web-sys/src/features/gen_CollectedClientData.rs
+  s_b34d432186975d::t_f4237879d25d02 18-22,63-68,80-84,108-114,126-130
+crates/web-sys/src/features/gen_CommandEvent.rs
+  s_b34d432186975d::t_486d661d1b83b9 35-41
+crates/web-sys/src/features/gen_CommandEventInit.rs
+  s_b34d432186975d::t_2c039e66490c82 48-52
+crates/web-sys/src/features/gen_CompositionEvent.rs
+  s_b34d432186975d::t_779b05d1c54121 28-34,42-48
+crates/web-sys/src/features/gen_CompositionEventInit.rs
+  s_b34d432186975d::t_cc9420a859497e 70-74
+crates/web-sys/src/features/gen_ComputedEffectTiming.rs
+  s_b34d432186975d::t_e1338e9c0e574b 60-64
+crates/web-sys/src/features/gen_ConnStatusDict.rs
+  s_b34d432186975d::t_9e1cc9d47536d9 18-22
+crates/web-sys/src/features/gen_ConsoleCounter.rs
+  s_b34d432186975d::t_5821dd042e305c 28-32
+crates/web-sys/src/features/gen_ConsoleCounterError.rs
+  s_b34d432186975d::t_4653ba1cfac9e2 18-22,33-37
+crates/web-sys/src/features/gen_ConsoleEvent.rs
+  s_b34d432186975d::t_d6700dc93eb64e 43-47,78-82,103-107,118-122,133-137,173-177,198-202
+crates/web-sys/src/features/gen_ConsoleInstanceOptions.rs
+  s_b34d432186975d::t_583ad085ff732c 18-22,43-47,71-77,88-92
+crates/web-sys/src/features/gen_ConsoleProfileEvent.rs
+  s_b34d432186975d::t_66aa98ddd00a3f 18-22
+crates/web-sys/src/features/gen_ConsoleStackEntry.rs
+  s_b34d432186975d::t_9e31219dc34910 18-22,43-47,58-62
+crates/web-sys/src/features/gen_ConsoleTimerError.rs
+  s_b34d432186975d::t_4594239bca770a 18-22,33-37
+crates/web-sys/src/features/gen_ConsoleTimerLogOrEnd.rs
+  s_b34d432186975d::t_014b1d78333cb3 28-32
+crates/web-sys/src/features/gen_ConsoleTimerStart.rs
+  s_b34d432186975d::t_55ee7525d16d05 18-22
+crates/web-sys/src/features/gen_CookieInit.rs
+  s_b34d432186975d::t_4252555cfabc16 18-22,63-67,88-92,115-119
+crates/web-sys/src/features/gen_CookieListItem.rs
+  s_b34d432186975d::t_c36c261f42e546 18-22,33-37
+crates/web-sys/src/features/gen_CookieStoreDeleteOptions.rs
+  s_b34d432186975d::t_f2532886f63190 18-22,33-37,58-62
+crates/web-sys/src/features/gen_CookieStoreGetOptions.rs
+  s_b34d432186975d::t_4a301b45261dd8 18-22,33-37
+crates/web-sys/src/features/gen_Credential.rs
+  s_b34d432186975d::t_070ef648ccc90e 26-32,40-46
+crates/web-sys/src/features/gen_Crypto.rs
+  s_b34d432186975d::t_930219e5cc2672 64-70
+crates/web-sys/src/features/gen_CryptoKey.rs
+  s_b34d432186975d::t_d8fa58c8c4a37a 26-32
+crates/web-sys/src/features/gen_CssAnimation.rs
+  s_b34d432186975d::t_c55a7654ea9650 28-34
+crates/web-sys/src/features/gen_CssConditionRule.rs
+  s_b34d432186975d::t_68530617b6e34f 33-44
+crates/web-sys/src/features/gen_CssCounterStyleRule.rs
+  s_b34d432186975d::t_2b3cec8b9b72fe 27-33,48-54,69-75,95-106,126-132,147-153,168-174,189-195,210-216,231-237,252-258
+crates/web-sys/src/features/gen_CssFontFeatureValuesRule.rs
+  s_b34d432186975d::t_a1acc797258203 32-43,68-79
+crates/web-sys/src/features/gen_CssImportRule.rs
+  s_b34d432186975d::t_23343f84634d99 27-33
+crates/web-sys/src/features/gen_CssKeyframeRule.rs
+  s_b34d432186975d::t_ad27f837f0e0b3 27-33
+crates/web-sys/src/features/gen_CssKeyframesRule.rs
+  s_b34d432186975d::t_d430a4826a5c20 27-33
+crates/web-sys/src/features/gen_CssNamespaceRule.rs
+  s_b34d432186975d::t_b9fb955479d440 32-43,51-57
+crates/web-sys/src/features/gen_CssPseudoElement.rs
+  s_b34d432186975d::t_6d43886c8ef3a2 26-32
+crates/web-sys/src/features/gen_CssRule.rs
+  s_b34d432186975d::t_df36104bb2be06 33-39
+crates/web-sys/src/features/gen_CssStyleDeclaration.rs
+  s_b34d432186975d::t_5c08d621b95020 26-32,74-87,103-117,125-131,147-161,201-207
+crates/web-sys/src/features/gen_CssStyleRule.rs
+  s_b34d432186975d::t_a5998fc6cb3c53 27-33
+crates/web-sys/src/features/gen_CssTransition.rs
+  s_b34d432186975d::t_80436c3f54c885 33-44
+crates/web-sys/src/features/gen_CssViewTransitionRule.rs
+  s_b34d432186975d::t_9c5ab834ce4c4f 41-56
+crates/web-sys/src/features/gen_DataTransfer.rs
+  s_b34d432186975d::t_2e0909e56386fd 26-32,47-53,112-121
+crates/web-sys/src/features/gen_DataTransferItem.rs
+  s_b34d432186975d::t_03bc5fa48df717 26-32,40-46
+crates/web-sys/src/features/gen_DecoderDoctorNotification.rs
+  s_b34d432186975d::t_18545c6b034686 18-24,37-43,54-58,69-73,94-100
+crates/web-sys/src/features/gen_DedicatedWorkerGlobalScope.rs
+  s_b34d432186975d::t_723bd77748277b 33-44
+crates/web-sys/src/features/gen_DhKeyDeriveParams.rs
+  s_b34d432186975d::t_c24de3503e705b 18-22
+crates/web-sys/src/features/gen_Directory.rs
+  s_b34d432186975d::t_31805d98b9ec03 26-32,40-46
+crates/web-sys/src/features/gen_DirectoryPickerOptions.rs
+  s_b34d432186975d::t_fad383893bc3b3 27-35
+crates/web-sys/src/features/gen_DisplayNameOptions.rs
+  s_b34d432186975d::t_b9b4696c87f21b 28-32
+crates/web-sys/src/features/gen_DisplayNameResult.rs
+  s_b34d432186975d::t_6dd131c7ea243f 18-22,33-37
+crates/web-sys/src/features/gen_DnsCacheEntry.rs
+  s_b34d432186975d::t_5b81c13fc9bdad 28-32,53-57
+crates/web-sys/src/features/gen_DnsLookupDict.rs
+  s_b34d432186975d::t_d91f90488ce914 38-42
+crates/web-sys/src/features/gen_Document.rs
+  s_b34d432186975d::t_db5488145d77c4 42-48,56-62,70-76,84-90,98-104,112-118,126-132,164-170,178-184,192-198,206-212,227-233,532-543,563-569,582-593
+crates/web-sys/src/features/gen_DocumentType.rs
+  s_b34d432186975d::t_27fa5db0c9af9f 28-34,42-48,56-62
+crates/web-sys/src/features/gen_DomError.rs
+  s_b34d432186975d::t_c2bb32b151566a 26-32,40-46
+crates/web-sys/src/features/gen_DomException.rs
+  s_b34d432186975d::t_bb4bc1e14e4733 26-32,40-46,68-74,103-109
+crates/web-sys/src/features/gen_DomStringList.rs
+  s_b34d432186975d::t_4b5d1f92f4e725 40-46,53-59
+crates/web-sys/src/features/gen_DomStringMap.rs
+  s_b34d432186975d::t_89b47c85791465 25-31
+crates/web-sys/src/features/gen_DomTokenList.rs
+  s_b34d432186975d::t_e85977aaaf07fe 33-39,166-172,309-315
+crates/web-sys/src/features/gen_EcKeyAlgorithm.rs
+  s_b34d432186975d::t_f7a396b8a5aee8 18-22,33-37
+crates/web-sys/src/features/gen_EcKeyGenParams.rs
+  s_b34d432186975d::t_2f3c90585f1705 18-22,33-37
+crates/web-sys/src/features/gen_EcKeyImportParams.rs
+  s_b34d432186975d::t_c4cade4f927ddb 18-22,33-37
+crates/web-sys/src/features/gen_EcdhKeyDeriveParams.rs
+  s_b34d432186975d::t_93c8df96d3d3b8 18-22
+crates/web-sys/src/features/gen_EcdsaParams.rs
+  s_b34d432186975d::t_7e2eb9b89c77c5 18-22
+crates/web-sys/src/features/gen_EffectTiming.rs
+  s_b34d432186975d::t_f73c20662b8f09 60-64
+crates/web-sys/src/features/gen_Element.rs
+  s_b34d432186975d::t_e3d650013b0999 28-34,42-48,56-62,70-76,84-90,105-111,216-222,237-243,274-280,417-423,435-445
+crates/web-sys/src/features/gen_ElementCreationOptions.rs
+  s_b34d432186975d::t_6dffc140f48d90 18-22,33-37
+crates/web-sys/src/features/gen_ElementDefinitionOptions.rs
+  s_b34d432186975d::t_7c1acbcef946d7 18-22
+crates/web-sys/src/features/gen_ErrorEvent.rs
+  s_b34d432186975d::t_6e74e289c6b5f4 27-33,41-47
+crates/web-sys/src/features/gen_ErrorEventInit.rs
+  s_b34d432186975d::t_99bc25490d9d47 68-72,93-97
+crates/web-sys/src/features/gen_Event.rs
+  s_b34d432186975d::t_18eedd3af7c522 26-32
+crates/web-sys/src/features/gen_EventSource.rs
+  s_b34d432186975d::t_ac6c79364ad72e 27-33
+crates/web-sys/src/features/gen_Exception.rs
+  s_b34d432186975d::t_d7fdf9fd48327f 22-28,36-42,57-63,92-98
+crates/web-sys/src/features/gen_ExtendableMessageEvent.rs
+  s_b34d432186975d::t_53b51906f5e551 40-51,64-75
+crates/web-sys/src/features/gen_ExtendableMessageEventInit.rs
+  s_b34d432186975d::t_ea469ba64a8b57 58-64,75-79
+crates/web-sys/src/features/gen_FakePluginMimeEntry.rs
+  s_b34d432186975d::t_e8471722306c55 18-22,33-37,48-52
+crates/web-sys/src/features/gen_FakePluginTagInit.rs
+  s_b34d432186975d::t_54f8e3514337d6 18-22,33-37,48-52,63-67,88-92,103-107,118-122,133-137
+crates/web-sys/src/features/gen_FetchEvent.rs
+  s_b34d432186975d::t_092b270d79240f 36-42
+crates/web-sys/src/features/gen_FetchEventInit.rs
+  s_b34d432186975d::t_edc5a160b9b557 48-52
+crates/web-sys/src/features/gen_File.rs
+  s_b34d432186975d::t_6ea68519e641a9 27-33
+crates/web-sys/src/features/gen_FilePickerAcceptType.rs
+  s_b34d432186975d::t_8e5e5b7d061304 57-65
+crates/web-sys/src/features/gen_FilePickerOptions.rs
+  s_b34d432186975d::t_8a96d8d85b4918 45-53
+crates/web-sys/src/features/gen_FilePropertyBag.rs
+  s_b34d432186975d::t_77a4739c079d2c 38-42
+crates/web-sys/src/features/gen_FileReaderSync.rs
+  s_b34d432186975d::t_7328d0a523713c 59-74,86-96,109-119,130-141
+crates/web-sys/src/features/gen_FileSystem.rs
+  s_b34d432186975d::t_38aac15c2b7311 26-32
+crates/web-sys/src/features/gen_FileSystemEntry.rs
+  s_b34d432186975d::t_35ff75b720ffe3 40-46,54-60
+crates/web-sys/src/features/gen_FileSystemHandle.rs
+  s_b34d432186975d::t_1a3df818a2e474 34-40
+crates/web-sys/src/features/gen_FontData.rs
+  s_b34d432186975d::t_49baf06c970aa0 35-45,57-67,79-89,101-111
+crates/web-sys/src/features/gen_FontFace.rs
+  s_b34d432186975d::t_699d99528bceca 26-32,47-53,68-74,89-95,110-116,131-137,152-158,173-179,194-200
+crates/web-sys/src/features/gen_FontFaceDescriptors.rs
+  s_b34d432186975d::t_6b40e291493bb4 18-22,33-38,49-53,64-68,79-83,94-98,109-115,126-130
+crates/web-sys/src/features/gen_Gamepad.rs
+  s_b34d432186975d::t_fcd8a7ac20cd20 26-32
+crates/web-sys/src/features/gen_GeolocationPositionError.rs
+  s_b34d432186975d::t_804afa65ccc126 55-70
+crates/web-sys/src/features/gen_GetUserMediaRequest.rs
+  s_b34d432186975d::t_1fa65e59edb78e 41-47,55-61,74-85
+crates/web-sys/src/features/gen_GpuAdapterInfo.rs
+  s_b34d432186975d::t_593b4ff1b9d433 35-45,57-67,79-89,101-111
+crates/web-sys/src/features/gen_GpuBindGroup.rs
+  s_b34d432186975d::t_cec9cb94b5147e 35-45
+crates/web-sys/src/features/gen_GpuBindGroupDescriptor.rs
+  s_b34d432186975d::t_94a796c08087bc 27-35
+crates/web-sys/src/features/gen_GpuBindGroupLayout.rs
+  s_b34d432186975d::t_da5003580682cc 35-45
+crates/web-sys/src/features/gen_GpuBindGroupLayoutDescriptor.rs
+  s_b34d432186975d::t_307e91182f38ec 27-35
+crates/web-sys/src/features/gen_GpuBuffer.rs
+  s_b34d432186975d::t_e081ed4c141c2e 69-79
+crates/web-sys/src/features/gen_GpuBufferDescriptor.rs
+  s_b34d432186975d::t_377502897b1f6a 27-35
+crates/web-sys/src/features/gen_GpuCommandBuffer.rs
+  s_b34d432186975d::t_87755845d8d0ee 35-45
+crates/web-sys/src/features/gen_GpuCommandBufferDescriptor.rs
+  s_b34d432186975d::t_e5cc3c75baa4d2 27-35
+crates/web-sys/src/features/gen_GpuCommandEncoder.rs
+  s_b34d432186975d::t_75edacce7dee71 35-45
+crates/web-sys/src/features/gen_GpuCommandEncoderDescriptor.rs
+  s_b34d432186975d::t_24ca255f857be4 27-35
+crates/web-sys/src/features/gen_GpuCompilationMessage.rs
+  s_b34d432186975d::t_13e4e3d5b65635 40-55
+crates/web-sys/src/features/gen_GpuComputePassDescriptor.rs
+  s_b34d432186975d::t_cf230904e54a01 27-35
+crates/web-sys/src/features/gen_GpuComputePassEncoder.rs
+  s_b34d432186975d::t_95db4c08053a6c 35-45
+crates/web-sys/src/features/gen_GpuComputePipeline.rs
+  s_b34d432186975d::t_cfc3297170ffb9 35-45
+crates/web-sys/src/features/gen_GpuComputePipelineDescriptor.rs
+  s_b34d432186975d::t_eaf5aadc10a443 27-35
+crates/web-sys/src/features/gen_GpuDevice.rs
+  s_b34d432186975d::t_f62822842853e4 118-128
+crates/web-sys/src/features/gen_GpuDeviceDescriptor.rs
+  s_b34d432186975d::t_f3196575ced581 27-35
+crates/web-sys/src/features/gen_GpuDeviceLostInfo.rs
+  s_b34d432186975d::t_1ba6874688d280 46-56
+crates/web-sys/src/features/gen_GpuError.rs
+  s_b34d432186975d::t_649db66bfd172f 34-44
+crates/web-sys/src/features/gen_GpuExternalTexture.rs
+  s_b34d432186975d::t_a20643f1bbd4de 35-45
+crates/web-sys/src/features/gen_GpuExternalTextureDescriptor.rs
+  s_b34d432186975d::t_672505432e231e 27-35
+crates/web-sys/src/features/gen_GpuFragmentState.rs
+  s_b34d432186975d::t_8e2fb092c6b2d0 44-52
+crates/web-sys/src/features/gen_GpuObjectDescriptorBase.rs
+  s_b34d432186975d::t_ef3e9ba1824192 27-35
+crates/web-sys/src/features/gen_GpuPipelineDescriptorBase.rs
+  s_b34d432186975d::t_4ec6ed5b785e9c 27-35
+crates/web-sys/src/features/gen_GpuPipelineLayout.rs
+  s_b34d432186975d::t_61eb6d51635fcb 35-45
+crates/web-sys/src/features/gen_GpuPipelineLayoutDescriptor.rs
+  s_b34d432186975d::t_8df25a64248e9c 27-35
+crates/web-sys/src/features/gen_GpuProgrammableStage.rs
+  s_b34d432186975d::t_8ba979dfe99650 46-54
+crates/web-sys/src/features/gen_GpuQuerySet.rs
+  s_b34d432186975d::t_46d0a7caefff77 58-68
+crates/web-sys/src/features/gen_GpuQuerySetDescriptor.rs
+  s_b34d432186975d::t_df4e36e07d96a9 27-35
+crates/web-sys/src/features/gen_GpuQueue.rs
+  s_b34d432186975d::t_cafcf2e9ad319c 35-45
+crates/web-sys/src/features/gen_GpuQueueDescriptor.rs
+  s_b34d432186975d::t_10ff1d158fcf51 27-35
+crates/web-sys/src/features/gen_GpuRenderBundle.rs
+  s_b34d432186975d::t_d1af81e76e48f0 35-45
+crates/web-sys/src/features/gen_GpuRenderBundleDescriptor.rs
+  s_b34d432186975d::t_2897b6e8524c19 27-35
+crates/web-sys/src/features/gen_GpuRenderBundleEncoder.rs
+  s_b34d432186975d::t_1acd1ef84fc205 35-45
+crates/web-sys/src/features/gen_GpuRenderBundleEncoderDescriptor.rs
+  s_b34d432186975d::t_9ae3e2e690bb7d 30-40
+crates/web-sys/src/features/gen_GpuRenderPassDescriptor.rs
+  s_b34d432186975d::t_1c39a0adc0c76b 27-35
+crates/web-sys/src/features/gen_GpuRenderPassEncoder.rs
+  s_b34d432186975d::t_5e581b5b81cb79 35-45
+crates/web-sys/src/features/gen_GpuRenderPassLayout.rs
+  s_b34d432186975d::t_51f7c2c02f68cf 27-35
+crates/web-sys/src/features/gen_GpuRenderPipeline.rs
+  s_b34d432186975d::t_752a6c36aeaf4b 35-45
+crates/web-sys/src/features/gen_GpuRenderPipelineDescriptor.rs
+  s_b34d432186975d::t_4f52d2e6c8899d 27-35
+crates/web-sys/src/features/gen_GpuRequestAdapterOptions.rs
+  s_b34d432186975d::t_c441982d2ae1b4 27-37
+crates/web-sys/src/features/gen_GpuSampler.rs
+  s_b34d432186975d::t_3ed407739617d4 35-45
+crates/web-sys/src/features/gen_GpuSamplerDescriptor.rs
+  s_b34d432186975d::t_34acc42d418d6f 27-35
+crates/web-sys/src/features/gen_GpuShaderModule.rs
+  s_b34d432186975d::t_a058d84840cae2 35-45
+crates/web-sys/src/features/gen_GpuShaderModuleCompilationHint.rs
+  s_b34d432186975d::t_7eacbd72abf038 30-38
+crates/web-sys/src/features/gen_GpuShaderModuleDescriptor.rs
+  s_b34d432186975d::t_431b840b03eadf 27-35,54-62
+crates/web-sys/src/features/gen_GpuTexture.rs
+  s_b34d432186975d::t_8909babd063c78 145-155
+crates/web-sys/src/features/gen_GpuTextureDescriptor.rs
+  s_b34d432186975d::t_ce09fcc76548dc 27-35
+crates/web-sys/src/features/gen_GpuTextureView.rs
+  s_b34d432186975d::t_7996ba7fa73848 35-45
+crates/web-sys/src/features/gen_GpuTextureViewDescriptor.rs
+  s_b34d432186975d::t_36c58bd67ef692 27-35,186-194
+crates/web-sys/src/features/gen_GpuVertexState.rs
+  s_b34d432186975d::t_9c2088436d76a0 45-53
+crates/web-sys/src/features/gen_HashChangeEvent.rs
+  s_b34d432186975d::t_b72b44fb078613 27-33,41-47
+crates/web-sys/src/features/gen_HashChangeEventInit.rs
+  s_b34d432186975d::t_7ed885f48b62c6 48-52,63-67
+crates/web-sys/src/features/gen_Headers.rs
+  s_b34d432186975d::t_ec5dee1ad52883 77-84
+crates/web-sys/src/features/gen_HidDevice.rs
+  s_b34d432186975d::t_0f66c093e22332 91-101
+crates/web-sys/src/features/gen_HitRegionOptions.rs
+  s_b34d432186975d::t_a50fa304ee49dc 30-34
+crates/web-sys/src/features/gen_HkdfParams.rs
+  s_b34d432186975d::t_e6e951ac31f67c 18-22
+crates/web-sys/src/features/gen_HmacDerivedKeyParams.rs
+  s_b34d432186975d::t_593b53e60f0e3b 18-22
+crates/web-sys/src/features/gen_HmacImportParams.rs
+  s_b34d432186975d::t_238330085aa708 18-22
+crates/web-sys/src/features/gen_HmacKeyAlgorithm.rs
+  s_b34d432186975d::t_a99f99c15b5a04 18-22
+crates/web-sys/src/features/gen_HmacKeyGenParams.rs
+  s_b34d432186975d::t_c8310336824e05 18-22
+crates/web-sys/src/features/gen_HtmlAnchorElement.rs
+  s_b34d432186975d::t_2d7ada5e8e629e 30-36,51-57,72-78,93-99,119-130,158-164,179-185,206-218,239-245,260-266,281-287,302-308,323-329,344-350,365-371,379-385,400-406,421-427,442-448,463-469,484-490,505-511,526-532,547-553
+crates/web-sys/src/features/gen_HtmlAreaElement.rs
+  s_b34d432186975d::t_6ab45504da3755 30-36,51-57,72-78,93-99,114-120,135-141,156-162,182-193,235-241,256-262,270-276,291-297,312-318,333-339,354-360,375-381,396-402,417-423,438-444
+crates/web-sys/src/features/gen_HtmlBaseElement.rs
+  s_b34d432186975d::t_4f5583d99536c3 30-36,51-57
+crates/web-sys/src/features/gen_HtmlBodyElement.rs
+  s_b34d432186975d::t_34406026ceb8f5 30-36,51-57,72-78,93-99,114-120,135-141
+crates/web-sys/src/features/gen_HtmlBrElement.rs
+  s_b34d432186975d::t_83ec9e78906370 30-36
+crates/web-sys/src/features/gen_HtmlButtonElement.rs
+  s_b34d432186975d::t_b027d8b0bfa833 72-78,98-109,129-135,174-180,195-201,216-222,237-243,285-299,344-355
+crates/web-sys/src/features/gen_HtmlCanvasElement.rs
+  s_b34d432186975d::t_2c458d62022b7a 139-145,156-165,176-186
+crates/web-sys/src/features/gen_HtmlDataElement.rs
+  s_b34d432186975d::t_f7f22651035881 30-36
+crates/web-sys/src/features/gen_HtmlDialogElement.rs
+  s_b34d432186975d::t_7e46b264c43ab3 49-60
+crates/web-sys/src/features/gen_HtmlDivElement.rs
+  s_b34d432186975d::t_e08e405ee53247 30-36
+crates/web-sys/src/features/gen_HtmlDocument.rs
+  s_b34d432186975d::t_4aa44c2333eb29 29-35,50-56,71-77,92-98,113-119,134-140,155-161,176-182,359-373
+crates/web-sys/src/features/gen_HtmlElement.rs
+  s_b34d432186975d::t_6f6e73e9e6b316 29-35,80-86,101-107,122-128,171-177,192-198,220-226,253-259,1693-1699
+crates/web-sys/src/features/gen_HtmlEmbedElement.rs
+  s_b34d432186975d::t_52024e712e189f 30-36,51-57,72-78,93-99,114-120,135-141
+crates/web-sys/src/features/gen_HtmlFieldSetElement.rs
+  s_b34d432186975d::t_770796f53b1873 52-58,73-79,123-137
+crates/web-sys/src/features/gen_HtmlFontElement.rs
+  s_b34d432186975d::t_7ff8535267b6ec 30-36,51-57,72-78
+crates/web-sys/src/features/gen_HtmlFormElement.rs
+  s_b34d432186975d::t_6a7a48efa32e53 35-46,66-72,87-93,108-114,129-135,150-156,171-177,206-212
+crates/web-sys/src/features/gen_HtmlFrameElement.rs
+  s_b34d432186975d::t_79e81a3517972a 30-36,51-57,72-78,93-99,114-120,180-191,211-217
+crates/web-sys/src/features/gen_HtmlFrameSetElement.rs
+  s_b34d432186975d::t_fba9968743a71f 30-36,51-57
+crates/web-sys/src/features/gen_HtmlHeadingElement.rs
+  s_b34d432186975d::t_d205c378413ab3 30-36
+crates/web-sys/src/features/gen_HtmlHrElement.rs
+  s_b34d432186975d::t_98cd3cae044823 30-36,51-57,86-92,107-113
+crates/web-sys/src/features/gen_HtmlHtmlElement.rs
+  s_b34d432186975d::t_33ab9b4e175cb9 30-36
+crates/web-sys/src/features/gen_HtmlIFrameElement.rs
+  s_b34d432186975d::t_8931c50a32cb0b 30-36,51-57,72-78,149-155,170-176,196-207,253-259,274-280,300-311,331-337,357-368,393-404
+crates/web-sys/src/features/gen_HtmlImageElement.rs
+  s_b34d432186975d::t_2f4ebad9e55076 30-36,51-57,72-78,93-99,114-120,140-151,213-219,265-271,286-292,335-341,356-362,377-383,398-404
+crates/web-sys/src/features/gen_HtmlInputElement.rs
+  s_b34d432186975d::t_28aec087ca0291 30-36,51-57,77-88,204-210,225-231,246-252,291-297,350-356,378-384,413-419,462-468,483-489,504-510,567-573,588-594,609-615,635-646,666-672,780-794,870-884,908-914,929-935,1015-1026
+crates/web-sys/src/features/gen_HtmlLabelElement.rs
+  s_b34d432186975d::t_a36b2323cf49ab 38-44
+crates/web-sys/src/features/gen_HtmlLegendElement.rs
+  s_b34d432186975d::t_654fcdf3e9e334 38-44
+crates/web-sys/src/features/gen_HtmlLiElement.rs
+  s_b34d432186975d::t_b149021c248ff7 44-50
+crates/web-sys/src/features/gen_HtmlLinkElement.rs
+  s_b34d432186975d::t_fb4f19af996522 44-50,65-71,86-92,115-121,136-142,157-163,183-194,222-228,243-249,264-270,285-291,306-312
+crates/web-sys/src/features/gen_HtmlMapElement.rs
+  s_b34d432186975d::t_e6ab64668b7fa0 30-36
+crates/web-sys/src/features/gen_HtmlMediaElement.rs
+  s_b34d432186975d::t_a8c7477cc6566b 38-44,59-65,89-95,122-128,461-467
+crates/web-sys/src/features/gen_HtmlMenuElement.rs
+  s_b34d432186975d::t_715d1981cd6600 30-36,51-57
+crates/web-sys/src/features/gen_HtmlMenuItemElement.rs
+  s_b34d432186975d::t_4d8930d0207b09 32-39,56-63,80-87,141-153
+crates/web-sys/src/features/gen_HtmlMetaElement.rs
+  s_b34d432186975d::t_63977e3cfa4baa 30-36,51-57,72-78,93-99
+crates/web-sys/src/features/gen_HtmlModElement.rs
+  s_b34d432186975d::t_c85a28dd1d216e 30-36,51-57
+crates/web-sys/src/features/gen_HtmlOListElement.rs
+  s_b34d432186975d::t_21c2e04bc7cc2f 58-64
+crates/web-sys/src/features/gen_HtmlObjectElement.rs
+  s_b34d432186975d::t_ca974f9a6380d4 30-36,51-57,96-102,117-123,146-152,167-173,241-255,263-269,284-290,305-311,354-360,389-395,410-416,431-437
+crates/web-sys/src/features/gen_HtmlOptGroupElement.rs
+  s_b34d432186975d::t_34cbdc29991e56 44-50
+crates/web-sys/src/features/gen_HtmlOptionElement.rs
+  s_b34d432186975d::t_88710627d48225 52-58,111-117,132-138
+crates/web-sys/src/features/gen_HtmlOutputElement.rs
+  s_b34d432186975d::t_33eacf51c989e0 46-52,67-73,86-97,117-123,165-179
+crates/web-sys/src/features/gen_HtmlParagraphElement.rs
+  s_b34d432186975d::t_8cd833288daffa 30-36
+crates/web-sys/src/features/gen_HtmlParamElement.rs
+  s_b34d432186975d::t_c15d4f9b5c3cd4 30-36,51-57,72-78,93-99
+crates/web-sys/src/features/gen_HtmlQuoteElement.rs
+  s_b34d432186975d::t_045af5e93ad4ca 30-36
+crates/web-sys/src/features/gen_HtmlScriptElement.rs
+  s_b34d432186975d::t_d3bf1d37322697 30-36,51-57,86-92,140-151,177-189,210-216,231-237,252-258
+crates/web-sys/src/features/gen_HtmlSelectElement.rs
+  s_b34d432186975d::t_d55e543de2624e 55-66,122-128,171-177,244-250,292-306
+crates/web-sys/src/features/gen_HtmlSlotElement.rs
+  s_b34d432186975d::t_b149bf20a23410 30-36
+crates/web-sys/src/features/gen_HtmlSourceElement.rs
+  s_b34d432186975d::t_fd9f018038cfe4 30-36,51-57,72-78,93-99,114-120
+crates/web-sys/src/features/gen_HtmlStyleElement.rs
+  s_b34d432186975d::t_837444e75f8573 44-50,65-71
+crates/web-sys/src/features/gen_HtmlTableCaptionElement.rs
+  s_b34d432186975d::t_037b69cb5c4749 35-46
+crates/web-sys/src/features/gen_HtmlTableCellElement.rs
+  s_b34d432186975d::t_1815ab40fbaf75 58-64,91-97,112-118,133-139,154-160,175-181,196-202,217-223,238-244,273-279,294-300
+crates/web-sys/src/features/gen_HtmlTableColElement.rs
+  s_b34d432186975d::t_b4375d17aa528f 44-50,65-71,86-92,107-113,128-134
+crates/web-sys/src/features/gen_HtmlTableElement.rs
+  s_b34d432186975d::t_e7a176a6daa2a8 94-100,115-121,136-142,157-163,178-184,199-205,220-226,241-247,262-268
+crates/web-sys/src/features/gen_HtmlTableRowElement.rs
+  s_b34d432186975d::t_b687fa6ef775ce 57-63,78-84,99-105,120-126,141-147
+crates/web-sys/src/features/gen_HtmlTableSectionElement.rs
+  s_b34d432186975d::t_04e1b9098b9287 43-54,74-80,100-111,136-147
+crates/web-sys/src/features/gen_HtmlTextAreaElement.rs
+  s_b34d432186975d::t_382a771989e1e3 35-46,180-186,206-217,279-285,300-306,320-334,355-361,416-430,510-524
+crates/web-sys/src/features/gen_HtmlTimeElement.rs
+  s_b34d432186975d::t_2493577138cf8b 30-36
+crates/web-sys/src/features/gen_HtmlTitleElement.rs
+  s_b34d432186975d::t_9dfbc0045baaa8 30-36
+crates/web-sys/src/features/gen_HtmlTrackElement.rs
+  s_b34d432186975d::t_8be0c9515ac5f0 30-36,51-57,72-78,93-99
+crates/web-sys/src/features/gen_HtmlUListElement.rs
+  s_b34d432186975d::t_b00374ffa2f1a3 44-50
+crates/web-sys/src/features/gen_HtmlVideoElement.rs
+  s_b34d432186975d::t_90fe65fe927f8e 73-79
+crates/web-sys/src/features/gen_HttpConnInfo.rs
+  s_b34d432186975d::t_9cffa3813e8c45 18-22
+crates/web-sys/src/features/gen_HttpConnectionElement.rs
+  s_b34d432186975d::t_9c51093c89777f 38-42
+crates/web-sys/src/features/gen_IdbDatabase.rs
+  s_b34d432186975d::t_04380017bb289f 27-33
+crates/web-sys/src/features/gen_IdbIndex.rs
+  s_b34d432186975d::t_b762b96040c1b9 26-32,77-84
+crates/web-sys/src/features/gen_IdbIndexParameters.rs
+  s_b34d432186975d::t_6b28d1a22cdc19 19-24
+crates/web-sys/src/features/gen_IdbMutableFile.rs
+  s_b34d432186975d::t_759744f0e74c92 29-36,45-52
+crates/web-sys/src/features/gen_IdbObjectStore.rs
+  s_b34d432186975d::t_d89cf354eb1d56 26-32
+crates/web-sys/src/features/gen_ImageCaptureError.rs
+  s_b34d432186975d::t_0c5549834e494d 29-35
+crates/web-sys/src/features/gen_ImageDecoder.rs
+  s_b34d432186975d::t_41fcec24e52f43 35-45
+crates/web-sys/src/features/gen_ImageDecoderInit.rs
+  s_b34d432186975d::t_5eccae417db33c 168-176
+crates/web-sys/src/features/gen_ImageEncodeOptions.rs
+  s_b34d432186975d::t_8f192dea5444cf 28-32
+crates/web-sys/src/features/gen_InputEvent.rs
+  s_b34d432186975d::t_5ea2114ab88a79 35-41,49-55
+crates/web-sys/src/features/gen_InputEventInit.rs
+  s_b34d432186975d::t_175bc7dfb96ece 70-74,97-101
+crates/web-sys/src/features/gen_IntersectionObserver.rs
+  s_b34d432186975d::t_10aafb9a058faf 39-50
+crates/web-sys/src/features/gen_IntersectionObserverInit.rs
+  s_b34d432186975d::t_8e265906bd6059 30-35
+crates/web-sys/src/features/gen_JsonWebKey.rs
+  s_b34d432186975d::t_44f5405f64dbd0 18-22,33-37,48-52,63-67,78-82,93-97,118-122,143-147,158-162,183-187,198-202,213-217,228-232,243-247,258-262
+crates/web-sys/src/features/gen_KeyAlgorithm.rs
+  s_b34d432186975d::t_b5546cd81b5bd0 18-22
+crates/web-sys/src/features/gen_KeyFrameRequestEvent.rs
+  s_b34d432186975d::t_4d00c73a797ff6 36-46
+crates/web-sys/src/features/gen_KeyboardEvent.rs
+  s_b34d432186975d::t_75a0b110ff47d3 91-97,105-111
+crates/web-sys/src/features/gen_KeyboardEventInit.rs
+  s_b34d432186975d::t_d8ce851448001b 210-214,235-239
+crates/web-sys/src/features/gen_KeyframeAnimationOptions.rs
+  s_b34d432186975d::t_8e9907abf0b300 95-103,241-249
+crates/web-sys/src/features/gen_KeyframeEffectOptions.rs
+  s_b34d432186975d::t_34977d2a01b28e 60-64
+crates/web-sys/src/features/gen_L10nElement.rs
+  s_b34d432186975d::t_e0ac7a8fc14095 28-32,43-47,58-62,73-77,88-92
+crates/web-sys/src/features/gen_L10nValue.rs
+  s_b34d432186975d::t_f7c770f2806a24 28-32
+crates/web-sys/src/features/gen_LocaleInfo.rs
+  s_b34d432186975d::t_aa070445609f18 18-22,33-37
+crates/web-sys/src/features/gen_Location.rs
+  s_b34d432186975d::t_084622fd8b6df3 26-32,47-53,61-67,82-88,103-109,124-130,145-151,166-172,187-193
+crates/web-sys/src/features/gen_Lock.rs
+  s_b34d432186975d::t_4485b265dfee7e 35-45
+crates/web-sys/src/features/gen_LockInfo.rs
+  s_b34d432186975d::t_4c31cd2875d1f1 27-35,74-82
+crates/web-sys/src/features/gen_MathMlElement.rs
+  s_b34d432186975d::t_7dc37b59587743 1405-1411
+crates/web-sys/src/features/gen_MediaDeviceInfo.rs
+  s_b34d432186975d::t_ec279a64e2d2ca 26-32,48-54,62-68
+crates/web-sys/src/features/gen_MediaEncryptedEvent.rs
+  s_b34d432186975d::t_93480c11f8977c 32-43
+crates/web-sys/src/features/gen_MediaError.rs
+  s_b34d432186975d::t_64fd8322288bc6 33-39
+crates/web-sys/src/features/gen_MediaImage.rs
+  s_b34d432186975d::t_0d181ca36ce6fc 27-35,54-62,81-89
+crates/web-sys/src/features/gen_MediaKeyNeededEventInit.rs
+  s_b34d432186975d::t_11700e6ea6fa2b 58-64
+crates/web-sys/src/features/gen_MediaKeySession.rs
+  s_b34d432186975d::t_16b01fd5a22fac 35-41
+crates/web-sys/src/features/gen_MediaKeySystemAccess.rs
+  s_b34d432186975d::t_74b951c465fc8d 31-42
+crates/web-sys/src/features/gen_MediaKeySystemConfiguration.rs
+  s_b34d432186975d::t_b3cd641b2bf8a9 58-62
+crates/web-sys/src/features/gen_MediaKeySystemMediaCapability.rs
+  s_b34d432186975d::t_032e1453b8b66f 23-29,40-46
+crates/web-sys/src/features/gen_MediaKeys.rs
+  s_b34d432186975d::t_7989ee5b2a70a6 26-32
+crates/web-sys/src/features/gen_MediaKeysPolicy.rs
+  s_b34d432186975d::t_aa1d0260f8dd34 18-22
+crates/web-sys/src/features/gen_MediaList.rs
+  s_b34d432186975d::t_9f0bb01b256991 26-32,68-74,81-87
+crates/web-sys/src/features/gen_MediaMetadata.rs
+  s_b34d432186975d::t_0d579c4cd1874a 35-45,68-78,101-111
+crates/web-sys/src/features/gen_MediaMetadataInit.rs
+  s_b34d432186975d::t_0c76aa02a553d3 27-35,54-62,101-109
+crates/web-sys/src/features/gen_MediaQueryList.rs
+  s_b34d432186975d::t_4e5b9c9e31d97e 27-33
+crates/web-sys/src/features/gen_MediaQueryListEvent.rs
+  s_b34d432186975d::t_b154c360b3d28d 27-33
+crates/web-sys/src/features/gen_MediaQueryListEventInit.rs
+  s_b34d432186975d::t_18137075508551 58-62
+crates/web-sys/src/features/gen_MediaRecorder.rs
+  s_b34d432186975d::t_dbe836b459ce53 43-49
+crates/web-sys/src/features/gen_MediaRecorderOptions.rs
+  s_b34d432186975d::t_594916ee1a84a8 50-54
+crates/web-sys/src/features/gen_MediaStream.rs
+  s_b34d432186975d::t_a8ba70f0d54fe3 27-33
+crates/web-sys/src/features/gen_MediaStreamConstraints.rs
+  s_b34d432186975d::t_f7040e56c9618a 52-57
+crates/web-sys/src/features/gen_MediaStreamError.rs
+  s_b34d432186975d::t_c6038baebeabe1 22-28,36-42,50-56
+crates/web-sys/src/features/gen_MediaStreamTrack.rs
+  s_b34d432186975d::t_80c0d553b973b4 27-33,41-47,55-61
+crates/web-sys/src/features/gen_MediaStreamTrackGeneratorInit.rs
+  s_b34d432186975d::t_52996bc30ebbcf 30-38
+crates/web-sys/src/features/gen_MediaTrackCapabilities.rs
+  s_b34d432186975d::t_2769c851f1bf22 107-115,194-202
+crates/web-sys/src/features/gen_MediaTrackConstraintSet.rs
+  s_b34d432186975d::t_29e94829c853b9 222-227
+crates/web-sys/src/features/gen_MediaTrackConstraints.rs
+  s_b34d432186975d::t_ca8ec883c725d9 216-220
+crates/web-sys/src/features/gen_MediaTrackSettings.rs
+  s_b34d432186975d::t_6a2e2419aa5530 38-42,63-67
+crates/web-sys/src/features/gen_MemoryAttribution.rs
+  s_b34d432186975d::t_1682013051ae45 47-55,73-81
+crates/web-sys/src/features/gen_MemoryAttributionContainer.rs
+  s_b34d432186975d::t_75c4448894f4a8 27-35,54-62
+crates/web-sys/src/features/gen_MessageEvent.rs
+  s_b34d432186975d::t_a770784955cb7c 34-40,48-54
+crates/web-sys/src/features/gen_MessageEventInit.rs
+  s_b34d432186975d::t_b4f95deb4d8af5 58-62,73-77
+crates/web-sys/src/features/gen_MidiPort.rs
+  s_b34d432186975d::t_0f758b42145816 27-33,41-47,55-61,69-75
+crates/web-sys/src/features/gen_MimeType.rs
+  s_b34d432186975d::t_3600d016c186a2 26-32,48-54,62-68
+crates/web-sys/src/features/gen_MouseEvent.rs
+  s_b34d432186975d::t_91c900f29bf3e5 156-162
+crates/web-sys/src/features/gen_MutationEvent.rs
+  s_b34d432186975d::t_589926f635fa15 35-41,49-55,63-69
+crates/web-sys/src/features/gen_MutationRecord.rs
+  s_b34d432186975d::t_93f4067c8d4f9f 26-32,85-91,104-115,123-129
+crates/web-sys/src/features/gen_NativeOsFileReadOptions.rs
+  s_b34d432186975d::t_29df8fdc1cca62 38-42
+crates/web-sys/src/features/gen_NativeOsFileWriteAtomicOptions.rs
+  s_b34d432186975d::t_8f2212f08d7e61 21-27,78-84
+crates/web-sys/src/features/gen_NavigateEvent.rs
+  s_b34d432186975d::t_6ae86e2dff883a 85-96
+crates/web-sys/src/features/gen_NavigateEventInit.rs
+  s_b34d432186975d::t_3f337632a80521 70-74
+crates/web-sys/src/features/gen_NavigationDestination.rs
+  s_b34d432186975d::t_7dd176f0ea34a0 26-32,40-46,54-60
+crates/web-sys/src/features/gen_NavigationHistoryEntry.rs
+  s_b34d432186975d::t_98c0102f07dd41 27-33,41-47,55-61
+crates/web-sys/src/features/gen_Navigator.rs
+  s_b34d432186975d::t_827d1dd7011896 58-64,293-299,307-313,321-327,335-341,349-355,363-369,377-383
+crates/web-sys/src/features/gen_NavigatorUaBrandVersion.rs
+  s_b34d432186975d::t_f9645e11753c61 27-35,54-62
+crates/web-sys/src/features/gen_NavigatorUaData.rs
+  s_b34d432186975d::t_c5d3493521c559 58-68
+crates/web-sys/src/features/gen_NetworkCommandOptions.rs
+  s_b34d432186975d::t_06297296112fe8 18-22,34-40,52-58,69-73,94-98,129-133,164-168,179-185,196-200,241-245,266-272,283-287,308-312,323-327,348-352,363-367,389-395,407-413,424-428,459-463,474-478,489-493,504-508,539-543,554-558,569-573,584-588,601-607
+crates/web-sys/src/features/gen_NetworkResultOptions.rs
+  s_b34d432186975d::t_c7494396154f97 28-34,45-51,72-76,97-101,132-136,157-161,192-196,217-221,242-246,267-271,282-286,307-311,322-326,357-361,382-386,407-411,432-436,447-451
+crates/web-sys/src/features/gen_Node.rs
+  s_b34d432186975d::t_28b7a3b12be83f 34-40,48-54,128-134,149-155,258-267,275-284
+crates/web-sys/src/features/gen_Notification.rs
+  s_b34d432186975d::t_f4f8d4d0578299 108-114,130-136,144-150,158-164,172-178,186-192,200-206
+crates/web-sys/src/features/gen_NotificationAction.rs
+  s_b34d432186975d::t_652877e5ff21fd 18-22,33-37,48-52
+crates/web-sys/src/features/gen_NotificationOptions.rs
+  s_b34d432186975d::t_6811652d9fdc69 28-32,43-47,80-84,95-99,110-114,155-159
+crates/web-sys/src/features/gen_OffscreenCanvasRenderingContext2d.rs
+  s_b34d432186975d::t_5d27f3204566bc 71-85,258-269,342-353,378-389,534-545,570-581,606-617,642-653
+crates/web-sys/src/features/gen_OpenFilePickerOptions.rs
+  s_b34d432186975d::t_d81ae47859aa33 45-53
+crates/web-sys/src/features/gen_OpenWindowEventDetail.rs
+  s_b34d432186975d::t_59e48d09368467 18-22,45-49,60-64
+crates/web-sys/src/features/gen_OptionalEffectTiming.rs
+  s_b34d432186975d::t_d93f638b18af84 60-64
+crates/web-sys/src/features/gen_PaintRequest.rs
+  s_b34d432186975d::t_986d552a54c0fe 34-40
+crates/web-sys/src/features/gen_PaymentAddress.rs
+  s_b34d432186975d::t_745357e58655a6 26-32,47-53,61-67,80-91,99-105,113-119,127-133,141-147,155-161,169-175
+crates/web-sys/src/features/gen_PaymentMethodChangeEvent.rs
+  s_b34d432186975d::t_67a4ad8c392fa3 33-44
+crates/web-sys/src/features/gen_PaymentMethodChangeEventInit.rs
+  s_b34d432186975d::t_377fba733c6b57 58-62
+crates/web-sys/src/features/gen_PaymentResponse.rs
+  s_b34d432186975d::t_6e2710d88e6a55 26-32,40-46,79-90,98-104,112-118,126-132
+crates/web-sys/src/features/gen_Pbkdf2Params.rs
+  s_b34d432186975d::t_53a097f5d79ceb 18-22
+crates/web-sys/src/features/gen_PerformanceEntry.rs
+  s_b34d432186975d::t_db611724544746 26-32,40-46
+crates/web-sys/src/features/gen_PerformanceEntryEventInit.rs
+  s_b34d432186975d::t_84827515711b68 58-63,84-88,99-103
+crates/web-sys/src/features/gen_PerformanceEntryFilterOptions.rs
+  s_b34d432186975d::t_616f97fbb0b68e 21-27,40-46,57-61
+crates/web-sys/src/features/gen_PerformanceResourceTiming.rs
+  s_b34d432186975d::t_5190356d092ea6 32-43,56-67
+crates/web-sys/src/features/gen_PerformanceServerTiming.rs
+  s_b34d432186975d::t_a3685ff07fae8d 26-32,57-68
+crates/web-sys/src/features/gen_Plugin.rs
+  s_b34d432186975d::t_7e646e7679bf36 26-32,40-46,54-60,68-74
+crates/web-sys/src/features/gen_PluginCrashedEventInit.rs
+  s_b34d432186975d::t_738b5583c74edf 48-54,75-81,92-98,119-123
+crates/web-sys/src/features/gen_PointerEvent.rs
+  s_b34d432186975d::t_9ee368704e3458 90-96
+crates/web-sys/src/features/gen_PointerEventInit.rs
+  s_b34d432186975d::t_2cf456991afd7d 332-336
+crates/web-sys/src/features/gen_PopupBlockedEvent.rs
+  s_b34d432186975d::t_229786ce624ea8 45-56,69-80,93-104
+crates/web-sys/src/features/gen_PopupBlockedEventInit.rs
+  s_b34d432186975d::t_672a7aecc2d939 50-56,67-73,84-90
+crates/web-sys/src/features/gen_PositionError.rs
+  s_b34d432186975d::t_552bb60d5579da 29-35
+crates/web-sys/src/features/gen_PresentationConnection.rs
+  s_b34d432186975d::t_382b8121ee4bec 27-33,41-47
+crates/web-sys/src/features/gen_PresentationConnectionCloseEvent.rs
+  s_b34d432186975d::t_54eb1fda1b1267 45-56
+crates/web-sys/src/features/gen_PresentationConnectionCloseEventInit.rs
+  s_b34d432186975d::t_a2679391cf11ae 53-59
+crates/web-sys/src/features/gen_ProcessingInstruction.rs
+  s_b34d432186975d::t_27fe8240629769 29-35
+crates/web-sys/src/features/gen_ProfileTimelineMarker.rs
+  s_b34d432186975d::t_a919501b4471e4 18-22,100-104,155-159
+crates/web-sys/src/features/gen_ProfileTimelineStackFrame.rs
+  s_b34d432186975d::t_b3d3eee5d6df19 18-24,57-63,94-98
+crates/web-sys/src/features/gen_PublicKeyCredential.rs
+  s_b34d432186975d::t_d8f048542bbe2a 51-68
+crates/web-sys/src/features/gen_PublicKeyCredentialCreationOptionsJson.rs
+  s_b34d432186975d::t_d064300fedd923 32-42,112-122
+crates/web-sys/src/features/gen_PublicKeyCredentialDescriptorJson.rs
+  s_b34d432186975d::t_994e7adedcc22e 30-38,80-88
+crates/web-sys/src/features/gen_PublicKeyCredentialEntity.rs
+  s_b34d432186975d::t_f66650fc778634 19-24,36-40
+crates/web-sys/src/features/gen_PublicKeyCredentialRequestOptions.rs
+  s_b34d432186975d::t_50b16e77f4609e 43-53,161-167
+crates/web-sys/src/features/gen_PublicKeyCredentialRequestOptionsJson.rs
+  s_b34d432186975d::t_c19b8f789fdb36 57-67,112-122,191-201,243-253
+crates/web-sys/src/features/gen_PublicKeyCredentialRpEntity.rs
+  s_b34d432186975d::t_bb205331bc9a20 19-24,36-40,51-55
+crates/web-sys/src/features/gen_PublicKeyCredentialUserEntity.rs
+  s_b34d432186975d::t_407d01b3e90cf8 22-27,39-43,54-58
+crates/web-sys/src/features/gen_PublicKeyCredentialUserEntityJson.rs
+  s_b34d432186975d::t_6d94d0db5566a8 30-40,62-70,92-100
+crates/web-sys/src/features/gen_PushMessageData.rs
+  s_b34d432186975d::t_8903d60add895c 48-54
+crates/web-sys/src/features/gen_PushSubscription.rs
+  s_b34d432186975d::t_56d33e9f76d7f6 26-32
+crates/web-sys/src/features/gen_PushSubscriptionInit.rs
+  s_b34d432186975d::t_51c498f486bb9e 59-63,84-88
+crates/web-sys/src/features/gen_PushSubscriptionJson.rs
+  s_b34d432186975d::t_a583be88e6f520 18-22
+crates/web-sys/src/features/gen_PushSubscriptionKeys.rs
+  s_b34d432186975d::t_dd8bb7b9c49147 18-22,33-37
+crates/web-sys/src/features/gen_RadioNodeList.rs
+  s_b34d432186975d::t_5baf615bb50238 27-33
+crates/web-sys/src/features/gen_RegisterRequest.rs
+  s_b34d432186975d::t_dda3bbe4c0d97f 18-22,33-37
+crates/web-sys/src/features/gen_RegisterResponse.rs
+  s_b34d432186975d::t_808fca9cd51ca9 18-22,43-47,58-62,73-77
+crates/web-sys/src/features/gen_RegisteredKey.rs
+  s_b34d432186975d::t_907ee5d843002e 18-22,33-37,58-62
+crates/web-sys/src/features/gen_RegistrationOptions.rs
+  s_b34d432186975d::t_28f7a0e22b4a33 18-22,33-37
+crates/web-sys/src/features/gen_RegistrationResponseJson.rs
+  s_b34d432186975d::t_2ea849730c4044 29-39,86-94,113-121,163-171
+crates/web-sys/src/features/gen_Request.rs
+  s_b34d432186975d::t_d87fdcd352e2e0 26-32,40-46,70-76,124-130
+crates/web-sys/src/features/gen_RequestInit.rs
+  s_b34d432186975d::t_97f79519894e13 122-126,137-141,199-203
+crates/web-sys/src/features/gen_RequestMediaKeySystemAccessNotification.rs
+  s_b34d432186975d::t_222cf952592e16 23-29
+crates/web-sys/src/features/gen_Response.rs
+  s_b34d432186975d::t_3bb9f75be44c50 34-40,69-75
+crates/web-sys/src/features/gen_ResponseInit.rs
+  s_b34d432186975d::t_b6d5410f962a12 54-58
+crates/web-sys/src/features/gen_RsaOaepParams.rs
+  s_b34d432186975d::t_5157181bac73d6 18-22
+crates/web-sys/src/features/gen_RsaOtherPrimesInfo.rs
+  s_b34d432186975d::t_68f0863c727084 18-22,33-37,48-52
+crates/web-sys/src/features/gen_RsaPssParams.rs
+  s_b34d432186975d::t_7da3b558108433 18-22
+crates/web-sys/src/features/gen_RtcCodecStats.rs
+  s_b34d432186975d::t_56bb460b4100c0 18-22,75-79,90-94
+crates/web-sys/src/features/gen_RtcConfiguration.rs
+  s_b34d432186975d::t_82802ddb4e3137 62-66
+crates/web-sys/src/features/gen_RtcDataChannel.rs
+  s_b34d432186975d::t_a458cc2cac6da0 27-33
+crates/web-sys/src/features/gen_RtcDataChannelInit.rs
+  s_b34d432186975d::t_78b1f4503642ed 78-82
+crates/web-sys/src/features/gen_RtcEncodedAudioFrameMetadata.rs
+  s_b34d432186975d::t_3add31f556f72e 47-57
+crates/web-sys/src/features/gen_RtcEncodedVideoFrameMetadata.rs
+  s_b34d432186975d::t_fab62273ac6cbe 124-134
+crates/web-sys/src/features/gen_RtcIceCandidate.rs
+  s_b34d432186975d::t_ebda26473354a4 26-32,47-53
+crates/web-sys/src/features/gen_RtcIceCandidateInit.rs
+  s_b34d432186975d::t_f68f49fe31c429 18-22,43-47
+crates/web-sys/src/features/gen_RtcIceCandidatePairStats.rs
+  s_b34d432186975d::t_bbd9ce438883da 18-22,127-133,186-192,225-231
+crates/web-sys/src/features/gen_RtcIceCandidateStats.rs
+  s_b34d432186975d::t_d8424dd1060d94 18-22,55-59,82-86,97-101,122-126
+crates/web-sys/src/features/gen_RtcIceComponentStats.rs
+  s_b34d432186975d::t_fb3314a19edda6 18-22,95-99
+crates/web-sys/src/features/gen_RtcIceServer.rs
+  s_b34d432186975d::t_7ecef9e5e862c3 18-22,45-49,80-84
+crates/web-sys/src/features/gen_RtcIdentityAssertion.rs
+  s_b34d432186975d::t_188dc922872b73 18-22,33-37
+crates/web-sys/src/features/gen_RtcIdentityAssertionResult.rs
+  s_b34d432186975d::t_2960e334f1052e 18-22
+crates/web-sys/src/features/gen_RtcIdentityProviderDetails.rs
+  s_b34d432186975d::t_f62eff27c20c22 18-22,33-37
+crates/web-sys/src/features/gen_RtcIdentityProviderOptions.rs
+  s_b34d432186975d::t_ca7c46736752f7 18-24,35-39,50-56
+crates/web-sys/src/features/gen_RtcIdentityValidationResult.rs
+  s_b34d432186975d::t_87de5b8c2192a6 18-22,33-37
+crates/web-sys/src/features/gen_RtcInboundRtpStreamStats.rs
+  s_b34d432186975d::t_62a4c9cc1e5f19 18-22,75-79,130-136,147-151,182-186,197-201,212-218
+crates/web-sys/src/features/gen_RtcMediaStreamStats.rs
+  s_b34d432186975d::t_e5a49397cb089b 18-22,55-61
+crates/web-sys/src/features/gen_RtcMediaStreamTrackStats.rs
+  s_b34d432186975d::t_d4228be034cabb 18-22,186-192
+crates/web-sys/src/features/gen_RtcOutboundRtpStreamStats.rs
+  s_b34d432186975d::t_0246285803e200 18-22,75-79,130-136,147-152,183-187,198-202,213-219
+crates/web-sys/src/features/gen_RtcPeerConnection.rs
+  s_b34d432186975d::t_c139ed74844fc7 186-197
+crates/web-sys/src/features/gen_RtcPeerConnectionIceErrorEvent.rs
+  s_b34d432186975d::t_4ffa6728ab6dec 32-43,68-79,104-115
+crates/web-sys/src/features/gen_RtcRtcpParameters.rs
+  s_b34d432186975d::t_1afa9474555129 18-22
+crates/web-sys/src/features/gen_RtcRtpCodecCapability.rs
+  s_b34d432186975d::t_37c5fe9215780f 38-42,53-57
+crates/web-sys/src/features/gen_RtcRtpCodecParameters.rs
+  s_b34d432186975d::t_191f023452291b 38-42,63-67
+crates/web-sys/src/features/gen_RtcRtpEncodingParameters.rs
+  s_b34d432186975d::t_f6fc48ec26a89a 79-83,112-122
+crates/web-sys/src/features/gen_RtcRtpHeaderExtensionCapability.rs
+  s_b34d432186975d::t_d7cf0066764a44 21-25
+crates/web-sys/src/features/gen_RtcRtpHeaderExtensionParameters.rs
+  s_b34d432186975d::t_e65dbc19dbe534 41-45
+crates/web-sys/src/features/gen_RtcRtpTransceiver.rs
+  s_b34d432186975d::t_78b4cfd37e1455 26-32,92-98
+crates/web-sys/src/features/gen_RtcSessionDescription.rs
+  s_b34d432186975d::t_fa06a63f35f5a0 42-48
+crates/web-sys/src/features/gen_RtcSessionDescriptionInit.rs
+  s_b34d432186975d::t_c40d24e7822f7a 18-22
+crates/web-sys/src/features/gen_RtcStats.rs
+  s_b34d432186975d::t_011c56ad802e27 18-22
+crates/web-sys/src/features/gen_RtcStatsReportInternal.rs
+  s_b34d432186975d::t_44405263c8c391 104-108,165-169,200-204
+crates/web-sys/src/features/gen_RtcTransportStats.rs
+  s_b34d432186975d::t_3e6bbf993787ad 18-22
+crates/web-sys/src/features/gen_RtcdtmfSender.rs
+  s_b34d432186975d::t_ee8654dcc87bdd 41-47
+crates/web-sys/src/features/gen_RtcdtmfToneChangeEvent.rs
+  s_b34d432186975d::t_dc68fb7a5efadf 27-33
+crates/web-sys/src/features/gen_RtcdtmfToneChangeEventInit.rs
+  s_b34d432186975d::t_59cf0d3aff1f5f 48-52
+crates/web-sys/src/features/gen_RtcrtpContributingSourceStats.rs
+  s_b34d432186975d::t_755d85ed074042 21-25,70-76
+crates/web-sys/src/features/gen_RtcrtpStreamStats.rs
+  s_b34d432186975d::t_65fcb92f9ed329 18-22,75-79,130-134,145-149,180-184,195-199,210-214
+crates/web-sys/src/features/gen_SaveFilePickerOptions.rs
+  s_b34d432186975d::t_82d684cb16a019 45-53,123-132
+crates/web-sys/src/features/gen_ScreenDetailed.rs
+  s_b34d432186975d::t_33fae5abef5360 118-128
+crates/web-sys/src/features/gen_SecurityPolicyViolationEvent.rs
+  s_b34d432186975d::t_3fdd0e6edf7aa8 32-43,56-67,80-91,104-115,128-140,153-164,177-188,201-212
+crates/web-sys/src/features/gen_SecurityPolicyViolationEventInit.rs
+  s_b34d432186975d::t_7b1eaaeb9197e7 53-59,99-105,118-124,147-153,165-171,182-188,201-207,230-236
+crates/web-sys/src/features/gen_Selection.rs
+  s_b34d432186975d::t_b457305d6a1843 70-76
+crates/web-sys/src/features/gen_ServiceWorker.rs
+  s_b34d432186975d::t_af5d810733f0f3 27-33
+crates/web-sys/src/features/gen_ServiceWorkerContainer.rs
+  s_b34d432186975d::t_9f4b91f5c58473 172-186
+crates/web-sys/src/features/gen_ServiceWorkerRegistration.rs
+  s_b34d432186975d::t_67185225b84f76 84-95
+crates/web-sys/src/features/gen_ShadowRoot.rs
+  s_b34d432186975d::t_7ff51712ab83fc 45-51
+crates/web-sys/src/features/gen_ShareData.rs
+  s_b34d432186975d::t_7ae49df88d2b4c 28-32,43-47,58-62
+crates/web-sys/src/features/gen_SharedWorkerGlobalScope.rs
+  s_b34d432186975d::t_c994d349d25f27 28-34
+crates/web-sys/src/features/gen_SignResponse.rs
+  s_b34d432186975d::t_e3dd9db08c452e 18-22,43-47,58-62,73-77
+crates/web-sys/src/features/gen_SocketElement.rs
+  s_b34d432186975d::t_2ac168203be839 28-32
+crates/web-sys/src/features/gen_SpeechGrammar.rs
+  s_b34d432186975d::t_6435e05caf41f4 26-32
+crates/web-sys/src/features/gen_SpeechRecognition.rs
+  s_b34d432186975d::t_6ceb3d8765b0e4 43-49,144-156
+crates/web-sys/src/features/gen_SpeechRecognitionAlternative.rs
+  s_b34d432186975d::t_60ab58c24ef335 31-42
+crates/web-sys/src/features/gen_SpeechRecognitionError.rs
+  s_b34d432186975d::t_ae8b7fff6c0af5 40-51
+crates/web-sys/src/features/gen_SpeechRecognitionErrorInit.rs
+  s_b34d432186975d::t_d865fbf1cb4626 60-64
+crates/web-sys/src/features/gen_SpeechSynthesisErrorEventInit.rs
+  s_b34d432186975d::t_bfede573955cbc 81-85
+crates/web-sys/src/features/gen_SpeechSynthesisEvent.rs
+  s_b34d432186975d::t_1129a33d0a08fe 76-82
+crates/web-sys/src/features/gen_SpeechSynthesisEventInit.rs
+  s_b34d432186975d::t_81466b1f19922b 78-82
+crates/web-sys/src/features/gen_SpeechSynthesisUtterance.rs
+  s_b34d432186975d::t_6b14c2810a9640 32-43,68-79
+crates/web-sys/src/features/gen_SpeechSynthesisVoice.rs
+  s_b34d432186975d::t_136e021c3cdf16 31-42,50-56,64-70
+crates/web-sys/src/features/gen_Storage.rs
+  s_b34d432186975d::t_4840af60a5eb1b 40-49,57-64,85-91
+crates/web-sys/src/features/gen_StorageEvent.rs
+  s_b34d432186975d::t_cdc3750ee351ec 27-33,41-47,55-61,69-75
+crates/web-sys/src/features/gen_StorageEventInit.rs
+  s_b34d432186975d::t_a89233c8a682cf 48-52,63-67,78-82,105-109
+crates/web-sys/src/features/gen_StyleSheet.rs
+  s_b34d432186975d::t_f1e9e608f9975f 26-32,40-46,69-75
+crates/web-sys/src/features/gen_SvgAngle.rs
+  s_b34d432186975d::t_63f1ddf5b5fef0 71-77
+crates/web-sys/src/features/gen_SvgAnimatedString.rs
+  s_b34d432186975d::t_401f172e06657e 26-32,47-53
+crates/web-sys/src/features/gen_SvgElement.rs
+  s_b34d432186975d::t_f24f2cd8a1c6b0 29-35,1401-1407
+crates/web-sys/src/features/gen_SvgLength.rs
+  s_b34d432186975d::t_bfa88a97f1a9bb 71-77
+crates/web-sys/src/features/gen_SvgPathSeg.rs
+  s_b34d432186975d::t_aa7112e4c5333c 34-45
+crates/web-sys/src/features/gen_SvgScriptElement.rs
+  s_b34d432186975d::t_f14c4631ea172e 30-36,51-57
+crates/web-sys/src/features/gen_SvgStringList.rs
+  s_b34d432186975d::t_bab6a66f8c2dea 43-52,67-76,87-96,113-128,139-148,160-170,177-183
+crates/web-sys/src/features/gen_SvgStyleElement.rs
+  s_b34d432186975d::t_fe8cdd096c4de2 30-36,51-57,72-78,93-99
+crates/web-sys/src/features/gen_SvgaElement.rs
+  s_b34d432186975d::t_b059e027a644bf 39-45,60-66,81-87,102-108,131-137,152-158,173-179
+crates/web-sys/src/features/gen_TcpSocket.rs
+  s_b34d432186975d::t_a40c6058f197ac 27-33
+crates/web-sys/src/features/gen_TcpSocketErrorEvent.rs
+  s_b34d432186975d::t_95af4a3a2b751f 27-33,41-47
+crates/web-sys/src/features/gen_TcpSocketErrorEventInit.rs
+  s_b34d432186975d::t_90b4bace46b4ce 48-52,63-67
+crates/web-sys/src/features/gen_Text.rs
+  s_b34d432186975d::t_a0dbb943007724 29-35
+crates/web-sys/src/features/gen_TextDecoder.rs
+  s_b34d432186975d::t_82b2969e6d2fc7 26-32,73-79,90-99,110-119,129-138,153-164,177-188,199-210
+crates/web-sys/src/features/gen_TextEncoder.rs
+  s_b34d432186975d::t_6e3fb89eca2865 26-32
+crates/web-sys/src/features/gen_TextTrack.rs
+  s_b34d432186975d::t_62a9450f3f91e5 35-41,49-55,63-69,82-93
+crates/web-sys/src/features/gen_TextTrackCue.rs
+  s_b34d432186975d::t_a4fc2162306cca 35-41
+crates/web-sys/src/features/gen_ToggleEvent.rs
+  s_b34d432186975d::t_e98c30deca2e8e 27-33,41-47
+crates/web-sys/src/features/gen_ToggleEventInit.rs
+  s_b34d432186975d::t_c719c96eb3eca3 48-52,63-67
+crates/web-sys/src/features/gen_TokenBinding.rs
+  s_b34d432186975d::t_946361ebbcad18 18-22,33-37
+crates/web-sys/src/features/gen_TransitionEvent.rs
+  s_b34d432186975d::t_cae5c34d3ff5d2 27-33,53-64
+crates/web-sys/src/features/gen_TransitionEventInit.rs
+  s_b34d432186975d::t_f69c489c365abc 58-62,73-77
+crates/web-sys/src/features/gen_TreeCellInfo.rs
+  s_b34d432186975d::t_fe7f9523630862 18-22
+crates/web-sys/src/features/gen_TreeView.rs
+  s_b34d432186975d::t_e289643dfedc72 72-81
+crates/web-sys/src/features/gen_U2fClientData.rs
+  s_b34d432186975d::t_34f9228e28d2aa 18-22,33-37,48-52
+crates/web-sys/src/features/gen_UaDataValues.rs
+  s_b34d432186975d::t_f43fd5bb3e91c1 27-35,54-62,159-167,186-194,213-221
+crates/web-sys/src/features/gen_UaLowEntropyJson.rs
+  s_b34d432186975d::t_87467fff7aba49 65-73
+crates/web-sys/src/features/gen_UdpMessageEventInit.rs
+  s_b34d432186975d::t_e049d4bdb4d4ab 58-62
+crates/web-sys/src/features/gen_UdpOptions.rs
+  s_b34d432186975d::t_4a78d9efdfde2d 28-32,63-67
+crates/web-sys/src/features/gen_Url.rs
+  s_b34d432186975d::t_a3ce225d101a81 22-28,43-49,57-63,78-84,99-105,120-126,141-147,162-168,183-189,204-210,233-239,274-288,304-318,338-344
+crates/web-sys/src/features/gen_UrlSearchParams.rs
+  s_b34d432186975d::t_6059df8bfd093a 79-85
+crates/web-sys/src/features/gen_UsbAlternateInterface.rs
+  s_b34d432186975d::t_6575ca7ad18479 104-119
+crates/web-sys/src/features/gen_UsbConfiguration.rs
+  s_b34d432186975d::t_feea3215f14dd5 56-71
+crates/web-sys/src/features/gen_UsbDevice.rs
+  s_b34d432186975d::t_0e0d769b43acc6 161-171,183-193,205-215
+crates/web-sys/src/features/gen_UsbDeviceFilter.rs
+  s_b34d432186975d::t_d74eda55fdcc91 81-89
+crates/web-sys/src/features/gen_VideoConfiguration.rs
+  s_b34d432186975d::t_ab0a254c0b8b68 38-42,53-57
+crates/web-sys/src/features/gen_VideoDecoderConfig.rs
+  s_b34d432186975d::t_3a7c17eb39792d 27-35
+crates/web-sys/src/features/gen_VideoEncoderConfig.rs
+  s_b34d432186975d::t_24650d2bdfde36 94-102,121-129,260-268
+crates/web-sys/src/features/gen_VideoTrack.rs
+  s_b34d432186975d::t_6af4029717d362 26-32,40-46,54-60,68-74
+crates/web-sys/src/features/gen_VrDisplay.rs
+  s_b34d432186975d::t_b91df8ecff54b6 64-70
+crates/web-sys/src/features/gen_VrSubmitFrameResult.rs
+  s_b34d432186975d::t_f27b2b55b9d119 38-49
+crates/web-sys/src/features/gen_VttCue.rs
+  s_b34d432186975d::t_9b5645ff0e3192 196-202
+crates/web-sys/src/features/gen_VttRegion.rs
+  s_b34d432186975d::t_7ab84d4492fa81 26-32
+crates/web-sys/src/features/gen_WebGl2RenderingContext.rs
+  s_b34d432186975d::t_eab149d75e39a1 2328-2343,8671-8685,8732-8746,8793-8807
+crates/web-sys/src/features/gen_WebGlActiveInfo.rs
+  s_b34d432186975d::t_d9aeb486a490ed 40-46
+crates/web-sys/src/features/gen_WebGlContextEvent.rs
+  s_b34d432186975d::t_acb7139e03ea23 32-43
+crates/web-sys/src/features/gen_WebGlContextEventInit.rs
+  s_b34d432186975d::t_a48b5d3923016d 48-53
+crates/web-sys/src/features/gen_WebGlRenderingContext.rs
+  s_b34d432186975d::t_343110de8af339 1918-1932,1979-1993,2040-2054
+crates/web-sys/src/features/gen_WebSocket.rs
+  s_b34d432186975d::t_f4edfa274f51c3 27-33,97-103,111-117
+crates/web-sys/src/features/gen_WebSocketElement.rs
+  s_b34d432186975d::t_05aa3739dd477f 28-32
+crates/web-sys/src/features/gen_WebTransportCloseInfo.rs
+  s_b34d432186975d::t_ca5a3e72c49a37 45-53
+crates/web-sys/src/features/gen_WebTransportHash.rs
+  s_b34d432186975d::t_415491fdf5143d 27-35
+crates/web-sys/src/features/gen_WebglDebugShaders.rs
+  s_b34d432186975d::t_f0acff6ebc999c 30-44
+crates/web-sys/src/features/gen_WidevineCdmManifest.rs
+  s_b34d432186975d::t_30db6576dc0859 18-22,33-37,48-52,63-67,78-82,93-98,109-113
+crates/web-sys/src/features/gen_Window.rs
+  s_b34d432186975d::t_fb0df72784507f 57-63,158-164,2091-2097,2336-2342,2353-2362,2373-2383,2649-2655,2663-2669
+crates/web-sys/src/features/gen_WorkerGlobalScope.rs
+  s_b34d432186975d::t_d66a9e411ab2c9 133-139,333-342,350-359
+crates/web-sys/src/features/gen_WorkerLocation.rs
+  s_b34d432186975d::t_85d39520802d42 26-32,40-46,54-60,68-74,82-88,96-102,110-116,124-130,138-144
+crates/web-sys/src/features/gen_WorkerNavigator.rs
+  s_b34d432186975d::t_19188378198775 118-130,138-144,158-170,184-196,210-222,230-236,244-250
+crates/web-sys/src/features/gen_WorkerOptions.rs
+  s_b34d432186975d::t_ddffa9f2afbacf 30-34
+crates/web-sys/src/features/gen_XPathResult.rs
+  s_b34d432186975d::t_20d6f719bd00ca 52-64
+crates/web-sys/src/features/gen_XmlHttpRequest.rs
+  s_b34d432186975d::t_4a7b84b8558e79 105-111,132-144,188-202,252-265,281-295
+crates/web-sys/src/features/gen_XmlSerializer.rs
+  s_b34d432186975d::t_46ea8b7fc9c9f5 42-57
+crates/web-sys/src/features/gen_css.rs
+  s_b34d432186975d::t_010c30aac45486 37-43
+crates/webidl-tests/globals.js
+  s_b34d432186975d::t_37891be20de9b7 831-839
+crates/webidl-tests/strings.rs
+  s_ac7fb576486525::t_448196bb7f92bb 78-120
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "a4b4e2296710584072648c12a670130c3583b98a",
+  "prompts": {},
+  "sessions": {
+    "s_ac7fb576486525": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fa1618e03ffeCizYAx1qQJ5mJJ",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    },
+    "s_b34d432186975d": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fa1d2ff74ffea0HngPXAq2u8E3",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
