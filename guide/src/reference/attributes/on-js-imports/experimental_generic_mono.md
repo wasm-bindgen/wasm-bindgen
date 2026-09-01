@@ -265,6 +265,34 @@ A constructor or inferred self-returning static method whose return is
 so the method remains on the imported class's default specialization instead
 of being hoisted.
 
+## Callback arguments
+
+A top-level raw `&dyn Fn(...)` or `&mut dyn FnMut(...)` callback may use type
+parameters in its own inputs and return type. This is the shape used by typed
+`js-sys` APIs such as `Array::map`:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    type Array<T>;
+
+    #[wasm_bindgen(method, experimental_generic_mono)]
+    fn map<T, U>(
+        this: &Array<T>,
+        callback: &mut dyn FnMut(T, u32, Array<T>) -> U,
+    ) -> Array<U>;
+}
+```
+
+The public wrapper accepts an ordinary Rust closure through `impl Fn` or
+`impl FnMut`, as on the non-generic import path. Each monomorphization describes
+the callback's concrete ABI argument and return types.
+
+Generic callback inputs and returns must be owned types. Borrowed forms such as
+`FnMut(&T)` and higher-ranked forms such as `for<'a> FnMut(&'a T)` are rejected.
+The callback must also be the top-level argument shape shown above; callback
+trait objects nested in another type do not receive this lowering.
+
 ## Other attributes
 
 `experimental_generic_mono` composes with the usual import attributes — `method`,
@@ -326,7 +354,10 @@ usually to drop `experimental_generic_mono`:
   `&T` *is* supported, and mutable references to *concrete* types (e.g.
   `&mut [u16]`, `&mut dyn FnMut(u32)`) bind exactly as they do on the
   non-generic import path — the restriction is only about references to type
-  parameters.
+  parameters. Top-level callbacks whose owned input or return types are generic
+  are supported separately as described in [Callback arguments](#callback-arguments).
+* **Borrowed or higher-ranked generic callback inputs and returns**
+  (`FnMut(&T)`, `for<'a> FnMut(&'a T)`).
 * **Returning a reference.**
 * **A bare type parameter, or a reference to one (`&T`), as the `variadic`
   argument**, since it may monomorphise to a scalar, which is not spreadable.

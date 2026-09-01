@@ -13,6 +13,10 @@ exports.withCallback = function (f, times) {
   }
 };
 
+exports.transform = function (value, f) {
+  return f(value);
+};
+
 exports.tryGet = function (key) {
   if (key === 0) {
     throw new Error("boom");

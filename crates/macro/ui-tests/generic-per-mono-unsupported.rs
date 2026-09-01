@@ -197,4 +197,19 @@ extern "C" {
     fn erased_slice_to_array_generic_elem<T>(xs: &[T]);
 }
 
+#[wasm_bindgen]
+extern "C" {
+    // Generic callback inputs cannot be borrowed by per-mono codegen.
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn callback_borrowed_arg<T>(f: &mut dyn FnMut(&T));
+
+    // Higher-ranked generic callback signatures are likewise unsupported.
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn callback_higher_ranked_arg<T>(f: &mut dyn for<'a> FnMut(&'a T));
+
+    // Nor can a generic callback return a borrowed value.
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn callback_borrowed_return<'a, T>(f: &mut dyn FnMut() -> &'a T);
+}
+
 fn main() {}

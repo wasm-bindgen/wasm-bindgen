@@ -171,3 +171,21 @@ error: `slice_to_array` requires a concrete slice element type (e.g. `&[u16]`); 
     |
 197 |     fn erased_slice_to_array_generic_elem<T>(xs: &[T]);
     |                                                  ^^^^
+
+error: experimental_generic_mono does not support borrowed generic callback arguments
+   --> ui-tests/generic-per-mono-unsupported.rs:204:51
+    |
+204 |     fn callback_borrowed_arg<T>(f: &mut dyn FnMut(&T));
+    |                                                   ^^
+
+error: experimental_generic_mono does not support higher-ranked generic callback signatures
+   --> ui-tests/generic-per-mono-unsupported.rs:208:41
+    |
+208 |     fn callback_higher_ranked_arg<T>(f: &mut dyn for<'a> FnMut(&'a T));
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: experimental_generic_mono does not support borrowed generic callback returns
+   --> ui-tests/generic-per-mono-unsupported.rs:212:63
+    |
+212 |     fn callback_borrowed_return<'a, T>(f: &mut dyn FnMut() -> &'a T);
+    |                                                               ^^^^^

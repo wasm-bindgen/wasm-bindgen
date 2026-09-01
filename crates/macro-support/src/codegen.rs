@@ -2978,6 +2978,12 @@ impl ast::ImportFunction {
     /// none of the wrapper's generics — and, for a method whose receiver names
     /// one (`this: &'a Foo`), binding the receiver as `&'a self`.
     ///
+    /// A top-level raw `&dyn Fn(...)`/`&mut dyn FnMut(...)` callback may use
+    /// generic types in its inputs and return. Its wrapper uses the ordinary
+    /// import path's `impl Fn`/`impl FnMut` lowering while the monomorphized
+    /// shim retains the raw trait-object ABI. Borrowed and higher-ranked
+    /// generic callback signatures are not supported.
+    ///
     /// Not (yet) supported, and rejected with a diagnostic:
     /// - class argument lists `validate_class_shape` cannot faithfully hoist;
     /// - a mutable reference to a generic type parameter (`&mut T`), or a
@@ -2989,6 +2995,7 @@ impl ast::ImportFunction {
     ///   the `Ok` type is monomorphised;
     /// - `slice_to_array` on a slice whose element type mentions a type
     ///   parameter;
+    /// - borrowed or higher-ranked generic callback inputs and returns;
     /// - `reexport` and `assert_no_shim`, neither of which has a well-defined
     ///   meaning when one shim is manufactured per monomorphisation.
     ///
@@ -3298,6 +3305,67 @@ impl ast::ImportFunction {
                     "unsupported pattern in experimental_generic_mono imported function",
                 ),
             };
+
+            // Raw callback trait objects already have generic ABI support in
+            // `convert::closures`. Lower all of them like ordinary imports,
+            // adding bounds when their callback signature is generic.
+            if let Some((is_mut, fn_bounds)) = detect_raw_fn_trait_obj(ty) {
+                if let Some((inputs, ret, higher_ranked)) = fn_trait_bound_sig(fn_bounds) {
+                    if higher_ranked {
+                        bail_span!(
+                            ty,
+                            "experimental_generic_mono does not support higher-ranked generic callback signatures"
+                        );
+                    }
+                    for input in &inputs {
+                        if generics::uses_generic_params(input, &type_params) {
+                            if generics::references_generic_param(input, &type_params) {
+                                bail_span!(
+                                    input,
+                                    "experimental_generic_mono does not support borrowed generic callback arguments"
+                                );
+                            }
+                            where_bounds.push(quote! {
+                                #input: #wasm_bindgen::convert::FromWasmAbi
+                            });
+                        }
+                    }
+                    if generics::uses_generic_params(&ret, &type_params) {
+                        if generics::references_generic_param(&ret, &type_params) {
+                            bail_span!(
+                                ret,
+                                "experimental_generic_mono does not support borrowed generic callback returns"
+                            );
+                        }
+                        where_bounds.push(quote! {
+                            #ret: #wasm_bindgen::convert::ReturnWasmAbi
+                        });
+                    }
+
+                    let amp = if is_mut {
+                        quote! { &mut }
+                    } else {
+                        quote! { & }
+                    };
+                    wrapper_args.push(quote! {
+                        #name: #amp (impl #fn_bounds + #wasm_bindgen::__rt::marker::MaybeUnwindSafe)
+                    });
+                    let abi_ty = quote! { #amp dyn #fn_bounds };
+                    let abi = quote! { <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi };
+                    let (args, names) = splat(wasm_bindgen, &name, &abi, Span::call_site());
+                    shim_abi_args.extend(args);
+                    arg_conversions.push(quote! {
+                        let #name = <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>
+                            ::into_abi(#name as #amp dyn #fn_bounds);
+                        let (#(#names),*) = <#abi as #wasm_bindgen::convert::WasmAbi>::split(#name);
+                    });
+                    all_prim_names.extend(names);
+                    describe_args.push(quote! {
+                        <#abi_ty as #wasm_bindgen::describe::WasmDescribe>::describe();
+                    });
+                    continue;
+                }
+            }
 
             if generics::uses_generic_params(ty, &type_params) {
                 // A bare, shared reference to a generic type parameter (`&T`)
@@ -5577,6 +5645,28 @@ fn detect_raw_fn_trait_obj(
                 }
             }
         }
+    }
+    None
+}
+
+/// Extracts the argument and return types from a `Fn`/`FnMut` trait bound.
+fn fn_trait_bound_sig(
+    bounds: &syn::punctuated::Punctuated<syn::TypeParamBound, syn::token::Plus>,
+) -> Option<(Vec<syn::Type>, syn::Type, bool)> {
+    for bound in bounds {
+        let syn::TypeParamBound::Trait(tb) = bound else {
+            continue;
+        };
+        let segment = tb.path.segments.last()?;
+        let syn::PathArguments::Parenthesized(args) = &segment.arguments else {
+            continue;
+        };
+        let inputs = args.inputs.iter().map(|arg| arg.ty.clone()).collect();
+        let ret = match &args.output {
+            syn::ReturnType::Type(_, ty) => (**ty).clone(),
+            syn::ReturnType::Default => parse_quote!(()),
+        };
+        return Some((inputs, ret, tb.lifetimes.is_some()));
     }
     None
 }
