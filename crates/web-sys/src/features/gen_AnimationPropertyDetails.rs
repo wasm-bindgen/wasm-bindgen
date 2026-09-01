@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AnimationPropertyDetails`*"]
     #[wasm_bindgen(method, getter = "property")]
     pub fn get_property(this: &AnimationPropertyDetails) -> ::alloc::string::String;
+    #[doc = "Like `get_property()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AnimationPropertyDetails`*"]
+    #[wasm_bindgen(method, getter = "property")]
+    pub fn get_property_js_string(this: &AnimationPropertyDetails) -> ::js_sys::JsString;
     #[doc = "Change the `property` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AnimationPropertyDetails`*"]
@@ -45,6 +50,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AnimationPropertyDetails`*"]
     #[wasm_bindgen(method, getter = "warning")]
     pub fn get_warning(this: &AnimationPropertyDetails) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_warning()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AnimationPropertyDetails`*"]
+    #[wasm_bindgen(method, getter = "warning")]
+    pub fn get_warning_js_string(this: &AnimationPropertyDetails) -> Option<::js_sys::JsString>;
     #[doc = "Change the `warning` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AnimationPropertyDetails`*"]

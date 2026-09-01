@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `VideoTrack`*"]
     pub fn id(this: &VideoTrack) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "VideoTrack", js_name = "id")]
+    #[doc = "Like `id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoTrack/id)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoTrack`*"]
+    pub fn id_js_string(this: &VideoTrack) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "VideoTrack", js_name = "kind")]
     #[doc = "Getter for the `kind` field of this object."]
     #[doc = ""]
@@ -30,6 +37,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `VideoTrack`*"]
     pub fn kind(this: &VideoTrack) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "VideoTrack", js_name = "kind")]
+    #[doc = "Like `kind()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoTrack/kind)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoTrack`*"]
+    pub fn kind_js_string(this: &VideoTrack) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "VideoTrack", js_name = "label")]
     #[doc = "Getter for the `label` field of this object."]
     #[doc = ""]
@@ -37,6 +51,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `VideoTrack`*"]
     pub fn label(this: &VideoTrack) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "VideoTrack", js_name = "label")]
+    #[doc = "Like `label()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoTrack/label)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoTrack`*"]
+    pub fn label_js_string(this: &VideoTrack) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "VideoTrack", js_name = "language")]
     #[doc = "Getter for the `language` field of this object."]
     #[doc = ""]
@@ -44,6 +65,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `VideoTrack`*"]
     pub fn language(this: &VideoTrack) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "VideoTrack", js_name = "language")]
+    #[doc = "Like `language()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VideoTrack/language)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoTrack`*"]
+    pub fn language_js_string(this: &VideoTrack) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "VideoTrack", js_name = "selected")]
     #[doc = "Getter for the `selected` field of this object."]
     #[doc = ""]

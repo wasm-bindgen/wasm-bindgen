@@ -40,6 +40,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
     #[wasm_bindgen(method, getter = "addonId")]
     pub fn get_addon_id(this: &ConsoleEvent) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_addon_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[wasm_bindgen(method, getter = "addonId")]
+    pub fn get_addon_id_js_string(this: &ConsoleEvent) -> Option<::js_sys::JsString>;
     #[doc = "Change the `addonId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
@@ -70,6 +75,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
     #[wasm_bindgen(method, getter = "consoleID")]
     pub fn get_console_id(this: &ConsoleEvent) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_console_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[wasm_bindgen(method, getter = "consoleID")]
+    pub fn get_console_id_js_string(this: &ConsoleEvent) -> Option<::js_sys::JsString>;
     #[doc = "Change the `consoleID` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
@@ -90,6 +100,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
     #[wasm_bindgen(method, getter = "filename")]
     pub fn get_filename(this: &ConsoleEvent) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_filename()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[wasm_bindgen(method, getter = "filename")]
+    pub fn get_filename_js_string(this: &ConsoleEvent) -> Option<::js_sys::JsString>;
     #[doc = "Change the `filename` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
@@ -100,6 +115,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
     #[wasm_bindgen(method, getter = "functionName")]
     pub fn get_function_name(this: &ConsoleEvent) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_function_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[wasm_bindgen(method, getter = "functionName")]
+    pub fn get_function_name_js_string(this: &ConsoleEvent) -> Option<::js_sys::JsString>;
     #[doc = "Change the `functionName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
@@ -110,6 +130,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
     #[wasm_bindgen(method, getter = "groupName")]
     pub fn get_group_name(this: &ConsoleEvent) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_group_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[wasm_bindgen(method, getter = "groupName")]
+    pub fn get_group_name_js_string(this: &ConsoleEvent) -> Option<::js_sys::JsString>;
     #[doc = "Change the `groupName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
@@ -145,6 +170,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
     #[wasm_bindgen(method, getter = "level")]
     pub fn get_level(this: &ConsoleEvent) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_level()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[wasm_bindgen(method, getter = "level")]
+    pub fn get_level_js_string(this: &ConsoleEvent) -> Option<::js_sys::JsString>;
     #[doc = "Change the `level` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
@@ -165,6 +195,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
     #[wasm_bindgen(method, getter = "prefix")]
     pub fn get_prefix(this: &ConsoleEvent) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_prefix()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]
+    #[wasm_bindgen(method, getter = "prefix")]
+    pub fn get_prefix_js_string(this: &ConsoleEvent) -> Option<::js_sys::JsString>;
     #[doc = "Change the `prefix` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleEvent`*"]

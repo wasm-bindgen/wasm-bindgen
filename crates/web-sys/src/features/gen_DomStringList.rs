@@ -37,10 +37,24 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomStringList`*"]
     pub fn item(this: &DomStringList, index: u32) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, js_class = "DOMStringList", js_name = "item")]
+    #[doc = "Like `item()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMStringList/item)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomStringList`*"]
+    pub fn item_js_string(this: &DomStringList, index: u32) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, js_class = "DOMStringList", indexing_getter)]
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomStringList`*"]
     pub fn get(this: &DomStringList, index: u32) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, js_class = "DOMStringList", indexing_getter)]
+    #[doc = "Like `get()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMStringList/get)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomStringList`*"]
+    pub fn get_js_string(this: &DomStringList, index: u32) -> Option<::js_sys::JsString>;
 }

@@ -26,6 +26,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ProcessingInstruction`*"]
     pub fn target(this: &ProcessingInstruction) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "ProcessingInstruction", js_name = "target")]
+    #[doc = "Like `target()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ProcessingInstruction/target)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ProcessingInstruction`*"]
+    pub fn target_js_string(this: &ProcessingInstruction) -> ::js_sys::JsString;
     #[cfg(feature = "StyleSheet")]
     #[wasm_bindgen(method, getter, js_class = "ProcessingInstruction", js_name = "sheet")]
     #[doc = "Getter for the `sheet` field of this object."]

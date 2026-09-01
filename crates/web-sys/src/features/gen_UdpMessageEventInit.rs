@@ -55,6 +55,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `UdpMessageEventInit`*"]
     #[wasm_bindgen(method, getter = "remoteAddress")]
     pub fn get_remote_address(this: &UdpMessageEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_remote_address()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `UdpMessageEventInit`*"]
+    #[wasm_bindgen(method, getter = "remoteAddress")]
+    pub fn get_remote_address_js_string(this: &UdpMessageEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `remoteAddress` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UdpMessageEventInit`*"]

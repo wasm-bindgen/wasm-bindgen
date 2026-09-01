@@ -35,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoConfiguration`*"]
     #[wasm_bindgen(method, getter = "contentType")]
     pub fn get_content_type(this: &VideoConfiguration) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_content_type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoConfiguration`*"]
+    #[wasm_bindgen(method, getter = "contentType")]
+    pub fn get_content_type_js_string(this: &VideoConfiguration) -> Option<::js_sys::JsString>;
     #[doc = "Change the `contentType` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `VideoConfiguration`*"]
@@ -45,6 +50,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `VideoConfiguration`*"]
     #[wasm_bindgen(method, getter = "framerate")]
     pub fn get_framerate(this: &VideoConfiguration) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_framerate()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoConfiguration`*"]
+    #[wasm_bindgen(method, getter = "framerate")]
+    pub fn get_framerate_js_string(this: &VideoConfiguration) -> Option<::js_sys::JsString>;
     #[doc = "Change the `framerate` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `VideoConfiguration`*"]

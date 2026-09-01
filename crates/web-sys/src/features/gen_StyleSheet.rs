@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StyleSheet`*"]
     pub fn type_(this: &StyleSheet) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "StyleSheet", js_name = "type")]
+    #[doc = "Like `type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/StyleSheet/type)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `StyleSheet`*"]
+    pub fn type_js_string(this: &StyleSheet) -> ::js_sys::JsString;
     #[wasm_bindgen(catch, method, getter, js_class = "StyleSheet", js_name = "href")]
     #[doc = "Getter for the `href` field of this object."]
     #[doc = ""]
@@ -30,6 +37,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StyleSheet`*"]
     pub fn href(this: &StyleSheet) -> Result<Option<::alloc::string::String>, JsValue>;
+    #[wasm_bindgen(catch, method, getter, js_class = "StyleSheet", js_name = "href")]
+    #[doc = "Like `href()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/StyleSheet/href)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `StyleSheet`*"]
+    pub fn href_js_string(this: &StyleSheet) -> Result<Option<::js_sys::JsString>, JsValue>;
     #[cfg(feature = "Node")]
     #[wasm_bindgen(method, getter, js_class = "StyleSheet", js_name = "ownerNode")]
     #[doc = "Getter for the `ownerNode` field of this object."]
@@ -52,6 +66,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StyleSheet`*"]
     pub fn title(this: &StyleSheet) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "StyleSheet", js_name = "title")]
+    #[doc = "Like `title()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/StyleSheet/title)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `StyleSheet`*"]
+    pub fn title_js_string(this: &StyleSheet) -> Option<::js_sys::JsString>;
     #[cfg(feature = "MediaList")]
     #[wasm_bindgen(method, getter, js_class = "StyleSheet", js_name = "media")]
     #[doc = "Getter for the `media` field of this object."]

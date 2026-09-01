@@ -41,6 +41,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
     pub fn href(this: &HtmlLinkElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLLinkElement", js_name = "href")]
+    #[doc = "Like `href()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement/href)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
+    pub fn href_js_string(this: &HtmlLinkElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLLinkElement", js_name = "href")]
     #[doc = "Setter for the `href` field of this object."]
     #[doc = ""]
@@ -55,6 +62,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
     pub fn cross_origin(this: &HtmlLinkElement) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "HTMLLinkElement", js_name = "crossOrigin")]
+    #[doc = "Like `cross_origin()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement/crossOrigin)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
+    pub fn cross_origin_js_string(this: &HtmlLinkElement) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, setter, js_class = "HTMLLinkElement", js_name = "crossOrigin")]
     #[doc = "Setter for the `crossOrigin` field of this object."]
     #[doc = ""]
@@ -69,6 +83,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
     pub fn rel(this: &HtmlLinkElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLLinkElement", js_name = "rel")]
+    #[doc = "Like `rel()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement/rel)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
+    pub fn rel_js_string(this: &HtmlLinkElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLLinkElement", js_name = "rel")]
     #[doc = "Setter for the `rel` field of this object."]
     #[doc = ""]
@@ -91,6 +112,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
     pub fn media(this: &HtmlLinkElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLLinkElement", js_name = "media")]
+    #[doc = "Like `media()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement/media)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
+    pub fn media_js_string(this: &HtmlLinkElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLLinkElement", js_name = "media")]
     #[doc = "Setter for the `media` field of this object."]
     #[doc = ""]
@@ -105,6 +133,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
     pub fn hreflang(this: &HtmlLinkElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLLinkElement", js_name = "hreflang")]
+    #[doc = "Like `hreflang()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement/hreflang)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
+    pub fn hreflang_js_string(this: &HtmlLinkElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLLinkElement", js_name = "hreflang")]
     #[doc = "Setter for the `hreflang` field of this object."]
     #[doc = ""]
@@ -119,6 +154,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
     pub fn type_(this: &HtmlLinkElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLLinkElement", js_name = "type")]
+    #[doc = "Like `type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement/type)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
+    pub fn type_js_string(this: &HtmlLinkElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLLinkElement", js_name = "type")]
     #[doc = "Setter for the `type` field of this object."]
     #[doc = ""]
@@ -138,6 +180,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
     pub fn referrer_policy(this: &HtmlLinkElement) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "HTMLLinkElement",
+        js_name = "referrerPolicy"
+    )]
+    #[doc = "Like `referrer_policy()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement/referrerPolicy)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
+    pub fn referrer_policy_js_string(this: &HtmlLinkElement) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         setter,
@@ -165,6 +219,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
     pub fn charset(this: &HtmlLinkElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLLinkElement", js_name = "charset")]
+    #[doc = "Like `charset()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement/charset)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
+    pub fn charset_js_string(this: &HtmlLinkElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLLinkElement", js_name = "charset")]
     #[doc = "Setter for the `charset` field of this object."]
     #[doc = ""]
@@ -179,6 +240,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
     pub fn rev(this: &HtmlLinkElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLLinkElement", js_name = "rev")]
+    #[doc = "Like `rev()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement/rev)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
+    pub fn rev_js_string(this: &HtmlLinkElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLLinkElement", js_name = "rev")]
     #[doc = "Setter for the `rev` field of this object."]
     #[doc = ""]
@@ -193,6 +261,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
     pub fn target(this: &HtmlLinkElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLLinkElement", js_name = "target")]
+    #[doc = "Like `target()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement/target)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
+    pub fn target_js_string(this: &HtmlLinkElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLLinkElement", js_name = "target")]
     #[doc = "Setter for the `target` field of this object."]
     #[doc = ""]
@@ -207,6 +282,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
     pub fn integrity(this: &HtmlLinkElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLLinkElement", js_name = "integrity")]
+    #[doc = "Like `integrity()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement/integrity)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
+    pub fn integrity_js_string(this: &HtmlLinkElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLLinkElement", js_name = "integrity")]
     #[doc = "Setter for the `integrity` field of this object."]
     #[doc = ""]
@@ -221,6 +303,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
     pub fn as_(this: &HtmlLinkElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLLinkElement", js_name = "as")]
+    #[doc = "Like `as()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLinkElement/as)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlLinkElement`*"]
+    pub fn as_js_string(this: &HtmlLinkElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLLinkElement", js_name = "as")]
     #[doc = "Setter for the `as` field of this object."]
     #[doc = ""]

@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TextDecoder`*"]
     pub fn encoding(this: &TextDecoder) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "TextDecoder", js_name = "encoding")]
+    #[doc = "Like `encoding()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder/encoding)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TextDecoder`*"]
+    pub fn encoding_js_string(this: &TextDecoder) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "TextDecoder", js_name = "fatal")]
     #[doc = "Getter for the `fatal` field of this object."]
     #[doc = ""]
@@ -63,6 +70,13 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `TextDecoder`*"]
     pub fn decode(this: &TextDecoder) -> Result<::alloc::string::String, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "TextDecoder", js_name = "decode")]
+    #[doc = "Like `decode()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder/decode)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TextDecoder`*"]
+    pub fn decode_js_string(this: &TextDecoder) -> Result<::js_sys::JsString, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "TextDecoder", js_name = "decode")]
     #[doc = "The `decode()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder/decode)"]
@@ -72,6 +86,16 @@ extern "C" {
         this: &TextDecoder,
         input: &::js_sys::Object,
     ) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "TextDecoder", js_name = "decode")]
+    #[doc = "Like `decode_with_buffer_source()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder/decode)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TextDecoder`*"]
+    pub fn decode_with_buffer_source_js_string(
+        this: &TextDecoder,
+        input: &::js_sys::Object,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "TextDecoder", js_name = "decode")]
     #[doc = "The `decode()` method."]
     #[doc = ""]
@@ -83,6 +107,16 @@ extern "C" {
         input: &[u8],
     ) -> Result<::alloc::string::String, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "TextDecoder", js_name = "decode")]
+    #[doc = "Like `decode_with_u8_array()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder/decode)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TextDecoder`*"]
+    pub fn decode_with_u8_array_js_string(
+        this: &TextDecoder,
+        input: &[u8],
+    ) -> Result<::js_sys::JsString, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "TextDecoder", js_name = "decode")]
     #[doc = "The `decode()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder/decode)"]
@@ -92,6 +126,16 @@ extern "C" {
         this: &TextDecoder,
         input: &::js_sys::Uint8Array,
     ) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "TextDecoder", js_name = "decode")]
+    #[doc = "Like `decode_with_js_u8_array()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder/decode)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TextDecoder`*"]
+    pub fn decode_with_js_u8_array_js_string(
+        this: &TextDecoder,
+        input: &::js_sys::Uint8Array,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[cfg(feature = "TextDecodeOptions")]
     #[wasm_bindgen(catch, method, js_class = "TextDecoder", js_name = "decode")]
     #[doc = "The `decode()` method."]
@@ -106,6 +150,18 @@ extern "C" {
     ) -> Result<::alloc::string::String, JsValue>;
     #[cfg(feature = "TextDecodeOptions")]
     #[wasm_bindgen(catch, method, js_class = "TextDecoder", js_name = "decode")]
+    #[doc = "Like `decode_with_buffer_source_and_options()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder/decode)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TextDecodeOptions`, `TextDecoder`*"]
+    pub fn decode_with_buffer_source_and_options_js_string(
+        this: &TextDecoder,
+        input: &::js_sys::Object,
+        options: &TextDecodeOptions,
+    ) -> Result<::js_sys::JsString, JsValue>;
+    #[cfg(feature = "TextDecodeOptions")]
+    #[wasm_bindgen(catch, method, js_class = "TextDecoder", js_name = "decode")]
     #[doc = "The `decode()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder/decode)"]
@@ -118,6 +174,18 @@ extern "C" {
     ) -> Result<::alloc::string::String, JsValue>;
     #[cfg(feature = "TextDecodeOptions")]
     #[wasm_bindgen(catch, method, js_class = "TextDecoder", js_name = "decode")]
+    #[doc = "Like `decode_with_u8_array_and_options()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder/decode)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TextDecodeOptions`, `TextDecoder`*"]
+    pub fn decode_with_u8_array_and_options_js_string(
+        this: &TextDecoder,
+        input: &[u8],
+        options: &TextDecodeOptions,
+    ) -> Result<::js_sys::JsString, JsValue>;
+    #[cfg(feature = "TextDecodeOptions")]
+    #[wasm_bindgen(catch, method, js_class = "TextDecoder", js_name = "decode")]
     #[doc = "The `decode()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder/decode)"]
@@ -128,4 +196,16 @@ extern "C" {
         input: &::js_sys::Uint8Array,
         options: &TextDecodeOptions,
     ) -> Result<::alloc::string::String, JsValue>;
+    #[cfg(feature = "TextDecodeOptions")]
+    #[wasm_bindgen(catch, method, js_class = "TextDecoder", js_name = "decode")]
+    #[doc = "Like `decode_with_js_u8_array_and_options()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder/decode)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TextDecodeOptions`, `TextDecoder`*"]
+    pub fn decode_with_js_u8_array_and_options_js_string(
+        this: &TextDecoder,
+        input: &::js_sys::Uint8Array,
+        options: &TextDecodeOptions,
+    ) -> Result<::js_sys::JsString, JsValue>;
 }

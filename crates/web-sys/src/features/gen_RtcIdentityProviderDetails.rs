@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderDetails`*"]
     #[wasm_bindgen(method, getter = "domain")]
     pub fn get_domain(this: &RtcIdentityProviderDetails) -> ::alloc::string::String;
+    #[doc = "Like `get_domain()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderDetails`*"]
+    #[wasm_bindgen(method, getter = "domain")]
+    pub fn get_domain_js_string(this: &RtcIdentityProviderDetails) -> ::js_sys::JsString;
     #[doc = "Change the `domain` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderDetails`*"]
@@ -25,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderDetails`*"]
     #[wasm_bindgen(method, getter = "protocol")]
     pub fn get_protocol(this: &RtcIdentityProviderDetails) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_protocol()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderDetails`*"]
+    #[wasm_bindgen(method, getter = "protocol")]
+    pub fn get_protocol_js_string(this: &RtcIdentityProviderDetails) -> Option<::js_sys::JsString>;
     #[doc = "Change the `protocol` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderDetails`*"]

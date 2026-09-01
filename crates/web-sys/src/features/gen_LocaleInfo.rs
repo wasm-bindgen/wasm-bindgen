@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `LocaleInfo`*"]
     #[wasm_bindgen(method, getter = "direction")]
     pub fn get_direction(this: &LocaleInfo) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_direction()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `LocaleInfo`*"]
+    #[wasm_bindgen(method, getter = "direction")]
+    pub fn get_direction_js_string(this: &LocaleInfo) -> Option<::js_sys::JsString>;
     #[doc = "Change the `direction` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `LocaleInfo`*"]
@@ -25,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `LocaleInfo`*"]
     #[wasm_bindgen(method, getter = "locale")]
     pub fn get_locale(this: &LocaleInfo) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_locale()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `LocaleInfo`*"]
+    #[wasm_bindgen(method, getter = "locale")]
+    pub fn get_locale_js_string(this: &LocaleInfo) -> Option<::js_sys::JsString>;
     #[doc = "Change the `locale` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `LocaleInfo`*"]

@@ -26,6 +26,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
     pub fn domain(this: &HtmlDocument) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLDocument", js_name = "domain")]
+    #[doc = "Like `domain()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/domain)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn domain_js_string(this: &HtmlDocument) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLDocument", js_name = "domain")]
     #[doc = "Setter for the `domain` field of this object."]
     #[doc = ""]
@@ -40,6 +47,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
     pub fn cookie(this: &HtmlDocument) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, getter, js_class = "HTMLDocument", js_name = "cookie")]
+    #[doc = "Like `cookie()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/cookie)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn cookie_js_string(this: &HtmlDocument) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, setter, js_class = "HTMLDocument", js_name = "cookie")]
     #[doc = "Setter for the `cookie` field of this object."]
     #[doc = ""]
@@ -54,6 +68,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
     pub fn design_mode(this: &HtmlDocument) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLDocument", js_name = "designMode")]
+    #[doc = "Like `design_mode()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/designMode)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn design_mode_js_string(this: &HtmlDocument) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLDocument", js_name = "designMode")]
     #[doc = "Setter for the `designMode` field of this object."]
     #[doc = ""]
@@ -68,6 +89,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
     pub fn fg_color(this: &HtmlDocument) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLDocument", js_name = "fgColor")]
+    #[doc = "Like `fg_color()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/fgColor)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn fg_color_js_string(this: &HtmlDocument) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLDocument", js_name = "fgColor")]
     #[doc = "Setter for the `fgColor` field of this object."]
     #[doc = ""]
@@ -82,6 +110,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
     pub fn link_color(this: &HtmlDocument) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLDocument", js_name = "linkColor")]
+    #[doc = "Like `link_color()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/linkColor)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn link_color_js_string(this: &HtmlDocument) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLDocument", js_name = "linkColor")]
     #[doc = "Setter for the `linkColor` field of this object."]
     #[doc = ""]
@@ -96,6 +131,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
     pub fn vlink_color(this: &HtmlDocument) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLDocument", js_name = "vlinkColor")]
+    #[doc = "Like `vlink_color()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/vlinkColor)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn vlink_color_js_string(this: &HtmlDocument) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLDocument", js_name = "vlinkColor")]
     #[doc = "Setter for the `vlinkColor` field of this object."]
     #[doc = ""]
@@ -110,6 +152,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
     pub fn alink_color(this: &HtmlDocument) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLDocument", js_name = "alinkColor")]
+    #[doc = "Like `alink_color()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/alinkColor)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn alink_color_js_string(this: &HtmlDocument) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLDocument", js_name = "alinkColor")]
     #[doc = "Setter for the `alinkColor` field of this object."]
     #[doc = ""]
@@ -124,6 +173,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
     pub fn bg_color(this: &HtmlDocument) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLDocument", js_name = "bgColor")]
+    #[doc = "Like `bg_color()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/bgColor)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn bg_color_js_string(this: &HtmlDocument) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLDocument", js_name = "bgColor")]
     #[doc = "Setter for the `bgColor` field of this object."]
     #[doc = ""]
@@ -300,6 +356,21 @@ extern "C" {
         this: &HtmlDocument,
         command_id: &str,
     ) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "HTMLDocument",
+        js_name = "queryCommandValue"
+    )]
+    #[doc = "Like `query_command_value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDocument/queryCommandValue)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDocument`*"]
+    pub fn query_command_value_js_string(
+        this: &HtmlDocument,
+        command_id: &str,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(method, js_class = "HTMLDocument", js_name = "releaseEvents")]
     #[doc = "The `releaseEvents()` method."]
     #[doc = ""]

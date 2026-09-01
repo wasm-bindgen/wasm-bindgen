@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MutationRecord`*"]
     pub fn type_(this: &MutationRecord) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "MutationRecord", js_name = "type")]
+    #[doc = "Like `type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationRecord/type)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MutationRecord`*"]
+    pub fn type_js_string(this: &MutationRecord) -> ::js_sys::JsString;
     #[cfg(feature = "Node")]
     #[wasm_bindgen(method, getter, js_class = "MutationRecord", js_name = "target")]
     #[doc = "Getter for the `target` field of this object."]
@@ -75,6 +82,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MutationRecord`*"]
     pub fn attribute_name(this: &MutationRecord) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "MutationRecord", js_name = "attributeName")]
+    #[doc = "Like `attribute_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationRecord/attributeName)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MutationRecord`*"]
+    pub fn attribute_name_js_string(this: &MutationRecord) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(
         method,
         getter,
@@ -87,6 +101,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MutationRecord`*"]
     pub fn attribute_namespace(this: &MutationRecord) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "MutationRecord",
+        js_name = "attributeNamespace"
+    )]
+    #[doc = "Like `attribute_namespace()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationRecord/attributeNamespace)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MutationRecord`*"]
+    pub fn attribute_namespace_js_string(this: &MutationRecord) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, getter, js_class = "MutationRecord", js_name = "oldValue")]
     #[doc = "Getter for the `oldValue` field of this object."]
     #[doc = ""]
@@ -94,4 +120,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MutationRecord`*"]
     pub fn old_value(this: &MutationRecord) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "MutationRecord", js_name = "oldValue")]
+    #[doc = "Like `old_value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationRecord/oldValue)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MutationRecord`*"]
+    pub fn old_value_js_string(this: &MutationRecord) -> Option<::js_sys::JsString>;
 }

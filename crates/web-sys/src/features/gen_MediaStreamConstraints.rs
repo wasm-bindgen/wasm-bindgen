@@ -49,6 +49,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaStreamConstraints`*"]
     #[wasm_bindgen(method, getter = "peerIdentity")]
     pub fn get_peer_identity(this: &MediaStreamConstraints) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_peer_identity()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaStreamConstraints`*"]
+    #[wasm_bindgen(method, getter = "peerIdentity")]
+    pub fn get_peer_identity_js_string(this: &MediaStreamConstraints)
+        -> Option<::js_sys::JsString>;
     #[doc = "Change the `peerIdentity` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaStreamConstraints`*"]

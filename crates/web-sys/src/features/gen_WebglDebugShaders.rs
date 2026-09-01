@@ -27,4 +27,19 @@ extern "C" {
         this: &WebglDebugShaders,
         shader: &WebGlShader,
     ) -> ::alloc::string::String;
+    #[cfg(feature = "WebGlShader")]
+    #[wasm_bindgen(
+        method,
+        js_class = "WEBGL_debug_shaders",
+        js_name = "getTranslatedShaderSource"
+    )]
+    #[doc = "Like `get_translated_shader_source()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_debug_shaders/getTranslatedShaderSource)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebGlShader`, `WebglDebugShaders`*"]
+    pub fn get_translated_shader_source_js_string(
+        this: &WebglDebugShaders,
+        shader: &WebGlShader,
+    ) -> ::js_sys::JsString;
 }

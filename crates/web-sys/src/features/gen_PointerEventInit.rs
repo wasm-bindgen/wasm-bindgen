@@ -329,6 +329,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PointerEventInit`*"]
     #[wasm_bindgen(method, getter = "pointerType")]
     pub fn get_pointer_type(this: &PointerEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_pointer_type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PointerEventInit`*"]
+    #[wasm_bindgen(method, getter = "pointerType")]
+    pub fn get_pointer_type_js_string(this: &PointerEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `pointerType` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PointerEventInit`*"]

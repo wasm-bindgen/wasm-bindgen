@@ -1918,6 +1918,21 @@ extern "C" {
     #[wasm_bindgen(
         method,
         js_class = "WebGLRenderingContext",
+        js_name = "getProgramInfoLog"
+    )]
+    #[doc = "Like `get_program_info_log()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getProgramInfoLog)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebGlProgram`, `WebGlRenderingContext`*"]
+    pub fn get_program_info_log_js_string(
+        this: &WebGlRenderingContext,
+        program: &WebGlProgram,
+    ) -> Option<::js_sys::JsString>;
+    #[cfg(feature = "WebGlProgram")]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGLRenderingContext",
         js_name = "getProgramParameter"
     )]
     #[doc = "The `getProgramParameter()` method."]
@@ -1960,6 +1975,21 @@ extern "C" {
         this: &WebGlRenderingContext,
         shader: &WebGlShader,
     ) -> Option<::alloc::string::String>;
+    #[cfg(feature = "WebGlShader")]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGLRenderingContext",
+        js_name = "getShaderInfoLog"
+    )]
+    #[doc = "Like `get_shader_info_log()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getShaderInfoLog)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebGlRenderingContext`, `WebGlShader`*"]
+    pub fn get_shader_info_log_js_string(
+        this: &WebGlRenderingContext,
+        shader: &WebGlShader,
+    ) -> Option<::js_sys::JsString>;
     #[cfg(feature = "WebGlShader")]
     #[wasm_bindgen(
         method,
@@ -2007,6 +2037,21 @@ extern "C" {
         this: &WebGlRenderingContext,
         shader: &WebGlShader,
     ) -> Option<::alloc::string::String>;
+    #[cfg(feature = "WebGlShader")]
+    #[wasm_bindgen(
+        method,
+        js_class = "WebGLRenderingContext",
+        js_name = "getShaderSource"
+    )]
+    #[doc = "Like `get_shader_source()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getShaderSource)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebGlRenderingContext`, `WebGlShader`*"]
+    pub fn get_shader_source_js_string(
+        this: &WebGlRenderingContext,
+        shader: &WebGlShader,
+    ) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(
         method,
         js_class = "WebGLRenderingContext",

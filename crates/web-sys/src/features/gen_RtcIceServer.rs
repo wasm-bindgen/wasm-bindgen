@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceServer`*"]
     #[wasm_bindgen(method, getter = "credential")]
     pub fn get_credential(this: &RtcIceServer) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_credential()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceServer`*"]
+    #[wasm_bindgen(method, getter = "credential")]
+    pub fn get_credential_js_string(this: &RtcIceServer) -> Option<::js_sys::JsString>;
     #[doc = "Change the `credential` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceServer`*"]
@@ -37,6 +42,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceServer`*"]
     #[wasm_bindgen(method, getter = "url")]
     pub fn get_url(this: &RtcIceServer) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceServer`*"]
+    #[wasm_bindgen(method, getter = "url")]
+    pub fn get_url_js_string(this: &RtcIceServer) -> Option<::js_sys::JsString>;
     #[doc = "Change the `url` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceServer`*"]
@@ -67,6 +77,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceServer`*"]
     #[wasm_bindgen(method, getter = "username")]
     pub fn get_username(this: &RtcIceServer) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_username()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceServer`*"]
+    #[wasm_bindgen(method, getter = "username")]
+    pub fn get_username_js_string(this: &RtcIceServer) -> Option<::js_sys::JsString>;
     #[doc = "Change the `username` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceServer`*"]

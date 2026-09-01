@@ -25,6 +25,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DnsCacheEntry`*"]
     #[wasm_bindgen(method, getter = "family")]
     pub fn get_family(this: &DnsCacheEntry) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_family()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DnsCacheEntry`*"]
+    #[wasm_bindgen(method, getter = "family")]
+    pub fn get_family_js_string(this: &DnsCacheEntry) -> Option<::js_sys::JsString>;
     #[doc = "Change the `family` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DnsCacheEntry`*"]
@@ -45,6 +50,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DnsCacheEntry`*"]
     #[wasm_bindgen(method, getter = "hostname")]
     pub fn get_hostname(this: &DnsCacheEntry) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_hostname()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DnsCacheEntry`*"]
+    #[wasm_bindgen(method, getter = "hostname")]
+    pub fn get_hostname_js_string(this: &DnsCacheEntry) -> Option<::js_sys::JsString>;
     #[doc = "Change the `hostname` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DnsCacheEntry`*"]

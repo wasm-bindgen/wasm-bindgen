@@ -85,6 +85,28 @@ impl StringGenerics {
     }
 }
 
+/// The `js_sys::JsString` counterpart of a top-level `String` return type
+/// (optionally under `Option`), for emitting a `_js_string` return variant
+/// that hands back the JS string by handle without copying it into wasm
+/// memory. Returns `None` when the type has no string in return position.
+fn js_string_return_variant(ty: &Type) -> Option<Type> {
+    if let Some(inner) = option_inner(ty) {
+        return is_owned_string(inner).then(|| syn::parse_quote!(Option<::js_sys::JsString>));
+    }
+    is_owned_string(ty).then(|| syn::parse_quote!(::js_sys::JsString))
+}
+
+/// `::alloc::string::String`, as produced for string return positions.
+fn is_owned_string(ty: &Type) -> bool {
+    let Type::Path(p) = ty else { return false };
+    p.qself.is_none()
+        && p.path
+            .segments
+            .iter()
+            .map(|s| s.ident.to_string())
+            .eq(["alloc", "string", "String"])
+}
+
 /// `&str` (shared, top level).
 fn is_str_ref(ty: &Type) -> bool {
     let Type::Reference(r) = ty else { return false };
@@ -522,7 +544,7 @@ impl InterfaceAttribute {
         ));
         let doc_req = doc_requirements(&features_doc, unstable_for_docs);
 
-        quote! {
+        let mut tokens = quote! {
             #unstable_attr
             #cfg_features
             #[wasm_bindgen(
@@ -536,7 +558,42 @@ impl InterfaceAttribute {
             #doc_req
             #deprecated
             #def
+        };
+
+        // `_js_string` return variant of a string getter: the same binding,
+        // handing the JS string back by handle instead of copying it into
+        // wasm memory.
+        if matches!(kind, InterfaceAttributeKind::Getter) {
+            if let Some(variant_ty) = js_string_return_variant(ty) {
+                let variant_name = rust_ident(&format!("{rust_name}_js_string"));
+                let variant_ty = if self.catch {
+                    quote!( Result<#variant_ty, JsValue> )
+                } else {
+                    quote!( #variant_ty )
+                };
+                let variant_doc = doc_comment(&format!(
+                    "Like `{rust_name}()`, but returning a `js_sys::JsString` handle \
+                     to the string rather than copying it into wasm memory.\n\n{mdn_docs}"
+                ));
+                tokens.extend(quote! {
+                    #unstable_attr
+                    #cfg_features
+                    #[wasm_bindgen(
+                        #catch
+                        #method
+                        getter,
+                        js_class = #parent_js_name,
+                        js_name = #js_name
+                    )]
+                    #variant_doc
+                    #doc_req
+                    #deprecated
+                    pub fn #variant_name(#this) -> #variant_ty;
+                });
+            }
         }
+
+        tokens
     }
 }
 
@@ -792,8 +849,10 @@ impl InterfaceMethod<'_> {
         };
 
         let generics = string_generics.generics();
+        let arguments = &arguments;
+        let extra_args = &extra_args;
 
-        Some(quote! {
+        let mut tokens = quote! {
             #unstable_attr
             #cfg_features
             #[wasm_bindgen(
@@ -806,7 +865,45 @@ impl InterfaceMethod<'_> {
             #doc_req
             #deprecated
             pub fn #name #generics (#this #(#arguments),*) #ret;
-        })
+        };
+
+        // `_js_string` return variant: the same binding, handing the JS
+        // string back by handle instead of copying it into wasm memory.
+        if !is_constructor {
+            if let Some(variant_ret) = ret_ty.as_ref().and_then(js_string_return_variant) {
+                let variant_name = format_ident!("{}_js_string", name);
+                let variant_ret = if *catch {
+                    quote!( -> Result<#variant_ret, JsValue> )
+                } else {
+                    quote!( -> #variant_ret )
+                };
+                let mut variant_extra_args = extra_args.clone();
+                if matches!(kind, InterfaceMethodKind::Regular) && js_name == &name.to_string() {
+                    variant_extra_args.push(quote!( js_name = #js_name ));
+                }
+                let variant_doc = doc_comment(&format!(
+                    "Like `{name}()`, but returning a `js_sys::JsString` handle to \
+                     the string rather than copying it into wasm memory.\n\n{}",
+                    mdn_doc(&parent_js_name, Some(js_name))
+                ));
+                tokens.extend(quote! {
+                    #unstable_attr
+                    #cfg_features
+                    #[wasm_bindgen(
+                        #catch_attr
+                        #method
+                        #variadic_attr
+                        #(#variant_extra_args),*
+                    )]
+                    #variant_doc
+                    #doc_req
+                    #deprecated
+                    pub fn #variant_name #generics (#this #(#arguments),*) #variant_ret;
+                });
+            }
+        }
+
+        Some(tokens)
     }
 }
 
@@ -1076,6 +1173,26 @@ impl DictionaryField {
             }
         });
 
+        // `_js_string` return variant of a string field getter: the same
+        // binding, handing the JS string back by handle instead of copying it
+        // into wasm memory.
+        let js_string_getter = js_string_return_variant(return_ty).map(|variant_ty| {
+            let variant_name = format_ident!("{}_js_string", getter_name);
+            let variant_doc = doc_comment(&format!(
+                "Like `{getter_name}()`, but returning a `js_sys::JsString` handle \
+                 to the string rather than copying it into wasm memory."
+            ));
+            quote! {
+                #unstable_attr
+                #cfg_features
+                #variant_doc
+                #getter_doc_req
+                #deprecated
+                #[wasm_bindgen(method, getter = #js_name)]
+                pub fn #variant_name(this: &#parent_ident) -> #variant_ty;
+            }
+        });
+
         quote! {
             #unstable_attr
             #cfg_features
@@ -1084,6 +1201,8 @@ impl DictionaryField {
             #deprecated
             #[wasm_bindgen(method, getter = #js_name)]
             pub fn #getter_name(this: &#parent_ident) -> #return_ty;
+
+            #js_string_getter
 
             #(#setters)*
         }
@@ -1549,7 +1668,7 @@ impl NamespaceAttribute {
 
         let ns_type_name_str = ns_type_name.to_string();
 
-        quote! {
+        let mut tokens = quote! {
             #unstable_attr
             #cfg_features
             #[wasm_bindgen(
@@ -1562,7 +1681,41 @@ impl NamespaceAttribute {
             #doc_desc
             #doc_req
             #def
+        };
+
+        // `_js_string` return variant of a string getter: the same binding,
+        // handing the JS string back by handle instead of copying it into
+        // wasm memory.
+        if matches!(kind, NamespaceAttributeKind::Getter) {
+            if let Some(variant_ty) = js_string_return_variant(ty) {
+                let variant_name = rust_ident(&format!("{rust_name}_js_string"));
+                let variant_ty = if self.catch {
+                    quote!( Result<#variant_ty, JsValue> )
+                } else {
+                    quote!( #variant_ty )
+                };
+                let variant_doc = doc_comment(&format!(
+                    "Like `{rust_name}()`, but returning a `js_sys::JsString` handle \
+                     to the string rather than copying it into wasm memory.\n\n{mdn_docs}"
+                ));
+                tokens.extend(quote! {
+                    #unstable_attr
+                    #cfg_features
+                    #[wasm_bindgen(
+                        #catch
+                        static_method_of = #ns_type_name_str,
+                        js_class = #parent_js_name,
+                        getter,
+                        js_name = #js_name
+                    )]
+                    #variant_doc
+                    #doc_req
+                    pub fn #variant_name() -> #variant_ty;
+                });
+            }
         }
+
+        tokens
     }
 }
 
@@ -1688,8 +1841,9 @@ impl Function<'_> {
         };
 
         let generics = string_generics.generics();
+        let arguments = &arguments;
 
-        Some(quote! {
+        let mut tokens = quote! {
             #unstable_attr
             #cfg_features
             #[wasm_bindgen(
@@ -1701,7 +1855,38 @@ impl Function<'_> {
             #doc_desc
             #doc_req
             pub fn #name #generics (#(#arguments),*) #ret;
-        })
+        };
+
+        // `_js_string` return variant: the same binding, handing the JS
+        // string back by handle instead of copying it into wasm memory.
+        if let Some(variant_ret) = ret_ty.as_ref().and_then(js_string_return_variant) {
+            let variant_name = format_ident!("{}_js_string", name);
+            let variant_ret = if *catch {
+                quote!( -> Result<#variant_ret, JsValue> )
+            } else {
+                quote!( -> #variant_ret )
+            };
+            let variant_doc = doc_comment(&format!(
+                "Like `{name}()`, but returning a `js_sys::JsString` handle to \
+                 the string rather than copying it into wasm memory.\n\n{}",
+                mdn_doc(&parent_js_name, Some(js_name))
+            ));
+            tokens.extend(quote! {
+                #unstable_attr
+                #cfg_features
+                #[wasm_bindgen(
+                    #catch_attr
+                    #variadic_attr
+                    js_namespace = #parent_js_name,
+                    js_name = #js_name
+                )]
+                #variant_doc
+                #doc_req
+                pub fn #variant_name #generics (#(#arguments),*) #variant_ret;
+            });
+        }
+
+        Some(tokens)
     }
 }
 

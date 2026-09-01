@@ -25,6 +25,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn namespace_uri(this: &Element) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "Element", js_name = "namespaceURI")]
+    #[doc = "Like `namespace_uri()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/namespaceURI)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn namespace_uri_js_string(this: &Element) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, getter, js_class = "Element", js_name = "prefix")]
     #[doc = "Getter for the `prefix` field of this object."]
     #[doc = ""]
@@ -32,6 +39,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn prefix(this: &Element) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "Element", js_name = "prefix")]
+    #[doc = "Like `prefix()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/prefix)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn prefix_js_string(this: &Element) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, getter, js_class = "Element", js_name = "localName")]
     #[doc = "Getter for the `localName` field of this object."]
     #[doc = ""]
@@ -39,6 +53,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn local_name(this: &Element) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Element", js_name = "localName")]
+    #[doc = "Like `local_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/localName)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn local_name_js_string(this: &Element) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "Element", js_name = "tagName")]
     #[doc = "Getter for the `tagName` field of this object."]
     #[doc = ""]
@@ -46,6 +67,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn tag_name(this: &Element) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Element", js_name = "tagName")]
+    #[doc = "Like `tag_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/tagName)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn tag_name_js_string(this: &Element) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "Element", js_name = "id")]
     #[doc = "Getter for the `id` field of this object."]
     #[doc = ""]
@@ -53,6 +81,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn id(this: &Element) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Element", js_name = "id")]
+    #[doc = "Like `id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/id)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn id_js_string(this: &Element) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "Element", js_name = "id")]
     #[doc = "Setter for the `id` field of this object."]
     #[doc = ""]
@@ -67,6 +102,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn class_name(this: &Element) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Element", js_name = "className")]
+    #[doc = "Like `class_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/className)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn class_name_js_string(this: &Element) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "Element", js_name = "className")]
     #[doc = "Setter for the `className` field of this object."]
     #[doc = ""]
@@ -171,6 +213,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn inner_html(this: &Element) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Element", js_name = "innerHTML")]
+    #[doc = "Like `inner_html()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn inner_html_js_string(this: &Element) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "Element", js_name = "innerHTML")]
     #[doc = "Setter for the `innerHTML` field of this object."]
     #[doc = ""]
@@ -185,6 +234,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn outer_html(this: &Element) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Element", js_name = "outerHTML")]
+    #[doc = "Like `outer_html()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/outerHTML)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn outer_html_js_string(this: &Element) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "Element", js_name = "outerHTML")]
     #[doc = "Setter for the `outerHTML` field of this object."]
     #[doc = ""]
@@ -215,6 +271,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn slot(this: &Element) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Element", js_name = "slot")]
+    #[doc = "Like `slot()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/slot)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn slot_js_string(this: &Element) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "Element", js_name = "slot")]
     #[doc = "Setter for the `slot` field of this object."]
     #[doc = ""]
@@ -351,6 +414,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Element`*"]
     pub fn get_attribute(this: &Element, name: &str) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, js_class = "Element", js_name = "getAttribute")]
+    #[doc = "Like `get_attribute()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttribute)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn get_attribute_js_string(this: &Element, name: &str) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, js_class = "Element", js_name = "getAttributeNS")]
     #[doc = "The `getAttributeNS()` method."]
     #[doc = ""]
@@ -362,6 +432,17 @@ extern "C" {
         namespace: Option<&str>,
         local_name: &str,
     ) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, js_class = "Element", js_name = "getAttributeNS")]
+    #[doc = "Like `get_attribute_ns()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttributeNS)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`*"]
+    pub fn get_attribute_ns_js_string(
+        this: &Element,
+        namespace: Option<&str>,
+        local_name: &str,
+    ) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, js_class = "Element", js_name = "getAttributeNames")]
     #[doc = "The `getAttributeNames()` method."]
     #[doc = ""]

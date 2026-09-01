@@ -25,6 +25,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
     pub fn data(this: &CharacterData) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "CharacterData", js_name = "data")]
+    #[doc = "Like `data()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/data)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn data_js_string(this: &CharacterData) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "CharacterData", js_name = "data")]
     #[doc = "Setter for the `data` field of this object."]
     #[doc = ""]
@@ -109,6 +116,17 @@ extern "C" {
         offset: u32,
         count: u32,
     ) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "CharacterData", js_name = "substringData")]
+    #[doc = "Like `substring_data()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CharacterData/substringData)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CharacterData`*"]
+    pub fn substring_data_js_string(
+        this: &CharacterData,
+        offset: u32,
+        count: u32,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, variadic, js_class = "CharacterData", js_name = "after")]
     #[doc = "The `after()` method."]
     #[doc = ""]

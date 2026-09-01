@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
     #[wasm_bindgen(method, getter = "display")]
     pub fn get_display(this: &FontFaceDescriptors) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_display()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
+    #[wasm_bindgen(method, getter = "display")]
+    pub fn get_display_js_string(this: &FontFaceDescriptors) -> Option<::js_sys::JsString>;
     #[doc = "Change the `display` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
@@ -25,6 +30,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
     #[wasm_bindgen(method, getter = "featureSettings")]
     pub fn get_feature_settings(this: &FontFaceDescriptors) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_feature_settings()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
+    #[wasm_bindgen(method, getter = "featureSettings")]
+    pub fn get_feature_settings_js_string(this: &FontFaceDescriptors)
+        -> Option<::js_sys::JsString>;
     #[doc = "Change the `featureSettings` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
@@ -35,6 +46,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
     #[wasm_bindgen(method, getter = "stretch")]
     pub fn get_stretch(this: &FontFaceDescriptors) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_stretch()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
+    #[wasm_bindgen(method, getter = "stretch")]
+    pub fn get_stretch_js_string(this: &FontFaceDescriptors) -> Option<::js_sys::JsString>;
     #[doc = "Change the `stretch` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
@@ -45,6 +61,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
     #[wasm_bindgen(method, getter = "style")]
     pub fn get_style(this: &FontFaceDescriptors) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_style()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
+    #[wasm_bindgen(method, getter = "style")]
+    pub fn get_style_js_string(this: &FontFaceDescriptors) -> Option<::js_sys::JsString>;
     #[doc = "Change the `style` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
@@ -55,6 +76,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
     #[wasm_bindgen(method, getter = "unicodeRange")]
     pub fn get_unicode_range(this: &FontFaceDescriptors) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_unicode_range()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
+    #[wasm_bindgen(method, getter = "unicodeRange")]
+    pub fn get_unicode_range_js_string(this: &FontFaceDescriptors) -> Option<::js_sys::JsString>;
     #[doc = "Change the `unicodeRange` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
@@ -65,6 +91,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
     #[wasm_bindgen(method, getter = "variant")]
     pub fn get_variant(this: &FontFaceDescriptors) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_variant()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
+    #[wasm_bindgen(method, getter = "variant")]
+    pub fn get_variant_js_string(this: &FontFaceDescriptors) -> Option<::js_sys::JsString>;
     #[doc = "Change the `variant` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
@@ -75,6 +106,13 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
     #[wasm_bindgen(method, getter = "variationSettings")]
     pub fn get_variation_settings(this: &FontFaceDescriptors) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_variation_settings()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
+    #[wasm_bindgen(method, getter = "variationSettings")]
+    pub fn get_variation_settings_js_string(
+        this: &FontFaceDescriptors,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `variationSettings` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
@@ -85,6 +123,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
     #[wasm_bindgen(method, getter = "weight")]
     pub fn get_weight(this: &FontFaceDescriptors) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_weight()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]
+    #[wasm_bindgen(method, getter = "weight")]
+    pub fn get_weight_js_string(this: &FontFaceDescriptors) -> Option<::js_sys::JsString>;
     #[doc = "Change the `weight` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FontFaceDescriptors`*"]

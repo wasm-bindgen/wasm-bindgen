@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaKeysPolicy`*"]
     #[wasm_bindgen(method, getter = "minHdcpVersion")]
     pub fn get_min_hdcp_version(this: &MediaKeysPolicy) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_min_hdcp_version()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaKeysPolicy`*"]
+    #[wasm_bindgen(method, getter = "minHdcpVersion")]
+    pub fn get_min_hdcp_version_js_string(this: &MediaKeysPolicy) -> Option<::js_sys::JsString>;
     #[doc = "Change the `minHdcpVersion` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaKeysPolicy`*"]

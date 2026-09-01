@@ -67,6 +67,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `InputEventInit`*"]
     #[wasm_bindgen(method, getter = "data")]
     pub fn get_data(this: &InputEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_data()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `InputEventInit`*"]
+    #[wasm_bindgen(method, getter = "data")]
+    pub fn get_data_js_string(this: &InputEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `data` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `InputEventInit`*"]
@@ -89,6 +94,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `InputEventInit`*"]
     #[wasm_bindgen(method, getter = "inputType")]
     pub fn get_input_type(this: &InputEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_input_type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `InputEventInit`*"]
+    #[wasm_bindgen(method, getter = "inputType")]
+    pub fn get_input_type_js_string(this: &InputEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `inputType` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `InputEventInit`*"]

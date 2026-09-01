@@ -45,6 +45,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcdtmfToneChangeEventInit`*"]
     #[wasm_bindgen(method, getter = "tone")]
     pub fn get_tone(this: &RtcdtmfToneChangeEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_tone()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcdtmfToneChangeEventInit`*"]
+    #[wasm_bindgen(method, getter = "tone")]
+    pub fn get_tone_js_string(this: &RtcdtmfToneChangeEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `tone` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcdtmfToneChangeEventInit`*"]

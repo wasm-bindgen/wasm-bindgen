@@ -20,6 +20,13 @@ extern "C" {
     pub fn get_appid(
         this: &AuthenticationExtensionsClientInputs,
     ) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_appid()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsClientInputs`*"]
+    #[wasm_bindgen(method, getter = "appid")]
+    pub fn get_appid_js_string(
+        this: &AuthenticationExtensionsClientInputs,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `appid` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsClientInputs`*"]
@@ -32,6 +39,13 @@ extern "C" {
     pub fn get_appid_exclude(
         this: &AuthenticationExtensionsClientInputs,
     ) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_appid_exclude()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsClientInputs`*"]
+    #[wasm_bindgen(method, getter = "appidExclude")]
+    pub fn get_appid_exclude_js_string(
+        this: &AuthenticationExtensionsClientInputs,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `appidExclude` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsClientInputs`*"]

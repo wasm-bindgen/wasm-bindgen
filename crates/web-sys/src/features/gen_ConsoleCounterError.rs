@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleCounterError`*"]
     #[wasm_bindgen(method, getter = "error")]
     pub fn get_error(this: &ConsoleCounterError) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_error()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleCounterError`*"]
+    #[wasm_bindgen(method, getter = "error")]
+    pub fn get_error_js_string(this: &ConsoleCounterError) -> Option<::js_sys::JsString>;
     #[doc = "Change the `error` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleCounterError`*"]
@@ -25,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleCounterError`*"]
     #[wasm_bindgen(method, getter = "label")]
     pub fn get_label(this: &ConsoleCounterError) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_label()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleCounterError`*"]
+    #[wasm_bindgen(method, getter = "label")]
+    pub fn get_label_js_string(this: &ConsoleCounterError) -> Option<::js_sys::JsString>;
     #[doc = "Change the `label` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleCounterError`*"]

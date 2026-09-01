@@ -15,6 +15,13 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderOptions`*"]
     #[wasm_bindgen(method, getter = "peerIdentity")]
     pub fn get_peer_identity(this: &RtcIdentityProviderOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_peer_identity()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderOptions`*"]
+    #[wasm_bindgen(method, getter = "peerIdentity")]
+    pub fn get_peer_identity_js_string(
+        this: &RtcIdentityProviderOptions,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `peerIdentity` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderOptions`*"]
@@ -25,6 +32,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderOptions`*"]
     #[wasm_bindgen(method, getter = "protocol")]
     pub fn get_protocol(this: &RtcIdentityProviderOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_protocol()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderOptions`*"]
+    #[wasm_bindgen(method, getter = "protocol")]
+    pub fn get_protocol_js_string(this: &RtcIdentityProviderOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `protocol` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderOptions`*"]
@@ -35,6 +47,13 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderOptions`*"]
     #[wasm_bindgen(method, getter = "usernameHint")]
     pub fn get_username_hint(this: &RtcIdentityProviderOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_username_hint()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderOptions`*"]
+    #[wasm_bindgen(method, getter = "usernameHint")]
+    pub fn get_username_hint_js_string(
+        this: &RtcIdentityProviderOptions,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `usernameHint` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityProviderOptions`*"]

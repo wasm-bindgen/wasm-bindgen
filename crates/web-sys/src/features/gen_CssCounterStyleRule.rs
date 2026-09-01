@@ -24,6 +24,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssCounterStyleRule`*"]
     pub fn name(this: &CssCounterStyleRule) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "CSSCounterStyleRule", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSCounterStyleRule/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssCounterStyleRule`*"]
+    pub fn name_js_string(this: &CssCounterStyleRule) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "CSSCounterStyleRule", js_name = "name")]
     #[doc = "Setter for the `name` field of this object."]
     #[doc = ""]
@@ -38,6 +45,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssCounterStyleRule`*"]
     pub fn system(this: &CssCounterStyleRule) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "CSSCounterStyleRule", js_name = "system")]
+    #[doc = "Like `system()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSCounterStyleRule/system)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssCounterStyleRule`*"]
+    pub fn system_js_string(this: &CssCounterStyleRule) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "CSSCounterStyleRule", js_name = "system")]
     #[doc = "Setter for the `system` field of this object."]
     #[doc = ""]
@@ -52,6 +66,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssCounterStyleRule`*"]
     pub fn symbols(this: &CssCounterStyleRule) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "CSSCounterStyleRule", js_name = "symbols")]
+    #[doc = "Like `symbols()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSCounterStyleRule/symbols)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssCounterStyleRule`*"]
+    pub fn symbols_js_string(this: &CssCounterStyleRule) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "CSSCounterStyleRule", js_name = "symbols")]
     #[doc = "Setter for the `symbols` field of this object."]
     #[doc = ""]
@@ -73,6 +94,18 @@ extern "C" {
     pub fn additive_symbols(this: &CssCounterStyleRule) -> ::alloc::string::String;
     #[wasm_bindgen(
         method,
+        getter,
+        js_class = "CSSCounterStyleRule",
+        js_name = "additiveSymbols"
+    )]
+    #[doc = "Like `additive_symbols()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSCounterStyleRule/additiveSymbols)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssCounterStyleRule`*"]
+    pub fn additive_symbols_js_string(this: &CssCounterStyleRule) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
         setter,
         js_class = "CSSCounterStyleRule",
         js_name = "additiveSymbols"
@@ -90,6 +123,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssCounterStyleRule`*"]
     pub fn negative(this: &CssCounterStyleRule) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "CSSCounterStyleRule", js_name = "negative")]
+    #[doc = "Like `negative()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSCounterStyleRule/negative)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssCounterStyleRule`*"]
+    pub fn negative_js_string(this: &CssCounterStyleRule) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "CSSCounterStyleRule", js_name = "negative")]
     #[doc = "Setter for the `negative` field of this object."]
     #[doc = ""]
@@ -104,6 +144,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssCounterStyleRule`*"]
     pub fn prefix(this: &CssCounterStyleRule) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "CSSCounterStyleRule", js_name = "prefix")]
+    #[doc = "Like `prefix()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSCounterStyleRule/prefix)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssCounterStyleRule`*"]
+    pub fn prefix_js_string(this: &CssCounterStyleRule) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "CSSCounterStyleRule", js_name = "prefix")]
     #[doc = "Setter for the `prefix` field of this object."]
     #[doc = ""]
@@ -118,6 +165,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssCounterStyleRule`*"]
     pub fn suffix(this: &CssCounterStyleRule) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "CSSCounterStyleRule", js_name = "suffix")]
+    #[doc = "Like `suffix()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSCounterStyleRule/suffix)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssCounterStyleRule`*"]
+    pub fn suffix_js_string(this: &CssCounterStyleRule) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "CSSCounterStyleRule", js_name = "suffix")]
     #[doc = "Setter for the `suffix` field of this object."]
     #[doc = ""]
@@ -132,6 +186,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssCounterStyleRule`*"]
     pub fn range(this: &CssCounterStyleRule) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "CSSCounterStyleRule", js_name = "range")]
+    #[doc = "Like `range()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSCounterStyleRule/range)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssCounterStyleRule`*"]
+    pub fn range_js_string(this: &CssCounterStyleRule) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "CSSCounterStyleRule", js_name = "range")]
     #[doc = "Setter for the `range` field of this object."]
     #[doc = ""]
@@ -146,6 +207,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssCounterStyleRule`*"]
     pub fn pad(this: &CssCounterStyleRule) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "CSSCounterStyleRule", js_name = "pad")]
+    #[doc = "Like `pad()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSCounterStyleRule/pad)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssCounterStyleRule`*"]
+    pub fn pad_js_string(this: &CssCounterStyleRule) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "CSSCounterStyleRule", js_name = "pad")]
     #[doc = "Setter for the `pad` field of this object."]
     #[doc = ""]
@@ -160,6 +228,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssCounterStyleRule`*"]
     pub fn speak_as(this: &CssCounterStyleRule) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "CSSCounterStyleRule", js_name = "speakAs")]
+    #[doc = "Like `speak_as()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSCounterStyleRule/speakAs)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssCounterStyleRule`*"]
+    pub fn speak_as_js_string(this: &CssCounterStyleRule) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "CSSCounterStyleRule", js_name = "speakAs")]
     #[doc = "Setter for the `speakAs` field of this object."]
     #[doc = ""]
@@ -174,6 +249,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssCounterStyleRule`*"]
     pub fn fallback(this: &CssCounterStyleRule) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "CSSCounterStyleRule", js_name = "fallback")]
+    #[doc = "Like `fallback()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSCounterStyleRule/fallback)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssCounterStyleRule`*"]
+    pub fn fallback_js_string(this: &CssCounterStyleRule) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "CSSCounterStyleRule", js_name = "fallback")]
     #[doc = "Setter for the `fallback` field of this object."]
     #[doc = ""]

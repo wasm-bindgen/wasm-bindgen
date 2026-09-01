@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CheckerboardReport`*"]
     #[wasm_bindgen(method, getter = "log")]
     pub fn get_log(this: &CheckerboardReport) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_log()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CheckerboardReport`*"]
+    #[wasm_bindgen(method, getter = "log")]
+    pub fn get_log_js_string(this: &CheckerboardReport) -> Option<::js_sys::JsString>;
     #[doc = "Change the `log` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CheckerboardReport`*"]

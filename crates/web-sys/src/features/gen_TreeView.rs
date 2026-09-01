@@ -69,6 +69,16 @@ extern "C" {
         this: &TreeView,
         row: i32,
     ) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "TreeView", js_name = "getRowProperties")]
+    #[doc = "Like `get_row_properties()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TreeView/getRowProperties)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TreeView`*"]
+    pub fn get_row_properties_js_string(
+        this: &TreeView,
+        row: i32,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "TreeView", js_name = "hasNextSibling")]
     #[doc = "The `hasNextSibling()` method."]
     #[doc = ""]

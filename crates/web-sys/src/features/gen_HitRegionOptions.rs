@@ -27,6 +27,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HitRegionOptions`*"]
     #[wasm_bindgen(method, getter = "id")]
     pub fn get_id(this: &HitRegionOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HitRegionOptions`*"]
+    #[wasm_bindgen(method, getter = "id")]
+    pub fn get_id_js_string(this: &HitRegionOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `id` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HitRegionOptions`*"]

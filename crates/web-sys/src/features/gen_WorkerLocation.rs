@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WorkerLocation`*"]
     pub fn href(this: &WorkerLocation) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "WorkerLocation", js_name = "href")]
+    #[doc = "Like `href()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerLocation/href)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerLocation`*"]
+    pub fn href_js_string(this: &WorkerLocation) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "WorkerLocation", js_name = "origin")]
     #[doc = "Getter for the `origin` field of this object."]
     #[doc = ""]
@@ -30,6 +37,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WorkerLocation`*"]
     pub fn origin(this: &WorkerLocation) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "WorkerLocation", js_name = "origin")]
+    #[doc = "Like `origin()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerLocation/origin)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerLocation`*"]
+    pub fn origin_js_string(this: &WorkerLocation) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "WorkerLocation", js_name = "protocol")]
     #[doc = "Getter for the `protocol` field of this object."]
     #[doc = ""]
@@ -37,6 +51,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WorkerLocation`*"]
     pub fn protocol(this: &WorkerLocation) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "WorkerLocation", js_name = "protocol")]
+    #[doc = "Like `protocol()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerLocation/protocol)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerLocation`*"]
+    pub fn protocol_js_string(this: &WorkerLocation) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "WorkerLocation", js_name = "host")]
     #[doc = "Getter for the `host` field of this object."]
     #[doc = ""]
@@ -44,6 +65,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WorkerLocation`*"]
     pub fn host(this: &WorkerLocation) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "WorkerLocation", js_name = "host")]
+    #[doc = "Like `host()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerLocation/host)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerLocation`*"]
+    pub fn host_js_string(this: &WorkerLocation) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "WorkerLocation", js_name = "hostname")]
     #[doc = "Getter for the `hostname` field of this object."]
     #[doc = ""]
@@ -51,6 +79,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WorkerLocation`*"]
     pub fn hostname(this: &WorkerLocation) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "WorkerLocation", js_name = "hostname")]
+    #[doc = "Like `hostname()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerLocation/hostname)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerLocation`*"]
+    pub fn hostname_js_string(this: &WorkerLocation) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "WorkerLocation", js_name = "port")]
     #[doc = "Getter for the `port` field of this object."]
     #[doc = ""]
@@ -58,6 +93,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WorkerLocation`*"]
     pub fn port(this: &WorkerLocation) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "WorkerLocation", js_name = "port")]
+    #[doc = "Like `port()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerLocation/port)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerLocation`*"]
+    pub fn port_js_string(this: &WorkerLocation) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "WorkerLocation", js_name = "pathname")]
     #[doc = "Getter for the `pathname` field of this object."]
     #[doc = ""]
@@ -65,6 +107,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WorkerLocation`*"]
     pub fn pathname(this: &WorkerLocation) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "WorkerLocation", js_name = "pathname")]
+    #[doc = "Like `pathname()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerLocation/pathname)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerLocation`*"]
+    pub fn pathname_js_string(this: &WorkerLocation) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "WorkerLocation", js_name = "search")]
     #[doc = "Getter for the `search` field of this object."]
     #[doc = ""]
@@ -72,6 +121,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WorkerLocation`*"]
     pub fn search(this: &WorkerLocation) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "WorkerLocation", js_name = "search")]
+    #[doc = "Like `search()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerLocation/search)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerLocation`*"]
+    pub fn search_js_string(this: &WorkerLocation) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "WorkerLocation", js_name = "hash")]
     #[doc = "Getter for the `hash` field of this object."]
     #[doc = ""]
@@ -79,4 +135,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WorkerLocation`*"]
     pub fn hash(this: &WorkerLocation) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "WorkerLocation", js_name = "hash")]
+    #[doc = "Like `hash()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerLocation/hash)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerLocation`*"]
+    pub fn hash_js_string(this: &WorkerLocation) -> ::js_sys::JsString;
 }

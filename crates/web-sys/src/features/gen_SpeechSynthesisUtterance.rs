@@ -31,6 +31,18 @@ extern "C" {
     pub fn text(this: &SpeechSynthesisUtterance) -> ::alloc::string::String;
     #[wasm_bindgen(
         method,
+        getter,
+        js_class = "SpeechSynthesisUtterance",
+        js_name = "text"
+    )]
+    #[doc = "Like `text()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesisUtterance/text)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechSynthesisUtterance`*"]
+    pub fn text_js_string(this: &SpeechSynthesisUtterance) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
         setter,
         js_class = "SpeechSynthesisUtterance",
         js_name = "text"
@@ -53,6 +65,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SpeechSynthesisUtterance`*"]
     pub fn lang(this: &SpeechSynthesisUtterance) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SpeechSynthesisUtterance",
+        js_name = "lang"
+    )]
+    #[doc = "Like `lang()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesisUtterance/lang)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechSynthesisUtterance`*"]
+    pub fn lang_js_string(this: &SpeechSynthesisUtterance) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         setter,

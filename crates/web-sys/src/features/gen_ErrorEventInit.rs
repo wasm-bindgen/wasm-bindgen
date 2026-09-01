@@ -65,6 +65,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ErrorEventInit`*"]
     #[wasm_bindgen(method, getter = "filename")]
     pub fn get_filename(this: &ErrorEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_filename()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ErrorEventInit`*"]
+    #[wasm_bindgen(method, getter = "filename")]
+    pub fn get_filename_js_string(this: &ErrorEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `filename` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ErrorEventInit`*"]
@@ -85,6 +90,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ErrorEventInit`*"]
     #[wasm_bindgen(method, getter = "message")]
     pub fn get_message(this: &ErrorEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_message()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ErrorEventInit`*"]
+    #[wasm_bindgen(method, getter = "message")]
+    pub fn get_message_js_string(this: &ErrorEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `message` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ErrorEventInit`*"]

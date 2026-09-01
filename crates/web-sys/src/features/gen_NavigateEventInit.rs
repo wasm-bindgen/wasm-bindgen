@@ -67,6 +67,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NavigateEventInit`*"]
     #[wasm_bindgen(method, getter = "downloadRequest")]
     pub fn get_download_request(this: &NavigateEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_download_request()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NavigateEventInit`*"]
+    #[wasm_bindgen(method, getter = "downloadRequest")]
+    pub fn get_download_request_js_string(this: &NavigateEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `downloadRequest` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NavigateEventInit`*"]

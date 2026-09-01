@@ -37,6 +37,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SpeechRecognitionError`*"]
     pub fn message(this: &SpeechRecognitionError) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SpeechRecognitionError",
+        js_name = "message"
+    )]
+    #[doc = "Like `message()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognitionError/message)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechRecognitionError`*"]
+    pub fn message_js_string(this: &SpeechRecognitionError) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(catch, constructor, js_class = "SpeechRecognitionError")]
     #[doc = "The `new SpeechRecognitionError(..)` constructor, creating a new instance of `SpeechRecognitionError`."]
     #[doc = ""]

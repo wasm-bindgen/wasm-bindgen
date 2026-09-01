@@ -45,4 +45,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PushMessageData`*"]
     pub fn text(this: &PushMessageData) -> ::alloc::string::String;
+    #[wasm_bindgen(method, js_class = "PushMessageData", js_name = "text")]
+    #[doc = "Like `text()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PushMessageData/text)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PushMessageData`*"]
+    pub fn text_js_string(this: &PushMessageData) -> ::js_sys::JsString;
 }

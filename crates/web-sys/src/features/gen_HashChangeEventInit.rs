@@ -45,6 +45,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HashChangeEventInit`*"]
     #[wasm_bindgen(method, getter = "newURL")]
     pub fn get_new_url(this: &HashChangeEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_new_url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HashChangeEventInit`*"]
+    #[wasm_bindgen(method, getter = "newURL")]
+    pub fn get_new_url_js_string(this: &HashChangeEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `newURL` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HashChangeEventInit`*"]
@@ -55,6 +60,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HashChangeEventInit`*"]
     #[wasm_bindgen(method, getter = "oldURL")]
     pub fn get_old_url(this: &HashChangeEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_old_url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HashChangeEventInit`*"]
+    #[wasm_bindgen(method, getter = "oldURL")]
+    pub fn get_old_url_js_string(this: &HashChangeEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `oldURL` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HashChangeEventInit`*"]

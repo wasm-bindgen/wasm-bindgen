@@ -27,6 +27,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn target(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "target")]
+    #[doc = "Like `target()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/target)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn target_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAnchorElement", js_name = "target")]
     #[doc = "Setter for the `target` field of this object."]
     #[doc = ""]
@@ -41,6 +48,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn download(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "download")]
+    #[doc = "Like `download()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/download)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn download_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAnchorElement", js_name = "download")]
     #[doc = "Setter for the `download` field of this object."]
     #[doc = ""]
@@ -55,6 +69,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn ping(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "ping")]
+    #[doc = "Like `ping()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/ping)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn ping_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAnchorElement", js_name = "ping")]
     #[doc = "Setter for the `ping` field of this object."]
     #[doc = ""]
@@ -69,6 +90,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn rel(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "rel")]
+    #[doc = "Like `rel()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/rel)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn rel_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAnchorElement", js_name = "rel")]
     #[doc = "Setter for the `rel` field of this object."]
     #[doc = ""]
@@ -88,6 +116,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn referrer_policy(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "HTMLAnchorElement",
+        js_name = "referrerPolicy"
+    )]
+    #[doc = "Like `referrer_policy()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/referrerPolicy)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn referrer_policy_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         setter,
@@ -115,6 +155,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn hreflang(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "hreflang")]
+    #[doc = "Like `hreflang()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/hreflang)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn hreflang_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAnchorElement", js_name = "hreflang")]
     #[doc = "Setter for the `hreflang` field of this object."]
     #[doc = ""]
@@ -129,6 +176,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn type_(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "type")]
+    #[doc = "Like `type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/type)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn type_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAnchorElement", js_name = "type")]
     #[doc = "Setter for the `type` field of this object."]
     #[doc = ""]
@@ -152,6 +206,19 @@ extern "C" {
     #[wasm_bindgen(
         catch,
         method,
+        getter,
+        js_class = "HTMLAnchorElement",
+        js_name = "text"
+    )]
+    #[doc = "Like `text()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/text)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn text_js_string(this: &HtmlAnchorElement) -> Result<::js_sys::JsString, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
         setter,
         js_class = "HTMLAnchorElement",
         js_name = "text"
@@ -169,6 +236,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn coords(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "coords")]
+    #[doc = "Like `coords()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/coords)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn coords_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAnchorElement", js_name = "coords")]
     #[doc = "Setter for the `coords` field of this object."]
     #[doc = ""]
@@ -183,6 +257,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn charset(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "charset")]
+    #[doc = "Like `charset()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/charset)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn charset_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAnchorElement", js_name = "charset")]
     #[doc = "Setter for the `charset` field of this object."]
     #[doc = ""]
@@ -197,6 +278,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn name(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn name_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAnchorElement", js_name = "name")]
     #[doc = "Setter for the `name` field of this object."]
     #[doc = ""]
@@ -211,6 +299,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn rev(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "rev")]
+    #[doc = "Like `rev()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/rev)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn rev_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAnchorElement", js_name = "rev")]
     #[doc = "Setter for the `rev` field of this object."]
     #[doc = ""]
@@ -225,6 +320,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn shape(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "shape")]
+    #[doc = "Like `shape()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/shape)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn shape_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAnchorElement", js_name = "shape")]
     #[doc = "Setter for the `shape` field of this object."]
     #[doc = ""]
@@ -239,6 +341,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn href(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "href")]
+    #[doc = "Like `href()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/href)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn href_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAnchorElement", js_name = "href")]
     #[doc = "Setter for the `href` field of this object."]
     #[doc = ""]
@@ -253,6 +362,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn origin(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "origin")]
+    #[doc = "Like `origin()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/origin)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn origin_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "protocol")]
     #[doc = "Getter for the `protocol` field of this object."]
     #[doc = ""]
@@ -260,6 +376,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn protocol(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "protocol")]
+    #[doc = "Like `protocol()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/protocol)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn protocol_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAnchorElement", js_name = "protocol")]
     #[doc = "Setter for the `protocol` field of this object."]
     #[doc = ""]
@@ -274,6 +397,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn username(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "username")]
+    #[doc = "Like `username()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/username)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn username_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAnchorElement", js_name = "username")]
     #[doc = "Setter for the `username` field of this object."]
     #[doc = ""]
@@ -288,6 +418,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn password(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "password")]
+    #[doc = "Like `password()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/password)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn password_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAnchorElement", js_name = "password")]
     #[doc = "Setter for the `password` field of this object."]
     #[doc = ""]
@@ -302,6 +439,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn host(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "host")]
+    #[doc = "Like `host()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/host)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn host_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAnchorElement", js_name = "host")]
     #[doc = "Setter for the `host` field of this object."]
     #[doc = ""]
@@ -316,6 +460,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn hostname(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "hostname")]
+    #[doc = "Like `hostname()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/hostname)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn hostname_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAnchorElement", js_name = "hostname")]
     #[doc = "Setter for the `hostname` field of this object."]
     #[doc = ""]
@@ -330,6 +481,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn port(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "port")]
+    #[doc = "Like `port()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/port)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn port_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAnchorElement", js_name = "port")]
     #[doc = "Setter for the `port` field of this object."]
     #[doc = ""]
@@ -344,6 +502,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn pathname(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "pathname")]
+    #[doc = "Like `pathname()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/pathname)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn pathname_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAnchorElement", js_name = "pathname")]
     #[doc = "Setter for the `pathname` field of this object."]
     #[doc = ""]
@@ -358,6 +523,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn search(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "search")]
+    #[doc = "Like `search()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/search)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn search_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAnchorElement", js_name = "search")]
     #[doc = "Setter for the `search` field of this object."]
     #[doc = ""]
@@ -372,6 +544,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
     pub fn hash(this: &HtmlAnchorElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAnchorElement", js_name = "hash")]
+    #[doc = "Like `hash()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/hash)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAnchorElement`*"]
+    pub fn hash_js_string(this: &HtmlAnchorElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAnchorElement", js_name = "hash")]
     #[doc = "Setter for the `hash` field of this object."]
     #[doc = ""]

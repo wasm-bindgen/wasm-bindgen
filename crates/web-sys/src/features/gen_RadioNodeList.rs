@@ -24,6 +24,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RadioNodeList`*"]
     pub fn value(this: &RadioNodeList) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "RadioNodeList", js_name = "value")]
+    #[doc = "Like `value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RadioNodeList/value)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RadioNodeList`*"]
+    pub fn value_js_string(this: &RadioNodeList) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "RadioNodeList", js_name = "value")]
     #[doc = "Setter for the `value` field of this object."]
     #[doc = ""]

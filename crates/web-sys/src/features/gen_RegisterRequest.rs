@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RegisterRequest`*"]
     #[wasm_bindgen(method, getter = "challenge")]
     pub fn get_challenge(this: &RegisterRequest) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_challenge()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegisterRequest`*"]
+    #[wasm_bindgen(method, getter = "challenge")]
+    pub fn get_challenge_js_string(this: &RegisterRequest) -> Option<::js_sys::JsString>;
     #[doc = "Change the `challenge` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RegisterRequest`*"]
@@ -25,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RegisterRequest`*"]
     #[wasm_bindgen(method, getter = "version")]
     pub fn get_version(this: &RegisterRequest) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_version()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegisterRequest`*"]
+    #[wasm_bindgen(method, getter = "version")]
+    pub fn get_version_js_string(this: &RegisterRequest) -> Option<::js_sys::JsString>;
     #[doc = "Change the `version` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RegisterRequest`*"]

@@ -34,6 +34,18 @@ extern "C" {
     pub fn align(this: &HtmlTableCaptionElement) -> ::alloc::string::String;
     #[wasm_bindgen(
         method,
+        getter,
+        js_class = "HTMLTableCaptionElement",
+        js_name = "align"
+    )]
+    #[doc = "Like `align()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableCaptionElement/align)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableCaptionElement`*"]
+    pub fn align_js_string(this: &HtmlTableCaptionElement) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
         setter,
         js_class = "HTMLTableCaptionElement",
         js_name = "align"

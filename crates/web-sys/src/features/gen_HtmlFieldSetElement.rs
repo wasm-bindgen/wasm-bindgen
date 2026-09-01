@@ -49,6 +49,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlFieldSetElement`*"]
     pub fn name(this: &HtmlFieldSetElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLFieldSetElement", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFieldSetElement/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFieldSetElement`*"]
+    pub fn name_js_string(this: &HtmlFieldSetElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLFieldSetElement", js_name = "name")]
     #[doc = "Setter for the `name` field of this object."]
     #[doc = ""]
@@ -63,6 +70,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlFieldSetElement`*"]
     pub fn type_(this: &HtmlFieldSetElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLFieldSetElement", js_name = "type")]
+    #[doc = "Like `type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFieldSetElement/type)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFieldSetElement`*"]
+    pub fn type_js_string(this: &HtmlFieldSetElement) -> ::js_sys::JsString;
     #[cfg(feature = "HtmlCollection")]
     #[wasm_bindgen(method, getter, js_class = "HTMLFieldSetElement", js_name = "elements")]
     #[doc = "Getter for the `elements` field of this object."]
@@ -106,6 +120,21 @@ extern "C" {
     pub fn validation_message(
         this: &HtmlFieldSetElement,
     ) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        getter,
+        js_class = "HTMLFieldSetElement",
+        js_name = "validationMessage"
+    )]
+    #[doc = "Like `validation_message()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFieldSetElement/validationMessage)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFieldSetElement`*"]
+    pub fn validation_message_js_string(
+        this: &HtmlFieldSetElement,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(method, js_class = "HTMLFieldSetElement", js_name = "checkValidity")]
     #[doc = "The `checkValidity()` method."]
     #[doc = ""]

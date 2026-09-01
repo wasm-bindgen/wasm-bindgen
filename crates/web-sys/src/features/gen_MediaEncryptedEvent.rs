@@ -30,6 +30,18 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaEncryptedEvent`*"]
     pub fn init_data_type(this: &MediaEncryptedEvent) -> ::alloc::string::String;
     #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "MediaEncryptedEvent",
+        js_name = "initDataType"
+    )]
+    #[doc = "Like `init_data_type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaEncryptedEvent/initDataType)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaEncryptedEvent`*"]
+    pub fn init_data_type_js_string(this: &MediaEncryptedEvent) -> ::js_sys::JsString;
+    #[wasm_bindgen(
         catch,
         method,
         getter,

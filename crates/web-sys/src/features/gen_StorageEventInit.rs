@@ -45,6 +45,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `StorageEventInit`*"]
     #[wasm_bindgen(method, getter = "key")]
     pub fn get_key(this: &StorageEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_key()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `StorageEventInit`*"]
+    #[wasm_bindgen(method, getter = "key")]
+    pub fn get_key_js_string(this: &StorageEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `key` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StorageEventInit`*"]
@@ -55,6 +60,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `StorageEventInit`*"]
     #[wasm_bindgen(method, getter = "newValue")]
     pub fn get_new_value(this: &StorageEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_new_value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `StorageEventInit`*"]
+    #[wasm_bindgen(method, getter = "newValue")]
+    pub fn get_new_value_js_string(this: &StorageEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `newValue` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StorageEventInit`*"]
@@ -65,6 +75,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `StorageEventInit`*"]
     #[wasm_bindgen(method, getter = "oldValue")]
     pub fn get_old_value(this: &StorageEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_old_value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `StorageEventInit`*"]
+    #[wasm_bindgen(method, getter = "oldValue")]
+    pub fn get_old_value_js_string(this: &StorageEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `oldValue` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StorageEventInit`*"]
@@ -87,6 +102,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `StorageEventInit`*"]
     #[wasm_bindgen(method, getter = "url")]
     pub fn get_url(this: &StorageEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `StorageEventInit`*"]
+    #[wasm_bindgen(method, getter = "url")]
+    pub fn get_url_js_string(this: &StorageEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `url` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StorageEventInit`*"]

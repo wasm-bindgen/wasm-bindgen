@@ -27,6 +27,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlDivElement`*"]
     pub fn align(this: &HtmlDivElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLDivElement", js_name = "align")]
+    #[doc = "Like `align()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDivElement/align)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDivElement`*"]
+    pub fn align_js_string(this: &HtmlDivElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLDivElement", js_name = "align")]
     #[doc = "Setter for the `align` field of this object."]
     #[doc = ""]

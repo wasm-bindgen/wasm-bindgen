@@ -27,6 +27,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
     pub fn alt(this: &HtmlAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAreaElement", js_name = "alt")]
+    #[doc = "Like `alt()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAreaElement/alt)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
+    pub fn alt_js_string(this: &HtmlAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAreaElement", js_name = "alt")]
     #[doc = "Setter for the `alt` field of this object."]
     #[doc = ""]
@@ -41,6 +48,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
     pub fn coords(this: &HtmlAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAreaElement", js_name = "coords")]
+    #[doc = "Like `coords()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAreaElement/coords)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
+    pub fn coords_js_string(this: &HtmlAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAreaElement", js_name = "coords")]
     #[doc = "Setter for the `coords` field of this object."]
     #[doc = ""]
@@ -55,6 +69,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
     pub fn shape(this: &HtmlAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAreaElement", js_name = "shape")]
+    #[doc = "Like `shape()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAreaElement/shape)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
+    pub fn shape_js_string(this: &HtmlAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAreaElement", js_name = "shape")]
     #[doc = "Setter for the `shape` field of this object."]
     #[doc = ""]
@@ -69,6 +90,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
     pub fn target(this: &HtmlAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAreaElement", js_name = "target")]
+    #[doc = "Like `target()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAreaElement/target)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
+    pub fn target_js_string(this: &HtmlAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAreaElement", js_name = "target")]
     #[doc = "Setter for the `target` field of this object."]
     #[doc = ""]
@@ -83,6 +111,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
     pub fn download(this: &HtmlAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAreaElement", js_name = "download")]
+    #[doc = "Like `download()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAreaElement/download)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
+    pub fn download_js_string(this: &HtmlAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAreaElement", js_name = "download")]
     #[doc = "Setter for the `download` field of this object."]
     #[doc = ""]
@@ -97,6 +132,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
     pub fn ping(this: &HtmlAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAreaElement", js_name = "ping")]
+    #[doc = "Like `ping()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAreaElement/ping)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
+    pub fn ping_js_string(this: &HtmlAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAreaElement", js_name = "ping")]
     #[doc = "Setter for the `ping` field of this object."]
     #[doc = ""]
@@ -111,6 +153,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
     pub fn rel(this: &HtmlAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAreaElement", js_name = "rel")]
+    #[doc = "Like `rel()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAreaElement/rel)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
+    pub fn rel_js_string(this: &HtmlAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAreaElement", js_name = "rel")]
     #[doc = "Setter for the `rel` field of this object."]
     #[doc = ""]
@@ -130,6 +179,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
     pub fn referrer_policy(this: &HtmlAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "HTMLAreaElement",
+        js_name = "referrerPolicy"
+    )]
+    #[doc = "Like `referrer_policy()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAreaElement/referrerPolicy)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
+    pub fn referrer_policy_js_string(this: &HtmlAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         setter,
@@ -171,6 +232,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
     pub fn href(this: &HtmlAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAreaElement", js_name = "href")]
+    #[doc = "Like `href()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAreaElement/href)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
+    pub fn href_js_string(this: &HtmlAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAreaElement", js_name = "href")]
     #[doc = "Setter for the `href` field of this object."]
     #[doc = ""]
@@ -185,6 +253,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
     pub fn origin(this: &HtmlAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAreaElement", js_name = "origin")]
+    #[doc = "Like `origin()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAreaElement/origin)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
+    pub fn origin_js_string(this: &HtmlAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "HTMLAreaElement", js_name = "protocol")]
     #[doc = "Getter for the `protocol` field of this object."]
     #[doc = ""]
@@ -192,6 +267,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
     pub fn protocol(this: &HtmlAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAreaElement", js_name = "protocol")]
+    #[doc = "Like `protocol()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAreaElement/protocol)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
+    pub fn protocol_js_string(this: &HtmlAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAreaElement", js_name = "protocol")]
     #[doc = "Setter for the `protocol` field of this object."]
     #[doc = ""]
@@ -206,6 +288,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
     pub fn username(this: &HtmlAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAreaElement", js_name = "username")]
+    #[doc = "Like `username()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAreaElement/username)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
+    pub fn username_js_string(this: &HtmlAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAreaElement", js_name = "username")]
     #[doc = "Setter for the `username` field of this object."]
     #[doc = ""]
@@ -220,6 +309,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
     pub fn password(this: &HtmlAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAreaElement", js_name = "password")]
+    #[doc = "Like `password()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAreaElement/password)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
+    pub fn password_js_string(this: &HtmlAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAreaElement", js_name = "password")]
     #[doc = "Setter for the `password` field of this object."]
     #[doc = ""]
@@ -234,6 +330,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
     pub fn host(this: &HtmlAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAreaElement", js_name = "host")]
+    #[doc = "Like `host()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAreaElement/host)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
+    pub fn host_js_string(this: &HtmlAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAreaElement", js_name = "host")]
     #[doc = "Setter for the `host` field of this object."]
     #[doc = ""]
@@ -248,6 +351,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
     pub fn hostname(this: &HtmlAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAreaElement", js_name = "hostname")]
+    #[doc = "Like `hostname()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAreaElement/hostname)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
+    pub fn hostname_js_string(this: &HtmlAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAreaElement", js_name = "hostname")]
     #[doc = "Setter for the `hostname` field of this object."]
     #[doc = ""]
@@ -262,6 +372,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
     pub fn port(this: &HtmlAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAreaElement", js_name = "port")]
+    #[doc = "Like `port()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAreaElement/port)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
+    pub fn port_js_string(this: &HtmlAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAreaElement", js_name = "port")]
     #[doc = "Setter for the `port` field of this object."]
     #[doc = ""]
@@ -276,6 +393,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
     pub fn pathname(this: &HtmlAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAreaElement", js_name = "pathname")]
+    #[doc = "Like `pathname()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAreaElement/pathname)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
+    pub fn pathname_js_string(this: &HtmlAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAreaElement", js_name = "pathname")]
     #[doc = "Setter for the `pathname` field of this object."]
     #[doc = ""]
@@ -290,6 +414,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
     pub fn search(this: &HtmlAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAreaElement", js_name = "search")]
+    #[doc = "Like `search()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAreaElement/search)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
+    pub fn search_js_string(this: &HtmlAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAreaElement", js_name = "search")]
     #[doc = "Setter for the `search` field of this object."]
     #[doc = ""]
@@ -304,6 +435,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
     pub fn hash(this: &HtmlAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLAreaElement", js_name = "hash")]
+    #[doc = "Like `hash()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAreaElement/hash)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlAreaElement`*"]
+    pub fn hash_js_string(this: &HtmlAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLAreaElement", js_name = "hash")]
     #[doc = "Setter for the `hash` field of this object."]
     #[doc = ""]

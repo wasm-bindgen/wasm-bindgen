@@ -24,6 +24,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssImportRule`*"]
     pub fn href(this: &CssImportRule) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "CSSImportRule", js_name = "href")]
+    #[doc = "Like `href()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSImportRule/href)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssImportRule`*"]
+    pub fn href_js_string(this: &CssImportRule) -> ::js_sys::JsString;
     #[cfg(feature = "MediaList")]
     #[wasm_bindgen(method, getter, js_class = "CSSImportRule", js_name = "media")]
     #[doc = "Getter for the `media` field of this object."]

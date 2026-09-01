@@ -38,6 +38,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `GetUserMediaRequest`*"]
     pub fn call_id(this: &GetUserMediaRequest) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "GetUserMediaRequest", js_name = "callID")]
+    #[doc = "Like `call_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GetUserMediaRequest/callID)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GetUserMediaRequest`*"]
+    pub fn call_id_js_string(this: &GetUserMediaRequest) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "GetUserMediaRequest", js_name = "rawID")]
     #[doc = "Getter for the `rawID` field of this object."]
     #[doc = ""]
@@ -45,6 +52,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `GetUserMediaRequest`*"]
     pub fn raw_id(this: &GetUserMediaRequest) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "GetUserMediaRequest", js_name = "rawID")]
+    #[doc = "Like `raw_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GetUserMediaRequest/rawID)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GetUserMediaRequest`*"]
+    pub fn raw_id_js_string(this: &GetUserMediaRequest) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         getter,
@@ -57,6 +71,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `GetUserMediaRequest`*"]
     pub fn media_source(this: &GetUserMediaRequest) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "GetUserMediaRequest",
+        js_name = "mediaSource"
+    )]
+    #[doc = "Like `media_source()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GetUserMediaRequest/mediaSource)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GetUserMediaRequest`*"]
+    pub fn media_source_js_string(this: &GetUserMediaRequest) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "GetUserMediaRequest", js_name = "isSecure")]
     #[doc = "Getter for the `isSecure` field of this object."]
     #[doc = ""]

@@ -31,6 +31,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Node`*"]
     pub fn node_name(this: &Node) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Node", js_name = "nodeName")]
+    #[doc = "Like `node_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeName)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Node`*"]
+    pub fn node_name_js_string(this: &Node) -> ::js_sys::JsString;
     #[wasm_bindgen(catch, method, getter, js_class = "Node", js_name = "baseURI")]
     #[doc = "Getter for the `baseURI` field of this object."]
     #[doc = ""]
@@ -38,6 +45,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Node`*"]
     pub fn base_uri(this: &Node) -> Result<Option<::alloc::string::String>, JsValue>;
+    #[wasm_bindgen(catch, method, getter, js_class = "Node", js_name = "baseURI")]
+    #[doc = "Like `base_uri()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Node/baseURI)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Node`*"]
+    pub fn base_uri_js_string(this: &Node) -> Result<Option<::js_sys::JsString>, JsValue>;
     #[wasm_bindgen(method, getter, js_class = "Node", js_name = "isConnected")]
     #[doc = "Getter for the `isConnected` field of this object."]
     #[doc = ""]
@@ -111,6 +125,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Node`*"]
     pub fn node_value(this: &Node) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "Node", js_name = "nodeValue")]
+    #[doc = "Like `node_value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Node/nodeValue)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Node`*"]
+    pub fn node_value_js_string(this: &Node) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, setter, js_class = "Node", js_name = "nodeValue")]
     #[doc = "Setter for the `nodeValue` field of this object."]
     #[doc = ""]
@@ -125,6 +146,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Node`*"]
     pub fn text_content(this: &Node) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "Node", js_name = "textContent")]
+    #[doc = "Like `text_content()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Node/textContent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Node`*"]
+    pub fn text_content_js_string(this: &Node) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, setter, js_class = "Node", js_name = "textContent")]
     #[doc = "Setter for the `textContent` field of this object."]
     #[doc = ""]
@@ -227,6 +255,16 @@ extern "C" {
         this: &Node,
         prefix: Option<&str>,
     ) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, js_class = "Node", js_name = "lookupNamespaceURI")]
+    #[doc = "Like `lookup_namespace_uri()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Node/lookupNamespaceURI)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Node`*"]
+    pub fn lookup_namespace_uri_js_string(
+        this: &Node,
+        prefix: Option<&str>,
+    ) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, js_class = "Node", js_name = "lookupPrefix")]
     #[doc = "The `lookupPrefix()` method."]
     #[doc = ""]
@@ -234,6 +272,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Node`*"]
     pub fn lookup_prefix(this: &Node, namespace: Option<&str>) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, js_class = "Node", js_name = "lookupPrefix")]
+    #[doc = "Like `lookup_prefix()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Node/lookupPrefix)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Node`*"]
+    pub fn lookup_prefix_js_string(
+        this: &Node,
+        namespace: Option<&str>,
+    ) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, js_class = "Node")]
     #[doc = "The `normalize()` method."]
     #[doc = ""]

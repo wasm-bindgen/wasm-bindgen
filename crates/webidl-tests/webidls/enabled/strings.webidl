@@ -28,3 +28,8 @@ interface PlainStrings {
   attribute DOMString title;
   DOMString echo(DOMString value);
 };
+
+namespace stringNs {
+  readonly attribute DOMString tag;
+  DOMString concat(DOMString a, DOMString b);
+};

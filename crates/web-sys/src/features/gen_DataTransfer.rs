@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DataTransfer`*"]
     pub fn drop_effect(this: &DataTransfer) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "DataTransfer", js_name = "dropEffect")]
+    #[doc = "Like `drop_effect()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/dropEffect)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DataTransfer`*"]
+    pub fn drop_effect_js_string(this: &DataTransfer) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "DataTransfer", js_name = "dropEffect")]
     #[doc = "Setter for the `dropEffect` field of this object."]
     #[doc = ""]
@@ -37,6 +44,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DataTransfer`*"]
     pub fn effect_allowed(this: &DataTransfer) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "DataTransfer", js_name = "effectAllowed")]
+    #[doc = "Like `effect_allowed()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/effectAllowed)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DataTransfer`*"]
+    pub fn effect_allowed_js_string(this: &DataTransfer) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "DataTransfer", js_name = "effectAllowed")]
     #[doc = "Setter for the `effectAllowed` field of this object."]
     #[doc = ""]
@@ -95,6 +109,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DataTransfer`*"]
     pub fn get_data(this: &DataTransfer, format: &str) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "DataTransfer", js_name = "getData")]
+    #[doc = "Like `get_data()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer/getData)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DataTransfer`*"]
+    pub fn get_data_js_string(
+        this: &DataTransfer,
+        format: &str,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "DataTransfer", js_name = "getFiles")]
     #[doc = "The `getFiles()` method."]
     #[doc = ""]

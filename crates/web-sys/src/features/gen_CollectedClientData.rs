@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
     #[wasm_bindgen(method, getter = "challenge")]
     pub fn get_challenge(this: &CollectedClientData) -> ::alloc::string::String;
+    #[doc = "Like `get_challenge()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
+    #[wasm_bindgen(method, getter = "challenge")]
+    pub fn get_challenge_js_string(this: &CollectedClientData) -> ::js_sys::JsString;
     #[doc = "Change the `challenge` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
@@ -55,6 +60,12 @@ extern "C" {
     #[deprecated(note = "Removed from the WebAuthn specification")]
     #[wasm_bindgen(method, getter = "hashAlgorithm")]
     pub fn get_hash_algorithm(this: &CollectedClientData) -> ::alloc::string::String;
+    #[doc = "Like `get_hash_algorithm()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
+    #[deprecated(note = "Removed from the WebAuthn specification")]
+    #[wasm_bindgen(method, getter = "hashAlgorithm")]
+    pub fn get_hash_algorithm_js_string(this: &CollectedClientData) -> ::js_sys::JsString;
     #[doc = "Change the `hashAlgorithm` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
@@ -66,6 +77,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
     #[wasm_bindgen(method, getter = "origin")]
     pub fn get_origin(this: &CollectedClientData) -> ::alloc::string::String;
+    #[doc = "Like `get_origin()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
+    #[wasm_bindgen(method, getter = "origin")]
+    pub fn get_origin_js_string(this: &CollectedClientData) -> ::js_sys::JsString;
     #[doc = "Change the `origin` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
@@ -89,6 +105,13 @@ extern "C" {
     #[deprecated(note = "Removed from the WebAuthn specification")]
     #[wasm_bindgen(method, getter = "tokenBindingId")]
     pub fn get_token_binding_id(this: &CollectedClientData) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_token_binding_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
+    #[deprecated(note = "Removed from the WebAuthn specification")]
+    #[wasm_bindgen(method, getter = "tokenBindingId")]
+    pub fn get_token_binding_id_js_string(this: &CollectedClientData)
+        -> Option<::js_sys::JsString>;
     #[doc = "Change the `tokenBindingId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
@@ -100,6 +123,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
     #[wasm_bindgen(method, getter = "type")]
     pub fn get_type(this: &CollectedClientData) -> ::alloc::string::String;
+    #[doc = "Like `get_type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]
+    #[wasm_bindgen(method, getter = "type")]
+    pub fn get_type_js_string(this: &CollectedClientData) -> ::js_sys::JsString;
     #[doc = "Change the `type` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CollectedClientData`*"]

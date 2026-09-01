@@ -25,6 +25,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
     pub fn name(this: &DocumentType) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "DocumentType", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn name_js_string(this: &DocumentType) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "DocumentType", js_name = "publicId")]
     #[doc = "Getter for the `publicId` field of this object."]
     #[doc = ""]
@@ -32,6 +39,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
     pub fn public_id(this: &DocumentType) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "DocumentType", js_name = "publicId")]
+    #[doc = "Like `public_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/publicId)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn public_id_js_string(this: &DocumentType) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "DocumentType", js_name = "systemId")]
     #[doc = "Getter for the `systemId` field of this object."]
     #[doc = ""]
@@ -39,6 +53,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
     pub fn system_id(this: &DocumentType) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "DocumentType", js_name = "systemId")]
+    #[doc = "Like `system_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DocumentType/systemId)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DocumentType`*"]
+    pub fn system_id_js_string(this: &DocumentType) -> ::js_sys::JsString;
     #[wasm_bindgen(catch, method, variadic, js_class = "DocumentType", js_name = "after")]
     #[doc = "The `after()` method."]
     #[doc = ""]
