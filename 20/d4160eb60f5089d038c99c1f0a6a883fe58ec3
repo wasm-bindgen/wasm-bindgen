@@ -1,0 +1,21 @@
+src/lib.rs
+  s_b34d432186975d::t_69838dd6620f49 148
+tests/wasm/generic_import_args.rs
+  s_b34d432186975d::t_74543b985b022e 22,61,66,69
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "20d4160eb60f5089d038c99c1f0a6a883fe58ec3",
+  "prompts": {},
+  "sessions": {
+    "s_b34d432186975d": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fa1d2ff74ffea0HngPXAq2u8E3",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
