@@ -83,7 +83,9 @@ fn experimental_generic_mono_mut_slice_is_written_back() {
 fn experimental_generic_mono_mut_closure_is_invoked() {
     let mut seen = Vec::new();
     {
-        let mut push = |v: u32| seen.push(v);
+        // Mutable captures require an explicit unwind-safety opt-in.
+        let mut seen = core::panic::AssertUnwindSafe(&mut seen);
+        let mut push = move |v: u32| seen.push(v);
         with_callback(&mut push, 3u32);
     }
     assert_eq!(seen, vec![0, 1, 2]);
@@ -92,7 +94,8 @@ fn experimental_generic_mono_mut_closure_is_invoked() {
     // used again with a different monomorphisation.
     let mut count = 0u32;
     {
-        let mut bump = |_: u32| count += 1;
+        let mut count = core::panic::AssertUnwindSafe(&mut count);
+        let mut bump = move |_: u32| **count += 1;
         with_callback(&mut bump, 2.0f64);
     }
     assert_eq!(count, 2);
