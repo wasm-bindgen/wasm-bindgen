@@ -3307,69 +3307,63 @@ impl ast::ImportFunction {
             };
 
             // Raw callback trait objects already have generic ABI support in
-            // `convert::closures`; only their callback signature's bounds need
-            // to be carried onto the monomorphized wrapper.
+            // `convert::closures`. Lower all of them like ordinary imports,
+            // adding bounds when their callback signature is generic.
             if let Some((is_mut, fn_bounds)) = detect_raw_fn_trait_obj(ty) {
                 if let Some((inputs, ret, higher_ranked)) = fn_trait_bound_sig(fn_bounds) {
-                    let uses_generics = inputs
-                        .iter()
-                        .any(|input| generics::uses_generic_params(input, &type_params))
-                        || generics::uses_generic_params(&ret, &type_params);
-                    if uses_generics {
-                        if higher_ranked {
-                            bail_span!(
-                                ty,
-                                "experimental_generic_mono does not support higher-ranked generic callback signatures"
-                            );
-                        }
-                        for input in &inputs {
-                            if generics::uses_generic_params(input, &type_params) {
-                                if generics::references_generic_param(input, &type_params) {
-                                    bail_span!(
-                                        input,
-                                        "experimental_generic_mono does not support borrowed generic callback arguments"
-                                    );
-                                }
-                                where_bounds.push(quote! {
-                                    #input: #wasm_bindgen::convert::FromWasmAbi
-                                });
-                            }
-                        }
-                        if generics::uses_generic_params(&ret, &type_params) {
-                            if generics::references_generic_param(&ret, &type_params) {
+                    if higher_ranked {
+                        bail_span!(
+                            ty,
+                            "experimental_generic_mono does not support higher-ranked generic callback signatures"
+                        );
+                    }
+                    for input in &inputs {
+                        if generics::uses_generic_params(input, &type_params) {
+                            if generics::references_generic_param(input, &type_params) {
                                 bail_span!(
-                                    ret,
-                                    "experimental_generic_mono does not support borrowed generic callback returns"
+                                    input,
+                                    "experimental_generic_mono does not support borrowed generic callback arguments"
                                 );
                             }
                             where_bounds.push(quote! {
-                                #ret: #wasm_bindgen::convert::ReturnWasmAbi
+                                #input: #wasm_bindgen::convert::FromWasmAbi
                             });
                         }
-
-                        let amp = if is_mut {
-                            quote! { &mut }
-                        } else {
-                            quote! { & }
-                        };
-                        wrapper_args.push(quote! {
-                            #name: #amp (impl #fn_bounds + #wasm_bindgen::__rt::marker::MaybeUnwindSafe)
-                        });
-                        let abi_ty = quote! { #amp dyn #fn_bounds };
-                        let abi = quote! { <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi };
-                        let (args, names) = splat(wasm_bindgen, &name, &abi, Span::call_site());
-                        shim_abi_args.extend(args);
-                        arg_conversions.push(quote! {
-                            let #name = <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>
-                                ::into_abi(#name as #amp dyn #fn_bounds);
-                            let (#(#names),*) = <#abi as #wasm_bindgen::convert::WasmAbi>::split(#name);
-                        });
-                        all_prim_names.extend(names);
-                        describe_args.push(quote! {
-                            <#abi_ty as #wasm_bindgen::describe::WasmDescribe>::describe();
-                        });
-                        continue;
                     }
+                    if generics::uses_generic_params(&ret, &type_params) {
+                        if generics::references_generic_param(&ret, &type_params) {
+                            bail_span!(
+                                ret,
+                                "experimental_generic_mono does not support borrowed generic callback returns"
+                            );
+                        }
+                        where_bounds.push(quote! {
+                            #ret: #wasm_bindgen::convert::ReturnWasmAbi
+                        });
+                    }
+
+                    let amp = if is_mut {
+                        quote! { &mut }
+                    } else {
+                        quote! { & }
+                    };
+                    wrapper_args.push(quote! {
+                        #name: #amp (impl #fn_bounds + #wasm_bindgen::__rt::marker::MaybeUnwindSafe)
+                    });
+                    let abi_ty = quote! { #amp dyn #fn_bounds };
+                    let abi = quote! { <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi };
+                    let (args, names) = splat(wasm_bindgen, &name, &abi, Span::call_site());
+                    shim_abi_args.extend(args);
+                    arg_conversions.push(quote! {
+                        let #name = <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>
+                            ::into_abi(#name as #amp dyn #fn_bounds);
+                        let (#(#names),*) = <#abi as #wasm_bindgen::convert::WasmAbi>::split(#name);
+                    });
+                    all_prim_names.extend(names);
+                    describe_args.push(quote! {
+                        <#abi_ty as #wasm_bindgen::describe::WasmDescribe>::describe();
+                    });
+                    continue;
                 }
             }
 

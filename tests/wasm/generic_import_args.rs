@@ -34,6 +34,9 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono)]
     fn transform<T, U>(value: T, f: &mut dyn FnMut(T) -> U) -> U;
 
+    #[wasm_bindgen(experimental_generic_mono, js_name = transform)]
+    fn transform_shared<T, U>(value: T, f: &dyn Fn(T) -> U) -> U;
+
     #[wasm_bindgen(experimental_generic_mono, catch, js_name = tryGet)]
     fn try_get<T>(key: u32) -> Result<T, JsValue>;
 
@@ -102,6 +105,12 @@ fn experimental_generic_mono_callback_signature() {
 
     let mut label = |value: f64| format!("value:{value}");
     assert_eq!(transform(2.5f64, &mut label), "value:2.5");
+
+    let increment = |value: u32| value + 1;
+    assert_eq!(transform_shared(3u32, &increment), 4);
+
+    let label = |value: f64| format!("shared:{value}");
+    assert_eq!(transform_shared(2.5f64, &label), "shared:2.5");
 }
 
 #[wasm_bindgen_test]
