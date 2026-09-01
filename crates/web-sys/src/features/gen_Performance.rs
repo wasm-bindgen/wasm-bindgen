@@ -2,7 +2,7 @@
 #![allow(clippy::all)]
 use super::*;
 use wasm_bindgen::prelude::*;
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(
         extends = "EventTarget",
@@ -150,7 +150,10 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn mark(this: &Performance, mark_name: &str) -> Result<PerformanceMark, JsValue>;
+    pub fn mark<S0: ::wasm_bindgen::JsStringLike>(
+        this: &Performance,
+        mark_name: S0,
+    ) -> Result<PerformanceMark, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(feature = "PerformanceMark", feature = "PerformanceMarkOptions",))]
     #[wasm_bindgen(catch, method, js_class = "Performance", js_name = "mark")]
@@ -162,9 +165,9 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn mark_with_mark_options(
+    pub fn mark_with_mark_options<S0: ::wasm_bindgen::JsStringLike>(
         this: &Performance,
-        mark_name: &str,
+        mark_name: S0,
         mark_options: &PerformanceMarkOptions,
     ) -> Result<PerformanceMark, JsValue>;
     #[cfg(not(web_sys_unstable_apis))]
@@ -211,22 +214,9 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn measure(this: &Performance, measure_name: &str) -> Result<PerformanceMeasure, JsValue>;
-    #[cfg(web_sys_unstable_apis)]
-    #[cfg(feature = "PerformanceMeasure")]
-    #[wasm_bindgen(catch, method, js_class = "Performance", js_name = "measure")]
-    #[doc = "The `measure()` method."]
-    #[doc = ""]
-    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Performance/measure)"]
-    #[doc = ""]
-    #[doc = "*This API requires the following crate features to be activated: `Performance`, `PerformanceMeasure`*"]
-    #[doc = ""]
-    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
-    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn measure_with_str(
+    pub fn measure<S0: ::wasm_bindgen::JsStringLike>(
         this: &Performance,
-        measure_name: &str,
-        start_or_measure_options: &str,
+        measure_name: S0,
     ) -> Result<PerformanceMeasure, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "PerformanceMeasure")]
@@ -239,11 +229,31 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn measure_with_str_and_end_mark(
+    pub fn measure_with_str<S0: ::wasm_bindgen::JsStringLike, S1: ::wasm_bindgen::JsStringLike>(
         this: &Performance,
-        measure_name: &str,
-        start_or_measure_options: &str,
-        end_mark: &str,
+        measure_name: S0,
+        start_or_measure_options: S1,
+    ) -> Result<PerformanceMeasure, JsValue>;
+    #[cfg(web_sys_unstable_apis)]
+    #[cfg(feature = "PerformanceMeasure")]
+    #[wasm_bindgen(catch, method, js_class = "Performance", js_name = "measure")]
+    #[doc = "The `measure()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Performance/measure)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Performance`, `PerformanceMeasure`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn measure_with_str_and_end_mark<
+        S0: ::wasm_bindgen::JsStringLike,
+        S1: ::wasm_bindgen::JsStringLike,
+        S2: ::wasm_bindgen::JsStringLike,
+    >(
+        this: &Performance,
+        measure_name: S0,
+        start_or_measure_options: S1,
+        end_mark: S2,
     ) -> Result<PerformanceMeasure, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(feature = "PerformanceMeasure", feature = "PerformanceMeasureOptions",))]
@@ -256,9 +266,9 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn measure_with_performance_measure_options(
+    pub fn measure_with_performance_measure_options<S0: ::wasm_bindgen::JsStringLike>(
         this: &Performance,
-        measure_name: &str,
+        measure_name: S0,
         start_or_measure_options: &PerformanceMeasureOptions,
     ) -> Result<PerformanceMeasure, JsValue>;
     #[cfg(web_sys_unstable_apis)]

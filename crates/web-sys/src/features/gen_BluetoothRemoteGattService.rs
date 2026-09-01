@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(
         extends = "EventTarget",
@@ -227,9 +227,9 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn get_characteristic_with_str(
+    pub fn get_characteristic_with_str<S0: ::wasm_bindgen::JsStringLike>(
         this: &BluetoothRemoteGattService,
-        characteristic: &str,
+        characteristic: S0,
     ) -> ::js_sys::Promise<BluetoothRemoteGattCharacteristic>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "BluetoothRemoteGattCharacteristic")]
@@ -283,9 +283,9 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn get_characteristics_with_str(
+    pub fn get_characteristics_with_str<S0: ::wasm_bindgen::JsStringLike>(
         this: &BluetoothRemoteGattService,
-        characteristic: &str,
+        characteristic: S0,
     ) -> ::js_sys::Promise<::js_sys::Array<BluetoothRemoteGattCharacteristic>>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "BluetoothRemoteGattCharacteristic")]
@@ -320,9 +320,9 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn get_included_service_with_str(
+    pub fn get_included_service_with_str<S0: ::wasm_bindgen::JsStringLike>(
         this: &BluetoothRemoteGattService,
-        service: &str,
+        service: S0,
     ) -> ::js_sys::Promise<BluetoothRemoteGattService>;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(
@@ -373,9 +373,9 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn get_included_services_with_str(
+    pub fn get_included_services_with_str<S0: ::wasm_bindgen::JsStringLike>(
         this: &BluetoothRemoteGattService,
-        service: &str,
+        service: S0,
     ) -> ::js_sys::Promise<::js_sys::Array<BluetoothRemoteGattService>>;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(

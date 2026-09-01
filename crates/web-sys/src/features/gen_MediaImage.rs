@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(extends = "::js_sys::Object", js_name = "MediaImage")]
     #[derive(Debug, Clone, PartialEq, Eq)]
@@ -31,7 +31,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "sizes")]
-    pub fn set_sizes(this: &MediaImage, val: &str);
+    pub fn set_sizes<S0: ::wasm_bindgen::JsStringLike>(this: &MediaImage, val: S0);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `src` field of this object."]
     #[doc = ""]
@@ -49,7 +49,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "src")]
-    pub fn set_src(this: &MediaImage, val: &str);
+    pub fn set_src<S0: ::wasm_bindgen::JsStringLike>(this: &MediaImage, val: S0);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `type` field of this object."]
     #[doc = ""]
@@ -67,7 +67,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "type")]
-    pub fn set_type(this: &MediaImage, val: &str);
+    pub fn set_type<S0: ::wasm_bindgen::JsStringLike>(this: &MediaImage, val: S0);
 }
 #[cfg(web_sys_unstable_apis)]
 impl MediaImage {
@@ -77,7 +77,7 @@ impl MediaImage {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new(src: &str) -> Self {
+    pub fn new<S0: ::wasm_bindgen::JsStringLike>(src: S0) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_src(src);
@@ -85,19 +85,19 @@ impl MediaImage {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_sizes()` instead."]
-    pub fn sizes(&mut self, val: &str) -> &mut Self {
+    pub fn sizes<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_sizes(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_src()` instead."]
-    pub fn src(&mut self, val: &str) -> &mut Self {
+    pub fn src<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_src(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_type()` instead."]
-    pub fn type_(&mut self, val: &str) -> &mut Self {
+    pub fn type_<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_type(val);
         self
     }

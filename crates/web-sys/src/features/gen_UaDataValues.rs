@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(extends = "::js_sys::Object", js_name = "UADataValues")]
     #[derive(Debug, Clone, PartialEq, Eq)]
@@ -31,7 +31,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "architecture")]
-    pub fn set_architecture(this: &UaDataValues, val: &str);
+    pub fn set_architecture<S0: ::wasm_bindgen::JsStringLike>(this: &UaDataValues, val: S0);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `bitness` field of this object."]
     #[doc = ""]
@@ -49,7 +49,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "bitness")]
-    pub fn set_bitness(this: &UaDataValues, val: &str);
+    pub fn set_bitness<S0: ::wasm_bindgen::JsStringLike>(this: &UaDataValues, val: S0);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "NavigatorUaBrandVersion")]
     #[doc = "Get the `brands` field of this object."]
@@ -145,7 +145,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "model")]
-    pub fn set_model(this: &UaDataValues, val: &str);
+    pub fn set_model<S0: ::wasm_bindgen::JsStringLike>(this: &UaDataValues, val: S0);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `platform` field of this object."]
     #[doc = ""]
@@ -163,7 +163,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "platform")]
-    pub fn set_platform(this: &UaDataValues, val: &str);
+    pub fn set_platform<S0: ::wasm_bindgen::JsStringLike>(this: &UaDataValues, val: S0);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `platformVersion` field of this object."]
     #[doc = ""]
@@ -181,7 +181,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "platformVersion")]
-    pub fn set_platform_version(this: &UaDataValues, val: &str);
+    pub fn set_platform_version<S0: ::wasm_bindgen::JsStringLike>(this: &UaDataValues, val: S0);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `wow64` field of this object."]
     #[doc = ""]
@@ -216,13 +216,13 @@ impl UaDataValues {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_architecture()` instead."]
-    pub fn architecture(&mut self, val: &str) -> &mut Self {
+    pub fn architecture<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_architecture(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_bitness()` instead."]
-    pub fn bitness(&mut self, val: &str) -> &mut Self {
+    pub fn bitness<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_bitness(val);
         self
     }
@@ -254,19 +254,19 @@ impl UaDataValues {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_model()` instead."]
-    pub fn model(&mut self, val: &str) -> &mut Self {
+    pub fn model<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_model(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_platform()` instead."]
-    pub fn platform(&mut self, val: &str) -> &mut Self {
+    pub fn platform<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_platform(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_platform_version()` instead."]
-    pub fn platform_version(&mut self, val: &str) -> &mut Self {
+    pub fn platform_version<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_platform_version(val);
         self
     }

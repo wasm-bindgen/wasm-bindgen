@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(extends = "::js_sys::Object", js_name = "MediaMetadataInit")]
     #[derive(Debug, Clone, PartialEq, Eq)]
@@ -31,7 +31,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "album")]
-    pub fn set_album(this: &MediaMetadataInit, val: &str);
+    pub fn set_album<S0: ::wasm_bindgen::JsStringLike>(this: &MediaMetadataInit, val: S0);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `artist` field of this object."]
     #[doc = ""]
@@ -49,7 +49,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "artist")]
-    pub fn set_artist(this: &MediaMetadataInit, val: &str);
+    pub fn set_artist<S0: ::wasm_bindgen::JsStringLike>(this: &MediaMetadataInit, val: S0);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "MediaImage")]
     #[doc = "Get the `artwork` field of this object."]
@@ -87,7 +87,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "title")]
-    pub fn set_title(this: &MediaMetadataInit, val: &str);
+    pub fn set_title<S0: ::wasm_bindgen::JsStringLike>(this: &MediaMetadataInit, val: S0);
 }
 #[cfg(web_sys_unstable_apis)]
 impl MediaMetadataInit {
@@ -104,13 +104,13 @@ impl MediaMetadataInit {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_album()` instead."]
-    pub fn album(&mut self, val: &str) -> &mut Self {
+    pub fn album<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_album(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_artist()` instead."]
-    pub fn artist(&mut self, val: &str) -> &mut Self {
+    pub fn artist<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_artist(val);
         self
     }
@@ -123,7 +123,7 @@ impl MediaMetadataInit {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_title()` instead."]
-    pub fn title(&mut self, val: &str) -> &mut Self {
+    pub fn title<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_title(val);
         self
     }

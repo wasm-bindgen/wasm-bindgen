@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(
         extends = "::js_sys::Object",
@@ -41,7 +41,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn set_title(this: &MediaMetadata, value: &str);
+    pub fn set_title<S0: ::wasm_bindgen::JsStringLike>(this: &MediaMetadata, value: S0);
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, getter, js_class = "MediaMetadata", js_name = "artist")]
     #[doc = "Getter for the `artist` field of this object."]
@@ -63,7 +63,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn set_artist(this: &MediaMetadata, value: &str);
+    pub fn set_artist<S0: ::wasm_bindgen::JsStringLike>(this: &MediaMetadata, value: S0);
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, getter, js_class = "MediaMetadata", js_name = "album")]
     #[doc = "Getter for the `album` field of this object."]
@@ -85,7 +85,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn set_album(this: &MediaMetadata, value: &str);
+    pub fn set_album<S0: ::wasm_bindgen::JsStringLike>(this: &MediaMetadata, value: S0);
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "MediaImage")]
     #[wasm_bindgen(method, getter, js_class = "MediaMetadata", js_name = "artwork")]

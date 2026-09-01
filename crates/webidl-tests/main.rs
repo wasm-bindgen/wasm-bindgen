@@ -38,6 +38,7 @@ pub mod record;
 pub mod setlike;
 pub mod signature_stability;
 pub mod simple;
+pub mod strings;
 pub mod throws;
 pub mod unstable;
 pub mod upcast;

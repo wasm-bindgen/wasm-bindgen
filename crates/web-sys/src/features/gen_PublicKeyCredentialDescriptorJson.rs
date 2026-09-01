@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(
         extends = "::js_sys::Object",
@@ -34,7 +34,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "id")]
-    pub fn set_id(this: &PublicKeyCredentialDescriptorJson, val: &str);
+    pub fn set_id<S0: ::wasm_bindgen::JsStringLike>(
+        this: &PublicKeyCredentialDescriptorJson,
+        val: S0,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `transports` field of this object."]
     #[doc = ""]
@@ -72,7 +75,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "type")]
-    pub fn set_type(this: &PublicKeyCredentialDescriptorJson, val: &str);
+    pub fn set_type<S0: ::wasm_bindgen::JsStringLike>(
+        this: &PublicKeyCredentialDescriptorJson,
+        val: S0,
+    );
 }
 #[cfg(web_sys_unstable_apis)]
 impl PublicKeyCredentialDescriptorJson {
@@ -82,7 +88,10 @@ impl PublicKeyCredentialDescriptorJson {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new(id: &str, type_: &str) -> Self {
+    pub fn new<S0: ::wasm_bindgen::JsStringLike, S1: ::wasm_bindgen::JsStringLike>(
+        id: S0,
+        type_: S1,
+    ) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_id(id);
@@ -91,7 +100,7 @@ impl PublicKeyCredentialDescriptorJson {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_id()` instead."]
-    pub fn id(&mut self, val: &str) -> &mut Self {
+    pub fn id<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_id(val);
         self
     }
@@ -103,7 +112,7 @@ impl PublicKeyCredentialDescriptorJson {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_type()` instead."]
-    pub fn type_(&mut self, val: &str) -> &mut Self {
+    pub fn type_<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_type(val);
         self
     }

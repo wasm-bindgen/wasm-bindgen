@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(
         extends = "EventTarget",
@@ -137,9 +137,9 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn generate_key_frame_with_rid(
+    pub fn generate_key_frame_with_rid<S0: ::wasm_bindgen::JsStringLike>(
         this: &RtcRtpScriptTransformer,
-        rid: &str,
+        rid: S0,
     ) -> ::js_sys::Promise<::js_sys::Number>;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(

@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(
         extends = "Event",
@@ -42,7 +42,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new(type_: &str) -> Result<ValueEvent, JsValue>;
+    pub fn new<S0: ::wasm_bindgen::JsStringLike>(type_: S0) -> Result<ValueEvent, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "ValueEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "ValueEvent")]
@@ -54,8 +54,8 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new_with_init_dict(
-        type_: &str,
+    pub fn new_with_init_dict<S0: ::wasm_bindgen::JsStringLike>(
+        type_: S0,
         init_dict: &ValueEventInit,
     ) -> Result<ValueEvent, JsValue>;
 }

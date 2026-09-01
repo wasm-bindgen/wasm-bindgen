@@ -366,7 +366,7 @@ impl<'src> FirstPassRecord<'src> {
             use super::*;
             use wasm_bindgen::prelude::*;
 
-            #[wasm_bindgen]
+            #[wasm_bindgen(experimental_generic_mono)]
             extern "C" {
                 #[wasm_bindgen(extends = "::js_sys::Object", js_name = #js_name)]
                 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -718,6 +718,7 @@ impl<'src> FirstPassRecord<'src> {
             unstable: unstable_override,
             deprecated: get_rust_deprecated(&field.attributes)
                 .or_else(|| parent_deprecated.clone()),
+            generics_compat,
         })
     }
 
@@ -879,6 +880,7 @@ impl<'src> FirstPassRecord<'src> {
                 catch: catch || getter_throws("", &js_name, &definition.attributes),
                 kind: NamespaceAttributeKind::Getter,
                 unstable,
+                generics_compat,
             });
         }
     }
@@ -1096,6 +1098,7 @@ impl<'src> FirstPassRecord<'src> {
                 kind,
                 unstable,
                 has_unstable_override: false,
+                generics_compat,
             });
         }
 
@@ -1127,6 +1130,7 @@ impl<'src> FirstPassRecord<'src> {
                         kind: InterfaceAttributeKind::Setter,
                         unstable,
                         has_unstable_override: false,
+                        generics_compat,
                     });
                 }
             }
@@ -1156,6 +1160,7 @@ impl<'src> FirstPassRecord<'src> {
                     kind: InterfaceAttributeKind::Setter,
                     unstable,
                     has_unstable_override: false,
+                    generics_compat,
                 });
             }
         }

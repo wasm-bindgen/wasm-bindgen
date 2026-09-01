@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(
         extends = "::js_sys::Object",
@@ -41,7 +41,7 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn set_label(this: &GpuRenderPassEncoder, value: &str);
+    pub fn set_label<S0: ::wasm_bindgen::JsStringLike>(this: &GpuRenderPassEncoder, value: S0);
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(
         method,
@@ -772,7 +772,10 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn insert_debug_marker(this: &GpuRenderPassEncoder, marker_label: &str);
+    pub fn insert_debug_marker<S0: ::wasm_bindgen::JsStringLike>(
+        this: &GpuRenderPassEncoder,
+        marker_label: S0,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, js_class = "GPURenderPassEncoder", js_name = "popDebugGroup")]
     #[doc = "The `popDebugGroup()` method."]
@@ -794,7 +797,10 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn push_debug_group(this: &GpuRenderPassEncoder, group_label: &str);
+    pub fn push_debug_group<S0: ::wasm_bindgen::JsStringLike>(
+        this: &GpuRenderPassEncoder,
+        group_label: S0,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, js_class = "GPURenderPassEncoder")]
     #[doc = "The `draw()` method."]

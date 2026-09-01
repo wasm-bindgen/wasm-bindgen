@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(extends = "::js_sys::Object", js_name = "GPURequestAdapterOptions")]
     #[derive(Debug, Clone, PartialEq, Eq)]
@@ -31,7 +31,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "featureLevel")]
-    pub fn set_feature_level(this: &GpuRequestAdapterOptions, val: &str);
+    pub fn set_feature_level<S0: ::wasm_bindgen::JsStringLike>(
+        this: &GpuRequestAdapterOptions,
+        val: S0,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `forceFallbackAdapter` field of this object."]
     #[doc = ""]
@@ -104,7 +107,7 @@ impl GpuRequestAdapterOptions {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_feature_level()` instead."]
-    pub fn feature_level(&mut self, val: &str) -> &mut Self {
+    pub fn feature_level<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_feature_level(val);
         self
     }

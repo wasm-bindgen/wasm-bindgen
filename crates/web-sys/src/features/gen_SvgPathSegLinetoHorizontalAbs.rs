@@ -2,7 +2,7 @@
 #![allow(clippy::all)]
 use super::*;
 use wasm_bindgen::prelude::*;
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     # [wasm_bindgen (is_type_of = | _ | false , extends = "SvgPathSeg" , extends = "::js_sys::Object" , js_name = "SVGPathSegLinetoHorizontalAbs" , typescript_type = "SVGPathSegLinetoHorizontalAbs")]
     #[derive(Debug, Clone, PartialEq, Eq)]

@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(extends = "::js_sys::Object", js_name = "BluetoothLEScanFilterInit")]
     #[derive(Debug, Clone, PartialEq, Eq)]
@@ -49,7 +49,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "name")]
-    pub fn set_name(this: &BluetoothLeScanFilterInit, val: &str);
+    pub fn set_name<S0: ::wasm_bindgen::JsStringLike>(this: &BluetoothLeScanFilterInit, val: S0);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `namePrefix` field of this object."]
     #[doc = ""]
@@ -67,7 +67,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "namePrefix")]
-    pub fn set_name_prefix(this: &BluetoothLeScanFilterInit, val: &str);
+    pub fn set_name_prefix<S0: ::wasm_bindgen::JsStringLike>(
+        this: &BluetoothLeScanFilterInit,
+        val: S0,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `serviceData` field of this object."]
     #[doc = ""]
@@ -135,13 +138,13 @@ impl BluetoothLeScanFilterInit {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_name()` instead."]
-    pub fn name(&mut self, val: &str) -> &mut Self {
+    pub fn name<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_name(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_name_prefix()` instead."]
-    pub fn name_prefix(&mut self, val: &str) -> &mut Self {
+    pub fn name_prefix<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_name_prefix(val);
         self
     }

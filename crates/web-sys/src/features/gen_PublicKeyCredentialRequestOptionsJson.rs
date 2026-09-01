@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(
         extends = "::js_sys::Object",
@@ -61,7 +61,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "attestation")]
-    pub fn set_attestation(this: &PublicKeyCredentialRequestOptionsJson, val: &str);
+    pub fn set_attestation<S0: ::wasm_bindgen::JsStringLike>(
+        this: &PublicKeyCredentialRequestOptionsJson,
+        val: S0,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `attestationFormats` field of this object."]
     #[doc = ""]
@@ -102,7 +105,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "challenge")]
-    pub fn set_challenge(this: &PublicKeyCredentialRequestOptionsJson, val: &str);
+    pub fn set_challenge<S0: ::wasm_bindgen::JsStringLike>(
+        this: &PublicKeyCredentialRequestOptionsJson,
+        val: S0,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "AuthenticationExtensionsClientInputsJson")]
     #[doc = "Get the `extensions` field of this object."]
@@ -167,7 +173,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "rpId")]
-    pub fn set_rp_id(this: &PublicKeyCredentialRequestOptionsJson, val: &str);
+    pub fn set_rp_id<S0: ::wasm_bindgen::JsStringLike>(
+        this: &PublicKeyCredentialRequestOptionsJson,
+        val: S0,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `timeout` field of this object."]
     #[doc = ""]
@@ -205,7 +214,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "userVerification")]
-    pub fn set_user_verification(this: &PublicKeyCredentialRequestOptionsJson, val: &str);
+    pub fn set_user_verification<S0: ::wasm_bindgen::JsStringLike>(
+        this: &PublicKeyCredentialRequestOptionsJson,
+        val: S0,
+    );
 }
 #[cfg(web_sys_unstable_apis)]
 impl PublicKeyCredentialRequestOptionsJson {
@@ -215,7 +227,7 @@ impl PublicKeyCredentialRequestOptionsJson {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new(challenge: &str) -> Self {
+    pub fn new<S0: ::wasm_bindgen::JsStringLike>(challenge: S0) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_challenge(challenge);
@@ -230,7 +242,7 @@ impl PublicKeyCredentialRequestOptionsJson {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_attestation()` instead."]
-    pub fn attestation(&mut self, val: &str) -> &mut Self {
+    pub fn attestation<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_attestation(val);
         self
     }
@@ -242,7 +254,7 @@ impl PublicKeyCredentialRequestOptionsJson {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_challenge()` instead."]
-    pub fn challenge(&mut self, val: &str) -> &mut Self {
+    pub fn challenge<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_challenge(val);
         self
     }
@@ -261,7 +273,7 @@ impl PublicKeyCredentialRequestOptionsJson {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_rp_id()` instead."]
-    pub fn rp_id(&mut self, val: &str) -> &mut Self {
+    pub fn rp_id<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_rp_id(val);
         self
     }
@@ -273,7 +285,7 @@ impl PublicKeyCredentialRequestOptionsJson {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_user_verification()` instead."]
-    pub fn user_verification(&mut self, val: &str) -> &mut Self {
+    pub fn user_verification<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_user_verification(val);
         self
     }

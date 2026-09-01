@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(
         extends = "PerformanceEntry",
@@ -42,7 +42,8 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new(mark_name: &str) -> Result<PerformanceMark, JsValue>;
+    pub fn new<S0: ::wasm_bindgen::JsStringLike>(mark_name: S0)
+        -> Result<PerformanceMark, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "PerformanceMarkOptions")]
     #[wasm_bindgen(catch, constructor, js_class = "PerformanceMark")]
@@ -54,8 +55,8 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new_with_mark_options(
-        mark_name: &str,
+    pub fn new_with_mark_options<S0: ::wasm_bindgen::JsStringLike>(
+        mark_name: S0,
         mark_options: &PerformanceMarkOptions,
     ) -> Result<PerformanceMark, JsValue>;
 }

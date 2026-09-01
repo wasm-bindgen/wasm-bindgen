@@ -40,3 +40,17 @@ Within `./.cargo/config.toml`:
 [build]
 rustflags = ["--cfg=web_sys_unstable_apis"]
 ```
+
+## String arguments
+
+Unstable APIs bind string arguments generically: each string argument accepts
+any of `&str`, `String`, `js_sys::JsString` or `&js_sys::JsString` through the
+[`JsStringLike`] bound, crossing the boundary at that shape's native wire
+format. Passing a cached `JsString` handle therefore avoids re-encoding the
+string on every call:
+
+```rust
+ctx.set_fill_style(&cached_js_string);
+```
+
+[`JsStringLike`]: https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-js-imports/experimental_generic_mono.html#string-bounds

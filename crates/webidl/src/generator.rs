@@ -33,6 +33,89 @@ fn is_ref_to_primitive_slice(ty: &Type) -> bool {
     )
 }
 
+/// Collects fresh type parameters that replace top-level JS-string argument
+/// positions in a typed-generics (`generics_compat = false`) signature, so
+/// callers can pass any string shape at its native wire format.
+///
+/// Argument positions (`&str`, optionally under `Option`) become
+/// `S{n}: ::wasm_bindgen::JsStringLike`. The enclosing extern block carries
+/// `experimental_generic_mono`, so each instantiation is bound at its
+/// concrete type. Return positions deliberately stay concrete (`String`):
+/// generic returns would require an annotation at every call site, which the
+/// Rust ecosystem reserves for conversion-shaped operations, not accessors.
+struct StringGenerics {
+    params: Vec<TokenStream>,
+}
+
+impl StringGenerics {
+    fn new() -> Self {
+        StringGenerics { params: Vec::new() }
+    }
+
+    /// The `<...>` generics list for the signature, if any string position was
+    /// replaced.
+    fn generics(&self) -> Option<TokenStream> {
+        if self.params.is_empty() {
+            None
+        } else {
+            let params = &self.params;
+            Some(quote!( <#(#params),*> ))
+        }
+    }
+
+    /// Replaces a top-level argument-position string type, allocating a fresh
+    /// `S{n}` parameter. Returns `None` if `ty` is not a string position.
+    fn arg(&mut self, ty: &Type) -> Option<Type> {
+        if let Some(inner) = option_inner(ty) {
+            let param = self.fresh(inner)?;
+            return Some(syn::parse_quote!( Option<#param> ));
+        }
+        let param = self.fresh(ty)?;
+        Some(syn::parse_quote!( #param ))
+    }
+
+    fn fresh(&mut self, ty: &Type) -> Option<Ident> {
+        if !is_str_ref(ty) {
+            return None;
+        }
+        let ident = format_ident!("S{}", self.params.len());
+        self.params
+            .push(quote!( #ident: ::wasm_bindgen::JsStringLike ));
+        Some(ident)
+    }
+}
+
+/// `&str` (shared, top level).
+fn is_str_ref(ty: &Type) -> bool {
+    let Type::Reference(r) = ty else { return false };
+    if r.mutability.is_some() {
+        return false;
+    }
+    let Type::Path(p) = &*r.elem else {
+        return false;
+    };
+    p.qself.is_none() && p.path.is_ident("str")
+}
+
+/// The `T` of a bare `Option<T>`.
+fn option_inner(ty: &Type) -> Option<&Type> {
+    let Type::Path(p) = ty else { return None };
+    if p.qself.is_some() || p.path.segments.len() != 1 {
+        return None;
+    }
+    let segment = p.path.segments.last()?;
+    if segment.ident != "Option" {
+        return None;
+    }
+    let syn::PathArguments::AngleBracketed(args) = &segment.arguments else {
+        return None;
+    };
+    match args.args.first() {
+        Some(syn::GenericArgument::Type(inner)) if args.args.len() == 1 => Some(inner),
+        _ => None,
+    }
+}
+
 fn add_features(features: &mut BTreeSet<String>, ty: &impl TraverseType) {
     ty.traverse_type(&mut |ident| {
         let ident = ident.to_string();
@@ -91,6 +174,7 @@ fn generate_arguments(
     variadic: bool,
     variadic_type: Option<&WbgType<'_>>,
     generics_compat: bool,
+    mut string_generics: Option<&mut StringGenerics>,
 ) -> Option<Vec<TokenStream>> {
     let mut output = Vec::with_capacity(arguments.len());
     for (i, (name, wbg_ty)) in arguments.iter().enumerate() {
@@ -140,6 +224,10 @@ fn generate_arguments(
                     return None;
                 }
             };
+            let ty = string_generics
+                .as_deref_mut()
+                .and_then(|generics| generics.arg(&ty))
+                .unwrap_or(ty);
             output.push(quote!( #name: #ty ));
         }
     }
@@ -309,6 +397,9 @@ pub struct InterfaceAttribute {
     /// the same name but different type. When true, this attribute is gated
     /// behind `#[cfg(not(web_sys_unstable_apis))]`.
     pub has_unstable_override: bool,
+    /// Whether `ty` was converted with legacy web-sys types (`true`) or typed
+    /// generics (`false`); string positions are only genericised in the latter.
+    pub generics_compat: bool,
 }
 
 impl InterfaceAttribute {
@@ -330,6 +421,7 @@ impl InterfaceAttribute {
             kind,
             unstable,
             has_unstable_override,
+            generics_compat,
         } = self;
 
         // If this is a stable attribute that has an unstable override,
@@ -373,6 +465,8 @@ impl InterfaceAttribute {
             (quote!(method,), Some(quote!( this: &#parent_name, )))
         };
 
+        let mut string_generics = StringGenerics::new();
+
         let (prefix, attr, def) = match kind {
             InterfaceAttributeKind::Getter => {
                 let rust_name = rust_ident(rust_name);
@@ -393,6 +487,13 @@ impl InterfaceAttribute {
             InterfaceAttributeKind::Setter => {
                 let rust_name = rust_ident(rust_name);
 
+                let ty = if !generics_compat {
+                    string_generics.arg(ty).unwrap_or_else(|| ty.clone())
+                } else {
+                    ty.clone()
+                };
+                let generics = string_generics.generics();
+
                 let ret_ty = if *catch {
                     Some(quote!( -> Result<(), JsValue> ))
                 } else {
@@ -402,7 +503,7 @@ impl InterfaceAttribute {
                 (
                     "Setter",
                     quote!(setter,),
-                    quote!( pub fn #rust_name(#this value: #ty) #ret_ty; ),
+                    quote!( pub fn #rust_name #generics (#this value: #ty) #ret_ty; ),
                 )
             }
         };
@@ -659,12 +760,15 @@ impl InterfaceMethod<'_> {
 
         let variadic_attr = generate_variadic(*variadic);
 
+        let mut string_generics = StringGenerics::new();
+
         // Generate arguments
         let arguments = match generate_arguments(
             arguments,
             *variadic,
             variadic_type.as_ref(),
             generics_compat,
+            (!generics_compat).then_some(&mut string_generics),
         ) {
             Some(args) => args,
             None => {
@@ -687,6 +791,8 @@ impl InterfaceMethod<'_> {
             ret.as_ref().map(|ret| quote!( -> #ret ))
         };
 
+        let generics = string_generics.generics();
+
         Some(quote! {
             #unstable_attr
             #cfg_features
@@ -699,7 +805,7 @@ impl InterfaceMethod<'_> {
             #doc_desc
             #doc_req
             #deprecated
-            pub fn #name(#this #(#arguments),*) #ret;
+            pub fn #name #generics (#this #(#arguments),*) #ret;
         })
     }
 }
@@ -796,7 +902,7 @@ impl Interface<'_> {
             use wasm_bindgen::prelude::*;
 
             #unstable_attr
-            #[wasm_bindgen]
+            #[wasm_bindgen(experimental_generic_mono)]
             extern "C" {
                 #[wasm_bindgen(
                     #is_type_of
@@ -845,6 +951,10 @@ pub struct DictionaryField {
     pub required: bool,
     pub unstable: bool,
     pub deprecated: Option<Option<String>>,
+    /// Whether the field types were converted with legacy web-sys types
+    /// (`true`) or typed generics (`false`); string positions are only
+    /// genericised in the latter.
+    pub generics_compat: bool,
 }
 
 impl DictionaryField {
@@ -945,6 +1055,14 @@ impl DictionaryField {
                 (quote! {}, quote! {})
             };
 
+            let mut string_generics = StringGenerics::new();
+            let ty = if !self.generics_compat {
+                string_generics.arg(ty).unwrap_or_else(|| ty.clone())
+            } else {
+                ty.clone()
+            };
+            let generics = string_generics.generics();
+
             quote! {
                 #unstable_attr
                 #setter_cfg_features
@@ -954,7 +1072,7 @@ impl DictionaryField {
                 #deprecated
                 #safety_doc
                 #[wasm_bindgen(method, setter = #js_name)]
-                pub #unsafe_token fn #setter_name(this: &#parent_ident, val: #ty);
+                pub #unsafe_token fn #setter_name #generics (this: &#parent_ident, val: #ty);
             }
         });
 
@@ -982,6 +1100,7 @@ impl DictionaryField {
             required: _,
             unstable: _,
             deprecated: _,
+            generics_compat: _,
         } = self;
 
         let name = rust_ident(name);
@@ -1005,6 +1124,16 @@ impl DictionaryField {
         // `unsigned long long`).
         let builder_ty = self.setter_types.first().map(|s| &s.ty).unwrap_or(ty);
 
+        let mut string_generics = StringGenerics::new();
+        let builder_ty = if !self.generics_compat {
+            string_generics
+                .arg(builder_ty)
+                .unwrap_or_else(|| builder_ty.clone())
+        } else {
+            builder_ty.clone()
+        };
+        let generics = string_generics.generics();
+
         // When is_js_value_ref_option_type is set, the first setter takes &JsValue
         // but the builder takes Option<&JsValue>, so unwrap_or bridges the types.
         let shim_args = if self.is_js_value_ref_option_type {
@@ -1019,7 +1148,7 @@ impl DictionaryField {
             #unstable_attr
             #cfg_features
             #deprecated
-            pub fn #name(&mut self, val: #builder_ty) -> &mut Self {
+            pub fn #name #generics (&mut self, val: #builder_ty) -> &mut Self {
                 self.#setter_name(#shim_args);
                 self
             }
@@ -1095,6 +1224,7 @@ impl Dictionary {
         // are shared across all constructor variants, preserving original field order.
         struct CtorVariant {
             ctor_name: Ident,
+            generics: Option<TokenStream>,
             args: Vec<TokenStream>,
             calls: Vec<TokenStream>,
             features: BTreeSet<String>,
@@ -1110,9 +1240,17 @@ impl Dictionary {
 
         // Helper: build args/calls for a single constructor variant, substituting
         // the given setter for the union field while keeping all fields in order.
+        type CtorParts = (
+            Option<TokenStream>,
+            Vec<TokenStream>,
+            Vec<TokenStream>,
+            BTreeSet<String>,
+            bool,
+        );
         let build_ctor = |union_setter: Option<&DictionaryFieldSetter>,
                           union_field: Option<&DictionaryField>|
-         -> (Vec<TokenStream>, Vec<TokenStream>, BTreeSet<String>, bool) {
+         -> CtorParts {
+            let mut string_generics = StringGenerics::new();
             let mut args = vec![];
             let mut calls = vec![];
             let mut features = BTreeSet::new();
@@ -1121,37 +1259,35 @@ impl Dictionary {
                 if !field.required {
                     continue;
                 }
-                if union_field == Some(field) {
+                let arg_name = rust_ident(&field.name);
+                let (set_name, ty) = if union_field == Some(field) {
                     let setter = union_setter.unwrap();
-                    let arg_name = rust_ident(&field.name);
                     let set_name = match &setter.name_suffix {
                         Some(suffix) => format_ident!("set_{}_{}", field.name, suffix),
                         None => format_ident!("set_{}", field.name),
                     };
-                    let ty = &setter.ty;
-                    args.push(quote!( #arg_name: #ty ));
-                    calls.push(quote!( ret.#set_name(#arg_name); ));
-                    add_features(&mut features, ty);
-                    if field.unstable && is_ref_to_primitive_slice(ty) {
-                        is_unsafe = true;
-                    }
+                    (set_name, &setter.ty)
                 } else {
-                    let arg_name = rust_ident(&field.name);
-                    let set_name = field.setter_name();
                     let ty = field
                         .setter_types
                         .first()
                         .map(|s| &s.ty)
                         .unwrap_or(&field.ty);
-                    args.push(quote!( #arg_name: #ty ));
-                    calls.push(quote!( ret.#set_name(#arg_name); ));
-                    add_features(&mut features, ty);
-                    if field.unstable && is_ref_to_primitive_slice(ty) {
-                        is_unsafe = true;
-                    }
+                    (field.setter_name(), ty)
+                };
+                add_features(&mut features, ty);
+                if field.unstable && is_ref_to_primitive_slice(ty) {
+                    is_unsafe = true;
                 }
+                let ty = if !field.generics_compat {
+                    string_generics.arg(ty).unwrap_or_else(|| ty.clone())
+                } else {
+                    ty.clone()
+                };
+                args.push(quote!( #arg_name: #ty ));
+                calls.push(quote!( ret.#set_name(#arg_name); ));
             }
-            (args, calls, features, is_unsafe)
+            (string_generics.generics(), args, calls, features, is_unsafe)
         };
 
         let ctor_variants: Vec<CtorVariant> = if let Some(union_field) = union_field {
@@ -1176,10 +1312,11 @@ impl Dictionary {
                             None => format_ident!("new"),
                         }
                     };
-                    let (args, calls, features, is_unsafe) =
+                    let (generics, args, calls, features, is_unsafe) =
                         build_ctor(Some(setter), Some(union_field));
                     Some(CtorVariant {
                         ctor_name,
+                        generics,
                         args,
                         calls,
                         features,
@@ -1188,9 +1325,10 @@ impl Dictionary {
                 })
                 .collect()
         } else {
-            let (args, calls, features, is_unsafe) = build_ctor(None, None);
+            let (generics, args, calls, features, is_unsafe) = build_ctor(None, None);
             vec![CtorVariant {
                 ctor_name: format_ident!("new"),
+                generics,
                 args,
                 calls,
                 features,
@@ -1225,6 +1363,7 @@ impl Dictionary {
             .iter()
             .map(|variant| {
                 let ctor_name = &variant.ctor_name;
+                let generics = &variant.generics;
                 let args = &variant.args;
                 let calls = &variant.calls;
 
@@ -1250,7 +1389,7 @@ impl Dictionary {
                     #ctor_doc_desc
                     #ctor_doc_req
                     #deprecated
-                    pub #ctor_unsafe fn #ctor_name(#(#args),*) -> Self {
+                    pub #ctor_unsafe fn #ctor_name #generics (#(#args),*) -> Self {
                         #[allow(unused_mut)]
                         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
                         #(#calls)*
@@ -1267,7 +1406,7 @@ impl Dictionary {
             use wasm_bindgen::prelude::*;
 
             #unstable_attr
-            #[wasm_bindgen]
+            #[wasm_bindgen(experimental_generic_mono)]
             extern "C" {
                 #[wasm_bindgen(extends = "::js_sys::Object", js_name = #js_name)]
                 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1320,6 +1459,9 @@ pub struct NamespaceAttribute {
     pub catch: bool,
     pub kind: NamespaceAttributeKind,
     pub unstable: bool,
+    /// Whether `ty` was converted with legacy web-sys types (`true`) or typed
+    /// generics (`false`); string positions are only genericised in the latter.
+    pub generics_compat: bool,
 }
 
 impl NamespaceAttribute {
@@ -1337,6 +1479,7 @@ impl NamespaceAttribute {
             catch,
             kind,
             unstable,
+            generics_compat,
         } = self;
 
         let unstable_attr = maybe_unstable_attr(*unstable);
@@ -1353,6 +1496,8 @@ impl NamespaceAttribute {
         features.insert(parent_name.to_string());
 
         let features_doc = required_doc_string(options, &features);
+
+        let mut string_generics = StringGenerics::new();
 
         let (prefix, attr, def) = match kind {
             NamespaceAttributeKind::Getter => {
@@ -1374,6 +1519,13 @@ impl NamespaceAttribute {
             NamespaceAttributeKind::Setter => {
                 let rust_name = rust_ident(rust_name);
 
+                let ty = if !generics_compat {
+                    string_generics.arg(ty).unwrap_or_else(|| ty.clone())
+                } else {
+                    ty.clone()
+                };
+                let generics = string_generics.generics();
+
                 let ret_ty = if *catch {
                     Some(quote!( -> Result<(), JsValue> ))
                 } else {
@@ -1383,7 +1535,7 @@ impl NamespaceAttribute {
                 (
                     "Setter",
                     quote!(setter,),
-                    quote!( pub fn #rust_name(value: #ty) #ret_ty; ),
+                    quote!( pub fn #rust_name #generics (value: #ty) #ret_ty; ),
                 )
             }
         };
@@ -1512,12 +1664,15 @@ impl Function<'_> {
             None
         };
 
+        let mut string_generics = StringGenerics::new();
+
         // Generate arguments
         let arguments = generate_arguments(
             arguments,
             *variadic,
             variadic_type.as_ref(),
             generics_compat,
+            (!generics_compat).then_some(&mut string_generics),
         )?;
 
         // Build the return type token
@@ -1532,6 +1687,8 @@ impl Function<'_> {
             ret.as_ref().map(|ret| quote!( -> #ret ))
         };
 
+        let generics = string_generics.generics();
+
         Some(quote! {
             #unstable_attr
             #cfg_features
@@ -1543,7 +1700,7 @@ impl Function<'_> {
             )]
             #doc_desc
             #doc_req
-            pub fn #name(#(#arguments),*) #ret;
+            pub fn #name #generics (#(#arguments),*) #ret;
         })
     }
 }
@@ -1590,7 +1747,7 @@ impl Namespace<'_> {
             None
         } else {
             Some(quote! {
-                #[wasm_bindgen]
+                #[wasm_bindgen(experimental_generic_mono)]
                 extern "C" {
                     #[wasm_bindgen(js_name = #js_name)]
                     pub type #ns_type_name;
@@ -1602,7 +1759,7 @@ impl Namespace<'_> {
             None
         } else {
             Some(quote! {
-                #[wasm_bindgen]
+                #[wasm_bindgen(experimental_generic_mono)]
                 extern "C" {
                     #(#attributes)*
                     #(#functions)*

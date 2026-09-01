@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(extends = "::js_sys::Object", js_name = "AudioEncoderConfig")]
     #[derive(Debug, Clone, PartialEq, Eq)]
@@ -78,7 +78,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "codec")]
-    pub fn set_codec(this: &AudioEncoderConfig, val: &str);
+    pub fn set_codec<S0: ::wasm_bindgen::JsStringLike>(this: &AudioEncoderConfig, val: S0);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `numberOfChannels` field of this object."]
     #[doc = ""]
@@ -124,7 +124,11 @@ impl AudioEncoderConfig {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new(codec: &str, number_of_channels: u32, sample_rate: u32) -> Self {
+    pub fn new<S0: ::wasm_bindgen::JsStringLike>(
+        codec: S0,
+        number_of_channels: u32,
+        sample_rate: u32,
+    ) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_codec(codec);
@@ -147,7 +151,7 @@ impl AudioEncoderConfig {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_codec()` instead."]
-    pub fn codec(&mut self, val: &str) -> &mut Self {
+    pub fn codec<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_codec(val);
         self
     }

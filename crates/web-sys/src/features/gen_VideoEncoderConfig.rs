@@ -3,7 +3,7 @@
 use super::*;
 use wasm_bindgen::prelude::*;
 #[cfg(web_sys_unstable_apis)]
-#[wasm_bindgen]
+#[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(extends = "::js_sys::Object", js_name = "VideoEncoderConfig")]
     #[derive(Debug, Clone, PartialEq, Eq)]
@@ -98,7 +98,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "codec")]
-    pub fn set_codec(this: &VideoEncoderConfig, val: &str);
+    pub fn set_codec<S0: ::wasm_bindgen::JsStringLike>(this: &VideoEncoderConfig, val: S0);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `contentHint` field of this object."]
     #[doc = ""]
@@ -116,7 +116,7 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "contentHint")]
-    pub fn set_content_hint(this: &VideoEncoderConfig, val: &str);
+    pub fn set_content_hint<S0: ::wasm_bindgen::JsStringLike>(this: &VideoEncoderConfig, val: S0);
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `displayHeight` field of this object."]
     #[doc = ""]
@@ -246,7 +246,10 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, setter = "scalabilityMode")]
-    pub fn set_scalability_mode(this: &VideoEncoderConfig, val: &str);
+    pub fn set_scalability_mode<S0: ::wasm_bindgen::JsStringLike>(
+        this: &VideoEncoderConfig,
+        val: S0,
+    );
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Get the `width` field of this object."]
     #[doc = ""]
@@ -274,7 +277,7 @@ impl VideoEncoderConfig {
     #[doc = ""]
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
-    pub fn new(codec: &str, height: u32, width: u32) -> Self {
+    pub fn new<S0: ::wasm_bindgen::JsStringLike>(codec: S0, height: u32, width: u32) -> Self {
         #[allow(unused_mut)]
         let mut ret: Self = ::wasm_bindgen::JsCast::unchecked_into(::js_sys::Object::new());
         ret.set_codec(codec);
@@ -304,13 +307,13 @@ impl VideoEncoderConfig {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_codec()` instead."]
-    pub fn codec(&mut self, val: &str) -> &mut Self {
+    pub fn codec<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_codec(val);
         self
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_content_hint()` instead."]
-    pub fn content_hint(&mut self, val: &str) -> &mut Self {
+    pub fn content_hint<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_content_hint(val);
         self
     }
@@ -354,7 +357,7 @@ impl VideoEncoderConfig {
     }
     #[cfg(web_sys_unstable_apis)]
     #[deprecated = "Use `set_scalability_mode()` instead."]
-    pub fn scalability_mode(&mut self, val: &str) -> &mut Self {
+    pub fn scalability_mode<S0: ::wasm_bindgen::JsStringLike>(&mut self, val: S0) -> &mut Self {
         self.set_scalability_mode(val);
         self
     }
