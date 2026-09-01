@@ -1,0 +1,31 @@
+CHANGELOG.md
+  s_b34d432186975d::t_8ddd15a323bc8d 28-32
+crates/js-sys/src/lib.rs
+  s_b34d432186975d::t_14201408320ebf 9876-9879
+guide/src/reference/attributes/on-js-imports/experimental_generic_mono.md
+  s_b34d432186975d::t_24ac55e3bd9bdc 93-120
+src/convert/traits.rs
+  s_b34d432186975d::t_e665c0409f318b 647-672
+src/lib.rs
+  s_b34d432186975d::t_88cb2b76d1ed4e 148
+tests/wasm/generic_import_args.js
+  s_b34d432186975d::t_ead1033867a46a 48-55
+tests/wasm/generic_import_args.rs
+  s_b34d432186975d::t_022319d8f451f0 20,22,60-69,106-123
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "15b7e6bdf922e684cb41ae83d041def0c0af733e",
+  "prompts": {},
+  "sessions": {
+    "s_b34d432186975d": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fa1d2ff74ffea0HngPXAq2u8E3",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
