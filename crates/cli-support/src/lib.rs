@@ -419,8 +419,13 @@ impl Bindgen {
             bail!("--experimental-reset-state-function is only supported for --target module, --target web, or --target nodejs")
         }
 
-        let thread_count = transforms::threads::run(&mut module)
-            .with_context(|| "failed to prepare module for threading")?;
+        let thread_count = if self.mode.emscripten() {
+            // Emscripten owns multithreading bootstrap logic.
+            None
+        } else {
+            transforms::threads::run(&mut module)
+                .with_context(|| "failed to prepare module for threading")?
+        };
 
         transforms::memory_discard::run(&mut module, self.memory_discard)
             .with_context(|| "failed to generate `memory.discard` trampoline")?;
