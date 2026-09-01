@@ -24,6 +24,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaStreamTrack`*"]
     pub fn kind(this: &MediaStreamTrack) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "MediaStreamTrack", js_name = "kind")]
+    #[doc = "Like `kind()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack/kind)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaStreamTrack`*"]
+    pub fn kind_js_string(this: &MediaStreamTrack) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "MediaStreamTrack", js_name = "id")]
     #[doc = "Getter for the `id` field of this object."]
     #[doc = ""]
@@ -31,6 +38,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaStreamTrack`*"]
     pub fn id(this: &MediaStreamTrack) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "MediaStreamTrack", js_name = "id")]
+    #[doc = "Like `id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack/id)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaStreamTrack`*"]
+    pub fn id_js_string(this: &MediaStreamTrack) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "MediaStreamTrack", js_name = "label")]
     #[doc = "Getter for the `label` field of this object."]
     #[doc = ""]
@@ -38,6 +52,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaStreamTrack`*"]
     pub fn label(this: &MediaStreamTrack) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "MediaStreamTrack", js_name = "label")]
+    #[doc = "Like `label()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack/label)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaStreamTrack`*"]
+    pub fn label_js_string(this: &MediaStreamTrack) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "MediaStreamTrack", js_name = "enabled")]
     #[doc = "Getter for the `enabled` field of this object."]
     #[doc = ""]

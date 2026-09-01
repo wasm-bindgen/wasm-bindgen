@@ -45,6 +45,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FetchEventInit`*"]
     #[wasm_bindgen(method, getter = "clientId")]
     pub fn get_client_id(this: &FetchEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_client_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FetchEventInit`*"]
+    #[wasm_bindgen(method, getter = "clientId")]
+    pub fn get_client_id_js_string(this: &FetchEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `clientId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FetchEventInit`*"]

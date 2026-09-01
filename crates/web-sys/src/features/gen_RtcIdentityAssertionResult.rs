@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityAssertionResult`*"]
     #[wasm_bindgen(method, getter = "assertion")]
     pub fn get_assertion(this: &RtcIdentityAssertionResult) -> ::alloc::string::String;
+    #[doc = "Like `get_assertion()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIdentityAssertionResult`*"]
+    #[wasm_bindgen(method, getter = "assertion")]
+    pub fn get_assertion_js_string(this: &RtcIdentityAssertionResult) -> ::js_sys::JsString;
     #[doc = "Change the `assertion` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityAssertionResult`*"]

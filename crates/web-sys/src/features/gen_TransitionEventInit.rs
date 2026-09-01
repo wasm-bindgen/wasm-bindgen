@@ -55,6 +55,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `TransitionEventInit`*"]
     #[wasm_bindgen(method, getter = "propertyName")]
     pub fn get_property_name(this: &TransitionEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_property_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TransitionEventInit`*"]
+    #[wasm_bindgen(method, getter = "propertyName")]
+    pub fn get_property_name_js_string(this: &TransitionEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `propertyName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TransitionEventInit`*"]
@@ -65,6 +70,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `TransitionEventInit`*"]
     #[wasm_bindgen(method, getter = "pseudoElement")]
     pub fn get_pseudo_element(this: &TransitionEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_pseudo_element()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TransitionEventInit`*"]
+    #[wasm_bindgen(method, getter = "pseudoElement")]
+    pub fn get_pseudo_element_js_string(this: &TransitionEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `pseudoElement` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TransitionEventInit`*"]

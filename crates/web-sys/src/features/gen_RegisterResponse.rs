@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]
     #[wasm_bindgen(method, getter = "clientData")]
     pub fn get_client_data(this: &RegisterResponse) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_client_data()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]
+    #[wasm_bindgen(method, getter = "clientData")]
+    pub fn get_client_data_js_string(this: &RegisterResponse) -> Option<::js_sys::JsString>;
     #[doc = "Change the `clientData` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]
@@ -35,6 +40,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]
     #[wasm_bindgen(method, getter = "errorMessage")]
     pub fn get_error_message(this: &RegisterResponse) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_error_message()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]
+    #[wasm_bindgen(method, getter = "errorMessage")]
+    pub fn get_error_message_js_string(this: &RegisterResponse) -> Option<::js_sys::JsString>;
     #[doc = "Change the `errorMessage` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]
@@ -45,6 +55,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]
     #[wasm_bindgen(method, getter = "registrationData")]
     pub fn get_registration_data(this: &RegisterResponse) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_registration_data()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]
+    #[wasm_bindgen(method, getter = "registrationData")]
+    pub fn get_registration_data_js_string(this: &RegisterResponse) -> Option<::js_sys::JsString>;
     #[doc = "Change the `registrationData` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]
@@ -55,6 +70,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]
     #[wasm_bindgen(method, getter = "version")]
     pub fn get_version(this: &RegisterResponse) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_version()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]
+    #[wasm_bindgen(method, getter = "version")]
+    pub fn get_version_js_string(this: &RegisterResponse) -> Option<::js_sys::JsString>;
     #[doc = "Change the `version` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RegisterResponse`*"]

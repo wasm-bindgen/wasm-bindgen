@@ -70,6 +70,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlVideoElement`*"]
     pub fn poster(this: &HtmlVideoElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLVideoElement", js_name = "poster")]
+    #[doc = "Like `poster()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement/poster)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlVideoElement`*"]
+    pub fn poster_js_string(this: &HtmlVideoElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLVideoElement", js_name = "poster")]
     #[doc = "Setter for the `poster` field of this object."]
     #[doc = ""]

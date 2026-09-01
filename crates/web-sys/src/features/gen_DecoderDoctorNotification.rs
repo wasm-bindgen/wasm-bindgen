@@ -15,6 +15,13 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
     #[wasm_bindgen(method, getter = "decodeIssue")]
     pub fn get_decode_issue(this: &DecoderDoctorNotification) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_decode_issue()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
+    #[wasm_bindgen(method, getter = "decodeIssue")]
+    pub fn get_decode_issue_js_string(
+        this: &DecoderDoctorNotification,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `decodeIssue` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
@@ -27,6 +34,13 @@ extern "C" {
     pub fn get_decoder_doctor_report_id(
         this: &DecoderDoctorNotification,
     ) -> ::alloc::string::String;
+    #[doc = "Like `get_decoder_doctor_report_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
+    #[wasm_bindgen(method, getter = "decoderDoctorReportId")]
+    pub fn get_decoder_doctor_report_id_js_string(
+        this: &DecoderDoctorNotification,
+    ) -> ::js_sys::JsString;
     #[doc = "Change the `decoderDoctorReportId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
@@ -37,6 +51,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
     #[wasm_bindgen(method, getter = "docURL")]
     pub fn get_doc_url(this: &DecoderDoctorNotification) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_doc_url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
+    #[wasm_bindgen(method, getter = "docURL")]
+    pub fn get_doc_url_js_string(this: &DecoderDoctorNotification) -> Option<::js_sys::JsString>;
     #[doc = "Change the `docURL` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
@@ -47,6 +66,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
     #[wasm_bindgen(method, getter = "formats")]
     pub fn get_formats(this: &DecoderDoctorNotification) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_formats()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
+    #[wasm_bindgen(method, getter = "formats")]
+    pub fn get_formats_js_string(this: &DecoderDoctorNotification) -> Option<::js_sys::JsString>;
     #[doc = "Change the `formats` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
@@ -67,6 +91,13 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
     #[wasm_bindgen(method, getter = "resourceURL")]
     pub fn get_resource_url(this: &DecoderDoctorNotification) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_resource_url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]
+    #[wasm_bindgen(method, getter = "resourceURL")]
+    pub fn get_resource_url_js_string(
+        this: &DecoderDoctorNotification,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `resourceURL` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DecoderDoctorNotification`*"]

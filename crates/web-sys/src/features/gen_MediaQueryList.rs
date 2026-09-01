@@ -24,6 +24,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaQueryList`*"]
     pub fn media(this: &MediaQueryList) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "MediaQueryList", js_name = "media")]
+    #[doc = "Like `media()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaQueryList/media)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaQueryList`*"]
+    pub fn media_js_string(this: &MediaQueryList) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "MediaQueryList", js_name = "matches")]
     #[doc = "Getter for the `matches` field of this object."]
     #[doc = ""]

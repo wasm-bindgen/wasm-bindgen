@@ -31,6 +31,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MessageEvent`*"]
     pub fn origin(this: &MessageEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "MessageEvent", js_name = "origin")]
+    #[doc = "Like `origin()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent/origin)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MessageEvent`*"]
+    pub fn origin_js_string(this: &MessageEvent) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "MessageEvent", js_name = "lastEventId")]
     #[doc = "Getter for the `lastEventId` field of this object."]
     #[doc = ""]
@@ -38,6 +45,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MessageEvent`*"]
     pub fn last_event_id(this: &MessageEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "MessageEvent", js_name = "lastEventId")]
+    #[doc = "Like `last_event_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent/lastEventId)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MessageEvent`*"]
+    pub fn last_event_id_js_string(this: &MessageEvent) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "MessageEvent", js_name = "source")]
     #[doc = "Getter for the `source` field of this object."]
     #[doc = ""]

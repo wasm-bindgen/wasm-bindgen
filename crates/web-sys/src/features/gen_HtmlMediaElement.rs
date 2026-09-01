@@ -35,6 +35,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlMediaElement`*"]
     pub fn src(this: &HtmlMediaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLMediaElement", js_name = "src")]
+    #[doc = "Like `src()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/src)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlMediaElement`*"]
+    pub fn src_js_string(this: &HtmlMediaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLMediaElement", js_name = "src")]
     #[doc = "Setter for the `src` field of this object."]
     #[doc = ""]
@@ -49,6 +56,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlMediaElement`*"]
     pub fn current_src(this: &HtmlMediaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLMediaElement", js_name = "currentSrc")]
+    #[doc = "Like `current_src()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/currentSrc)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlMediaElement`*"]
+    pub fn current_src_js_string(this: &HtmlMediaElement) -> ::js_sys::JsString;
     #[cfg(feature = "MediaStream")]
     #[wasm_bindgen(method, getter, js_class = "HTMLMediaElement", js_name = "srcObject")]
     #[doc = "Getter for the `srcObject` field of this object."]
@@ -72,6 +86,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlMediaElement`*"]
     pub fn cross_origin(this: &HtmlMediaElement) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "HTMLMediaElement", js_name = "crossOrigin")]
+    #[doc = "Like `cross_origin()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/crossOrigin)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlMediaElement`*"]
+    pub fn cross_origin_js_string(this: &HtmlMediaElement) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, setter, js_class = "HTMLMediaElement", js_name = "crossOrigin")]
     #[doc = "Setter for the `crossOrigin` field of this object."]
     #[doc = ""]
@@ -98,6 +119,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlMediaElement`*"]
     pub fn preload(this: &HtmlMediaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLMediaElement", js_name = "preload")]
+    #[doc = "Like `preload()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/preload)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlMediaElement`*"]
+    pub fn preload_js_string(this: &HtmlMediaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLMediaElement", js_name = "preload")]
     #[doc = "Setter for the `preload` field of this object."]
     #[doc = ""]
@@ -430,6 +458,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlMediaElement`*"]
     pub fn can_play_type(this: &HtmlMediaElement, type_: &str) -> ::alloc::string::String;
+    #[wasm_bindgen(method, js_class = "HTMLMediaElement", js_name = "canPlayType")]
+    #[doc = "Like `can_play_type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/canPlayType)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlMediaElement`*"]
+    pub fn can_play_type_js_string(this: &HtmlMediaElement, type_: &str) -> ::js_sys::JsString;
     #[wasm_bindgen(catch, method, js_class = "HTMLMediaElement", js_name = "fastSeek")]
     #[doc = "The `fastSeek()` method."]
     #[doc = ""]

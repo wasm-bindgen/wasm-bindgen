@@ -24,6 +24,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TcpSocket`*"]
     pub fn host(this: &TcpSocket) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "TCPSocket", js_name = "host")]
+    #[doc = "Like `host()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TCPSocket/host)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TcpSocket`*"]
+    pub fn host_js_string(this: &TcpSocket) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "TCPSocket", js_name = "port")]
     #[doc = "Getter for the `port` field of this object."]
     #[doc = ""]

@@ -35,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DnsLookupDict`*"]
     #[wasm_bindgen(method, getter = "error")]
     pub fn get_error(this: &DnsLookupDict) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_error()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DnsLookupDict`*"]
+    #[wasm_bindgen(method, getter = "error")]
+    pub fn get_error_js_string(this: &DnsLookupDict) -> Option<::js_sys::JsString>;
     #[doc = "Change the `error` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DnsLookupDict`*"]

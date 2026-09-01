@@ -15,6 +15,13 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineStackFrame`*"]
     #[wasm_bindgen(method, getter = "asyncCause")]
     pub fn get_async_cause(this: &ProfileTimelineStackFrame) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_async_cause()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineStackFrame`*"]
+    #[wasm_bindgen(method, getter = "asyncCause")]
+    pub fn get_async_cause_js_string(
+        this: &ProfileTimelineStackFrame,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `asyncCause` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineStackFrame`*"]
@@ -47,6 +54,13 @@ extern "C" {
     pub fn get_function_display_name(
         this: &ProfileTimelineStackFrame,
     ) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_function_display_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineStackFrame`*"]
+    #[wasm_bindgen(method, getter = "functionDisplayName")]
+    pub fn get_function_display_name_js_string(
+        this: &ProfileTimelineStackFrame,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `functionDisplayName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineStackFrame`*"]
@@ -77,6 +91,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineStackFrame`*"]
     #[wasm_bindgen(method, getter = "source")]
     pub fn get_source(this: &ProfileTimelineStackFrame) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_source()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineStackFrame`*"]
+    #[wasm_bindgen(method, getter = "source")]
+    pub fn get_source_js_string(this: &ProfileTimelineStackFrame) -> Option<::js_sys::JsString>;
     #[doc = "Change the `source` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineStackFrame`*"]

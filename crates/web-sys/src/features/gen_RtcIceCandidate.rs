@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidate`*"]
     pub fn candidate(this: &RtcIceCandidate) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "RTCIceCandidate", js_name = "candidate")]
+    #[doc = "Like `candidate()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCIceCandidate/candidate)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidate`*"]
+    pub fn candidate_js_string(this: &RtcIceCandidate) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "RTCIceCandidate", js_name = "candidate")]
     #[doc = "Setter for the `candidate` field of this object."]
     #[doc = ""]
@@ -37,6 +44,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidate`*"]
     pub fn sdp_mid(this: &RtcIceCandidate) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "RTCIceCandidate", js_name = "sdpMid")]
+    #[doc = "Like `sdp_mid()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCIceCandidate/sdpMid)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidate`*"]
+    pub fn sdp_mid_js_string(this: &RtcIceCandidate) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, setter, js_class = "RTCIceCandidate", js_name = "sdpMid")]
     #[doc = "Setter for the `sdpMid` field of this object."]
     #[doc = ""]

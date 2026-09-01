@@ -40,6 +40,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
     pub fn mime_type(this: &MediaRecorder) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "MediaRecorder", js_name = "mimeType")]
+    #[doc = "Like `mime_type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/mimeType)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaRecorder`*"]
+    pub fn mime_type_js_string(this: &MediaRecorder) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         getter,

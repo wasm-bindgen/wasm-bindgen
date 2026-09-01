@@ -39,4 +39,20 @@ extern "C" {
         this: &XmlSerializer,
         root: &Node,
     ) -> Result<::alloc::string::String, JsValue>;
+    #[cfg(feature = "Node")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "XMLSerializer",
+        js_name = "serializeToString"
+    )]
+    #[doc = "Like `serialize_to_string()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLSerializer/serializeToString)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Node`, `XmlSerializer`*"]
+    pub fn serialize_to_string_js_string(
+        this: &XmlSerializer,
+        root: &Node,
+    ) -> Result<::js_sys::JsString, JsValue>;
 }

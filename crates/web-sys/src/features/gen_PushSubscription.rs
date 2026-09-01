@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PushSubscription`*"]
     pub fn endpoint(this: &PushSubscription) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "PushSubscription", js_name = "endpoint")]
+    #[doc = "Like `endpoint()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PushSubscription/endpoint)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PushSubscription`*"]
+    pub fn endpoint_js_string(this: &PushSubscription) -> ::js_sys::JsString;
     #[cfg(feature = "PushSubscriptionOptions")]
     #[wasm_bindgen(method, getter, js_class = "PushSubscription", js_name = "options")]
     #[doc = "Getter for the `options` field of this object."]

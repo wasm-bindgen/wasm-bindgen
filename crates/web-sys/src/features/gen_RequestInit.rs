@@ -119,6 +119,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
     #[wasm_bindgen(method, getter = "integrity")]
     pub fn get_integrity(this: &RequestInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_integrity()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
+    #[wasm_bindgen(method, getter = "integrity")]
+    pub fn get_integrity_js_string(this: &RequestInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `integrity` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
@@ -129,6 +134,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
     #[wasm_bindgen(method, getter = "method")]
     pub fn get_method(this: &RequestInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_method()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
+    #[wasm_bindgen(method, getter = "method")]
+    pub fn get_method_js_string(this: &RequestInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `method` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
@@ -186,6 +196,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
     #[wasm_bindgen(method, getter = "referrer")]
     pub fn get_referrer(this: &RequestInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_referrer()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]
+    #[wasm_bindgen(method, getter = "referrer")]
+    pub fn get_referrer_js_string(this: &RequestInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `referrer` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RequestInit`*"]

@@ -27,6 +27,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlHtmlElement`*"]
     pub fn version(this: &HtmlHtmlElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLHtmlElement", js_name = "version")]
+    #[doc = "Like `version()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLHtmlElement/version)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlHtmlElement`*"]
+    pub fn version_js_string(this: &HtmlHtmlElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLHtmlElement", js_name = "version")]
     #[doc = "Setter for the `version` field of this object."]
     #[doc = ""]

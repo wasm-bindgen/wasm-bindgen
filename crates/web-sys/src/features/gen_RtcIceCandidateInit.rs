@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateInit`*"]
     #[wasm_bindgen(method, getter = "candidate")]
     pub fn get_candidate(this: &RtcIceCandidateInit) -> ::alloc::string::String;
+    #[doc = "Like `get_candidate()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateInit`*"]
+    #[wasm_bindgen(method, getter = "candidate")]
+    pub fn get_candidate_js_string(this: &RtcIceCandidateInit) -> ::js_sys::JsString;
     #[doc = "Change the `candidate` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateInit`*"]
@@ -35,6 +40,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateInit`*"]
     #[wasm_bindgen(method, getter = "sdpMid")]
     pub fn get_sdp_mid(this: &RtcIceCandidateInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_sdp_mid()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateInit`*"]
+    #[wasm_bindgen(method, getter = "sdpMid")]
+    pub fn get_sdp_mid_js_string(this: &RtcIceCandidateInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `sdpMid` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidateInit`*"]

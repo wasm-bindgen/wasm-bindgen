@@ -207,6 +207,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEventInit`*"]
     #[wasm_bindgen(method, getter = "code")]
     pub fn get_code(this: &KeyboardEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_code()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyboardEventInit`*"]
+    #[wasm_bindgen(method, getter = "code")]
+    pub fn get_code_js_string(this: &KeyboardEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `code` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEventInit`*"]
@@ -227,6 +232,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEventInit`*"]
     #[wasm_bindgen(method, getter = "key")]
     pub fn get_key(this: &KeyboardEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_key()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyboardEventInit`*"]
+    #[wasm_bindgen(method, getter = "key")]
+    pub fn get_key_js_string(this: &KeyboardEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `key` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEventInit`*"]

@@ -24,6 +24,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcdtmfToneChangeEvent`*"]
     pub fn tone(this: &RtcdtmfToneChangeEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "RTCDTMFToneChangeEvent", js_name = "tone")]
+    #[doc = "Like `tone()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCDTMFToneChangeEvent/tone)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcdtmfToneChangeEvent`*"]
+    pub fn tone_js_string(this: &RtcdtmfToneChangeEvent) -> ::js_sys::JsString;
     #[wasm_bindgen(catch, constructor, js_class = "RTCDTMFToneChangeEvent")]
     #[doc = "The `new RtcdtmfToneChangeEvent(..)` constructor, creating a new instance of `RtcdtmfToneChangeEvent`."]
     #[doc = ""]

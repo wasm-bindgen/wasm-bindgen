@@ -19,6 +19,12 @@ extern "C" {
     #[deprecated(note = "Removed from the WebAuthn specification")]
     #[wasm_bindgen(method, getter = "icon")]
     pub fn get_icon(this: &PublicKeyCredentialUserEntity) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_icon()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialUserEntity`*"]
+    #[deprecated(note = "Removed from the WebAuthn specification")]
+    #[wasm_bindgen(method, getter = "icon")]
+    pub fn get_icon_js_string(this: &PublicKeyCredentialUserEntity) -> Option<::js_sys::JsString>;
     #[doc = "Change the `icon` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialUserEntity`*"]
@@ -30,6 +36,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialUserEntity`*"]
     #[wasm_bindgen(method, getter = "name")]
     pub fn get_name(this: &PublicKeyCredentialUserEntity) -> ::alloc::string::String;
+    #[doc = "Like `get_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialUserEntity`*"]
+    #[wasm_bindgen(method, getter = "name")]
+    pub fn get_name_js_string(this: &PublicKeyCredentialUserEntity) -> ::js_sys::JsString;
     #[doc = "Change the `name` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialUserEntity`*"]
@@ -40,6 +51,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialUserEntity`*"]
     #[wasm_bindgen(method, getter = "displayName")]
     pub fn get_display_name(this: &PublicKeyCredentialUserEntity) -> ::alloc::string::String;
+    #[doc = "Like `get_display_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialUserEntity`*"]
+    #[wasm_bindgen(method, getter = "displayName")]
+    pub fn get_display_name_js_string(this: &PublicKeyCredentialUserEntity) -> ::js_sys::JsString;
     #[doc = "Change the `displayName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PublicKeyCredentialUserEntity`*"]

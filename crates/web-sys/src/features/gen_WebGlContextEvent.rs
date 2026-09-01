@@ -29,6 +29,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WebGlContextEvent`*"]
     pub fn status_message(this: &WebGlContextEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "WebGLContextEvent",
+        js_name = "statusMessage"
+    )]
+    #[doc = "Like `status_message()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGLContextEvent/statusMessage)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WebGlContextEvent`*"]
+    pub fn status_message_js_string(this: &WebGlContextEvent) -> ::js_sys::JsString;
     #[wasm_bindgen(catch, constructor, js_class = "WebGLContextEvent")]
     #[doc = "The `new WebGlContextEvent(..)` constructor, creating a new instance of `WebGlContextEvent`."]
     #[doc = ""]

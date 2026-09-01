@@ -102,6 +102,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `XmlHttpRequest`*"]
     pub fn response_url(this: &XmlHttpRequest) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "XMLHttpRequest", js_name = "responseURL")]
+    #[doc = "Like `response_url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseURL)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `XmlHttpRequest`*"]
+    pub fn response_url_js_string(this: &XmlHttpRequest) -> ::js_sys::JsString;
     #[wasm_bindgen(catch, method, getter, js_class = "XMLHttpRequest", js_name = "status")]
     #[doc = "Getter for the `status` field of this object."]
     #[doc = ""]
@@ -122,6 +129,19 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `XmlHttpRequest`*"]
     pub fn status_text(this: &XmlHttpRequest) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        getter,
+        js_class = "XMLHttpRequest",
+        js_name = "statusText"
+    )]
+    #[doc = "Like `status_text()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/statusText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `XmlHttpRequest`*"]
+    pub fn status_text_js_string(this: &XmlHttpRequest) -> Result<::js_sys::JsString, JsValue>;
     #[cfg(feature = "XmlHttpRequestResponseType")]
     #[wasm_bindgen(method, getter, js_class = "XMLHttpRequest", js_name = "responseType")]
     #[doc = "Getter for the `responseType` field of this object."]
@@ -165,6 +185,21 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `XmlHttpRequest`*"]
     pub fn response_text(this: &XmlHttpRequest)
         -> Result<Option<::alloc::string::String>, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        getter,
+        js_class = "XMLHttpRequest",
+        js_name = "responseText"
+    )]
+    #[doc = "Like `response_text()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `XmlHttpRequest`*"]
+    pub fn response_text_js_string(
+        this: &XmlHttpRequest,
+    ) -> Result<Option<::js_sys::JsString>, JsValue>;
     #[cfg(feature = "Document")]
     #[wasm_bindgen(
         catch,
@@ -218,6 +253,20 @@ extern "C" {
         catch,
         method,
         js_class = "XMLHttpRequest",
+        js_name = "getAllResponseHeaders"
+    )]
+    #[doc = "Like `get_all_response_headers()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/getAllResponseHeaders)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `XmlHttpRequest`*"]
+    pub fn get_all_response_headers_js_string(
+        this: &XmlHttpRequest,
+    ) -> Result<::js_sys::JsString, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "XMLHttpRequest",
         js_name = "getResponseHeader"
     )]
     #[doc = "The `getResponseHeader()` method."]
@@ -229,6 +278,21 @@ extern "C" {
         this: &XmlHttpRequest,
         header: &str,
     ) -> Result<Option<::alloc::string::String>, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "XMLHttpRequest",
+        js_name = "getResponseHeader"
+    )]
+    #[doc = "Like `get_response_header()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/getResponseHeader)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `XmlHttpRequest`*"]
+    pub fn get_response_header_js_string(
+        this: &XmlHttpRequest,
+        header: &str,
+    ) -> Result<Option<::js_sys::JsString>, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "XMLHttpRequest")]
     #[doc = "The `open()` method."]
     #[doc = ""]

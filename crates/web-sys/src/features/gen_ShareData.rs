@@ -25,6 +25,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ShareData`*"]
     #[wasm_bindgen(method, getter = "text")]
     pub fn get_text(this: &ShareData) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_text()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ShareData`*"]
+    #[wasm_bindgen(method, getter = "text")]
+    pub fn get_text_js_string(this: &ShareData) -> Option<::js_sys::JsString>;
     #[doc = "Change the `text` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ShareData`*"]
@@ -35,6 +40,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ShareData`*"]
     #[wasm_bindgen(method, getter = "title")]
     pub fn get_title(this: &ShareData) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_title()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ShareData`*"]
+    #[wasm_bindgen(method, getter = "title")]
+    pub fn get_title_js_string(this: &ShareData) -> Option<::js_sys::JsString>;
     #[doc = "Change the `title` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ShareData`*"]
@@ -45,6 +55,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ShareData`*"]
     #[wasm_bindgen(method, getter = "url")]
     pub fn get_url(this: &ShareData) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ShareData`*"]
+    #[wasm_bindgen(method, getter = "url")]
+    pub fn get_url_js_string(this: &ShareData) -> Option<::js_sys::JsString>;
     #[doc = "Change the `url` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ShareData`*"]

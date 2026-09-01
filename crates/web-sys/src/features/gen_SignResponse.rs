@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SignResponse`*"]
     #[wasm_bindgen(method, getter = "clientData")]
     pub fn get_client_data(this: &SignResponse) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_client_data()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SignResponse`*"]
+    #[wasm_bindgen(method, getter = "clientData")]
+    pub fn get_client_data_js_string(this: &SignResponse) -> Option<::js_sys::JsString>;
     #[doc = "Change the `clientData` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SignResponse`*"]
@@ -35,6 +40,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SignResponse`*"]
     #[wasm_bindgen(method, getter = "errorMessage")]
     pub fn get_error_message(this: &SignResponse) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_error_message()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SignResponse`*"]
+    #[wasm_bindgen(method, getter = "errorMessage")]
+    pub fn get_error_message_js_string(this: &SignResponse) -> Option<::js_sys::JsString>;
     #[doc = "Change the `errorMessage` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SignResponse`*"]
@@ -45,6 +55,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SignResponse`*"]
     #[wasm_bindgen(method, getter = "keyHandle")]
     pub fn get_key_handle(this: &SignResponse) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_key_handle()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SignResponse`*"]
+    #[wasm_bindgen(method, getter = "keyHandle")]
+    pub fn get_key_handle_js_string(this: &SignResponse) -> Option<::js_sys::JsString>;
     #[doc = "Change the `keyHandle` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SignResponse`*"]
@@ -55,6 +70,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SignResponse`*"]
     #[wasm_bindgen(method, getter = "signatureData")]
     pub fn get_signature_data(this: &SignResponse) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_signature_data()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SignResponse`*"]
+    #[wasm_bindgen(method, getter = "signatureData")]
+    pub fn get_signature_data_js_string(this: &SignResponse) -> Option<::js_sys::JsString>;
     #[doc = "Change the `signatureData` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SignResponse`*"]

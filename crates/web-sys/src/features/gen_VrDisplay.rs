@@ -61,6 +61,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `VrDisplay`*"]
     pub fn display_name(this: &VrDisplay) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "VRDisplay", js_name = "displayName")]
+    #[doc = "Like `display_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/VRDisplay/displayName)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VrDisplay`*"]
+    pub fn display_name_js_string(this: &VrDisplay) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "VRDisplay", js_name = "depthNear")]
     #[doc = "Getter for the `depthNear` field of this object."]
     #[doc = ""]

@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
     #[wasm_bindgen(method, getter = "domain")]
     pub fn get_domain(this: &CookieInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_domain()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
+    #[wasm_bindgen(method, getter = "domain")]
+    pub fn get_domain_js_string(this: &CookieInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `domain` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
@@ -55,6 +60,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
     #[wasm_bindgen(method, getter = "name")]
     pub fn get_name(this: &CookieInit) -> ::alloc::string::String;
+    #[doc = "Like `get_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
+    #[wasm_bindgen(method, getter = "name")]
+    pub fn get_name_js_string(this: &CookieInit) -> ::js_sys::JsString;
     #[doc = "Change the `name` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
@@ -75,6 +85,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
     #[wasm_bindgen(method, getter = "path")]
     pub fn get_path(this: &CookieInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_path()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
+    #[wasm_bindgen(method, getter = "path")]
+    pub fn get_path_js_string(this: &CookieInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `path` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
@@ -97,6 +112,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
     #[wasm_bindgen(method, getter = "value")]
     pub fn get_value(this: &CookieInit) -> ::alloc::string::String;
+    #[doc = "Like `get_value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]
+    #[wasm_bindgen(method, getter = "value")]
+    pub fn get_value_js_string(this: &CookieInit) -> ::js_sys::JsString;
     #[doc = "Change the `value` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CookieInit`*"]

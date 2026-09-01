@@ -51,6 +51,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ResponseInit`*"]
     #[wasm_bindgen(method, getter = "statusText")]
     pub fn get_status_text(this: &ResponseInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_status_text()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ResponseInit`*"]
+    #[wasm_bindgen(method, getter = "statusText")]
+    pub fn get_status_text_js_string(this: &ResponseInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `statusText` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ResponseInit`*"]

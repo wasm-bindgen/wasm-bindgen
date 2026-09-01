@@ -130,6 +130,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
     pub fn origin(this: &WorkerGlobalScope) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "WorkerGlobalScope", js_name = "origin")]
+    #[doc = "Like `origin()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/origin)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn origin_js_string(this: &WorkerGlobalScope) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         getter,
@@ -323,6 +330,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
     pub fn atob(this: &WorkerGlobalScope, atob: &str) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope", js_name = "atob")]
+    #[doc = "Like `atob()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/atob)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn atob_js_string(
+        this: &WorkerGlobalScope,
+        atob: &str,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope")]
     #[doc = "The `btoa()` method."]
     #[doc = ""]
@@ -330,6 +347,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
     pub fn btoa(this: &WorkerGlobalScope, btoa: &str) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "WorkerGlobalScope", js_name = "btoa")]
+    #[doc = "Like `btoa()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WorkerGlobalScope/btoa)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `WorkerGlobalScope`*"]
+    pub fn btoa_js_string(
+        this: &WorkerGlobalScope,
+        btoa: &str,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(method, js_class = "WorkerGlobalScope", js_name = "clearInterval")]
     #[doc = "The `clearInterval()` method."]
     #[doc = ""]

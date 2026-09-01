@@ -24,6 +24,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MidiPort`*"]
     pub fn id(this: &MidiPort) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "MIDIPort", js_name = "id")]
+    #[doc = "Like `id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MIDIPort/id)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MidiPort`*"]
+    pub fn id_js_string(this: &MidiPort) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "MIDIPort", js_name = "manufacturer")]
     #[doc = "Getter for the `manufacturer` field of this object."]
     #[doc = ""]
@@ -31,6 +38,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MidiPort`*"]
     pub fn manufacturer(this: &MidiPort) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "MIDIPort", js_name = "manufacturer")]
+    #[doc = "Like `manufacturer()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MIDIPort/manufacturer)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MidiPort`*"]
+    pub fn manufacturer_js_string(this: &MidiPort) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, getter, js_class = "MIDIPort", js_name = "name")]
     #[doc = "Getter for the `name` field of this object."]
     #[doc = ""]
@@ -38,6 +52,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MidiPort`*"]
     pub fn name(this: &MidiPort) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "MIDIPort", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MIDIPort/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MidiPort`*"]
+    pub fn name_js_string(this: &MidiPort) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, getter, js_class = "MIDIPort", js_name = "version")]
     #[doc = "Getter for the `version` field of this object."]
     #[doc = ""]
@@ -45,6 +66,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MidiPort`*"]
     pub fn version(this: &MidiPort) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "MIDIPort", js_name = "version")]
+    #[doc = "Like `version()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MIDIPort/version)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MidiPort`*"]
+    pub fn version_js_string(this: &MidiPort) -> Option<::js_sys::JsString>;
     #[cfg(feature = "MidiPortType")]
     #[wasm_bindgen(method, getter, js_class = "MIDIPort", js_name = "type")]
     #[doc = "Getter for the `type` field of this object."]

@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineMarker`*"]
     #[wasm_bindgen(method, getter = "causeName")]
     pub fn get_cause_name(this: &ProfileTimelineMarker) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_cause_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineMarker`*"]
+    #[wasm_bindgen(method, getter = "causeName")]
+    pub fn get_cause_name_js_string(this: &ProfileTimelineMarker) -> Option<::js_sys::JsString>;
     #[doc = "Change the `causeName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineMarker`*"]
@@ -92,6 +97,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineMarker`*"]
     #[wasm_bindgen(method, getter = "name")]
     pub fn get_name(this: &ProfileTimelineMarker) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineMarker`*"]
+    #[wasm_bindgen(method, getter = "name")]
+    pub fn get_name_js_string(this: &ProfileTimelineMarker) -> Option<::js_sys::JsString>;
     #[doc = "Change the `name` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineMarker`*"]
@@ -142,6 +152,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineMarker`*"]
     #[wasm_bindgen(method, getter = "type")]
     pub fn get_type(this: &ProfileTimelineMarker) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineMarker`*"]
+    #[wasm_bindgen(method, getter = "type")]
+    pub fn get_type_js_string(this: &ProfileTimelineMarker) -> Option<::js_sys::JsString>;
     #[doc = "Change the `type` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ProfileTimelineMarker`*"]

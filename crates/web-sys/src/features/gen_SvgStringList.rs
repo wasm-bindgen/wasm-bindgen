@@ -40,6 +40,16 @@ extern "C" {
         this: &SvgStringList,
         new_item: &str,
     ) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "SVGStringList", js_name = "appendItem")]
+    #[doc = "Like `append_item()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGStringList/appendItem)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgStringList`*"]
+    pub fn append_item_js_string(
+        this: &SvgStringList,
+        new_item: &str,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(method, js_class = "SVGStringList")]
     #[doc = "The `clear()` method."]
     #[doc = ""]
@@ -54,6 +64,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgStringList`*"]
     pub fn get_item(this: &SvgStringList, index: u32) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "SVGStringList", js_name = "getItem")]
+    #[doc = "Like `get_item()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGStringList/getItem)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgStringList`*"]
+    pub fn get_item_js_string(
+        this: &SvgStringList,
+        index: u32,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "SVGStringList")]
     #[doc = "The `initialize()` method."]
     #[doc = ""]
@@ -64,6 +84,16 @@ extern "C" {
         this: &SvgStringList,
         new_item: &str,
     ) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "SVGStringList", js_name = "initialize")]
+    #[doc = "Like `initialize()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGStringList/initialize)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgStringList`*"]
+    pub fn initialize_js_string(
+        this: &SvgStringList,
+        new_item: &str,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(
         catch,
         method,
@@ -80,6 +110,22 @@ extern "C" {
         new_item: &str,
         index: u32,
     ) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "SVGStringList",
+        js_name = "insertItemBefore"
+    )]
+    #[doc = "Like `insert_item_before()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGStringList/insertItemBefore)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgStringList`*"]
+    pub fn insert_item_before_js_string(
+        this: &SvgStringList,
+        new_item: &str,
+        index: u32,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "SVGStringList", js_name = "removeItem")]
     #[doc = "The `removeItem()` method."]
     #[doc = ""]
@@ -90,6 +136,16 @@ extern "C" {
         this: &SvgStringList,
         index: u32,
     ) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "SVGStringList", js_name = "removeItem")]
+    #[doc = "Like `remove_item()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGStringList/removeItem)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgStringList`*"]
+    pub fn remove_item_js_string(
+        this: &SvgStringList,
+        index: u32,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "SVGStringList", js_name = "replaceItem")]
     #[doc = "The `replaceItem()` method."]
     #[doc = ""]
@@ -101,10 +157,28 @@ extern "C" {
         new_item: &str,
         index: u32,
     ) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "SVGStringList", js_name = "replaceItem")]
+    #[doc = "Like `replace_item()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGStringList/replaceItem)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgStringList`*"]
+    pub fn replace_item_js_string(
+        this: &SvgStringList,
+        new_item: &str,
+        index: u32,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(method, js_class = "SVGStringList", indexing_getter)]
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgStringList`*"]
     pub fn get(this: &SvgStringList, index: u32) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, js_class = "SVGStringList", indexing_getter)]
+    #[doc = "Like `get()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGStringList/get)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgStringList`*"]
+    pub fn get_js_string(this: &SvgStringList, index: u32) -> Option<::js_sys::JsString>;
 }

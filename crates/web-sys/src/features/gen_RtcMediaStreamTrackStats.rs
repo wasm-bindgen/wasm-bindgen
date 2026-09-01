@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcMediaStreamTrackStats`*"]
     #[wasm_bindgen(method, getter = "id")]
     pub fn get_id(this: &RtcMediaStreamTrackStats) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcMediaStreamTrackStats`*"]
+    #[wasm_bindgen(method, getter = "id")]
+    pub fn get_id_js_string(this: &RtcMediaStreamTrackStats) -> Option<::js_sys::JsString>;
     #[doc = "Change the `id` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcMediaStreamTrackStats`*"]
@@ -178,6 +183,13 @@ extern "C" {
     #[wasm_bindgen(method, getter = "trackIdentifier")]
     pub fn get_track_identifier(this: &RtcMediaStreamTrackStats)
         -> Option<::alloc::string::String>;
+    #[doc = "Like `get_track_identifier()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcMediaStreamTrackStats`*"]
+    #[wasm_bindgen(method, getter = "trackIdentifier")]
+    pub fn get_track_identifier_js_string(
+        this: &RtcMediaStreamTrackStats,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `trackIdentifier` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcMediaStreamTrackStats`*"]

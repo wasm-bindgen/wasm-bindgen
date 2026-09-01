@@ -105,6 +105,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Notification`*"]
     pub fn title(this: &Notification) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Notification", js_name = "title")]
+    #[doc = "Like `title()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Notification/title)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Notification`*"]
+    pub fn title_js_string(this: &Notification) -> ::js_sys::JsString;
     #[cfg(feature = "NotificationDirection")]
     #[wasm_bindgen(method, getter, js_class = "Notification", js_name = "dir")]
     #[doc = "Getter for the `dir` field of this object."]
@@ -120,6 +127,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Notification`*"]
     pub fn lang(this: &Notification) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "Notification", js_name = "lang")]
+    #[doc = "Like `lang()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Notification/lang)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Notification`*"]
+    pub fn lang_js_string(this: &Notification) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, getter, js_class = "Notification", js_name = "body")]
     #[doc = "Getter for the `body` field of this object."]
     #[doc = ""]
@@ -127,6 +141,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Notification`*"]
     pub fn body(this: &Notification) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "Notification", js_name = "body")]
+    #[doc = "Like `body()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Notification/body)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Notification`*"]
+    pub fn body_js_string(this: &Notification) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, getter, js_class = "Notification", js_name = "tag")]
     #[doc = "Getter for the `tag` field of this object."]
     #[doc = ""]
@@ -134,6 +155,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Notification`*"]
     pub fn tag(this: &Notification) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "Notification", js_name = "tag")]
+    #[doc = "Like `tag()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Notification/tag)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Notification`*"]
+    pub fn tag_js_string(this: &Notification) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, getter, js_class = "Notification", js_name = "image")]
     #[doc = "Getter for the `image` field of this object."]
     #[doc = ""]
@@ -141,6 +169,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Notification`*"]
     pub fn image(this: &Notification) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Notification", js_name = "image")]
+    #[doc = "Like `image()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Notification/image)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Notification`*"]
+    pub fn image_js_string(this: &Notification) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "Notification", js_name = "icon")]
     #[doc = "Getter for the `icon` field of this object."]
     #[doc = ""]
@@ -148,6 +183,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Notification`*"]
     pub fn icon(this: &Notification) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "Notification", js_name = "icon")]
+    #[doc = "Like `icon()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Notification/icon)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Notification`*"]
+    pub fn icon_js_string(this: &Notification) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, getter, js_class = "Notification", js_name = "badge")]
     #[doc = "Getter for the `badge` field of this object."]
     #[doc = ""]
@@ -155,6 +197,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Notification`*"]
     pub fn badge(this: &Notification) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Notification", js_name = "badge")]
+    #[doc = "Like `badge()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Notification/badge)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Notification`*"]
+    pub fn badge_js_string(this: &Notification) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "Notification", js_name = "vibrate")]
     #[doc = "Getter for the `vibrate` field of this object."]
     #[doc = ""]

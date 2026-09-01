@@ -71,6 +71,21 @@ extern "C" {
     #[wasm_bindgen(
         catch,
         method,
+        getter,
+        js_class = "CanvasRenderingContext2D",
+        js_name = "globalCompositeOperation"
+    )]
+    #[doc = "Like `global_composite_operation()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CanvasRenderingContext2d`*"]
+    pub fn global_composite_operation_js_string(
+        this: &CanvasRenderingContext2d,
+    ) -> Result<::js_sys::JsString, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
         setter,
         js_class = "CanvasRenderingContext2D",
         js_name = "globalCompositeOperation"
@@ -227,6 +242,18 @@ extern "C" {
     pub fn filter(this: &CanvasRenderingContext2d) -> ::alloc::string::String;
     #[wasm_bindgen(
         method,
+        getter,
+        js_class = "CanvasRenderingContext2D",
+        js_name = "filter"
+    )]
+    #[doc = "Like `filter()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/filter)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CanvasRenderingContext2d`*"]
+    pub fn filter_js_string(this: &CanvasRenderingContext2d) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
         setter,
         js_class = "CanvasRenderingContext2D",
         js_name = "filter"
@@ -299,6 +326,18 @@ extern "C" {
     pub fn line_cap(this: &CanvasRenderingContext2d) -> ::alloc::string::String;
     #[wasm_bindgen(
         method,
+        getter,
+        js_class = "CanvasRenderingContext2D",
+        js_name = "lineCap"
+    )]
+    #[doc = "Like `line_cap()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/lineCap)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CanvasRenderingContext2d`*"]
+    pub fn line_cap_js_string(this: &CanvasRenderingContext2d) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
         setter,
         js_class = "CanvasRenderingContext2D",
         js_name = "lineCap"
@@ -321,6 +360,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CanvasRenderingContext2d`*"]
     pub fn line_join(this: &CanvasRenderingContext2d) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "CanvasRenderingContext2D",
+        js_name = "lineJoin"
+    )]
+    #[doc = "Like `line_join()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/lineJoin)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CanvasRenderingContext2d`*"]
+    pub fn line_join_js_string(this: &CanvasRenderingContext2d) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         setter,
@@ -467,6 +518,18 @@ extern "C" {
     pub fn shadow_color(this: &CanvasRenderingContext2d) -> ::alloc::string::String;
     #[wasm_bindgen(
         method,
+        getter,
+        js_class = "CanvasRenderingContext2D",
+        js_name = "shadowColor"
+    )]
+    #[doc = "Like `shadow_color()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/shadowColor)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CanvasRenderingContext2d`*"]
+    pub fn shadow_color_js_string(this: &CanvasRenderingContext2d) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
         setter,
         js_class = "CanvasRenderingContext2D",
         js_name = "shadowColor"
@@ -489,6 +552,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CanvasRenderingContext2d`*"]
     pub fn font(this: &CanvasRenderingContext2d) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "CanvasRenderingContext2D",
+        js_name = "font"
+    )]
+    #[doc = "Like `font()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/font)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CanvasRenderingContext2d`*"]
+    pub fn font_js_string(this: &CanvasRenderingContext2d) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         setter,
@@ -515,6 +590,18 @@ extern "C" {
     pub fn text_align(this: &CanvasRenderingContext2d) -> ::alloc::string::String;
     #[wasm_bindgen(
         method,
+        getter,
+        js_class = "CanvasRenderingContext2D",
+        js_name = "textAlign"
+    )]
+    #[doc = "Like `text_align()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/textAlign)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CanvasRenderingContext2d`*"]
+    pub fn text_align_js_string(this: &CanvasRenderingContext2d) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
         setter,
         js_class = "CanvasRenderingContext2D",
         js_name = "textAlign"
@@ -537,6 +624,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CanvasRenderingContext2d`*"]
     pub fn text_baseline(this: &CanvasRenderingContext2d) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "CanvasRenderingContext2D",
+        js_name = "textBaseline"
+    )]
+    #[doc = "Like `text_baseline()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/textBaseline)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CanvasRenderingContext2d`*"]
+    pub fn text_baseline_js_string(this: &CanvasRenderingContext2d) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         setter,

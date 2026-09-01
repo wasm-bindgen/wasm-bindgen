@@ -25,6 +25,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CompositionEvent`*"]
     pub fn data(this: &CompositionEvent) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "CompositionEvent", js_name = "data")]
+    #[doc = "Like `data()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent/data)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CompositionEvent`*"]
+    pub fn data_js_string(this: &CompositionEvent) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, getter, js_class = "CompositionEvent", js_name = "locale")]
     #[doc = "Getter for the `locale` field of this object."]
     #[doc = ""]
@@ -32,6 +39,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CompositionEvent`*"]
     pub fn locale(this: &CompositionEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "CompositionEvent", js_name = "locale")]
+    #[doc = "Like `locale()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent/locale)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CompositionEvent`*"]
+    pub fn locale_js_string(this: &CompositionEvent) -> ::js_sys::JsString;
     #[wasm_bindgen(catch, constructor, js_class = "CompositionEvent")]
     #[doc = "The `new CompositionEvent(..)` constructor, creating a new instance of `CompositionEvent`."]
     #[doc = ""]

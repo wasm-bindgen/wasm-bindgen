@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcCodecStats`*"]
     #[wasm_bindgen(method, getter = "id")]
     pub fn get_id(this: &RtcCodecStats) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcCodecStats`*"]
+    #[wasm_bindgen(method, getter = "id")]
+    pub fn get_id_js_string(this: &RtcCodecStats) -> Option<::js_sys::JsString>;
     #[doc = "Change the `id` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcCodecStats`*"]
@@ -67,6 +72,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcCodecStats`*"]
     #[wasm_bindgen(method, getter = "codec")]
     pub fn get_codec(this: &RtcCodecStats) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_codec()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcCodecStats`*"]
+    #[wasm_bindgen(method, getter = "codec")]
+    pub fn get_codec_js_string(this: &RtcCodecStats) -> Option<::js_sys::JsString>;
     #[doc = "Change the `codec` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcCodecStats`*"]
@@ -77,6 +87,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcCodecStats`*"]
     #[wasm_bindgen(method, getter = "parameters")]
     pub fn get_parameters(this: &RtcCodecStats) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_parameters()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcCodecStats`*"]
+    #[wasm_bindgen(method, getter = "parameters")]
+    pub fn get_parameters_js_string(this: &RtcCodecStats) -> Option<::js_sys::JsString>;
     #[doc = "Change the `parameters` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcCodecStats`*"]

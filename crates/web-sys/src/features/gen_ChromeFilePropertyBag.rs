@@ -35,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ChromeFilePropertyBag`*"]
     #[wasm_bindgen(method, getter = "type")]
     pub fn get_type(this: &ChromeFilePropertyBag) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ChromeFilePropertyBag`*"]
+    #[wasm_bindgen(method, getter = "type")]
+    pub fn get_type_js_string(this: &ChromeFilePropertyBag) -> Option<::js_sys::JsString>;
     #[doc = "Change the `type` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ChromeFilePropertyBag`*"]
@@ -55,6 +60,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ChromeFilePropertyBag`*"]
     #[wasm_bindgen(method, getter = "name")]
     pub fn get_name(this: &ChromeFilePropertyBag) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ChromeFilePropertyBag`*"]
+    #[wasm_bindgen(method, getter = "name")]
+    pub fn get_name_js_string(this: &ChromeFilePropertyBag) -> Option<::js_sys::JsString>;
     #[doc = "Change the `name` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ChromeFilePropertyBag`*"]

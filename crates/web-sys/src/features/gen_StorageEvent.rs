@@ -24,6 +24,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StorageEvent`*"]
     pub fn key(this: &StorageEvent) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "StorageEvent", js_name = "key")]
+    #[doc = "Like `key()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/StorageEvent/key)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `StorageEvent`*"]
+    pub fn key_js_string(this: &StorageEvent) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, getter, js_class = "StorageEvent", js_name = "oldValue")]
     #[doc = "Getter for the `oldValue` field of this object."]
     #[doc = ""]
@@ -31,6 +38,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StorageEvent`*"]
     pub fn old_value(this: &StorageEvent) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "StorageEvent", js_name = "oldValue")]
+    #[doc = "Like `old_value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/StorageEvent/oldValue)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `StorageEvent`*"]
+    pub fn old_value_js_string(this: &StorageEvent) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, getter, js_class = "StorageEvent", js_name = "newValue")]
     #[doc = "Getter for the `newValue` field of this object."]
     #[doc = ""]
@@ -38,6 +52,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StorageEvent`*"]
     pub fn new_value(this: &StorageEvent) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "StorageEvent", js_name = "newValue")]
+    #[doc = "Like `new_value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/StorageEvent/newValue)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `StorageEvent`*"]
+    pub fn new_value_js_string(this: &StorageEvent) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, getter, js_class = "StorageEvent", js_name = "url")]
     #[doc = "Getter for the `url` field of this object."]
     #[doc = ""]
@@ -45,6 +66,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `StorageEvent`*"]
     pub fn url(this: &StorageEvent) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "StorageEvent", js_name = "url")]
+    #[doc = "Like `url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/StorageEvent/url)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `StorageEvent`*"]
+    pub fn url_js_string(this: &StorageEvent) -> Option<::js_sys::JsString>;
     #[cfg(feature = "Storage")]
     #[wasm_bindgen(method, getter, js_class = "StorageEvent", js_name = "storageArea")]
     #[doc = "Getter for the `storageArea` field of this object."]

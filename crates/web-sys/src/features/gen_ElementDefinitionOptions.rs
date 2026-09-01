@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ElementDefinitionOptions`*"]
     #[wasm_bindgen(method, getter = "extends")]
     pub fn get_extends(this: &ElementDefinitionOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_extends()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ElementDefinitionOptions`*"]
+    #[wasm_bindgen(method, getter = "extends")]
+    pub fn get_extends_js_string(this: &ElementDefinitionOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `extends` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ElementDefinitionOptions`*"]

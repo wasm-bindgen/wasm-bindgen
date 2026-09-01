@@ -34,6 +34,13 @@ pub mod css {
         #[doc = ""]
         #[doc = "*This API requires the following crate features to be activated: `css`*"]
         pub fn escape(ident: &str) -> ::alloc::string::String;
+        #[wasm_bindgen(js_namespace = "CSS", js_name = "escape")]
+        #[doc = "Like `escape()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+        #[doc = ""]
+        #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSS/escape)"]
+        #[doc = ""]
+        #[doc = "*This API requires the following crate features to be activated: `css`*"]
+        pub fn escape_js_string(ident: &str) -> ::js_sys::JsString;
         #[wasm_bindgen(catch, js_namespace = "CSS", js_name = "supports")]
         #[doc = "The `CSS.supports()` function."]
         #[doc = ""]

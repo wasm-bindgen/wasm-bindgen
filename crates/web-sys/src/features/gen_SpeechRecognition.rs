@@ -40,6 +40,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SpeechRecognition`*"]
     pub fn lang(this: &SpeechRecognition) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "SpeechRecognition", js_name = "lang")]
+    #[doc = "Like `lang()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition/lang)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechRecognition`*"]
+    pub fn lang_js_string(this: &SpeechRecognition) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "SpeechRecognition", js_name = "lang")]
     #[doc = "Setter for the `lang` field of this object."]
     #[doc = ""]
@@ -134,6 +141,19 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SpeechRecognition`*"]
     pub fn service_uri(this: &SpeechRecognition) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        getter,
+        js_class = "SpeechRecognition",
+        js_name = "serviceURI"
+    )]
+    #[doc = "Like `service_uri()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition/serviceURI)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechRecognition`*"]
+    pub fn service_uri_js_string(this: &SpeechRecognition) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(
         catch,
         method,

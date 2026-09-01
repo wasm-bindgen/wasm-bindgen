@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpTransceiver`*"]
     pub fn mid(this: &RtcRtpTransceiver) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "RTCRtpTransceiver", js_name = "mid")]
+    #[doc = "Like `mid()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpTransceiver/mid)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcRtpTransceiver`*"]
+    pub fn mid_js_string(this: &RtcRtpTransceiver) -> Option<::js_sys::JsString>;
     #[cfg(feature = "RtcRtpSender")]
     #[wasm_bindgen(method, getter, js_class = "RTCRtpTransceiver", js_name = "sender")]
     #[doc = "Getter for the `sender` field of this object."]
@@ -82,6 +89,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpTransceiver`*"]
     pub fn get_remote_track_id(this: &RtcRtpTransceiver) -> ::alloc::string::String;
+    #[wasm_bindgen(method, js_class = "RTCRtpTransceiver", js_name = "getRemoteTrackId")]
+    #[doc = "Like `get_remote_track_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpTransceiver/getRemoteTrackId)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcRtpTransceiver`*"]
+    pub fn get_remote_track_id_js_string(this: &RtcRtpTransceiver) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         js_class = "RTCRtpTransceiver",

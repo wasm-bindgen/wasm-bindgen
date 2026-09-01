@@ -32,6 +32,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaKeySession`*"]
     pub fn session_id(this: &MediaKeySession) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "MediaKeySession", js_name = "sessionId")]
+    #[doc = "Like `session_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaKeySession/sessionId)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaKeySession`*"]
+    pub fn session_id_js_string(this: &MediaKeySession) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "MediaKeySession", js_name = "expiration")]
     #[doc = "Getter for the `expiration` field of this object."]
     #[doc = ""]

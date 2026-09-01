@@ -24,6 +24,17 @@ extern "C" {
     #[wasm_bindgen(method, getter = "featureLevel")]
     pub fn get_feature_level(this: &GpuRequestAdapterOptions) -> Option<::alloc::string::String>;
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Like `get_feature_level()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuRequestAdapterOptions`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "featureLevel")]
+    pub fn get_feature_level_js_string(
+        this: &GpuRequestAdapterOptions,
+    ) -> Option<::js_sys::JsString>;
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `featureLevel` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `GpuRequestAdapterOptions`*"]

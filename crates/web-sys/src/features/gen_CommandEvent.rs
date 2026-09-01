@@ -32,6 +32,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CommandEvent`*"]
     pub fn command(this: &CommandEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "CommandEvent", js_name = "command")]
+    #[doc = "Like `command()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CommandEvent/command)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CommandEvent`*"]
+    pub fn command_js_string(this: &CommandEvent) -> ::js_sys::JsString;
     #[wasm_bindgen(catch, constructor, js_class = "CommandEvent")]
     #[doc = "The `new CommandEvent(..)` constructor, creating a new instance of `CommandEvent`."]
     #[doc = ""]

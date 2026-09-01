@@ -18,6 +18,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcrtpContributingSourceStats`*"]
     #[wasm_bindgen(method, getter = "id")]
     pub fn get_id(this: &RtcrtpContributingSourceStats) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcrtpContributingSourceStats`*"]
+    #[wasm_bindgen(method, getter = "id")]
+    pub fn get_id_js_string(this: &RtcrtpContributingSourceStats) -> Option<::js_sys::JsString>;
     #[doc = "Change the `id` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcrtpContributingSourceStats`*"]
@@ -62,6 +67,13 @@ extern "C" {
     pub fn get_inbound_rtp_stream_id(
         this: &RtcrtpContributingSourceStats,
     ) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_inbound_rtp_stream_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcrtpContributingSourceStats`*"]
+    #[wasm_bindgen(method, getter = "inboundRtpStreamId")]
+    pub fn get_inbound_rtp_stream_id_js_string(
+        this: &RtcrtpContributingSourceStats,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `inboundRtpStreamId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcrtpContributingSourceStats`*"]

@@ -19,6 +19,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Exception`*"]
     pub fn name(this: &Exception) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Exception", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Exception/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Exception`*"]
+    pub fn name_js_string(this: &Exception) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "Exception", js_name = "message")]
     #[doc = "Getter for the `message` field of this object."]
     #[doc = ""]
@@ -26,6 +33,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Exception`*"]
     pub fn message(this: &Exception) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Exception", js_name = "message")]
+    #[doc = "Like `message()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Exception/message)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Exception`*"]
+    pub fn message_js_string(this: &Exception) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "Exception", js_name = "result")]
     #[doc = "Getter for the `result` field of this object."]
     #[doc = ""]
@@ -40,6 +54,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Exception`*"]
     pub fn filename(this: &Exception) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Exception", js_name = "filename")]
+    #[doc = "Like `filename()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Exception/filename)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Exception`*"]
+    pub fn filename_js_string(this: &Exception) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "Exception", js_name = "lineNumber")]
     #[doc = "Getter for the `lineNumber` field of this object."]
     #[doc = ""]
@@ -68,4 +89,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Exception`*"]
     pub fn stack(this: &Exception) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Exception", js_name = "stack")]
+    #[doc = "Like `stack()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Exception/stack)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Exception`*"]
+    pub fn stack_js_string(this: &Exception) -> ::js_sys::JsString;
 }

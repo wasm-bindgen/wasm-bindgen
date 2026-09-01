@@ -27,6 +27,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlFrameSetElement`*"]
     pub fn cols(this: &HtmlFrameSetElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLFrameSetElement", js_name = "cols")]
+    #[doc = "Like `cols()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFrameSetElement/cols)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFrameSetElement`*"]
+    pub fn cols_js_string(this: &HtmlFrameSetElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLFrameSetElement", js_name = "cols")]
     #[doc = "Setter for the `cols` field of this object."]
     #[doc = ""]
@@ -41,6 +48,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlFrameSetElement`*"]
     pub fn rows(this: &HtmlFrameSetElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLFrameSetElement", js_name = "rows")]
+    #[doc = "Like `rows()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFrameSetElement/rows)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFrameSetElement`*"]
+    pub fn rows_js_string(this: &HtmlFrameSetElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLFrameSetElement", js_name = "rows")]
     #[doc = "Setter for the `rows` field of this object."]
     #[doc = ""]

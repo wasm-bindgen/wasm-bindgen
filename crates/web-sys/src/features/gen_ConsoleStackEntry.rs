@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleStackEntry`*"]
     #[wasm_bindgen(method, getter = "asyncCause")]
     pub fn get_async_cause(this: &ConsoleStackEntry) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_async_cause()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleStackEntry`*"]
+    #[wasm_bindgen(method, getter = "asyncCause")]
+    pub fn get_async_cause_js_string(this: &ConsoleStackEntry) -> Option<::js_sys::JsString>;
     #[doc = "Change the `asyncCause` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleStackEntry`*"]
@@ -35,6 +40,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleStackEntry`*"]
     #[wasm_bindgen(method, getter = "filename")]
     pub fn get_filename(this: &ConsoleStackEntry) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_filename()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleStackEntry`*"]
+    #[wasm_bindgen(method, getter = "filename")]
+    pub fn get_filename_js_string(this: &ConsoleStackEntry) -> Option<::js_sys::JsString>;
     #[doc = "Change the `filename` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleStackEntry`*"]
@@ -45,6 +55,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleStackEntry`*"]
     #[wasm_bindgen(method, getter = "functionName")]
     pub fn get_function_name(this: &ConsoleStackEntry) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_function_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleStackEntry`*"]
+    #[wasm_bindgen(method, getter = "functionName")]
+    pub fn get_function_name_js_string(this: &ConsoleStackEntry) -> Option<::js_sys::JsString>;
     #[doc = "Change the `functionName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleStackEntry`*"]

@@ -55,6 +55,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryEventInit`*"]
     #[wasm_bindgen(method, getter = "entryType")]
     pub fn get_entry_type(this: &PerformanceEntryEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_entry_type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryEventInit`*"]
+    #[wasm_bindgen(method, getter = "entryType")]
+    pub fn get_entry_type_js_string(this: &PerformanceEntryEventInit)
+        -> Option<::js_sys::JsString>;
     #[doc = "Change the `entryType` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryEventInit`*"]
@@ -75,6 +81,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryEventInit`*"]
     #[wasm_bindgen(method, getter = "name")]
     pub fn get_name(this: &PerformanceEntryEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryEventInit`*"]
+    #[wasm_bindgen(method, getter = "name")]
+    pub fn get_name_js_string(this: &PerformanceEntryEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `name` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryEventInit`*"]
@@ -85,6 +96,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryEventInit`*"]
     #[wasm_bindgen(method, getter = "origin")]
     pub fn get_origin(this: &PerformanceEntryEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_origin()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryEventInit`*"]
+    #[wasm_bindgen(method, getter = "origin")]
+    pub fn get_origin_js_string(this: &PerformanceEntryEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `origin` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PerformanceEntryEventInit`*"]

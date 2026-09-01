@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SpeechGrammar`*"]
     pub fn src(this: &SpeechGrammar) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, getter, js_class = "SpeechGrammar", js_name = "src")]
+    #[doc = "Like `src()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechGrammar/src)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechGrammar`*"]
+    pub fn src_js_string(this: &SpeechGrammar) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, setter, js_class = "SpeechGrammar", js_name = "src")]
     #[doc = "Setter for the `src` field of this object."]
     #[doc = ""]

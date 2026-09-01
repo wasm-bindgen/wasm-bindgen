@@ -25,6 +25,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SocketElement`*"]
     #[wasm_bindgen(method, getter = "host")]
     pub fn get_host(this: &SocketElement) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_host()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SocketElement`*"]
+    #[wasm_bindgen(method, getter = "host")]
+    pub fn get_host_js_string(this: &SocketElement) -> Option<::js_sys::JsString>;
     #[doc = "Change the `host` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SocketElement`*"]

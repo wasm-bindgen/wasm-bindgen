@@ -45,6 +45,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AnimationEventInit`*"]
     #[wasm_bindgen(method, getter = "animationName")]
     pub fn get_animation_name(this: &AnimationEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_animation_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AnimationEventInit`*"]
+    #[wasm_bindgen(method, getter = "animationName")]
+    pub fn get_animation_name_js_string(this: &AnimationEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `animationName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AnimationEventInit`*"]
@@ -65,6 +70,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `AnimationEventInit`*"]
     #[wasm_bindgen(method, getter = "pseudoElement")]
     pub fn get_pseudo_element(this: &AnimationEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_pseudo_element()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AnimationEventInit`*"]
+    #[wasm_bindgen(method, getter = "pseudoElement")]
+    pub fn get_pseudo_element_js_string(this: &AnimationEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `pseudoElement` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AnimationEventInit`*"]

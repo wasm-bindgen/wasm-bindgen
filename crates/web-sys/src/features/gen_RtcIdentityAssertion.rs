@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityAssertion`*"]
     #[wasm_bindgen(method, getter = "idp")]
     pub fn get_idp(this: &RtcIdentityAssertion) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_idp()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIdentityAssertion`*"]
+    #[wasm_bindgen(method, getter = "idp")]
+    pub fn get_idp_js_string(this: &RtcIdentityAssertion) -> Option<::js_sys::JsString>;
     #[doc = "Change the `idp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityAssertion`*"]
@@ -25,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityAssertion`*"]
     #[wasm_bindgen(method, getter = "name")]
     pub fn get_name(this: &RtcIdentityAssertion) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIdentityAssertion`*"]
+    #[wasm_bindgen(method, getter = "name")]
+    pub fn get_name_js_string(this: &RtcIdentityAssertion) -> Option<::js_sys::JsString>;
     #[doc = "Change the `name` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityAssertion`*"]

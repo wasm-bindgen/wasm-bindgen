@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RsaOtherPrimesInfo`*"]
     #[wasm_bindgen(method, getter = "d")]
     pub fn get_d(this: &RsaOtherPrimesInfo) -> ::alloc::string::String;
+    #[doc = "Like `get_d()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RsaOtherPrimesInfo`*"]
+    #[wasm_bindgen(method, getter = "d")]
+    pub fn get_d_js_string(this: &RsaOtherPrimesInfo) -> ::js_sys::JsString;
     #[doc = "Change the `d` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RsaOtherPrimesInfo`*"]
@@ -25,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RsaOtherPrimesInfo`*"]
     #[wasm_bindgen(method, getter = "r")]
     pub fn get_r(this: &RsaOtherPrimesInfo) -> ::alloc::string::String;
+    #[doc = "Like `get_r()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RsaOtherPrimesInfo`*"]
+    #[wasm_bindgen(method, getter = "r")]
+    pub fn get_r_js_string(this: &RsaOtherPrimesInfo) -> ::js_sys::JsString;
     #[doc = "Change the `r` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RsaOtherPrimesInfo`*"]
@@ -35,6 +45,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RsaOtherPrimesInfo`*"]
     #[wasm_bindgen(method, getter = "t")]
     pub fn get_t(this: &RsaOtherPrimesInfo) -> ::alloc::string::String;
+    #[doc = "Like `get_t()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RsaOtherPrimesInfo`*"]
+    #[wasm_bindgen(method, getter = "t")]
+    pub fn get_t_js_string(this: &RsaOtherPrimesInfo) -> ::js_sys::JsString;
     #[doc = "Change the `t` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RsaOtherPrimesInfo`*"]

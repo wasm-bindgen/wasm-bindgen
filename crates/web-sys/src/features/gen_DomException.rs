@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomException`*"]
     pub fn name(this: &DomException) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "DOMException", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMException/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomException`*"]
+    pub fn name_js_string(this: &DomException) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "DOMException", js_name = "message")]
     #[doc = "Getter for the `message` field of this object."]
     #[doc = ""]
@@ -30,6 +37,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomException`*"]
     pub fn message(this: &DomException) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "DOMException", js_name = "message")]
+    #[doc = "Like `message()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMException/message)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomException`*"]
+    pub fn message_js_string(this: &DomException) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "DOMException", js_name = "code")]
     #[doc = "Getter for the `code` field of this object."]
     #[doc = ""]
@@ -51,6 +65,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomException`*"]
     pub fn filename(this: &DomException) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "DOMException", js_name = "filename")]
+    #[doc = "Like `filename()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMException/filename)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomException`*"]
+    pub fn filename_js_string(this: &DomException) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "DOMException", js_name = "lineNumber")]
     #[doc = "Getter for the `lineNumber` field of this object."]
     #[doc = ""]
@@ -79,6 +100,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomException`*"]
     pub fn stack(this: &DomException) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "DOMException", js_name = "stack")]
+    #[doc = "Like `stack()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMException/stack)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomException`*"]
+    pub fn stack_js_string(this: &DomException) -> ::js_sys::JsString;
     #[wasm_bindgen(catch, constructor, js_class = "DOMException")]
     #[doc = "The `new DomException(..)` constructor, creating a new instance of `DomException`."]
     #[doc = ""]

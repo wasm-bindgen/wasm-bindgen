@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaList`*"]
     pub fn media_text(this: &MediaList) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "MediaList", js_name = "mediaText")]
+    #[doc = "Like `media_text()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaList/mediaText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaList`*"]
+    pub fn media_text_js_string(this: &MediaList) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "MediaList", js_name = "mediaText")]
     #[doc = "Setter for the `mediaText` field of this object."]
     #[doc = ""]
@@ -58,10 +65,24 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaList`*"]
     pub fn item(this: &MediaList, index: u32) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, js_class = "MediaList", js_name = "item")]
+    #[doc = "Like `item()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaList/item)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaList`*"]
+    pub fn item_js_string(this: &MediaList, index: u32) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, js_class = "MediaList", indexing_getter)]
     #[doc = "Indexing getter. As in the literal Javascript `this[key]`."]
     #[doc = ""]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaList`*"]
     pub fn get(this: &MediaList, index: u32) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, js_class = "MediaList", indexing_getter)]
+    #[doc = "Like `get()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaList/get)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaList`*"]
+    pub fn get_js_string(this: &MediaList, index: u32) -> Option<::js_sys::JsString>;
 }

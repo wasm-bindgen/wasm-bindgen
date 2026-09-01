@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityValidationResult`*"]
     #[wasm_bindgen(method, getter = "contents")]
     pub fn get_contents(this: &RtcIdentityValidationResult) -> ::alloc::string::String;
+    #[doc = "Like `get_contents()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIdentityValidationResult`*"]
+    #[wasm_bindgen(method, getter = "contents")]
+    pub fn get_contents_js_string(this: &RtcIdentityValidationResult) -> ::js_sys::JsString;
     #[doc = "Change the `contents` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityValidationResult`*"]
@@ -25,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityValidationResult`*"]
     #[wasm_bindgen(method, getter = "identity")]
     pub fn get_identity(this: &RtcIdentityValidationResult) -> ::alloc::string::String;
+    #[doc = "Like `get_identity()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIdentityValidationResult`*"]
+    #[wasm_bindgen(method, getter = "identity")]
+    pub fn get_identity_js_string(this: &RtcIdentityValidationResult) -> ::js_sys::JsString;
     #[doc = "Change the `identity` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIdentityValidationResult`*"]

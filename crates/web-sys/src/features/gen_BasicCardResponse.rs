@@ -27,6 +27,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
     #[wasm_bindgen(method, getter = "cardNumber")]
     pub fn get_card_number(this: &BasicCardResponse) -> ::alloc::string::String;
+    #[doc = "Like `get_card_number()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
+    #[wasm_bindgen(method, getter = "cardNumber")]
+    pub fn get_card_number_js_string(this: &BasicCardResponse) -> ::js_sys::JsString;
     #[doc = "Change the `cardNumber` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
@@ -37,6 +42,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
     #[wasm_bindgen(method, getter = "cardSecurityCode")]
     pub fn get_card_security_code(this: &BasicCardResponse) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_card_security_code()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
+    #[wasm_bindgen(method, getter = "cardSecurityCode")]
+    pub fn get_card_security_code_js_string(this: &BasicCardResponse)
+        -> Option<::js_sys::JsString>;
     #[doc = "Change the `cardSecurityCode` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
@@ -47,6 +58,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
     #[wasm_bindgen(method, getter = "cardholderName")]
     pub fn get_cardholder_name(this: &BasicCardResponse) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_cardholder_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
+    #[wasm_bindgen(method, getter = "cardholderName")]
+    pub fn get_cardholder_name_js_string(this: &BasicCardResponse) -> Option<::js_sys::JsString>;
     #[doc = "Change the `cardholderName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
@@ -57,6 +73,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
     #[wasm_bindgen(method, getter = "expiryMonth")]
     pub fn get_expiry_month(this: &BasicCardResponse) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_expiry_month()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
+    #[wasm_bindgen(method, getter = "expiryMonth")]
+    pub fn get_expiry_month_js_string(this: &BasicCardResponse) -> Option<::js_sys::JsString>;
     #[doc = "Change the `expiryMonth` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
@@ -67,6 +88,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
     #[wasm_bindgen(method, getter = "expiryYear")]
     pub fn get_expiry_year(this: &BasicCardResponse) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_expiry_year()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
+    #[wasm_bindgen(method, getter = "expiryYear")]
+    pub fn get_expiry_year_js_string(this: &BasicCardResponse) -> Option<::js_sys::JsString>;
     #[doc = "Change the `expiryYear` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `BasicCardResponse`*"]
