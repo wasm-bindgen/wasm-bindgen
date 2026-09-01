@@ -90,6 +90,37 @@ Relaxed bounds are the exception: `T: ?Sized` is not supported on any
 `wasm-bindgen` generic — erased or per-monomorphisation — and is reported as
 `unsupported in wasm-bindgen generics`.
 
+### String bounds
+
+For imports that take or return a JS string, the `wasm_bindgen::JsStringLike`
+and `wasm_bindgen::JsStringLikeOwn` marker traits name the set of string shapes
+directly:
+
+```rust
+use wasm_bindgen::{JsStringLike, JsStringLikeOwn};
+
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn set_title<T: JsStringLike>(title: T);
+
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn get_title<T: JsStringLikeOwn>() -> T;
+}
+```
+
+`JsStringLike` is implemented for `String`, `&str`, `js_sys::JsString` and
+`&js_sys::JsString`, so a caller can pass whichever it already holds and each
+monomorphisation crosses at that shape's native wire format — UTF-8 buffers
+for the Rust strings, a handle for `JsString` — all arriving in JS as a
+string value. `JsStringLikeOwn` is the owned subset — `String` (copied out of
+the JS string) and `js_sys::JsString` (a handle, no copy) — which is what can
+travel in every direction, so it is the bound for return positions and for
+sequence elements. Nullable positions work under both bounds (`Option<T>` in
+either direction), since the traits carry the `Option` ABI traits as
+supertraits. Both traits are open: implementing one for your own
+`#[wasm_bindgen]`-imported type is a promise that it marshals as a JS string.
+
 ## `impl Trait` arguments
 
 Argument-position `impl Trait` is supported. It is desugared into a synthesized

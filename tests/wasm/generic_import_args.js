@@ -45,6 +45,14 @@ exports.describeAny = function (x) {
   return typeof x + ":" + x;
 };
 
+exports.describeStr = function (s) {
+  return typeof s + ":" + s;
+};
+
+exports.makeStr = function () {
+  return "made";
+};
+
 exports.sumSlice = function (xs) {
   let total = 0;
   for (const v of xs) {
