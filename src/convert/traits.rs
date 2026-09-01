@@ -644,3 +644,37 @@ impl<T: IntoJsGeneric + Clone> IntoJsGeneric for &T {
 // and prevent wrapper types from canonicalising to a different target.
 // Instead, implementations are provided explicitly by each owning crate
 // (macro-generated for user types; hand-written for `js_sys` containers).
+
+/// Marker for types that cross the ABI as a JavaScript string.
+///
+/// Use as a bound on an `experimental_generic_mono` import's type parameter to
+/// accept any Rust or JS string shape, each at its native wire format:
+/// `String` and `&str` cross as UTF-8 buffers, `js_sys::JsString` and
+/// `&js_sys::JsString` as handles — all arriving in JS as a string value.
+///
+/// Implementing this trait for a type is a promise that its `IntoWasmAbi`
+/// conversion produces a JS string on the other side, as is the case for
+/// `#[wasm_bindgen]`-imported extern types of JS strings.
+///
+/// `OptionIntoWasmAbi` is a supertrait so that nullable string positions
+/// (`Option<T>`) work under the same bound.
+pub trait JsStringLike: IntoWasmAbi + OptionIntoWasmAbi {}
+
+impl JsStringLike for alloc::string::String {}
+impl JsStringLike for &str {}
+
+/// Marker for the owned [`JsStringLike`] shapes: `String` and
+/// `js_sys::JsString`.
+///
+/// The owned subset is what can travel in every direction: received back from
+/// JS (a return the caller chooses to take as an owned Rust `String` copy or
+/// a `js_sys::JsString` handle), and carried as sequence elements through the
+/// vector ABI. Borrowed shapes (`&str`, `&js_sys::JsString`) have no place
+/// here, so the `FromWasmAbi`, `OptionFromWasmAbi` and `Vector*WasmAbi`
+/// supertraits are all satisfiable.
+pub trait JsStringLikeOwn:
+    JsStringLike + FromWasmAbi + OptionFromWasmAbi + VectorIntoWasmAbi + VectorFromWasmAbi
+{
+}
+
+impl JsStringLikeOwn for alloc::string::String {}

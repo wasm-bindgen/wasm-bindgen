@@ -9873,6 +9873,10 @@ impl UpcastFrom<JsString> for &str {}
 impl UpcastFrom<char> for JsString {}
 impl UpcastFrom<JsString> for char {}
 
+impl wasm_bindgen::JsStringLike for JsString {}
+impl wasm_bindgen::JsStringLike for &JsString {}
+impl wasm_bindgen::JsStringLikeOwn for JsString {}
+
 impl JsString {
     /// Returns the `JsString` value of this JS value if it's an instance of a
     /// string.
