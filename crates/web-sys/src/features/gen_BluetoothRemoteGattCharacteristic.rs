@@ -307,7 +307,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_value_with_u8_slice(
         this: &BluetoothRemoteGattCharacteristic,
-        value: &mut [u8],
+        value: &[u8],
     ) -> Result<::js_sys::Promise<::js_sys::Undefined>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(
@@ -364,7 +364,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_value_with_response_with_u8_slice(
         this: &BluetoothRemoteGattCharacteristic,
-        value: &mut [u8],
+        value: &[u8],
     ) -> Result<::js_sys::Promise<::js_sys::Undefined>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(
@@ -421,7 +421,7 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn write_value_without_response_with_u8_slice(
         this: &BluetoothRemoteGattCharacteristic,
-        value: &mut [u8],
+        value: &[u8],
     ) -> Result<::js_sys::Promise<::js_sys::Undefined>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(

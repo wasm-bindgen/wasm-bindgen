@@ -328,7 +328,7 @@ extern "C" {
     pub fn control_transfer_out_with_u8_slice(
         this: &UsbDevice,
         setup: &UsbControlTransferParameters,
-        data: &mut [u8],
+        data: &[u8],
     ) -> Result<::js_sys::Promise<UsbOutTransferResult>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(all(
@@ -417,7 +417,7 @@ extern "C" {
     pub fn isochronous_transfer_out_with_u8_slice(
         this: &UsbDevice,
         endpoint_number: u8,
-        data: &mut [u8],
+        data: &[u8],
         packet_lengths: &[::js_sys::Number],
     ) -> Result<::js_sys::Promise<UsbIsochronousOutTransferResult>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
@@ -553,7 +553,7 @@ extern "C" {
     pub fn transfer_out_with_u8_slice(
         this: &UsbDevice,
         endpoint_number: u8,
-        data: &mut [u8],
+        data: &[u8],
     ) -> Result<::js_sys::Promise<UsbOutTransferResult>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "UsbOutTransferResult")]

@@ -113,6 +113,14 @@ pub(crate) static IMMUTABLE_SLICE_WHITELIST: Lazy<BTreeSet<&'static str>> = Lazy
         "setImmediates",
         "writeBuffer",
         "writeTexture",
+        // Bluetooth
+        "writeValue",
+        "writeValueWithResponse",
+        "writeValueWithoutResponse",
+        // WebUSB
+        "controlTransferOut",
+        "isochronousTransferOut",
+        "transferOut",
         // AudioBuffer
         "copyToChannel",
         // FontFace
@@ -128,6 +136,18 @@ pub(crate) static IMMUTABLE_SLICE_WHITELIST: Lazy<BTreeSet<&'static str>> = Lazy
         "verify",
         // TextDecoder
         "decode",
+        // Further read-only candidates in stable APIs, held back as breaking
+        // signature changes for the next major version: appendBuffer /
+        // appendBufferAsync (SourceBuffer), generateRequest / update
+        // (MediaKeySession), setServerCertificate (MediaKeys), get / has
+        // (MediaKeyStatusMap), sendBeacon (Navigator), createPeriodicWave
+        // (BaseAudioContext), setValueCurveAtTime (AudioParam),
+        // vertexAttribI4iv / vertexAttribI4uiv (WebGL2), multiDraw*WEBGL
+        // (WEBGL_multi_draw).
+        //
+        // sendReport / sendFeatureReport (WebHID) are excluded: the spec
+        // references `data` inside its in-parallel steps without a
+        // synchronous copy step, so a synchronous read is not guaranteed.
     ])
 });
 

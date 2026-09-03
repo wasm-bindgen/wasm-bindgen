@@ -72,6 +72,11 @@
 * Changed WebGPU `setImmediates` APIs to take immutable u8 slice.
   [#5289](https://github.com/wasm-bindgen/wasm-bindgen/pull/5289)
 
+* Changed Web Bluetooth `writeValue` / `writeValueWithResponse` /
+  `writeValueWithoutResponse` and WebUSB `controlTransferOut` / `transferOut`
+  / `isochronousTransferOut` APIs to take immutable u8 slices.
+  [#5309](https://github.com/wasm-bindgen/wasm-bindgen/pull/5309)
+
 * Emscripten glue no longer reads `wasmExports['name']` inline inside inner
   functions. It now references the asmjs-mangled identifiers emcc's own
   top-level `assignWasmExports` receiving code binds for every wasm export
