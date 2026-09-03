@@ -145,7 +145,7 @@ mod externref;
 use externref::__wbindgen_externref_heap_live_count;
 
 pub use crate::__rt::marker::ErasableGeneric;
-pub use crate::convert::{IntoJsGeneric, JsGeneric, JsStringLike, JsStringLikeOwn};
+pub use crate::convert::{IntoJsGeneric, JsGeneric, JsStringLike};
 
 #[doc(hidden)]
 pub mod handler;

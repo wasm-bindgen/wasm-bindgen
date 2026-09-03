@@ -31,11 +31,10 @@
   [#5230](https://github.com/wasm-bindgen/wasm-bindgen/pull/5230)
   [#5272](https://github.com/wasm-bindgen/wasm-bindgen/pull/5272)
 
-* Added `JsStringLike` and `JsStringLikeOwn` marker traits — implemented for
-  `String`/`&str` (and `js_sys::JsString`/`&js_sys::JsString` in `js-sys`),
-  with `JsStringLikeOwn` as the owned subset — as bounds for
-  `experimental_generic_mono` imports that accept or return any string shape
-  at its native wire format.
+* Added the experimental `JsStringLike` marker trait — implemented for
+  `String`/`&str` (and `js_sys::JsString`/`&js_sys::JsString` in `js-sys`) —
+  as a bound for `experimental_generic_mono` imports that accept any string
+  shape at its native wire format.
 
 * Added an experimental `--experimental-memory-discard` flag which replaces an
   `env.__wbindgen_memory_discard` function import with a local trampoline

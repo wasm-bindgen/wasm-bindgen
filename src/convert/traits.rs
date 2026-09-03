@@ -658,23 +658,10 @@ impl<T: IntoJsGeneric + Clone> IntoJsGeneric for &T {
 ///
 /// `OptionIntoWasmAbi` is a supertrait so that nullable string positions
 /// (`Option<T>`) work under the same bound.
+///
+/// This trait is experimental, like `experimental_generic_mono` itself, and
+/// may change or be removed as that feature stabilizes.
 pub trait JsStringLike: IntoWasmAbi + OptionIntoWasmAbi {}
 
 impl JsStringLike for alloc::string::String {}
 impl JsStringLike for &str {}
-
-/// Marker for the owned [`JsStringLike`] shapes: `String` and
-/// `js_sys::JsString`.
-///
-/// The owned subset is what can travel in every direction: received back from
-/// JS (a return the caller chooses to take as an owned Rust `String` copy or
-/// a `js_sys::JsString` handle), and carried as sequence elements through the
-/// vector ABI. Borrowed shapes (`&str`, `&js_sys::JsString`) have no place
-/// here, so the `FromWasmAbi`, `OptionFromWasmAbi` and `Vector*WasmAbi`
-/// supertraits are all satisfiable.
-pub trait JsStringLikeOwn:
-    JsStringLike + FromWasmAbi + OptionFromWasmAbi + VectorIntoWasmAbi + VectorFromWasmAbi
-{
-}
-
-impl JsStringLikeOwn for alloc::string::String {}

@@ -20,7 +20,7 @@
 
 use js_sys::JsString;
 use wasm_bindgen::prelude::*;
-use wasm_bindgen::{JsStringLike, JsStringLikeOwn};
+use wasm_bindgen::JsStringLike;
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen(module = "tests/wasm/generic_import_args.js")]
@@ -65,15 +65,10 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono, js_name = sumSlice)]
     fn sum_slice<T>(xs: &[T]) -> f64;
 
-    // `JsStringLike`/`JsStringLikeOwn` bounds: every string shape crosses at its
-    // native wire format (UTF-8 buffer vs handle) but must arrive in JS as a
-    // string *value*, and a JS string return must be receivable as either an
-    // owned copy or a handle.
+    // `JsStringLike` bound: every string shape crosses at its native wire
+    // format (UTF-8 buffer vs handle) but must arrive in JS as a string *value*.
     #[wasm_bindgen(experimental_generic_mono, js_name = describeStr)]
     fn describe_str<T: JsStringLike>(s: T) -> String;
-
-    #[wasm_bindgen(experimental_generic_mono, js_name = makeStr)]
-    fn make_str<T: JsStringLikeOwn>() -> T;
 }
 
 #[wasm_bindgen_test]
@@ -138,12 +133,6 @@ fn experimental_generic_mono_string_arg_bound() {
     let js = JsString::from("handle");
     assert_eq!(describe_str(&js), "string:handle");
     assert_eq!(describe_str(js), "string:handle");
-}
-
-#[wasm_bindgen_test]
-fn experimental_generic_mono_string_ret_bound() {
-    assert_eq!(make_str::<String>(), "made");
-    assert_eq!(make_str::<JsString>().to_string(), "made");
 }
 
 #[wasm_bindgen_test]
