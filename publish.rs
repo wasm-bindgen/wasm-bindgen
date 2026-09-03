@@ -43,6 +43,8 @@ const CRATES_TO_AVOID_PUBLISH: &[&str] = &[
     "msrv-cli-test",
     "msrv-library-test",
     "msrv-resolver-test",
+    "private-dedupe-a",
+    "private-dedupe-b",
 ];
 
 struct Crate {

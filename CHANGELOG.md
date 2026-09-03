@@ -5,6 +5,16 @@
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Removed
+
+## [0.2.128](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.127...0.2.128)
+
+### Added
+
 * Added `OffscreenCanvas` overloads for the WebGL `texImage2D`, `texSubImage2D`,
   `texImage3D` and `texSubImage3D` functions, matching the `TexImageSource`
   typedef in the WebGL specification.
@@ -30,6 +40,7 @@
   is experimental and may change as it stabilizes.
   [#5230](https://github.com/wasm-bindgen/wasm-bindgen/pull/5230)
   [#5272](https://github.com/wasm-bindgen/wasm-bindgen/pull/5272)
+  [#5314](https://github.com/wasm-bindgen/wasm-bindgen/pull/5314)
 
 * Added the experimental, sealed `JsStringLike` marker trait — implemented for
   `String`/`&str` (and `js_sys::JsString`/`&js_sys::JsString` in `js-sys`) —
@@ -57,6 +68,24 @@
   parameter defaults.
   [#5290](https://github.com/wasm-bindgen/wasm-bindgen/pull/5290)
 
+* Added experimental JSPI (JS Promise Integration) support: using it emits a
+  compiler warning noting the experimental status.
+  Supports `#[wasm_bindgen(jspi)]` on exports (sync or `async`), within which
+  a `#[wasm_bindgen(suspending)]` import call can suspend to the JS event
+  loop until its `Promise` settles. `js_sys::futures::jspi_block_on_promise`
+  also suspends on any `Promise` inside a synchronous function, while
+  `spawn_local` is context-aware: tasks spawned from within a JSPI context
+  support synchronous JSPI suspensions throughout their call trees.
+  Compatible with `catch` (rejections as `Err`), `async`, and
+  `panic=unwind`.
+  [#5193](https://github.com/wasm-bindgen/wasm-bindgen/pull/5193)
+
+* Added a `--ts-typed-array-buffers` CLI flag to declare owned typed-array
+  return values (e.g. `Vec<u8>`) as `Uint8Array<ArrayBuffer>` in generated
+  TypeScript, since they are always copied into a fresh, non-shared
+  `ArrayBuffer`. Requires TypeScript 5.7+.
+  [#5263](https://github.com/wasm-bindgen/wasm-bindgen/pull/5263)
+
 ### Changed
 
 * Export shim symbols are now mangled with a per-crate hash, so identically
@@ -74,6 +103,7 @@
   e.g. `js_namespace = ["a", "b"]`. The previous behavior silently dropped
   the block-level namespace.
   [#4324](https://github.com/wasm-bindgen/wasm-bindgen/issues/4324)
+
 * Changed WebGPU `setImmediates` APIs to take immutable u8 slice.
   [#5289](https://github.com/wasm-bindgen/wasm-bindgen/pull/5289)
 
@@ -170,6 +200,7 @@
   `--target no-modules`, matching the `wasm_bindgen.initSync` function that
   the JS output already exposes.
   [#5284](https://github.com/wasm-bindgen/wasm-bindgen/issues/5284)
+
 * Removed the last panicking code paths from `externref` table management:
   `RefCell::borrow_mut()` embedded panic location data (including the source
   path string) in `.rodata` of optimized builds, which not even `wasm-opt`
@@ -180,8 +211,6 @@
   for the generated JS binding and TypeScript declarations, and the name is
   validated as a JS identifier.
   [#5286](https://github.com/wasm-bindgen/wasm-bindgen/issues/5286)
-
-### Removed
 
 ## [0.2.127](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.126...0.2.127)
 
@@ -207,24 +236,6 @@
   `JsNullable<JsValue>`, so catch-all nullable closures can be used where a
   typed callback is expected.
   [#5234](https://github.com/wasm-bindgen/wasm-bindgen/issues/5234)
-
-* Added experimental JSPI (JS Promise Integration) support: using it emits a
-  compiler warning noting the experimental status.
-  Supports `#[wasm_bindgen(jspi)]` on exports (sync or `async`), within which
-  a `#[wasm_bindgen(suspending)]` import call can suspend to the JS event
-  loop until its `Promise` settles. `js_sys::futures::jspi_block_on_promise`
-  also suspends on any `Promise` inside a synchronous function, while
-  `spawn_local` is context-aware: tasks spawned from within a JSPI context
-  support synchronous JSPI suspensions throughout their call trees.
-  Compatible with `catch` (rejections as `Err`), `async`, and
-  `panic=unwind`.
-  [#5193](https://github.com/wasm-bindgen/wasm-bindgen/pull/5193)
-
-* Added a `--ts-typed-array-buffers` CLI flag to declare owned typed-array
-  return values (e.g. `Vec<u8>`) as `Uint8Array<ArrayBuffer>` in generated
-  TypeScript, since they are always copied into a fresh, non-shared
-  `ArrayBuffer`. Requires TypeScript 5.7+.
-  [#5263](https://github.com/wasm-bindgen/wasm-bindgen/pull/5263)
 
 ### Changed
 
