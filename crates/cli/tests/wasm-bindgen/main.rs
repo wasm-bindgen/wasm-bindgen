@@ -2533,6 +2533,39 @@ fn private_namespaced_classes_export_actual_ts_identifier() {
 }
 
 #[test]
+fn emscripten_shared_memory_skips_thread_transform() {
+    // In an emcc `--shared-memory` link the Emscripten runtime owns pthread
+    // bootstrap and TLS, and the synthetic `__wasm_init_tls`/`__tls_size`
+    // exports the thread transform consumes don't survive the link, so the
+    // transform must be skipped rather than failing with
+    // `failed to find __wasm_init_tls`.
+    let root = TARGET_DIR
+        .join("cli-tests")
+        .join("emscripten_shared_memory_skips_thread_transform");
+    drop(fs::remove_dir_all(&root));
+    fs::create_dir_all(&root).unwrap();
+
+    let mut module = walrus::Module::default();
+    module.add_import_memory("env", "memory", true, false, 17, Some(16384), None);
+    module.customs.add(RawCustomSection {
+        name: "__wasm_bindgen_emscripten_marker".into(),
+        data: vec![1],
+    });
+    let wasm_path = root.join("input.wasm");
+    module.emit_wasm_file(&wasm_path).unwrap();
+
+    let out_dir = root.join("pkg");
+    fs::create_dir_all(&out_dir).unwrap();
+    wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
+        "wasm-bindgen".as_ref(),
+        "--out-dir".as_ref(),
+        out_dir.as_os_str(),
+        wasm_path.as_os_str(),
+    ])
+    .unwrap();
+}
+
+#[test]
 fn emscripten_namespaced_exports_valid_ts() {
     // Covers all three TS-emission bugs for namespaced (`js_namespace`)
     // exports in emscripten output:

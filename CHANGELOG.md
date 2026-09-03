@@ -92,7 +92,7 @@
   module with shared memory and aborted the build (`failed to find
   __wasm_init_tls`), since Emscripten's linker had already consumed the
   synthetic symbols it looks for.
-  [#5314](https://github.com/wasm-bindgen/wasm-bindgen/pull/5314)
+  [#5315](https://github.com/wasm-bindgen/wasm-bindgen/pull/5315)
 
 * Fixed conflicting deprecation messages on `web-sys` dictionary fields that
   are themselves deprecated: the deprecated builder-style method no longer
