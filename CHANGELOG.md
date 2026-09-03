@@ -87,6 +87,13 @@
 
 ### Fixed
 
+* The thread-bootstrap transform is now skipped in Emscripten mode, where the
+  Emscripten runtime owns pthread startup and TLS. It previously ran on any
+  module with shared memory and aborted the build (`failed to find
+  __wasm_init_tls`), since Emscripten's linker had already consumed the
+  synthetic symbols it looks for.
+  [#5315](https://github.com/wasm-bindgen/wasm-bindgen/pull/5315)
+
 * Fixed conflicting deprecation messages on `web-sys` dictionary fields that
   are themselves deprecated: the deprecated builder-style method no longer
   points at an equally-deprecated setter, and the WebAuthn fields removed from
