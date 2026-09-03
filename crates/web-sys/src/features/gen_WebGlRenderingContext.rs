@@ -572,6 +572,27 @@ extern "C" {
         type_: u32,
         video: &HtmlVideoElement,
     ) -> Result<(), JsValue>;
+    #[cfg(feature = "OffscreenCanvas")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGLRenderingContext",
+        js_name = "texImage2D"
+    )]
+    #[doc = "The `texImage2D()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `OffscreenCanvas`, `WebGlRenderingContext`*"]
+    pub fn tex_image_2d_with_u32_and_u32_and_offscreen_canvas(
+        this: &WebGlRenderingContext,
+        target: u32,
+        level: i32,
+        internalformat: i32,
+        format: u32,
+        type_: u32,
+        offscreen_canvas: &OffscreenCanvas,
+    ) -> Result<(), JsValue>;
     #[cfg(feature = "VideoFrame")]
     #[wasm_bindgen(
         catch,
@@ -771,6 +792,28 @@ extern "C" {
         format: u32,
         type_: u32,
         video: &HtmlVideoElement,
+    ) -> Result<(), JsValue>;
+    #[cfg(feature = "OffscreenCanvas")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "WebGLRenderingContext",
+        js_name = "texSubImage2D"
+    )]
+    #[doc = "The `texSubImage2D()` method."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texSubImage2D)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `OffscreenCanvas`, `WebGlRenderingContext`*"]
+    pub fn tex_sub_image_2d_with_u32_and_u32_and_offscreen_canvas(
+        this: &WebGlRenderingContext,
+        target: u32,
+        level: i32,
+        xoffset: i32,
+        yoffset: i32,
+        format: u32,
+        type_: u32,
+        offscreen_canvas: &OffscreenCanvas,
     ) -> Result<(), JsValue>;
     #[cfg(feature = "VideoFrame")]
     #[wasm_bindgen(

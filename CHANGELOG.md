@@ -5,6 +5,11 @@
 
 ### Added
 
+* Added `OffscreenCanvas` overloads for the WebGL `texImage2D`, `texSubImage2D`,
+  `texImage3D` and `texSubImage3D` functions, matching the `TexImageSource`
+  typedef in the WebGL specification.
+  [#5312](https://github.com/wasm-bindgen/wasm-bindgen/pull/5312)
+
 * Added `--split-debug-info` to the CLI. This option extracts the DWARF debug
   info to a separate `*_bg.debug.wasm` file. Use `--debug-info-url` to set
   the recorded URL for the debug info. [#5279](https://github.com/wasm-bindgen/wasm-bindgen/pull/5279)

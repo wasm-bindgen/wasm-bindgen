@@ -366,6 +366,9 @@ interface mixin WebGL2RenderingContextBase
                     GLenum format, GLenum type, HTMLVideoElement source); // May throw DOMException
     [Throws]
     undefined texImage2D(GLenum target, GLint level, GLint internalformat,
+                    GLenum format, GLenum type, OffscreenCanvas source); // May throw DOMException
+    [Throws]
+    undefined texImage2D(GLenum target, GLint level, GLint internalformat,
                     GLenum format, GLenum type, VideoFrame source); // May throw DOMException
     [Throws] // Another overhead throws.
     undefined texImage2D(GLenum target, GLint level, GLint internalformat,
@@ -387,6 +390,9 @@ interface mixin WebGL2RenderingContextBase
     [Throws]
     undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLenum format, GLenum type, HTMLVideoElement source); // May throw DOMException
+    [Throws]
+    undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLenum format, GLenum type, OffscreenCanvas source); // May throw DOMException
     [Throws]
     undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLenum format, GLenum type, VideoFrame source); // May throw DOMException
@@ -413,6 +419,10 @@ interface mixin WebGL2RenderingContextBase
     undefined texImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
                     GLint border, GLenum format, GLenum type,
                     HTMLVideoElement source); // May throw DOMException
+    [Throws]
+    undefined texImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
+                    GLint border, GLenum format, GLenum type,
+                    OffscreenCanvas source); // May throw DOMException
     [Throws]
     undefined texImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
                     GLint border, GLenum format, GLenum type,
@@ -445,6 +455,10 @@ interface mixin WebGL2RenderingContextBase
     undefined texImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
                     GLsizei depth, GLint border, GLenum format, GLenum type,
                     HTMLVideoElement source); // May throw DOMException
+    [Throws]
+    undefined texImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
+                    GLsizei depth, GLint border, GLenum format, GLenum type,
+                    OffscreenCanvas source); // May throw DOMException
     [Throws]
     undefined texImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height,
                     GLsizei depth, GLint border, GLenum format, GLenum type,
@@ -483,6 +497,10 @@ interface mixin WebGL2RenderingContextBase
     [Throws]
     undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
                        GLsizei height, GLenum format, GLenum type,
+                       OffscreenCanvas source); // May throw DOMException
+    [Throws]
+    undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
+                       GLsizei height, GLenum format, GLenum type,
                        VideoFrame source); // May throw DOMException
     [Throws] // Another overhead throws.
     undefined texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
@@ -513,6 +531,10 @@ interface mixin WebGL2RenderingContextBase
     undefined texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
                        GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
                        HTMLVideoElement source); // May throw DOMException
+    [Throws]
+    undefined texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
+                       GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
+                       OffscreenCanvas source); // May throw DOMException
     [Throws]
     undefined texSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
                        GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type,
