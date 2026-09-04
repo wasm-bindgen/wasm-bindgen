@@ -1,0 +1,38 @@
+CHANGELOG.md
+  s_b34d432186975d::t_d05ba02bb955d1 38
+crates/js-sys/src/lib.rs
+  s_b34d432186975d::t_1ead0ad2bf0cd8 9878-9879,9880
+guide/src/reference/attributes/on-js-imports/experimental_generic_mono.md
+  s_b34d432186975d::t_c55ab43f7c50e3 93-94,97-99,101-105,106-112,117
+src/convert/traits.rs
+  s_b34d432186975d::t_81b0d4da0f73ca 647-654,657-659,665-667
+  s_e39bb38ebf41c0::t_09b797337d4436 655-656,663-666,668-669
+tests/wasm/generic_import_args.js
+  s_b34d432186975d::t_3c645b7832f931 52-55
+tests/wasm/generic_import_args.rs
+  s_b34d432186975d::t_b02c5c77ba1acb 21,67,70-71,126-137
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "bef37303d13ca36825557d86b20c30ff2349a3ad",
+  "prompts": {},
+  "sessions": {
+    "s_b34d432186975d": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fa1d2ff74ffea0HngPXAq2u8E3",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    },
+    "s_e39bb38ebf41c0": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f9606b0a0ffeVWaRKTS47zxh2D",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
