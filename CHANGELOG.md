@@ -98,6 +98,12 @@
 
 ### Fixed
 
+* Fixed `js-sys` failing to compile with `no_std` and the
+  `futures-core-03-stream` feature enabled, since the feature unconditionally
+  pulled in `futures-util/std`. The `std` feature of `futures-util` is now only
+  enabled by the `js-sys` `std` feature.
+  [#5322](https://github.com/wasm-bindgen/wasm-bindgen/pull/5322)
+
 * The thread-bootstrap transform is now skipped in Emscripten mode, where the
   Emscripten runtime owns pthread startup and TLS. It previously ran on any
   module with shared memory and aborted the build (`failed to find

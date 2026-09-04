@@ -92,7 +92,7 @@ jobs:
     - run: >
         cargo clippy --no-deps --no-default-features --target wasm32-unknown-unknown
         -p wasm-bindgen
-        -p js-sys
+        -p js-sys --features js-sys/futures-core-03-stream
         -p web-sys
         -p wasm-bindgen-futures
         -p wasm-bindgen-test
