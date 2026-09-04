@@ -652,16 +652,20 @@ impl<T: IntoJsGeneric + Clone> IntoJsGeneric for &T {
 /// `String` and `&str` cross as UTF-8 buffers, `js_sys::JsString` and
 /// `&js_sys::JsString` as handles — all arriving in JS as a string value.
 ///
-/// Implementing this trait for a type is a promise that its `IntoWasmAbi`
-/// conversion produces a JS string on the other side, as is the case for
-/// `#[wasm_bindgen]`-imported extern types of JS strings.
+/// This trait is sealed: it is implemented only for the string shapes above,
+/// each of which is guaranteed to produce a JS string on the other side.
 ///
 /// `OptionIntoWasmAbi` is a supertrait so that nullable string positions
 /// (`Option<T>`) work under the same bound.
 ///
 /// This trait is experimental, like `experimental_generic_mono` itself, and
 /// may change or be removed as that feature stabilizes.
-pub trait JsStringLike: IntoWasmAbi + OptionIntoWasmAbi {}
+pub trait JsStringLike:
+    IntoWasmAbi + OptionIntoWasmAbi + crate::__rt::marker::JsStringLikeSealed
+{
+}
 
+impl crate::__rt::marker::JsStringLikeSealed for alloc::string::String {}
+impl crate::__rt::marker::JsStringLikeSealed for &str {}
 impl JsStringLike for alloc::string::String {}
 impl JsStringLike for &str {}

@@ -31,7 +31,7 @@
   [#5230](https://github.com/wasm-bindgen/wasm-bindgen/pull/5230)
   [#5272](https://github.com/wasm-bindgen/wasm-bindgen/pull/5272)
 
-* Added the experimental `JsStringLike` marker trait — implemented for
+* Added the experimental, sealed `JsStringLike` marker trait — implemented for
   `String`/`&str` (and `js_sys::JsString`/`&js_sys::JsString` in `js-sys`) —
   as a bound for `experimental_generic_mono` imports that accept any string
   shape at its native wire format.

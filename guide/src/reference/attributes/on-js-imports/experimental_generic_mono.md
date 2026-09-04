@@ -112,8 +112,7 @@ monomorphisation crosses at that shape's native wire format — UTF-8 buffers
 for the Rust strings, a handle for `JsString` — all arriving in JS as a
 string value. Nullable positions work under the same bound (`Option<T>`),
 since the trait carries `OptionIntoWasmAbi` as a supertrait. The trait is
-open: implementing it for your own `#[wasm_bindgen]`-imported type is a
-promise that it marshals as a JS string. Like `experimental_generic_mono`
+sealed to exactly these string shapes. Like `experimental_generic_mono`
 itself, the trait is experimental and may change as the feature stabilizes.
 
 ## `impl Trait` arguments
