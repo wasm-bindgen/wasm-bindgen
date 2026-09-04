@@ -1,0 +1,19 @@
+src/convert/traits.rs
+  s_e39bb38ebf41c0::t_09b797337d4436 655-656,660-663,665-666
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "45b6d8fe57fd0038ead941530cce87fd82fdce6e",
+  "prompts": {},
+  "sessions": {
+    "s_e39bb38ebf41c0": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f9606b0a0ffeVWaRKTS47zxh2D",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
