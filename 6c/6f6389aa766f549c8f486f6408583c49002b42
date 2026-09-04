@@ -1,0 +1,31 @@
+crates/cli/tests/reference/crates/private-dedupe-a/src/lib.rs
+  s_dd0116796c5bb6::t_ae8fac2214ffa2 18-27
+crates/cli/tests/reference/crates/private-dedupe-b/src/lib.rs
+  s_dd0116796c5bb6::t_2f9e1b6b036d14 18-27
+crates/cli/tests/reference/private-dedupe.bg.js
+  s_dd0116796c5bb6::t_e4c2a0c2254ac1 1-16,113-142,163-167
+crates/cli/tests/reference/private-dedupe.d.ts
+  s_dd0116796c5bb6::t_91acb1d22edeb8 4-13,32-37
+crates/cli/tests/reference/private-dedupe.js
+  s_dd0116796c5bb6::t_1a87dcca359237 8
+crates/cli/tests/reference/private-dedupe.rs
+  s_dd0116796c5bb6::t_d2ef71f762d65d 18-35
+crates/cli/tests/reference/private-dedupe.wat
+  s_dd0116796c5bb6::t_5c24bd92a686f6 2-14,24-26,32-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "6c6f6389aa766f549c8f486f6408583c49002b42",
+  "prompts": {},
+  "sessions": {
+    "s_dd0116796c5bb6": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f91b894a7ffeQwL83YGFHi6U3Q",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
