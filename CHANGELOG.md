@@ -123,7 +123,8 @@
 
 * C-style `#[wasm_bindgen]` enums in `Vec<T>` / `Box<[T]>` now generate
   TypeScript and JSDoc as `EnumName[]` instead of `any[]`.
-  [#4480](https://github.com/wasm-bindgen/wasm-bindgen/issues/4480)
+  [#5321](https://github.com/wasm-bindgen/wasm-bindgen/pull/5321)
+
 * Fixed `js-sys` failing to compile with `no_std` and the
   `futures-core-03-stream` feature enabled, since the feature unconditionally
   pulled in `futures-util/std`. The `std` feature of `futures-util` is now only
