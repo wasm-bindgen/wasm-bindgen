@@ -4950,7 +4950,7 @@ impl ToTokens for ast::Enum {
         let enum_name = &self.rust_name;
         let name_str = shared::qualified_name(self.js_namespace.as_deref(), &self.js_name);
         let name_len = name_str.chars().count() as u32;
-        let name_chars = name_str.chars().map(|c| c as u32);
+        let name_chars: Vec<u32> = name_str.chars().map(|c| c as u32).collect();
         let unique_crate_identifier = crate::hash::unique_crate_identifier();
         let unique_crate_identifier_len = unique_crate_identifier.chars().count() as u32;
         let unique_crate_identifier_chars = unique_crate_identifier.chars().map(|c| c as u32);
@@ -5045,7 +5045,9 @@ impl ToTokens for ast::Enum {
                 fn describe_vector() {
                     use #wasm_bindgen::describe::*;
                     inform(VECTOR);
-                    <#wasm_bindgen::JsValue as #wasm_bindgen::describe::WasmDescribe>::describe();
+                    inform(NAMED_EXTERNREF);
+                    inform(#name_len);
+                    #(inform(#name_chars);)*
                 }
             }
 

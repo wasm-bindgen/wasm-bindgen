@@ -21,8 +21,12 @@ test("function calls", () => {
   const fn_returns_enum: () => wbg.Foo = wbg.fn_returns_enum;
   const fn_expects_option_enum: (_?: wbg.Foo) => void = wbg.fn_expects_option_enum;
   const fn_returns_option_enum: () => wbg.Foo | undefined = wbg.fn_returns_option_enum;
+  const fn_expects_enum_vec: (_: wbg.Foo[]) => void = wbg.fn_expects_enum_vec;
+  const fn_returns_enum_vec: () => wbg.Foo[] = wbg.fn_returns_enum_vec;
 
   fn_expects_enum(wbg.Foo.B);
   expect(fn_returns_enum()).toStrictEqual(wbg.Foo.A);
   expect(fn_returns_option_enum()).toStrictEqual(wbg.Foo.A);
+  fn_expects_enum_vec([wbg.Foo.B]);
+  expect(fn_returns_enum_vec()).toStrictEqual([wbg.Foo.A]);
 });

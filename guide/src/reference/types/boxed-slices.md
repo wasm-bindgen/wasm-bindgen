@@ -9,6 +9,7 @@ You can pass boxed slices and `Vec`s of several different types to and from JS:
 - `JsValue`s.
 - Imported JavaScript types.
 - Exported Rust types.
+- C-style exported enums.
 - `String`s.
 
 [You can also pass boxed slices of numbers to JS](boxed-number-slices.html),

@@ -98,6 +98,10 @@
 
 ### Fixed
 
+* C-style `#[wasm_bindgen]` enums in `Vec<T>` / `Box<[T]>` now generate
+  TypeScript and JSDoc as `EnumName[]` instead of `any[]`.
+  [#4480](https://github.com/wasm-bindgen/wasm-bindgen/issues/4480)
+
 * The thread-bootstrap transform is now skipped in Emscripten mode, where the
   Emscripten runtime owns pthread startup and TLS. It previously ran on any
   module with shared memory and aborted the build (`failed to find
