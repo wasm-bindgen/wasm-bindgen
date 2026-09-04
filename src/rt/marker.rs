@@ -44,6 +44,10 @@ pub struct CheckSupportsStaticProperty<T: SupportsStaticProperty>(T);
 ))]
 use core::panic::UnwindSafe;
 
+/// Seal for `wasm_bindgen::JsStringLike`: only string shapes provided by
+/// `wasm-bindgen` and `js-sys` may implement it.
+pub trait JsStringLikeSealed {}
+
 /// Marker trait for types that are UnwindSafe only when building with panic unwind
 pub trait MaybeUnwindSafe {}
 

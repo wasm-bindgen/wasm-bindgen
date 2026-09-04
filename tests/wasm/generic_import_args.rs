@@ -18,7 +18,9 @@
 //! - `&[T]` with a generic element type: takes the `&T` HRTB route rather
 //!   than the concrete-slice route, both as a plain and a `variadic` argument.
 
+use js_sys::JsString;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsStringLike;
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen(module = "tests/wasm/generic_import_args.js")]
@@ -62,6 +64,14 @@ extern "C" {
     // view.
     #[wasm_bindgen(experimental_generic_mono, js_name = sumSlice)]
     fn sum_slice<T>(xs: &[T]) -> f64;
+
+    // `JsStringLike` bound: every string shape crosses at its native wire
+    // format (UTF-8 buffer vs handle) but must arrive in JS as a string *value*.
+    #[wasm_bindgen(experimental_generic_mono, js_name = describeStr)]
+    fn describe_str<T: JsStringLike>(s: T) -> String;
+
+    #[wasm_bindgen(experimental_generic_mono, js_name = describeStr)]
+    fn describe_str_impl(s: impl JsStringLike) -> String;
 }
 
 #[wasm_bindgen_test]
@@ -114,6 +124,28 @@ fn experimental_generic_mono_callback_signature() {
 
     let label = |value: f64| format!("shared:{value}");
     assert_eq!(transform_shared(2.5f64, &label), "shared:2.5");
+}
+
+#[wasm_bindgen_test]
+fn experimental_generic_mono_string_arg_bound() {
+    // JS reports `typeof` plus the value, so a shape that crossed as anything
+    // other than a string value surfaces as a mismatch.
+    assert_eq!(describe_str("borrowed"), "string:borrowed");
+    assert_eq!(describe_str(String::from("owned")), "string:owned");
+
+    let js = JsString::from("handle");
+    assert_eq!(describe_str(&js), "string:handle");
+    assert_eq!(describe_str(js), "string:handle");
+}
+
+#[wasm_bindgen_test]
+fn experimental_generic_mono_string_arg_impl_trait() {
+    assert_eq!(describe_str_impl("borrowed"), "string:borrowed");
+    assert_eq!(describe_str_impl(String::from("owned")), "string:owned");
+
+    let js = JsString::from("handle");
+    assert_eq!(describe_str_impl(&js), "string:handle");
+    assert_eq!(describe_str_impl(js), "string:handle");
 }
 
 #[wasm_bindgen_test]

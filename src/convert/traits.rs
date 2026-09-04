@@ -644,3 +644,28 @@ impl<T: IntoJsGeneric + Clone> IntoJsGeneric for &T {
 // and prevent wrapper types from canonicalising to a different target.
 // Instead, implementations are provided explicitly by each owning crate
 // (macro-generated for user types; hand-written for `js_sys` containers).
+
+/// Marker for types that cross the ABI as a JavaScript string.
+///
+/// Use as a bound on an `experimental_generic_mono` import's type parameter to
+/// accept any Rust or JS string shape, each at its native wire format:
+/// `String` and `&str` cross as UTF-8 buffers, `js_sys::JsString` and
+/// `&js_sys::JsString` as handles — all arriving in JS as a string value.
+///
+/// This trait is sealed: it is implemented only for the string shapes above,
+/// each of which is guaranteed to produce a JS string on the other side.
+///
+/// `OptionIntoWasmAbi` is a supertrait so that nullable string positions
+/// (`Option<T>`) work under the same bound.
+///
+/// This trait is experimental, like `experimental_generic_mono` itself, and
+/// may change or be removed as that feature stabilizes.
+pub trait JsStringLike:
+    IntoWasmAbi + OptionIntoWasmAbi + crate::__rt::marker::JsStringLikeSealed
+{
+}
+
+impl crate::__rt::marker::JsStringLikeSealed for alloc::string::String {}
+impl crate::__rt::marker::JsStringLikeSealed for &str {}
+impl JsStringLike for alloc::string::String {}
+impl JsStringLike for &str {}

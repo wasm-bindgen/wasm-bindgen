@@ -49,6 +49,10 @@ exports.describeAny = function (x) {
   return typeof x + ":" + x;
 };
 
+exports.describeStr = function (s) {
+  return typeof s + ":" + s;
+};
+
 exports.sumSlice = function (xs) {
   let total = 0;
   for (const v of xs) {

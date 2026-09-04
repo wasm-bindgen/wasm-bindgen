@@ -90,6 +90,31 @@ Relaxed bounds are the exception: `T: ?Sized` is not supported on any
 `wasm-bindgen` generic — erased or per-monomorphisation — and is reported as
 `unsupported in wasm-bindgen generics`.
 
+### String bounds
+
+For imports that take a JS string, the experimental
+`wasm_bindgen::JsStringLike` marker trait names the set of string shapes
+directly:
+
+```rust
+use wasm_bindgen::JsStringLike;
+
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn set_title<T: JsStringLike>(title: T);
+}
+```
+
+`JsStringLike` is implemented for `String`, `&str`, `js_sys::JsString` and
+`&js_sys::JsString`, so a caller can pass whichever it already holds and each
+monomorphisation crosses at that shape's native wire format — UTF-8 buffers
+for the Rust strings, a handle for `JsString` — all arriving in JS as a
+string value. Nullable positions work under the same bound (`Option<T>`),
+since the trait carries `OptionIntoWasmAbi` as a supertrait. The trait is
+sealed to exactly these string shapes. Like `experimental_generic_mono`
+itself, the trait is experimental and may change as the feature stabilizes.
+
 ## `impl Trait` arguments
 
 Argument-position `impl Trait` is supported. It is desugared into a synthesized
