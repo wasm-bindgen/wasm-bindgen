@@ -14,7 +14,6 @@
   info to a separate `*_bg.debug.wasm` file. Use `--debug-info-url` to set
   the recorded URL for the debug info. [#5279](https://github.com/wasm-bindgen/wasm-bindgen/pull/5279)
 
-<<<<<<< HEAD
 * Added `#[wasm_bindgen(experimental_generic_mono)]` for imported functions,
   which binds a generic import once per monomorphisation instead of erasing
   its type parameters to `JsValue`. It can be applied to an individual import
@@ -98,6 +97,9 @@
 
 ### Fixed
 
+* C-style `#[wasm_bindgen]` enums in `Vec<T>` / `Box<[T]>` now generate
+  TypeScript and JSDoc as `EnumName[]` instead of `any[]`.
+  [#4480](https://github.com/wasm-bindgen/wasm-bindgen/issues/4480)
 * Fixed `js-sys` failing to compile with `no_std` and the
   `futures-core-03-stream` feature enabled, since the feature unconditionally
   pulled in `futures-util/std`. The `std` feature of `futures-util` is now only

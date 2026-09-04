@@ -15,3 +15,21 @@ pub fn statuses() -> Vec<JsValue> {
         private_dedupe_b::make().into(),
     ]
 }
+
+// Vectors of another crate's private items resolve to that crate's renamed
+// identity, not the current crate's.
+
+#[wasm_bindgen]
+pub fn b_statuses() -> Vec<private_dedupe_b::Status> {
+    vec![private_dedupe_b::make()]
+}
+
+#[wasm_bindgen]
+pub fn a_levels() -> Vec<private_dedupe_a::Level> {
+    private_dedupe_a::levels()
+}
+
+#[wasm_bindgen]
+pub fn b_levels() -> Vec<private_dedupe_b::Level> {
+    private_dedupe_b::levels()
+}

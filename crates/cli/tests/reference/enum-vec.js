@@ -5,5 +5,5 @@ import { __wbg_set_wasm } from "./reference_test_bg.js";
 __wbg_set_wasm(wasm);
 wasm.__wbindgen_start();
 export {
-    Level, Level2, Status, Status2, a_levels, b_levels, b_statuses, statuses
+    Color, HiddenErr, RenamedErr, enum_vec_echo, hidden_err_vec_echo, ns, ns_err_vec_echo, option_enum_vec_echo, renamed_err_vec_echo
 } from "./reference_test_bg.js";

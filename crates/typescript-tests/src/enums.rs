@@ -21,3 +21,11 @@ pub fn fn_expects_option_enum(_: Option<Foo>) {}
 pub fn fn_returns_option_enum() -> Option<Foo> {
     Some(Foo::A)
 }
+
+#[wasm_bindgen]
+pub fn fn_expects_enum_vec(_: Vec<Foo>) {}
+
+#[wasm_bindgen]
+pub fn fn_returns_enum_vec() -> Vec<Foo> {
+    vec![Foo::A]
+}

@@ -1,3 +1,19 @@
+/**
+ * @enum {0 | 1}
+ */
+const Level = Object.freeze({
+    Low: 0, "0": "Low",
+    High: 1, "1": "High",
+});
+
+/**
+ * @enum {0 | 1}
+ */
+const Level2 = Object.freeze({
+    Low: 0, "0": "Low",
+    High: 1, "1": "High",
+});
+
 class Status {
     static __wrap(ptr) {
         const obj = Object.create(Status.prototype);
@@ -95,6 +111,36 @@ class Status2 {
 if (Symbol.dispose) Status2.prototype[Symbol.dispose] = Status2.prototype.free;
 
 /**
+ * @returns {Level[]}
+ */
+export function a_levels() {
+    const ret = wasm.a_levels();
+    var v1 = getArrayJsValueFromWasm0(ret[0], ret[1]);
+    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    return v1;
+}
+
+/**
+ * @returns {Level2[]}
+ */
+export function b_levels() {
+    const ret = wasm.b_levels();
+    var v1 = getArrayJsValueFromWasm0(ret[0], ret[1]);
+    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    return v1;
+}
+
+/**
+ * @returns {Status2[]}
+ */
+export function b_statuses() {
+    const ret = wasm.b_statuses();
+    var v1 = getArrayJsValueFromWasm0(ret[0], ret[1]);
+    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    return v1;
+}
+
+/**
  * @returns {any[]}
  */
 export function statuses() {
@@ -112,6 +158,11 @@ export function __wbg_status2_new(arg0) {
 }
 export function __wbg_status_new(arg0) {
     const ret = Status.__wrap(arg0);
+    return ret;
+}
+export function __wbindgen_generic_0000000000000000(arg0) {
+    // Cast intrinsic for `F64 -> Externref`.
+    const ret = arg0;
     return ret;
 }
 export function __wbindgen_init_externref_table() {
