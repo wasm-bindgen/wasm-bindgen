@@ -1,0 +1,21 @@
+crates/cli/tests/reference/enum-vec.bg.js
+  s_dd0116796c5bb6::t_8f5b1fbafe0979 104,111
+crates/cli/tests/reference/enum-vec.wat
+  s_dd0116796c5bb6::t_3b53e11eb4a00a 11-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "036a3f7fd8db5bc730a3d2356a2f61a3f951ac21",
+  "prompts": {},
+  "sessions": {
+    "s_dd0116796c5bb6": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f91b894a7ffeQwL83YGFHi6U3Q",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
