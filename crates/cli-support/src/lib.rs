@@ -46,7 +46,6 @@ pub struct Bindgen {
     split_linked_modules: bool,
     generate_reset_state: bool,
     force_enable_abort_handler: bool,
-    memory_discard: bool,
 }
 
 pub struct Output {
@@ -127,7 +126,6 @@ impl Bindgen {
             split_linked_modules: false,
             generate_reset_state: false,
             force_enable_abort_handler: false,
-            memory_discard: false,
         }
     }
 
@@ -338,14 +336,6 @@ impl Bindgen {
         self
     }
 
-    /// Experimental and subject to change: replace an
-    /// `env.__wbindgen_memory_discard` import with a `memory.discard`
-    /// trampoline from the memory-control proposal.
-    pub fn memory_discard(&mut self, memory_discard: bool) -> &mut Self {
-        self.memory_discard = memory_discard;
-        self
-    }
-
     pub fn generate<P: AsRef<Path>>(&mut self, path: P) -> Result<(), Error> {
         self.generate_output()?.emit(path.as_ref())
     }
@@ -426,9 +416,6 @@ impl Bindgen {
             transforms::threads::run(&mut module)
                 .with_context(|| "failed to prepare module for threading")?
         };
-
-        transforms::memory_discard::run(&mut module, self.memory_discard)
-            .with_context(|| "failed to generate `memory.discard` trampoline")?;
 
         // If requested, turn all mangled symbols into prettier unmangled
         // symbols with the help of `rustc-demangle`.

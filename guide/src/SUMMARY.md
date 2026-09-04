@@ -52,7 +52,6 @@
   - [Supported Browsers](./reference/browser-support.md)
   - [Support for Weak References](./reference/weak-references.md)
   - [Support for Reference Types](./reference/reference-types.md)
-  - [Releasing Memory with `memory.discard`](./reference/memory-discard.md)
   - [Catching Panics](./reference/catch-unwind.md)
   - [Handling Aborts](./reference/handling-aborts.md)
   - [Supported Types](./reference/types.md)

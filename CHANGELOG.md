@@ -14,6 +14,7 @@
   info to a separate `*_bg.debug.wasm` file. Use `--debug-info-url` to set
   the recorded URL for the debug info. [#5279](https://github.com/wasm-bindgen/wasm-bindgen/pull/5279)
 
+<<<<<<< HEAD
 * Added `#[wasm_bindgen(experimental_generic_mono)]` for imported functions,
   which binds a generic import once per monomorphisation instead of erasing
   its type parameters to `JsValue`. It can be applied to an individual import
