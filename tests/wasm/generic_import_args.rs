@@ -69,6 +69,9 @@ extern "C" {
     // format (UTF-8 buffer vs handle) but must arrive in JS as a string *value*.
     #[wasm_bindgen(experimental_generic_mono, js_name = describeStr)]
     fn describe_str<T: JsStringLike>(s: T) -> String;
+
+    #[wasm_bindgen(experimental_generic_mono, js_name = describeStr)]
+    fn describe_str_impl(s: impl JsStringLike) -> String;
 }
 
 #[wasm_bindgen_test]
@@ -133,6 +136,16 @@ fn experimental_generic_mono_string_arg_bound() {
     let js = JsString::from("handle");
     assert_eq!(describe_str(&js), "string:handle");
     assert_eq!(describe_str(js), "string:handle");
+}
+
+#[wasm_bindgen_test]
+fn experimental_generic_mono_string_arg_impl_trait() {
+    assert_eq!(describe_str_impl("borrowed"), "string:borrowed");
+    assert_eq!(describe_str_impl(String::from("owned")), "string:owned");
+
+    let js = JsString::from("handle");
+    assert_eq!(describe_str_impl(&js), "string:handle");
+    assert_eq!(describe_str_impl(js), "string:handle");
 }
 
 #[wasm_bindgen_test]
