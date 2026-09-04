@@ -7,7 +7,7 @@
   (type (;5;) (func (param i32) (result i32)))
   (type (;6;) (func (result i32 i32)))
   (type (;7;) (func))
-  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_bb96b2010945f0bc" (func (;0;) (type 2)))
+  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_5d9e815e6fdf150f" (func (;0;) (type 2)))
   (import "./reference_test_bg.js" "__wbg_status2_new" (func (;1;) (type 3)))
   (import "./reference_test_bg.js" "__wbg_status_new" (func (;2;) (type 3)))
   (import "./reference_test_bg.js" "__wbindgen_generic_0000000000000000" (func (;3;) (type 0)))
