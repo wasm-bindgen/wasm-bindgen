@@ -1,0 +1,18 @@
+{
+  "name": "jspi-opfs",
+  "type": "module",
+  "collaborators": [
+    "The wasm-bindgen Developers"
+  ],
+  "version": "0.0.0",
+  "files": [
+    "jspi_opfs_bg.wasm",
+    "jspi_opfs.js",
+    "jspi_opfs.d.ts"
+  ],
+  "main": "jspi_opfs.js",
+  "types": "jspi_opfs.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
