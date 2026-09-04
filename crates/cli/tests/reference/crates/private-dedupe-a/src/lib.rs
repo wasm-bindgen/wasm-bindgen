@@ -15,3 +15,13 @@ impl Status {
 pub fn make() -> Status {
     Status { code: 1 }
 }
+
+#[wasm_bindgen(private)]
+pub enum Level {
+    Low,
+    High,
+}
+
+pub fn levels() -> Vec<Level> {
+    vec![Level::Low, Level::High]
+}

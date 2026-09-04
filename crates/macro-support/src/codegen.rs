@@ -596,9 +596,7 @@ impl ToTokens for ast::Struct {
                 fn describe_vector() {
                     use #wasm_bindgen::describe::*;
                     inform(VECTOR);
-                    inform(NAMED_EXTERNREF);
-                    inform(#name_len);
-                    #(inform(#name_chars);)*
+                    <#name as #wasm_bindgen::describe::WasmDescribe>::describe();
                 }
             }
 
@@ -5045,9 +5043,7 @@ impl ToTokens for ast::Enum {
                 fn describe_vector() {
                     use #wasm_bindgen::describe::*;
                     inform(VECTOR);
-                    inform(NAMED_EXTERNREF);
-                    inform(#name_len);
-                    #(inform(#name_chars);)*
+                    <#enum_name as #wasm_bindgen::describe::WasmDescribe>::describe();
                 }
             }
 

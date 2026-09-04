@@ -312,7 +312,9 @@ impl Descriptor {
             Descriptor::F32 => Some(VectorKind::F32),
             Descriptor::F64 => Some(VectorKind::F64),
             Descriptor::Externref => Some(VectorKind::Externref),
-            Descriptor::NamedExternref(ref name) => Some(VectorKind::NamedExternref(name.clone())),
+            Descriptor::NamedExternref(ref name)
+            | Descriptor::RustStruct { ref name, .. }
+            | Descriptor::Enum { ref name, .. } => Some(VectorKind::NamedExternref(name.clone())),
             _ => None,
         }
     }
