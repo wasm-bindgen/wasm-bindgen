@@ -47,12 +47,6 @@
   as a bound for `experimental_generic_mono` imports that accept any string
   shape at its native wire format.
 
-* Added an experimental `--experimental-memory-discard` flag which replaces an
-  `env.__wbindgen_memory_discard` function import with a local trampoline
-  containing the `memory.discard` instruction from the memory-control
-  proposal, allowing custom allocators to release physical pages back to the
-  host. Experimental and subject to change.
-
 * `#[wasm_bindgen(experimental_generic_mono)]` now supports class-level generic
   parameters: an imported *type* that is itself generic (`type Holder<T>`),
   used as a method receiver (`this: &Holder<T>`), or as the return type of a
