@@ -2,7 +2,6 @@ pub mod catch_handler;
 pub mod export_sp_restore;
 pub mod externref;
 pub mod jspi;
-pub mod memory_discard;
 pub mod multi_value;
 pub mod threads;
 
