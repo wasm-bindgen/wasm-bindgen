@@ -23,7 +23,7 @@ test = false
 [features]
 # TODO: remove unsafe-eval for 1.0 release
 default = ["std", "unsafe-eval"]
-std = ["wasm-bindgen/std", "dep:futures-util"]
+std = ["wasm-bindgen/std", "futures-util/std"]
 # It has been agreed to gate functionnality requiring CSP unsafe-eval behind this feature
 # See https://github.com/wasm-bindgen/wasm-bindgen/issues/1647#issuecomment-3775469177
 unsafe-eval = []
@@ -35,7 +35,7 @@ futures-core-03-stream = ["dep:futures-util", "dep:futures-core"]
 [dependencies]
 cfg-if = "1.0.0"
 futures-core = { version = "0.3.8", default-features = false, optional = true }
-futures-util = { version = "0.3.31", default-features = false, features = ["std"], optional = true }
+futures-util = { version = "0.3.31", default-features = false, optional = true }
 wasm-bindgen = { path = "../..", version = "=0.2.127", default-features = false }
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
