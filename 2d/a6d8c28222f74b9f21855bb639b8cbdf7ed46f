@@ -1,0 +1,19 @@
+crates/js-sys/Cargo.toml
+  s_dd0116796c5bb6::t_7b9f74cae7e924 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "2da6d8c28222f74b9f21855bb639b8cbdf7ed46f",
+  "prompts": {},
+  "sessions": {
+    "s_dd0116796c5bb6": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f91b894a7ffeQwL83YGFHi6U3Q",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Guy Bedford <guybedford@gmail.com>"
+    }
+  }
+}
