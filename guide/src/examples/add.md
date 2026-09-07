@@ -6,21 +6,40 @@
 [code]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples/add
 
 One of `wasm-bindgen`'s core goals is a pay-only-for-what-you-use philosophy, so
-if we don't use much then we shouldn't be paying much! As a result
-`#[wasm_bindgen]` can generate super-small executables
+if we don't use much then we shouldn't be paying much! However, if you want to
+emit small-sized Wasm files, you will need the wasm-bindgen CLI tool to optimize
+the compiled result and trim it down by a lot. You can install it by running
+`cargo install wasm-bindgen`.
 
-Currently this code...
+For example, take the following code:
 
 ```rust
 {{#include ../../../examples/add/src/lib.rs}}
 ```
 
-generates a 710 byte Wasm binary:
+Now, if you compile this with 
+`cargo build --release --target wasm32-unknown-unknown`...
 
 ```
-$ ls -l add_bg.wasm
--rw-rw-r-- 1 alex alex 710 Sep 19 17:32 add_bg.wasm
+$ ls -l add.wasm`
+-rw-rw-r-- 1 alex alex 33851 Jan 1 13:58 add.wasm
 ```
+
+Well, that's kind of small. But we can do better! Run the tool we downloaded:
+
+```
+$ wasm-bindgen add.wasm --out-dir out
+$ ls -l out/
+total 20
+-rw-rw-r-- 1 alex alex  525 Jan  1 14:25 add_bg.js
+-rw-rw-r-- 1 alex alex 1085 Jan  1 14:25 add_bg.wasm
+-rw-rw-r-- 1 alex alex  233 Jan  1 14:25 add_bg.wasm.d.ts
+-rw-rw-r-- 1 alex alex   94 Jan  1 14:25 add.d.ts
+-rw-rw-r-- 1 alex alex  161 Jan  1 14:25 add.js
+```
+
+See that wasm file? That's the same one you started with. Now that's a 
+huge improvement.
 
 If you run [wasm-opt], a C++ tool for optimize WebAssembly, you can make it
 even smaller too!
