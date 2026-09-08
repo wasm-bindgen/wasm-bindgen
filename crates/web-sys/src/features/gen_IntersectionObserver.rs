@@ -40,6 +40,18 @@ extern "C" {
         method,
         getter,
         js_class = "IntersectionObserver",
+        js_name = "rootMargin"
+    )]
+    #[doc = "Like `root_margin()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IntersectionObserver/rootMargin)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IntersectionObserver`*"]
+    pub fn root_margin_js_string(this: &IntersectionObserver) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "IntersectionObserver",
         js_name = "thresholds"
     )]
     #[doc = "Getter for the `thresholds` field of this object."]

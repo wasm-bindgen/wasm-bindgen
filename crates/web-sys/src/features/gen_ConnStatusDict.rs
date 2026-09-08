@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConnStatusDict`*"]
     #[wasm_bindgen(method, getter = "status")]
     pub fn get_status(this: &ConnStatusDict) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_status()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConnStatusDict`*"]
+    #[wasm_bindgen(method, getter = "status")]
+    pub fn get_status_js_string(this: &ConnStatusDict) -> Option<::js_sys::JsString>;
     #[doc = "Change the `status` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConnStatusDict`*"]

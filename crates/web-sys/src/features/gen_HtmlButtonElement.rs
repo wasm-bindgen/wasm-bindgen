@@ -69,6 +69,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlButtonElement`*"]
     pub fn form_action(this: &HtmlButtonElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLButtonElement", js_name = "formAction")]
+    #[doc = "Like `form_action()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLButtonElement/formAction)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlButtonElement`*"]
+    pub fn form_action_js_string(this: &HtmlButtonElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLButtonElement", js_name = "formAction")]
     #[doc = "Setter for the `formAction` field of this object."]
     #[doc = ""]
@@ -90,6 +97,18 @@ extern "C" {
     pub fn form_enctype(this: &HtmlButtonElement) -> ::alloc::string::String;
     #[wasm_bindgen(
         method,
+        getter,
+        js_class = "HTMLButtonElement",
+        js_name = "formEnctype"
+    )]
+    #[doc = "Like `form_enctype()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLButtonElement/formEnctype)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlButtonElement`*"]
+    pub fn form_enctype_js_string(this: &HtmlButtonElement) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
         setter,
         js_class = "HTMLButtonElement",
         js_name = "formEnctype"
@@ -107,6 +126,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlButtonElement`*"]
     pub fn form_method(this: &HtmlButtonElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLButtonElement", js_name = "formMethod")]
+    #[doc = "Like `form_method()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLButtonElement/formMethod)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlButtonElement`*"]
+    pub fn form_method_js_string(this: &HtmlButtonElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLButtonElement", js_name = "formMethod")]
     #[doc = "Setter for the `formMethod` field of this object."]
     #[doc = ""]
@@ -145,6 +171,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlButtonElement`*"]
     pub fn form_target(this: &HtmlButtonElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLButtonElement", js_name = "formTarget")]
+    #[doc = "Like `form_target()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLButtonElement/formTarget)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlButtonElement`*"]
+    pub fn form_target_js_string(this: &HtmlButtonElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLButtonElement", js_name = "formTarget")]
     #[doc = "Setter for the `formTarget` field of this object."]
     #[doc = ""]
@@ -159,6 +192,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlButtonElement`*"]
     pub fn name(this: &HtmlButtonElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLButtonElement", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLButtonElement/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlButtonElement`*"]
+    pub fn name_js_string(this: &HtmlButtonElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLButtonElement", js_name = "name")]
     #[doc = "Setter for the `name` field of this object."]
     #[doc = ""]
@@ -173,6 +213,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlButtonElement`*"]
     pub fn type_(this: &HtmlButtonElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLButtonElement", js_name = "type")]
+    #[doc = "Like `type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLButtonElement/type)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlButtonElement`*"]
+    pub fn type_js_string(this: &HtmlButtonElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLButtonElement", js_name = "type")]
     #[doc = "Setter for the `type` field of this object."]
     #[doc = ""]
@@ -187,6 +234,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlButtonElement`*"]
     pub fn value(this: &HtmlButtonElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLButtonElement", js_name = "value")]
+    #[doc = "Like `value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLButtonElement/value)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlButtonElement`*"]
+    pub fn value_js_string(this: &HtmlButtonElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLButtonElement", js_name = "value")]
     #[doc = "Setter for the `value` field of this object."]
     #[doc = ""]
@@ -228,6 +282,21 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlButtonElement`*"]
     pub fn validation_message(this: &HtmlButtonElement)
         -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        getter,
+        js_class = "HTMLButtonElement",
+        js_name = "validationMessage"
+    )]
+    #[doc = "Like `validation_message()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLButtonElement/validationMessage)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlButtonElement`*"]
+    pub fn validation_message_js_string(
+        this: &HtmlButtonElement,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[cfg(feature = "NodeList")]
     #[wasm_bindgen(method, getter, js_class = "HTMLButtonElement", js_name = "labels")]
     #[doc = "Getter for the `labels` field of this object."]
@@ -272,6 +341,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlButtonElement`*"]
     pub fn popover_target_action(this: &HtmlButtonElement) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "HTMLButtonElement",
+        js_name = "popoverTargetAction"
+    )]
+    #[doc = "Like `popover_target_action()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLButtonElement/popoverTargetAction)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlButtonElement`*"]
+    pub fn popover_target_action_js_string(this: &HtmlButtonElement) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         setter,

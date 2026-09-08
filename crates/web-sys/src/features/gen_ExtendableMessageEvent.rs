@@ -41,6 +41,18 @@ extern "C" {
         method,
         getter,
         js_class = "ExtendableMessageEvent",
+        js_name = "origin"
+    )]
+    #[doc = "Like `origin()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ExtendableMessageEvent/origin)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEvent`*"]
+    pub fn origin_js_string(this: &ExtendableMessageEvent) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "ExtendableMessageEvent",
         js_name = "lastEventId"
     )]
     #[doc = "Getter for the `lastEventId` field of this object."]
@@ -49,6 +61,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEvent`*"]
     pub fn last_event_id(this: &ExtendableMessageEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "ExtendableMessageEvent",
+        js_name = "lastEventId"
+    )]
+    #[doc = "Like `last_event_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ExtendableMessageEvent/lastEventId)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ExtendableMessageEvent`*"]
+    pub fn last_event_id_js_string(this: &ExtendableMessageEvent) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         getter,

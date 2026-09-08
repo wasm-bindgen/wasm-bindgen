@@ -24,6 +24,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `EventSource`*"]
     pub fn url(this: &EventSource) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "EventSource", js_name = "url")]
+    #[doc = "Like `url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/EventSource/url)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `EventSource`*"]
+    pub fn url_js_string(this: &EventSource) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "EventSource", js_name = "withCredentials")]
     #[doc = "Getter for the `withCredentials` field of this object."]
     #[doc = ""]

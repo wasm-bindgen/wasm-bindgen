@@ -24,6 +24,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AnimationEvent`*"]
     pub fn animation_name(this: &AnimationEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "AnimationEvent", js_name = "animationName")]
+    #[doc = "Like `animation_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AnimationEvent/animationName)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AnimationEvent`*"]
+    pub fn animation_name_js_string(this: &AnimationEvent) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "AnimationEvent", js_name = "elapsedTime")]
     #[doc = "Getter for the `elapsedTime` field of this object."]
     #[doc = ""]
@@ -38,6 +45,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AnimationEvent`*"]
     pub fn pseudo_element(this: &AnimationEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "AnimationEvent", js_name = "pseudoElement")]
+    #[doc = "Like `pseudo_element()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/AnimationEvent/pseudoElement)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AnimationEvent`*"]
+    pub fn pseudo_element_js_string(this: &AnimationEvent) -> ::js_sys::JsString;
     #[wasm_bindgen(catch, constructor, js_class = "AnimationEvent")]
     #[doc = "The `new AnimationEvent(..)` constructor, creating a new instance of `AnimationEvent`."]
     #[doc = ""]

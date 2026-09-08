@@ -45,6 +45,13 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]
     #[wasm_bindgen(method, getter = "browserDumpID")]
     pub fn get_browser_dump_id(this: &PluginCrashedEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_browser_dump_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]
+    #[wasm_bindgen(method, getter = "browserDumpID")]
+    pub fn get_browser_dump_id_js_string(
+        this: &PluginCrashedEventInit,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `browserDumpID` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]
@@ -65,6 +72,13 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]
     #[wasm_bindgen(method, getter = "pluginDumpID")]
     pub fn get_plugin_dump_id(this: &PluginCrashedEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_plugin_dump_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]
+    #[wasm_bindgen(method, getter = "pluginDumpID")]
+    pub fn get_plugin_dump_id_js_string(
+        this: &PluginCrashedEventInit,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `pluginDumpID` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]
@@ -75,6 +89,13 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]
     #[wasm_bindgen(method, getter = "pluginFilename")]
     pub fn get_plugin_filename(this: &PluginCrashedEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_plugin_filename()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]
+    #[wasm_bindgen(method, getter = "pluginFilename")]
+    pub fn get_plugin_filename_js_string(
+        this: &PluginCrashedEventInit,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `pluginFilename` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]
@@ -95,6 +116,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]
     #[wasm_bindgen(method, getter = "pluginName")]
     pub fn get_plugin_name(this: &PluginCrashedEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_plugin_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]
+    #[wasm_bindgen(method, getter = "pluginName")]
+    pub fn get_plugin_name_js_string(this: &PluginCrashedEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `pluginName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PluginCrashedEventInit`*"]

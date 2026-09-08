@@ -56,6 +56,22 @@ extern "C" {
         blob: &Blob,
     ) -> Result<::alloc::string::String, JsValue>;
     #[cfg(feature = "Blob")]
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "FileReaderSync",
+        js_name = "readAsBinaryString"
+    )]
+    #[doc = "Like `read_as_binary_string()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileReaderSync/readAsBinaryString)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`, `FileReaderSync`*"]
+    pub fn read_as_binary_string_js_string(
+        this: &FileReaderSync,
+        blob: &Blob,
+    ) -> Result<::js_sys::JsString, JsValue>;
+    #[cfg(feature = "Blob")]
     #[wasm_bindgen(catch, method, js_class = "FileReaderSync", js_name = "readAsDataURL")]
     #[doc = "The `readAsDataURL()` method."]
     #[doc = ""]
@@ -66,6 +82,17 @@ extern "C" {
         this: &FileReaderSync,
         blob: &Blob,
     ) -> Result<::alloc::string::String, JsValue>;
+    #[cfg(feature = "Blob")]
+    #[wasm_bindgen(catch, method, js_class = "FileReaderSync", js_name = "readAsDataURL")]
+    #[doc = "Like `read_as_data_url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileReaderSync/readAsDataURL)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`, `FileReaderSync`*"]
+    pub fn read_as_data_url_js_string(
+        this: &FileReaderSync,
+        blob: &Blob,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[cfg(feature = "Blob")]
     #[wasm_bindgen(catch, method, js_class = "FileReaderSync", js_name = "readAsText")]
     #[doc = "The `readAsText()` method."]
@@ -79,6 +106,17 @@ extern "C" {
     ) -> Result<::alloc::string::String, JsValue>;
     #[cfg(feature = "Blob")]
     #[wasm_bindgen(catch, method, js_class = "FileReaderSync", js_name = "readAsText")]
+    #[doc = "Like `read_as_text()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileReaderSync/readAsText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`, `FileReaderSync`*"]
+    pub fn read_as_text_js_string(
+        this: &FileReaderSync,
+        blob: &Blob,
+    ) -> Result<::js_sys::JsString, JsValue>;
+    #[cfg(feature = "Blob")]
+    #[wasm_bindgen(catch, method, js_class = "FileReaderSync", js_name = "readAsText")]
     #[doc = "The `readAsText()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileReaderSync/readAsText)"]
@@ -89,4 +127,16 @@ extern "C" {
         blob: &Blob,
         encoding: &str,
     ) -> Result<::alloc::string::String, JsValue>;
+    #[cfg(feature = "Blob")]
+    #[wasm_bindgen(catch, method, js_class = "FileReaderSync", js_name = "readAsText")]
+    #[doc = "Like `read_as_text_with_encoding()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileReaderSync/readAsText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Blob`, `FileReaderSync`*"]
+    pub fn read_as_text_with_encoding_js_string(
+        this: &FileReaderSync,
+        blob: &Blob,
+        encoding: &str,
+    ) -> Result<::js_sys::JsString, JsValue>;
 }

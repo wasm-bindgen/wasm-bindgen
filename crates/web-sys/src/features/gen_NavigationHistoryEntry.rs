@@ -24,6 +24,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NavigationHistoryEntry`*"]
     pub fn url(this: &NavigationHistoryEntry) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "NavigationHistoryEntry", js_name = "url")]
+    #[doc = "Like `url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/NavigationHistoryEntry/url)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NavigationHistoryEntry`*"]
+    pub fn url_js_string(this: &NavigationHistoryEntry) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, getter, js_class = "NavigationHistoryEntry", js_name = "key")]
     #[doc = "Getter for the `key` field of this object."]
     #[doc = ""]
@@ -31,6 +38,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NavigationHistoryEntry`*"]
     pub fn key(this: &NavigationHistoryEntry) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "NavigationHistoryEntry", js_name = "key")]
+    #[doc = "Like `key()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/NavigationHistoryEntry/key)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NavigationHistoryEntry`*"]
+    pub fn key_js_string(this: &NavigationHistoryEntry) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "NavigationHistoryEntry", js_name = "id")]
     #[doc = "Getter for the `id` field of this object."]
     #[doc = ""]
@@ -38,6 +52,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NavigationHistoryEntry`*"]
     pub fn id(this: &NavigationHistoryEntry) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "NavigationHistoryEntry", js_name = "id")]
+    #[doc = "Like `id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/NavigationHistoryEntry/id)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NavigationHistoryEntry`*"]
+    pub fn id_js_string(this: &NavigationHistoryEntry) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "NavigationHistoryEntry", js_name = "index")]
     #[doc = "Getter for the `index` field of this object."]
     #[doc = ""]

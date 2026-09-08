@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleInstanceOptions`*"]
     #[wasm_bindgen(method, getter = "consoleID")]
     pub fn get_console_id(this: &ConsoleInstanceOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_console_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleInstanceOptions`*"]
+    #[wasm_bindgen(method, getter = "consoleID")]
+    pub fn get_console_id_js_string(this: &ConsoleInstanceOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `consoleID` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleInstanceOptions`*"]
@@ -35,6 +40,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleInstanceOptions`*"]
     #[wasm_bindgen(method, getter = "innerID")]
     pub fn get_inner_id(this: &ConsoleInstanceOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_inner_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleInstanceOptions`*"]
+    #[wasm_bindgen(method, getter = "innerID")]
+    pub fn get_inner_id_js_string(this: &ConsoleInstanceOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `innerID` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleInstanceOptions`*"]
@@ -58,6 +68,13 @@ extern "C" {
     #[wasm_bindgen(method, getter = "maxLogLevelPref")]
     pub fn get_max_log_level_pref(this: &ConsoleInstanceOptions)
         -> Option<::alloc::string::String>;
+    #[doc = "Like `get_max_log_level_pref()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleInstanceOptions`*"]
+    #[wasm_bindgen(method, getter = "maxLogLevelPref")]
+    pub fn get_max_log_level_pref_js_string(
+        this: &ConsoleInstanceOptions,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `maxLogLevelPref` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleInstanceOptions`*"]
@@ -68,6 +85,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleInstanceOptions`*"]
     #[wasm_bindgen(method, getter = "prefix")]
     pub fn get_prefix(this: &ConsoleInstanceOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_prefix()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleInstanceOptions`*"]
+    #[wasm_bindgen(method, getter = "prefix")]
+    pub fn get_prefix_js_string(this: &ConsoleInstanceOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `prefix` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleInstanceOptions`*"]

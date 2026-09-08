@@ -16,6 +16,12 @@ extern "C" {
     #[deprecated]
     #[wasm_bindgen(method, getter = "locale")]
     pub fn get_locale(this: &IdbIndexParameters) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_locale()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbIndexParameters`*"]
+    #[deprecated]
+    #[wasm_bindgen(method, getter = "locale")]
+    pub fn get_locale_js_string(this: &IdbIndexParameters) -> Option<::js_sys::JsString>;
     #[doc = "Change the `locale` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `IdbIndexParameters`*"]

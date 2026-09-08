@@ -55,6 +55,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
     pub fn do_not_track(this: &Navigator) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Navigator", js_name = "doNotTrack")]
+    #[doc = "Like `do_not_track()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/doNotTrack)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
+    pub fn do_not_track_js_string(this: &Navigator) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "Navigator", js_name = "maxTouchPoints")]
     #[doc = "Getter for the `maxTouchPoints` field of this object."]
     #[doc = ""]
@@ -283,6 +290,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
     pub fn app_code_name(this: &Navigator) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, getter, js_class = "Navigator", js_name = "appCodeName")]
+    #[doc = "Like `app_code_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/appCodeName)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
+    pub fn app_code_name_js_string(this: &Navigator) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(method, getter, js_class = "Navigator", js_name = "appName")]
     #[doc = "Getter for the `appName` field of this object."]
     #[doc = ""]
@@ -290,6 +304,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
     pub fn app_name(this: &Navigator) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Navigator", js_name = "appName")]
+    #[doc = "Like `app_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/appName)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
+    pub fn app_name_js_string(this: &Navigator) -> ::js_sys::JsString;
     #[wasm_bindgen(catch, method, getter, js_class = "Navigator", js_name = "appVersion")]
     #[doc = "Getter for the `appVersion` field of this object."]
     #[doc = ""]
@@ -297,6 +318,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
     pub fn app_version(this: &Navigator) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, getter, js_class = "Navigator", js_name = "appVersion")]
+    #[doc = "Like `app_version()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/appVersion)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
+    pub fn app_version_js_string(this: &Navigator) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, getter, js_class = "Navigator", js_name = "platform")]
     #[doc = "Getter for the `platform` field of this object."]
     #[doc = ""]
@@ -304,6 +332,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
     pub fn platform(this: &Navigator) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, getter, js_class = "Navigator", js_name = "platform")]
+    #[doc = "Like `platform()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/platform)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
+    pub fn platform_js_string(this: &Navigator) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, getter, js_class = "Navigator", js_name = "userAgent")]
     #[doc = "Getter for the `userAgent` field of this object."]
     #[doc = ""]
@@ -311,6 +346,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
     pub fn user_agent(this: &Navigator) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, getter, js_class = "Navigator", js_name = "userAgent")]
+    #[doc = "Like `user_agent()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/userAgent)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
+    pub fn user_agent_js_string(this: &Navigator) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(method, getter, js_class = "Navigator", js_name = "product")]
     #[doc = "Getter for the `product` field of this object."]
     #[doc = ""]
@@ -318,6 +360,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
     pub fn product(this: &Navigator) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Navigator", js_name = "product")]
+    #[doc = "Like `product()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/product)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
+    pub fn product_js_string(this: &Navigator) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "Navigator", js_name = "language")]
     #[doc = "Getter for the `language` field of this object."]
     #[doc = ""]
@@ -325,6 +374,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
     pub fn language(this: &Navigator) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "Navigator", js_name = "language")]
+    #[doc = "Like `language()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/language)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Navigator`*"]
+    pub fn language_js_string(this: &Navigator) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, getter, js_class = "Navigator", js_name = "languages")]
     #[doc = "Getter for the `languages` field of this object."]
     #[doc = ""]

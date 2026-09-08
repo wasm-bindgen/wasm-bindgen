@@ -25,4 +25,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssAnimation`*"]
     pub fn animation_name(this: &CssAnimation) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "CSSAnimation", js_name = "animationName")]
+    #[doc = "Like `animation_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSAnimation/animationName)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssAnimation`*"]
+    pub fn animation_name_js_string(this: &CssAnimation) -> ::js_sys::JsString;
 }

@@ -88,6 +88,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
     pub fn key(this: &KeyboardEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "KeyboardEvent", js_name = "key")]
+    #[doc = "Like `key()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
+    pub fn key_js_string(this: &KeyboardEvent) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "KeyboardEvent", js_name = "code")]
     #[doc = "Getter for the `code` field of this object."]
     #[doc = ""]
@@ -95,6 +102,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
     pub fn code(this: &KeyboardEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "KeyboardEvent", js_name = "code")]
+    #[doc = "Like `code()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/code)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `KeyboardEvent`*"]
+    pub fn code_js_string(this: &KeyboardEvent) -> ::js_sys::JsString;
     #[wasm_bindgen(catch, constructor, js_class = "KeyboardEvent")]
     #[doc = "The `new KeyboardEvent(..)` constructor, creating a new instance of `KeyboardEvent`."]
     #[doc = ""]

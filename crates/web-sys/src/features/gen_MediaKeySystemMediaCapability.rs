@@ -20,6 +20,13 @@ extern "C" {
     pub fn get_content_type(
         this: &MediaKeySystemMediaCapability,
     ) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_content_type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaKeySystemMediaCapability`*"]
+    #[wasm_bindgen(method, getter = "contentType")]
+    pub fn get_content_type_js_string(
+        this: &MediaKeySystemMediaCapability,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `contentType` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaKeySystemMediaCapability`*"]
@@ -30,6 +37,13 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaKeySystemMediaCapability`*"]
     #[wasm_bindgen(method, getter = "robustness")]
     pub fn get_robustness(this: &MediaKeySystemMediaCapability) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_robustness()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaKeySystemMediaCapability`*"]
+    #[wasm_bindgen(method, getter = "robustness")]
+    pub fn get_robustness_js_string(
+        this: &MediaKeySystemMediaCapability,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `robustness` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaKeySystemMediaCapability`*"]

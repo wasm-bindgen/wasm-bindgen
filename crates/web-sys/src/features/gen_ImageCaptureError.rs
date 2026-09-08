@@ -26,6 +26,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ImageCaptureError`*"]
     pub fn message(this: &ImageCaptureError) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "ImageCaptureError", js_name = "message")]
+    #[doc = "Like `message()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ImageCaptureError/message)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ImageCaptureError`*"]
+    pub fn message_js_string(this: &ImageCaptureError) -> ::js_sys::JsString;
 }
 impl ImageCaptureError {
     #[doc = "The `ImageCaptureError.FRAME_GRAB_ERROR` const."]

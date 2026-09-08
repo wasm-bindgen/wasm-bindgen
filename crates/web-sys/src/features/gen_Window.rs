@@ -54,6 +54,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     pub fn name(this: &Window) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, getter, js_class = "Window", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn name_js_string(this: &Window) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, setter, js_class = "Window", js_name = "name")]
     #[doc = "Setter for the `name` field of this object."]
     #[doc = ""]
@@ -148,6 +155,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     pub fn status(this: &Window) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, getter, js_class = "Window", js_name = "status")]
+    #[doc = "Like `status()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/status)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn status_js_string(this: &Window) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, setter, js_class = "Window", js_name = "status")]
     #[doc = "Setter for the `status` field of this object."]
     #[doc = ""]
@@ -2074,6 +2088,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     pub fn origin(this: &Window) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Window", js_name = "origin")]
+    #[doc = "Like `origin()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/origin)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn origin_js_string(this: &Window) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "Window", js_name = "isSecureContext")]
     #[doc = "Getter for the `isSecureContext` field of this object."]
     #[doc = ""]
@@ -2312,6 +2333,13 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     pub fn prompt(this: &Window) -> Result<Option<::alloc::string::String>, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Window", js_name = "prompt")]
+    #[doc = "Like `prompt()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn prompt_js_string(this: &Window) -> Result<Option<::js_sys::JsString>, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "prompt")]
     #[doc = "The `prompt()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt)"]
@@ -2321,6 +2349,16 @@ extern "C" {
         this: &Window,
         message: &str,
     ) -> Result<Option<::alloc::string::String>, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "prompt")]
+    #[doc = "Like `prompt_with_message()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn prompt_with_message_js_string(
+        this: &Window,
+        message: &str,
+    ) -> Result<Option<::js_sys::JsString>, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Window", js_name = "prompt")]
     #[doc = "The `prompt()` method."]
     #[doc = ""]
@@ -2332,6 +2370,17 @@ extern "C" {
         message: &str,
         default: &str,
     ) -> Result<Option<::alloc::string::String>, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "prompt")]
+    #[doc = "Like `prompt_with_message_and_default()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn prompt_with_message_and_default_js_string(
+        this: &Window,
+        message: &str,
+        default: &str,
+    ) -> Result<Option<::js_sys::JsString>, JsValue>;
     #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "FontData")]
     #[wasm_bindgen(catch, method, js_class = "Window", js_name = "queryLocalFonts")]
@@ -2597,6 +2646,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     pub fn atob(this: &Window, atob: &str) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "atob")]
+    #[doc = "Like `atob()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/atob)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn atob_js_string(this: &Window, atob: &str) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Window")]
     #[doc = "The `btoa()` method."]
     #[doc = ""]
@@ -2604,6 +2660,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Window`*"]
     pub fn btoa(this: &Window, btoa: &str) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Window", js_name = "btoa")]
+    #[doc = "Like `btoa()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Window/btoa)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Window`*"]
+    pub fn btoa_js_string(this: &Window, btoa: &str) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(method, js_class = "Window", js_name = "clearInterval")]
     #[doc = "The `clearInterval()` method."]
     #[doc = ""]

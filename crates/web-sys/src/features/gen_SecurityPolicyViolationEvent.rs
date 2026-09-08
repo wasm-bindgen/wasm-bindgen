@@ -33,6 +33,18 @@ extern "C" {
         method,
         getter,
         js_class = "SecurityPolicyViolationEvent",
+        js_name = "documentURI"
+    )]
+    #[doc = "Like `document_uri()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SecurityPolicyViolationEvent/documentURI)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEvent`*"]
+    pub fn document_uri_js_string(this: &SecurityPolicyViolationEvent) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SecurityPolicyViolationEvent",
         js_name = "referrer"
     )]
     #[doc = "Getter for the `referrer` field of this object."]
@@ -41,6 +53,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEvent`*"]
     pub fn referrer(this: &SecurityPolicyViolationEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SecurityPolicyViolationEvent",
+        js_name = "referrer"
+    )]
+    #[doc = "Like `referrer()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SecurityPolicyViolationEvent/referrer)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEvent`*"]
+    pub fn referrer_js_string(this: &SecurityPolicyViolationEvent) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         getter,
@@ -57,6 +81,18 @@ extern "C" {
         method,
         getter,
         js_class = "SecurityPolicyViolationEvent",
+        js_name = "blockedURI"
+    )]
+    #[doc = "Like `blocked_uri()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SecurityPolicyViolationEvent/blockedURI)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEvent`*"]
+    pub fn blocked_uri_js_string(this: &SecurityPolicyViolationEvent) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SecurityPolicyViolationEvent",
         js_name = "violatedDirective"
     )]
     #[doc = "Getter for the `violatedDirective` field of this object."]
@@ -65,6 +101,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEvent`*"]
     pub fn violated_directive(this: &SecurityPolicyViolationEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SecurityPolicyViolationEvent",
+        js_name = "violatedDirective"
+    )]
+    #[doc = "Like `violated_directive()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SecurityPolicyViolationEvent/violatedDirective)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEvent`*"]
+    pub fn violated_directive_js_string(this: &SecurityPolicyViolationEvent) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         getter,
@@ -81,6 +129,19 @@ extern "C" {
         method,
         getter,
         js_class = "SecurityPolicyViolationEvent",
+        js_name = "effectiveDirective"
+    )]
+    #[doc = "Like `effective_directive()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SecurityPolicyViolationEvent/effectiveDirective)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEvent`*"]
+    pub fn effective_directive_js_string(this: &SecurityPolicyViolationEvent)
+        -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SecurityPolicyViolationEvent",
         js_name = "originalPolicy"
     )]
     #[doc = "Getter for the `originalPolicy` field of this object."]
@@ -89,6 +150,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEvent`*"]
     pub fn original_policy(this: &SecurityPolicyViolationEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SecurityPolicyViolationEvent",
+        js_name = "originalPolicy"
+    )]
+    #[doc = "Like `original_policy()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SecurityPolicyViolationEvent/originalPolicy)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEvent`*"]
+    pub fn original_policy_js_string(this: &SecurityPolicyViolationEvent) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         getter,
@@ -105,6 +178,18 @@ extern "C" {
         method,
         getter,
         js_class = "SecurityPolicyViolationEvent",
+        js_name = "sourceFile"
+    )]
+    #[doc = "Like `source_file()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SecurityPolicyViolationEvent/sourceFile)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEvent`*"]
+    pub fn source_file_js_string(this: &SecurityPolicyViolationEvent) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SecurityPolicyViolationEvent",
         js_name = "sample"
     )]
     #[doc = "Getter for the `sample` field of this object."]
@@ -113,6 +198,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEvent`*"]
     pub fn sample(this: &SecurityPolicyViolationEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SecurityPolicyViolationEvent",
+        js_name = "sample"
+    )]
+    #[doc = "Like `sample()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SecurityPolicyViolationEvent/sample)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SecurityPolicyViolationEvent`*"]
+    pub fn sample_js_string(this: &SecurityPolicyViolationEvent) -> ::js_sys::JsString;
     #[cfg(feature = "SecurityPolicyViolationEventDisposition")]
     #[wasm_bindgen(
         method,

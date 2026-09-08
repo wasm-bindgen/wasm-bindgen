@@ -74,6 +74,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
     pub fn get(this: &Headers, name: &str) -> Result<Option<::alloc::string::String>, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "Headers", js_name = "get")]
+    #[doc = "Like `get()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Headers/get)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Headers`*"]
+    pub fn get_js_string(this: &Headers, name: &str)
+        -> Result<Option<::js_sys::JsString>, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "Headers")]
     #[doc = "The `has()` method."]
     #[doc = ""]

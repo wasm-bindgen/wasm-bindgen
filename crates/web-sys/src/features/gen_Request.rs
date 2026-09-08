@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Request`*"]
     pub fn method(this: &Request) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Request", js_name = "method")]
+    #[doc = "Like `method()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Request/method)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Request`*"]
+    pub fn method_js_string(this: &Request) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "Request", js_name = "url")]
     #[doc = "Getter for the `url` field of this object."]
     #[doc = ""]
@@ -30,6 +37,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Request`*"]
     pub fn url(this: &Request) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Request", js_name = "url")]
+    #[doc = "Like `url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Request/url)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Request`*"]
+    pub fn url_js_string(this: &Request) -> ::js_sys::JsString;
     #[cfg(feature = "Headers")]
     #[wasm_bindgen(method, getter, js_class = "Request", js_name = "headers")]
     #[doc = "Getter for the `headers` field of this object."]
@@ -53,6 +67,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Request`*"]
     pub fn referrer(this: &Request) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Request", js_name = "referrer")]
+    #[doc = "Like `referrer()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Request/referrer)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Request`*"]
+    pub fn referrer_js_string(this: &Request) -> ::js_sys::JsString;
     #[cfg(feature = "ReferrerPolicy")]
     #[wasm_bindgen(method, getter, js_class = "Request", js_name = "referrerPolicy")]
     #[doc = "Getter for the `referrerPolicy` field of this object."]
@@ -100,6 +121,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Request`*"]
     pub fn integrity(this: &Request) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Request", js_name = "integrity")]
+    #[doc = "Like `integrity()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Request/integrity)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Request`*"]
+    pub fn integrity_js_string(this: &Request) -> ::js_sys::JsString;
     #[cfg(feature = "AbortSignal")]
     #[wasm_bindgen(method, getter, js_class = "Request", js_name = "signal")]
     #[doc = "Getter for the `signal` field of this object."]

@@ -41,6 +41,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlUListElement`*"]
     pub fn type_(this: &HtmlUListElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLUListElement", js_name = "type")]
+    #[doc = "Like `type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLUListElement/type)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlUListElement`*"]
+    pub fn type_js_string(this: &HtmlUListElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLUListElement", js_name = "type")]
     #[doc = "Setter for the `type` field of this object."]
     #[doc = ""]

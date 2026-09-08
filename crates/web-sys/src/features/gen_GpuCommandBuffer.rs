@@ -32,6 +32,17 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn label(this: &GpuCommandBuffer) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(method, getter, js_class = "GPUCommandBuffer", js_name = "label")]
+    #[doc = "Like `label()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUCommandBuffer/label)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuCommandBuffer`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn label_js_string(this: &GpuCommandBuffer) -> ::js_sys::JsString;
+    #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, setter, js_class = "GPUCommandBuffer", js_name = "label")]
     #[doc = "Setter for the `label` field of this object."]
     #[doc = ""]

@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Client`*"]
     pub fn url(this: &Client) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Client", js_name = "url")]
+    #[doc = "Like `url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Client/url)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Client`*"]
+    pub fn url_js_string(this: &Client) -> ::js_sys::JsString;
     #[cfg(feature = "FrameType")]
     #[wasm_bindgen(method, getter, js_class = "Client", js_name = "frameType")]
     #[doc = "Getter for the `frameType` field of this object."]
@@ -46,6 +53,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Client`*"]
     pub fn id(this: &Client) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Client", js_name = "id")]
+    #[doc = "Like `id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Client/id)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Client`*"]
+    pub fn id_js_string(this: &Client) -> ::js_sys::JsString;
     #[wasm_bindgen(catch, method, js_class = "Client", js_name = "postMessage")]
     #[doc = "The `postMessage()` method."]
     #[doc = ""]

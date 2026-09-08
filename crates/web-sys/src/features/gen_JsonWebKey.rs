@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
     #[wasm_bindgen(method, getter = "alg")]
     pub fn get_alg(this: &JsonWebKey) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_alg()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
+    #[wasm_bindgen(method, getter = "alg")]
+    pub fn get_alg_js_string(this: &JsonWebKey) -> Option<::js_sys::JsString>;
     #[doc = "Change the `alg` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
@@ -25,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
     #[wasm_bindgen(method, getter = "crv")]
     pub fn get_crv(this: &JsonWebKey) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_crv()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
+    #[wasm_bindgen(method, getter = "crv")]
+    pub fn get_crv_js_string(this: &JsonWebKey) -> Option<::js_sys::JsString>;
     #[doc = "Change the `crv` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
@@ -35,6 +45,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
     #[wasm_bindgen(method, getter = "d")]
     pub fn get_d(this: &JsonWebKey) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_d()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
+    #[wasm_bindgen(method, getter = "d")]
+    pub fn get_d_js_string(this: &JsonWebKey) -> Option<::js_sys::JsString>;
     #[doc = "Change the `d` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
@@ -45,6 +60,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
     #[wasm_bindgen(method, getter = "dp")]
     pub fn get_dp(this: &JsonWebKey) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_dp()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
+    #[wasm_bindgen(method, getter = "dp")]
+    pub fn get_dp_js_string(this: &JsonWebKey) -> Option<::js_sys::JsString>;
     #[doc = "Change the `dp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
@@ -55,6 +75,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
     #[wasm_bindgen(method, getter = "dq")]
     pub fn get_dq(this: &JsonWebKey) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_dq()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
+    #[wasm_bindgen(method, getter = "dq")]
+    pub fn get_dq_js_string(this: &JsonWebKey) -> Option<::js_sys::JsString>;
     #[doc = "Change the `dq` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
@@ -65,6 +90,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
     #[wasm_bindgen(method, getter = "e")]
     pub fn get_e(this: &JsonWebKey) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_e()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
+    #[wasm_bindgen(method, getter = "e")]
+    pub fn get_e_js_string(this: &JsonWebKey) -> Option<::js_sys::JsString>;
     #[doc = "Change the `e` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
@@ -85,6 +115,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
     #[wasm_bindgen(method, getter = "k")]
     pub fn get_k(this: &JsonWebKey) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_k()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
+    #[wasm_bindgen(method, getter = "k")]
+    pub fn get_k_js_string(this: &JsonWebKey) -> Option<::js_sys::JsString>;
     #[doc = "Change the `k` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
@@ -105,6 +140,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
     #[wasm_bindgen(method, getter = "kty")]
     pub fn get_kty(this: &JsonWebKey) -> ::alloc::string::String;
+    #[doc = "Like `get_kty()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
+    #[wasm_bindgen(method, getter = "kty")]
+    pub fn get_kty_js_string(this: &JsonWebKey) -> ::js_sys::JsString;
     #[doc = "Change the `kty` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
@@ -115,6 +155,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
     #[wasm_bindgen(method, getter = "n")]
     pub fn get_n(this: &JsonWebKey) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_n()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
+    #[wasm_bindgen(method, getter = "n")]
+    pub fn get_n_js_string(this: &JsonWebKey) -> Option<::js_sys::JsString>;
     #[doc = "Change the `n` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
@@ -135,6 +180,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
     #[wasm_bindgen(method, getter = "p")]
     pub fn get_p(this: &JsonWebKey) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_p()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
+    #[wasm_bindgen(method, getter = "p")]
+    pub fn get_p_js_string(this: &JsonWebKey) -> Option<::js_sys::JsString>;
     #[doc = "Change the `p` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
@@ -145,6 +195,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
     #[wasm_bindgen(method, getter = "q")]
     pub fn get_q(this: &JsonWebKey) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_q()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
+    #[wasm_bindgen(method, getter = "q")]
+    pub fn get_q_js_string(this: &JsonWebKey) -> Option<::js_sys::JsString>;
     #[doc = "Change the `q` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
@@ -155,6 +210,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
     #[wasm_bindgen(method, getter = "qi")]
     pub fn get_qi(this: &JsonWebKey) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_qi()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
+    #[wasm_bindgen(method, getter = "qi")]
+    pub fn get_qi_js_string(this: &JsonWebKey) -> Option<::js_sys::JsString>;
     #[doc = "Change the `qi` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
@@ -165,6 +225,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
     #[wasm_bindgen(method, getter = "use")]
     pub fn get_use(this: &JsonWebKey) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_use()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
+    #[wasm_bindgen(method, getter = "use")]
+    pub fn get_use_js_string(this: &JsonWebKey) -> Option<::js_sys::JsString>;
     #[doc = "Change the `use` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
@@ -175,6 +240,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
     #[wasm_bindgen(method, getter = "x")]
     pub fn get_x(this: &JsonWebKey) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_x()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
+    #[wasm_bindgen(method, getter = "x")]
+    pub fn get_x_js_string(this: &JsonWebKey) -> Option<::js_sys::JsString>;
     #[doc = "Change the `x` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
@@ -185,6 +255,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
     #[wasm_bindgen(method, getter = "y")]
     pub fn get_y(this: &JsonWebKey) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_y()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]
+    #[wasm_bindgen(method, getter = "y")]
+    pub fn get_y_js_string(this: &JsonWebKey) -> Option<::js_sys::JsString>;
     #[doc = "Change the `y` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `JsonWebKey`*"]

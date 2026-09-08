@@ -38,6 +38,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CloseEvent`*"]
     pub fn reason(this: &CloseEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "CloseEvent", js_name = "reason")]
+    #[doc = "Like `reason()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/reason)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CloseEvent`*"]
+    pub fn reason_js_string(this: &CloseEvent) -> ::js_sys::JsString;
     #[wasm_bindgen(catch, constructor, js_class = "CloseEvent")]
     #[doc = "The `new CloseEvent(..)` constructor, creating a new instance of `CloseEvent`."]
     #[doc = ""]

@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ElementCreationOptions`*"]
     #[wasm_bindgen(method, getter = "is")]
     pub fn get_is(this: &ElementCreationOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_is()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ElementCreationOptions`*"]
+    #[wasm_bindgen(method, getter = "is")]
+    pub fn get_is_js_string(this: &ElementCreationOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `is` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ElementCreationOptions`*"]
@@ -25,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ElementCreationOptions`*"]
     #[wasm_bindgen(method, getter = "pseudo")]
     pub fn get_pseudo(this: &ElementCreationOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_pseudo()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ElementCreationOptions`*"]
+    #[wasm_bindgen(method, getter = "pseudo")]
+    pub fn get_pseudo_js_string(this: &ElementCreationOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `pseudo` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ElementCreationOptions`*"]

@@ -30,6 +30,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaError`*"]
     pub fn message(this: &MediaError) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "MediaError", js_name = "message")]
+    #[doc = "Like `message()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaError/message)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaError`*"]
+    pub fn message_js_string(this: &MediaError) -> ::js_sys::JsString;
 }
 impl MediaError {
     #[doc = "The `MediaError.MEDIA_ERR_ABORTED` const."]

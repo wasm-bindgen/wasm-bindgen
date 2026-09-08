@@ -45,6 +45,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CommandEventInit`*"]
     #[wasm_bindgen(method, getter = "command")]
     pub fn get_command(this: &CommandEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_command()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CommandEventInit`*"]
+    #[wasm_bindgen(method, getter = "command")]
+    pub fn get_command_js_string(this: &CommandEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `command` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CommandEventInit`*"]

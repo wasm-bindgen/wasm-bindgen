@@ -31,6 +31,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Response`*"]
     pub fn url(this: &Response) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Response", js_name = "url")]
+    #[doc = "Like `url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/url)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Response`*"]
+    pub fn url_js_string(this: &Response) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "Response", js_name = "redirected")]
     #[doc = "Getter for the `redirected` field of this object."]
     #[doc = ""]
@@ -59,6 +66,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Response`*"]
     pub fn status_text(this: &Response) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Response", js_name = "statusText")]
+    #[doc = "Like `status_text()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Response/statusText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Response`*"]
+    pub fn status_text_js_string(this: &Response) -> ::js_sys::JsString;
     #[cfg(feature = "Headers")]
     #[wasm_bindgen(method, getter, js_class = "Response", js_name = "headers")]
     #[doc = "Getter for the `headers` field of this object."]

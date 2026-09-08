@@ -26,6 +26,17 @@ extern "C" {
         this: &RegistrationResponseJson,
     ) -> Option<::alloc::string::String>;
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Like `get_authenticator_attachment()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegistrationResponseJson`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "authenticatorAttachment")]
+    pub fn get_authenticator_attachment_js_string(
+        this: &RegistrationResponseJson,
+    ) -> Option<::js_sys::JsString>;
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `authenticatorAttachment` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RegistrationResponseJson`*"]
@@ -72,6 +83,15 @@ extern "C" {
     #[wasm_bindgen(method, getter = "id")]
     pub fn get_id(this: &RegistrationResponseJson) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Like `get_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegistrationResponseJson`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "id")]
+    pub fn get_id_js_string(this: &RegistrationResponseJson) -> ::js_sys::JsString;
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `id` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RegistrationResponseJson`*"]
@@ -89,6 +109,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "rawId")]
     pub fn get_raw_id(this: &RegistrationResponseJson) -> ::alloc::string::String;
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Like `get_raw_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegistrationResponseJson`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "rawId")]
+    pub fn get_raw_id_js_string(this: &RegistrationResponseJson) -> ::js_sys::JsString;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `rawId` field of this object."]
     #[doc = ""]
@@ -130,6 +159,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "type")]
     pub fn get_type(this: &RegistrationResponseJson) -> ::alloc::string::String;
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Like `get_type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegistrationResponseJson`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "type")]
+    pub fn get_type_js_string(this: &RegistrationResponseJson) -> ::js_sys::JsString;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `type` field of this object."]
     #[doc = ""]

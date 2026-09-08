@@ -43,6 +43,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlOutputElement`*"]
     pub fn name(this: &HtmlOutputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLOutputElement", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLOutputElement/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlOutputElement`*"]
+    pub fn name_js_string(this: &HtmlOutputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLOutputElement", js_name = "name")]
     #[doc = "Setter for the `name` field of this object."]
     #[doc = ""]
@@ -57,6 +64,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlOutputElement`*"]
     pub fn type_(this: &HtmlOutputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLOutputElement", js_name = "type")]
+    #[doc = "Like `type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLOutputElement/type)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlOutputElement`*"]
+    pub fn type_js_string(this: &HtmlOutputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         getter,
@@ -69,6 +83,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlOutputElement`*"]
     pub fn default_value(this: &HtmlOutputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "HTMLOutputElement",
+        js_name = "defaultValue"
+    )]
+    #[doc = "Like `default_value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLOutputElement/defaultValue)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlOutputElement`*"]
+    pub fn default_value_js_string(this: &HtmlOutputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         setter,
@@ -88,6 +114,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlOutputElement`*"]
     pub fn value(this: &HtmlOutputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLOutputElement", js_name = "value")]
+    #[doc = "Like `value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLOutputElement/value)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlOutputElement`*"]
+    pub fn value_js_string(this: &HtmlOutputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLOutputElement", js_name = "value")]
     #[doc = "Setter for the `value` field of this object."]
     #[doc = ""]
@@ -129,6 +162,21 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlOutputElement`*"]
     pub fn validation_message(this: &HtmlOutputElement)
         -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        getter,
+        js_class = "HTMLOutputElement",
+        js_name = "validationMessage"
+    )]
+    #[doc = "Like `validation_message()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLOutputElement/validationMessage)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlOutputElement`*"]
+    pub fn validation_message_js_string(
+        this: &HtmlOutputElement,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[cfg(feature = "NodeList")]
     #[wasm_bindgen(method, getter, js_class = "HTMLOutputElement", js_name = "labels")]
     #[doc = "Getter for the `labels` field of this object."]

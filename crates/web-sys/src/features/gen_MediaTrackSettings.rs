@@ -35,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaTrackSettings`*"]
     #[wasm_bindgen(method, getter = "deviceId")]
     pub fn get_device_id(this: &MediaTrackSettings) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_device_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaTrackSettings`*"]
+    #[wasm_bindgen(method, getter = "deviceId")]
+    pub fn get_device_id_js_string(this: &MediaTrackSettings) -> Option<::js_sys::JsString>;
     #[doc = "Change the `deviceId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaTrackSettings`*"]
@@ -55,6 +60,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaTrackSettings`*"]
     #[wasm_bindgen(method, getter = "facingMode")]
     pub fn get_facing_mode(this: &MediaTrackSettings) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_facing_mode()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaTrackSettings`*"]
+    #[wasm_bindgen(method, getter = "facingMode")]
+    pub fn get_facing_mode_js_string(this: &MediaTrackSettings) -> Option<::js_sys::JsString>;
     #[doc = "Change the `facingMode` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaTrackSettings`*"]

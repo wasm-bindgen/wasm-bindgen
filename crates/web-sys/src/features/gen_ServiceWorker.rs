@@ -24,6 +24,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ServiceWorker`*"]
     pub fn script_url(this: &ServiceWorker) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "ServiceWorker", js_name = "scriptURL")]
+    #[doc = "Like `script_url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorker/scriptURL)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ServiceWorker`*"]
+    pub fn script_url_js_string(this: &ServiceWorker) -> ::js_sys::JsString;
     #[cfg(feature = "ServiceWorkerState")]
     #[wasm_bindgen(method, getter, js_class = "ServiceWorker", js_name = "state")]
     #[doc = "Getter for the `state` field of this object."]

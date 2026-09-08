@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Location`*"]
     pub fn href(this: &Location) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, getter, js_class = "Location", js_name = "href")]
+    #[doc = "Like `href()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Location/href)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Location`*"]
+    pub fn href_js_string(this: &Location) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, setter, js_class = "Location", js_name = "href")]
     #[doc = "Setter for the `href` field of this object."]
     #[doc = ""]
@@ -37,6 +44,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Location`*"]
     pub fn origin(this: &Location) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, getter, js_class = "Location", js_name = "origin")]
+    #[doc = "Like `origin()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Location/origin)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Location`*"]
+    pub fn origin_js_string(this: &Location) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, getter, js_class = "Location", js_name = "protocol")]
     #[doc = "Getter for the `protocol` field of this object."]
     #[doc = ""]
@@ -44,6 +58,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Location`*"]
     pub fn protocol(this: &Location) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, getter, js_class = "Location", js_name = "protocol")]
+    #[doc = "Like `protocol()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Location/protocol)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Location`*"]
+    pub fn protocol_js_string(this: &Location) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, setter, js_class = "Location", js_name = "protocol")]
     #[doc = "Setter for the `protocol` field of this object."]
     #[doc = ""]
@@ -58,6 +79,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Location`*"]
     pub fn host(this: &Location) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, getter, js_class = "Location", js_name = "host")]
+    #[doc = "Like `host()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Location/host)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Location`*"]
+    pub fn host_js_string(this: &Location) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, setter, js_class = "Location", js_name = "host")]
     #[doc = "Setter for the `host` field of this object."]
     #[doc = ""]
@@ -72,6 +100,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Location`*"]
     pub fn hostname(this: &Location) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, getter, js_class = "Location", js_name = "hostname")]
+    #[doc = "Like `hostname()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Location/hostname)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Location`*"]
+    pub fn hostname_js_string(this: &Location) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, setter, js_class = "Location", js_name = "hostname")]
     #[doc = "Setter for the `hostname` field of this object."]
     #[doc = ""]
@@ -86,6 +121,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Location`*"]
     pub fn port(this: &Location) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, getter, js_class = "Location", js_name = "port")]
+    #[doc = "Like `port()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Location/port)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Location`*"]
+    pub fn port_js_string(this: &Location) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, setter, js_class = "Location", js_name = "port")]
     #[doc = "Setter for the `port` field of this object."]
     #[doc = ""]
@@ -100,6 +142,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Location`*"]
     pub fn pathname(this: &Location) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, getter, js_class = "Location", js_name = "pathname")]
+    #[doc = "Like `pathname()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Location/pathname)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Location`*"]
+    pub fn pathname_js_string(this: &Location) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, setter, js_class = "Location", js_name = "pathname")]
     #[doc = "Setter for the `pathname` field of this object."]
     #[doc = ""]
@@ -114,6 +163,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Location`*"]
     pub fn search(this: &Location) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, getter, js_class = "Location", js_name = "search")]
+    #[doc = "Like `search()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Location/search)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Location`*"]
+    pub fn search_js_string(this: &Location) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, setter, js_class = "Location", js_name = "search")]
     #[doc = "Setter for the `search` field of this object."]
     #[doc = ""]
@@ -128,6 +184,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Location`*"]
     pub fn hash(this: &Location) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, getter, js_class = "Location", js_name = "hash")]
+    #[doc = "Like `hash()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Location/hash)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Location`*"]
+    pub fn hash_js_string(this: &Location) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, setter, js_class = "Location", js_name = "hash")]
     #[doc = "Setter for the `hash` field of this object."]
     #[doc = ""]

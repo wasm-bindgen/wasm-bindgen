@@ -828,3 +828,12 @@ global.PlainStrings = class PlainStrings {
     return v;
   }
 };
+
+global.stringNs = {
+  tag: 'ns',
+  concat(a, b) {
+    strictEqual(typeof a, 'string');
+    strictEqual(typeof b, 'string');
+    return a + b;
+  },
+};

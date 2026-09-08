@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "cmd")]
     pub fn get_cmd(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_cmd()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "cmd")]
+    pub fn get_cmd_js_string(this: &NetworkCommandOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `cmd` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -26,6 +31,13 @@ extern "C" {
     #[wasm_bindgen(method, getter = "curExternalIfname")]
     pub fn get_cur_external_ifname(this: &NetworkCommandOptions)
         -> Option<::alloc::string::String>;
+    #[doc = "Like `get_cur_external_ifname()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "curExternalIfname")]
+    pub fn get_cur_external_ifname_js_string(
+        this: &NetworkCommandOptions,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `curExternalIfname` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -37,6 +49,13 @@ extern "C" {
     #[wasm_bindgen(method, getter = "curInternalIfname")]
     pub fn get_cur_internal_ifname(this: &NetworkCommandOptions)
         -> Option<::alloc::string::String>;
+    #[doc = "Like `get_cur_internal_ifname()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "curInternalIfname")]
+    pub fn get_cur_internal_ifname_js_string(
+        this: &NetworkCommandOptions,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `curInternalIfname` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -47,6 +66,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "dns1")]
     pub fn get_dns1(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_dns1()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "dns1")]
+    pub fn get_dns1_js_string(this: &NetworkCommandOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `dns1` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -67,6 +91,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "dns2")]
     pub fn get_dns2(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_dns2()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "dns2")]
+    pub fn get_dns2_js_string(this: &NetworkCommandOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `dns2` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -97,6 +126,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "domain")]
     pub fn get_domain(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_domain()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "domain")]
+    pub fn get_domain_js_string(this: &NetworkCommandOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `domain` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -127,6 +161,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "endIp")]
     pub fn get_end_ip(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_end_ip()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "endIp")]
+    pub fn get_end_ip_js_string(this: &NetworkCommandOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `endIp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -137,6 +176,13 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "externalIfname")]
     pub fn get_external_ifname(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_external_ifname()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "externalIfname")]
+    pub fn get_external_ifname_js_string(
+        this: &NetworkCommandOptions,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `externalIfname` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -147,6 +193,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "gateway")]
     pub fn get_gateway(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_gateway()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "gateway")]
+    pub fn get_gateway_js_string(this: &NetworkCommandOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `gateway` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -187,6 +238,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "ifname")]
     pub fn get_ifname(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_ifname()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "ifname")]
+    pub fn get_ifname_js_string(this: &NetworkCommandOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `ifname` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -207,6 +263,13 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "internalIfname")]
     pub fn get_internal_ifname(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_internal_ifname()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "internalIfname")]
+    pub fn get_internal_ifname_js_string(
+        this: &NetworkCommandOptions,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `internalIfname` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -217,6 +280,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "ip")]
     pub fn get_ip(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_ip()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "ip")]
+    pub fn get_ip_js_string(this: &NetworkCommandOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `ip` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -237,6 +305,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "key")]
     pub fn get_key(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_key()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "key")]
+    pub fn get_key_js_string(this: &NetworkCommandOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `key` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -247,6 +320,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "link")]
     pub fn get_link(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_link()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "link")]
+    pub fn get_link_js_string(this: &NetworkCommandOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `link` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -267,6 +345,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "maskLength")]
     pub fn get_mask_length(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_mask_length()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "maskLength")]
+    pub fn get_mask_length_js_string(this: &NetworkCommandOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `maskLength` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -277,6 +360,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "mode")]
     pub fn get_mode(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_mode()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "mode")]
+    pub fn get_mode_js_string(this: &NetworkCommandOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `mode` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -298,6 +386,13 @@ extern "C" {
     #[wasm_bindgen(method, getter = "preExternalIfname")]
     pub fn get_pre_external_ifname(this: &NetworkCommandOptions)
         -> Option<::alloc::string::String>;
+    #[doc = "Like `get_pre_external_ifname()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "preExternalIfname")]
+    pub fn get_pre_external_ifname_js_string(
+        this: &NetworkCommandOptions,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `preExternalIfname` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -309,6 +404,13 @@ extern "C" {
     #[wasm_bindgen(method, getter = "preInternalIfname")]
     pub fn get_pre_internal_ifname(this: &NetworkCommandOptions)
         -> Option<::alloc::string::String>;
+    #[doc = "Like `get_pre_internal_ifname()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "preInternalIfname")]
+    pub fn get_pre_internal_ifname_js_string(
+        this: &NetworkCommandOptions,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `preInternalIfname` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -319,6 +421,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "prefix")]
     pub fn get_prefix(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_prefix()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "prefix")]
+    pub fn get_prefix_js_string(this: &NetworkCommandOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `prefix` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -349,6 +456,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "security")]
     pub fn get_security(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_security()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "security")]
+    pub fn get_security_js_string(this: &NetworkCommandOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `security` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -359,6 +471,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "serverIp")]
     pub fn get_server_ip(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_server_ip()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "serverIp")]
+    pub fn get_server_ip_js_string(this: &NetworkCommandOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `serverIp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -369,6 +486,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "ssid")]
     pub fn get_ssid(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_ssid()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "ssid")]
+    pub fn get_ssid_js_string(this: &NetworkCommandOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `ssid` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -379,6 +501,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "startIp")]
     pub fn get_start_ip(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_start_ip()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "startIp")]
+    pub fn get_start_ip_js_string(this: &NetworkCommandOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `startIp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -409,6 +536,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "usbEndIp")]
     pub fn get_usb_end_ip(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_usb_end_ip()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "usbEndIp")]
+    pub fn get_usb_end_ip_js_string(this: &NetworkCommandOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `usbEndIp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -419,6 +551,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "usbStartIp")]
     pub fn get_usb_start_ip(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_usb_start_ip()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "usbStartIp")]
+    pub fn get_usb_start_ip_js_string(this: &NetworkCommandOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `usbStartIp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -429,6 +566,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "wifiEndIp")]
     pub fn get_wifi_end_ip(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_wifi_end_ip()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "wifiEndIp")]
+    pub fn get_wifi_end_ip_js_string(this: &NetworkCommandOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `wifiEndIp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -439,6 +581,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
     #[wasm_bindgen(method, getter = "wifiStartIp")]
     pub fn get_wifi_start_ip(this: &NetworkCommandOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_wifi_start_ip()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "wifiStartIp")]
+    pub fn get_wifi_start_ip_js_string(this: &NetworkCommandOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `wifiStartIp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
@@ -451,6 +598,13 @@ extern "C" {
     pub fn get_wifictrlinterfacename(
         this: &NetworkCommandOptions,
     ) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_wifictrlinterfacename()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]
+    #[wasm_bindgen(method, getter = "wifictrlinterfacename")]
+    pub fn get_wifictrlinterfacename_js_string(
+        this: &NetworkCommandOptions,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `wifictrlinterfacename` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NetworkCommandOptions`*"]

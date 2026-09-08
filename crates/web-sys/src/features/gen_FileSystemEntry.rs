@@ -37,6 +37,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FileSystemEntry`*"]
     pub fn name(this: &FileSystemEntry) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "FileSystemEntry", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemEntry/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FileSystemEntry`*"]
+    pub fn name_js_string(this: &FileSystemEntry) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "FileSystemEntry", js_name = "fullPath")]
     #[doc = "Getter for the `fullPath` field of this object."]
     #[doc = ""]
@@ -44,6 +51,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FileSystemEntry`*"]
     pub fn full_path(this: &FileSystemEntry) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "FileSystemEntry", js_name = "fullPath")]
+    #[doc = "Like `full_path()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemEntry/fullPath)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FileSystemEntry`*"]
+    pub fn full_path_js_string(this: &FileSystemEntry) -> ::js_sys::JsString;
     #[cfg(feature = "FileSystem")]
     #[wasm_bindgen(method, getter, js_class = "FileSystemEntry", js_name = "filesystem")]
     #[doc = "Getter for the `filesystem` field of this object."]

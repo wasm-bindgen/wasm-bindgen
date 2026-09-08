@@ -24,6 +24,15 @@ extern "C" {
     #[wasm_bindgen(method, getter = "album")]
     pub fn get_album(this: &MediaMetadataInit) -> Option<::alloc::string::String>;
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Like `get_album()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaMetadataInit`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "album")]
+    pub fn get_album_js_string(this: &MediaMetadataInit) -> Option<::js_sys::JsString>;
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `album` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaMetadataInit`*"]
@@ -41,6 +50,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "artist")]
     pub fn get_artist(this: &MediaMetadataInit) -> Option<::alloc::string::String>;
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Like `get_artist()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaMetadataInit`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "artist")]
+    pub fn get_artist_js_string(this: &MediaMetadataInit) -> Option<::js_sys::JsString>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `artist` field of this object."]
     #[doc = ""]
@@ -79,6 +97,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "title")]
     pub fn get_title(this: &MediaMetadataInit) -> Option<::alloc::string::String>;
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Like `get_title()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaMetadataInit`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "title")]
+    pub fn get_title_js_string(this: &MediaMetadataInit) -> Option<::js_sys::JsString>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `title` field of this object."]
     #[doc = ""]

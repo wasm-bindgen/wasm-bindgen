@@ -35,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpCodecCapability`*"]
     #[wasm_bindgen(method, getter = "mimeType")]
     pub fn get_mime_type(this: &RtcRtpCodecCapability) -> ::alloc::string::String;
+    #[doc = "Like `get_mime_type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcRtpCodecCapability`*"]
+    #[wasm_bindgen(method, getter = "mimeType")]
+    pub fn get_mime_type_js_string(this: &RtcRtpCodecCapability) -> ::js_sys::JsString;
     #[doc = "Change the `mimeType` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpCodecCapability`*"]
@@ -45,6 +50,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpCodecCapability`*"]
     #[wasm_bindgen(method, getter = "sdpFmtpLine")]
     pub fn get_sdp_fmtp_line(this: &RtcRtpCodecCapability) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_sdp_fmtp_line()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcRtpCodecCapability`*"]
+    #[wasm_bindgen(method, getter = "sdpFmtpLine")]
+    pub fn get_sdp_fmtp_line_js_string(this: &RtcRtpCodecCapability) -> Option<::js_sys::JsString>;
     #[doc = "Change the `sdpFmtpLine` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpCodecCapability`*"]

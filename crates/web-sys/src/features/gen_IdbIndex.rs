@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `IdbIndex`*"]
     pub fn name(this: &IdbIndex) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "IDBIndex", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBIndex/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbIndex`*"]
+    pub fn name_js_string(this: &IdbIndex) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "IDBIndex", js_name = "name")]
     #[doc = "Setter for the `name` field of this object."]
     #[doc = ""]
@@ -67,6 +74,14 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `IdbIndex`*"]
     #[deprecated]
     pub fn locale(this: &IdbIndex) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "IDBIndex", js_name = "locale")]
+    #[doc = "Like `locale()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBIndex/locale)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbIndex`*"]
+    #[deprecated]
+    pub fn locale_js_string(this: &IdbIndex) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, getter, js_class = "IDBIndex", js_name = "isAutoLocale")]
     #[doc = "Getter for the `isAutoLocale` field of this object."]
     #[doc = ""]

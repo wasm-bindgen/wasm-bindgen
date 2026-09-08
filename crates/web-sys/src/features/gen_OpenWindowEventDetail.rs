@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `OpenWindowEventDetail`*"]
     #[wasm_bindgen(method, getter = "features")]
     pub fn get_features(this: &OpenWindowEventDetail) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_features()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `OpenWindowEventDetail`*"]
+    #[wasm_bindgen(method, getter = "features")]
+    pub fn get_features_js_string(this: &OpenWindowEventDetail) -> Option<::js_sys::JsString>;
     #[doc = "Change the `features` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `OpenWindowEventDetail`*"]
@@ -37,6 +42,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `OpenWindowEventDetail`*"]
     #[wasm_bindgen(method, getter = "name")]
     pub fn get_name(this: &OpenWindowEventDetail) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `OpenWindowEventDetail`*"]
+    #[wasm_bindgen(method, getter = "name")]
+    pub fn get_name_js_string(this: &OpenWindowEventDetail) -> Option<::js_sys::JsString>;
     #[doc = "Change the `name` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `OpenWindowEventDetail`*"]
@@ -47,6 +57,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `OpenWindowEventDetail`*"]
     #[wasm_bindgen(method, getter = "url")]
     pub fn get_url(this: &OpenWindowEventDetail) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `OpenWindowEventDetail`*"]
+    #[wasm_bindgen(method, getter = "url")]
+    pub fn get_url_js_string(this: &OpenWindowEventDetail) -> Option<::js_sys::JsString>;
     #[doc = "Change the `url` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `OpenWindowEventDetail`*"]

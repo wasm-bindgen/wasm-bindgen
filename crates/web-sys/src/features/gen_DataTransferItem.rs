@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DataTransferItem`*"]
     pub fn kind(this: &DataTransferItem) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "DataTransferItem", js_name = "kind")]
+    #[doc = "Like `kind()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DataTransferItem/kind)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DataTransferItem`*"]
+    pub fn kind_js_string(this: &DataTransferItem) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "DataTransferItem", js_name = "type")]
     #[doc = "Getter for the `type` field of this object."]
     #[doc = ""]
@@ -30,6 +37,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DataTransferItem`*"]
     pub fn type_(this: &DataTransferItem) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "DataTransferItem", js_name = "type")]
+    #[doc = "Like `type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DataTransferItem/type)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DataTransferItem`*"]
+    pub fn type_js_string(this: &DataTransferItem) -> ::js_sys::JsString;
     #[cfg(feature = "File")]
     #[wasm_bindgen(catch, method, js_class = "DataTransferItem", js_name = "getAsFile")]
     #[doc = "The `getAsFile()` method."]

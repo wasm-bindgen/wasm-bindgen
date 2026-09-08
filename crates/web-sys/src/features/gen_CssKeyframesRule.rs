@@ -24,6 +24,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssKeyframesRule`*"]
     pub fn name(this: &CssKeyframesRule) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "CSSKeyframesRule", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSKeyframesRule/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssKeyframesRule`*"]
+    pub fn name_js_string(this: &CssKeyframesRule) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "CSSKeyframesRule", js_name = "name")]
     #[doc = "Setter for the `name` field of this object."]
     #[doc = ""]

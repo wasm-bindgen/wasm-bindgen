@@ -29,6 +29,17 @@ extern "C" {
         this: &AuthenticationExtensionsDevicePublicKeyInputs,
     ) -> Option<::alloc::string::String>;
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Like `get_attestation()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsDevicePublicKeyInputs`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "attestation")]
+    pub fn get_attestation_js_string(
+        this: &AuthenticationExtensionsDevicePublicKeyInputs,
+    ) -> Option<::js_sys::JsString>;
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `attestation` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsDevicePublicKeyInputs`*"]

@@ -55,6 +55,13 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `MediaKeyNeededEventInit`*"]
     #[wasm_bindgen(method, getter = "initDataType")]
     pub fn get_init_data_type(this: &MediaKeyNeededEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_init_data_type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaKeyNeededEventInit`*"]
+    #[wasm_bindgen(method, getter = "initDataType")]
+    pub fn get_init_data_type_js_string(
+        this: &MediaKeyNeededEventInit,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `initDataType` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaKeyNeededEventInit`*"]

@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MediaKeys`*"]
     pub fn key_system(this: &MediaKeys) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "MediaKeys", js_name = "keySystem")]
+    #[doc = "Like `key_system()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MediaKeys/keySystem)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MediaKeys`*"]
+    pub fn key_system_js_string(this: &MediaKeys) -> ::js_sys::JsString;
     #[cfg(feature = "MediaKeySession")]
     #[wasm_bindgen(catch, method, js_class = "MediaKeys", js_name = "createSession")]
     #[doc = "The `createSession()` method."]

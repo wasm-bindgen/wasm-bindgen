@@ -81,6 +81,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ServiceWorkerRegistration`*"]
     pub fn scope(this: &ServiceWorkerRegistration) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "ServiceWorkerRegistration",
+        js_name = "scope"
+    )]
+    #[doc = "Like `scope()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration/scope)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ServiceWorkerRegistration`*"]
+    pub fn scope_js_string(this: &ServiceWorkerRegistration) -> ::js_sys::JsString;
     #[cfg(feature = "ServiceWorkerUpdateViaCache")]
     #[wasm_bindgen(
         catch,

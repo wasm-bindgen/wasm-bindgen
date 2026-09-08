@@ -42,6 +42,18 @@ extern "C" {
     pub fn align(this: &HtmlTableSectionElement) -> ::alloc::string::String;
     #[wasm_bindgen(
         method,
+        getter,
+        js_class = "HTMLTableSectionElement",
+        js_name = "align"
+    )]
+    #[doc = "Like `align()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableSectionElement/align)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableSectionElement`*"]
+    pub fn align_js_string(this: &HtmlTableSectionElement) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
         setter,
         js_class = "HTMLTableSectionElement",
         js_name = "align"
@@ -59,6 +71,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableSectionElement`*"]
     pub fn ch(this: &HtmlTableSectionElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLTableSectionElement", js_name = "ch")]
+    #[doc = "Like `ch()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableSectionElement/ch)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableSectionElement`*"]
+    pub fn ch_js_string(this: &HtmlTableSectionElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLTableSectionElement", js_name = "ch")]
     #[doc = "Setter for the `ch` field of this object."]
     #[doc = ""]
@@ -78,6 +97,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableSectionElement`*"]
     pub fn ch_off(this: &HtmlTableSectionElement) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "HTMLTableSectionElement",
+        js_name = "chOff"
+    )]
+    #[doc = "Like `ch_off()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableSectionElement/chOff)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableSectionElement`*"]
+    pub fn ch_off_js_string(this: &HtmlTableSectionElement) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         setter,
@@ -102,6 +133,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableSectionElement`*"]
     pub fn v_align(this: &HtmlTableSectionElement) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "HTMLTableSectionElement",
+        js_name = "vAlign"
+    )]
+    #[doc = "Like `v_align()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableSectionElement/vAlign)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableSectionElement`*"]
+    pub fn v_align_js_string(this: &HtmlTableSectionElement) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         setter,

@@ -76,6 +76,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
     pub fn get(this: &UrlSearchParams, name: &str) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, js_class = "URLSearchParams", js_name = "get")]
+    #[doc = "Like `get()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/get)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `UrlSearchParams`*"]
+    pub fn get_js_string(this: &UrlSearchParams, name: &str) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, js_class = "URLSearchParams", js_name = "getAll")]
     #[doc = "The `getAll()` method."]
     #[doc = ""]

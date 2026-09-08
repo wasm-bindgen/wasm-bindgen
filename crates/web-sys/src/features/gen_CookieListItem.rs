@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CookieListItem`*"]
     #[wasm_bindgen(method, getter = "name")]
     pub fn get_name(this: &CookieListItem) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieListItem`*"]
+    #[wasm_bindgen(method, getter = "name")]
+    pub fn get_name_js_string(this: &CookieListItem) -> Option<::js_sys::JsString>;
     #[doc = "Change the `name` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CookieListItem`*"]
@@ -25,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CookieListItem`*"]
     #[wasm_bindgen(method, getter = "value")]
     pub fn get_value(this: &CookieListItem) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieListItem`*"]
+    #[wasm_bindgen(method, getter = "value")]
+    pub fn get_value_js_string(this: &CookieListItem) -> Option<::js_sys::JsString>;
     #[doc = "Change the `value` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CookieListItem`*"]

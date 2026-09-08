@@ -75,6 +75,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `SpeechSynthesisEventInit`*"]
     #[wasm_bindgen(method, getter = "name")]
     pub fn get_name(this: &SpeechSynthesisEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechSynthesisEventInit`*"]
+    #[wasm_bindgen(method, getter = "name")]
+    pub fn get_name_js_string(this: &SpeechSynthesisEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `name` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SpeechSynthesisEventInit`*"]

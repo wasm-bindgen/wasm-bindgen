@@ -47,6 +47,13 @@ extern "C" {
     pub fn get_resident_key(
         this: &AuthenticatorSelectionCriteria,
     ) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_resident_key()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AuthenticatorSelectionCriteria`*"]
+    #[wasm_bindgen(method, getter = "residentKey")]
+    pub fn get_resident_key_js_string(
+        this: &AuthenticatorSelectionCriteria,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `residentKey` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AuthenticatorSelectionCriteria`*"]

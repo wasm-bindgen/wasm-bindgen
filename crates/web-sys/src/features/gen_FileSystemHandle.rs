@@ -31,6 +31,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FileSystemHandle`*"]
     pub fn name(this: &FileSystemHandle) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "FileSystemHandle", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/FileSystemHandle/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FileSystemHandle`*"]
+    pub fn name_js_string(this: &FileSystemHandle) -> ::js_sys::JsString;
     #[wasm_bindgen(method, js_class = "FileSystemHandle", js_name = "isSameEntry")]
     #[doc = "The `isSameEntry()` method."]
     #[doc = ""]

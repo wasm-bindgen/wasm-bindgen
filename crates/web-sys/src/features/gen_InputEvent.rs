@@ -32,6 +32,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `InputEvent`*"]
     pub fn input_type(this: &InputEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "InputEvent", js_name = "inputType")]
+    #[doc = "Like `input_type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/InputEvent/inputType)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `InputEvent`*"]
+    pub fn input_type_js_string(this: &InputEvent) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "InputEvent", js_name = "data")]
     #[doc = "Getter for the `data` field of this object."]
     #[doc = ""]
@@ -39,6 +46,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `InputEvent`*"]
     pub fn data(this: &InputEvent) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "InputEvent", js_name = "data")]
+    #[doc = "Like `data()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/InputEvent/data)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `InputEvent`*"]
+    pub fn data_js_string(this: &InputEvent) -> Option<::js_sys::JsString>;
     #[cfg(feature = "DataTransfer")]
     #[wasm_bindgen(method, getter, js_class = "InputEvent", js_name = "dataTransfer")]
     #[doc = "Getter for the `dataTransfer` field of this object."]

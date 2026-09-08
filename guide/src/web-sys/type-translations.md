@@ -19,4 +19,10 @@ all Web APIs)][webidl] have relatively straightforward translations into
   `Closure<dyn FnMut(...)>`, extract the underlying `JsValue` with `as_ref`, and
   then use `JsCast::unchecked_ref` to convert it to a `js_sys::Function`.
 
+* String returns (`DOMString` and friends) are bound as an owned Rust
+  `String`, which copies the string data into wasm memory. Every
+  string-returning function also has a `_js_string` variant returning a
+  `js_sys::JsString` handle to the same value without copying it out — useful
+  when the string is only passed back to other JS APIs, or is large.
+
 [webidl]: https://heycam.github.io/webidl/

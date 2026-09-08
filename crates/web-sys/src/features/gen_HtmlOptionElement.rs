@@ -49,6 +49,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlOptionElement`*"]
     pub fn label(this: &HtmlOptionElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLOptionElement", js_name = "label")]
+    #[doc = "Like `label()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLOptionElement/label)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlOptionElement`*"]
+    pub fn label_js_string(this: &HtmlOptionElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLOptionElement", js_name = "label")]
     #[doc = "Setter for the `label` field of this object."]
     #[doc = ""]
@@ -101,6 +108,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlOptionElement`*"]
     pub fn value(this: &HtmlOptionElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLOptionElement", js_name = "value")]
+    #[doc = "Like `value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLOptionElement/value)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlOptionElement`*"]
+    pub fn value_js_string(this: &HtmlOptionElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLOptionElement", js_name = "value")]
     #[doc = "Setter for the `value` field of this object."]
     #[doc = ""]
@@ -115,6 +129,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlOptionElement`*"]
     pub fn text(this: &HtmlOptionElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLOptionElement", js_name = "text")]
+    #[doc = "Like `text()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLOptionElement/text)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlOptionElement`*"]
+    pub fn text_js_string(this: &HtmlOptionElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLOptionElement", js_name = "text")]
     #[doc = "Setter for the `text` field of this object."]
     #[doc = ""]

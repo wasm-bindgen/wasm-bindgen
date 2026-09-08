@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DisplayNameResult`*"]
     #[wasm_bindgen(method, getter = "locale")]
     pub fn get_locale(this: &DisplayNameResult) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_locale()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DisplayNameResult`*"]
+    #[wasm_bindgen(method, getter = "locale")]
+    pub fn get_locale_js_string(this: &DisplayNameResult) -> Option<::js_sys::JsString>;
     #[doc = "Change the `locale` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DisplayNameResult`*"]
@@ -25,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `DisplayNameResult`*"]
     #[wasm_bindgen(method, getter = "style")]
     pub fn get_style(this: &DisplayNameResult) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_style()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DisplayNameResult`*"]
+    #[wasm_bindgen(method, getter = "style")]
+    pub fn get_style_js_string(this: &DisplayNameResult) -> Option<::js_sys::JsString>;
     #[doc = "Change the `style` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DisplayNameResult`*"]

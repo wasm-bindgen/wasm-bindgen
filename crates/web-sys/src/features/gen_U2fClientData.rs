@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `U2fClientData`*"]
     #[wasm_bindgen(method, getter = "challenge")]
     pub fn get_challenge(this: &U2fClientData) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_challenge()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `U2fClientData`*"]
+    #[wasm_bindgen(method, getter = "challenge")]
+    pub fn get_challenge_js_string(this: &U2fClientData) -> Option<::js_sys::JsString>;
     #[doc = "Change the `challenge` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `U2fClientData`*"]
@@ -25,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `U2fClientData`*"]
     #[wasm_bindgen(method, getter = "origin")]
     pub fn get_origin(this: &U2fClientData) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_origin()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `U2fClientData`*"]
+    #[wasm_bindgen(method, getter = "origin")]
+    pub fn get_origin_js_string(this: &U2fClientData) -> Option<::js_sys::JsString>;
     #[doc = "Change the `origin` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `U2fClientData`*"]
@@ -35,6 +45,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `U2fClientData`*"]
     #[wasm_bindgen(method, getter = "typ")]
     pub fn get_typ(this: &U2fClientData) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_typ()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `U2fClientData`*"]
+    #[wasm_bindgen(method, getter = "typ")]
+    pub fn get_typ_js_string(this: &U2fClientData) -> Option<::js_sys::JsString>;
     #[doc = "Change the `typ` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `U2fClientData`*"]

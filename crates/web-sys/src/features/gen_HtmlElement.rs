@@ -26,6 +26,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn title(this: &HtmlElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLElement", js_name = "title")]
+    #[doc = "Like `title()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/title)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
+    pub fn title_js_string(this: &HtmlElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLElement", js_name = "title")]
     #[doc = "Setter for the `title` field of this object."]
     #[doc = ""]
@@ -70,6 +77,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn lang(this: &HtmlElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLElement", js_name = "lang")]
+    #[doc = "Like `lang()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/lang)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
+    pub fn lang_js_string(this: &HtmlElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLElement", js_name = "lang")]
     #[doc = "Setter for the `lang` field of this object."]
     #[doc = ""]
@@ -84,6 +98,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn dir(this: &HtmlElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLElement", js_name = "dir")]
+    #[doc = "Like `dir()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/dir)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
+    pub fn dir_js_string(this: &HtmlElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLElement", js_name = "dir")]
     #[doc = "Setter for the `dir` field of this object."]
     #[doc = ""]
@@ -98,6 +119,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn inner_text(this: &HtmlElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLElement", js_name = "innerText")]
+    #[doc = "Like `inner_text()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/innerText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
+    pub fn inner_text_js_string(this: &HtmlElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLElement", js_name = "innerText")]
     #[doc = "Setter for the `innerText` field of this object."]
     #[doc = ""]
@@ -140,6 +168,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn access_key(this: &HtmlElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLElement", js_name = "accessKey")]
+    #[doc = "Like `access_key()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/accessKey)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
+    pub fn access_key_js_string(this: &HtmlElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLElement", js_name = "accessKey")]
     #[doc = "Setter for the `accessKey` field of this object."]
     #[doc = ""]
@@ -154,6 +189,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn access_key_label(this: &HtmlElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLElement", js_name = "accessKeyLabel")]
+    #[doc = "Like `access_key_label()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/accessKeyLabel)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
+    pub fn access_key_label_js_string(this: &HtmlElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "HTMLElement", js_name = "draggable")]
     #[doc = "Getter for the `draggable` field of this object."]
     #[doc = ""]
@@ -175,6 +217,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn content_editable(this: &HtmlElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLElement", js_name = "contentEditable")]
+    #[doc = "Like `content_editable()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/contentEditable)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
+    pub fn content_editable_js_string(this: &HtmlElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLElement", js_name = "contentEditable")]
     #[doc = "Setter for the `contentEditable` field of this object."]
     #[doc = ""]
@@ -201,6 +250,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn popover(this: &HtmlElement) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "HTMLElement", js_name = "popover")]
+    #[doc = "Like `popover()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/popover)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
+    pub fn popover_js_string(this: &HtmlElement) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(catch, method, setter, js_class = "HTMLElement", js_name = "popover")]
     #[doc = "Setter for the `popover` field of this object."]
     #[doc = ""]
@@ -1634,6 +1690,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
     pub fn nonce(this: &HtmlElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLElement", js_name = "nonce")]
+    #[doc = "Like `nonce()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/nonce)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlElement`*"]
+    pub fn nonce_js_string(this: &HtmlElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLElement", js_name = "nonce")]
     #[doc = "Setter for the `nonce` field of this object."]
     #[doc = ""]

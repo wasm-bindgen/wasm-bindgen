@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PaymentAddress`*"]
     pub fn country(this: &PaymentAddress) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "PaymentAddress", js_name = "country")]
+    #[doc = "Like `country()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentAddress/country)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PaymentAddress`*"]
+    pub fn country_js_string(this: &PaymentAddress) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "PaymentAddress", js_name = "addressLine")]
     #[doc = "Getter for the `addressLine` field of this object."]
     #[doc = ""]
@@ -37,6 +44,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PaymentAddress`*"]
     pub fn region(this: &PaymentAddress) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "PaymentAddress", js_name = "region")]
+    #[doc = "Like `region()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentAddress/region)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PaymentAddress`*"]
+    pub fn region_js_string(this: &PaymentAddress) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "PaymentAddress", js_name = "city")]
     #[doc = "Getter for the `city` field of this object."]
     #[doc = ""]
@@ -44,6 +58,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PaymentAddress`*"]
     pub fn city(this: &PaymentAddress) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "PaymentAddress", js_name = "city")]
+    #[doc = "Like `city()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentAddress/city)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PaymentAddress`*"]
+    pub fn city_js_string(this: &PaymentAddress) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         getter,
@@ -56,6 +77,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PaymentAddress`*"]
     pub fn dependent_locality(this: &PaymentAddress) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "PaymentAddress",
+        js_name = "dependentLocality"
+    )]
+    #[doc = "Like `dependent_locality()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentAddress/dependentLocality)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PaymentAddress`*"]
+    pub fn dependent_locality_js_string(this: &PaymentAddress) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "PaymentAddress", js_name = "postalCode")]
     #[doc = "Getter for the `postalCode` field of this object."]
     #[doc = ""]
@@ -63,6 +96,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PaymentAddress`*"]
     pub fn postal_code(this: &PaymentAddress) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "PaymentAddress", js_name = "postalCode")]
+    #[doc = "Like `postal_code()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentAddress/postalCode)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PaymentAddress`*"]
+    pub fn postal_code_js_string(this: &PaymentAddress) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "PaymentAddress", js_name = "sortingCode")]
     #[doc = "Getter for the `sortingCode` field of this object."]
     #[doc = ""]
@@ -70,6 +110,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PaymentAddress`*"]
     pub fn sorting_code(this: &PaymentAddress) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "PaymentAddress", js_name = "sortingCode")]
+    #[doc = "Like `sorting_code()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentAddress/sortingCode)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PaymentAddress`*"]
+    pub fn sorting_code_js_string(this: &PaymentAddress) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "PaymentAddress", js_name = "languageCode")]
     #[doc = "Getter for the `languageCode` field of this object."]
     #[doc = ""]
@@ -77,6 +124,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PaymentAddress`*"]
     pub fn language_code(this: &PaymentAddress) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "PaymentAddress", js_name = "languageCode")]
+    #[doc = "Like `language_code()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentAddress/languageCode)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PaymentAddress`*"]
+    pub fn language_code_js_string(this: &PaymentAddress) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "PaymentAddress", js_name = "organization")]
     #[doc = "Getter for the `organization` field of this object."]
     #[doc = ""]
@@ -84,6 +138,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PaymentAddress`*"]
     pub fn organization(this: &PaymentAddress) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "PaymentAddress", js_name = "organization")]
+    #[doc = "Like `organization()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentAddress/organization)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PaymentAddress`*"]
+    pub fn organization_js_string(this: &PaymentAddress) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "PaymentAddress", js_name = "recipient")]
     #[doc = "Getter for the `recipient` field of this object."]
     #[doc = ""]
@@ -91,6 +152,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PaymentAddress`*"]
     pub fn recipient(this: &PaymentAddress) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "PaymentAddress", js_name = "recipient")]
+    #[doc = "Like `recipient()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentAddress/recipient)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PaymentAddress`*"]
+    pub fn recipient_js_string(this: &PaymentAddress) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "PaymentAddress", js_name = "phone")]
     #[doc = "Getter for the `phone` field of this object."]
     #[doc = ""]
@@ -98,6 +166,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PaymentAddress`*"]
     pub fn phone(this: &PaymentAddress) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "PaymentAddress", js_name = "phone")]
+    #[doc = "Like `phone()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentAddress/phone)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PaymentAddress`*"]
+    pub fn phone_js_string(this: &PaymentAddress) -> ::js_sys::JsString;
     #[wasm_bindgen(method, js_class = "PaymentAddress", js_name = "toJSON")]
     #[doc = "The `toJSON()` method."]
     #[doc = ""]

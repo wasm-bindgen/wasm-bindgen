@@ -30,4 +30,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssTransition`*"]
     pub fn transition_property(this: &CssTransition) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "CSSTransition",
+        js_name = "transitionProperty"
+    )]
+    #[doc = "Like `transition_property()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSTransition/transitionProperty)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssTransition`*"]
+    pub fn transition_property_js_string(this: &CssTransition) -> ::js_sys::JsString;
 }

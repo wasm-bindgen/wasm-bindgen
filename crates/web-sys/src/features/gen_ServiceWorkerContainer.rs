@@ -169,6 +169,21 @@ extern "C" {
         this: &ServiceWorkerContainer,
         url: &str,
     ) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        js_class = "ServiceWorkerContainer",
+        js_name = "getScopeForUrl"
+    )]
+    #[doc = "Like `get_scope_for_url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/getScopeForUrl)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ServiceWorkerContainer`*"]
+    pub fn get_scope_for_url_js_string(
+        this: &ServiceWorkerContainer,
+        url: &str,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(method, js_class = "ServiceWorkerContainer")]
     #[doc = "The `register()` method."]
     #[doc = ""]

@@ -54,6 +54,19 @@ extern "C" {
         method,
         getter,
         js_class = "XPathResult",
+        js_name = "stringValue"
+    )]
+    #[doc = "Like `string_value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/XPathResult/stringValue)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `XPathResult`*"]
+    pub fn string_value_js_string(this: &XPathResult) -> Result<::js_sys::JsString, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        getter,
+        js_class = "XPathResult",
         js_name = "booleanValue"
     )]
     #[doc = "Getter for the `booleanValue` field of this object."]

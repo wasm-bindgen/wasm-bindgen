@@ -62,6 +62,15 @@ extern "C" {
     #[wasm_bindgen(method, getter = "platform")]
     pub fn get_platform(this: &UaLowEntropyJson) -> Option<::alloc::string::String>;
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Like `get_platform()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `UaLowEntropyJson`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "platform")]
+    pub fn get_platform_js_string(this: &UaLowEntropyJson) -> Option<::js_sys::JsString>;
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `platform` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `UaLowEntropyJson`*"]

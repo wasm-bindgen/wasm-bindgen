@@ -20,6 +20,13 @@ extern "C" {
     pub fn get_key_system(
         this: &RequestMediaKeySystemAccessNotification,
     ) -> ::alloc::string::String;
+    #[doc = "Like `get_key_system()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RequestMediaKeySystemAccessNotification`*"]
+    #[wasm_bindgen(method, getter = "keySystem")]
+    pub fn get_key_system_js_string(
+        this: &RequestMediaKeySystemAccessNotification,
+    ) -> ::js_sys::JsString;
     #[doc = "Change the `keySystem` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RequestMediaKeySystemAccessNotification`*"]

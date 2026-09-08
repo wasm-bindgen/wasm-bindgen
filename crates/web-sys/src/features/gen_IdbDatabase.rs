@@ -24,6 +24,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `IdbDatabase`*"]
     pub fn name(this: &IdbDatabase) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "IDBDatabase", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/IDBDatabase/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IdbDatabase`*"]
+    pub fn name_js_string(this: &IdbDatabase) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "IDBDatabase", js_name = "version")]
     #[doc = "Getter for the `version` field of this object."]
     #[doc = ""]

@@ -27,6 +27,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTitleElement`*"]
     pub fn text(this: &HtmlTitleElement) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, getter, js_class = "HTMLTitleElement", js_name = "text")]
+    #[doc = "Like `text()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTitleElement/text)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTitleElement`*"]
+    pub fn text_js_string(this: &HtmlTitleElement) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, setter, js_class = "HTMLTitleElement", js_name = "text")]
     #[doc = "Setter for the `text` field of this object."]
     #[doc = ""]

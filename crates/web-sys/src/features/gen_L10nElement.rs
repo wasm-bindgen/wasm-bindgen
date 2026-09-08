@@ -25,6 +25,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
     #[wasm_bindgen(method, getter = "l10nAttrs")]
     pub fn get_l10n_attrs(this: &L10nElement) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_l10n_attrs()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
+    #[wasm_bindgen(method, getter = "l10nAttrs")]
+    pub fn get_l10n_attrs_js_string(this: &L10nElement) -> Option<::js_sys::JsString>;
     #[doc = "Change the `l10nAttrs` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
@@ -35,6 +40,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
     #[wasm_bindgen(method, getter = "l10nId")]
     pub fn get_l10n_id(this: &L10nElement) -> ::alloc::string::String;
+    #[doc = "Like `get_l10n_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
+    #[wasm_bindgen(method, getter = "l10nId")]
+    pub fn get_l10n_id_js_string(this: &L10nElement) -> ::js_sys::JsString;
     #[doc = "Change the `l10nId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
@@ -45,6 +55,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
     #[wasm_bindgen(method, getter = "localName")]
     pub fn get_local_name(this: &L10nElement) -> ::alloc::string::String;
+    #[doc = "Like `get_local_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
+    #[wasm_bindgen(method, getter = "localName")]
+    pub fn get_local_name_js_string(this: &L10nElement) -> ::js_sys::JsString;
     #[doc = "Change the `localName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
@@ -55,6 +70,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
     #[wasm_bindgen(method, getter = "namespaceURI")]
     pub fn get_namespace_uri(this: &L10nElement) -> ::alloc::string::String;
+    #[doc = "Like `get_namespace_uri()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
+    #[wasm_bindgen(method, getter = "namespaceURI")]
+    pub fn get_namespace_uri_js_string(this: &L10nElement) -> ::js_sys::JsString;
     #[doc = "Change the `namespaceURI` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
@@ -65,6 +85,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
     #[wasm_bindgen(method, getter = "type")]
     pub fn get_type(this: &L10nElement) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]
+    #[wasm_bindgen(method, getter = "type")]
+    pub fn get_type_js_string(this: &L10nElement) -> Option<::js_sys::JsString>;
     #[doc = "Change the `type` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `L10nElement`*"]

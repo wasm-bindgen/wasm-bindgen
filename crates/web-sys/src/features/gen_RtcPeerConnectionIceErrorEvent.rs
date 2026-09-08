@@ -33,6 +33,18 @@ extern "C" {
         method,
         getter,
         js_class = "RTCPeerConnectionIceErrorEvent",
+        js_name = "address"
+    )]
+    #[doc = "Like `address()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnectionIceErrorEvent/address)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcPeerConnectionIceErrorEvent`*"]
+    pub fn address_js_string(this: &RtcPeerConnectionIceErrorEvent) -> Option<::js_sys::JsString>;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "RTCPeerConnectionIceErrorEvent",
         js_name = "port"
     )]
     #[doc = "Getter for the `port` field of this object."]
@@ -57,6 +69,18 @@ extern "C" {
         method,
         getter,
         js_class = "RTCPeerConnectionIceErrorEvent",
+        js_name = "url"
+    )]
+    #[doc = "Like `url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnectionIceErrorEvent/url)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcPeerConnectionIceErrorEvent`*"]
+    pub fn url_js_string(this: &RtcPeerConnectionIceErrorEvent) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "RTCPeerConnectionIceErrorEvent",
         js_name = "errorCode"
     )]
     #[doc = "Getter for the `errorCode` field of this object."]
@@ -77,4 +101,16 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcPeerConnectionIceErrorEvent`*"]
     pub fn error_text(this: &RtcPeerConnectionIceErrorEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "RTCPeerConnectionIceErrorEvent",
+        js_name = "errorText"
+    )]
+    #[doc = "Like `error_text()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnectionIceErrorEvent/errorText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcPeerConnectionIceErrorEvent`*"]
+    pub fn error_text_js_string(this: &RtcPeerConnectionIceErrorEvent) -> ::js_sys::JsString;
 }

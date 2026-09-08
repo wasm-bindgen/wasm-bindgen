@@ -101,6 +101,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcStatsReportInternal`*"]
     #[wasm_bindgen(method, getter = "localSdp")]
     pub fn get_local_sdp(this: &RtcStatsReportInternal) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_local_sdp()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcStatsReportInternal`*"]
+    #[wasm_bindgen(method, getter = "localSdp")]
+    pub fn get_local_sdp_js_string(this: &RtcStatsReportInternal) -> Option<::js_sys::JsString>;
     #[doc = "Change the `localSdp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcStatsReportInternal`*"]
@@ -157,6 +162,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcStatsReportInternal`*"]
     #[wasm_bindgen(method, getter = "pcid")]
     pub fn get_pcid(this: &RtcStatsReportInternal) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_pcid()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcStatsReportInternal`*"]
+    #[wasm_bindgen(method, getter = "pcid")]
+    pub fn get_pcid_js_string(this: &RtcStatsReportInternal) -> Option<::js_sys::JsString>;
     #[doc = "Change the `pcid` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcStatsReportInternal`*"]
@@ -187,6 +197,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcStatsReportInternal`*"]
     #[wasm_bindgen(method, getter = "remoteSdp")]
     pub fn get_remote_sdp(this: &RtcStatsReportInternal) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_remote_sdp()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcStatsReportInternal`*"]
+    #[wasm_bindgen(method, getter = "remoteSdp")]
+    pub fn get_remote_sdp_js_string(this: &RtcStatsReportInternal) -> Option<::js_sys::JsString>;
     #[doc = "Change the `remoteSdp` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcStatsReportInternal`*"]

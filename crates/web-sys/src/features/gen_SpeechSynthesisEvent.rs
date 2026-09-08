@@ -73,6 +73,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SpeechSynthesisEvent`*"]
     pub fn name(this: &SpeechSynthesisEvent) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "SpeechSynthesisEvent", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesisEvent/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SpeechSynthesisEvent`*"]
+    pub fn name_js_string(this: &SpeechSynthesisEvent) -> Option<::js_sys::JsString>;
     #[cfg(feature = "SpeechSynthesisEventInit")]
     #[wasm_bindgen(catch, constructor, js_class = "SpeechSynthesisEvent")]
     #[doc = "The `new SpeechSynthesisEvent(..)` constructor, creating a new instance of `SpeechSynthesisEvent`."]

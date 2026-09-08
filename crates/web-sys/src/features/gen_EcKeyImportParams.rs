@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `EcKeyImportParams`*"]
     #[wasm_bindgen(method, getter = "name")]
     pub fn get_name(this: &EcKeyImportParams) -> ::alloc::string::String;
+    #[doc = "Like `get_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `EcKeyImportParams`*"]
+    #[wasm_bindgen(method, getter = "name")]
+    pub fn get_name_js_string(this: &EcKeyImportParams) -> ::js_sys::JsString;
     #[doc = "Change the `name` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `EcKeyImportParams`*"]
@@ -25,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `EcKeyImportParams`*"]
     #[wasm_bindgen(method, getter = "namedCurve")]
     pub fn get_named_curve(this: &EcKeyImportParams) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_named_curve()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `EcKeyImportParams`*"]
+    #[wasm_bindgen(method, getter = "namedCurve")]
+    pub fn get_named_curve_js_string(this: &EcKeyImportParams) -> Option<::js_sys::JsString>;
     #[doc = "Change the `namedCurve` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `EcKeyImportParams`*"]

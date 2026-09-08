@@ -42,6 +42,15 @@ extern "C" {
     #[wasm_bindgen(method, getter = "id")]
     pub fn get_id(this: &FilePickerOptions) -> Option<::alloc::string::String>;
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Like `get_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FilePickerOptions`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "id")]
+    pub fn get_id_js_string(this: &FilePickerOptions) -> Option<::js_sys::JsString>;
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `id` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FilePickerOptions`*"]

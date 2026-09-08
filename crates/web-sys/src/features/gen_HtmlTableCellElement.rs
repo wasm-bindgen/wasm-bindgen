@@ -55,6 +55,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableCellElement`*"]
     pub fn headers(this: &HtmlTableCellElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLTableCellElement", js_name = "headers")]
+    #[doc = "Like `headers()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableCellElement/headers)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableCellElement`*"]
+    pub fn headers_js_string(this: &HtmlTableCellElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLTableCellElement", js_name = "headers")]
     #[doc = "Setter for the `headers` field of this object."]
     #[doc = ""]
@@ -81,6 +88,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableCellElement`*"]
     pub fn abbr(this: &HtmlTableCellElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLTableCellElement", js_name = "abbr")]
+    #[doc = "Like `abbr()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableCellElement/abbr)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableCellElement`*"]
+    pub fn abbr_js_string(this: &HtmlTableCellElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLTableCellElement", js_name = "abbr")]
     #[doc = "Setter for the `abbr` field of this object."]
     #[doc = ""]
@@ -95,6 +109,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableCellElement`*"]
     pub fn scope(this: &HtmlTableCellElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLTableCellElement", js_name = "scope")]
+    #[doc = "Like `scope()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableCellElement/scope)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableCellElement`*"]
+    pub fn scope_js_string(this: &HtmlTableCellElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLTableCellElement", js_name = "scope")]
     #[doc = "Setter for the `scope` field of this object."]
     #[doc = ""]
@@ -109,6 +130,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableCellElement`*"]
     pub fn align(this: &HtmlTableCellElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLTableCellElement", js_name = "align")]
+    #[doc = "Like `align()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableCellElement/align)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableCellElement`*"]
+    pub fn align_js_string(this: &HtmlTableCellElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLTableCellElement", js_name = "align")]
     #[doc = "Setter for the `align` field of this object."]
     #[doc = ""]
@@ -123,6 +151,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableCellElement`*"]
     pub fn axis(this: &HtmlTableCellElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLTableCellElement", js_name = "axis")]
+    #[doc = "Like `axis()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableCellElement/axis)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableCellElement`*"]
+    pub fn axis_js_string(this: &HtmlTableCellElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLTableCellElement", js_name = "axis")]
     #[doc = "Setter for the `axis` field of this object."]
     #[doc = ""]
@@ -137,6 +172,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableCellElement`*"]
     pub fn height(this: &HtmlTableCellElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLTableCellElement", js_name = "height")]
+    #[doc = "Like `height()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableCellElement/height)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableCellElement`*"]
+    pub fn height_js_string(this: &HtmlTableCellElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLTableCellElement", js_name = "height")]
     #[doc = "Setter for the `height` field of this object."]
     #[doc = ""]
@@ -151,6 +193,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableCellElement`*"]
     pub fn width(this: &HtmlTableCellElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLTableCellElement", js_name = "width")]
+    #[doc = "Like `width()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableCellElement/width)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableCellElement`*"]
+    pub fn width_js_string(this: &HtmlTableCellElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLTableCellElement", js_name = "width")]
     #[doc = "Setter for the `width` field of this object."]
     #[doc = ""]
@@ -165,6 +214,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableCellElement`*"]
     pub fn ch(this: &HtmlTableCellElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLTableCellElement", js_name = "ch")]
+    #[doc = "Like `ch()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableCellElement/ch)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableCellElement`*"]
+    pub fn ch_js_string(this: &HtmlTableCellElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLTableCellElement", js_name = "ch")]
     #[doc = "Setter for the `ch` field of this object."]
     #[doc = ""]
@@ -179,6 +235,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableCellElement`*"]
     pub fn ch_off(this: &HtmlTableCellElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLTableCellElement", js_name = "chOff")]
+    #[doc = "Like `ch_off()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableCellElement/chOff)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableCellElement`*"]
+    pub fn ch_off_js_string(this: &HtmlTableCellElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLTableCellElement", js_name = "chOff")]
     #[doc = "Setter for the `chOff` field of this object."]
     #[doc = ""]
@@ -207,6 +270,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableCellElement`*"]
     pub fn v_align(this: &HtmlTableCellElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLTableCellElement", js_name = "vAlign")]
+    #[doc = "Like `v_align()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableCellElement/vAlign)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableCellElement`*"]
+    pub fn v_align_js_string(this: &HtmlTableCellElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLTableCellElement", js_name = "vAlign")]
     #[doc = "Setter for the `vAlign` field of this object."]
     #[doc = ""]
@@ -221,6 +291,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableCellElement`*"]
     pub fn bg_color(this: &HtmlTableCellElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLTableCellElement", js_name = "bgColor")]
+    #[doc = "Like `bg_color()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableCellElement/bgColor)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableCellElement`*"]
+    pub fn bg_color_js_string(this: &HtmlTableCellElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLTableCellElement", js_name = "bgColor")]
     #[doc = "Setter for the `bgColor` field of this object."]
     #[doc = ""]

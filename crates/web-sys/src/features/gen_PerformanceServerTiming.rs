@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PerformanceServerTiming`*"]
     pub fn name(this: &PerformanceServerTiming) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "PerformanceServerTiming", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceServerTiming/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PerformanceServerTiming`*"]
+    pub fn name_js_string(this: &PerformanceServerTiming) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         getter,
@@ -47,6 +54,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PerformanceServerTiming`*"]
     pub fn description(this: &PerformanceServerTiming) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "PerformanceServerTiming",
+        js_name = "description"
+    )]
+    #[doc = "Like `description()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceServerTiming/description)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PerformanceServerTiming`*"]
+    pub fn description_js_string(this: &PerformanceServerTiming) -> ::js_sys::JsString;
     #[wasm_bindgen(method, js_class = "PerformanceServerTiming", js_name = "toJSON")]
     #[doc = "The `toJSON()` method."]
     #[doc = ""]

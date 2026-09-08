@@ -26,6 +26,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgElement`*"]
     pub fn id(this: &SvgElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "SVGElement", js_name = "id")]
+    #[doc = "Like `id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGElement/id)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgElement`*"]
+    pub fn id_js_string(this: &SvgElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "SVGElement", js_name = "id")]
     #[doc = "Setter for the `id` field of this object."]
     #[doc = ""]
@@ -1391,6 +1398,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgElement`*"]
     pub fn nonce(this: &SvgElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "SVGElement", js_name = "nonce")]
+    #[doc = "Like `nonce()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGElement/nonce)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgElement`*"]
+    pub fn nonce_js_string(this: &SvgElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "SVGElement", js_name = "nonce")]
     #[doc = "Setter for the `nonce` field of this object."]
     #[doc = ""]

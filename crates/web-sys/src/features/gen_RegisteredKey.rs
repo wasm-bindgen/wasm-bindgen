@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RegisteredKey`*"]
     #[wasm_bindgen(method, getter = "appId")]
     pub fn get_app_id(this: &RegisteredKey) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_app_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegisteredKey`*"]
+    #[wasm_bindgen(method, getter = "appId")]
+    pub fn get_app_id_js_string(this: &RegisteredKey) -> Option<::js_sys::JsString>;
     #[doc = "Change the `appId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RegisteredKey`*"]
@@ -25,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RegisteredKey`*"]
     #[wasm_bindgen(method, getter = "keyHandle")]
     pub fn get_key_handle(this: &RegisteredKey) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_key_handle()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegisteredKey`*"]
+    #[wasm_bindgen(method, getter = "keyHandle")]
+    pub fn get_key_handle_js_string(this: &RegisteredKey) -> Option<::js_sys::JsString>;
     #[doc = "Change the `keyHandle` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RegisteredKey`*"]
@@ -45,6 +55,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RegisteredKey`*"]
     #[wasm_bindgen(method, getter = "version")]
     pub fn get_version(this: &RegisteredKey) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_version()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RegisteredKey`*"]
+    #[wasm_bindgen(method, getter = "version")]
+    pub fn get_version_js_string(this: &RegisteredKey) -> Option<::js_sys::JsString>;
     #[doc = "Change the `version` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RegisteredKey`*"]

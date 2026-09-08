@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceComponentStats`*"]
     #[wasm_bindgen(method, getter = "id")]
     pub fn get_id(this: &RtcIceComponentStats) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceComponentStats`*"]
+    #[wasm_bindgen(method, getter = "id")]
+    pub fn get_id_js_string(this: &RtcIceComponentStats) -> Option<::js_sys::JsString>;
     #[doc = "Change the `id` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceComponentStats`*"]
@@ -87,6 +92,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceComponentStats`*"]
     #[wasm_bindgen(method, getter = "transportId")]
     pub fn get_transport_id(this: &RtcIceComponentStats) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_transport_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceComponentStats`*"]
+    #[wasm_bindgen(method, getter = "transportId")]
+    pub fn get_transport_id_js_string(this: &RtcIceComponentStats) -> Option<::js_sys::JsString>;
     #[doc = "Change the `transportId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceComponentStats`*"]

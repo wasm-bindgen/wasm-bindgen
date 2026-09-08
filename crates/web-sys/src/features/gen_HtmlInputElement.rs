@@ -27,6 +27,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
     pub fn accept(this: &HtmlInputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLInputElement", js_name = "accept")]
+    #[doc = "Like `accept()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/accept)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn accept_js_string(this: &HtmlInputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLInputElement", js_name = "accept")]
     #[doc = "Setter for the `accept` field of this object."]
     #[doc = ""]
@@ -41,6 +48,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
     pub fn alt(this: &HtmlInputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLInputElement", js_name = "alt")]
+    #[doc = "Like `alt()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/alt)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn alt_js_string(this: &HtmlInputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLInputElement", js_name = "alt")]
     #[doc = "Setter for the `alt` field of this object."]
     #[doc = ""]
@@ -60,6 +74,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
     pub fn autocomplete(this: &HtmlInputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "HTMLInputElement",
+        js_name = "autocomplete"
+    )]
+    #[doc = "Like `autocomplete()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/autocomplete)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn autocomplete_js_string(this: &HtmlInputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         setter,
@@ -175,6 +201,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
     pub fn form_action(this: &HtmlInputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLInputElement", js_name = "formAction")]
+    #[doc = "Like `form_action()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/formAction)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn form_action_js_string(this: &HtmlInputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLInputElement", js_name = "formAction")]
     #[doc = "Setter for the `formAction` field of this object."]
     #[doc = ""]
@@ -189,6 +222,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
     pub fn form_enctype(this: &HtmlInputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLInputElement", js_name = "formEnctype")]
+    #[doc = "Like `form_enctype()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/formEnctype)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn form_enctype_js_string(this: &HtmlInputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLInputElement", js_name = "formEnctype")]
     #[doc = "Setter for the `formEnctype` field of this object."]
     #[doc = ""]
@@ -203,6 +243,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
     pub fn form_method(this: &HtmlInputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLInputElement", js_name = "formMethod")]
+    #[doc = "Like `form_method()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/formMethod)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn form_method_js_string(this: &HtmlInputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLInputElement", js_name = "formMethod")]
     #[doc = "Setter for the `formMethod` field of this object."]
     #[doc = ""]
@@ -241,6 +288,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
     pub fn form_target(this: &HtmlInputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLInputElement", js_name = "formTarget")]
+    #[doc = "Like `form_target()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/formTarget)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn form_target_js_string(this: &HtmlInputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLInputElement", js_name = "formTarget")]
     #[doc = "Setter for the `formTarget` field of this object."]
     #[doc = ""]
@@ -293,6 +347,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
     pub fn input_mode(this: &HtmlInputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLInputElement", js_name = "inputMode")]
+    #[doc = "Like `input_mode()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/inputMode)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn input_mode_js_string(this: &HtmlInputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLInputElement", js_name = "inputMode")]
     #[doc = "Setter for the `inputMode` field of this object."]
     #[doc = ""]
@@ -314,6 +375,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
     pub fn max(this: &HtmlInputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLInputElement", js_name = "max")]
+    #[doc = "Like `max()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/max)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn max_js_string(this: &HtmlInputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLInputElement", js_name = "max")]
     #[doc = "Setter for the `max` field of this object."]
     #[doc = ""]
@@ -342,6 +410,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
     pub fn min(this: &HtmlInputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLInputElement", js_name = "min")]
+    #[doc = "Like `min()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/min)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn min_js_string(this: &HtmlInputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLInputElement", js_name = "min")]
     #[doc = "Setter for the `min` field of this object."]
     #[doc = ""]
@@ -384,6 +459,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
     pub fn name(this: &HtmlInputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLInputElement", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn name_js_string(this: &HtmlInputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLInputElement", js_name = "name")]
     #[doc = "Setter for the `name` field of this object."]
     #[doc = ""]
@@ -398,6 +480,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
     pub fn pattern(this: &HtmlInputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLInputElement", js_name = "pattern")]
+    #[doc = "Like `pattern()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/pattern)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn pattern_js_string(this: &HtmlInputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLInputElement", js_name = "pattern")]
     #[doc = "Setter for the `pattern` field of this object."]
     #[doc = ""]
@@ -412,6 +501,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
     pub fn placeholder(this: &HtmlInputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLInputElement", js_name = "placeholder")]
+    #[doc = "Like `placeholder()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/placeholder)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn placeholder_js_string(this: &HtmlInputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLInputElement", js_name = "placeholder")]
     #[doc = "Setter for the `placeholder` field of this object."]
     #[doc = ""]
@@ -468,6 +564,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
     pub fn src(this: &HtmlInputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLInputElement", js_name = "src")]
+    #[doc = "Like `src()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/src)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn src_js_string(this: &HtmlInputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLInputElement", js_name = "src")]
     #[doc = "Setter for the `src` field of this object."]
     #[doc = ""]
@@ -482,6 +585,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
     pub fn step(this: &HtmlInputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLInputElement", js_name = "step")]
+    #[doc = "Like `step()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/step)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn step_js_string(this: &HtmlInputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLInputElement", js_name = "step")]
     #[doc = "Setter for the `step` field of this object."]
     #[doc = ""]
@@ -496,6 +606,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
     pub fn type_(this: &HtmlInputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLInputElement", js_name = "type")]
+    #[doc = "Like `type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/type)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn type_js_string(this: &HtmlInputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLInputElement", js_name = "type")]
     #[doc = "Setter for the `type` field of this object."]
     #[doc = ""]
@@ -517,6 +634,18 @@ extern "C" {
     pub fn default_value(this: &HtmlInputElement) -> ::alloc::string::String;
     #[wasm_bindgen(
         method,
+        getter,
+        js_class = "HTMLInputElement",
+        js_name = "defaultValue"
+    )]
+    #[doc = "Like `default_value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/defaultValue)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn default_value_js_string(this: &HtmlInputElement) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
         setter,
         js_class = "HTMLInputElement",
         js_name = "defaultValue"
@@ -534,6 +663,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
     pub fn value(this: &HtmlInputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLInputElement", js_name = "value")]
+    #[doc = "Like `value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/value)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn value_js_string(this: &HtmlInputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLInputElement", js_name = "value")]
     #[doc = "Setter for the `value` field of this object."]
     #[doc = ""]
@@ -641,6 +777,21 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
     pub fn validation_message(this: &HtmlInputElement) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        getter,
+        js_class = "HTMLInputElement",
+        js_name = "validationMessage"
+    )]
+    #[doc = "Like `validation_message()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/validationMessage)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn validation_message_js_string(
+        this: &HtmlInputElement,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[cfg(feature = "NodeList")]
     #[wasm_bindgen(method, getter, js_class = "HTMLInputElement", js_name = "labels")]
     #[doc = "Getter for the `labels` field of this object."]
@@ -719,6 +870,21 @@ extern "C" {
     #[wasm_bindgen(
         catch,
         method,
+        getter,
+        js_class = "HTMLInputElement",
+        js_name = "selectionDirection"
+    )]
+    #[doc = "Like `selection_direction()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/selectionDirection)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn selection_direction_js_string(
+        this: &HtmlInputElement,
+    ) -> Result<Option<::js_sys::JsString>, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
         setter,
         js_class = "HTMLInputElement",
         js_name = "selectionDirection"
@@ -739,6 +905,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
     pub fn align(this: &HtmlInputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLInputElement", js_name = "align")]
+    #[doc = "Like `align()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/align)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn align_js_string(this: &HtmlInputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLInputElement", js_name = "align")]
     #[doc = "Setter for the `align` field of this object."]
     #[doc = ""]
@@ -753,6 +926,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
     pub fn use_map(this: &HtmlInputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLInputElement", js_name = "useMap")]
+    #[doc = "Like `use_map()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/useMap)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn use_map_js_string(this: &HtmlInputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLInputElement", js_name = "useMap")]
     #[doc = "Setter for the `useMap` field of this object."]
     #[doc = ""]
@@ -832,6 +1012,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
     pub fn popover_target_action(this: &HtmlInputElement) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "HTMLInputElement",
+        js_name = "popoverTargetAction"
+    )]
+    #[doc = "Like `popover_target_action()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/popoverTargetAction)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlInputElement`*"]
+    pub fn popover_target_action_js_string(this: &HtmlInputElement) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         setter,

@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
     #[wasm_bindgen(method, getter = "id")]
     pub fn get_id(this: &RtcIceCandidatePairStats) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
+    #[wasm_bindgen(method, getter = "id")]
+    pub fn get_id_js_string(this: &RtcIceCandidatePairStats) -> Option<::js_sys::JsString>;
     #[doc = "Change the `id` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
@@ -119,6 +124,13 @@ extern "C" {
     pub fn get_local_candidate_id(
         this: &RtcIceCandidatePairStats,
     ) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_local_candidate_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
+    #[wasm_bindgen(method, getter = "localCandidateId")]
+    pub fn get_local_candidate_id_js_string(
+        this: &RtcIceCandidatePairStats,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `localCandidateId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
@@ -171,6 +183,13 @@ extern "C" {
     pub fn get_remote_candidate_id(
         this: &RtcIceCandidatePairStats,
     ) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_remote_candidate_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
+    #[wasm_bindgen(method, getter = "remoteCandidateId")]
+    pub fn get_remote_candidate_id_js_string(
+        this: &RtcIceCandidatePairStats,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `remoteCandidateId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
@@ -203,6 +222,13 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
     #[wasm_bindgen(method, getter = "transportId")]
     pub fn get_transport_id(this: &RtcIceCandidatePairStats) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_transport_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]
+    #[wasm_bindgen(method, getter = "transportId")]
+    pub fn get_transport_id_js_string(
+        this: &RtcIceCandidatePairStats,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `transportId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcIceCandidatePairStats`*"]

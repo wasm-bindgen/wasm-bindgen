@@ -38,6 +38,22 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn navigation(this: &CssViewTransitionRule) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "CSSViewTransitionRule",
+        js_name = "navigation"
+    )]
+    #[doc = "Like `navigation()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSViewTransitionRule/navigation)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssViewTransitionRule`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn navigation_js_string(this: &CssViewTransitionRule) -> ::js_sys::JsString;
+    #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, getter, js_class = "CSSViewTransitionRule", js_name = "types")]
     #[doc = "Getter for the `types` field of this object."]
     #[doc = ""]

@@ -31,6 +31,18 @@ extern "C" {
     pub fn font_family(this: &CssFontFeatureValuesRule) -> ::alloc::string::String;
     #[wasm_bindgen(
         method,
+        getter,
+        js_class = "CSSFontFeatureValuesRule",
+        js_name = "fontFamily"
+    )]
+    #[doc = "Like `font_family()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSFontFeatureValuesRule/fontFamily)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssFontFeatureValuesRule`*"]
+    pub fn font_family_js_string(this: &CssFontFeatureValuesRule) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
         setter,
         js_class = "CSSFontFeatureValuesRule",
         js_name = "fontFamily"
@@ -53,6 +65,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CssFontFeatureValuesRule`*"]
     pub fn value_text(this: &CssFontFeatureValuesRule) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "CSSFontFeatureValuesRule",
+        js_name = "valueText"
+    )]
+    #[doc = "Like `value_text()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/CSSFontFeatureValuesRule/valueText)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CssFontFeatureValuesRule`*"]
+    pub fn value_text_js_string(this: &CssFontFeatureValuesRule) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         setter,

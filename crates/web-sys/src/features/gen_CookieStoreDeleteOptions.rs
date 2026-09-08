@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CookieStoreDeleteOptions`*"]
     #[wasm_bindgen(method, getter = "domain")]
     pub fn get_domain(this: &CookieStoreDeleteOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_domain()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieStoreDeleteOptions`*"]
+    #[wasm_bindgen(method, getter = "domain")]
+    pub fn get_domain_js_string(this: &CookieStoreDeleteOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `domain` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CookieStoreDeleteOptions`*"]
@@ -25,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CookieStoreDeleteOptions`*"]
     #[wasm_bindgen(method, getter = "name")]
     pub fn get_name(this: &CookieStoreDeleteOptions) -> ::alloc::string::String;
+    #[doc = "Like `get_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieStoreDeleteOptions`*"]
+    #[wasm_bindgen(method, getter = "name")]
+    pub fn get_name_js_string(this: &CookieStoreDeleteOptions) -> ::js_sys::JsString;
     #[doc = "Change the `name` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CookieStoreDeleteOptions`*"]
@@ -45,6 +55,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CookieStoreDeleteOptions`*"]
     #[wasm_bindgen(method, getter = "path")]
     pub fn get_path(this: &CookieStoreDeleteOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_path()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CookieStoreDeleteOptions`*"]
+    #[wasm_bindgen(method, getter = "path")]
+    pub fn get_path_js_string(this: &CookieStoreDeleteOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `path` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CookieStoreDeleteOptions`*"]

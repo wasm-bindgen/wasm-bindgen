@@ -76,6 +76,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpEncodingParameters`*"]
     #[wasm_bindgen(method, getter = "rid")]
     pub fn get_rid(this: &RtcRtpEncodingParameters) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_rid()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcRtpEncodingParameters`*"]
+    #[wasm_bindgen(method, getter = "rid")]
+    pub fn get_rid_js_string(this: &RtcRtpEncodingParameters) -> Option<::js_sys::JsString>;
     #[doc = "Change the `rid` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcRtpEncodingParameters`*"]
@@ -103,6 +108,17 @@ extern "C" {
     #[wasm_bindgen(method, getter = "scalabilityMode")]
     pub fn get_scalability_mode(this: &RtcRtpEncodingParameters)
         -> Option<::alloc::string::String>;
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Like `get_scalability_mode()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcRtpEncodingParameters`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "scalabilityMode")]
+    pub fn get_scalability_mode_js_string(
+        this: &RtcRtpEncodingParameters,
+    ) -> Option<::js_sys::JsString>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `scalabilityMode` field of this object."]
     #[doc = ""]

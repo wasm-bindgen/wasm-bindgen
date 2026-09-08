@@ -31,6 +31,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgPathSeg`*"]
     pub fn path_seg_type_as_letter(this: &SvgPathSeg) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "SVGPathSeg",
+        js_name = "pathSegTypeAsLetter"
+    )]
+    #[doc = "Like `path_seg_type_as_letter()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGPathSeg/pathSegTypeAsLetter)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgPathSeg`*"]
+    pub fn path_seg_type_as_letter_js_string(this: &SvgPathSeg) -> ::js_sys::JsString;
 }
 impl SvgPathSeg {
     #[doc = "The `SVGPathSeg.PATHSEG_UNKNOWN` const."]

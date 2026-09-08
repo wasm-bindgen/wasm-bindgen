@@ -48,6 +48,18 @@ extern "C" {
     pub fn return_value(this: &HtmlDialogElement) -> ::alloc::string::String;
     #[wasm_bindgen(
         method,
+        getter,
+        js_class = "HTMLDialogElement",
+        js_name = "returnValue"
+    )]
+    #[doc = "Like `return_value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLDialogElement/returnValue)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlDialogElement`*"]
+    pub fn return_value_js_string(this: &HtmlDialogElement) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
         setter,
         js_class = "HTMLDialogElement",
         js_name = "returnValue"

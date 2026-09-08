@@ -35,6 +35,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlLabelElement`*"]
     pub fn html_for(this: &HtmlLabelElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLLabelElement", js_name = "htmlFor")]
+    #[doc = "Like `html_for()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLLabelElement/htmlFor)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlLabelElement`*"]
+    pub fn html_for_js_string(this: &HtmlLabelElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLLabelElement", js_name = "htmlFor")]
     #[doc = "Setter for the `htmlFor` field of this object."]
     #[doc = ""]

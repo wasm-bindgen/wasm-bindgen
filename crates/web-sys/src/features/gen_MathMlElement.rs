@@ -1402,6 +1402,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MathMlElement`*"]
     pub fn nonce(this: &MathMlElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "MathMLElement", js_name = "nonce")]
+    #[doc = "Like `nonce()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MathMLElement/nonce)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MathMlElement`*"]
+    pub fn nonce_js_string(this: &MathMlElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "MathMLElement", js_name = "nonce")]
     #[doc = "Setter for the `nonce` field of this object."]
     #[doc = ""]

@@ -33,6 +33,18 @@ extern "C" {
         method,
         getter,
         js_class = "PerformanceResourceTiming",
+        js_name = "initiatorType"
+    )]
+    #[doc = "Like `initiator_type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming/initiatorType)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PerformanceResourceTiming`*"]
+    pub fn initiator_type_js_string(this: &PerformanceResourceTiming) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "PerformanceResourceTiming",
         js_name = "nextHopProtocol"
     )]
     #[doc = "Getter for the `nextHopProtocol` field of this object."]
@@ -41,6 +53,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PerformanceResourceTiming`*"]
     pub fn next_hop_protocol(this: &PerformanceResourceTiming) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "PerformanceResourceTiming",
+        js_name = "nextHopProtocol"
+    )]
+    #[doc = "Like `next_hop_protocol()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming/nextHopProtocol)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PerformanceResourceTiming`*"]
+    pub fn next_hop_protocol_js_string(this: &PerformanceResourceTiming) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         getter,

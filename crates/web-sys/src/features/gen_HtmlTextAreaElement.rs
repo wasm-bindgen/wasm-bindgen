@@ -34,6 +34,18 @@ extern "C" {
     pub fn autocomplete(this: &HtmlTextAreaElement) -> ::alloc::string::String;
     #[wasm_bindgen(
         method,
+        getter,
+        js_class = "HTMLTextAreaElement",
+        js_name = "autocomplete"
+    )]
+    #[doc = "Like `autocomplete()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTextAreaElement/autocomplete)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
+    pub fn autocomplete_js_string(this: &HtmlTextAreaElement) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
         setter,
         js_class = "HTMLTextAreaElement",
         js_name = "autocomplete"
@@ -165,6 +177,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
     pub fn name(this: &HtmlTextAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLTextAreaElement", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTextAreaElement/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
+    pub fn name_js_string(this: &HtmlTextAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLTextAreaElement", js_name = "name")]
     #[doc = "Setter for the `name` field of this object."]
     #[doc = ""]
@@ -184,6 +203,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
     pub fn placeholder(this: &HtmlTextAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "HTMLTextAreaElement",
+        js_name = "placeholder"
+    )]
+    #[doc = "Like `placeholder()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTextAreaElement/placeholder)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
+    pub fn placeholder_js_string(this: &HtmlTextAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         setter,
@@ -245,6 +276,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
     pub fn wrap(this: &HtmlTextAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLTextAreaElement", js_name = "wrap")]
+    #[doc = "Like `wrap()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTextAreaElement/wrap)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
+    pub fn wrap_js_string(this: &HtmlTextAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLTextAreaElement", js_name = "wrap")]
     #[doc = "Setter for the `wrap` field of this object."]
     #[doc = ""]
@@ -259,6 +297,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
     pub fn type_(this: &HtmlTextAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLTextAreaElement", js_name = "type")]
+    #[doc = "Like `type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTextAreaElement/type)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
+    pub fn type_js_string(this: &HtmlTextAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(
         catch,
         method,
@@ -272,6 +317,21 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
     pub fn default_value(this: &HtmlTextAreaElement) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        getter,
+        js_class = "HTMLTextAreaElement",
+        js_name = "defaultValue"
+    )]
+    #[doc = "Like `default_value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTextAreaElement/defaultValue)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
+    pub fn default_value_js_string(
+        this: &HtmlTextAreaElement,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(
         catch,
         method,
@@ -292,6 +352,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
     pub fn value(this: &HtmlTextAreaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLTextAreaElement", js_name = "value")]
+    #[doc = "Like `value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTextAreaElement/value)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
+    pub fn value_js_string(this: &HtmlTextAreaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLTextAreaElement", js_name = "value")]
     #[doc = "Setter for the `value` field of this object."]
     #[doc = ""]
@@ -346,6 +413,21 @@ extern "C" {
     pub fn validation_message(
         this: &HtmlTextAreaElement,
     ) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        getter,
+        js_class = "HTMLTextAreaElement",
+        js_name = "validationMessage"
+    )]
+    #[doc = "Like `validation_message()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTextAreaElement/validationMessage)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
+    pub fn validation_message_js_string(
+        this: &HtmlTextAreaElement,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[cfg(feature = "NodeList")]
     #[wasm_bindgen(method, getter, js_class = "HTMLTextAreaElement", js_name = "labels")]
     #[doc = "Getter for the `labels` field of this object."]
@@ -425,6 +507,21 @@ extern "C" {
     pub fn selection_direction(
         this: &HtmlTextAreaElement,
     ) -> Result<Option<::alloc::string::String>, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        getter,
+        js_class = "HTMLTextAreaElement",
+        js_name = "selectionDirection"
+    )]
+    #[doc = "Like `selection_direction()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTextAreaElement/selectionDirection)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTextAreaElement`*"]
+    pub fn selection_direction_js_string(
+        this: &HtmlTextAreaElement,
+    ) -> Result<Option<::js_sys::JsString>, JsValue>;
     #[wasm_bindgen(
         catch,
         method,

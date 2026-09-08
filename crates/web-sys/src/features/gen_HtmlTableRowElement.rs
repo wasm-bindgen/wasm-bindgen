@@ -54,6 +54,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableRowElement`*"]
     pub fn align(this: &HtmlTableRowElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLTableRowElement", js_name = "align")]
+    #[doc = "Like `align()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableRowElement/align)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableRowElement`*"]
+    pub fn align_js_string(this: &HtmlTableRowElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLTableRowElement", js_name = "align")]
     #[doc = "Setter for the `align` field of this object."]
     #[doc = ""]
@@ -68,6 +75,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableRowElement`*"]
     pub fn ch(this: &HtmlTableRowElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLTableRowElement", js_name = "ch")]
+    #[doc = "Like `ch()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableRowElement/ch)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableRowElement`*"]
+    pub fn ch_js_string(this: &HtmlTableRowElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLTableRowElement", js_name = "ch")]
     #[doc = "Setter for the `ch` field of this object."]
     #[doc = ""]
@@ -82,6 +96,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableRowElement`*"]
     pub fn ch_off(this: &HtmlTableRowElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLTableRowElement", js_name = "chOff")]
+    #[doc = "Like `ch_off()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableRowElement/chOff)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableRowElement`*"]
+    pub fn ch_off_js_string(this: &HtmlTableRowElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLTableRowElement", js_name = "chOff")]
     #[doc = "Setter for the `chOff` field of this object."]
     #[doc = ""]
@@ -96,6 +117,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableRowElement`*"]
     pub fn v_align(this: &HtmlTableRowElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLTableRowElement", js_name = "vAlign")]
+    #[doc = "Like `v_align()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableRowElement/vAlign)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableRowElement`*"]
+    pub fn v_align_js_string(this: &HtmlTableRowElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLTableRowElement", js_name = "vAlign")]
     #[doc = "Setter for the `vAlign` field of this object."]
     #[doc = ""]
@@ -110,6 +138,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlTableRowElement`*"]
     pub fn bg_color(this: &HtmlTableRowElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLTableRowElement", js_name = "bgColor")]
+    #[doc = "Like `bg_color()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLTableRowElement/bgColor)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlTableRowElement`*"]
+    pub fn bg_color_js_string(this: &HtmlTableRowElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLTableRowElement", js_name = "bgColor")]
     #[doc = "Setter for the `bgColor` field of this object."]
     #[doc = ""]

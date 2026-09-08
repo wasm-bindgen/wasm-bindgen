@@ -136,6 +136,13 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`*"]
     pub fn to_data_url(this: &HtmlCanvasElement) -> Result<::alloc::string::String, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "HTMLCanvasElement", js_name = "toDataURL")]
+    #[doc = "Like `to_data_url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toDataURL)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`*"]
+    pub fn to_data_url_js_string(this: &HtmlCanvasElement) -> Result<::js_sys::JsString, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLCanvasElement", js_name = "toDataURL")]
     #[doc = "The `toDataURL()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toDataURL)"]
@@ -145,6 +152,16 @@ extern "C" {
         this: &HtmlCanvasElement,
         type_: &str,
     ) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLCanvasElement", js_name = "toDataURL")]
+    #[doc = "Like `to_data_url_with_type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toDataURL)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`*"]
+    pub fn to_data_url_with_type_js_string(
+        this: &HtmlCanvasElement,
+        type_: &str,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, js_class = "HTMLCanvasElement", js_name = "toDataURL")]
     #[doc = "The `toDataURL()` method."]
     #[doc = ""]
@@ -156,6 +173,17 @@ extern "C" {
         type_: &str,
         encoder_options: &::wasm_bindgen::JsValue,
     ) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, js_class = "HTMLCanvasElement", js_name = "toDataURL")]
+    #[doc = "Like `to_data_url_with_type_and_encoder_options()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toDataURL)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlCanvasElement`*"]
+    pub fn to_data_url_with_type_and_encoder_options_js_string(
+        this: &HtmlCanvasElement,
+        type_: &str,
+        encoder_options: &::wasm_bindgen::JsValue,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[cfg(feature = "OffscreenCanvas")]
     #[wasm_bindgen(
         catch,

@@ -54,6 +54,18 @@ extern "C" {
     pub fn autocomplete(this: &HtmlSelectElement) -> ::alloc::string::String;
     #[wasm_bindgen(
         method,
+        getter,
+        js_class = "HTMLSelectElement",
+        js_name = "autocomplete"
+    )]
+    #[doc = "Like `autocomplete()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLSelectElement/autocomplete)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlSelectElement`*"]
+    pub fn autocomplete_js_string(this: &HtmlSelectElement) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
         setter,
         js_class = "HTMLSelectElement",
         js_name = "autocomplete"
@@ -107,6 +119,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlSelectElement`*"]
     pub fn name(this: &HtmlSelectElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLSelectElement", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLSelectElement/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlSelectElement`*"]
+    pub fn name_js_string(this: &HtmlSelectElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLSelectElement", js_name = "name")]
     #[doc = "Setter for the `name` field of this object."]
     #[doc = ""]
@@ -149,6 +168,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlSelectElement`*"]
     pub fn type_(this: &HtmlSelectElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLSelectElement", js_name = "type")]
+    #[doc = "Like `type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLSelectElement/type)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlSelectElement`*"]
+    pub fn type_js_string(this: &HtmlSelectElement) -> ::js_sys::JsString;
     #[cfg(feature = "HtmlOptionsCollection")]
     #[wasm_bindgen(method, getter, js_class = "HTMLSelectElement", js_name = "options")]
     #[doc = "Getter for the `options` field of this object."]
@@ -215,6 +241,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlSelectElement`*"]
     pub fn value(this: &HtmlSelectElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLSelectElement", js_name = "value")]
+    #[doc = "Like `value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLSelectElement/value)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlSelectElement`*"]
+    pub fn value_js_string(this: &HtmlSelectElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLSelectElement", js_name = "value")]
     #[doc = "Setter for the `value` field of this object."]
     #[doc = ""]
@@ -256,6 +289,21 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `HtmlSelectElement`*"]
     pub fn validation_message(this: &HtmlSelectElement)
         -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(
+        catch,
+        method,
+        getter,
+        js_class = "HTMLSelectElement",
+        js_name = "validationMessage"
+    )]
+    #[doc = "Like `validation_message()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLSelectElement/validationMessage)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlSelectElement`*"]
+    pub fn validation_message_js_string(
+        this: &HtmlSelectElement,
+    ) -> Result<::js_sys::JsString, JsValue>;
     #[cfg(feature = "NodeList")]
     #[wasm_bindgen(method, getter, js_class = "HTMLSelectElement", js_name = "labels")]
     #[doc = "Getter for the `labels` field of this object."]

@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ConsoleProfileEvent`*"]
     #[wasm_bindgen(method, getter = "action")]
     pub fn get_action(this: &ConsoleProfileEvent) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_action()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ConsoleProfileEvent`*"]
+    #[wasm_bindgen(method, getter = "action")]
+    pub fn get_action_js_string(this: &ConsoleProfileEvent) -> Option<::js_sys::JsString>;
     #[doc = "Change the `action` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ConsoleProfileEvent`*"]

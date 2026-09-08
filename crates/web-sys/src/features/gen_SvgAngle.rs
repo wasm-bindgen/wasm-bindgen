@@ -68,6 +68,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgAngle`*"]
     pub fn value_as_string(this: &SvgAngle) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "SVGAngle", js_name = "valueAsString")]
+    #[doc = "Like `value_as_string()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGAngle/valueAsString)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgAngle`*"]
+    pub fn value_as_string_js_string(this: &SvgAngle) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "SVGAngle", js_name = "valueAsString")]
     #[doc = "Setter for the `valueAsString` field of this object."]
     #[doc = ""]

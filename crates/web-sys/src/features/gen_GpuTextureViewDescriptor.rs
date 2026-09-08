@@ -24,6 +24,15 @@ extern "C" {
     #[wasm_bindgen(method, getter = "label")]
     pub fn get_label(this: &GpuTextureViewDescriptor) -> Option<::alloc::string::String>;
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Like `get_label()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuTextureViewDescriptor`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "label")]
+    pub fn get_label_js_string(this: &GpuTextureViewDescriptor) -> Option<::js_sys::JsString>;
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `label` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `GpuTextureViewDescriptor`*"]
@@ -173,6 +182,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "swizzle")]
     pub fn get_swizzle(this: &GpuTextureViewDescriptor) -> Option<::alloc::string::String>;
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Like `get_swizzle()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuTextureViewDescriptor`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "swizzle")]
+    pub fn get_swizzle_js_string(this: &GpuTextureViewDescriptor) -> Option<::js_sys::JsString>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `swizzle` field of this object."]
     #[doc = ""]

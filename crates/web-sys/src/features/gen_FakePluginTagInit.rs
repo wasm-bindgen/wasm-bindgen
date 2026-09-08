@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
     #[wasm_bindgen(method, getter = "description")]
     pub fn get_description(this: &FakePluginTagInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_description()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
+    #[wasm_bindgen(method, getter = "description")]
+    pub fn get_description_js_string(this: &FakePluginTagInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `description` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
@@ -25,6 +30,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
     #[wasm_bindgen(method, getter = "fileName")]
     pub fn get_file_name(this: &FakePluginTagInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_file_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
+    #[wasm_bindgen(method, getter = "fileName")]
+    pub fn get_file_name_js_string(this: &FakePluginTagInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `fileName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
@@ -35,6 +45,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
     #[wasm_bindgen(method, getter = "fullPath")]
     pub fn get_full_path(this: &FakePluginTagInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_full_path()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
+    #[wasm_bindgen(method, getter = "fullPath")]
+    pub fn get_full_path_js_string(this: &FakePluginTagInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `fullPath` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
@@ -45,6 +60,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
     #[wasm_bindgen(method, getter = "handlerURI")]
     pub fn get_handler_uri(this: &FakePluginTagInit) -> ::alloc::string::String;
+    #[doc = "Like `get_handler_uri()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
+    #[wasm_bindgen(method, getter = "handlerURI")]
+    pub fn get_handler_uri_js_string(this: &FakePluginTagInit) -> ::js_sys::JsString;
     #[doc = "Change the `handlerURI` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
@@ -65,6 +85,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
     #[wasm_bindgen(method, getter = "name")]
     pub fn get_name(this: &FakePluginTagInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
+    #[wasm_bindgen(method, getter = "name")]
+    pub fn get_name_js_string(this: &FakePluginTagInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `name` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
@@ -75,6 +100,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
     #[wasm_bindgen(method, getter = "niceName")]
     pub fn get_nice_name(this: &FakePluginTagInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_nice_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
+    #[wasm_bindgen(method, getter = "niceName")]
+    pub fn get_nice_name_js_string(this: &FakePluginTagInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `niceName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
@@ -85,6 +115,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
     #[wasm_bindgen(method, getter = "sandboxScript")]
     pub fn get_sandbox_script(this: &FakePluginTagInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_sandbox_script()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
+    #[wasm_bindgen(method, getter = "sandboxScript")]
+    pub fn get_sandbox_script_js_string(this: &FakePluginTagInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `sandboxScript` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
@@ -95,6 +130,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
     #[wasm_bindgen(method, getter = "version")]
     pub fn get_version(this: &FakePluginTagInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_version()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]
+    #[wasm_bindgen(method, getter = "version")]
+    pub fn get_version_js_string(this: &FakePluginTagInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `version` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `FakePluginTagInit`*"]

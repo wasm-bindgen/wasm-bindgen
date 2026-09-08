@@ -36,6 +36,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgaElement`*"]
     pub fn download(this: &SvgaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "SVGAElement", js_name = "download")]
+    #[doc = "Like `download()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGAElement/download)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgaElement`*"]
+    pub fn download_js_string(this: &SvgaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "SVGAElement", js_name = "download")]
     #[doc = "Setter for the `download` field of this object."]
     #[doc = ""]
@@ -50,6 +57,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgaElement`*"]
     pub fn ping(this: &SvgaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "SVGAElement", js_name = "ping")]
+    #[doc = "Like `ping()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGAElement/ping)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgaElement`*"]
+    pub fn ping_js_string(this: &SvgaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "SVGAElement", js_name = "ping")]
     #[doc = "Setter for the `ping` field of this object."]
     #[doc = ""]
@@ -64,6 +78,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgaElement`*"]
     pub fn rel(this: &SvgaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "SVGAElement", js_name = "rel")]
+    #[doc = "Like `rel()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGAElement/rel)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgaElement`*"]
+    pub fn rel_js_string(this: &SvgaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "SVGAElement", js_name = "rel")]
     #[doc = "Setter for the `rel` field of this object."]
     #[doc = ""]
@@ -78,6 +99,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgaElement`*"]
     pub fn referrer_policy(this: &SvgaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "SVGAElement", js_name = "referrerPolicy")]
+    #[doc = "Like `referrer_policy()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGAElement/referrerPolicy)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgaElement`*"]
+    pub fn referrer_policy_js_string(this: &SvgaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "SVGAElement", js_name = "referrerPolicy")]
     #[doc = "Setter for the `referrerPolicy` field of this object."]
     #[doc = ""]
@@ -100,6 +128,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgaElement`*"]
     pub fn hreflang(this: &SvgaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "SVGAElement", js_name = "hreflang")]
+    #[doc = "Like `hreflang()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGAElement/hreflang)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgaElement`*"]
+    pub fn hreflang_js_string(this: &SvgaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "SVGAElement", js_name = "hreflang")]
     #[doc = "Setter for the `hreflang` field of this object."]
     #[doc = ""]
@@ -114,6 +149,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgaElement`*"]
     pub fn type_(this: &SvgaElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "SVGAElement", js_name = "type")]
+    #[doc = "Like `type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGAElement/type)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgaElement`*"]
+    pub fn type_js_string(this: &SvgaElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "SVGAElement", js_name = "type")]
     #[doc = "Setter for the `type` field of this object."]
     #[doc = ""]
@@ -128,6 +170,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgaElement`*"]
     pub fn text(this: &SvgaElement) -> Result<::alloc::string::String, JsValue>;
+    #[wasm_bindgen(catch, method, getter, js_class = "SVGAElement", js_name = "text")]
+    #[doc = "Like `text()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGAElement/text)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgaElement`*"]
+    pub fn text_js_string(this: &SvgaElement) -> Result<::js_sys::JsString, JsValue>;
     #[wasm_bindgen(catch, method, setter, js_class = "SVGAElement", js_name = "text")]
     #[doc = "Setter for the `text` field of this object."]
     #[doc = ""]

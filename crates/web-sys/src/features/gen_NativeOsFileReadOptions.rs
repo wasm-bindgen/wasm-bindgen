@@ -35,6 +35,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NativeOsFileReadOptions`*"]
     #[wasm_bindgen(method, getter = "encoding")]
     pub fn get_encoding(this: &NativeOsFileReadOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_encoding()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NativeOsFileReadOptions`*"]
+    #[wasm_bindgen(method, getter = "encoding")]
+    pub fn get_encoding_js_string(this: &NativeOsFileReadOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `encoding` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NativeOsFileReadOptions`*"]

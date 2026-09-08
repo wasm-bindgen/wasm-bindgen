@@ -30,6 +30,13 @@ extern "C" {
     pub fn get_support(
         this: &AuthenticationExtensionsLargeBlobInputs,
     ) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_support()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsLargeBlobInputs`*"]
+    #[wasm_bindgen(method, getter = "support")]
+    pub fn get_support_js_string(
+        this: &AuthenticationExtensionsLargeBlobInputs,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `support` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AuthenticationExtensionsLargeBlobInputs`*"]

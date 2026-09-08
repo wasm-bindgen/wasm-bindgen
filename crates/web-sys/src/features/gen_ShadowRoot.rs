@@ -42,6 +42,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ShadowRoot`*"]
     pub fn inner_html(this: &ShadowRoot) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "ShadowRoot", js_name = "innerHTML")]
+    #[doc = "Like `inner_html()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot/innerHTML)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `ShadowRoot`*"]
+    pub fn inner_html_js_string(this: &ShadowRoot) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "ShadowRoot", js_name = "innerHTML")]
     #[doc = "Setter for the `innerHTML` field of this object."]
     #[doc = ""]

@@ -25,6 +25,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SharedWorkerGlobalScope`*"]
     pub fn name(this: &SharedWorkerGlobalScope) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "SharedWorkerGlobalScope", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorkerGlobalScope/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SharedWorkerGlobalScope`*"]
+    pub fn name_js_string(this: &SharedWorkerGlobalScope) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         getter,

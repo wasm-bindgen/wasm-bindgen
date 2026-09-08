@@ -24,6 +24,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HashChangeEvent`*"]
     pub fn old_url(this: &HashChangeEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HashChangeEvent", js_name = "oldURL")]
+    #[doc = "Like `old_url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HashChangeEvent/oldURL)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HashChangeEvent`*"]
+    pub fn old_url_js_string(this: &HashChangeEvent) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "HashChangeEvent", js_name = "newURL")]
     #[doc = "Getter for the `newURL` field of this object."]
     #[doc = ""]
@@ -31,6 +38,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HashChangeEvent`*"]
     pub fn new_url(this: &HashChangeEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HashChangeEvent", js_name = "newURL")]
+    #[doc = "Like `new_url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HashChangeEvent/newURL)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HashChangeEvent`*"]
+    pub fn new_url_js_string(this: &HashChangeEvent) -> ::js_sys::JsString;
     #[wasm_bindgen(catch, constructor, js_class = "HashChangeEvent")]
     #[doc = "The `new HashChangeEvent(..)` constructor, creating a new instance of `HashChangeEvent`."]
     #[doc = ""]

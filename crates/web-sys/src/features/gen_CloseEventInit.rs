@@ -55,6 +55,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `CloseEventInit`*"]
     #[wasm_bindgen(method, getter = "reason")]
     pub fn get_reason(this: &CloseEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_reason()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CloseEventInit`*"]
+    #[wasm_bindgen(method, getter = "reason")]
+    pub fn get_reason_js_string(this: &CloseEventInit) -> Option<::js_sys::JsString>;
     #[doc = "Change the `reason` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CloseEventInit`*"]

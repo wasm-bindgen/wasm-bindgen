@@ -34,6 +34,18 @@ extern "C" {
     pub fn accept_charset(this: &HtmlFormElement) -> ::alloc::string::String;
     #[wasm_bindgen(
         method,
+        getter,
+        js_class = "HTMLFormElement",
+        js_name = "acceptCharset"
+    )]
+    #[doc = "Like `accept_charset()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFormElement/acceptCharset)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFormElement`*"]
+    pub fn accept_charset_js_string(this: &HtmlFormElement) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
         setter,
         js_class = "HTMLFormElement",
         js_name = "acceptCharset"
@@ -51,6 +63,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlFormElement`*"]
     pub fn action(this: &HtmlFormElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLFormElement", js_name = "action")]
+    #[doc = "Like `action()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFormElement/action)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFormElement`*"]
+    pub fn action_js_string(this: &HtmlFormElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLFormElement", js_name = "action")]
     #[doc = "Setter for the `action` field of this object."]
     #[doc = ""]
@@ -65,6 +84,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlFormElement`*"]
     pub fn autocomplete(this: &HtmlFormElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLFormElement", js_name = "autocomplete")]
+    #[doc = "Like `autocomplete()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFormElement/autocomplete)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFormElement`*"]
+    pub fn autocomplete_js_string(this: &HtmlFormElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLFormElement", js_name = "autocomplete")]
     #[doc = "Setter for the `autocomplete` field of this object."]
     #[doc = ""]
@@ -79,6 +105,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlFormElement`*"]
     pub fn enctype(this: &HtmlFormElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLFormElement", js_name = "enctype")]
+    #[doc = "Like `enctype()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFormElement/enctype)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFormElement`*"]
+    pub fn enctype_js_string(this: &HtmlFormElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLFormElement", js_name = "enctype")]
     #[doc = "Setter for the `enctype` field of this object."]
     #[doc = ""]
@@ -93,6 +126,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlFormElement`*"]
     pub fn encoding(this: &HtmlFormElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLFormElement", js_name = "encoding")]
+    #[doc = "Like `encoding()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFormElement/encoding)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFormElement`*"]
+    pub fn encoding_js_string(this: &HtmlFormElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLFormElement", js_name = "encoding")]
     #[doc = "Setter for the `encoding` field of this object."]
     #[doc = ""]
@@ -107,6 +147,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlFormElement`*"]
     pub fn method(this: &HtmlFormElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLFormElement", js_name = "method")]
+    #[doc = "Like `method()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFormElement/method)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFormElement`*"]
+    pub fn method_js_string(this: &HtmlFormElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLFormElement", js_name = "method")]
     #[doc = "Setter for the `method` field of this object."]
     #[doc = ""]
@@ -121,6 +168,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlFormElement`*"]
     pub fn name(this: &HtmlFormElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLFormElement", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFormElement/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFormElement`*"]
+    pub fn name_js_string(this: &HtmlFormElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLFormElement", js_name = "name")]
     #[doc = "Setter for the `name` field of this object."]
     #[doc = ""]
@@ -149,6 +203,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlFormElement`*"]
     pub fn target(this: &HtmlFormElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLFormElement", js_name = "target")]
+    #[doc = "Like `target()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFormElement/target)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFormElement`*"]
+    pub fn target_js_string(this: &HtmlFormElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLFormElement", js_name = "target")]
     #[doc = "Setter for the `target` field of this object."]
     #[doc = ""]

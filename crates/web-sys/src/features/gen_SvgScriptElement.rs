@@ -27,6 +27,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgScriptElement`*"]
     pub fn type_(this: &SvgScriptElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "SVGScriptElement", js_name = "type")]
+    #[doc = "Like `type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGScriptElement/type)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgScriptElement`*"]
+    pub fn type_js_string(this: &SvgScriptElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "SVGScriptElement", js_name = "type")]
     #[doc = "Setter for the `type` field of this object."]
     #[doc = ""]
@@ -41,6 +48,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `SvgScriptElement`*"]
     pub fn cross_origin(this: &SvgScriptElement) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "SVGScriptElement", js_name = "crossOrigin")]
+    #[doc = "Like `cross_origin()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/SVGScriptElement/crossOrigin)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `SvgScriptElement`*"]
+    pub fn cross_origin_js_string(this: &SvgScriptElement) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, setter, js_class = "SVGScriptElement", js_name = "crossOrigin")]
     #[doc = "Setter for the `crossOrigin` field of this object."]
     #[doc = ""]

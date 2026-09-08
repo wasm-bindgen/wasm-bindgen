@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TextEncoder`*"]
     pub fn encoding(this: &TextEncoder) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "TextEncoder", js_name = "encoding")]
+    #[doc = "Like `encoding()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TextEncoder/encoding)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TextEncoder`*"]
+    pub fn encoding_js_string(this: &TextEncoder) -> ::js_sys::JsString;
     #[wasm_bindgen(catch, constructor, js_class = "TextEncoder")]
     #[doc = "The `new TextEncoder(..)` constructor, creating a new instance of `TextEncoder`."]
     #[doc = ""]

@@ -32,6 +32,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TextTrack`*"]
     pub fn label(this: &TextTrack) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "TextTrack", js_name = "label")]
+    #[doc = "Like `label()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TextTrack/label)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TextTrack`*"]
+    pub fn label_js_string(this: &TextTrack) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "TextTrack", js_name = "language")]
     #[doc = "Getter for the `language` field of this object."]
     #[doc = ""]
@@ -39,6 +46,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TextTrack`*"]
     pub fn language(this: &TextTrack) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "TextTrack", js_name = "language")]
+    #[doc = "Like `language()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TextTrack/language)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TextTrack`*"]
+    pub fn language_js_string(this: &TextTrack) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "TextTrack", js_name = "id")]
     #[doc = "Getter for the `id` field of this object."]
     #[doc = ""]
@@ -46,6 +60,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TextTrack`*"]
     pub fn id(this: &TextTrack) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "TextTrack", js_name = "id")]
+    #[doc = "Like `id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TextTrack/id)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TextTrack`*"]
+    pub fn id_js_string(this: &TextTrack) -> ::js_sys::JsString;
     #[wasm_bindgen(
         method,
         getter,
@@ -58,6 +79,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `TextTrack`*"]
     pub fn in_band_metadata_track_dispatch_type(this: &TextTrack) -> ::alloc::string::String;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "TextTrack",
+        js_name = "inBandMetadataTrackDispatchType"
+    )]
+    #[doc = "Like `in_band_metadata_track_dispatch_type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/TextTrack/inBandMetadataTrackDispatchType)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `TextTrack`*"]
+    pub fn in_band_metadata_track_dispatch_type_js_string(this: &TextTrack) -> ::js_sys::JsString;
     #[cfg(feature = "TextTrackMode")]
     #[wasm_bindgen(method, getter, js_class = "TextTrack", js_name = "mode")]
     #[doc = "Getter for the `mode` field of this object."]

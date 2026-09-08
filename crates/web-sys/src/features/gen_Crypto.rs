@@ -61,4 +61,11 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Crypto`*"]
     pub fn random_uuid(this: &Crypto) -> ::alloc::string::String;
+    #[wasm_bindgen(method, js_class = "Crypto", js_name = "randomUUID")]
+    #[doc = "Like `random_uuid()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Crypto/randomUUID)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Crypto`*"]
+    pub fn random_uuid_js_string(this: &Crypto) -> ::js_sys::JsString;
 }

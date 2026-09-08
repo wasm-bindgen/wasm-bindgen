@@ -27,6 +27,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlFrameElement`*"]
     pub fn name(this: &HtmlFrameElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLFrameElement", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFrameElement/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFrameElement`*"]
+    pub fn name_js_string(this: &HtmlFrameElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLFrameElement", js_name = "name")]
     #[doc = "Setter for the `name` field of this object."]
     #[doc = ""]
@@ -41,6 +48,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlFrameElement`*"]
     pub fn scrolling(this: &HtmlFrameElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLFrameElement", js_name = "scrolling")]
+    #[doc = "Like `scrolling()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFrameElement/scrolling)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFrameElement`*"]
+    pub fn scrolling_js_string(this: &HtmlFrameElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLFrameElement", js_name = "scrolling")]
     #[doc = "Setter for the `scrolling` field of this object."]
     #[doc = ""]
@@ -55,6 +69,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlFrameElement`*"]
     pub fn src(this: &HtmlFrameElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLFrameElement", js_name = "src")]
+    #[doc = "Like `src()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFrameElement/src)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFrameElement`*"]
+    pub fn src_js_string(this: &HtmlFrameElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLFrameElement", js_name = "src")]
     #[doc = "Setter for the `src` field of this object."]
     #[doc = ""]
@@ -69,6 +90,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlFrameElement`*"]
     pub fn frame_border(this: &HtmlFrameElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLFrameElement", js_name = "frameBorder")]
+    #[doc = "Like `frame_border()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFrameElement/frameBorder)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFrameElement`*"]
+    pub fn frame_border_js_string(this: &HtmlFrameElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLFrameElement", js_name = "frameBorder")]
     #[doc = "Setter for the `frameBorder` field of this object."]
     #[doc = ""]
@@ -83,6 +111,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlFrameElement`*"]
     pub fn long_desc(this: &HtmlFrameElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLFrameElement", js_name = "longDesc")]
+    #[doc = "Like `long_desc()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFrameElement/longDesc)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFrameElement`*"]
+    pub fn long_desc_js_string(this: &HtmlFrameElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLFrameElement", js_name = "longDesc")]
     #[doc = "Setter for the `longDesc` field of this object."]
     #[doc = ""]
@@ -144,6 +179,18 @@ extern "C" {
     pub fn margin_height(this: &HtmlFrameElement) -> ::alloc::string::String;
     #[wasm_bindgen(
         method,
+        getter,
+        js_class = "HTMLFrameElement",
+        js_name = "marginHeight"
+    )]
+    #[doc = "Like `margin_height()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFrameElement/marginHeight)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFrameElement`*"]
+    pub fn margin_height_js_string(this: &HtmlFrameElement) -> ::js_sys::JsString;
+    #[wasm_bindgen(
+        method,
         setter,
         js_class = "HTMLFrameElement",
         js_name = "marginHeight"
@@ -161,6 +208,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `HtmlFrameElement`*"]
     pub fn margin_width(this: &HtmlFrameElement) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "HTMLFrameElement", js_name = "marginWidth")]
+    #[doc = "Like `margin_width()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/HTMLFrameElement/marginWidth)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `HtmlFrameElement`*"]
+    pub fn margin_width_js_string(this: &HtmlFrameElement) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "HTMLFrameElement", js_name = "marginWidth")]
     #[doc = "Setter for the `marginWidth` field of this object."]
     #[doc = ""]

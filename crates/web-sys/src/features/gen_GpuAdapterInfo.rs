@@ -32,6 +32,17 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn vendor(this: &GpuAdapterInfo) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(method, getter, js_class = "GPUAdapterInfo", js_name = "vendor")]
+    #[doc = "Like `vendor()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUAdapterInfo/vendor)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuAdapterInfo`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn vendor_js_string(this: &GpuAdapterInfo) -> ::js_sys::JsString;
+    #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, getter, js_class = "GPUAdapterInfo", js_name = "architecture")]
     #[doc = "Getter for the `architecture` field of this object."]
     #[doc = ""]
@@ -42,6 +53,17 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn architecture(this: &GpuAdapterInfo) -> ::alloc::string::String;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(method, getter, js_class = "GPUAdapterInfo", js_name = "architecture")]
+    #[doc = "Like `architecture()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUAdapterInfo/architecture)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuAdapterInfo`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn architecture_js_string(this: &GpuAdapterInfo) -> ::js_sys::JsString;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, getter, js_class = "GPUAdapterInfo", js_name = "device")]
     #[doc = "Getter for the `device` field of this object."]
@@ -54,6 +76,17 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn device(this: &GpuAdapterInfo) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(method, getter, js_class = "GPUAdapterInfo", js_name = "device")]
+    #[doc = "Like `device()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUAdapterInfo/device)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuAdapterInfo`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn device_js_string(this: &GpuAdapterInfo) -> ::js_sys::JsString;
+    #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(method, getter, js_class = "GPUAdapterInfo", js_name = "description")]
     #[doc = "Getter for the `description` field of this object."]
     #[doc = ""]
@@ -64,6 +97,17 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn description(this: &GpuAdapterInfo) -> ::alloc::string::String;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(method, getter, js_class = "GPUAdapterInfo", js_name = "description")]
+    #[doc = "Like `description()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUAdapterInfo/description)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuAdapterInfo`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn description_js_string(this: &GpuAdapterInfo) -> ::js_sys::JsString;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(
         method,

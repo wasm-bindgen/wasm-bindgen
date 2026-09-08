@@ -38,6 +38,11 @@
   crossing at its native wire format. Generated extern blocks carry
   `experimental_generic_mono` to bind each instantiation per-monomorphisation.
 
+* Every string-returning `web-sys` function gains an additional `_js_string`
+  variant returning a `js_sys::JsString` handle to the string rather than
+  copying it into wasm memory, across methods, attribute and dictionary-field
+  getters, and namespace functions and attributes.
+
 * Added an experimental `--experimental-memory-discard` flag which replaces an
   `env.__wbindgen_memory_discard` function import with a local trampoline
   containing the `memory.discard` instruction from the memory-control

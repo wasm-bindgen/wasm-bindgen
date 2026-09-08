@@ -91,6 +91,15 @@ extern "C" {
     #[wasm_bindgen(method, getter = "codec")]
     pub fn get_codec(this: &VideoEncoderConfig) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Like `get_codec()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoEncoderConfig`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "codec")]
+    pub fn get_codec_js_string(this: &VideoEncoderConfig) -> ::js_sys::JsString;
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `codec` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `VideoEncoderConfig`*"]
@@ -108,6 +117,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "contentHint")]
     pub fn get_content_hint(this: &VideoEncoderConfig) -> Option<::alloc::string::String>;
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Like `get_content_hint()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoEncoderConfig`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "contentHint")]
+    pub fn get_content_hint_js_string(this: &VideoEncoderConfig) -> Option<::js_sys::JsString>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `contentHint` field of this object."]
     #[doc = ""]
@@ -238,6 +256,15 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "scalabilityMode")]
     pub fn get_scalability_mode(this: &VideoEncoderConfig) -> Option<::alloc::string::String>;
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Like `get_scalability_mode()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `VideoEncoderConfig`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "scalabilityMode")]
+    pub fn get_scalability_mode_js_string(this: &VideoEncoderConfig) -> Option<::js_sys::JsString>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `scalabilityMode` field of this object."]
     #[doc = ""]

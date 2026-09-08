@@ -75,6 +75,22 @@ extern "C" {
         method,
         getter,
         js_class = "BluetoothAdvertisingEvent",
+        js_name = "name"
+    )]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothAdvertisingEvent/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BluetoothAdvertisingEvent`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn name_js_string(this: &BluetoothAdvertisingEvent) -> Option<::js_sys::JsString>;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "BluetoothAdvertisingEvent",
         js_name = "appearance"
     )]
     #[doc = "Getter for the `appearance` field of this object."]

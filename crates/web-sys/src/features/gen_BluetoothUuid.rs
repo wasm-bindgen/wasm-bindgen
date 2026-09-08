@@ -39,6 +39,21 @@ extern "C" {
     #[wasm_bindgen(
         static_method_of = "BluetoothUuid",
         js_class = "BluetoothUUID",
+        js_name = "canonicalUUID"
+    )]
+    #[doc = "Like `canonical_uuid()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothUUID/canonicalUUID)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BluetoothUuid`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn canonical_uuid_js_string(alias: u32) -> ::js_sys::JsString;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        static_method_of = "BluetoothUuid",
+        js_class = "BluetoothUUID",
         js_name = "getCharacteristic"
     )]
     #[doc = "The `getCharacteristic()` method."]
@@ -58,6 +73,23 @@ extern "C" {
         js_class = "BluetoothUUID",
         js_name = "getCharacteristic"
     )]
+    #[doc = "Like `get_characteristic_with_str()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothUUID/getCharacteristic)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BluetoothUuid`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn get_characteristic_with_str_js_string<S0: ::wasm_bindgen::JsStringLike>(
+        name: S0,
+    ) -> ::js_sys::JsString;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        static_method_of = "BluetoothUuid",
+        js_class = "BluetoothUUID",
+        js_name = "getCharacteristic"
+    )]
     #[doc = "The `getCharacteristic()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothUUID/getCharacteristic_static)"]
@@ -67,6 +99,21 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get_characteristic_with_u32(name: u32) -> ::alloc::string::String;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        static_method_of = "BluetoothUuid",
+        js_class = "BluetoothUUID",
+        js_name = "getCharacteristic"
+    )]
+    #[doc = "Like `get_characteristic_with_u32()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothUUID/getCharacteristic)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BluetoothUuid`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn get_characteristic_with_u32_js_string(name: u32) -> ::js_sys::JsString;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(
         static_method_of = "BluetoothUuid",
@@ -90,6 +137,23 @@ extern "C" {
         js_class = "BluetoothUUID",
         js_name = "getDescriptor"
     )]
+    #[doc = "Like `get_descriptor_with_str()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothUUID/getDescriptor)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BluetoothUuid`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn get_descriptor_with_str_js_string<S0: ::wasm_bindgen::JsStringLike>(
+        name: S0,
+    ) -> ::js_sys::JsString;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        static_method_of = "BluetoothUuid",
+        js_class = "BluetoothUUID",
+        js_name = "getDescriptor"
+    )]
     #[doc = "The `getDescriptor()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothUUID/getDescriptor_static)"]
@@ -99,6 +163,21 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get_descriptor_with_u32(name: u32) -> ::alloc::string::String;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        static_method_of = "BluetoothUuid",
+        js_class = "BluetoothUUID",
+        js_name = "getDescriptor"
+    )]
+    #[doc = "Like `get_descriptor_with_u32()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothUUID/getDescriptor)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BluetoothUuid`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn get_descriptor_with_u32_js_string(name: u32) -> ::js_sys::JsString;
     #[cfg(web_sys_unstable_apis)]
     #[wasm_bindgen(
         static_method_of = "BluetoothUuid",
@@ -122,6 +201,23 @@ extern "C" {
         js_class = "BluetoothUUID",
         js_name = "getService"
     )]
+    #[doc = "Like `get_service_with_str()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothUUID/getService)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BluetoothUuid`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn get_service_with_str_js_string<S0: ::wasm_bindgen::JsStringLike>(
+        name: S0,
+    ) -> ::js_sys::JsString;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        static_method_of = "BluetoothUuid",
+        js_class = "BluetoothUUID",
+        js_name = "getService"
+    )]
     #[doc = "The `getService()` method."]
     #[doc = ""]
     #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothUUID/getService_static)"]
@@ -131,4 +227,19 @@ extern "C" {
     #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn get_service_with_u32(name: u32) -> ::alloc::string::String;
+    #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        static_method_of = "BluetoothUuid",
+        js_class = "BluetoothUUID",
+        js_name = "getService"
+    )]
+    #[doc = "Like `get_service_with_u32()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/BluetoothUUID/getService)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `BluetoothUuid`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn get_service_with_u32_js_string(name: u32) -> ::js_sys::JsString;
 }

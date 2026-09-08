@@ -30,6 +30,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
     pub fn value(this: &DomTokenList) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "DOMTokenList", js_name = "value")]
+    #[doc = "Like `value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/value)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn value_js_string(this: &DomTokenList) -> ::js_sys::JsString;
     #[wasm_bindgen(method, setter, js_class = "DOMTokenList", js_name = "value")]
     #[doc = "Setter for the `value` field of this object."]
     #[doc = ""]
@@ -156,6 +163,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
     pub fn item(this: &DomTokenList, index: u32) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, js_class = "DOMTokenList", js_name = "item")]
+    #[doc = "Like `item()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/item)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn item_js_string(this: &DomTokenList, index: u32) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(catch, method, variadic, js_class = "DOMTokenList")]
     #[doc = "The `remove()` method."]
     #[doc = ""]
@@ -292,6 +306,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
     pub fn get(this: &DomTokenList, index: u32) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, js_class = "DOMTokenList", indexing_getter)]
+    #[doc = "Like `get()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/get)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomTokenList`*"]
+    pub fn get_js_string(this: &DomTokenList, index: u32) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, js_class = "DOMTokenList")]
     #[doc = "The `entries()` method."]
     #[doc = ""]

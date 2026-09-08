@@ -37,6 +37,22 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     pub fn message(this: &GpuCompilationMessage) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "GPUCompilationMessage",
+        js_name = "message"
+    )]
+    #[doc = "Like `message()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/GPUCompilationMessage/message)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `GpuCompilationMessage`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    pub fn message_js_string(this: &GpuCompilationMessage) -> ::js_sys::JsString;
+    #[cfg(web_sys_unstable_apis)]
     #[cfg(feature = "GpuCompilationMessageType")]
     #[wasm_bindgen(method, getter, js_class = "GPUCompilationMessage", js_name = "type")]
     #[doc = "Getter for the `type` field of this object."]

@@ -15,6 +15,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcrtpStreamStats`*"]
     #[wasm_bindgen(method, getter = "id")]
     pub fn get_id(this: &RtcrtpStreamStats) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcrtpStreamStats`*"]
+    #[wasm_bindgen(method, getter = "id")]
+    pub fn get_id_js_string(this: &RtcrtpStreamStats) -> Option<::js_sys::JsString>;
     #[doc = "Change the `id` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcrtpStreamStats`*"]
@@ -67,6 +72,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcrtpStreamStats`*"]
     #[wasm_bindgen(method, getter = "codecId")]
     pub fn get_codec_id(this: &RtcrtpStreamStats) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_codec_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcrtpStreamStats`*"]
+    #[wasm_bindgen(method, getter = "codecId")]
+    pub fn get_codec_id_js_string(this: &RtcrtpStreamStats) -> Option<::js_sys::JsString>;
     #[doc = "Change the `codecId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcrtpStreamStats`*"]
@@ -117,6 +127,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcrtpStreamStats`*"]
     #[wasm_bindgen(method, getter = "mediaTrackId")]
     pub fn get_media_track_id(this: &RtcrtpStreamStats) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_media_track_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcrtpStreamStats`*"]
+    #[wasm_bindgen(method, getter = "mediaTrackId")]
+    pub fn get_media_track_id_js_string(this: &RtcrtpStreamStats) -> Option<::js_sys::JsString>;
     #[doc = "Change the `mediaTrackId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcrtpStreamStats`*"]
@@ -127,6 +142,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcrtpStreamStats`*"]
     #[wasm_bindgen(method, getter = "mediaType")]
     pub fn get_media_type(this: &RtcrtpStreamStats) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_media_type()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcrtpStreamStats`*"]
+    #[wasm_bindgen(method, getter = "mediaType")]
+    pub fn get_media_type_js_string(this: &RtcrtpStreamStats) -> Option<::js_sys::JsString>;
     #[doc = "Change the `mediaType` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcrtpStreamStats`*"]
@@ -157,6 +177,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcrtpStreamStats`*"]
     #[wasm_bindgen(method, getter = "remoteId")]
     pub fn get_remote_id(this: &RtcrtpStreamStats) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_remote_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcrtpStreamStats`*"]
+    #[wasm_bindgen(method, getter = "remoteId")]
+    pub fn get_remote_id_js_string(this: &RtcrtpStreamStats) -> Option<::js_sys::JsString>;
     #[doc = "Change the `remoteId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcrtpStreamStats`*"]
@@ -167,6 +192,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcrtpStreamStats`*"]
     #[wasm_bindgen(method, getter = "ssrc")]
     pub fn get_ssrc(this: &RtcrtpStreamStats) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_ssrc()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcrtpStreamStats`*"]
+    #[wasm_bindgen(method, getter = "ssrc")]
+    pub fn get_ssrc_js_string(this: &RtcrtpStreamStats) -> Option<::js_sys::JsString>;
     #[doc = "Change the `ssrc` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcrtpStreamStats`*"]
@@ -177,6 +207,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `RtcrtpStreamStats`*"]
     #[wasm_bindgen(method, getter = "transportId")]
     pub fn get_transport_id(this: &RtcrtpStreamStats) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_transport_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `RtcrtpStreamStats`*"]
+    #[wasm_bindgen(method, getter = "transportId")]
+    pub fn get_transport_id_js_string(this: &RtcrtpStreamStats) -> Option<::js_sys::JsString>;
     #[doc = "Change the `transportId` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `RtcrtpStreamStats`*"]

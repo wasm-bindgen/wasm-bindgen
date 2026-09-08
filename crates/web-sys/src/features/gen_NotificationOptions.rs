@@ -25,6 +25,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
     #[wasm_bindgen(method, getter = "badge")]
     pub fn get_badge(this: &NotificationOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_badge()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
+    #[wasm_bindgen(method, getter = "badge")]
+    pub fn get_badge_js_string(this: &NotificationOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `badge` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
@@ -35,6 +40,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
     #[wasm_bindgen(method, getter = "body")]
     pub fn get_body(this: &NotificationOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_body()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
+    #[wasm_bindgen(method, getter = "body")]
+    pub fn get_body_js_string(this: &NotificationOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `body` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
@@ -67,6 +77,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
     #[wasm_bindgen(method, getter = "icon")]
     pub fn get_icon(this: &NotificationOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_icon()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
+    #[wasm_bindgen(method, getter = "icon")]
+    pub fn get_icon_js_string(this: &NotificationOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `icon` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
@@ -77,6 +92,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
     #[wasm_bindgen(method, getter = "image")]
     pub fn get_image(this: &NotificationOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_image()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
+    #[wasm_bindgen(method, getter = "image")]
+    pub fn get_image_js_string(this: &NotificationOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `image` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
@@ -87,6 +107,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
     #[wasm_bindgen(method, getter = "lang")]
     pub fn get_lang(this: &NotificationOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_lang()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
+    #[wasm_bindgen(method, getter = "lang")]
+    pub fn get_lang_js_string(this: &NotificationOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `lang` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
@@ -127,6 +152,11 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
     #[wasm_bindgen(method, getter = "tag")]
     pub fn get_tag(this: &NotificationOptions) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_tag()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]
+    #[wasm_bindgen(method, getter = "tag")]
+    pub fn get_tag_js_string(this: &NotificationOptions) -> Option<::js_sys::JsString>;
     #[doc = "Change the `tag` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `NotificationOptions`*"]

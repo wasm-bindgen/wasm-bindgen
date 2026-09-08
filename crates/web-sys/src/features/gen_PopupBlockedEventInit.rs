@@ -47,6 +47,13 @@ extern "C" {
     pub fn get_popup_window_features(
         this: &PopupBlockedEventInit,
     ) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_popup_window_features()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEventInit`*"]
+    #[wasm_bindgen(method, getter = "popupWindowFeatures")]
+    pub fn get_popup_window_features_js_string(
+        this: &PopupBlockedEventInit,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `popupWindowFeatures` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEventInit`*"]
@@ -57,6 +64,13 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEventInit`*"]
     #[wasm_bindgen(method, getter = "popupWindowName")]
     pub fn get_popup_window_name(this: &PopupBlockedEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_popup_window_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEventInit`*"]
+    #[wasm_bindgen(method, getter = "popupWindowName")]
+    pub fn get_popup_window_name_js_string(
+        this: &PopupBlockedEventInit,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `popupWindowName` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEventInit`*"]
@@ -67,6 +81,13 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEventInit`*"]
     #[wasm_bindgen(method, getter = "popupWindowURI")]
     pub fn get_popup_window_uri(this: &PopupBlockedEventInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_popup_window_uri()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEventInit`*"]
+    #[wasm_bindgen(method, getter = "popupWindowURI")]
+    pub fn get_popup_window_uri_js_string(
+        this: &PopupBlockedEventInit,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `popupWindowURI` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PopupBlockedEventInit`*"]

@@ -27,6 +27,12 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `IntersectionObserverInit`*"]
     #[wasm_bindgen(method, getter = "rootMargin")]
     pub fn get_root_margin(this: &IntersectionObserverInit) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_root_margin()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `IntersectionObserverInit`*"]
+    #[wasm_bindgen(method, getter = "rootMargin")]
+    pub fn get_root_margin_js_string(this: &IntersectionObserverInit)
+        -> Option<::js_sys::JsString>;
     #[doc = "Change the `rootMargin` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `IntersectionObserverInit`*"]

@@ -22,6 +22,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `DomStringMap`*"]
     pub fn get(this: &DomStringMap, name: &str) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, js_class = "DOMStringMap", indexing_getter)]
+    #[doc = "Like `get()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/DOMStringMap/get)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `DomStringMap`*"]
+    pub fn get_js_string(this: &DomStringMap, name: &str) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(catch, method, js_class = "DOMStringMap", indexing_setter)]
     #[doc = "Indexing setter. As in the literal Javascript `this[key] = value`."]
     #[doc = ""]

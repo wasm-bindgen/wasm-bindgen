@@ -104,6 +104,13 @@ extern "C" {
     pub fn get_selected_text_content(
         this: &CaretStateChangedEventInit,
     ) -> Option<::alloc::string::String>;
+    #[doc = "Like `get_selected_text_content()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `CaretStateChangedEventInit`*"]
+    #[wasm_bindgen(method, getter = "selectedTextContent")]
+    pub fn get_selected_text_content_js_string(
+        this: &CaretStateChangedEventInit,
+    ) -> Option<::js_sys::JsString>;
     #[doc = "Change the `selectedTextContent` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `CaretStateChangedEventInit`*"]

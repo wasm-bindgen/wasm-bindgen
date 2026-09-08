@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Plugin`*"]
     pub fn description(this: &Plugin) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Plugin", js_name = "description")]
+    #[doc = "Like `description()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Plugin/description)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Plugin`*"]
+    pub fn description_js_string(this: &Plugin) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "Plugin", js_name = "filename")]
     #[doc = "Getter for the `filename` field of this object."]
     #[doc = ""]
@@ -30,6 +37,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Plugin`*"]
     pub fn filename(this: &Plugin) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Plugin", js_name = "filename")]
+    #[doc = "Like `filename()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Plugin/filename)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Plugin`*"]
+    pub fn filename_js_string(this: &Plugin) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "Plugin", js_name = "version")]
     #[doc = "Getter for the `version` field of this object."]
     #[doc = ""]
@@ -37,6 +51,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Plugin`*"]
     pub fn version(this: &Plugin) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Plugin", js_name = "version")]
+    #[doc = "Like `version()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Plugin/version)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Plugin`*"]
+    pub fn version_js_string(this: &Plugin) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "Plugin", js_name = "name")]
     #[doc = "Getter for the `name` field of this object."]
     #[doc = ""]
@@ -44,6 +65,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `Plugin`*"]
     pub fn name(this: &Plugin) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "Plugin", js_name = "name")]
+    #[doc = "Like `name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/Plugin/name)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Plugin`*"]
+    pub fn name_js_string(this: &Plugin) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "Plugin", js_name = "length")]
     #[doc = "Getter for the `length` field of this object."]
     #[doc = ""]

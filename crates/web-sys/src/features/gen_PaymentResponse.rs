@@ -23,6 +23,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PaymentResponse`*"]
     pub fn request_id(this: &PaymentResponse) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "PaymentResponse", js_name = "requestId")]
+    #[doc = "Like `request_id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentResponse/requestId)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PaymentResponse`*"]
+    pub fn request_id_js_string(this: &PaymentResponse) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "PaymentResponse", js_name = "methodName")]
     #[doc = "Getter for the `methodName` field of this object."]
     #[doc = ""]
@@ -30,6 +37,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PaymentResponse`*"]
     pub fn method_name(this: &PaymentResponse) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "PaymentResponse", js_name = "methodName")]
+    #[doc = "Like `method_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentResponse/methodName)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PaymentResponse`*"]
+    pub fn method_name_js_string(this: &PaymentResponse) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "PaymentResponse", js_name = "details")]
     #[doc = "Getter for the `details` field of this object."]
     #[doc = ""]
@@ -62,6 +76,18 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PaymentResponse`*"]
     pub fn shipping_option(this: &PaymentResponse) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(
+        method,
+        getter,
+        js_class = "PaymentResponse",
+        js_name = "shippingOption"
+    )]
+    #[doc = "Like `shipping_option()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentResponse/shippingOption)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PaymentResponse`*"]
+    pub fn shipping_option_js_string(this: &PaymentResponse) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, getter, js_class = "PaymentResponse", js_name = "payerName")]
     #[doc = "Getter for the `payerName` field of this object."]
     #[doc = ""]
@@ -69,6 +95,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PaymentResponse`*"]
     pub fn payer_name(this: &PaymentResponse) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "PaymentResponse", js_name = "payerName")]
+    #[doc = "Like `payer_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentResponse/payerName)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PaymentResponse`*"]
+    pub fn payer_name_js_string(this: &PaymentResponse) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, getter, js_class = "PaymentResponse", js_name = "payerEmail")]
     #[doc = "Getter for the `payerEmail` field of this object."]
     #[doc = ""]
@@ -76,6 +109,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PaymentResponse`*"]
     pub fn payer_email(this: &PaymentResponse) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "PaymentResponse", js_name = "payerEmail")]
+    #[doc = "Like `payer_email()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentResponse/payerEmail)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PaymentResponse`*"]
+    pub fn payer_email_js_string(this: &PaymentResponse) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, getter, js_class = "PaymentResponse", js_name = "payerPhone")]
     #[doc = "Getter for the `payerPhone` field of this object."]
     #[doc = ""]
@@ -83,6 +123,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PaymentResponse`*"]
     pub fn payer_phone(this: &PaymentResponse) -> Option<::alloc::string::String>;
+    #[wasm_bindgen(method, getter, js_class = "PaymentResponse", js_name = "payerPhone")]
+    #[doc = "Like `payer_phone()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PaymentResponse/payerPhone)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PaymentResponse`*"]
+    pub fn payer_phone_js_string(this: &PaymentResponse) -> Option<::js_sys::JsString>;
     #[wasm_bindgen(method, js_class = "PaymentResponse")]
     #[doc = "The `complete()` method."]
     #[doc = ""]

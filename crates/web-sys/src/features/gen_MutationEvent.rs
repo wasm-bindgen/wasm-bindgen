@@ -32,6 +32,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MutationEvent`*"]
     pub fn prev_value(this: &MutationEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "MutationEvent", js_name = "prevValue")]
+    #[doc = "Like `prev_value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/prevValue)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MutationEvent`*"]
+    pub fn prev_value_js_string(this: &MutationEvent) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "MutationEvent", js_name = "newValue")]
     #[doc = "Getter for the `newValue` field of this object."]
     #[doc = ""]
@@ -39,6 +46,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MutationEvent`*"]
     pub fn new_value(this: &MutationEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "MutationEvent", js_name = "newValue")]
+    #[doc = "Like `new_value()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/newValue)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MutationEvent`*"]
+    pub fn new_value_js_string(this: &MutationEvent) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "MutationEvent", js_name = "attrName")]
     #[doc = "Getter for the `attrName` field of this object."]
     #[doc = ""]
@@ -46,6 +60,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `MutationEvent`*"]
     pub fn attr_name(this: &MutationEvent) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "MutationEvent", js_name = "attrName")]
+    #[doc = "Like `attr_name()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/MutationEvent/attrName)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `MutationEvent`*"]
+    pub fn attr_name_js_string(this: &MutationEvent) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "MutationEvent", js_name = "attrChange")]
     #[doc = "Getter for the `attrChange` field of this object."]
     #[doc = ""]

@@ -24,6 +24,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PresentationConnection`*"]
     pub fn id(this: &PresentationConnection) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "PresentationConnection", js_name = "id")]
+    #[doc = "Like `id()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PresentationConnection/id)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PresentationConnection`*"]
+    pub fn id_js_string(this: &PresentationConnection) -> ::js_sys::JsString;
     #[wasm_bindgen(method, getter, js_class = "PresentationConnection", js_name = "url")]
     #[doc = "Getter for the `url` field of this object."]
     #[doc = ""]
@@ -31,6 +38,13 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `PresentationConnection`*"]
     pub fn url(this: &PresentationConnection) -> ::alloc::string::String;
+    #[wasm_bindgen(method, getter, js_class = "PresentationConnection", js_name = "url")]
+    #[doc = "Like `url()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/PresentationConnection/url)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `PresentationConnection`*"]
+    pub fn url_js_string(this: &PresentationConnection) -> ::js_sys::JsString;
     #[cfg(feature = "PresentationConnectionState")]
     #[wasm_bindgen(method, getter, js_class = "PresentationConnection", js_name = "state")]
     #[doc = "Getter for the `state` field of this object."]

@@ -29,6 +29,17 @@ extern "C" {
         this: &AuthenticatorAssertionResponseJson,
     ) -> Option<::alloc::string::String>;
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Like `get_attestation_object()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AuthenticatorAssertionResponseJson`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "attestationObject")]
+    pub fn get_attestation_object_js_string(
+        this: &AuthenticatorAssertionResponseJson,
+    ) -> Option<::js_sys::JsString>;
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `attestationObject` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AuthenticatorAssertionResponseJson`*"]
@@ -51,6 +62,17 @@ extern "C" {
     pub fn get_authenticator_data(
         this: &AuthenticatorAssertionResponseJson,
     ) -> ::alloc::string::String;
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Like `get_authenticator_data()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AuthenticatorAssertionResponseJson`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "authenticatorData")]
+    pub fn get_authenticator_data_js_string(
+        this: &AuthenticatorAssertionResponseJson,
+    ) -> ::js_sys::JsString;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `authenticatorData` field of this object."]
     #[doc = ""]
@@ -75,6 +97,17 @@ extern "C" {
         this: &AuthenticatorAssertionResponseJson,
     ) -> ::alloc::string::String;
     #[cfg(web_sys_unstable_apis)]
+    #[doc = "Like `get_client_data_json()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AuthenticatorAssertionResponseJson`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "clientDataJSON")]
+    pub fn get_client_data_json_js_string(
+        this: &AuthenticatorAssertionResponseJson,
+    ) -> ::js_sys::JsString;
+    #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `clientDataJSON` field of this object."]
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `AuthenticatorAssertionResponseJson`*"]
@@ -95,6 +128,16 @@ extern "C" {
     #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
     #[wasm_bindgen(method, getter = "signature")]
     pub fn get_signature(this: &AuthenticatorAssertionResponseJson) -> ::alloc::string::String;
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Like `get_signature()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AuthenticatorAssertionResponseJson`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "signature")]
+    pub fn get_signature_js_string(this: &AuthenticatorAssertionResponseJson)
+        -> ::js_sys::JsString;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `signature` field of this object."]
     #[doc = ""]
@@ -118,6 +161,17 @@ extern "C" {
     pub fn get_user_handle(
         this: &AuthenticatorAssertionResponseJson,
     ) -> Option<::alloc::string::String>;
+    #[cfg(web_sys_unstable_apis)]
+    #[doc = "Like `get_user_handle()`, but returning a `js_sys::JsString` handle to the string rather than copying it into wasm memory."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `AuthenticatorAssertionResponseJson`*"]
+    #[doc = ""]
+    #[doc = "*This API is unstable and requires `--cfg=web_sys_unstable_apis` to be activated, as"]
+    #[doc = "[described in the `wasm-bindgen` guide](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/unstable-apis.html)*"]
+    #[wasm_bindgen(method, getter = "userHandle")]
+    pub fn get_user_handle_js_string(
+        this: &AuthenticatorAssertionResponseJson,
+    ) -> Option<::js_sys::JsString>;
     #[cfg(web_sys_unstable_apis)]
     #[doc = "Change the `userHandle` field of this object."]
     #[doc = ""]
