@@ -101,6 +101,7 @@ pub struct Context<'a> {
     typescript: String,
     typescript_emscripten_classes: String,
     config: &'a Bindgen,
+    emscripten_side_module: bool,
     pub module: &'a mut Module,
     aux: &'a WasmBindgenAux,
     wit: &'a NonstandardWitSection,
@@ -342,7 +343,13 @@ impl<'a> Context<'a> {
         aux: &'a WasmBindgenAux,
     ) -> Result<Context<'a>, Error> {
         let memory64 = module.memories.iter().next().is_some_and(|m| m.memory64);
+        let emscripten_side_module = config.mode.emscripten()
+            && module
+                .customs
+                .iter()
+                .any(|(_, section)| matches!(section.name(), "dylink" | "dylink.0"));
         Ok(Context {
+            emscripten_side_module,
             globals: String::new(),
             es_module_imports: String::new(),
             intrinsics: Some(Default::default()),
@@ -1830,12 +1837,12 @@ if (require('worker_threads').isMainThread) {{
         // actually exports it, since its receiving binding otherwise doesn't
         // exist. It runs static constructors on --no-entry builds.
         let initialize_logic = if self.module.exports.iter().any(|e| e.name == "_initialize") {
-            format!("{}();", emscripten_mangle("_initialize"))
+            format!("{}();", self.wasm_export_ref("_initialize"))
         } else {
             String::new()
         };
         let start_logic = if needs_manual_start {
-            format!("{}();", emscripten_mangle("__wbindgen_start"))
+            format!("{}();", self.wasm_export_ref("__wbindgen_start"))
         } else {
             String::new()
         };
@@ -4355,10 +4362,12 @@ if (require('worker_threads').isMainThread) {{
             };
 
             if matches!(self.config.mode, OutputMode::Emscripten) {
+                let postset = format!("CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined') ? {{ register: () => {{}}, unregister: () => {{}} }} : new FinalizationRegistry({prevent_stale});");
+                let postset = serde_json::to_string(&postset).unwrap();
                 format!(
                     "addToLibrary({{
                         $CLOSURE_DTORS: {{}},
-                        $CLOSURE_DTORS__postset: \"CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined') ? {{ register: () => {{}}, unregister: () => {{}} }} : new FinalizationRegistry({prevent_stale});\"
+                        $CLOSURE_DTORS__postset: {postset}
                     }});\n"
                 )
             }             else {
@@ -7057,7 +7066,8 @@ addToLibrary({
     }
 
     /// JS expression that reaches a wasm export by name, honoring the output
-    /// mode. The emscripten target never reads `wasmExports['name']` inline in
+    /// mode. Emscripten side modules use the dynamic linker's symbol map.
+    /// For a main module, the emscripten target never reads `wasmExports['name']` inline in
     /// inner functions — emcc's metadce/minify export tracking doesn't reliably
     /// cover name-keyed accesses there across versions. Instead it references
     /// the identifier emcc's own top-level receiving code (`assignWasmExports`)
@@ -7066,7 +7076,11 @@ addToLibrary({
     /// wasm export otherwise) and are renamed by the import/export minifier in
     /// lockstep with the wasm. Other modes use the local `wasm` binding.
     fn wasm_export_ref(&self, name: &str) -> String {
-        if matches!(self.config.mode, OutputMode::Emscripten) {
+        if self.emscripten_side_module {
+            // The dynamic loader publishes side-module exports in wasmImports;
+            // they have no receiving variables in the main module's exports.
+            format!("wasmImports[{}]", serde_json::to_string(name).unwrap())
+        } else if matches!(self.config.mode, OutputMode::Emscripten) {
             emscripten_mangle(name)
         } else {
             format!("wasm.{name}")

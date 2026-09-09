@@ -14,12 +14,13 @@ use crate::descriptor::{Descriptor, GenericImportKey};
 use crate::interpreter::Interpreter;
 use anyhow::{bail, Error};
 use std::borrow::Cow;
-use std::collections::hash_map::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use walrus::{CustomSection, FunctionId, Module, TypedCustomSectionId};
 
 #[derive(Default, Debug)]
 pub struct WasmBindgenDescriptorsSection {
     pub descriptors: HashMap<String, Descriptor>,
+    pub function_table: BTreeMap<u32, FunctionId>,
     /// Per-monomorphisation imports discovered via the
     /// `__wbindgen_describe_generic_import` marker. Keyed by the
     /// `(key, signature)` pair so that two distinct generic imports sharing an
@@ -40,6 +41,7 @@ pub fn execute(module: &mut Module) -> Result<WasmBindgenDescriptorsSectionId, E
 
     section.execute_exports(module, &mut interpreter)?;
     section.execute_generic_imports(module, &mut interpreter)?;
+    section.function_table = interpreter.into_function_table();
 
     Ok(module.customs.add(section))
 }

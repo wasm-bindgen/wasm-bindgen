@@ -428,14 +428,25 @@ impl Bindgen {
         // Quick fix for https://github.com/wasm-bindgen/wasm-bindgen/pull/4931
         // which is likely a compiler bug
         {
-            let exn_import = module.imports.iter().find_map(|impt| match impt.kind {
-                walrus::ImportKind::Tag(id)
-                    if impt.module == "env" && impt.name == "__cpp_exception" =>
-                {
-                    Some((impt, id))
-                }
-                _ => None,
-            });
+            // Emscripten side modules must use the main module's exception tag
+            // so an exception can cross the dynamic-library boundary.
+            let side_module = self.mode.emscripten()
+                && module
+                    .customs
+                    .iter()
+                    .any(|(_, section)| matches!(section.name(), "dylink" | "dylink.0"));
+            let exn_import = if side_module {
+                None
+            } else {
+                module.imports.iter().find_map(|impt| match impt.kind {
+                    walrus::ImportKind::Tag(id)
+                        if impt.module == "env" && impt.name == "__cpp_exception" =>
+                    {
+                        Some((impt, id))
+                    }
+                    _ => None,
+                })
+            };
             if let Some((import, id)) = exn_import {
                 let original_import_id = import.id();
                 let tag = module.tags.get_mut(id);

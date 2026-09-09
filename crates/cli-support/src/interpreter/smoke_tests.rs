@@ -48,6 +48,116 @@ fn smoke() {
 }
 
 #[test]
+fn imported_function_got_preserves_the_exported_table_index() {
+    interpret(
+        r#"(module
+            (import "__wbindgen_placeholder__" "__wbindgen_describe"
+                (func $describe (param i32)))
+            (import "env" "__table_base" (global $base i32))
+            (import "GOT.func" "closure_adapter" (global $adapter_index (mut i32)))
+            (table 2 funcref)
+            (elem (global.get $base) $unrelated $adapter)
+            (func $unrelated (result i32) i32.const 42)
+            (func $adapter (param i32 i32))
+            (export "closure_adapter" (func $adapter))
+            (func (export "describe_adapter")
+                global.get $adapter_index
+                call $describe)
+        )"#,
+        "describe_adapter",
+        &[1],
+    );
+}
+
+#[test]
+fn function_got_can_refer_to_an_export_without_a_static_table_slot() {
+    let wasm = wat::parse_str(
+        r#"(module
+            (import "__wbindgen_placeholder__" "__wbindgen_describe"
+                (func $describe (param i32)))
+            (import "GOT.func" "closure_adapter" (global $adapter_index (mut i32)))
+            (table 0 funcref)
+            (func $adapter (export "closure_adapter") (param i32 i32))
+            (func (export "describe_adapter")
+                global.get $adapter_index
+                call $describe)
+        )"#,
+    )
+    .unwrap();
+    let module = ModuleConfig::new().parse(&wasm).unwrap();
+    let exported = |name: &str| {
+        module
+            .exports
+            .iter()
+            .find_map(|export| {
+                if export.name != name {
+                    return None;
+                }
+                match export.item {
+                    walrus::ExportItem::Function(func) => Some(func),
+                    _ => None,
+                }
+            })
+            .unwrap()
+    };
+    let mut interpreter = Interpreter::new(&module).unwrap();
+    let index = interpreter.interpret_descriptor(exported("describe_adapter"), &module)[0];
+    assert_eq!(
+        interpreter.into_function_table()[&index],
+        exported("closure_adapter")
+    );
+}
+
+#[test]
+fn function_got_indices_do_not_overlap_expression_elements_or_table_holes() {
+    let wasm = wat::parse_str(
+        r#"(module
+            (import "__wbindgen_placeholder__" "__wbindgen_describe"
+                (func $describe (param i32)))
+            (import "env" "__table_base" (global $base i32))
+            (import "GOT.func" "existing" (global $existing (mut i32)))
+            (import "GOT.func" "new" (global $new (mut i32)))
+            (table 16 funcref)
+            (func $existing (export "existing"))
+            (func (export "new"))
+            (elem (i32.add (global.get $base) (i32.const 4)) funcref
+                (ref.null func) (ref.func $existing))
+            (func (export "describe_indices")
+                global.get $existing
+                call $describe
+                global.get $new
+                call $describe)
+        )"#,
+    )
+    .unwrap();
+    let module = ModuleConfig::new().parse(&wasm).unwrap();
+    let describe = module.exports.get_func("describe_indices").unwrap();
+    let new = module.exports.get_func("new").unwrap();
+    let mut interpreter = Interpreter::new(&module).unwrap();
+    let descriptor = interpreter.interpret_descriptor(describe, &module).to_vec();
+    assert_eq!(descriptor[0], 5);
+    assert!(descriptor[1] >= 16);
+    assert_eq!(interpreter.into_function_table()[&descriptor[1]], new);
+}
+
+#[test]
+#[should_panic(expected = "cannot resolve GOT.func::missing during descriptor interpretation")]
+fn an_unresolved_function_got_is_not_treated_as_table_entry_zero() {
+    interpret(
+        r#"(module
+            (import "__wbindgen_placeholder__" "__wbindgen_describe"
+                (func $describe (param i32)))
+            (import "GOT.func" "missing" (global $missing (mut i32)))
+            (func (export "describe_missing")
+                global.get $missing
+                call $describe)
+        )"#,
+        "describe_missing",
+        &[],
+    );
+}
+
+#[test]
 fn locals() {
     let wat = r#"
         (module
@@ -837,4 +947,155 @@ fn wasm64_stack_pointer_global() {
         )
     "#;
     interpret(wat, "foo", &[65520]);
+}
+
+#[test]
+fn indirect_calls_forward_arguments_and_results() {
+    for call in ["call_indirect", "return_call_indirect"] {
+        interpret(
+            &format!(
+                r#"(module
+                (type $add (func (param i32 i32) (result i32)))
+                (import "__wbindgen_placeholder__" "__wbindgen_describe"
+                    (func $describe (param i32)))
+                (table 4 funcref)
+                (elem (i32.const 2) $add)
+                (func $add (type $add)
+                    local.get 0 local.get 1 i32.add)
+                (func $dispatch (result i32)
+                    i32.const 19 i32.const 23 i32.const 2
+                    {call} (type $add))
+                (func (export "run") call $dispatch call $describe)
+            )"#
+            ),
+            "run",
+            &[42],
+        );
+    }
+}
+
+#[test]
+fn descriptor_imports_can_be_called_indirectly() {
+    for call in ["call_indirect", "return_call_indirect"] {
+        interpret(
+            &format!(
+                r#"(module
+                (type $describe (func (param i32)))
+                (import "__wbindgen_placeholder__" "__wbindgen_describe"
+                    (func $describe (type $describe)))
+                (table 1 funcref)
+                (elem (i32.const 0) $describe)
+                (func (export "run")
+                    i32.const 42 i32.const 0 {call} (type $describe))
+            )"#
+            ),
+            "run",
+            &[42],
+        );
+    }
+}
+
+#[test]
+fn imported_function_addresses_use_the_same_indirect_call_table() {
+    interpret(
+        r#"(module
+            (type $callback (func (param i32)))
+            (import "__wbindgen_placeholder__" "__wbindgen_describe"
+                (func $describe (type $callback)))
+            (import "GOT.func" "callback" (global $callback (mut i32)))
+            (import "env" "invoke_vi" (func $invoke (param i32 i32)))
+            (table 4 funcref)
+            (func (export "callback") (type $callback) local.get 0 call $describe)
+            (func (export "run")
+                i32.const 42 global.get $callback call_indirect (type $callback)
+                global.get $callback i32.const 43 call $invoke)
+        )"#,
+        "run",
+        &[42, 43],
+    );
+}
+
+#[test]
+fn later_element_segments_replace_earlier_functions() {
+    interpret(
+        r#"(module
+            (type $callback (func))
+            (import "__wbindgen_placeholder__" "__wbindgen_describe"
+                (func $describe (param i32)))
+            (table 2 funcref)
+            (func $first i32.const 1 call $describe)
+            (func $second i32.const 2 call $describe)
+            (elem (i32.const 1) $first)
+            (elem (i32.const 1) $second)
+            (func (export "run") i32.const 1 call_indirect (type $callback))
+        )"#,
+        "run",
+        &[2],
+    );
+}
+
+#[test]
+#[should_panic(expected = "function table entry 1 is unavailable during descriptor interpretation")]
+fn a_null_element_overwrites_an_earlier_function() {
+    interpret(
+        r#"(module
+            (type $callback (func))
+            (table 2 funcref)
+            (func $callback)
+            (elem (i32.const 1) $callback)
+            (elem (i32.const 1) funcref (ref.null func))
+            (func (export "run") i32.const 1 call_indirect (type $callback))
+        )"#,
+        "run",
+        &[],
+    );
+}
+
+#[test]
+#[should_panic(expected = "function table entry 9 is unavailable during descriptor interpretation")]
+fn an_indirect_call_to_an_unavailable_function_reports_its_index() {
+    interpret(
+        r#"(module
+            (type $callback (func))
+            (table 2 funcref)
+            (func (export "run") i32.const 9 call_indirect (type $callback))
+        )"#,
+        "run",
+        &[],
+    );
+}
+
+#[test]
+#[should_panic(expected = "indirect call type mismatch at function table index 0")]
+fn indirect_calls_check_the_function_type() {
+    interpret(
+        r#"(module
+            (type $callback (func))
+            (table 1 funcref)
+            (func $wrong (result i32) i32.const 42)
+            (elem (i32.const 0) $wrong)
+            (func (export "run") i32.const 0 call_indirect (type $callback))
+        )"#,
+        "run",
+        &[],
+    );
+}
+
+#[test]
+fn unrelated_tables_do_not_overwrite_function_entries() {
+    interpret(
+        r#"(module
+            (type $callback (func))
+            (import "__wbindgen_placeholder__" "__wbindgen_describe"
+                (func $describe (param i32)))
+            (table $functions 1 funcref)
+            (table $objects 1 externref)
+            (func $callback i32.const 42 call $describe)
+            (elem (table $functions) (i32.const 0) func $callback)
+            (elem (table $objects) (i32.const 0) externref (ref.null extern))
+            (func (export "run") i32.const 0 call_indirect (type $callback))
+        )"#,
+        "run",
+        &[42],
+    );
 }

@@ -32,6 +32,7 @@ struct Context<'a> {
     vendor_prefixes: HashMap<String, Vec<String>>,
     unique_crate_identifier: &'a str,
     descriptors: HashMap<String, Descriptor>,
+    function_table: BTreeMap<u32, FunctionId>,
     externref_enabled: bool,
     thread_count: Option<ThreadCount>,
     support_start: bool,
@@ -147,6 +148,7 @@ pub fn process(
         function_imports: Default::default(),
         vendor_prefixes: Default::default(),
         descriptors: Default::default(),
+        function_table: Default::default(),
         unique_crate_identifier: "",
         memory: wasm_conventions::get_memory(module).ok(),
         module,
@@ -454,11 +456,13 @@ impl<'a> Context<'a> {
         {
             let WasmBindgenDescriptorsSection {
                 descriptors,
+                function_table,
                 generic_imports,
             } = *custom;
             // Store all the executed descriptors in our own field so we have
             // access to them while processing programs.
             self.descriptors.extend(descriptors);
+            self.function_table = function_table;
 
             // Per-monomorphisation imports discovered via the
             // `__wbindgen_describe_generic_import` marker — both generic imports
@@ -689,6 +693,21 @@ impl<'a> Context<'a> {
         struct Replace<'a> {
             map: &'a HashMap<FunctionId, FunctionId>,
         }
+        impl Replace<'_> {
+            fn const_expr(&mut self, expr: &mut ConstExpr) {
+                match expr {
+                    ConstExpr::RefFunc(func) => self.visit_function_id_mut(func),
+                    ConstExpr::Extended(ops) => {
+                        for op in ops {
+                            if let walrus::ConstOp::RefFunc(func) = op {
+                                self.visit_function_id_mut(func);
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
         impl VisitorMut for Replace<'_> {
             fn visit_function_id_mut(&mut self, function: &mut FunctionId) {
                 if let Some(replacement) = self.map.get(function) {
@@ -697,6 +716,12 @@ impl<'a> Context<'a> {
             }
         }
         let mut replace = Replace { map };
+        for (_, func) in self.function_exports.values_mut() {
+            replace.visit_function_id_mut(func);
+        }
+        for func in self.function_table.values_mut() {
+            replace.visit_function_id_mut(func);
+        }
         for (_id, func) in self.module.funcs.iter_local_mut() {
             let entry = func.entry_block();
             walrus::ir::dfs_pre_order_mut(&mut replace, func, entry);
@@ -710,12 +735,31 @@ impl<'a> Context<'a> {
                 }
                 ElementItems::Expressions(_, exprs) => {
                     for expr in exprs {
-                        if let ConstExpr::RefFunc(func) = expr {
-                            replace.visit_function_id_mut(func);
-                        }
+                        replace.const_expr(expr);
                     }
                 }
             }
+        }
+        // Dynamic-linker GOT entries resolve by export name. Keep those aliases
+        // on the generated import too, or they retain the descriptor stub.
+        for export in self.module.exports.iter_mut() {
+            if let walrus::ExportItem::Function(func) = &mut export.item {
+                replace.visit_function_id_mut(func);
+            }
+        }
+        let globals: Vec<_> = self
+            .module
+            .globals
+            .iter()
+            .map(|global| global.id())
+            .collect();
+        for global in globals {
+            if let walrus::GlobalKind::Local(expr) = &mut self.module.globals.get_mut(global).kind {
+                replace.const_expr(expr);
+            }
+        }
+        if let Some(start) = &mut self.module.start {
+            replace.visit_function_id_mut(start);
         }
     }
 
@@ -3036,8 +3080,8 @@ mod tests {
         (module, mem)
     }
 
-    fn run_discover_main(module: &mut Module, memory: MemoryId) -> bool {
-        let mut cx = Context {
+    fn test_context(module: &mut Module, memory: MemoryId) -> Context<'_> {
+        Context {
             start_found: false,
             module,
             adapters: Default::default(),
@@ -3048,6 +3092,7 @@ mod tests {
             vendor_prefixes: Default::default(),
             unique_crate_identifier: "",
             descriptors: Default::default(),
+            function_table: Default::default(),
             externref_enabled: false,
             thread_count: None,
             support_start: true,
@@ -3059,9 +3104,53 @@ mod tests {
             item_identities: Default::default(),
             ambiguous_items: Default::default(),
             demangled_exports: Default::default(),
-        };
+        }
+    }
+
+    fn run_discover_main(module: &mut Module, memory: MemoryId) -> bool {
+        let mut cx = test_context(module, memory);
         cx.discover_main().unwrap();
         cx.start_found
+    }
+
+    #[test]
+    fn replacing_a_descriptor_stub_updates_export_and_global_aliases() {
+        let wasm = wat::parse_str(
+            r#"(module
+            (type $t (func))
+            (import "env" "bound" (func $bound (type $t)))
+            (memory 1)
+            (table 1 funcref)
+            (func $stub)
+            (func (export "caller") call $stub)
+            (global $alias funcref (ref.func $stub))
+            (elem (i32.const 0) $stub)
+            (export "stub_alias" (func $stub))
+            (export "bound_alias" (func $bound))
+            (export "pointer" (global $alias))
+            (start $stub)
+        )"#,
+        )
+        .unwrap();
+        let mut module = walrus::ModuleConfig::new().parse(&wasm).unwrap();
+        let stub = module.exports.get_func("stub_alias").unwrap();
+        let bound = module.exports.get_func("bound_alias").unwrap();
+        let memory = module.memories.iter().next().unwrap().id();
+        let mut cx = test_context(&mut module, memory);
+        cx.function_table = crate::interpreter::Interpreter::new(cx.module)
+            .unwrap()
+            .into_function_table();
+        cx.handle_duplicate_imports(&HashMap::from([(stub, bound)]));
+        assert_eq!(cx.function_table[&0], bound);
+        assert_eq!(cx.module.exports.get_func("stub_alias").unwrap(), bound);
+        assert_eq!(cx.module.start, Some(bound));
+        assert!(cx.module.globals.iter().any(|g| matches!(g.kind,
+            walrus::GlobalKind::Local(ConstExpr::RefFunc(f)) if f == bound)));
+        assert!(cx.module.elements.iter().any(|e| matches!(&e.items,
+            ElementItems::Functions(funcs) if funcs == &[bound])));
+        wasmparser::Validator::new()
+            .validate_all(&cx.module.emit_wasm())
+            .unwrap();
     }
 
     /// Collect argv and argc constants.

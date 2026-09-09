@@ -19,7 +19,7 @@
 #![deny(missing_docs)]
 
 use crate::wasm_conventions;
-use anyhow::{bail, ensure};
+use anyhow::{bail, ensure, Context as _};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use walrus::ir::InstrSeqId;
 use walrus::{ExportId, FunctionId, GlobalId, GlobalKind, LocalFunction, LocalId, Module, ValType};
@@ -79,9 +79,50 @@ pub struct Interpreter {
     /// rest are forwarded. Maps the import id to its number of result values.
     invoke_imports: HashMap<FunctionId, usize>,
 
-    /// Function table contents (index -> function), reconstructed from active
-    /// element segments. Used to resolve the target of an `invoke_*` call.
-    funcref_table: BTreeMap<i32, FunctionId>,
+    // The instantiated function table, shared with binding generation after
+    // interpretation. This includes functions supplied by imported symbols.
+    function_table: BTreeMap<u32, FunctionId>,
+}
+
+// Evaluate integer constant expressions using the instance's global values.
+fn eval_const(expr: &walrus::ConstExpr, globals: &HashMap<GlobalId, i32>) -> Option<i32> {
+    use walrus::{ir::Value, ConstExpr, ConstOp};
+    match expr {
+        ConstExpr::Value(Value::I32(n)) => Some(*n),
+        ConstExpr::Value(Value::I64(n)) => Some(*n as i32),
+        ConstExpr::Global(global) => globals.get(global).copied(),
+        ConstExpr::Extended(ops) => {
+            let mut stack = Vec::<i32>::new();
+            for op in ops {
+                match op {
+                    ConstOp::I32Const(n) => stack.push(*n),
+                    ConstOp::I64Const(n) => stack.push(*n as i32),
+                    ConstOp::GlobalGet(global) => stack.push(*globals.get(global)?),
+                    ConstOp::I32Add
+                    | ConstOp::I64Add
+                    | ConstOp::I32Sub
+                    | ConstOp::I64Sub
+                    | ConstOp::I32Mul
+                    | ConstOp::I64Mul => {
+                        let b = stack.pop()?;
+                        let a = stack.pop()?;
+                        stack.push(match op {
+                            ConstOp::I32Add | ConstOp::I64Add => a.wrapping_add(b),
+                            ConstOp::I32Sub | ConstOp::I64Sub => a.wrapping_sub(b),
+                            _ => a.wrapping_mul(b),
+                        });
+                    }
+                    _ => return None,
+                }
+            }
+            if stack.len() == 1 {
+                stack.pop()
+            } else {
+                None
+            }
+        }
+        _ => None,
+    }
 }
 
 fn skip_calls(module: &Module, id: FunctionId) -> HashSet<FunctionId> {
@@ -140,15 +181,14 @@ impl Interpreter {
         // (common in PIC/dynamic-linked modules such as those produced by
         // emscripten) have no compile-time value, so we initialize them to a
         // safe placeholder. Descriptor functions don't depend on the actual
-        // value of PIC base globals (`__memory_base`, `__table_base`,
-        // `GOT.mem.*`, `GOT.func.*`); they only need consistent reads/writes.
+        // value of PIC base globals (`__memory_base`, `__table_base`). Function
+        // GOT entries encode table indices and are resolved below.
         for global in module.globals.iter() {
             match global.kind {
-                GlobalKind::Local(walrus::ConstExpr::Value(walrus::ir::Value::I32(n))) => {
-                    ret.globals.insert(global.id(), n);
-                }
-                GlobalKind::Local(walrus::ConstExpr::Value(walrus::ir::Value::I64(n))) => {
-                    ret.globals.insert(global.id(), n as i32);
+                GlobalKind::Local(ref expr) => {
+                    if let Some(n) = eval_const(expr, &ret.globals) {
+                        ret.globals.insert(global.id(), n);
+                    }
                 }
                 GlobalKind::Import(_) if global.ty == ValType::I32 || global.ty == ValType::I64 => {
                     ret.globals.insert(global.id(), 0);
@@ -203,22 +243,83 @@ impl Interpreter {
             }
         }
 
-        // Reconstruct the function table from active element segments so an
-        // `invoke_*(fnptr, ..)` can resolve `fnptr` to a concrete function.
+        // Instantiate the function table in element-segment order. Reserve its
+        // full range, including null entries, before resolving imported symbols.
+        let table = module.tables.main_function_table()?;
+        let mut next_index = table.map_or(0, |id| module.tables.get(id).initial).max(1);
         for element in module.elements.iter() {
             let offset = match &element.kind {
-                walrus::ElementKind::Active { offset, .. } => offset,
+                walrus::ElementKind::Active { table: id, offset } if Some(*id) == table => offset,
                 _ => continue,
             };
-            let base = match offset {
-                walrus::ConstExpr::Value(walrus::ir::Value::I32(n)) => *n,
-                walrus::ConstExpr::Value(walrus::ir::Value::I64(n)) => *n as i32,
-                walrus::ConstExpr::Global(g) => ret.globals.get(g).copied().unwrap_or(0),
-                _ => continue,
+            let base = eval_const(offset, &ret.globals)
+                .context("cannot evaluate function-table offset during descriptor interpretation")?
+                as u32;
+            let length = match &element.items {
+                walrus::ElementItems::Functions(funcs) => funcs.len(),
+                walrus::ElementItems::Expressions(_, exprs) => exprs.len(),
             };
-            if let walrus::ElementItems::Functions(funcs) = &element.items {
-                for (i, func) in funcs.iter().enumerate() {
-                    ret.funcref_table.insert(base + i as i32, *func);
+            next_index = next_index.max(u64::from(base) + length as u64);
+            for i in 0..length {
+                let func = match &element.items {
+                    walrus::ElementItems::Functions(funcs) => Some(funcs[i]),
+                    walrus::ElementItems::Expressions(_, exprs) => match exprs[i] {
+                        walrus::ConstExpr::RefFunc(func) => Some(func),
+                        walrus::ConstExpr::RefNull(_) => None,
+                        _ => bail!("cannot evaluate function-table element during descriptor interpretation"),
+                    },
+                };
+                let index = u32::try_from(u64::from(base) + i as u64)?;
+                if let Some(func) = func {
+                    ret.function_table.insert(index, func);
+                } else {
+                    // A later segment can overwrite a function with ref.null.
+                    ret.function_table.remove(&index);
+                }
+            }
+        }
+
+        // Emscripten side modules load function pointers through GOT globals.
+        // These must name the same table entries that descriptor processing will
+        // subsequently export; using zero can select an unrelated function.
+        let mut function_indices: HashMap<_, _> = ret
+            .function_table
+            .iter()
+            .map(|(&index, &func)| (func, index))
+            .collect();
+        let exported_functions: HashMap<_, _> = module
+            .exports
+            .iter()
+            .filter_map(|export| match export.item {
+                walrus::ExportItem::Function(func) => Some((export.name.as_str(), func)),
+                _ => None,
+            })
+            .collect();
+        for import in module.imports.iter() {
+            if import.module != "GOT.func" {
+                continue;
+            }
+            if let walrus::ImportKind::Global(global) = import.kind {
+                match exported_functions.get(import.name.as_str()) {
+                    Some(&func) => {
+                        let index = match function_indices.get(&func) {
+                            Some(&index) => index,
+                            None => {
+                                // Exported functions need not have an initial
+                                // table slot. Carry their identity through the
+                                // descriptor instead of changing the Wasm table.
+                                let index = u32::try_from(next_index)?;
+                                next_index += 1;
+                                ret.function_table.insert(index, func);
+                                function_indices.insert(func, index);
+                                index
+                            }
+                        };
+                        ret.globals.insert(global, index as i32);
+                    }
+                    None => {
+                        ret.globals.remove(&global);
+                    }
                 }
             }
         }
@@ -286,9 +387,22 @@ impl Interpreter {
         self.describe_generic_import_id
     }
 
+    /// Returns the instantiated function table for resolving descriptor indices
+    /// during binding generation. Its entries must not be emitted into the Wasm
+    /// table: imported symbols may occupy different slots at runtime.
+    pub fn into_function_table(self) -> BTreeMap<u32, FunctionId> {
+        self.function_table
+    }
+
     /// Returns the export id of the `__wbindgen_skip_interpret_calls`.
     pub fn skip_interpret(&self) -> Option<ExportId> {
         self.skip_interpret
+    }
+
+    fn table_entry(&self, index: u32) -> anyhow::Result<FunctionId> {
+        self.function_table.get(&index).copied().with_context(|| {
+            format!("function table entry {index} is unavailable during descriptor interpretation")
+        })
     }
 
     fn call(&mut self, id: FunctionId, module: &Module, args: &[i32]) {
@@ -377,6 +491,13 @@ impl Frame<'_> {
 
                 Instr::GlobalGet(e) => {
                     let val = *self.interp.globals.get(&e.global).unwrap_or_else(|| {
+                        if let GlobalKind::Import(id) = self.module.globals.get(e.global).kind {
+                            let import = self.module.imports.get(id);
+                            panic!(
+                                "cannot resolve {}::{} during descriptor interpretation",
+                                import.module, import.name
+                            );
+                        }
                         panic!(
                             "global {:?} not found, this is a bug in wasm-bindgen",
                             e.global
@@ -510,8 +631,27 @@ impl Frame<'_> {
                     stack.pop().unwrap();
                 }
 
-                Instr::Call(Call { func }) | Instr::ReturnCall(ReturnCall { func }) => {
-                    let func = *func;
+                Instr::Call(_)
+                | Instr::ReturnCall(_)
+                | Instr::CallIndirect(_)
+                | Instr::ReturnCallIndirect(_) => {
+                    let func = match instr {
+                        Instr::Call(Call { func }) | Instr::ReturnCall(ReturnCall { func }) => {
+                            *func
+                        }
+                        Instr::CallIndirect(CallIndirect { ty, .. })
+                        | Instr::ReturnCallIndirect(ReturnCallIndirect { ty, .. }) => {
+                            let index = stack.pop().unwrap() as u32;
+                            let func = self.interp.table_entry(index)?;
+                            ensure!(
+                                self.module.funcs.get(func).ty() == *ty,
+                                "indirect call type mismatch at function table index {index}"
+                            );
+                            func
+                        }
+                        _ => unreachable!(),
+                    };
+                    let stack = &mut self.interp.scratch;
                     // If this function is calling the `__wbindgen_describe`
                     // function, which we've precomputed the id for, then
                     // it's telling us about the next `u32` element in the
@@ -586,19 +726,14 @@ impl Frame<'_> {
                             let (&fnptr, rest) = args
                                 .split_first()
                                 .expect("invoke_* always takes a function pointer");
-                            let target =
-                                *self.interp.funcref_table.get(&fnptr).unwrap_or_else(|| {
-                                    panic!(
-                                        "invoke_* target {fnptr} not found in the function table"
-                                    )
-                                });
+                            let target = self.interp.table_entry(fnptr as u32)?;
                             self.interp.call(target, self.module, rest);
                         } else {
                             self.interp.call(func, self.module, &args);
                         }
                     }
 
-                    if let Instr::ReturnCall(_) = instr {
+                    if matches!(instr, Instr::ReturnCall(_) | Instr::ReturnCallIndirect(_)) {
                         log::trace!("return_call");
                         return Ok(Flow::Return);
                     }
@@ -692,3 +827,6 @@ impl Frame<'_> {
 
 #[cfg(test)]
 mod smoke_tests;
+
+#[cfg(test)]
+mod table_tests;
