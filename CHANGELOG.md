@@ -9,6 +9,10 @@
 
 ### Fixed
 
+* Fix Emscripten side-module closure bindings by resolving `GOT.func` references,
+  updating exported import aliases, and using the host's dynamic symbols and
+  shared exception tag.
+
 ### Removed
 
 ## [0.2.128](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.127...0.2.128)

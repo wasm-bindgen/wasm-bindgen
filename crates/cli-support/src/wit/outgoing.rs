@@ -1,5 +1,4 @@
 use crate::descriptor::{Descriptor, Function};
-use crate::wasm_conventions::get_function_table_entry;
 use crate::wit::{AdapterType, ClosureDtor, Instruction, InstructionBuilder};
 use crate::wit::{InstructionData, StackChange};
 use anyhow::{bail, format_err, Error};
@@ -321,23 +320,23 @@ impl InstructionBuilder<'_, '_> {
         Ok(())
     }
 
-    // The function table never changes right now, so we can statically
-    // look up the desired function.
-    fn export_table_element(&mut self, idx: u32) -> ExportId {
+    fn export_table_element(&mut self, idx: u32) -> Result<ExportId, Error> {
         let module = &mut *self.cx.module;
-        let func_id = get_function_table_entry(module, idx).unwrap();
+        let func_id = self.cx.function_table.get(&idx).copied().ok_or_else(|| {
+            format_err!("function table entry {idx} is unavailable for binding generation")
+        })?;
         if let Some(export) = module
             .exports
             .iter()
             .find(|e| matches!(e.item, walrus::ExportItem::Function(id) if id == func_id))
         {
-            return export.id();
+            return Ok(export.id());
         }
         let name = match &module.funcs.get(func_id).name {
             Some(name) => to_valid_ident(name),
             None => format!("__wasm_bindgen_func_elem_{}", func_id.index()),
         };
-        module.exports.add(&name, func_id)
+        Ok(module.exports.add(&name, func_id))
     }
 
     fn outgoing_function(
@@ -355,7 +354,7 @@ impl InstructionBuilder<'_, '_> {
         let ptr_descriptor = closure_word_descriptor(self.cx.memory64());
         descriptor.arguments.insert(0, ptr_descriptor.clone());
         descriptor.arguments.insert(0, ptr_descriptor);
-        let shim = self.export_table_element(descriptor.shim_idx);
+        let shim = self.export_table_element(descriptor.shim_idx)?;
         let dtor = match owned_closure {
             None => ClosureDtor::Immediate,
             Some(false) => ClosureDtor::Borrowed,
