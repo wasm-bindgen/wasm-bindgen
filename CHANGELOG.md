@@ -9,6 +9,11 @@
 
 ### Fixed
 
+* Updated `walrus` to 0.27.1, fixing `--keep-debug` output whose `.debug_loc`
+  referenced removed code becoming unparseable (`wasm-opt -g` failed with
+  `debug_loc error`).
+  [#5328](https://github.com/wasm-bindgen/wasm-bindgen/pull/5328)
+
 ### Removed
 
 ## [0.2.128](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.127...0.2.128)
