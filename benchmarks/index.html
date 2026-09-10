@@ -1,0 +1,309 @@
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+    <style>
+
+body {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+thead td {
+  font-weight: bold;
+}
+table td {
+  border: 1px solid black;
+  padding: 10px;
+}
+
+.about {
+  display: none;
+}
+    </style>
+    <script src='index.js' type=module async></script>
+  </head>
+  <body>
+    <a href='https://github.com/wasm-bindgen/wasm-bindgen/tree/main/benchmarks'>Source code</a>
+
+    <h1>JS / wasm-bindgen comparison</h1>
+
+    <p>
+      These benchmarks are meant to compare WebAssembly costs using raw wasm
+      files and wasm-bindgen itself against the JS equivalents. These
+      microbenchmarks aren't really representative of WebAssembly performance,
+      but can be useful data points about how expensive it is to cross
+      boundaries for example.
+    </p>
+    <p>
+      For all benchmarks higher numbers are better numbers.
+    </p>
+
+    <table id='js-vs-wasm-bindgen'>
+      <thead>
+        <tr>
+          <td>Benchmark</td>
+          <td>wasm-bindgen</td>
+          <td>JS</td>
+          <td><code>*.wast</code></td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            Call a thunk
+
+            <a class='about-open' href='#'>(?)</a>
+
+            <p class='about'>
+              This benchmarks tests out how long it take JS to call a thunk in
+              the given language. For example JS will call a JS thunk or
+              JS will call a Wasm function that does nothing.
+            </p>
+          </td>
+
+          <td class='bm' id='wbindgen_thunk'></td>
+          <td class='bm' id='js_thunk'></td>
+          <td class='bm' id='raw_thunk'></td>
+        </tr>
+        <tr>
+          <td>
+            Call an adder
+
+            <a class='about-open' href='#'>(?)</a>
+
+            <p class='about'>
+              This benchmarks tests out how long it take JS to call a function
+              in the target language which adds two numbers and returns the
+              result. This is likely to be similar to the previous benchmark
+              in terms of results, but it's thought that some extra computation
+              may show overheads differently.
+            </p>
+          </td>
+
+          <td class='bm' id='wbindgen_thunk'></td>
+          <td class='bm' id='js_thunk'></td>
+          <td class='bm' id='raw_thunk'></td>
+        </tr>
+
+          <td>
+            Call a JS thunk
+
+            <a class='about-open' href='#'>(?)</a>
+
+            <p class='about'>
+              This benchmarks tests out how long it takes to call a JS function
+              10,000 times. Each language/framework has a function which takes a
+              parameter of how many times to call an imported JS function.
+              Remember that JS itself benefits from inlining, where as JS cannot
+              be inlined into WebAssembly. In these cases the imported function
+              performs no work, it just returns immediately.
+            </p>
+          </td>
+
+          <td class='bm' id='wbindgen_call_js_thunk_n_times'></td>
+          <td class='bm' id='js_call_js_thunk_n_times'></td>
+          <td class='bm' id='raw_call_js_thunk_n_times'></td>
+        </tr>
+
+        <tr>
+          <td>
+            Call a JS function which adds
+
+            <a class='about-open' href='#'>(?)</a>
+
+            <p class='about'>
+              This benchmark is similar to the previous thunk benchmark except
+              that this time the imported function will add its two arguments
+              and returns the result. This helps measure the overhead of
+              sending data like integers back and forth.
+            </p>
+          </td>
+
+          <td class='bm' id='wbindgen_call_js_add_n_times'></td>
+          <td class='bm' id='js_call_js_add_n_times'></td>
+          <td class='bm' id='raw_call_js_add_n_times'></td>
+        </tr>
+
+        <tr>
+          <td>
+            Calculate Fib(40)
+
+            <a class='about-open' href='#'>(?)</a>
+
+            <p class='about'>
+              This benchmarks calculates the 40th fibonacci number. It in
+              theory should favor Wasm since Wasm is "better a compute", but
+              a good JIT will probably make the code roughly equivalent.
+            </p>
+          </td>
+
+          <td class='bm' id='wbindgen_fib_40'></td>
+          <td class='bm' id='js_fib_40'></td>
+        </tr>
+
+        <tr>
+          <td>
+            Access <code>Node.firstChild</code>
+
+            <a class='about-open' href='#'>(?)</a>
+
+            <p class='about'>
+              This benchmark attempts to see the cost of accessing a DOM
+              property from both JS and WebAssembly. We access the DOM property
+              as fast as possible in WebAssembly and otherwise just access it
+              as a normal property in JS.
+            </p>
+          </td>
+
+          <td class='bm' id='wbindgen_call_node_first_child_n_times'></td>
+          <td class='bm' id='js_call_node_first_child_n_times'></td>
+        </tr>
+
+        <tr>
+          <td>
+            Access <code>Node.nodeType</code>
+
+            <a class='about-open' href='#'>(?)</a>
+
+            <p class='about'>
+              This benchmark attempts to see the cost of accessing a DOM
+              property from both JS and WebAssembly. We access the DOM property
+              as fast as possible in WebAssembly and otherwise just access it
+              as a normal property in JS.
+            </p>
+          </td>
+
+          <td class='bm' id='wbindgen_call_node_node_type_n_times'></td>
+          <td class='bm' id='js_call_node_node_type_n_times'></td>
+        </tr>
+
+        <tr>
+          <td>
+            Count types of nodes on a page
+
+            <a class='about-open' href='#'>(?)</a>
+
+            <p class='about'>
+              This is intended to be a "flavorful DOM benchmark" which
+              exercises DOM functionality from WebAssembly, specifically
+              counting the number of types of each node on a page.
+            </p>
+          </td>
+
+          <td class='bm' id='wbindgen_count_node_types'></td>
+          <td class='bm' id='js_count_node_types'></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h1>wasm-bindgen benchmarks</h1>
+
+    <p>
+      These benchmarks don't compare against JS but are instead more intended
+      to be compared against each other, across browsers, or across versions of
+      wasm-bindgen.
+    </p>
+
+    <table id='js-vs-wasm-bindgen'>
+      <thead>
+        <tr>
+          <td>Benchmark</td>
+          <td>Result</td>
+        </tr>
+      </thead>
+      <tbody id='wbindgen-body'>
+        <tr>
+          <td>
+            Access <code>Node.nodeType</code> with <code>final</code>
+
+            <a class='about-open' href='#'>(?)</a>
+
+            <p class='about'>
+              This is similar to the <code>Node.nodeType</code> benchmark above
+              except that it uses the <code>final</code> attribute in
+              wasm-bindgen.
+            </p>
+          </td>
+
+          <td class='bm' id='wbindgen_call_first_child_final_n_times'></td>
+        </tr>
+        <tr>
+          <td>
+            Access <code>Node.nodeType</code> with <code>structural</code>
+
+            <a class='about-open' href='#'>(?)</a>
+
+            <p class='about'>
+              This is similar to the <code>Node.nodeType</code> benchmark above
+              except that it uses the <code>structural</code> attribute in
+              wasm-bindgen.
+            </p>
+          </td>
+
+          <td class='bm' id='wbindgen_call_first_child_structural_n_times'></td>
+        </tr>
+
+        <tr>
+          <td>
+            Call a custom JS class <code>Foo.bar</code> method with
+            <code>final</code>
+
+            <a class='about-open' href='#'>(?)</a>
+
+            <p class='about'>
+              This is similar to the <code>Node.nodeType</code> benchmark above
+              except that it's not calling a DOM method but rather a custom JS
+              class's method.
+            </p>
+          </td>
+
+          <td class='bm' id='wbindgen_call_foo_bar_final_n_times'></td>
+        </tr>
+        <tr>
+          <td>
+            Call a custom JS class <code>Foo.bar</code> method with
+            <code>structural</code>
+
+            <a class='about-open' href='#'>(?)</a>
+
+            <p class='about'>
+              This is similar to the <code>Node.nodeType</code> benchmark above
+              except that it's not calling a DOM method but rather a custom JS
+              class's method.
+            </p>
+          </td>
+
+          <td class='bm' id='wbindgen_call_foo_bar_structural_n_times'></td>
+        </tr>
+
+        <tr>
+          <td>
+            Call a custom JS function with a string enum value parameter
+
+            <a class='about-open' href='#'>(?)</a>
+
+            <p class='about'>
+              Benchmarks the speed of passing string enums to javascript
+            </p>
+          </td>
+
+          <td class='bm' id='wbindgen_call_use_baz_n_times'></td>
+        </tr>
+
+        <tr style='display:none' class='str-benchmark'>
+          <td>
+            Pass <span class='str'></span> to/from wasm-bindgen
+
+            <a class='about-open' href='#'>(?)</a>
+
+            <p class='about'>
+              This benchmarks the overhead of passing strings to Wasm and
+              also receiving them from wasm.
+            </p>
+          </td>
+
+          <td class='bm'></td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>

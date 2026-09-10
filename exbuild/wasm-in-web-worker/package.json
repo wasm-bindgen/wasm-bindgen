@@ -1,0 +1,14 @@
+{
+  "name": "wasm-in-web-worker",
+  "collaborators": [
+    "The wasm-bindgen Developers"
+  ],
+  "version": "0.0.0",
+  "files": [
+    "wasm_in_web_worker_bg.wasm",
+    "wasm_in_web_worker.js",
+    "wasm_in_web_worker.d.ts"
+  ],
+  "browser": "wasm_in_web_worker.js",
+  "types": "wasm_in_web_worker.d.ts"
+}
