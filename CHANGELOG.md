@@ -9,6 +9,12 @@
 
 ### Fixed
 
+* Updated `walrus` to 0.27.2, fixing `--keep-debug` output that `wasm-opt -g`
+  could not process: `.debug_loc` entries for removed code were unparseable
+  (`debug_loc error`), and `DW_AT_high_pc` was re-encoded as variable-width
+  `udata` (`compile unit size was incorrect`).
+  [#5328](https://github.com/wasm-bindgen/wasm-bindgen/pull/5328)
+
 ### Removed
 
 ## [0.2.128](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.127...0.2.128)
