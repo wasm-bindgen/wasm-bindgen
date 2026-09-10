@@ -55,7 +55,7 @@ assert_cmd = "2"
 predicates = "3"
 pretty_assertions = "1.4"
 regex = "1.11.2"
-rstest = "0.26"
+rstest = "0.27"
 wasmprinter = "0.245"
 
 [features]
