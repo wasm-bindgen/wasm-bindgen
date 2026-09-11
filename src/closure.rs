@@ -994,7 +994,10 @@ where
     }
 }
 
-// In ScopedClosure, the Rust closure type is the phantom type that erases.
-unsafe impl<T: ?Sized + WasmClosure> ErasableGeneric for ScopedClosure<'_, T> {
-    type Repr = ScopedClosure<'static, dyn FnMut()>;
+// In ScopedClosure, the Rust closure type is the phantom type that erases. The
+// scope lifetime is preserved (not erased to `'static`) so the `Repr`-equality
+// gate on `upcast`/`upcast_into` cannot launder a borrowed closure's lifetime;
+// see #5176.
+unsafe impl<'a, T: ?Sized + WasmClosure> ErasableGeneric for ScopedClosure<'a, T> {
+    type Repr = ScopedClosure<'a, dyn FnMut()>;
 }
