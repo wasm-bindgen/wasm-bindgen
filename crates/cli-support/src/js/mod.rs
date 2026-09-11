@@ -772,8 +772,15 @@ impl<'a> Context<'a> {
             String::new()
         };
 
-        if let Some(mem) = self.module.memories.iter().next() {
-            if let Some(id) = mem.import {
+        // Emscripten pthreads import shared memory as `env.memory` rather than placeholder.
+        if !matches!(self.config.mode, OutputMode::Emscripten) {
+            if let Some((mem, id)) = self
+                .module
+                .memories
+                .iter()
+                .next()
+                .and_then(|mem| mem.import.map(|id| (mem, id)))
+            {
                 self.module.imports.get_mut(id).module = PLACEHOLDER_MODULE.to_owned();
                 let mut init_memory = "new WebAssembly.Memory({".to_string();
                 init_memory.push_str(&format!("initial:{}", mem.initial));

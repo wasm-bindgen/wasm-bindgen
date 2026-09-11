@@ -380,8 +380,13 @@ impl Bindgen {
             bail!("--experimental-reset-state-function is only supported for --target module, --target web, or --target nodejs")
         }
 
-        let thread_count = transforms::threads::run(&mut module)
-            .with_context(|| "failed to prepare module for threading")?;
+        // Emscripten's pthread runtime manages `__wasm_init_tls` and TLS stacks itself.
+        let thread_count = if self.mode.emscripten() {
+            None
+        } else {
+            transforms::threads::run(&mut module)
+                .with_context(|| "failed to prepare module for threading")?
+        };
 
         // If requested, turn all mangled symbols into prettier unmangled
         // symbols with the help of `rustc-demangle`.
