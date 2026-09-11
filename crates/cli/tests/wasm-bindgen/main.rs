@@ -2566,6 +2566,63 @@ fn emscripten_shared_memory_skips_thread_transform() {
 }
 
 #[test]
+fn emscripten_reinit_is_noop_and_library_parses() {
+    // Emscripten owns instantiation, so the reinit machinery that
+    // `schedule_reinit()` turns on has nothing to reset there; it must not
+    // be emitted. The closure
+    // finalization registry (a multi-line `__postset`) must also come out as
+    // a valid JS string literal.
+    let mut project = Project::new("emscripten_reinit_is_noop_and_library_parses");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen::prelude::*;
+
+            #[wasm_bindgen]
+            pub fn make_closure() -> JsValue {
+                let cb = Closure::<dyn Fn()>::new(|| wasm_bindgen::handler::schedule_reinit());
+                cb.into_js_value()
+            }
+        "#,
+    );
+
+    let built = project.build();
+    let mut module = ModuleConfig::new().parse_file(&built).unwrap();
+    module.customs.add(RawCustomSection {
+        name: "__wasm_bindgen_emscripten_marker".into(),
+        data: vec![1],
+    });
+    let emscripten_wasm = project.root.join("emscripten_input.wasm");
+    module.emit_wasm_file(&emscripten_wasm).unwrap();
+
+    let out_dir = project.root.join("pkg-emscripten");
+    fs::create_dir_all(&out_dir).unwrap();
+    wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
+        "wasm-bindgen".as_ref(),
+        "--out-dir".as_ref(),
+        out_dir.as_os_str(),
+        emscripten_wasm.as_os_str(),
+    ])
+    .unwrap();
+
+    let lib = fs::read_to_string(out_dir.join("library_bindgen.js")).unwrap();
+    assert!(
+        !lib.contains("__wbg_reinit_scheduled") && !lib.contains("__wbg_reset_state"),
+        "reinit machinery must not be emitted for emscripten:\n{lib}"
+    );
+    assert!(lib.contains("$CLOSURE_DTORS__postset"));
+
+    // The library is a script evaluated by emcc's JS compiler, where
+    // `addToLibrary` is provided.
+    Command::new("node")
+        .arg("-e")
+        .arg("globalThis.addToLibrary = () => {}; require(process.argv[1])")
+        .arg(out_dir.join("library_bindgen.js"))
+        .assert()
+        .success();
+}
+
+#[test]
 fn emscripten_namespaced_exports_valid_ts() {
     // Covers all three TS-emission bugs for namespaced (`js_namespace`)
     // exports in emscripten output:
