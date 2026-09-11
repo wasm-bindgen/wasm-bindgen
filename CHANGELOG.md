@@ -18,6 +18,13 @@
 
 ### Fixed
 
+* Emscripten output no longer emits the instance reinit machinery, which
+  Emscripten's JS compiler rejected (unescaped multi-line `__postset`, and
+  `var reinit_scheduled = let ...`): `schedule_reinit()` is a no-op there since
+  Emscripten owns instantiation. The closure finalization `__postset` is now
+  emitted as an escaped string literal.
+  [#5332](https://github.com/wasm-bindgen/wasm-bindgen/pull/5332)
+
 * Updated `walrus` to 0.27.2, fixing `--keep-debug` output that `wasm-opt -g`
   could not process: `.debug_loc` entries for removed code were unparseable
   (`debug_loc error`), and `DW_AT_high_pc` was re-encoded as variable-width

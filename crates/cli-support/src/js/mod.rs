@@ -361,7 +361,10 @@ impl<'a> Context<'a> {
             config,
             threads_enabled: threads_xform::is_enabled(module),
             unwind_enabled: has_local_exception_tags(module),
-            generate_reinit: aux.uses_reinit || config.generate_reset_state,
+            // Emscripten owns instantiation, so the instance cannot be reset
+            // from the bindgen glue; reinit requests are no-ops there.
+            generate_reinit: !matches!(config.mode, OutputMode::Emscripten)
+                && (aux.uses_reinit || config.generate_reset_state),
             module,
             npm_dependencies: Default::default(),
             wit,
@@ -4355,10 +4358,13 @@ if (require('worker_threads').isMainThread) {{
             };
 
             if matches!(self.config.mode, OutputMode::Emscripten) {
+                let postset = format!(
+                    "CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined') ? {{ register: () => {{}}, unregister: () => {{}} }} : new FinalizationRegistry({prevent_stale});"
+                );
                 format!(
                     "addToLibrary({{
                         $CLOSURE_DTORS: {{}},
-                        $CLOSURE_DTORS__postset: \"CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined') ? {{ register: () => {{}}, unregister: () => {{}} }} : new FinalizationRegistry({prevent_stale});\"
+                        $CLOSURE_DTORS__postset: {postset:?}
                     }});\n"
                 )
             }             else {
@@ -6574,7 +6580,11 @@ addToLibrary({
             }
             Intrinsic::Reinit => {
                 assert_eq!(args.len(), 0);
-                "__wbg_reinit_scheduled = true".to_string()
+                if self.generate_reinit {
+                    "__wbg_reinit_scheduled = true".to_string()
+                } else {
+                    "undefined".to_string()
+                }
             }
 
             // Identity: the shim hands the pending Promise straight back to
