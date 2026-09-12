@@ -21,6 +21,11 @@
 //! the `__jspi_stack_base` global when JSPI instrumentation is active and is
 //! a constant `0` otherwise, so modules that never use JSPI attributes carry
 //! no JSPI machinery and keep running on engines without exnref/JSPI.
+//!
+//! On the emscripten target the fibers belong to emscripten's JSPI runtime
+//! (`-sJSPI_HOOKS` / `-sREENTRANT_JSPI`): the CLI wraps the boundaries with
+//! its lifecycle hooks instead, and the context probe is a hook registered
+//! through `<emscripten/jspi.h>` that tracks whether a fiber is current.
 
 // The `suspending` attribute on the internal bridge import generates an
 // experimental-status deprecation warning; this module is itself part of the
@@ -46,6 +51,7 @@ extern "C" {
     /// export or a promising-entered poll. Rewritten in-wasm by the CLI to
     /// read the `__jspi_stack_base` global (constant `0` in modules without
     /// JSPI instrumentation); no JS shim is ever emitted.
+    #[cfg(not(target_os = "emscripten"))]
     fn __wbindgen_jspi_in_context() -> u32;
 
     /// Schedules a task poll on the microtask queue, entered through the
@@ -61,8 +67,63 @@ extern "C" {
 
 /// Whether the caller is executing within a JSPI context, i.e. whether a
 /// spawned task's polls should be promising-entered.
+#[cfg(not(target_os = "emscripten"))]
 pub(crate) fn in_context() -> bool {
     __wbindgen_jspi_in_context() != 0
+}
+
+#[cfg(target_os = "emscripten")]
+pub(crate) use emscripten::in_context;
+
+/// The context probe under emscripten: a lifecycle hook registered with
+/// emscripten's JSPI runtime, which reports every fiber's enter, exit,
+/// suspend and resume (for wasm-bindgen's and emscripten's own promising
+/// exports alike). The per-fiber token carries whether the fiber's host was
+/// itself in a fiber, so leaving the fiber restores the host's answer.
+#[cfg(target_os = "emscripten")]
+mod emscripten {
+    use core::ffi::c_void;
+    use core::sync::atomic::{AtomicBool, Ordering::Relaxed};
+
+    const JSPI_ENTER: u32 = 1;
+    const JSPI_EXIT: u32 = 2;
+    const JSPI_SUSPEND: u32 = 4;
+    const JSPI_RESUME: u32 = 8;
+
+    type Hook = unsafe extern "C" fn(u32, *mut c_void, i32) -> *mut c_void;
+
+    extern "C" {
+        fn jspi_register(hook: Hook, mask: u32) -> i32;
+    }
+
+    // Per instance, not per thread: JSPI is rejected under `atomics`.
+    static IN_FIBER: AtomicBool = AtomicBool::new(false);
+
+    pub(crate) fn in_context() -> bool {
+        IN_FIBER.load(Relaxed)
+    }
+
+    unsafe extern "C" fn hook(event: u32, token: *mut c_void, _error: i32) -> *mut c_void {
+        match event {
+            JSPI_ENTER | JSPI_RESUME => IN_FIBER.swap(true, Relaxed) as usize as *mut c_void,
+            JSPI_SUSPEND | JSPI_EXIT => {
+                IN_FIBER.store(!token.is_null(), Relaxed);
+                token
+            }
+            _ => token,
+        }
+    }
+
+    extern "C" fn register() {
+        // -1 without `-sJSPI_HOOKS`: no events, so no fiber is ever current.
+        unsafe {
+            jspi_register(hook, JSPI_ENTER | JSPI_EXIT | JSPI_SUSPEND | JSPI_RESUME);
+        }
+    }
+
+    #[used]
+    #[link_section = ".init_array"]
+    static REGISTER: extern "C" fn() = register;
 }
 
 /// Suspend the current promising execution until `promise` settles.

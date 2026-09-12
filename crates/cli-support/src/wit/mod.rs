@@ -190,29 +190,15 @@ pub fn process(
 
     // The JSPI transform (`transforms::jspi`) needs `__wbindgen_malloc`/
     // `__wbindgen_free` to evacuate fiber shadow stacks around suspensions,
-    // and the address of the `__wbindgen_jspi_rejected` flag static to report
-    // promise rejections. Record them before `unexport_intrinsics` removes
-    // their exports.
+    // and `__wbindgen_jspi_set_rejected` to report promise rejections. Record
+    // them before `unexport_intrinsics` removes their exports.
     if !cx.aux.imports_with_suspending.is_empty() || cx.aux.export_map.values().any(|e| e.jspi) {
         cx.aux.jspi_malloc = Some(cx.malloc()?);
         cx.aux.jspi_free = Some(cx.free()?);
-        cx.aux.jspi_rejected = cx
-            .module
-            .exports
-            .iter()
-            .find(|e| e.name == "__wbindgen_jspi_rejected")
-            .and_then(|e| match e.item {
-                walrus::ExportItem::Global(g) => Some(g),
-                _ => None,
-            })
-            .and_then(|g| match &cx.module.globals.get(g).kind {
-                walrus::GlobalKind::Local(walrus::ConstExpr::Value(v)) => match *v {
-                    walrus::ir::Value::I32(v) => Some(v as u32 as u64),
-                    walrus::ir::Value::I64(v) => Some(v as u64),
-                    _ => None,
-                },
-                _ => None,
-            });
+        cx.aux.jspi_set_rejected = cx
+            .function_exports
+            .get("__wbindgen_jspi_set_rejected")
+            .map(|p| p.1);
     }
 
     cx.verify()?;

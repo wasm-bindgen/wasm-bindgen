@@ -5,6 +5,15 @@
 
 ### Added
 
+* Added JSPI support on the `wasm32-unknown-emscripten` target:
+  `#[wasm_bindgen(jspi)]`, `#[wasm_bindgen(suspending)]`,
+  `jspi_block_on_promise` and the JSPI context inheritance of `spawn_local`
+  now work when linking with `-sJSPI` and `-sJSPI_HOOKS` (or
+  `-sREENTRANT_JSPI`). The fibers belong to emscripten's JSPI runtime, which
+  wasm-bindgen integrates with through its lifecycle hook exports instead of
+  its own shadow stack management.
+  [#5330](https://github.com/wasm-bindgen/wasm-bindgen/pull/5330)
+
 ### Changed
 
 ### Fixed
