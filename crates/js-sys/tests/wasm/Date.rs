@@ -224,12 +224,15 @@ fn parse() {
 fn set_date() {
     let event1 = Date::new(&"August 19, 1975 23:15:30".into());
     let event2 = Date::new(&"August 24, 1975 23:15:30".into());
+    let event3 = Date::new(&"August 22, 1975 23:15:30".into());
 
     let ms = event1.set_date(24);
+    event3.set_date(-1);
 
     assert_eq!(ms, event2.get_time());
     assert_eq!(event1.get_time(), event2.get_time());
     assert_eq!(event1.get_date(), 24);
+    assert_eq!(event3.get_date(), 30);
 }
 
 #[wasm_bindgen_test]
@@ -269,58 +272,77 @@ fn set_full_year_with_month_date() {
 fn set_hours() {
     let event1 = Date::new(&"August 19, 1975 23:15:30".into());
     let event2 = Date::new(&"August 19, 1975 20:15:30".into());
+    let event3 = Date::new(&"August 19, 1975 20:15:30".into());
 
     let ms = event1.set_hours(20);
+    event3.set_hours(-5);
 
     assert_eq!(ms, event2.get_time());
     assert_eq!(event1.get_time(), event2.get_time());
     assert_eq!(event1.get_hours(), 20);
+    assert_eq!(event3.get_date(), 18);
+    assert_eq!(event3.get_hours(), 19);
 }
 
 #[wasm_bindgen_test]
 fn set_milliseconds() {
     let event = Date::new(&"August 19, 1975 23:15:30".into());
+    let event2 = Date::new(&"August 19, 1975 23:15:30".into());
 
     let ms = event.set_milliseconds(456);
+    event2.set_milliseconds(-1000);
 
     assert_eq!(ms, event.get_time());
     assert_eq!(event.get_milliseconds(), 456);
+    assert_eq!(event2.get_milliseconds(), 0);
+    assert_eq!(event2.get_seconds(), 29);
 }
 
 #[wasm_bindgen_test]
 fn set_minutes() {
     let event1 = Date::new(&"August 19, 1975 23:15:30".into());
     let event2 = Date::new(&"August 19, 1975 23:45:30".into());
+    let event3 = Date::new(&"August 19, 1975 23:45:30".into());
 
     let ms = event1.set_minutes(45);
+    event3.set_minutes(-10);
 
     assert_eq!(ms, event2.get_time());
     assert_eq!(event1.get_time(), event2.get_time());
     assert_eq!(event1.get_minutes(), 45);
+    assert_eq!(event3.get_minutes(), 50);
+    assert_eq!(event3.get_hours(), 22);
 }
 
 #[wasm_bindgen_test]
 fn set_month() {
     let event1 = Date::new(&"August 19, 1975 23:15:30".into());
     let event2 = Date::new(&"April 19, 1975 23:15:30".into());
+    let event3 = Date::new(&"April 19, 1975 23:15:30".into());
 
     let ms = event1.set_month(3);
+    event3.set_month(-1);
 
     assert_eq!(ms, event2.get_time());
     assert_eq!(event1.get_time(), event2.get_time());
     assert_eq!(event1.get_month(), 3);
+    assert_eq!(event3.get_month(), 11);
 }
 
 #[wasm_bindgen_test]
 fn set_seconds() {
     let event1 = Date::new(&"August 19, 1975 23:15:30".into());
     let event2 = Date::new(&"August 19, 1975 23:15:42".into());
+    let event3 = Date::new(&"August 19, 1975 23:15:42".into());
 
     let ms = event1.set_seconds(42);
+    event3.set_seconds(-1);
 
     assert_eq!(ms, event2.get_time());
     assert_eq!(event1.get_time(), event2.get_time());
     assert_eq!(event1.get_seconds(), 42);
+    assert_eq!(event3.get_seconds(), 59);
+    assert_eq!(event3.get_minutes(), 14);
 }
 
 #[wasm_bindgen_test]
@@ -338,12 +360,15 @@ fn set_time() {
 fn set_utc_date() {
     let event1 = Date::new(&"August 19, 1975 23:15:30 GMT-3:00".into());
     let event2 = Date::new(&"August 19, 1975 02:15:30 GMT".into());
+    let event3 = Date::new(&"August 19, 1975 23:15:30 GMT-3:00".into());
 
     let ms = event1.set_utc_date(19);
+    event3.set_utc_date(-1);
 
     assert_eq!(ms, event2.get_time());
     assert_eq!(event1.get_time(), event2.get_time());
     assert_eq!(event1.get_utc_date(), 19);
+    assert_eq!(event3.get_utc_date(), 30);
 }
 
 #[wasm_bindgen_test]
@@ -383,60 +408,75 @@ fn set_utc_full_year_with_month_date() {
 fn set_utc_hours() {
     let event1 = Date::new(&"August 19, 1975 23:15:30 GMT-3:00".into());
     let event2 = Date::new(&"August 20, 1975 23:15:30 GMT".into());
+    let event3 = Date::new(&"August 19, 1975 23:15:30 GMT-3:00".into());
 
     let ms = event1.set_utc_hours(23);
+    event3.set_utc_hours(-1);
 
     assert_eq!(ms, event2.get_time());
     assert_eq!(event1.get_time(), event2.get_time());
     assert_eq!(event1.get_utc_hours(), 23);
+    assert_eq!(event3.get_utc_hours(), 23);
 }
 
 #[wasm_bindgen_test]
 fn set_utc_milliseconds() {
     let event1 = Date::new(&"1995-12-17T09:24:00Z".into());
     let event2 = Date::new(&"1995-12-17T09:24:00.420Z".into());
+    let event3 = Date::new(&"1995-12-17T09:24:00Z".into());
 
     let ms = event1.set_utc_milliseconds(420);
+    event3.set_utc_milliseconds(-500);
 
     assert_eq!(ms, event2.get_time());
     assert_eq!(event1.get_time(), event2.get_time());
     assert_eq!(event1.get_utc_milliseconds(), 420);
+    assert_eq!(event3.get_utc_milliseconds(), 500);
 }
 
 #[wasm_bindgen_test]
 fn set_utc_minutes() {
     let event1 = Date::new(&"December 31, 1975, 23:15:30 GMT-3:00".into());
     let event2 = Date::new(&"January 01, 1976 02:25:30 GMT".into());
+    let event3 = Date::new(&"December 31, 1975, 23:15:30 GMT-3:00".into());
 
     let ms = event1.set_utc_minutes(25);
+    event3.set_utc_minutes(-25);
 
     assert_eq!(ms, event2.get_time());
     assert_eq!(event1.get_time(), event2.get_time());
     assert_eq!(event1.get_utc_minutes(), 25);
+    assert_eq!(event3.get_utc_minutes(), 35);
 }
 
 #[wasm_bindgen_test]
 fn set_utc_month() {
     let event1 = Date::new(&"December 31, 1975 23:15:30 GMT-3:00".into());
     let event2 = Date::new(&"December 01, 1976 02:15:30 GMT".into());
+    let event3 = Date::new(&"December 31, 1975 23:15:30 GMT-3:00".into());
 
     let ms = event1.set_utc_month(11);
+    event3.set_utc_month(-3);
 
     assert_eq!(ms, event2.get_time());
     assert_eq!(event1.get_time(), event2.get_time());
     assert_eq!(event1.get_utc_month(), 11);
+    assert_eq!(event3.get_utc_month(), 9);
 }
 
 #[wasm_bindgen_test]
 fn set_utc_seconds() {
     let event1 = Date::new(&"December 31, 1975 23:15:30 GMT-3:00".into());
     let event2 = Date::new(&"January 01, 1976 02:15:39 GMT".into());
+    let event3 = Date::new(&"December 31, 1975 23:15:30 GMT-3:00".into());
 
     let ms = event1.set_utc_seconds(39);
+    event3.set_utc_seconds(-25);
 
     assert_eq!(ms, event2.get_time());
     assert_eq!(event1.get_time(), event2.get_time());
     assert_eq!(event1.get_utc_seconds(), 39);
+    assert_eq!(event3.get_utc_seconds(), 35);
 }
 
 #[wasm_bindgen_test]
