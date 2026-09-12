@@ -181,6 +181,27 @@ JSPI is not supported together with **threads/atomics** (shared memories):
 JSPI itself is a single-threaded proposal. Building with both enabled is
 rejected by the CLI.
 
+## Emscripten
+
+On the `wasm32-unknown-emscripten` target the fibers belong to emscripten's
+JSPI runtime, so link with `-sJSPI` and its lifecycle hooks:
+`-sJSPI_HOOKS`, or `-sREENTRANT_JSPI`, which additionally runs every
+promising activation on its own shadow stack so any number of fibers may be
+suspended at once (the rustc-driven flow is `-Clink-arg=-sWASM_BINDGEN
+-Clink-arg=-sJSPI -Clink-arg=-sREENTRANT_JSPI`). The `#[wasm_bindgen(jspi)]`
+and `#[wasm_bindgen(suspending)]` attributes, `jspi_block_on_promise` and the
+JSPI context inheritance of `spawn_local` then work as on the other targets.
+
+Instead of the shadow stack management described below, wasm-bindgen wraps
+each `jspi` export and `suspending` import with emscripten's `__jspi_enter`
+/ `__jspi_exit` and `__jspi_suspend` / `__jspi_resume` hook exports (the
+same instrumentation binaryen's `--jspi-hooks` pass applies to emscripten's
+own `JSPI_EXPORTS` and `JSPI_IMPORTS`), and the runtime registers a
+lifecycle hook through `<emscripten/jspi.h>` to track the ambient JSPI
+context. Emscripten's own promising exports and suspending imports (such as
+`main` and `emscripten_sleep`) participate in the same fiber system, so the
+two may be mixed freely.
+
 ## Full example — OPFS file system
 
 The `jspi-opfs` example demonstrates all four patterns: `#[wasm_bindgen(jspi)]`
@@ -240,6 +261,9 @@ one. If you see a `SuspendError`, check that every path reaching the
 suspending import originates in a `jspi` export.
 
 ## Shadow Stack Management
+
+This section describes the non-emscripten targets; see [Emscripten](#emscripten)
+above for how the emscripten runtime takes this over.
 
 On suspension the shadow stack is saved into the heap, and restored back
 onto the stack on resume. Each `#[wasm_bindgen(jspi)]` export records the

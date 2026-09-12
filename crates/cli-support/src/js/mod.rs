@@ -5585,13 +5585,15 @@ addToLibrary({
                 // evaluation time before `wasmImports` is assembled.
                 let import_def = if self.aux.imports_with_suspending.contains(&id) {
                     if matches!(self.config.mode, OutputMode::Emscripten) {
-                        let name = self.module.imports.get(core).name.clone();
+                        // The jsifier binds library functions under their
+                        // asmjs-mangled identifier.
+                        let name = emscripten_mangle(&self.module.imports.get(core).name);
                         self.emscripten_import_postsets.insert(
                             core,
                             format!(
-                                "var __wbg_inner_{name} = {name}; \
+                                "var __wbg_inner{name} = {name}; \
                                  {name} = new WebAssembly.Suspending(function(...args) {{ \
-                                     try {{ return __wbg_inner_{name}.apply(this, args); }} \
+                                     try {{ return __wbg_inner{name}.apply(this, args); }} \
                                      catch (e) {{ return Promise.reject(e); }} \
                                  }});"
                             ),
@@ -6619,7 +6621,8 @@ addToLibrary({
                     Cow::Owned(format!("let {cache};"))
                 };
                 self.intrinsic(Cow::Borrowed(cache), Some(cache), decl, &[]);
-                let trampoline = self.wasm_export_ref(crate::transforms::jspi::TASK_POLL_EXPORT);
+                let trampoline =
+                    self.raw_wasm_export_ref(crate::transforms::jspi::TASK_POLL_EXPORT);
                 // The promise is dropped, so a poll that unwinds (a panic, or
                 // a rethrown rejection of a non-`catch` suspending import)
                 // surfaces as an unhandled rejection. When the catch-wrapper
@@ -7068,6 +7071,18 @@ addToLibrary({
     fn wasm_export_ref(&self, name: &str) -> String {
         if matches!(self.config.mode, OutputMode::Emscripten) {
             emscripten_mangle(name)
+        } else {
+            format!("wasm.{name}")
+        }
+    }
+
+    /// JS expression for the raw exported wasm function, as
+    /// `WebAssembly.promising` requires. On emscripten the mangled binding may
+    /// be an assertion wrapper (`createExportWrapper`), so read `wasmExports`
+    /// directly; metadce roots name-keyed `wasmExports` accesses.
+    fn raw_wasm_export_ref(&self, name: &str) -> String {
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            format!("wasmExports[{name:?}]")
         } else {
             format!("wasm.{name}")
         }

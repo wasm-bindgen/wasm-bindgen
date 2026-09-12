@@ -59,6 +59,10 @@
 //! would permanently leak the region above it. A fiber that never suspends
 //! completes synchronously under its still-live callers and keeps the entry
 //! offset.
+//!
+//! On the emscripten target none of this runs: emscripten's own JSPI runtime
+//! owns the fibers and their stacks, and the exports and imports are instead
+//! wrapped with its lifecycle hooks (see `transforms::jspi_hooks`).
 
 use crate::wit::{AdapterKind, Instruction, NonstandardWitSection, WasmBindgenAux};
 use anyhow::{anyhow, bail, Error};
@@ -78,6 +82,7 @@ pub fn run(
     aux: &mut WasmBindgenAux,
     wit: &mut NonstandardWitSection,
     externref: bool,
+    emscripten: Option<super::ExceptionHandlingVersion>,
 ) -> Result<(), Error> {
     // The wasm-level export ids of `#[wasm_bindgen(jspi)]` exports.
     let mut jspi_exports = Vec::new();
@@ -191,6 +196,18 @@ pub fn run(
         );
     }
 
+    if let Some(eh_version) = emscripten {
+        let legacy_eh = eh_version == super::ExceptionHandlingVersion::Legacy;
+        return super::jspi_hooks::run(
+            module,
+            aux,
+            wit,
+            jspi_exports,
+            suspending_imports,
+            legacy_eh,
+        );
+    }
+
     // The single stack-top snapshot and the fiber globals are per-instance,
     // not per-thread, and JSPI itself is a single-threaded proposal.
     if module.memories.iter().any(|m| m.shared) {
@@ -282,10 +299,10 @@ pub fn run(
     // The rejection protocol for `catch`-marked suspending imports, if any.
     let has_catch = suspending_imports.iter().any(|(_, c)| *c);
     let rejection = if has_catch {
-        let addr = aux.jspi_rejected.ok_or_else(|| {
+        let set_rejected = aux.jspi_set_rejected.ok_or_else(|| {
             anyhow!(
-                "could not locate the `__wbindgen_jspi_rejected` flag static; \
-                 it is defined by the wasm-bindgen runtime"
+                "could not locate `__wbindgen_jspi_set_rejected`; it is defined by \
+                 the wasm-bindgen runtime"
             )
         })?;
         // The JS glue wires `WebAssembly.JSTag` up to any present tag import
@@ -293,7 +310,10 @@ pub fn run(
         // unset — it means "catch imports use wasm catch wrappers", which is
         // the catch-wrapper transform's decision, not ours.
         let js_tag = crate::transforms::catch_handler::get_or_import_js_tag(module);
-        Some(Rejection { js_tag, addr })
+        Some(Rejection {
+            js_tag,
+            set_rejected,
+        })
     } else {
         None
     };
@@ -352,10 +372,10 @@ struct JspiContext {
 
 /// The rejection-to-data protocol for the suspend intrinsic.
 #[derive(Clone, Copy)]
-struct Rejection {
-    js_tag: TagId,
-    /// Linear-memory address of the `__wbindgen_jspi_rejected` u32 flag.
-    addr: u64,
+pub(super) struct Rejection {
+    pub(super) js_tag: TagId,
+    /// The runtime's `__wbindgen_jspi_set_rejected(i32)`.
+    pub(super) set_rejected: FunctionId,
 }
 
 fn const_zero(ty: ValType) -> ConstExpr {
@@ -682,7 +702,7 @@ fn push_align(body: &mut InstrSeqBuilder, ty: ValType) {
 ///                 local.set <results>...
 ///                 local.get $base $len $buf
 ///                 call $__jspi_restore
-///                 (i32.store rejected_addr (i32.const 0))
+///                 (call $__wbindgen_jspi_set_rejected (i32.const 0))
 ///                 local.get <results>...
 ///                 br $done
 ///             end
@@ -690,7 +710,7 @@ fn push_align(body: &mut InstrSeqBuilder, ty: ValType) {
 ///             local.set <result>
 ///             local.get $base $len $buf
 ///             call $__jspi_restore
-///             (i32.store rejected_addr (i32.const 1))
+///             (call $__wbindgen_jspi_set_rejected (i32.const 1))
 ///             local.get <result>
 ///             br $done
 ///         end
@@ -753,19 +773,7 @@ fn wrap_suspending(
         }
     };
     let store_rejected = |seq: &mut InstrSeqBuilder, rejection: Rejection, value: i32| {
-        match ctx.ptr_ty {
-            ValType::I64 => seq.i64_const(rejection.addr as i64),
-            _ => seq.i32_const(rejection.addr as i32),
-        };
-        seq.i32_const(value);
-        seq.store(
-            ctx.memory,
-            ir::StoreKind::I32 { atomic: false },
-            MemArg {
-                align: 4,
-                offset: 0,
-            },
-        );
+        seq.i32_const(value).call(rejection.set_rejected);
     };
 
     // Pre-allocate the block sequences so labels can reference each other.
@@ -881,7 +889,7 @@ fn wrap_suspending(
 }
 
 /// Rewrite all calls to suspending imports to go through the wrappers.
-fn rewrite_calls(module: &mut Module, wrappers: &HashMap<FunctionId, FunctionId>) {
+pub(super) fn rewrite_calls(module: &mut Module, wrappers: &HashMap<FunctionId, FunctionId>) {
     let wrapper_ids: std::collections::HashSet<_> = wrappers.values().copied().collect();
     for (func_id, func) in module.funcs.iter_local_mut() {
         if wrapper_ids.contains(&func_id) {

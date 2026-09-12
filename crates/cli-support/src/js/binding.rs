@@ -2150,8 +2150,9 @@ impl Invocation {
                         Cow::Owned(format!("let {cache_var};"))
                     };
                     cx.intrinsic(Cow::Owned(cache_var.clone()), Some(&cache_var), decl, &[]);
+                    let raw = cx.raw_wasm_export_ref(&name);
                     Ok(format!(
-                        "({cache_var} ??= WebAssembly.promising({accessor}))({})",
+                        "({cache_var} ??= WebAssembly.promising({raw}))({})",
                         args.join(", ")
                     ))
                 } else {

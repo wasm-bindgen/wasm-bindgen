@@ -2997,14 +2997,16 @@ fn emscripten_exports_hoisted_to_library_symbols() {
 
 #[test]
 fn emscripten_jspi_codegen() {
-    // JSPI on the emscripten target uses exactly the same path as the other
-    // targets: the in-wasm shadow-stack instrumentation plus
-    // `WebAssembly.promising`/`WebAssembly.Suspending` in the JS glue — with
-    // no interaction with emscripten's own JSPI machinery. The emscripten
-    // specifics are purely about the JS library format: exports hoist as
-    // `async function` symbols, the promising cache is a library symbol, and
-    // the suspending import is rewrapped via `__postset` (a Suspending
-    // instance can't be stringified through the compile-time jsifier).
+    // On the emscripten target the fibers belong to emscripten's JSPI runtime
+    // (`-sJSPI_HOOKS` / `-sREENTRANT_JSPI`): wasm-bindgen emits no shadow-stack
+    // instrumentation of its own and instead wraps the jspi exports and
+    // suspending imports with the `__jspi_*` lifecycle hook exports that
+    // runtime provides. The JS glue is the same `WebAssembly.promising` /
+    // `WebAssembly.Suspending` as on other targets, in JS library form:
+    // exports hoist as `async function` symbols, the promising cache is a
+    // library symbol, and the suspending import is rewrapped via `__postset`
+    // (a Suspending instance can't be stringified through the compile-time
+    // jsifier).
     let mut project = Project::new("emscripten_jspi_codegen");
     project.file(
         "src/lib.rs",
@@ -3031,11 +3033,60 @@ fn emscripten_jspi_codegen() {
     );
 
     let built = project.build();
-    let mut module = ModuleConfig::new().parse_file(&built).unwrap();
-    module.customs.add(RawCustomSection {
-        name: "__wasm_bindgen_emscripten_marker".into(),
-        data: vec![1],
-    });
+    // `emit_wasm` consumes the custom sections, so parse afresh per emit.
+    let emscripten_module = || {
+        let mut module = ModuleConfig::new().parse_file(&built).unwrap();
+        module.customs.add(RawCustomSection {
+            name: "__wasm_bindgen_emscripten_marker".into(),
+            data: vec![1],
+        });
+        module
+    };
+
+    // Without emscripten's hook runtime linked in, JSPI is refused with a
+    // pointer at the link flag.
+    let no_hooks_wasm = project.root.join("emscripten_no_hooks.wasm");
+    emscripten_module().emit_wasm_file(&no_hooks_wasm).unwrap();
+    let no_hooks_dir = project.root.join("pkg-emscripten-no-hooks");
+    fs::create_dir_all(&no_hooks_dir).unwrap();
+    let err = wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
+        "wasm-bindgen".as_ref(),
+        "--out-dir".as_ref(),
+        no_hooks_dir.as_os_str(),
+        no_hooks_wasm.as_os_str(),
+    ])
+    .unwrap_err();
+    assert!(
+        format!("{err:?}").contains("-sJSPI_HOOKS"),
+        "missing hooks should be reported:\n{err:?}"
+    );
+
+    // Stand in for libjspi: the four hook exports emscripten's
+    // `REQUIRED_EXPORTS` puts in the linked module.
+    let mut module = emscripten_module();
+    let before = module.types.add(&[], &[walrus::ValType::I64]);
+    let after = module
+        .types
+        .add(&[walrus::ValType::I64, walrus::ValType::I32], &[]);
+    for (name, ty) in [
+        ("__jspi_enter", before),
+        ("__jspi_exit", after),
+        ("__jspi_suspend", before),
+        ("__jspi_resume", after),
+    ] {
+        let (params, results) = {
+            let ty = module.types.get(ty);
+            (ty.params().to_vec(), ty.results().to_vec())
+        };
+        let mut builder = walrus::FunctionBuilder::new(&mut module.types, &params, &results);
+        let locals: Vec<_> = params.iter().map(|p| module.locals.add(*p)).collect();
+        if !results.is_empty() {
+            builder.func_body().i64_const(0);
+        }
+        let func = builder.finish(locals, &mut module.funcs);
+        module.funcs.get_mut(func).name = Some(name.to_string());
+        module.exports.add(name, func);
+    }
     let emscripten_wasm = project.root.join("emscripten_input.wasm");
     module.emit_wasm_file(&emscripten_wasm).unwrap();
 
@@ -3061,8 +3112,10 @@ fn emscripten_jspi_codegen() {
         lib.contains("$compute: async function compute("),
         "compute should hoist as an async library function:\n{lib}"
     );
+    // The promising target is the raw export: the mangled `_do_work` binding
+    // may be an assertion wrapper under emcc's `-sASSERTIONS`.
     assert!(
-        lib.contains("WebAssembly.promising(_do_work)"),
+        lib.contains("WebAssembly.promising(wasmExports[\"do_work\"])"),
         "do_work should call through WebAssembly.promising:\n{lib}"
     );
     assert!(
@@ -3081,17 +3134,49 @@ fn emscripten_jspi_codegen() {
         "the Suspending postset should target the sleep import:\n{lib}"
     );
 
-    // The in-wasm instrumentation ran: the fiber base global exists and the
-    // jspi exports are wired to their wrappers.
+    // The wasm carries the hook wrappers and none of the shadow-stack
+    // machinery of the non-emscripten transform.
     let out_module = ModuleConfig::new()
         .parse_file(out_dir.join("emscripten_input_bg.wasm"))
         .unwrap();
     assert!(
-        out_module
+        !out_module
             .globals
             .iter()
             .any(|g| g.name.as_deref() == Some("__jspi_stack_base")),
-        "output wasm should contain the __jspi_stack_base global"
+        "emscripten output must not carry wasm-bindgen's fiber stack globals"
+    );
+    let calls_hook = |export: &str, hook: &str| {
+        let walrus::ExportItem::Function(f) = out_module
+            .exports
+            .iter()
+            .find(|e| e.name == export)
+            .unwrap()
+            .item
+        else {
+            panic!("`{export}` is not a function export")
+        };
+        let hook = out_module.funcs.by_name(hook).unwrap();
+        let walrus::FunctionKind::Local(local) = &out_module.funcs.get(f).kind else {
+            panic!("`{export}` should be a local function")
+        };
+        struct Scan(walrus::FunctionId, bool);
+        impl<'a> walrus::ir::Visitor<'a> for Scan {
+            fn visit_call(&mut self, call: &walrus::ir::Call) {
+                self.1 |= call.func == self.0;
+            }
+        }
+        let mut scan = Scan(hook, false);
+        walrus::ir::dfs_in_order(&mut scan, local, local.entry_block());
+        scan.1
+    };
+    assert!(
+        calls_hook("do_work", "__jspi_enter") && calls_hook("do_work", "__jspi_exit"),
+        "do_work export should be wrapped with the enter/exit hooks"
+    );
+    assert!(
+        calls_hook("compute", "__jspi_enter"),
+        "compute export should be wrapped with the enter hook"
     );
 }
 
