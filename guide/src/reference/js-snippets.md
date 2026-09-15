@@ -59,11 +59,6 @@ make use of `inline_js` but instead to leverage `module` where possible.
 While quite useful local JS snippets currently suffer from a few caveats which
 are important to be aware of. Many of these are temporary though!
 
-* Currently `import` statements are not supported in the JS file. This is a
-  restriction we may lift in the future once we settle on a good way to support
-  this. For now, though, js snippets must be standalone modules and can't import
-  from anything else.
-
 * Only `--target web` and the default bundler output mode are supported. To
   support `--target nodejs` we'd need to translate ES module syntax to CommonJS
   (this is
