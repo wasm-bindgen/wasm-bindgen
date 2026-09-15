@@ -111,6 +111,7 @@ macro_rules! attrgen {
             (fallback, false, Fallback(Span)),
             (main, false, Main(Span)),
             (start, false, Start(Span)),
+            (tokio, false, Tokio(Span, Option<String>)),
             (wasm_bindgen, false, WasmBindgen(Span, syn::Path)),
             (js_sys, false, JsSys(Span, syn::Path)),
             (wasm_bindgen_futures, false, WasmBindgenFutures(Span, syn::Path)),
@@ -1724,6 +1725,37 @@ fn function_from_decl(
             r#unsafe: matches!(sig.safety, syn::Safety::Unsafe(_)),
             r#async: sig.asyncness.is_some(),
             jspi: opts.jspi().is_some(),
+            tokio: match opts.tokio() {
+                Some(mode) => {
+                    let span = opts
+                        .attrs
+                        .iter()
+                        .find_map(|(_, attr)| match attr {
+                            BindgenAttr::Tokio(span, _) => Some(*span),
+                            _ => None,
+                        })
+                        .unwrap();
+                    if sig.asyncness.is_none() {
+                        return Err(Diagnostic::span_error(
+                            span,
+                            "#[wasm_bindgen(tokio)] can only be applied to `async` functions",
+                        ));
+                    }
+                    match mode.as_deref() {
+                        None => Some(ast::TokioMode::Ambient),
+                        Some("isolated") => Some(ast::TokioMode::Isolated),
+                        Some(other) => {
+                            return Err(Diagnostic::span_error(
+                                span,
+                                format!(
+                                    "unknown tokio mode `{other}`; expected `tokio` or `tokio = \"isolated\"`"
+                                ),
+                            ))
+                        }
+                    }
+                }
+                None => None,
+            },
             generate_typescript: opts.skip_typescript().is_none(),
             generate_jsdoc: opts.skip_jsdoc().is_none(),
             variadic: opts.variadic().is_some(),
