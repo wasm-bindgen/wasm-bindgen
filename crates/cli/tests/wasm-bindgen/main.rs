@@ -3153,6 +3153,84 @@ fn emscripten_jspi_codegen() {
 }
 
 #[test]
+fn emscripten_default_namespace_export_aliased() {
+    // `js_namespace = ["default"]` must surface as the ES *default* export.
+    // The namespace root's identifier is legalized to `_default`, so the
+    // public export has to be routed through an alias library symbol keyed by
+    // the true name (`$default`) carrying the `__export`/`__force`
+    // attributes — emscripten's jsifier then binds it to a legal identifier
+    // and emits `export { <binding> as default };`. Exporting the legalized
+    // `_default` directly yields a named export that module-worker hosts
+    // (e.g. wrangler) don't recognize as a default export.
+    let mut project = Project::new("emscripten_default_namespace_export_aliased");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen::prelude::*;
+
+            #[wasm_bindgen(js_namespace = ["default"])]
+            pub fn fetch(a: i32) -> i32 {
+                a + 1
+            }
+        "#,
+    );
+
+    let built = project.build();
+    let mut module = ModuleConfig::new().parse_file(&built).unwrap();
+    module.customs.add(RawCustomSection {
+        name: "__wasm_bindgen_emscripten_marker".into(),
+        data: vec![1],
+    });
+    let emscripten_wasm = project.root.join("emscripten_input.wasm");
+    module.emit_wasm_file(&emscripten_wasm).unwrap();
+
+    let out_dir = project.root.join("pkg-emscripten");
+    fs::create_dir_all(&out_dir).unwrap();
+    wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
+        "wasm-bindgen".as_ref(),
+        "--out-dir".as_ref(),
+        out_dir.as_os_str(),
+        emscripten_wasm.as_os_str(),
+    ])
+    .unwrap();
+
+    let lib = fs::read_to_string(out_dir.join("library_bindgen.js")).unwrap();
+
+    // The real namespace-root symbol keeps the legalized identifier and its
+    // postset assembly, but stays private (no export attributes).
+    assert!(
+        lib.contains("$_default: {}"),
+        "namespace root should be hoisted under the legalized identifier:\n{lib}"
+    );
+    assert!(
+        !lib.contains("$_default__export") && !lib.contains("$_default__force"),
+        "legalized root must not be exported under its legalized name:\n{lib}"
+    );
+    assert!(
+        lib.contains("_default.fetch = default__fetch"),
+        "root postset should assemble the namespace shape:\n{lib}"
+    );
+
+    // The alias symbol carries the true export name and the export attributes.
+    assert!(
+        lib.contains("'$default': '=_default'"),
+        "alias symbol under the true name should reference the root:\n{lib}"
+    );
+    assert!(
+        lib.contains("'$default__deps': ['$_default']"),
+        "alias symbol must depend on the root:\n{lib}"
+    );
+    assert!(
+        lib.contains("'$default__export': true") && lib.contains("'$default__force': true"),
+        "alias symbol must carry __export/__force:\n{lib}"
+    );
+    assert!(
+        lib.contains(r#"Module[\"default\"] = _default;"#),
+        "Module attachment should use the true export name:\n{lib}"
+    );
+}
+
+#[test]
 fn emscripten_user_imports_are_prefixed() {
     // User module imports land in the `--extern-pre-js` sidecar at module top
     // level alongside emcc's runtime, and the imported names come verbatim from
