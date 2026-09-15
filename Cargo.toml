@@ -65,6 +65,10 @@ wasm-bindgen-futures = { path = 'crates/futures' }
 wasm-bindgen-test-crate-a = { path = 'tests/crates/a' }
 wasm-bindgen-test-crate-b = { path = 'tests/crates/b' }
 
+[target.'cfg(target_os = "emscripten")'.dev-dependencies]
+tokio = { version = "1", default-features = false, features = ["rt", "time", "sync"] }
+wasm-bindgen-futures = { path = 'crates/futures', features = ["tokio"] }
+
 [target.'cfg(target_arch = "wasm64")'.dev-dependencies]
 js-sys = { path = 'crates/js-sys', features = ["unsafe-eval"] }
 paste = "1"
@@ -82,6 +86,7 @@ unexpected_cfgs = { level = "warn", check-cfg = [
   'cfg(wasm_bindgen_use_js_sys)',
   'cfg(xxx_debug_only_print_generated_code)',
   'cfg(legacy_eh)',
+  'cfg(tokio_unstable)',
 ] }
 unused_lifetimes = "warn"
 
@@ -148,6 +153,8 @@ resolver = "2"
 
 [patch.crates-io]
 js-sys = { path = 'crates/js-sys' }
+# tokio-rs/tokio#8479: EventLoopRuntime for wasm32-unknown-emscripten
+tokio = { git = 'https://github.com/guybedford/tokio', branch = 'emscripten-event-loop' }
 wasm-bindgen = { path = '.' }
 wasm-bindgen-futures = { path = 'crates/futures' }
 wasm-bindgen-test = { path = 'crates/test' }

@@ -11,4 +11,5 @@ rustflags = [
   "-Clink-arg=-sDISABLE_EXCEPTION_CATCHING=1",
   "-Clink-arg=-sERROR_ON_UNDEFINED_SYMBOLS=0",
   "-Crelocation-model=static",
+  "--cfg=tokio_unstable",
 ]

@@ -20,5 +20,8 @@ pub use js_sys::futures::stream;
 #[allow(deprecated)]
 pub use js_sys::futures::jspi_block_on_promise;
 
+#[cfg(all(target_os = "emscripten", feature = "tokio", tokio_unstable))]
+pub mod tokio;
+
 pub use js_sys;
 pub use wasm_bindgen;
