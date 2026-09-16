@@ -43,12 +43,6 @@
   copying it into wasm memory, across methods, attribute and dictionary-field
   getters, and namespace functions and attributes.
 
-* Added an experimental `--experimental-memory-discard` flag which replaces an
-  `env.__wbindgen_memory_discard` function import with a local trampoline
-  containing the `memory.discard` instruction from the memory-control
-  proposal, allowing custom allocators to release physical pages back to the
-  host. Experimental and subject to change.
-
 * `#[wasm_bindgen(experimental_generic_mono)]` now supports class-level generic
   parameters: an imported *type* that is itself generic (`type Holder<T>`),
   used as a method receiver (`this: &Holder<T>`), or as the return type of a
@@ -98,6 +92,12 @@
   `-sMODULARIZE=instance`.
 
 ### Fixed
+
+* Updated `walrus` to 0.27.2, fixing `--keep-debug` output that `wasm-opt -g`
+  could not process: `.debug_loc` entries for removed code were unparseable
+  (`debug_loc error`), and `DW_AT_high_pc` was re-encoded as variable-width
+  `udata` (`compile unit size was incorrect`).
+  [#5328](https://github.com/wasm-bindgen/wasm-bindgen/pull/5328)
 
 * Fixed conflicting deprecation messages on `web-sys` dictionary fields that
   are themselves deprecated: the deprecated builder-style method no longer
