@@ -153,8 +153,10 @@ resolver = "2"
 
 [patch.crates-io]
 js-sys = { path = 'crates/js-sys' }
-# tokio-rs/tokio#8479: EventLoopRuntime for wasm32-unknown-emscripten
-tokio = { git = 'https://github.com/guybedford/tokio', branch = 'emscripten-event-loop' }
+# tokio-rs/mio#1969: wasm32-unknown-emscripten support, required by the tokio patch
+mio = { git = 'https://github.com/guybedford/mio', branch = 'emscripten' }
+# tokio-rs/tokio#8484: event loops for wasm32-unknown-emscripten
+tokio = { git = 'https://github.com/guybedford/tokio', branch = 'emscripten-event-loop-host' }
 wasm-bindgen = { path = '.' }
 wasm-bindgen-futures = { path = 'crates/futures' }
 wasm-bindgen-test = { path = 'crates/test' }
