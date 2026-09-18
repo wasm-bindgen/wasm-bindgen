@@ -5,6 +5,9 @@
 
 ### Added
 
+* Added the WebGL extension interface `EXT_polygon_offset_clamp`.
+  [#5336](https://github.com/wasm-bindgen/wasm-bindgen/pull/5336)
+
 ### Changed
 
 ### Fixed
