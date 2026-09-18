@@ -2539,6 +2539,13 @@ mod gen_ExtFragDepth;
 #[allow(unused_imports)]
 pub use gen_ExtFragDepth::*;
 
+#[cfg(feature = "ExtPolygonOffsetClamp")]
+#[allow(non_snake_case)]
+mod gen_ExtPolygonOffsetClamp;
+#[cfg(feature = "ExtPolygonOffsetClamp")]
+#[allow(unused_imports)]
+pub use gen_ExtPolygonOffsetClamp::*;
+
 #[cfg(feature = "ExtSRgb")]
 #[allow(non_snake_case)]
 mod gen_ExtSRgb;
