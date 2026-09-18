@@ -18,7 +18,7 @@ std::thread_local! {
 fn build() -> std::io::Result<LocalEventLoop> {
     ::tokio::runtime::Builder::new_current_thread()
         .enable_all()
-        .build_local_event_loop(Default::default())
+        .build_hosted_local_event_loop(Default::default())
 }
 
 /// Runs `f` with this thread's ambient event loop, building a default one
@@ -38,8 +38,8 @@ pub fn try_set_ambient(rt: LocalEventLoop) -> Result<(), LocalEventLoop> {
 
 /// Spawns `future` as a root on `rt` and a sibling task that awaits its
 /// `JoinHandle` and delivers the outcome to `on_complete`, so a root panic
-/// arrives as `Err(JoinError)`. Both are queued only; nothing runs on the
-/// caller's stack.
+/// arrives as `Err(JoinError)`. Both are queued only (the hosted loop
+/// schedules its own drive); nothing runs on the caller's stack.
 fn spawn_root<F, C>(rt: &LocalEventLoop, future: F, on_complete: C)
 where
     F: Future + 'static,
@@ -58,7 +58,7 @@ where
 /// `future_to_promise`). Called re-entrantly — a task's JS import invoking
 /// an export mid-drive — driving on the caller's stack would nest the
 /// runtime context, so the root is only queued; the in-progress drive picks
-/// it up, or the host loop does once it returns.
+/// it up, or the hosted loop's own scheduled drive does once it returns.
 pub fn schedule<F, C>(future: F, on_complete: C)
 where
     F: Future + 'static,
