@@ -34,4 +34,5 @@ pub enum GpuFeatureName {
     PrimitiveIndex = "primitive-index",
     TextureComponentSwizzle = "texture-component-swizzle",
     SubgroupSizeControl = "subgroup-size-control",
+    TextureCompressionUnaligned = "texture-compression-unaligned",
 }
