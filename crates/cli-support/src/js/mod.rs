@@ -493,10 +493,14 @@ impl<'a> Context<'a> {
     /// `value` is the right-hand side (a function/class expression, or `{}`
     /// for a namespace root). `extra_deps` lists `$`-less library symbols the
     /// body references; every symbol also depends on `$initBindgen`.
-    /// `postset_extra` runs after the symbol is defined. `public` adds the
-    /// `Module.<id>` attachment plus the `__export`/`__force` attributes so
-    /// emscripten includes the symbol and emits it as a named export;
-    /// namespace leaves are hoisted privately (`public = false`) and stay
+    /// `postset_extra` runs after the symbol is defined. `export_name` makes
+    /// the symbol public: it adds the `Module.<name>` attachment plus the
+    /// `__export`/`__force` attributes so emscripten includes the symbol and
+    /// emits it as a named export. When the name had to be legalized away from
+    /// the true export name (e.g. `default` -> `_default`), the export is
+    /// routed through an alias symbol keyed by the true name so emscripten's
+    /// reserved-name aliasing emits `export { <binding> as <name> }`.
+    /// Namespace leaves are hoisted privately (`export_name = None`) and stay
     /// reachable through the root's `__deps`.
     fn hoist_emscripten_export(
         &mut self,
@@ -504,12 +508,13 @@ impl<'a> Context<'a> {
         value: &str,
         extra_deps: &[&str],
         postset_extra: &str,
-        public: bool,
+        export_name: Option<&str>,
     ) {
+        let direct = export_name == Some(identifier);
         let mut deps = vec!["$initBindgen".to_string()];
         deps.extend(extra_deps.iter().map(|d| format!("${d}")));
         let deps_fmt: Vec<String> = deps.iter().map(|d| format!("'{d}'")).collect();
-        let module_attach = if public {
+        let module_attach = if direct {
             format!("Module['{identifier}'] = {identifier};")
         } else {
             String::new()
@@ -520,7 +525,7 @@ impl<'a> Context<'a> {
         } else {
             format!(",\n    ${identifier}__postset: {postset:?}")
         };
-        let export_attrs = if public {
+        let export_attrs = if direct {
             format!(",\n    ${identifier}__export: true,\n    ${identifier}__force: true")
         } else {
             String::new()
@@ -540,6 +545,21 @@ impl<'a> Context<'a> {
              ${identifier}__deps: [{}]{postset_field}{export_attrs}\n}});",
             deps_fmt.join(", "),
         ));
+        if let Some(name) = export_name {
+            if !direct {
+                // Alias entry under the true export name. jsifier legalizes
+                // the binding itself and exports it via
+                // `export { <binding> as <name> };`, which for `default`
+                // produces the ES default export.
+                let attach = format!("Module[{name:?}] = {identifier};");
+                self.emscripten_library(&format!(
+                    "addToLibrary({{\n    '${name}': '={identifier}',\n    \
+                     '${name}__deps': ['${identifier}'],\n    \
+                     '${name}__postset': {attach:?},\n    \
+                     '${name}__export': true,\n    '${name}__force': true\n}});"
+                ));
+            }
+        }
     }
 
     /// Hoist a clean export (free function, class, or enum) to a library symbol
@@ -567,7 +587,7 @@ impl<'a> Context<'a> {
             value,
             extra_deps,
             postset_extra,
-            !is_namespaced && !private,
+            (!is_namespaced && !private).then_some(js_name),
         );
         if is_namespaced {
             define_export(
@@ -2759,8 +2779,12 @@ if (require('worker_threads').isMainThread) {{
                         // hoisted leaves are deps and `ns_dst` assembles the
                         // nested shape in the root's `__postset`.
                         if self.config.typescript {
-                            self.typescript
-                                .push_str(&format!("{identifier}: {ts_dst};\n"));
+                            let ts_key = if is_valid_ident(export_name) {
+                                export_name.clone()
+                            } else {
+                                format!("{export_name:?}")
+                            };
+                            self.typescript.push_str(&format!("{ts_key}: {ts_dst};\n"));
                         }
                         let leaf_refs: Vec<&str> = leaf_ids.iter().map(String::as_str).collect();
                         self.hoist_emscripten_export(
@@ -2768,7 +2792,7 @@ if (require('worker_threads').isMainThread) {{
                             "{}",
                             &leaf_refs,
                             ns_dst.trim_end(),
-                            true,
+                            Some(export_name.as_str()),
                         );
                         continue;
                     }
