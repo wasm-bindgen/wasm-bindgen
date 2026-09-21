@@ -5,6 +5,11 @@
 
 ### Added
 
+* `WASM_BINDGEN_TEST_STARTUP_TIMEOUT` and `WASM_BINDGEN_TEST_PAGE_LOAD_TIMEOUT` bound the
+  headless runner's browser launch and page load, neither dropping below
+  `WASM_BINDGEN_TEST_TIMEOUT`.
+  [#5338](https://github.com/wasm-bindgen/wasm-bindgen/pull/5338)
+
 ### Changed
 
 * Library MSRV bumped from 1.77 to 1.81, per the 2-year MSRV policy.
@@ -24,6 +29,10 @@
   (`debug_loc error`), and `DW_AT_high_pc` was re-encoded as variable-width
   `udata` (`compile unit size was incorrect`).
   [#5328](https://github.com/wasm-bindgen/wasm-bindgen/pull/5328)
+
+* The headless test runner no longer hangs on a WebDriver that never answers, or on
+  a browser holding the driver's stdio pipes open.
+  [#5338](https://github.com/wasm-bindgen/wasm-bindgen/pull/5338)
 
 ### Removed
 
