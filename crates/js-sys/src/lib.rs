@@ -10179,6 +10179,45 @@ extern "C" {
     pub fn value_of(this: &Symbol) -> Symbol;
 }
 
+macro_rules! impl_primitive_union_wrapper_category {
+    ($trait:path, bigint) => {
+        impl $trait for BigInt {}
+        impl $trait for &BigInt {}
+    };
+    ($trait:path, boolean) => {
+        impl $trait for Boolean {}
+        impl $trait for &Boolean {}
+    };
+    ($trait:path, number) => {
+        impl $trait for Number {}
+        impl $trait for &Number {}
+    };
+    // `JsString` and `&JsString` are covered by the blanket implementation for
+    // every `T: wasm_bindgen::JsStringLike`.
+    ($trait:path, string) => {};
+    ($trait:path, symbol) => {
+        impl $trait for Symbol {}
+        impl $trait for &Symbol {}
+    };
+}
+
+macro_rules! impl_primitive_union_wrappers {
+    ($(($name:ident, $typescript:literal, [$($supertrait:ident),*], [$($category:ident),+])),* $(,)?) => {
+        $(
+            #[doc(inline)]
+            pub use wasm_bindgen::convert::$name;
+            $(impl_primitive_union_wrapper_category!(wasm_bindgen::convert::$name, $category);)+
+        )*
+    };
+}
+
+impl_primitive_union_wrapper_category!(wasm_bindgen::__rt::marker::PrimitiveUnionSealed, bigint);
+impl_primitive_union_wrapper_category!(wasm_bindgen::__rt::marker::PrimitiveUnionSealed, boolean);
+impl_primitive_union_wrapper_category!(wasm_bindgen::__rt::marker::PrimitiveUnionSealed, number);
+impl_primitive_union_wrapper_category!(wasm_bindgen::__rt::marker::PrimitiveUnionSealed, symbol);
+
+wasm_bindgen::__wbg_for_each_primitive_union!(impl_primitive_union_wrappers);
+
 #[allow(non_snake_case)]
 pub mod Intl {
     use super::*;
