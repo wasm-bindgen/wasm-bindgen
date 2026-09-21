@@ -12,6 +12,13 @@
 * Added `source` property to ToggleEvent.
   [#5353](https://github.com/wasm-bindgen/wasm-bindgen/pull/5353)
 
+* Added 26 experimental `js-sys` marker traits for every union of two or more
+  TypeScript `bigint`, `boolean`, `number`, `string`, and `symbol` primitive
+  categories. Traits such as `JsNumberOrStringLike` can bound
+  `experimental_generic_mono` import parameters while preserving each concrete
+  Rust type's native ABI representation. String-containing unions accept every
+  `wasm_bindgen::JsStringLike` implementation.
+
 ### Changed
 
 * Replaced the `once_cell` dependency with `core::cell::LazyCell`, which is

@@ -49,6 +49,10 @@ exports.describeAny = function (x) {
   return typeof x + ":" + x;
 };
 
+exports.describeType = function (x) {
+  return typeof x;
+};
+
 exports.describeStr = function (s) {
   return typeof s + ":" + s;
 };
