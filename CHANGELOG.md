@@ -19,6 +19,10 @@
   Rust type's native ABI representation. String-containing unions accept every
   `wasm_bindgen::JsStringLike` implementation.
 
+* Added the experimental `js_sys::JsPropertyLike` alias for
+  `JsNumberOrStringOrSymbolLike`, covering the `string | number | symbol` keys
+  accepted by TypeScript's `Record` type.
+
 ### Changed
 
 * Replaced the `once_cell` dependency with `core::cell::LazyCell`, which is

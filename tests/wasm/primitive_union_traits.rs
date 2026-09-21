@@ -102,6 +102,7 @@ fn every_primitive_union_accepts_its_member_categories() {
     assert_union!(js_sys::JsBooleanOrNumberOrSymbolLike: boolean, number, symbol);
     assert_union!(js_sys::JsBooleanOrStringOrSymbolLike: boolean, string, symbol);
     assert_union!(js_sys::JsNumberOrStringOrSymbolLike: number, string, symbol);
+    assert_union!(js_sys::JsPropertyLike: number, string, symbol);
 
     assert_union!(
         js_sys::JsBigIntOrBooleanOrNumberOrStringLike: bigint,
@@ -141,6 +142,23 @@ fn every_primitive_union_accepts_its_member_categories() {
         string,
         symbol,
     );
+}
+
+#[wasm_bindgen_test]
+fn property_like_is_an_alias_for_number_string_or_symbol() {
+    fn accepts_property<T: js_sys::JsPropertyLike>() {}
+    fn accepts_union<T: js_sys::JsNumberOrStringOrSymbolLike>() {}
+
+    fn property_is_union<T: js_sys::JsPropertyLike>() {
+        accepts_union::<T>();
+    }
+
+    fn union_is_property<T: js_sys::JsNumberOrStringOrSymbolLike>() {
+        accepts_property::<T>();
+    }
+
+    property_is_union::<String>();
+    union_is_property::<String>();
 }
 
 #[wasm_bindgen_test]
