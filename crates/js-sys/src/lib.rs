@@ -10218,6 +10218,16 @@ impl_primitive_union_wrapper_category!(wasm_bindgen::__rt::marker::PrimitiveUnio
 
 wasm_bindgen::__wbg_for_each_primitive_union!(impl_primitive_union_wrappers);
 
+/// Marker for Rust parameter types that can be used as keys in a TypeScript
+/// `Record`.
+///
+/// This is an alias for [`JsNumberOrStringOrSymbolLike`], matching
+/// TypeScript's `PropertyKey` (`string | number | symbol`).
+///
+/// This trait is experimental and may change or be removed as
+/// `experimental_generic_mono` evolves.
+pub use JsNumberOrStringOrSymbolLike as JsPropertyLike;
+
 #[allow(non_snake_case)]
 pub mod Intl {
     use super::*;
