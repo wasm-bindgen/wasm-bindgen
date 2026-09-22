@@ -186,7 +186,7 @@ async fn instantiate_module() {
 #[wasm_bindgen_test]
 fn memory_works() {
     let obj = Object::new();
-    Reflect::set(obj.as_ref(), &"initial".into(), &1.into()).unwrap();
+    Reflect::set(obj.as_ref(), &JsString::from("initial"), &1.into()).unwrap();
     let mem = WebAssembly::Memory::new(&obj).unwrap();
     assert!(mem.is_instance_of::<WebAssembly::Memory>());
     assert!(mem.is_instance_of::<Object>());
@@ -206,8 +206,13 @@ fn memory_works() {
 #[wasm_bindgen_test]
 fn table_get_and_set_raw() {
     let obj = Object::new();
-    Reflect::set(obj.as_ref(), &"element".into(), &"externref".into()).unwrap();
-    Reflect::set(obj.as_ref(), &"initial".into(), &1.into()).unwrap();
+    Reflect::set(
+        obj.as_ref(),
+        &JsString::from("element"),
+        &"externref".into(),
+    )
+    .unwrap();
+    Reflect::set(obj.as_ref(), &JsString::from("initial"), &1.into()).unwrap();
     let tbl = WebAssembly::Table::new(&obj).unwrap();
 
     assert_eq!(tbl.length(), 1);
@@ -219,8 +224,13 @@ fn table_get_and_set_raw() {
 #[wasm_bindgen_test]
 fn new_and_grow_with_value() {
     let obj = Object::new();
-    Reflect::set(obj.as_ref(), &"element".into(), &"externref".into()).unwrap();
-    Reflect::set(obj.as_ref(), &"initial".into(), &1.into()).unwrap();
+    Reflect::set(
+        obj.as_ref(),
+        &JsString::from("element"),
+        &"externref".into(),
+    )
+    .unwrap();
+    Reflect::set(obj.as_ref(), &JsString::from("initial"), &1.into()).unwrap();
     let tbl = WebAssembly::Table::new_with_value(&obj, JsValue::from(42)).unwrap();
 
     assert_eq!(tbl.length(), 1);

@@ -70,7 +70,7 @@ fn assign() {
     let c = JsString::from("c");
 
     let target = Object::new();
-    Reflect::set(target.as_ref(), a.as_ref(), a.as_ref()).unwrap();
+    Reflect::set(&target, &a, &a).unwrap();
 
     let src1 = Object::new();
     Reflect::set(src1.as_ref(), &a, &c).unwrap();
@@ -131,7 +131,7 @@ fn define_property() {
     {
         let descriptor = js_sys::PropertyDescriptor::new_value::<Number>(&43.into());
         let foo = foo_42();
-        let foo = Object::define_property(&foo, &"bar".into(), &descriptor).unwrap();
+        let foo = Object::define_property(&foo, "bar", &descriptor).unwrap();
         assert!(foo.has_own_property(&"bar".into()));
     }
 }
@@ -191,6 +191,80 @@ fn define_property_str_typed() {
     assert_eq!(num.value_of(), 3.14);
 }
 
+#[wasm_bindgen_test]
+fn property_key_methods_preserve_typed_values() {
+    let object: Object<Number> = Object::new_typed();
+    let descriptor = js_sys::PropertyDescriptor::new_value(&Number::from(42));
+    descriptor.set_enumerable(true);
+
+    let symbol = Symbol::for_("typed_property_key");
+    Object::define_property_key(&object, "string", &descriptor).unwrap();
+    Object::define_property_key(&object, 7_u32, &descriptor).unwrap();
+    Object::define_property_key(&object, &symbol, &descriptor).unwrap();
+
+    assert!(Object::has_own_key(&object, "string").unwrap());
+    assert!(Object::has_own_key(&object, 7_u32).unwrap());
+    assert!(Object::has_own_key(&object, &symbol).unwrap());
+
+    let string_descriptor = Object::get_own_property_descriptor_key(&object, "string").unwrap();
+    let number_descriptor = Object::get_own_property_descriptor_key(&object, 7_u32).unwrap();
+    let symbol_descriptor = Object::get_own_property_descriptor_key(&object, &symbol).unwrap();
+
+    assert_eq!(string_descriptor.get_value().unwrap().value_of(), 42.0);
+    assert_eq!(number_descriptor.get_value().unwrap().value_of(), 42.0);
+    assert_eq!(symbol_descriptor.get_value().unwrap().value_of(), 42.0);
+
+    assert!(object.property_is_enumerable_key("string"));
+    assert!(object.property_is_enumerable_key(7_u32));
+    assert!(object.property_is_enumerable_key(&symbol));
+}
+
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen_test]
+fn unsuffixed_methods_accept_property_keys() {
+    let object: Object<Number> = Object::new_typed();
+    let descriptor = js_sys::PropertyDescriptor::new_value(&Number::from(42));
+    descriptor.set_enumerable(true);
+
+    let symbol = Symbol::for_("unsuffixed_property_key");
+    Object::define_property(&object, "string", &descriptor).unwrap();
+    Object::define_property(&object, 7_u32, &descriptor).unwrap();
+    Object::define_property(&object, &symbol, &descriptor).unwrap();
+
+    assert!(Object::has_own(&object, "string").unwrap());
+    assert!(Object::has_own(&object, 7_u32).unwrap());
+    assert!(Object::has_own(&object, &symbol).unwrap());
+
+    let symbol_descriptor = Object::get_own_property_descriptor(&object, &symbol).unwrap();
+    assert_eq!(symbol_descriptor.get_value().unwrap().value_of(), 42.0);
+    let number_descriptor = Object::get_own_property_descriptor(&object, 7_u32).unwrap();
+    assert_eq!(number_descriptor.get_value().unwrap().value_of(), 42.0);
+
+    assert!(object.property_is_enumerable("string"));
+    assert!(object.property_is_enumerable(7_u32));
+    assert!(object.property_is_enumerable(&symbol));
+
+    let entries: Array<ArrayTuple<(u32, Number)>> = Array::new_typed();
+    let entry: ArrayTuple<(u32, Number)> =
+        Array::of2(&JsValue::from(9), &Number::from(1)).unchecked_into();
+    entries.push(&entry);
+    let from_entries = Object::from_entries(&entries).unwrap();
+    assert!(Object::has_own(&from_entries, 9_u32).unwrap());
+}
+
+#[wasm_bindgen_test]
+fn from_entries_accepts_property_keys() {
+    let entries: Array<ArrayTuple<(u32, Number)>> = Array::new_typed();
+    let entry: ArrayTuple<(u32, Number)> =
+        Array::of2(&JsValue::from(7), &Number::from(42)).unchecked_into();
+    entries.push(&entry);
+
+    let object = Object::from_entries_key(&entries).unwrap();
+    assert!(Object::has_own_key(&object, 7_u32).unwrap());
+    let descriptor = Object::get_own_property_descriptor_key(&object, 7_u32).unwrap();
+    assert_eq!(descriptor.get_value().unwrap().value_of(), 42.0);
+}
+
 #[allow(deprecated)]
 #[wasm_bindgen_test]
 fn define_properties() {
@@ -198,8 +272,8 @@ fn define_properties() {
     let descriptor = DefinePropertyAttrs::from(JsValue::from(Object::new()));
     descriptor.set_value(&42.into());
     let descriptor = JsValue::from(descriptor);
-    Reflect::set(props.as_ref(), &"bar".into(), &descriptor).unwrap();
-    Reflect::set(props.as_ref(), &"car".into(), &descriptor).unwrap();
+    Reflect::set(props.as_ref(), &JsString::from("bar"), &descriptor).unwrap();
+    Reflect::set(props.as_ref(), &JsString::from("car"), &descriptor).unwrap();
     let foo = foo_42();
     let foo = Object::define_properties(&foo, &props);
     assert!(foo.has_own_property(&"bar".into()));
@@ -260,9 +334,9 @@ fn get_own_property_descriptor() {
     }
     #[cfg(js_sys_unstable_apis)]
     {
-        let desc = Object::get_own_property_descriptor(&foo, &"foo".into()).unwrap();
+        let desc = Object::get_own_property_descriptor(&foo, "foo").unwrap();
         assert_eq!(desc.get_value().unwrap(), 42);
-        let desc = Object::get_own_property_descriptor(&foo, &"bar".into()).unwrap();
+        let desc = Object::get_own_property_descriptor(&foo, "bar").unwrap();
         assert!(desc.is_undefined());
     }
 }
@@ -280,7 +354,7 @@ fn get_own_property_descriptors() {
     #[cfg(js_sys_unstable_apis)]
     {
         let descriptors = Object::get_own_property_descriptors(&foo).unwrap();
-        let foo_desc = Reflect::get(&descriptors, &"foo".into()).unwrap().unwrap();
+        let foo_desc = Reflect::get(&descriptors, "foo").unwrap().unwrap();
         assert_eq!(foo_desc.get_value().unwrap(), 42);
     }
 }
@@ -360,8 +434,8 @@ fn has_own() {
 
     #[cfg(js_sys_unstable_apis)]
     {
-        assert!(Object::has_own(&foo_42(), &"foo".into()).unwrap());
-        assert!(!Object::has_own(&foo_42(), &"bar".into()).unwrap());
+        assert!(Object::has_own(&foo_42(), "foo").unwrap());
+        assert!(!Object::has_own(&foo_42(), "bar").unwrap());
         assert!(Object::has_own_symbol(&map_with_symbol_key(), &symbol_key()).unwrap());
     }
 }
@@ -448,9 +522,9 @@ fn values() {
 
 #[wasm_bindgen_test]
 fn property_is_enumerable() {
-    assert!(foo_42().property_is_enumerable(&"foo".into()));
-    assert!(!foo_42().property_is_enumerable(&42.into()));
-    assert!(!Object::new().property_is_enumerable(&"foo".into()));
+    assert!(foo_42().property_is_enumerable(&JsString::from("foo")));
+    assert!(!foo_42().property_is_enumerable(&Number::from(42)));
+    assert!(!Object::new().property_is_enumerable(&JsString::from("foo")));
 }
 
 #[wasm_bindgen_test]
@@ -487,8 +561,8 @@ fn entries_typed() {
     let obj: Object<JsString> = Reflect::construct(&func, arr.unchecked_ref())
         .unwrap()
         .unchecked_into();
-    Reflect::set(&obj, &"a".into(), &JsString::from("1").into()).unwrap();
-    Reflect::set(&obj, &"b".into(), &JsString::from("2").into()).unwrap();
+    Reflect::set(&obj, &JsString::from("a"), &JsString::from("1").into()).unwrap();
+    Reflect::set(&obj, &JsString::from("b"), &JsString::from("2").into()).unwrap();
 
     // entries_typed returns Array<ArrayTuple<JsString, T>>
     let entries = Object::entries_typed(&obj).unwrap();

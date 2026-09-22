@@ -102,13 +102,13 @@ fn delete_property() {
     r.set_x(10);
 
     let obj = Object::from(JsValue::from(r.clone()));
-    Reflect::delete_property(&obj, &"x".into()).unwrap();
+    Reflect::delete_property(&obj, &JsString::from("x")).unwrap();
     assert!(r.x_jsval().is_undefined());
 
     let array: Array<JsValue> = Array::new();
     array.push(&1.into());
     let obj = Object::from(JsValue::from(array.clone()));
-    Reflect::delete_property(&obj, &0.into()).unwrap();
+    Reflect::delete_property(&obj, &Number::from(0)).unwrap();
     #[cfg(not(js_sys_unstable_apis))]
     let array = Array::from(&JsValue::from(obj));
     #[cfg(js_sys_unstable_apis)]
@@ -149,10 +149,20 @@ fn get_own_property_descriptor() {
     r.set_x(10);
 
     let obj = Object::from(JsValue::from(r.clone()));
-    let desc = Reflect::get_own_property_descriptor(&obj, &"x".into()).unwrap();
-    assert_eq!(PropertyDescriptor::from(desc).value(), 10);
-    let desc = Reflect::get_own_property_descriptor(&obj, &"foo".into()).unwrap();
-    assert!(desc.is_undefined());
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        let desc = Reflect::get_own_property_descriptor(&obj, &"x".into()).unwrap();
+        assert_eq!(PropertyDescriptor::from(desc).value(), 10);
+        let desc = Reflect::get_own_property_descriptor(&obj, &"foo".into()).unwrap();
+        assert!(desc.is_undefined());
+    }
+    #[cfg(js_sys_unstable_apis)]
+    {
+        let desc = Reflect::get_own_property_descriptor(&obj, "x").unwrap();
+        assert_eq!(desc.get_value().unwrap(), 10);
+        let desc = Reflect::get_own_property_descriptor(&obj, "foo").unwrap();
+        assert!(desc.is_undefined());
+    }
 }
 
 #[wasm_bindgen_test]
@@ -211,9 +221,110 @@ fn set() {
     #[cfg(js_sys_unstable_apis)]
     {
         let obj = Object::new();
-        assert!(Reflect::set(&obj, &"key".into(), &"value".into()).unwrap());
-        assert_eq!(Reflect::get(&obj, &"key".into()).unwrap().unwrap(), "value");
+        assert!(Reflect::set(&obj, "key", &"value".into()).unwrap());
+        assert_eq!(Reflect::get(&obj, "key").unwrap().unwrap(), "value");
     }
+}
+
+#[wasm_bindgen_test]
+fn property_key_methods_preserve_typed_values() {
+    let object: Object<Number> = Object::new_typed();
+    let symbol = Symbol::for_("reflect_property_key");
+
+    assert!(Reflect::set_key(&object, "string", &Number::from(1)).unwrap());
+    assert!(Reflect::set_key(&object, 7_u32, &Number::from(2)).unwrap());
+    assert!(Reflect::set_key(&object, &symbol, &Number::from(3)).unwrap());
+
+    assert_eq!(
+        Reflect::get_key(&object, "string")
+            .unwrap()
+            .unwrap()
+            .value_of(),
+        1.0
+    );
+    assert_eq!(
+        Reflect::get_key(&object, 7_u32)
+            .unwrap()
+            .unwrap()
+            .value_of(),
+        2.0
+    );
+    assert_eq!(
+        Reflect::get_key(&object, &symbol)
+            .unwrap()
+            .unwrap()
+            .value_of(),
+        3.0
+    );
+
+    assert!(Reflect::has_key(&object, "string").unwrap());
+    assert!(Reflect::has_key(&object, 7_u32).unwrap());
+    assert!(Reflect::has_key(&object, &symbol).unwrap());
+
+    let symbol_descriptor = Reflect::get_own_property_descriptor_key(&object, &symbol).unwrap();
+    assert_eq!(symbol_descriptor.get_value().unwrap().value_of(), 3.0);
+
+    let defined_descriptor = js_sys::PropertyDescriptor::new_value(&Number::from(4));
+    assert!(Reflect::define_property_key(&object, "defined", &defined_descriptor).unwrap());
+    assert_eq!(
+        Reflect::get_key(&object, "defined")
+            .unwrap()
+            .unwrap()
+            .value_of(),
+        4.0
+    );
+
+    assert!(Reflect::delete_property_key(&object, "string").unwrap());
+    assert!(Reflect::delete_property_key(&object, 7_u32).unwrap());
+    assert!(Reflect::delete_property_key(&object, &symbol).unwrap());
+    assert!(!Reflect::has_key(&object, "string").unwrap());
+    assert!(!Reflect::has_key(&object, 7_u32).unwrap());
+    assert!(!Reflect::has_key(&object, &symbol).unwrap());
+}
+
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen_test]
+fn unsuffixed_methods_accept_property_keys() {
+    let object: Object<Number> = Object::new_typed();
+    let symbol = Symbol::for_("reflect_unsuffixed_property_key");
+
+    assert!(Reflect::set(&object, "string", &Number::from(1)).unwrap());
+    assert!(Reflect::set(&object, 7_u32, &Number::from(2)).unwrap());
+    assert!(Reflect::set(&object, &symbol, &Number::from(3)).unwrap());
+
+    assert_eq!(
+        Reflect::get(&object, "string").unwrap().unwrap().value_of(),
+        1.0
+    );
+    assert_eq!(
+        Reflect::get(&object, 7_u32).unwrap().unwrap().value_of(),
+        2.0
+    );
+    assert_eq!(
+        Reflect::get(&object, &symbol).unwrap().unwrap().value_of(),
+        3.0
+    );
+
+    assert!(Reflect::has(&object, "string").unwrap());
+    assert!(Reflect::has(&object, 7_u32).unwrap());
+    assert!(Reflect::has(&object, &symbol).unwrap());
+
+    let descriptor = Reflect::get_own_property_descriptor(&object, &symbol).unwrap();
+    assert_eq!(descriptor.get_value().unwrap().value_of(), 3.0);
+
+    let defined = js_sys::PropertyDescriptor::new_value(&Number::from(4));
+    assert!(Reflect::define_property(&object, 8_u32, &defined).unwrap());
+    assert_eq!(
+        Reflect::get(&object, 8_u32).unwrap().unwrap().value_of(),
+        4.0
+    );
+
+    assert!(Reflect::delete_property(&object, "string").unwrap());
+    assert!(Reflect::delete_property(&object, 7_u32).unwrap());
+    assert!(Reflect::delete_property(&object, &symbol).unwrap());
+    assert!(!Reflect::has(&object, "string").unwrap());
+    assert!(!Reflect::has(&object, 7_u32).unwrap());
+    assert!(!Reflect::has(&object, &symbol).unwrap());
 }
 
 #[wasm_bindgen_test]
@@ -276,19 +387,19 @@ fn reflect_bindings_handle_proxies_that_just_throw_for_everything() {
     let p = throw_all_the_time();
 
     let desc = Object::new();
-    Reflect::set(desc.as_ref(), &"value".into(), &1.into()).unwrap();
+    Reflect::set(desc.as_ref(), &JsString::from("value"), &1.into()).unwrap();
     #[cfg(not(js_sys_unstable_apis))]
     assert!(Reflect::define_property(&p, &"a".into(), &desc).is_err());
     #[cfg(js_sys_unstable_apis)]
     assert!(Reflect::define_property(&p, &JsString::from("a"), desc.unchecked_ref()).is_err());
 
-    assert!(Reflect::delete_property(&p, &"a".into()).is_err());
+    assert!(Reflect::delete_property(&p, &JsString::from("a")).is_err());
 
-    assert!(Reflect::get(p.as_ref(), &"a".into()).is_err());
+    assert!(Reflect::get(p.as_ref(), &JsString::from("a")).is_err());
     assert!(Reflect::get_f64(p.as_ref(), 0.0).is_err());
     assert!(Reflect::get_u32(p.as_ref(), 0).is_err());
 
-    assert!(Reflect::get_own_property_descriptor(&p, &"a".into()).is_err());
+    assert!(Reflect::get_own_property_descriptor(&p, &JsString::from("a")).is_err());
 
     assert!(Reflect::get_prototype_of(p.as_ref()).is_err());
 
@@ -300,7 +411,7 @@ fn reflect_bindings_handle_proxies_that_just_throw_for_everything() {
 
     assert!(Reflect::prevent_extensions(&p).is_err());
 
-    assert!(Reflect::set(p.as_ref(), &"a".into(), &1.into()).is_err());
+    assert!(Reflect::set(p.as_ref(), &JsString::from("a"), &1.into()).is_err());
     assert!(Reflect::set_f64(p.as_ref(), 0.0, &1.into()).is_err());
     assert!(Reflect::set_u32(p.as_ref(), 0, &1.into()).is_err());
 
