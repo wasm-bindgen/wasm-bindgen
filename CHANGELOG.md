@@ -12,11 +12,24 @@
   Rust type's native ABI representation. String-containing unions accept every
   `wasm_bindgen::JsStringLike` implementation.
 
-* Added the experimental `js_sys::JsPropertyLike` alias for
+* Added the experimental `js_sys::PropertyKey` alias for
   `JsNumberOrStringOrSymbolLike`, covering the `string | number | symbol` keys
-  accepted by TypeScript's `Record` type.
+  accepted by TypeScript's `Record` type. New `Object` and `Reflect` property
+  operations use this bound to accept string, number, or symbol keys while
+  retaining typed values; existing key-specific operations remain available.
 
 ### Changed
+
+* Under `js_sys_unstable_apis`, the unsuffixed `Object::define_property`,
+  `Object::from_entries`, `Object::get_own_property_descriptor`,
+  `Object::has_own`, `Object::property_is_enumerable`,
+  `Reflect::define_property`, `Reflect::delete_property`, `Reflect::get`,
+  `Reflect::get_own_property_descriptor`, `Reflect::has`, and `Reflect::set`
+  now take a generic `K: PropertyKey` key, accepting string, number, or symbol
+  keys. `Reflect::get_own_property_descriptor` now returns a typed
+  `PropertyDescriptor<T>`, and `Reflect::has` now takes an `&Object<T>` target.
+  Callers passing `&"key".into()` should pass `"key"` (or another concrete key
+  type) instead.
 
 ### Fixed
 
