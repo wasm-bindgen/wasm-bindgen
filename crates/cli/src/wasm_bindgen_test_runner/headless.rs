@@ -5,14 +5,17 @@ use rouille::url::Url;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value as Json};
 use std::env;
+use std::error::Error as StdError;
+use std::fmt;
 use std::fs::File;
 use std::io::{self, Read, Write};
 use std::net::{SocketAddr, TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
+use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
-use ureq::Agent;
+use ureq::{Agent, RequestBuilder};
 
 /// Options that can use to customize and configure a WebDriver session.
 type Capabilities = Map<String, Json>;
@@ -48,6 +51,14 @@ pub struct LegacyNewSessionParameters {
     pub required: Capabilities,
 }
 
+/// Per-phase request budgets, each settable through the environment.
+pub struct Timeouts {
+    pub driver: Duration,
+    pub startup: Duration,
+    pub page_load: Duration,
+    pub test: Duration,
+}
+
 /// Execute a headless browser tests against a server running on `server`
 /// address.
 ///
@@ -58,8 +69,7 @@ pub struct LegacyNewSessionParameters {
 pub fn run(
     server: &SocketAddr,
     shell: &Shell,
-    driver_timeout: u64,
-    test_timeout: u64,
+    timeouts: &Timeouts,
     nocapture: bool,
 ) -> Result<(), Error> {
     let driver = Driver::find()?;
@@ -70,7 +80,7 @@ pub fn run(
             // Wait for the driver to come online and bind its port before we try to
             // connect to it.
             let start = Instant::now();
-            let max = Duration::new(driver_timeout, 0);
+            let max = timeouts.driver;
 
             // Each individual driver spawn gets this long to bind its port
             // before we kill it and retry. This handles drivers that get stuck
@@ -153,11 +163,10 @@ pub fn run(
     shell.status("Starting new webdriver session...");
     // Allocate a new session with the webdriver protocol, and once we've done
     // so schedule the browser to get closed with a call to `close_window`.
-    let id = client.new_session(&driver, capabilities)?;
-    client.session = Some(id.clone());
+    client.new_session(&driver, capabilities, timeouts.startup)?;
 
     let browser_name = client
-        .session_browser_name(&id)
+        .session_browser_name(timeouts.startup)
         .unwrap_or_else(|| driver.browser().to_ascii_lowercase());
     let style_mode = style_mode_for_browser(&browser_name);
 
@@ -185,7 +194,7 @@ pub fn run(
     shell.status(&format!(
         "Visiting {url} (browser: {browser_name}, sink: append, style: {style_mode:?}, poll: 100ms)..."
     ));
-    client.goto(&id, url.as_str())?;
+    client.goto(url.as_str(), timeouts.page_load)?;
     shell.status("Loading page elements...");
 
     // At this point we need to wait for the test to finish before we can take a
@@ -203,21 +212,22 @@ pub fn run(
     //       information.
     shell.status("Waiting for test to finish...");
     let start = Instant::now();
-    let max = Duration::new(test_timeout, 0);
+    let max = timeouts.test;
     let no_stream_scrape = env::var_os("WASM_BINDGEN_TEST_NO_STREAM").is_some();
     let mut shell_cleared = false;
     let mut output_buf = String::new();
     let mut output_offset = 0usize;
-    while start.elapsed() < max {
+    while let Some(remaining) = max.checked_sub(start.elapsed()) {
+        let budget = remaining.max(MIN_POLL_TIMEOUT);
         if no_stream_scrape {
-            let output = client.text_content(&id, "#output", 0)?;
+            let output = client.text_content("#output", 0, budget)?;
             if output.chunk.contains("test result: ") {
                 output_buf = output.chunk;
                 output_offset = output.next_offset;
                 break;
             }
         } else {
-            let output = client.text_content(&id, "#output", output_offset)?;
+            let output = client.text_content("#output", output_offset, budget)?;
             let new_output = output.chunk;
             output_offset = output.next_offset;
 
@@ -251,7 +261,7 @@ pub fn run(
 
     // Print any remaining output that might have arrived after the last poll
     let remaining_output = {
-        let output = client.text_content(&id, "#output", output_offset)?;
+        let output = client.text_content("#output", output_offset, timeouts.test)?;
         output.chunk
     };
     if !remaining_output.is_empty() {
@@ -273,7 +283,7 @@ pub fn run(
     // a scoping regression where the module-loaded run.js can't see the
     // `nocapture` const from the inline classic script.
     if nocapture && output_buf.contains("test result: ok") {
-        let console_output = client.text_content(&id, "#console_output", 0)?;
+        let console_output = client.text_content("#console_output", 0, timeouts.test)?;
         if !console_output.chunk.is_empty() {
             bail!(
                 "with --nocapture, #console_output should be empty but contained:\n{}",
@@ -287,7 +297,13 @@ pub fn run(
         let mut has_output = false;
         let mut offset = 0;
         loop {
-            let output = client.text_content(&id, "#console_output", offset)?;
+            let output = match client.text_content("#console_output", offset, timeouts.test) {
+                Ok(output) => output,
+                Err(e) => {
+                    warn!("failed to read console output {e:?}");
+                    break;
+                }
+            };
             let chunk = output.chunk;
             if chunk.is_empty() {
                 break;
@@ -489,10 +505,26 @@ struct Client {
     session: Option<String>,
 }
 
+/// Budget for the window close once the outcome is known.
+const CLEANUP_TIMEOUT: Duration = Duration::from_secs(5);
+
+/// Floor so the last poll is not cut short by its own deadline.
+const MIN_POLL_TIMEOUT: Duration = Duration::from_secs(5);
+
 enum Method<'a> {
     Get,
     Post(&'a str),
     Delete,
+}
+
+impl Method<'_> {
+    fn verb(&self) -> &'static str {
+        match self {
+            Method::Get => "GET",
+            Method::Post(_) => "POST",
+            Method::Delete => "DELETE",
+        }
+    }
 }
 
 // Below here is a bunch of details of the WebDriver protocol implementation.
@@ -500,8 +532,13 @@ enum Method<'a> {
 // copied the `webdriver-client` crate when writing the below bindings.
 
 impl Client {
-    fn new_session(&mut self, driver: &Driver, mut cap: Capabilities) -> Result<String, Error> {
-        match driver {
+    fn new_session(
+        &mut self,
+        driver: &Driver,
+        mut cap: Capabilities,
+        timeout: Duration,
+    ) -> Result<(), Error> {
+        let id = match driver {
             Driver::Gecko(_) => {
                 #[derive(Deserialize)]
                 struct Response {
@@ -529,7 +566,7 @@ impl Client {
                 let request = json!({
                     "capabilities": session_config,
                 });
-                let x: Response = self.post("/session", &request)?;
+                let x: Response = self.post("/session", &request, timeout)?;
                 Ok(x.value.session_id)
             }
             Driver::Safari(_) => {
@@ -556,7 +593,7 @@ impl Client {
                     "capabilities": {
                     }
                 });
-                let x: Response = self.post("/session", &request)?;
+                let x: Response = self.post("/session", &request, timeout)?;
                 Ok(x.clone()
                     .session_id
                     .or_else(|| x.value.map(|v| v.session_id.unwrap()))
@@ -583,7 +620,7 @@ impl Client {
                     desired: cap,
                     required: Capabilities::new(),
                 };
-                let body = self.post_raw("/session", &request)?;
+                let body = self.post_raw("/session", &request, timeout)?;
                 parse_legacy_session_response("Chrome", &body)
             }
             Driver::Edge(_) => {
@@ -607,20 +644,33 @@ impl Client {
                     desired: cap,
                     required: Capabilities::new(),
                 };
-                let body = self.post_raw("/session", &request)?;
+                let body = self.post_raw("/session", &request, timeout)?;
                 parse_legacy_session_response("Edge", &body)
             }
-        }
-    }
-
-    fn close_window(&mut self, id: &str) -> Result<(), Error> {
-        #[derive(Deserialize)]
-        struct Response {}
-        let _: Response = self.delete(&format!("/session/{id}/window"))?;
+        }?;
+        self.session = Some(id);
         Ok(())
     }
 
-    fn goto(&mut self, id: &str, url: &str) -> Result<(), Error> {
+    fn session_path(&self, suffix: &str) -> Result<String, Error> {
+        let id = self
+            .session
+            .as_deref()
+            .context("no active webdriver session")?;
+        Ok(format!("/session/{id}{suffix}"))
+    }
+
+    fn close_window(&mut self, timeout: Duration) -> Result<(), Error> {
+        let Some(id) = self.session.take() else {
+            return Ok(());
+        };
+        #[derive(Deserialize)]
+        struct Response {}
+        let _: Response = self.delete(&format!("/session/{id}/window"), timeout)?;
+        Ok(())
+    }
+
+    fn goto(&mut self, url: &str, timeout: Duration) -> Result<(), Error> {
         #[derive(Serialize)]
         struct Request {
             url: String,
@@ -631,15 +681,16 @@ impl Client {
         let request = Request {
             url: url.to_string(),
         };
-        let _: Response = self.post(&format!("/session/{id}/url"), &request)?;
+        let path = self.session_path("/url")?;
+        let _: Response = self.post(&path, &request, timeout)?;
         Ok(())
     }
 
     fn text_content(
         &mut self,
-        id: &str,
         selector: &str,
         offset: usize,
+        timeout: Duration,
     ) -> Result<TextChunk, Error> {
         #[derive(Serialize)]
         struct Request {
@@ -668,7 +719,8 @@ impl Client {
             ),
             args: vec![offset],
         };
-        let x: Response = self.post(&format!("/session/{id}/execute/sync"), &request)?;
+        let path = self.session_path("/execute/sync")?;
+        let x: Response = self.post(&path, &request, timeout)?;
         match x.value {
             serde_json::Value::Object(_) => {
                 let value: Value = serde_json::from_value(x.value)?;
@@ -685,8 +737,9 @@ impl Client {
         }
     }
 
-    fn session_browser_name(&mut self, id: &str) -> Option<String> {
-        let value: serde_json::Value = match self.get(&format!("/session/{id}")) {
+    fn session_browser_name(&mut self, timeout: Duration) -> Option<String> {
+        let path = self.session_path("").ok()?;
+        let value: serde_json::Value = match self.get(&path, timeout) {
             Ok(value) => value,
             Err(err) => {
                 debug!("failed to read webdriver session capabilities: {err:#}");
@@ -709,60 +762,61 @@ impl Client {
             .map(|s| s.to_string())
     }
 
-    fn get<U>(&mut self, path: &str) -> Result<U, Error>
+    fn get<U>(&mut self, path: &str, timeout: Duration) -> Result<U, Error>
     where
         U: for<'a> Deserialize<'a>,
     {
         debug!("GET {path}");
-        let result = self.doit(path, Method::Get)?;
+        let result = self.doit(path, Method::Get, timeout)?;
         Ok(serde_json::from_str(&result)?)
     }
 
-    fn post<T, U>(&mut self, path: &str, data: &T) -> Result<U, Error>
+    fn post<T, U>(&mut self, path: &str, data: &T, timeout: Duration) -> Result<U, Error>
     where
         T: Serialize,
         U: for<'a> Deserialize<'a>,
     {
         let input = serde_json::to_string(data)?;
         debug!("POST {path} {input}");
-        let result = self.doit(path, Method::Post(&input))?;
+        let result = self.doit(path, Method::Post(&input), timeout)?;
         Ok(serde_json::from_str(&result)?)
     }
 
     /// Like [`post`](Self::post) but returns the raw response body instead of
     /// deserializing it, so callers can inspect driver-specific error encodings.
-    fn post_raw<T>(&mut self, path: &str, data: &T) -> Result<String, Error>
+    fn post_raw<T>(&mut self, path: &str, data: &T, timeout: Duration) -> Result<String, Error>
     where
         T: Serialize,
     {
         let input = serde_json::to_string(data)?;
         debug!("POST {path} {input}");
-        self.doit(path, Method::Post(&input))
+        self.doit(path, Method::Post(&input), timeout)
     }
 
-    fn delete<U>(&mut self, path: &str) -> Result<U, Error>
+    fn delete<U>(&mut self, path: &str, timeout: Duration) -> Result<U, Error>
     where
         U: for<'a> Deserialize<'a>,
     {
         debug!("DELETE {path}");
-        let result = self.doit(path, Method::Delete)?;
+        let result = self.doit(path, Method::Delete, timeout)?;
         Ok(serde_json::from_str(&result)?)
     }
 
-    fn doit(&mut self, path: &str, method: Method) -> Result<String, Error> {
+    fn doit(&mut self, path: &str, method: Method, timeout: Duration) -> Result<String, Error> {
         let url = self.driver_url.join(path)?;
+        let verb = method.verb();
+        let fail = |err| request_error(err, verb, path, timeout);
         let mut response = match method {
-            Method::Post(data) => self
-                .agent
-                .post(url.as_str())
+            Method::Post(data) => with_timeout(self.agent.post(url.as_str()), timeout)
                 .content_type("application/json")
-                .send(data.as_bytes())?,
-            Method::Get => self.agent.get(url.as_str()).call()?,
-            Method::Delete => self.agent.delete(url.as_str()).call()?,
-        };
+                .send(data.as_bytes()),
+            Method::Get => with_timeout(self.agent.get(url.as_str()), timeout).call(),
+            Method::Delete => with_timeout(self.agent.delete(url.as_str()), timeout).call(),
+        }
+        .map_err(fail)?;
 
         let response_code = response.status();
-        let result = response.body_mut().read_to_string()?;
+        let result = response.body_mut().read_to_string().map_err(fail)?;
 
         if response_code != 200 {
             bail!("non-200 response code: {response_code}\n{result}");
@@ -772,13 +826,35 @@ impl Client {
     }
 }
 
+/// Marks a request that ran out of budget.
+#[derive(Debug)]
+struct WebDriverTimeout(String);
+
+impl fmt::Display for WebDriverTimeout {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
+impl StdError for WebDriverTimeout {}
+
+fn with_timeout<Any>(builder: RequestBuilder<Any>, timeout: Duration) -> RequestBuilder<Any> {
+    builder.config().timeout_global(Some(timeout)).build()
+}
+
+fn request_error(err: ureq::Error, verb: &str, path: &str, timeout: Duration) -> Error {
+    match err {
+        ureq::Error::Timeout(_) => Error::new(WebDriverTimeout(format!(
+            "webdriver {verb} {path} timed out after {:.1}s",
+            timeout.as_secs_f64()
+        ))),
+        other => Error::from(other).context(format!("webdriver {verb} {path} request failed")),
+    }
+}
+
 impl Drop for Client {
     fn drop(&mut self) {
-        let id = match &self.session {
-            Some(id) => id.clone(),
-            None => return,
-        };
-        if let Err(e) = self.close_window(&id) {
+        if let Err(e) = self.close_window(CLEANUP_TIMEOUT) {
             warn!("failed to close window {e:?}");
         }
     }
@@ -799,10 +875,13 @@ fn tab(s: &str) -> String {
     result
 }
 
+/// Cap for reading one driver pipe, which the driver's browser child can hold open.
+const STDIO_DUMP_TIMEOUT: Duration = Duration::from_secs(2);
+
 struct BackgroundChild<'a> {
     child: Child,
-    stdout: Option<thread::JoinHandle<io::Result<Vec<u8>>>>,
-    stderr: Option<thread::JoinHandle<io::Result<Vec<u8>>>>,
+    stdout: Option<mpsc::Receiver<io::Result<Vec<u8>>>>,
+    stderr: Option<mpsc::Receiver<io::Result<Vec<u8>>>>,
     shell: &'a Shell,
     print_stdio_on_drop: bool,
 }
@@ -820,22 +899,12 @@ impl<'a> BackgroundChild<'a> {
         let mut child = cmd
             .spawn()
             .context(format!("failed to spawn {path:?} binary"))?;
-        let mut stdout = child.stdout.take().unwrap();
-        let mut stderr = child.stderr.take().unwrap();
-        let stdout = Some(thread::spawn(move || {
-            let mut dst = Vec::new();
-            stdout.read_to_end(&mut dst)?;
-            Ok(dst)
-        }));
-        let stderr = Some(thread::spawn(move || {
-            let mut dst = Vec::new();
-            stderr.read_to_end(&mut dst)?;
-            Ok(dst)
-        }));
+        let stdout = read_to_channel(child.stdout.take().unwrap());
+        let stderr = read_to_channel(child.stderr.take().unwrap());
         Ok(BackgroundChild {
             child,
-            stdout,
-            stderr,
+            stdout: Some(stdout),
+            stderr: Some(stderr),
             shell,
             print_stdio_on_drop: true,
         })
@@ -864,20 +933,74 @@ impl Drop for BackgroundChild<'_> {
         self.shell.clear();
         println!("driver status: {status}");
 
-        let stdout = self.stdout.take().unwrap().join().unwrap().unwrap();
-        if !stdout.is_empty() {
-            println!("driver stdout:\n{}", tab(&String::from_utf8_lossy(&stdout)));
+        dump_stream("stdout", self.stdout.take().unwrap());
+        dump_stream("stderr", self.stderr.take().unwrap());
+    }
+}
+
+fn read_to_channel(mut pipe: impl Read + Send + 'static) -> mpsc::Receiver<io::Result<Vec<u8>>> {
+    let (tx, rx) = mpsc::channel();
+    thread::spawn(move || {
+        let mut buf = [0u8; 8192];
+        loop {
+            match pipe.read(&mut buf) {
+                Ok(0) => return,
+                Ok(n) => {
+                    if tx.send(Ok(buf[..n].to_vec())).is_err() {
+                        return;
+                    }
+                }
+                Err(e) => {
+                    let _ = tx.send(Err(e));
+                    return;
+                }
+            }
         }
-        let stderr = self.stderr.take().unwrap().join().unwrap().unwrap();
-        if !stderr.is_empty() {
-            println!("driver stderr:\n{}", tab(&String::from_utf8_lossy(&stderr)));
+    });
+    rx
+}
+
+/// Drains whatever reached `rx` before the cap, with a notice when the stream did not end.
+fn collect_stream(rx: mpsc::Receiver<io::Result<Vec<u8>>>) -> (Vec<u8>, Option<String>) {
+    let deadline = Instant::now() + STDIO_DUMP_TIMEOUT;
+    let mut bytes = Vec::new();
+    loop {
+        match rx.recv_timeout(deadline.saturating_duration_since(Instant::now())) {
+            Ok(Ok(chunk)) => bytes.extend_from_slice(&chunk),
+            Ok(Err(e)) => return (bytes, Some(format!("read failed, {e}"))),
+            Err(mpsc::RecvTimeoutError::Timeout) => {
+                let held = "truncated, a child process still holds the pipe".to_string();
+                return (bytes, Some(held));
+            }
+            Err(mpsc::RecvTimeoutError::Disconnected) => return (bytes, None),
         }
+    }
+}
+
+fn dump_stream(name: &str, rx: mpsc::Receiver<io::Result<Vec<u8>>>) {
+    let (bytes, notice) = collect_stream(rx);
+    if !bytes.is_empty() {
+        println!("driver {name}:\n{}", tab(&String::from_utf8_lossy(&bytes)));
+    }
+    if let Some(notice) = notice {
+        println!("driver {name} {notice}");
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::parse_legacy_session_response;
+    use super::{
+        collect_stream, parse_legacy_session_response, read_to_channel, Agent, Client, Error, Url,
+        WebDriverTimeout,
+    };
+    use std::io::{Read, Write};
+    use std::net::{TcpListener, TcpStream};
+    use std::thread;
+    use std::time::{Duration, Instant};
+
+    const BUDGET: Duration = Duration::from_millis(300);
+    const HOLD: Duration = Duration::from_secs(30);
+    const SLACK: Duration = Duration::from_secs(3);
 
     // A real chromedriver 150 response when driving Chrome 149: HTTP 200 with a
     // non-zero JSON Wire Protocol `status` and a placeholder `sessionId`.
@@ -903,5 +1026,157 @@ mod tests {
         let body = r#"{"sessionId":"abc123","status":0,"value":{}}"#;
         let id = parse_legacy_session_response("Chrome", body).expect("success should parse");
         assert_eq!(id, "abc123");
+    }
+
+    fn bound_listener() -> (TcpListener, Url) {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let addr = listener.local_addr().unwrap();
+        (listener, Url::parse(&format!("http://{addr}/")).unwrap())
+    }
+
+    fn client_for(url: Url) -> Client {
+        Client {
+            agent: Agent::new_with_defaults(),
+            driver_url: url,
+            session: None,
+        }
+    }
+
+    fn stalled_driver() -> Url {
+        let (listener, url) = bound_listener();
+        thread::spawn(move || {
+            for stream in listener.incoming().flatten() {
+                thread::spawn(move || {
+                    let _stream = stream;
+                    thread::sleep(HOLD);
+                });
+            }
+        });
+        url
+    }
+
+    fn one_shot_driver(response: Vec<u8>) -> Url {
+        let (listener, url) = bound_listener();
+        thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            let mut buf = [0u8; 4096];
+            let _ = stream.read(&mut buf);
+            let _ = stream.write_all(&response);
+            thread::sleep(HOLD);
+        });
+        url
+    }
+
+    fn timeout_error(url: Url, request: impl FnOnce(&mut Client) -> Result<(), Error>) -> Error {
+        let mut client = client_for(url);
+        let start = Instant::now();
+        let err = request(&mut client).expect_err("the command must fail");
+        assert!(start.elapsed() < SLACK, "the request outlived its timeout");
+        assert!(
+            err.downcast_ref::<WebDriverTimeout>().is_some(),
+            "stall must be marked as a timeout, got: {err:#}"
+        );
+        err
+    }
+
+    #[test]
+    fn stalled_get_hits_the_request_timeout() {
+        let err = timeout_error(stalled_driver(), |c| {
+            c.get::<serde_json::Value>("/session", BUDGET).map(|_| ())
+        });
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains("timed out") && msg.contains("/session"),
+            "error must name timeout and request, got: {msg}"
+        );
+    }
+
+    #[test]
+    fn stalled_post_hits_the_request_timeout() {
+        timeout_error(stalled_driver(), |c| {
+            c.post::<_, serde_json::Value>(
+                "/session",
+                &serde_json::json!({"capabilities": {}}),
+                BUDGET,
+            )
+            .map(|_| ())
+        });
+    }
+
+    #[test]
+    fn stalled_response_body_hits_the_request_timeout() {
+        let url = one_shot_driver(b"HTTP/1.1 200 OK\r\ncontent-length: 1000\r\n\r\n".to_vec());
+        timeout_error(url, |c| {
+            c.get::<serde_json::Value>("/session/x/execute/sync", BUDGET)
+                .map(|_| ())
+        });
+    }
+
+    #[test]
+    fn failed_close_consumes_the_session() {
+        let mut client = client_for(stalled_driver());
+        client.session = Some("deadbeef".into());
+        let err = client
+            .close_window(BUDGET)
+            .expect_err("a stalled close must fail");
+        assert!(err.downcast_ref::<WebDriverTimeout>().is_some());
+        let start = Instant::now();
+        assert!(client.close_window(BUDGET).is_ok());
+        drop(client);
+        assert!(
+            start.elapsed() < Duration::from_secs(1),
+            "consumed session must not re-request"
+        );
+    }
+
+    #[test]
+    fn answered_close_failure_is_not_a_timeout() {
+        let body = r#"{"value":{"error":"unable to close window","message":"refused"}}"#;
+        let response = format!(
+            "HTTP/1.1 500 Internal Server Error\r\ncontent-type: application/json\r\ncontent-length: {}\r\n\r\n{body}",
+            body.len()
+        );
+        let mut client = client_for(one_shot_driver(response.into_bytes()));
+        client.session = Some("deadbeef".into());
+        let err = client
+            .close_window(BUDGET)
+            .expect_err("a 500 close must fail");
+        assert!(
+            err.downcast_ref::<WebDriverTimeout>().is_none(),
+            "answered close is not a stall, got: {err:#}"
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn drop_does_not_wait_for_a_grandchild_holding_the_pipes() {
+        use super::{BackgroundChild, Shell};
+        use std::path::Path;
+        use std::process::Command;
+
+        let shell = Shell::new();
+        let mut cmd = Command::new("/bin/sh");
+        cmd.arg("-c").arg("sleep 10 & exit");
+        let child = BackgroundChild::spawn(Path::new("/bin/sh"), &mut cmd, &shell).unwrap();
+        let start = Instant::now();
+        drop(child);
+        assert!(
+            start.elapsed() < Duration::from_secs(6),
+            "drop waited on stdio held open past the dump cap"
+        );
+    }
+
+    #[test]
+    fn a_held_pipe_still_yields_what_arrived() {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let addr = listener.local_addr().unwrap();
+        thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            stream.write_all(b"driver said hello").unwrap();
+            thread::sleep(HOLD);
+        });
+        let (bytes, notice) = collect_stream(read_to_channel(TcpStream::connect(addr).unwrap()));
+        assert_eq!(bytes, b"driver said hello");
+        assert!(notice.is_some(), "a held pipe must be reported");
     }
 }

@@ -5,6 +5,13 @@
 
 ### Added
 
+* Added the WebGL extension interface `EXT_polygon_offset_clamp`.
+  [#5336](https://github.com/wasm-bindgen/wasm-bindgen/pull/5336)
+
+* Added the `texture-compression-unaligned` variant to `GpuFeatureName`,
+  matching the WebGPU specification.
+  [#5335](https://github.com/wasm-bindgen/wasm-bindgen/pull/5335)
+
 ### Changed
 
 * Library MSRV bumped from 1.77 to 1.81, per the 2-year MSRV policy.
@@ -15,6 +22,15 @@
 * The bundler entry module no longer re-exports `#[wasm_bindgen(private)]`
   items from `*_bg.js`, which does not export them.
   [#5343](https://github.com/wasm-bindgen/wasm-bindgen/pull/5343)
+
+* `web-sys`: WebGL extension interfaces declared with `LegacyNoInterfaceObject`
+  (`OVR_multiview2`, `WEBGL_multi_draw`, `EXT_polygon_offset_clamp`) now
+  generate `is_type_of = |_| false` like their `NoInterfaceObject` counterparts.
+  [#5336](https://github.com/wasm-bindgen/wasm-bindgen/pull/5336)
+
+* The blanket `From<E: Error> for JsError` impl is now available without the
+  `std` feature, using `core::error::Error`, so `?` works in `no_std` crates.
+  [#5029](https://github.com/wasm-bindgen/wasm-bindgen/pull/5029)
 
 * Emscripten output no longer emits the instance reinit machinery, which
   Emscripten's JS compiler rejected (unescaped multi-line `__postset`, and
@@ -28,6 +44,10 @@
   (`debug_loc error`), and `DW_AT_high_pc` was re-encoded as variable-width
   `udata` (`compile unit size was incorrect`).
   [#5328](https://github.com/wasm-bindgen/wasm-bindgen/pull/5328)
+
+* The headless test runner no longer hangs on a WebDriver that never answers, or on
+  a browser holding the driver's stdio pipes open.
+  [#5338](https://github.com/wasm-bindgen/wasm-bindgen/pull/5338)
 
 ### Removed
 

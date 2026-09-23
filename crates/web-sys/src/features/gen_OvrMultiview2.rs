@@ -4,11 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(
-        extends = "::js_sys::Object",
-        js_name = "OVR_multiview2",
-        typescript_type = "OVR_multiview2"
-    )]
+    # [wasm_bindgen (is_type_of = | _ | false , extends = "::js_sys::Object" , js_name = "OVR_multiview2" , typescript_type = "OVR_multiview2")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `OvrMultiview2` class."]
     #[doc = ""]

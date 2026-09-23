@@ -19,6 +19,7 @@ use std::ffi::OsString;
 use std::fs;
 use std::path::PathBuf;
 use std::thread;
+use std::time::Duration;
 use wasm_bindgen_cli_support::Bindgen;
 use wasmparser::{Imports, Parser as WasmParser, Payload, TypeRef};
 
@@ -310,23 +311,15 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let driver_timeout = env::var("WASM_BINDGEN_TEST_DRIVER_TIMEOUT")
-        .map(|timeout| {
-            timeout
-                .parse()
-                .expect("Could not parse 'WASM_BINDGEN_TEST_DRIVER_TIMEOUT'")
-        })
-        .unwrap_or(5);
-
-    let browser_timeout = env::var("WASM_BINDGEN_TEST_TIMEOUT")
-        .map(|timeout| {
-            let timeout = timeout
-                .parse()
-                .expect("Could not parse 'WASM_BINDGEN_TEST_TIMEOUT'");
-            println!("Set timeout to {timeout} seconds...");
-            timeout
-        })
-        .unwrap_or(20);
+    let test = timeout_from_env("WASM_BINDGEN_TEST_TIMEOUT", 20);
+    // Browser launch and page load follow the drivers' own default limits, but
+    // never undercut a raised test timeout.
+    let timeouts = headless::Timeouts {
+        driver: timeout_from_env("WASM_BINDGEN_TEST_DRIVER_TIMEOUT", 5),
+        startup: Duration::from_secs(60).max(test),
+        page_load: Duration::from_secs(300).max(test),
+        test,
+    };
 
     let shell = shell::Shell::new();
 
@@ -414,13 +407,7 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
             }
             println!("Tests are now available at http://{addr}");
             thread::spawn(|| srv.run());
-            headless::run(
-                &addr,
-                &shell,
-                driver_timeout,
-                browser_timeout,
-                cli.nocapture,
-            )?;
+            headless::run(&addr, &shell, &timeouts, cli.nocapture)?;
         }
         TestMode::Browser { .. }
         | TestMode::DedicatedWorker { .. }
@@ -461,10 +448,21 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
             }
 
             thread::spawn(|| srv.run());
-            headless::run(&addr, &shell, driver_timeout, browser_timeout, nocapture)?;
+            headless::run(&addr, &shell, &timeouts, nocapture)?;
         }
     }
     Ok(())
+}
+
+fn timeout_from_env(name: &str, default_secs: u64) -> Duration {
+    let Ok(value) = env::var(name) else {
+        return Duration::from_secs(default_secs);
+    };
+    let secs = value
+        .parse()
+        .unwrap_or_else(|_| panic!("Could not parse '{name}'"));
+    println!("Set {name} to {secs} seconds...");
+    Duration::from_secs(secs)
 }
 
 fn module_uses_memory64(wasm: &[u8]) -> anyhow::Result<bool> {

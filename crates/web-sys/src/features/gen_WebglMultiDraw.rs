@@ -4,11 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(
-        extends = "::js_sys::Object",
-        js_name = "WEBGL_multi_draw",
-        typescript_type = "WEBGL_multi_draw"
-    )]
+    # [wasm_bindgen (is_type_of = | _ | false , extends = "::js_sys::Object" , js_name = "WEBGL_multi_draw" , typescript_type = "WEBGL_multi_draw")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `WebglMultiDraw` class."]
     #[doc = ""]
