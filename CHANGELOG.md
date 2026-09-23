@@ -9,6 +9,10 @@
 
 ### Fixed
 
+* The bundler entry module no longer re-exports `#[wasm_bindgen(private)]`
+  items from `*_bg.js`, which does not export them.
+  [#5343](https://github.com/wasm-bindgen/wasm-bindgen/pull/5343)
+
 * Emscripten output no longer emits the instance reinit machinery, which
   Emscripten's JS compiler rejected (unescaped multi-line `__postset`, and
   `var reinit_scheduled = let ...`): `schedule_reinit()` is a no-op there since
