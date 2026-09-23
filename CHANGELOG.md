@@ -33,6 +33,10 @@
   `udata` (`compile unit size was incorrect`).
   [#5328](https://github.com/wasm-bindgen/wasm-bindgen/pull/5328)
 
+* The headless test runner no longer hangs on a WebDriver that never answers, or on
+  a browser holding the driver's stdio pipes open.
+  [#5338](https://github.com/wasm-bindgen/wasm-bindgen/pull/5338)
+
 ### Removed
 
 ## [0.2.128](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.127...0.2.128)
