@@ -5,6 +5,9 @@
 
 ### Added
 
+* Added the WebGL extension interface `EXT_polygon_offset_clamp`.
+  [#5336](https://github.com/wasm-bindgen/wasm-bindgen/pull/5336)
+
 * Added the `texture-compression-unaligned` variant to `GpuFeatureName`,
   matching the WebGPU specification.
   [#5335](https://github.com/wasm-bindgen/wasm-bindgen/pull/5335)
@@ -15,6 +18,11 @@
   [#5257](https://github.com/wasm-bindgen/wasm-bindgen/pull/5257)
 
 ### Fixed
+
+* `web-sys`: WebGL extension interfaces declared with `LegacyNoInterfaceObject`
+  (`OVR_multiview2`, `WEBGL_multi_draw`, `EXT_polygon_offset_clamp`) now
+  generate `is_type_of = |_| false` like their `NoInterfaceObject` counterparts.
+  [#5336](https://github.com/wasm-bindgen/wasm-bindgen/pull/5336)
 
 * The blanket `From<E: Error> for JsError` impl is now available without the
   `std` feature, using `core::error::Error`, so `?` works in `no_std` crates.

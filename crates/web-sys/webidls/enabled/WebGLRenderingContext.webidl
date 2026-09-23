@@ -954,6 +954,13 @@ interface WEBGL_lose_context {
     undefined restoreContext();
 };
 
+[Exposed=(Window,Worker), LegacyNoInterfaceObject]
+interface EXT_polygon_offset_clamp {
+    const GLenum POLYGON_OFFSET_CLAMP_EXT = 0x8E1B;
+
+    undefined polygonOffsetClampEXT(GLfloat factor, GLfloat units, GLfloat clamp);
+};
+
 [NoInterfaceObject]
 interface EXT_texture_filter_anisotropic
 {
