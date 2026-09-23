@@ -19,6 +19,12 @@
 
 ### Fixed
 
+* The headless test runner now keeps the path of a remote WebDriver URL set
+  with variables like `CHROMEDRIVER_REMOTE`. A driver at
+  `http://host/wd/hub/` now gets `http://host/wd/hub/session` instead of
+  `http://host/session`.
+  [#2841](https://github.com/wasm-bindgen/wasm-bindgen/issues/2841)
+
 * The bundler entry module no longer re-exports `#[wasm_bindgen(private)]`
   items from `*_bg.js`, which does not export them.
   [#5343](https://github.com/wasm-bindgen/wasm-bindgen/pull/5343)
