@@ -1133,6 +1133,7 @@ pub fn is_wbg_generic(ext_attrs: Option<&ExtendedAttributeList>) -> bool {
 /// Whether a webidl object is marked as a no interface object.
 pub fn is_no_interface_object(ext_attrs: &Option<ExtendedAttributeList>) -> bool {
     has_named_attribute(ext_attrs.as_ref(), "NoInterfaceObject")
+        || has_named_attribute(ext_attrs.as_ref(), "LegacyNoInterfaceObject")
 }
 
 pub fn get_rust_deprecated(ext_attrs: &Option<ExtendedAttributeList>) -> Option<Option<String>> {

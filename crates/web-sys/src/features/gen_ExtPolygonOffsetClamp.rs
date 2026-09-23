@@ -4,11 +4,7 @@ use super::*;
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(
-        extends = "::js_sys::Object",
-        js_name = "EXT_polygon_offset_clamp",
-        typescript_type = "EXT_polygon_offset_clamp"
-    )]
+    # [wasm_bindgen (is_type_of = | _ | false , extends = "::js_sys::Object" , js_name = "EXT_polygon_offset_clamp" , typescript_type = "EXT_polygon_offset_clamp")]
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[doc = "The `ExtPolygonOffsetClamp` class."]
     #[doc = ""]
