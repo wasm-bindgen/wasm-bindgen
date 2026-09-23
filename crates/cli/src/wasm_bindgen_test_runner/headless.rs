@@ -153,11 +153,10 @@ pub fn run(
     shell.status("Starting new webdriver session...");
     // Allocate a new session with the webdriver protocol, and once we've done
     // so schedule the browser to get closed with a call to `close_window`.
-    let id = client.new_session(&driver, capabilities)?;
-    client.session = Some(id.clone());
+    client.new_session(&driver, capabilities)?;
 
     let browser_name = client
-        .session_browser_name(&id)
+        .session_browser_name()
         .unwrap_or_else(|| driver.browser().to_ascii_lowercase());
     let style_mode = style_mode_for_browser(&browser_name);
 
@@ -185,7 +184,7 @@ pub fn run(
     shell.status(&format!(
         "Visiting {url} (browser: {browser_name}, sink: append, style: {style_mode:?}, poll: 100ms)..."
     ));
-    client.goto(&id, url.as_str())?;
+    client.goto(url.as_str())?;
     shell.status("Loading page elements...");
 
     // At this point we need to wait for the test to finish before we can take a
@@ -210,14 +209,14 @@ pub fn run(
     let mut output_offset = 0usize;
     while start.elapsed() < max {
         if no_stream_scrape {
-            let output = client.text_content(&id, "#output", 0)?;
+            let output = client.text_content("#output", 0)?;
             if output.chunk.contains("test result: ") {
                 output_buf = output.chunk;
                 output_offset = output.next_offset;
                 break;
             }
         } else {
-            let output = client.text_content(&id, "#output", output_offset)?;
+            let output = client.text_content("#output", output_offset)?;
             let new_output = output.chunk;
             output_offset = output.next_offset;
 
@@ -251,7 +250,7 @@ pub fn run(
 
     // Print any remaining output that might have arrived after the last poll
     let remaining_output = {
-        let output = client.text_content(&id, "#output", output_offset)?;
+        let output = client.text_content("#output", output_offset)?;
         output.chunk
     };
     if !remaining_output.is_empty() {
@@ -273,7 +272,7 @@ pub fn run(
     // a scoping regression where the module-loaded run.js can't see the
     // `nocapture` const from the inline classic script.
     if nocapture && output_buf.contains("test result: ok") {
-        let console_output = client.text_content(&id, "#console_output", 0)?;
+        let console_output = client.text_content("#console_output", 0)?;
         if !console_output.chunk.is_empty() {
             bail!(
                 "with --nocapture, #console_output should be empty but contained:\n{}",
@@ -287,7 +286,7 @@ pub fn run(
         let mut has_output = false;
         let mut offset = 0;
         loop {
-            let output = client.text_content(&id, "#console_output", offset)?;
+            let output = client.text_content("#console_output", offset)?;
             let chunk = output.chunk;
             if chunk.is_empty() {
                 break;
@@ -500,8 +499,8 @@ enum Method<'a> {
 // copied the `webdriver-client` crate when writing the below bindings.
 
 impl Client {
-    fn new_session(&mut self, driver: &Driver, mut cap: Capabilities) -> Result<String, Error> {
-        match driver {
+    fn new_session(&mut self, driver: &Driver, mut cap: Capabilities) -> Result<(), Error> {
+        let id = match driver {
             Driver::Gecko(_) => {
                 #[derive(Deserialize)]
                 struct Response {
@@ -610,17 +609,30 @@ impl Client {
                 let body = self.post_raw("/session", &request)?;
                 parse_legacy_session_response("Edge", &body)
             }
-        }
+        }?;
+        self.session = Some(id);
+        Ok(())
     }
 
-    fn close_window(&mut self, id: &str) -> Result<(), Error> {
+    fn session_path(&self, suffix: &str) -> Result<String, Error> {
+        let id = self
+            .session
+            .as_deref()
+            .context("no active webdriver session")?;
+        Ok(format!("/session/{id}{suffix}"))
+    }
+
+    fn close_window(&mut self) -> Result<(), Error> {
+        let Some(id) = self.session.take() else {
+            return Ok(());
+        };
         #[derive(Deserialize)]
         struct Response {}
         let _: Response = self.delete(&format!("/session/{id}/window"))?;
         Ok(())
     }
 
-    fn goto(&mut self, id: &str, url: &str) -> Result<(), Error> {
+    fn goto(&mut self, url: &str) -> Result<(), Error> {
         #[derive(Serialize)]
         struct Request {
             url: String,
@@ -631,16 +643,12 @@ impl Client {
         let request = Request {
             url: url.to_string(),
         };
-        let _: Response = self.post(&format!("/session/{id}/url"), &request)?;
+        let path = self.session_path("/url")?;
+        let _: Response = self.post(&path, &request)?;
         Ok(())
     }
 
-    fn text_content(
-        &mut self,
-        id: &str,
-        selector: &str,
-        offset: usize,
-    ) -> Result<TextChunk, Error> {
+    fn text_content(&mut self, selector: &str, offset: usize) -> Result<TextChunk, Error> {
         #[derive(Serialize)]
         struct Request {
             script: String,
@@ -668,7 +676,8 @@ impl Client {
             ),
             args: vec![offset],
         };
-        let x: Response = self.post(&format!("/session/{id}/execute/sync"), &request)?;
+        let path = self.session_path("/execute/sync")?;
+        let x: Response = self.post(&path, &request)?;
         match x.value {
             serde_json::Value::Object(_) => {
                 let value: Value = serde_json::from_value(x.value)?;
@@ -685,8 +694,9 @@ impl Client {
         }
     }
 
-    fn session_browser_name(&mut self, id: &str) -> Option<String> {
-        let value: serde_json::Value = match self.get(&format!("/session/{id}")) {
+    fn session_browser_name(&mut self) -> Option<String> {
+        let path = self.session_path("").ok()?;
+        let value: serde_json::Value = match self.get(&path) {
             Ok(value) => value,
             Err(err) => {
                 debug!("failed to read webdriver session capabilities: {err:#}");
@@ -774,11 +784,7 @@ impl Client {
 
 impl Drop for Client {
     fn drop(&mut self) {
-        let id = match &self.session {
-            Some(id) => id.clone(),
-            None => return,
-        };
-        if let Err(e) = self.close_window(&id) {
+        if let Err(e) = self.close_window() {
             warn!("failed to close window {e:?}");
         }
     }
