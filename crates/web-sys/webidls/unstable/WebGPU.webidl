@@ -135,6 +135,7 @@ enum GPUFeatureName {
     "primitive-index",
     "texture-component-swizzle",
     "subgroup-size-control",
+    "texture-compression-unaligned",
 };
 
 [Exposed=(Window, Worker), SecureContext]

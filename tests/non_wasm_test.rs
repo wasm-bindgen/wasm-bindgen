@@ -1,25 +1,29 @@
 #![cfg(not(target_family = "wasm"))]
 
-use std::sync::{Arc, Condvar, Mutex};
+use std::sync::{Condvar, Mutex};
+use std::time::Duration;
 
-use once_cell::sync::Lazy;
 use wasm_bindgen_test::wasm_bindgen_test;
 
-static TEST: Lazy<Arc<(Mutex<bool>, Condvar)>> =
-    Lazy::new(|| Arc::new((Mutex::new(false), Condvar::new())));
+static TEST: (Mutex<bool>, Condvar) = (Mutex::new(false), Condvar::new());
 
+// Sorts before `test_wait` so libtest runs it first under `--test-threads=1`.
 #[wasm_bindgen_test(unsupported = test)]
 fn test_success() {
     let mut success = TEST.0.lock().unwrap();
     *success = true;
-    // We notify the condvar that the value has changed.
     TEST.1.notify_one();
 }
 
 #[test]
-fn test() {
-    let mut success = TEST.0.lock().unwrap();
-    while !*success {
-        success = TEST.1.wait(success).unwrap();
-    }
+fn test_wait() {
+    let success = TEST.0.lock().unwrap();
+    let (success, result) = TEST
+        .1
+        .wait_timeout_while(success, Duration::from_secs(30), |success| !*success)
+        .unwrap();
+    assert!(
+        *success && !result.timed_out(),
+        "`unsupported = test` did not run `test_success`"
+    );
 }
