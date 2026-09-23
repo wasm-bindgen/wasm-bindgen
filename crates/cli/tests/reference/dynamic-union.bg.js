@@ -80,11 +80,11 @@ export function echo_wrapper(w) {
     const ret = wasm.echo_wrapper(w);
     return ret;
 }
-export function __wbg___wbindgen_is_undefined_8c687d0b90d5b524(arg0) {
+export function __wbg___wbindgen_is_undefined_8865fb403f8fe9d8(arg0) {
     const ret = arg0 === undefined;
     return ret;
 }
-export function __wbg___wbindgen_string_get_92ab86bb19cbc12f(arg0, arg1) {
+export function __wbg___wbindgen_string_get_0380ccaa2f57f0d9(arg0, arg1) {
     const obj = arg1;
     const ret = typeof(obj) === 'string' ? obj : undefined;
     var ptr1 = isLikeNone(ret) ? 0 : passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
@@ -92,7 +92,7 @@ export function __wbg___wbindgen_string_get_92ab86bb19cbc12f(arg0, arg1) {
     getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
     getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
 }
-export function __wbg___wbindgen_throw_5d9e815e6fdf150f(arg0, arg1) {
+export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 export function __wbg_exportedstruct_new(arg0) {
