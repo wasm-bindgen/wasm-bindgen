@@ -10,6 +10,9 @@
 
 ### Changed
 
+* Library MSRV bumped from 1.77 to 1.81, per the 2-year MSRV policy.
+  [#5257](https://github.com/wasm-bindgen/wasm-bindgen/pull/5257)
+
 ### Fixed
 
 * `web-sys`: WebGL extension interfaces declared with `LegacyNoInterfaceObject`
