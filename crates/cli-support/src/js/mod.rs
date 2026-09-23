@@ -2733,7 +2733,9 @@ if (require('worker_threads').isMainThread) {{
         for (ref export_name, export) in exports {
             match export {
                 ExportEntry::Definition(def) => {
-                    self.export_name_list.push(export_name.clone());
+                    if !def.private {
+                        self.export_name_list.push(export_name.clone());
+                    }
                     self.export_def(Some(export_name), &def);
                 }
                 ExportEntry::Namespace(ns) => {

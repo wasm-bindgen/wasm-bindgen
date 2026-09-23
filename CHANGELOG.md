@@ -19,6 +19,10 @@
 
 ### Fixed
 
+* The bundler entry module no longer re-exports `#[wasm_bindgen(private)]`
+  items from `*_bg.js`, which does not export them.
+  [#5343](https://github.com/wasm-bindgen/wasm-bindgen/pull/5343)
+
 * `web-sys`: WebGL extension interfaces declared with `LegacyNoInterfaceObject`
   (`OVR_multiview2`, `WEBGL_multi_draw`, `EXT_polygon_offset_clamp`) now
   generate `is_type_of = |_| false` like their `NoInterfaceObject` counterparts.
