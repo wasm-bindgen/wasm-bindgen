@@ -49,6 +49,10 @@
   a browser holding the driver's stdio pipes open.
   [#5338](https://github.com/wasm-bindgen/wasm-bindgen/pull/5338)
 
+* The CLI's schema version mismatch error now names the input Wasm file and
+  the path of the running `wasm-bindgen` binary.
+  [#4430](https://github.com/wasm-bindgen/wasm-bindgen/issues/4430)
+
 ### Removed
 
 ## [0.2.128](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.127...0.2.128)

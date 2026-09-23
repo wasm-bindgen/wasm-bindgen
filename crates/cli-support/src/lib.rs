@@ -458,7 +458,14 @@ impl Bindgen {
         // error instead of an unhelpful panic if an incompatible descriptor is
         // found.
         let mut storage = Vec::new();
-        let programs = wit::extract_programs(&mut module, &mut storage)?;
+        let programs =
+            wit::extract_programs(&mut module, &mut storage).map_err(|err| match &self.input {
+                Input::Path(path) => err.context(format!(
+                    "failed to read wasm-bindgen data from '{}'",
+                    path.display()
+                )),
+                _ => err,
+            })?;
 
         // Learn about the type signatures of all wasm-bindgen imports and
         // exports by executing `__wbindgen_describe_*` functions. This'll
