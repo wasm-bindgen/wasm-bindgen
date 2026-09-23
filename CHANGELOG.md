@@ -12,6 +12,10 @@
 
 ### Fixed
 
+* The blanket `From<E: Error> for JsError` impl is now available without the
+  `std` feature, using `core::error::Error`, so `?` works in `no_std` crates.
+  [#5029](https://github.com/wasm-bindgen/wasm-bindgen/pull/5029)
+
 * Emscripten output no longer emits the instance reinit machinery, which
   Emscripten's JS compiler rejected (unescaped multi-line `__postset`, and
   `var reinit_scheduled = let ...`): `schedule_reinit()` is a no-op there since
