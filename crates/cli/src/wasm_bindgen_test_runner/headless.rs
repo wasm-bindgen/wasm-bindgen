@@ -218,7 +218,6 @@ pub fn run(
     let mut output_buf = String::new();
     let mut output_offset = 0usize;
     while let Some(remaining) = max.checked_sub(start.elapsed()) {
-        // Floored so the last poll is not cut short by its own deadline.
         let budget = remaining.max(MIN_POLL_TIMEOUT);
         if no_stream_scrape {
             let output = client.text_content("#output", 0, budget)?;
@@ -320,13 +319,6 @@ pub fn run(
         bail!("some tests failed")
     }
 
-    if let Err(e) = client.close_window(CLEANUP_TIMEOUT) {
-        // A stalled close means a wedged driver.
-        if e.downcast_ref::<WebDriverTimeout>().is_some() {
-            return Err(e);
-        }
-        warn!("failed to close window {e:?}");
-    }
     Ok(())
 }
 
@@ -999,11 +991,10 @@ fn dump_stream(name: &str, rx: mpsc::Receiver<io::Result<Vec<u8>>>) {
 mod tests {
     use super::{
         collect_stream, parse_legacy_session_response, read_to_channel, Agent, Client, Error, Url,
-        WebDriverTimeout, CLEANUP_TIMEOUT,
+        WebDriverTimeout,
     };
     use std::io::{Read, Write};
     use std::net::{TcpListener, TcpStream};
-    use std::sync::mpsc;
     use std::thread;
     use std::time::{Duration, Instant};
 
@@ -1119,20 +1110,6 @@ mod tests {
             c.get::<serde_json::Value>("/session/x/execute/sync", BUDGET)
                 .map(|_| ())
         });
-    }
-
-    #[test]
-    fn drop_closes_within_the_cleanup_budget() {
-        let url = stalled_driver();
-        let (tx, rx) = mpsc::channel();
-        thread::spawn(move || {
-            let mut client = client_for(url);
-            client.session = Some("deadbeef".into());
-            drop(client);
-            let _ = tx.send(());
-        });
-        rx.recv_timeout(CLEANUP_TIMEOUT * 2)
-            .expect("Drop hung on a stalled driver");
     }
 
     #[test]

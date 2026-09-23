@@ -312,10 +312,12 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
     }
 
     let test = timeout_from_env("WASM_BINDGEN_TEST_TIMEOUT", 20);
+    // Browser launch and page load follow the drivers' own default limits, but
+    // never undercut a raised test timeout.
     let timeouts = headless::Timeouts {
         driver: timeout_from_env("WASM_BINDGEN_TEST_DRIVER_TIMEOUT", 5),
-        startup: timeout_from_env("WASM_BINDGEN_TEST_STARTUP_TIMEOUT", 60).max(test),
-        page_load: timeout_from_env("WASM_BINDGEN_TEST_PAGE_LOAD_TIMEOUT", 300).max(test),
+        startup: Duration::from_secs(60).max(test),
+        page_load: Duration::from_secs(300).max(test),
         test,
     };
 
