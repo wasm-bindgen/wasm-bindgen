@@ -5,6 +5,10 @@
 
 ### Added
 
+* Added the `texture-compression-unaligned` variant to `GpuFeatureName`,
+  matching the WebGPU specification.
+  [#5335](https://github.com/wasm-bindgen/wasm-bindgen/pull/5335)
+
 ### Changed
 
 * Library MSRV bumped from 1.77 to 1.81, per the 2-year MSRV policy.
