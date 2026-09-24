@@ -152,6 +152,68 @@ pub fn maybe_wrap_export_call(call: &str, guard: ExportGuard) -> String {
 /// collide with any valid payload (including i64/u64 on wasm64 via f64).
 const F64_OPTION_SENTINEL: &str = "Number.MAX_SAFE_INTEGER";
 
+/// Delimits the placeholder `\0<index>\0` that stands for an argument while
+/// the function body is generated. It never appears in generated JS.
+const ARG_PLACEHOLDER: char = '\0';
+
+/// Picks the JS name of each argument of a function with the given body.
+///
+/// An argument keeps its name unless the body also uses that name for
+/// something else, such as the module-level `wasm` object, one of the body's
+/// locals or a class. The argument would shadow it, so it gets `_` prefixes
+/// until the name is free, as the macro does for keywords. Only the JS code
+/// and its JSDoc use the new name. The `.d.ts` keeps the name from Rust.
+fn js_arg_names(args: &[AuxFunctionArgumentData], body: [&str; 3]) -> Vec<String> {
+    let mut used = HashSet::new();
+    for code in body {
+        collect_identifiers(code, &mut used);
+    }
+    let mut taken = used
+        .iter()
+        .copied()
+        .chain(args.iter().map(|arg| arg.name.as_str()))
+        .map(String::from)
+        .collect::<HashSet<_>>();
+
+    let mut names = Vec::with_capacity(args.len());
+    for arg in args {
+        let mut name = arg.name.clone();
+        if used.contains(name.as_str()) {
+            while taken.contains(&name) {
+                name.insert(0, '_');
+            }
+            taken.insert(name.clone());
+        }
+        names.push(name);
+    }
+    names
+}
+
+/// Collects every word in the given JS code that could be an identifier.
+/// This includes words in strings, comments and property names, so that no
+/// use of a name is missed, at the cost of sometimes renaming an argument
+/// that didn't need it.
+fn collect_identifiers<'a>(code: &'a str, idents: &mut HashSet<&'a str>) {
+    let is_ident_char = |c: char| c.is_alphanumeric() || c == '_' || c == '$';
+    idents.extend(code.split(|c| !is_ident_char(c)).filter(|s| !s.is_empty()));
+}
+
+/// Replaces the argument placeholders in `code` with the given names.
+fn replace_arg_placeholders(code: &str, names: &[String]) -> String {
+    // Placeholders are delimited on both sides, so every odd part of the
+    // split is the index of an argument.
+    let mut ret = String::with_capacity(code.len());
+    for (i, part) in code.split(ARG_PLACEHOLDER).enumerate() {
+        if i % 2 == 0 {
+            ret.push_str(part);
+        } else {
+            let index = part.parse::<usize>().expect("invalid argument placeholder");
+            ret.push_str(&names[index]);
+        }
+    }
+    ret
+}
+
 impl<'a, 'b> Builder<'a, 'b> {
     pub fn new(cx: &'a mut Context<'b>) -> Builder<'a, 'b> {
         Builder {
@@ -337,7 +399,16 @@ impl<'a, 'b> Builder<'a, 'b> {
                     desc: None,
                 },
             };
-            js.args.push(arg.name.clone());
+            // Names from Rust can clash with names the body uses, so their
+            // final JS names are only picked once the body is generated (see
+            // `js_arg_names`). Until then, use placeholders. The generated
+            // names (`arg0`, ...) are already safe to use.
+            if args_data.is_some() {
+                js.args
+                    .push(format!("{ARG_PLACEHOLDER}{i}{ARG_PLACEHOLDER}"));
+            } else {
+                js.args.push(arg.name.clone());
+            }
             function_args.push(arg);
             arg_tys.push(param);
         }
@@ -401,14 +472,34 @@ impl<'a, 'b> Builder<'a, 'b> {
         //     self.ts_args.remove(0);
         // }
 
+        // Now that the body is known, give every argument its final JS name.
+        // The JS code and its JSDoc use these names, while the TypeScript
+        // signature keeps the names from Rust.
+        let js_names = if args_data.is_some() {
+            js_arg_names(&function_args, [&js.pre_try, &js.prelude, &js.finally])
+        } else {
+            function_args.iter().map(|arg| arg.name.clone()).collect()
+        };
+        js.pre_try = replace_arg_placeholders(&js.pre_try, &js_names);
+        js.prelude = replace_arg_placeholders(&js.prelude, &js_names);
+        js.finally = replace_arg_placeholders(&js.finally, &js_names);
+        let js_function_args = function_args
+            .iter()
+            .zip(js_names)
+            .map(|(arg, name)| AuxFunctionArgumentData {
+                name,
+                ..arg.clone()
+            })
+            .collect::<Vec<_>>();
+
         let mut code = String::new();
         code.push('(');
-        for (i, v) in function_args.iter().enumerate() {
+        for (i, v) in js_function_args.iter().enumerate() {
             if i != 0 {
                 code.push_str(", ");
             }
 
-            if variadic && i == function_args.len() - 1 {
+            if variadic && i == js_function_args.len() - 1 {
                 code.push_str("...");
             }
 
@@ -435,6 +526,10 @@ impl<'a, 'b> Builder<'a, 'b> {
 
         code.push_str(&call);
         code.push('}');
+        debug_assert!(
+            !code.contains(ARG_PLACEHOLDER),
+            "argument placeholder left in generated JS: {code}"
+        );
 
         // Rust Structs' fields converted into Getter and Setter functions before
         // we decode them from webassembly, finding if a function is a field
@@ -455,7 +550,7 @@ impl<'a, 'b> Builder<'a, 'b> {
         );
         let js_doc = if generate_jsdoc {
             self.js_doc_comments(
-                &function_args,
+                &js_function_args,
                 &arg_tys,
                 &ts_ret_ty,
                 variadic,
@@ -794,6 +889,12 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         }
     }
 
+    /// Returns the JS expression for the argument at `idx`.
+    ///
+    /// For an exported function's arguments named in Rust, this is a
+    /// placeholder that only gets its final name once the whole body is
+    /// generated (see `js_arg_names`). Use it only in code that ends up in the
+    /// body.
     pub fn arg(&self, idx: u32) -> &str {
         &self.args[idx as usize]
     }
@@ -2273,5 +2374,61 @@ pub(crate) fn adapter2ts(
             dst.push_str(name);
         }
         AdapterType::Function => dst.push_str("any"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn identifiers(code: &str) -> Vec<&str> {
+        let mut idents = HashSet::new();
+        collect_identifiers(code, &mut idents);
+        let mut idents = idents.into_iter().collect::<Vec<_>>();
+        idents.sort_unstable();
+        idents
+    }
+
+    #[test]
+    fn collect_identifiers_finds_every_word() {
+        assert_eq!(
+            identifiers("const ptr0 = f(\u{0}0\u{0}, wasm.malloc, ...rest);"),
+            ["0", "const", "f", "malloc", "ptr0", "rest", "wasm"],
+        );
+        // An apostrophe in a template literal or regex doesn't hide the code
+        // after it.
+        assert_eq!(
+            identifiers("g(`it's ${x}`, /'/.test(y)); // z"),
+            ["$", "g", "it", "s", "test", "x", "y", "z"],
+        );
+    }
+
+    #[test]
+    fn js_arg_names_avoids_clashes() {
+        let arg = |name: &str| AuxFunctionArgumentData {
+            name: name.to_string(),
+            ty_override: None,
+            optional: false,
+            desc: None,
+        };
+        let args = [arg("wasm"), arg("_wasm"), arg("value")];
+        let body = "wasm.f(\u{0}0\u{0}, \u{0}1\u{0}, \u{0}2\u{0});";
+        assert_eq!(
+            js_arg_names(&args, ["", body, ""]),
+            ["__wasm", "_wasm", "value"],
+        );
+        assert_eq!(
+            replace_arg_placeholders(body, &js_arg_names(&args, ["", body, ""])),
+            "wasm.f(__wasm, _wasm, value);",
+        );
+
+        // A name that the body only uses as a property is renamed although
+        // it didn't need to be. The result is still valid.
+        let args = [arg("malloc")];
+        let body = "wasm.malloc(\u{0}0\u{0});";
+        assert_eq!(
+            replace_arg_placeholders(body, &js_arg_names(&args, ["", body, ""])),
+            "wasm.malloc(_malloc);",
+        );
     }
 }
