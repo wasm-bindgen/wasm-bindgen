@@ -26,6 +26,12 @@
 
 ### Fixed
 
+* An exported function argument named like an identifier its generated JS
+  uses, such as `wasm`, a local like `ret` or a class, no longer shadows it.
+  Calling such a function used to throw. The argument is renamed with a `_`
+  prefix in the JS glue, and the TypeScript definitions keep its name.
+  [#3729](https://github.com/wasm-bindgen/wasm-bindgen/issues/3729)
+
 * The headless test runner now keeps the path of a remote WebDriver URL set
   with variables like `CHROMEDRIVER_REMOTE`. A driver at
   `http://host/wd/hub/` now gets `http://host/wd/hub/session` instead of
