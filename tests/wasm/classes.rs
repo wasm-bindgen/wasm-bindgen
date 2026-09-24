@@ -35,6 +35,7 @@ extern "C" {
     fn js_test_option_classes();
     fn js_test_inspectable_classes();
     fn js_test_inspectable_classes_can_override_generated_methods();
+    fn js_test_inspectable_tuple_struct();
     fn js_test_class_defined_in_macro();
     fn js_classless_this();
 }
@@ -614,6 +615,21 @@ pub struct NotInspectable {
 impl NotInspectable {
     pub fn new() -> Self {
         Self::default()
+    }
+}
+
+#[wasm_bindgen_test]
+fn inspectable_tuple_struct() {
+    js_test_inspectable_tuple_struct();
+}
+
+#[wasm_bindgen(inspectable)]
+pub struct InspectableTuple(pub u32, pub i32);
+
+#[wasm_bindgen]
+impl InspectableTuple {
+    pub fn new(a: u32, b: i32) -> Self {
+        Self(a, b)
     }
 }
 
