@@ -86,6 +86,7 @@ unexpected_cfgs = { level = "warn", check-cfg = [
   'cfg(legacy_eh)',
   'cfg(tokio_unstable)',
   'cfg(wasm_bindgen_unstable_tokio)',
+  'cfg(wasm_bindgen_unstable_jspi)',
 ] }
 unused_lifetimes = "warn"
 

@@ -19,6 +19,18 @@
   `--cfg wasm_bindgen_unstable_tokio`.
   [#5334](https://github.com/wasm-bindgen/wasm-bindgen/pull/5334)
 
+* Added experimental JSPI support on the `wasm32-unknown-emscripten` target,
+  gated behind `--cfg wasm_bindgen_unstable_jspi`: `#[wasm_bindgen(jspi)]`,
+  `#[wasm_bindgen(suspending)]`, `jspi_block_on_promise` and the JSPI context
+  inheritance of `spawn_local` work when linking with `-sJSPI` and
+  `-sJSPI_HOOKS` (or `-sREENTRANT_JSPI`). The fibers belong to Emscripten's
+  JSPI runtime, which wasm-bindgen integrates with through its lifecycle hook
+  exports instead of its own shadow stack management. `jspi` combines with
+  `experimental_tokio` into a parked runtime: the export is a promising
+  activation running its future with `block_on` on a Tokio runtime whose
+  waits are JSPI suspensions, so invocations interleave at every wait.
+  [#5333](https://github.com/wasm-bindgen/wasm-bindgen/pull/5333)
+
 ### Changed
 
 * Library MSRV bumped from 1.77 to 1.81, per the 2-year MSRV policy.

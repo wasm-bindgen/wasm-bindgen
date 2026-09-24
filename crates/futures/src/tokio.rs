@@ -7,6 +7,10 @@
 //! any of them lands on the same scheduler. With
 //! `experimental_tokio = "isolated"` each invocation instead owns a fresh
 //! event loop ([`schedule_isolated`]).
+//!
+//! Combined with `jspi`, the export is a promising activation and the future
+//! runs to completion inside it with [`block_on`] / [`block_on_isolated`] on
+//! a runtime that parks by JSPI suspension (linked with `-sJSPI`).
 
 #[cfg(not(tokio_unstable))]
 compile_error!("`wasm_bindgen_unstable_tokio` requires tokio's `--cfg tokio_unstable`");
@@ -16,11 +20,12 @@ extern crate std;
 use core::future::Future;
 use std::cell::OnceCell;
 
-pub use ::tokio::runtime::LocalEventLoop;
+pub use ::tokio::runtime::{LocalEventLoop, Runtime};
 pub use ::tokio::task::JoinError;
 
 std::thread_local! {
     static AMBIENT: OnceCell<LocalEventLoop> = const { OnceCell::new() };
+    static AMBIENT_PARKED: OnceCell<Runtime> = const { OnceCell::new() };
 }
 
 /// Builds with every driver the enabled tokio features provide. The I/O
@@ -121,4 +126,45 @@ where
     if ::tokio::runtime::Handle::try_current().is_err() {
         rt.drive();
     }
+}
+
+/// Builds a parked runtime: a current-thread `Runtime` whose idle waits are
+/// JSPI suspensions of the calling activation. Same driver fallback as
+/// [`build`].
+fn build_parked() -> std::io::Result<Runtime> {
+    match ::tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+    {
+        Err(e) if e.kind() == std::io::ErrorKind::Unsupported => {
+            ::tokio::runtime::Builder::new_current_thread()
+                .enable_time()
+                .build()
+        }
+        built => built,
+    }
+}
+
+/// Runs `future` to completion on the thread's ambient parked runtime, for
+/// `#[wasm_bindgen(jspi, experimental_tokio)]`: the export is a promising
+/// activation, and every wait of the runtime (timers, I/O, an idle scheduler)
+/// is a JSPI suspension of that activation, which leaves the runtime. A
+/// sibling invocation arriving meanwhile enters the same runtime and waits
+/// on its own. A suspension the runtime does not issue (`jspi_block_on_promise`
+/// or a suspending import inside task code) keeps the runtime entered
+/// instead, so a sibling `block_on` during it fails as a nested runtime.
+pub fn block_on<F: Future>(future: F) -> F::Output {
+    AMBIENT_PARKED.with(|cell| {
+        cell.get_or_init(|| build_parked().expect("failed to build ambient tokio runtime"))
+            .block_on(future)
+    })
+}
+
+/// [`block_on`] on a fresh runtime owned by this call and dropped once
+/// `future` settles (tasks still in flight are dropped, the reactor closed),
+/// for `#[wasm_bindgen(jspi, experimental_tokio = "isolated")]`.
+pub fn block_on_isolated<F: Future>(future: F) -> F::Output {
+    build_parked()
+        .expect("failed to build isolated tokio runtime")
+        .block_on(future)
 }
