@@ -26,6 +26,11 @@
 
 ### Fixed
 
+* Struct field getters no longer trigger the `unsafe_op_in_unsafe_fn` lint
+  (warn by default in edition 2024) when the field name comes from a
+  `macro_rules!` body, for example through `paste!`.
+  [#4465](https://github.com/wasm-bindgen/wasm-bindgen/issues/4465)
+
 * The headless test runner now keeps the path of a remote WebDriver URL set
   with variables like `CHROMEDRIVER_REMOTE`. A driver at
   `http://host/wd/hub/` now gets `http://host/wd/hub/session` instead of

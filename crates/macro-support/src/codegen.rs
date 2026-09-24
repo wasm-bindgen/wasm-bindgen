@@ -772,7 +772,12 @@ impl ToTokens for ast::StructField {
 
                     let js = js.into_ptr();
                     assert_not_null(js);
-                    let val = #val;
+                    // `#val` carries the field's span, so when the field name
+                    // comes from a `macro_rules!` expansion in the user's crate
+                    // rustc does not treat the dereference as part of this
+                    // macro's output, and `unsafe_op_in_unsafe_fn` fires on it
+                    // without an explicit `unsafe` block.
+                    let val = unsafe { #val };
                     <#ty as IntoWasmAbi>::into_abi(val).into()
                 }
                 }
