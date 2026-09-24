@@ -42,7 +42,7 @@ fn main() {
     }
 
     if target_arch == "wasm32" && target_os == "emscripten" {
-        // Emscripten uses emcc to handle the linking and it will deadcode elimainte __instance_terminated
+        // Emscripten uses emcc to handle the linking and it will deadcode eliminate __instance_terminated
         // which causes the test on Emscripten to fail to build.
         println!("cargo:rustc-link-arg=-Wl,--export=__instance_terminated");
     }

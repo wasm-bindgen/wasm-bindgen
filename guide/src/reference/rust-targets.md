@@ -64,9 +64,13 @@ pub fn only_on_the_wasm_target() {
 }
 ```
 
-## Other Web Targets
+## Emscripten
 
-The `wasm-bindgen` target does not support the `wasm32-unknown-emscripten` nor
-the `asmjs-unknown-emscripten` targets. There are currently no plans to support
-these targets either. All annotations work like other platforms on the targets,
-retaining exported functions and causing all imports to panic.
+`wasm-bindgen` also supports the `wasm32-unknown-emscripten` target, where
+Emscripten provides a libc, an in-memory file system and its own JavaScript
+runtime around the Wasm. The build flow differs from `wasm32-unknown-unknown`:
+Emscripten runs the `wasm-bindgen` CLI itself at link time. See the
+[Emscripten Target](emscripten.md) page for details.
+
+The `asmjs-unknown-emscripten` target was removed in Rust 1.76 and is not
+supported.

@@ -64,6 +64,9 @@ wasm-bindgen-futures = { path = 'crates/futures' }
 wasm-bindgen-test-crate-a = { path = 'tests/crates/a' }
 wasm-bindgen-test-crate-b = { path = 'tests/crates/b' }
 
+[target.'cfg(all(target_os = "emscripten", wasm_bindgen_unstable_tokio))'.dev-dependencies]
+tokio = { version = "1", default-features = false, features = ["rt", "time", "sync"] }
+
 [target.'cfg(target_arch = "wasm64")'.dev-dependencies]
 js-sys = { path = 'crates/js-sys', features = ["unsafe-eval"] }
 paste = "1"
@@ -81,6 +84,8 @@ unexpected_cfgs = { level = "warn", check-cfg = [
   'cfg(wasm_bindgen_use_js_sys)',
   'cfg(xxx_debug_only_print_generated_code)',
   'cfg(legacy_eh)',
+  'cfg(tokio_unstable)',
+  'cfg(wasm_bindgen_unstable_tokio)',
 ] }
 unused_lifetimes = "warn"
 
@@ -147,6 +152,10 @@ resolver = "2"
 
 [patch.crates-io]
 js-sys = { path = 'crates/js-sys' }
+# tokio-rs/mio#1969: wasm32-unknown-emscripten support, required by the tokio patch
+mio = { git = 'https://github.com/guybedford/mio', tag = '1.2.3-cf.emscripten' }
+# tokio-rs/tokio#8484: event loops for wasm32-unknown-emscripten
+tokio = { git = 'https://github.com/guybedford/tokio', tag = '1.53.1-cf.emscripten' }
 wasm-bindgen = { path = '.' }
 wasm-bindgen-futures = { path = 'crates/futures' }
 wasm-bindgen-test = { path = 'crates/test' }

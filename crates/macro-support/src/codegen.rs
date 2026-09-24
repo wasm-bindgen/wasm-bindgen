@@ -1120,6 +1120,60 @@ impl TryToTokens for ast::Export {
                         #call
                     })
                 }
+            } else if let Some(tokio_mode) = self.function.tokio {
+                // Drive the exported future on a tokio event-loop
+                // runtime (so `tokio::spawn`, timers, and IO inside it
+                // work), bridging its outcome to the returned `Promise`:
+                // the thread's shared ambient runtime, or with
+                // `experimental_tokio = "isolated"` a fresh runtime owned by
+                // this invocation. `schedule` drives before returning when
+                // safe. Off emscripten (or without the unstable cfg)
+                // `wasm_bindgen_futures::tokio` is a stub whose bound
+                // reports the unsupported target at the attribute.
+                let promise = if ast::use_js_sys_futures() {
+                    quote! { #js_sys::Promise }
+                } else {
+                    quote! { #wasm_bindgen_futures::js_sys::Promise }
+                };
+                let schedule = match tokio_mode {
+                    ast::TokioMode::Ambient => quote! { schedule },
+                    ast::TokioMode::Isolated => quote! { schedule_isolated },
+                };
+                call = quote! {
+                    {
+                        // `AssertUnwindSafe` so the executor closure satisfies the
+                        // `UnwindSafe` bound `Promise::new` imposes under
+                        // panic=unwind (mirrors `future_to_promise`). A panic in
+                        // the future is caught by tokio's task harness and arrives
+                        // as `Err(JoinError)`, so we don't catch_unwind here.
+                        let mut __wbg_fut = ::core::panic::AssertUnwindSafe(
+                            ::core::option::Option::Some(async move {
+                                #call
+                            })
+                        );
+                        #promise::new(&mut move |resolve, reject| {
+                            let __wbg_fut = __wbg_fut
+                                .take()
+                                .expect("Promise executor invoked more than once");
+                            #wasm_bindgen_futures::tokio::#schedule(__wbg_fut, move |__wbg_out| {
+                                match __wbg_out {
+                                    ::core::result::Result::Ok(::core::result::Result::Ok(__wbg_val)) => {
+                                        let _ = resolve.call(&#wasm_bindgen::JsValue::UNDEFINED, (&__wbg_val,));
+                                    }
+                                    ::core::result::Result::Ok(::core::result::Result::Err(__wbg_val)) => {
+                                        let _ = reject.call(&#wasm_bindgen::JsValue::UNDEFINED, (&__wbg_val,));
+                                    }
+                                    ::core::result::Result::Err(__wbg_join_err) => {
+                                        let __wbg_err = #wasm_bindgen::JsValue::from(
+                                            ::std::format!("exported async task failed: {}", __wbg_join_err)
+                                        );
+                                        let _ = reject.call(&#wasm_bindgen::JsValue::UNDEFINED, (&__wbg_err,));
+                                    }
+                                }
+                            });
+                        }).into()
+                    }
+                }
             } else {
                 call = quote! {
                     #futures::future_to_promise(async move {

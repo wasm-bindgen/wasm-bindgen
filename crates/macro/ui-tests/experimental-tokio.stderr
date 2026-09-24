@@ -1,0 +1,25 @@
+error: #[wasm_bindgen(experimental_tokio)] can only be applied to `async` functions
+ --> ui-tests/experimental-tokio.rs:3:16
+  |
+3 | #[wasm_bindgen(experimental_tokio)]
+  |                ^^^^^^^^^^^^^^^^^^
+
+error: unknown tokio mode `shared`; expected `experimental_tokio` or `experimental_tokio = "isolated"`
+ --> ui-tests/experimental-tokio.rs:6:16
+  |
+6 | #[wasm_bindgen(experimental_tokio = "shared")]
+  |                ^^^^^^^^^^^^^^^^^^
+
+error[E0277]: `#[wasm_bindgen(experimental_tokio)]` is only supported on the `wasm32-unknown-emscripten` target with `--cfg wasm_bindgen_unstable_tokio`
+  --> ui-tests/experimental-tokio.rs:10:1
+   |
+10 | #[wasm_bindgen(experimental_tokio)]
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ this async export is driven on a tokio event loop
+   |
+   = help: the trait `ExperimentalTokioSupported` is not implemented for `{async block@$DIR/ui-tests/experimental-tokio.rs:10:1: 10:36}`
+note: required by a bound in `schedule`
+  --> $WORKSPACE/crates/futures/src/lib.rs
+   |
+   |     pub fn schedule<F: ExperimentalTokioSupported, C>(_future: F, _on_complete: C) {
+   |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `schedule`
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)

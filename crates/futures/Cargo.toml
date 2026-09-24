@@ -20,6 +20,11 @@ rustdoc-args = ["--cfg", "docsrs"]
 js-sys = { path = "../js-sys", version = "=0.3.105", default-features = false }
 wasm-bindgen = { path = "../..", version = "=0.2.128", default-features = false }
 
+# Unstable: only pulled in under `--cfg wasm_bindgen_unstable_tokio`, and
+# requires tokio's emscripten event-loop support (tokio-rs/tokio#8484).
+[target.'cfg(all(target_os = "emscripten", wasm_bindgen_unstable_tokio))'.dependencies]
+tokio = { version = "1", features = ["rt", "time"], default-features = false }
+
 [features]
 default = ["std"]
 futures-core-03-stream = ["js-sys/futures-core-03-stream"]

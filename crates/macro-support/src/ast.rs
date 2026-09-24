@@ -446,6 +446,19 @@ pub struct DynamicUnion {
     pub wasm_bindgen: Path,
 }
 
+/// Which tokio runtime a `#[wasm_bindgen(experimental_tokio)]` export runs on.
+#[cfg_attr(feature = "extra-traits", derive(Debug))]
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum TokioMode {
+    /// The thread's shared ambient runtime (bare `experimental_tokio`).
+    Ambient,
+    /// A fresh runtime owned by each invocation
+    /// (`experimental_tokio = "isolated"`), so
+    /// its reactor and tasks are isolated from other invocations —
+    /// e.g. multiplexed hosts where I/O must not cross request contexts.
+    Isolated,
+}
+
 /// Information about a function being imported or exported
 #[cfg_attr(feature = "extra-traits", derive(Debug))]
 #[derive(Clone)]
@@ -469,6 +482,10 @@ pub struct Function {
     /// Whether this export should be wrapped with `WebAssembly.promising` so
     /// it returns a JS Promise and can suspend via JSPI.
     pub jspi: bool,
+    /// Whether the `experimental_tokio` attribute was applied: drive the
+    /// exported async function on tokio's emscripten event-loop runtime
+    /// instead of `wasm-bindgen-futures`' executor.
+    pub tokio: Option<TokioMode>,
     /// Whether to generate a typescript definition for this function
     pub generate_typescript: bool,
     /// Whether to generate jsdoc documentation for this function

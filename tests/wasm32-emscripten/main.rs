@@ -56,3 +56,54 @@ pub async fn hello() -> Interval {
 async fn hello_test() {
     hello().await;
 }
+
+// Compiles the `experimental_tokio` attribute expansion: an async export
+// driven on the ambient event-loop runtime rather than the wasm-bindgen
+// executor.
+#[cfg(wasm_bindgen_unstable_tokio)]
+#[wasm_bindgen(experimental_tokio)]
+pub async fn tokio_sleep_ms(ms: u32) -> u32 {
+    tokio::time::sleep(std::time::Duration::from_millis(ms as u64)).await;
+    ms
+}
+
+// Two independently scheduled roots (as two `experimental_tokio` exports
+// would be) must land on one runtime: a oneshot crosses between them, both
+// use timers, and one spawns a subtask. NOTE: the emscripten harness is
+// check-only today (it never instantiates the module), so this body is
+// compile coverage until the harness executes tests.
+#[cfg(wasm_bindgen_unstable_tokio)]
+#[wasm_bindgen_test]
+async fn tokio_ambient_runtime_is_shared() {
+    use std::time::Duration;
+    use tokio::sync::oneshot;
+    use wasm_bindgen_futures::tokio::schedule;
+
+    let (cross_tx, cross_rx) = oneshot::channel::<u32>();
+    let (a_tx, a_rx) = oneshot::channel::<u32>();
+    let (b_tx, b_rx) = oneshot::channel::<u32>();
+
+    schedule(
+        async move {
+            tokio::time::sleep(Duration::from_millis(10)).await;
+            cross_tx.send(7).unwrap();
+            1u32
+        },
+        move |out| {
+            a_tx.send(out.unwrap()).unwrap();
+        },
+    );
+
+    schedule(
+        async move {
+            let v = cross_rx.await.unwrap();
+            tokio::spawn(async move { v + 1 }).await.unwrap()
+        },
+        move |out| {
+            b_tx.send(out.unwrap()).unwrap();
+        },
+    );
+
+    assert_eq!(a_rx.await.unwrap(), 1);
+    assert_eq!(b_rx.await.unwrap(), 8);
+}

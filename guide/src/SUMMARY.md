@@ -49,6 +49,7 @@
   - [Optimizing for Size](./reference/optimize-size.md)
   - [Debug information](./reference/debug-info.md)
   - [Supported Rust Targets](./reference/rust-targets.md)
+  - [Emscripten Target](./reference/emscripten.md)
   - [Supported Browsers](./reference/browser-support.md)
   - [Support for Weak References](./reference/weak-references.md)
   - [Support for Reference Types](./reference/reference-types.md)

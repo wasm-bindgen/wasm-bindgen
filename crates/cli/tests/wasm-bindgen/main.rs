@@ -3152,6 +3152,226 @@ fn emscripten_jspi_codegen() {
     );
 }
 
+/// End-to-end emscripten build as a user would do it: a bin crate built with
+/// `cargo build --target wasm32-unknown-emscripten` and `-sWASM_BINDGEN`, so
+/// emcc links via wasm-ld, runs this workspace's `wasm-bindgen` CLI from
+/// `PATH` as a post-link step and integrates the bindings into its output,
+/// which node then exercises. Needs emcc >= 6.0.10 on `PATH`; skipped
+/// otherwise (CI runs it in the emscripten job).
+///
+/// The `experimental_tokio` export is the runtime coverage for the tokio
+/// attribute: the harness in `tests/wasm32-emscripten` only checks the
+/// generated library. The tokio/mio `[patch]`es mirror the workspace ones.
+#[test]
+fn emscripten_end_to_end() {
+    let Some(emcc) = which("emcc") else {
+        eprintln!("skipping emscripten_end_to_end: `emcc` not found on PATH");
+        return;
+    };
+    let version = Command::new(&emcc).arg("--version").output().unwrap();
+    let version = String::from_utf8_lossy(&version.stdout);
+    let (major, minor, patch) = version
+        .lines()
+        .next()
+        .and_then(|l| {
+            l.split_whitespace().find_map(|w| {
+                // `6.0.10` from a release, `6.0.10-git` from a checkout.
+                let w = w.split('-').next().unwrap();
+                let mut it = w.split('.').map(|n| n.parse::<u32>().ok());
+                Some((it.next()??, it.next()??, it.next()??))
+            })
+        })
+        .unwrap_or_else(|| panic!("could not parse emcc version from {version:?}"));
+    assert!(
+        (major, minor, patch) >= (6, 0, 10),
+        "emscripten_end_to_end needs emcc >= 6.0.10 for the -sWASM_BINDGEN post-link \
+         flow, found {major}.{minor}.{patch}"
+    );
+
+    let mut project = Project::new("emscripten_end_to_end");
+    project.target("wasm32-unknown-emscripten");
+    project
+        .file(
+            "Cargo.toml",
+            &format!(
+                r#"
+                [package]
+                name = "emscripten_end_to_end"
+                version = "0.0.0"
+                edition = "2021"
+
+                [dependencies]
+                wasm-bindgen = {{ path = "{root}" }}
+                wasm-bindgen-futures = {{ path = "{root}/crates/futures" }}
+                js-sys = {{ path = "{root}/crates/js-sys" }}
+                tokio = {{ version = "1", default-features = false, features = ["rt", "time"] }}
+
+                [patch.crates-io]
+                mio = {{ git = "https://github.com/guybedford/mio", tag = "1.2.3-cf.emscripten" }}
+                tokio = {{ git = "https://github.com/guybedford/tokio", tag = "1.53.1-cf.emscripten" }}
+
+                [workspace]
+                "#,
+                root = REPO_ROOT.display(),
+            ),
+        )
+        // The documented configuration, plus `-sERROR_ON_UNDEFINED_SYMBOLS=0`
+        // which stock emscripten needs for the tokio patchset's epoll
+        // listener intrinsics (CI runs the emsdk release, not the patchset).
+        .file(
+            ".cargo/config.toml",
+            r#"
+            [target.wasm32-unknown-emscripten]
+            rustflags = [
+              "-Cpanic=abort",
+              "-Cllvm-args=-enable-emscripten-cxx-exceptions=0",
+              "-Crelocation-model=static",
+              "--cfg=wasm_bindgen_unstable_tokio",
+              "--cfg=tokio_unstable",
+              "-Clink-arg=-sWASM_BINDGEN",
+              "-Clink-arg=-Wno-experimental",
+              "-Clink-arg=-sERROR_ON_UNDEFINED_SYMBOLS=0",
+              "-Clink-arg=-sMODULARIZE",
+              "-Clink-arg=-sEXPORT_ES6",
+            ]
+            "#,
+        )
+        .file(
+            "src/main.rs",
+            r#"
+            use wasm_bindgen::prelude::*;
+
+            #[wasm_bindgen]
+            pub fn add(a: u32, b: u32) -> u32 {
+                a + b
+            }
+
+            #[wasm_bindgen]
+            pub fn greet(name: &str) -> String {
+                format!("Hello, {name}!")
+            }
+
+            #[wasm_bindgen]
+            pub struct Counter {
+                n: u32,
+            }
+
+            #[wasm_bindgen]
+            impl Counter {
+                #[wasm_bindgen(constructor)]
+                pub fn new(n: u32) -> Counter {
+                    Counter { n }
+                }
+
+                pub fn incr(&mut self) -> u32 {
+                    self.n += 1;
+                    self.n
+                }
+            }
+
+            #[wasm_bindgen]
+            pub async fn delayed(v: u32) -> u32 {
+                let p = js_sys::Promise::resolve(&JsValue::from(v));
+                let r = wasm_bindgen_futures::JsFuture::from(p).await.unwrap();
+                r.as_f64().unwrap() as u32 + 1
+            }
+
+            #[wasm_bindgen]
+            pub fn now_secs() -> f64 {
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs_f64()
+            }
+
+            #[wasm_bindgen(experimental_tokio)]
+            pub async fn tokio_sleep_spawn(ms: u32) -> u32 {
+                tokio::time::sleep(std::time::Duration::from_millis(ms as u64)).await;
+                tokio::spawn(async move { ms + 1 }).await.unwrap()
+            }
+
+            #[wasm_bindgen(experimental_tokio = "isolated")]
+            pub async fn tokio_isolated(ms: u32) -> u32 {
+                tokio::time::sleep(std::time::Duration::from_millis(ms as u64)).await;
+                ms * 2
+            }
+
+            fn main() {
+                println!("main ran");
+            }
+            "#,
+        );
+
+    // emcc resolves `wasm-bindgen` from PATH: put this workspace's CLI first.
+    let cli_dir = Path::new(env!("CARGO_BIN_EXE_wasm-bindgen"))
+        .parent()
+        .unwrap();
+    let path = env::join_paths(
+        std::iter::once(cli_dir.to_path_buf())
+            .chain(env::split_paths(&env::var_os("PATH").unwrap_or_default())),
+    )
+    .unwrap();
+    project.cargo_cmd.env("PATH", path);
+
+    let wasm = project.build();
+    let js = wasm.with_extension("js");
+    assert!(
+        js.is_file(),
+        "emcc should emit {} next to the wasm",
+        js.display()
+    );
+
+    let out_dir = project.root.join("pkg");
+    fs::create_dir_all(&out_dir).unwrap();
+    fs::copy(&js, out_dir.join("emscripten_end_to_end.js")).unwrap();
+    fs::copy(&wasm, out_dir.join("emscripten_end_to_end.wasm")).unwrap();
+    fs::write(out_dir.join("package.json"), r#"{ "type": "module" }"#).unwrap();
+    fs::write(
+        out_dir.join("run.mjs"),
+        r#"
+        import Module from './emscripten_end_to_end.js';
+        const m = await Module();
+        const assert = (c, msg) => { if (!c) throw new Error('assertion failed: ' + msg); };
+
+        assert(m.add(2, 3) === 5, 'add');
+        assert(m.greet('world') === 'Hello, world!', 'greet');
+        const c = new m.Counter(41);
+        assert(c.incr() === 42, 'Counter.incr');
+        c.free();
+        assert(await m.delayed(9) === 10, 'async export');
+        assert(Math.abs(m.now_secs() - Date.now() / 1000) < 60, 'SystemTime::now');
+
+        // Only the clean API is surfaced: no raw wasm exports or glue.
+        for (const name of ['_main', 'main', '__wbindgen_malloc', '___wbindgen_malloc']) {
+            assert(m[name] === undefined, 'leaked export ' + name);
+        }
+
+        // Two ambient roots share one event loop; the isolated one owns its own.
+        const t0 = Date.now();
+        const [a, b, iso] = await Promise.all([
+            m.tokio_sleep_spawn(30),
+            m.tokio_sleep_spawn(40),
+            m.tokio_isolated(20),
+        ]);
+        assert(a === 31 && b === 41 && iso === 40, `tokio results ${a} ${b} ${iso}`);
+        assert(Date.now() - t0 >= 35, 'tokio timers actually waited');
+        // The ambient loop is reusable after its roots settle.
+        assert(await m.tokio_sleep_spawn(1) === 2, 'ambient loop reuse');
+
+        console.log('ok');
+        "#,
+    )
+    .unwrap();
+
+    Command::new("node")
+        .arg("run.mjs")
+        .current_dir(&out_dir)
+        .assert()
+        .success()
+        .stdout(str::contains("main ran"))
+        .stdout(str::contains("ok\n"));
+}
+
 #[test]
 fn emscripten_user_imports_are_prefixed() {
     // User module imports land in the `--extern-pre-js` sidecar at module top
