@@ -803,7 +803,7 @@ impl Client {
     }
 
     fn doit(&mut self, path: &str, method: Method, timeout: Duration) -> Result<String, Error> {
-        let url = self.driver_url.join(path)?;
+        let url = endpoint_url(&self.driver_url, path)?;
         let verb = method.verb();
         let fail = |err| request_error(err, verb, path, timeout);
         let mut response = match method {
@@ -824,6 +824,17 @@ impl Client {
         debug!("got: {result}");
         Ok(result)
     }
+}
+
+/// Resolves a WebDriver command path such as `/session` against the driver
+/// URL, keeping the URL's own path. A remote driver at `http://host/wd/hub`
+/// gets `http://host/wd/hub/session`, not `http://host/session`.
+fn endpoint_url(driver_url: &Url, path: &str) -> Result<Url, Error> {
+    let mut base = driver_url.clone();
+    if !base.path().ends_with('/') {
+        base.set_path(&format!("{}/", base.path()));
+    }
+    Ok(base.join(path.trim_start_matches('/'))?)
 }
 
 /// Marks a request that ran out of budget.
@@ -1077,6 +1088,44 @@ mod tests {
             "stall must be marked as a timeout, got: {err:#}"
         );
         err
+    }
+
+    /// Answers one request with `{}` and returns the request target it saw.
+    fn requested_path(base: &str, request: impl FnOnce(&mut Client)) -> String {
+        let (listener, url) = bound_listener();
+        let base = url.join(base).unwrap();
+        let server = thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            let mut buf = [0u8; 4096];
+            let n = stream.read(&mut buf).unwrap();
+            let head = String::from_utf8_lossy(&buf[..n]).into_owned();
+            let _ = stream.write_all(b"HTTP/1.1 200 OK\r\ncontent-length: 2\r\n\r\n{}");
+            head.split(' ').nth(1).unwrap().to_string()
+        });
+        let mut client = client_for(base);
+        request(&mut client);
+        server.join().unwrap()
+    }
+
+    #[test]
+    fn remote_url_path_is_kept() {
+        let cases = [
+            ("/", "/session"),
+            ("/wd/hub/", "/wd/hub/session"),
+            ("/wd/hub", "/wd/hub/session"),
+        ];
+        for (base, expected) in cases {
+            let path = requested_path(base, |c| {
+                c.get::<serde_json::Value>("/session", BUDGET).unwrap();
+            });
+            assert_eq!(path, expected, "driver URL path `{base}`");
+        }
+
+        let path = requested_path("/wd/hub/", |c| {
+            c.session = Some("abc".into());
+            c.close_window(BUDGET).unwrap();
+        });
+        assert_eq!(path, "/wd/hub/session/abc/window");
     }
 
     #[test]
