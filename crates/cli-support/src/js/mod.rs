@@ -117,10 +117,13 @@ pub struct Context<'a> {
     /// A map from an import to the name we've locally imported it as.
     imported_names: HashMap<JsImportName, String>,
 
-    /// A set of all defined identifiers through either exports or imports to
-    /// the number of times they've been used, used to generate new
-    /// identifiers.
-    defined_identifiers: HashMap<String, usize>,
+    /// All identifiers defined at module scope through exports or imports.
+    defined_identifiers: IdentScope,
+
+    /// Module-scope identifiers handed out while generating the current
+    /// adapter body, which its arguments must not shadow. Reset by
+    /// `binding::JsBuilder::new`.
+    pub(crate) body_refs: HashSet<String>,
 
     /// A set of all (tracked) symbols referenced from within type definitions,
     /// function signatures, etc.
@@ -353,6 +356,7 @@ impl<'a> Context<'a> {
             imported_names: Default::default(),
             js_imports: Default::default(),
             defined_identifiers: Default::default(),
+            body_refs: Default::default(),
             wasm_import_definitions: Default::default(),
             typescript_refs: Default::default(),
             used_string_enums: Default::default(),
@@ -613,6 +617,8 @@ impl<'a> Context<'a> {
             let actual_js_name: &str = js_name.unwrap_or(&name);
             self.adapter_deps.insert(actual_js_name.to_string());
         }
+
+        self.body_refs.insert(js_name.unwrap_or(&name).to_string());
 
         if self.intrinsics.as_ref().unwrap().contains_key(&name) {
             return;
@@ -2037,7 +2043,9 @@ if (require('worker_threads').isMainThread) {{
             let class = self.exported_classes.entry(key.clone()).or_default();
             class.identifier = identifier;
         }
-        self.exported_classes.get_mut(&key).unwrap()
+        let class = self.exported_classes.get_mut(&key).unwrap();
+        self.body_refs.insert(class.identifier.clone());
+        class
     }
 
     /// Verify that every impl-block class reference resolves to a
@@ -3843,7 +3851,8 @@ if (require('worker_threads').isMainThread) {{
             .entry(memory)
             .or_insert((next, Default::default()));
         kinds.insert(kind);
-        if matches!(self.config.mode, OutputMode::Emscripten) {
+        let is_emscripten = matches!(self.config.mode, OutputMode::Emscripten);
+        let view = if is_emscripten {
             MemView {
                 name: kind.to_string().into(),
                 num,
@@ -3853,7 +3862,9 @@ if (require('worker_threads').isMainThread) {{
                 name: format!("get{kind}Memory").into(),
                 num,
             }
-        }
+        };
+        self.body_refs.insert(view.access_ident(is_emscripten));
+        view
     }
 
     fn memview_table(&mut self, name: &'static str, table: walrus::TableId) -> MemView {
@@ -4665,12 +4676,7 @@ if (require('worker_threads').isMainThread) {{
                 // Just register the name for collision detection without modifying it.
                 // We should implement separate local / external name handling here in due course
                 // and then just use generate_identifier, but for now this retains backwards compat.
-                let cnt = self
-                    .defined_identifiers
-                    .entry(name.to_string())
-                    .or_insert(0);
-                *cnt += 1;
-                if *cnt > 1 {
+                if !self.defined_identifiers.reserve(name) {
                     bail!("cannot import `{name}` from two locations");
                 }
                 name.to_string()
@@ -5634,8 +5640,9 @@ addToLibrary({
                     let dep_refs: Vec<&str> = new_deps.iter().map(String::as_str).collect();
                     self.export_to_emscripten(&name, &code, &dep_refs);
                 } else {
+                    let name = self.export_adapter_name(id);
                     self.globals.push_str("function ");
-                    self.globals.push_str(&self.export_adapter_name(id));
+                    self.globals.push_str(&name);
                     self.globals.push_str(&code);
                     self.globals.push_str("\n\n");
                 }
@@ -6821,6 +6828,8 @@ addToLibrary({
 
     fn expose_string_enum(&mut self, string_enum_name: &str) {
         self.used_string_enums.insert(string_enum_name.to_string());
+        self.body_refs
+            .insert(format!("__wbindgen_enum_{string_enum_name}"));
     }
 
     /// Walk every dynamic union's variant types and seed `typescript_refs`
@@ -7077,10 +7086,13 @@ addToLibrary({
     /// the canonical DCE-graph pairs (kept iff used, dropped together with the
     /// wasm export otherwise) and are renamed by the import/export minifier in
     /// lockstep with the wasm. Other modes use the local `wasm` binding.
-    fn wasm_export_ref(&self, name: &str) -> String {
+    fn wasm_export_ref(&mut self, name: &str) -> String {
         if matches!(self.config.mode, OutputMode::Emscripten) {
-            emscripten_mangle(name)
+            let name = emscripten_mangle(name);
+            self.body_refs.insert(name.clone());
+            name
         } else {
+            self.body_refs.insert("wasm".to_string());
             format!("wasm.{name}")
         }
     }
@@ -7127,7 +7139,7 @@ addToLibrary({
         name
     }
 
-    fn export_adapter_name(&self, adapter_id: AdapterId) -> String {
+    fn export_adapter_name(&mut self, adapter_id: AdapterId) -> String {
         let (export_id, _) = *self
             .wit
             .exports
@@ -7135,11 +7147,13 @@ addToLibrary({
             .find(|(_, id)| *id == adapter_id)
             .expect("could not find an export adapter");
 
-        self.module.exports.get(export_id).name.clone()
+        let name = self.module.exports.get(export_id).name.clone();
+        self.body_refs.insert(name.clone());
+        name
     }
 
     fn generate_identifier(&mut self, name: &str) -> String {
-        Self::generate_identifier_with(&mut self.defined_identifiers, name)
+        self.defined_identifiers.generate(name)
     }
 
     /// Returns the identifier for a qualified name, reusing a previously
@@ -7152,27 +7166,6 @@ addToLibrary({
         self.qualified_to_identifier
             .insert(qualified_name.to_string(), id.clone());
         id
-    }
-
-    fn generate_identifier_with(identifiers: &mut HashMap<String, usize>, name: &str) -> String {
-        let name = to_valid_ident(name);
-        let cnt = identifiers.entry(name.to_string()).or_insert(0);
-        *cnt += 1;
-        let mut suffix = *cnt;
-        if suffix == 1 {
-            name.to_string()
-        } else {
-            // Keep incrementing until we find an identifier that isn't already taken
-            let mut candidate = format!("{name}{suffix}");
-            while identifiers.contains_key(&candidate) {
-                suffix += 1;
-                candidate = format!("{name}{suffix}");
-            }
-            // Update the counter and reserve the candidate
-            *identifiers.get_mut(&*name).unwrap() = suffix;
-            identifiers.insert(candidate.clone(), 1);
-            candidate
-        }
     }
 
     fn inject_stack_pointer_shim(&mut self) -> Result<(), Error> {
@@ -7824,6 +7817,43 @@ impl ExportedClass {
     }
 }
 
+/// The identifiers bound in one JS scope, used to pick names that don't
+/// collide with each other.
+#[derive(Default)]
+pub(crate) struct IdentScope {
+    /// Each name maps to the highest numeric suffix handed out for it.
+    idents: HashMap<String, usize>,
+}
+
+impl IdentScope {
+    /// Binds `name` as-is, returning whether it was still free.
+    pub(crate) fn reserve(&mut self, name: &str) -> bool {
+        let cnt = self.idents.entry(name.to_string()).or_insert(0);
+        *cnt += 1;
+        *cnt == 1
+    }
+
+    /// Binds and returns `name` if free, otherwise the first free `name2`,
+    /// `name3`, ...
+    pub(crate) fn generate(&mut self, name: &str) -> String {
+        let name = to_valid_ident(name);
+        let cnt = self.idents.entry(name.clone()).or_insert(0);
+        *cnt += 1;
+        let mut suffix = *cnt;
+        if suffix == 1 {
+            return name;
+        }
+        let mut candidate = format!("{name}{suffix}");
+        while self.idents.contains_key(&candidate) {
+            suffix += 1;
+            candidate = format!("{name}{suffix}");
+        }
+        *self.idents.get_mut(&name).unwrap() = suffix;
+        self.idents.insert(candidate.clone(), 1);
+        candidate
+    }
+}
+
 struct MemView {
     name: Cow<'static, str>,
     num: usize,
@@ -7833,10 +7863,19 @@ impl MemView {
     /// Formats the MemView specifically for accessing the memory buffer directly
     fn access(&self, is_emscripten: bool) -> String {
         if is_emscripten {
+            self.access_ident(is_emscripten)
+        } else {
+            format!("{self}()")
+        }
+    }
+
+    /// The module-scope identifier `access` goes through.
+    fn access_ident(&self, is_emscripten: bool) -> String {
+        if is_emscripten {
             // Emscripten global arrays (e.g., "HEAPU8") don't use the num suffix
             self.name.to_string()
         } else {
-            format!("{self}()")
+            self.to_string()
         }
     }
 }
@@ -7868,4 +7907,23 @@ fn write_es_import(dest: &mut String, module: &str, items: &[(String, Option<Str
     dest.push_str(" } from '");
     dest.push_str(module);
     dest.push_str("';\n");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::IdentScope;
+
+    #[test]
+    fn ident_scope_suffixes_taken_names() {
+        let mut scope = IdentScope::default();
+        assert!(scope.reserve("wasm"));
+        assert!(!scope.reserve("wasm"));
+        assert_eq!(scope.generate("ret"), "ret");
+        assert_eq!(scope.generate("ret"), "ret2");
+        assert_eq!(scope.generate("ret"), "ret3");
+        assert!(scope.reserve("ptr2"));
+        assert_eq!(scope.generate("ptr"), "ptr");
+        assert_eq!(scope.generate("ptr"), "ptr3");
+        assert_eq!(scope.generate("class"), "_class");
+    }
 }
