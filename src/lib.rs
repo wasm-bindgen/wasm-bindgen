@@ -93,6 +93,13 @@ const _: () = {
     #[cfg(target_os = "emscripten")]
     #[link_section = "__wasm_bindgen_emscripten_marker"]
     static __WASM_BINDGEN_EMSCRIPTEN_MARKER: [u8; 1] = [1];
+
+    /// A custom data section telling the CLI that the runtime was built with
+    /// `--cfg wasm_bindgen_unstable_jspi`, so JSPI on Emscripten goes through
+    /// its lifecycle hooks rather than wasm-bindgen's own stack management.
+    #[cfg(all(target_os = "emscripten", wasm_bindgen_unstable_jspi))]
+    #[link_section = "__wasm_bindgen_emscripten_jspi_marker"]
+    static __WASM_BINDGEN_EMSCRIPTEN_JSPI_MARKER: [u8; 1] = [1];
 };
 
 macro_rules! externs {

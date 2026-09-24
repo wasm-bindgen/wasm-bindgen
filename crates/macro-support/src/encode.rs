@@ -241,7 +241,9 @@ fn shared_function<'a>(func: &'a ast::Function, _intern: &'a Interner) -> Functi
 
     Function {
         args,
-        asyncness: func.r#async,
+        // `jspi, experimental_tokio` runs the future to completion inside the
+        // export with `block_on`, so to JS it is a sync jspi export.
+        asyncness: func.r#async && !(func.jspi && func.tokio.is_some()),
         // Reported truthfully alongside `asyncness`: every jspi export is a
         // JSPI context root (the CLI wraps its activation with the in-wasm
         // fiber wrapper), while only sync jspi exports are additionally

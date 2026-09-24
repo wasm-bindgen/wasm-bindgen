@@ -181,6 +181,15 @@ JSPI is not supported together with **threads/atomics** (shared memories):
 JSPI itself is a single-threaded proposal. Building with both enabled is
 rejected by the CLI.
 
+## Emscripten
+
+On the `wasm32-unknown-emscripten` target the fibers belong to Emscripten's
+JSPI runtime, and wasm-bindgen integrates with it through its lifecycle hooks
+instead of the shadow stack management described below. This is experimental
+and gated behind `--cfg wasm_bindgen_unstable_jspi`; see the
+[Emscripten Target](emscripten.md#jspi) page for the build recipe and for
+combining `jspi` with `experimental_tokio`.
+
 ## Full example — OPFS file system
 
 The `jspi-opfs` example demonstrates all four patterns: `#[wasm_bindgen(jspi)]`
@@ -240,6 +249,9 @@ one. If you see a `SuspendError`, check that every path reaching the
 suspending import originates in a `jspi` export.
 
 ## Shadow Stack Management
+
+This section describes the non-emscripten targets; see [Emscripten](#emscripten)
+above for how the emscripten runtime takes this over.
 
 On suspension the shadow stack is saved into the heap, and restored back
 onto the stack on resume. Each `#[wasm_bindgen(jspi)]` export records the

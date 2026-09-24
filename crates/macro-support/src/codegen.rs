@@ -1074,10 +1074,26 @@ impl TryToTokens for ast::Export {
             bail_span!(syn_ret, "cannot return a borrowed ref with #[wasm_bindgen]",)
         }
 
+        // `#[wasm_bindgen(jspi, experimental_tokio)]`: the export is a
+        // promising activation that runs the future to completion with
+        // `block_on` on a tokio runtime which parks by JSPI suspension, so
+        // it returns the value directly like a sync `jspi` export.
+        let parked = self.function.r#async && self.function.jspi && self.function.tokio.is_some();
+
         // For an `async` function we always run it through `future_to_promise`
         // since we're returning a promise to JS, and this will implicitly
         // require that the function returns a `Future<Output = Result<...>>`
-        let (ret_ty, inner_ret_ty, ret_expr) = if self.function.r#async {
+        let (ret_ty, inner_ret_ty, ret_expr) = if parked {
+            let block_on = match self.function.tokio {
+                Some(ast::TokioMode::Isolated) => quote! { block_on_isolated },
+                _ => quote! { block_on },
+            };
+            (
+                quote! { #syn_ret },
+                quote! { #syn_ret },
+                quote! { #wasm_bindgen_futures::tokio::#block_on(async move { #ret.await }) },
+            )
+        } else if self.function.r#async {
             if self.start.is_start() {
                 (
                     quote! { () },
@@ -1113,7 +1129,7 @@ impl TryToTokens for ast::Export {
             }
         };
 
-        if self.function.r#async {
+        if self.function.r#async && !parked {
             if self.start.is_start() {
                 call = quote! {
                     #futures::spawn_local(async move {
