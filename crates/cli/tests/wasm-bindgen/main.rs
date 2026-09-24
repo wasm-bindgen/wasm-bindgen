@@ -4634,3 +4634,51 @@ fn stripped_custom_section_errors_helpfully() {
         "error should point at custom-section stripping, got: {err}"
     );
 }
+
+#[test]
+fn schema_mismatch_error_names_input_file() {
+    // With several Wasm files in one project, the schema mismatch error must
+    // say which file was built against the other wasm-bindgen version.
+    let root = TARGET_DIR
+        .join("cli-tests")
+        .join("schema_mismatch_error_names_input_file");
+    drop(fs::remove_dir_all(&root));
+    fs::create_dir_all(&root).unwrap();
+
+    let json = br#"{"schema_version":"0-mismatch","version":"0.0.0"}"#;
+    let mut data = (json.len() as u32).to_le_bytes().to_vec();
+    data.extend_from_slice(json);
+    let mut module = walrus::Module::default();
+    module.customs.add(RawCustomSection {
+        name: "__wasm_bindgen_unstable".into(),
+        data,
+    });
+    let wasm_path = root.join("mismatched.wasm");
+    module.emit_wasm_file(&wasm_path).unwrap();
+
+    let out_dir = root.join("pkg");
+    fs::create_dir_all(&out_dir).unwrap();
+    let err = wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
+        "wasm-bindgen".as_ref(),
+        "--out-dir".as_ref(),
+        out_dir.as_os_str(),
+        wasm_path.as_os_str(),
+    ])
+    .unwrap_err();
+
+    // Format the error the same way the `wasm-bindgen` binary prints it.
+    let err = format!("{err:?}");
+    assert!(
+        err.contains("different bindgen format"),
+        "expected a schema mismatch error, got: {err}"
+    );
+    assert!(
+        err.contains(&wasm_path.display().to_string()),
+        "error should name the input file, got: {err}"
+    );
+    let exe = env::current_exe().unwrap();
+    assert!(
+        err.contains(&exe.display().to_string()),
+        "error should name the running binary, got: {err}"
+    );
+}

@@ -2816,14 +2816,16 @@ pub fn extract_programs<'a>(
             // manages versions for us, so we in theory should need this check
             // less and less over time.
             if let Some(their_version) = verify_schema_matches(data)? {
+                let binary_path = match std::env::current_exe() {
+                    Ok(path) => format!("\n               this binary path: {}", path.display()),
+                    Err(_) => String::new(),
+                };
                 bail!(
-                    "
-
-it looks like the Rust project used to create this Wasm file was linked against
+                    "it looks like the Rust project used to create this Wasm file was linked against
 version of wasm-bindgen that uses a different bindgen format than this binary:
 
   rust Wasm file schema version: {their_version}
-     this binary schema version: {my_version}
+     this binary schema version: {my_version}{binary_path}
 
 Currently the bindgen format is unstable enough that these two schema versions
 must exactly match. You can accomplish this by either updating this binary or
