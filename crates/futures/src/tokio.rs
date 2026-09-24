@@ -150,9 +150,15 @@ fn build_parked() -> std::io::Result<Runtime> {
 /// activation, and every wait of the runtime (timers, I/O, an idle scheduler)
 /// is a JSPI suspension of that activation, which leaves the runtime. A
 /// sibling invocation arriving meanwhile enters the same runtime and waits
-/// on its own. A suspension the runtime does not issue (`jspi_block_on_promise`
-/// or a suspending import inside task code) keeps the runtime entered
-/// instead, so a sibling `block_on` during it fails as a nested runtime.
+/// on its own.
+///
+/// A suspension the runtime does not issue (`jspi_block_on_promise` or a
+/// suspending import inside task code) parks the activation mid-poll. With
+/// tokio's fiber-owned runtime context (`--cfg tokio_unstable_jspi_hooks`) a
+/// sibling still enters, and its timers and I/O advance once the parked
+/// activation resumes and releases the scheduler core; without it the
+/// runtime stays entered across the suspension and the sibling's `block_on`
+/// is a nested runtime.
 pub fn block_on<F: Future>(future: F) -> F::Output {
     AMBIENT_PARKED.with(|cell| {
         cell.get_or_init(|| build_parked().expect("failed to build ambient tokio runtime"))

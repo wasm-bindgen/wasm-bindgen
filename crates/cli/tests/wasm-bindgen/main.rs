@@ -3523,11 +3523,14 @@ fn emscripten_jspi_end_to_end(name: &str, reentrant: bool) {
         .join("system/include/emscripten/jspi.h")
         .is_file()
     {
-        eprintln!("skipping {name}: `emcc` has no JSPI lifecycle hooks (emscripten#27698)");
+        skip_jspi(
+            name,
+            "`emcc` has no JSPI lifecycle hooks (emscripten#27698)",
+        );
         return;
     }
     let Some(node_flags) = node_jspi_flags() else {
-        eprintln!("skipping {name}: the `node` on PATH lacks JSPI (needs Node >= 24)");
+        skip_jspi(name, "the `node` on PATH lacks JSPI (needs Node >= 24)");
         return;
     };
 
@@ -3740,11 +3743,14 @@ fn emscripten_jspi_tokio_project(name: &str) -> Option<(PathBuf, &'static [&'sta
         .join("system/include/emscripten/jspi.h")
         .is_file()
     {
-        eprintln!("skipping {name}: `emcc` has no JSPI lifecycle hooks (emscripten#27698)");
+        skip_jspi(
+            name,
+            "`emcc` has no JSPI lifecycle hooks (emscripten#27698)",
+        );
         return None;
     }
     let Some(node_flags) = node_jspi_flags() else {
-        eprintln!("skipping {name}: the `node` on PATH lacks JSPI (needs Node >= 24)");
+        skip_jspi(name, "the `node` on PATH lacks JSPI (needs Node >= 24)");
         return None;
     };
 
@@ -4697,6 +4703,15 @@ const JSPI_LIB_RS: &str = r#"
 /// Node removes the flag entirely), `--experimental-wasm-jspi` on Node 24.
 /// `None` (skip) on older Node, which either rejects the flag (≤ 20) or
 /// lacks the API (22).
+/// Skips an emscripten JSPI test for a toolchain reason, or fails when CI
+/// asserts the toolchain is present (`WASM_BINDGEN_REQUIRE_EMSCRIPTEN_JSPI`).
+fn skip_jspi(name: &str, reason: &str) {
+    if env::var_os("WASM_BINDGEN_REQUIRE_EMSCRIPTEN_JSPI").is_some() {
+        panic!("{name}: {reason}, but WASM_BINDGEN_REQUIRE_EMSCRIPTEN_JSPI is set");
+    }
+    eprintln!("skipping {name}: {reason}");
+}
+
 fn node_jspi_flags() -> Option<&'static [&'static str]> {
     const PROBE: &str = "process.exit(typeof WebAssembly.Suspending === 'function' ? 0 : 1)";
     const FLAGGED: &[&str] = &["--experimental-wasm-jspi"];
@@ -4726,7 +4741,7 @@ fn run_jspi_test(
     describe_body: &str,
 ) {
     let Some(node_flags) = node_jspi_flags() else {
-        eprintln!("skipping {name}: the `node` on PATH lacks JSPI (needs Node >= 24)");
+        skip_jspi(name, "the `node` on PATH lacks JSPI (needs Node >= 24)");
         return;
     };
 
