@@ -12,6 +12,13 @@
   matching the WebGPU specification.
   [#5335](https://github.com/wasm-bindgen/wasm-bindgen/pull/5335)
 
+* Added an Emscripten Target page to the guide covering the
+  `wasm32-unknown-emscripten` build flow, including the experimental
+  `#[wasm_bindgen(experimental_tokio)]` attribute for driving an exported
+  async function on a Tokio event-loop runtime there, gated behind
+  `--cfg wasm_bindgen_unstable_tokio`.
+  [#5334](https://github.com/wasm-bindgen/wasm-bindgen/pull/5334)
+
 ### Changed
 
 * Library MSRV bumped from 1.77 to 1.81, per the 2-year MSRV policy.

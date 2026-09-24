@@ -222,17 +222,16 @@ jobs:
       - name: Setup Emscripten SDK
         uses: mymindstorm/setup-emsdk@v16
         with:
-          # Minimum for the `-sWASM_BINDGEN` integration: the `__force`/
-          # `__export` JS library decorators the generated `library_bindgen.js`
-          # relies on landed in 6.0.7, which also restored linking rustc's
-          # prebuilt wasm32-unknown-emscripten std after 6.0.6 dropped the
-          # legacy JS-exceptions ABI (`__cpp_exception`).
-          version: 6.0.7
+          # Minimum for the `-sWASM_BINDGEN` post-link flow, where emcc runs
+          # `wasm-bindgen` itself at link time (emscripten-core/emscripten#27208).
+          version: 6.0.10
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
       - name: Run Emscripten headless tests
         run: cargo test --test wasm32-emscripten --target wasm32-unknown-emscripten
+      - name: Run Emscripten end-to-end build
+        run: cargo test -p wasm-bindgen-cli --test wasm-bindgen emscripten_end_to_end
 
   # I don't know why this is failing so comment this out for now, but ideally
   # this would be figured out at some point and solved.

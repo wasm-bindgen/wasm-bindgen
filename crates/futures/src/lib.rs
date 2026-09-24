@@ -20,5 +20,30 @@ pub use js_sys::futures::stream;
 #[allow(deprecated)]
 pub use js_sys::futures::jspi_block_on_promise;
 
+#[cfg(all(target_os = "emscripten", wasm_bindgen_unstable_tokio))]
+pub mod tokio;
+
+/// Stand-in for unsupported targets: `#[wasm_bindgen(experimental_tokio)]`
+/// expansions still resolve, and the unsatisfiable bound reports why at the
+/// attribute instead of as an unresolved path.
+#[cfg(not(all(target_os = "emscripten", wasm_bindgen_unstable_tokio)))]
+#[doc(hidden)]
+pub mod tokio {
+    #[diagnostic::on_unimplemented(
+        message = "`#[wasm_bindgen(experimental_tokio)]` is only supported on the \
+                   `wasm32-unknown-emscripten` target with `--cfg wasm_bindgen_unstable_tokio`",
+        label = "this async export is driven on a tokio event loop"
+    )]
+    pub trait ExperimentalTokioSupported {}
+
+    pub fn schedule<F: ExperimentalTokioSupported, C>(_future: F, _on_complete: C) {
+        unreachable!()
+    }
+
+    pub fn schedule_isolated<F: ExperimentalTokioSupported, C>(_future: F, _on_complete: C) {
+        unreachable!()
+    }
+}
+
 pub use js_sys;
 pub use wasm_bindgen;

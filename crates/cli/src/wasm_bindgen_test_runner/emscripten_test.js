@@ -83,9 +83,15 @@
             if (typeof Module.Interval !== 'string' || !Module.Interval.startsWith('=class ')) {
                 return { status: false, e: 'test result: Interval is not a class value snippet' };
             }
+            // `tokio_sleep_ms` is a `#[wasm_bindgen(experimental_tokio)]` export: its
+            // presence checks the tokio-attribute expansion survived the
+            // full CLI pipeline into the emscripten glue.
+            if (typeof Module.tokio_sleep_ms !== 'function') {
+                return { status: false, e: 'test result: tokio_sleep_ms() is not found in Module' };
+            }
             // The hoisted exports must carry both attributes so emscripten
             // emits them as named ESM exports under -sMODULARIZE=instance.
-            for (const name of ['hello', 'Interval']) {
+            for (const name of ['hello', 'Interval', 'tokio_sleep_ms']) {
                 if (!window.exportedSymbols.has(name)) {
                     return { status: false, e: `test result: ${name} does not carry __export: true` };
                 }
