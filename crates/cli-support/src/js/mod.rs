@@ -2376,7 +2376,9 @@ if (require('worker_threads').isMainThread) {{
         // the class shows only the "ptr" property when logged or serialized
         if class.is_inspectable {
             // Creates a `toJSON` method which returns an object of all readable properties
-            // This object looks like { a: this.a, b: this.b }
+            // This object looks like { a: this.a, b: this.b }. Names that are
+            // not valid identifiers, such as the `0` and `1` fields of a
+            // tuple struct, are quoted: { "0": this["0"] }
             dst.push_str(&format!(
                 "\
                 toJSON() {{
@@ -2390,7 +2392,12 @@ if (require('worker_threads').isMainThread) {{
                     .readable_properties
                     .iter()
                     .fold(String::from("\n"), |fields, field_name| {
-                        format!("{fields}{field_name}: this.{field_name},\n")
+                        if is_valid_ident(field_name) {
+                            format!("{fields}{field_name}: this.{field_name},\n")
+                        } else {
+                            let key = format!("\"{}\"", escape_string(field_name));
+                            format!("{fields}{key}: this[{key}],\n")
+                        }
                     })
             ));
             // Also add definitions to the .d.ts file.

@@ -248,6 +248,15 @@ exports.js_test_inspectable_classes = () => {
     not_inspectable.free();
 };
 
+exports.js_test_inspectable_tuple_struct = () => {
+    const tuple = wasm.InspectableTuple.new(1, -2);
+    // Tuple struct fields are exposed as the properties `0` and `1`
+    assert.deepStrictEqual(tuple.toJSON(), { 0: 1, 1: -2 });
+    assert.strictEqual(tuple.toString(), '{"0":1,"1":-2}');
+    assert(console_log_to_string(tuple).endsWith("{ '0': 1, '1': -2 }"));
+    tuple.free();
+};
+
 exports.js_test_inspectable_classes_can_override_generated_methods = () => {
     const overridden_inspectable = wasm.OverriddenInspectable.new();
     // Inspectable classes can have the generated toJSON and toString overwritten

@@ -71,6 +71,11 @@
   the path of the running `wasm-bindgen` binary.
   [#4430](https://github.com/wasm-bindgen/wasm-bindgen/issues/4430)
 
+* `#[wasm_bindgen(inspectable)]` on a tuple struct no longer generates invalid
+  JavaScript. The generated `toJSON` now reads the `0`, `1`, ... fields as
+  `this["0"]` instead of `this.0`.
+  [#2573](https://github.com/wasm-bindgen/wasm-bindgen/issues/2573)
+
 ### Removed
 
 ## [0.2.128](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.127...0.2.128)
