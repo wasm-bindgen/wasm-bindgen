@@ -233,17 +233,15 @@ jobs:
         run: cargo test --test wasm32-emscripten --target wasm32-unknown-emscripten
       - name: Run Emscripten end-to-end build
         run: cargo test -p wasm-bindgen-cli --test wasm-bindgen emscripten_end_to_end
-      # The patchset the guide's Tokio and JSPI sections describe: the
-      # guybedford/emscripten tag as the frontend over emsdk 6.0.10's
-      # toolchain (its config still supplies LLVM and Node), and the binaryen
-      # release carrying the `--jspi-hooks` pass as BINARYEN_ROOT.
+      # The patchset the guide's JSPI section describes, set up the way it
+      # says: the guybedford/emscripten tag as the frontend over the emsdk
+      # toolchain, and the binaryen release carrying the `--jspi-hooks` pass.
       - name: Overlay the Emscripten patchset
         run: |
           git clone --depth 1 --branch 6.0.10-cf.emscripten https://github.com/guybedford/emscripten "$RUNNER_TEMP/emscripten"
           (cd "$RUNNER_TEMP/emscripten" && python3 bootstrap.py)
           curl -sSL https://github.com/guybedford/binaryen/releases/download/version_132_jspi_hooks_1/binaryen-version_132_jspi_hooks_1-x86_64-linux.tar.gz | tar xz -C "$RUNNER_TEMP"
-          echo "EM_CONFIG=$EMSDK/.emscripten" >> "$GITHUB_ENV"
-          echo "EM_BINARYEN_ROOT=$RUNNER_TEMP/binaryen-version_132_jspi_hooks_1" >> "$GITHUB_ENV"
+          printf "LLVM_ROOT = '%s'\nBINARYEN_ROOT = '%s'\n" "$(em-config LLVM_ROOT)" "$RUNNER_TEMP/binaryen-version_132_jspi_hooks_1" > "$RUNNER_TEMP/emscripten/.emscripten"
           echo "$RUNNER_TEMP/emscripten" >> "$GITHUB_PATH"
       - name: Run Emscripten end-to-end builds against the patchset
         # The JSPI builds skip when the toolchain lacks the hooks; here they

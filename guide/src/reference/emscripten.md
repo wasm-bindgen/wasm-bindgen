@@ -196,18 +196,14 @@ rustflags = ["--cfg=wasm_bindgen_unstable_tokio", "--cfg=tokio_unstable", ...]
 The reactor also needs Emscripten's epoll readiness listeners
 ([emscripten#27547]) and async DNS ([emscripten#27742]), not yet in a
 release. The `6.0.10-cf.emscripten` tag of [guybedford/emscripten] is
-Emscripten 6.0.10 plus those two changes; with emsdk 6.0.10 installed and
-activated, use its checkout in place of emsdk's `upstream/emscripten` (replace
-that directory, or point `EM_CONFIG` at a config reusing emsdk's toolchain):
+Emscripten 6.0.10 plus those changes; with `emcc` 6.0.10 (emsdk, Homebrew,
+...) already on `PATH`, use its checkout as the frontend over that toolchain:
 
 ```sh
-git clone --branch 6.0.10-cf.emscripten https://github.com/guybedford/emscripten
-cat > emscripten/.emscripten <<EOF
-LLVM_ROOT = '$EMSDK/upstream/bin'
-BINARYEN_ROOT = '$EMSDK/upstream'
-NODE_JS = '$(command -v node)'
-EOF
-export EM_CONFIG=$PWD/emscripten/.emscripten PATH=$PWD/emscripten:$PATH
+git clone --depth 1 --branch 6.0.10-cf.emscripten https://github.com/guybedford/emscripten
+(cd emscripten && ./bootstrap.py)
+printf "LLVM_ROOT = '%s'\nBINARYEN_ROOT = '%s'\n" "$(em-config LLVM_ROOT)" "$(em-config BINARYEN_ROOT)" > emscripten/.emscripten
+export PATH=$PWD/emscripten:$PATH
 ```
 
 Timers, `tokio::spawn` and the sync primitives work on stock Emscripten
@@ -227,25 +223,22 @@ Timers, `tokio::spawn` and the sync primitives work on stock Emscripten
 
 ### Getting started
 
-1. Install and activate emsdk 6.0.10, then check out the
-   `6.0.10-cf.emscripten` tag of [guybedford/emscripten] (Emscripten 6.0.10
-   plus the hooks, [emscripten#27698], and `-sREENTRANT_JSPI`,
-   [emscripten#27699]) and the [`version_132_jspi_hooks_1`][binaryen-release]
-   release of `guybedford/binaryen`, whose `wasm-opt` has the `--jspi-hooks`
-   pass `-sJSPI_HOOKS` runs. Point an `EM_CONFIG` at them over emsdk's
-   toolchain:
+1. Emscripten 6.0.10 with the hooks: the `6.0.10-cf.emscripten` tag of
+   [guybedford/emscripten] (the release plus [emscripten#27698] and
+   [emscripten#27699]) as the frontend over your existing Emscripten install,
+   and the [`version_132_jspi_hooks_1`][binaryen-release] Binaryen, whose
+   `wasm-opt` has the `--jspi-hooks` pass. With `emcc` 6.0.10 (emsdk, Homebrew,
+   ...) already on `PATH`:
 
    ```sh
-   git clone --branch 6.0.10-cf.emscripten https://github.com/guybedford/emscripten
+   git clone --depth 1 --branch 6.0.10-cf.emscripten https://github.com/guybedford/emscripten
    (cd emscripten && ./bootstrap.py)
    curl -L https://github.com/guybedford/binaryen/releases/download/version_132_jspi_hooks_1/binaryen-version_132_jspi_hooks_1-x86_64-linux.tar.gz | tar xz
-   cat > emscripten/.emscripten <<EOF
-   LLVM_ROOT = '$EMSDK/upstream/bin'
-   BINARYEN_ROOT = '$PWD/binaryen-version_132_jspi_hooks_1'
-   NODE_JS = '$(command -v node)'
-   EOF
-   export EM_CONFIG=$PWD/emscripten/.emscripten PATH=$PWD/emscripten:$PATH
+   printf "LLVM_ROOT = '%s'\nBINARYEN_ROOT = '%s'\n" "$(em-config LLVM_ROOT)" "$PWD/binaryen-version_132_jspi_hooks_1" > emscripten/.emscripten
+   export PATH=$PWD/emscripten:$PATH
    ```
+
+   (Pick the [binaryen asset][binaryen-release] for your platform.)
 
 2. Build with the cfg and link with `-sJSPI` plus the hooks: `-sJSPI_HOOKS`,
    or `-sREENTRANT_JSPI`, which also gives every promising activation its
@@ -335,10 +328,9 @@ invocation's timers and I/O only advance once it resumes. Isolated runtimes
 park independently.
 
 The complete configuration for the combination is the union of the Tokio and
-JSPI ones above. Toolchain: emsdk 6.0.10 with the `6.0.10-cf.emscripten` tag
-of [guybedford/emscripten] over it, the [`version_132_jspi_hooks_1`][binaryen-release]
-binaryen release as `BINARYEN_ROOT`, and Node 25 or newer (Node 24 with
-`--experimental-wasm-jspi`) to run. Crates:
+JSPI ones above: the JSPI toolchain setup (the tag carries the Tokio changes
+too), and Node 25 or newer (Node 24 with `--experimental-wasm-jspi`) to run.
+Crates:
 
 ```toml
 # Cargo.toml
