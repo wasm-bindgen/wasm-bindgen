@@ -48,6 +48,10 @@
 
 ### Fixed
 
+* `js-sys`: the `Number` constants no longer trigger deprecation warnings for
+  the `core::f64` module constants when building the crate from source.
+  [#5351](https://github.com/wasm-bindgen/wasm-bindgen/pull/5351)
+
 * The `wasm_bindgen`, `wasm_bindgen_futures` and `js_sys` crate-path options
   on a `#[wasm_bindgen] impl` block now apply to its methods; previously they
   were ignored there.
