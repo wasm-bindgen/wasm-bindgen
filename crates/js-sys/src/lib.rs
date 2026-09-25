@@ -41,7 +41,6 @@ use core::cmp::Ordering;
 #[cfg(not(js_sys_unstable_apis))]
 use core::convert::Infallible;
 use core::convert::{self, TryFrom};
-use core::f64;
 use core::fmt;
 use core::iter::{self, Product, Sum};
 use core::marker::PhantomData;
