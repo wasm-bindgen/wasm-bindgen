@@ -18,6 +18,7 @@ console.log(namedStruct.inner); // 42
 named_struct_by_shared_ref(namedStruct);
 named_struct_by_exclusive_ref(namedStruct);
 named_struct_by_value(namedStruct);
+// `namedStruct` has been moved into Rust and can no longer be used.
 
 let optionalNamedStruct = return_optional_named_struct(42);
 named_struct_by_optional_value(optionalNamedStruct);
