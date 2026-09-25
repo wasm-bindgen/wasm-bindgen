@@ -19,3 +19,17 @@ help: consider importing one of these functions
    |
 3  + use wasm_bindgen_futures::future_to_promise;
    |
+
+error[E0425]: cannot find function `future_to_promise` in module `test`
+  --> ui-tests/wasm-bindgen.rs:61:1
+   |
+61 | #[wasm_bindgen(wasm_bindgen_futures = test)]
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not found in `test`
+   |
+   = note: this error originates in the attribute macro `wasm_bindgen::prelude::__wasm_bindgen_class_marker` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider importing one of these functions
+   |
+3  + use js_sys::futures::future_to_promise;
+   |
+3  + use wasm_bindgen_futures::future_to_promise;
+   |

@@ -38,6 +38,11 @@
 
 ### Fixed
 
+* The `wasm_bindgen`, `wasm_bindgen_futures` and `js_sys` crate-path options
+  on a `#[wasm_bindgen] impl` block now apply to its methods; previously they
+  were ignored there.
+  [#5333](https://github.com/wasm-bindgen/wasm-bindgen/pull/5333)
+
 * Struct field getters no longer trigger the `unsafe_op_in_unsafe_fn` lint
   (warn by default in edition 2024) when the field name comes from a
   `macro_rules!` body, for example through `paste!`.
