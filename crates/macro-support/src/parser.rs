@@ -1167,11 +1167,13 @@ impl<'a>
             // enclosing `extern "C"` block) is part of a binding's identity:
             // two otherwise identical imports that differ only in their
             // namespace resolve to different JS values, so they must not share
-            // a shim name. Hashing is gated on `None` so that shim names for
-            // imports without a namespace are unchanged.
-            let hash = match js_namespace {
-                None => ShortHash(data).to_string(),
-                Some(ns) => ShortHash((data, ns)).to_string(),
+            // a shim name. The same holds for the contents of an `inline_js`
+            // snippet (see `inline_js_snippet`). Both are only hashed when
+            // present so that other shim names are unchanged.
+            let hash = match (js_namespace, inline_js_snippet(program, module)) {
+                (None, None) => ShortHash(data).to_string(),
+                (Some(ns), None) => ShortHash((data, ns)).to_string(),
+                (ns, Some(snippet)) => ShortHash((data, ns, snippet)).to_string(),
             };
             format!(
                 "__wbg_{}_{hash}",
@@ -1394,11 +1396,15 @@ impl<'a>
             .unwrap_or(&default_name)
             .to_string();
         let unraw_ident = self.ident.unraw();
-        // As for functions above, the resolved `js_namespace` is part of the
-        // binding's identity, gated on `None` to keep existing names.
-        let hash = match js_namespace {
-            None => ShortHash((&js_name, module, &unraw_ident)).to_string(),
-            Some(ns) => ShortHash((&js_name, module, &unraw_ident, ns)).to_string(),
+        // As for functions above, the resolved `js_namespace` and the
+        // `inline_js` snippet are part of the binding's identity, and are only
+        // hashed when present to keep existing names.
+        let hash = match (js_namespace, inline_js_snippet(program, module)) {
+            (None, None) => ShortHash((&js_name, module, &unraw_ident)).to_string(),
+            (Some(ns), None) => ShortHash((&js_name, module, &unraw_ident, ns)).to_string(),
+            (ns, Some(snippet)) => {
+                ShortHash((&js_name, module, &unraw_ident, ns, snippet)).to_string()
+            }
         };
         let shim = format!("__wbg_static_accessor_{unraw_ident}_{hash}");
         let thread_local = opts.get_thread_local()?;
@@ -3106,6 +3112,22 @@ pub fn module_from_opts(
     };
     Diagnostic::from_vec(errors)?;
     Ok(module)
+}
+
+/// Returns the contents of the `inline_js` snippet an import comes from.
+///
+/// Every `#[wasm_bindgen]` invocation parses into its own `Program`, so the
+/// snippet of each `inline_js` extern block is `ImportModule::Inline(0)`. The
+/// index alone therefore can't tell two snippets apart, and shim names hash
+/// the snippet contents instead, as `Program::link_function_name` does.
+fn inline_js_snippet<'a>(
+    program: &'a ast::Program,
+    module: &Option<ast::ImportModule>,
+) -> Option<&'a str> {
+    match module {
+        Some(ast::ImportModule::Inline(idx)) => Some(&program.inline_js[*idx]),
+        _ => None,
+    }
 }
 
 /// Get the first type parameter of a generic type, errors on incorrect input.

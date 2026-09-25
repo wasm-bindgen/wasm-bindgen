@@ -9,6 +9,12 @@
 
 ### Fixed
 
+* Imported functions and statics from two different `inline_js` snippets no
+  longer share one binding when they have the same name and signature. The
+  snippet contents are now part of the generated shim name, so each import
+  reads its own snippet's export.
+  [#3878](https://github.com/wasm-bindgen/wasm-bindgen/issues/3878)
+
 ### Removed
 
 ## [0.2.129](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.128...0.2.129)
