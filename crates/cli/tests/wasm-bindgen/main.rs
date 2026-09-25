@@ -3054,14 +3054,19 @@ fn emscripten_exports_hoisted_to_library_symbols() {
 
 #[test]
 fn emscripten_jspi_codegen() {
-    // JSPI on the emscripten target uses exactly the same path as the other
-    // targets: the in-wasm shadow-stack instrumentation plus
-    // `WebAssembly.promising`/`WebAssembly.Suspending` in the JS glue — with
-    // no interaction with emscripten's own JSPI machinery. The emscripten
-    // specifics are purely about the JS library format: exports hoist as
-    // `async function` symbols, the promising cache is a library symbol, and
-    // the suspending import is rewrapped via `__postset` (a Suspending
-    // instance can't be stringified through the compile-time jsifier).
+    // On the emscripten target under `--cfg wasm_bindgen_unstable_jspi` (the
+    // runtime then emits the `__wasm_bindgen_emscripten_jspi_marker` section)
+    // the fibers belong to emscripten's JSPI runtime (`-sJSPI_HOOKS` /
+    // `-sREENTRANT_JSPI`): wasm-bindgen emits no shadow-stack instrumentation
+    // of its own and instead wraps the jspi exports and suspending imports
+    // with the `__jspi_*` lifecycle hook exports that runtime provides.
+    // Without the marker it keeps its own shadow-stack instrumentation, as on
+    // every other target. The JS glue is the same `WebAssembly.promising` /
+    // `WebAssembly.Suspending` as on other targets, in JS library form:
+    // exports hoist as `async function` symbols, the promising cache is a
+    // library symbol, and the suspending import is rewrapped via `__postset`
+    // (a Suspending instance can't be stringified through the compile-time
+    // jsifier).
     let mut project = Project::new("emscripten_jspi_codegen");
     project.file(
         "src/lib.rs",
@@ -3088,11 +3093,94 @@ fn emscripten_jspi_codegen() {
     );
 
     let built = project.build();
-    let mut module = ModuleConfig::new().parse_file(&built).unwrap();
-    module.customs.add(RawCustomSection {
-        name: "__wasm_bindgen_emscripten_marker".into(),
-        data: vec![1],
-    });
+    // `emit_wasm` consumes the custom sections, so parse afresh per emit.
+    let emscripten_module = |jspi_marker: bool| {
+        let mut module = ModuleConfig::new().parse_file(&built).unwrap();
+        module.customs.add(RawCustomSection {
+            name: "__wasm_bindgen_emscripten_marker".into(),
+            data: vec![1],
+        });
+        if jspi_marker {
+            module.customs.add(RawCustomSection {
+                name: "__wasm_bindgen_emscripten_jspi_marker".into(),
+                data: vec![1],
+            });
+        }
+        module
+    };
+
+    // Without the cfg marker, the shadow-stack instrumentation runs against
+    // emscripten's `__stack_pointer` as it does elsewhere.
+    let stack_wasm = project.root.join("emscripten_stack.wasm");
+    emscripten_module(false)
+        .emit_wasm_file(&stack_wasm)
+        .unwrap();
+    let stack_dir = project.root.join("pkg-emscripten-stack");
+    fs::create_dir_all(&stack_dir).unwrap();
+    wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
+        "wasm-bindgen".as_ref(),
+        "--out-dir".as_ref(),
+        stack_dir.as_os_str(),
+        stack_wasm.as_os_str(),
+    ])
+    .unwrap();
+    let stack_module = ModuleConfig::new()
+        .parse_file(stack_dir.join("emscripten_stack_bg.wasm"))
+        .unwrap();
+    assert!(
+        stack_module
+            .globals
+            .iter()
+            .any(|g| g.name.as_deref() == Some("__jspi_stack_base")),
+        "without the marker the output should carry the __jspi_stack_base global"
+    );
+
+    // With the marker but without emscripten's hook runtime linked in, JSPI
+    // is refused with a pointer at the link flag.
+    let no_hooks_wasm = project.root.join("emscripten_no_hooks.wasm");
+    emscripten_module(true)
+        .emit_wasm_file(&no_hooks_wasm)
+        .unwrap();
+    let no_hooks_dir = project.root.join("pkg-emscripten-no-hooks");
+    fs::create_dir_all(&no_hooks_dir).unwrap();
+    let err = wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
+        "wasm-bindgen".as_ref(),
+        "--out-dir".as_ref(),
+        no_hooks_dir.as_os_str(),
+        no_hooks_wasm.as_os_str(),
+    ])
+    .unwrap_err();
+    assert!(
+        format!("{err:?}").contains("-sJSPI_HOOKS"),
+        "missing hooks should be reported:\n{err:?}"
+    );
+
+    // Stand in for libjspi: the four hook exports emscripten's
+    // `REQUIRED_EXPORTS` puts in the linked module.
+    let mut module = emscripten_module(true);
+    let before = module.types.add(&[], &[walrus::ValType::I64]);
+    let after = module
+        .types
+        .add(&[walrus::ValType::I64, walrus::ValType::I32], &[]);
+    for (name, ty) in [
+        ("__jspi_enter", before),
+        ("__jspi_exit", after),
+        ("__jspi_suspend", before),
+        ("__jspi_resume", after),
+    ] {
+        let (params, results) = {
+            let ty = module.types.get(ty);
+            (ty.params().to_vec(), ty.results().to_vec())
+        };
+        let mut builder = walrus::FunctionBuilder::new(&mut module.types, &params, &results);
+        let locals: Vec<_> = params.iter().map(|p| module.locals.add(*p)).collect();
+        if !results.is_empty() {
+            builder.func_body().i64_const(0);
+        }
+        let func = builder.finish(locals, &mut module.funcs);
+        module.funcs.get_mut(func).name = Some(name.to_string());
+        module.exports.add(name, func);
+    }
     let emscripten_wasm = project.root.join("emscripten_input.wasm");
     module.emit_wasm_file(&emscripten_wasm).unwrap();
 
@@ -3118,8 +3206,10 @@ fn emscripten_jspi_codegen() {
         lib.contains("$compute: async function compute("),
         "compute should hoist as an async library function:\n{lib}"
     );
+    // The promising target is the raw export: the mangled `_do_work` binding
+    // may be an assertion wrapper under emcc's `-sASSERTIONS`.
     assert!(
-        lib.contains("WebAssembly.promising(_do_work)"),
+        lib.contains("WebAssembly.promising(wasmExports[\"do_work\"])"),
         "do_work should call through WebAssembly.promising:\n{lib}"
     );
     assert!(
@@ -3138,17 +3228,49 @@ fn emscripten_jspi_codegen() {
         "the Suspending postset should target the sleep import:\n{lib}"
     );
 
-    // The in-wasm instrumentation ran: the fiber base global exists and the
-    // jspi exports are wired to their wrappers.
+    // The wasm carries the hook wrappers and none of the shadow-stack
+    // machinery of the non-emscripten transform.
     let out_module = ModuleConfig::new()
         .parse_file(out_dir.join("emscripten_input_bg.wasm"))
         .unwrap();
     assert!(
-        out_module
+        !out_module
             .globals
             .iter()
             .any(|g| g.name.as_deref() == Some("__jspi_stack_base")),
-        "output wasm should contain the __jspi_stack_base global"
+        "emscripten output must not carry wasm-bindgen's fiber stack globals"
+    );
+    let calls_hook = |export: &str, hook: &str| {
+        let walrus::ExportItem::Function(f) = out_module
+            .exports
+            .iter()
+            .find(|e| e.name == export)
+            .unwrap()
+            .item
+        else {
+            panic!("`{export}` is not a function export")
+        };
+        let hook = out_module.funcs.by_name(hook).unwrap();
+        let walrus::FunctionKind::Local(local) = &out_module.funcs.get(f).kind else {
+            panic!("`{export}` should be a local function")
+        };
+        struct Scan(walrus::FunctionId, bool);
+        impl<'a> walrus::ir::Visitor<'a> for Scan {
+            fn visit_call(&mut self, call: &walrus::ir::Call) {
+                self.1 |= call.func == self.0;
+            }
+        }
+        let mut scan = Scan(hook, false);
+        walrus::ir::dfs_in_order(&mut scan, local, local.entry_block());
+        scan.1
+    };
+    assert!(
+        calls_hook("do_work", "__jspi_enter") && calls_hook("do_work", "__jspi_exit"),
+        "do_work export should be wrapped with the enter/exit hooks"
+    );
+    assert!(
+        calls_hook("compute", "__jspi_enter"),
+        "compute export should be wrapped with the enter hook"
     );
 }
 
@@ -3370,6 +3492,446 @@ fn emscripten_end_to_end() {
         .success()
         .stdout(str::contains("main ran"))
         .stdout(str::contains("ok\n"));
+}
+
+/// JSPI on emscripten through its lifecycle hooks, built as a user would with
+/// `--cfg wasm_bindgen_unstable_jspi` and `-sJSPI -sJSPI_HOOKS`. Needs an
+/// emcc carrying the hooks (`<emscripten/jspi.h>`), a `wasm-opt` with the
+/// `--jspi-hooks` pass, and a JSPI-capable node; skipped otherwise (CI
+/// overlays the emscripten patchset for it). `-sREENTRANT_JSPI` implies the
+/// hooks and gives every activation its own shadow stack, so the same program
+/// also runs with interleaved suspensions under it.
+#[test]
+fn emscripten_end_to_end_jspi() {
+    emscripten_jspi_end_to_end("emscripten_end_to_end_jspi", false);
+}
+
+#[test]
+fn emscripten_end_to_end_reentrant_jspi() {
+    emscripten_jspi_end_to_end("emscripten_end_to_end_reentrant_jspi", true);
+}
+
+fn emscripten_jspi_end_to_end(name: &str, reentrant: bool) {
+    let Some(emcc) = which("emcc") else {
+        eprintln!("skipping {name}: `emcc` not found on PATH");
+        return;
+    };
+    let emcc = fs::canonicalize(&emcc).unwrap();
+    if !emcc
+        .parent()
+        .unwrap()
+        .join("system/include/emscripten/jspi.h")
+        .is_file()
+    {
+        skip_jspi(
+            name,
+            "`emcc` has no JSPI lifecycle hooks (emscripten#27698)",
+        );
+        return;
+    }
+    let Some(node_flags) = node_jspi_flags() else {
+        skip_jspi(name, "the `node` on PATH lacks JSPI (needs Node >= 24)");
+        return;
+    };
+
+    let mut project = Project::new(name);
+    project.target("wasm32-unknown-emscripten");
+    project
+        .file(
+            "Cargo.toml",
+            &format!(
+                r#"
+                [package]
+                name = "{name}"
+                version = "0.0.0"
+                edition = "2021"
+
+                [dependencies]
+                wasm-bindgen = {{ path = "{root}" }}
+                wasm-bindgen-futures = {{ path = "{root}/crates/futures" }}
+                js-sys = {{ path = "{root}/crates/js-sys" }}
+
+                # The workspace `.cargo/config.toml` applies here too and
+                # enables the tokio cfg, so its patches are needed as well.
+                [patch.crates-io]
+                mio = {{ git = "https://github.com/guybedford/mio", tag = "1.2.3-cf.emscripten" }}
+                tokio = {{ git = "https://github.com/guybedford/tokio", tag = "1.53.1-cf.emscripten" }}
+
+                [workspace]
+                "#,
+                root = REPO_ROOT.display(),
+            ),
+        )
+        .file(
+            ".cargo/config.toml",
+            r#"
+            [target.wasm32-unknown-emscripten]
+            rustflags = [
+              "-Cpanic=abort",
+              "-Cllvm-args=-enable-emscripten-cxx-exceptions=0",
+              "-Crelocation-model=static",
+              "--cfg=wasm_bindgen_unstable_jspi",
+              "-Clink-arg=-sWASM_BINDGEN",
+              "-Clink-arg=-Wno-experimental",
+              "-Clink-arg=-sJSPI",
+              "-Clink-arg=-sJSPI_HOOKS",
+              "-Clink-arg=-sMODULARIZE",
+              "-Clink-arg=-sEXPORT_ES6",
+            ]
+            "#,
+        )
+        .file(
+            "src/main.rs",
+            r#"
+            #![allow(deprecated)]
+            use wasm_bindgen::prelude::*;
+
+            #[wasm_bindgen]
+            extern "C" {
+                #[wasm_bindgen(suspending)]
+                fn sleep_ms(ms: u32) -> u32;
+                #[wasm_bindgen(catch, suspending)]
+                fn settle(value: u32, reject: bool) -> Result<u32, JsValue>;
+                fn note(value: u32);
+            }
+
+            // A sync export that parks mid-frame on a suspending import.
+            #[wasm_bindgen(jspi)]
+            pub fn sleep_then(ms: u32, value: u32) -> u32 {
+                sleep_ms(ms) + value
+            }
+
+            // The rejection-to-data protocol of a `catch` suspending import.
+            #[wasm_bindgen(jspi)]
+            pub fn try_settle(value: u32, reject: bool) -> u32 {
+                match settle(value, reject) {
+                    Ok(v) => v,
+                    Err(e) => e.as_f64().unwrap() as u32 + 1000,
+                }
+            }
+
+            // Suspending on an arbitrary promise from sync code.
+            #[wasm_bindgen(jspi)]
+            pub fn block_on(p: js_sys::Promise) -> u32 {
+                js_sys::futures::jspi_block_on_promise(&p).unwrap().as_f64().unwrap() as u32
+            }
+
+            // Context inheritance: a plain `spawn_local` from a jspi export
+            // is promising-entered, so its poll may suspend on sync calls.
+            #[wasm_bindgen(jspi)]
+            pub fn spawn_suspending(ms: u32, value: u32) {
+                wasm_bindgen_futures::spawn_local(async move {
+                    note(sleep_ms(ms) + value);
+                });
+            }
+
+            fn main() {
+                println!("main ran");
+            }
+            "#,
+        );
+    if reentrant {
+        // Implies `-sJSPI_HOOKS`; passed alongside the config's flags.
+        project.cargo_cmd.env("EMCC_CFLAGS", "-sREENTRANT_JSPI");
+    }
+
+    let cli_dir = Path::new(env!("CARGO_BIN_EXE_wasm-bindgen"))
+        .parent()
+        .unwrap();
+    let path = env::join_paths(
+        std::iter::once(cli_dir.to_path_buf())
+            .chain(env::split_paths(&env::var_os("PATH").unwrap_or_default())),
+    )
+    .unwrap();
+    project.cargo_cmd.env("PATH", path);
+
+    let wasm = project.build();
+    let js = wasm.with_extension("js");
+    let out_dir = project.root.join("pkg");
+    fs::create_dir_all(&out_dir).unwrap();
+    fs::copy(&js, out_dir.join(format!("{name}.js"))).unwrap();
+    fs::copy(&wasm, out_dir.join(format!("{name}.wasm"))).unwrap();
+    fs::write(out_dir.join("package.json"), r#"{ "type": "module" }"#).unwrap();
+    fs::write(
+        out_dir.join("run.mjs"),
+        format!(
+            r#"
+        const assert = (c, msg) => {{ if (!c) throw new Error('assertion failed: ' + msg); }};
+        const notes = [];
+        globalThis.sleep_ms = ms => new Promise(r => setTimeout(() => r(ms), ms));
+        globalThis.settle = (value, reject) =>
+            reject ? Promise.reject(value) : Promise.resolve(value);
+        globalThis.note = v => notes.push(v);
+
+        const {{ default: Module }} = await import('./{name}.js');
+        const m = await Module();
+
+        // A sync jspi export returns a promise and really waited.
+        const t0 = Date.now();
+        const slept = m.sleep_then(30, 1);
+        assert(slept instanceof Promise, 'jspi export returns a Promise');
+        assert(await slept === 31, 'sleep_then');
+        assert(Date.now() - t0 >= 25, 'sleep_then waited');
+
+        // Under -sREENTRANT_JSPI several fibers may be parked at once.
+        if ({reentrant}) {{
+            const many = await Promise.all([m.sleep_then(20, 1), m.sleep_then(5, 2), m.sleep_then(10, 3)]);
+            assert(many.join() === '21,7,13', `interleaved ${{many}}`);
+        }}
+
+        assert(await m.try_settle(7, false) === 7, 'catch suspending fulfilled');
+        assert(await m.try_settle(7, true) === 1007, 'catch suspending rejected as data');
+        assert(await m.block_on(Promise.resolve(41)) === 41, 'jspi_block_on_promise');
+
+        // The spawned task suspends on its own fiber after the export returned.
+        await m.spawn_suspending(10, 100);
+        assert(notes.length === 0, 'spawned task has not run yet');
+        await new Promise(r => setTimeout(r, 60));
+        assert(notes.join() === '110', `spawn_local inherited the JSPI context: ${{notes}}`);
+
+        console.log('ok');
+        "#
+        ),
+    )
+    .unwrap();
+
+    Command::new("node")
+        .args(node_flags)
+        .arg("run.mjs")
+        .current_dir(&out_dir)
+        .assert()
+        .success()
+        .stdout(str::contains("main ran"))
+        .stdout(str::contains("ok\n"));
+}
+
+/// `#[wasm_bindgen(jspi, experimental_tokio)]`: a promising export that runs
+/// its future to completion with `block_on` on a tokio runtime which parks by
+/// JSPI suspension of the activation, so invocations interleave at every
+/// wait; tokio's fiber-owned runtime context (`tokio_unstable_jspi_hooks`)
+/// lets a sibling enter while another is parked, whether the park is tokio's
+/// own or a suspension issued from task code. Built with
+/// `-sJSPI -sREENTRANT_JSPI`.
+#[test]
+fn emscripten_end_to_end_jspi_tokio() {
+    let Some((out_dir, node_flags)) =
+        emscripten_jspi_tokio_project("emscripten_end_to_end_jspi_tokio")
+    else {
+        return;
+    };
+    Command::new("node")
+        .args(node_flags)
+        .arg("run.mjs")
+        .current_dir(&out_dir)
+        .assert()
+        .success()
+        .stdout(str::contains("main ran"))
+        .stdout(str::contains("ok\n"));
+}
+
+/// Builds the `jspi, experimental_tokio` program and its `run.mjs`; `None`
+/// when the toolchain lacks the JSPI hooks or a JSPI-capable node.
+fn emscripten_jspi_tokio_project(name: &str) -> Option<(PathBuf, &'static [&'static str])> {
+    let Some(emcc) = which("emcc") else {
+        eprintln!("skipping {name}: `emcc` not found on PATH");
+        return None;
+    };
+    let emcc = fs::canonicalize(&emcc).unwrap();
+    if !emcc
+        .parent()
+        .unwrap()
+        .join("system/include/emscripten/jspi.h")
+        .is_file()
+    {
+        skip_jspi(
+            name,
+            "`emcc` has no JSPI lifecycle hooks (emscripten#27698)",
+        );
+        return None;
+    }
+    let Some(node_flags) = node_jspi_flags() else {
+        skip_jspi(name, "the `node` on PATH lacks JSPI (needs Node >= 24)");
+        return None;
+    };
+
+    let mut project = Project::new(name);
+    project.target("wasm32-unknown-emscripten");
+    project
+        .file(
+            "Cargo.toml",
+            &format!(
+                r#"
+                [package]
+                name = "{name}"
+                version = "0.0.0"
+                edition = "2021"
+
+                [dependencies]
+                wasm-bindgen = {{ path = "{root}" }}
+                wasm-bindgen-futures = {{ path = "{root}/crates/futures" }}
+                js-sys = {{ path = "{root}/crates/js-sys" }}
+                tokio = {{ version = "1", default-features = false, features = ["rt", "time"] }}
+
+                [patch.crates-io]
+                mio = {{ git = "https://github.com/guybedford/mio", tag = "1.2.3-cf.emscripten" }}
+                tokio = {{ git = "https://github.com/guybedford/tokio", tag = "1.53.1-cf.emscripten" }}
+
+                [workspace]
+                "#,
+                root = REPO_ROOT.display(),
+            ),
+        )
+        .file(
+            ".cargo/config.toml",
+            r#"
+            [target.wasm32-unknown-emscripten]
+            rustflags = [
+              "-Cpanic=abort",
+              "-Cllvm-args=-enable-emscripten-cxx-exceptions=0",
+              "-Crelocation-model=static",
+              "--cfg=wasm_bindgen_unstable_jspi",
+              "--cfg=wasm_bindgen_unstable_tokio",
+              "--cfg=tokio_unstable",
+              "--cfg=tokio_unstable_jspi_hooks",
+              "-Clink-arg=-sWASM_BINDGEN",
+              "-Clink-arg=-Wno-experimental",
+              "-Clink-arg=-sJSPI",
+              "-Clink-arg=-sREENTRANT_JSPI",
+              "-Clink-arg=-sMODULARIZE",
+              "-Clink-arg=-sEXPORT_ES6",
+            ]
+            "#,
+        )
+        .file(
+            "src/main.rs",
+            r#"
+            #![allow(deprecated)]
+            use wasm_bindgen::prelude::*;
+            use std::time::Duration;
+
+            #[wasm_bindgen]
+            extern "C" {
+                #[wasm_bindgen(suspending)]
+                fn sleep_ms(ms: u32) -> u32;
+            }
+
+            // (a) tokio waits park the activation; a spawned task is joined.
+            #[wasm_bindgen(jspi, experimental_tokio)]
+            pub async fn sleep_and_spawn(ms: u32) -> u32 {
+                tokio::time::sleep(Duration::from_millis(ms as u64)).await;
+                tokio::spawn(async move { ms + 1 }).await.unwrap()
+            }
+
+            // (b) each invocation owns its runtime and parks independently.
+            #[wasm_bindgen(jspi, experimental_tokio = "isolated")]
+            pub async fn isolated_sleep(ms: u32) -> u32 {
+                tokio::time::sleep(Duration::from_millis(ms as u64)).await;
+                ms
+            }
+
+            // (c) a JSPI suspension issued directly by the root.
+            #[wasm_bindgen(jspi, experimental_tokio)]
+            pub async fn block_on_promise(p: js_sys::Promise) -> u32 {
+                let v = js_sys::futures::jspi_block_on_promise(&p).unwrap().as_f64().unwrap() as u32;
+                tokio::time::sleep(Duration::from_millis(1)).await;
+                v + 2
+            }
+
+            // (d) a suspension issued from task code rather than by tokio.
+            #[wasm_bindgen(jspi, experimental_tokio)]
+            pub async fn task_suspends(ms: u32) -> u32 {
+                tokio::spawn(async move { sleep_ms(ms) }).await.unwrap() + 3
+            }
+
+            #[wasm_bindgen(jspi, experimental_tokio = "isolated")]
+            pub async fn isolated_task_suspends(ms: u32) -> u32 {
+                tokio::spawn(async move { sleep_ms(ms) }).await.unwrap() + 4
+            }
+
+            fn main() {
+                println!("main ran");
+            }
+            "#,
+        );
+
+    let cli_dir = Path::new(env!("CARGO_BIN_EXE_wasm-bindgen"))
+        .parent()
+        .unwrap();
+    let path = env::join_paths(
+        std::iter::once(cli_dir.to_path_buf())
+            .chain(env::split_paths(&env::var_os("PATH").unwrap_or_default())),
+    )
+    .unwrap();
+    project.cargo_cmd.env("PATH", path);
+
+    let wasm = project.build();
+    let js = wasm.with_extension("js");
+    // To JS these are sync jspi exports: promising-entered, so the runtime's
+    // parks suspend the activation, and awaited to the value.
+    let glue = fs::read_to_string(&js).unwrap();
+    for export in ["sleep_and_spawn", "isolated_sleep"] {
+        assert!(
+            glue.contains(&format!("WebAssembly.promising(wasmExports[\"{export}\"])")),
+            "{export} should be entered through WebAssembly.promising"
+        );
+    }
+    let out_dir = project.root.join("pkg");
+    fs::create_dir_all(&out_dir).unwrap();
+    fs::copy(&js, out_dir.join(format!("{name}.js"))).unwrap();
+    fs::copy(&wasm, out_dir.join(format!("{name}.wasm"))).unwrap();
+    fs::write(out_dir.join("package.json"), r#"{ "type": "module" }"#).unwrap();
+    fs::write(
+        out_dir.join("run.mjs"),
+        format!(
+            r#"
+        const assert = (c, msg) => {{ if (!c) throw new Error('assertion failed: ' + msg); }};
+        globalThis.sleep_ms = ms => new Promise(r => setTimeout(() => r(ms), ms));
+        const {{ default: Module }} = await import('./{name}.js');
+        const m = await Module();
+
+        let t0 = Date.now();
+        const a = m.sleep_and_spawn(20);
+        assert(a instanceof Promise, 'a jspi export returns a Promise');
+        assert(await a === 21, 'sleep_and_spawn');
+        assert(Date.now() - t0 >= 15, 'the tokio timer waited');
+
+        // Independent parking: completion follows the sleep lengths.
+        const order = [];
+        t0 = Date.now();
+        const settled = await Promise.all([40, 10, 25].map(ms => m.isolated_sleep(ms).then(v => {{ order.push(v); return v; }})));
+        assert(settled.join() === '40,10,25', `isolated results ${{settled}}`);
+        assert(order.join() === '10,25,40', `isolated completion order ${{order}}`);
+        assert(Date.now() - t0 < 80, `isolated invocations overlapped (${{Date.now() - t0}} ms)`);
+
+        // The shared runtime: a sibling enters while another is parked.
+        order.length = 0;
+        t0 = Date.now();
+        await Promise.all([40, 10].map(ms => m.sleep_and_spawn(ms).then(v => order.push(v))));
+        assert(order.join() === '11,41', `ambient completion order ${{order}}`);
+        assert(Date.now() - t0 < 80, `ambient invocations overlapped (${{Date.now() - t0}} ms)`);
+
+        assert(await m.block_on_promise(Promise.resolve(40)) === 42, 'jspi_block_on_promise in the root');
+        assert(await m.task_suspends(5) === 8, 'a suspension inside task code');
+
+        // A sibling enters while a task-issued suspension holds another
+        // activation parked. On the shared runtime the parked activation
+        // owns the scheduler core mid-poll, so the sibling's timers only
+        // fire once it resumes; an isolated runtime parks independently.
+        order.length = 0;
+        await Promise.all([m.task_suspends(40).then(v => order.push(v)), m.sleep_and_spawn(5).then(v => order.push(v))]);
+        assert(order.join() === '43,6', `ambient sibling during a task suspension ${{order}}`);
+        order.length = 0;
+        t0 = Date.now();
+        await Promise.all([m.isolated_task_suspends(40).then(v => order.push(v)), m.isolated_sleep(5).then(v => order.push(v))]);
+        assert(order.join() === '5,44', `isolated sibling during a task suspension ${{order}}`);
+        assert(Date.now() - t0 < 80, `isolated sibling overlapped (${{Date.now() - t0}} ms)`);
+
+        console.log('ok');
+        "#
+        ),
+    )
+    .unwrap();
+    Some((out_dir, node_flags))
 }
 
 #[test]
@@ -4141,6 +4703,15 @@ const JSPI_LIB_RS: &str = r#"
 /// Node removes the flag entirely), `--experimental-wasm-jspi` on Node 24.
 /// `None` (skip) on older Node, which either rejects the flag (≤ 20) or
 /// lacks the API (22).
+/// Skips an emscripten JSPI test for a toolchain reason, or fails when CI
+/// asserts the toolchain is present (`WASM_BINDGEN_REQUIRE_EMSCRIPTEN_JSPI`).
+fn skip_jspi(name: &str, reason: &str) {
+    if env::var_os("WASM_BINDGEN_REQUIRE_EMSCRIPTEN_JSPI").is_some() {
+        panic!("{name}: {reason}, but WASM_BINDGEN_REQUIRE_EMSCRIPTEN_JSPI is set");
+    }
+    eprintln!("skipping {name}: {reason}");
+}
+
 fn node_jspi_flags() -> Option<&'static [&'static str]> {
     const PROBE: &str = "process.exit(typeof WebAssembly.Suspending === 'function' ? 0 : 1)";
     const FLAGGED: &[&str] = &["--experimental-wasm-jspi"];
@@ -4170,7 +4741,7 @@ fn run_jspi_test(
     describe_body: &str,
 ) {
     let Some(node_flags) = node_jspi_flags() else {
-        eprintln!("skipping {name}: the `node` on PATH lacks JSPI (needs Node >= 24)");
+        skip_jspi(name, "the `node` on PATH lacks JSPI (needs Node >= 24)");
         return;
     };
 

@@ -2,6 +2,7 @@ pub mod catch_handler;
 pub mod export_sp_restore;
 pub mod externref;
 pub mod jspi;
+pub mod jspi_hooks;
 pub mod multi_value;
 pub mod threads;
 

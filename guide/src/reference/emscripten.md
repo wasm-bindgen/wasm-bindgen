@@ -4,8 +4,9 @@
 `wasm32-unknown-unknown`. Emscripten links a libc, an in-memory file system,
 POSIX-style APIs and its own JavaScript runtime around the Wasm, so more of
 `std` works out of the box (`std::fs`, `std::time`, `std::env`, ...), Rust can
-be linked against C/C++ sources, and a Tokio runtime can drive exported async
-functions (see [Tokio](#tokio)). Otherwise `wasm32-unknown-unknown` stays the
+be linked against C/C++ sources, a Tokio runtime can drive exported async
+functions (see [Tokio](#tokio)), and JSPI goes through Emscripten's own fiber
+runtime (see [JSPI](#jspi)). Otherwise `wasm32-unknown-unknown` stays the
 right default: it has the smallest runtime and the fastest cold start.
 
 > **Experimental.** Emscripten support is newer than the rest of `wasm-bindgen`
@@ -195,18 +196,14 @@ rustflags = ["--cfg=wasm_bindgen_unstable_tokio", "--cfg=tokio_unstable", ...]
 The reactor also needs Emscripten's epoll readiness listeners
 ([emscripten#27547]) and async DNS ([emscripten#27742]), not yet in a
 release. The `6.0.10-cf.emscripten` tag of [guybedford/emscripten] is
-Emscripten 6.0.10 plus those two changes; with emsdk 6.0.10 installed and
-activated, use its checkout in place of emsdk's `upstream/emscripten` (replace
-that directory, or point `EM_CONFIG` at a config reusing emsdk's toolchain):
+Emscripten 6.0.10 plus those changes; with `emcc` 6.0.10 (emsdk, Homebrew,
+...) already on `PATH`, use its checkout as the frontend over that toolchain:
 
 ```sh
-git clone --branch 6.0.10-cf.emscripten https://github.com/guybedford/emscripten
-cat > emscripten/.emscripten <<EOF
-LLVM_ROOT = '$EMSDK/upstream/bin'
-BINARYEN_ROOT = '$EMSDK/upstream'
-NODE_JS = '$(command -v node)'
-EOF
-export EM_CONFIG=$PWD/emscripten/.emscripten PATH=$PWD/emscripten:$PATH
+git clone --depth 1 --branch 6.0.10-cf.emscripten https://github.com/guybedford/emscripten
+(cd emscripten && ./bootstrap.py)
+printf "LLVM_ROOT = '%s'\nBINARYEN_ROOT = '%s'\n" "$(em-config LLVM_ROOT)" "$(em-config BINARYEN_ROOT)" > emscripten/.emscripten
+export PATH=$PWD/emscripten:$PATH
 ```
 
 Timers, `tokio::spawn` and the sync primitives work on stock Emscripten
@@ -218,6 +215,153 @@ Timers, `tokio::spawn` and the sync primitives work on stock Emscripten
 [emscripten#27547]: https://github.com/emscripten-core/emscripten/pull/27547
 [emscripten#27742]: https://github.com/emscripten-core/emscripten/pull/27742
 [guybedford/emscripten]: https://github.com/guybedford/emscripten/tree/6.0.10-cf.emscripten
+
+## JSPI
+
+> **Experimental.** This depends on Emscripten's JSPI lifecycle hooks, which
+> have not shipped in an Emscripten release, and is subject to change.
+
+### Getting started
+
+1. Emscripten 6.0.10 with the hooks: the `6.0.10-cf.emscripten` tag of
+   [guybedford/emscripten] (the release plus [emscripten#27698] and
+   [emscripten#27699]) as the frontend over your existing Emscripten install,
+   and the [`version_132_jspi_hooks_1`][binaryen-release] Binaryen, whose
+   `wasm-opt` has the `--jspi-hooks` pass. With `emcc` 6.0.10 (emsdk, Homebrew,
+   ...) already on `PATH`:
+
+   ```sh
+   git clone --depth 1 --branch 6.0.10-cf.emscripten https://github.com/guybedford/emscripten
+   (cd emscripten && ./bootstrap.py)
+   curl -L https://github.com/guybedford/binaryen/releases/download/version_132_jspi_hooks_1/binaryen-version_132_jspi_hooks_1-x86_64-linux.tar.gz | tar xz
+   printf "LLVM_ROOT = '%s'\nBINARYEN_ROOT = '%s'\n" "$(em-config LLVM_ROOT)" "$PWD/binaryen-version_132_jspi_hooks_1" > emscripten/.emscripten
+   export PATH=$PWD/emscripten:$PATH
+   ```
+
+   (Pick the [binaryen asset][binaryen-release] for your platform.)
+
+2. Build with the cfg and link with `-sJSPI` plus the hooks: `-sJSPI_HOOKS`,
+   or `-sREENTRANT_JSPI`, which also gives every promising activation its
+   own shadow stack so any number of them may be suspended at once:
+
+   ```toml
+   # .cargo/config.toml
+   [target.wasm32-unknown-emscripten]
+   rustflags = [
+     "-Cpanic=abort",
+     "-Cllvm-args=-enable-emscripten-cxx-exceptions=0",
+     "-Crelocation-model=static",
+     "--cfg=wasm_bindgen_unstable_jspi",
+     "-Clink-arg=-sWASM_BINDGEN",
+     "-Clink-arg=-sJSPI",
+     "-Clink-arg=-sREENTRANT_JSPI",
+   ]
+   ```
+
+3. Use the [JSPI attributes](jspi.md) as on any other target:
+
+   ```rust
+   #[wasm_bindgen]
+   extern "C" {
+       #[wasm_bindgen(suspending)]
+       fn fetch_text(url: &str) -> String;
+   }
+
+   #[wasm_bindgen(jspi)]
+   pub fn load(url: &str) -> usize {
+       fetch_text(url).len() // parks the activation until the promise settles
+   }
+   ```
+
+4. Run under a JSPI-capable engine (Node 25+, or Node 24 with
+   `--experimental-wasm-jspi`). `jspi` exports return a `Promise`.
+
+### How it works
+
+On this target the fibers belong to Emscripten's JSPI runtime, so instead of
+its own [shadow stack management](jspi.md#shadow-stack-management)
+wasm-bindgen wraps each `#[wasm_bindgen(jspi)]` export and
+`#[wasm_bindgen(suspending)]` import with the runtime's `__jspi_enter` /
+`__jspi_exit` and `__jspi_suspend` / `__jspi_resume` hook exports (the same
+instrumentation binaryen's `--jspi-hooks` pass applies to Emscripten's own
+`JSPI_EXPORTS` and `JSPI_IMPORTS`), and tracks the ambient JSPI context
+through a hook registered with `<emscripten/jspi.h>`. `jspi_block_on_promise`
+and the JSPI context inheritance of `spawn_local` work as on the other
+targets, and Emscripten's own promising exports and suspending imports
+(`main`, `emscripten_sleep`, ...) share the same fiber system.
+
+Without the cfg, JSPI on Emscripten keeps wasm-bindgen's shadow stack
+management: nothing Emscripten-specific is referenced, so stock Emscripten
+links. The runtime built with the cfg marks the module, and only then does
+the CLI require the hooks (failing with a pointer at `-sJSPI_HOOKS` when they
+are missing).
+
+### With Tokio
+
+`jspi` combines with [`experimental_tokio`](#tokio) into a *parked* runtime:
+the export is a promising activation whose body runs the future to completion
+with `block_on` on a current-thread Tokio runtime, and every wait of that
+runtime (timers, I/O readiness, an idle scheduler) is a JSPI suspension of the
+activation. To JS it is a sync `jspi` export: a `Promise` of the value.
+`jspi_block_on_promise` and suspending imports work anywhere inside, in the
+root or in spawned tasks. Invocations interleave at every wait: Tokio's
+fiber-owned runtime context (`--cfg tokio_unstable_jspi_hooks`, in the tagged
+Tokio) lets a sibling invocation enter while another is parked, whether the
+park is Tokio's own or a suspension issued from task code.
+
+```rust
+#[wasm_bindgen(jspi, experimental_tokio)]
+pub async fn handle(req: Request) -> Response {
+    let config = jspi_block_on_promise(&load_config())?; // parks the activation
+    tokio::time::sleep(Duration::from_millis(10)).await;  // parks it too
+    // ...
+}
+```
+
+By default all such exports share the thread's ambient runtime; with
+`experimental_tokio = "isolated"` each invocation owns a fresh runtime,
+dropped once the root settles (tasks still in flight are dropped, the reactor
+closed). The shared runtime has one scheduler core: while an activation is
+suspended from inside a task (a suspending import or `jspi_block_on_promise`
+in task code, rather than a Tokio wait), it holds that core, and a sibling
+invocation's timers and I/O only advance once it resumes. Isolated runtimes
+park independently.
+
+The complete configuration for the combination is the union of the Tokio and
+JSPI ones above: the JSPI toolchain setup (the tag carries the Tokio changes
+too), and Node 25 or newer (Node 24 with `--experimental-wasm-jspi`) to run.
+Crates:
+
+```toml
+# Cargo.toml
+[patch.crates-io]
+mio = { git = "https://github.com/guybedford/mio", tag = "1.2.3-cf.emscripten" }
+tokio = { git = "https://github.com/guybedford/tokio", tag = "1.53.1-cf.emscripten" }
+```
+
+```toml
+# .cargo/config.toml
+[target.wasm32-unknown-emscripten]
+rustflags = [
+  "-Cpanic=abort",
+  "-Cllvm-args=-enable-emscripten-cxx-exceptions=0",
+  "-Crelocation-model=static",
+  "--cfg=wasm_bindgen_unstable_tokio",
+  "--cfg=wasm_bindgen_unstable_jspi",
+  "--cfg=tokio_unstable",
+  "--cfg=tokio_unstable_jspi_hooks",
+  "-Clink-arg=-sWASM_BINDGEN",
+  "-Clink-arg=-sJSPI",
+  "-Clink-arg=-sREENTRANT_JSPI",
+]
+```
+
+`-sREENTRANT_JSPI` (which implies `-sJSPI_HOOKS`) is required: every parked
+activation keeps its own shadow stack.
+
+[emscripten#27698]: https://github.com/emscripten-core/emscripten/pull/27698
+[emscripten#27699]: https://github.com/emscripten-core/emscripten/pull/27699
+[binaryen-release]: https://github.com/guybedford/binaryen/releases/tag/version_132_jspi_hooks_1
 
 ## Limitations
 

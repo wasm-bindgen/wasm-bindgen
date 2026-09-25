@@ -46,4 +46,21 @@ pub fn bad1() {}
 #[wasm_bindgen(wasm_bindgen_futures = test)]
 pub async fn bad2() {}
 
+#[wasm_bindgen]
+pub struct Good;
+
+// Impl-level crate paths reach the methods.
+#[wasm_bindgen(wasm_bindgen = test::wasm_bindgen, wasm_bindgen_futures = wasm_bindgen_futures, js_sys = ::js_sys)]
+impl Good {
+    pub async fn good12(&self) {}
+}
+
+#[wasm_bindgen]
+pub struct Bad;
+
+#[wasm_bindgen(wasm_bindgen_futures = test)]
+impl Bad {
+    pub async fn bad3(&self) {}
+}
+
 fn main() {}

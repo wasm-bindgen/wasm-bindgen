@@ -25,8 +25,9 @@
         return DECORATORS.some(function(d) { return key.endsWith(d); });
     }
 
-    // Defer test execution to allow library_bindgen.js to finish evaluating
-    setTimeout(function() {
+    // Run once every classic script, including library_bindgen.js after this
+    // one, has evaluated.
+    document.addEventListener('DOMContentLoaded', function() {
         try {
             if (typeof window.mergedLibrary.$initBindgen !== 'function') {
                 throw new Error("$initBindgen not found in the merged library.");
@@ -122,6 +123,6 @@
             }
         }       
         elem.textContent +='test result: ok';
-    }, 50); // Small delay pushes this to the end of the event loop
+    });
 
 })();

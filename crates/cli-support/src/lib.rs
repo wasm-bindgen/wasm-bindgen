@@ -382,6 +382,14 @@ impl Bindgen {
             self.mode = OutputMode::Emscripten;
         }
 
+        // Emitted by the runtime under `--cfg wasm_bindgen_unstable_jspi`:
+        // JSPI goes through Emscripten's lifecycle hooks.
+        let emscripten_jspi_hooks = module
+            .customs
+            .remove_raw("__wasm_bindgen_emscripten_jspi_marker")
+            .is_some()
+            && matches!(self.mode, OutputMode::Emscripten);
+
         // Enable reference type transformations if the module is already using it.
         if let Ok(true) = wasm_conventions::target_feature(&module, "reference-types") {
             self.externref = true;
@@ -529,11 +537,12 @@ impl Bindgen {
         // suspending wrappers (via the repointed `implements` entries) so
         // that promise rejections are consumed innermost as data while
         // SuspendError misuse and rethrown exceptions still reach the
-        // abort/catch machinery over a restored shadow stack. The transform
-        // is target agnostic: on emscripten it operates against emscripten's
-        // `__stack_pointer` in exactly the same way, with no interaction
-        // with emscripten's own JSPI machinery.
-        run_jspi_transform(&mut module, self.externref)?;
+        // abort/catch machinery over a restored shadow stack. On emscripten
+        // under `wasm_bindgen_unstable_jspi` the fibers belong to
+        // emscripten's JSPI runtime, so the wrappers call its lifecycle hooks
+        // instead and touch no stack state.
+        let hooks = emscripten_jspi_hooks.then_some(eh_version);
+        run_jspi_transform(&mut module, self.externref, hooks)?;
 
         // Generate Wasm catch wrappers for imports with #[wasm_bindgen(catch)].
         // This runs after externref processing so that we have access to the
@@ -954,8 +963,13 @@ fn split_debug_info(wasm: &[u8], url: &str) -> Result<Vec<u8>, Error> {
 }
 
 /// Instrument `#[wasm_bindgen(jspi)]` exports and `#[wasm_bindgen(suspending)]`
-/// imports with in-wasm shadow-stack management. See `transforms::jspi`.
-fn run_jspi_transform(module: &mut Module, externref: bool) -> Result<(), Error> {
+/// imports with in-wasm shadow-stack management, or with emscripten's JSPI
+/// lifecycle hooks when `hooks` is set. See `transforms::jspi`.
+fn run_jspi_transform(
+    module: &mut Module,
+    externref: bool,
+    hooks: Option<transforms::ExceptionHandlingVersion>,
+) -> Result<(), Error> {
     let mut aux = module
         .customs
         .delete_typed::<wit::WasmBindgenAux>()
@@ -965,7 +979,7 @@ fn run_jspi_transform(module: &mut Module, externref: bool) -> Result<(), Error>
         .delete_typed::<wit::NonstandardWitSection>()
         .expect("wit section should exist");
 
-    let result = transforms::jspi::run(module, &mut aux, &mut wit, externref)
+    let result = transforms::jspi::run(module, &mut aux, &mut wit, externref, hooks)
         .context("failed to instrument module for JSPI");
 
     module.customs.add(*wit);

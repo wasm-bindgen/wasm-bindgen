@@ -43,6 +43,16 @@ pub mod tokio {
     pub fn schedule_isolated<F: ExperimentalTokioSupported, C>(_future: F, _on_complete: C) {
         unreachable!()
     }
+
+    pub fn block_on<F: ExperimentalTokioSupported + core::future::Future>(_future: F) -> F::Output {
+        unreachable!()
+    }
+
+    pub fn block_on_isolated<F: ExperimentalTokioSupported + core::future::Future>(
+        _future: F,
+    ) -> F::Output {
+        unreachable!()
+    }
 }
 
 pub use js_sys;

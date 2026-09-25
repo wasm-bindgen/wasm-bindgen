@@ -2065,6 +2065,17 @@ impl<'a> MacroParse<(Option<BindgenAttrs>, &'a mut TokenStream)> for syn::Item {
             }
             syn::Item::Impl(mut i) => {
                 let opts = opts.unwrap_or_default();
+                // The methods take their crate paths from the class marker,
+                // which reads them off `program`.
+                if let Some(path) = opts.wasm_bindgen() {
+                    program.wasm_bindgen = path.clone();
+                }
+                if let Some(path) = opts.js_sys() {
+                    program.js_sys = path.clone();
+                }
+                if let Some(path) = opts.wasm_bindgen_futures() {
+                    program.wasm_bindgen_futures = path.clone();
+                }
                 (&mut i).macro_parse(program, opts)?;
                 i.to_tokens(tokens);
             }
