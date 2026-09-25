@@ -1,0 +1,293 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `crates/js-sys/src/futures/jspi.rs`."><title>jspi.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-203241e4.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="js_sys" data-themes="" data-resource-suffix="" data-rustdoc-version="1.100.0-nightly (f7575a9da 2026-09-24)" data-channel="nightly" data-search-js="search-b167f383.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-1814ead3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-9f56287d.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">js_sys/futures/</div>jspi.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! Internal JSPI (JS Promise Integration) machinery.
+<a href=#2 id=2 data-nosnippet>2</a>//!
+<a href=#3 id=3 data-nosnippet>3</a>//! The public surface is a single function, `futures::jspi_block_on_promise`:
+<a href=#4 id=4 data-nosnippet>4</a>//! suspend the current promising execution until a JS `Promise` settles. The
+<a href=#5 id=5 data-nosnippet>5</a>//! executor side has no API at all — `spawn_local` (and everything built on
+<a href=#6 id=6 data-nosnippet>6</a>//! it, like `future_to_promise` and async exports) checks the ambient JSPI
+<a href=#7 id=7 data-nosnippet>7</a>//! context at spawn time and enters the task's polls through a
+<a href=#8 id=8 data-nosnippet>8</a>//! `WebAssembly.promising` boundary when spawned from within one, so sync
+<a href=#9 id=9 data-nosnippet>9</a>//! code reached from such a task may itself suspend. The capability is
+<a href=#10 id=10 data-nosnippet>10</a>//! inherited transitively: a task spawned from a promising-entered poll is
+<a href=#11 id=11 data-nosnippet>11</a>//! itself promising-entered.
+<a href=#12 id=12 data-nosnippet>12</a>//!
+<a href=#13 id=13 data-nosnippet>13</a>//! The runtime state is minimal by construction. The suspend bridge,
+<a href=#14 id=14 data-nosnippet>14</a>//! `__wbindgen_jspi_suspend`, is a plain `#[wasm_bindgen(catch, suspending)]`
+<a href=#15 id=15 data-nosnippet>15</a>//! import whose JS body is an identity function: JSPI itself awaits the
+<a href=#16 id=16 data-nosnippet>16</a>//! returned `Promise` and resumes with the settled value, while a rejection
+<a href=#17 id=17 data-nosnippet>17</a>//! is thrown into wasm as a `WebAssembly.JSTag` exception and marshalled to
+<a href=#18 id=18 data-nosnippet>18</a>//! `Err` by the standard `catch + suspending` machinery (see
+<a href=#19 id=19 data-nosnippet>19</a>//! `cli-support/src/transforms/jspi.rs`). The ambient context probe,
+<a href=#20 id=20 data-nosnippet>20</a>//! `__wbindgen_jspi_in_context`, is rewritten in-wasm by the CLI: it reads
+<a href=#21 id=21 data-nosnippet>21</a>//! the `__jspi_stack_base` global when JSPI instrumentation is active and is
+<a href=#22 id=22 data-nosnippet>22</a>//! a constant `0` otherwise, so modules that never use JSPI attributes carry
+<a href=#23 id=23 data-nosnippet>23</a>//! no JSPI machinery and keep running on engines without exnref/JSPI.
+<a href=#24 id=24 data-nosnippet>24</a>//!
+<a href=#25 id=25 data-nosnippet>25</a>//! On the emscripten target under `--cfg wasm_bindgen_unstable_jspi` the
+<a href=#26 id=26 data-nosnippet>26</a>//! fibers belong to emscripten's JSPI runtime (`-sJSPI_HOOKS` /
+<a href=#27 id=27 data-nosnippet>27</a>//! `-sREENTRANT_JSPI`): the CLI wraps the boundaries with its lifecycle hooks
+<a href=#28 id=28 data-nosnippet>28</a>//! instead, and the context probe is a hook registered through
+<a href=#29 id=29 data-nosnippet>29</a>//! `&lt;emscripten/jspi.h&gt;` that tracks whether a fiber is current.
+<a href=#30 id=30 data-nosnippet>30</a>
+<a href=#31 id=31 data-nosnippet>31</a></span><span class="comment">// The `suspending` attribute on the internal bridge import generates an
+<a href=#32 id=32 data-nosnippet>32</a>// experimental-status deprecation warning; this module is itself part of the
+<a href=#33 id=33 data-nosnippet>33</a>// experimental JSPI surface, so silence it here.
+<a href=#34 id=34 data-nosnippet>34</a></span><span class="attr">#![allow(deprecated)]
+<a href=#35 id=35 data-nosnippet>35</a>
+<a href=#36 id=36 data-nosnippet>36</a></span><span class="kw">use </span><span class="kw">crate</span>::Promise;
+<a href=#37 id=37 data-nosnippet>37</a><span class="kw">use </span>alloc::boxed::Box;
+<a href=#38 id=38 data-nosnippet>38</a><span class="kw">use </span>alloc::rc::Rc;
+<a href=#39 id=39 data-nosnippet>39</a><span class="kw">use </span>core::cell::{Cell, RefCell};
+<a href=#40 id=40 data-nosnippet>40</a><span class="kw">use </span>core::future::Future;
+<a href=#41 id=41 data-nosnippet>41</a><span class="kw">use </span>core::mem::ManuallyDrop;
+<a href=#42 id=42 data-nosnippet>42</a><span class="kw">use </span>core::pin::Pin;
+<a href=#43 id=43 data-nosnippet>43</a><span class="kw">use </span>core::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
+<a href=#44 id=44 data-nosnippet>44</a><span class="kw">use </span>wasm_bindgen::prelude::<span class="kw-2">*</span>;
+<a href=#45 id=45 data-nosnippet>45</a>
+<a href=#46 id=46 data-nosnippet>46</a><span class="attr">#[wasm_bindgen(raw_module = <span class="string">"__wbindgen_placeholder__"</span>)]
+<a href=#47 id=47 data-nosnippet>47</a></span><span class="kw">extern </span><span class="string">"C" </span>{
+<a href=#48 id=48 data-nosnippet>48</a>    <span class="attr">#[wasm_bindgen(catch, suspending)]
+<a href=#49 id=49 data-nosnippet>49</a>    </span><span class="kw">fn </span>__wbindgen_jspi_suspend(promise: <span class="kw-2">&amp;</span>Promise) -&gt; <span class="prelude-ty">Result</span>&lt;JsValue, JsValue&gt;;
+<a href=#50 id=50 data-nosnippet>50</a>
+<a href=#51 id=51 data-nosnippet>51</a>    <span class="doccomment">/// Whether a JSPI context is on the stack: a `#[wasm_bindgen(jspi)]`
+<a href=#52 id=52 data-nosnippet>52</a>    /// export or a promising-entered poll. Rewritten in-wasm by the CLI to
+<a href=#53 id=53 data-nosnippet>53</a>    /// read the `__jspi_stack_base` global (constant `0` in modules without
+<a href=#54 id=54 data-nosnippet>54</a>    /// JSPI instrumentation); no JS shim is ever emitted.
+<a href=#55 id=55 data-nosnippet>55</a>    </span><span class="attr">#[cfg(not(all(target_os = <span class="string">"emscripten"</span>, wasm_bindgen_unstable_jspi)))]
+<a href=#56 id=56 data-nosnippet>56</a>    </span><span class="kw">fn </span>__wbindgen_jspi_in_context() -&gt; u32;
+<a href=#57 id=57 data-nosnippet>57</a>
+<a href=#58 id=58 data-nosnippet>58</a>    <span class="doccomment">/// Schedules a task poll on the microtask queue, entered through the
+<a href=#59 id=59 data-nosnippet>59</a>    /// promising-wrapped `__wbg_jspi_task_poll` export so the poll runs
+<a href=#60 id=60 data-nosnippet>60</a>    /// on a fresh suspendable stack. Consumes one strong `Rc&lt;SpawnedTask&gt;`
+<a href=#61 id=61 data-nosnippet>61</a>    /// reference, reclaimed by the trampoline.
+<a href=#62 id=62 data-nosnippet>62</a>    </span><span class="kw">fn </span>__wbindgen_jspi_spawn_poll(task: u32);
+<a href=#63 id=63 data-nosnippet>63</a>
+<a href=#64 id=64 data-nosnippet>64</a>    <span class="doccomment">/// The same operation, called only from the initial schedule in
+<a href=#65 id=65 data-nosnippet>65</a>    /// [`spawn_promising`].
+<a href=#66 id=66 data-nosnippet>66</a>    </span><span class="kw">fn </span>__wbindgen_jspi_spawn_first(task: u32);
+<a href=#67 id=67 data-nosnippet>67</a>}
+<a href=#68 id=68 data-nosnippet>68</a>
+<a href=#69 id=69 data-nosnippet>69</a><span class="doccomment">/// Whether the caller is executing within a JSPI context, i.e. whether a
+<a href=#70 id=70 data-nosnippet>70</a>/// spawned task's polls should be promising-entered.
+<a href=#71 id=71 data-nosnippet>71</a></span><span class="attr">#[cfg(not(all(target_os = <span class="string">"emscripten"</span>, wasm_bindgen_unstable_jspi)))]
+<a href=#72 id=72 data-nosnippet>72</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>in_context() -&gt; bool {
+<a href=#73 id=73 data-nosnippet>73</a>    __wbindgen_jspi_in_context() != <span class="number">0
+<a href=#74 id=74 data-nosnippet>74</a></span>}
+<a href=#75 id=75 data-nosnippet>75</a>
+<a href=#76 id=76 data-nosnippet>76</a><span class="attr">#[cfg(all(target_os = <span class="string">"emscripten"</span>, wasm_bindgen_unstable_jspi))]
+<a href=#77 id=77 data-nosnippet>77</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>emscripten::in_context;
+<a href=#78 id=78 data-nosnippet>78</a>
+<a href=#79 id=79 data-nosnippet>79</a><span class="doccomment">/// The context probe under emscripten: a lifecycle hook registered with
+<a href=#80 id=80 data-nosnippet>80</a>/// emscripten's JSPI runtime, which reports every fiber's enter, exit,
+<a href=#81 id=81 data-nosnippet>81</a>/// suspend and resume (for wasm-bindgen's and emscripten's own promising
+<a href=#82 id=82 data-nosnippet>82</a>/// exports alike). The per-fiber token carries whether the fiber's host was
+<a href=#83 id=83 data-nosnippet>83</a>/// itself in a fiber, so leaving the fiber restores the host's answer.
+<a href=#84 id=84 data-nosnippet>84</a></span><span class="attr">#[cfg(all(target_os = <span class="string">"emscripten"</span>, wasm_bindgen_unstable_jspi))]
+<a href=#85 id=85 data-nosnippet>85</a></span><span class="kw">mod </span>emscripten {
+<a href=#86 id=86 data-nosnippet>86</a>    <span class="kw">use </span>core::ffi::c_void;
+<a href=#87 id=87 data-nosnippet>87</a>    <span class="kw">use </span>core::sync::atomic::{AtomicBool, Ordering::Relaxed};
+<a href=#88 id=88 data-nosnippet>88</a>
+<a href=#89 id=89 data-nosnippet>89</a>    <span class="kw">const </span>JSPI_ENTER: u32 = <span class="number">1</span>;
+<a href=#90 id=90 data-nosnippet>90</a>    <span class="kw">const </span>JSPI_EXIT: u32 = <span class="number">2</span>;
+<a href=#91 id=91 data-nosnippet>91</a>    <span class="kw">const </span>JSPI_SUSPEND: u32 = <span class="number">4</span>;
+<a href=#92 id=92 data-nosnippet>92</a>    <span class="kw">const </span>JSPI_RESUME: u32 = <span class="number">8</span>;
+<a href=#93 id=93 data-nosnippet>93</a>
+<a href=#94 id=94 data-nosnippet>94</a>    <span class="kw">type </span>Hook = <span class="kw">unsafe extern </span><span class="string">"C" </span><span class="kw">fn</span>(u32, <span class="kw-2">*mut </span>c_void, i32) -&gt; <span class="kw-2">*mut </span>c_void;
+<a href=#95 id=95 data-nosnippet>95</a>
+<a href=#96 id=96 data-nosnippet>96</a>    <span class="kw">extern </span><span class="string">"C" </span>{
+<a href=#97 id=97 data-nosnippet>97</a>        <span class="kw">fn </span>jspi_register(hook: Hook, mask: u32) -&gt; i32;
+<a href=#98 id=98 data-nosnippet>98</a>    }
+<a href=#99 id=99 data-nosnippet>99</a>
+<a href=#100 id=100 data-nosnippet>100</a>    <span class="comment">// Per instance, not per thread: JSPI is rejected under `atomics`.
+<a href=#101 id=101 data-nosnippet>101</a>    </span><span class="kw">static </span>IN_FIBER: AtomicBool = AtomicBool::new(<span class="bool-val">false</span>);
+<a href=#102 id=102 data-nosnippet>102</a>
+<a href=#103 id=103 data-nosnippet>103</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>in_context() -&gt; bool {
+<a href=#104 id=104 data-nosnippet>104</a>        IN_FIBER.load(Relaxed)
+<a href=#105 id=105 data-nosnippet>105</a>    }
+<a href=#106 id=106 data-nosnippet>106</a>
+<a href=#107 id=107 data-nosnippet>107</a>    <span class="kw">unsafe extern </span><span class="string">"C" </span><span class="kw">fn </span>hook(event: u32, token: <span class="kw-2">*mut </span>c_void, _error: i32) -&gt; <span class="kw-2">*mut </span>c_void {
+<a href=#108 id=108 data-nosnippet>108</a>        <span class="kw">match </span>event {
+<a href=#109 id=109 data-nosnippet>109</a>            JSPI_ENTER | JSPI_RESUME =&gt; IN_FIBER.swap(<span class="bool-val">true</span>, Relaxed) <span class="kw">as </span>usize <span class="kw">as </span><span class="kw-2">*mut </span>c_void,
+<a href=#110 id=110 data-nosnippet>110</a>            JSPI_SUSPEND | JSPI_EXIT =&gt; {
+<a href=#111 id=111 data-nosnippet>111</a>                IN_FIBER.store(!token.is_null(), Relaxed);
+<a href=#112 id=112 data-nosnippet>112</a>                token
+<a href=#113 id=113 data-nosnippet>113</a>            }
+<a href=#114 id=114 data-nosnippet>114</a>            <span class="kw">_ </span>=&gt; token,
+<a href=#115 id=115 data-nosnippet>115</a>        }
+<a href=#116 id=116 data-nosnippet>116</a>    }
+<a href=#117 id=117 data-nosnippet>117</a>
+<a href=#118 id=118 data-nosnippet>118</a>    <span class="kw">extern </span><span class="string">"C" </span><span class="kw">fn </span>register() {
+<a href=#119 id=119 data-nosnippet>119</a>        <span class="comment">// -1 without `-sJSPI_HOOKS`: no events, so no fiber is ever current.
+<a href=#120 id=120 data-nosnippet>120</a>        </span><span class="kw">unsafe </span>{
+<a href=#121 id=121 data-nosnippet>121</a>            jspi_register(hook, JSPI_ENTER | JSPI_EXIT | JSPI_SUSPEND | JSPI_RESUME);
+<a href=#122 id=122 data-nosnippet>122</a>        }
+<a href=#123 id=123 data-nosnippet>123</a>    }
+<a href=#124 id=124 data-nosnippet>124</a>
+<a href=#125 id=125 data-nosnippet>125</a>    <span class="attr">#[used]
+<a href=#126 id=126 data-nosnippet>126</a>    #[link_section = <span class="string">".init_array"</span>]
+<a href=#127 id=127 data-nosnippet>127</a>    </span><span class="kw">static </span>REGISTER: <span class="kw">extern </span><span class="string">"C" </span><span class="kw">fn</span>() = register;
+<a href=#128 id=128 data-nosnippet>128</a>}
+<a href=#129 id=129 data-nosnippet>129</a>
+<a href=#130 id=130 data-nosnippet>130</a><span class="doccomment">/// Suspend the current promising execution until `promise` settles.
+<a href=#131 id=131 data-nosnippet>131</a>/// Backs `futures::jspi_block_on_promise`.
+<a href=#132 id=132 data-nosnippet>132</a>///
+<a href=#133 id=133 data-nosnippet>133</a>/// On return the shadow stack is guaranteed to hold the correct contents
+<a href=#134 id=134 data-nosnippet>134</a>/// for this execution, regardless of what else ran while it was suspended:
+<a href=#135 id=135 data-nosnippet>135</a>/// the wasm-bindgen CLI instruments every `#[wasm_bindgen(suspending)]`
+<a href=#136 id=136 data-nosnippet>136</a>/// import with an in-wasm wrapper that evacuates the live shadow-stack
+<a href=#137 id=137 data-nosnippet>137</a>/// region to a heap buffer before suspending and copies it back as the very
+<a href=#138 id=138 data-nosnippet>138</a>/// first instructions after resume (see `cli-support/src/transforms/jspi.rs`).
+<a href=#139 id=139 data-nosnippet>139</a>/// The `catch` marshalling (rejections as `Err` data) rides the same wrapper.
+<a href=#140 id=140 data-nosnippet>140</a></span><span class="attr">#[inline(never)]
+<a href=#141 id=141 data-nosnippet>141</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>suspend(promise: <span class="kw-2">&amp;</span>Promise) -&gt; <span class="prelude-ty">Result</span>&lt;JsValue, JsValue&gt; {
+<a href=#142 id=142 data-nosnippet>142</a>    __wbindgen_jspi_suspend(promise)
+<a href=#143 id=143 data-nosnippet>143</a>}
+<a href=#144 id=144 data-nosnippet>144</a>
+<a href=#145 id=145 data-nosnippet>145</a><span class="comment">// ─── Promising-entered task polls ────────────────────────────────────────────
+<a href=#146 id=146 data-nosnippet>146</a>
+<a href=#147 id=147 data-nosnippet>147</a></span><span class="doccomment">/// Poll-in-flight discipline for a spawned task.
+<a href=#148 id=148 data-nosnippet>148</a></span><span class="attr">#[derive(Clone, Copy, PartialEq)]
+<a href=#149 id=149 data-nosnippet>149</a></span><span class="kw">enum </span>State {
+<a href=#150 id=150 data-nosnippet>150</a>    <span class="doccomment">/// Not scheduled and not being polled.
+<a href=#151 id=151 data-nosnippet>151</a>    </span>Idle,
+<a href=#152 id=152 data-nosnippet>152</a>    <span class="doccomment">/// A poll is queued on the microtask queue but has not started.
+<a href=#153 id=153 data-nosnippet>153</a>    </span>Scheduled,
+<a href=#154 id=154 data-nosnippet>154</a>    <span class="doccomment">/// A poll is in flight — executing, or suspended mid-frame.
+<a href=#155 id=155 data-nosnippet>155</a>    </span>Running,
+<a href=#156 id=156 data-nosnippet>156</a>    <span class="doccomment">/// A wake arrived during the in-flight poll: re-poll before going idle.
+<a href=#157 id=157 data-nosnippet>157</a>    </span>RunningWoken,
+<a href=#158 id=158 data-nosnippet>158</a>}
+<a href=#159 id=159 data-nosnippet>159</a>
+<a href=#160 id=160 data-nosnippet>160</a><span class="kw">struct </span>SpawnedTask {
+<a href=#161 id=161 data-nosnippet>161</a>    <span class="doccomment">/// `None` once the future has completed (late wakes are no-ops).
+<a href=#162 id=162 data-nosnippet>162</a>    </span>future: RefCell&lt;<span class="prelude-ty">Option</span>&lt;Pin&lt;Box&lt;<span class="kw">dyn </span>Future&lt;Output = ()&gt;&gt;&gt;&gt;&gt;,
+<a href=#163 id=163 data-nosnippet>163</a>    state: Cell&lt;State&gt;,
+<a href=#164 id=164 data-nosnippet>164</a>}
+<a href=#165 id=165 data-nosnippet>165</a>
+<a href=#166 id=166 data-nosnippet>166</a><span class="kw">impl </span>SpawnedTask {
+<a href=#167 id=167 data-nosnippet>167</a>    <span class="doccomment">/// Schedule a poll, consuming one strong reference into the intrinsic.
+<a href=#168 id=168 data-nosnippet>168</a>    </span><span class="kw">fn </span>schedule(this: Rc&lt;SpawnedTask&gt;) {
+<a href=#169 id=169 data-nosnippet>169</a>        this.state.set(State::Scheduled);
+<a href=#170 id=170 data-nosnippet>170</a>        __wbindgen_jspi_spawn_poll(Rc::into_raw(this) <span class="kw">as </span>u32);
+<a href=#171 id=171 data-nosnippet>171</a>    }
+<a href=#172 id=172 data-nosnippet>172</a>
+<a href=#173 id=173 data-nosnippet>173</a>    <span class="kw">fn </span>wake(this: <span class="kw-2">&amp;</span>Rc&lt;SpawnedTask&gt;) {
+<a href=#174 id=174 data-nosnippet>174</a>        <span class="kw">match </span>this.state.get() {
+<a href=#175 id=175 data-nosnippet>175</a>            <span class="comment">// In flight (possibly suspended): flag a re-poll. The poll loop
+<a href=#176 id=176 data-nosnippet>176</a>            // consumes the flag when the in-flight poll returns, so the
+<a href=#177 id=177 data-nosnippet>177</a>            // future is never entered reentrantly.
+<a href=#178 id=178 data-nosnippet>178</a>            </span>State::Running =&gt; this.state.set(State::RunningWoken),
+<a href=#179 id=179 data-nosnippet>179</a>            State::RunningWoken | State::Scheduled =&gt; {}
+<a href=#180 id=180 data-nosnippet>180</a>            State::Idle =&gt; {
+<a href=#181 id=181 data-nosnippet>181</a>                <span class="kw">if </span>this.future.borrow().is_some() {
+<a href=#182 id=182 data-nosnippet>182</a>                    SpawnedTask::schedule(Rc::clone(this));
+<a href=#183 id=183 data-nosnippet>183</a>                }
+<a href=#184 id=184 data-nosnippet>184</a>            }
+<a href=#185 id=185 data-nosnippet>185</a>        }
+<a href=#186 id=186 data-nosnippet>186</a>    }
+<a href=#187 id=187 data-nosnippet>187</a>
+<a href=#188 id=188 data-nosnippet>188</a>    <span class="kw">fn </span>poll(this: <span class="kw-2">&amp;</span>Rc&lt;SpawnedTask&gt;) {
+<a href=#189 id=189 data-nosnippet>189</a>        <span class="kw">loop </span>{
+<a href=#190 id=190 data-nosnippet>190</a>            this.state.set(State::Running);
+<a href=#191 id=191 data-nosnippet>191</a>            <span class="kw">let </span>waker = task_waker(Rc::clone(this));
+<a href=#192 id=192 data-nosnippet>192</a>            <span class="kw">let </span><span class="kw-2">mut </span>cx = Context::from_waker(<span class="kw-2">&amp;</span>waker);
+<a href=#193 id=193 data-nosnippet>193</a>            <span class="kw">let </span>done = {
+<a href=#194 id=194 data-nosnippet>194</a>                <span class="kw">let </span><span class="kw-2">mut </span>slot = this.future.borrow_mut();
+<a href=#195 id=195 data-nosnippet>195</a>                <span class="kw">let </span><span class="prelude-val">Some</span>(future) = slot.as_mut() <span class="kw">else </span>{ <span class="kw">return </span>};
+<a href=#196 id=196 data-nosnippet>196</a>                <span class="comment">// The poll may suspend; `slot` stays mutably borrowed across
+<a href=#197 id=197 data-nosnippet>197</a>                // the suspension, which is sound because every other path to
+<a href=#198 id=198 data-nosnippet>198</a>                // the future first checks `state` (`Running`) and never
+<a href=#199 id=199 data-nosnippet>199</a>                // touches the `RefCell`.
+<a href=#200 id=200 data-nosnippet>200</a>                </span><span class="kw">match </span>future.as_mut().poll(<span class="kw-2">&amp;mut </span>cx) {
+<a href=#201 id=201 data-nosnippet>201</a>                    Poll::Ready(()) =&gt; {
+<a href=#202 id=202 data-nosnippet>202</a>                        <span class="kw-2">*</span>slot = <span class="prelude-val">None</span>;
+<a href=#203 id=203 data-nosnippet>203</a>                        <span class="bool-val">true
+<a href=#204 id=204 data-nosnippet>204</a>                    </span>}
+<a href=#205 id=205 data-nosnippet>205</a>                    Poll::Pending =&gt; <span class="bool-val">false</span>,
+<a href=#206 id=206 data-nosnippet>206</a>                }
+<a href=#207 id=207 data-nosnippet>207</a>            };
+<a href=#208 id=208 data-nosnippet>208</a>            <span class="kw">if </span>done {
+<a href=#209 id=209 data-nosnippet>209</a>                this.state.set(State::Idle);
+<a href=#210 id=210 data-nosnippet>210</a>                <span class="kw">return</span>;
+<a href=#211 id=211 data-nosnippet>211</a>            }
+<a href=#212 id=212 data-nosnippet>212</a>            <span class="kw">match </span>this.state.replace(State::Idle) {
+<a href=#213 id=213 data-nosnippet>213</a>                <span class="comment">// Woken while the poll was in flight: re-poll.
+<a href=#214 id=214 data-nosnippet>214</a>                </span>State::RunningWoken =&gt; <span class="kw">continue</span>,
+<a href=#215 id=215 data-nosnippet>215</a>                <span class="kw">_ </span>=&gt; <span class="kw">return</span>,
+<a href=#216 id=216 data-nosnippet>216</a>            }
+<a href=#217 id=217 data-nosnippet>217</a>        }
+<a href=#218 id=218 data-nosnippet>218</a>    }
+<a href=#219 id=219 data-nosnippet>219</a>}
+<a href=#220 id=220 data-nosnippet>220</a>
+<a href=#221 id=221 data-nosnippet>221</a><span class="doccomment">/// A `Waker` over `Rc&lt;SpawnedTask&gt;`. As in `task::singlethread`, `Waker`'s
+<a href=#222 id=222 data-nosnippet>222</a>/// nominal `Send + Sync` demand is safely ignored: JSPI is single-threaded
+<a href=#223 id=223 data-nosnippet>223</a>/// (rejected under the `atomics` feature), so the lie is confined to the
+<a href=#224 id=224 data-nosnippet>224</a>/// vtable.
+<a href=#225 id=225 data-nosnippet>225</a></span><span class="kw">fn </span>task_waker(task: Rc&lt;SpawnedTask&gt;) -&gt; Waker {
+<a href=#226 id=226 data-nosnippet>226</a>    <span class="kw">unsafe fn </span>raw_clone(ptr: <span class="kw-2">*const </span>()) -&gt; RawWaker {
+<a href=#227 id=227 data-nosnippet>227</a>        <span class="kw">let </span>rc = ManuallyDrop::new(Rc::from_raw(ptr <span class="kw">as </span><span class="kw-2">*const </span>SpawnedTask));
+<a href=#228 id=228 data-nosnippet>228</a>        RawWaker::new(Rc::into_raw(Rc::clone(<span class="kw-2">&amp;</span>rc)) <span class="kw">as </span><span class="kw-2">*const </span>(), <span class="kw-2">&amp;</span>VTABLE)
+<a href=#229 id=229 data-nosnippet>229</a>    }
+<a href=#230 id=230 data-nosnippet>230</a>
+<a href=#231 id=231 data-nosnippet>231</a>    <span class="kw">unsafe fn </span>raw_wake(ptr: <span class="kw-2">*const </span>()) {
+<a href=#232 id=232 data-nosnippet>232</a>        <span class="kw">let </span>rc = Rc::from_raw(ptr <span class="kw">as </span><span class="kw-2">*const </span>SpawnedTask);
+<a href=#233 id=233 data-nosnippet>233</a>        SpawnedTask::wake(<span class="kw-2">&amp;</span>rc);
+<a href=#234 id=234 data-nosnippet>234</a>    }
+<a href=#235 id=235 data-nosnippet>235</a>
+<a href=#236 id=236 data-nosnippet>236</a>    <span class="kw">unsafe fn </span>raw_wake_by_ref(ptr: <span class="kw-2">*const </span>()) {
+<a href=#237 id=237 data-nosnippet>237</a>        <span class="kw">let </span>rc = ManuallyDrop::new(Rc::from_raw(ptr <span class="kw">as </span><span class="kw-2">*const </span>SpawnedTask));
+<a href=#238 id=238 data-nosnippet>238</a>        SpawnedTask::wake(<span class="kw-2">&amp;</span>rc);
+<a href=#239 id=239 data-nosnippet>239</a>    }
+<a href=#240 id=240 data-nosnippet>240</a>
+<a href=#241 id=241 data-nosnippet>241</a>    <span class="kw">unsafe fn </span>raw_drop(ptr: <span class="kw-2">*const </span>()) {
+<a href=#242 id=242 data-nosnippet>242</a>        drop(Rc::from_raw(ptr <span class="kw">as </span><span class="kw-2">*const </span>SpawnedTask));
+<a href=#243 id=243 data-nosnippet>243</a>    }
+<a href=#244 id=244 data-nosnippet>244</a>
+<a href=#245 id=245 data-nosnippet>245</a>    <span class="kw">static </span>VTABLE: RawWakerVTable =
+<a href=#246 id=246 data-nosnippet>246</a>        RawWakerVTable::new(raw_clone, raw_wake, raw_wake_by_ref, raw_drop);
+<a href=#247 id=247 data-nosnippet>247</a>
+<a href=#248 id=248 data-nosnippet>248</a>    <span class="kw">unsafe </span>{ Waker::from_raw(RawWaker::new(Rc::into_raw(task) <span class="kw">as </span><span class="kw-2">*const </span>(), <span class="kw-2">&amp;</span>VTABLE)) }
+<a href=#249 id=249 data-nosnippet>249</a>}
+<a href=#250 id=250 data-nosnippet>250</a>
+<a href=#251 id=251 data-nosnippet>251</a><span class="doccomment">/// The promising-entered poll trampoline. Each call runs one task's poll
+<a href=#252 id=252 data-nosnippet>252</a>/// loop on a fresh suspendable stack. Not public API.
+<a href=#253 id=253 data-nosnippet>253</a>///
+<a href=#254 id=254 data-nosnippet>254</a>/// A raw wasm export rather than a `#[wasm_bindgen(jspi)]` one: the CLI
+<a href=#255 id=255 data-nosnippet>255</a>/// special-cases it by name — in a module with `#[wasm_bindgen(jspi)]`
+<a href=#256 id=256 data-nosnippet>256</a>/// exports it receives the same in-wasm wrapper as a jspi export and is
+<a href=#257 id=257 data-nosnippet>257</a>/// invoked through `WebAssembly.promising` by the spawn intrinsics' JS
+<a href=#258 id=258 data-nosnippet>258</a>/// shims; in a module without them the ambient context is constant-false,
+<a href=#259 id=259 data-nosnippet>259</a>/// so the export is deleted and the spawn intrinsics are stubbed out,
+<a href=#260 id=260 data-nosnippet>260</a>/// leaving no JSPI machinery at all.
+<a href=#261 id=261 data-nosnippet>261</a>///
+<a href=#262 id=262 data-nosnippet>262</a>/// `extern "C-unwind"`: an unwind must be able to escape the poll — a panic
+<a href=#263 id=263 data-nosnippet>263</a>/// under panic=unwind, or a rethrown rejection of a non-`catch` suspending
+<a href=#264 id=264 data-nosnippet>264</a>/// import — to reject the promising call's promise. Plain `extern "C"` is
+<a href=#265 id=265 data-nosnippet>265</a>/// nounwind, whose `panic_cannot_unwind` guard would abort the whole
+<a href=#266 id=266 data-nosnippet>266</a>/// instance instead of abandoning the one task.
+<a href=#267 id=267 data-nosnippet>267</a></span><span class="attr">#[no_mangle]
+<a href=#268 id=268 data-nosnippet>268</a></span><span class="kw">pub extern </span><span class="string">"C-unwind" </span><span class="kw">fn </span>__wbg_jspi_task_poll(task: u32) {
+<a href=#269 id=269 data-nosnippet>269</a>    <span class="kw">let </span>task = <span class="kw">unsafe </span>{ Rc::from_raw(task <span class="kw">as </span><span class="kw-2">*const </span>SpawnedTask) };
+<a href=#270 id=270 data-nosnippet>270</a>    SpawnedTask::poll(<span class="kw-2">&amp;</span>task);
+<a href=#271 id=271 data-nosnippet>271</a>}
+<a href=#272 id=272 data-nosnippet>272</a>
+<a href=#273 id=273 data-nosnippet>273</a><span class="doccomment">/// Runs a `Future&lt;Output = ()&gt;` with every poll entered through a
+<a href=#274 id=274 data-nosnippet>274</a>/// `WebAssembly.promising` boundary, so the task's whole call tree may
+<a href=#275 id=275 data-nosnippet>275</a>/// suspend. Backs `spawn_local` when called within a JSPI context —
+<a href=#276 id=276 data-nosnippet>276</a>/// including the rooted activation of a `#[wasm_bindgen(jspi)] async fn`
+<a href=#277 id=277 data-nosnippet>277</a>/// export.
+<a href=#278 id=278 data-nosnippet>278</a>///
+<a href=#279 id=279 data-nosnippet>279</a>/// A suspension parks only this task's poll; the microtask queue, other
+<a href=#280 id=280 data-nosnippet>280</a>/// tasks, and the event loop continue. A wake arriving while the poll is
+<a href=#281 id=281 data-nosnippet>281</a>/// suspended re-polls after the suspended poll returns. The task is leaked
+<a href=#282 id=282 data-nosnippet>282</a>/// if its future never completes, exactly like `spawn_local`.
+<a href=#283 id=283 data-nosnippet>283</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>spawn_promising&lt;F&gt;(future: F)
+<a href=#284 id=284 data-nosnippet>284</a><span class="kw">where
+<a href=#285 id=285 data-nosnippet>285</a>    </span>F: Future&lt;Output = ()&gt; + <span class="lifetime">'static</span>,
+<a href=#286 id=286 data-nosnippet>286</a>{
+<a href=#287 id=287 data-nosnippet>287</a>    <span class="kw">let </span>task = Rc::new(SpawnedTask {
+<a href=#288 id=288 data-nosnippet>288</a>        future: RefCell::new(<span class="prelude-val">Some</span>(Box::pin(future))),
+<a href=#289 id=289 data-nosnippet>289</a>        state: Cell::new(State::Scheduled),
+<a href=#290 id=290 data-nosnippet>290</a>    });
+<a href=#291 id=291 data-nosnippet>291</a>    __wbindgen_jspi_spawn_first(Rc::into_raw(task) <span class="kw">as </span>u32);
+<a href=#292 id=292 data-nosnippet>292</a>}
+</code></pre></div></section></main></body></html>

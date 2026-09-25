@@ -1,0 +1,225 @@
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+    <style>
+      #scene {
+        height: 100%;
+        width: 500px;
+        float: left;
+      }
+
+      #render, .concurrency, .timing {
+        padding: 20px;
+        margin: 20px;
+        float: left;
+      }
+    </style>
+  </head>
+  <body>
+    <textarea id='scene'>
+{
+  "width": 800,
+  "height": 800,
+  "fov": 90.0,
+  "shadow_bias": 1e-13,
+  "max_recursion_depth": 20,
+  "elements": [
+    {
+      "Sphere" : {
+        "center": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": -5.0
+        },
+        "radius": 1.0,
+        "material": {
+          "coloration" : {
+            "Color": {
+              "red": 0.2,
+              "green": 1.0,
+              "blue": 0.2
+            }
+          },
+          "albedo": 0.18,
+          "surface": {
+            "Reflective": {
+              "reflectivity": 0.7
+            }
+          }
+        }
+      }
+    },
+    {
+      "Sphere" : {
+        "center": {
+          "x": -3.0,
+          "y": 1.0,
+          "z": -6.0
+        },
+        "radius": 2.0,
+        "material": {
+          "coloration": {
+            "Color": {
+              "red": 1.0,
+              "green": 1.0,
+              "blue": 1.0
+            }
+          },
+          "albedo": 0.58,
+          "surface": "Diffuse"
+        }
+      }
+    },
+    {
+      "Sphere": {
+        "center": {
+          "x": 2.0,
+          "y": 1.0,
+          "z": -4.0
+        },
+        "radius": 1.5,
+        "material": {
+          "coloration": {
+            "Color": {
+              "red": 1.0,
+              "green": 1.0,
+              "blue": 1.0
+            }
+          },
+          "albedo": 0.18,
+          "surface": {
+            "Refractive": {
+              "index": 1.5,
+              "transparency": 1.0
+            }
+          }
+        }
+      }
+    },
+    {
+      "Plane": {
+        "origin": {
+          "x": 0.0,
+          "y": -2.0,
+          "z": -5.0
+        },
+        "normal": {
+          "x": 0.0,
+          "y": -1.0,
+          "z": 0.0
+        },
+        "material": {
+          "coloration": {
+            "Color": {
+              "red": 1.0,
+              "green": 1.0,
+              "blue": 1.0
+            }
+          },
+          "albedo": 0.18,
+          "surface": {
+            "Reflective": {
+              "reflectivity": 0.5
+            }
+          }
+        }
+      }
+    },
+    {
+      "Plane": {
+        "origin": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": -20.0
+        },
+        "normal": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": -1.0
+        },
+        "material": {
+          "coloration": {
+            "Color": {
+              "red": 0.2,
+              "green": 0.3,
+              "blue": 1.0
+            }
+          },
+          "albedo": 0.38,
+          "surface": "Diffuse"
+        }
+      }
+    }
+  ],
+  "lights": [
+    {
+      "Spherical": {
+        "position": {
+          "x": -2.0,
+          "y": 10.0,
+          "z": -3.0
+        },
+        "color": {
+          "red": 0.3,
+          "green": 0.8,
+          "blue": 0.3
+        },
+        "intensity": 10000.0
+      }
+    },
+    {
+      "Spherical": {
+        "position": {
+          "x": 0.25,
+          "y": 0.0,
+          "z": -2.0
+        },
+        "color": {
+          "red": 0.8,
+          "green": 0.3,
+          "blue": 0.3
+        },
+        "intensity": 250.0
+      }
+    },
+    {
+      "Directional": {
+        "direction": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": -1.0
+        },
+        "color": {
+          "red": 1.0,
+          "green": 1.0,
+          "blue": 1.0
+        },
+        "intensity": 0.0
+      }
+    }
+  ]
+}
+    </textarea>
+
+    <button disabled id='render'>Loading wasm...</button>
+    <div class='concurrency'>
+      <p id='concurrency-amt'>Concurrency: 1</p>
+      <br/>
+      <input disabled type="range" id="concurrency" min="0" max="1" />
+    </div>
+    <div id='timing'>
+      Render duration:
+      <p id='timing-val'></p>
+    </div>
+
+
+    <canvas id='canvas'></canvas>
+
+    <script>
+      document.getElementById('render').disabled = true;
+      document.getElementById('concurrency').disabled = true;
+    </script>
+    <script src='raytrace_parallel.js'></script>
+    <script src='index.js'></script>
+  </body>
+</html>
