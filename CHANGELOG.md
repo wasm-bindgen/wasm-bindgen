@@ -5,6 +5,9 @@
 
 ### Added
 
+* Added `source` property to ToggleEvent.
+  [#5353](https://github.com/wasm-bindgen/wasm-bindgen/pull/5353)
+
 ### Changed
 
 ### Fixed
