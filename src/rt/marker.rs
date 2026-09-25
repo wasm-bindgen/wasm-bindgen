@@ -48,6 +48,10 @@ use core::panic::UnwindSafe;
 /// `wasm-bindgen` and `js-sys` may implement it.
 pub trait JsStringLikeSealed {}
 
+/// Seal for the TypeScript primitive-union marker traits re-exported by
+/// `js-sys`.
+pub trait PrimitiveUnionSealed {}
+
 /// Marker trait for types that are UnwindSafe only when building with panic unwind
 pub trait MaybeUnwindSafe {}
 

@@ -115,6 +115,64 @@ since the trait carries `OptionIntoWasmAbi` as a supertrait. The trait is
 sealed to exactly these string shapes. Like `experimental_generic_mono`
 itself, the trait is experimental and may change as the feature stabilizes.
 
+### Primitive union bounds
+
+`js-sys` provides experimental marker traits for every union of two or more
+TypeScript value primitives from `bigint`, `boolean`, `number`, `string`, and
+`symbol`. Their names list the members alphabetically, separated by `Or`, and
+end in `Like`. For example, `JsNumberOrStringLike` represents
+`number | string`:
+
+```rust
+use js_sys::JsNumberOrStringLike;
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn set_value<T: JsNumberOrStringLike>(value: T);
+}
+
+set_value(42u32);
+set_value("forty-two");
+```
+
+These traits are parameter allowlists, not runtime union values. Each call is
+still monomorphised at its concrete Rust type and receives that type's normal
+descriptor and ABI. The marker bound itself is not emitted as a TypeScript
+union descriptor.
+
+The member categories accept the following Rust representations:
+
+| TypeScript primitive | Rust parameter types |
+|----------------------|----------------------|
+| `bigint` | `i64`, `u64`, `i128`, `u128`, `js_sys::BigInt`, `&js_sys::BigInt` |
+| `boolean` | `bool`, `js_sys::Boolean`, `&js_sys::Boolean` |
+| `number` | `i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `isize`, `usize`, `f32`, `f64`, `js_sys::Number`, `&js_sys::Number` |
+| `string` | every `wasm_bindgen::JsStringLike` implementation |
+| `symbol` | `js_sys::Symbol`, `&js_sys::Symbol` |
+
+In particular, every union containing `string` automatically accepts current
+and future `JsStringLike` implementations. `char` is not `JsStringLike` and is
+therefore not a member of these unions.
+
+Narrower unions widen to larger unions. Generic Rust code with a
+`T: JsNumberOrStringLike` bound can therefore pass `T` to a parameter bounded
+by `JsBooleanOrNumberOrStringLike`, just as `number | string` is assignable to
+`boolean | number | string` in TypeScript.
+
+All supported concrete members work in nullable `Option<T>` import positions.
+The union traits do not themselves require `OptionIntoWasmAbi`, because some
+numeric types use specialized concrete `Option<T>` ABI implementations. Code
+outside generated imports that needs to prove an optional conversion must add
+the corresponding `Option<T>: IntoWasmAbi` bound itself.
+
+There are 26 traits in total: all combinations of at least two of the five
+primitive categories. There are no generated singleton traits; use
+`JsStringLike` for a string-only parameter and concrete bounds or types for the
+other singleton cases. Like `experimental_generic_mono`, the union traits may
+change or be removed while the feature evolves.
+
 ## `impl Trait` arguments
 
 Argument-position `impl Trait` is supported. It is desugared into a synthesized

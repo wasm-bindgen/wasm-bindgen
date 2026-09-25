@@ -669,3 +669,328 @@ impl crate::__rt::marker::JsStringLikeSealed for alloc::string::String {}
 impl crate::__rt::marker::JsStringLikeSealed for &str {}
 impl JsStringLike for alloc::string::String {}
 impl JsStringLike for &str {}
+
+/// Invokes a callback macro with the catalog of TypeScript primitive-union
+/// marker traits.
+///
+/// This is exported only so `js-sys` can generate its public re-exports and
+/// implementations for JavaScript wrapper types from the same catalog as
+/// `wasm-bindgen`.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __wbg_for_each_primitive_union {
+    ($callback:ident) => {
+        $callback! {
+            (
+                JsBigIntOrBooleanOrNumberOrStringOrSymbolLike,
+                "bigint | boolean | number | string | symbol",
+                [],
+                [bigint, boolean, number, string, symbol]
+            ),
+            (
+                JsBigIntOrBooleanOrNumberOrStringLike,
+                "bigint | boolean | number | string",
+                [JsBigIntOrBooleanOrNumberOrStringOrSymbolLike],
+                [bigint, boolean, number, string]
+            ),
+            (
+                JsBigIntOrBooleanOrNumberOrSymbolLike,
+                "bigint | boolean | number | symbol",
+                [JsBigIntOrBooleanOrNumberOrStringOrSymbolLike],
+                [bigint, boolean, number, symbol]
+            ),
+            (
+                JsBigIntOrBooleanOrStringOrSymbolLike,
+                "bigint | boolean | string | symbol",
+                [JsBigIntOrBooleanOrNumberOrStringOrSymbolLike],
+                [bigint, boolean, string, symbol]
+            ),
+            (
+                JsBigIntOrNumberOrStringOrSymbolLike,
+                "bigint | number | string | symbol",
+                [JsBigIntOrBooleanOrNumberOrStringOrSymbolLike],
+                [bigint, number, string, symbol]
+            ),
+            (
+                JsBooleanOrNumberOrStringOrSymbolLike,
+                "boolean | number | string | symbol",
+                [JsBigIntOrBooleanOrNumberOrStringOrSymbolLike],
+                [boolean, number, string, symbol]
+            ),
+            (
+                JsBigIntOrBooleanOrNumberLike,
+                "bigint | boolean | number",
+                [
+                    JsBigIntOrBooleanOrNumberOrStringLike,
+                    JsBigIntOrBooleanOrNumberOrSymbolLike
+                ],
+                [bigint, boolean, number]
+            ),
+            (
+                JsBigIntOrBooleanOrStringLike,
+                "bigint | boolean | string",
+                [
+                    JsBigIntOrBooleanOrNumberOrStringLike,
+                    JsBigIntOrBooleanOrStringOrSymbolLike
+                ],
+                [bigint, boolean, string]
+            ),
+            (
+                JsBigIntOrBooleanOrSymbolLike,
+                "bigint | boolean | symbol",
+                [
+                    JsBigIntOrBooleanOrNumberOrSymbolLike,
+                    JsBigIntOrBooleanOrStringOrSymbolLike
+                ],
+                [bigint, boolean, symbol]
+            ),
+            (
+                JsBigIntOrNumberOrStringLike,
+                "bigint | number | string",
+                [
+                    JsBigIntOrBooleanOrNumberOrStringLike,
+                    JsBigIntOrNumberOrStringOrSymbolLike
+                ],
+                [bigint, number, string]
+            ),
+            (
+                JsBigIntOrNumberOrSymbolLike,
+                "bigint | number | symbol",
+                [
+                    JsBigIntOrBooleanOrNumberOrSymbolLike,
+                    JsBigIntOrNumberOrStringOrSymbolLike
+                ],
+                [bigint, number, symbol]
+            ),
+            (
+                JsBigIntOrStringOrSymbolLike,
+                "bigint | string | symbol",
+                [
+                    JsBigIntOrBooleanOrStringOrSymbolLike,
+                    JsBigIntOrNumberOrStringOrSymbolLike
+                ],
+                [bigint, string, symbol]
+            ),
+            (
+                JsBooleanOrNumberOrStringLike,
+                "boolean | number | string",
+                [
+                    JsBigIntOrBooleanOrNumberOrStringLike,
+                    JsBooleanOrNumberOrStringOrSymbolLike
+                ],
+                [boolean, number, string]
+            ),
+            (
+                JsBooleanOrNumberOrSymbolLike,
+                "boolean | number | symbol",
+                [
+                    JsBigIntOrBooleanOrNumberOrSymbolLike,
+                    JsBooleanOrNumberOrStringOrSymbolLike
+                ],
+                [boolean, number, symbol]
+            ),
+            (
+                JsBooleanOrStringOrSymbolLike,
+                "boolean | string | symbol",
+                [
+                    JsBigIntOrBooleanOrStringOrSymbolLike,
+                    JsBooleanOrNumberOrStringOrSymbolLike
+                ],
+                [boolean, string, symbol]
+            ),
+            (
+                JsNumberOrStringOrSymbolLike,
+                "number | string | symbol",
+                [
+                    JsBigIntOrNumberOrStringOrSymbolLike,
+                    JsBooleanOrNumberOrStringOrSymbolLike
+                ],
+                [number, string, symbol]
+            ),
+            (
+                JsBigIntOrBooleanLike,
+                "bigint | boolean",
+                [
+                    JsBigIntOrBooleanOrNumberLike,
+                    JsBigIntOrBooleanOrStringLike,
+                    JsBigIntOrBooleanOrSymbolLike
+                ],
+                [bigint, boolean]
+            ),
+            (
+                JsBigIntOrNumberLike,
+                "bigint | number",
+                [
+                    JsBigIntOrBooleanOrNumberLike,
+                    JsBigIntOrNumberOrStringLike,
+                    JsBigIntOrNumberOrSymbolLike
+                ],
+                [bigint, number]
+            ),
+            (
+                JsBigIntOrStringLike,
+                "bigint | string",
+                [
+                    JsBigIntOrBooleanOrStringLike,
+                    JsBigIntOrNumberOrStringLike,
+                    JsBigIntOrStringOrSymbolLike
+                ],
+                [bigint, string]
+            ),
+            (
+                JsBigIntOrSymbolLike,
+                "bigint | symbol",
+                [
+                    JsBigIntOrBooleanOrSymbolLike,
+                    JsBigIntOrNumberOrSymbolLike,
+                    JsBigIntOrStringOrSymbolLike
+                ],
+                [bigint, symbol]
+            ),
+            (
+                JsBooleanOrNumberLike,
+                "boolean | number",
+                [
+                    JsBigIntOrBooleanOrNumberLike,
+                    JsBooleanOrNumberOrStringLike,
+                    JsBooleanOrNumberOrSymbolLike
+                ],
+                [boolean, number]
+            ),
+            (
+                JsBooleanOrStringLike,
+                "boolean | string",
+                [
+                    JsBigIntOrBooleanOrStringLike,
+                    JsBooleanOrNumberOrStringLike,
+                    JsBooleanOrStringOrSymbolLike
+                ],
+                [boolean, string]
+            ),
+            (
+                JsBooleanOrSymbolLike,
+                "boolean | symbol",
+                [
+                    JsBigIntOrBooleanOrSymbolLike,
+                    JsBooleanOrNumberOrSymbolLike,
+                    JsBooleanOrStringOrSymbolLike
+                ],
+                [boolean, symbol]
+            ),
+            (
+                JsNumberOrStringLike,
+                "number | string",
+                [
+                    JsBigIntOrNumberOrStringLike,
+                    JsBooleanOrNumberOrStringLike,
+                    JsNumberOrStringOrSymbolLike
+                ],
+                [number, string]
+            ),
+            (
+                JsNumberOrSymbolLike,
+                "number | symbol",
+                [
+                    JsBigIntOrNumberOrSymbolLike,
+                    JsBooleanOrNumberOrSymbolLike,
+                    JsNumberOrStringOrSymbolLike
+                ],
+                [number, symbol]
+            ),
+            (
+                JsStringOrSymbolLike,
+                "string | symbol",
+                [
+                    JsBigIntOrStringOrSymbolLike,
+                    JsBooleanOrStringOrSymbolLike,
+                    JsNumberOrStringOrSymbolLike
+                ],
+                [string, symbol]
+            ),
+        }
+    };
+}
+
+macro_rules! impl_primitive_union_category {
+    ($trait:path, bigint) => {
+        impl $trait for i64 {}
+        impl $trait for u64 {}
+        impl $trait for i128 {}
+        impl $trait for u128 {}
+    };
+    ($trait:path, boolean) => {
+        impl $trait for bool {}
+    };
+    ($trait:path, number) => {
+        impl $trait for i8 {}
+        impl $trait for u8 {}
+        impl $trait for i16 {}
+        impl $trait for u16 {}
+        impl $trait for i32 {}
+        impl $trait for u32 {}
+        impl $trait for isize {}
+        impl $trait for usize {}
+        impl $trait for f32 {}
+        impl $trait for f64 {}
+    };
+    ($trait:path, string) => {
+        impl<T: JsStringLike> $trait for T {}
+    };
+    ($trait:path, symbol) => {};
+}
+
+impl_primitive_union_category!(crate::__rt::marker::PrimitiveUnionSealed, bigint);
+impl_primitive_union_category!(crate::__rt::marker::PrimitiveUnionSealed, boolean);
+impl_primitive_union_category!(crate::__rt::marker::PrimitiveUnionSealed, number);
+impl_primitive_union_category!(crate::__rt::marker::PrimitiveUnionSealed, string);
+
+macro_rules! primitive_union_category_doc {
+    (bigint) => {
+        "- `bigint`: `i64`, `u64`, `i128`, `u128`, `js_sys::BigInt`, and `&js_sys::BigInt`\n"
+    };
+    (boolean) => {
+        "- `boolean`: `bool`, `js_sys::Boolean`, and `&js_sys::Boolean`\n"
+    };
+    (number) => {
+        "- `number`: `i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `isize`, `usize`, `f32`, `f64`, `js_sys::Number`, and `&js_sys::Number`\n"
+    };
+    (string) => {
+        "- `string`: every [`JsStringLike`] implementation\n"
+    };
+    (symbol) => {
+        "- `symbol`: `js_sys::Symbol` and `&js_sys::Symbol`\n"
+    };
+}
+
+macro_rules! define_primitive_union_traits {
+    ($(($name:ident, $typescript:literal, [$($supertrait:ident),*], [$($category:ident),+])),* $(,)?) => {
+        $(
+            #[doc = concat!(
+                "Marker for Rust parameter types represented by the TypeScript union `",
+                $typescript,
+                "`.\n\n",
+                "Use this trait as a bound on an `experimental_generic_mono` ",
+                "JavaScript import. Each monomorphisation retains its concrete ",
+                "ABI representation; this marker only restricts which Rust types ",
+                "may instantiate the parameter.\n\n",
+                "The union's primitive categories use these Rust representations:\n\n",
+                $(primitive_union_category_doc!($category),)+
+                "\nThe `js_sys` types are available through this trait's public ",
+                "re-export from that crate.\n\n",
+                "This trait is experimental and may change or be removed as ",
+                "`experimental_generic_mono` evolves."
+            )]
+            #[doc(hidden)]
+            pub trait $name:
+                IntoWasmAbi
+                + crate::__rt::marker::PrimitiveUnionSealed
+                $(+ $supertrait)*
+            {
+            }
+
+            $(impl_primitive_union_category!($name, $category);)+
+        )*
+    };
+}
+
+crate::__wbg_for_each_primitive_union!(define_primitive_union_traits);

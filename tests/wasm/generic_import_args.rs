@@ -18,7 +18,10 @@
 //! - `&[T]` with a generic element type: takes the `&T` HRTB route rather
 //!   than the concrete-slice route, both as a plain and a `variadic` argument.
 
-use js_sys::JsString;
+use js_sys::{
+    BigInt, Boolean, JsBigIntOrBooleanOrNumberOrStringOrSymbolLike, JsNumberOrStringLike, JsString,
+    Number, Symbol,
+};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsStringLike;
 use wasm_bindgen_test::*;
@@ -57,6 +60,20 @@ extern "C" {
     // so marshalling the wrong wire form surfaces as a mismatched value.
     #[wasm_bindgen(experimental_generic_mono, js_name = describeAny)]
     fn describe_any<T>(x: T) -> String;
+
+    #[wasm_bindgen(experimental_generic_mono, js_name = describeAny)]
+    fn describe_primitive<T: JsBigIntOrBooleanOrNumberOrStringOrSymbolLike>(x: T) -> String;
+
+    #[wasm_bindgen(experimental_generic_mono, js_name = describeType)]
+    fn describe_primitive_type<T: JsBigIntOrBooleanOrNumberOrStringOrSymbolLike>(x: T) -> String;
+
+    #[wasm_bindgen(experimental_generic_mono, js_name = describeType)]
+    fn describe_number_or_string_type<T: JsNumberOrStringLike>(x: T) -> String;
+
+    #[wasm_bindgen(experimental_generic_mono, js_name = optDescribe)]
+    fn describe_optional_primitive<T: JsBigIntOrBooleanOrNumberOrStringOrSymbolLike>(
+        x: Option<T>,
+    ) -> String;
 
     // A shared slice with a *generic* element type: `&[T]` takes the `&T`
     // HRTB route (`for<'a> &'a [T]: IntoWasmAbi`) rather than the
@@ -146,6 +163,102 @@ fn experimental_generic_mono_string_arg_impl_trait() {
     let js = JsString::from("handle");
     assert_eq!(describe_str_impl(&js), "string:handle");
     assert_eq!(describe_str_impl(js), "string:handle");
+}
+
+#[wasm_bindgen_test]
+fn experimental_generic_mono_primitive_union_accepts_number() {
+    assert_eq!(describe_primitive(7u32), "number:7");
+}
+
+#[wasm_bindgen_test]
+fn primitive_union_accepts_every_js_string_like_shape() {
+    assert_eq!(describe_number_or_string_type("borrowed"), "string");
+    assert_eq!(
+        describe_number_or_string_type(String::from("owned")),
+        "string"
+    );
+
+    let js = JsString::from("handle");
+    assert_eq!(describe_number_or_string_type(&js), "string");
+    assert_eq!(describe_number_or_string_type(js), "string");
+}
+
+#[wasm_bindgen_test]
+fn primitive_union_accepts_native_and_wrapper_shapes() {
+    assert_eq!(describe_primitive_type(7f64), "number");
+    let number = Number::from(7);
+    assert_eq!(describe_primitive_type(&number), "number");
+    assert_eq!(describe_primitive_type(number), "number");
+
+    assert_eq!(describe_primitive_type(7i64), "bigint");
+    let bigint = BigInt::from(7);
+    assert_eq!(describe_primitive_type(&bigint), "bigint");
+    assert_eq!(describe_primitive_type(bigint), "bigint");
+
+    assert_eq!(describe_primitive_type(true), "boolean");
+    let boolean = Boolean::from(true);
+    assert_eq!(describe_primitive_type(&boolean), "boolean");
+    assert_eq!(describe_primitive_type(boolean), "boolean");
+
+    let symbol = Symbol::for_("primitive-union-test");
+    assert_eq!(describe_primitive_type(&symbol), "symbol");
+    assert_eq!(describe_primitive_type(symbol), "symbol");
+}
+
+#[wasm_bindgen_test]
+fn primitive_union_supports_specialized_optional_abis() {
+    assert_eq!(describe_optional_primitive(Some(7u32)), "some:7");
+    assert_eq!(describe_optional_primitive::<u32>(None), "none");
+    assert_eq!(describe_optional_primitive(Some(2.5f64)), "some:2.5");
+    assert_eq!(describe_optional_primitive::<f64>(None), "none");
+}
+
+#[wasm_bindgen_test]
+fn primitive_union_four_member_traits_widen_to_all_primitives() {
+    fn assert_bigint_boolean_number_string<T: js_sys::JsBigIntOrBooleanOrNumberOrStringLike>() {}
+    assert_bigint_boolean_number_string::<i64>();
+    assert_bigint_boolean_number_string::<bool>();
+    assert_bigint_boolean_number_string::<f64>();
+    assert_bigint_boolean_number_string::<String>();
+
+    fn assert_widens<T: js_sys::JsBigIntOrBooleanOrNumberOrStringLike>() {
+        fn accepts_all<U: js_sys::JsBigIntOrBooleanOrNumberOrStringOrSymbolLike>() {}
+        accepts_all::<T>();
+    }
+    assert_widens::<String>();
+}
+
+#[wasm_bindgen_test]
+fn primitive_union_three_member_traits_widen_to_four_member_unions() {
+    fn assert_bigint_number_string<T: js_sys::JsBigIntOrNumberOrStringLike>() {}
+    assert_bigint_number_string::<i64>();
+    assert_bigint_number_string::<f64>();
+    assert_bigint_number_string::<String>();
+
+    fn assert_widens<T: js_sys::JsBigIntOrNumberOrStringLike>() {
+        fn with_boolean<U: js_sys::JsBigIntOrBooleanOrNumberOrStringLike>() {}
+        fn with_symbol<U: js_sys::JsBigIntOrNumberOrStringOrSymbolLike>() {}
+        with_boolean::<T>();
+        with_symbol::<T>();
+    }
+    assert_widens::<String>();
+}
+
+#[wasm_bindgen_test]
+fn primitive_union_two_member_traits_widen_to_three_member_unions() {
+    fn assert_number_string<T: js_sys::JsNumberOrStringLike>() {}
+    assert_number_string::<f64>();
+    assert_number_string::<String>();
+
+    fn assert_widens<T: js_sys::JsNumberOrStringLike>() {
+        fn with_bigint<U: js_sys::JsBigIntOrNumberOrStringLike>() {}
+        fn with_boolean<U: js_sys::JsBooleanOrNumberOrStringLike>() {}
+        fn with_symbol<U: js_sys::JsNumberOrStringOrSymbolLike>() {}
+        with_bigint::<T>();
+        with_boolean::<T>();
+        with_symbol::<T>();
+    }
+    assert_widens::<String>();
 }
 
 #[wasm_bindgen_test]
