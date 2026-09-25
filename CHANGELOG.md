@@ -58,6 +58,12 @@
   `macro_rules!` body, for example through `paste!`.
   [#4465](https://github.com/wasm-bindgen/wasm-bindgen/issues/4465)
 
+* Exported function arguments named like an identifier their generated JS
+  glue binds or references, such as `wasm`, `ret` or a class name, no longer
+  shadow it, which made calling the function throw. Such arguments get a
+  numeric suffix in the JS, while the TypeScript definitions keep their name.
+  [#3729](https://github.com/wasm-bindgen/wasm-bindgen/issues/3729)
+
 * The headless test runner now keeps the path of a remote WebDriver URL set
   with variables like `CHROMEDRIVER_REMOTE`. A driver at
   `http://host/wd/hub/` now gets `http://host/wd/hub/session` instead of
