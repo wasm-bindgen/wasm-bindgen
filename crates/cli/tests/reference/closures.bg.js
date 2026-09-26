@@ -45,7 +45,7 @@ export function __wbg_forEach_63624cb19d529054(arg0, arg1, arg2) {
         state0.a = 0;
     }
 }
-export function __wbg_instanceof_Window_82d71df4eddf88bc(arg0) {
+export function __wbg_instanceof_Window_6cde849ec69a0219(arg0) {
     let result;
     try {
         result = arg0 instanceof Window;

@@ -103,7 +103,7 @@ export function __wbg_exportedstruct_unwrap(arg0) {
     const ret = ExportedStruct.__unwrap(arg0);
     return ret;
 }
-export function __wbg_instanceof_ImportedType_fe5eedffdd3920ad(arg0) {
+export function __wbg_instanceof_ImportedType_44452eb91df46c85(arg0) {
     let result;
     try {
         result = arg0 instanceof ImportedType;

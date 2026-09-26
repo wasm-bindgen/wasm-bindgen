@@ -15,6 +15,12 @@
   reads its own snippet's export.
   [#3878](https://github.com/wasm-bindgen/wasm-bindgen/issues/3878)
 
+* Imported types with the same Rust name no longer share one `instanceof`
+  check when their module, `inline_js` snippet, `js_name` or `js_namespace`
+  differ. Imported `static_string` statics with the same name no longer share
+  one string.
+  [#5352](https://github.com/wasm-bindgen/wasm-bindgen/pull/5352)
+
 ### Removed
 
 ## [0.2.129](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.128...0.2.129)

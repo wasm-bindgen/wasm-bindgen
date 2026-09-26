@@ -1275,12 +1275,24 @@ impl<'a>
     }
 }
 
-impl ConvertToAst<(&ast::Program, BindgenAttrs)> for syn::ForeignItemType {
+impl<'a>
+    ConvertToAst<(
+        &ast::Program,
+        BindgenAttrs,
+        &'a Option<ast::ImportModule>,
+        Option<&'a [String]>,
+    )> for syn::ForeignItemType
+{
     type Target = ast::ImportKind;
 
     fn convert(
         self,
-        (program, attrs): (&ast::Program, BindgenAttrs),
+        (program, attrs, module, js_namespace): (
+            &ast::Program,
+            BindgenAttrs,
+            &'a Option<ast::ImportModule>,
+            Option<&'a [String]>,
+        ),
     ) -> Result<Self::Target, Diagnostic> {
         let js_name = attrs
             .js_name_no_symbol("extern types with #[wasm_bindgen]")?
@@ -1288,22 +1300,20 @@ impl ConvertToAst<(&ast::Program, BindgenAttrs)> for syn::ForeignItemType {
         let typescript_type = attrs.typescript_type().map(|s| s.0.to_string());
         let is_type_of = attrs.is_type_of().cloned();
         let unraw_ident = self.ident.unraw();
-        let cfg_attrs = crate::cfg_gate_attrs(&self.attrs);
-        let namespace = attrs.js_namespace().map(|(ns, _)| ns.0);
-        let hash = if cfg_attrs.is_empty() {
-            ShortHash((namespace, &unraw_ident)).to_string()
-        } else {
-            ShortHash((
-                namespace,
-                &unraw_ident,
-                cfg_attrs
-                    .iter()
-                    .map(ToTokens::to_token_stream)
-                    .map(|tokens| tokens.to_string())
-                    .collect::<String>(),
-            ))
-            .to_string()
-        };
+        let cfg_attrs: String = crate::cfg_gate_attrs(&self.attrs)
+            .iter()
+            .map(|attr| attr.to_token_stream().to_string())
+            .collect();
+        // Everything that selects the JS class is part of the `instanceof`
+        // shim's identity, as for imported functions and statics.
+        let hash = ShortHash((
+            &js_name,
+            module,
+            &unraw_ident,
+            js_namespace,
+            inline_js_snippet(program, module),
+            cfg_attrs,
+        ));
         let shim = format!("__wbg_instanceof_{unraw_ident}_{hash}");
         let mut extends = Vec::new();
         let mut vendor_prefixes = Vec::new();
@@ -1465,7 +1475,9 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
         };
 
         let unraw_ident = self.ident.unraw();
-        let hash = ShortHash((&module, &unraw_ident));
+        // The string itself is what the shim returns, so it is part of the
+        // shim's identity.
+        let hash = ShortHash((&module, &unraw_ident, &string));
         let shim = format!("__wbg_string_{unraw_ident}_{hash}");
         opts.check_used();
         Ok(ast::ImportKind::String(ast::ImportString {
@@ -3002,7 +3014,9 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
                 block_generic_per_mono,
                 js_namespace.as_deref(),
             ))?,
-            syn::ForeignItem::Type(t) => t.convert((program, item_opts))?,
+            syn::ForeignItem::Type(t) => {
+                t.convert((program, item_opts, &module, js_namespace.as_deref()))?
+            }
             syn::ForeignItem::Static(s) => {
                 s.convert((program, item_opts, &module, js_namespace.as_deref()))?
             }
