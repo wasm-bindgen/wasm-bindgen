@@ -269,3 +269,145 @@ fn same_static_string_different_locations() {
     assert_eq!(a::S.with(|s| String::from(s)), "a");
     assert_eq!(b::S.with(|s| String::from(s)), "b");
 }
+
+// Imports that differ only in an attribute that changes how JS is called must
+// not share a binding either.
+pub mod same_function_variadic_a {
+    use wasm_bindgen::prelude::*;
+
+    #[wasm_bindgen]
+    extern "C" {
+        #[wasm_bindgen(js_namespace = Math)]
+        pub fn max(values: &[f64]) -> f64;
+    }
+}
+
+pub mod same_function_variadic_b {
+    use wasm_bindgen::prelude::*;
+
+    #[wasm_bindgen]
+    extern "C" {
+        #[wasm_bindgen(js_namespace = Math, variadic)]
+        pub fn max(values: &[f64]) -> f64;
+    }
+}
+
+#[wasm_bindgen_test]
+fn same_function_variadic() {
+    use same_function_variadic_a as a;
+    use same_function_variadic_b as b;
+
+    // Without `variadic`, `Math.max` gets one typed array, which is NaN.
+    assert!(a::max(&[1.0, 2.0]).is_nan());
+    assert_eq!(b::max(&[1.0, 2.0]), 2.0);
+}
+
+pub mod same_function_slice_to_array_a {
+    use wasm_bindgen::prelude::*;
+
+    #[wasm_bindgen]
+    extern "C" {
+        #[wasm_bindgen(js_namespace = Array, js_name = isArray)]
+        pub fn is_array(values: &[u32]) -> bool;
+    }
+}
+
+pub mod same_function_slice_to_array_b {
+    use wasm_bindgen::prelude::*;
+
+    #[wasm_bindgen]
+    extern "C" {
+        #[wasm_bindgen(js_namespace = Array, js_name = isArray, slice_to_array)]
+        pub fn is_array(values: &[u32]) -> bool;
+    }
+}
+
+#[wasm_bindgen_test]
+fn same_function_slice_to_array() {
+    use same_function_slice_to_array_a as a;
+    use same_function_slice_to_array_b as b;
+
+    assert!(!a::is_array(&[1, 2]));
+    assert!(b::is_array(&[1, 2]));
+}
+
+// Shim names only keep the ASCII letters, digits and underscores of the JS name.
+pub mod same_function_similar_js_name_a {
+    use wasm_bindgen::prelude::*;
+
+    #[wasm_bindgen(module = "tests/wasm/duplicates_c.js")]
+    extern "C" {
+        #[wasm_bindgen(js_name = "$get")]
+        pub fn get() -> u32;
+    }
+}
+
+pub mod same_function_similar_js_name_b {
+    use wasm_bindgen::prelude::*;
+
+    #[wasm_bindgen(module = "tests/wasm/duplicates_c.js")]
+    extern "C" {
+        pub fn get() -> u32;
+    }
+}
+
+#[wasm_bindgen_test]
+fn same_function_similar_js_name() {
+    use same_function_similar_js_name_a as a;
+    use same_function_similar_js_name_b as b;
+
+    assert_eq!(a::get(), 1);
+    assert_eq!(b::get(), 2);
+}
+
+pub mod same_method_different_kind_a {
+    use wasm_bindgen::prelude::*;
+
+    #[wasm_bindgen]
+    extern "C" {
+        pub type Value;
+        #[wasm_bindgen(method, js_class = "Object", js_name = toString)]
+        pub fn describe(this: &Value) -> JsValue;
+    }
+}
+
+pub mod same_method_different_kind_b {
+    use wasm_bindgen::prelude::*;
+
+    #[wasm_bindgen]
+    extern "C" {
+        pub type Value;
+        #[wasm_bindgen(method, getter, js_class = "Object", js_name = toString)]
+        pub fn describe(this: &Value) -> JsValue;
+    }
+}
+
+pub mod same_method_different_kind_c {
+    use wasm_bindgen::prelude::*;
+
+    #[wasm_bindgen]
+    extern "C" {
+        pub type Value;
+        #[wasm_bindgen(method, final, js_class = "Object", js_name = toString)]
+        pub fn describe(this: &Value) -> JsValue;
+    }
+}
+
+#[wasm_bindgen_test]
+fn same_method_different_kind() {
+    use same_method_different_kind_a as a;
+    use same_method_different_kind_b as b;
+    use same_method_different_kind_c as c;
+    use wasm_bindgen::JsCast;
+
+    let array = js_sys::Array::of2(&1.into(), &2.into());
+    // `array.toString()`
+    assert_eq!(array.unchecked_ref::<a::Value>().describe(), "1,2");
+    // `array.toString`
+    assert!(array.unchecked_ref::<b::Value>().describe().is_function());
+    // `Object.prototype.toString.call(array)`
+    assert_eq!(
+        array.unchecked_ref::<c::Value>().describe(),
+        "[object Array]"
+    );
+}

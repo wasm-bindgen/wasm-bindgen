@@ -250,18 +250,16 @@ fn experimental_generic_mono_identical_imports_deduplicate() {
     assert_contains!(&js, "console.log(");
 }
 
-/// A *genuine* shim-key collision must still be reported, naming both imports.
+/// Two `experimental_generic_mono` imports that agree on everything else and differ only
+/// in `variadic` must get distinct shim keys, and both must bind.
 ///
-/// `variadic` is one of the attributes that does not contribute to the shim
-/// key and, unlike `catch`, does not perturb the signature tokens either (it
-/// spreads the trailing sequence argument rather than retyping it). So these
-/// two agree on every hashed input yet want materially different bindings:
-/// one calls `console.log(xs)`, the other `console.log(...xs)`. Binding only
-/// one would silently mis-bind every monomorphisation of the other, so this
-/// has to stay an error -- the dedup above must not swallow it.
+/// Unlike `catch`, `variadic` does not perturb the signature tokens (it spreads
+/// the trailing sequence argument rather than retyping it), so it is hashed into
+/// the key as part of the call style (`ImportCallStyle` in `parser.rs`). One
+/// import calls `console.log(xs)`, the other `console.log(...xs)`.
 #[test]
-fn experimental_generic_mono_genuine_collision_is_reported() {
-    let err = Project::new("experimental_generic_mono_genuine_collision_is_reported")
+fn experimental_generic_mono_variadic_does_not_collide_on_the_shim_key() {
+    let out_dir = Project::new("experimental_generic_mono_variadic_shim_key")
         .file(
             "src/lib.rs",
             r#"
@@ -280,9 +278,8 @@ fn experimental_generic_mono_genuine_collision_is_reported() {
                     use wasm_bindgen::prelude::*;
                     #[wasm_bindgen]
                     extern "C" {
-                        // Differs from `one::log` only in `variadic`, which is
-                        // not hashed into the shim key and leaves the signature
-                        // tokens byte-identical.
+                        // Differs from `one::log` only in `variadic`, which
+                        // leaves the signature tokens byte-identical.
                         #[wasm_bindgen(js_namespace = console, experimental_generic_mono, variadic)]
                         pub fn log<T>(xs: Vec<T>);
                     }
@@ -296,13 +293,14 @@ fn experimental_generic_mono_genuine_collision_is_reported() {
             "#,
         )
         .wasm_bindgen("--target web")
-        .unwrap_err()
-        .to_string();
+        .unwrap();
+    let js =
+        fs::read_to_string(out_dir.join("experimental_generic_mono_variadic_shim_key.js")).unwrap();
 
-    assert_contains!(&err, "collided on the shim key");
-    // The shim key is a hash, so the message has to name the imports in terms
-    // the user recognises.
-    assert_contains!(&err, "console.log");
+    // Both calls must be bound; if the two imports still shared a key one of
+    // them would be silently dropped (or the build would fail).
+    assert_contains!(&js, "console.log(v0)");
+    assert_contains!(&js, "console.log(...(v0))");
 }
 
 /// Same-named exports from different crates no longer collide at link time

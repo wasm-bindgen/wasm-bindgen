@@ -26,11 +26,11 @@ export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {
 export function __wbg__wbg_cb_unref_dcc1a90847f04c41(arg0) {
     arg0._wbg_cb_unref();
 }
-export function __wbg_call_187d372bd5fdd4aa() { return handleError(function (arg0, arg1, arg2) {
+export function __wbg_call_a48f35d3fb7572a8() { return handleError(function (arg0, arg1, arg2) {
     const ret = arg0.call(arg1, arg2);
     return ret;
 }, arguments); }
-export function __wbg_new_typed_b01cb72a8af741a3(arg0, arg1) {
+export function __wbg_new_typed_1b466b4a87f4f6fa(arg0, arg1) {
     try {
         var state0 = {a: arg0, b: arg1};
         var cb0 = (arg0, arg1) => {
@@ -48,14 +48,14 @@ export function __wbg_new_typed_b01cb72a8af741a3(arg0, arg1) {
         state0.a = 0;
     }
 }
-export function __wbg_queueMicrotask_9833f9a49df95a49(arg0) {
+export function __wbg_queueMicrotask_2030f4836bf1c47b(arg0) {
     const ret = arg0.queueMicrotask;
     return ret;
 }
 export function __wbg_queueMicrotask_a72f977e97f23c5f(arg0) {
     queueMicrotask(arg0);
 }
-export function __wbg_resolve_0076e10020304ede(arg0) {
+export function __wbg_resolve_5556851ee5625d79(arg0) {
     const ret = Promise.resolve(arg0);
     return ret;
 }

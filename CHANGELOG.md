@@ -21,6 +21,15 @@
   one string.
   [#5352](https://github.com/wasm-bindgen/wasm-bindgen/pull/5352)
 
+* Imported functions with the same name and signature no longer share one
+  binding when they differ in how JS is called: `catch`, `variadic`, `final`,
+  `slice_to_array`, `suspending`, `experimental_generic_mono`, the method kind
+  (`constructor`, `static_method_of`, `getter`, `setter`, `indexing_*`), or a
+  `js_name` with characters that a shim name drops. Two
+  `experimental_generic_mono` imports that differ only in one of these now
+  both bind instead of failing the build.
+  [#5352](https://github.com/wasm-bindgen/wasm-bindgen/pull/5352)
+
 ### Removed
 
 ## [0.2.129](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.128...0.2.129)

@@ -257,7 +257,7 @@ pub enum ImportFunctionKind {
 
 /// The type of a method
 #[cfg_attr(feature = "extra-traits", derive(Debug, PartialEq, Eq))]
-#[derive(Clone)]
+#[derive(Clone, Hash)]
 pub enum MethodKind {
     /// A class constructor
     Constructor,
@@ -267,7 +267,7 @@ pub enum MethodKind {
 
 /// The operation performed by a class method
 #[cfg_attr(feature = "extra-traits", derive(Debug, PartialEq, Eq))]
-#[derive(Clone)]
+#[derive(Clone, Hash)]
 pub struct Operation {
     /// Whether this method is static
     pub is_static: bool,
@@ -277,7 +277,7 @@ pub struct Operation {
 
 /// The kind of operation performed by a method
 #[cfg_attr(feature = "extra-traits", derive(Debug, PartialEq, Eq))]
-#[derive(Clone)]
+#[derive(Clone, Hash)]
 pub enum OperationKind {
     /// A standard method, nothing special
     Regular,

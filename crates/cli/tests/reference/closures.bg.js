@@ -58,7 +58,7 @@ export function __wbg_instanceof_Window_6cde849ec69a0219(arg0) {
 export function __wbg_log_17c30ef363c61cf4(arg0) {
     console.log(arg0);
 }
-export function __wbg_setTimeout_78f3ff5ac3675dc6() { return handleError(function (arg0, arg1) {
+export function __wbg_setTimeout_5e125a59db298258() { return handleError(function (arg0, arg1) {
     const ret = arg0.setTimeout(arg1);
     return ret;
 }, arguments); }
