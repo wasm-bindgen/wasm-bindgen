@@ -8,7 +8,7 @@
 > attribute](final.html) is more functionally interesting than
 > `structural` (as `structural` is simply the default)
 
-[RFC 5]: https://rustwasm.github.io/rfcs/005-structural-and-deref.html
+[RFC 5]: https://github.com/rustwasm/rfcs/blob/master/text/005-structural-and-deref.md
 
 The `structural` flag can be added to `method` annotations, indicating that the
 method being accessed (or property with getters/setters) should be accessed in a

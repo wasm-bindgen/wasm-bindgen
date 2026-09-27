@@ -20,6 +20,6 @@ artifact, but this is not required! You can review the [deployment
 documentation][deploy] for other options of how to deploy Rust and WebAssembly.
 
 [code]: https://github.com/wasm-bindgen/wasm-bindgen/tree/master/examples
-[gol]: https://rustwasm.github.io/docs/book/
+[gol]: https://rustwasm.github.io/docs/book/game-of-life/introduction.html
 [deploy]: ../reference/deployment.html
-[wpt]: https://rustwasm.github.io/docs/wasm-pack/tutorials/index.html
+[wpt]: https://wasm-bindgen.github.io/wasm-pack/book/tutorials/index.html
