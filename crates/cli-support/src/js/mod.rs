@@ -7006,6 +7006,9 @@ addToLibrary({
                 if (type == 'number' || type == 'boolean' || val == null) {
                     return  `${val}`;
                 }
+                if (type == 'bigint') {
+                    return `${val}n`;
+                }
                 if (type == 'string') {
                     return `\"${val}\"`;
                 }

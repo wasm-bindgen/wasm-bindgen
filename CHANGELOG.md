@@ -9,6 +9,9 @@
 
 ### Fixed
 
+* `debugString` handles `bigint` values (e.g. `123n`).
+  [#5356](https://github.com/wasm-bindgen/wasm-bindgen/pull/5356)
+
 ### Removed
 
 ## [0.2.129](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.128...0.2.129)
