@@ -10,7 +10,7 @@ use core::any::Any;
 use core::borrow::{Borrow, BorrowMut};
 #[cfg(target_feature = "atomics")]
 use core::cell::UnsafeCell;
-use core::cell::{Cell, RefCell};
+use core::cell::{Cell, LazyCell as Lazy, RefCell};
 use core::convert::Infallible;
 use core::marker::PhantomData;
 use core::ops::{Deref, DerefMut};
@@ -21,7 +21,6 @@ use wasm_bindgen_shared::tys::FUNCTION;
 
 use alloc::alloc::{alloc, dealloc, realloc, Layout};
 use alloc::rc::Rc;
-use once_cell::unsync::Lazy;
 
 pub extern crate alloc;
 pub extern crate core;
@@ -147,13 +146,11 @@ unsafe impl<T> Send for ThreadLocalWrapper<T> {}
 /// Wrapper around [`Lazy`] adding `Send + Sync` when `atomics` is not enabled.
 pub struct LazyCell<T, F = fn() -> T>(ThreadLocalWrapper<Lazy<T, F>>);
 
-impl<T, F> LazyCell<T, F> {
+impl<T, F: FnOnce() -> T> LazyCell<T, F> {
     pub const fn new(init: F) -> LazyCell<T, F> {
         Self(ThreadLocalWrapper(Lazy::new(init)))
     }
-}
 
-impl<T, F: FnOnce() -> T> LazyCell<T, F> {
     pub fn force(this: &Self) -> &T {
         &this.0 .0
     }
@@ -163,7 +160,7 @@ impl<T> Deref for LazyCell<T> {
     type Target = T;
 
     fn deref(&self) -> &T {
-        ::once_cell::unsync::Lazy::force(&self.0 .0)
+        Lazy::force(&self.0 .0)
     }
 }
 
