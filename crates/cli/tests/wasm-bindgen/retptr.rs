@@ -5,6 +5,7 @@ use std::fs;
 #[test]
 fn shared_worker_high_address_retptr() {
     let mut project = Project::new("shared_worker_high_address_retptr");
+    project.cargo_cmd.env("RUSTUP_TOOLCHAIN", "nightly");
     project.cargo_cmd.arg("-Zbuild-std=std,panic_abort").env(
         "RUSTFLAGS",
         "-Ctarget-feature=+atomics,+bulk-memory,-multivalue \
@@ -89,7 +90,10 @@ fn shared_worker_high_address_retptr() {
 fn memory64_retptr() {
     let mut project = Project::new("memory64_retptr");
     project.target("wasm64-unknown-unknown");
-    project.cargo_cmd.arg("-Zbuild-std=std,panic_abort");
+    project
+        .cargo_cmd
+        .env("RUSTUP_TOOLCHAIN", "nightly")
+        .arg("-Zbuild-std=std,panic_abort");
     project.file(
         "src/lib.rs",
         r#"
