@@ -9,6 +9,9 @@
   out of the JavaScript object, which throws on any later use.
   [#5354](https://github.com/wasm-bindgen/wasm-bindgen/pull/5354)
 
+* Added `source` property to ToggleEvent.
+  [#5353](https://github.com/wasm-bindgen/wasm-bindgen/pull/5353)
+
 ### Changed
 
 * Replaced the `once_cell` dependency with `core::cell::LazyCell`, which is
