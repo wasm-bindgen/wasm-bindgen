@@ -11,6 +11,9 @@
 
 ### Changed
 
+* Replaced the `once_cell` dependency with `core::cell::LazyCell`, which is
+  available now that the library MSRV is 1.81.
+
 ### Fixed
 
 * `debugString` handles `bigint` values (e.g. `123n`).
@@ -18,6 +21,11 @@
 
 * Fixed JSPI task pointers being truncated to 32 bits on `wasm64`.
   [#5358](https://github.com/wasm-bindgen/wasm-bindgen/issues/5358)
+
+* Return pointers above 2 GiB on `wasm32` (e.g. thread stacks allocated under
+  `+atomics`) are no longer treated as negative offsets in the generated JS,
+  which previously threw a `RangeError` on number and string conversions.
+  [#5360](https://github.com/wasm-bindgen/wasm-bindgen/pull/5360)
 
 ### Removed
 

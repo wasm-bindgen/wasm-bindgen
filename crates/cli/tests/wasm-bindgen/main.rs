@@ -14,6 +14,7 @@
 mod diagnostics;
 mod npm;
 mod reference;
+mod retptr;
 
 use assert_cmd::Command;
 use predicates::str;
