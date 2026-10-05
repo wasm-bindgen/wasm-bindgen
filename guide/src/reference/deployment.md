@@ -41,11 +41,13 @@ form.
 > native ES modules today they're all very much likely to in the future!
 
 Currently the only known bundler known to be fully compatible with
-`wasm-bindgen` is [webpack]. Most [examples] use webpack, and you can check out
-the [hello world example online] to see the details of webpack configuration
+`wasm-bindgen` is [webpack]. Rolldown is also compatible with
+[`rolldown-plugin-wasm`]. Most [examples] use webpack, and you can check out the
+[hello world example online] to see the details of webpack configuration
 necessary.
 
 [webpack]: https://webpack.js.org/
+[`rolldown-plugin-wasm`]: https://github.com/sxzz/rolldown-plugin-wasm
 [examples]: ../examples/index.html
 [hello world example online]: ../examples/hello-world.html
 

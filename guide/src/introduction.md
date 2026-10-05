@@ -5,7 +5,9 @@ high-level interactions between Wasm modules and JavaScript. The `wasm-bindgen`
 tool and crate are only one part of the [Rust and WebAssembly
 ecosystem][rustwasm]. If you're not familiar already with `wasm-bindgen` it's
 recommended to start by reading the [Game of Life tutorial][gol]. If you're
-curious about `wasm-pack`, you can find that [documentation here][wasm-pack].
+curious about `wasm-pack`, you can find that [documentation here][wasm-pack]
+(including the current [installer][wasm-pack-installer]; older
+`rustwasm.github.io/wasm-pack/installer/` URLs are deprecated).
 
 The `wasm-bindgen` tool is sort of half polyfill for features like the
 [component model proposal][component-model] and half features for empowering high-level
@@ -38,6 +40,7 @@ publishing Rust-compiled-to-WebAssembly on NPM!
 [console-log]: https://github.com/wasm-bindgen/wasm-bindgen/tree/main/examples/console_log
 [perf-ex]: https://github.com/wasm-bindgen/wasm-bindgen/tree/main/examples/performance
 [hello-online]: https://webassembly.studio/?f=gzubao6tg3
-[rustwasm]: https://rustwasm.github.io/
-[gol]: https://rustwasm.github.io/docs/book/
+[rustwasm]: https://github.com/rustwasm
+[gol]: https://rustwasm.github.io/docs/book/game-of-life/introduction.html
 [wasm-pack]: https://wasm-bindgen.github.io/wasm-pack/book/
+[wasm-pack-installer]: https://wasm-bindgen.github.io/wasm-pack/installer/
