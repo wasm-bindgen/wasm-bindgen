@@ -11,6 +11,9 @@
 
 ### Changed
 
+* Replaced the `once_cell` dependency with `core::cell::LazyCell`, which is
+  available now that the library MSRV is 1.81.
+
 ### Fixed
 
 * `debugString` handles `bigint` values (e.g. `123n`).
