@@ -43,7 +43,7 @@ As an example, the `wasm-bindgen` repository [contains an example][example]
 about generating small Wasm binaries and shows off how to generate a small wasm
 file for adding two numbers.
 
-[gol]: https://rustwasm.github.io/book/game-of-life/introduction.html
-[size]: https://rustwasm.github.io/book/game-of-life/code-size.html
+[gol]: https://rustwasm.github.io/docs/book/game-of-life/introduction.html
+[size]: https://rustwasm.github.io/docs/book/game-of-life/code-size.html
 [issue]: https://github.com/wasm-bindgen/wasm-bindgen/issues/new
 [example]: https://wasm-bindgen.github.io/wasm-bindgen/examples/add.html
