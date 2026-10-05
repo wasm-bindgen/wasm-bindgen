@@ -761,6 +761,8 @@ impl ToTokens for ast::StructField {
                 #wasm_bindgen::__wbindgen_coverage! {
                 #[cfg_attr(all(target_family = "wasm", not(target_os = "wasi")), export_name = #getter_symbol)]
                 #[doc(hidden)]
+                // Copy fields are also cloned under getter_with_clone
+                #[allow(clippy::clone_on_copy)]
                 pub unsafe extern "C-unwind" fn #getter(js: #struct_abi)
                     -> #wasm_bindgen::convert::WasmRet<<#ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi>
                 {
