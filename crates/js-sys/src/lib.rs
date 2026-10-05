@@ -7002,6 +7002,7 @@ extern "C" {
         descriptor: &PropertyDescriptor<JsValue>,
     ) -> Result<Object<T>, JsValue>;
 
+    // Next major: deprecate in favor of `define_property`
     /// The static method `Object.defineProperty()` defines a new property
     /// directly on an object, or modifies an existing property on an object,
     /// and returns the object.
@@ -7127,6 +7128,7 @@ extern "C" {
         entries: &I,
     ) -> Result<Object<T>, JsValue>;
 
+    // Next major: deprecate in favor of `from_entries`
     /// The `Object.fromEntries()` method transforms an iterable of key-value
     /// pairs into an object.
     ///
@@ -7195,6 +7197,7 @@ extern "C" {
         prop: &Symbol,
     ) -> Result<PropertyDescriptor<JsValue>, JsValue>;
 
+    // Next major: deprecate in favor of `get_own_property_descriptor`
     /// The `Object.getOwnPropertyDescriptor()` method returns a property
     /// descriptor for an own property of a given object.
     ///
@@ -7327,6 +7330,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = Object, js_name = hasOwn, catch)]
     pub fn has_own_symbol<T>(instance: &Object<T>, property: &Symbol) -> Result<bool, JsValue>;
 
+    // Next major: deprecate in favor of `has_own`
     /// The `Object.hasOwn()` method returns whether an object has the specified
     /// property as its own property.
     ///
@@ -7439,6 +7443,7 @@ extern "C" {
     )]
     pub fn property_is_enumerable<T, K: PropertyKey>(this: &Object<T>, property: K) -> bool;
 
+    // Next major: deprecate in favor of `property_is_enumerable`
     /// The `propertyIsEnumerable()` method returns whether the specified
     /// property is both an own property and enumerable.
     ///
@@ -7748,6 +7753,7 @@ pub mod Reflect {
             attributes: &PropertyDescriptor<T>,
         ) -> Result<bool, JsValue>;
 
+        // Next major: deprecate in favor of `define_property`
         /// The static `Reflect.defineProperty()` method defines or modifies a
         /// property using any JavaScript property-key representation.
         ///
@@ -7798,6 +7804,7 @@ pub mod Reflect {
         #[wasm_bindgen(js_namespace = Reflect, js_name = deleteProperty, catch)]
         pub fn delete_property_str<T>(target: &Object<T>, key: &JsString) -> Result<bool, JsValue>;
 
+        // Next major: deprecate in favor of `delete_property`
         /// The static `Reflect.deleteProperty()` method deletes a property
         /// using any JavaScript property-key representation.
         ///
@@ -7846,6 +7853,7 @@ pub mod Reflect {
         #[wasm_bindgen(js_namespace = Reflect, js_name = get, catch)]
         pub fn get_symbol<T>(target: &Object<T>, key: &Symbol) -> Result<JsValue, JsValue>;
 
+        // Next major: deprecate in favor of `get`
         /// The static `Reflect.get()` method returns a property value using any
         /// JavaScript property-key representation.
         ///
@@ -7912,6 +7920,7 @@ pub mod Reflect {
             property_key: &JsString,
         ) -> Result<PropertyDescriptor<T>, JsValue>;
 
+        // Next major: deprecate in favor of `get_own_property_descriptor`
         /// The static `Reflect.getOwnPropertyDescriptor()` method returns a
         /// property descriptor using any JavaScript property-key
         /// representation.
@@ -7983,6 +7992,7 @@ pub mod Reflect {
         #[wasm_bindgen(js_namespace = Reflect, js_name = has, catch)]
         pub fn has_symbol<T>(target: &Object<T>, property_key: &Symbol) -> Result<bool, JsValue>;
 
+        // Next major: deprecate in favor of `has`
         /// The static `Reflect.has()` method checks for a property using any
         /// JavaScript property-key representation.
         ///
@@ -8073,6 +8083,7 @@ pub mod Reflect {
             value: &T,
         ) -> Result<bool, JsValue>;
 
+        // Next major: deprecate in favor of `set`
         /// The static `Reflect.set()` method sets a property using any
         /// JavaScript property-key representation.
         ///
@@ -10454,54 +10465,189 @@ extern "C" {
     pub fn value_of(this: &Symbol) -> Symbol;
 }
 
-macro_rules! impl_primitive_union_wrapper_category {
+mod primitive_union_sealed {
+    /// Seal for the TypeScript primitive-union marker traits.
+    pub trait Sealed {}
+}
+
+macro_rules! impl_primitive_union_category {
     ($trait:path, bigint) => {
+        impl $trait for i64 {}
+        impl $trait for u64 {}
+        impl $trait for i128 {}
+        impl $trait for u128 {}
         impl $trait for BigInt {}
         impl $trait for &BigInt {}
     };
     ($trait:path, boolean) => {
+        impl $trait for bool {}
         impl $trait for Boolean {}
         impl $trait for &Boolean {}
     };
     ($trait:path, number) => {
+        impl $trait for i8 {}
+        impl $trait for u8 {}
+        impl $trait for i16 {}
+        impl $trait for u16 {}
+        impl $trait for i32 {}
+        impl $trait for u32 {}
+        impl $trait for isize {}
+        impl $trait for usize {}
+        impl $trait for f32 {}
+        impl $trait for f64 {}
         impl $trait for Number {}
         impl $trait for &Number {}
     };
-    // `JsString` and `&JsString` are covered by the blanket implementation for
-    // every `T: wasm_bindgen::JsStringLike`.
-    ($trait:path, string) => {};
+    // Mirrors the sealed `wasm_bindgen::JsStringLike` implementations. A
+    // blanket `impl<T: JsStringLike>` would be rejected by coherence here,
+    // because `JsStringLike` is a foreign trait.
+    ($trait:path, string) => {
+        impl $trait for String {}
+        impl $trait for &str {}
+        impl $trait for JsString {}
+        impl $trait for &JsString {}
+    };
     ($trait:path, symbol) => {
         impl $trait for Symbol {}
         impl $trait for &Symbol {}
     };
 }
 
-macro_rules! impl_primitive_union_wrappers {
-    ($(($name:ident, $typescript:literal, [$($supertrait:ident),*], [$($category:ident),+])),* $(,)?) => {
+impl_primitive_union_category!(primitive_union_sealed::Sealed, bigint);
+impl_primitive_union_category!(primitive_union_sealed::Sealed, boolean);
+impl_primitive_union_category!(primitive_union_sealed::Sealed, number);
+impl_primitive_union_category!(primitive_union_sealed::Sealed, string);
+impl_primitive_union_category!(primitive_union_sealed::Sealed, symbol);
+
+macro_rules! primitive_union_category_doc {
+    (bigint) => {
+        "- `bigint`: `i64`, `u64`, `i128`, `u128`, [`BigInt`], and `&BigInt`\n"
+    };
+    (boolean) => {
+        "- `boolean`: `bool`, [`Boolean`], and `&Boolean`\n"
+    };
+    (number) => {
+        "- `number`: `i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `isize`, `usize`, `f32`, `f64`, [`Number`], and `&Number`\n"
+    };
+    (string) => {
+        "- `string`: `String`, `&str`, [`JsString`], and `&JsString` (the \
+         [`JsStringLike`](wasm_bindgen::JsStringLike) types)\n"
+    };
+    (symbol) => {
+        "- `symbol`: [`Symbol`] and `&Symbol`\n"
+    };
+}
+
+macro_rules! define_primitive_union_traits {
+    ($(($(#[$attr:meta])* $name:ident, $typescript:literal, [$($supertrait:ident),*], [$($category:ident),+])),* $(,)?) => {
         $(
-            #[doc(inline)]
-            pub use wasm_bindgen::convert::$name;
-            $(impl_primitive_union_wrapper_category!(wasm_bindgen::convert::$name, $category);)+
+            $(#[$attr])*
+            #[doc = concat!(
+                "Marker for Rust parameter types represented by the TypeScript union `",
+                $typescript,
+                "`.\n\n",
+                "Use this trait as a bound on an `experimental_generic_mono` ",
+                "JavaScript import. Each monomorphisation retains its concrete ",
+                "ABI representation; this marker only restricts which Rust types ",
+                "may instantiate the parameter.\n\n",
+                "The union's primitive categories use these Rust representations:\n\n",
+                $(primitive_union_category_doc!($category),)+
+                "\nThis trait is experimental and may change or be removed as ",
+                "`experimental_generic_mono` evolves."
+            )]
+            pub trait $name: IntoWasmAbi + primitive_union_sealed::Sealed $(+ $supertrait)* {}
+
+            $(impl_primitive_union_category!($name, $category);)+
         )*
     };
 }
 
-impl_primitive_union_wrapper_category!(wasm_bindgen::__rt::marker::PrimitiveUnionSealed, bigint);
-impl_primitive_union_wrapper_category!(wasm_bindgen::__rt::marker::PrimitiveUnionSealed, boolean);
-impl_primitive_union_wrapper_category!(wasm_bindgen::__rt::marker::PrimitiveUnionSealed, number);
-impl_primitive_union_wrapper_category!(wasm_bindgen::__rt::marker::PrimitiveUnionSealed, symbol);
-
-wasm_bindgen::__wbg_for_each_primitive_union!(impl_primitive_union_wrappers);
-
-/// Marker for Rust parameter types that can be used as JavaScript property
-/// keys, including as keys in a TypeScript `Record`.
-///
-/// This is an alias for [`JsNumberOrStringOrSymbolLike`], matching
-/// TypeScript's `PropertyKey` (`string | number | symbol`).
-///
-/// This trait is experimental and may change or be removed as
-/// `experimental_generic_mono` evolves.
-pub use JsNumberOrStringOrSymbolLike as PropertyKey;
+// The catalog covers every union of two or more of the primitive categories
+// with a Rust-native ABI representation (`bigint`, `boolean`, `number`, and
+// `string`). `symbol` crosses the boundary as an ordinary JS handle, so unions
+// containing it are better expressed with a `&Symbol` overload; the one
+// exception is `PropertyKey`, where `symbol` carries semantic identity.
+define_primitive_union_traits! {
+    (
+        JsBigIntOrBooleanOrNumberOrStringLike,
+        "bigint | boolean | number | string",
+        [],
+        [bigint, boolean, number, string]
+    ),
+    (
+        JsBigIntOrBooleanOrNumberLike,
+        "bigint | boolean | number",
+        [JsBigIntOrBooleanOrNumberOrStringLike],
+        [bigint, boolean, number]
+    ),
+    (
+        JsBigIntOrBooleanOrStringLike,
+        "bigint | boolean | string",
+        [JsBigIntOrBooleanOrNumberOrStringLike],
+        [bigint, boolean, string]
+    ),
+    (
+        JsBigIntOrNumberOrStringLike,
+        "bigint | number | string",
+        [JsBigIntOrBooleanOrNumberOrStringLike],
+        [bigint, number, string]
+    ),
+    (
+        JsBooleanOrNumberOrStringLike,
+        "boolean | number | string",
+        [JsBigIntOrBooleanOrNumberOrStringLike],
+        [boolean, number, string]
+    ),
+    (
+        JsBigIntOrBooleanLike,
+        "bigint | boolean",
+        [JsBigIntOrBooleanOrNumberLike, JsBigIntOrBooleanOrStringLike],
+        [bigint, boolean]
+    ),
+    (
+        JsBigIntOrNumberLike,
+        "bigint | number",
+        [JsBigIntOrBooleanOrNumberLike, JsBigIntOrNumberOrStringLike],
+        [bigint, number]
+    ),
+    (
+        JsBigIntOrStringLike,
+        "bigint | string",
+        [JsBigIntOrBooleanOrStringLike, JsBigIntOrNumberOrStringLike],
+        [bigint, string]
+    ),
+    (
+        JsBooleanOrNumberLike,
+        "boolean | number",
+        [JsBigIntOrBooleanOrNumberLike, JsBooleanOrNumberOrStringLike],
+        [boolean, number]
+    ),
+    (
+        JsBooleanOrStringLike,
+        "boolean | string",
+        [JsBigIntOrBooleanOrStringLike, JsBooleanOrNumberOrStringLike],
+        [boolean, string]
+    ),
+    (
+        JsNumberOrStringLike,
+        "number | string",
+        [
+            JsBigIntOrNumberOrStringLike,
+            JsBooleanOrNumberOrStringLike,
+            PropertyKey
+        ],
+        [number, string]
+    ),
+    (
+        /// TypeScript's `PropertyKey`: the key types accepted by JavaScript
+        /// property operations and by TypeScript's `Record`.
+        ///
+        PropertyKey,
+        "number | string | symbol",
+        [],
+        [number, string, symbol]
+    ),
+}
 
 #[allow(non_snake_case)]
 pub mod Intl {

@@ -12,18 +12,19 @@
 * Added `source` property to ToggleEvent.
   [#5353](https://github.com/wasm-bindgen/wasm-bindgen/pull/5353)
 
-* Added 26 experimental `js-sys` marker traits for every union of two or more
-  TypeScript `bigint`, `boolean`, `number`, `string`, and `symbol` primitive
+* Added 11 experimental `js-sys` marker traits for every union of two or more
+  of the TypeScript `bigint`, `boolean`, `number`, and `string` primitive
   categories. Traits such as `JsNumberOrStringLike` can bound
   `experimental_generic_mono` import parameters while preserving each concrete
   Rust type's native ABI representation. String-containing unions accept every
-  `wasm_bindgen::JsStringLike` implementation.
+  `wasm_bindgen::JsStringLike` type.
 
-* Added the experimental `js_sys::PropertyKey` alias for
-  `JsNumberOrStringOrSymbolLike`, covering the `string | number | symbol` keys
-  accepted by TypeScript's `Record` type. New `Object` and `Reflect` property
-  operations use this bound to accept string, number, or symbol keys while
-  retaining typed values; existing key-specific operations remain available.
+* Added the experimental `js_sys::PropertyKey` marker trait for the
+  `string | number | symbol` keys accepted by TypeScript's `Record` type.
+  `JsNumberOrStringLike` widens to `PropertyKey`. New `Object` and `Reflect`
+  property operations use this bound to accept string, number, or symbol keys
+  while retaining typed values; existing key-specific operations remain
+  available.
 
 ### Changed
 

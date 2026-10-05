@@ -19,8 +19,8 @@
 //!   than the concrete-slice route, both as a plain and a `variadic` argument.
 
 use js_sys::{
-    BigInt, Boolean, JsBigIntOrBooleanOrNumberOrStringOrSymbolLike, JsNumberOrStringLike, JsString,
-    Number, Symbol,
+    BigInt, Boolean, JsBigIntOrBooleanOrNumberOrStringLike, JsNumberOrStringLike, JsString, Number,
+    PropertyKey, Symbol,
 };
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsStringLike;
@@ -62,16 +62,19 @@ extern "C" {
     fn describe_any<T>(x: T) -> String;
 
     #[wasm_bindgen(experimental_generic_mono, js_name = describeAny)]
-    fn describe_primitive<T: JsBigIntOrBooleanOrNumberOrStringOrSymbolLike>(x: T) -> String;
+    fn describe_primitive<T: JsBigIntOrBooleanOrNumberOrStringLike>(x: T) -> String;
 
     #[wasm_bindgen(experimental_generic_mono, js_name = describeType)]
-    fn describe_primitive_type<T: JsBigIntOrBooleanOrNumberOrStringOrSymbolLike>(x: T) -> String;
+    fn describe_primitive_type<T: JsBigIntOrBooleanOrNumberOrStringLike>(x: T) -> String;
+
+    #[wasm_bindgen(experimental_generic_mono, js_name = describeType)]
+    fn describe_property_key_type<T: PropertyKey>(x: T) -> String;
 
     #[wasm_bindgen(experimental_generic_mono, js_name = describeType)]
     fn describe_number_or_string_type<T: JsNumberOrStringLike>(x: T) -> String;
 
     #[wasm_bindgen(experimental_generic_mono, js_name = optDescribe)]
-    fn describe_optional_primitive<T: JsBigIntOrBooleanOrNumberOrStringOrSymbolLike>(
+    fn describe_optional_primitive<T: JsBigIntOrBooleanOrNumberOrStringLike>(
         x: Option<T>,
     ) -> String;
 
@@ -199,10 +202,16 @@ fn primitive_union_accepts_native_and_wrapper_shapes() {
     let boolean = Boolean::from(true);
     assert_eq!(describe_primitive_type(&boolean), "boolean");
     assert_eq!(describe_primitive_type(boolean), "boolean");
+}
+
+#[wasm_bindgen_test]
+fn property_key_accepts_number_string_and_symbol_shapes() {
+    assert_eq!(describe_property_key_type(7u32), "number");
+    assert_eq!(describe_property_key_type("key"), "string");
 
     let symbol = Symbol::for_("primitive-union-test");
-    assert_eq!(describe_primitive_type(&symbol), "symbol");
-    assert_eq!(describe_primitive_type(symbol), "symbol");
+    assert_eq!(describe_property_key_type(&symbol), "symbol");
+    assert_eq!(describe_property_key_type(symbol), "symbol");
 }
 
 #[wasm_bindgen_test]
@@ -214,18 +223,12 @@ fn primitive_union_supports_specialized_optional_abis() {
 }
 
 #[wasm_bindgen_test]
-fn primitive_union_four_member_traits_widen_to_all_primitives() {
+fn primitive_union_four_member_trait_accepts_all_native_primitives() {
     fn assert_bigint_boolean_number_string<T: js_sys::JsBigIntOrBooleanOrNumberOrStringLike>() {}
     assert_bigint_boolean_number_string::<i64>();
     assert_bigint_boolean_number_string::<bool>();
     assert_bigint_boolean_number_string::<f64>();
     assert_bigint_boolean_number_string::<String>();
-
-    fn assert_widens<T: js_sys::JsBigIntOrBooleanOrNumberOrStringLike>() {
-        fn accepts_all<U: js_sys::JsBigIntOrBooleanOrNumberOrStringOrSymbolLike>() {}
-        accepts_all::<T>();
-    }
-    assert_widens::<String>();
 }
 
 #[wasm_bindgen_test]
@@ -237,9 +240,7 @@ fn primitive_union_three_member_traits_widen_to_four_member_unions() {
 
     fn assert_widens<T: js_sys::JsBigIntOrNumberOrStringLike>() {
         fn with_boolean<U: js_sys::JsBigIntOrBooleanOrNumberOrStringLike>() {}
-        fn with_symbol<U: js_sys::JsBigIntOrNumberOrStringOrSymbolLike>() {}
         with_boolean::<T>();
-        with_symbol::<T>();
     }
     assert_widens::<String>();
 }
@@ -253,10 +254,10 @@ fn primitive_union_two_member_traits_widen_to_three_member_unions() {
     fn assert_widens<T: js_sys::JsNumberOrStringLike>() {
         fn with_bigint<U: js_sys::JsBigIntOrNumberOrStringLike>() {}
         fn with_boolean<U: js_sys::JsBooleanOrNumberOrStringLike>() {}
-        fn with_symbol<U: js_sys::JsNumberOrStringOrSymbolLike>() {}
+        fn with_symbol_as_property_key<U: js_sys::PropertyKey>() {}
         with_bigint::<T>();
         with_boolean::<T>();
-        with_symbol::<T>();
+        with_symbol_as_property_key::<T>();
     }
     assert_widens::<String>();
 }
