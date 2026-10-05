@@ -1242,12 +1242,8 @@ fn instruction(
         Instruction::Retptr { size } => {
             js.cx.inject_stack_pointer_shim()?;
             let sp = js.cx.wasm_export_ref("__wbindgen_add_to_stack_pointer");
-            let retptr = if js.cx.memory64 {
-                format!("{sp}(-{size})")
-            } else {
-                format!("{sp}(-{size}) >>> 0")
-            };
-            js.prelude(&format!("const retptr = {retptr};"));
+            let coerce = js.cx.coerce_ptr_suffix();
+            js.prelude(&format!("const retptr = {sp}(-{size}){coerce};"));
             js.finally(&format!("{sp}({size});"));
             js.stack.push("retptr".to_string());
         }
