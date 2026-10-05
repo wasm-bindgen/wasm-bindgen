@@ -16,6 +16,9 @@
 * `debugString` handles `bigint` values (e.g. `123n`).
   [#5356](https://github.com/wasm-bindgen/wasm-bindgen/pull/5356)
 
+* Fixed JSPI task pointers being truncated to 32 bits on `wasm64`.
+  [#5358](https://github.com/wasm-bindgen/wasm-bindgen/issues/5358)
+
 ### Removed
 
 ## [0.2.129](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.128...0.2.129)
