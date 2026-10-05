@@ -19,6 +19,11 @@
 * `debugString` handles `bigint` values (e.g. `123n`).
   [#5356](https://github.com/wasm-bindgen/wasm-bindgen/pull/5356)
 
+* Return pointers above 2 GiB on `wasm32` (e.g. thread stacks allocated under
+  `+atomics`) are no longer treated as negative offsets in the generated JS,
+  which previously threw a `RangeError` on number and string conversions.
+  [#5360](https://github.com/wasm-bindgen/wasm-bindgen/pull/5360)
+
 ### Removed
 
 ## [0.2.129](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.128...0.2.129)

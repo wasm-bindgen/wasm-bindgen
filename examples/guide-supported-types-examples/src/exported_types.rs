@@ -1,3 +1,5 @@
+#![allow(clippy::clone_on_copy)]
+
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
