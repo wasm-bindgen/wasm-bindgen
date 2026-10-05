@@ -5,6 +5,10 @@
 
 ### Added
 
+* Documented in the guide that passing an exported Rust type by value moves it
+  out of the JavaScript object, which throws on any later use.
+  [#5354](https://github.com/wasm-bindgen/wasm-bindgen/pull/5354)
+
 ### Changed
 
 ### Fixed
