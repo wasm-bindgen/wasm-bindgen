@@ -8,6 +8,14 @@
 > To generate getters/setters for non-`Copy` public fields, use `#[wasm_bindgen(getter_with_clone)]` for the struct
 > or [implement getters/setters manually](https://wasm-bindgen.github.io/wasm-bindgen/reference/attributes/on-rust-exports/getter-and-setter.html).
 
+Passing an instance by value (`T` or `Option<T>` parameter) moves it into
+Rust: the value is not copied, and the JavaScript object is left empty, as if
+`.free()` had been called on it. Any later use of that object, whether passing
+it to another function or accessing its fields and methods, throws an error
+(`Attempt to use a moved value` when built with `--debug`, `null pointer
+passed to rust` otherwise). Passing by reference (`&T` or `&mut T`) leaves the
+JavaScript object usable.
+
 Exported functions can use [generic JavaScript types](./js-sys.md) with concrete type parameters (like `Promise<Number>`), but cannot have their own generic type parameters.
 
 ## Example Rust Usage

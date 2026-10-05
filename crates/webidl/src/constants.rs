@@ -1,7 +1,7 @@
-use once_cell::sync::Lazy;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::iter::FromIterator;
+use std::sync::LazyLock as Lazy;
 
 pub(crate) static BUILTIN_IDENTS: Lazy<BTreeSet<&'static str>> = Lazy::new(|| {
     BTreeSet::from_iter(vec![

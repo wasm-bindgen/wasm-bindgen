@@ -5,12 +5,22 @@
 
 ### Added
 
+* Documented in the guide that passing an exported Rust type by value moves it
+  out of the JavaScript object, which throws on any later use.
+  [#5354](https://github.com/wasm-bindgen/wasm-bindgen/pull/5354)
+
 * Added `source` property to ToggleEvent.
   [#5353](https://github.com/wasm-bindgen/wasm-bindgen/pull/5353)
 
 ### Changed
 
+* Replaced the `once_cell` dependency with `core::cell::LazyCell`, which is
+  available now that the library MSRV is 1.81.
+
 ### Fixed
+
+* `debugString` handles `bigint` values (e.g. `123n`).
+  [#5356](https://github.com/wasm-bindgen/wasm-bindgen/pull/5356)
 
 ### Removed
 
@@ -50,6 +60,10 @@
   [#5257](https://github.com/wasm-bindgen/wasm-bindgen/pull/5257)
 
 ### Fixed
+
+* `js-sys`: the `Number` constants no longer trigger deprecation warnings for
+  the `core::f64` module constants when building the crate from source.
+  [#5351](https://github.com/wasm-bindgen/wasm-bindgen/pull/5351)
 
 * The `wasm_bindgen`, `wasm_bindgen_futures` and `js_sys` crate-path options
   on a `#[wasm_bindgen] impl` block now apply to its methods; previously they
