@@ -9,6 +9,9 @@
   out of the JavaScript object, which throws on any later use.
   [#5354](https://github.com/wasm-bindgen/wasm-bindgen/pull/5354)
 
+* Added `source` property to ToggleEvent.
+  [#5353](https://github.com/wasm-bindgen/wasm-bindgen/pull/5353)
+
 ### Changed
 
 * Replaced the `once_cell` dependency with `core::cell::LazyCell`, which is
@@ -39,6 +42,11 @@
 
 * `debugString` handles `bigint` values (e.g. `123n`).
   [#5356](https://github.com/wasm-bindgen/wasm-bindgen/pull/5356)
+
+* Return pointers above 2 GiB on `wasm32` (e.g. thread stacks allocated under
+  `+atomics`) are no longer treated as negative offsets in the generated JS,
+  which previously threw a `RangeError` on number and string conversions.
+  [#5360](https://github.com/wasm-bindgen/wasm-bindgen/pull/5360)
 
 ### Removed
 

@@ -31,6 +31,14 @@ extern "C" {
     #[doc = ""]
     #[doc = "*This API requires the following crate features to be activated: `ToggleEvent`*"]
     pub fn new_state(this: &ToggleEvent) -> ::alloc::string::String;
+    #[cfg(feature = "Element")]
+    #[wasm_bindgen(method, getter, js_class = "ToggleEvent", js_name = "source")]
+    #[doc = "Getter for the `source` field of this object."]
+    #[doc = ""]
+    #[doc = "[MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/API/ToggleEvent/source)"]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`, `ToggleEvent`*"]
+    pub fn source(this: &ToggleEvent) -> Option<Element>;
     #[wasm_bindgen(catch, constructor, js_class = "ToggleEvent")]
     #[doc = "The `new ToggleEvent(..)` constructor, creating a new instance of `ToggleEvent`."]
     #[doc = ""]

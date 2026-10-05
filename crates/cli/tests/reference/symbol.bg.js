@@ -64,8 +64,8 @@ export function __wbg_string_getter_27db002d52b3baca(arg0, arg1) {
     const ret = arg1[Symbol.toPrimitive];
     const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len1 = WASM_VECTOR_LEN;
-    getDataViewMemory0().setInt32(arg0 + 4 * 1, len1, true);
-    getDataViewMemory0().setInt32(arg0 + 4 * 0, ptr1, true);
+    getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 1, len1, true);
+    getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr1, true);
 }
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;
