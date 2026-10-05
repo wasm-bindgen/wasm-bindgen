@@ -2910,6 +2910,7 @@ if (require('worker_threads').isMainThread) {{
         assert!(!self.config.externref);
         if matches!(self.config.mode, OutputMode::Emscripten) {
             self.emscripten_global_deps.insert("heap".to_string());
+            self.body_refs.insert("heap".to_string());
             return;
         }
         self.intrinsic(
@@ -3905,6 +3906,7 @@ if (require('worker_threads').isMainThread) {{
         if matches!(self.config.mode, OutputMode::Emscripten) {
             self.emscripten_global_deps
                 .insert("stack_pointer".to_string());
+            self.body_refs.insert("stack_pointer".to_string());
             return;
         }
         self.intrinsic(
