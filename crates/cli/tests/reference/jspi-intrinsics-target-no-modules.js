@@ -16,7 +16,7 @@ let wasm_bindgen = (function(exports) {
     function __wbg_get_imports() {
         const import0 = {
             __proto__: null,
-            __wbg___wbindgen_jspi_suspend_747b367c12c10e32: ((__inner) => new WebAssembly.Suspending(function(...args) {
+            __wbg___wbindgen_jspi_suspend_83a35dabfa04fa34: ((__inner) => new WebAssembly.Suspending(function(...args) {
                 try { return __inner.apply(this, args); }
                 catch (e) { return Promise.reject(e); }
             }))(function(arg0) {

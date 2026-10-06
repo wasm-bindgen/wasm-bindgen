@@ -15,7 +15,7 @@
   (import "./reference_test_bg.js" "__wbg___wbindgen_throw_41e9ee4f547fc59a" (func (;2;) (type 6)))
   (import "./reference_test_bg.js" "__wbg_exportedstruct_new" (func (;3;) (type 7)))
   (import "./reference_test_bg.js" "__wbg_exportedstruct_unwrap" (func (;4;) (type 1)))
-  (import "./reference_test_bg.js" "__wbg_instanceof_ImportedType_fe5eedffdd3920ad" (func (;5;) (type 1)))
+  (import "./reference_test_bg.js" "__wbg_instanceof_ImportedType_44452eb91df46c85" (func (;5;) (type 1)))
   (import "./reference_test_bg.js" "__wbindgen_generic_0000000000000000" (func (;6;) (type 4)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;7;) (type 10)))
   (table $__wbindgen_externrefs (;0;) 1024 externref)

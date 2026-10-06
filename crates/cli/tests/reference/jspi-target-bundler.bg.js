@@ -19,7 +19,7 @@ export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
 
-export const __wbg_fetch_number_65eabd7e4b01732a = ((__inner) => new WebAssembly.Suspending(function(...args) {
+export const __wbg_fetch_number_5170522aaa809683 = ((__inner) => new WebAssembly.Suspending(function(...args) {
     try { return __inner.apply(this, args); }
     catch (e) { return Promise.reject(e); }
 }))(function() {
@@ -27,7 +27,7 @@ export const __wbg_fetch_number_65eabd7e4b01732a = ((__inner) => new WebAssembly
     return ret;
 });
 
-export const __wbg_fetch_text_048849ee5aceab72 = ((__inner) => new WebAssembly.Suspending(function(...args) {
+export const __wbg_fetch_text_34534fabe4d1d100 = ((__inner) => new WebAssembly.Suspending(function(...args) {
     try { return __inner.apply(this, args); }
     catch (e) { return Promise.reject(e); }
 }))(function() {
@@ -35,14 +35,14 @@ export const __wbg_fetch_text_048849ee5aceab72 = ((__inner) => new WebAssembly.S
     return ret;
 });
 
-export const __wbg_sleep_319b371bcbeaac51 = ((__inner) => new WebAssembly.Suspending(function(...args) {
+export const __wbg_sleep_c1b3c1cdf7d71e45 = ((__inner) => new WebAssembly.Suspending(function(...args) {
     try { return __inner.apply(this, args); }
     catch (e) { return Promise.reject(e); }
 }))(function(arg0) {
     return sleep(arg0 >>> 0);
 });
 
-export const __wbg_try_fetch_f9048591b2d6944b = ((__inner) => new WebAssembly.Suspending(function(...args) {
+export const __wbg_try_fetch_8e435833d94a818c = ((__inner) => new WebAssembly.Suspending(function(...args) {
     try { return __inner.apply(this, args); }
     catch (e) { return Promise.reject(e); }
 }))(function() {

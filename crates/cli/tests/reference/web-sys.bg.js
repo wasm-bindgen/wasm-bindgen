@@ -23,7 +23,7 @@ export function __wbg___wbindgen_debug_string_4687d8d8c2017d52(arg0, arg1) {
 export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
-export function __wbg_new_820eb53f620ccf82() { return handleError(function (arg0, arg1) {
+export function __wbg_new_ab0c9e97418ae717() { return handleError(function (arg0, arg1) {
     const ret = new URL(getStringFromWasm0(arg0, arg1));
     return ret;
 }, arguments); }

@@ -6,7 +6,7 @@
   (type (;4;) (func))
   (import "./reference_test_bg.js" "__wbg___wbindgen_throw_41e9ee4f547fc59a" (func (;0;) (type 1)))
   (import "./reference_test_bg.js" "__wbg_do_a0ba2606225d4465" (func (;1;) (type 0)))
-  (import "./reference_test_bg.js" "__wbg_new_37453f8cfbfa31f7" (func (;2;) (type 3)))
+  (import "./reference_test_bg.js" "__wbg_new_b4330c6bd880e041" (func (;2;) (type 3)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;3;) (type 4)))
   (import "test" "test2" (func (;4;) (type 3)))
   (table $__wbindgen_externrefs (;0;) 1024 externref)
