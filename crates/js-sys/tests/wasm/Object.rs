@@ -191,6 +191,7 @@ fn define_property_str_typed() {
     assert_eq!(num.value_of(), 3.14);
 }
 
+#[cfg(js_sys_unstable_apis)]
 #[wasm_bindgen_test]
 fn property_key_methods_preserve_typed_values() {
     let object: Object<Number> = Object::new_typed();
@@ -206,9 +207,15 @@ fn property_key_methods_preserve_typed_values() {
     assert!(Object::has_own_key(&object, 7_u32).unwrap());
     assert!(Object::has_own_key(&object, &symbol).unwrap());
 
-    let string_descriptor = Object::get_own_property_descriptor_key(&object, "string").unwrap();
-    let number_descriptor = Object::get_own_property_descriptor_key(&object, 7_u32).unwrap();
-    let symbol_descriptor = Object::get_own_property_descriptor_key(&object, &symbol).unwrap();
+    let string_descriptor = Object::get_own_property_descriptor_key(&object, "string")
+        .unwrap()
+        .unwrap();
+    let number_descriptor = Object::get_own_property_descriptor_key(&object, 7_u32)
+        .unwrap()
+        .unwrap();
+    let symbol_descriptor = Object::get_own_property_descriptor_key(&object, &symbol)
+        .unwrap()
+        .unwrap();
 
     assert_eq!(string_descriptor.get_value().unwrap().value_of(), 42.0);
     assert_eq!(number_descriptor.get_value().unwrap().value_of(), 42.0);
@@ -235,9 +242,13 @@ fn unsuffixed_methods_accept_property_keys() {
     assert!(Object::has_own(&object, 7_u32).unwrap());
     assert!(Object::has_own(&object, &symbol).unwrap());
 
-    let symbol_descriptor = Object::get_own_property_descriptor(&object, &symbol).unwrap();
+    let symbol_descriptor = Object::get_own_property_descriptor(&object, &symbol)
+        .unwrap()
+        .unwrap();
     assert_eq!(symbol_descriptor.get_value().unwrap().value_of(), 42.0);
-    let number_descriptor = Object::get_own_property_descriptor(&object, 7_u32).unwrap();
+    let number_descriptor = Object::get_own_property_descriptor(&object, 7_u32)
+        .unwrap()
+        .unwrap();
     assert_eq!(number_descriptor.get_value().unwrap().value_of(), 42.0);
 
     assert!(object.property_is_enumerable("string"));
@@ -252,6 +263,7 @@ fn unsuffixed_methods_accept_property_keys() {
     assert!(Object::has_own(&from_entries, 9_u32).unwrap());
 }
 
+#[cfg(js_sys_unstable_apis)]
 #[wasm_bindgen_test]
 fn from_entries_accepts_property_keys() {
     let entries: Array<ArrayTuple<(u32, Number)>> = Array::new_typed();
@@ -261,7 +273,9 @@ fn from_entries_accepts_property_keys() {
 
     let object = Object::from_entries_key(&entries).unwrap();
     assert!(Object::has_own_key(&object, 7_u32).unwrap());
-    let descriptor = Object::get_own_property_descriptor_key(&object, 7_u32).unwrap();
+    let descriptor = Object::get_own_property_descriptor_key(&object, 7_u32)
+        .unwrap()
+        .unwrap();
     assert_eq!(descriptor.get_value().unwrap().value_of(), 42.0);
 }
 
@@ -334,10 +348,13 @@ fn get_own_property_descriptor() {
     }
     #[cfg(js_sys_unstable_apis)]
     {
-        let desc = Object::get_own_property_descriptor(&foo, "foo").unwrap();
+        let desc = Object::get_own_property_descriptor(&foo, "foo")
+            .unwrap()
+            .unwrap();
         assert_eq!(desc.get_value().unwrap(), 42);
-        let desc = Object::get_own_property_descriptor(&foo, "bar").unwrap();
-        assert!(desc.is_undefined());
+        assert!(Object::get_own_property_descriptor(&foo, "bar")
+            .unwrap()
+            .is_none());
     }
 }
 

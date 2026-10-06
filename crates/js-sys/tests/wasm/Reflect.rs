@@ -158,10 +158,13 @@ fn get_own_property_descriptor() {
     }
     #[cfg(js_sys_unstable_apis)]
     {
-        let desc = Reflect::get_own_property_descriptor(&obj, "x").unwrap();
+        let desc = Reflect::get_own_property_descriptor(&obj, "x")
+            .unwrap()
+            .unwrap();
         assert_eq!(desc.get_value().unwrap(), 10);
-        let desc = Reflect::get_own_property_descriptor(&obj, "foo").unwrap();
-        assert!(desc.is_undefined());
+        assert!(Reflect::get_own_property_descriptor(&obj, "foo")
+            .unwrap()
+            .is_none());
     }
 }
 
@@ -226,6 +229,7 @@ fn set() {
     }
 }
 
+#[cfg(js_sys_unstable_apis)]
 #[wasm_bindgen_test]
 fn property_key_methods_preserve_typed_values() {
     let object: Object<Number> = Object::new_typed();
@@ -261,7 +265,9 @@ fn property_key_methods_preserve_typed_values() {
     assert!(Reflect::has_key(&object, 7_u32).unwrap());
     assert!(Reflect::has_key(&object, &symbol).unwrap());
 
-    let symbol_descriptor = Reflect::get_own_property_descriptor_key(&object, &symbol).unwrap();
+    let symbol_descriptor = Reflect::get_own_property_descriptor_key(&object, &symbol)
+        .unwrap()
+        .unwrap();
     assert_eq!(symbol_descriptor.get_value().unwrap().value_of(), 3.0);
 
     let defined_descriptor = js_sys::PropertyDescriptor::new_value(&Number::from(4));
@@ -309,7 +315,9 @@ fn unsuffixed_methods_accept_property_keys() {
     assert!(Reflect::has(&object, 7_u32).unwrap());
     assert!(Reflect::has(&object, &symbol).unwrap());
 
-    let descriptor = Reflect::get_own_property_descriptor(&object, &symbol).unwrap();
+    let descriptor = Reflect::get_own_property_descriptor(&object, &symbol)
+        .unwrap()
+        .unwrap();
     assert_eq!(descriptor.get_value().unwrap().value_of(), 3.0);
 
     let defined = js_sys::PropertyDescriptor::new_value(&Number::from(4));

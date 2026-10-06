@@ -7012,6 +7012,7 @@ extern "C" {
     /// object's value type.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty)
+    #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(
         static_method_of = Object,
         js_name = defineProperty,
@@ -7136,6 +7137,7 @@ extern "C" {
     /// keys use any JavaScript property-key representation.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/fromEntries)
+    #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(static_method_of = Object, catch, js_name = fromEntries)]
     pub fn from_entries_key<K: PropertyKey, T: JsGeneric, I: Iterable<Item = ArrayTuple<(K, T)>>>(
         entries: &I,
@@ -7170,7 +7172,7 @@ extern "C" {
     pub fn get_own_property_descriptor<T, K: PropertyKey>(
         obj: &Object<T>,
         prop: K,
-    ) -> Result<PropertyDescriptor<T>, JsValue>;
+    ) -> Result<Option<PropertyDescriptor<T>>, JsValue>;
 
     // Next major: deprecate
     /// The `Object.getOwnPropertyDescriptor()` method returns a
@@ -7206,6 +7208,7 @@ extern "C" {
     /// object's value type.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor)
+    #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(
         static_method_of = Object,
         js_name = getOwnPropertyDescriptor,
@@ -7215,7 +7218,7 @@ extern "C" {
     pub fn get_own_property_descriptor_key<T, K: PropertyKey>(
         obj: &Object<T>,
         prop: K,
-    ) -> Result<PropertyDescriptor<T>, JsValue>;
+    ) -> Result<Option<PropertyDescriptor<T>>, JsValue>;
 
     /// The `Object.getOwnPropertyDescriptors()` method returns all own
     /// property descriptors of a given object.
@@ -7338,6 +7341,7 @@ extern "C" {
     /// every JavaScript property-key representation.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwn)
+    #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(
         static_method_of = Object,
         js_name = hasOwn,
@@ -7450,6 +7454,7 @@ extern "C" {
     /// This method accepts every JavaScript property-key representation.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/propertyIsEnumerable)
+    #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(
         method,
         js_name = propertyIsEnumerable,
@@ -7758,6 +7763,7 @@ pub mod Reflect {
         /// property using any JavaScript property-key representation.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/defineProperty)
+        #[cfg(js_sys_unstable_apis)]
         #[wasm_bindgen(
             js_namespace = Reflect,
             js_name = defineProperty,
@@ -7809,6 +7815,7 @@ pub mod Reflect {
         /// using any JavaScript property-key representation.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/deleteProperty)
+        #[cfg(js_sys_unstable_apis)]
         #[wasm_bindgen(
             js_namespace = Reflect,
             js_name = deleteProperty,
@@ -7858,6 +7865,7 @@ pub mod Reflect {
         /// JavaScript property-key representation.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/get)
+        #[cfg(js_sys_unstable_apis)]
         #[wasm_bindgen(
             js_namespace = Reflect,
             js_name = get,
@@ -7907,7 +7915,7 @@ pub mod Reflect {
         pub fn get_own_property_descriptor<T, K: PropertyKey>(
             target: &Object<T>,
             property_key: K,
-        ) -> Result<PropertyDescriptor<T>, JsValue>;
+        ) -> Result<Option<PropertyDescriptor<T>>, JsValue>;
 
         /// The static `Reflect.getOwnPropertyDescriptor()` method is similar to
         /// `Object.getOwnPropertyDescriptor()`. It returns a property descriptor
@@ -7926,6 +7934,7 @@ pub mod Reflect {
         /// representation.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/getOwnPropertyDescriptor)
+        #[cfg(js_sys_unstable_apis)]
         #[wasm_bindgen(
             js_namespace = Reflect,
             js_name = getOwnPropertyDescriptor,
@@ -7935,7 +7944,7 @@ pub mod Reflect {
         pub fn get_own_property_descriptor_key<T, K: PropertyKey>(
             target: &Object<T>,
             property_key: K,
-        ) -> Result<PropertyDescriptor<T>, JsValue>;
+        ) -> Result<Option<PropertyDescriptor<T>>, JsValue>;
 
         /// The static `Reflect.getPrototypeOf()` method is almost the same
         /// method as `Object.getPrototypeOf()`. It returns the prototype
@@ -7997,6 +8006,7 @@ pub mod Reflect {
         /// JavaScript property-key representation.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/has)
+        #[cfg(js_sys_unstable_apis)]
         #[wasm_bindgen(
             js_namespace = Reflect,
             js_name = has,
@@ -8088,6 +8098,7 @@ pub mod Reflect {
         /// JavaScript property-key representation.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/set)
+        #[cfg(js_sys_unstable_apis)]
         #[wasm_bindgen(
             js_namespace = Reflect,
             js_name = set,
@@ -10499,8 +10510,9 @@ macro_rules! impl_primitive_union_category {
         impl $trait for &Number {}
     };
     // Mirrors the sealed `wasm_bindgen::JsStringLike` implementations. A
-    // blanket `impl<T: JsStringLike>` would be rejected by coherence here,
-    // because `JsStringLike` is a foreign trait.
+    // blanket `impl<T: JsStringLike>` would overlap with the concrete impls
+    // below, since coherence cannot rule out a foreign trait being implemented
+    // for `i32` and friends.
     ($trait:path, string) => {
         impl $trait for String {}
         impl $trait for &str {}
