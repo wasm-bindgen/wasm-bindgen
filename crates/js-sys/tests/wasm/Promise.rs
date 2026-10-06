@@ -126,7 +126,12 @@ async fn test_promise_then_with_closure() {
 #[wasm_bindgen_test]
 async fn test_promise_catch_with_closure() {
     let error_obj = Object::new();
-    js_sys::Reflect::set(&error_obj, &"message".into(), &"error occurred".into()).unwrap();
+    js_sys::Reflect::set(
+        &error_obj,
+        &JsString::from("message"),
+        &"error occurred".into(),
+    )
+    .unwrap();
 
     let promise: Promise<TestValue> = Promise::reject_typed(&error_obj);
 

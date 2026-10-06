@@ -79,7 +79,7 @@ fn typed_get_set() {
     let map: WeakMap<Object, Object> = WeakMap::new_typed();
     let key = some_key();
     let value = Object::new();
-    Reflect::set(&value, &"data".into(), &42.into()).unwrap();
+    Reflect::set(&value, &JsString::from("data"), &42.into()).unwrap();
     map.set(&key, &value);
     #[cfg(not(js_sys_unstable_apis))]
     let retrieved = map.get(&key);

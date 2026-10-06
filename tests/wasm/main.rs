@@ -66,6 +66,7 @@ pub mod node;
 pub mod nullable;
 pub mod option;
 pub mod optional_primitives;
+pub mod primitive_union_traits;
 pub mod reexport;
 pub mod result;
 pub mod result_jserror;

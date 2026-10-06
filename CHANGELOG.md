@@ -12,10 +12,36 @@
 * Added `source` property to ToggleEvent.
   [#5353](https://github.com/wasm-bindgen/wasm-bindgen/pull/5353)
 
+* Added 11 experimental `js-sys` marker traits for every union of two or more
+  of the TypeScript `bigint`, `boolean`, `number`, and `string` primitive
+  categories. Traits such as `JsNumberOrStringLike` can bound
+  `experimental_generic_mono` import parameters while preserving each concrete
+  Rust type's native ABI representation. String-containing unions accept every
+  `wasm_bindgen::JsStringLike` type.
+  [#5341](https://github.com/wasm-bindgen/wasm-bindgen/pull/5341)
+
+* Added the experimental `js_sys::PropertyKey` marker trait for the
+  `string | number | symbol` keys accepted by TypeScript's `Record` type.
+  `JsNumberOrStringLike` widens to `PropertyKey`.
+  [#5341](https://github.com/wasm-bindgen/wasm-bindgen/pull/5341)
+
 ### Changed
 
 * Replaced the `once_cell` dependency with `core::cell::LazyCell`, which is
   available now that the library MSRV is 1.81.
+
+* Under `js_sys_unstable_apis`, the unsuffixed `Object::define_property`,
+  `Object::from_entries`, `Object::get_own_property_descriptor`,
+  `Object::has_own`, `Object::property_is_enumerable`,
+  `Reflect::define_property`, `Reflect::delete_property`, `Reflect::get`,
+  `Reflect::get_own_property_descriptor`, `Reflect::has`, and `Reflect::set`
+  now take a generic `K: PropertyKey` key, accepting string, number, or symbol
+  keys. `Object::get_own_property_descriptor` and
+  `Reflect::get_own_property_descriptor` now return
+  `Option<PropertyDescriptor<T>>`, and `Reflect::has` now takes an
+  `&Object<T>` target. Callers passing `&"key".into()` should pass `"key"` (or
+  another concrete key type) instead.
+  [#5341](https://github.com/wasm-bindgen/wasm-bindgen/pull/5341)
 
 ### Fixed
 

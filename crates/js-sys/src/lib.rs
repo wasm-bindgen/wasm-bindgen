@@ -6956,16 +6956,26 @@ extern "C" {
     #[wasm_bindgen(static_method_of = Object, js_name = defineProperty)]
     pub fn define_property<T>(obj: &Object<T>, prop: &JsValue, descriptor: &Object) -> Object<T>;
 
+    // Stable `_key`-suffixed variants of the generic `K: PropertyKey` property
+    // operations can be added if `PropertyKey` stabilizes first.
     /// The static method `Object.defineProperty()` defines a new
     /// property directly on an object, or modifies an existing
     /// property on an object, and returns the object.
     ///
+    /// The property key may be any JavaScript property-key representation
+    /// (string, number, or symbol).
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(static_method_of = Object, js_name = defineProperty, catch)]
-    pub fn define_property<T>(
+    #[wasm_bindgen(
+        static_method_of = Object,
+        js_name = defineProperty,
+        catch,
+        experimental_generic_mono
+    )]
+    pub fn define_property<T, K: PropertyKey>(
         obj: &Object<T>,
-        prop: &JsString,
+        prop: K,
         descriptor: &PropertyDescriptor<T>,
     ) -> Result<Object<T>, JsValue>;
 
@@ -7078,10 +7088,13 @@ extern "C" {
     /// The `Object.fromEntries()` method transforms a list of key-value pairs
     /// into an object.
     ///
+    /// Entry keys may use any JavaScript property-key representation
+    /// (string, number, or symbol).
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/fromEntries)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(static_method_of = Object, catch, js_name = fromEntries)]
-    pub fn from_entries<T: JsGeneric, I: Iterable<Item = ArrayTuple<(JsString, T)>>>(
+    pub fn from_entries<K: PropertyKey, T: JsGeneric, I: Iterable<Item = ArrayTuple<(K, T)>>>(
         entries: &I,
     ) -> Result<Object<T>, JsValue>;
 
@@ -7110,13 +7123,21 @@ extern "C" {
     /// present on an object and not in the object's prototype chain)
     /// of a given object.
     ///
+    /// The property key may be any JavaScript property-key representation
+    /// (string, number, or symbol).
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertyDescriptor, catch)]
-    pub fn get_own_property_descriptor<T>(
+    #[wasm_bindgen(
+        static_method_of = Object,
+        js_name = getOwnPropertyDescriptor,
+        catch,
+        experimental_generic_mono
+    )]
+    pub fn get_own_property_descriptor<T, K: PropertyKey>(
         obj: &Object<T>,
-        prop: &JsString,
-    ) -> Result<PropertyDescriptor<T>, JsValue>;
+        prop: K,
+    ) -> Result<Option<PropertyDescriptor<T>>, JsValue>;
 
     // Next major: deprecate
     /// The `Object.getOwnPropertyDescriptor()` method returns a
@@ -7226,10 +7247,18 @@ extern "C" {
     /// object passed in has the specified property as its own property (as
     /// opposed to inheriting it).
     ///
+    /// The property key may be any JavaScript property-key representation
+    /// (string, number, or symbol).
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwn)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(static_method_of = Object, js_name = hasOwn, catch)]
-    pub fn has_own<T>(instance: &Object<T>, property: &JsString) -> Result<bool, JsValue>;
+    #[wasm_bindgen(
+        static_method_of = Object,
+        js_name = hasOwn,
+        catch,
+        experimental_generic_mono
+    )]
+    pub fn has_own<T, K: PropertyKey>(instance: &Object<T>, property: K) -> Result<bool, JsValue>;
 
     // Next major: deprecate
     /// The `Object.hasOwn()` method returns a boolean indicating whether the
@@ -7323,8 +7352,24 @@ extern "C" {
     /// whether the specified property is enumerable.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/propertyIsEnumerable)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = propertyIsEnumerable)]
     pub fn property_is_enumerable<T>(this: &Object<T>, property: &JsValue) -> bool;
+
+    /// The `propertyIsEnumerable()` method returns whether the specified
+    /// property is both an own property and enumerable.
+    ///
+    /// The property key may be any JavaScript property-key representation
+    /// (string, number, or symbol).
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/propertyIsEnumerable)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_name = propertyIsEnumerable,
+        experimental_generic_mono
+    )]
+    pub fn property_is_enumerable<T, K: PropertyKey>(this: &Object<T>, property: K) -> bool;
 
     /// The `Object.seal()` method seals an object, preventing new properties
     /// from being added to it and marking all existing properties as
@@ -7594,12 +7639,20 @@ pub mod Reflect {
         /// The static `Reflect.defineProperty()` method is like
         /// `Object.defineProperty()` but returns a `Boolean`.
         ///
+        /// The property key may be any JavaScript property-key representation
+        /// (string, number, or symbol).
+        ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/defineProperty)
         #[cfg(js_sys_unstable_apis)]
-        #[wasm_bindgen(js_namespace = Reflect, js_name = defineProperty, catch)]
-        pub fn define_property<T>(
+        #[wasm_bindgen(
+            js_namespace = Reflect,
+            js_name = defineProperty,
+            catch,
+            experimental_generic_mono
+        )]
+        pub fn define_property<T, K: PropertyKey>(
             target: &Object<T>,
-            property_key: &JsValue,
+            property_key: K,
             attributes: &PropertyDescriptor<T>,
         ) -> Result<bool, JsValue>;
 
@@ -7618,8 +7671,28 @@ pub mod Reflect {
         /// properties.  It is like the `delete` operator as a function.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/deleteProperty)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, js_name = deleteProperty, catch)]
         pub fn delete_property<T>(target: &Object<T>, key: &JsValue) -> Result<bool, JsValue>;
+
+        /// The static `Reflect.deleteProperty()` method allows to delete
+        /// properties.  It is like the `delete` operator as a function.
+        ///
+        /// The property key may be any JavaScript property-key representation
+        /// (string, number, or symbol).
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/deleteProperty)
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(
+            js_namespace = Reflect,
+            js_name = deleteProperty,
+            catch,
+            experimental_generic_mono
+        )]
+        pub fn delete_property<T, K: PropertyKey>(
+            target: &Object<T>,
+            key: K,
+        ) -> Result<bool, JsValue>;
 
         /// The static `Reflect.deleteProperty()` method allows to delete
         /// properties.  It is like the `delete` operator as a function.
@@ -7639,10 +7712,13 @@ pub mod Reflect {
         /// The static `Reflect.get()` method works like getting a property from
         /// an object (`target[propertyKey]`) as a function.
         ///
+        /// The property key may be any JavaScript property-key representation
+        /// (string, number, or symbol).
+        ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/get)
         #[cfg(js_sys_unstable_apis)]
-        #[wasm_bindgen(js_namespace = Reflect, catch)]
-        pub fn get<T>(target: &Object<T>, key: &JsString) -> Result<Option<T>, JsValue>;
+        #[wasm_bindgen(js_namespace = Reflect, catch, experimental_generic_mono)]
+        pub fn get<T, K: PropertyKey>(target: &Object<T>, key: K) -> Result<Option<T>, JsValue>;
 
         /// The static `Reflect.get()` method works like getting a property from
         /// an object (`target[propertyKey]`) as a function.
@@ -7673,11 +7749,32 @@ pub mod Reflect {
         /// of the given property if it exists on the object, `undefined` otherwise.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/getOwnPropertyDescriptor)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, js_name = getOwnPropertyDescriptor, catch)]
         pub fn get_own_property_descriptor<T>(
             target: &Object<T>,
             property_key: &JsValue,
         ) -> Result<JsValue, JsValue>;
+
+        /// The static `Reflect.getOwnPropertyDescriptor()` method is similar to
+        /// `Object.getOwnPropertyDescriptor()`. It returns a property descriptor
+        /// of the given property if it exists on the object, `undefined` otherwise.
+        ///
+        /// The property key may be any JavaScript property-key representation
+        /// (string, number, or symbol).
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/getOwnPropertyDescriptor)
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(
+            js_namespace = Reflect,
+            js_name = getOwnPropertyDescriptor,
+            catch,
+            experimental_generic_mono
+        )]
+        pub fn get_own_property_descriptor<T, K: PropertyKey>(
+            target: &Object<T>,
+            property_key: K,
+        ) -> Result<Option<PropertyDescriptor<T>>, JsValue>;
 
         /// The static `Reflect.getOwnPropertyDescriptor()` method is similar to
         /// `Object.getOwnPropertyDescriptor()`. It returns a property descriptor
@@ -7721,10 +7818,14 @@ pub mod Reflect {
         /// The static `Reflect.has()` method works like the in operator as a
         /// function.
         ///
+        /// The property key may be any JavaScript property-key representation
+        /// (string, number, or symbol).
+        ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/has)
         #[cfg(js_sys_unstable_apis)]
-        #[wasm_bindgen(js_namespace = Reflect, catch)]
-        pub fn has(target: &JsValue, property_key: &Symbol) -> Result<bool, JsValue>;
+        #[wasm_bindgen(js_namespace = Reflect, catch, experimental_generic_mono)]
+        pub fn has<T, K: PropertyKey>(target: &Object<T>, property_key: K)
+            -> Result<bool, JsValue>;
 
         // Next major: deprecate
         /// The static `Reflect.has()` method works like the in operator as a
@@ -7780,12 +7881,15 @@ pub mod Reflect {
         /// The static `Reflect.set()` method works like setting a
         /// property on an object.
         ///
+        /// The property key may be any JavaScript property-key representation
+        /// (string, number, or symbol).
+        ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/set)
         #[cfg(js_sys_unstable_apis)]
-        #[wasm_bindgen(js_namespace = Reflect, catch)]
-        pub fn set<T>(
+        #[wasm_bindgen(js_namespace = Reflect, catch, experimental_generic_mono)]
+        pub fn set<T, K: PropertyKey>(
             target: &Object<T>,
-            property_key: &JsString,
+            property_key: K,
             value: &T,
         ) -> Result<bool, JsValue>;
 
@@ -10176,6 +10280,191 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/valueOf)
     #[wasm_bindgen(method, js_name = valueOf)]
     pub fn value_of(this: &Symbol) -> Symbol;
+}
+
+mod primitive_union_sealed {
+    /// Seal for the TypeScript primitive-union marker traits.
+    pub trait Sealed {}
+}
+
+macro_rules! impl_primitive_union_category {
+    ($trait:path, bigint) => {
+        impl $trait for i64 {}
+        impl $trait for u64 {}
+        impl $trait for i128 {}
+        impl $trait for u128 {}
+        impl $trait for BigInt {}
+        impl $trait for &BigInt {}
+    };
+    ($trait:path, boolean) => {
+        impl $trait for bool {}
+        impl $trait for Boolean {}
+        impl $trait for &Boolean {}
+    };
+    ($trait:path, number) => {
+        impl $trait for i8 {}
+        impl $trait for u8 {}
+        impl $trait for i16 {}
+        impl $trait for u16 {}
+        impl $trait for i32 {}
+        impl $trait for u32 {}
+        impl $trait for isize {}
+        impl $trait for usize {}
+        impl $trait for f32 {}
+        impl $trait for f64 {}
+        impl $trait for Number {}
+        impl $trait for &Number {}
+    };
+    // Mirrors the sealed `wasm_bindgen::JsStringLike` implementations. A
+    // blanket `impl<T: JsStringLike>` would overlap with the concrete impls
+    // below, since coherence cannot rule out a foreign trait being implemented
+    // for `i32` and friends.
+    ($trait:path, string) => {
+        impl $trait for String {}
+        impl $trait for &str {}
+        impl $trait for JsString {}
+        impl $trait for &JsString {}
+    };
+    ($trait:path, symbol) => {
+        impl $trait for Symbol {}
+        impl $trait for &Symbol {}
+    };
+}
+
+impl_primitive_union_category!(primitive_union_sealed::Sealed, bigint);
+impl_primitive_union_category!(primitive_union_sealed::Sealed, boolean);
+impl_primitive_union_category!(primitive_union_sealed::Sealed, number);
+impl_primitive_union_category!(primitive_union_sealed::Sealed, string);
+impl_primitive_union_category!(primitive_union_sealed::Sealed, symbol);
+
+macro_rules! primitive_union_category_doc {
+    (bigint) => {
+        "- `bigint`: `i64`, `u64`, `i128`, `u128`, [`BigInt`], and `&BigInt`\n"
+    };
+    (boolean) => {
+        "- `boolean`: `bool`, [`Boolean`], and `&Boolean`\n"
+    };
+    (number) => {
+        "- `number`: `i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `isize`, `usize`, `f32`, `f64`, [`Number`], and `&Number`\n"
+    };
+    (string) => {
+        "- `string`: `String`, `&str`, [`JsString`], and `&JsString` (the \
+         [`JsStringLike`](wasm_bindgen::JsStringLike) types)\n"
+    };
+    (symbol) => {
+        "- `symbol`: [`Symbol`] and `&Symbol`\n"
+    };
+}
+
+macro_rules! define_primitive_union_traits {
+    ($(($(#[$attr:meta])* $name:ident, $typescript:literal, [$($supertrait:ident),*], [$($category:ident),+])),* $(,)?) => {
+        $(
+            $(#[$attr])*
+            #[doc = concat!(
+                "Marker for Rust parameter types represented by the TypeScript union `",
+                $typescript,
+                "`.\n\n",
+                "Use this trait as a bound on an `experimental_generic_mono` ",
+                "JavaScript import. Each monomorphisation retains its concrete ",
+                "ABI representation; this marker only restricts which Rust types ",
+                "may instantiate the parameter.\n\n",
+                "The union's primitive categories use these Rust representations:\n\n",
+                $(primitive_union_category_doc!($category),)+
+                "\nThis trait is experimental and may change or be removed as ",
+                "`experimental_generic_mono` evolves."
+            )]
+            pub trait $name: IntoWasmAbi + primitive_union_sealed::Sealed $(+ $supertrait)* {}
+
+            $(impl_primitive_union_category!($name, $category);)+
+        )*
+    };
+}
+
+// The catalog covers every union of two or more of the primitive categories
+// with a Rust-native ABI representation (`bigint`, `boolean`, `number`, and
+// `string`). `symbol` crosses the boundary as an ordinary JS handle, so unions
+// containing it are better expressed with a `&Symbol` overload; the one
+// exception is `PropertyKey`, where `symbol` carries semantic identity.
+define_primitive_union_traits! {
+    (
+        JsBigIntOrBooleanOrNumberOrStringLike,
+        "bigint | boolean | number | string",
+        [],
+        [bigint, boolean, number, string]
+    ),
+    (
+        JsBigIntOrBooleanOrNumberLike,
+        "bigint | boolean | number",
+        [JsBigIntOrBooleanOrNumberOrStringLike],
+        [bigint, boolean, number]
+    ),
+    (
+        JsBigIntOrBooleanOrStringLike,
+        "bigint | boolean | string",
+        [JsBigIntOrBooleanOrNumberOrStringLike],
+        [bigint, boolean, string]
+    ),
+    (
+        JsBigIntOrNumberOrStringLike,
+        "bigint | number | string",
+        [JsBigIntOrBooleanOrNumberOrStringLike],
+        [bigint, number, string]
+    ),
+    (
+        JsBooleanOrNumberOrStringLike,
+        "boolean | number | string",
+        [JsBigIntOrBooleanOrNumberOrStringLike],
+        [boolean, number, string]
+    ),
+    (
+        JsBigIntOrBooleanLike,
+        "bigint | boolean",
+        [JsBigIntOrBooleanOrNumberLike, JsBigIntOrBooleanOrStringLike],
+        [bigint, boolean]
+    ),
+    (
+        JsBigIntOrNumberLike,
+        "bigint | number",
+        [JsBigIntOrBooleanOrNumberLike, JsBigIntOrNumberOrStringLike],
+        [bigint, number]
+    ),
+    (
+        JsBigIntOrStringLike,
+        "bigint | string",
+        [JsBigIntOrBooleanOrStringLike, JsBigIntOrNumberOrStringLike],
+        [bigint, string]
+    ),
+    (
+        JsBooleanOrNumberLike,
+        "boolean | number",
+        [JsBigIntOrBooleanOrNumberLike, JsBooleanOrNumberOrStringLike],
+        [boolean, number]
+    ),
+    (
+        JsBooleanOrStringLike,
+        "boolean | string",
+        [JsBigIntOrBooleanOrStringLike, JsBooleanOrNumberOrStringLike],
+        [boolean, string]
+    ),
+    (
+        JsNumberOrStringLike,
+        "number | string",
+        [
+            JsBigIntOrNumberOrStringLike,
+            JsBooleanOrNumberOrStringLike,
+            PropertyKey
+        ],
+        [number, string]
+    ),
+    (
+        /// TypeScript's `PropertyKey`: the key types accepted by JavaScript
+        /// property operations and by TypeScript's `Record`.
+        ///
+        PropertyKey,
+        "number | string | symbol",
+        [],
+        [number, string, symbol]
+    ),
 }
 
 #[allow(non_snake_case)]

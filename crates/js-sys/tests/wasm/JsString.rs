@@ -736,7 +736,7 @@ fn value_of() {
 fn raw() {
     let call_site = Object::new();
     let raw: Array<JsValue> = Array::of(&["foo".into(), "bar".into(), "123".into()]);
-    Reflect::set(call_site.as_ref(), &"raw".into(), &raw.into()).unwrap();
+    Reflect::set(call_site.as_ref(), &JsString::from("raw"), &raw.into()).unwrap();
     assert_eq!(
         JsString::raw_2(&call_site, "5", "JavaScript").unwrap(),
         "foo5barJavaScript123"
