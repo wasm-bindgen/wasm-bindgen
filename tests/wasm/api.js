@@ -66,6 +66,17 @@ exports.debug_values = () => ([
     [1.0, [2.0, 3.0]],
     () => (null),
     new Set(),
+    NaN,
+    Infinity,
+    -Infinity,
+    'a"b\nc',
+    [1, , 3],
+    class Foo {
+      static name = 5;
+    },
+    function bar(){
+      return "foobar";
+    }
 ]);
 
 exports.assert_function_table = (x, i) => {

@@ -48,6 +48,9 @@
   now uses native `async fn` in traits.
   [#5365](https://github.com/wasm-bindgen/wasm-bindgen/pull/5365)
 
+* Escape string inputs in `debugString`.
+  [#5366](https://github.com/wasm-bindgen/wasm-bindgen/pull/5366)
+
 ### Fixed
 
 * Imported functions and statics from two different `inline_js` snippets no
@@ -700,7 +703,7 @@
   To ease this transition for `js_namespace` usage, diagnostic
   messages now include hints for missing namespaces for easier
   fixing.
-  
+
   [#5154](https://github.com/wasm-bindgen/wasm-bindgen/pull/5154)
 
 ### Fixed
@@ -900,7 +903,7 @@
   [#5125](https://github.com/wasm-bindgen/wasm-bindgen/pull/5125)
 
 * Added `wasm_bindgen::instance()` to return the current
-  `WebAssembly.Instance`. The generated JS glue retains the 
+  `WebAssembly.Instance`. The generated JS glue retains the
   instantiated `WebAssembly.Instance`.
   [#5118](https://github.com/wasm-bindgen/wasm-bindgen/pull/5118)
 
@@ -1104,7 +1107,7 @@
 * TTY-gated status/clear output in the test runner shell to avoid `\r` control-character
   artifacts in non-interactive (CI) environments.
   [#4960](https://github.com/wasm-bindgen/wasm-bindgen/pull/4960)
-  
+
 * Added `bench_console_log_10mb` benchmark alongside the existing 1MB benchmark for the
   headless test runner. The main branch cannot complete this benchmark at any volume.
   [#4960](https://github.com/wasm-bindgen/wasm-bindgen/pull/4960)
@@ -1149,7 +1152,7 @@
 * Fixed large test outputs (10MB+) causing oversized WebDriver responses that were either
   extremely slow or crashed completely, by switching to incremental streaming output collection.
   [#4960](https://github.com/wasm-bindgen/wasm-bindgen/pull/4960)
-  
+
 * Fixed a duplciate wasm export in node ESM atomics, when compiled in debug mode
   [#5028](https://github.com/wasm-bindgen/wasm-bindgen/pull/5028)
 
@@ -1311,7 +1314,7 @@
 
 * Add Node.js `worker_threads` support for atomics builds. When targeting Node.js with atomics enabled, wasm-bindgen now generates `initSync({ module, memory, thread_stack_size })` and `__wbg_get_imports(memory)` functions that allow worker threads to initialize with a shared WebAssembly.Memory and pre-compiled module. Auto-initialization occurs only on the main thread for backwards compatibility.
 
-* Added a panic message when a getter has more than one argument. 
+* Added a panic message when a getter has more than one argument.
   [#4936](https://github.com/wasm-bindgen/wasm-bindgen/pull/4936)
 
 * Added support for WebIDL namespace attributes in `wasm-bindgen-webidl`. This enables
