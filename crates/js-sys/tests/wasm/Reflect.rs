@@ -231,65 +231,6 @@ fn set() {
 
 #[cfg(js_sys_unstable_apis)]
 #[wasm_bindgen_test]
-fn property_key_methods_preserve_typed_values() {
-    let object: Object<Number> = Object::new_typed();
-    let symbol = Symbol::for_("reflect_property_key");
-
-    assert!(Reflect::set_key(&object, "string", &Number::from(1)).unwrap());
-    assert!(Reflect::set_key(&object, 7_u32, &Number::from(2)).unwrap());
-    assert!(Reflect::set_key(&object, &symbol, &Number::from(3)).unwrap());
-
-    assert_eq!(
-        Reflect::get_key(&object, "string")
-            .unwrap()
-            .unwrap()
-            .value_of(),
-        1.0
-    );
-    assert_eq!(
-        Reflect::get_key(&object, 7_u32)
-            .unwrap()
-            .unwrap()
-            .value_of(),
-        2.0
-    );
-    assert_eq!(
-        Reflect::get_key(&object, &symbol)
-            .unwrap()
-            .unwrap()
-            .value_of(),
-        3.0
-    );
-
-    assert!(Reflect::has_key(&object, "string").unwrap());
-    assert!(Reflect::has_key(&object, 7_u32).unwrap());
-    assert!(Reflect::has_key(&object, &symbol).unwrap());
-
-    let symbol_descriptor = Reflect::get_own_property_descriptor_key(&object, &symbol)
-        .unwrap()
-        .unwrap();
-    assert_eq!(symbol_descriptor.get_value().unwrap().value_of(), 3.0);
-
-    let defined_descriptor = js_sys::PropertyDescriptor::new_value(&Number::from(4));
-    assert!(Reflect::define_property_key(&object, "defined", &defined_descriptor).unwrap());
-    assert_eq!(
-        Reflect::get_key(&object, "defined")
-            .unwrap()
-            .unwrap()
-            .value_of(),
-        4.0
-    );
-
-    assert!(Reflect::delete_property_key(&object, "string").unwrap());
-    assert!(Reflect::delete_property_key(&object, 7_u32).unwrap());
-    assert!(Reflect::delete_property_key(&object, &symbol).unwrap());
-    assert!(!Reflect::has_key(&object, "string").unwrap());
-    assert!(!Reflect::has_key(&object, 7_u32).unwrap());
-    assert!(!Reflect::has_key(&object, &symbol).unwrap());
-}
-
-#[cfg(js_sys_unstable_apis)]
-#[wasm_bindgen_test]
 fn unsuffixed_methods_accept_property_keys() {
     let object: Object<Number> = Object::new_typed();
     let symbol = Symbol::for_("reflect_unsuffixed_property_key");

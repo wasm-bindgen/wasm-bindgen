@@ -193,41 +193,6 @@ fn define_property_str_typed() {
 
 #[cfg(js_sys_unstable_apis)]
 #[wasm_bindgen_test]
-fn property_key_methods_preserve_typed_values() {
-    let object: Object<Number> = Object::new_typed();
-    let descriptor = js_sys::PropertyDescriptor::new_value(&Number::from(42));
-    descriptor.set_enumerable(true);
-
-    let symbol = Symbol::for_("typed_property_key");
-    Object::define_property_key(&object, "string", &descriptor).unwrap();
-    Object::define_property_key(&object, 7_u32, &descriptor).unwrap();
-    Object::define_property_key(&object, &symbol, &descriptor).unwrap();
-
-    assert!(Object::has_own_key(&object, "string").unwrap());
-    assert!(Object::has_own_key(&object, 7_u32).unwrap());
-    assert!(Object::has_own_key(&object, &symbol).unwrap());
-
-    let string_descriptor = Object::get_own_property_descriptor_key(&object, "string")
-        .unwrap()
-        .unwrap();
-    let number_descriptor = Object::get_own_property_descriptor_key(&object, 7_u32)
-        .unwrap()
-        .unwrap();
-    let symbol_descriptor = Object::get_own_property_descriptor_key(&object, &symbol)
-        .unwrap()
-        .unwrap();
-
-    assert_eq!(string_descriptor.get_value().unwrap().value_of(), 42.0);
-    assert_eq!(number_descriptor.get_value().unwrap().value_of(), 42.0);
-    assert_eq!(symbol_descriptor.get_value().unwrap().value_of(), 42.0);
-
-    assert!(object.property_is_enumerable_key("string"));
-    assert!(object.property_is_enumerable_key(7_u32));
-    assert!(object.property_is_enumerable_key(&symbol));
-}
-
-#[cfg(js_sys_unstable_apis)]
-#[wasm_bindgen_test]
 fn unsuffixed_methods_accept_property_keys() {
     let object: Object<Number> = Object::new_typed();
     let descriptor = js_sys::PropertyDescriptor::new_value(&Number::from(42));
@@ -261,22 +226,6 @@ fn unsuffixed_methods_accept_property_keys() {
     entries.push(&entry);
     let from_entries = Object::from_entries(&entries).unwrap();
     assert!(Object::has_own(&from_entries, 9_u32).unwrap());
-}
-
-#[cfg(js_sys_unstable_apis)]
-#[wasm_bindgen_test]
-fn from_entries_accepts_property_keys() {
-    let entries: Array<ArrayTuple<(u32, Number)>> = Array::new_typed();
-    let entry: ArrayTuple<(u32, Number)> =
-        Array::of2(&JsValue::from(7), &Number::from(42)).unchecked_into();
-    entries.push(&entry);
-
-    let object = Object::from_entries_key(&entries).unwrap();
-    assert!(Object::has_own_key(&object, 7_u32).unwrap());
-    let descriptor = Object::get_own_property_descriptor_key(&object, 7_u32)
-        .unwrap()
-        .unwrap();
-    assert_eq!(descriptor.get_value().unwrap().value_of(), 42.0);
 }
 
 #[allow(deprecated)]

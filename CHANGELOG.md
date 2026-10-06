@@ -22,9 +22,7 @@
 
 * Added the experimental `js_sys::PropertyKey` marker trait for the
   `string | number | symbol` keys accepted by TypeScript's `Record` type.
-  `JsNumberOrStringLike` widens to `PropertyKey`. Under `js_sys_unstable_apis`,
-  `_key`-suffixed `Object` and `Reflect` property operations use this bound to
-  accept string, number, or symbol keys while retaining typed values.
+  `JsNumberOrStringLike` widens to `PropertyKey`.
   [#5341](https://github.com/wasm-bindgen/wasm-bindgen/pull/5341)
 
 ### Changed
