@@ -17,7 +17,7 @@ use alloc::vec::Vec;
 // Common analysis procedure
 pub(crate) async fn common<M: Measurement>(
     id: &BenchmarkId,
-    routine: &mut dyn Routine<M>,
+    routine: &mut impl Routine<M>,
     config: &BenchmarkConfig,
     criterion: &Criterion<M>,
 ) {

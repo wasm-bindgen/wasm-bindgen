@@ -43,6 +43,9 @@
   another concrete key type) instead.
   [#5341](https://github.com/wasm-bindgen/wasm-bindgen/pull/5341)
 
+* `wasm-bindgen-test` no longer depends on `async-trait`. Its benchmark code
+  now uses native `async fn` in traits.
+
 ### Fixed
 
 * Imported functions and statics from two different `inline_js` snippets no
