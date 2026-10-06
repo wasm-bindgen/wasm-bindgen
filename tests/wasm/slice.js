@@ -336,3 +336,80 @@ exports.js_clamped = (a, offset) => {
   assert.equal(a[1], offset + 1);
   assert.equal(a[2], offset + 2);
 };
+
+exports.js_return_array_buffer = () => new Uint8Array([1, 2, 3]).buffer;
+
+exports.js_wrong_types = () => {
+    // Arrays, typed arrays and other array-like objects are accepted.
+    assert.strictEqual(wasm.wrong_types_slice_len(new Uint8Array([1, 2, 3])), 3);
+    assert.strictEqual(wasm.wrong_types_slice_len([1, 2, 3]), 3);
+    assert.strictEqual(wasm.wrong_types_slice_len({ length: 2, 0: 1, 1: 2 }), 2);
+    assert.strictEqual(wasm.wrong_types_slice_len(Buffer.from([1, 2])), 2);
+    assert.strictEqual(wasm.wrong_types_vec_len(new Float64Array([1, 2])), 2);
+    assert.strictEqual(wasm.wrong_types_vec_len([1, 2]), 2);
+    assert.strictEqual(wasm.wrong_types_optional_vec_len([1, 2]), 2);
+    assert.strictEqual(wasm.wrong_types_optional_vec_len(undefined), undefined);
+    assert.strictEqual(wasm.wrong_types_optional_vec_len(null), undefined);
+    assert.strictEqual(wasm.wrong_types_jsvalue_vec_len(['a', 'b']), 2);
+
+    // Mutable slices need a typed array with the same element size and the
+    // same integer or float kind, since the results are copied back into its
+    // buffer as raw bytes.
+    const u8 = new Uint8Array([1, 2, 3]);
+    assert.strictEqual(wasm.wrong_types_mut_slice_add_one(u8), 3);
+    assert.deepStrictEqual(u8, new Uint8Array([2, 3, 4]));
+    const i8 = new Int8Array([-1, 2]);
+    assert.strictEqual(wasm.wrong_types_mut_slice_add_one(i8), 2);
+    assert.deepStrictEqual(i8, new Int8Array([0, 3]));
+    const clamped = new Uint8ClampedArray([1, 2]);
+    assert.strictEqual(wasm.wrong_types_mut_slice_add_one(clamped), 2);
+    assert.deepStrictEqual(clamped, new Uint8ClampedArray([2, 3]));
+    const buf = Buffer.from([1, 2]);
+    assert.strictEqual(wasm.wrong_types_mut_slice_add_one(buf), 2);
+    assert.deepStrictEqual([...buf], [2, 3]);
+    const i32 = new Int32Array([-1]);
+    assert.strictEqual(wasm.wrong_types_mut_u32_len(i32), 1);
+    assert.deepStrictEqual(i32, new Int32Array([-1]));
+    const f32 = new Float32Array([1.5]);
+    assert.strictEqual(wasm.wrong_types_mut_f32_len(f32), 1);
+    assert.deepStrictEqual(f32, new Float32Array([1.5]));
+
+    // this part only works when `--debug` is passed to `wasm-bindgen` (or the
+    // equivalent thereof)
+    if (require('process').env.WASM_BINDGEN_NO_DEBUG)
+        return;
+
+    const buffer = new Uint8Array([1, 2, 3]).buffer;
+    assert.throws(() => wasm.wrong_types_slice_len(buffer),
+        /^Error: expected an array or Uint8Array, found ArrayBuffer$/);
+    assert.throws(() => wasm.wrong_types_slice_len(null),
+        /^Error: expected an array or Uint8Array, found null$/);
+    assert.throws(() => wasm.wrong_types_slice_len(3),
+        /^Error: expected an array or Uint8Array, found number$/);
+    assert.throws(() => wasm.wrong_types_slice_len('abc'),
+        /^Error: expected an array or Uint8Array, found string$/);
+    assert.throws(() => wasm.wrong_types_vec_len(new DataView(new ArrayBuffer(16))),
+        /^Error: expected an array or Float64Array, found DataView$/);
+    assert.throws(() => wasm.wrong_types_optional_vec_len(buffer),
+        /^Error: expected an array or Uint8Array, found ArrayBuffer$/);
+    assert.throws(() => wasm.wrong_types_jsvalue_vec_len(new Set(['a', 'b'])),
+        /^Error: expected an array, found Set$/);
+    assert.throws(() => wasm.wrong_types_jsvalue_vec_len('ab'),
+        /^Error: expected an array, found string$/);
+    assert.throws(() => wasm.wrong_types_mut_slice_add_one(buffer),
+        /^Error: expected Uint8Array, found ArrayBuffer$/);
+    assert.throws(() => wasm.wrong_types_mut_slice_add_one([1, 2, 3]),
+        /^Error: expected Uint8Array, found Array$/);
+    assert.throws(() => wasm.wrong_types_mut_slice_add_one(new Uint16Array([1, 2])),
+        /^Error: expected Uint8Array, found Uint16Array$/);
+    assert.throws(() => wasm.wrong_types_mut_slice_add_one(new Float32Array([1])),
+        /^Error: expected Uint8Array, found Float32Array$/);
+    assert.throws(() => wasm.wrong_types_mut_u32_len(new Float32Array([1.5])),
+        /^Error: expected Uint32Array, found Float32Array$/);
+    assert.throws(() => wasm.wrong_types_mut_f32_len(new Int32Array([1])),
+        /^Error: expected Float32Array, found Int32Array$/);
+    assert.throws(() => wasm.wrong_types_mut_f32_len(new DataView(new ArrayBuffer(4))),
+        /^Error: expected Float32Array, found DataView$/);
+    assert.throws(() => wasm.wrong_types_imported_vec_len(),
+        /^Error: expected an array or Uint8Array, found ArrayBuffer$/);
+};
