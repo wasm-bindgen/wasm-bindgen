@@ -59,12 +59,18 @@ extern "C" {
     /// promising-wrapped `__wbg_jspi_task_poll` export so the poll runs
     /// on a fresh suspendable stack. Consumes one strong `Rc<SpawnedTask>`
     /// reference, reclaimed by the trampoline.
-    fn __wbindgen_jspi_spawn_poll(task: u32);
+    fn __wbindgen_jspi_spawn_poll(task: TaskToken);
 
     /// The same operation, called only from the initial schedule in
     /// [`spawn_promising`].
-    fn __wbindgen_jspi_spawn_first(task: u32);
+    fn __wbindgen_jspi_spawn_first(task: TaskToken);
 }
+
+// Not `usize`: that lowers through `f64`, while the raw export takes an integer.
+#[cfg(target_arch = "wasm64")]
+type TaskToken = u64;
+#[cfg(not(target_arch = "wasm64"))]
+type TaskToken = u32;
 
 /// Whether the caller is executing within a JSPI context, i.e. whether a
 /// spawned task's polls should be promising-entered.
@@ -167,7 +173,7 @@ impl SpawnedTask {
     /// Schedule a poll, consuming one strong reference into the intrinsic.
     fn schedule(this: Rc<SpawnedTask>) {
         this.state.set(State::Scheduled);
-        __wbindgen_jspi_spawn_poll(Rc::into_raw(this) as u32);
+        __wbindgen_jspi_spawn_poll(Rc::into_raw(this) as TaskToken);
     }
 
     fn wake(this: &Rc<SpawnedTask>) {
@@ -265,7 +271,7 @@ fn task_waker(task: Rc<SpawnedTask>) -> Waker {
 /// nounwind, whose `panic_cannot_unwind` guard would abort the whole
 /// instance instead of abandoning the one task.
 #[no_mangle]
-pub extern "C-unwind" fn __wbg_jspi_task_poll(task: u32) {
+pub extern "C-unwind" fn __wbg_jspi_task_poll(task: TaskToken) {
     let task = unsafe { Rc::from_raw(task as *const SpawnedTask) };
     SpawnedTask::poll(&task);
 }
@@ -288,5 +294,5 @@ where
         future: RefCell::new(Some(Box::pin(future))),
         state: Cell::new(State::Scheduled),
     });
-    __wbindgen_jspi_spawn_first(Rc::into_raw(task) as u32);
+    __wbindgen_jspi_spawn_first(Rc::into_raw(task) as TaskToken);
 }

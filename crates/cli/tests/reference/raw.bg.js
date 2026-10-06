@@ -57,7 +57,7 @@ export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {
 export function __wbg_do_a0ba2606225d4465(arg0) {
     arg0.do();
 }
-export function __wbg_new_37453f8cfbfa31f7() {
+export function __wbg_new_b4330c6bd880e041() {
     const ret = new Other();
     return ret;
 }

@@ -1163,23 +1163,55 @@ impl<'a>
                 module,
                 cfg_attrs,
             );
-            // The *resolved* `js_namespace` (item-level, or inherited from the
-            // enclosing `extern "C"` block) is part of a binding's identity:
-            // two otherwise identical imports that differ only in their
-            // namespace resolve to different JS values, so they must not share
-            // a shim name. Hashing is gated on `None` so that shim names for
-            // imports without a namespace are unchanged.
-            let hash = match js_namespace {
-                None => ShortHash(data).to_string(),
-                Some(ns) => ShortHash((data, ns)).to_string(),
+            let name = wasm
+                .name
+                .chars()
+                .filter(|&c| c.is_ascii_alphanumeric() || c == '_')
+                .collect::<String>();
+            let call_style = ImportCallStyle {
+                catch,
+                variadic,
+                r#final: opts.r#final().is_some(),
+                suspending: opts.suspending().is_some(),
+                generic_per_mono,
+                method_kind: match &kind {
+                    ast::ImportFunctionKind::Method {
+                        kind:
+                            ast::MethodKind::Operation(ast::Operation {
+                                is_static: false,
+                                kind: ast::OperationKind::Regular,
+                            }),
+                        ..
+                    }
+                    | ast::ImportFunctionKind::Normal => None,
+                    ast::ImportFunctionKind::Method { kind, .. } => Some(kind),
+                },
+                slice_to_array: wasm
+                    .arguments
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, arg)| arg.slice_to_array)
+                    .map(|(i, _)| i)
+                    .collect(),
+                js_name: (name != wasm.name).then_some(&wasm.name),
             };
-            format!(
-                "__wbg_{}_{hash}",
-                wasm.name
-                    .chars()
-                    .filter(|&c| c.is_ascii_alphanumeric() || c == '_')
-                    .collect::<String>(),
-            )
+            // Imports with the same shim name share one binding, so everything
+            // that changes the JS a binding calls, or how it calls it, is part
+            // of the hash. The resolved `js_namespace` (item-level, or
+            // inherited from the enclosing `extern "C"` block), the `inline_js`
+            // snippet (see `inline_js_snippet`) and the call style are only
+            // hashed when present, so that imports without them keep their
+            // names.
+            let hash = match (
+                js_namespace,
+                inline_js_snippet(program, module),
+                (!call_style.is_plain()).then_some(call_style),
+            ) {
+                (None, None, None) => ShortHash(data).to_string(),
+                (Some(ns), None, None) => ShortHash((data, ns)).to_string(),
+                (ns, snippet, call_style) => ShortHash((data, ns, snippet, call_style)).to_string(),
+            };
+            format!("__wbg_{name}_{hash}")
         };
         if let Some(span) = opts.r#final() {
             if opts.structural().is_some() {
@@ -1273,12 +1305,24 @@ impl<'a>
     }
 }
 
-impl ConvertToAst<(&ast::Program, BindgenAttrs)> for syn::ForeignItemType {
+impl<'a>
+    ConvertToAst<(
+        &ast::Program,
+        BindgenAttrs,
+        &'a Option<ast::ImportModule>,
+        Option<&'a [String]>,
+    )> for syn::ForeignItemType
+{
     type Target = ast::ImportKind;
 
     fn convert(
         self,
-        (program, attrs): (&ast::Program, BindgenAttrs),
+        (program, attrs, module, js_namespace): (
+            &ast::Program,
+            BindgenAttrs,
+            &'a Option<ast::ImportModule>,
+            Option<&'a [String]>,
+        ),
     ) -> Result<Self::Target, Diagnostic> {
         let js_name = attrs
             .js_name_no_symbol("extern types with #[wasm_bindgen]")?
@@ -1286,22 +1330,25 @@ impl ConvertToAst<(&ast::Program, BindgenAttrs)> for syn::ForeignItemType {
         let typescript_type = attrs.typescript_type().map(|s| s.0.to_string());
         let is_type_of = attrs.is_type_of().cloned();
         let unraw_ident = self.ident.unraw();
-        let cfg_attrs = crate::cfg_gate_attrs(&self.attrs);
-        let namespace = attrs.js_namespace().map(|(ns, _)| ns.0);
-        let hash = if cfg_attrs.is_empty() {
-            ShortHash((namespace, &unraw_ident)).to_string()
-        } else {
-            ShortHash((
-                namespace,
-                &unraw_ident,
-                cfg_attrs
-                    .iter()
-                    .map(ToTokens::to_token_stream)
-                    .map(|tokens| tokens.to_string())
-                    .collect::<String>(),
-            ))
-            .to_string()
-        };
+        let cfg_attrs: String = crate::cfg_gate_attrs(&self.attrs)
+            .iter()
+            .map(|attr| attr.to_token_stream().to_string())
+            .collect();
+        // Everything that selects the JS class is part of the `instanceof`
+        // shim's identity, as for imported functions and statics. Unlike
+        // those, it is all hashed even when absent: an `instanceof` shim only
+        // ends up in the output of code that checks the type, so few names
+        // change, and one tuple is easier to keep complete. Vendor prefixes
+        // are left out because the CLI applies them to every import of the
+        // same JS name anyway.
+        let hash = ShortHash((
+            &js_name,
+            module,
+            &unraw_ident,
+            js_namespace,
+            inline_js_snippet(program, module),
+            cfg_attrs,
+        ));
         let shim = format!("__wbg_instanceof_{unraw_ident}_{hash}");
         let mut extends = Vec::new();
         let mut vendor_prefixes = Vec::new();
@@ -1394,11 +1441,16 @@ impl<'a>
             .unwrap_or(&default_name)
             .to_string();
         let unraw_ident = self.ident.unraw();
-        // As for functions above, the resolved `js_namespace` is part of the
-        // binding's identity, gated on `None` to keep existing names.
-        let hash = match js_namespace {
-            None => ShortHash((&js_name, module, &unraw_ident)).to_string(),
-            Some(ns) => ShortHash((&js_name, module, &unraw_ident, ns)).to_string(),
+        // As for functions above, the resolved `js_namespace` and the
+        // `inline_js` snippet are only hashed when present. A static has no
+        // call style: its binding just reads `js_name` from its module and
+        // namespace.
+        let hash = match (js_namespace, inline_js_snippet(program, module)) {
+            (None, None) => ShortHash((&js_name, module, &unraw_ident)).to_string(),
+            (Some(ns), None) => ShortHash((&js_name, module, &unraw_ident, ns)).to_string(),
+            (ns, Some(snippet)) => {
+                ShortHash((&js_name, module, &unraw_ident, ns, snippet)).to_string()
+            }
         };
         let shim = format!("__wbg_static_accessor_{unraw_ident}_{hash}");
         let thread_local = opts.get_thread_local()?;
@@ -1459,7 +1511,9 @@ impl<'a> ConvertToAst<(&ast::Program, BindgenAttrs, &'a Option<ast::ImportModule
         };
 
         let unraw_ident = self.ident.unraw();
-        let hash = ShortHash((&module, &unraw_ident));
+        // The string itself is what the shim returns, so it is part of the
+        // shim's identity.
+        let hash = ShortHash((&module, &unraw_ident, &string));
         let shim = format!("__wbg_string_{unraw_ident}_{hash}");
         opts.check_used();
         Ok(ast::ImportKind::String(ast::ImportString {
@@ -2996,7 +3050,9 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
                 block_generic_per_mono,
                 js_namespace.as_deref(),
             ))?,
-            syn::ForeignItem::Type(t) => t.convert((program, item_opts))?,
+            syn::ForeignItem::Type(t) => {
+                t.convert((program, item_opts, &module, js_namespace.as_deref()))?
+            }
             syn::ForeignItem::Static(s) => {
                 s.convert((program, item_opts, &module, js_namespace.as_deref()))?
             }
@@ -3106,6 +3162,59 @@ pub fn module_from_opts(
     };
     Diagnostic::from_vec(errors)?;
     Ok(module)
+}
+
+/// Returns the contents of the `inline_js` snippet an import comes from.
+///
+/// Every `#[wasm_bindgen]` invocation parses into its own `Program`, so the
+/// snippet of each `inline_js` extern block is `ImportModule::Inline(0)`. The
+/// index alone therefore can't tell two snippets apart, and shim names hash
+/// the snippet contents instead, as `Program::link_function_name` does.
+fn inline_js_snippet<'a>(
+    program: &'a ast::Program,
+    module: &Option<ast::ImportModule>,
+) -> Option<&'a str> {
+    match module {
+        Some(ast::ImportModule::Inline(idx)) => Some(&program.inline_js[*idx]),
+        _ => None,
+    }
+}
+
+/// The parts of an imported function's binding that change the generated JS
+/// but not its signature, module or namespace.
+#[derive(Hash)]
+struct ImportCallStyle<'a> {
+    catch: bool,
+    variadic: bool,
+    r#final: bool,
+    suspending: bool,
+    generic_per_mono: bool,
+    /// The kind of method, unless this is a plain function or method call.
+    method_kind: Option<&'a ast::MethodKind>,
+    /// The indices of the arguments passed with `slice_to_array`.
+    slice_to_array: Vec<usize>,
+    /// The JS name, if the shim name can't spell it.
+    js_name: Option<&'a String>,
+}
+
+impl ImportCallStyle<'_> {
+    /// Whether this is a plain call, with none of the attributes above.
+    fn is_plain(&self) -> bool {
+        let Self {
+            catch,
+            variadic,
+            r#final,
+            suspending,
+            generic_per_mono,
+            method_kind,
+            slice_to_array,
+            js_name,
+        } = self;
+        !(*catch || *variadic || *r#final || *suspending || *generic_per_mono)
+            && method_kind.is_none()
+            && slice_to_array.is_empty()
+            && js_name.is_none()
+    }
 }
 
 /// Get the first type parameter of a generic type, errors on incorrect input.

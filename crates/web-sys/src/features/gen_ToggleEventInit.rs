@@ -60,6 +60,18 @@ extern "C" {
     #[doc = "*This API requires the following crate features to be activated: `ToggleEventInit`*"]
     #[wasm_bindgen(method, setter = "oldState")]
     pub fn set_old_state(this: &ToggleEventInit, val: &str);
+    #[cfg(feature = "Element")]
+    #[doc = "Get the `source` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`, `ToggleEventInit`*"]
+    #[wasm_bindgen(method, getter = "source")]
+    pub fn get_source(this: &ToggleEventInit) -> Option<Element>;
+    #[cfg(feature = "Element")]
+    #[doc = "Change the `source` field of this object."]
+    #[doc = ""]
+    #[doc = "*This API requires the following crate features to be activated: `Element`, `ToggleEventInit`*"]
+    #[wasm_bindgen(method, setter = "source")]
+    pub fn set_source(this: &ToggleEventInit, val: Option<&Element>);
 }
 impl ToggleEventInit {
     #[doc = "Construct a new `ToggleEventInit`."]
@@ -93,6 +105,12 @@ impl ToggleEventInit {
     #[deprecated = "Use `set_old_state()` instead."]
     pub fn old_state(&mut self, val: &str) -> &mut Self {
         self.set_old_state(val);
+        self
+    }
+    #[cfg(feature = "Element")]
+    #[deprecated = "Use `set_source()` instead."]
+    pub fn source(&mut self, val: Option<&Element>) -> &mut Self {
+        self.set_source(val);
         self
     }
 }

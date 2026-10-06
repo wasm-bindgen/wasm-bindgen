@@ -10,7 +10,7 @@ export function exported() {
 export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
-export function __wbg_catch_me_687c8ac1b7535045() { return handleError(function () {
+export function __wbg_catch_me_0255e6d04778e7f9() { return handleError(function () {
     catch_me();
 }, arguments); }
 export function __wbg_get_b0096ab6db85c3a1(arg0) {
@@ -20,7 +20,7 @@ export function __wbg_get_b0096ab6db85c3a1(arg0) {
 export function __wbg_my_function_a1fb416215f1cd28() {
     a.my_function();
 }
-export function __wbg_new_625e056221ff6a6e(arg0) {
+export function __wbg_new_4fb20cf466dcf1e1(arg0) {
     const ret = new _default(arg0);
     return ret;
 }

@@ -11,7 +11,7 @@ export function exported() {
 export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
-export function __wbg_foo_86c7ea0e4ba8cf8a() { return handleError(function () {
+export function __wbg_foo_2101648249cc4347() { return handleError(function () {
     const ret = foo();
     return ret;
 }, arguments) ?? 0n; }

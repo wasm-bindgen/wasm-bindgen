@@ -9,6 +9,9 @@
   out of the JavaScript object, which throws on any later use.
   [#5354](https://github.com/wasm-bindgen/wasm-bindgen/pull/5354)
 
+* Added `source` property to ToggleEvent.
+  [#5353](https://github.com/wasm-bindgen/wasm-bindgen/pull/5353)
+
 ### Changed
 
 * Replaced the `once_cell` dependency with `core::cell::LazyCell`, which is
@@ -16,8 +19,37 @@
 
 ### Fixed
 
+* Imported functions and statics from two different `inline_js` snippets no
+  longer share one binding when they have the same name and signature. The
+  snippet contents are now part of the generated shim name, so each import
+  reads its own snippet's export.
+  [#3878](https://github.com/wasm-bindgen/wasm-bindgen/issues/3878)
+
+* Imported types with the same Rust name no longer share one `instanceof`
+  check when their module, `inline_js` snippet, `js_name` or `js_namespace`
+  differ. Imported `static_string` statics with the same name no longer share
+  one string.
+  [#5352](https://github.com/wasm-bindgen/wasm-bindgen/pull/5352)
+
+* Imported functions with the same name and signature no longer share one
+  binding when they differ in how JS is called: `catch`, `variadic`, `final`,
+  `slice_to_array`, `suspending`, `experimental_generic_mono`, the method kind
+  (`constructor`, `static_method_of`, `getter`, `setter`, `indexing_*`), or a
+  `js_name` with characters that a shim name drops. Two
+  `experimental_generic_mono` imports that differ only in one of these now
+  both bind instead of failing the build.
+  [#5352](https://github.com/wasm-bindgen/wasm-bindgen/pull/5352)
+
 * `debugString` handles `bigint` values (e.g. `123n`).
   [#5356](https://github.com/wasm-bindgen/wasm-bindgen/pull/5356)
+
+* Fixed JSPI task pointers being truncated to 32 bits on `wasm64`.
+  [#5358](https://github.com/wasm-bindgen/wasm-bindgen/issues/5358)
+
+* Return pointers above 2 GiB on `wasm32` (e.g. thread stacks allocated under
+  `+atomics`) are no longer treated as negative offsets in the generated JS,
+  which previously threw a `RangeError` on number and string conversions.
+  [#5360](https://github.com/wasm-bindgen/wasm-bindgen/pull/5360)
 
 ### Removed
 

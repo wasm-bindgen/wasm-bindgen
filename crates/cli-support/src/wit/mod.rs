@@ -1385,23 +1385,19 @@ impl<'a> Context<'a> {
                     )
                 }
             };
-            // The shim key is a hash over `(namespace + js_namespace, signature
-            // tokens, module, cfg_attrs)` and the imported function's
-            // `wasm.name` (which is the `js_name` when one is given). A number of
-            // attributes are still *not* hashed, though: `catch`, `variadic`,
-            // `slice_to_array`, `structural`/`final`, and the getter/setter
-            // accessor kind. Two generic imports that agree on everything hashed
-            // and differ only in one of those therefore land on the same key.
+            // The shim key hashes everything that shapes the binding: the
+            // imported function's `wasm.name` (which is the `js_name` when one
+            // is given), the signature tokens, module, namespace, `inline_js`
+            // snippet and cfg attributes, and the call style (`catch`,
+            // `variadic`, `slice_to_array`, `final`, the method kind and so on;
+            // see `ImportCallStyle` in the macro). Two generic imports on the
+            // same key should be the same declaration made twice, which is
+            // benign and must be deduplicated rather than rejected.
             //
-            // Two *identical* declarations also land on the same key, which is
-            // benign and must be deduplicated rather than rejected. So compare
-            // the resulting metadata rather than treating any key clash as an
-            // error: silently keeping one of two genuinely different bindings
+            // Still compare the resulting metadata rather than trusting the
+            // key: silently keeping one of two genuinely different bindings
             // would mis-bind every monomorphisation of the other, but silently
             // keeping one of two identical bindings is exactly right.
-            //
-            // The mismatch case is user-reachable, so say what to actually do
-            // about it.
             //
             // The display string ends up in a `//` comment in the generated JS
             // (see `import_comments`), so strip anything that could terminate
@@ -1438,12 +1434,8 @@ impl<'a> Context<'a> {
                             "two `experimental_generic_mono` imports collided on the shim key `{shim}`: \
                              `{previous}` and `{display}`.\n\
                              \n\
-                             This happens when two generic imports have the same Rust function \
-                             name, `js_name`, `js_namespace`, signature and module, and differ \
-                             only in an attribute that does not contribute to the shim key — \
-                             `catch`, `variadic`, `slice_to_array`, `structural`/`final`, or the \
-                             getter/setter accessor kind. Binding both would be ambiguous, \
-                             because a monomorphisation names only this key.\n\
+                             Binding both would be ambiguous, because a monomorphisation names \
+                             only this key.\n\
                              \n\
                              To fix it, make the two imports distinguishable on the Rust side: \
                              give them different Rust function names (adding `js_name` to keep \
