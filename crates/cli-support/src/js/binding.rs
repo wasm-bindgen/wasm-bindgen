@@ -933,6 +933,50 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         self.prelude("}");
     }
 
+    /// Values that are not objects with a numeric `length`, such as an
+    /// `ArrayBuffer` or a string, would otherwise be copied into Wasm as an
+    /// empty or zeroed vector.
+    fn assert_array_like(&mut self, arg: &str, kind: &VectorKind) {
+        if !self.cx.config.debug {
+            return;
+        }
+        self.cx.expose_assert_array_like();
+        match kind {
+            VectorKind::Externref | VectorKind::NamedExternref(_) => {
+                self.prelude(&format!("_assertArrayLike({arg});"));
+            }
+            _ => {
+                let typed_array = kind.js_ty();
+                self.prelude(&format!("_assertArrayLike({arg}, '{typed_array}');"));
+            }
+        }
+    }
+
+    fn assert_optional_array_like(&mut self, arg: &str, kind: &VectorKind) {
+        if !self.cx.config.debug {
+            return;
+        }
+        self.cx.expose_is_like_none();
+        self.prelude(&format!("if (!isLikeNone({arg})) {{"));
+        self.assert_array_like(arg, kind);
+        self.prelude("}");
+    }
+
+    /// Mutable slices are copied back into the buffer of the original typed
+    /// array as raw bytes, so it needs the same element size and the same
+    /// integer or float kind.
+    fn assert_typed_array(&mut self, arg: &str, kind: &VectorKind) {
+        if !self.cx.config.debug {
+            return;
+        }
+        self.cx.expose_assert_typed_array();
+        let typed_array = kind.js_ty();
+        let size = kind.size();
+        self.prelude(&format!(
+            "_assertTypedArray({arg}, '{typed_array}', {size});"
+        ));
+    }
+
     fn assert_not_moved(&mut self, arg: &str) {
         if self.cx.generate_reinit {
             // Under reset state, we need comprehensive validation
@@ -1500,6 +1544,7 @@ fn instruction(
 
         Instruction::VectorToMemory { kind, malloc, mem } => {
             let val = js.pop();
+            js.assert_array_like(&val, kind);
             let func = js.cx.pass_to_wasm_function(kind.clone(), *mem);
             let malloc = js.cx.wasm_export_of(*malloc);
             let i = js.tmp();
@@ -1588,6 +1633,7 @@ fn instruction(
             let i = js.tmp();
             let malloc = js.cx.wasm_export_of(*malloc);
             let val = js.pop();
+            js.assert_optional_array_like(&val, kind);
             js.prelude(&format!(
                 "var ptr{i} = isLikeNone({val}) ? 0 : {func}({val}, {malloc});",
             ));
@@ -1599,6 +1645,7 @@ fn instruction(
         Instruction::MutableSliceToMemory { kind, malloc, mem } => {
             // Copy the contents of the typed array into wasm.
             let val = js.pop();
+            js.assert_typed_array(&val, kind);
             let func = js.cx.pass_to_wasm_function(kind.clone(), *mem);
             let malloc = js.cx.wasm_export_of(*malloc);
             let i = js.tmp();

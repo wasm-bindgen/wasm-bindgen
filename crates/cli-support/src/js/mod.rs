@@ -2990,6 +2990,41 @@ if (require('worker_threads').isMainThread) {{
         );
     }
 
+    fn expose_assert_array_like(&mut self) {
+        self.intrinsic(
+            "assert_array_like".into(),
+            "_assertArrayLike".into(),
+            "
+            function _assertArrayLike(n, typedArray) {
+                if (typeof(n) !== 'object' || n === null || typeof(n.length) !== 'number') {
+                    const expected = typedArray === undefined ? 'an array' : `an array or ${typedArray}`;
+                    const found = n === null ? 'null' : typeof(n) === 'object' ? Object.prototype.toString.call(n).slice(8, -1) : typeof(n);
+                    throw new Error(`expected ${expected}, found ${found}`);
+                }
+            }
+            "
+            .into(),
+            &[],
+        );
+    }
+
+    fn expose_assert_typed_array(&mut self) {
+        self.intrinsic(
+            "assert_typed_array".into(),
+            "_assertTypedArray".into(),
+            "
+            function _assertTypedArray(n, typedArray, size) {
+                const found = n === null ? 'null' : typeof(n) === 'object' ? Object.prototype.toString.call(n).slice(8, -1) : typeof(n);
+                if (!ArrayBuffer.isView(n) || n.BYTES_PER_ELEMENT !== size || found.startsWith('Float') !== typedArray.startsWith('Float')) {
+                    throw new Error(`expected ${typedArray}, found ${found}`);
+                }
+            }
+            "
+            .into(),
+            &[],
+        );
+    }
+
     fn expose_wasm_vector_len(&mut self) {
         self.adapter_deps.insert("WASM_VECTOR_LEN".to_string());
 

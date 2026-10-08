@@ -82,6 +82,15 @@
   which previously threw a `RangeError` on number and string conversions.
   [#5360](https://github.com/wasm-bindgen/wasm-bindgen/pull/5360)
 
+* With `--debug`, passing a value that is not an object with a numeric
+  `length`, such as an `ArrayBuffer` or a string, where Rust takes `&[T]`,
+  `Vec<T>`, `Box<[T]>` or `Option<Vec<T>>` now throws an error naming the
+  expected and received types, instead of silently passing an empty or zeroed
+  slice. `&mut [T]` arguments must be a typed array with the same element size
+  and the same integer or float kind, since the results are copied back into
+  its buffer.
+  [#1961](https://github.com/wasm-bindgen/wasm-bindgen/issues/1961)
+
 ### Removed
 
 ## [0.2.129](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.128...0.2.129)

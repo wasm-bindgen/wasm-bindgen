@@ -30,6 +30,10 @@ extern "C" {
     fn js_clamped2_uninit(val: Clamped<Vec<MaybeUninit<u8>>>, offset: u8);
     #[wasm_bindgen(js_name = js_clamped)]
     fn js_clamped3_uninit(val: Clamped<&mut [MaybeUninit<u8>]>, offset: u8);
+
+    fn js_wrong_types();
+
+    fn js_return_array_buffer() -> Vec<u8>;
 }
 
 macro_rules! export_macro {
@@ -288,6 +292,54 @@ fn take_clamped() {
     js_clamped_uninit(Clamped(slice_uninit_ref(&[1, 2, 3])), 1);
     js_clamped2_uninit(Clamped(slice_uninit_ref(&[4, 5, 6]).to_vec()), 4);
     js_clamped3_uninit(Clamped(slice_uninit_mut(&mut [7, 8, 9])), 7);
+}
+
+#[wasm_bindgen]
+pub fn wrong_types_slice_len(a: &[u8]) -> usize {
+    a.len()
+}
+
+#[wasm_bindgen]
+pub fn wrong_types_vec_len(a: Vec<f64>) -> usize {
+    a.len()
+}
+
+#[wasm_bindgen]
+pub fn wrong_types_optional_vec_len(a: Option<Vec<u8>>) -> Option<usize> {
+    a.map(|a| a.len())
+}
+
+#[wasm_bindgen]
+pub fn wrong_types_jsvalue_vec_len(a: Vec<JsValue>) -> usize {
+    a.len()
+}
+
+#[wasm_bindgen]
+pub fn wrong_types_mut_slice_add_one(a: &mut [u8]) -> usize {
+    for x in a.iter_mut() {
+        *x = x.wrapping_add(1);
+    }
+    a.len()
+}
+
+#[wasm_bindgen]
+pub fn wrong_types_mut_u32_len(a: &mut [u32]) -> usize {
+    a.len()
+}
+
+#[wasm_bindgen]
+pub fn wrong_types_mut_f32_len(a: &mut [f32]) -> usize {
+    a.len()
+}
+
+#[wasm_bindgen]
+pub fn wrong_types_imported_vec_len() -> usize {
+    js_return_array_buffer().len()
+}
+
+#[wasm_bindgen_test]
+fn wrong_types() {
+    js_wrong_types();
 }
 
 fn slice_ref<T>(slice: &[MaybeUninit<T>]) -> &[T] {
