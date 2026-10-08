@@ -47,11 +47,18 @@ struct AttributeParseState {
     parsed: Cell<usize>,
     checks: Cell<usize>,
     unused_attrs: RefCell<Vec<UnusedState>>,
+    conflicting_attrs: RefCell<Vec<ConflictState>>,
 }
 
 struct UnusedState {
     error: bool,
     ident: Ident,
+}
+
+/// An option that is ignored because a conflicting one is also set.
+struct ConflictState {
+    ignored: Ident,
+    used: &'static str,
 }
 
 /// Parsed attributes from a `#[wasm_bindgen(..)]`.
@@ -984,6 +991,7 @@ impl<'a>
         };
 
         let operation_kind = operation_kind(&opts);
+        warn_conflicting_operation_kinds(&opts, &operation_kind);
 
         let kind = if opts.method().is_some() {
             let class = wasm.arguments.first().ok_or_else(|| {
@@ -2079,9 +2087,11 @@ impl<'a> MacroParse<(Option<BindgenAttrs>, &'a mut TokenStream)> for syn::Item {
                         bail_span!(&f.sig.inputs, "the start function cannot have arguments",);
                     }
                 }
+                let kind = operation_kind(&opts);
+                warn_conflicting_operation_kinds(&opts, &kind);
                 let method_kind = ast::MethodKind::Operation(ast::Operation {
                     is_static: true,
-                    kind: operation_kind(&opts),
+                    kind,
                 });
                 let rust_name = f.sig.ident.clone();
                 let start = if opts.start().is_some() {
@@ -2375,6 +2385,7 @@ impl MacroParse<&ClassMarker> for &mut syn::ImplItemFn {
         } else {
             let is_static = method_self.is_none();
             let kind = operation_kind(&opts);
+            warn_conflicting_operation_kinds(&opts, &kind);
             ast::MethodKind::Operation(ast::Operation { is_static, kind })
         };
 
@@ -3427,9 +3438,12 @@ pub fn reset_attrs_used() {
         state.parsed.set(0);
         state.checks.set(0);
         state.unused_attrs.borrow_mut().clear();
+        state.conflicting_attrs.borrow_mut().clear();
     })
 }
 
+/// Emits the unused attribute errors and warnings, and the warnings about
+/// conflicting options.
 pub fn check_unused_attrs(tokens: &mut TokenStream) {
     ATTRS.with(|state| {
         assert_eq!(state.parsed.get(), state.checks.get());
@@ -3450,9 +3464,25 @@ pub fn check_unused_attrs(tokens: &mut TokenStream) {
                 };
             });
         }
+        for ConflictState { ignored, used } in &*state.conflicting_attrs.borrow() {
+            let note = format!(
+                "`{ignored}` conflicts with `{used}` and is ignored; \
+                 setting both will be an error in the next major version"
+            );
+            tokens.extend(quote::quote_spanned! { ignored.span() =>
+                const _: () = {
+                    #[deprecated(note = #note)]
+                    const fn #ignored() {}
+                    #ignored();
+                };
+            });
+        }
     })
 }
 
+/// Picks the operation kind from the `this`, `getter`, `setter` and
+/// `indexing_*` options. If more than one is set, the last one in this order
+/// is used.
 fn operation_kind(opts: &BindgenAttrs) -> ast::OperationKind {
     let mut operation_kind = ast::OperationKind::Regular;
     if opts.this().is_some() {
@@ -3474,6 +3504,43 @@ fn operation_kind(opts: &BindgenAttrs) -> ast::OperationKind {
         operation_kind = ast::OperationKind::IndexingDeleter;
     }
     operation_kind
+}
+
+/// Warns about each option that `operation_kind` ignored when picking `kind`.
+// TODO(next major): make conflicting options an error instead.
+fn warn_conflicting_operation_kinds(opts: &BindgenAttrs, kind: &ast::OperationKind) {
+    let used = match kind {
+        ast::OperationKind::Regular => return,
+        ast::OperationKind::RegularThis => "this",
+        ast::OperationKind::Getter(_) => "getter",
+        ast::OperationKind::Setter(_) => "setter",
+        ast::OperationKind::IndexingGetter => "indexing_getter",
+        ast::OperationKind::IndexingSetter => "indexing_setter",
+        ast::OperationKind::IndexingDeleter => "indexing_deleter",
+    };
+    let mut found_used = false;
+    for (_, attr) in &opts.attrs {
+        let (name, span) = match attr {
+            BindgenAttr::This(span) => ("this", span),
+            BindgenAttr::Getter(span, _) => ("getter", span),
+            BindgenAttr::Setter(span, _) => ("setter", span),
+            BindgenAttr::IndexingGetter(span) => ("indexing_getter", span),
+            BindgenAttr::IndexingSetter(span) => ("indexing_setter", span),
+            BindgenAttr::IndexingDeleter(span) => ("indexing_deleter", span),
+            _ => continue,
+        };
+        if name == used {
+            found_used = true;
+        } else {
+            ATTRS.with(|state| {
+                state.conflicting_attrs.borrow_mut().push(ConflictState {
+                    ignored: Ident::new(name, *span),
+                    used,
+                })
+            });
+        }
+    }
+    debug_assert!(found_used, "`{used}` is missing from the options above");
 }
 
 pub fn link_to(opts: BindgenAttrs) -> Result<ast::LinkToModule, Diagnostic> {

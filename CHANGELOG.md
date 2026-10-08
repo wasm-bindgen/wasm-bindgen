@@ -51,6 +51,14 @@
 * Escape string inputs in `debugString`.
   [#5366](https://github.com/wasm-bindgen/wasm-bindgen/pull/5366)
 
+* `#[wasm_bindgen]` now warns when a function sets more than one of `this`,
+  `getter`, `setter`, `indexing_getter`, `indexing_setter` and
+  `indexing_deleter`. Only one of them takes effect, and the others used to be
+  ignored silently. Conflicting options will be an error in the next major
+  version.
+  [#4272](https://github.com/wasm-bindgen/wasm-bindgen/issues/4272)
+  [#5369](https://github.com/wasm-bindgen/wasm-bindgen/pull/5369)
+
 ### Fixed
 
 * Imported functions and statics from two different `inline_js` snippets no
