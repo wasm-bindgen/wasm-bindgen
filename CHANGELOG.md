@@ -29,6 +29,7 @@
 
 * Replaced the `once_cell` dependency with `core::cell::LazyCell`, which is
   available now that the library MSRV is 1.81.
+  [#5359](https://github.com/wasm-bindgen/wasm-bindgen/pull/5359)
 
 * Under `js_sys_unstable_apis`, the unsuffixed `Object::define_property`,
   `Object::from_entries`, `Object::get_own_property_descriptor`,
@@ -42,6 +43,10 @@
   `&Object<T>` target. Callers passing `&"key".into()` should pass `"key"` (or
   another concrete key type) instead.
   [#5341](https://github.com/wasm-bindgen/wasm-bindgen/pull/5341)
+
+* `wasm-bindgen-test` no longer depends on `async-trait`. Its benchmark code
+  now uses native `async fn` in traits.
+  [#5365](https://github.com/wasm-bindgen/wasm-bindgen/pull/5365)
 
 ### Fixed
 

@@ -4,14 +4,12 @@ use super::report::{BenchmarkId, Report};
 use super::{ActualSamplingMode, Bencher, Criterion};
 use alloc::boxed::Box;
 use alloc::vec::Vec;
-use async_trait::async_trait;
 use core::future::Future;
 use core::marker::PhantomData;
 use core::pin::Pin;
 use core::time::Duration;
 
 /// PRIVATE
-#[async_trait(?Send)]
 pub(crate) trait Routine<M: Measurement> {
     /// PRIVATE
     async fn bench(&mut self, m: &M, iters: &[u64]) -> Vec<f64>;
@@ -85,7 +83,6 @@ impl<M: Measurement, F> AsyncFunction<M, F> {
     }
 }
 
-#[async_trait(?Send)]
 impl<M, F> Routine<M> for AsyncFunction<M, F>
 where
     M: Measurement,
@@ -157,7 +154,6 @@ where
     }
 }
 
-#[async_trait(?Send)]
 impl<M: Measurement, F> Routine<M> for Function<M, F>
 where
     F: FnMut(&mut Bencher<'_, M>),
