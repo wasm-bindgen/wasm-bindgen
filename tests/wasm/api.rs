@@ -287,3 +287,19 @@ fn from_str_preserves_bom() {
         s.encode_utf16().count() as u32
     );
 }
+
+#[cfg(feature = "enable-interning")]
+#[wasm_bindgen_test]
+fn from_utf8_lossy_uses_intern_cache() {
+    let s = "interned lossy";
+    wasm_bindgen::intern(s);
+    let a = JsValue::from_utf8_lossy(s.as_bytes());
+    let b = JsValue::from_str(s);
+    assert_eq!(a.as_string().unwrap(), s);
+    assert_eq!(a, b);
+    wasm_bindgen::unintern(s);
+    assert_eq!(
+        JsValue::from_utf8_lossy(s.as_bytes()).as_string().unwrap(),
+        s
+    );
+}

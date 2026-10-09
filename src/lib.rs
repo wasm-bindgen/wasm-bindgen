@@ -235,8 +235,8 @@ impl JsValue {
     #[inline]
     pub fn from_utf8_lossy(bytes: &[u8]) -> JsValue {
         #[cfg(feature = "enable-interning")]
-        if let Ok(s) = core::str::from_utf8(bytes) {
-            return JsValue::from_str(s);
+        if let Some(value) = cache::intern::get_bytes(bytes) {
+            return value;
         }
         __wbindgen_string_from_utf8_lossy(bytes)
     }
