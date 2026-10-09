@@ -255,3 +255,35 @@ fn function_table_is() {
 
 #[no_mangle]
 pub extern "C" fn function_table_lookup() {}
+
+#[wasm_bindgen_test]
+fn from_utf8_lossy_works() {
+    let cases: &[&[u8]] = &[
+        b"",
+        b"hello",
+        "héllo wörld ✓ 🎉".as_bytes(),
+        "\u{feff}bom prefixed".as_bytes(),
+        b"\xff",
+        b"invalid \xff\xfe bytes",
+        b"truncated \xe2\x82",
+        b"overlong \xc0\xaf",
+        b"surrogate \xed\xa0\x80",
+    ];
+    for bytes in cases {
+        let expected = String::from_utf8_lossy(bytes);
+        let value = JsValue::from_utf8_lossy(bytes);
+        assert!(value.is_string());
+        assert_eq!(value.as_string().unwrap(), expected);
+        assert_eq!(value, JsValue::from_str(&expected));
+    }
+}
+
+#[wasm_bindgen_test]
+fn from_str_preserves_bom() {
+    let s = "\u{feff}bar";
+    assert_eq!(JsValue::from_str(s).as_string().unwrap(), s);
+    assert_eq!(
+        js_sys::JsString::from(s).length(),
+        s.encode_utf16().count() as u32
+    );
+}

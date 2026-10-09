@@ -1,53 +1,19 @@
 /**
- * @returns {number}
+ * @param {Uint8Array} bytes
+ * @returns {any}
  */
-export function result_i32() {
-    const ret = wasm.result_i32();
-    if (ret[2]) {
-        throw takeFromExternrefTable0(ret[1]);
-    }
-    return ret[0];
+export function foo(bytes) {
+    const ptr0 = passArray8ToWasm0(bytes, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.foo(ptr0, len0);
+    return ret;
 }
-
-/**
- * @returns {string}
- */
-export function result_string() {
-    let deferred2_0;
-    let deferred2_1;
-    try {
-        const ret = wasm.result_string();
-        var ptr1 = ret[0];
-        var len1 = ret[1];
-        if (ret[3]) {
-            ptr1 = 0; len1 = 0;
-            throw takeFromExternrefTable0(ret[2]);
-        }
-        deferred2_0 = ptr1;
-        deferred2_1 = len1;
-        return getStringFromWasm0(ptr1, len1);
-    } finally {
-        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
-    }
-}
-
-export function result_void() {
-    const ret = wasm.result_void();
-    if (ret[1]) {
-        throw takeFromExternrefTable0(ret[0]);
-    }
-}
-export function __wbg_Error_30c8987f7c2ed4e2(arg0, arg1) {
-    const ret = Error(getStringFromWasm0(arg0, arg1));
+export function __wbg___wbindgen_string_from_utf8_lossy_da861c7d40e6c311(arg0, arg1) {
+    const ret = decodeText(getArrayU8FromWasm0(arg0, arg1));
     return ret;
 }
 export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
-}
-export function __wbindgen_generic_0000000000000000(arg0) {
-    // Cast intrinsic for `F64 -> Externref`.
-    const ret = arg0;
-    return ret;
 }
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;
@@ -58,6 +24,11 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
 }
+function getArrayU8FromWasm0(ptr, len) {
+    ptr = ptr >>> 0;
+    return getUint8ArrayMemory0().subarray(ptr / 1, ptr / 1 + len);
+}
+
 function getStringFromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return decodeText(getUint8ArrayMemory0().subarray(ptr, ptr + len));
@@ -71,10 +42,11 @@ function getUint8ArrayMemory0() {
     return cachedUint8ArrayMemory0;
 }
 
-function takeFromExternrefTable0(idx) {
-    const value = wasm.__wbindgen_externrefs.get(idx);
-    wasm.__externref_table_dealloc(idx);
-    return value;
+function passArray8ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 1, 1) >>> 0;
+    getUint8ArrayMemory0().set(arg, ptr / 1);
+    WASM_VECTOR_LEN = arg.length;
+    return ptr;
 }
 
 let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true });
@@ -90,6 +62,8 @@ function decodeText(bytes) {
     }
     return cachedTextDecoder.decode(bytes);
 }
+
+let WASM_VECTOR_LEN = 0;
 
 
 let wasm;

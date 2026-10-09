@@ -5,6 +5,11 @@
 
 ### Added
 
+* Added `JsValue::from_utf8_lossy` to create a JS string directly from a
+  `&[u8]`, decoding on the JS side with replacement characters for invalid
+  UTF-8 instead of requiring a `String::from_utf8_lossy` allocation first.
+  [#5370](https://github.com/wasm-bindgen/wasm-bindgen/pull/5370)
+
 * Documented in the guide that passing an exported Rust type by value moves it
   out of the JavaScript object, which throws on any later use.
   [#5354](https://github.com/wasm-bindgen/wasm-bindgen/pull/5354)
@@ -26,6 +31,11 @@
   [#5341](https://github.com/wasm-bindgen/wasm-bindgen/pull/5341)
 
 ### Changed
+
+* The generated `TextDecoder` no longer sets `fatal: true`. Rust `&str` is
+  always valid UTF-8, so this only removes a redundant check and lets
+  `JsValue::from_str` and `JsValue::from_utf8_lossy` share a single decoder.
+  [#5370](https://github.com/wasm-bindgen/wasm-bindgen/pull/5370)
 
 * Replaced the `once_cell` dependency with `core::cell::LazyCell`, which is
   available now that the library MSRV is 1.81.

@@ -226,6 +226,21 @@ impl JsValue {
         wbg_cast(s)
     }
 
+    /// Creates a new JS value which is a string, decoding `bytes` as UTF-8.
+    ///
+    /// Invalid UTF-8 sequences are replaced with U+FFFD, so this behaves like
+    /// `JsValue::from_str(&String::from_utf8_lossy(bytes))` without the
+    /// intermediate Rust allocation: the bytes are decoded directly from
+    /// Wasm memory on the JS side.
+    #[inline]
+    pub fn from_utf8_lossy(bytes: &[u8]) -> JsValue {
+        #[cfg(feature = "enable-interning")]
+        if let Ok(s) = core::str::from_utf8(bytes) {
+            return JsValue::from_str(s);
+        }
+        __wbindgen_string_from_utf8_lossy(bytes)
+    }
+
     /// Creates a new JS value which is a number.
     ///
     /// This function creates a JS value representing a number (a heap
@@ -1295,6 +1310,7 @@ extern "C" {
     fn __wbindgen_number_get(js: &JsValue) -> Option<f64>;
     fn __wbindgen_boolean_get(js: &JsValue) -> Option<bool>;
     fn __wbindgen_string_get(js: &JsValue) -> Option<String>;
+    fn __wbindgen_string_from_utf8_lossy(bytes: &[u8]) -> JsValue;
     fn __wbindgen_bigint_get_as_i64(js: &JsValue) -> Option<i64>;
 
     fn __wbindgen_debug_string(js: &JsValue) -> String;
