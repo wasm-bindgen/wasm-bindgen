@@ -47,11 +47,18 @@ struct AttributeParseState {
     parsed: Cell<usize>,
     checks: Cell<usize>,
     unused_attrs: RefCell<Vec<UnusedState>>,
+    conflicting_attrs: RefCell<Vec<ConflictState>>,
 }
 
 struct UnusedState {
     error: bool,
     ident: Ident,
+}
+
+/// An option that is ignored because a conflicting one is also set.
+struct ConflictState {
+    ignored: Ident,
+    used: &'static str,
 }
 
 /// Parsed attributes from a `#[wasm_bindgen(..)]`.
@@ -1760,7 +1767,9 @@ fn function_from_decl(
                 "free functions with #[wasm_bindgen] do not support symbols in js_name",
             ));
         }
-        let kind = operation_kind(opts);
+        // Callers that use the kind call `operation_kind`, which warns about
+        // ignored options.
+        let (kind, _) = pick_operation_kind(opts);
         let prefix = match kind {
             OperationKind::Setter(_) => "set_",
             _ => "",
@@ -3427,9 +3436,12 @@ pub fn reset_attrs_used() {
         state.parsed.set(0);
         state.checks.set(0);
         state.unused_attrs.borrow_mut().clear();
+        state.conflicting_attrs.borrow_mut().clear();
     })
 }
 
+/// Emits the unused attribute errors and warnings, and the warnings about
+/// conflicting options.
 pub fn check_unused_attrs(tokens: &mut TokenStream) {
     ATTRS.with(|state| {
         assert_eq!(state.parsed.get(), state.checks.get());
@@ -3450,30 +3462,95 @@ pub fn check_unused_attrs(tokens: &mut TokenStream) {
                 };
             });
         }
+        for ConflictState { ignored, used } in &*state.conflicting_attrs.borrow() {
+            let note = format!(
+                "`{ignored}` conflicts with `{used}` and is ignored; \
+                 conflicting options will be an error in the next major version"
+            );
+            tokens.extend(quote::quote_spanned! { ignored.span() =>
+                const _: () = {
+                    #[deprecated(note = #note)]
+                    const fn #ignored() {}
+                    #ignored();
+                };
+            });
+        }
     })
 }
 
+/// Picks the operation kind from the `this`, `getter`, `setter` and
+/// `indexing_*` options, and records a warning for each of them that is
+/// ignored. If more than one is set, the last one in this order is used.
+// TODO(next major): make conflicting options an error instead.
 fn operation_kind(opts: &BindgenAttrs) -> ast::OperationKind {
-    let mut operation_kind = ast::OperationKind::Regular;
-    if opts.this().is_some() {
-        operation_kind = ast::OperationKind::RegularThis;
+    let (kind, conflicts) = pick_operation_kind(opts);
+    ATTRS.with(|state| state.conflicting_attrs.borrow_mut().extend(conflicts));
+    kind
+}
+
+/// Like [`operation_kind`], but returns the ignored options instead of
+/// recording warnings for them.
+fn pick_operation_kind(opts: &BindgenAttrs) -> (ast::OperationKind, Vec<ConflictState>) {
+    // Each of the options that is set, with its rank in the order above.
+    let mut found = Vec::new();
+    let mut winner = None;
+    for (used, attr) in &opts.attrs {
+        let (rank, name, span, kind) = match attr {
+            BindgenAttr::This(span) => (0, "this", span, ast::OperationKind::RegularThis),
+            BindgenAttr::Getter(span, property) => (
+                1,
+                "getter",
+                span,
+                ast::OperationKind::Getter(property.clone()),
+            ),
+            BindgenAttr::Setter(span, property) => (
+                2,
+                "setter",
+                span,
+                ast::OperationKind::Setter(property.clone()),
+            ),
+            BindgenAttr::IndexingGetter(span) => (
+                3,
+                "indexing_getter",
+                span,
+                ast::OperationKind::IndexingGetter,
+            ),
+            BindgenAttr::IndexingSetter(span) => (
+                4,
+                "indexing_setter",
+                span,
+                ast::OperationKind::IndexingSetter,
+            ),
+            BindgenAttr::IndexingDeleter(span) => (
+                5,
+                "indexing_deleter",
+                span,
+                ast::OperationKind::IndexingDeleter,
+            ),
+            _ => continue,
+        };
+        // As with the other options, only the first use of each one is read,
+        // so a repeat stays unused.
+        if !found.iter().any(|&(r, _, _)| r == rank) {
+            used.set(true);
+            if winner.as_ref().map_or(true, |&(r, _, _)| rank > r) {
+                winner = Some((rank, name, kind));
+            }
+        }
+        found.push((rank, name, *span));
     }
-    if let Some(g) = opts.getter() {
-        operation_kind = ast::OperationKind::Getter(g.clone());
-    }
-    if let Some(s) = opts.setter() {
-        operation_kind = ast::OperationKind::Setter(s.clone());
-    }
-    if opts.indexing_getter().is_some() {
-        operation_kind = ast::OperationKind::IndexingGetter;
-    }
-    if opts.indexing_setter().is_some() {
-        operation_kind = ast::OperationKind::IndexingSetter;
-    }
-    if opts.indexing_deleter().is_some() {
-        operation_kind = ast::OperationKind::IndexingDeleter;
-    }
-    operation_kind
+    let Some((rank, used, kind)) = winner else {
+        return (ast::OperationKind::Regular, Vec::new());
+    };
+    let conflicts = found
+        .into_iter()
+        .filter(|&(r, _, _)| r != rank)
+        .map(|(_, name, span)| ConflictState {
+            ignored: Ident::new(name, span),
+            used,
+        })
+        .collect();
+    (kind, conflicts)
 }
 
 pub fn link_to(opts: BindgenAttrs) -> Result<ast::LinkToModule, Diagnostic> {
@@ -3633,5 +3710,32 @@ mod tests {
         )
         .unwrap();
         assert_eq!(namespaces, vec![None]);
+    }
+
+    /// Counts the warnings about conflicting options in an expansion.
+    fn conflict_warnings(attr: proc_macro2::TokenStream, item: proc_macro2::TokenStream) -> usize {
+        let tokens = crate::expand(attr, item).unwrap();
+        tokens.to_string().matches("conflicts with").count()
+    }
+
+    #[test]
+    fn conflicting_options_warn_once_with_js_name() {
+        // `js_name` makes `function_from_decl` read the operation kind as well.
+        let import = conflict_warnings(
+            quote::quote! {},
+            quote::quote! {
+                extern "C" {
+                    type Foo;
+                    #[wasm_bindgen(method, getter, setter, js_name = renamed)]
+                    fn set_renamed(this: &Foo, value: u32);
+                }
+            },
+        );
+        assert_eq!(import, 1);
+        let export = conflict_warnings(
+            quote::quote! { getter, setter, js_name = renamed },
+            quote::quote! { pub fn set_renamed(value: u32) {} },
+        );
+        assert_eq!(export, 1);
     }
 }

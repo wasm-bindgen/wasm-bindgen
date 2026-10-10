@@ -1,0 +1,109 @@
+error: use of deprecated function `_::getter`: `getter` conflicts with `setter` and is ignored; conflicting options will be an error in the next major version
+ --> ui-tests/conflicting-operation-kinds.rs:9:28
+  |
+9 |     #[wasm_bindgen(method, getter, setter)]
+  |                            ^^^^^^
+  |
+note: the lint level is defined here
+ --> ui-tests/conflicting-operation-kinds.rs:1:9
+  |
+1 | #![deny(deprecated)]
+  |         ^^^^^^^^^^
+
+error: use of deprecated function `_::getter`: `getter` conflicts with `setter` and is ignored; conflicting options will be an error in the next major version
+  --> ui-tests/conflicting-operation-kinds.rs:13:36
+   |
+13 |     #[wasm_bindgen(method, setter, getter)]
+   |                                    ^^^^^^
+
+error: use of deprecated function `_::getter`: `getter` conflicts with `setter` and is ignored; conflicting options will be an error in the next major version
+  --> ui-tests/conflicting-operation-kinds.rs:16:28
+   |
+16 |     #[wasm_bindgen(method, getter)]
+   |                            ^^^^^^
+
+error: use of deprecated function `_::getter`: `getter` conflicts with `setter` and is ignored; conflicting options will be an error in the next major version
+  --> ui-tests/conflicting-operation-kinds.rs:20:55
+   |
+20 |     #[wasm_bindgen(method, setter, js_name = renamed, getter)]
+   |                                                       ^^^^^^
+
+error: use of deprecated function `_::getter`: `getter` conflicts with `setter` and is ignored; conflicting options will be an error in the next major version
+  --> ui-tests/conflicting-operation-kinds.rs:23:44
+   |
+23 |     #[wasm_bindgen(static_method_of = Foo, getter, setter)]
+   |                                            ^^^^^^
+
+error: use of deprecated function `_::getter`: `getter` conflicts with `indexing_getter` and is ignored; conflicting options will be an error in the next major version
+  --> ui-tests/conflicting-operation-kinds.rs:26:28
+   |
+26 |     #[wasm_bindgen(method, getter, indexing_getter)]
+   |                            ^^^^^^
+
+error: use of deprecated function `_::indexing_getter`: `indexing_getter` conflicts with `indexing_setter` and is ignored; conflicting options will be an error in the next major version
+  --> ui-tests/conflicting-operation-kinds.rs:29:40
+   |
+29 |     #[wasm_bindgen(method, structural, indexing_getter, indexing_setter)]
+   |                                        ^^^^^^^^^^^^^^^
+
+error: use of deprecated function `_::indexing_getter`: `indexing_getter` conflicts with `indexing_deleter` and is ignored; conflicting options will be an error in the next major version
+  --> ui-tests/conflicting-operation-kinds.rs:32:40
+   |
+32 |     #[wasm_bindgen(method, structural, indexing_getter, indexing_deleter)]
+   |                                        ^^^^^^^^^^^^^^^
+
+error: use of deprecated function `_::indexing_setter`: `indexing_setter` conflicts with `indexing_deleter` and is ignored; conflicting options will be an error in the next major version
+  --> ui-tests/conflicting-operation-kinds.rs:35:40
+   |
+35 |     #[wasm_bindgen(method, structural, indexing_setter, indexing_deleter)]
+   |                                        ^^^^^^^^^^^^^^^
+
+error: use of deprecated function `_::getter`: `getter` conflicts with `indexing_deleter` and is ignored; conflicting options will be an error in the next major version
+  --> ui-tests/conflicting-operation-kinds.rs:38:40
+   |
+38 |     #[wasm_bindgen(method, structural, getter, setter, indexing_deleter)]
+   |                                        ^^^^^^
+
+error: use of deprecated function `_::setter`: `setter` conflicts with `indexing_deleter` and is ignored; conflicting options will be an error in the next major version
+  --> ui-tests/conflicting-operation-kinds.rs:38:48
+   |
+38 |     #[wasm_bindgen(method, structural, getter, setter, indexing_deleter)]
+   |                                                ^^^^^^
+
+error: use of deprecated function `Bar::set_getter_setter::_::getter`: `getter` conflicts with `setter` and is ignored; conflicting options will be an error in the next major version
+  --> ui-tests/conflicting-operation-kinds.rs:67:20
+   |
+67 |     #[wasm_bindgen(getter, setter)]
+   |                    ^^^^^^
+
+error: use of deprecated function `Bar::set_with_js_name::_::getter`: `getter` conflicts with `setter` and is ignored; conflicting options will be an error in the next major version
+  --> ui-tests/conflicting-operation-kinds.rs:72:20
+   |
+72 |     #[wasm_bindgen(getter, setter, js_name = renamed)]
+   |                    ^^^^^^
+
+error: use of deprecated function `Bar::set_static_getter_setter::_::getter`: `getter` conflicts with `setter` and is ignored; conflicting options will be an error in the next major version
+  --> ui-tests/conflicting-operation-kinds.rs:77:20
+   |
+77 |     #[wasm_bindgen(getter, setter)]
+   |                    ^^^^^^
+
+error: use of deprecated function `Bar::indexing_getter_deleter::_::indexing_getter`: `indexing_getter` conflicts with `indexing_deleter` and is ignored; conflicting options will be an error in the next major version
+  --> ui-tests/conflicting-operation-kinds.rs:80:20
+   |
+80 |     #[wasm_bindgen(indexing_getter, indexing_deleter)]
+   |                    ^^^^^^^^^^^^^^^
+
+error: use of deprecated function `_::this`: `this` conflicts with `getter` and is ignored; conflicting options will be an error in the next major version
+  --> ui-tests/conflicting-operation-kinds.rs:94:16
+   |
+94 | #[wasm_bindgen(this, getter)]
+   |                ^^^^
+
+warning: unused variable: `getter`
+  --> ui-tests/conflicting-operation-kinds.rs:42:36
+   |
+42 |     #[wasm_bindgen(method, getter, getter = other)]
+   |                                    ^^^^^^ help: if this is intentional, prefix it with an underscore: `_getter`
+   |
+   = note: `#[warn(unused_variables)]` on by default
