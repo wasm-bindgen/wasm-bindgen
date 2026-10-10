@@ -239,6 +239,13 @@ fn debug_output() {
         "JsValue([1, [2, 3]])",
         "JsValue(Function)",
         "JsValue(Set)",
+        "JsValue(NaN)",
+        "JsValue(Infinity)",
+        "JsValue(-Infinity)",
+        "JsValue(\"a\\\"b\\nc\")",
+        "JsValue([1, undefined, 3])",
+        "JsValue(Function)",
+        "JsValue(Function(bar))",
     ];
     for (test, expected) in test_iter.zip(expecteds) {
         assert_eq!(format!("{:?}", test.unwrap()), expected);
