@@ -38,6 +38,10 @@ extern "C" {
     #[wasm_bindgen(method, structural, getter, setter, indexing_deleter)]
     fn three_options(this: &Foo, key: u32);
 
+    // A repeated option isn't a conflict. Only its first use is read.
+    #[wasm_bindgen(method, getter, getter = other)]
+    fn repeated_getter(this: &Foo) -> u32;
+
     // A single option is fine.
     #[wasm_bindgen(method, getter)]
     fn value(this: &Foo) -> u32;
