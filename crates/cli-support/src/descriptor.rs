@@ -416,6 +416,29 @@ impl VectorKind {
         }
     }
 
+    /// The element type of a plain JS array that can be passed instead of the
+    /// typed array from `js_ty` when the vector is copied into Wasm memory.
+    /// The copy uses `TypedArray.prototype.set`, which converts each element
+    /// the same way a typed array store does.
+    pub fn plain_array_element_ty(&self) -> Option<&'static str> {
+        match *self {
+            VectorKind::I8
+            | VectorKind::U8
+            | VectorKind::I16
+            | VectorKind::U16
+            | VectorKind::I32
+            | VectorKind::U32
+            | VectorKind::F32
+            | VectorKind::F64 => Some("number"),
+            VectorKind::I64 | VectorKind::U64 => Some("bigint"),
+            // Copied through a `Uint8Array` view, so numbers in a plain array
+            // would wrap around instead of being clamped.
+            VectorKind::ClampedU8 => None,
+            // Not typed arrays.
+            VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_) => None,
+        }
+    }
+
     pub fn size(&self) -> usize {
         match *self {
             VectorKind::String => 1,

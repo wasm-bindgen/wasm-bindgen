@@ -87,6 +87,10 @@ pub enum AdapterType {
     I32,
     I64,
     Vector(VectorKind),
+    /// A `&mut [T]` argument. Unlike `Vector`, the contents are copied back
+    /// into the buffer of the passed typed array after the call, so it can't
+    /// be a plain array.
+    MutableSlice(VectorKind),
     Option(Box<AdapterType>),
     Struct(String),
     Enum(String),

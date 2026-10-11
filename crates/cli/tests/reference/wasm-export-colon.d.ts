@@ -48,7 +48,7 @@ export function __wbgbench_dump(): Uint8Array | undefined;
 /**
  * Used to write previous benchmark data before the benchmark, for later comparison.
  */
-export function __wbgbench_import(baseline: Uint8Array): void;
+export function __wbgbench_import(baseline: Uint8Array | number[]): void;
 
 /**
  * Handler for `console.debug` invocations. See above.
