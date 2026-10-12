@@ -135,7 +135,7 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
 
     // Repoint the file to be read from "name.js" to "name.wasm" in the case of emscripten.
     // Rustc generates a .js and a .wasm file when targeting emscripten. It lists the .js
-    // file as the primary executor which is inconsitent with what is expected here.
+    // file as the primary executor which is inconsistent with what is expected here.
     if file_name_buf.extension().unwrap_or_default() == "js" {
         file_name_buf.set_extension("wasm");
     }

@@ -9,7 +9,7 @@ use anyhow::{Context, Error};
 use super::Cli;
 use super::Tests;
 
-// depends on the variable 'wasm' and initializes te WasmBindgenTestContext cx
+// depends on the variable 'wasm' and initializes the WasmBindgenTestContext cx
 pub fn shared_setup(is_bench: bool) -> String {
     format!(
         r#"

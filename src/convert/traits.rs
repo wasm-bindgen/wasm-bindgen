@@ -9,7 +9,7 @@ use crate::{ErasableGeneric, JsValue};
 /// A trait for anything that can be converted into a type that can cross the
 /// Wasm ABI directly, eg `u32` or `f64`.
 ///
-/// This is the opposite operation as `FromWasmAbi` and `Ref[Mut]FromWasmAbi`.
+/// This is the opposite of `FromWasmAbi` and `Ref[Mut]FromWasmAbi`.
 ///
 /// # ⚠️ Unstable
 ///
