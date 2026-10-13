@@ -461,14 +461,9 @@ impl OptionIntoWasmAbi for &str {
     }
 }
 
-// Borrowed string shapes that deref to `str` cross exactly like `&str`: a
-// borrowed UTF-8 buffer that JS reads without freeing. Their `WasmDescribe`
-// comes from the blanket `&T` impl (`REF` + the pointee's string descriptor),
-// matching `&str`.
-//
-// `&&str` is deliberately absent: the blanket `&T` impl describes it as
-// `REF REF STRING`, which the CLI cannot bind, and that impl cannot be
-// overridden for `&&str` because `&str: WasmDescribe`.
+// Borrowed shapes that deref to `str` cross exactly like `&str`. `&&str` is
+// omitted: the blanket `&T` describe gives `REF REF STRING`, which the CLI
+// can't bind.
 macro_rules! str_ref_into_wasm_abi {
     ($($t:ty),* $(,)?) => ($(
         impl IntoWasmAbi for &$t {

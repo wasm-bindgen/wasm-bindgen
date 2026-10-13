@@ -652,10 +652,8 @@ impl<T: IntoJsGeneric + Clone> IntoJsGeneric for &T {
 /// `String` and `&str` cross as UTF-8 buffers, `js_sys::JsString` and
 /// `&js_sys::JsString` as handles — all arriving in JS as a string value.
 ///
-/// The borrowed shapes `&String`, `&Box<str>` and `&Cow<str>` are also
-/// accepted and cross exactly like `&str`, so callers that relied on deref
-/// coercion to pass them to a `&str` parameter keep compiling when it becomes
-/// a `JsStringLike` bound. `&&str` is not accepted; dereference it first.
+/// `&String`, `&Box<str>` and `&Cow<str>` are also accepted and cross like
+/// `&str`. `&&str` is not; dereference it first.
 ///
 /// This trait is sealed: it is implemented only for the string shapes above,
 /// each of which is guaranteed to produce a JS string on the other side.

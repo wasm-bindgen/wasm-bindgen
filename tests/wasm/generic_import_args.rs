@@ -172,9 +172,6 @@ fn experimental_generic_mono_string_arg_impl_trait() {
     assert_eq!(describe_str_impl(js), "string:handle");
 }
 
-// Borrowed shapes that deref to `str` cross as a borrowed UTF-8 buffer, like
-// `&str`, so existing `&str` callers keep compiling against a generic
-// `JsStringLike` parameter.
 #[wasm_bindgen_test]
 fn experimental_generic_mono_string_arg_borrowed_shapes() {
     let owned = String::from("string");

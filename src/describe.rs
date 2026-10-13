@@ -185,8 +185,7 @@ cfg_if! {
     }
 }
 
-// Pointees for the `&Box<str>` and `&Cow<str>` string ABIs, which get their
-// descriptor from the blanket `&T` impl. These describe like `str`.
+// Pointees for `&Box<str>` and `&Cow<str>`, described like `str`.
 impl WasmDescribe for Box<str> {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
