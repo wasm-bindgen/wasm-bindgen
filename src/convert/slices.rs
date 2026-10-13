@@ -1,3 +1,4 @@
+use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -459,6 +460,36 @@ impl OptionIntoWasmAbi for &str {
         null_slice()
     }
 }
+
+// Borrowed string shapes that deref to `str` cross exactly like `&str`: a
+// borrowed UTF-8 buffer that JS reads without freeing. Their `WasmDescribe`
+// comes from the blanket `&T` impl (`REF` + the pointee's string descriptor),
+// matching `&str`.
+//
+// `&&str` is deliberately absent: the blanket `&T` impl describes it as
+// `REF REF STRING`, which the CLI cannot bind, and that impl cannot be
+// overridden for `&&str` because `&str: WasmDescribe`.
+macro_rules! str_ref_into_wasm_abi {
+    ($($t:ty),* $(,)?) => ($(
+        impl IntoWasmAbi for &$t {
+            type Abi = <&'static str as IntoWasmAbi>::Abi;
+
+            #[inline]
+            fn into_abi(self) -> Self::Abi {
+                <&str as IntoWasmAbi>::into_abi(self)
+            }
+        }
+
+        impl OptionIntoWasmAbi for &$t {
+            #[inline]
+            fn none() -> Self::Abi {
+                <&str as OptionIntoWasmAbi>::none()
+            }
+        }
+    )*)
+}
+
+str_ref_into_wasm_abi!(String, Box<str>, Cow<'_, str>);
 
 impl RefFromWasmAbi for str {
     type Abi = <[u8] as RefFromWasmAbi>::Abi;

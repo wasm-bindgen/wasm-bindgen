@@ -3,6 +3,7 @@
 
 #![doc(hidden)]
 
+use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -181,6 +182,22 @@ cfg_if! {
         simple! {
             String => STRING
         }
+    }
+}
+
+// Pointees for the `&Box<str>` and `&Cow<str>` string ABIs, which get their
+// descriptor from the blanket `&T` impl. These describe like `str`.
+impl WasmDescribe for Box<str> {
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe() {
+        str::describe();
+    }
+}
+
+impl WasmDescribe for Cow<'_, str> {
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe() {
+        str::describe();
     }
 }
 

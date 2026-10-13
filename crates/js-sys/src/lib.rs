@@ -10322,6 +10322,9 @@ macro_rules! impl_primitive_union_category {
     ($trait:path, string) => {
         impl $trait for String {}
         impl $trait for &str {}
+        impl $trait for &String {}
+        impl $trait for &alloc::boxed::Box<str> {}
+        impl $trait for &alloc::borrow::Cow<'_, str> {}
         impl $trait for JsString {}
         impl $trait for &JsString {}
     };
@@ -10348,7 +10351,8 @@ macro_rules! primitive_union_category_doc {
         "- `number`: `i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `isize`, `usize`, `f32`, `f64`, [`Number`], and `&Number`\n"
     };
     (string) => {
-        "- `string`: `String`, `&str`, [`JsString`], and `&JsString` (the \
+        "- `string`: `String`, `&str`, `&String`, `&Box<str>`, `&Cow<str>`, \
+         [`JsString`], and `&JsString` (the \
          [`JsStringLike`](wasm_bindgen::JsStringLike) types)\n"
     };
     (symbol) => {

@@ -25,6 +25,12 @@
   `JsNumberOrStringLike` widens to `PropertyKey`.
   [#5341](https://github.com/wasm-bindgen/wasm-bindgen/pull/5341)
 
+* `JsStringLike` and the `js-sys` string-containing primitive-union traits
+  now accept `&String`, `&Box<str>`, and `&Cow<str>`, which also gain
+  `IntoWasmAbi` and `OptionIntoWasmAbi` impls that cross exactly like `&str`.
+  Callers that passed these to a `&str` import parameter keep compiling when
+  it becomes an `experimental_generic_mono` `T: JsStringLike` parameter.
+
 ### Changed
 
 * Replaced the `once_cell` dependency with `core::cell::LazyCell`, which is

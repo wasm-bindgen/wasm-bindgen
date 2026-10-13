@@ -22,6 +22,7 @@ use js_sys::{
     BigInt, Boolean, JsBigIntOrBooleanOrNumberOrStringLike, JsNumberOrStringLike, JsString, Number,
     PropertyKey, Symbol,
 };
+use std::borrow::Cow;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsStringLike;
 use wasm_bindgen_test::*;
@@ -92,6 +93,9 @@ extern "C" {
 
     #[wasm_bindgen(experimental_generic_mono, js_name = describeStr)]
     fn describe_str_impl(s: impl JsStringLike) -> String;
+
+    #[wasm_bindgen(experimental_generic_mono, js_name = optDescribe)]
+    fn describe_optional_str<T: JsStringLike>(s: Option<T>) -> String;
 }
 
 #[wasm_bindgen_test]
@@ -168,6 +172,55 @@ fn experimental_generic_mono_string_arg_impl_trait() {
     assert_eq!(describe_str_impl(js), "string:handle");
 }
 
+// Borrowed shapes that deref to `str` cross as a borrowed UTF-8 buffer, like
+// `&str`, so existing `&str` callers keep compiling against a generic
+// `JsStringLike` parameter.
+#[wasm_bindgen_test]
+fn experimental_generic_mono_string_arg_borrowed_shapes() {
+    let owned = String::from("string");
+    assert_eq!(describe_str(&owned), "string:string");
+
+    let boxed: Box<str> = "boxed".into();
+    assert_eq!(describe_str(&boxed), "string:boxed");
+
+    let cow_borrowed: Cow<'_, str> = Cow::Borrowed("cow-borrowed");
+    assert_eq!(describe_str(&cow_borrowed), "string:cow-borrowed");
+    let cow_owned: Cow<'_, str> = Cow::Owned(String::from("cow-owned"));
+    assert_eq!(describe_str(&cow_owned), "string:cow-owned");
+
+    // The borrow must not hand ownership of the buffer to JS.
+    assert_eq!(owned, "string");
+    assert_eq!(&*boxed, "boxed");
+    assert_eq!(cow_owned, "cow-owned");
+}
+
+// Migrating a `&str` parameter to `S: JsStringLike` must not break callers
+// that passed `&String` through deref coercion.
+#[wasm_bindgen_test]
+fn js_string_like_accepts_borrowed_string_where_str_was_accepted() {
+    fn takes_str(_: &str) {}
+    fn takes_js_string_like<S: JsStringLike>(_: S) {}
+
+    let s = String::from("value");
+    takes_str(&s);
+    takes_js_string_like(&s);
+}
+
+#[wasm_bindgen_test]
+fn experimental_generic_mono_optional_string_arg_borrowed_shapes() {
+    let owned = String::from("string");
+    assert_eq!(describe_optional_str(Some(&owned)), "some:string");
+    assert_eq!(describe_optional_str::<&String>(None), "none");
+
+    let boxed: Box<str> = "boxed".into();
+    assert_eq!(describe_optional_str(Some(&boxed)), "some:boxed");
+    assert_eq!(describe_optional_str::<&Box<str>>(None), "none");
+
+    let cow: Cow<'_, str> = Cow::Borrowed("cow");
+    assert_eq!(describe_optional_str(Some(&cow)), "some:cow");
+    assert_eq!(describe_optional_str::<&Cow<'_, str>>(None), "none");
+}
+
 #[wasm_bindgen_test]
 fn experimental_generic_mono_primitive_union_accepts_number() {
     assert_eq!(describe_primitive(7u32), "number:7");
@@ -184,6 +237,13 @@ fn primitive_union_accepts_every_js_string_like_shape() {
     let js = JsString::from("handle");
     assert_eq!(describe_number_or_string_type(&js), "string");
     assert_eq!(describe_number_or_string_type(js), "string");
+
+    let owned = String::from("owned");
+    assert_eq!(describe_number_or_string_type(&owned), "string");
+    let boxed: Box<str> = "boxed".into();
+    assert_eq!(describe_number_or_string_type(&boxed), "string");
+    let cow: Cow<'_, str> = Cow::Borrowed("cow");
+    assert_eq!(describe_number_or_string_type(&cow), "string");
 }
 
 #[wasm_bindgen_test]
