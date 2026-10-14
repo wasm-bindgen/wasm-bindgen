@@ -152,6 +152,14 @@
   `Into<(H, Array<T>)>` split it.
   [#5448](https://github.com/wasm-bindgen/wasm-bindgen/pull/5448)
 
+* Added `#[wasm_bindgen(reinit = "reconstruct")]` for exported structs. After
+  the module is reinitialized, a stale JS wrapper of such a class re-runs its
+  constructor with the originally passed arguments on next use instead of
+  throwing. The generated export glue now runs the termination/reinit guard
+  before converting arguments, so a pending reinit takes effect before any
+  linear memory is touched.
+  [#5375](https://github.com/wasm-bindgen/wasm-bindgen/pull/5375)
+
 ### Changed
 
 * `VectorIntoWasmAbi`, `VectorFromWasmAbi` and `WasmDescribeVector` are
