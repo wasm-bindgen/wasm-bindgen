@@ -4,6 +4,11 @@
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | No | Yes | Yes | No | No | No | A JavaScript `TypedArray` view of the Wasm memory for the boxed slice of the appropriate type (`Int32Array`, `Uint8Array`, etc) |
 
+> **Note:** A `&T` parameter also accepts a plain JavaScript array of numbers
+> (or of `bigint`s for the 64-bit types), which is copied into the Wasm memory
+> the same way as a `TypedArray`. A `&mut T` parameter only accepts a
+> `TypedArray`, since the results are copied back into its buffer.
+
 > **Note:** Numeric `MaybeUninit<T>` can always be assumed to be initialized
 > upon transmission from Rust to JS and vice-versa. However, uninitialized
 > values coming from Rust might contain unspecified values.
