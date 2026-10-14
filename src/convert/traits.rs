@@ -652,6 +652,9 @@ impl<T: IntoJsGeneric + Clone> IntoJsGeneric for &T {
 /// `String` and `&str` cross as UTF-8 buffers, `js_sys::JsString` and
 /// `&js_sys::JsString` as handles — all arriving in JS as a string value.
 ///
+/// `&String`, `&Box<str>` and `&Cow<str>` are also accepted and cross like
+/// `&str`. `&&str` is not; dereference it first.
+///
 /// This trait is sealed: it is implemented only for the string shapes above,
 /// each of which is guaranteed to produce a JS string on the other side.
 ///
@@ -665,7 +668,17 @@ pub trait JsStringLike:
 {
 }
 
-impl crate::__rt::marker::JsStringLikeSealed for alloc::string::String {}
-impl crate::__rt::marker::JsStringLikeSealed for &str {}
-impl JsStringLike for alloc::string::String {}
-impl JsStringLike for &str {}
+macro_rules! impl_js_string_like {
+    ($($t:ty),* $(,)?) => ($(
+        impl crate::__rt::marker::JsStringLikeSealed for $t {}
+        impl JsStringLike for $t {}
+    )*)
+}
+
+impl_js_string_like!(
+    alloc::string::String,
+    &str,
+    &alloc::string::String,
+    &alloc::boxed::Box<str>,
+    &alloc::borrow::Cow<'_, str>,
+);

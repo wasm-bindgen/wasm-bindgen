@@ -1,3 +1,4 @@
+use alloc::borrow::Cow;
 use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -459,6 +460,31 @@ impl OptionIntoWasmAbi for &str {
         null_slice()
     }
 }
+
+// Borrowed shapes that deref to `str` cross exactly like `&str`. `&&str` is
+// omitted: the blanket `&T` describe gives `REF REF STRING`, which the CLI
+// can't bind.
+macro_rules! str_ref_into_wasm_abi {
+    ($($t:ty),* $(,)?) => ($(
+        impl IntoWasmAbi for &$t {
+            type Abi = <&'static str as IntoWasmAbi>::Abi;
+
+            #[inline]
+            fn into_abi(self) -> Self::Abi {
+                <&str as IntoWasmAbi>::into_abi(self)
+            }
+        }
+
+        impl OptionIntoWasmAbi for &$t {
+            #[inline]
+            fn none() -> Self::Abi {
+                <&str as OptionIntoWasmAbi>::none()
+            }
+        }
+    )*)
+}
+
+str_ref_into_wasm_abi!(String, Box<str>, Cow<'_, str>);
 
 impl RefFromWasmAbi for str {
     type Abi = <[u8] as RefFromWasmAbi>::Abi;

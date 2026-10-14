@@ -106,14 +106,15 @@ extern "C" {
 }
 ```
 
-`JsStringLike` is implemented for `String`, `&str`, `js_sys::JsString` and
-`&js_sys::JsString`, so a caller can pass whichever it already holds and each
-monomorphisation crosses at that shape's native wire format — UTF-8 buffers
-for the Rust strings, a handle for `JsString` — all arriving in JS as a
-string value. Nullable positions work under the same bound (`Option<T>`),
-since the trait carries `OptionIntoWasmAbi` as a supertrait. The trait is
-sealed to exactly these string shapes. Like `experimental_generic_mono`
-itself, the trait is experimental and may change as the feature stabilizes.
+`JsStringLike` is implemented for `String`, `&str`, `&String`, `&Box<str>`,
+`&Cow<str>`, `js_sys::JsString` and `&js_sys::JsString`, so a caller can pass
+whichever it already holds and each monomorphisation crosses at that shape's
+native wire format — UTF-8 buffers for the Rust strings, a handle for
+`JsString` — all arriving in JS as a string value. Nullable positions work
+under the same bound (`Option<T>`), since the trait carries `OptionIntoWasmAbi`
+as a supertrait. The trait is sealed to exactly these string shapes. Like
+`experimental_generic_mono` itself, the trait is experimental and may change
+as the feature stabilizes.
 
 ### Primitive union bounds
 
@@ -149,7 +150,7 @@ The member categories accept the following Rust representations:
 | `bigint` | `i64`, `u64`, `i128`, `u128`, `js_sys::BigInt`, `&js_sys::BigInt` |
 | `boolean` | `bool`, `js_sys::Boolean`, `&js_sys::Boolean` |
 | `number` | `i8`, `u8`, `i16`, `u16`, `i32`, `u32`, `isize`, `usize`, `f32`, `f64`, `js_sys::Number`, `&js_sys::Number` |
-| `string` | `String`, `&str`, `js_sys::JsString`, `&js_sys::JsString` (the `wasm_bindgen::JsStringLike` types) |
+| `string` | `String`, `&str`, `&String`, `&Box<str>`, `&Cow<str>`, `js_sys::JsString`, `&js_sys::JsString` (the `wasm_bindgen::JsStringLike` types) |
 | `symbol` (`PropertyKey` only) | `js_sys::Symbol`, `&js_sys::Symbol` |
 
 `char` is not `JsStringLike` and is therefore not a member of these unions.

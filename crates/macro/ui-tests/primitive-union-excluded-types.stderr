@@ -5,14 +5,14 @@ error[E0277]: the trait bound `char: JsNumberOrStringLike` is not satisfied
   |                               ^^^^ the trait `JsNumberOrStringLike` is not implemented for `char`
   |
   = help: the following other types implement trait `JsNumberOrStringLike`:
+            &Box<str>
+            &Cow<'_, str>
             &JsString
             &Number
+            &String
             &str
             JsString
             Number
-            String
-            f32
-            f64
           and $N others
 note: required by a bound in `assert_number_or_string`
  --> ui-tests/primitive-union-excluded-types.rs:4:31
@@ -27,14 +27,14 @@ error[E0277]: the trait bound `JsValue: JsNumberOrStringLike` is not satisfied
   |                               ^^^^^^^ the trait `JsNumberOrStringLike` is not implemented for `JsValue`
   |
   = help: the following other types implement trait `JsNumberOrStringLike`:
+            &Box<str>
+            &Cow<'_, str>
             &JsString
             &Number
+            &String
             &str
             JsString
             Number
-            String
-            f32
-            f64
           and $N others
 note: required by a bound in `assert_number_or_string`
  --> ui-tests/primitive-union-excluded-types.rs:4:31
