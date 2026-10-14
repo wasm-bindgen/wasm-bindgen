@@ -24,7 +24,7 @@
 // CLI's exact-string check (`verify_schema_matches` in `wasm-bindgen-cli-support`) would then
 // wave through a genuinely incompatible macro/CLI pair. Hence "next unreleased version", and
 // hence only one bump per release cycle however many schema changes land in it.
-const APPROVED_SCHEMA_FILE_HASH: &str = "7738280894060988902";
+const APPROVED_SCHEMA_FILE_HASH: &str = "1296002398517839054";
 
 #[test]
 fn schema_version() {

@@ -106,6 +106,7 @@ macro_rules! attrgen {
             (extends, false, Extends(Span, syn::Path)),
             (extends_js_class, false, ExtendsJsClass(Span, String, Span)),
             (extends_js_namespace, false, ExtendsJsNamespace(Span, JsNamespace, Vec<Span>)),
+            (reinit, false, Reinit(Span, String, Span)),
             (no_deref, false, NoDeref(Span)),
             (no_upcast, false, NoUpcast(Span)),
             (no_promising, false, NoPromising(Span)),
@@ -672,6 +673,19 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
         }
 
         let is_inspectable = attrs.inspectable().is_some();
+        let reinit = match attrs.reinit() {
+            Some(("reconstruct", _)) => Some(ast::Reinit::Reconstruct),
+            Some((other, span)) => {
+                return Err(Diagnostic::span_error(
+                    span,
+                    format!(
+                        "unknown `reinit` policy `{other}`; the only supported value is \
+                         `reinit = \"reconstruct\"`"
+                    ),
+                ));
+            }
+            None => None,
+        };
         let getter_with_clone = attrs.getter_with_clone();
         let js_namespace = attrs.js_namespace().map(|(ns, _)| ns.0);
         let qualified_name = wasm_bindgen_shared::qualified_name(js_namespace.as_deref(), &js_name);
@@ -767,6 +781,7 @@ impl ConvertToAst<&ast::Program> for &mut syn::ItemStruct {
             extends,
             extends_js_class,
             extends_js_namespace,
+            reinit,
             wasm_bindgen: program.wasm_bindgen.clone(),
         })
     }

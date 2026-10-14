@@ -2294,6 +2294,14 @@ impl<'a> Context<'a> {
                 .extends_js_namespace
                 .as_ref()
                 .map(|ns| ns.iter().map(|s| s.to_string()).collect()),
+            reinit_reconstruct: match struct_.reinit {
+                None => false,
+                Some("reconstruct") => true,
+                Some(other) => bail!(
+                    "unknown `reinit` policy `{other}` on exported struct `{}`",
+                    struct_.name
+                ),
+            },
         };
         self.aux.structs.push(aux);
 
