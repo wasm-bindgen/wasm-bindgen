@@ -15,9 +15,8 @@ exports.__wbg_reset_state = __wbg_reset_state;
  * @returns {number}
  */
 function add_that_might_fail(a, b) {
-    let ret;
     __wbg_call_guard();
-    ret = wasm.add_that_might_fail(a, b);
+    const ret = wasm.add_that_might_fail(a, b);
     return ret >>> 0;
 }
 exports.add_that_might_fail = add_that_might_fail;
