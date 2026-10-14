@@ -18,9 +18,8 @@ export function __wbg_reset_state () {
 }
 
 export function exported() {
-    let ret;
     __wbg_call_guard();
-    ret = wasm.exported();
+    const ret = wasm.exported();
     if (ret[1]) {
         throw takeFromExternrefTable0(ret[0]);
     }
