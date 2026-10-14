@@ -121,7 +121,6 @@ pub enum ExportGuard {
 fn wrap_try_catch(call: &str) -> String {
     format!(
         "\
-        __wbg_call_guard();
         try {{
             {call};
         }} catch(e) {{
@@ -131,20 +130,25 @@ fn wrap_try_catch(call: &str) -> String {
     )
 }
 
-fn wrap_call_guard(call: &str) -> String {
-    format!(
-        "\
-        __wbg_call_guard();
-        {call};
-        "
-    )
-}
-
+/// Wrap a standalone export call, running the call guard immediately before
+/// it. Used where there is no enclosing function prologue to hoist the guard
+/// into (deferred frees, `free()`).
 pub fn maybe_wrap_export_call(call: &str, guard: ExportGuard) -> String {
     match guard {
-        ExportGuard::Abort => wrap_try_catch(call),
-        ExportGuard::GuardOnly => wrap_call_guard(call),
         ExportGuard::None => format!("{call};"),
+        _ => format!(
+            "__wbg_call_guard();\n{}",
+            wrap_hoisted_export_call(call, guard)
+        ),
+    }
+}
+
+/// Wrap an export call whose guard already ran in the function prologue
+/// (see `Builder::process`), so only the abort try/catch remains.
+fn wrap_hoisted_export_call(call: &str, guard: ExportGuard) -> String {
+    match guard {
+        ExportGuard::Abort => wrap_try_catch(call),
+        ExportGuard::GuardOnly | ExportGuard::None => format!("{call};"),
     }
 }
 
@@ -298,17 +302,20 @@ impl<'a, 'b> Builder<'a, 'b> {
         if ctor_needs_sentinel_check {
             js.prelude("if (arguments[0] === __wbgSuperSkip) return;");
         }
+        // The guard may terminate the call or swap in a fresh instance, so it
+        // has to run before anything below touches `wasm.*`: argument
+        // conversion allocates in linear memory and the stale-wrapper checks
+        // compare against the instance id the reset bumps.
+        if (js.cx.aux.wrapped_js_tag.is_some() || js.cx.generate_reinit)
+            && instructions
+                .iter()
+                .any(|i| matches!(i.instr, Instruction::CallExport(_)))
+        {
+            js.prelude("__wbg_call_guard();");
+        }
         if let Some(consumes_self) = self.method {
             let _ = params.next();
-            if js.cx.generate_reinit {
-                js.prelude(
-                    "
-                    if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
-                        throw new Error('Invalid stale object from previous Wasm instance');
-                    }
-                    ",
-                );
-            }
+            js.assert_not_stale("this");
             if js.cx.config.debug {
                 js.prelude(
                     "if (this.__wbg_ptr == 0) throw new Error('Attempt to use a moved value');",
@@ -977,17 +984,29 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         ));
     }
 
-    fn assert_not_moved(&mut self, arg: &str) {
-        if self.cx.generate_reinit {
-            // Under reset state, we need comprehensive validation
-            self.prelude(&format!(
-                "\
-                if (({arg}).__wbg_inst !== undefined && ({arg}).__wbg_inst !== __wbg_instance_id) {{
-                    throw new Error('Invalid stale object from previous Wasm instance');
-                }}
-                "
-            ));
+    /// Reject (or, for `reinit = "reconstruct"` classes, rebuild) a wrapper
+    /// created by a previous Wasm instance.
+    fn assert_not_stale(&mut self, arg: &str) {
+        if !self.cx.generate_reinit {
+            return;
         }
+        let stale = if self.cx.generate_reconstruct {
+            self.cx.expose_reconstruct_stale();
+            format!("_reconstructStale({arg});")
+        } else {
+            "throw new Error('Invalid stale object from previous Wasm instance');".to_string()
+        };
+        self.prelude(&format!(
+            "\
+            if ({arg}.__wbg_inst !== undefined && {arg}.__wbg_inst !== __wbg_instance_id) {{
+                {stale}
+            }}
+            "
+        ));
+    }
+
+    fn assert_not_moved(&mut self, arg: &str) {
+        self.assert_not_stale(arg);
         if self.cx.config.debug {
             // Debug mode only checks for moved values
             self.prelude(&format!(
@@ -1136,9 +1155,9 @@ fn instruction(
                     // Void JSPI export: `await` the Promise from the promising
                     // call so that deferred frees in the `finally` block run
                     // only after the fiber has completed.
-                    js.prelude(&maybe_wrap_export_call(&format!("await {call}"), guard));
+                    js.prelude(&wrap_hoisted_export_call(&format!("await {call}"), guard));
                 }
-                (false, 0) => js.prelude(&maybe_wrap_export_call(&call, guard)),
+                (false, 0) => js.prelude(&wrap_hoisted_export_call(&call, guard)),
                 (false, n) => {
                     // For JSPI exports the `call` expression returns a Promise;
                     // `await` it so the resolved WASM return value
@@ -1150,13 +1169,13 @@ fn instruction(
                     } else {
                         ""
                     };
-                    let body = if matches!(guard, ExportGuard::None) {
-                        format!("const ret = {maybe_await}{call};")
-                    } else {
+                    let body = if matches!(guard, ExportGuard::Abort) {
                         format!(
                             "let ret;\n{}",
-                            maybe_wrap_export_call(&format!("ret = {maybe_await}{call}"), guard)
+                            wrap_hoisted_export_call(&format!("ret = {maybe_await}{call}"), guard)
                         )
+                    } else {
+                        format!("const ret = {maybe_await}{call};")
                     };
                     js.prelude(&body);
                     if n == 1 {
@@ -1711,6 +1730,16 @@ fn instruction(
                     // qualified    -> upcast / free symbol names (match macro)
                     let ancestors: Vec<(String, String)> =
                         cls.map(|c| c.ancestors.clone()).unwrap_or_default();
+                    // `reinit = "reconstruct"` keeps the constructor's JS
+                    // arguments (by reference) so a stale wrapper can replay
+                    // the call. Stored only once the Wasm constructor has
+                    // succeeded, alongside the pointer it produced.
+                    let store_args = if js.cx.generate_reinit && cls.is_some_and(|c| c.reconstruct)
+                    {
+                        "Object.defineProperty(this, '__wbg_args', { value: [...arguments] });\n"
+                    } else {
+                        ""
+                    };
                     // When reinit is enabled, define __wbg_inst as non-enumerable
                     // and non-configurable so it doesn't appear in serialization
                     // (e.g. toJSON) but remains writable for instance replacement.
@@ -1722,6 +1751,7 @@ fn instruction(
                             body.push_str(
                                 "Object.defineProperty(this, '__wbg_inst', { value: __wbg_instance_id, writable: true });\n",
                             );
+                            body.push_str(store_args);
                         }
                         // Chain upcasts: each hop consumes the previous ptr.
                         let mut prev_ptr_expr = format!("{val} >>> 0");
@@ -1762,7 +1792,7 @@ fn instruction(
                                 "\
                                 this.__wbg_ptr = {val};
                                 Object.defineProperty(this, '__wbg_inst', {{ value: __wbg_instance_id, writable: true }});
-                                "
+                                {store_args}"
                             ),
                             format!("{{ ptr: {val}, instance: __wbg_instance_id }}"),
                         )
