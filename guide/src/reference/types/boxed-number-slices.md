@@ -8,9 +8,9 @@
 from the Wasm linear memory when returning a boxed slice to JavaScript, and vice
 versa when receiving a JavaScript `TypedArray` as a boxed slice in Rust.
 
-> **Note:** `T` and `Option<T>` parameters also accept a plain JavaScript array
-> of numbers (or of `bigint`s for the 64-bit types), which is copied into the
-> Wasm linear memory the same way as a `TypedArray`.
+> **Note:** `T` and `Option<T>` parameters of an exported function also accept
+> a plain JavaScript array of numbers (or of `bigint`s for the 64-bit types),
+> which is copied into the Wasm linear memory the same way as a `TypedArray`.
 
 > **Note:** Numeric `MaybeUninit<T>` can always be assumed to be initialized
 > upon transmission from Rust to JS and vice-versa. However, uninitialized
