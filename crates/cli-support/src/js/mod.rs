@@ -7141,10 +7141,12 @@ addToLibrary({
     /// `WebAssembly.promising` requires. On emscripten the mangled binding may
     /// be an assertion wrapper (`createExportWrapper`), so read `wasmExports`
     /// directly; metadce roots name-keyed `wasmExports` accesses.
-    fn raw_wasm_export_ref(&self, name: &str) -> String {
+    fn raw_wasm_export_ref(&mut self, name: &str) -> String {
         if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.body_refs.insert("wasmExports".to_string());
             format!("wasmExports[{name:?}]")
         } else {
+            self.body_refs.insert("wasm".to_string());
             format!("wasm.{name}")
         }
     }
