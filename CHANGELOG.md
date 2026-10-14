@@ -26,7 +26,9 @@
   [#5341](https://github.com/wasm-bindgen/wasm-bindgen/pull/5341)
 
 * `JsStringLike` and the `js-sys` string primitive-union traits now accept
-  `&String`, `&Box<str>` and `&Cow<str>`.
+  `&String`, `&Box<str>` and `&Cow<str>`. These shapes, and `Option` of each,
+  also work as plain import argument types.
+  [#5374](https://github.com/wasm-bindgen/wasm-bindgen/pull/5374)
 
 ### Changed
 
