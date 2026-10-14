@@ -469,6 +469,18 @@ pub fn maybe_wrap_export_call(call: &str, guard: ExportGuard) -> String {
     out
 }
 
+/// Wrap an export call whose guard already ran in the function prologue
+/// (see `Builder::process`), so only the abort try/catch remains.
+fn wrap_hoisted_export_call(call: &str, guard: ExportGuard) -> String {
+    maybe_wrap_export_call(
+        call,
+        ExportGuard {
+            call_guard: false,
+            ..guard
+        },
+    )
+}
+
 /// Sentinel used by the f64-ABI `Option` paths to represent `None`. Must not
 /// collide with any valid payload (including i64/u64 on wasm64 via f64).
 const F64_OPTION_SENTINEL: &str = "Number.MAX_SAFE_INTEGER";
@@ -1140,6 +1152,18 @@ impl<'p> BodyParams<'p> {
         }
         if self.ctor_needs_sentinel_check {
             js.prelude("if (arguments[0] === __wbgSuperSkip) return;");
+        }
+        // The guard may terminate the call or swap in a fresh instance, so it
+        // has to run before anything below touches `wasm.*`: argument
+        // conversion allocates in linear memory and the stale-wrapper checks
+        // compare against the instance id the reset bumps.
+        if js.cx.export_guard().call_guard
+            && self
+                .instructions
+                .iter()
+                .any(|i| matches!(i.instr, Instruction::CallExport(_)))
+        {
+            js.prelude("__wbg_call_guard();");
         }
         if let Some(receiver) = self.receiver {
             if js.cx.generate_reinit {
@@ -2551,9 +2575,9 @@ fn instruction(
                     // Void JSPI export: `await` the Promise from the promising
                     // call so that deferred frees in the `finally` block run
                     // only after the fiber has completed.
-                    js.prelude(&maybe_wrap_export_call(&format!("await {call}"), guard));
+                    js.prelude(&wrap_hoisted_export_call(&format!("await {call}"), guard));
                 }
-                (false, 0) => js.prelude(&maybe_wrap_export_call(&call, guard)),
+                (false, 0) => js.prelude(&wrap_hoisted_export_call(&call, guard)),
                 (false, n) => {
                     // For JSPI exports the `call` expression returns a Promise;
                     // `await` it so the resolved WASM return value
@@ -2565,13 +2589,13 @@ fn instruction(
                     } else {
                         ""
                     };
-                    let body = if guard.is_none() {
-                        format!("const ret = {maybe_await}{call};")
-                    } else {
+                    let body = if guard.catch {
                         format!(
                             "let ret;\n{}",
-                            maybe_wrap_export_call(&format!("ret = {maybe_await}{call}"), guard)
+                            wrap_hoisted_export_call(&format!("ret = {maybe_await}{call}"), guard)
                         )
+                    } else {
+                        format!("const ret = {maybe_await}{call};")
                     };
                     js.prelude(&body);
                     let ret = js.local("ret".to_string());

@@ -3,8 +3,8 @@
  * @returns {number}
  */
 export function maybe_panic(x) {
-    let ret;
     __wbg_call_guard();
+    let ret;
     try {
         ret = wasm.maybe_panic(x);
     } catch(e) {
