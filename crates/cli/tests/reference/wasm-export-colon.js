@@ -83,7 +83,7 @@ export function __wbgbench_dump() {
 
 /**
  * Used to write previous benchmark data before the benchmark, for later comparison.
- * @param {Uint8Array} baseline
+ * @param {Uint8Array | number[]} baseline
  */
 export function __wbgbench_import(baseline) {
     const ptr0 = passArray8ToWasm0(baseline, wasm.__wbindgen_malloc);

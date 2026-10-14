@@ -40,8 +40,8 @@ export function owned_floats() {
 }
 
 /**
- * @param {Uint8Array} borrowed
- * @param {Uint8Array} owned
+ * @param {Uint8Array | number[]} borrowed
+ * @param {Uint8Array | number[]} owned
  * @returns {Uint8Array<ArrayBuffer>}
  */
 export function roundtrip(borrowed, owned) {

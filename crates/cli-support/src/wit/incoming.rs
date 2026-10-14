@@ -268,7 +268,7 @@ impl InstructionBuilder<'_, '_> {
                 let ptr_ty = self.ptr_ty();
                 if mutable {
                     self.instruction(
-                        &[AdapterType::Vector(kind.clone())],
+                        &[AdapterType::MutableSlice(kind.clone())],
                         Instruction::MutableSliceToMemory {
                             kind,
                             malloc: self.cx.malloc()?,

@@ -2293,8 +2293,16 @@ pub(crate) fn adapter2ts(
                 if typed_array_buffers && matches!(position, TypePosition::Return) {
                     dst.push_str("<ArrayBuffer>");
                 }
+                // Arguments are copied into wasm memory, which works the same
+                // for a plain array of the element type.
+                if let (TypePosition::Argument, Some(element)) =
+                    (position, kind.plain_array_element_ty())
+                {
+                    dst.push_str(&format!(" | {element}[]"));
+                }
             }
         },
+        AdapterType::MutableSlice(kind) => dst.push_str(&kind.js_ty()),
         AdapterType::Option(ty) => {
             adapter2ts(ty, position, dst, refs, name_map, typed_array_buffers);
             dst.push_str(match position {

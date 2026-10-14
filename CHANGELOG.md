@@ -64,6 +64,17 @@
   [#4272](https://github.com/wasm-bindgen/wasm-bindgen/issues/4272)
   [#5369](https://github.com/wasm-bindgen/wasm-bindgen/pull/5369)
 
+* `&[T]`, `Vec<T>`, `Box<[T]>`, `Option<Vec<T>>` and `Option<Box<[T]>>`
+  arguments with a number element type are now declared in TypeScript and
+  JSDoc as the typed array or a plain array (e.g. `Uint8Array | number[]`, or
+  `BigInt64Array | bigint[]` for 64-bit elements), matching what the generated
+  JS already accepts. Read-write struct fields of these types are declared as
+  a getter and setter pair. `&mut [T]` arguments still take only a typed
+  array, since the results are copied back into its buffer, and so do
+  `Clamped` arguments, since numbers in a plain array would wrap around
+  instead of being clamped.
+  [#4504](https://github.com/wasm-bindgen/wasm-bindgen/issues/4504)
+
 ### Fixed
 
 * Imported functions and statics from two different `inline_js` snippets no

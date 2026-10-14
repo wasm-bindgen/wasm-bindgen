@@ -9,7 +9,7 @@ export function call_get_bytes() {
 }
 
 /**
- * @param {BigInt64Array} a
+ * @param {BigInt64Array | bigint[]} a
  */
 export function take_boxed_slice(a) {
     _assertArrayLike(a, 'BigInt64Array');
@@ -49,7 +49,7 @@ export function take_mut_slice(a) {
 }
 
 /**
- * @param {Uint16Array | null} [a]
+ * @param {Uint16Array | number[] | null} [a]
  */
 export function take_optional_vec(a) {
     if (!isLikeNone(a)) {
@@ -61,7 +61,7 @@ export function take_optional_vec(a) {
 }
 
 /**
- * @param {Uint8Array} a
+ * @param {Uint8Array | number[]} a
  */
 export function take_slice(a) {
     _assertArrayLike(a, 'Uint8Array');
@@ -71,7 +71,7 @@ export function take_slice(a) {
 }
 
 /**
- * @param {Float64Array} a
+ * @param {Float64Array | number[]} a
  */
 export function take_vec(a) {
     _assertArrayLike(a, 'Float64Array');

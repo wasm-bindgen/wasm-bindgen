@@ -293,7 +293,7 @@ export function echo_option_usize(a) {
 }
 
 /**
- * @param {Int16Array | null} [a]
+ * @param {Int16Array | number[] | null} [a]
  * @returns {Int16Array | undefined}
  */
 export function echo_option_vec_i16(a) {
@@ -309,7 +309,7 @@ export function echo_option_vec_i16(a) {
 }
 
 /**
- * @param {Int32Array | null} [a]
+ * @param {Int32Array | number[] | null} [a]
  * @returns {Int32Array | undefined}
  */
 export function echo_option_vec_i32(a) {
@@ -325,7 +325,7 @@ export function echo_option_vec_i32(a) {
 }
 
 /**
- * @param {BigInt64Array | null} [a]
+ * @param {BigInt64Array | bigint[] | null} [a]
  * @returns {BigInt64Array | undefined}
  */
 export function echo_option_vec_i64(a) {
@@ -341,7 +341,7 @@ export function echo_option_vec_i64(a) {
 }
 
 /**
- * @param {Int8Array | null} [a]
+ * @param {Int8Array | number[] | null} [a]
  * @returns {Int8Array | undefined}
  */
 export function echo_option_vec_i8(a) {
@@ -389,7 +389,7 @@ export function echo_option_vec_struct(a) {
 }
 
 /**
- * @param {Uint16Array | null} [a]
+ * @param {Uint16Array | number[] | null} [a]
  * @returns {Uint16Array | undefined}
  */
 export function echo_option_vec_u16(a) {
@@ -405,7 +405,7 @@ export function echo_option_vec_u16(a) {
 }
 
 /**
- * @param {Uint32Array | null} [a]
+ * @param {Uint32Array | number[] | null} [a]
  * @returns {Uint32Array | undefined}
  */
 export function echo_option_vec_u32(a) {
@@ -421,7 +421,7 @@ export function echo_option_vec_u32(a) {
 }
 
 /**
- * @param {BigUint64Array | null} [a]
+ * @param {BigUint64Array | bigint[] | null} [a]
  * @returns {BigUint64Array | undefined}
  */
 export function echo_option_vec_u64(a) {
@@ -437,7 +437,7 @@ export function echo_option_vec_u64(a) {
 }
 
 /**
- * @param {Uint8Array | null} [a]
+ * @param {Uint8Array | number[] | null} [a]
  * @returns {Uint8Array | undefined}
  */
 export function echo_option_vec_u8(a) {
@@ -453,7 +453,7 @@ export function echo_option_vec_u8(a) {
 }
 
 /**
- * @param {Int16Array | null} [a]
+ * @param {Int16Array | number[] | null} [a]
  * @returns {Int16Array | undefined}
  */
 export function echo_option_vec_uninit_i16(a) {
@@ -469,7 +469,7 @@ export function echo_option_vec_uninit_i16(a) {
 }
 
 /**
- * @param {Int32Array | null} [a]
+ * @param {Int32Array | number[] | null} [a]
  * @returns {Int32Array | undefined}
  */
 export function echo_option_vec_uninit_i32(a) {
@@ -485,7 +485,7 @@ export function echo_option_vec_uninit_i32(a) {
 }
 
 /**
- * @param {BigInt64Array | null} [a]
+ * @param {BigInt64Array | bigint[] | null} [a]
  * @returns {BigInt64Array | undefined}
  */
 export function echo_option_vec_uninit_i64(a) {
@@ -501,7 +501,7 @@ export function echo_option_vec_uninit_i64(a) {
 }
 
 /**
- * @param {Int8Array | null} [a]
+ * @param {Int8Array | number[] | null} [a]
  * @returns {Int8Array | undefined}
  */
 export function echo_option_vec_uninit_i8(a) {
@@ -517,7 +517,7 @@ export function echo_option_vec_uninit_i8(a) {
 }
 
 /**
- * @param {Uint16Array | null} [a]
+ * @param {Uint16Array | number[] | null} [a]
  * @returns {Uint16Array | undefined}
  */
 export function echo_option_vec_uninit_u16(a) {
@@ -533,7 +533,7 @@ export function echo_option_vec_uninit_u16(a) {
 }
 
 /**
- * @param {Uint32Array | null} [a]
+ * @param {Uint32Array | number[] | null} [a]
  * @returns {Uint32Array | undefined}
  */
 export function echo_option_vec_uninit_u32(a) {
@@ -549,7 +549,7 @@ export function echo_option_vec_uninit_u32(a) {
 }
 
 /**
- * @param {BigUint64Array | null} [a]
+ * @param {BigUint64Array | bigint[] | null} [a]
  * @returns {BigUint64Array | undefined}
  */
 export function echo_option_vec_uninit_u64(a) {
@@ -565,7 +565,7 @@ export function echo_option_vec_uninit_u64(a) {
 }
 
 /**
- * @param {Uint8Array | null} [a]
+ * @param {Uint8Array | number[] | null} [a]
  * @returns {Uint8Array | undefined}
  */
 export function echo_option_vec_uninit_u8(a) {
@@ -665,7 +665,7 @@ export function echo_usize(a) {
 }
 
 /**
- * @param {Int16Array} a
+ * @param {Int16Array | number[]} a
  * @returns {Int16Array}
  */
 export function echo_vec_i16(a) {
@@ -678,7 +678,7 @@ export function echo_vec_i16(a) {
 }
 
 /**
- * @param {Int32Array} a
+ * @param {Int32Array | number[]} a
  * @returns {Int32Array}
  */
 export function echo_vec_i32(a) {
@@ -691,7 +691,7 @@ export function echo_vec_i32(a) {
 }
 
 /**
- * @param {BigInt64Array} a
+ * @param {BigInt64Array | bigint[]} a
  * @returns {BigInt64Array}
  */
 export function echo_vec_i64(a) {
@@ -704,7 +704,7 @@ export function echo_vec_i64(a) {
 }
 
 /**
- * @param {Int8Array} a
+ * @param {Int8Array | number[]} a
  * @returns {Int8Array}
  */
 export function echo_vec_i8(a) {
@@ -743,7 +743,7 @@ export function echo_vec_struct(a) {
 }
 
 /**
- * @param {Uint16Array} a
+ * @param {Uint16Array | number[]} a
  * @returns {Uint16Array}
  */
 export function echo_vec_u16(a) {
@@ -756,7 +756,7 @@ export function echo_vec_u16(a) {
 }
 
 /**
- * @param {Uint32Array} a
+ * @param {Uint32Array | number[]} a
  * @returns {Uint32Array}
  */
 export function echo_vec_u32(a) {
@@ -769,7 +769,7 @@ export function echo_vec_u32(a) {
 }
 
 /**
- * @param {BigUint64Array} a
+ * @param {BigUint64Array | bigint[]} a
  * @returns {BigUint64Array}
  */
 export function echo_vec_u64(a) {
@@ -782,7 +782,7 @@ export function echo_vec_u64(a) {
 }
 
 /**
- * @param {Uint8Array} a
+ * @param {Uint8Array | number[]} a
  * @returns {Uint8Array}
  */
 export function echo_vec_u8(a) {
@@ -795,7 +795,7 @@ export function echo_vec_u8(a) {
 }
 
 /**
- * @param {Int16Array} a
+ * @param {Int16Array | number[]} a
  * @returns {Int16Array}
  */
 export function echo_vec_uninit_i16(a) {
@@ -808,7 +808,7 @@ export function echo_vec_uninit_i16(a) {
 }
 
 /**
- * @param {Int32Array} a
+ * @param {Int32Array | number[]} a
  * @returns {Int32Array}
  */
 export function echo_vec_uninit_i32(a) {
@@ -821,7 +821,7 @@ export function echo_vec_uninit_i32(a) {
 }
 
 /**
- * @param {BigInt64Array} a
+ * @param {BigInt64Array | bigint[]} a
  * @returns {BigInt64Array}
  */
 export function echo_vec_uninit_i64(a) {
@@ -834,7 +834,7 @@ export function echo_vec_uninit_i64(a) {
 }
 
 /**
- * @param {Int8Array} a
+ * @param {Int8Array | number[]} a
  * @returns {Int8Array}
  */
 export function echo_vec_uninit_i8(a) {
@@ -847,7 +847,7 @@ export function echo_vec_uninit_i8(a) {
 }
 
 /**
- * @param {Uint16Array} a
+ * @param {Uint16Array | number[]} a
  * @returns {Uint16Array}
  */
 export function echo_vec_uninit_u16(a) {
@@ -860,7 +860,7 @@ export function echo_vec_uninit_u16(a) {
 }
 
 /**
- * @param {Uint32Array} a
+ * @param {Uint32Array | number[]} a
  * @returns {Uint32Array}
  */
 export function echo_vec_uninit_u32(a) {
@@ -873,7 +873,7 @@ export function echo_vec_uninit_u32(a) {
 }
 
 /**
- * @param {BigUint64Array} a
+ * @param {BigUint64Array | bigint[]} a
  * @returns {BigUint64Array}
  */
 export function echo_vec_uninit_u64(a) {
@@ -886,7 +886,7 @@ export function echo_vec_uninit_u64(a) {
 }
 
 /**
- * @param {Uint8Array} a
+ * @param {Uint8Array | number[]} a
  * @returns {Uint8Array}
  */
 export function echo_vec_uninit_u8(a) {
