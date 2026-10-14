@@ -19,6 +19,14 @@
   `ArrayBuffer` through unchanged.
   [#5445](https://github.com/wasm-bindgen/wasm-bindgen/pull/5445)
 
+* Added `#[wasm_bindgen(reinit = "reconstruct")]` for exported structs. After
+  the module is reinitialized, a stale JS wrapper of such a class re-runs its
+  constructor with the originally passed arguments on next use instead of
+  throwing. The generated export glue now runs the termination/reinit guard
+  before converting arguments, so a pending reinit takes effect before any
+  linear memory is touched.
+  [#5375](https://github.com/wasm-bindgen/wasm-bindgen/pull/5375)
+
 * A borrowed number, `bool`, `char` or borrowed string crosses by copy, so
   `&f64`, `&Option<T>`, `&Nullable<T>`, `Option<&f64>` and
   `Option<&Nullable<T>>` are argument types, and an

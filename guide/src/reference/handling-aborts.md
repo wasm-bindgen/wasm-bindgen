@@ -102,6 +102,11 @@ With this setup, a hard abort (or host-initiated termination) transparently
 reinitializes the module on the next export call. The caller sees a fresh
 instance with all Rust statics reset to their initial values.
 
+JS wrappers of exported structs created by the previous instance throw
+`Invalid stale object from previous Wasm instance` when used. An exported
+struct can opt into being rebuilt from its constructor arguments instead with
+[`#[wasm_bindgen(reinit = "reconstruct")]`](./attributes/on-rust-exports/reinit.md).
+
 ## See Also
 
 - [Catching Panics](./catch-unwind.md) — catching recoverable Rust panics as
