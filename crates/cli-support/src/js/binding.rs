@@ -315,15 +315,7 @@ impl<'a, 'b> Builder<'a, 'b> {
         }
         if let Some(consumes_self) = self.method {
             let _ = params.next();
-            if js.cx.generate_reinit {
-                js.prelude(
-                    "
-                    if (this.__wbg_inst !== undefined && this.__wbg_inst !== __wbg_instance_id) {
-                        throw new Error('Invalid stale object from previous Wasm instance');
-                    }
-                    ",
-                );
-            }
+            js.assert_not_stale("this");
             if js.cx.config.debug {
                 js.prelude(
                     "if (this.__wbg_ptr == 0) throw new Error('Attempt to use a moved value');",
@@ -992,17 +984,29 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         ));
     }
 
-    fn assert_not_moved(&mut self, arg: &str) {
-        if self.cx.generate_reinit {
-            // Under reset state, we need comprehensive validation
-            self.prelude(&format!(
-                "\
-                if (({arg}).__wbg_inst !== undefined && ({arg}).__wbg_inst !== __wbg_instance_id) {{
-                    throw new Error('Invalid stale object from previous Wasm instance');
-                }}
-                "
-            ));
+    /// Reject (or, for `reinit = "reconstruct"` classes, rebuild) a wrapper
+    /// created by a previous Wasm instance.
+    fn assert_not_stale(&mut self, arg: &str) {
+        if !self.cx.generate_reinit {
+            return;
         }
+        let stale = if self.cx.generate_reconstruct {
+            self.cx.expose_reconstruct_stale();
+            format!("_reconstructStale({arg});")
+        } else {
+            "throw new Error('Invalid stale object from previous Wasm instance');".to_string()
+        };
+        self.prelude(&format!(
+            "\
+            if ({arg}.__wbg_inst !== undefined && {arg}.__wbg_inst !== __wbg_instance_id) {{
+                {stale}
+            }}
+            "
+        ));
+    }
+
+    fn assert_not_moved(&mut self, arg: &str) {
+        self.assert_not_stale(arg);
         if self.cx.config.debug {
             // Debug mode only checks for moved values
             self.prelude(&format!(
@@ -1726,6 +1730,16 @@ fn instruction(
                     // qualified    -> upcast / free symbol names (match macro)
                     let ancestors: Vec<(String, String)> =
                         cls.map(|c| c.ancestors.clone()).unwrap_or_default();
+                    // `reinit = "reconstruct"` keeps the constructor's JS
+                    // arguments (by reference) so a stale wrapper can replay
+                    // the call. Stored only once the Wasm constructor has
+                    // succeeded, alongside the pointer it produced.
+                    let store_args = if js.cx.generate_reinit && cls.is_some_and(|c| c.reconstruct)
+                    {
+                        "Object.defineProperty(this, '__wbg_args', { value: [...arguments] });\n"
+                    } else {
+                        ""
+                    };
                     // When reinit is enabled, define __wbg_inst as non-enumerable
                     // and non-configurable so it doesn't appear in serialization
                     // (e.g. toJSON) but remains writable for instance replacement.
@@ -1737,6 +1751,7 @@ fn instruction(
                             body.push_str(
                                 "Object.defineProperty(this, '__wbg_inst', { value: __wbg_instance_id, writable: true });\n",
                             );
+                            body.push_str(store_args);
                         }
                         // Chain upcasts: each hop consumes the previous ptr.
                         let mut prev_ptr_expr = format!("{val} >>> 0");
@@ -1777,7 +1792,7 @@ fn instruction(
                                 "\
                                 this.__wbg_ptr = {val};
                                 Object.defineProperty(this, '__wbg_inst', {{ value: __wbg_instance_id, writable: true }});
-                                "
+                                {store_args}"
                             ),
                             format!("{{ ptr: {val}, instance: __wbg_instance_id }}"),
                         )
