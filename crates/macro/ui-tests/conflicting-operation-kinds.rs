@@ -42,6 +42,10 @@ extern "C" {
     #[wasm_bindgen(method, getter, getter = other)]
     fn repeated_getter(this: &Foo) -> u32;
 
+    // A repeated option that conflicts is reported once, at its first use.
+    #[wasm_bindgen(method, getter, getter = other, setter)]
+    fn set_repeated_getter(this: &Foo, value: u32);
+
     // A single option is fine.
     #[wasm_bindgen(method, getter)]
     fn value(this: &Foo) -> u32;
@@ -93,6 +97,9 @@ impl Bar {
 
 #[wasm_bindgen(this, getter)]
 pub fn this_getter(_this: JsValue) {}
+
+#[wasm_bindgen(this, this, getter)]
+pub fn this_repeated_getter(_this: JsValue) {}
 
 // A single option is fine.
 #[wasm_bindgen(this)]

@@ -3491,7 +3491,8 @@ fn operation_kind(opts: &BindgenAttrs) -> ast::OperationKind {
 /// Like [`operation_kind`], but returns the ignored options instead of
 /// recording warnings for them.
 fn pick_operation_kind(opts: &BindgenAttrs) -> (ast::OperationKind, Vec<ConflictState>) {
-    // Each of the options that is set, with its rank in the order above.
+    // The first use of each option that is set, with its rank in the order
+    // above.
     let mut found = Vec::new();
     let mut winner = None;
     for (used, attr) in &opts.attrs {
@@ -3536,8 +3537,8 @@ fn pick_operation_kind(opts: &BindgenAttrs) -> (ast::OperationKind, Vec<Conflict
             if winner.as_ref().map_or(true, |&(r, _, _)| rank > r) {
                 winner = Some((rank, name, kind));
             }
+            found.push((rank, name, *span));
         }
-        found.push((rank, name, *span));
     }
     let Some((rank, used, kind)) = winner else {
         return (ast::OperationKind::Regular, Vec::new());
