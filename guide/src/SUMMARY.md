@@ -117,6 +117,7 @@
       - [`unchecked_return_type`, `unchecked_param_type`, and `unchecked_optional_param_type`](./reference/attributes/on-rust-exports/unchecked_type.md)
       - [`return_description` and `param_description`](./reference/attributes/on-rust-exports/description.md)
       - [`extends = Parent`](./reference/attributes/on-rust-exports/extends.md)
+      - [`reinit = "reconstruct"`](./reference/attributes/on-rust-exports/reinit.md)
 
 - [`web-sys`](./web-sys/index.md)
   - [Using `web-sys`](./web-sys/using-web-sys.md)

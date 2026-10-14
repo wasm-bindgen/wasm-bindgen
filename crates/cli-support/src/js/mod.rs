@@ -169,6 +169,12 @@ pub struct Context<'a> {
     /// `__wbg_reset_state` function.
     generate_reinit: bool,
 
+    /// Whether any exported class opts into `reinit = "reconstruct"` (and
+    /// `generate_reinit` is set). Stale-wrapper checks then dispatch through
+    /// `_reconstructStale` instead of throwing inline, since a parent-class
+    /// method may be invoked on a reconstructible subclass instance.
+    generate_reconstruct: bool,
+
     /// Mapping from qualified name (used in WasmDescribe) to the unique declaration identifier.
     pub(crate) qualified_to_identifier: HashMap<String, String>,
     /// Cumulative set of every emscripten library symbol that any generated
@@ -310,6 +316,9 @@ struct ExportedClass {
     /// other class. Non-participating classes keep the single-pointer
     /// `this.__wbg_ptr` representation for backward compatibility.
     participates_in_inheritance: bool,
+    /// `#[wasm_bindgen(reinit = "reconstruct")]`: a stale wrapper re-runs
+    /// the constructor with its stored arguments instead of throwing.
+    reconstruct: bool,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -345,6 +354,10 @@ impl<'a> Context<'a> {
         aux: &'a WasmBindgenAux,
     ) -> Result<Context<'a>, Error> {
         let memory64 = module.memories.iter().next().is_some_and(|m| m.memory64);
+        // Emscripten owns instantiation, so the instance cannot be reset
+        // from the bindgen glue; reinit requests are no-ops there.
+        let generate_reinit = !matches!(config.mode, OutputMode::Emscripten)
+            && (aux.uses_reinit || config.generate_reset_state);
         Ok(Context {
             globals: String::new(),
             es_module_imports: String::new(),
@@ -365,10 +378,9 @@ impl<'a> Context<'a> {
             config,
             threads_enabled: threads_xform::is_enabled(module),
             unwind_enabled: has_local_exception_tags(module),
-            // Emscripten owns instantiation, so the instance cannot be reset
-            // from the bindgen glue; reinit requests are no-ops there.
-            generate_reinit: !matches!(config.mode, OutputMode::Emscripten)
-                && (aux.uses_reinit || config.generate_reset_state),
+            generate_reinit,
+            generate_reconstruct: generate_reinit
+                && aux.structs.iter().any(|s| s.reinit_reconstruct),
             module,
             npm_dependencies: Default::default(),
             wit,
@@ -2137,6 +2149,7 @@ if (require('worker_threads').isMainThread) {{
     }
 
     fn write_classes(&mut self) -> Result<(), Error> {
+        self.validate_reconstruct_classes()?;
         let exported_classes = std::mem::take(&mut self.exported_classes);
         // Build a name → (JS identifier, generate_typescript) map so a
         // subclass can resolve its parent's emitted class identifier and
@@ -2162,6 +2175,34 @@ if (require('worker_threads').isMainThread) {{
             .collect();
         for (class, exports) in exported_classes {
             self.write_class(&class, exports, &class_identifiers)?;
+        }
+        Ok(())
+    }
+
+    /// `reinit = "reconstruct"` replays the constructor call stored on the
+    /// wrapper, so the class needs a constructor, and in an `extends` chain
+    /// only the most-derived constructor is ever stored: a parent opting in
+    /// while a child does not would leave child instances with nothing to
+    /// replay.
+    fn validate_reconstruct_classes(&self) -> Result<(), Error> {
+        for (name, class) in self.exported_classes.iter() {
+            if !class.reconstruct {
+                continue;
+            }
+            if !class.has_constructor {
+                bail!(
+                    "class `{name}` uses `reinit = \"reconstruct\"` but has no \
+                     `#[wasm_bindgen(constructor)]` to reconstruct it with"
+                );
+            }
+            for (child_name, child) in self.exported_classes.iter() {
+                if !child.reconstruct && child.ancestors.iter().any(|(_, anc)| anc == name) {
+                    bail!(
+                        "`reinit` must be set on the most-derived exported class: \
+                         `{child_name}` extends `{name}` but does not set `reinit`"
+                    );
+                }
+            }
         }
         Ok(())
     }
@@ -2524,6 +2565,37 @@ if (require('worker_threads').isMainThread) {{
         ));
         ts_dst.push_str("  free(): void;\n");
         ts_dst.push_str("  [Symbol.dispose](): void;\n");
+
+        if class.reconstruct && self.generate_reinit {
+            // Re-run the constructor on a throwaway wrapper and adopt its
+            // pointers, so `this` keeps its identity and prototype chain.
+            // The throwaway is unregistered from finalization so the
+            // adopted pointers are not freed when it is collected.
+            let mut adopt = String::from("this.__wbg_ptr = obj.__wbg_ptr;\n");
+            let token = if participates {
+                let mut parts = Vec::new();
+                for id in std::iter::once(identifier).chain(ancestors.iter().map(|(id, _)| id)) {
+                    adopt.push_str(&format!("this.__wbg_ptr_{id} = obj.__wbg_ptr_{id};\n"));
+                    parts.push(format!("__wbg_ptr_{id}: this.__wbg_ptr_{id}"));
+                }
+                parts.push("instance: __wbg_instance_id".to_string());
+                format!("{{ {} }}", parts.join(", "))
+            } else {
+                "{ ptr: this.__wbg_ptr, instance: __wbg_instance_id }".to_string()
+            };
+            dst.push_str(&format!(
+                "\
+                __wbg_reconstruct() {{
+                    const obj = new {identifier}(...this.__wbg_args);
+                    {adopt}this.__wbg_inst = __wbg_instance_id;
+                    {identifier}Finalization.unregister(obj);
+                    {identifier}Finalization.unregister(this);
+                    {identifier}Finalization.register(this, {token}, this);
+                }}
+                "
+            ));
+        }
+
         dst.push_str(&class.contents);
         ts_dst.push_str(&class.typescript);
 
@@ -3963,6 +4035,28 @@ if (require('worker_threads').isMainThread) {{
         );
     }
 
+    /// Stale-wrapper handler used when some class has `reinit = "reconstruct"`.
+    /// Only wrappers built by a reconstructible constructor carry `__wbg_args`;
+    /// anything else (notably `__wrap`ped return values) still throws.
+    fn expose_reconstruct_stale(&mut self) {
+        self.intrinsic(
+            "reconstruct_stale".into(),
+            "_reconstructStale".into(),
+            {
+                "
+            function _reconstructStale(obj) {
+                if (obj.__wbg_args === undefined) {
+                    throw new Error('Invalid stale object from previous Wasm instance');
+                }
+                obj.__wbg_reconstruct();
+            }
+            "
+                .into()
+            },
+            &[],
+        );
+    }
+
     fn expose_global_stack_pointer(&mut self) {
         if matches!(self.config.mode, OutputMode::Emscripten) {
             self.emscripten_global_deps
@@ -4903,6 +4997,7 @@ if (require('worker_threads').isMainThread) {{
             // parent's qualified JS identity so downstream lookups against
             // `exported_classes` (keyed by qualified_name) resolve.
             class.extends = parent_qualified_name(s);
+            class.reconstruct = s.reinit_reconstruct;
             if s.extends.is_some() {
                 any_class_has_parent = true;
             }
@@ -6997,6 +7092,7 @@ addToLibrary({
         class.js_namespace = struct_.js_namespace.as_ref().map(|ns| ns.to_vec());
         class.js_name = Some(struct_.name.clone());
         class.extends = parent_qualified;
+        class.reconstruct = struct_.reinit_reconstruct;
         Ok(())
     }
 
