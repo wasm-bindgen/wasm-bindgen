@@ -3345,94 +3345,99 @@ if (require('worker_threads').isMainThread) {{
         );
     }
 
-    fn expose_text_decoder(&mut self, mem: &MemView, memory: MemoryId) {
+    fn expose_text_decoder(&mut self, memory: MemoryId) {
         if matches!(self.config.mode, OutputMode::Emscripten) {
             self.adapter_deps.insert("cachedTextDecoder".to_string());
             self.emscripten_global_deps
                 .insert("cachedTextDecoder".to_string());
         }
 
-        self.intrinsic("text_decoder".into(), "decodeText".into(), {
-            // This is needed to workaround a bug in Safari
-            // See: https://github.com/wasm-bindgen/wasm-bindgen/issues/1825
-            let init = Some("cachedTextDecoder.decode();");
+        self.intrinsic(
+            "text_decoder".into(),
+            "decodeText".into(),
+            {
+                // This is needed to workaround a bug in Safari
+                // See: https://github.com/wasm-bindgen/wasm-bindgen/issues/1825
+                let init = Some("cachedTextDecoder.decode();");
 
-            // `ignoreBOM` is needed so that the BOM will be preserved when sending a string from Rust to JS
-            // `fatal` is needed to catch any weird encoding bugs when sending a string from Rust to JS
-            let mut dst = if matches!(self.config.mode, OutputMode::Emscripten) {
-                String::new()
-            } else {
-                Self::write_text_processor(
-                    self.module,
-                    memory,
-                    "let",
-                    "TextDecoder",
-                    "('utf-8', { ignoreBOM: true, fatal: true })",
-                    init,
-                    self.config.mode.clone(),
-                )
-            };
+                // `ignoreBOM` is needed so that the BOM will be preserved when sending a string from Rust to JS.
+                // The decoder is deliberately non-fatal: `JsValue::from_utf8_lossy` decodes arbitrary bytes
+                // with replacement characters, and `&str` is always valid UTF-8 so it never observes the difference.
+                let mut dst = if matches!(self.config.mode, OutputMode::Emscripten) {
+                    String::new()
+                } else {
+                    Self::write_text_processor(
+                        self.module,
+                        memory,
+                        "let",
+                        "TextDecoder",
+                        "('utf-8', { ignoreBOM: true })",
+                        init,
+                        self.config.mode.clone(),
+                    )
+                };
 
-            // Typically we try to give a raw view of memory out to `TextDecoder` to
-            // avoid copying too much data. If, however, a `SharedArrayBuffer` is
-            // being used it looks like that is rejected by `TextDecoder` or
-            // otherwise doesn't work with it. When we detect a shared situation we
-            // use `slice` which creates a new array instead of `subarray` which
-            // creates just a view. That way in shared mode we copy more data but in
-            // non-shared mode there's no need to copy the data except for the
-            // string itself.
-            let text_decoder_decode = {
-                let is_shared = self.module.memories.get(memory).shared;
-                let method = if is_shared { "slice" } else { "subarray" };
-                format!("cachedTextDecoder.decode({}.{method}(ptr, ptr + len))", mem.access(self.config.mode.emscripten()))
-            };
+                // Typically we try to give a raw view of memory out to `TextDecoder` to
+                // avoid copying too much data. If, however, a `SharedArrayBuffer` is
+                // being used it looks like that is rejected by `TextDecoder` or
+                // otherwise doesn't work with it. When we detect a shared situation we
+                // use `slice` which creates a new array instead of the view passed in.
+                // That way in shared mode we copy more data but in non-shared mode
+                // there's no need to copy the data except for the string itself.
+                let text_decoder_decode = if self.module.memories.get(memory).shared {
+                    "cachedTextDecoder.decode(bytes.slice())"
+                } else {
+                    "cachedTextDecoder.decode(bytes)"
+                };
 
-            match &self.config.mode {
-                OutputMode::Bundler { .. } | OutputMode::Web => {
-                    // For targets that can run in a browser, we need a workaround for the fact that
-                    // (at least) Safari 16 to 18 has a TextDecoder that can't decode anymore after
-                    // processing 2GiB of data. The workaround is that we keep track of how much the
-                    // decoder has decoded and just create a new decoder when we're getting close to
-                    // the limit.
-                    // See MAX_SAFARI_DECODE_BYTES below for link to bug report.
+                match &self.config.mode {
+                    OutputMode::Bundler { .. } | OutputMode::Web => {
+                        // For targets that can run in a browser, we need a workaround for the fact that
+                        // (at least) Safari 16 to 18 has a TextDecoder that can't decode anymore after
+                        // processing 2GiB of data. The workaround is that we keep track of how much the
+                        // decoder has decoded and just create a new decoder when we're getting close to
+                        // the limit.
+                        // See MAX_SAFARI_DECODE_BYTES below for link to bug report.
 
-                    // Maximum number of bytes Safari can handle for one TextDecoder is 2GiB (0x80000000 bytes)
-                    // but empirically it seems to crash a bit before the end, so we remove 1MiB (0x100000 bytes)
-                    // of margin.
-                    // Workaround for a bug in Safari.
-                    // See https://github.com/rustwasm/wasm-bindgen/issues/4471
-                    const MAX_SAFARI_DECODE_BYTES: u32 = 0x80000000 - 0x100000;
-                    dst.push_str(&format!(
-                        "
+                        // Maximum number of bytes Safari can handle for one TextDecoder is 2GiB (0x80000000 bytes)
+                        // but empirically it seems to crash a bit before the end, so we remove 1MiB (0x100000 bytes)
+                        // of margin.
+                        // Workaround for a bug in Safari.
+                        // See https://github.com/rustwasm/wasm-bindgen/issues/4471
+                        const MAX_SAFARI_DECODE_BYTES: u32 = 0x80000000 - 0x100000;
+                        dst.push_str(&format!(
+                            "
                         const MAX_SAFARI_DECODE_BYTES = {MAX_SAFARI_DECODE_BYTES};
                         let numBytesDecoded = 0;
-                        function decodeText(ptr, len) {{
-                            numBytesDecoded += len;
+                        function decodeText(bytes) {{
+                            numBytesDecoded += bytes.length;
                             if (numBytesDecoded >= MAX_SAFARI_DECODE_BYTES) {{
-                                cachedTextDecoder = new TextDecoder('utf-8', {{ ignoreBOM: true, fatal: true }});
+                                cachedTextDecoder = new TextDecoder('utf-8', {{ ignoreBOM: true }});
                                 cachedTextDecoder.decode();
-                                numBytesDecoded = len;
+                                numBytesDecoded = bytes.length;
                             }}
                             return {text_decoder_decode};
                         }}
                         ",
-                    ));
-                }
-                _ => {
-                    // For any non-browser target (including Emscripten), we can just use the TextDecoder without any workarounds.
-                    // For browser-targets, see the workaround for Safari above.
-                    dst.push_str(&format!(
-                        "
-                        function decodeText(ptr, len) {{
+                        ));
+                    }
+                    _ => {
+                        // For any non-browser target (including Emscripten), we can just use the TextDecoder without any workarounds.
+                        // For browser-targets, see the workaround for Safari above.
+                        dst.push_str(&format!(
+                            "
+                        function decodeText(bytes) {{
                             return {text_decoder_decode};
                         }}
                         ",
-                    ));
+                        ));
+                    }
                 }
-            }
 
-            dst.into()
-        }, &["cachedTextDecoder"])
+                dst.into()
+            },
+            &["cachedTextDecoder"],
+        )
     }
 
     fn write_text_processor(
@@ -3470,14 +3475,28 @@ if (require('worker_threads').isMainThread) {{
         dst
     }
 
+    fn single_memory(&self) -> Result<MemoryId, Error> {
+        let mut memories = self.module.memories.iter();
+        let memory = memories
+            .next()
+            .ok_or_else(|| anyhow!("no memory found for memory intrinsic"))?
+            .id();
+        if memories.next().is_some() {
+            bail!("multiple memories found, unsure which to use for memory intrinsic");
+        }
+        Ok(memory)
+    }
+
     fn expose_get_string_from_wasm(&mut self, memory: MemoryId) -> MemView {
         let mem = self.expose_uint8_memory(memory);
-        self.expose_text_decoder(&mem, memory);
+        self.expose_text_decoder(memory);
         let ret = MemView {
             name: "getStringFromWasm".into(),
             num: mem.num,
         };
-        let ptr_coerce = self.coerce_ptr_suffix();
+        let ptr_fixup = self.coerce_ptr_assign("ptr");
+        let mem_access = mem.access(self.config.mode.emscripten());
+        let mem_name = mem.name.to_string();
         self.intrinsic(
             ret.to_string().into(),
             None,
@@ -3485,13 +3504,14 @@ if (require('worker_threads').isMainThread) {{
                 format!(
                     "
                 function {ret}(ptr, len) {{
-                    return decodeText(ptr{ptr_coerce}, len);
+                    {ptr_fixup}
+                    return decodeText({mem_access}.subarray(ptr, ptr + len));
                 }}
                 ",
                 )
                 .into()
             },
-            &["decodeText"],
+            &["decodeText", &mem_name],
         );
         ret
     }
@@ -6448,6 +6468,14 @@ addToLibrary({
                 "typeof(obj) === 'string' ? obj : undefined".to_string()
             }
 
+            Intrinsic::StringFromUtf8Lossy => {
+                assert_eq!(args.len(), 1);
+                let memory = self.single_memory()?;
+                self.expose_text_decoder(memory);
+                self.adapter_deps.insert("decodeText".to_string());
+                format!("decodeText({})", args[0])
+            }
+
             Intrinsic::BooleanGet => {
                 assert_eq!(args.len(), 1);
                 prelude.push_str(&format!("const v = {};\n", args[0]));
@@ -6530,18 +6558,7 @@ addToLibrary({
 
             Intrinsic::Memory => {
                 assert_eq!(args.len(), 0);
-                let mut memories = self.module.memories.iter();
-                let memory = memories
-                    .next()
-                    .ok_or_else(|| anyhow!("no memory found to return in memory intrinsic"))?
-                    .id();
-                if memories.next().is_some() {
-                    bail!(
-                        "multiple memories found, unsure which to return \
-                         from memory intrinsic"
-                    );
-                }
-                drop(memories);
+                let memory = self.single_memory()?;
                 match self.config.mode {
                     OutputMode::Emscripten => "HEAPU8".to_string(),
                     _ => format!("wasm.{}", self.export_name_of(memory)),

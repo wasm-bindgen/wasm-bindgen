@@ -75,6 +75,7 @@ intrinsics! {
         BigIntGetAsI64 = "__wbindgen_bigint_get_as_i64",
         NumberGet = "__wbindgen_number_get",
         StringGet = "__wbindgen_string_get",
+        StringFromUtf8Lossy = "__wbindgen_string_from_utf8_lossy",
         BooleanGet = "__wbindgen_boolean_get",
         Throw = "__wbindgen_throw",
         Rethrow = "__wbindgen_rethrow",
