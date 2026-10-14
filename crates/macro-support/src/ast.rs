@@ -567,8 +567,22 @@ pub struct Struct {
     /// child via `extends_js_namespace = ...`. Required when the parent
     /// struct uses `js_namespace`. Defaults to `None`.
     pub extends_js_namespace: Option<Vec<String>>,
+    /// How JS wrappers of this class behave once the Wasm instance they
+    /// were created from has been reinitialized, from
+    /// `#[wasm_bindgen(reinit = "...")]`. `None` keeps the default of
+    /// throwing on use of a stale wrapper.
+    pub reinit: Option<Reinit>,
     /// Path to wasm_bindgen
     pub wasm_bindgen: Path,
+}
+
+/// The `reinit = "..."` policy of an exported struct.
+#[cfg_attr(feature = "extra-traits", derive(Debug))]
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Reinit {
+    /// Re-run the JS constructor with the originally passed arguments and
+    /// adopt the fresh pointer(s) in place of the stale ones.
+    Reconstruct,
 }
 
 /// The field of a struct

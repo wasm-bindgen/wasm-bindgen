@@ -488,6 +488,9 @@ fn shared_struct<'a>(s: &'a ast::Struct, intern: &'a Interner) -> Struct<'a> {
             .extends_js_namespace
             .as_ref()
             .map(|ns| ns.iter().map(|s| &**s).collect()),
+        reinit: s.reinit.map(|r| match r {
+            ast::Reinit::Reconstruct => "reconstruct",
+        }),
     }
 }
 
