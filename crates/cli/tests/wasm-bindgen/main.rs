@@ -2599,6 +2599,299 @@ describe('schedule_reinit under panic=abort', () => {
         .success();
 }
 
+/// `#[wasm_bindgen(reinit = "reconstruct")]` under a real trap: the abort
+/// hook schedules a reinit, and the next call on a stale wrapper rebuilds
+/// it from its stored constructor arguments instead of throwing.
+#[test]
+fn reinit_reconstruct() {
+    let mut project = Project::new("reinit_reconstruct");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen::prelude::*;
+
+            #[wasm_bindgen(inline_js = "
+                export function read_start(cfg) { return cfg.start; }
+                export function ctor_should_fail() { return globalThis.ctorShouldFail === true; }
+            ")]
+            extern "C" {
+                fn read_start(cfg: &JsValue) -> u32;
+                fn ctor_should_fail() -> bool;
+            }
+
+            fn on_abort() {
+                wasm_bindgen::handler::schedule_reinit();
+            }
+
+            #[wasm_bindgen(start)]
+            pub fn start() {
+                wasm_bindgen::handler::set_on_abort(on_abort);
+            }
+
+            #[wasm_bindgen]
+            pub fn trigger_unreachable() {
+                #[cfg(target_arch = "wasm32")]
+                unsafe { core::arch::wasm32::unreachable(); }
+            }
+
+            #[wasm_bindgen(reinit = "reconstruct")]
+            pub struct Counter {
+                count: u32,
+            }
+
+            #[wasm_bindgen]
+            impl Counter {
+                #[wasm_bindgen(constructor)]
+                pub fn new(cfg: &JsValue) -> Counter {
+                    Counter { count: read_start(cfg) }
+                }
+
+                pub fn increment(&mut self) -> u32 {
+                    self.count += 1;
+                    self.count
+                }
+
+                #[wasm_bindgen(getter)]
+                pub fn count(&self) -> u32 {
+                    self.count
+                }
+
+                #[wasm_bindgen(setter)]
+                pub fn set_count(&mut self, count: u32) {
+                    self.count = count;
+                }
+
+                pub fn trap(&self) {
+                    trigger_unreachable();
+                }
+
+                pub fn wrapped(start: u32) -> Counter {
+                    Counter { count: start }
+                }
+            }
+
+            #[wasm_bindgen]
+            pub fn read_counter(counter: &Counter) -> u32 {
+                counter.count
+            }
+
+            #[wasm_bindgen]
+            pub struct Parent {
+                name: String,
+            }
+
+            #[wasm_bindgen]
+            impl Parent {
+                #[wasm_bindgen(constructor)]
+                pub fn new(name: String) -> Parent {
+                    Parent { name }
+                }
+
+                pub fn name(&self) -> String {
+                    self.name.clone()
+                }
+            }
+
+            #[wasm_bindgen(extends = Parent, reinit = "reconstruct")]
+            pub struct Child {
+                extra: u32,
+            }
+
+            #[wasm_bindgen]
+            impl Child {
+                #[wasm_bindgen(constructor)]
+                pub fn new(name: String, extra: u32) -> Child {
+                    Child { parent: Parent::new(name).into(), extra }
+                }
+
+                pub fn bump(&mut self) -> u32 {
+                    self.extra += 1;
+                    self.extra
+                }
+            }
+
+            #[wasm_bindgen(reinit = "reconstruct")]
+            pub struct Fragile {}
+
+            #[wasm_bindgen]
+            impl Fragile {
+                #[wasm_bindgen(constructor)]
+                pub fn new() -> Result<Fragile, JsError> {
+                    if ctor_should_fail() {
+                        return Err(JsError::new("constructor failed"));
+                    }
+                    Ok(Fragile {})
+                }
+
+                pub fn ping(&self) -> u32 {
+                    1
+                }
+            }
+        "#,
+    );
+
+    let out_dir = project
+        .wasm_bindgen("--target nodejs --force-enable-abort-handler")
+        .unwrap();
+
+    fs::write(
+        out_dir.join("test_reinit_reconstruct.js"),
+        r#"
+const { describe, it } = require('node:test');
+const assert = require('node:assert/strict');
+
+let instanceCount = 0;
+const OrigInstance = WebAssembly.Instance;
+WebAssembly.Instance = function(module, imports) {
+    instanceCount++;
+    return new OrigInstance(module, imports);
+};
+const wasm = require('./reinit_reconstruct.js');
+assert.strictEqual(instanceCount, 1);
+
+function trap() {
+    assert.throws(() => wasm.trigger_unreachable(), (e) => e instanceof WebAssembly.RuntimeError);
+}
+
+describe('reinit = "reconstruct"', () => {
+    it('rebuilds a stale wrapper from its constructor arguments', () => {
+        const cfg = { start: 5 };
+        const c = new wasm.Counter(cfg);
+        assert.strictEqual(c.increment(), 6);
+        assert.strictEqual(c.increment(), 7);
+
+        const before = instanceCount;
+        assert.throws(() => c.trap(), (e) => e instanceof WebAssembly.RuntimeError);
+        assert.strictEqual(c.increment(), 6, 'reconstructed from start: 5');
+        assert.strictEqual(instanceCount, before + 1, 'exactly one reinit');
+        assert.strictEqual(c.increment(), 7, 'no further reconstruction');
+        assert.ok(c instanceof wasm.Counter);
+    });
+
+    it('arguments are stored by reference', () => {
+        const cfg = { start: 1 };
+        const c = new wasm.Counter(cfg);
+        cfg.start = 40;
+        trap();
+        assert.strictEqual(c.increment(), 41);
+    });
+
+    it('getters and setters reconstruct', () => {
+        const c = new wasm.Counter({ start: 3 });
+        c.count = 9;
+        trap();
+        assert.strictEqual(c.count, 3);
+        trap();
+        c.count = 11;
+        assert.strictEqual(c.count, 11);
+    });
+
+    it('a stale wrapper passed as an argument reconstructs', () => {
+        const c = new wasm.Counter({ start: 8 });
+        c.increment();
+        trap();
+        assert.strictEqual(wasm.read_counter(c), 8);
+    });
+
+    it('a parent method on a stale child refreshes every ancestor pointer', () => {
+        const d = new wasm.Child('rex', 2);
+        assert.strictEqual(d.bump(), 3);
+        trap();
+        assert.strictEqual(d.name(), 'rex');
+        assert.strictEqual(d.bump(), 3);
+        assert.ok(d instanceof wasm.Child);
+        assert.ok(d instanceof wasm.Parent);
+    });
+
+    it('a wrapper returned from Rust has no arguments and still throws', () => {
+        const w = wasm.Counter.wrapped(9);
+        assert.strictEqual(w.increment(), 10);
+        trap();
+        assert.throws(() => w.increment(), /Invalid stale object from previous Wasm instance/);
+    });
+
+    it('a failing reconstruction propagates the constructor error', () => {
+        const f = new wasm.Fragile();
+        assert.strictEqual(f.ping(), 1);
+        globalThis.ctorShouldFail = true;
+        trap();
+        assert.throws(() => f.ping(), /constructor failed/);
+        globalThis.ctorShouldFail = false;
+        assert.strictEqual(f.ping(), 1, 'reconstructs once the constructor succeeds again');
+    });
+});
+"#,
+    )
+    .unwrap();
+
+    Command::new("node")
+        .arg("--test")
+        .arg("test_reinit_reconstruct.js")
+        .current_dir(&out_dir)
+        .assert()
+        .success();
+}
+
+#[test]
+fn reinit_reconstruct_requires_constructor() {
+    let err = Project::new("reinit_reconstruct_requires_constructor")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen(reinit = "reconstruct")]
+                pub struct NoCtor {}
+
+                #[wasm_bindgen]
+                impl NoCtor {
+                    pub fn make() -> NoCtor { NoCtor {} }
+                }
+            "#,
+        )
+        .wasm_bindgen("--target nodejs")
+        .unwrap_err();
+    assert!(
+        format!("{err:?}").contains("has no `#[wasm_bindgen(constructor)]`"),
+        "{err:?}"
+    );
+}
+
+#[test]
+fn reinit_reconstruct_requires_most_derived() {
+    let err = Project::new("reinit_reconstruct_requires_most_derived")
+        .file(
+            "src/lib.rs",
+            r#"
+                use wasm_bindgen::prelude::*;
+
+                #[wasm_bindgen(reinit = "reconstruct")]
+                pub struct Base {}
+
+                #[wasm_bindgen]
+                impl Base {
+                    #[wasm_bindgen(constructor)]
+                    pub fn new() -> Base { Base {} }
+                }
+
+                #[wasm_bindgen(extends = Base)]
+                pub struct Derived {}
+
+                #[wasm_bindgen]
+                impl Derived {
+                    #[wasm_bindgen(constructor)]
+                    pub fn new() -> Derived { Derived { parent: Base::new().into() } }
+                }
+            "#,
+        )
+        .wasm_bindgen("--target nodejs")
+        .unwrap_err();
+    assert!(
+        format!("{err:?}").contains("`reinit` must be set on the most-derived exported class"),
+        "{err:?}"
+    );
+}
+
 #[test]
 fn multiple_start_functions() {
     let out_dir = Project::new("multiple_start_functions")
