@@ -118,6 +118,7 @@ export function wasm_args(wasm3, wasm2) {
     let deferred2_0;
     let deferred2_1;
     try {
+        _assertArrayLike(wasm3, 'Uint8Array');
         const ptr0 = passArray8ToWasm0(wasm3, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
         _assertNum(wasm2);
@@ -153,6 +154,14 @@ const FooFinalization = (typeof FinalizationRegistry === 'undefined')
 
 
 //#region intrinsics
+function _assertArrayLike(n, typedArray) {
+    if (typeof(n) !== 'object' || n === null || typeof(n.length) !== 'number') {
+        const expected = typedArray === undefined ? 'an array' : `an array or ${typedArray}`;
+        const found = n === null ? 'null' : typeof(n) === 'object' ? Object.prototype.toString.call(n).slice(8, -1) : typeof(n);
+        throw new Error(`expected ${expected}, found ${found}`);
+    }
+}
+
 function _assertClass(instance, klass) {
     if (!(instance instanceof klass)) {
         throw new Error(`expected instance of ${klass.name}`);
