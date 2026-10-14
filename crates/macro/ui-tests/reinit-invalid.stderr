@@ -1,0 +1,5 @@
+error: unknown `reinit` policy `foo`; the only supported value is `reinit = "reconstruct"`
+ --> ui-tests/reinit-invalid.rs:3:25
+  |
+3 | #[wasm_bindgen(reinit = "foo")]
+  |                         ^^^^^
