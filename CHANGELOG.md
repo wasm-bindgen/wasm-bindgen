@@ -36,14 +36,8 @@
   [#5374](https://github.com/wasm-bindgen/wasm-bindgen/pull/5374)
 
 * Added support for threads on memory64 (`wasm64-unknown-unknown` with
-  `+atomics` and a shared memory). The threads transform now emits `i64`
-  addresses for the thread counter, the lock of the temporary stack, the stack
-  and TLS allocation of each thread, and calls `__wbindgen_malloc` and
-  `__wbindgen_free` with their memory64 `f64` words. `__wbindgen_thread_destroy`
-  takes `f64` words on memory64, so JS passes numbers and the no-argument form
-  still destroys the calling thread. The JS glue creates the imported memory
-  with `address: 'i64'` and `BigInt` page counts.
-  [#5330](https://github.com/wasm-bindgen/wasm-bindgen/issues/5330)
+  `+atomics`). On memory64, `__wbindgen_thread_destroy` takes JS numbers.
+  [#5378](https://github.com/wasm-bindgen/wasm-bindgen/pull/5378)
 
 ### Changed
 

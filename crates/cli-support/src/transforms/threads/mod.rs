@@ -196,7 +196,7 @@ fn delete_synthetic_export(module: &mut Module, name: &str) -> Result<ExportItem
 /// - `base` is the starting address of the extra `pages`.
 /// - `addr` is the _first_ address in that chunk that is aligned to `align`.
 fn allocate_static_data(memory: &mut Memory, pages: u32, align: u32) -> Result<(u64, u64), Error> {
-    // The last address plus one of the address space: 4 GiB on wasm32.
+    // Exclusive end of the address space.
     let (limit, space) = if memory.memory64 {
         (u64::MAX, "memory64")
     } else {

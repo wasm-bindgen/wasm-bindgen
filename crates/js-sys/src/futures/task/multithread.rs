@@ -212,7 +212,7 @@ fn wait_async(ptr: &AtomicI32, current_value: i32) -> Option<crate::Promise> {
     } else {
         let mem = wasm_bindgen::memory().unchecked_into::<crate::WebAssembly::Memory>();
         let array = crate::Int32Array::new(&mem.buffer());
-        let result = Atomics::wait_async(&array, ptr.as_ptr() as u32 / 4, current_value);
+        let result = Atomics::wait_async(&array, ptr.as_ptr() as usize / 4, current_value);
         if result.async_() {
             Some(result.value())
         } else {
@@ -226,7 +226,7 @@ fn wait_async(ptr: &AtomicI32, current_value: i32) -> Option<crate::Promise> {
         type WaitAsyncResult;
 
         #[wasm_bindgen(static_method_of = Atomics, js_name = waitAsync)]
-        fn wait_async(buf: &crate::Int32Array, index: u32, value: i32) -> WaitAsyncResult;
+        fn wait_async(buf: &crate::Int32Array, index: usize, value: i32) -> WaitAsyncResult;
 
         #[wasm_bindgen(static_method_of = Atomics, js_name = waitAsync, getter)]
         fn get_wait_async() -> JsValue;
