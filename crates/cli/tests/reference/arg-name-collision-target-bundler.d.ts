@@ -33,4 +33,4 @@ export function local_args(ptr0: string, len0: number, ret: number): string;
 /**
  * Named like the module-level `wasm` object; `wasm2` is already taken.
  */
-export function wasm_args(wasm: Uint8Array, wasm2: number): string;
+export function wasm_args(wasm: Uint8Array | number[], wasm2: number): string;

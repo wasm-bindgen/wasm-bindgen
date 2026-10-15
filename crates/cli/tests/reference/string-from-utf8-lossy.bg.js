@@ -1,5 +1,5 @@
 /**
- * @param {Uint8Array} bytes
+ * @param {Uint8Array | number[]} bytes
  * @returns {any}
  */
 export function foo(bytes) {
