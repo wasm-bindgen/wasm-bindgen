@@ -814,10 +814,16 @@ impl<'a> Context<'a> {
             if let Some(mem) = self.module.memories.iter().next() {
                 if let Some(id) = mem.import {
                     self.module.imports.get_mut(id).module = PLACEHOLDER_MODULE.to_owned();
+                    // A memory64 memory has `address: 'i64'`, and its page
+                    // counts are BigInts.
+                    let n = if mem.memory64 { "n" } else { "" };
                     let mut init_memory = "new WebAssembly.Memory({".to_string();
-                    init_memory.push_str(&format!("initial:{}", mem.initial));
+                    init_memory.push_str(&format!("initial:{}{n}", mem.initial));
                     if let Some(max) = mem.maximum {
-                        init_memory.push_str(&format!(",maximum:{max}"));
+                        init_memory.push_str(&format!(",maximum:{max}{n}"));
+                    }
+                    if mem.memory64 {
+                        init_memory.push_str(",address:'i64'");
                     }
                     if mem.shared {
                         init_memory.push_str(",shared:true");

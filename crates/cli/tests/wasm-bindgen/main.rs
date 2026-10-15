@@ -541,6 +541,113 @@ fn wasi_target_has_no_placeholder_imports_panic_unwind() {
     assert_no_placeholder_imports(&wasm);
 }
 
+/// The `RUSTFLAGS` of a threaded build: atomics, and a shared memory that JS
+/// imports, with the TLS symbols that the threads transform uses.
+fn threads_rustflags(max_memory: u64) -> String {
+    format!(
+        "-Ctarget-feature=+atomics,+bulk-memory,+mutable-globals \
+         -Clink-args=--shared-memory \
+         -Clink-args=--max-memory={max_memory} \
+         -Clink-args=--import-memory \
+         -Clink-args=--export=__wasm_init_tls \
+         -Clink-args=--export=__tls_size \
+         -Clink-args=--export=__tls_align \
+         -Clink-args=--export=__tls_base"
+    )
+}
+
+/// Threads on memory64 (`wasm64-unknown-unknown`): the JS glue makes an `i64`
+/// shared memory, and a second thread on that memory gets its own stack and
+/// TLS, allocates, and destroys itself with no arguments, as on wasm32.
+#[test]
+fn memory64_threads_run_in_node_workers() {
+    let mut project = Project::new("memory64_threads_run_in_node_workers");
+    project.target("wasm64-unknown-unknown").file(
+        "src/lib.rs",
+        r#"
+            use std::cell::Cell;
+            use wasm_bindgen::prelude::*;
+
+            thread_local! {
+                static ID: Cell<u32> = const { Cell::new(0) };
+            }
+
+            #[wasm_bindgen]
+            pub fn set_id(id: u32) {
+                ID.with(|c| c.set(id));
+            }
+
+            #[wasm_bindgen]
+            pub fn get_id() -> u32 {
+                ID.with(Cell::get)
+            }
+
+            #[wasm_bindgen]
+            pub fn squares(n: usize) -> Vec<f64> {
+                (0..n).map(|i| (i * i) as f64).collect()
+            }
+        "#,
+    );
+    project
+        .cargo_cmd
+        .env("RUSTUP_TOOLCHAIN", "nightly")
+        .env("RUSTFLAGS", threads_rustflags(1 << 33))
+        .arg("-Zbuild-std=std,panic_abort");
+    let out_dir = project.wasm_bindgen("--target web").unwrap();
+
+    let js = fs::read_to_string(out_dir.join("memory64_threads_run_in_node_workers.js")).unwrap();
+    assert!(
+        js.contains("address:'i64'"),
+        "the memory of the glue is not an i64 memory"
+    );
+
+    fs::write(
+        out_dir.join("main.mjs"),
+        r#"
+            import { readFile } from 'node:fs/promises';
+            import { Worker } from 'node:worker_threads';
+            import init, { set_id, get_id, squares } from './memory64_threads_run_in_node_workers.js';
+
+            const bytes = await readFile(new URL('./memory64_threads_run_in_node_workers_bg.wasm', import.meta.url));
+            const module = await WebAssembly.compile(bytes);
+            const wasm = await init({ module_or_path: module });
+            set_id(1);
+            const worker = new Worker(new URL('./worker.mjs', import.meta.url), {
+                workerData: { module, memory: wasm.memory },
+            });
+            const reply = await new Promise((resolve, reject) => {
+                worker.once('message', resolve);
+                worker.once('error', reject);
+            });
+            await worker.terminate();
+            console.log(JSON.stringify({ main: get_id(), sum: squares(1000).reduce((a, b) => a + b, 0), ...reply }));
+        "#,
+    )
+    .unwrap();
+    fs::write(
+        out_dir.join("worker.mjs"),
+        r#"
+            import { parentPort, workerData } from 'node:worker_threads';
+            import init, { set_id, get_id, squares } from './memory64_threads_run_in_node_workers.js';
+
+            const wasm = await init({ module_or_path: workerData.module, memory: workerData.memory });
+            set_id(2);
+            const sum = squares(1000).reduce((a, b) => a + b, 0);
+            const id = get_id();
+            wasm.__wbindgen_thread_destroy();
+            parentPort.postMessage({ worker: id, workerSum: sum });
+        "#,
+    )
+    .unwrap();
+
+    Command::new("node")
+        .arg("main.mjs")
+        .current_dir(out_dir)
+        .assert()
+        .success()
+        .stdout("{\"main\":1,\"sum\":332833500,\"worker\":2,\"workerSum\":332833500}\n");
+}
+
 #[test]
 fn bin_crate_works() {
     let out_dir = Project::new("bin_crate_works")
