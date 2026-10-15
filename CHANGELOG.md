@@ -5,6 +5,10 @@
 
 ### Added
 
+* String enums implement `TryFromJsValue`, accepting only their listed values,
+  so they can be used as dynamic-union variant payloads.
+  [#5376](https://github.com/wasm-bindgen/wasm-bindgen/pull/5376)
+
 * Added `JsValue::from_utf8_lossy` to create a JS string directly from a
   `&[u8]`, decoding on the JS side with replacement characters for invalid
   UTF-8 instead of requiring a `String::from_utf8_lossy` allocation first.
@@ -90,6 +94,10 @@
   [#4504](https://github.com/wasm-bindgen/wasm-bindgen/issues/4504)
 
 ### Fixed
+
+* The TypeScript alias for a string enum that is only referenced through a
+  dynamic union is now emitted.
+  [#5376](https://github.com/wasm-bindgen/wasm-bindgen/pull/5376)
 
 * Attributes on imported statics, such as doc comments, `#[allow(...)]`,
   `#[deprecated]` and `#[cfg(...)]`, are now applied to the generated static

@@ -4975,14 +4975,14 @@ if (require('worker_threads').isMainThread) {{
         for (_, e) in crate::sorted_iter(&self.aux.enums) {
             self.generate_enum(e)?;
         }
-        for (_, e) in crate::sorted_iter(&self.aux.string_enums) {
-            self.generate_string_enum(e)?;
-        }
         // Dynamic unions can reference each other (a variant payload may
         // itself be another dynamic union or a string enum). Walk the
         // reference closure before emitting so that all transitively-
         // referenced types get rendered.
         self.expand_typescript_refs();
+        for (_, e) in crate::sorted_iter(&self.aux.string_enums) {
+            self.generate_string_enum(e)?;
+        }
         for (_, e) in crate::sorted_iter(&self.aux.dynamic_unions) {
             self.generate_dynamic_union(e)?;
         }

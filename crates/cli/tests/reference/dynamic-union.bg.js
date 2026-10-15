@@ -64,6 +64,15 @@ export function echo_response(response) {
 }
 
 /**
+ * @param {ShadeOrNumber} s
+ * @returns {ShadeOrNumber}
+ */
+export function echo_shade(s) {
+    const ret = wasm.echo_shade(s);
+    return ret;
+}
+
+/**
  * @param {Status} status
  * @returns {Status}
  */
@@ -83,6 +92,12 @@ export function echo_wrapper(w) {
 export function __wbg___wbindgen_is_undefined_8865fb403f8fe9d8(arg0) {
     const ret = arg0 === undefined;
     return ret;
+}
+export function __wbg___wbindgen_number_get_2e0e7dee9f701a71(arg0, arg1) {
+    const obj = arg1;
+    const ret = typeof(obj) === 'number' ? obj : undefined;
+    getDataViewMemory0().setFloat64((arg0 >>> 0) + 8 * 1, isLikeNone(ret) ? 0 : ret, true);
+    getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, !isLikeNone(ret), true);
 }
 export function __wbg___wbindgen_string_get_0380ccaa2f57f0d9(arg0, arg1) {
     const obj = arg1;
@@ -113,7 +128,12 @@ export function __wbg_instanceof_ImportedType_44452eb91df46c85(arg0) {
     const ret = result;
     return ret;
 }
-export function __wbindgen_generic_0000000000000000(arg0, arg1) {
+export function __wbindgen_generic_0000000000000000(arg0) {
+    // Cast intrinsic for `F64 -> Externref`.
+    const ret = arg0;
+    return ret;
+}
+export function __wbindgen_generic_0000000000000001(arg0, arg1) {
     // Cast intrinsic for `Ref(String) -> Externref`.
     const ret = getStringFromWasm0(arg0, arg1);
     return ret;

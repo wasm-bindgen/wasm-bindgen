@@ -1968,26 +1968,16 @@ impl TryToTokens for ast::ImportType {
     }
 }
 
-// String enums predate dynamic unions and overlap structurally: a string
-// enum is equivalent to a dynamic union with only string-literal variants,
-// minus a few details. Future cleanup (separate PR) could subsume string
-// enums into the dynamic-union codegen. Differences to reconcile first:
+// Next major: generate string enums with the dynamic-union codegen, since a
+// string enum is a dynamic union with only string-literal variants:
 //
-// * `__Invalid`: string enums silently accept unknown JS strings as a hidden
-//   `__Invalid` variant. Dynamic unions throw, or accept an explicit
-//   `#[wasm_bindgen(fallback)]` catch-all variant. Migrating means dropping
-//   `__Invalid` (telling users to switch to `fallback`).
-// * Inherent helpers: `from_str` / `to_str` / `from_js_value` are emitted
-//   here as inherent methods. Dynamic unions don't generate equivalents.
-//   Either preserve them or document removal as breaking.
-// * `TryFromJsValue`: string enums currently lack this impl, so they
-//   can't be `dyn_into` targets or dynamic-union variant payloads.
-//   Dynamic unions have it. Unification would gain this on the string
-//   enum path for free.
-// * ABI: string enums use a u32 discriminant; dynamic unions use an
-//   externref. Benchmarks (see `benches/enum_roundtrip.rs`) show the
-//   round-trip cost is within ~1% on Node, so the perf argument for
-//   keeping the discriminant ABI is weak.
+// * Drop `__Invalid`, so an unknown string throws as it does for dynamic
+//   unions. A catch-all becomes an explicit `#[wasm_bindgen(fallback)]`
+//   variant.
+// * Emit `from_str` / `to_str` / `from_js_value` for dynamic unions whose
+//   variants are all string literals, so existing callers keep them.
+// * Switch from the u32 discriminant ABI to externref; the round trip is
+//   within ~1% on Node (`benches/enum_roundtrip.rs`).
 impl ToTokens for ast::StringEnum {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let vis = &self.vis;
@@ -2103,6 +2093,17 @@ impl ToTokens for ast::StringEnum {
             {
                 fn from(val: #enum_name) -> Self {
                     #wasm_bindgen::JsValue::from_str(val.to_str())
+                }
+            }
+
+            // Unknown strings are rejected rather than mapped to `__Invalid`,
+            // so a dynamic union falls through to its later variants.
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::TryFromJsValue for #enum_name {
+                fn try_from_js_value_ref(
+                    value: &#wasm_bindgen::JsValue,
+                ) -> #wasm_bindgen::__rt::core::option::Option<Self> {
+                    Self::from_js_value(value)
                 }
             }
         })
