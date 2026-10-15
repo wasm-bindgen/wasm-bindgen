@@ -5159,11 +5159,13 @@ impl ToTokens for ast::Enum {
 impl ToTokens for ast::ImportStatic {
     fn to_tokens(&self, into: &mut TokenStream) {
         let ty = &self.ty;
+        let attrs = &self.attrs;
 
         if let Some(thread_local) = self.thread_local {
             thread_local_import(
                 &self.vis,
                 &self.rust_name,
+                attrs,
                 &self.wasm_bindgen,
                 ty,
                 ty,
@@ -5180,6 +5182,7 @@ impl ToTokens for ast::ImportStatic {
             let init = static_init(wasm_bindgen, ty, shim_name);
 
             into.extend(quote! {
+                #(#attrs)*
                 #[automatically_derived]
                 #[deprecated = "use with `#[wasm_bindgen(thread_local_v2)]` instead"]
             });
@@ -5202,7 +5205,7 @@ impl ToTokens for ast::ImportStatic {
             inner: quote! {
                 <#ty as WasmDescribe>::describe();
             },
-            attrs: vec![],
+            attrs: crate::cfg_gate_attrs(attrs),
             wasm_bindgen: &self.wasm_bindgen,
         }
         .to_tokens(into);
@@ -5217,6 +5220,7 @@ impl ToTokens for ast::ImportString {
         thread_local_import(
             &self.vis,
             &self.rust_name,
+            &self.attrs,
             &self.wasm_bindgen,
             &actual_ty,
             &self.ty,
@@ -5230,6 +5234,7 @@ impl ToTokens for ast::ImportString {
 fn thread_local_import(
     vis: &syn::Visibility,
     name: &Ident,
+    attrs: &[syn::Attribute],
     wasm_bindgen: &syn::Path,
     actual_ty: &syn::Type,
     ty: &syn::Type,
@@ -5241,6 +5246,7 @@ fn thread_local_import(
     match thread_local {
         ast::ThreadLocal::V1 => quote! {
             #wasm_bindgen::__rt::std::thread_local! {
+                #(#attrs)*
                 #[automatically_derived]
                 #[deprecated = "use with `#[wasm_bindgen(thread_local_v2)]` instead"]
                 #vis static #name: #actual_ty = {
@@ -5250,6 +5256,7 @@ fn thread_local_import(
         },
         ast::ThreadLocal::V2 => {
             quote! {
+                #(#attrs)*
                 #vis static #name: #wasm_bindgen::JsThreadLocal<#actual_ty> = {
                     fn init() -> #actual_ty {
                         #init

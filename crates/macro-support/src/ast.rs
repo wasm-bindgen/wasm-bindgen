@@ -309,6 +309,8 @@ pub struct ImportStatic {
     pub rust_name: Ident,
     /// The name of this static on the JS side
     pub js_name: String,
+    /// The custom attributes to apply to this static
+    pub attrs: Vec<syn::Attribute>,
     /// Path to wasm_bindgen
     pub wasm_bindgen: Path,
     /// Version of `thread_local`, if any.
@@ -336,6 +338,8 @@ pub struct ImportString {
     pub shim: Ident,
     /// The name of this static on the Rust side
     pub rust_name: Ident,
+    /// The custom attributes to apply to this static
+    pub attrs: Vec<syn::Attribute>,
     /// Path to wasm_bindgen
     pub wasm_bindgen: Path,
     /// Path to js_sys
