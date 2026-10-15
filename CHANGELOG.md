@@ -97,7 +97,7 @@
   queues its own `run_all` microtask, so Rust tasks interleave with JS
   microtasks queued between their wakes; their order among themselves is
   unchanged.
-  [#XXXX](https://github.com/wasm-bindgen/wasm-bindgen/pull/XXXX)
+  [#5379](https://github.com/wasm-bindgen/wasm-bindgen/pull/5379)
 
 * Imported functions and statics from two different `inline_js` snippets no
   longer share one binding when they have the same name and signature. The
