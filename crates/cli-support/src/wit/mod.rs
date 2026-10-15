@@ -968,25 +968,20 @@ impl<'a> Context<'a> {
         qualified: &mut String,
         origin: Option<ItemOrigin<'_>>,
     ) -> Result<(), Error> {
-        let Some(origin) = origin else {
-            let origin = ItemOrigin {
-                kind: ItemKind::Value,
-                unique_crate_identifier: self.unique_crate_identifier,
-                module_hash: None,
-            };
-            if let Some(identity) = self.defined_item_identity(origin, qualified) {
-                *qualified = identity;
-            } else if self.ambiguous_items.contains(qualified.as_str()) {
-                bail!(
-                    "`{qualified}` is exported as `#[wasm_bindgen(private)]` more than once, \
-                     so this reference to it by name is ambiguous"
-                );
-            }
-            return Ok(());
-        };
+        let by_name = origin.is_none();
+        let origin = origin.unwrap_or(ItemOrigin {
+            kind: ItemKind::Value,
+            unique_crate_identifier: self.unique_crate_identifier,
+            module_hash: None,
+        });
         if let Some(identity) = self.defined_item_identity(origin, qualified) {
             *qualified = identity;
-        } else if self.colliding_items.contains(qualified.as_str()) {
+        } else if by_name && self.ambiguous_items.contains(qualified.as_str()) {
+            bail!(
+                "`{qualified}` is exported as `#[wasm_bindgen(private)]` more than once, \
+                 so this reference to it by name is ambiguous"
+            );
+        } else if !by_name && self.colliding_items.contains(qualified.as_str()) {
             bail!(
                 "the type descriptor of `{qualified}` matches none of its definitions; \
                  this is a wasm-bindgen bug"

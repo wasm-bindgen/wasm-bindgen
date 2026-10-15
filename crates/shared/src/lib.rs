@@ -13,7 +13,7 @@ pub mod tys;
 // This gets changed whenever our schema changes.
 // At this time versions of wasm-bindgen and wasm-bindgen-cli are required to have the exact same
 // SCHEMA_VERSION in order to work together.
-pub const SCHEMA_VERSION: &str = "0.2.130";
+pub const SCHEMA_VERSION: &str = "0.2.128";
 
 #[macro_export]
 macro_rules! shared_api {
@@ -274,7 +274,8 @@ pub fn module_mangled_symbol(base: &str, crate_hash: &str, module_path: &str) ->
 /// FNV-1a hash of a `module_path!()`, carried by type descriptors to identify
 /// the defining module. A `const fn` so the macro can fold it into a constant:
 /// the descriptor interpreter cannot read static data, so the string itself
-/// cannot be informed at runtime.
+/// cannot be informed at runtime. The macro (through `wasm_bindgen::__rt`)
+/// and the CLI must both use this one function.
 pub const fn module_path_hash(module_path: &str) -> u32 {
     let bytes = module_path.as_bytes();
     let mut hash = 0x811c_9dc5u32;
@@ -287,16 +288,16 @@ pub const fn module_path_hash(module_path: &str) -> u32 {
     hash
 }
 
-/// Extract the crate name from a `unique_crate_identifier` (see
-/// [`crate_hash`]).
+/// Extract the crate name from a `unique_crate_identifier`, which is encoded
+/// as `"{crate_name}-{hash}"` (the hash contains no `-`).
 pub fn crate_name(unique_crate_identifier: &str) -> &str {
     unique_crate_identifier
         .rsplit_once('-')
         .map_or(unique_crate_identifier, |(name, _)| name)
 }
 
-/// Extract the crate hash from a `unique_crate_identifier`, which is encoded
-/// as `"{crate_name}-{hash}"` (the hash contains no `-`).
+/// Extract the crate hash from a `unique_crate_identifier` (see
+/// [`crate_name`]).
 pub fn crate_hash(unique_crate_identifier: &str) -> &str {
     unique_crate_identifier
         .rsplit_once('-')
