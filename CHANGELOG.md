@@ -35,6 +35,10 @@
   also work as plain import argument types.
   [#5374](https://github.com/wasm-bindgen/wasm-bindgen/pull/5374)
 
+* Added support for threads on memory64 (`wasm64-unknown-unknown` with
+  `+atomics`). On memory64, `__wbindgen_thread_destroy` takes JS numbers.
+  [#5378](https://github.com/wasm-bindgen/wasm-bindgen/pull/5378)
+
 ### Changed
 
 * The generated `TextDecoder` no longer sets `fatal: true`. Rust `&str` is
