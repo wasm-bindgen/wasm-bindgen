@@ -63,6 +63,24 @@ pub fn echo_optional_wrapper(w: Option<Wrapper>) -> Option<Wrapper> {
     w
 }
 
+#[wasm_bindgen]
+pub enum Shade {
+    Light = "light",
+    Dark = "dark",
+}
+
+// A string enum payload dispatches through its `TryFromJsValue` impl.
+#[wasm_bindgen]
+pub enum ShadeOrNumber {
+    Shade(Shade),
+    Number(f64),
+}
+
+#[wasm_bindgen]
+pub fn echo_shade(s: ShadeOrNumber) -> ShadeOrNumber {
+    s
+}
+
 // `#[wasm_bindgen(fallback)]` makes the last tuple variant act as a
 // catch-all, accepting whatever didn't match an earlier variant. Required
 // when the variant's type lacks a meaningful runtime check.

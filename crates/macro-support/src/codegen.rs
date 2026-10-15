@@ -1980,10 +1980,6 @@ impl TryToTokens for ast::ImportType {
 // * Inherent helpers: `from_str` / `to_str` / `from_js_value` are emitted
 //   here as inherent methods. Dynamic unions don't generate equivalents.
 //   Either preserve them or document removal as breaking.
-// * `TryFromJsValue`: string enums currently lack this impl, so they
-//   can't be `dyn_into` targets or dynamic-union variant payloads.
-//   Dynamic unions have it. Unification would gain this on the string
-//   enum path for free.
 // * ABI: string enums use a u32 discriminant; dynamic unions use an
 //   externref. Benchmarks (see `benches/enum_roundtrip.rs`) show the
 //   round-trip cost is within ~1% on Node, so the perf argument for
@@ -2103,6 +2099,17 @@ impl ToTokens for ast::StringEnum {
             {
                 fn from(val: #enum_name) -> Self {
                     #wasm_bindgen::JsValue::from_str(val.to_str())
+                }
+            }
+
+            // Unknown strings are rejected rather than mapped to `__Invalid`,
+            // so a dynamic union falls through to its later variants.
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::TryFromJsValue for #enum_name {
+                fn try_from_js_value_ref(
+                    value: &#wasm_bindgen::JsValue,
+                ) -> #wasm_bindgen::__rt::core::option::Option<Self> {
+                    Self::from_js_value(value)
                 }
             }
         })
