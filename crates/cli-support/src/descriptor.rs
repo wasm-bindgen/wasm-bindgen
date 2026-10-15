@@ -62,15 +62,20 @@ pub enum Descriptor {
         name: String,
         hole: u32,
         unique_crate_identifier: String,
+        module: u32,
     },
     StringEnum {
         name: String,
         invalid: u32,
         hole: u32,
+        unique_crate_identifier: String,
+        module: u32,
     },
     DynamicUnion {
         name: String,
         variant_types: Vec<Descriptor>,
+        unique_crate_identifier: String,
+        module: u32,
     },
     RustStruct {
         name: String,
@@ -82,6 +87,26 @@ pub enum Descriptor {
     Unit,
     NonNull,
     RawPointer,
+}
+
+/// The name spaces in which same-named exported items collide: structs and
+/// numeric enums are both JS values, while string enums and dynamic unions
+/// are TypeScript-only and kept apart.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum ItemNamespace {
+    Value,
+    StringEnum,
+    DynamicUnion,
+}
+
+/// Where a Rust type named in a descriptor is defined.
+#[derive(Clone, Copy)]
+pub struct ItemOrigin<'a> {
+    pub namespace: ItemNamespace,
+    pub unique_crate_identifier: &'a str,
+    /// `module_path_hash` of the defining module; `None` for structs, whose
+    /// wasm shims are only unique per crate.
+    pub module: Option<u32>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -185,10 +210,12 @@ impl Descriptor {
                 let name = get_string(data);
                 let hole = get(data);
                 let unique_crate_identifier = get_string(data);
+                let module = get(data);
                 Descriptor::Enum {
                     name,
                     hole,
                     unique_crate_identifier,
+                    module,
                 }
             }
             STRING_ENUM => {
@@ -196,14 +223,20 @@ impl Descriptor {
                 let variant_count = get(data);
                 let invalid = variant_count;
                 let hole = variant_count + 1;
+                let unique_crate_identifier = get_string(data);
+                let module = get(data);
                 Descriptor::StringEnum {
                     name,
                     invalid,
                     hole,
+                    unique_crate_identifier,
+                    module,
                 }
             }
             DYNAMIC_UNION => {
                 let name = get_string(data);
+                let unique_crate_identifier = get_string(data);
+                let module = get(data);
                 let type_count = get(data);
                 let mut variant_types = Vec::new();
                 for _ in 0..type_count {
@@ -212,6 +245,8 @@ impl Descriptor {
                 Descriptor::DynamicUnion {
                     name,
                     variant_types,
+                    unique_crate_identifier,
+                    module,
                 }
             }
             RUST_STRUCT => {
@@ -235,13 +270,13 @@ impl Descriptor {
         }
     }
 
-    /// Visit every struct/enum/externref type name embedded in this
+    /// Visit every Rust type and externref type name embedded in this
     /// descriptor tree, so callers can rewrite names to their final JS
     /// identities (see `Context::resolve_descriptor` in `wit`). Rust types
-    /// include their defining crate identifier; named externrefs do not.
+    /// include where they are defined; named externrefs do not.
     pub fn visit_named_types_mut<E>(
         &mut self,
-        f: &mut impl FnMut(&mut String, Option<&str>) -> Result<(), E>,
+        f: &mut impl FnMut(&mut String, Option<ItemOrigin<'_>>) -> Result<(), E>,
     ) -> Result<(), E> {
         match self {
             Descriptor::Function(function) => function.visit_named_types_mut(f),
@@ -257,16 +292,57 @@ impl Descriptor {
             // the ambiguity check even though it never refers to the Rust
             // type.
             Descriptor::NamedExternref(name) => f(name, None),
+            Descriptor::RustStruct {
+                name,
+                unique_crate_identifier,
+            } => f(
+                name,
+                Some(ItemOrigin {
+                    namespace: ItemNamespace::Value,
+                    unique_crate_identifier,
+                    module: None,
+                }),
+            ),
             Descriptor::Enum {
                 name,
                 unique_crate_identifier,
+                module,
                 ..
-            }
-            | Descriptor::RustStruct {
+            } => f(
+                name,
+                Some(ItemOrigin {
+                    namespace: ItemNamespace::Value,
+                    unique_crate_identifier,
+                    module: Some(*module),
+                }),
+            ),
+            Descriptor::StringEnum {
                 name,
                 unique_crate_identifier,
-            } => f(name, Some(unique_crate_identifier)),
-            Descriptor::DynamicUnion { variant_types, .. } => {
+                module,
+                ..
+            } => f(
+                name,
+                Some(ItemOrigin {
+                    namespace: ItemNamespace::StringEnum,
+                    unique_crate_identifier,
+                    module: Some(*module),
+                }),
+            ),
+            Descriptor::DynamicUnion {
+                name,
+                variant_types,
+                unique_crate_identifier,
+                module,
+            } => {
+                f(
+                    name,
+                    Some(ItemOrigin {
+                        namespace: ItemNamespace::DynamicUnion,
+                        unique_crate_identifier,
+                        module: Some(*module),
+                    }),
+                )?;
                 for d in variant_types {
                     d.visit_named_types_mut(f)?;
                 }
@@ -364,7 +440,7 @@ impl Function {
     /// See [`Descriptor::visit_named_types_mut`].
     pub fn visit_named_types_mut<E>(
         &mut self,
-        f: &mut impl FnMut(&mut String, Option<&str>) -> Result<(), E>,
+        f: &mut impl FnMut(&mut String, Option<ItemOrigin<'_>>) -> Result<(), E>,
     ) -> Result<(), E> {
         for d in &mut self.arguments {
             d.visit_named_types_mut(f)?;

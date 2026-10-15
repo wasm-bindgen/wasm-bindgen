@@ -450,8 +450,15 @@ fn external_all_private_type_collision_resolves() {
                 #[wasm_bindgen(private)]
                 pub enum Mode { A = 1 }
 
+                #[wasm_bindgen(private)]
+                pub enum Shade { Light = "light" }
+
+                #[wasm_bindgen(private)]
+                pub enum ShadeOrNumber { Shade(Shade), Number(f64) }
+
                 pub fn make() -> Widget { Widget { a_value: 1 } }
                 pub fn mode() -> Mode { Mode::A }
+                pub fn shade() -> ShadeOrNumber { ShadeOrNumber::Shade(Shade::Light) }
             "#,
         )
         .file("widget-b/Cargo.toml", &dep_crate_toml("widget-b"))
@@ -466,8 +473,15 @@ fn external_all_private_type_collision_resolves() {
                 #[wasm_bindgen(private)]
                 pub enum Mode { B = 2 }
 
+                #[wasm_bindgen(private)]
+                pub enum Shade { Dark = "dark" }
+
+                #[wasm_bindgen(private)]
+                pub enum ShadeOrNumber { Shade(Shade), Number(f64) }
+
                 pub fn make() -> Widget { Widget { b_value: 2 } }
                 pub fn mode() -> Mode { Mode::B }
+                pub fn shade() -> ShadeOrNumber { ShadeOrNumber::Shade(Shade::Dark) }
             "#,
         )
         .dep("widget-a = { path = 'widget-a' }")
@@ -496,6 +510,16 @@ fn external_all_private_type_collision_resolves() {
                 pub fn b_mode() -> widget_b::Mode {
                     widget_b::mode()
                 }
+
+                #[wasm_bindgen]
+                pub fn a_shade() -> widget_a::ShadeOrNumber {
+                    widget_a::shade()
+                }
+
+                #[wasm_bindgen]
+                pub fn b_shade() -> widget_b::ShadeOrNumber {
+                    widget_b::shade()
+                }
             "#,
         )
         .wasm_bindgen("--target web")
@@ -509,6 +533,114 @@ fn external_all_private_type_collision_resolves() {
     assert_contains!(&dts, "export function make_b_widget(): Widget2;");
     assert_contains!(&dts, "export function a_mode(): Mode;");
     assert_contains!(&dts, "export function b_mode(): Mode2;");
+    assert_contains!(&dts, "export function a_shade(): ShadeOrNumber;");
+    assert_contains!(&dts, "export function b_shade(): ShadeOrNumber2;");
+    assert_contains!(&dts, "type ShadeOrNumber = Shade | number;");
+    assert_contains!(&dts, "type ShadeOrNumber2 = Shade2 | number;");
+    assert_contains!(&dts, "type Shade = \"light\";");
+    assert_contains!(&dts, "type Shade2 = \"dark\";");
+}
+
+/// Two public definitions of one name in different modules of one crate are
+/// the same collision as across crates, including byte-identical copies.
+fn duplicate_public_item_in_one_crate_errors(project: &str, item: &str, name: &str) {
+    let err = Project::new(project)
+        .file(
+            "src/lib.rs",
+            &format!(
+                r#"
+                    macro_rules! items {{
+                        ($m:ident) => {{
+                            pub mod $m {{
+                                use wasm_bindgen::prelude::*;
+                                #[wasm_bindgen]
+                                {item}
+                                #[wasm_bindgen]
+                                pub fn $m(value: {name}) -> {name} {{ value }}
+                            }}
+                        }};
+                    }}
+                    items!(a);
+                    items!(b);
+                "#
+            ),
+        )
+        .wasm_bindgen("")
+        .unwrap_err()
+        .to_string();
+
+    assert!(
+        err.contains(&format!("the name `{name}` is exported multiple times")),
+        "unexpected error for `{name}`:\n{err}"
+    );
+}
+
+/// String enums are resolved apart from numeric enums, so a string enum is
+/// unaffected by private numeric enums of the same name being numbered.
+#[test]
+fn same_name_across_item_kinds_resolves() {
+    let out_dir = Project::new("same_name_across_item_kinds_resolves")
+        .file(
+            "src/lib.rs",
+            r#"
+                macro_rules! levels {
+                    ($m:ident) => {
+                        pub mod $m {
+                            use wasm_bindgen::prelude::*;
+                            #[wasm_bindgen(private)]
+                            pub enum Level { Low = 1 }
+                            #[wasm_bindgen]
+                            pub fn $m(level: Level) -> Level { level }
+                        }
+                    };
+                }
+                levels!(a);
+                levels!(b);
+
+                pub mod c {
+                    use wasm_bindgen::prelude::*;
+                    #[wasm_bindgen]
+                    pub enum Level { Low = "low" }
+                    #[wasm_bindgen]
+                    pub fn c(level: Level) -> Level { level }
+                }
+            "#,
+        )
+        .wasm_bindgen("--target web")
+        .unwrap();
+    let dts =
+        fs::read_to_string(out_dir.join("same_name_across_item_kinds_resolves.d.ts")).unwrap();
+
+    assert_contains!(&dts, "export function a(level: Level): Level;");
+    assert_contains!(&dts, "export function b(level: Level2): Level2;");
+    assert_contains!(&dts, "export function c(level: Level): Level;");
+}
+
+#[test]
+fn duplicate_public_string_enum_in_one_crate_errors() {
+    duplicate_public_item_in_one_crate_errors(
+        "duplicate_public_string_enum_in_one_crate_errors",
+        r#"pub enum Mode { Fast = "fast", Slow = "slow" }"#,
+        "Mode",
+    );
+}
+
+#[test]
+fn duplicate_public_numeric_enum_in_one_crate_errors() {
+    duplicate_public_item_in_one_crate_errors(
+        "duplicate_public_numeric_enum_in_one_crate_errors",
+        "#[derive(Clone, Copy)] pub enum Level { Low = 1, High = 2 }",
+        "Level",
+    );
+}
+
+#[test]
+fn duplicate_public_dynamic_union_in_one_crate_errors() {
+    duplicate_public_item_in_one_crate_errors(
+        "duplicate_public_dynamic_union_in_one_crate_errors",
+        "pub enum TextOrNumber { Text(String), Number(f64) }",
+        "TextOrNumber",
+    );
 }
 
 /// Functions have no `private` form, so the collision is caught when the

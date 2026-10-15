@@ -71,6 +71,7 @@ pub mod reexport;
 pub mod result;
 pub mod result_jserror;
 pub mod rethrow;
+pub mod same_name_items;
 pub mod should_panic;
 pub mod simple;
 pub mod slice;

@@ -49,14 +49,19 @@ The `private` attribute is only supported on structs and enums, not on functions
 
 ## Name collisions
 
-Because private types are not part of the public JavaScript API, multiple
-crates in the same build may each export a private type with the same name
-without colliding. This is useful for crates that use private types as
-implementation details: two versions of such a crate can coexist in one
-dependency graph. When the same name is defined more than once, the private
-copies are numbered (`Config`, `Config2`, `Config3`, ...) in the generated
-bindings.
+Because private types are not part of the public JavaScript API, a name may
+be defined privately more than once in a build without colliding, whether in
+different crates or in different modules of one crate. This is useful for
+crates that use private types as implementation details: two versions of such
+a crate can coexist in one dependency graph, and generated bindings can define
+the same enum in several modules. When the same name is defined more than
+once, the private copies are numbered (`Config`, `Config2`, `Config3`, ...) in
+the generated bindings.
 
-Exporting the same name publicly from more than one crate remains an error,
-reported by the `wasm-bindgen` CLI with the qualified name (taking
-`js_namespace` into account).
+This applies to structs, numeric enums, string enums and dynamic unions. Two
+structs with the same name in one crate are still rejected by the Rust
+compiler, as their generated symbols are only unique per crate.
+
+Exporting the same name publicly more than once remains an error, reported by
+the `wasm-bindgen` CLI with the qualified name (taking `js_namespace` into
+account).

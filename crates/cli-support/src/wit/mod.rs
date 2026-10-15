@@ -1,5 +1,5 @@
 use crate::decode::{ImportModule, LocalModule};
-use crate::descriptor::{Descriptor, Function, GenericImportKey};
+use crate::descriptor::{Descriptor, Function, GenericImportKey, ItemNamespace, ItemOrigin};
 use crate::descriptors::WasmBindgenDescriptorsSection;
 use crate::intrinsic::Intrinsic;
 use crate::transforms::threads::ThreadCount;
@@ -19,6 +19,27 @@ mod standard;
 pub use self::nonstandard::*;
 pub use self::standard::*;
 
+/// A definition of a `#[wasm_bindgen]` item: its name within its namespace,
+/// plus the crate and module (`None` for structs) it is defined in.
+#[derive(PartialEq, Eq, Hash)]
+struct ItemKey {
+    namespace: ItemNamespace,
+    unique_crate_identifier: String,
+    module: Option<u32>,
+    name: String,
+}
+
+impl ItemKey {
+    fn new(origin: ItemOrigin<'_>, name: &str) -> Self {
+        ItemKey {
+            namespace: origin.namespace,
+            unique_crate_identifier: origin.unique_crate_identifier.to_string(),
+            module: origin.module,
+            name: name.to_string(),
+        }
+    }
+}
+
 struct Context<'a> {
     start_found: bool,
     module: &'a mut Module,
@@ -31,6 +52,8 @@ struct Context<'a> {
     memory: Option<MemoryId>,
     vendor_prefixes: HashMap<String, Vec<String>>,
     unique_crate_identifier: &'a str,
+    /// `module_path!()` of the program being processed.
+    module_path: &'a str,
     descriptors: HashMap<String, Descriptor>,
     externref_enabled: bool,
     thread_count: Option<ThreadCount>,
@@ -58,14 +81,16 @@ struct Context<'a> {
     /// the name to actually report is recorded here as they are created rather
     /// than recovered by parsing it back out of the walrus function name.
     generic_import_display_names: HashMap<ImportId, String>,
-    /// Final JS identities for exported structs/enums whose qualified names
-    /// collide across crates, keyed by `(unique_crate_identifier,
-    /// qualified_name)`. Only the colliding `private` definitions appear
-    /// here; anything absent keeps its canonical qualified name.
-    item_identities: HashMap<(String, String), String>,
-    /// Qualified names exported as `private` by multiple crates with no
-    /// public owner. A structural reference to one of these from outside its
-    /// defining crate is ambiguous and reported as an error.
+    /// Final JS identities of exported items whose qualified names collide
+    /// across crates or modules, keyed by `(namespace,
+    /// unique_crate_identifier, qualified_name)`, with one `(module,
+    /// identity)` entry per definition in that crate (`module` is its
+    /// `module_path_hash`, `None` for structs). Names that don't collide are
+    /// absent and keep their name.
+    item_identities: HashMap<ItemKey, String>,
+    /// Struct and numeric enum names exported as `private` more than once
+    /// with no public owner. A reference by name that can't tell the
+    /// definitions apart is reported as ambiguous.
     ambiguous_items: BTreeSet<String>,
     /// Exports restored from their mangled symbol to a canonical name, in
     /// module order; used to re-sort them by final name afterwards (see
@@ -148,6 +173,7 @@ pub fn process(
         vendor_prefixes: Default::default(),
         descriptors: Default::default(),
         unique_crate_identifier: "",
+        module_path: "",
         memory: wasm_conventions::get_memory(module).ok(),
         module,
         start_found: false,
@@ -287,64 +313,101 @@ pub fn process(
     Ok((adapters, aux))
 }
 
-/// Decide the final JS identity of every exported struct/enum up front.
+/// Decide the final JS identity of every exported struct and enum up front.
 ///
-/// Identically named exports from different crates no longer collide at link
-/// time (their wasm shims carry a per-crate hash), so name collisions are
-/// resolved here instead: a name exported publicly by more than one crate is
-/// an error, while `private` copies are remapped to numbered identities
-/// (`Name`, `Name2`, `Name3`, ...) so any number of them can coexist. Names
-/// defined only once keep their canonical identity and are unaffected.
+/// Identically named exports from different crates or modules don't collide
+/// at link time (their wasm symbols carry a per-crate hash, and per-module
+/// where needed), so name collisions are resolved here instead: a name
+/// exported publicly more than once is an error, while `private` copies are
+/// remapped to numbered identities (`Name`, `Name2`, `Name3`, ...) so any
+/// number of them can coexist. Names defined only once keep their canonical
+/// identity and are unaffected.
 fn resolve_item_identities(cx: &mut Context, programs: &[decode::Program]) -> Result<(), Error> {
-    let mut definitions: BTreeMap<String, Vec<(&str, bool)>> = BTreeMap::new();
+    // Each definition is `(unique_crate_identifier, module_path, private)`.
+    // Structs have no module path since their shims are only unique per
+    // crate.
+    let mut definitions: BTreeMap<(ItemNamespace, String), Vec<(&str, Option<&str>, bool)>> =
+        BTreeMap::new();
     for program in programs {
         let uci = program.unique_crate_identifier;
+        let module = Some(program.module_path.as_str());
+        let mut define = |namespace, name: String, module, private| {
+            definitions
+                .entry((namespace, name))
+                .or_default()
+                .push((uci, module, private));
+        };
         for struct_ in &program.structs {
             let qualified =
                 wasm_bindgen_shared::qualified_name(struct_.js_namespace.as_deref(), struct_.name);
-            definitions
-                .entry(qualified)
-                .or_default()
-                .push((uci, struct_.private));
+            define(ItemNamespace::Value, qualified, None, struct_.private);
         }
         for enum_ in &program.enums {
             let qualified =
                 wasm_bindgen_shared::qualified_name(enum_.js_namespace.as_deref(), enum_.name);
-            definitions
-                .entry(qualified)
-                .or_default()
-                .push((uci, enum_.private));
+            define(ItemNamespace::Value, qualified, module, enum_.private);
+        }
+        for import in &program.imports {
+            match &import.kind {
+                decode::ImportKind::Enum(e) => {
+                    define(ItemNamespace::StringEnum, e.name.into(), module, e.private)
+                }
+                decode::ImportKind::DynamicUnion(u) => define(
+                    ItemNamespace::DynamicUnion,
+                    u.name.into(),
+                    module,
+                    u.private,
+                ),
+                _ => {}
+            }
         }
     }
     // All names taken so far; grown as identities are assigned so that a
     // numbered identity can never land on another definition's name.
-    let mut taken: BTreeSet<String> = definitions.keys().cloned().collect();
-    for (name, mut defs) in definitions {
-        // A crate's own programs are one definition: the same item shows up
-        // once per codegen unit its macro expansion landed in.
+    let mut taken: BTreeSet<String> = definitions.keys().map(|(_, name)| name.clone()).collect();
+    for ((namespace, name), mut defs) in definitions {
+        // A definition shows up once per codegen unit its macro expansion
+        // landed in.
         defs.sort();
         defs.dedup();
         if defs.len() < 2 {
             continue;
         }
-        let public_count = defs.iter().filter(|(_, private)| !private).count();
-        if public_count > 1 {
+        let mut hashes = HashMap::new();
+        for (uci, module, _) in &defs {
+            let Some(module) = module else { continue };
+            let hash = wasm_bindgen_shared::module_path_hash(module);
+            match hashes.insert((*uci, hash), *module) {
+                Some(other) if other != *module => bail!(
+                    "`{name}` is defined in modules `{other}` and `{module}`, whose \
+                     hashes collide; rename one of them"
+                ),
+                _ => {}
+            }
+        }
+        let public: Vec<String> = defs
+            .iter()
+            .filter(|(_, _, private)| !private)
+            .map(|(uci, module, _)| match module {
+                Some(module) => format!("`{module}`"),
+                None => format!("crate `{}`", uci.rsplit_once('-').map_or(*uci, |(n, _)| n)),
+            })
+            .collect();
+        if public.len() > 1 {
             bail!(
-                "the name `{name}` is exported multiple times in this build; \
+                "the name `{name}` is exported multiple times in this build (from {}); \
                  rename one side with `js_name`/`js_namespace`, or mark copies that \
-                 are not part of your public interface as `#[wasm_bindgen(private)]`"
+                 are not part of your public interface as `#[wasm_bindgen(private)]`",
+                public.join(" and ")
             );
         }
         // The canonical name goes to the public definition when there is
         // one, otherwise to the first private definition; remaining private
         // copies are numbered `Name2`, `Name3`, ... skipping taken names.
-        // Every private definition gets a map entry (even the one keeping
-        // the canonical name) so its own crate's references resolve rather
-        // than hitting the ambiguity check below.
-        let mut canonical_free = public_count == 0;
+        let mut canonical_free = public.is_empty();
         let mut counter = 2u32;
-        for (uci, private) in &defs {
-            if !*private {
+        for (uci, module, private) in &defs {
+            if !private {
                 continue;
             }
             let identity = if canonical_free {
@@ -359,10 +422,17 @@ fn resolve_item_identities(cx: &mut Context, programs: &[decode::Program]) -> Re
                     }
                 }
             };
-            cx.item_identities
-                .insert(((*uci).to_string(), name.clone()), identity);
+            let key = ItemKey {
+                namespace,
+                unique_crate_identifier: (*uci).to_string(),
+                module: module.map(wasm_bindgen_shared::module_path_hash),
+                name: name.clone(),
+            };
+            cx.item_identities.insert(key, identity);
         }
-        if public_count == 0 {
+        // Only struct and numeric enum names can be referenced without a
+        // defining crate (see `resolve_item_ref`).
+        if public.is_empty() && namespace == ItemNamespace::Value {
             cx.ambiguous_items.insert(name);
         }
     }
@@ -863,37 +933,50 @@ impl<'a> Context<'a> {
         wasm_bindgen_shared::mangled_symbol(base, self.crate_hash())
     }
 
-    /// Final JS identity of a struct/enum defined by the current program's
-    /// crate (inherent impls always live in the defining crate, so class
-    /// strings on exports resolve through the same crate identity).
-    fn item_identity(&self, qualified: &str) -> String {
-        self.item_identities
-            .get(&(
-                self.unique_crate_identifier.to_string(),
-                qualified.to_string(),
-            ))
-            .cloned()
-            .unwrap_or_else(|| qualified.to_string())
+    /// `module_path_hash` of the current program's module.
+    fn module_hash(&self) -> u32 {
+        wasm_bindgen_shared::module_path_hash(self.module_path)
     }
 
-    /// Final JS identity of a struct/enum referenced by name. Rust type
-    /// descriptors carry their defining crate; other named descriptors use
-    /// the current program's crate.
+    /// Final JS identity of an item defined by the current program, in
+    /// `module` (`None` for structs). Inherent impls always live in the
+    /// defining crate, so class strings on exports resolve here too.
+    fn item_identity(&self, namespace: ItemNamespace, module: Option<u32>, name: &str) -> String {
+        let origin = ItemOrigin {
+            namespace,
+            unique_crate_identifier: self.unique_crate_identifier,
+            module,
+        };
+        self.defined_item_identity(origin, name)
+            .unwrap_or_else(|| name.to_string())
+    }
+
+    fn defined_item_identity(&self, origin: ItemOrigin<'_>, name: &str) -> Option<String> {
+        self.item_identities
+            .get(&ItemKey::new(origin, name))
+            .cloned()
+    }
+
+    /// Final JS identity of an item referenced by name. Rust type
+    /// descriptors carry where the type is defined; other named descriptors
+    /// can only follow a struct of the current program's crate.
     fn resolve_item_ref(
         &self,
         qualified: &mut String,
-        defining_crate: Option<&str>,
+        origin: Option<ItemOrigin<'_>>,
     ) -> Result<(), Error> {
-        let defining_crate = defining_crate.unwrap_or(self.unique_crate_identifier);
-        if let Some(identity) = self
-            .item_identities
-            .get(&(defining_crate.to_string(), qualified.to_string()))
-        {
-            *qualified = identity.clone();
-        } else if self.ambiguous_items.contains(qualified.as_str()) {
+        let by_name = origin.is_none();
+        let origin = origin.unwrap_or(ItemOrigin {
+            namespace: ItemNamespace::Value,
+            unique_crate_identifier: self.unique_crate_identifier,
+            module: None,
+        });
+        if let Some(identity) = self.defined_item_identity(origin, qualified) {
+            *qualified = identity;
+        } else if by_name && self.ambiguous_items.contains(qualified.as_str()) {
             bail!(
-                "`{qualified}` is exported as `#[wasm_bindgen(private)]` by multiple \
-                 crates, so this reference to it by name is ambiguous"
+                "`{qualified}` is exported as `#[wasm_bindgen(private)]` more than once, \
+                 so this reference to it by name is ambiguous"
             );
         }
         Ok(())
@@ -902,16 +985,12 @@ impl<'a> Context<'a> {
     /// Rewrite struct/enum names embedded in a descriptor to their final JS
     /// identities as seen from the current program's crate.
     fn resolve_descriptor(&self, descriptor: &mut Descriptor) -> Result<(), Error> {
-        descriptor.visit_named_types_mut(&mut |name, defining_crate| {
-            self.resolve_item_ref(name, defining_crate)
-        })
+        descriptor.visit_named_types_mut(&mut |name, origin| self.resolve_item_ref(name, origin))
     }
 
     /// See [`Context::resolve_descriptor`].
     fn resolve_descriptor_function(&self, function: &mut Function) -> Result<(), Error> {
-        function.visit_named_types_mut(&mut |name, defining_crate| {
-            self.resolve_item_ref(name, defining_crate)
-        })
+        function.visit_named_types_mut(&mut |name, origin| self.resolve_item_ref(name, origin))
     }
 
     /// The macro emits every export shim under a crate-hash mangled symbol so
@@ -1027,6 +1106,7 @@ impl<'a> Context<'a> {
 
     fn program(&mut self, program: decode::Program<'a>) -> Result<(), Error> {
         self.unique_crate_identifier = program.unique_crate_identifier;
+        self.module_path = program.module_path.as_str();
         let decode::Program {
             exports,
             enums,
@@ -1036,6 +1116,7 @@ impl<'a> Context<'a> {
             local_modules,
             inline_js,
             unique_crate_identifier,
+            module_path: _,
             package_json,
             linked_modules,
         } = program;
@@ -1145,11 +1226,18 @@ impl<'a> Context<'a> {
         // Resolve the class identity up front: when the class was remapped
         // (a colliding `private` struct), the export's restored wasm name
         // follows the identity rather than the canonical form.
-        let class_identity = export.class.as_ref().map(|class| {
-            let qualified =
-                wasm_bindgen_shared::qualified_name(export.js_namespace.as_deref(), class);
-            (self.item_identity(&qualified), qualified)
-        });
+        let class_identity = export
+            .class
+            .as_ref()
+            .map(|class| {
+                let qualified =
+                    wasm_bindgen_shared::qualified_name(export.js_namespace.as_deref(), class);
+                Ok::<_, Error>((
+                    self.item_identity(ItemNamespace::Value, None, &qualified),
+                    qualified,
+                ))
+            })
+            .transpose()?;
         let final_name = match &class_identity {
             Some((identity, qualified)) if identity != qualified => {
                 struct_function_export_name(identity, export.function.name)
@@ -1840,8 +1928,13 @@ impl<'a> Context<'a> {
     }
 
     fn string_enum(&mut self, string_enum: &decode::StringEnum<'_>) -> Result<(), Error> {
+        let identity = self.item_identity(
+            ItemNamespace::StringEnum,
+            Some(self.module_hash()),
+            string_enum.name,
+        );
         let aux = AuxStringEnum {
-            name: string_enum.name.to_string(),
+            name: identity.clone(),
             comments: concatenate_comments(&string_enum.comments),
             variant_values: string_enum
                 .variant_values
@@ -1855,15 +1948,21 @@ impl<'a> Context<'a> {
                 .as_ref()
                 .map(|ns| ns.iter().map(|s| s.to_string()).collect()),
         };
-        let mut result = Ok(());
-        self.aux
-            .string_enums
-            .entry(aux.name.clone())
-            .and_modify(|existing| {
-                result = Err(anyhow!("duplicate string enums:\n{existing:?}\n{aux:?}"));
-            })
-            .or_insert(aux);
-        result
+        if self.aux.string_enums.insert(identity, aux).is_some() {
+            return Err(self.defined_twice_in_module(string_enum.name));
+        }
+        Ok(())
+    }
+
+    /// Two definitions share a name, crate and module when one sits in a
+    /// function body (which `module_path!()` can't tell apart) or when both
+    /// are given the same `js_name`.
+    fn defined_twice_in_module(&self, name: &str) -> Error {
+        anyhow!(
+            "`{name}` is defined more than once in module `{}`; move one definition \
+             into its own module or rename it",
+            self.module_path
+        )
     }
 
     fn dynamic_union(&mut self, dynamic_union: &decode::DynamicUnion<'_>) -> Result<(), Error> {
@@ -1882,10 +1981,11 @@ impl<'a> Context<'a> {
         // TypeScript rendering to JS-generation time so that renamed types
         // resolve through `qualified_to_identifier`.
         for idx in 0..dynamic_union.variant_type_cnt {
-            let descriptor_name = self.mangled(&wasm_bindgen_shared::dynamic_union_variant(
-                dynamic_union.name,
-                idx,
-            ));
+            let descriptor_name = wasm_bindgen_shared::module_mangled_symbol(
+                &wasm_bindgen_shared::dynamic_union_variant(dynamic_union.name, idx),
+                self.crate_hash(),
+                self.module_path,
+            );
             let mut descriptor = self.descriptors.remove(&descriptor_name).ok_or_else(|| {
                 anyhow!("dynamic union variant descriptor not found: {descriptor_name}")
             })?;
@@ -1902,23 +2002,23 @@ impl<'a> Context<'a> {
             variants.push(AuxDynamicUnionVariant::Type(builder.output[0].clone()));
         }
 
+        let identity = self.item_identity(
+            ItemNamespace::DynamicUnion,
+            Some(self.module_hash()),
+            dynamic_union.name,
+        );
         let aux = AuxDynamicUnion {
-            name: dynamic_union.name.to_string(),
+            name: identity.clone(),
             comments: concatenate_comments(&dynamic_union.comments),
             variants,
             generate_typescript: dynamic_union.generate_typescript,
             private: dynamic_union.private,
             fallback: dynamic_union.fallback,
         };
-        let mut result = Ok(());
-        self.aux
-            .dynamic_unions
-            .entry(aux.name.clone())
-            .and_modify(|existing| {
-                result = Err(anyhow!("duplicate dynamic unions:\n{existing:?}\n{aux:?}"));
-            })
-            .or_insert(aux);
-        result
+        if self.aux.dynamic_unions.insert(identity, aux).is_some() {
+            return Err(self.defined_twice_in_module(dynamic_union.name));
+        }
+        Ok(())
     }
 
     fn enum_(&mut self, enum_: decode::Enum<'_>) -> Result<(), Error> {
@@ -1928,7 +2028,11 @@ impl<'a> Context<'a> {
         // Like structs, colliding `private` enums are remapped to a numbered
         // identity; downstream code recomputes the qualified identity from
         // the bare name, so the suffix lives there.
-        let identity = self.item_identity(&qualified_name);
+        let identity = self.item_identity(
+            ItemNamespace::Value,
+            Some(self.module_hash()),
+            &qualified_name,
+        );
         let bare_identity = format!("{}{}", enum_.name, &identity[qualified_name.len()..]);
         let aux = AuxEnum {
             name: bare_identity,
@@ -1952,15 +2056,10 @@ impl<'a> Context<'a> {
                 .map(|ns| ns.iter().map(|s| s.to_string()).collect()),
             private: enum_.private,
         };
-        let mut result = Ok(());
-        self.aux
-            .enums
-            .entry(identity)
-            .and_modify(|existing| {
-                result = Err(anyhow!("duplicate enums:\n{existing:?}\n{aux:?}"));
-            })
-            .or_insert(aux);
-        result
+        if self.aux.enums.insert(identity, aux).is_some() {
+            return Err(self.defined_twice_in_module(enum_.name));
+        }
+        Ok(())
     }
 
     fn struct_(&mut self, struct_: decode::Struct<'_>) -> Result<(), Error> {
@@ -1969,7 +2068,7 @@ impl<'a> Context<'a> {
         // The class identity downstream; remapped to a numbered identity
         // (`Name2`, `Name3`, ...) when this is a colliding `private` struct
         // so that any number of same-named private classes can coexist.
-        let identity = self.item_identity(&qualified_name);
+        let identity = self.item_identity(ItemNamespace::Value, None, &qualified_name);
         for field in struct_.fields {
             let getter = self.mangled(&wasm_bindgen_shared::struct_field_get(
                 &qualified_name,
@@ -3027,6 +3126,7 @@ mod tests {
             memory: Some(memory),
             vendor_prefixes: Default::default(),
             unique_crate_identifier: "",
+            module_path: "",
             descriptors: Default::default(),
             externref_enabled: false,
             thread_count: None,
