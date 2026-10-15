@@ -398,10 +398,7 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::NamedExternref(name.clone()).option()],
                 );
             }
-            Descriptor::DynamicUnion {
-                name,
-                variant_types: _,
-            } => {
+            Descriptor::DynamicUnion { name, .. } => {
                 // Dynamic unions share the externref ABI; reuse the externref
                 // option lifting.
                 self.instruction(

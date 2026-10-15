@@ -13,7 +13,7 @@ pub mod tys;
 // This gets changed whenever our schema changes.
 // At this time versions of wasm-bindgen and wasm-bindgen-cli are required to have the exact same
 // SCHEMA_VERSION in order to work together.
-pub const SCHEMA_VERSION: &str = "0.2.128";
+pub const SCHEMA_VERSION: &str = "0.2.130";
 
 #[macro_export]
 macro_rules! shared_api {
@@ -32,6 +32,9 @@ macro_rules! shared_api {
             local_modules: Vec<LocalModule<'a>>,
             inline_js: Vec<&'a str>,
             unique_crate_identifier: &'a str,
+            // `module_path!()` of the macro invocation, so same-named items
+            // in different modules of one crate stay distinct.
+            module_path: LitOrExpr<'a>,
             package_json: Option<&'a str>,
             linked_modules: Vec<LinkedModule<'a>>,
         }
@@ -257,8 +260,44 @@ pub fn mangled_symbol(base: &str, crate_hash: &str) -> String {
     name
 }
 
-/// Extract the crate hash from a `unique_crate_identifier`, which is encoded
+/// [`mangled_symbol`] further qualified by the defining module, for wasm
+/// symbols of items that may share a name across modules of one crate. The
+/// macro only learns the module path from rustc, so it emits this as
+/// `concat!(module_mangled_symbol(base, hash, ""), module_path!())`.
+pub fn module_mangled_symbol(base: &str, crate_hash: &str, module_path: &str) -> String {
+    let mut name = mangled_symbol(base, crate_hash);
+    name.push('_');
+    name.push_str(module_path);
+    name
+}
+
+/// FNV-1a hash of a `module_path!()`, carried by type descriptors to identify
+/// the defining module. A `const fn` so the macro can fold it into a constant:
+/// the descriptor interpreter cannot read static data, so the string itself
+/// cannot be informed at runtime. The macro (through `wasm_bindgen::__rt`)
+/// and the CLI must both use this one function.
+pub const fn module_path_hash(module_path: &str) -> u32 {
+    let bytes = module_path.as_bytes();
+    let mut hash = 0x811c_9dc5u32;
+    let mut i = 0;
+    while i < bytes.len() {
+        hash ^= bytes[i] as u32;
+        hash = hash.wrapping_mul(0x0100_0193);
+        i += 1;
+    }
+    hash
+}
+
+/// Extract the crate name from a `unique_crate_identifier`, which is encoded
 /// as `"{crate_name}-{hash}"` (the hash contains no `-`).
+pub fn crate_name(unique_crate_identifier: &str) -> &str {
+    unique_crate_identifier
+        .rsplit_once('-')
+        .map_or(unique_crate_identifier, |(name, _)| name)
+}
+
+/// Extract the crate hash from a `unique_crate_identifier` (see
+/// [`crate_name`]).
 pub fn crate_hash(unique_crate_identifier: &str) -> &str {
     unique_crate_identifier
         .rsplit_once('-')

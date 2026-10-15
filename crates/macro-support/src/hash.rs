@@ -30,6 +30,12 @@ pub fn crate_mangled_symbol(base: &str) -> String {
     wasm_bindgen_shared::mangled_symbol(base, &ShortHash(0).to_string())
 }
 
+/// Prefix of a [`wasm_bindgen_shared::module_mangled_symbol`], which the
+/// macro completes with `module_path!()`.
+pub fn module_mangled_symbol_prefix(base: &str) -> String {
+    wasm_bindgen_shared::module_mangled_symbol(base, &ShortHash(0).to_string(), "")
+}
+
 impl<T: Hash> fmt::Display for ShortHash<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         static HASHED: AtomicBool = AtomicBool::new(false);

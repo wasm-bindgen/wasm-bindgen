@@ -95,6 +95,18 @@
 
 ### Fixed
 
+* String enums, numeric enums and dynamic unions with the same name in
+  different modules of one crate are now handled like same-named items in
+  different crates: two public definitions report that the name is exported
+  multiple times, and `private` copies are numbered (`Mode`, `Mode2`, ...).
+  Previously `wasm-bindgen` failed with `dynamic union variant descriptor not
+  found` or `duplicate enums`.
+  [#5381](https://github.com/wasm-bindgen/wasm-bindgen/pull/5381)
+
+* `private` string enums and dynamic unions with the same name in different
+  crates can now coexist, numbered like structs and numeric enums.
+  [#5381](https://github.com/wasm-bindgen/wasm-bindgen/pull/5381)
+
 * The TypeScript alias for a string enum that is only referenced through a
   dynamic union is now emitted.
   [#5376](https://github.com/wasm-bindgen/wasm-bindgen/pull/5376)

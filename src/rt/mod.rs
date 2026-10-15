@@ -988,6 +988,8 @@ impl<E: core::fmt::Debug> Main for &mut MainWrapper<Result<(), E>> {
     }
 }
 
+pub use wasm_bindgen_shared::module_path_hash;
+
 pub const fn flat_len<T, const SIZE: usize>(slices: [&[T]; SIZE]) -> usize {
     let mut len = 0;
     let mut i = 0;
