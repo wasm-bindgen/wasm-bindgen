@@ -2624,6 +2624,57 @@ fn emscripten_reinit_is_noop_and_library_parses() {
 }
 
 #[test]
+fn heap_stack_pointer_args_not_shadowed() {
+    // Without reference types a borrowed `JsValue` argument goes through the
+    // `heap`/`stack_pointer` globals, which the emscripten library declares
+    // itself rather than through an intrinsic.
+    let mut project = Project::new("heap_stack_pointer_args_not_shadowed");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen::prelude::*;
+
+            #[wasm_bindgen]
+            pub fn same(heap: &JsValue, stack_pointer: &JsValue) -> bool {
+                heap == stack_pointer
+            }
+        "#,
+    );
+    project
+        .cargo_cmd
+        .env("RUSTUP_TOOLCHAIN", "nightly")
+        .env("RUSTFLAGS", "-C target-cpu=mvp")
+        .arg("-Zbuild-std=std,panic_abort");
+
+    let built = project.build();
+    let mut module = ModuleConfig::new().parse_file(&built).unwrap();
+    module.customs.add(RawCustomSection {
+        name: "__wasm_bindgen_emscripten_marker".into(),
+        data: vec![1],
+    });
+    let emscripten_wasm = project.root.join("emscripten_input.wasm");
+    module.emit_wasm_file(&emscripten_wasm).unwrap();
+
+    let out_dir = project.root.join("pkg-emscripten");
+    fs::create_dir_all(&out_dir).unwrap();
+    wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
+        "wasm-bindgen".as_ref(),
+        "--out-dir".as_ref(),
+        out_dir.as_os_str(),
+        emscripten_wasm.as_os_str(),
+    ])
+    .unwrap();
+    let lib = fs::read_to_string(out_dir.join("library_bindgen.js")).unwrap();
+    assert!(lib.contains("(heap2, stack_pointer2)"), "{lib}");
+    assert!(lib.contains("heap[stack_pointer++] = undefined;"), "{lib}");
+
+    let js = run_wasm_bindgen(&built, &project.root.join("pkg"), "--target bundler").unwrap();
+    let js = fs::read_to_string(js.join("heap_stack_pointer_args_not_shadowed_bg.js")).unwrap();
+    assert!(js.contains("function same(heap2, stack_pointer2)"), "{js}");
+    assert!(js.contains("heap[stack_pointer++] = undefined;"), "{js}");
+}
+
+#[test]
 fn emscripten_namespaced_exports_valid_ts() {
     // Covers all three TS-emission bugs for namespaced (`js_namespace`)
     // exports in emscripten output:

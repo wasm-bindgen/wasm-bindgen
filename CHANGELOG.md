@@ -128,6 +128,12 @@
   its buffer.
   [#1961](https://github.com/wasm-bindgen/wasm-bindgen/issues/1961)
 
+* Exported function arguments named like an identifier their generated JS
+  glue binds or references, such as `wasm`, `ret` or a class name, no longer
+  shadow it, which made calling the function throw. Such arguments get a
+  numeric suffix in the JS, while the TypeScript definitions keep their name.
+  [#3729](https://github.com/wasm-bindgen/wasm-bindgen/issues/3729)
+
 ### Removed
 
 ## [0.2.129](https://github.com/wasm-bindgen/wasm-bindgen/compare/0.2.128...0.2.129)
