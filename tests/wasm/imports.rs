@@ -43,6 +43,13 @@ extern "C" {
     #[wasm_bindgen(thread_local_v2, js_namespace = bar, js_name = foo)]
     static FOO: JsValue;
 
+    #[cfg(any())]
+    #[wasm_bindgen(thread_local_v2, js_name = missing)]
+    static GATED: JsValue;
+    #[cfg(not(any()))]
+    #[wasm_bindgen(thread_local_v2, js_namespace = bar, js_name = foo)]
+    static GATED: JsValue;
+
     fn take_custom_type(f: CustomType) -> CustomType;
     fn touch_custom_type();
     fn custom_type_return_2() -> CustomType;
@@ -212,6 +219,11 @@ fn rust_keyword() {
 #[wasm_bindgen_test]
 fn rust_keyword2() {
     assert_eq!(FOO.with(JsValue::as_f64), Some(3.0));
+}
+
+#[wasm_bindgen_test]
+fn cfg_static() {
+    assert_eq!(GATED.with(JsValue::as_f64), Some(3.0));
 }
 
 #[cfg(not(panic = "unwind"))]

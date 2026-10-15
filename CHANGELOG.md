@@ -87,6 +87,11 @@
 
 ### Fixed
 
+* Attributes on imported statics, such as doc comments, `#[allow(...)]`,
+  `#[deprecated]` and `#[cfg(...)]`, are now applied to the generated static
+  instead of being dropped.
+  [#5377](https://github.com/wasm-bindgen/wasm-bindgen/pull/5377)
+
 * Imported functions and statics from two different `inline_js` snippets no
   longer share one binding when they have the same name and signature. The
   snippet contents are now part of the generated shim name, so each import
