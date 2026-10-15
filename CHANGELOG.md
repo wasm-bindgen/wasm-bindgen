@@ -95,6 +95,11 @@
   dynamic union is now emitted.
   [#5376](https://github.com/wasm-bindgen/wasm-bindgen/pull/5376)
 
+* Attributes on imported statics, such as doc comments, `#[allow(...)]`,
+  `#[deprecated]` and `#[cfg(...)]`, are now applied to the generated static
+  instead of being dropped.
+  [#5377](https://github.com/wasm-bindgen/wasm-bindgen/pull/5377)
+
 * Imported functions and statics from two different `inline_js` snippets no
   longer share one binding when they have the same name and signature. The
   snippet contents are now part of the generated shim name, so each import
@@ -135,6 +140,12 @@
   and the same integer or float kind, since the results are copied back into
   its buffer.
   [#1961](https://github.com/wasm-bindgen/wasm-bindgen/issues/1961)
+
+* Exported function arguments named like an identifier their generated JS
+  glue binds or references, such as `wasm`, `ret` or a class name, no longer
+  shadow it, which made calling the function throw. Such arguments get a
+  numeric suffix in the JS, while the TypeScript definitions keep their name.
+  [#3729](https://github.com/wasm-bindgen/wasm-bindgen/issues/3729)
 
 ### Removed
 
