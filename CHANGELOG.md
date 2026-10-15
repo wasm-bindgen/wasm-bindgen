@@ -91,6 +91,12 @@
 
 ### Fixed
 
+* `async` imports returning a type-erased generic, such as
+  `async fn load<T: JsGeneric>(this: &Holder<T>) -> Result<T, JsValue>`, now
+  compile. The resolved value is erased the same way as a synchronous generic
+  return.
+  [#5380](https://github.com/wasm-bindgen/wasm-bindgen/pull/5380)
+
 * Attributes on imported statics, such as doc comments, `#[allow(...)]`,
   `#[deprecated]` and `#[cfg(...)]`, are now applied to the generated static
   instead of being dropped.

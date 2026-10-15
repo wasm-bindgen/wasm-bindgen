@@ -1,5 +1,6 @@
 //! Runtime coverage for `async` and `slice_to_array` per-monomorphisation
-//! generic imports (`#[wasm_bindgen(experimental_generic_mono)]`).
+//! generic imports (`#[wasm_bindgen(experimental_generic_mono)]`), plus `async`
+//! type-erased generic returns.
 //!
 //! These assert the *observable* behaviour, which a reference snapshot cannot:
 //! the reference test only pins the JS text, so it would happily accept a
@@ -7,7 +8,9 @@
 //! the `Promise` as if it were a `u32`) or that silently ignored
 //! `slice_to_array` (handing JS a typed-array view instead of an `Array`).
 
+use js_sys::Object;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsGeneric;
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen(module = "tests/wasm/generic_import_async.js")]
@@ -65,6 +68,35 @@ extern "C" {
 extern "C" {
     #[wasm_bindgen(experimental_generic_mono, js_name = kindOf)]
     fn kind_of_block_slice<T>(xs: &[u16], other: T) -> String;
+}
+
+#[wasm_bindgen(module = "tests/wasm/generic_import_async.js")]
+extern "C" {
+    type Holder<T: JsGeneric>;
+
+    #[wasm_bindgen(js_name = makeHolder)]
+    fn make_holder<T: JsGeneric>(value: &JsValue) -> Holder<T>;
+
+    #[wasm_bindgen(method, catch)]
+    async fn load<T: JsGeneric>(this: &Holder<T>) -> Result<T, JsValue>;
+
+    #[wasm_bindgen(method, catch, js_name = load)]
+    async fn load_opt<T: JsGeneric>(this: &Holder<T>) -> Result<Option<T>, JsValue>;
+}
+
+#[wasm_bindgen_test]
+async fn async_erased_generic_return() {
+    let obj = Object::new();
+    let holder: Holder<Object> = make_holder(&obj);
+    let loaded: Object = holder.load().await.unwrap();
+    assert!(loaded.is_instance_of::<Object>());
+    assert!(Object::is(&loaded, &obj));
+
+    let loaded: Option<Object> = holder.load_opt().await.unwrap();
+    assert!(Object::is(&loaded.unwrap(), &obj));
+
+    let empty: Holder<Object> = make_holder(&JsValue::UNDEFINED);
+    assert!(empty.load_opt().await.unwrap().is_none());
 }
 
 #[wasm_bindgen_test]

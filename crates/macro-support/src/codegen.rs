@@ -2681,30 +2681,50 @@ impl ast::ImportFunction {
                 } else {
                     original_ty
                 };
-                if generics::uses_generic_params(ty, &fn_generic_param_names)
-                    || generics::uses_lifetime_params(ty, &fn_lifetime_param_names)
-                {
+                // Imported `Promise<T>` erases to `Promise<JsValue>` for every
+                // `T`, so a bound on the promise would not constrain `T`. Async
+                // returns erase the resolved type instead.
+                let erase_ty = if self.function.r#async {
+                    original_ty
+                } else {
+                    ty
+                };
+                let erased = generics::uses_generic_params(erase_ty, &fn_generic_param_names)
+                    || generics::uses_lifetime_params(erase_ty, &fn_lifetime_param_names);
+                let concrete_ty = if erased {
                     let concrete_ty = generic_to_concrete(
-                        ty.clone(),
+                        erase_ty.clone(),
                         &fn_class_generics.concrete_defaults,
                         &fn_lifetime_param_names,
                     )?;
                     fn_class_generics.add_fn_bound(
-                        parse_quote! { #ty: #wasm_bindgen::__rt::marker::ErasableGenericOwn<#concrete_ty> },
+                        parse_quote! { #erase_ty: #wasm_bindgen::__rt::marker::ErasableGenericOwn<#concrete_ty> },
                     );
-                    convert_ret = quote! { unsafe { #wasm_bindgen::__rt::core::mem::transmute_copy(&#wasm_bindgen::__rt::core::mem::ManuallyDrop::new(<#concrete_ty as #wasm_bindgen::convert::FromWasmAbi>::from_abi(#ret_ident.join()))) } };
-                    abi_ret = quote! { #wasm_bindgen::convert::WasmRet<<#concrete_ty as #wasm_bindgen::convert::FromWasmAbi>::Abi> };
+                    Some(concrete_ty)
                 } else {
-                    convert_ret = quote! { <#ty as #wasm_bindgen::convert::FromWasmAbi>::from_abi(#ret_ident.join()) };
-                    abi_ret = quote! { #wasm_bindgen::convert::WasmRet<<#ty as #wasm_bindgen::convert::FromWasmAbi>::Abi> };
+                    None
+                };
+                let abi_ty = match (&concrete_ty, self.function.r#async) {
+                    (Some(concrete_ty), true) => quote! { #promise<#concrete_ty> },
+                    (Some(concrete_ty), false) => quote! { #concrete_ty },
+                    (None, _) => quote! { #ty },
+                };
+                abi_ret = quote! { #wasm_bindgen::convert::WasmRet<<#abi_ty as #wasm_bindgen::convert::FromWasmAbi>::Abi> };
+                convert_ret = quote! { <#abi_ty as #wasm_bindgen::convert::FromWasmAbi>::from_abi(#ret_ident.join()) };
+                if concrete_ty.is_some() && !self.function.r#async {
+                    convert_ret = quote! { unsafe { #wasm_bindgen::__rt::core::mem::transmute_copy(&#wasm_bindgen::__rt::core::mem::ManuallyDrop::new(#convert_ret)) } };
                 }
                 if self.function.r#async {
-                    convert_ret = quote! {
-                        #futures::JsFuture::from(
-                            <#promise<#original_ty> as #wasm_bindgen::convert::FromWasmAbi>
-                                ::from_abi(#ret_ident.join())
-                        ).await
-                    };
+                    convert_ret = quote! { #futures::JsFuture::from(#convert_ret).await };
+                    if concrete_ty.is_some() {
+                        convert_ret = quote! {
+                            #convert_ret.map(|v| unsafe {
+                                #wasm_bindgen::__rt::core::mem::transmute_copy::<_, #original_ty>(
+                                    &#wasm_bindgen::__rt::core::mem::ManuallyDrop::new(v)
+                                )
+                            })
+                        };
+                    }
                     if self.catch {
                         convert_ret = quote! { Ok(#convert_ret?) };
                     } else {

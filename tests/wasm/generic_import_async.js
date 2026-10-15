@@ -39,3 +39,12 @@ exports.joinOf = function(v) {
   if (v === undefined) return 'undefined';
   return `${v.constructor.name}:${v.join('|')}`;
 };
+
+exports.makeHolder = function(value) {
+  return {
+    async load() {
+      await null;
+      return value;
+    },
+  };
+};
