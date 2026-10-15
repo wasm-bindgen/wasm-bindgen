@@ -1443,6 +1443,358 @@ setTimeout(() => {
         .stdout(str::contains("PASS"));
 }
 
+/// Shared Rust source for the tests of the futures executor after a poll or a
+/// `run_all` microtask that never returned normally.
+const INTERRUPTED_EXECUTOR_LIB_RS: &str = r#"
+                use std::cell::Cell;
+                use std::future::poll_fn;
+                use std::task::Poll;
+                use wasm_bindgen::prelude::*;
+                use wasm_bindgen_futures::spawn_local;
+
+                #[wasm_bindgen(inline_js = "
+                    export function now() { return Date.now(); }
+                    export function throw_foreign() { throw new Error('foreign exception from poll'); }
+                    export function record(name) { (globalThis.order ??= []).push(name); }
+                ")]
+                extern "C" {
+                    fn now() -> f64;
+                    fn throw_foreign();
+                    fn record(name: &str);
+                }
+
+                thread_local! {
+                    static COMPLETED: Cell<u32> = const { Cell::new(0) };
+                }
+
+                /// Spawns a task that counts its completion.
+                #[wasm_bindgen]
+                pub fn spawn_counter() {
+                    spawn_local(async { COMPLETED.with(|c| c.set(c.get() + 1)) });
+                }
+
+                #[wasm_bindgen]
+                pub fn completed() -> u32 {
+                    COMPLETED.with(Cell::get)
+                }
+
+                /// Spawns a task that appends `name` to `globalThis.order`.
+                #[wasm_bindgen]
+                pub fn spawn_recording(name: String) {
+                    spawn_local(async move { record(&name) });
+                }
+
+                /// Spawns a task that wakes itself `yields` times before it
+                /// counts its completion.
+                #[wasm_bindgen]
+                pub fn spawn_yielding(yields: u32) {
+                    let mut left = yields;
+                    spawn_local(async move {
+                        poll_fn(|cx| {
+                            if left == 0 {
+                                return Poll::Ready(());
+                            }
+                            left -= 1;
+                            cx.waker().wake_by_ref();
+                            Poll::Pending
+                        })
+                        .await;
+                        COMPLETED.with(|c| c.set(c.get() + 1));
+                    });
+                }
+
+                /// Spawns a task whose first poll wakes its own task, so the
+                /// task is queued again, and then does not return: it spins for
+                /// `spin_ms` (for the host to terminate it) or, when `spin_ms`
+                /// is 0, calls a JS function that throws.
+                #[wasm_bindgen]
+                pub fn spawn_interrupted(spin_ms: f64) {
+                    let mut polled = false;
+                    spawn_local(poll_fn(move |cx| {
+                        if !polled {
+                            polled = true;
+                            cx.waker().wake_by_ref();
+                            if spin_ms > 0.0 {
+                                let deadline = now() + spin_ms;
+                                while now() < deadline {}
+                            } else {
+                                throw_foreign();
+                            }
+                        }
+                        Poll::Pending
+                    }));
+                }
+            "#;
+
+/// Builds [`INTERRUPTED_EXECUTOR_LIB_RS`] for Node.js, writes `script` next to
+/// the bindings and runs it. The script prints `PASS` on success. With
+/// `panic_unwind`, the crate is built with `-Cpanic=unwind` (nightly
+/// build-std), otherwise with the default `panic = "abort"`.
+fn run_interrupted_executor_test(name: &str, panic_unwind: bool, script: &str) {
+    let mut project = Project::new(name);
+    project
+        .file("src/lib.rs", INTERRUPTED_EXECUTOR_LIB_RS)
+        .file(
+            "Cargo.toml",
+            &format!(
+                "
+                    [package]
+                    name = \"{name}\"
+                    authors = []
+                    version = \"1.0.0\"
+                    edition = '2021'
+
+                    [dependencies]
+                    wasm-bindgen = {{ path = '{root}' }}
+                    wasm-bindgen-futures = {{ path = '{root}/crates/futures' }}
+
+                    [lib]
+                    crate-type = ['cdylib']
+
+                    [workspace]
+
+                    [profile.dev]
+                    codegen-units = 1
+                ",
+                root = REPO_ROOT.display(),
+            ),
+        );
+    if panic_unwind {
+        project
+            .cargo_cmd
+            .env("RUSTUP_TOOLCHAIN", "nightly")
+            .env("RUSTFLAGS", "-Cpanic=unwind")
+            .arg("-Zbuild-std=std,panic_unwind");
+    }
+    let out_dir = project.wasm_bindgen("--target nodejs").unwrap();
+    fs::write(
+        out_dir.join("test.js"),
+        script.replace("{module}", &format!("./{name}.js")),
+    )
+    .unwrap();
+    Command::new("node")
+        .arg("test.js")
+        .current_dir(&out_dir)
+        .assert()
+        .success()
+        .stdout(str::contains("PASS"));
+}
+
+/// A host that terminates execution inside a microtask checkpoint discards
+/// every pending microtask, including a queued `run_all`. Tasks spawned or
+/// woken afterwards must still be polled. The script drops exactly one
+/// `queueMicrotask` call in place of a termination.
+#[test]
+fn spawn_local_runs_after_a_lost_microtask() {
+    run_interrupted_executor_test(
+        "spawn_local_runs_after_a_lost_microtask",
+        false,
+        r#"
+const assert = require('node:assert/strict');
+const realQueueMicrotask = globalThis.queueMicrotask;
+let dropped = 0;
+globalThis.queueMicrotask = () => {
+    dropped += 1;
+    globalThis.queueMicrotask = realQueueMicrotask;
+};
+const wasm = require('{module}');
+
+wasm.spawn_counter();
+assert.strictEqual(dropped, 1, 'the first spawn must queue a microtask, which is dropped');
+wasm.spawn_counter();
+
+setTimeout(() => {
+    assert.strictEqual(wasm.completed(), 2, 'both tasks must run once a later microtask runs');
+    console.log('PASS');
+}, 50);
+"#,
+    );
+}
+
+/// Under `panic = "abort"` a JS exception thrown through a poll unwinds the
+/// wasm frames without running destructors, so the task's `RefCell` borrow is
+/// never released. When the task, already woken, comes up again it must be
+/// skipped, not polled and not panicked on, and later tasks must still run.
+#[test]
+fn spawn_local_skips_a_task_whose_poll_did_not_return() {
+    run_interrupted_executor_test(
+        "spawn_local_skips_a_task_whose_poll_did_not_return",
+        false,
+        r#"
+const assert = require('node:assert/strict');
+// Exceptions thrown out of a microtask are recorded here; assertion failures
+// are reported by `check` instead, so this handler cannot swallow them.
+const uncaught = [];
+process.on('uncaughtException', (e) => uncaught.push(String((e && e.message) || e)));
+function check(f) {
+    try {
+        f();
+    } catch (e) {
+        console.error(e);
+        process.exit(1);
+    }
+}
+const wasm = require('{module}');
+
+wasm.spawn_interrupted(0);
+
+setTimeout(() => check(() => {
+    assert.deepStrictEqual(uncaught, ['foreign exception from poll']);
+    wasm.spawn_counter();
+    setTimeout(() => check(() => {
+        assert.deepStrictEqual(uncaught, ['foreign exception from poll'], 'nothing else may throw');
+        assert.strictEqual(wasm.completed(), 1, 'a task spawned afterwards must run');
+        console.log('PASS');
+    }), 50);
+}), 50);
+"#,
+    );
+}
+
+/// Queuing a microtask per wake must not let pending microtasks pile up: while
+/// many tasks keep waking each other within one microtask checkpoint, the
+/// executor's pending `run_all` microtasks stay bounded by the number of
+/// queued tasks, rather than growing with every tick.
+#[test]
+fn spawn_local_pending_microtasks_stay_bounded() {
+    run_interrupted_executor_test(
+        "spawn_local_pending_microtasks_stay_bounded",
+        false,
+        r#"
+const assert = require('node:assert/strict');
+const realQueueMicrotask = globalThis.queueMicrotask;
+let pending = 0;
+let maxPending = 0;
+globalThis.queueMicrotask = (f) => {
+    pending += 1;
+    maxPending = Math.max(maxPending, pending);
+    realQueueMicrotask(() => {
+        pending -= 1;
+        f();
+    });
+};
+const wasm = require('{module}');
+
+const TASKS = 100;
+for (let i = 0; i < TASKS; i++) {
+    wasm.spawn_yielding(50);
+}
+
+setTimeout(() => {
+    try {
+        assert.strictEqual(wasm.completed(), TASKS);
+        assert.ok(maxPending <= TASKS, `at most ${TASKS} run_all microtasks may be pending, saw ${maxPending}`);
+        console.log('PASS');
+    } catch (e) {
+        console.error(e);
+        process.exit(1);
+    }
+}, 50);
+"#,
+    );
+}
+
+/// Node script for the terminated-`run_all` tests. The termination and the
+/// discard are both V8's own: the executor's microtasks are queued into a `vm`
+/// context with its own microtask queue, which V8 drains at the end of
+/// `runInContext`, inside the call's watchdog. The watchdog terminates the
+/// `run_all` microtask in the middle of a poll, and `RunMicrotasks` then
+/// discards every microtask still pending in that queue, including the one the
+/// task's self-wake queued. Afterwards, the `run_all` closure must still be
+/// callable, the interrupted task must be skipped, and a newly spawned task
+/// must run.
+const TERMINATED_RUN_ALL_JS: &str = r#"
+const assert = require('node:assert/strict');
+const vm = require('node:vm');
+// Exceptions thrown out of a microtask are recorded here; assertion failures
+// are reported by `check` instead, so this handler cannot swallow them.
+const uncaught = [];
+process.on('uncaughtException', (e) => uncaught.push(String((e && e.message) || e)));
+function check(f) {
+    try {
+        f();
+    } catch (e) {
+        console.error(e);
+        process.exit(1);
+    }
+}
+const context = vm.createContext({}, { microtaskMode: 'afterEvaluate' });
+const queueInContext = vm.runInContext('(f) => { Promise.resolve().then(() => f()); }', context);
+const realQueueMicrotask = globalThis.queueMicrotask;
+let queued = 0;
+globalThis.queueMicrotask = (f) => {
+    queued += 1;
+    queueInContext(f);
+};
+const wasm = require('{module}');
+
+wasm.spawn_interrupted(5000);
+assert.strictEqual(queued, 1, 'spawning must queue run_all');
+assert.throws(
+    () => vm.runInContext('0', context, { timeout: 100 }),
+    { code: 'ERR_SCRIPT_EXECUTION_TIMEOUT' },
+);
+assert.strictEqual(queued, 2, "the task's self-wake must have queued a run_all before the termination");
+globalThis.queueMicrotask = realQueueMicrotask;
+
+wasm.spawn_counter();
+setTimeout(() => check(() => {
+    assert.deepStrictEqual(uncaught, []);
+    assert.strictEqual(wasm.completed(), 1, 'a task spawned after the termination must run');
+    console.log('PASS');
+}), 50);
+"#;
+
+#[test]
+fn spawn_local_runs_after_a_terminated_run_all() {
+    run_interrupted_executor_test(
+        "spawn_local_runs_after_a_terminated_run_all",
+        false,
+        TERMINATED_RUN_ALL_JS,
+    );
+}
+
+/// The same under `panic = "unwind"`, where the `ClearOnUnwind` guard in
+/// `Task::run` must not be armed for the interrupted task: its `Drop` would
+/// panic again on the held borrow, and the resulting abort terminates the
+/// instance.
+#[test]
+fn spawn_local_runs_after_a_terminated_run_all_panic_unwind() {
+    run_interrupted_executor_test(
+        "spawn_local_runs_after_a_terminated_run_all_panic_unwind",
+        true,
+        TERMINATED_RUN_ALL_JS,
+    );
+}
+
+/// Each task runs from the microtask its own wake queued, so tasks keep their
+/// order among themselves and interleave with JS microtasks queued in between.
+#[test]
+fn spawn_local_tasks_run_in_wake_order() {
+    run_interrupted_executor_test(
+        "spawn_local_tasks_run_in_wake_order",
+        false,
+        r#"
+const assert = require('node:assert/strict');
+const wasm = require('{module}');
+
+wasm.spawn_recording('A');
+queueMicrotask(() => (globalThis.order ??= []).push('X'));
+wasm.spawn_recording('B');
+
+setTimeout(() => {
+    try {
+        assert.deepStrictEqual(globalThis.order, ['A', 'X', 'B']);
+        console.log('PASS');
+    } catch (e) {
+        console.error(e);
+        process.exit(1);
+    }
+}, 50);
+"#,
+    );
+}
+
 #[test]
 fn termination_reset_state() {
     let mut project = Project::new("termination_reset_state");

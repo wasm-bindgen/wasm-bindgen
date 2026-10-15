@@ -84,6 +84,10 @@ export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {
 export function __wbg__wbg_cb_unref_dcc1a90847f04c41(arg0) {
     arg0._wbg_cb_unref();
 }
+export function __wbg_bind_cbc6e966737ed2f6(arg0, arg1, arg2) {
+    const ret = arg0.bind(arg1, arg2 >>> 0);
+    return ret;
+}
 export function __wbg_call_a48f35d3fb7572a8() { return handleError(function (arg0, arg1, arg2) {
     const ret = arg0.call(arg1, arg2);
     return ret;
@@ -110,7 +114,7 @@ export function __wbg_queueMicrotask_2030f4836bf1c47b(arg0) {
     const ret = arg0.queueMicrotask;
     return ret;
 }
-export function __wbg_queueMicrotask_a72f977e97f23c5f(arg0) {
+export function __wbg_queueMicrotask_82b01fabccb37b2e(arg0) {
     queueMicrotask(arg0);
 }
 export function __wbg_resolve_5556851ee5625d79(arg0) {
@@ -155,13 +159,13 @@ export function __wbg_static_accessor_WINDOW_d7f903d1508cbdc4() {
     const ret = typeof window === 'undefined' ? null : window;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 }
-export function __wbg_then_e71170d78fcf8954(arg0, arg1) {
+export function __wbg_then_a4cb8f00841f9343(arg0, arg1) {
     const ret = arg0.then(arg1);
     return ret;
 }
 export function __wbindgen_generic_0000000000000000(arg0, arg1) {
-    // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [Externref], shim_idx: 6, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, wasm_bindgen_0000000000000003___convert__closures_____invoke___wasm_bindgen_0000000000000003___JsValue__core_0000000000000005___result__Result_____wasm_bindgen_0000000000000003___JsError___true_);
+    // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [U32], shim_idx: 6, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: false }) -> Externref`.
+    const ret = makeClosure(arg0, arg1, wasm_bindgen_0000000000000003___convert__closures_____invoke___u32__core_0000000000000005___result__Result_____wasm_bindgen_0000000000000003___JsError___true_);
     return ret;
 }
 export function __wbindgen_generic_0000000000000001(arg0) {
@@ -188,15 +192,15 @@ function wasm_bindgen_0000000000000003___convert__closures_____invoke___bool__tr
     return ret !== 0;
 }
 
-function wasm_bindgen_0000000000000003___convert__closures_____invoke___wasm_bindgen_0000000000000003___JsValue__core_0000000000000005___result__Result_____wasm_bindgen_0000000000000003___JsError___true_(arg0, arg1, arg2) {
-    const ret = wasm.wasm_bindgen_0000000000000003___convert__closures_____invoke___wasm_bindgen_0000000000000003___JsValue__core_0000000000000005___result__Result_____wasm_bindgen_0000000000000003___JsError___true_(arg0, arg1, arg2);
+function wasm_bindgen_0000000000000003___convert__closures_____invoke___js_sys_0000000000000004___Function_fn_wasm_bindgen_0000000000000003___JsValue_____wasm_bindgen_0000000000000003___sys__Undefined___js_sys_0000000000000004___Function_fn_wasm_bindgen_0000000000000003___JsValue_____wasm_bindgen_0000000000000003___sys__Undefined_______true_(arg0, arg1, arg2, arg3) {
+    wasm.wasm_bindgen_0000000000000003___convert__closures_____invoke___js_sys_0000000000000004___Function_fn_wasm_bindgen_0000000000000003___JsValue_____wasm_bindgen_0000000000000003___sys__Undefined___js_sys_0000000000000004___Function_fn_wasm_bindgen_0000000000000003___JsValue_____wasm_bindgen_0000000000000003___sys__Undefined_______true_(arg0, arg1, arg2, arg3);
+}
+
+function wasm_bindgen_0000000000000003___convert__closures_____invoke___u32__core_0000000000000005___result__Result_____wasm_bindgen_0000000000000003___JsError___true_(arg0, arg1, arg2) {
+    const ret = wasm.wasm_bindgen_0000000000000003___convert__closures_____invoke___u32__core_0000000000000005___result__Result_____wasm_bindgen_0000000000000003___JsError___true_(arg0, arg1, arg2);
     if (ret[1]) {
         throw takeFromExternrefTable0(ret[0]);
     }
-}
-
-function wasm_bindgen_0000000000000003___convert__closures_____invoke___js_sys_0000000000000004___Function_fn_wasm_bindgen_0000000000000003___JsValue_____wasm_bindgen_0000000000000003___sys__Undefined___js_sys_0000000000000004___Function_fn_wasm_bindgen_0000000000000003___JsValue_____wasm_bindgen_0000000000000003___sys__Undefined_______true_(arg0, arg1, arg2, arg3) {
-    wasm.wasm_bindgen_0000000000000003___convert__closures_____invoke___js_sys_0000000000000004___Function_fn_wasm_bindgen_0000000000000003___JsValue_____wasm_bindgen_0000000000000003___sys__Undefined___js_sys_0000000000000004___Function_fn_wasm_bindgen_0000000000000003___JsValue_____wasm_bindgen_0000000000000003___sys__Undefined_______true_(arg0, arg1, arg2, arg3);
 }
 
 const HoldsNumberFinalization = (typeof FinalizationRegistry === 'undefined')
@@ -305,7 +309,7 @@ function isLikeNone(x) {
     return x === undefined || x === null;
 }
 
-function makeMutClosure(arg0, arg1, f) {
+function makeClosure(arg0, arg1, f) {
     const state = { a: arg0, b: arg1, cnt: 1 };
     const real = (...args) => {
 
@@ -313,12 +317,9 @@ function makeMutClosure(arg0, arg1, f) {
         // count. This ensures that the Rust closure environment won't
         // be deallocated while we're invoking it.
         state.cnt++;
-        const a = state.a;
-        state.a = 0;
         try {
-            return f(a, state.b, ...args);
+            return f(state.a, state.b, ...args);
         } finally {
-            state.a = a;
             real._wbg_cb_unref();
         }
     };

@@ -139,12 +139,26 @@ impl Task {
     }
 
     pub(crate) fn run(&self) {
+        // A borrow that is already held means an earlier poll of this task never
+        // returned normally: the host terminated execution in the middle of it,
+        // or, under `panic = "abort"`, a foreign exception unwound through it
+        // without running destructors. The future is in an unknown state and
+        // can be neither polled nor dropped safely, so leave it alone, before
+        // arming `ClearOnUnwind`, whose `Drop` would need the same borrow.
+        // `is_queued` is still `true` from the wake that queued this run, so
+        // the task is never queued again, and its allocation is leaked.
+        if self.inner.try_borrow_mut().is_err() {
+            return;
+        }
+
         // A poll can unwind via either a Rust panic or a foreign (JS)
         // exception. `catch_unwind` only catches the former, but both run
         // drops, so a drop guard covers both: if a poll unwinds we drop
         // `Inner`, releasing the future and breaking the
         // `Inner -> Waker -> Rc<Task>` cycle that would otherwise leak the
-        // `Task`. The guard is disarmed (forgotten) on a normal return.
+        // `Task`. The guard is disarmed (forgotten) on a normal return. It is
+        // created before `borrow` so that, on unwind, `borrow` is released
+        // before the guard's `Drop` takes it again.
         struct ClearOnUnwind<'a>(&'a RefCell<Option<Inner>>);
         impl Drop for ClearOnUnwind<'_> {
             fn drop(&mut self) {

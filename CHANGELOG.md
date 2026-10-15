@@ -87,6 +87,18 @@
 
 ### Fixed
 
+* The single-threaded `spawn_local` executor keeps running after the host
+  terminates JS execution in the middle of a poll (V8's
+  `TerminateExecution`, as used for CPU-time limits). Previously the
+  discarded `run_all` microtask, or the `run_all` closure left uncallable,
+  stopped every later task in the instance from being polled, and the
+  interrupted task's held borrow trapped once under `panic = "abort"` and
+  terminated the instance under `panic = "unwind"`. Each scheduled task now
+  queues its own `run_all` microtask, so Rust tasks interleave with JS
+  microtasks queued between their wakes; their order among themselves is
+  unchanged.
+  [#XXXX](https://github.com/wasm-bindgen/wasm-bindgen/pull/XXXX)
+
 * Imported functions and statics from two different `inline_js` snippets no
   longer share one binding when they have the same name and signature. The
   snippet contents are now part of the generated shim name, so each import
