@@ -575,8 +575,9 @@ fn duplicate_public_item_in_one_crate_errors(project: &str, item: &str, name: &s
     );
 }
 
-/// String enums are resolved apart from numeric enums, so a string enum is
-/// unaffected by private numeric enums of the same name being numbered.
+/// Structs, numeric enums, string enums and dynamic unions share one
+/// TypeScript scope, so same-named items of different kinds are numbered
+/// together.
 #[test]
 fn same_name_across_item_kinds_resolves() {
     let out_dir = Project::new("same_name_across_item_kinds_resolves")
@@ -611,9 +612,12 @@ fn same_name_across_item_kinds_resolves() {
     let dts =
         fs::read_to_string(out_dir.join("same_name_across_item_kinds_resolves.d.ts")).unwrap();
 
-    assert_contains!(&dts, "export function a(level: Level): Level;");
-    assert_contains!(&dts, "export function b(level: Level2): Level2;");
+    assert_contains!(&dts, "export function a(level: Level2): Level2;");
+    assert_contains!(&dts, "export function b(level: Level3): Level3;");
     assert_contains!(&dts, "export function c(level: Level): Level;");
+    assert_contains!(&dts, "type Level = \"low\";");
+    assert_contains!(&dts, "declare enum Level2 {");
+    assert_contains!(&dts, "declare enum Level3 {");
 }
 
 #[test]

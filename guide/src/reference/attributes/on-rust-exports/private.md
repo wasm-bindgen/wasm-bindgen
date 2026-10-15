@@ -58,9 +58,11 @@ the same enum in several modules. When the same name is defined more than
 once, the private copies are numbered (`Config`, `Config2`, `Config3`, ...) in
 the generated bindings.
 
-This applies to structs, numeric enums, string enums and dynamic unions. Two
-structs with the same name in one crate are still rejected by the Rust
-compiler, as their generated symbols are only unique per crate.
+This applies to structs, numeric enums, string enums and dynamic unions,
+which all share one name space in the generated bindings. Two structs with the
+same name in one crate, or two dynamic unions given the same `js_name` in one
+module, are still rejected by the Rust compiler, as their generated symbols
+are only unique per crate or per module.
 
 Exporting the same name publicly more than once remains an error, reported by
 the `wasm-bindgen` CLI with the qualified name (taking `js_namespace` into

@@ -287,6 +287,14 @@ pub const fn module_path_hash(module_path: &str) -> u32 {
     hash
 }
 
+/// Extract the crate name from a `unique_crate_identifier` (see
+/// [`crate_hash`]).
+pub fn crate_name(unique_crate_identifier: &str) -> &str {
+    unique_crate_identifier
+        .rsplit_once('-')
+        .map_or(unique_crate_identifier, |(name, _)| name)
+}
+
 /// Extract the crate hash from a `unique_crate_identifier`, which is encoded
 /// as `"{crate_name}-{hash}"` (the hash contains no `-`).
 pub fn crate_hash(unique_crate_identifier: &str) -> &str {

@@ -62,20 +62,20 @@ pub enum Descriptor {
         name: String,
         hole: u32,
         unique_crate_identifier: String,
-        module: u32,
+        module_hash: u32,
     },
     StringEnum {
         name: String,
         invalid: u32,
         hole: u32,
         unique_crate_identifier: String,
-        module: u32,
+        module_hash: u32,
     },
     DynamicUnion {
         name: String,
         variant_types: Vec<Descriptor>,
         unique_crate_identifier: String,
-        module: u32,
+        module_hash: u32,
     },
     RustStruct {
         name: String,
@@ -89,11 +89,11 @@ pub enum Descriptor {
     RawPointer,
 }
 
-/// The name spaces in which same-named exported items collide: structs and
-/// numeric enums are both JS values, while string enums and dynamic unions
-/// are TypeScript-only and kept apart.
+/// Kinds of exported items that share the one JS/TypeScript name space.
+/// Structs and numeric enums are JS values, string enums and dynamic unions
+/// are TypeScript aliases, but a name can only be declared once.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub enum ItemNamespace {
+pub enum ItemKind {
     Value,
     StringEnum,
     DynamicUnion,
@@ -102,11 +102,11 @@ pub enum ItemNamespace {
 /// Where a Rust type named in a descriptor is defined.
 #[derive(Clone, Copy)]
 pub struct ItemOrigin<'a> {
-    pub namespace: ItemNamespace,
+    pub kind: ItemKind,
     pub unique_crate_identifier: &'a str,
     /// `module_path_hash` of the defining module; `None` for structs, whose
     /// wasm shims are only unique per crate.
-    pub module: Option<u32>,
+    pub module_hash: Option<u32>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -210,12 +210,12 @@ impl Descriptor {
                 let name = get_string(data);
                 let hole = get(data);
                 let unique_crate_identifier = get_string(data);
-                let module = get(data);
+                let module_hash = get(data);
                 Descriptor::Enum {
                     name,
                     hole,
                     unique_crate_identifier,
-                    module,
+                    module_hash,
                 }
             }
             STRING_ENUM => {
@@ -224,19 +224,19 @@ impl Descriptor {
                 let invalid = variant_count;
                 let hole = variant_count + 1;
                 let unique_crate_identifier = get_string(data);
-                let module = get(data);
+                let module_hash = get(data);
                 Descriptor::StringEnum {
                     name,
                     invalid,
                     hole,
                     unique_crate_identifier,
-                    module,
+                    module_hash,
                 }
             }
             DYNAMIC_UNION => {
                 let name = get_string(data);
                 let unique_crate_identifier = get_string(data);
-                let module = get(data);
+                let module_hash = get(data);
                 let type_count = get(data);
                 let mut variant_types = Vec::new();
                 for _ in 0..type_count {
@@ -246,7 +246,7 @@ impl Descriptor {
                     name,
                     variant_types,
                     unique_crate_identifier,
-                    module,
+                    module_hash,
                 }
             }
             RUST_STRUCT => {
@@ -298,49 +298,49 @@ impl Descriptor {
             } => f(
                 name,
                 Some(ItemOrigin {
-                    namespace: ItemNamespace::Value,
+                    kind: ItemKind::Value,
                     unique_crate_identifier,
-                    module: None,
+                    module_hash: None,
                 }),
             ),
             Descriptor::Enum {
                 name,
                 unique_crate_identifier,
-                module,
+                module_hash,
                 ..
             } => f(
                 name,
                 Some(ItemOrigin {
-                    namespace: ItemNamespace::Value,
+                    kind: ItemKind::Value,
                     unique_crate_identifier,
-                    module: Some(*module),
+                    module_hash: Some(*module_hash),
                 }),
             ),
             Descriptor::StringEnum {
                 name,
                 unique_crate_identifier,
-                module,
+                module_hash,
                 ..
             } => f(
                 name,
                 Some(ItemOrigin {
-                    namespace: ItemNamespace::StringEnum,
+                    kind: ItemKind::StringEnum,
                     unique_crate_identifier,
-                    module: Some(*module),
+                    module_hash: Some(*module_hash),
                 }),
             ),
             Descriptor::DynamicUnion {
                 name,
                 variant_types,
                 unique_crate_identifier,
-                module,
+                module_hash,
             } => {
                 f(
                     name,
                     Some(ItemOrigin {
-                        namespace: ItemNamespace::DynamicUnion,
+                        kind: ItemKind::DynamicUnion,
                         unique_crate_identifier,
-                        module: Some(*module),
+                        module_hash: Some(*module_hash),
                     }),
                 )?;
                 for d in variant_types {
