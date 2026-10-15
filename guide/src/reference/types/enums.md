@@ -83,6 +83,9 @@ console.log(Theme.Dark);  // "dark"
 console.log(Theme.Auto);  // "auto"
 ```
 
+String enums implement `TryFromJsValue`, accepting only their listed values,
+so they can be converted from a `JsValue` and used as dynamic-union payloads.
+
 
 ## Dynamic Unions
 
@@ -209,7 +212,7 @@ the union may appear inside `Option`:
 pub enum Inner { Foo = "foo", Bar = "bar", Number(u32) }
 
 #[wasm_bindgen]
-pub enum Outer { Loading = "loading", Wrapped(Inner), Bare(Foo) }
+pub enum Outer { Loading = "loading", Wrapped(Inner), Themed(Theme), Bare(Foo) }
 
 #[wasm_bindgen]
 pub fn maybe(o: Option<Outer>) -> Option<Outer> { o }
@@ -220,7 +223,7 @@ optional with the standard wasm-bindgen pattern:
 
 ```typescript
 export type Inner = "foo" | "bar" | number;
-export type Outer = "loading" | Inner | Foo;
+export type Outer = "loading" | Inner | Theme | Foo;
 
 export function maybe(o?: Outer | null): Outer | undefined;
 ```

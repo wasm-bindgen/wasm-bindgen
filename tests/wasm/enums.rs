@@ -23,6 +23,7 @@ extern "C" {
     fn js_nested_union_roundtrip(o: OuterUnion) -> OuterUnion;
     fn js_optional_union_roundtrip(o: Option<OuterUnion>) -> Option<OuterUnion>;
     fn js_fallback_union_roundtrip(u: FallbackUnion) -> FallbackUnion;
+    fn js_shade_union_roundtrip(u: ShadeUnion) -> ShadeUnion;
 
     // Async round-trip: imports an `async fn` returning a dynamic union,
     // exercising `Promise<Union>` resolution across the `JsFuture` seam.
@@ -324,6 +325,50 @@ fn test_fallback_union_roundtrip() {
     assert!(matches!(
         js_fallback_union_roundtrip(FallbackUnion::Anything(foo)),
         FallbackUnion::Anything(_)
+    ));
+}
+
+#[wasm_bindgen]
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum Shade {
+    Light = "light",
+    Dark = "dark",
+}
+
+// A string enum payload is tested through its `TryFromJsValue` impl, which
+// rejects unknown strings so they fall through to the `String` variant.
+#[wasm_bindgen]
+pub enum ShadeUnion {
+    Shade(Shade),
+    Other(String),
+}
+
+#[wasm_bindgen]
+pub fn shade_union_roundtrip(u: ShadeUnion) -> ShadeUnion {
+    u
+}
+
+#[wasm_bindgen_test]
+fn test_string_enum_try_from_js_value() {
+    use wasm_bindgen::convert::TryFromJsValue;
+
+    assert_eq!(
+        Shade::try_from_js_value(JsValue::from_str("dark")).ok(),
+        Some(Shade::Dark)
+    );
+    assert!(Shade::try_from_js_value(JsValue::from_str("dim")).is_err());
+    assert!(Shade::try_from_js_value(JsValue::from(1)).is_err());
+}
+
+#[wasm_bindgen_test]
+fn test_string_enum_union_payload() {
+    assert!(matches!(
+        js_shade_union_roundtrip(ShadeUnion::Shade(Shade::Light)),
+        ShadeUnion::Shade(Shade::Light)
+    ));
+    assert!(matches!(
+        js_shade_union_roundtrip(ShadeUnion::Other("dim".to_string())),
+        ShadeUnion::Other(s) if s == "dim"
     ));
 }
 
