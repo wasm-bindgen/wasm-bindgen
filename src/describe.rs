@@ -279,7 +279,7 @@ where
     }
 }
 
-/// Describes a `#[wasm_bindgen(copy_slice)]` import argument `T` (`&[E]` or
+/// Describes a `#[wasm_bindgen(slice = copy)]` import argument `T` (`&[E]` or
 /// `Option<&[E]>`), which crosses with `T`'s own ABI. The CLI hands JS a fresh
 /// typed array for primitive `E`, and treats any other `E` as plain `T`.
 pub struct CopySlice<T>(core::marker::PhantomData<T>);
@@ -292,7 +292,7 @@ impl<T: WasmDescribe> WasmDescribe for CopySlice<T> {
     }
 }
 
-/// Describes a `#[wasm_bindgen(slice_to_array)]` import argument `T` whose
+/// Describes a `#[wasm_bindgen(slice = array)]` import argument `T` whose
 /// slice element type is a `experimental_generic_mono` type parameter, so the
 /// concrete-element rewrite through `VectorRefIntoWasmAbi` cannot be named.
 /// `T` crosses with its own ABI; the CLI hands JS a fresh plain `Array` for

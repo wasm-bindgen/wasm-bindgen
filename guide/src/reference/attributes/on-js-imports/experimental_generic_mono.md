@@ -384,13 +384,14 @@ trait objects nested in another type do not receive this lowering.
 `experimental_generic_mono` composes with the usual import attributes — `method`,
 `static_method_of`, `constructor`, `getter`, `setter`, `structural`, `final`,
 `indexing_getter`, `indexing_setter`, `indexing_deleter`, `js_namespace`,
-`js_name`, `catch`, `variadic`, `slice_to_array`, and `copy_slice` — and the
-resulting JS binding is shaped exactly as it would be for the equivalent
-non-generic import. A slice whose element type is a type parameter resolves
-`slice_to_array` / `copy_slice` per instantiation: a primitive element gets the
-fresh `Array` / typed-array copy, while a handle-shaped element (e.g.
-`JsString`) keeps its default fresh `Array` of handles, so the attribute can
-cover a whole `extern "C"` block without inspecting element types.
+`js_name`, `catch`, `variadic`, and the [`slice` modes](slice.md) (including
+the `slice_to_array` alias) — and the resulting JS binding is shaped exactly
+as it would be for the equivalent non-generic import. A slice whose element
+type is a type parameter resolves `slice = array` / `slice = copy` per
+instantiation: a primitive element gets the fresh `Array` / typed-array copy,
+while a handle-shaped element (e.g. `JsString`) keeps its default fresh
+`Array` of handles, so the attribute can cover a whole `extern "C"` block
+without inspecting element types.
 
 The two that do *not* compose are `assert_no_shim` and `reexport`; both are
 rejected, see [Unsupported shapes](#unsupported-shapes).
@@ -494,7 +495,7 @@ hash.
 A monomorphisation records only a shim key, which is a hash over the Rust
 function name, the `js_name` (when one is given), the `js_namespace`, the
 signature tokens, the `module`, and any `cfg` attributes. It does *not* cover
-`catch`, `variadic`, `slice_to_array`, `copy_slice`, `structural`/`final`, or
+`catch`, `variadic`, the `slice` modes, `structural`/`final`, or
 the getter/setter accessor kind. Two imports differing only in one of those claim
 the same key, and the CLI cannot tell which binding a given instantiation meant.
 Rather than silently binding one of them, which would mis-bind every

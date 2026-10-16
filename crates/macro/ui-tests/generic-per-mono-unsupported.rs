@@ -26,10 +26,10 @@ extern "C" {
     // The same nesting rejection applies with a slice mode set: a generic
     // `&[T]` resolves its mode per monomorphisation (see the pass tests), but
     // `Option<&[T]>` is a nested reference and still needs the erasure path.
-    #[wasm_bindgen(experimental_generic_mono, slice_to_array)]
+    #[wasm_bindgen(experimental_generic_mono, slice = array)]
     fn slice_to_array_option_elem<T>(xs: Option<&[T]>, other: T);
 
-    #[wasm_bindgen(experimental_generic_mono, copy_slice)]
+    #[wasm_bindgen(experimental_generic_mono, slice = copy)]
     fn copy_slice_option_elem<T>(xs: Option<&[T]>, other: T);
 
     // Returning a reference is not supported.

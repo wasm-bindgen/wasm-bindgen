@@ -125,7 +125,7 @@ macro_rules! attrgen {
             (wasm_bindgen_futures, false, WasmBindgenFutures(Span, syn::Path)),
             (skip, false, Skip(Span)),
             (slice_to_array, false, SliceToArray(Span)),
-            (copy_slice, false, CopySlice(Span)),
+            (slice, false, Slice(Span, Ident)),
             (typescript_type, false, TypeScriptType(Span, String, Span)),
             (getter_with_clone, false, GetterWithClone(Span)),
             (static_string, false, StaticString(Span)),
@@ -994,9 +994,10 @@ impl<'a>
             });
         let generic_per_mono = fn_generic_per_mono || (block_generic_per_mono && is_generic);
 
-        // The slice mode (`slice_to_array` / `copy_slice`) is inherited from
-        // the enclosing `extern "C"` block; a fn-level attribute *overrides*
-        // the block default, and a per-arg attribute overrides both.
+        // The slice mode (`slice = ..`, or its `slice_to_array` alias) is
+        // inherited from the enclosing `extern "C"` block; a fn-level
+        // attribute *overrides* the block default, and a per-arg attribute
+        // overrides both (including back to the `view` default).
         let fn_slice_mode = import_slice_mode(&opts)?.unwrap_or(block_slice_mode);
         let args_attrs = extract_args_attrs(
             &mut self.sig,
@@ -1879,24 +1880,43 @@ struct FnArgAttrs {
 }
 
 /// The slice mode selected by a `#[wasm_bindgen(..)]` attribute set, or `None`
-/// if neither `slice_to_array` nor `copy_slice` is present. The two attributes
-/// contradict each other, so both at one level is an error naming both spans.
+/// if neither `slice = ..` nor its `slice_to_array` alias is present. Both at
+/// one level could only agree or contradict, so the pair is an error naming
+/// both spans.
 fn import_slice_mode(attrs: &BindgenAttrs) -> Result<Option<ast::SliceMode>, Diagnostic> {
-    match (attrs.slice_to_array(), attrs.copy_slice()) {
-        (Some(array_span), Some(copy_span)) => Diagnostic::from_vec(vec![
+    let mode = match attrs.slice() {
+        Some(ident) => Some(match ident.to_string().as_str() {
+            "view" => ast::SliceMode::View,
+            "array" => ast::SliceMode::Array,
+            "copy" => ast::SliceMode::Copy,
+            other => {
+                return Err(Diagnostic::span_error(
+                    ident.span(),
+                    format!(
+                        "unknown slice mode `{other}`; expected `slice = view`, \
+                         `slice = array` or `slice = copy`"
+                    ),
+                ))
+            }
+        }),
+        None => None,
+    };
+    match (attrs.slice_to_array(), mode) {
+        (Some(alias_span), Some(_)) => Diagnostic::from_vec(vec![
             Diagnostic::span_error(
-                *array_span,
-                "cannot specify both `slice_to_array` and `copy_slice`",
+                *alias_span,
+                "cannot specify both `slice_to_array` and `slice`; `slice_to_array` \
+                 is an alias of `slice = array`",
             ),
             Diagnostic::span_error(
-                *copy_span,
-                "cannot specify both `slice_to_array` and `copy_slice`",
+                attrs.slice().unwrap().span(),
+                "cannot specify both `slice_to_array` and `slice`; `slice_to_array` \
+                 is an alias of `slice = array`",
             ),
         ])
         .map(|()| None),
         (Some(_), None) => Ok(Some(ast::SliceMode::Array)),
-        (None, Some(_)) => Ok(Some(ast::SliceMode::Copy)),
-        (None, None) => Ok(None),
+        (None, mode) => Ok(mode),
     }
 }
 
@@ -1925,8 +1945,8 @@ fn check_slice_mode_arg(
     };
     if slice.is_mut {
         let (attr, shape) = match mode {
-            ast::SliceMode::Array => ("slice_to_array", "`Array`"),
-            ast::SliceMode::Copy => ("copy_slice", "typed array"),
+            ast::SliceMode::Array => ("slice = array", "plain `Array`"),
+            ast::SliceMode::Copy => ("slice = copy", "typed array"),
             ast::SliceMode::View => unreachable!("only non-default modes are checked"),
         };
         return Err(Diagnostic::spanned_error(
@@ -1934,9 +1954,9 @@ fn check_slice_mode_arg(
             format!(
                 "`{attr}` cannot be applied to a `&mut` slice: JS receives an owned \
                  {shape}, so its writes are never written back into the caller's slice — use a \
-                 shared slice if JS only needs to read the elements, or remove `{attr}` \
-                 (it may be inherited from the function or the enclosing `extern \"C\"` block) \
-                 to keep the writable typed-array view"
+                 shared slice if JS only needs to read the elements, or set `slice = view` on \
+                 this argument (the mode may be inherited from the function or the enclosing \
+                 `extern \"C\"` block) to keep the writable typed-array view"
             ),
         ));
     }
@@ -3047,9 +3067,9 @@ fn add_class_cfg_to_function_shims(imports: &mut [ast::Import]) {
 struct ForeignItemCtx {
     module: Option<ast::ImportModule>,
     js_namespace: Option<JsNamespace>,
-    /// Block-level slice mode (`slice_to_array` / `copy_slice`) inherited by
-    /// every foreign function inside the `extern "C"` block. A per-fn or
-    /// per-arg attribute overrides this.
+    /// Block-level slice mode (`slice = ..`, or its `slice_to_array` alias)
+    /// inherited by every foreign function inside the `extern "C"` block. A
+    /// per-fn or per-arg attribute overrides this.
     slice_mode: ast::SliceMode,
     /// Block-level `experimental_generic_mono` flag inherited by every *generic* foreign
     /// function inside the `extern "C"` block, opting them onto the
@@ -3291,7 +3311,7 @@ struct ImportCallStyle<'a> {
     method_kind: Option<&'a ast::MethodKind>,
     /// The indices of the arguments passed with `slice_to_array`.
     slice_to_array: Vec<usize>,
-    /// The indices of the arguments passed with `copy_slice`.
+    /// The indices of the arguments passed with `slice = copy`.
     copy_slice: Vec<usize>,
     /// The JS name, if the shim name can't spell it.
     js_name: Option<&'a String>,
@@ -3299,7 +3319,9 @@ struct ImportCallStyle<'a> {
 
 /// Written by hand rather than derived so that `copy_slice` contributes to
 /// the hash only when non-empty: shim names of imports predating the
-/// attribute stay unchanged.
+/// `slice = copy` mode stay unchanged. `slice_to_array` holds `Array`-mode
+/// indices however the mode was spelled, so the alias and `slice = array`
+/// hash identically, as they must — they are one binding shape.
 impl Hash for ImportCallStyle<'_> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         let Self {

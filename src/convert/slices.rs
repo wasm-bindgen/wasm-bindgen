@@ -313,7 +313,7 @@ where
     }
 }
 
-/// Internal trait used by the `slice_to_array` macro codegen.
+/// Internal trait used by the `slice = array` macro codegen.
 ///
 /// Produces the wire representation JS observes when an outgoing `&[T]`
 /// argument is rendered as a plain `Array`. There are two impl shapes,
@@ -335,8 +335,9 @@ where
 /// cli-support side picks the right JS shim based on the element
 /// `VectorKind` recovered from the descriptor.
 ///
-/// Not user-facing: users opt in via `#[wasm_bindgen(slice_to_array)]`
-/// on an imported function or `extern "C"` block.
+/// Not user-facing: users opt in via `#[wasm_bindgen(slice = array)]` (or its
+/// `slice_to_array` alias) on an imported argument, function, or `extern "C"`
+/// block.
 pub trait VectorRefIntoWasmAbi {
     /// Construct the wire representation for `Some(slice)`. The returned
     /// `WasmSlice` is either a borrow of the input slice (primitive

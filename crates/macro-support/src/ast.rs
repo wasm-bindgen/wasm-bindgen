@@ -529,16 +529,19 @@ pub struct FunctionArgumentData {
     pub slice_mode: SliceMode,
 }
 
-/// How an imported function's `&[T]` / `Option<&[T]>` argument reaches JS.
+/// How an imported function's `&[T]` / `Option<&[T]>` argument reaches JS
+/// (`slice = view | array | copy`).
 #[cfg_attr(feature = "extra-traits", derive(Debug))]
 #[derive(Clone, Copy, Default, PartialEq, Eq)]
 pub enum SliceMode {
-    /// A typed-array view of linear memory for primitive `T`.
+    /// `slice = view`: a typed-array view of wasm linear memory for primitive
+    /// `T`. The default, planned to flip to [`Copy`](Self::Copy) in the next
+    /// major release, making the zero-copy view the explicit opt-in.
     #[default]
     View,
-    /// `slice_to_array`: a fresh plain `Array`.
+    /// `slice = array` (alias `slice_to_array`): a fresh plain `Array`.
     Array,
-    /// `copy_slice`: a fresh typed array for primitive `T`.
+    /// `slice = copy`: a fresh typed array for primitive `T`.
     Copy,
 }
 
