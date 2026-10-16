@@ -2703,8 +2703,8 @@ impl ast::ImportFunction {
                 convert_arg = quote! { #var };
             }
 
-            // `slice_to_array`: hand JS an owned `Array` instead of a
-            // typed-array view. See `slice_to_array_rewrite`. `copy_slice`
+            // `slice = array`: hand JS an owned `Array` instead of a
+            // typed-array view. See `slice_to_array_rewrite`. `slice = copy`
             // needs no rewrite here: its wire is the argument's default
             // borrowed ABI, and only the descriptor changes (see
             // `copy_slice_describe_ty`).
@@ -3109,11 +3109,11 @@ impl ast::ImportFunction {
     /// parameter (`&T`, passed by value/handle), unit and non-unit returns
     /// (including a generic `-> T`), `catch`, `variadic`, `async` (including a
     /// generic `-> T`, since the value crossing the ABI is the `Promise` and the
-    /// resolved value is converted inside `JsFuture<T>`), and the slice-mode
-    /// attributes (`slice_to_array` via the `VectorRefIntoWasmAbi` rewrite for
-    /// a concrete element type, or the `SliceToArray` describe marker for a
-    /// generic one, which resolves per instantiation; `copy_slice` via the
-    /// `CopySlice` marker either way). Argument-position `impl Trait`
+    /// resolved value is converted inside `JsFuture<T>`), and the slice modes
+    /// (`slice = array` via the `VectorRefIntoWasmAbi` rewrite for a concrete
+    /// element type, or the `SliceToArray` describe marker for a generic one,
+    /// which resolves per instantiation; `slice = copy` via the `CopySlice`
+    /// marker either way). Argument-position `impl Trait`
     /// (e.g. `fn f(x: impl Clone)`, including nested, e.g. `Vec<impl Clone>`)
     /// is also supported: it is desugared into a synthesized named type
     /// parameter with the same bounds before any of the above logic runs, so
@@ -3617,7 +3617,7 @@ impl ast::ImportFunction {
                 let (#(#names),*) = <#abi as #wasm_bindgen::convert::WasmAbi>::split(#name);
             });
             all_prim_names.extend(names);
-            // `copy_slice`, and `slice_to_array` on a generic element type,
+            // `slice = copy`, and `slice = array` on a generic element type,
             // are carried entirely by the descriptor: the wire stays the
             // default borrowed ABI above, and the marker resolves per element
             // kind at the CLI (a fresh typed array / `Array` for primitives; a
@@ -5763,13 +5763,13 @@ fn slice_to_array_describe_ty(wasm_bindgen: &syn::Path, ty: &syn::Type) -> Optio
     })
 }
 
-/// The type to hand `WasmDescribe::describe` for a `copy_slice` argument, or
-/// `None` if `ty` is not slice-shaped.
+/// The type to hand `WasmDescribe::describe` for a `slice = copy` argument,
+/// or `None` if `ty` is not slice-shaped.
 ///
-/// Unlike `slice_to_array`, `copy_slice` leaves the argument's ABI untouched —
-/// the wire is the default borrowed `WasmSlice` — so the describe type is just
-/// the argument's own type under the `CopySlice` marker. The CLI resolves the
-/// marker per element kind: a fresh typed array for primitives, a no-op
+/// Unlike `slice = array`, `slice = copy` leaves the argument's ABI untouched
+/// — the wire is the default borrowed `WasmSlice` — so the describe type is
+/// just the argument's own type under the `CopySlice` marker. The CLI resolves
+/// the marker per element kind: a fresh typed array for primitives, a no-op
 /// otherwise (see `COPY_SLICE` in cli-support's `descriptor.rs`).
 fn copy_slice_describe_ty(wasm_bindgen: &syn::Path, ty: &syn::Type) -> Option<syn::Type> {
     detect_slice_or_option_slice(ty)?;

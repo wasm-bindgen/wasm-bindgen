@@ -1,5 +1,12 @@
 # `slice_to_array`
 
+`slice_to_array` is an alias of [`slice = array`](slice.md): the two
+spellings select the same mode and may be used interchangeably (though not
+both at one level, which is a compile error). The valued `slice` attribute
+is the more general form — it also names the `copy` and (default) `view`
+modes, which is what allows an argument to opt back *out* of an inherited
+mode.
+
 By default, an `&[T]` argument to an imported JS function uses one of two
 representations on the JS side:
 
@@ -18,7 +25,7 @@ change.
 This is useful when binding JS APIs that expect a plain `T[]` (e.g.
 `Array<number>`) rather than a typed array. For APIs that expect a typed
 array JS may retain (`Uint8Array`, `BufferSource`), see
-[`copy_slice`](copy_slice.md), which hands JS a fresh typed-array copy
+[`slice = copy`](slice.md), which hands JS a fresh typed-array copy
 instead; the three-way choice on primitive slices is laid out there.
 
 ## Per-function
@@ -48,11 +55,12 @@ extern "C" {
 
 A more specific level overrides a broader one: a per-fn attribute
 overrides the block default, and a per-arg attribute overrides both
-(e.g. a `copy_slice` argument under a block-level `slice_to_array`).
-The mode only acts on `&[T]` / `Option<&[T]>` arguments; any other
-argument shape (e.g. the `this` argument of a method, or unrelated
-scalar arguments) is left untouched, so it's safe to set the attribute
-on a method or on an entire `extern "C"` block of mixed-shape imports.
+(e.g. a `slice = copy` or `slice = view` argument under a block-level
+`slice_to_array`). The mode only acts on `&[T]` / `Option<&[T]>`
+arguments; any other argument shape (e.g. the `this` argument of a
+method, or unrelated scalar arguments) is left untouched, so it's safe
+to set the attribute on a method or on an entire `extern "C"` block of
+mixed-shape imports.
 
 ## Wire format
 
@@ -103,8 +111,8 @@ fresh JS string.
   whereas a plain `&mut [T]` argument gives JS a typed-array *view*
   whose writes do land in the caller's buffer. Since that difference is
   invisible at runtime, it is an error rather than a silent no-op. Use
-  `&[T]` if JS only needs to read the elements, or drop
-  `slice_to_array` for that argument to keep the writable view. This
-  matters most when `slice_to_array` is inherited from the enclosing
-  `extern "C"` block, where the attribute is nowhere near the argument
-  it would have applied to.
+  `&[T]` if JS only needs to read the elements, or set `slice = view`
+  on that argument to keep the writable view. This matters most when
+  `slice_to_array` is inherited from the enclosing `extern "C"` block,
+  where the attribute is nowhere near the argument it would have
+  applied to.
