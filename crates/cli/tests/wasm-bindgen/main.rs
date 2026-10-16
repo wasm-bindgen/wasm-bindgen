@@ -5411,6 +5411,68 @@ fn stripped_custom_section_errors_helpfully() {
 }
 
 #[test]
+fn stripped_target_features_keeps_externref() {
+    // `strip = true` drops the `target_features` section, so reference types
+    // must be detected from the runtime's exported externref intrinsics.
+    let mut project = Project::new("stripped_target_features_keeps_externref");
+    project.file(
+        "src/lib.rs",
+        r#"
+            use wasm_bindgen::prelude::*;
+
+            #[wasm_bindgen]
+            extern "C" {
+                #[wasm_bindgen(catch, js_namespace = JSON)]
+                fn parse(s: &str) -> Result<JsValue, JsValue>;
+            }
+
+            #[wasm_bindgen]
+            pub fn parse_ok(s: &str) -> bool {
+                parse(s).is_ok()
+            }
+        "#,
+    );
+    // Catch wrappers are only generated with panic=unwind.
+    project
+        .cargo_cmd
+        .env("RUSTUP_TOOLCHAIN", "nightly")
+        .env("RUSTFLAGS", "-Cpanic=unwind -Cstrip=symbols")
+        .arg("-Zbuild-std=std,panic_unwind");
+
+    let built = project.build();
+    let module = ModuleConfig::new().parse_file(&built).unwrap();
+    assert!(module
+        .customs
+        .iter()
+        .all(|(_, c)| c.name() != "target_features"));
+
+    let out_dir = project.root.join("pkg");
+    assert_cmd::cargo::cargo_bin_cmd!("wasm-bindgen")
+        .arg("--target")
+        .arg("nodejs")
+        .arg("--out-dir")
+        .arg(&out_dir)
+        .arg(&built)
+        .assert()
+        .success()
+        .stderr(str::contains("strip = true"));
+    fs::write(
+        out_dir.join("test.js"),
+        r#"
+const assert = require('node:assert/strict');
+const wasm = require('./stripped_target_features_keeps_externref.js');
+assert.strictEqual(wasm.parse_ok('{}'), true);
+"#,
+    )
+    .unwrap();
+    Command::new("node")
+        .arg("test.js")
+        .current_dir(&out_dir)
+        .assert()
+        .success();
+}
+
+#[test]
 fn schema_mismatch_error_names_input_file() {
     // With several Wasm files in one project, the schema mismatch error must
     // say which file was built against the other wasm-bindgen version.
