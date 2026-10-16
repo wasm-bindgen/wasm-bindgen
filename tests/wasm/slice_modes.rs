@@ -21,6 +21,10 @@
 //!   nesting under a block-level `slice_to_array` alias
 //! - `slice = array` and its released `slice_to_array` alias produce the same
 //!   shape
+//! - every other sequence shape: `Clamped<&[u8]>`, owned `Vec<T>` /
+//!   `Box<[T]>` / `Option<Vec<T>>` / `Clamped<Vec<u8>>` (already fresh, so
+//!   `copy` is a no-op and `array` converts), and `&[String]`, which has no
+//!   typed form and crosses as a fresh `Array` under either mode
 //! - per-mono generics: `&[T]` under `slice = copy`, instantiated at `u8`
 //!   (typed copy) and at `JsString` (handle tier, already a fresh `Array`,
 //!   where the mode is a no-op)
@@ -29,6 +33,7 @@
 
 use js_sys::JsString;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::Clamped;
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen(module = "tests/wasm/slice_modes.js")]
@@ -124,6 +129,56 @@ extern "C" {
         #[wasm_bindgen(slice = copy)] copied: &[u8],
         #[wasm_bindgen(slice = view)] as_view: &[u8],
     ) -> String;
+}
+
+// The mode applies by shape, to every sequence an argument can be.
+#[wasm_bindgen(module = "tests/wasm/slice_modes.js")]
+extern "C" {
+    #[wasm_bindgen(js_name = kindsOf)]
+    fn kinds_of_clamped(
+        #[wasm_bindgen(slice = copy)] copied: Clamped<&[u8]>,
+        #[wasm_bindgen(slice = array)] as_array: Clamped<&[u8]>,
+        view: Clamped<&[u8]>,
+    ) -> String;
+
+    #[wasm_bindgen(js_name = kindsOf)]
+    fn kinds_of_owned(
+        #[wasm_bindgen(slice = copy)] copied: Vec<u8>,
+        #[wasm_bindgen(slice = array)] as_array: Vec<u8>,
+        #[wasm_bindgen(slice = array)] boxed: Box<[f64]>,
+        #[wasm_bindgen(slice = array)] optional: Option<Vec<u8>>,
+        #[wasm_bindgen(slice = array)] clamped: Clamped<Vec<u8>>,
+    ) -> String;
+
+    #[wasm_bindgen(slice = array)]
+    fn joined(v: Vec<u16>) -> String;
+    #[wasm_bindgen(slice = copy, js_name = joined)]
+    fn joined_strings_copy(v: &[String]) -> String;
+    #[wasm_bindgen(slice = array, js_name = joined)]
+    fn joined_strings_array(v: Option<&[String]>) -> String;
+}
+
+#[wasm_bindgen_test]
+fn every_sequence_shape() {
+    assert_eq!(
+        kinds_of_clamped(Clamped(&[1]), Clamped(&[2]), Clamped(&[3])),
+        "Uint8ClampedArray:fresh,Array,Uint8ClampedArray:view"
+    );
+    assert_eq!(
+        kinds_of_owned(
+            vec![1],
+            vec![2],
+            Box::new([3.5]),
+            Some(vec![4]),
+            Clamped(vec![5])
+        ),
+        "Uint8Array:fresh,Array,Array,Array,Array"
+    );
+    assert_eq!(joined(vec![1, 2, 3]), "Array:1,2,3");
+    let strings = ["a".to_string(), "b".to_string()];
+    assert_eq!(joined_strings_copy(&strings), "Array:a,b");
+    assert_eq!(joined_strings_array(Some(&strings)), "Array:a,b");
+    assert_eq!(joined_strings_array(None), "undefined");
 }
 
 #[wasm_bindgen_test]

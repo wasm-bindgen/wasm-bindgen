@@ -16,9 +16,11 @@ extern "C" {
     #[wasm_bindgen(slice = copy)]
     fn per_fn(xs: &mut [u32]);
 
-    // The `Option`-wrapped form must be caught too.
+    // The `Option`- and `Clamped`-wrapped forms must be caught too.
     #[wasm_bindgen(slice = copy)]
     fn optional(xs: Option<&mut [f64]>);
+    #[wasm_bindgen(slice = copy)]
+    fn clamped(xs: wasm_bindgen::Clamped<&mut [u8]>);
 }
 
 // Inherited from the enclosing block rather than the function. An explicit

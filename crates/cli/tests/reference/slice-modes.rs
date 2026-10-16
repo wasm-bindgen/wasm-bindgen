@@ -10,6 +10,7 @@
 // still hands JS the zero-copy typed-array view.
 
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::Clamped;
 
 #[wasm_bindgen]
 extern "C" {
@@ -35,6 +36,14 @@ extern "C" {
     );
 }
 
+// The mode applies by shape: owned data is already fresh (`array` converts
+// it), `Clamped` gets the same treatment as any typed slice, and `&[String]`
+// crosses as a freshly allocated buffer of handles.
+#[wasm_bindgen(slice = array)]
+extern "C" {
+    fn js_shapes(owned: Vec<u8>, boxed: Box<[f64]>, clamped: Clamped<&[u8]>, strings: &[String]);
+}
+
 #[wasm_bindgen]
 pub fn driver() {
     let v = vec![1u8, 2, 3];
@@ -48,4 +57,6 @@ pub fn driver() {
     js_copy_optional_u16(None);
 
     js_block_mixed(&v16, &v16, &v16);
+
+    js_shapes(v.clone(), Box::new([1.5]), Clamped(&v), &["a".to_string()]);
 }

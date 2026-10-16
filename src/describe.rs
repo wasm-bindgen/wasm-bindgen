@@ -279,31 +279,17 @@ where
     }
 }
 
-/// Describes a `#[wasm_bindgen(slice = copy)]` import argument `T` (`&[E]` or
-/// `Option<&[E]>`), which crosses with `T`'s own ABI. The CLI hands JS a fresh
-/// typed array for primitive `E`, and treats any other `E` as plain `T`.
-pub struct CopySlice<T>(core::marker::PhantomData<T>);
+/// Describes an import argument whose wire is described by `T` under a
+/// `#[wasm_bindgen(slice = ..)]` mode (`SLICE_MODE_ARRAY` or
+/// `SLICE_MODE_COPY`). The CLI applies the mode to typed-array sequence shapes
+/// and ignores it on every other shape.
+pub struct SliceMode<T: ?Sized, const MODE: u32>(core::marker::PhantomData<T>);
 
-impl<T: WasmDescribe> WasmDescribe for CopySlice<T> {
+impl<T: WasmDescribe + ?Sized, const MODE: u32> WasmDescribe for SliceMode<T, MODE> {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
-        inform(COPY_SLICE);
-        T::describe();
-    }
-}
-
-/// Describes a `#[wasm_bindgen(slice = array)]` import argument `T` whose
-/// slice element type is a `experimental_generic_mono` type parameter, so the
-/// concrete-element rewrite through `VectorRefIntoWasmAbi` cannot be named.
-/// `T` crosses with its own ABI; the CLI hands JS a fresh plain `Array` for
-/// primitive elements, and treats any other element kind as plain `T` (the
-/// handle tier already arrives as a fresh `Array`).
-pub struct SliceToArray<T>(core::marker::PhantomData<T>);
-
-impl<T: WasmDescribe> WasmDescribe for SliceToArray<T> {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
-        inform(SLICE_TO_ARRAY);
+        inform(SLICE_MODE);
+        inform(MODE);
         T::describe();
     }
 }

@@ -45,6 +45,9 @@ tys! {
     CLAMPED
     NONNULL
     RAW_POINTER
-    COPY_SLICE
-    SLICE_TO_ARRAY
+    SLICE_MODE
 }
+
+/// The mode word following a `SLICE_MODE` tag.
+pub const SLICE_MODE_ARRAY: u32 = 0;
+pub const SLICE_MODE_COPY: u32 = 1;

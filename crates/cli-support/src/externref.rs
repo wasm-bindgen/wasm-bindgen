@@ -319,13 +319,7 @@ fn module_needs_externref_metadata(aux: &WasmBindgenAux, section: &NonstandardWi
                 } | VectorLoad {
                     kind: VectorKind::Externref | VectorKind::NamedExternref(_),
                     ..
-                } | VectorLoadAsArray {
-                    kind: VectorKind::Externref | VectorKind::NamedExternref(_),
-                    ..
                 } | OptionVectorLoad {
-                    kind: VectorKind::Externref | VectorKind::NamedExternref(_),
-                    ..
-                } | OptionVectorLoadAsArray {
                     kind: VectorKind::Externref | VectorKind::NamedExternref(_),
                     ..
                 } | View {

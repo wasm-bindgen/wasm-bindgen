@@ -14,6 +14,8 @@ exports.kindsOf = (...args) => args.map(describe).join(',');
 
 exports.isWasmMemoryView = (v) => v.buffer.byteLength > v.byteLength;
 
+exports.joined = (v) => v === undefined ? 'undefined' : `${describe(v)}:${Array.from(v).join(',')}`;
+
 exports.js_copy_u8 = (v) => {
     assert.strictEqual(describe(v), 'Uint8Array:fresh');
     assert.deepStrictEqual(Array.from(v), [1, 2, 3]);
