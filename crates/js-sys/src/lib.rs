@@ -6871,7 +6871,7 @@ impl Default for PropertyDescriptor {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(typescript_type = "object")]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type Object<T = JsValue>;
 
     // Next major: deprecate
@@ -7477,6 +7477,19 @@ impl Object {
         }
     }
 }
+
+// `Object.is`, not the derived `===`: subclasses like `Number` can hold
+// `NaN`, for which `===` is not reflexive as `Eq` requires. Next major: add
+// a reference-value base type excluding primitives, move `Number` onto
+// `JsValue`, and derive.
+impl<T> PartialEq for Object<T> {
+    #[inline]
+    fn eq(&self, other: &Object<T>) -> bool {
+        Object::is(self.as_ref(), other.as_ref())
+    }
+}
+
+impl<T> Eq for Object<T> {}
 
 impl Default for Object<JsValue> {
     fn default() -> Self {
