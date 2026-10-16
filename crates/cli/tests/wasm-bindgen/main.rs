@@ -1608,11 +1608,13 @@ const INTERRUPTED_EXECUTOR_LIB_RS: &str = r#"
                     export function now() { return Date.now(); }
                     export function throw_foreign() { throw new Error('foreign exception from poll'); }
                     export function record(name) { (globalThis.order ??= []).push(name); }
+                    export function drain() { globalThis.drain(); }
                 ")]
                 extern "C" {
                     fn now() -> f64;
                     fn throw_foreign();
                     fn record(name: &str);
+                    fn drain();
                 }
 
                 thread_local! {
@@ -1648,6 +1650,28 @@ const INTERRUPTED_EXECUTOR_LIB_RS: &str = r#"
                             }
                             left -= 1;
                             cx.waker().wake_by_ref();
+                            Poll::Pending
+                        })
+                        .await;
+                        COMPLETED.with(|c| c.set(c.get() + 1));
+                    });
+                }
+
+                /// Spawns a task whose first poll wakes its own task and then
+                /// calls `globalThis.drain()`, which may run pending microtasks
+                /// synchronously, before returning `Pending`. The second poll
+                /// counts its completion.
+                #[wasm_bindgen]
+                pub fn spawn_waking_then_draining() {
+                    let mut polled = false;
+                    spawn_local(async move {
+                        poll_fn(|cx| {
+                            if polled {
+                                return Poll::Ready(());
+                            }
+                            polled = true;
+                            cx.waker().wake_by_ref();
+                            drain();
                             Poll::Pending
                         })
                         .await;
@@ -1943,6 +1967,69 @@ setTimeout(() => {
         process.exit(1);
     }
 }, 50);
+"#,
+    );
+}
+
+/// A poll that wakes its own task and then drains, synchronously, a microtask
+/// queue holding that wake's `run_all` re-enters `run_all` while the poll is
+/// still on the stack. The nested run finds the task's borrow held, exactly as
+/// after a poll that never returned. The task must still be polled again once
+/// the outer poll returns. V8 never re-enters a queue that is already running
+/// its microtasks, so this needs two queues: the first `run_all` runs from
+/// Node's own queue, and every later one is queued into a `vm` context whose
+/// queue `drain` runs (`microtaskMode: 'afterEvaluate'`).
+#[test]
+fn spawn_local_repolls_a_task_whose_wake_ran_during_its_own_poll() {
+    run_interrupted_executor_test(
+        "spawn_local_repolls_a_task_whose_wake_ran_during_its_own_poll",
+        false,
+        r#"
+const assert = require('node:assert/strict');
+const vm = require('node:vm');
+const uncaught = [];
+process.on('uncaughtException', (e) => uncaught.push(String((e && e.message) || e)));
+function check(f) {
+    try {
+        f();
+    } catch (e) {
+        console.error(e);
+        process.exit(1);
+    }
+}
+const context = vm.createContext({}, { microtaskMode: 'afterEvaluate' });
+const queueInContext = vm.runInContext('(f) => { Promise.resolve().then(() => f()); }', context);
+const realQueueMicrotask = globalThis.queueMicrotask;
+let first = true;
+globalThis.queueMicrotask = (f) => {
+    if (first) {
+        first = false;
+        realQueueMicrotask(f);
+    } else {
+        queueInContext(f);
+    }
+};
+let drains = 0;
+globalThis.drain = () => {
+    drains += 1;
+    vm.runInContext('0', context);
+};
+const wasm = require('{module}');
+
+wasm.spawn_waking_then_draining();
+setTimeout(() => check(() => {
+    globalThis.queueMicrotask = realQueueMicrotask;
+    // Run whatever the executor queued into the context since.
+    vm.runInContext('0', context);
+    assert.strictEqual(drains, 1, 'the first poll must have drained the context queue');
+    assert.deepStrictEqual(uncaught, []);
+    assert.strictEqual(wasm.completed(), 1, 'a task that woke itself must be polled again');
+    wasm.spawn_counter();
+    setTimeout(() => check(() => {
+        assert.strictEqual(wasm.completed(), 2, 'a task spawned afterwards must run');
+        console.log('PASS');
+    }), 50);
+}), 50);
 "#,
     );
 }

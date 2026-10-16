@@ -1,6 +1,6 @@
 use alloc::boxed::Box;
 use alloc::rc::Rc;
-use core::cell::{Cell, RefCell};
+use core::cell::{Cell, RefCell, RefMut};
 use core::future::Future;
 use core::mem::ManuallyDrop;
 use core::pin::Pin;
@@ -54,6 +54,10 @@ pub(crate) struct Task {
 
     // This is used to ensure that the Task will only be queued once
     is_queued: Cell<bool>,
+
+    // Set when a run of this task found its poll still in progress (see
+    // `run`). That poll, if it returns, queues the run that was skipped.
+    run_skipped: Cell<bool>,
 }
 
 impl Task {
@@ -63,6 +67,7 @@ impl Task {
             console: try_create_task(core::any::type_name::<F>()),
             inner: RefCell::new(None),
             is_queued: Cell::new(true),
+            run_skipped: Cell::new(false),
         });
 
         let waker = unsafe { Waker::from_raw(Task::into_raw_waker(Rc::clone(&this))) };
@@ -138,55 +143,66 @@ impl Task {
         RawWaker::new(Rc::into_raw(this) as *const (), &VTABLE)
     }
 
-    pub(crate) fn run(&self) {
-        // A borrow that is already held means an earlier poll of this task never
-        // returned normally: the host terminated execution in the middle of it,
-        // or, under `panic = "abort"`, a foreign exception unwound through it
-        // without running destructors. The future is in an unknown state and
-        // can be neither polled nor dropped safely, so leave it alone, before
-        // arming `ClearOnUnwind`, whose `Drop` would need the same borrow.
-        // `is_queued` is still `true` from the wake that queued this run, so
-        // the task is never queued again, and its allocation is leaked.
-        if self.inner.try_borrow_mut().is_err() {
+    pub(crate) fn run(this: &Rc<Self>) {
+        // A borrow that is already held means a poll of this task has not
+        // returned. Either it is still on the stack, because the host drained
+        // a microtask queue synchronously from inside it and so re-entered
+        // `run_all`, or it never will: the host terminated execution in the
+        // middle of it, or, under `panic = "abort"`, a foreign exception
+        // unwound through it without running destructors. The two cannot be
+        // told apart here, and in neither case may the future be polled or
+        // dropped, so leave it alone. `is_queued` is still `true` from the
+        // wake that queued this run, so the task is not queued again by a
+        // wake; `run_skipped` records that this run did not happen. A poll
+        // that is still on the stack queues the task again when it returns
+        // (below). A poll that never returns leaves the task unqueued for
+        // good, and its allocation is leaked.
+        let Ok(borrow) = this.inner.try_borrow_mut() else {
+            this.run_skipped.set(true);
             return;
-        }
+        };
 
         // A poll can unwind via either a Rust panic or a foreign (JS)
         // exception. `catch_unwind` only catches the former, but both run
         // drops, so a drop guard covers both: if a poll unwinds we drop
         // `Inner`, releasing the future and breaking the
         // `Inner -> Waker -> Rc<Task>` cycle that would otherwise leak the
-        // `Task`. The guard is disarmed (forgotten) on a normal return. It is
-        // created before `borrow` so that, on unwind, `borrow` is released
-        // before the guard's `Drop` takes it again.
-        struct ClearOnUnwind<'a>(&'a RefCell<Option<Inner>>);
+        // `Task`. The guard owns the borrow, and is disarmed on a normal
+        // return.
+        struct ClearOnUnwind<'a> {
+            inner: RefMut<'a, Option<Inner>>,
+            armed: bool,
+        }
         impl Drop for ClearOnUnwind<'_> {
             fn drop(&mut self) {
-                *self.0.borrow_mut() = None;
+                if self.armed {
+                    *self.inner = None;
+                }
             }
         }
-        let clear_on_unwind = ClearOnUnwind(&self.inner);
-
-        let mut borrow = self.inner.borrow_mut();
+        let mut guard = ClearOnUnwind {
+            inner: borrow,
+            armed: true,
+        };
 
         // Wakeups can come in after a Future has finished and been destroyed,
         // so handle this gracefully by just ignoring the request to run.
-        let inner = match borrow.as_mut() {
+        let inner = match guard.inner.as_mut() {
             Some(inner) => inner,
             None => {
-                core::mem::forget(clear_on_unwind);
+                guard.armed = false;
                 return;
             }
         };
 
         // Ensure that if poll calls `waker.wake()` we can get enqueued back on
         // the run queue.
-        self.is_queued.set(false);
+        this.is_queued.set(false);
 
         // In debug mode we want to avoid deeply nested stacks from individual
         // `poll()` calls, so we use `task.run` on a task created per future.
         #[cfg(debug_assertions)]
-        let is_ready = match self.console.as_ref() {
+        let is_ready = match this.console.as_ref() {
             // Wrap `inner` in AssertUnwindSafe before capturing it, so the closure
             // satisfies MaybeUnwindSafe (required when panic=unwind). This is safe:
             // a panic from `is_ready` propagates as usual and is handled by the
@@ -210,9 +226,18 @@ impl Task {
         // take quite some time, so ensure that the heaviest of resources are
         // released early.
         if is_ready {
-            *borrow = None;
+            *guard.inner = None;
         }
 
-        core::mem::forget(clear_on_unwind);
+        guard.armed = false;
+        drop(guard);
+
+        // A run skipped while this poll was on the stack (see the top of this
+        // function) used up the queue entry of a wake that came during this
+        // poll. `is_queued` is still `true` from that wake, so no later wake
+        // queues the task: queue the run that wake asked for.
+        if this.run_skipped.replace(false) && !is_ready {
+            Self::force_wake(Rc::clone(this));
+        }
     }
 }

@@ -9,7 +9,9 @@ use wasm_bindgen::JsError;
 #[wasm_bindgen]
 extern "C" {
     // The `run_all` closure as a JS function, or that function bound to the
-    // sequence number of one scheduled run.
+    // sequence number of one scheduled run. `bind_seq` is `Function::bind1`
+    // with the bound argument passed as a `u32`: `bind1` takes it as a JS
+    // value, which would allocate a `Number` on every wake.
     type RunAll;
 
     #[wasm_bindgen(method, js_name = bind)]
@@ -60,7 +62,7 @@ impl QueueState {
                     _ => break,
                 }
             };
-            task.run();
+            crate::futures::task::Task::run(&task);
         }
     }
 }
