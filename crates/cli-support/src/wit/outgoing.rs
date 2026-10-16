@@ -215,7 +215,40 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Closure(d) => {
                 self.outgoing_function(d.mutable, &d.function, Some(d.owned))?
             }
+
+            Descriptor::CopySlice(d) => self.outgoing_copy_slice(d)?,
         }
+        Ok(())
+    }
+
+    fn outgoing_copy_slice(&mut self, arg: &Descriptor) -> Result<(), Error> {
+        let (slice, optional) = match arg {
+            Descriptor::Option(d) => (&**d, true),
+            d => (d, false),
+        };
+        let kind = slice
+            .vector_kind()
+            .ok_or_else(|| format_err!("unsupported copy_slice argument type {arg:?}"))?;
+        let mem = self.cx.memory()?;
+        let ptr_ty = self.outgoing_internal_word_ty();
+        let (instr, output) = if optional {
+            (
+                Instruction::OptionViewCopy {
+                    kind: kind.clone(),
+                    mem,
+                },
+                AdapterType::Vector(kind).option(),
+            )
+        } else {
+            (
+                Instruction::ViewCopy {
+                    kind: kind.clone(),
+                    mem,
+                },
+                AdapterType::Vector(kind),
+            )
+        };
+        self.instruction(&[ptr_ty.clone(), ptr_ty], instr, &[output]);
         Ok(())
     }
 
@@ -658,6 +691,7 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Function(_)
             | Descriptor::Closure(_)
             | Descriptor::Slice(_)
+            | Descriptor::CopySlice(_)
             | Descriptor::Result(_) => {
                 bail!("unsupported Result type for returning from exported Rust function: {arg:?}")
             }

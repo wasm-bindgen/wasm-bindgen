@@ -384,8 +384,13 @@ trait objects nested in another type do not receive this lowering.
 `experimental_generic_mono` composes with the usual import attributes — `method`,
 `static_method_of`, `constructor`, `getter`, `setter`, `structural`, `final`,
 `indexing_getter`, `indexing_setter`, `indexing_deleter`, `js_namespace`,
-`js_name`, `catch`, `variadic`, and `slice_to_array` — and the resulting JS
-binding is shaped exactly as it would be for the equivalent non-generic import.
+`js_name`, `catch`, `variadic`, `slice_to_array`, and `copy_slice` — and the
+resulting JS binding is shaped exactly as it would be for the equivalent
+non-generic import. A slice whose element type is a type parameter resolves
+`slice_to_array` / `copy_slice` per instantiation: a primitive element gets the
+fresh `Array` / typed-array copy, while a handle-shaped element (e.g.
+`JsString`) keeps its default fresh `Array` of handles, so the attribute can
+cover a whole `extern "C"` block without inspecting element types.
 
 The two that do *not* compose are `assert_no_shim` and `reexport`; both are
 rejected, see [Unsupported shapes](#unsupported-shapes).
@@ -450,11 +455,6 @@ usually to drop `experimental_generic_mono`:
 * **A type parameter in the error position of a `catch` import**
   (`Result<T, E>` with generic `E`): only the `Ok` type is monomorphised, and the
   error type is always `JsValue`.
-* **`slice_to_array` on a slice whose element type mentions a type parameter**
-  (`&[T]`, `&[Vec<T>]`, `Option<&[T]>`). `VectorRefIntoWasmAbi` is implemented
-  per concrete ABI shape, so no bound the caller can write makes an arbitrary `T`
-  satisfy it; the element type must be concrete. See
-  [`slice_to_array`](./slice_to_array.md).
 * **`reexport`**, which has no well-defined target when one binding is
   manufactured per monomorphisation.
 * **`assert_no_shim`**, which asserts that no shim function is generated for the
@@ -494,8 +494,8 @@ hash.
 A monomorphisation records only a shim key, which is a hash over the Rust
 function name, the `js_name` (when one is given), the `js_namespace`, the
 signature tokens, the `module`, and any `cfg` attributes. It does *not* cover
-`catch`, `variadic`, `slice_to_array`, `structural`/`final`, or the
-getter/setter accessor kind. Two imports differing only in one of those claim
+`catch`, `variadic`, `slice_to_array`, `copy_slice`, `structural`/`final`, or
+the getter/setter accessor kind. Two imports differing only in one of those claim
 the same key, and the CLI cannot tell which binding a given instantiation meant.
 Rather than silently binding one of them, which would mis-bind every
 monomorphisation of the other, it fails with an error naming both JS targets.

@@ -45,4 +45,6 @@ tys! {
     CLAMPED
     NONNULL
     RAW_POINTER
+    COPY_SLICE
+    SLICE_TO_ARRAY
 }

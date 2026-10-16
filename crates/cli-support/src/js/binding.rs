@@ -2196,6 +2196,29 @@ fn instruction(
             js.push(format!("{ptr} === 0 ? undefined : {f}({ptr}, {len})"));
         }
 
+        Instruction::ViewCopy { kind, mem } => {
+            let len = js.pop();
+            let ptr = js.pop();
+            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
+            let i = js.tmp();
+            js.prelude(&format!("var v{i} = {f}({ptr}, {len}).slice();"));
+            let v = js.local(format!("v{i}"));
+            js.push(v);
+        }
+
+        Instruction::OptionViewCopy { kind, mem } => {
+            let len = js.pop();
+            let ptr = js.pop();
+            let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
+            let i = js.tmp();
+            js.prelude(&format!("let v{i};"));
+            js.prelude(&format!("if ({ptr} !== 0) {{"));
+            js.prelude(&format!("v{i} = {f}({ptr}, {len}).slice();"));
+            js.prelude("}");
+            let v = js.local(format!("v{i}"));
+            js.push(v);
+        }
+
         Instruction::OptionF64Sentinel => {
             let val = js.pop();
             js.push(format!(

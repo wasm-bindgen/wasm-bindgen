@@ -76,6 +76,7 @@
     - [On JavaScript Imports](./reference/attributes/on-js-imports/index.md)
       - [`catch`](./reference/attributes/on-js-imports/catch.md)
       - [`constructor`](./reference/attributes/on-js-imports/constructor.md)
+      - [`copy_slice`](./reference/attributes/on-js-imports/copy_slice.md)
       - [`extends`](./reference/attributes/on-js-imports/extends.md)
       - [`experimental_generic_mono`](./reference/attributes/on-js-imports/experimental_generic_mono.md)
       - [`getter` and `setter`](./reference/attributes/on-js-imports/getter-and-setter.md)

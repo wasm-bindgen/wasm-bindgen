@@ -16,7 +16,10 @@ of the element kind. The user-facing Rust signature is unchanged —
 change.
 
 This is useful when binding JS APIs that expect a plain `T[]` (e.g.
-`Array<number>`) rather than a typed array.
+`Array<number>`) rather than a typed array. For APIs that expect a typed
+array JS may retain (`Uint8Array`, `BufferSource`), see
+[`copy_slice`](copy_slice.md), which hands JS a fresh typed-array copy
+instead; the three-way choice on primitive slices is laid out there.
 
 ## Per-function
 
@@ -43,12 +46,13 @@ extern "C" {
 }
 ```
 
-Per-function and per-block `slice_to_array` combine additively — the
-attribute is opt-in at either level. The mode only acts on `&[T]` /
-`Option<&[T]>` arguments; any other argument shape (e.g. the `this`
-argument of a method, or unrelated scalar arguments) is left
-untouched, so it's safe to set the attribute on a method or on an
-entire `extern "C"` block of mixed-shape imports.
+A more specific level overrides a broader one: a per-fn attribute
+overrides the block default, and a per-arg attribute overrides both
+(e.g. a `copy_slice` argument under a block-level `slice_to_array`).
+The mode only acts on `&[T]` / `Option<&[T]>` arguments; any other
+argument shape (e.g. the `this` argument of a method, or unrelated
+scalar arguments) is left untouched, so it's safe to set the attribute
+on a method or on an entire `extern "C"` block of mixed-shape imports.
 
 ## Wire format
 
@@ -78,16 +82,20 @@ fresh JS string.
   the `this` receiver of a method).
 * It does **not** affect the default `&[T]` (zero-copy typed-array view)
   behaviour for functions where `slice_to_array` was not opted into.
-* It does **not** work with a generic element type. `&[T]` for a type
-  parameter `T` is rejected at compile time, because
-  `VectorRefIntoWasmAbi` is implemented per concrete ABI shape and no
-  bound the caller can write makes an arbitrary `T` satisfy it. This
-  applies on both the type-erasure generic path and `experimental_generic_mono`.
-  The element type must be concrete, e.g. `&[u16]`. A concrete element type
-  in a generic function is fine — it is the element type that has to be
-  concrete, not the function. Note that `slice_to_array` is inheritable
-  from the enclosing `extern "C"` block, so a generic function in such a
-  block must not take a `&[T]` argument.
+* It does **not** reject a generic element type. `&[T]` for a type
+  parameter `T` resolves per concrete instantiation under
+  [`experimental_generic_mono`](experimental_generic_mono.md) — a fresh
+  `Array` of numbers at `T = u16`, and the handle tier's fresh `Array`
+  of shared handles at `T = JsString` — and is a no-op on the
+  type-erasure generic path, where the slice erases to the handle tier
+  (which already arrives as a fresh `Array`). This is what lets the
+  attribute cover a whole `extern "C"` block, generic functions
+  included, without inspecting element types. One caveat on the
+  per-mono path: a generic element keeps the slice's *default* borrowed
+  ABI, so an instantiation at an element type with no such ABI (e.g.
+  `T = String`) fails to compile exactly as it would without the
+  attribute, even though the concrete `&[String]` spelling is
+  supported.
 * It **cannot** be combined with a `&mut` slice, and the combination is
   rejected at compile time. `slice_to_array` hands JS an owned `Array`
   copied out of linear memory, so there is nowhere for JS's writes to
