@@ -390,8 +390,32 @@ impl Bindgen {
             .is_some()
             && matches!(self.mode, OutputMode::Emscripten);
 
-        // Enable reference type transformations if the module is already using it.
-        if let Ok(true) = wasm_conventions::target_feature(&module, "reference-types") {
+        // Enable reference type transformations if the module is already using
+        // it. `strip = true` drops the `target_features` section, in which case
+        // the runtime's externref intrinsics show it was built with reference
+        // types.
+        let has_target_features = module
+            .customs
+            .iter()
+            .any(|(_, custom)| custom.name() == "target_features");
+        let reference_types = if has_target_features {
+            wasm_conventions::target_feature(&module, "reference-types").unwrap_or(false)
+        } else if module
+            .exports
+            .iter()
+            .any(|export| export.name == "__externref_table_alloc")
+        {
+            eprintln!(
+                "warning: the `target_features` custom section is missing, likely due to \
+                 `strip = true`, so wasm-bindgen cannot detect which Wasm features are \
+                 enabled. Avoid `strip = true` and run `wasm-opt` on the wasm-bindgen \
+                 output instead."
+            );
+            true
+        } else {
+            false
+        };
+        if reference_types {
             self.externref = true;
         }
 
