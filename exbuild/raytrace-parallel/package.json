@@ -1,0 +1,14 @@
+{
+  "name": "raytrace-parallel",
+  "collaborators": [
+    "The wasm-bindgen Developers"
+  ],
+  "version": "0.0.0",
+  "files": [
+    "raytrace_parallel_bg.wasm",
+    "raytrace_parallel.js",
+    "raytrace_parallel.d.ts"
+  ],
+  "browser": "raytrace_parallel.js",
+  "types": "raytrace_parallel.d.ts"
+}
