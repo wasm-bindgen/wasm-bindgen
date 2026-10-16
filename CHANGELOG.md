@@ -95,6 +95,14 @@
 
 ### Fixed
 
+* Reference types are now detected from the runtime's externref intrinsics when
+  the `target_features` section is missing, as with `strip = true`. Previously
+  such builds skipped the externref transform, and `#[wasm_bindgen(catch)]`
+  imports failed with `externref table required for catch wrappers`. A warning
+  now recommends running `wasm-opt` on the wasm-bindgen output instead of
+  `strip = true`.
+  [#5382](https://github.com/wasm-bindgen/wasm-bindgen/pull/5382)
+
 * String enums, numeric enums and dynamic unions with the same name in
   different modules of one crate are now handled like same-named items in
   different crates: two public definitions report that the name is exported
