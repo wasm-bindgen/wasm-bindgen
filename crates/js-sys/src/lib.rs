@@ -6871,7 +6871,7 @@ impl Default for PropertyDescriptor {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(typescript_type = "object")]
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type Object<T = JsValue>;
 
     // Next major: deprecate
@@ -7477,15 +7477,6 @@ impl Object {
         }
     }
 }
-
-impl PartialEq for Object {
-    #[inline]
-    fn eq(&self, other: &Object) -> bool {
-        Object::is(self.as_ref(), other.as_ref())
-    }
-}
-
-impl Eq for Object {}
 
 impl Default for Object<JsValue> {
     fn default() -> Self {
