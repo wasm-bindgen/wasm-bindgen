@@ -5,6 +5,10 @@
 
 ### Added
 
+* String enums implement `TryFromJsValue`, accepting only their listed values,
+  so they can be used as dynamic-union variant payloads.
+  [#5376](https://github.com/wasm-bindgen/wasm-bindgen/pull/5376)
+
 * Added `JsValue::from_utf8_lossy` to create a JS string directly from a
   `&[u8]`, decoding on the JS side with replacement characters for invalid
   UTF-8 instead of requiring a `String::from_utf8_lossy` allocation first.
@@ -34,6 +38,10 @@
   `&String`, `&Box<str>` and `&Cow<str>`. These shapes, and `Option` of each,
   also work as plain import argument types.
   [#5374](https://github.com/wasm-bindgen/wasm-bindgen/pull/5374)
+
+* Added support for threads on memory64 (`wasm64-unknown-unknown` with
+  `+atomics`). On memory64, `__wbindgen_thread_destroy` takes JS numbers.
+  [#5378](https://github.com/wasm-bindgen/wasm-bindgen/pull/5378)
 
 ### Changed
 
@@ -98,6 +106,27 @@
   microtasks queued between their wakes; their order among themselves is
   unchanged.
   [#5379](https://github.com/wasm-bindgen/wasm-bindgen/pull/5379)
+
+* String enums, numeric enums and dynamic unions with the same name in
+  different modules of one crate are now handled like same-named items in
+  different crates: two public definitions report that the name is exported
+  multiple times, and `private` copies are numbered (`Mode`, `Mode2`, ...).
+  Previously `wasm-bindgen` failed with `dynamic union variant descriptor not
+  found` or `duplicate enums`.
+  [#5381](https://github.com/wasm-bindgen/wasm-bindgen/pull/5381)
+
+* `private` string enums and dynamic unions with the same name in different
+  crates can now coexist, numbered like structs and numeric enums.
+  [#5381](https://github.com/wasm-bindgen/wasm-bindgen/pull/5381)
+
+* The TypeScript alias for a string enum that is only referenced through a
+  dynamic union is now emitted.
+  [#5376](https://github.com/wasm-bindgen/wasm-bindgen/pull/5376)
+
+* Attributes on imported statics, such as doc comments, `#[allow(...)]`,
+  `#[deprecated]` and `#[cfg(...)]`, are now applied to the generated static
+  instead of being dropped.
+  [#5377](https://github.com/wasm-bindgen/wasm-bindgen/pull/5377)
 
 * Imported functions and statics from two different `inline_js` snippets no
   longer share one binding when they have the same name and signature. The

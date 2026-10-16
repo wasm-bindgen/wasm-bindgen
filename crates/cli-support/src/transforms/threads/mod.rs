@@ -1,7 +1,7 @@
 use crate::wasm_conventions;
 use anyhow::{anyhow, bail, Error};
 use std::cmp;
-use walrus::ir::Value;
+use walrus::ir::{BinaryOp, UnaryOp, Value};
 use walrus::FunctionBuilder;
 use walrus::{
     ir::MemArg, ConstExpr, ExportItem, FunctionId, GlobalId, InstrSeqBuilder, Memory, MemoryId,
@@ -62,11 +62,7 @@ pub fn run(module: &mut Module) -> Result<Option<ThreadCount>, Error> {
     let mem = module.memories.get_mut(memory);
     assert!(mem.shared);
 
-    // TODO: support memory64. This transform currently emits i32 addresses for
-    // thread counters, locks, stacks, and allocator calls.
-    if mem.memory64 {
-        bail!("threading does not currently support memory64");
-    }
+    let memory64 = mem.memory64;
     if mem.import.is_none() {
         bail!("threading requires memory to be imported; add `-Clink-arg=--import-memory` to RUSTFLAGS");
     }
@@ -84,43 +80,45 @@ pub fn run(module: &mut Module) -> Result<Option<ThreadCount>, Error> {
     let static_data_pages = 1;
     let (base, addr) = allocate_static_data(mem, static_data_pages, static_data_align)?;
 
+    let abi = Abi::of(module, memory64)?;
+
     let tls = Tls {
         init: delete_synthetic_func(module, "__wasm_init_tls")?,
-        size: delete_synthetic_global(module, "__tls_size")?,
-        align: delete_synthetic_global(module, "__tls_align")?,
+        size: delete_synthetic_global(module, "__tls_size", abi.ptr)?,
+        align: delete_synthetic_global(module, "__tls_align", abi.ptr)?,
         base: wasm_conventions::get_tls_base(module)
             .ok_or_else(|| anyhow!("failed to find tls base"))?,
     };
 
-    let thread_counter_addr = addr as i32;
+    let thread_counter_addr = addr;
 
-    let stack_alloc =
-        module
-            .globals
-            .add_local(ValType::I32, true, false, ConstExpr::Value(Value::I32(0)));
+    let stack_alloc = module
+        .globals
+        .add_local(abi.ptr, true, false, abi.ptr_const_expr(0));
 
     // Make sure the temporary stack is aligned down
-    let temp_stack = (base + static_data_pages * PAGE_SIZE) & !(static_data_align - 1);
+    let temp_stack =
+        (base + u64::from(static_data_pages * PAGE_SIZE)) & !u64::from(static_data_align - 1);
 
     const _: () = assert!(DEFAULT_THREAD_STACK_SIZE % PAGE_SIZE == 0);
 
     let stack = Stack {
         pointer: wasm_conventions::get_stack_pointer(module)
             .ok_or_else(|| anyhow!("failed to find stack pointer"))?,
-        temp: temp_stack as i32,
+        temp: temp_stack,
         temp_lock: thread_counter_addr + 4,
         alloc: stack_alloc,
         size: module.globals.add_local(
-            ValType::I32,
+            abi.ptr,
             true,
             false,
-            ConstExpr::Value(Value::I32(DEFAULT_THREAD_STACK_SIZE as i32)),
+            abi.ptr_const_expr(DEFAULT_THREAD_STACK_SIZE.into()),
         ),
     };
 
     let _ = module.exports.add("__stack_alloc", stack.alloc);
 
-    let thread_count = inject_start(module, &tls, &stack, thread_counter_addr, memory)?;
+    let thread_count = inject_start(module, abi, &tls, &stack, thread_counter_addr, memory)?;
 
     // we expose a `__wbindgen_thread_destroy()` helper function that deallocates stack space.
     //
@@ -138,7 +136,7 @@ pub fn run(module: &mut Module) -> Result<Option<ThreadCount>, Error> {
     //   the leader should not call this function with the same set of parameters twice.
     // - Moreover, concurrent calls can lead to UB: the follower could be in the middle of a
     //   call while the leader is destroying its stack! You should make sure that this cannot happen.
-    inject_destroy(module, &tls, &stack, memory)?;
+    inject_destroy(module, abi, &tls, &stack, memory)?;
 
     Ok(Some(thread_count))
 }
@@ -164,7 +162,9 @@ fn delete_synthetic_func(module: &mut Module, name: &str) -> Result<FunctionId, 
     }
 }
 
-fn delete_synthetic_global(module: &mut Module, name: &str) -> Result<u32, Error> {
+/// The value of a constant global of the linker. Its type is the address type
+/// of the memory: `i32` on wasm32, `i64` on memory64.
+fn delete_synthetic_global(module: &mut Module, name: &str, ty: ValType) -> Result<u64, Error> {
     let id = match delete_synthetic_export(module, name)? {
         walrus::ExportItem::Global(g) => g,
         _ => bail!("`{name}` must be a global"),
@@ -173,9 +173,10 @@ fn delete_synthetic_global(module: &mut Module, name: &str) -> Result<u32, Error
         walrus::GlobalKind::Local(g) => g,
         walrus::GlobalKind::Import(_) => bail!("`{name}` must not be an imported global"),
     };
-    match g {
-        ConstExpr::Value(Value::I32(v)) => Ok(*v as u32),
-        _ => bail!("`{name}` was not an `i32` constant"),
+    match (g, ty) {
+        (ConstExpr::Value(Value::I32(v)), ValType::I32) => Ok(u64::from(*v as u32)),
+        (ConstExpr::Value(Value::I64(v)), ValType::I64) => Ok(*v as u64),
+        _ => bail!("`{name}` was not an `{ty}` constant"),
     }
 }
 
@@ -194,18 +195,26 @@ fn delete_synthetic_export(module: &mut Module, name: &str) -> Result<ExportItem
 /// Allocates extra space for static data. Returns `(addr, base)`, where:
 /// - `base` is the starting address of the extra `pages`.
 /// - `addr` is the _first_ address in that chunk that is aligned to `align`.
-fn allocate_static_data(memory: &mut Memory, pages: u32, align: u32) -> Result<(u32, u32), Error> {
+fn allocate_static_data(memory: &mut Memory, pages: u32, align: u32) -> Result<(u64, u64), Error> {
+    // Exclusive end of the address space.
+    let (limit, space) = if memory.memory64 {
+        (u64::MAX, "memory64")
+    } else {
+        (1 << 32, "wasm32")
+    };
     // Allocate after the module's original initial memory.
     let base = memory
         .initial
         .checked_mul(u64::from(PAGE_SIZE))
-        .and_then(|base| u32::try_from(base).ok())
-        .ok_or_else(|| anyhow!("initial memory size exceeds wasm32 address space"))?;
+        .filter(|base| *base < limit)
+        .ok_or_else(|| anyhow!("initial memory size exceeds {space} address space"))?;
     let static_data_size = pages
         .checked_mul(PAGE_SIZE)
-        .ok_or_else(|| anyhow!("static data allocation size overflows wasm32 address space"))?;
-    base.checked_add(static_data_size)
-        .ok_or_else(|| anyhow!("static data allocation exceeds wasm32 address space"))?;
+        .ok_or_else(|| anyhow!("static data allocation size overflows {space} address space"))?;
+    base.checked_add(u64::from(static_data_size))
+        .filter(|end| *end <= limit)
+        .ok_or_else(|| anyhow!("static data allocation exceeds {space} address space"))?;
+    let align = u64::from(align);
     let address = (base + (align - 1)) & !(align - 1); // align up
 
     memory.initial += u64::from(pages);
@@ -214,10 +223,126 @@ fn allocate_static_data(memory: &mut Memory, pages: u32, align: u32) -> Result<(
     Ok((base, address))
 }
 
+/// The value types of the code that this transform emits.
+#[derive(Clone, Copy)]
+struct Abi {
+    /// The type of an address: `i32` on wasm32, `i64` on memory64.
+    ptr: ValType,
+    /// The type of a size or an address in the parameters of `__wbindgen_malloc`
+    /// and `__wbindgen_free`: `i32` on wasm32, and `f64` on memory64 (the
+    /// number ABI of `WasmWord`, which gives a JS number).
+    word: ValType,
+}
+
+impl Abi {
+    /// Read the types from the memory and from `__wbindgen_malloc` and
+    /// `__wbindgen_free`.
+    fn of(module: &Module, memory64: bool) -> Result<Abi, Error> {
+        let ptr = if memory64 { ValType::I64 } else { ValType::I32 };
+        let malloc = module.types.get(
+            module
+                .funcs
+                .get(find_function(module, "__wbindgen_malloc")?)
+                .ty(),
+        );
+        let free = module.types.get(
+            module
+                .funcs
+                .get(find_function(module, "__wbindgen_free")?)
+                .ty(),
+        );
+        let word = match malloc.params() {
+            [word, align] if word == align => *word,
+            _ => bail!("`__wbindgen_malloc` must take a size and an alignment of the same type"),
+        };
+        let supported = match ptr {
+            ValType::I32 => word == ValType::I32,
+            _ => word == ValType::F64,
+        };
+        if !supported {
+            bail!("`__wbindgen_malloc` takes `{word}`, which does not suit `{ptr}` addresses");
+        }
+        if malloc.results() != [word] {
+            bail!("`__wbindgen_malloc` must return a `{word}`");
+        }
+        if free.params() != [word, word, word] || !free.results().is_empty() {
+            bail!("`__wbindgen_free` must take three `{word}` values");
+        }
+        Ok(Abi { ptr, word })
+    }
+
+    /// The `add` instruction of addresses.
+    fn add(self) -> BinaryOp {
+        match self.ptr {
+            ValType::I32 => BinaryOp::I32Add,
+            _ => BinaryOp::I64Add,
+        }
+    }
+
+    fn ptr_value(self, value: u64) -> Value {
+        match self.ptr {
+            ValType::I32 => Value::I32(value as i32),
+            _ => Value::I64(value as i64),
+        }
+    }
+
+    fn ptr_const_expr(self, value: u64) -> ConstExpr {
+        ConstExpr::Value(self.ptr_value(value))
+    }
+
+    /// Push the address `value`.
+    fn ptr_const(self, body: &mut InstrSeqBuilder<'_>, value: u64) {
+        body.const_(self.ptr_value(value));
+    }
+
+    /// Push the word `value`, an argument of `__wbindgen_malloc` or `__wbindgen_free`.
+    fn word_const(self, body: &mut InstrSeqBuilder<'_>, value: u64) {
+        body.const_(match self.word {
+            ValType::I32 => Value::I32(value as i32),
+            _ => Value::F64(value as f64),
+        });
+    }
+
+    /// Change the address on the stack into a word.
+    fn ptr_to_word(self, body: &mut InstrSeqBuilder<'_>) {
+        if self.word == ValType::F64 {
+            body.unop(UnaryOp::F64ConvertUI64);
+        }
+    }
+
+    /// Change the word on the stack into an address. A word that is not a
+    /// number (`undefined` from JS on the number ABI) becomes 0.
+    fn word_to_ptr(self, body: &mut InstrSeqBuilder<'_>) {
+        if self.word == ValType::F64 {
+            body.unop(UnaryOp::I64TruncUSatF64);
+        }
+    }
+
+    /// Change the `i32` on the stack, a size from JS, into an address.
+    fn i32_to_ptr(self, body: &mut InstrSeqBuilder<'_>) {
+        if self.ptr == ValType::I64 {
+            body.unop(UnaryOp::I64ExtendUI32);
+        }
+    }
+
+    /// Change the address on the stack into the `i32` condition "not zero".
+    fn ptr_is_nonzero(self, body: &mut InstrSeqBuilder<'_>) {
+        if self.ptr == ValType::I64 {
+            body.i64_const(0).binop(BinaryOp::I64Ne);
+        }
+    }
+
+    /// Change the word on the stack into the `i32` condition "not zero".
+    fn word_is_nonzero(self, body: &mut InstrSeqBuilder<'_>) {
+        self.word_to_ptr(body);
+        self.ptr_is_nonzero(body);
+    }
+}
+
 struct Tls {
     init: walrus::FunctionId,
-    size: u32,
-    align: u32,
+    size: u64,
+    align: u64,
     base: GlobalId,
 }
 
@@ -225,9 +350,9 @@ struct Stack {
     /// The stack pointer global
     pointer: GlobalId,
     /// The address of a small, "scratch-space" stack
-    temp: i32,
+    temp: u64,
     /// The address of a lock for the temporary stack
-    temp_lock: i32,
+    temp_lock: u64,
     /// A global to store allocated stack
     alloc: GlobalId,
     /// The size of the stack
@@ -236,15 +361,17 @@ struct Stack {
 
 fn inject_start(
     module: &mut Module,
+    abi: Abi,
     tls: &Tls,
     stack: &Stack,
-    thread_counter_addr: i32,
+    thread_counter_addr: u64,
     memory: MemoryId,
 ) -> Result<ThreadCount, Error> {
     use walrus::ir::*;
 
-    let local = module.locals.add(ValType::I32);
+    let local = module.locals.add(abi.ptr);
     let thread_count = module.locals.add(ValType::I32);
+    // The stack size from JS: an `i32` also on memory64, thus a JS number.
     let stack_size = module.locals.add(ValType::I32);
 
     let malloc = find_function(module, "__wbindgen_malloc")?;
@@ -261,8 +388,8 @@ fn inject_start(
     // Perform an if/else based on whether we're the first thread or not. Our
     // thread ID will be zero if we're the first thread, otherwise it'll be
     // nonzero (assuming we don't overflow...)
-    body.i32_const(thread_counter_addr)
-        .i32_const(1)
+    abi.ptr_const(&mut body, thread_counter_addr);
+    body.i32_const(1)
         .atomic_rmw(memory, AtomicOp::Add, AtomicWidth::I32, ATOMIC_MEM_ARG)
         .local_tee(thread_count)
         .if_else(
@@ -274,17 +401,21 @@ fn inject_start(
                 body.local_get(stack_size).if_else(
                     None,
                     |body| {
-                        body.local_get(stack_size).global_set(stack.size);
+                        body.local_get(stack_size);
+                        abi.i32_to_ptr(body);
+                        body.global_set(stack.size);
                     },
                     |_| (),
                 );
 
                 // local = malloc(stack.size, align) [aka base]
-                with_temp_stack(body, memory, stack, |body| {
-                    body.global_get(stack.size)
-                        .i32_const(16)
-                        .call(malloc)
-                        .local_tee(local);
+                with_temp_stack(body, abi, memory, stack, |body| {
+                    body.global_get(stack.size);
+                    abi.ptr_to_word(body);
+                    abi.word_const(body, 16);
+                    body.call(malloc);
+                    abi.word_to_ptr(body);
+                    body.local_tee(local);
                 });
 
                 // stack.alloc = base
@@ -293,7 +424,7 @@ fn inject_start(
                 // stack_pointer = base + stack.size
                 body.global_get(stack.alloc)
                     .global_get(stack.size)
-                    .binop(BinaryOp::I32Add)
+                    .binop(abi.add())
                     .global_set(stack.pointer);
             },
             // If the thread id is zero then the default stack pointer works for
@@ -302,10 +433,11 @@ fn inject_start(
         );
 
     // Afterwards we need to initialize our thread-local state.
-    body.i32_const(tls.size as i32)
-        .i32_const(tls.align as i32)
-        .call(malloc)
-        .global_set(tls.base)
+    abi.word_const(&mut body, tls.size);
+    abi.word_const(&mut body, tls.align);
+    body.call(malloc);
+    abi.word_to_ptr(&mut body);
+    body.global_set(tls.base)
         .global_get(tls.base)
         .call(tls.init);
 
@@ -317,17 +449,17 @@ fn inject_start(
 
 fn inject_destroy(
     module: &mut Module,
+    abi: Abi,
     tls: &Tls,
     stack: &Stack,
     memory: MemoryId,
 ) -> Result<(), Error> {
     let free = find_function(module, "__wbindgen_free")?;
 
-    let mut builder = FunctionBuilder::new(
-        &mut module.types,
-        &[ValType::I32, ValType::I32, ValType::I32],
-        &[],
-    );
+    // The parameters have the type of the words of `__wbindgen_free`: on
+    // memory64 with the number ABI, JS gives numbers, and a missing argument
+    // (`undefined`, thus NaN) is 0 as on wasm32.
+    let mut builder = FunctionBuilder::new(&mut module.types, &[abi.word; 3], &[]);
 
     builder.name("__wbindgen_thread_destroy".into());
 
@@ -335,56 +467,69 @@ fn inject_destroy(
 
     // if no explicit parameters are passed (i.e. their value is 0) then we assume
     // we're being called from the agent that must be destroyed and rely on its globals
-    let tls_base = module.locals.add(ValType::I32);
-    let stack_alloc = module.locals.add(ValType::I32);
-    let stack_size = module.locals.add(ValType::I32);
+    let tls_base = module.locals.add(abi.word);
+    let stack_alloc = module.locals.add(abi.word);
+    let stack_size = module.locals.add(abi.word);
 
     // Ideally, at this point, we would destroy the values stored in TLS.
     // We can't really do that without help from the standard library.
     // See https://github.com/wasm-bindgen/wasm-bindgen/pull/2769#issuecomment-1015775467.
 
-    body.local_get(tls_base).if_else(
+    body.local_get(tls_base);
+    abi.word_is_nonzero(&mut body);
+    body.if_else(
         None,
         |body| {
-            body.local_get(tls_base)
-                .i32_const(tls.size as i32)
-                .i32_const(tls.align as i32)
-                .call(free);
+            body.local_get(tls_base);
+            abi.word_const(body, tls.size);
+            abi.word_const(body, tls.align);
+            body.call(free);
         },
         |body| {
-            body.global_get(tls.base)
-                .i32_const(tls.size as i32)
-                .i32_const(tls.align as i32)
-                .call(free);
+            body.global_get(tls.base);
+            abi.ptr_to_word(body);
+            abi.word_const(body, tls.size);
+            abi.word_const(body, tls.align);
+            body.call(free);
 
-            // set tls.base = i32::MIN to trigger invalid memory
-            body.i32_const(i32::MIN).global_set(tls.base);
+            // set tls.base = i32::MIN (i64::MIN on memory64) to trigger invalid memory
+            let invalid = match abi.ptr {
+                ValType::I32 => u64::from(i32::MIN as u32),
+                _ => i64::MIN as u64,
+            };
+            abi.ptr_const(body, invalid);
+            body.global_set(tls.base);
         },
     );
 
     // free the stack calling `__wbindgen_free(stack.alloc, stack.size)`
-    body.local_get(stack_alloc).if_else(
+    body.local_get(stack_alloc);
+    abi.word_is_nonzero(&mut body);
+    body.if_else(
         None,
         |body| {
             // we're destroying somebody else's stack, so we can use our own
-            body.local_get(stack_alloc)
-                .local_get(stack_size)
-                .i32_const(DEFAULT_THREAD_STACK_SIZE as i32)
-                .local_get(stack_size)
-                .select(None)
-                .i32_const(16)
-                .call(free);
+            body.local_get(stack_alloc).local_get(stack_size);
+            abi.word_const(body, DEFAULT_THREAD_STACK_SIZE.into());
+            body.local_get(stack_size);
+            abi.word_is_nonzero(body);
+            body.select(None);
+            abi.word_const(body, 16);
+            body.call(free);
         },
         |body| {
-            with_temp_stack(body, memory, stack, |body| {
-                body.global_get(stack.alloc)
-                    .global_get(stack.size)
-                    .i32_const(16)
-                    .call(free);
+            with_temp_stack(body, abi, memory, stack, |body| {
+                body.global_get(stack.alloc);
+                abi.ptr_to_word(body);
+                body.global_get(stack.size);
+                abi.ptr_to_word(body);
+                abi.word_const(body, 16);
+                body.call(free);
             });
 
             // set stack.alloc = 0 to trigger invalid memory
-            body.i32_const(0).global_set(stack.alloc);
+            abi.ptr_const(body, 0);
+            body.global_set(stack.alloc);
         },
     );
 
@@ -411,27 +556,29 @@ fn find_function(module: &Module, name: &str) -> Result<FunctionId, Error> {
 /// stack is usable. Clobbers `stack.pointer`.
 fn with_temp_stack(
     body: &mut InstrSeqBuilder<'_>,
+    abi: Abi,
     memory: MemoryId,
     stack: &Stack,
     block: impl Fn(&mut InstrSeqBuilder<'_>),
 ) {
     use walrus::ir::*;
 
-    body.i32_const(stack.temp).global_set(stack.pointer);
+    abi.ptr_const(body, stack.temp);
+    body.global_set(stack.pointer);
 
     body.loop_(None, |loop_| {
         let loop_id = loop_.id();
 
+        abi.ptr_const(loop_, stack.temp_lock);
         loop_
-            .i32_const(stack.temp_lock)
             .i32_const(0)
             .i32_const(1)
             .cmpxchg(memory, AtomicWidth::I32, ATOMIC_MEM_ARG)
             .if_else(
                 None,
                 |body| {
-                    body.i32_const(stack.temp_lock)
-                        .i32_const(1)
+                    abi.ptr_const(body, stack.temp_lock);
+                    body.i32_const(1)
                         .i64_const(-1)
                         .atomic_wait(memory, ATOMIC_MEM_ARG, false)
                         .drop()
@@ -443,11 +590,11 @@ fn with_temp_stack(
 
     block(body);
 
-    body.i32_const(stack.temp_lock)
-        .i32_const(0)
-        .store(memory, StoreKind::I32 { atomic: true }, ATOMIC_MEM_ARG)
-        .i32_const(stack.temp_lock)
-        .i32_const(1)
+    abi.ptr_const(body, stack.temp_lock);
+    body.i32_const(0)
+        .store(memory, StoreKind::I32 { atomic: true }, ATOMIC_MEM_ARG);
+    abi.ptr_const(body, stack.temp_lock);
+    body.i32_const(1)
         .atomic_notify(memory, ATOMIC_MEM_ARG)
         .drop();
 }

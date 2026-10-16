@@ -41,6 +41,7 @@ pub fn encode(program: &ast::Program) -> Result<EncodeResult, Diagnostic> {
 
 struct Interner {
     bump: bumpalo::Bump,
+    module_path: syn::Expr,
     files: RefCell<HashMap<String, LocalFile>>,
     root: PathBuf,
     has_package_json: Cell<bool>,
@@ -60,6 +61,7 @@ impl Interner {
             .into();
         Interner {
             bump: bumpalo::Bump::new(),
+            module_path: syn::parse_quote!(module_path!()),
             files: RefCell::new(HashMap::new()),
             root,
             has_package_json: Cell::new(false),
@@ -186,6 +188,7 @@ fn shared_program<'a>(
             .map(|js| intern.intern_str(js))
             .collect(),
         unique_crate_identifier: intern.intern_str(&intern.unique_crate_identifier()),
+        module_path: LitOrExpr::Expr(&intern.module_path),
         package_json: if intern.has_package_json.get() {
             Some(intern.intern_str(intern.root.join("package.json").to_str().unwrap()))
         } else {

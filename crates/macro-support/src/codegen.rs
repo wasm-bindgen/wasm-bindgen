@@ -798,6 +798,7 @@ impl ToTokens for ast::StructField {
             },
             attrs: vec![],
             wasm_bindgen: &self.wasm_bindgen,
+            module_symbol: None,
         }
         .to_tokens(tokens);
 
@@ -1351,6 +1352,7 @@ impl TryToTokens for ast::Export {
             },
             attrs,
             wasm_bindgen: &self.wasm_bindgen,
+            module_symbol: None,
         }
         .to_tokens(into);
 
@@ -1968,26 +1970,16 @@ impl TryToTokens for ast::ImportType {
     }
 }
 
-// String enums predate dynamic unions and overlap structurally: a string
-// enum is equivalent to a dynamic union with only string-literal variants,
-// minus a few details. Future cleanup (separate PR) could subsume string
-// enums into the dynamic-union codegen. Differences to reconcile first:
+// Next major: generate string enums with the dynamic-union codegen, since a
+// string enum is a dynamic union with only string-literal variants:
 //
-// * `__Invalid`: string enums silently accept unknown JS strings as a hidden
-//   `__Invalid` variant. Dynamic unions throw, or accept an explicit
-//   `#[wasm_bindgen(fallback)]` catch-all variant. Migrating means dropping
-//   `__Invalid` (telling users to switch to `fallback`).
-// * Inherent helpers: `from_str` / `to_str` / `from_js_value` are emitted
-//   here as inherent methods. Dynamic unions don't generate equivalents.
-//   Either preserve them or document removal as breaking.
-// * `TryFromJsValue`: string enums currently lack this impl, so they
-//   can't be `dyn_into` targets or dynamic-union variant payloads.
-//   Dynamic unions have it. Unification would gain this on the string
-//   enum path for free.
-// * ABI: string enums use a u32 discriminant; dynamic unions use an
-//   externref. Benchmarks (see `benches/enum_roundtrip.rs`) show the
-//   round-trip cost is within ~1% on Node, so the perf argument for
-//   keeping the discriminant ABI is weak.
+// * Drop `__Invalid`, so an unknown string throws as it does for dynamic
+//   unions. A catch-all becomes an explicit `#[wasm_bindgen(fallback)]`
+//   variant.
+// * Emit `from_str` / `to_str` / `from_js_value` for dynamic unions whose
+//   variants are all string literals, so existing callers keep them.
+// * Switch from the u32 discriminant ABI to externref; the round trip is
+//   within ~1% on Node (`benches/enum_roundtrip.rs`).
 impl ToTokens for ast::StringEnum {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let vis = &self.vis;
@@ -2002,6 +1994,7 @@ impl ToTokens for ast::StringEnum {
         let invalid = variant_count;
         let hole = variant_count + 1;
         let attrs = &self.rust_attrs;
+        let item_origin = describe_item_origin(&self.wasm_bindgen);
 
         let invalid_to_str_msg = format!(
             "Converting an invalid string enum ({enum_name}) back to a string is currently not supported"
@@ -2094,6 +2087,7 @@ impl ToTokens for ast::StringEnum {
                     inform(#name_len);
                     #(inform(#name_chars);)*
                     inform(#variant_count);
+                    #item_origin
                 }
             }
 
@@ -2103,6 +2097,17 @@ impl ToTokens for ast::StringEnum {
             {
                 fn from(val: #enum_name) -> Self {
                     #wasm_bindgen::JsValue::from_str(val.to_str())
+                }
+            }
+
+            // Unknown strings are rejected rather than mapped to `__Invalid`,
+            // so a dynamic union falls through to its later variants.
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::TryFromJsValue for #enum_name {
+                fn try_from_js_value_ref(
+                    value: &#wasm_bindgen::JsValue,
+                ) -> #wasm_bindgen::__rt::core::option::Option<Self> {
+                    Self::from_js_value(value)
                 }
             }
         })
@@ -2276,6 +2281,7 @@ impl ToTokens for ast::DynamicUnion {
             }
         }
         let type_count = type_variants.len() as u32;
+        let item_origin = describe_item_origin(wasm_bindgen);
 
         (quote! {
             #(#attrs)*
@@ -2318,6 +2324,7 @@ impl ToTokens for ast::DynamicUnion {
                     inform(DYNAMIC_UNION);
                     inform(#name_len);
                     #(inform(#name_chars);)*
+                    #item_origin
                     inform(#type_count);
                     #(<#type_variants as WasmDescribe>::describe();)*
                 }
@@ -2383,14 +2390,12 @@ impl ToTokens for ast::DynamicUnion {
         })
         .to_tokens(tokens);
 
-        // Generate descriptor exports for each type variant so cli-support can look them up
+        // Generate descriptor exports for each type variant so cli-support can
+        // look them up. Same-named unions may be defined in several modules of
+        // a crate, so the symbol is qualified by the defining module.
         for (idx, ty) in type_variants.iter().enumerate() {
-            let descriptor_name = Ident::new(
-                &crate::hash::crate_mangled_symbol(&shared::dynamic_union_variant(
-                    name_str, idx as u32,
-                )),
-                Span::call_site(),
-            );
+            let base = shared::dynamic_union_variant(name_str, idx as u32);
+            let descriptor_name = Ident::new(&base, Span::call_site());
             Descriptor {
                 ident: &descriptor_name,
                 inner: quote! {
@@ -2398,6 +2403,7 @@ impl ToTokens for ast::DynamicUnion {
                 },
                 attrs: vec![],
                 wasm_bindgen: &self.wasm_bindgen,
+                module_symbol: Some(crate::hash::module_mangled_symbol_prefix(&base)),
             }
             .to_tokens(tokens);
         }
@@ -4950,6 +4956,7 @@ impl TryToTokens for DescribeImport<'_> {
                 },
                 attrs,
                 wasm_bindgen: self.wasm_bindgen,
+                module_symbol: None,
             }
             .to_tokens(tokens);
             return Ok(());
@@ -5014,6 +5021,7 @@ impl TryToTokens for DescribeImport<'_> {
             },
             attrs,
             wasm_bindgen: self.wasm_bindgen,
+            module_symbol: None,
         }
         .to_tokens(tokens);
         Ok(())
@@ -5026,9 +5034,7 @@ impl ToTokens for ast::Enum {
         let name_str = shared::qualified_name(self.js_namespace.as_deref(), &self.js_name);
         let name_len = name_str.chars().count() as u32;
         let name_chars: Vec<u32> = name_str.chars().map(|c| c as u32).collect();
-        let unique_crate_identifier = crate::hash::unique_crate_identifier();
-        let unique_crate_identifier_len = unique_crate_identifier.chars().count() as u32;
-        let unique_crate_identifier_chars = unique_crate_identifier.chars().map(|c| c as u32);
+        let item_origin = describe_item_origin(&self.wasm_bindgen);
         let hole = &self.hole;
         let underlying = if self.signed {
             quote! { i32 }
@@ -5088,8 +5094,7 @@ impl ToTokens for ast::Enum {
                     inform(#name_len);
                     #(inform(#name_chars);)*
                     inform(#hole);
-                    inform(#unique_crate_identifier_len);
-                    #(inform(#unique_crate_identifier_chars);)*
+                    #item_origin
                 }
             }
 
@@ -5159,11 +5164,13 @@ impl ToTokens for ast::Enum {
 impl ToTokens for ast::ImportStatic {
     fn to_tokens(&self, into: &mut TokenStream) {
         let ty = &self.ty;
+        let attrs = &self.attrs;
 
         if let Some(thread_local) = self.thread_local {
             thread_local_import(
                 &self.vis,
                 &self.rust_name,
+                attrs,
                 &self.wasm_bindgen,
                 ty,
                 ty,
@@ -5180,6 +5187,7 @@ impl ToTokens for ast::ImportStatic {
             let init = static_init(wasm_bindgen, ty, shim_name);
 
             into.extend(quote! {
+                #(#attrs)*
                 #[automatically_derived]
                 #[deprecated = "use with `#[wasm_bindgen(thread_local_v2)]` instead"]
             });
@@ -5202,8 +5210,9 @@ impl ToTokens for ast::ImportStatic {
             inner: quote! {
                 <#ty as WasmDescribe>::describe();
             },
-            attrs: vec![],
+            attrs: crate::cfg_gate_attrs(attrs),
             wasm_bindgen: &self.wasm_bindgen,
+            module_symbol: None,
         }
         .to_tokens(into);
     }
@@ -5217,6 +5226,7 @@ impl ToTokens for ast::ImportString {
         thread_local_import(
             &self.vis,
             &self.rust_name,
+            &self.attrs,
             &self.wasm_bindgen,
             &actual_ty,
             &self.ty,
@@ -5230,6 +5240,7 @@ impl ToTokens for ast::ImportString {
 fn thread_local_import(
     vis: &syn::Visibility,
     name: &Ident,
+    attrs: &[syn::Attribute],
     wasm_bindgen: &syn::Path,
     actual_ty: &syn::Type,
     ty: &syn::Type,
@@ -5241,6 +5252,7 @@ fn thread_local_import(
     match thread_local {
         ast::ThreadLocal::V1 => quote! {
             #wasm_bindgen::__rt::std::thread_local! {
+                #(#attrs)*
                 #[automatically_derived]
                 #[deprecated = "use with `#[wasm_bindgen(thread_local_v2)]` instead"]
                 #vis static #name: #actual_ty = {
@@ -5250,6 +5262,7 @@ fn thread_local_import(
         },
         ast::ThreadLocal::V2 => {
             quote! {
+                #(#attrs)*
                 #vis static #name: #wasm_bindgen::JsThreadLocal<#actual_ty> = {
                     fn init() -> #actual_ty {
                         #init
@@ -5290,6 +5303,10 @@ struct Descriptor<'a, T> {
     inner: T,
     attrs: Vec<syn::Attribute>,
     wasm_bindgen: &'a syn::Path,
+    /// Export the descriptor as this symbol prefix followed by
+    /// `module_path!()` (see `shared::module_mangled_symbol`) instead of by
+    /// `ident`.
+    module_symbol: Option<String>,
 }
 
 impl<T: ToTokens> ToTokens for Descriptor<'_, T> {
@@ -5307,12 +5324,22 @@ impl<T: ToTokens> ToTokens for Descriptor<'_, T> {
         }
 
         let ident = self.ident;
-
-        if !DESCRIPTORS_EMITTED.with(|list| list.borrow_mut().insert(ident.to_string())) {
-            return;
-        }
-
         let name = Ident::new(&format!("__wbindgen_describe_{ident}"), ident.span());
+
+        // A module-qualified symbol needs no dedup: two items with the same
+        // name in one module are already a Rust error.
+        let symbol = match &self.module_symbol {
+            Some(prefix) => {
+                let prefix = format!("__wbindgen_describe_{prefix}");
+                quote!(#[export_name = concat!(#prefix, module_path!())])
+            }
+            None => {
+                if !DESCRIPTORS_EMITTED.with(|list| list.borrow_mut().insert(ident.to_string())) {
+                    return;
+                }
+                quote!(#[no_mangle])
+            }
+        };
         let inner = &self.inner;
         let attrs = &self.attrs;
         let wasm_bindgen = &self.wasm_bindgen;
@@ -5322,7 +5349,7 @@ impl<T: ToTokens> ToTokens for Descriptor<'_, T> {
             const _: () = {
                 #wasm_bindgen::__wbindgen_coverage! {
                 #(#attrs)*
-                #[no_mangle]
+                #symbol
                 #[doc(hidden)]
                 pub extern "C-unwind" fn #name() {
                     use #wasm_bindgen::describe::*;
@@ -5334,6 +5361,22 @@ impl<T: ToTokens> ToTokens for Descriptor<'_, T> {
             };
         })
         .to_tokens(tokens);
+    }
+}
+
+/// Descriptor words locating a type's definition, so the CLI can tell
+/// same-named types in different crates and modules apart.
+fn describe_item_origin(wasm_bindgen: &syn::Path) -> TokenStream {
+    let unique_crate_identifier = crate::hash::unique_crate_identifier();
+    let len = unique_crate_identifier.chars().count() as u32;
+    let chars = unique_crate_identifier.chars().map(u32::from);
+    quote! {
+        inform(#len);
+        #(inform(#chars);)*
+        // A `const` item, so the hash is computed by rustc and informed as a
+        // constant (see `module_path_hash`).
+        const MODULE_PATH_HASH: u32 = #wasm_bindgen::__rt::module_path_hash(module_path!());
+        inform(MODULE_PATH_HASH);
     }
 }
 

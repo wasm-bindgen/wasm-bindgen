@@ -814,10 +814,16 @@ impl<'a> Context<'a> {
             if let Some(mem) = self.module.memories.iter().next() {
                 if let Some(id) = mem.import {
                     self.module.imports.get_mut(id).module = PLACEHOLDER_MODULE.to_owned();
+                    // A memory64 memory has `address: 'i64'`, and its page
+                    // counts are BigInts.
+                    let n = if mem.memory64 { "n" } else { "" };
                     let mut init_memory = "new WebAssembly.Memory({".to_string();
-                    init_memory.push_str(&format!("initial:{}", mem.initial));
+                    init_memory.push_str(&format!("initial:{}{n}", mem.initial));
                     if let Some(max) = mem.maximum {
-                        init_memory.push_str(&format!(",maximum:{max}"));
+                        init_memory.push_str(&format!(",maximum:{max}{n}"));
+                    }
+                    if mem.memory64 {
+                        init_memory.push_str(",address:'i64'");
                     }
                     if mem.shared {
                         init_memory.push_str(",shared:true");
@@ -4969,14 +4975,14 @@ if (require('worker_threads').isMainThread) {{
         for (_, e) in crate::sorted_iter(&self.aux.enums) {
             self.generate_enum(e)?;
         }
-        for (_, e) in crate::sorted_iter(&self.aux.string_enums) {
-            self.generate_string_enum(e)?;
-        }
         // Dynamic unions can reference each other (a variant payload may
         // itself be another dynamic union or a string enum). Walk the
         // reference closure before emitting so that all transitively-
         // referenced types get rendered.
         self.expand_typescript_refs();
+        for (_, e) in crate::sorted_iter(&self.aux.string_enums) {
+            self.generate_string_enum(e)?;
+        }
         for (_, e) in crate::sorted_iter(&self.aux.dynamic_unions) {
             self.generate_dynamic_union(e)?;
         }
