@@ -313,32 +313,29 @@ where
     }
 }
 
-/// Internal trait used by the `slice = array` macro codegen.
-///
-/// Produces the wire representation JS observes when an outgoing `&[T]`
-/// argument is rendered as a plain `Array`. There are two impl shapes,
-/// neither of which requires `T: Clone`:
+/// Internal trait used by the `slice = array | copy` macro codegen, so that a
+/// `&[T]` argument can cross even when `T` has no borrowed slice ABI (e.g.
+/// `&[String]`). There are two impl shapes, neither of which requires
+/// `T: Clone`:
 ///
 /// * For primitive numeric `T` (`u8`, `i32`, `f64`, ...) the wire is a
-///   borrow of the slice memory directly — no allocation, no copy. The
-///   JS-side shim performs `Array.from(typedArrayView)` to materialise
-///   the JS `Array` and never frees the buffer.
+///   borrow of the slice memory directly — no allocation, no copy.
 /// * For everything else (`String`, `JsValue`, imported types, exported
-///   types) the wire is a freshly allocated `Box<[u32]>` of externref
-///   indices — one per element, constructed via `&T -> JsValue` (which
-///   for handle-shaped types is a refcount bump on the existing JS
-///   slot, and for `String` / value-shaped types creates a fresh JS
-///   value). The JS-side shim reads the indices into a JS `Array` and
-///   frees the index buffer.
+///   types) the wire is a freshly allocated `Box<[JsValue]>`, one element
+///   per item, constructed via `&T -> JsValue` (which for handle-shaped
+///   types is a refcount bump on the existing JS slot, and for `String` /
+///   value-shaped types creates a fresh JS value). JS owns and frees it.
 ///
-/// Both shapes carry the same `WasmSlice` (ptr + len) on the wire. The
-/// cli-support side picks the right JS shim based on the element
-/// `VectorKind` recovered from the descriptor.
+/// [`Wire`](Self::Wire) describes whichever of the two it is, so the CLI sees
+/// the true ownership of the buffer.
 ///
-/// Not user-facing: users opt in via `#[wasm_bindgen(slice = array)]` (or its
-/// `slice_to_array` alias) on an imported argument, function, or `extern "C"`
-/// block.
+/// Not user-facing: users opt in via `#[wasm_bindgen(slice = ..)]` on an
+/// imported argument, function, or `extern "C"` block.
 pub trait VectorRefIntoWasmAbi {
+    /// The type whose `WasmDescribe` matches the wire `slice_into_abi`
+    /// produces.
+    type Wire: WasmDescribe;
+
     /// Construct the wire representation for `Some(slice)`. The returned
     /// `WasmSlice` is either a borrow of the input slice (primitive
     /// case) or a buffer JS owns and frees (handle-shaped case).
@@ -361,10 +358,10 @@ pub trait VectorRefIntoWasmAbi {
 macro_rules! vector_ref_into_wasm_abi_primitive {
     ($($t:ty)*) => ($(
         impl VectorRefIntoWasmAbi for $t {
+            type Wire = &'static [$t];
+
             #[inline]
             fn slice_into_abi(slice: &[Self]) -> WasmSlice {
-                // Borrow of the slice memory; the JS shim does
-                // `Array.from(view)` and never frees.
                 WasmSlice::from_usize(slice.as_ptr() as usize, slice.len())
             }
         }
@@ -377,12 +374,10 @@ impl<T> VectorRefIntoWasmAbi for T
 where
     for<'a> &'a T: Into<JsValue>,
 {
+    type Wire = Box<[JsValue]>;
+
     #[inline]
     fn slice_into_abi(slice: &[Self]) -> WasmSlice {
-        // Build a fresh `[JsValue]` buffer one element at a time. The
-        // existing `Vec<JsValue>` ABI hands off the buffer to JS; the
-        // JS shim drops each externref slot it reads and frees the
-        // buffer.
         let js_vals: Box<[JsValue]> = slice.iter().map(Into::into).collect();
         js_vals.into_abi()
     }

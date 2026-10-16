@@ -87,9 +87,19 @@ pub enum Descriptor {
     Unit,
     NonNull,
     RawPointer,
-    /// A `Ref(Slice(_))`, or an `Option` of one, with a primitive element kind,
-    /// handed to JS as a fresh typed-array copy of the borrowed slice.
-    CopySlice(Box<Descriptor>),
+    /// An imported function argument under a non-default `slice = ..` mode.
+    /// Only ever wraps a typed sequence (see [`Descriptor::is_typed_sequence`]).
+    SliceMode(SliceMode, Box<Descriptor>),
+}
+
+/// How a typed sequence reaches JS: as a view of wasm memory, a fresh plain
+/// `Array`, or a fresh typed array.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum SliceMode {
+    #[default]
+    View,
+    Array,
+    Copy,
 }
 
 /// Kinds of exported items that share the one JS/TypeScript name space.
@@ -269,38 +279,18 @@ impl Descriptor {
             CLAMPED => Descriptor::_decode(data, true),
             NONNULL => Descriptor::NonNull,
             RAW_POINTER => Descriptor::RawPointer,
-            // Like `LONGREF`, both slice-mode markers are resolved here: only
-            // primitive element kinds have a typed form, so only they change
-            // shape; everything else keeps the plain contents and with them
-            // its default handling.
-            COPY_SLICE => {
+            // The macro marks every argument in a mode's scope; the mode only
+            // means something for a typed sequence, so every other shape
+            // drops it here and keeps its default handling.
+            SLICE_MODE => {
+                let mode = match get(data) {
+                    SLICE_MODE_ARRAY => SliceMode::Array,
+                    SLICE_MODE_COPY => SliceMode::Copy,
+                    other => panic!("unknown slice mode: {other}"),
+                };
                 let contents = Descriptor::_decode(data, clamped);
-                if is_primitive_ref_slice(&contents) {
-                    Descriptor::CopySlice(Box::new(contents))
-                } else {
-                    contents
-                }
-            }
-            SLICE_TO_ARRAY => {
-                // `Ref(Vector(prim))` is exactly what the concrete-element
-                // `slice_to_array` rewrite describes (through `&Vec<T>`), and
-                // like this marker its wire is a borrow of the caller's
-                // slice, so the two converge on one representation.
-                let contents = Descriptor::_decode(data, clamped);
-                if is_primitive_ref_slice(&contents) {
-                    fn to_vector(d: Descriptor) -> Descriptor {
-                        match d {
-                            Descriptor::Option(d) => Descriptor::Option(Box::new(to_vector(*d))),
-                            Descriptor::Ref(d) => match *d {
-                                Descriptor::Slice(elem) => {
-                                    Descriptor::Ref(Box::new(Descriptor::Vector(elem)))
-                                }
-                                d => Descriptor::Ref(Box::new(d)),
-                            },
-                            d => d,
-                        }
-                    }
-                    to_vector(contents)
+                if contents.is_typed_sequence() {
+                    Descriptor::SliceMode(mode, Box::new(contents))
                 } else {
                     contents
                 }
@@ -398,6 +388,27 @@ impl Descriptor {
         }
     }
 
+    /// Whether this is a borrowed `Ref(Slice(_))` or owned `Vector(_)`, or an
+    /// `Option` of either, whose element kind has a typed-array form.
+    pub fn is_typed_sequence(&self) -> bool {
+        let d = match self {
+            Descriptor::Option(d) => d,
+            d => d,
+        };
+        let shaped = match d {
+            Descriptor::Ref(d) => matches!(**d, Descriptor::Slice(_)),
+            Descriptor::Vector(_) => true,
+            _ => false,
+        };
+        shaped
+            && d.vector_kind().is_some_and(|kind| {
+                !matches!(
+                    kind,
+                    VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_)
+                )
+            })
+    }
+
     pub fn vector_kind(&self) -> Option<VectorKind> {
         let inner = match *self {
             Descriptor::String | Descriptor::CachedString => return Some(VectorKind::String),
@@ -433,22 +444,6 @@ impl Descriptor {
             _ => None,
         }
     }
-}
-
-/// Whether `d` is a `Ref(Slice(_))`, or an `Option` of one, whose element
-/// kind has a typed-array form (i.e. not the string/externref handle tier).
-fn is_primitive_ref_slice(d: &Descriptor) -> bool {
-    let slice = match d {
-        Descriptor::Option(d) => d,
-        d => d,
-    };
-    matches!(slice, Descriptor::Ref(d) if matches!(**d, Descriptor::Slice(_)))
-        && slice.vector_kind().is_some_and(|kind| {
-            !matches!(
-                kind,
-                VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_)
-            )
-        })
 }
 
 fn get(a: &mut &[u32]) -> u32 {
@@ -492,49 +487,44 @@ fn vector_kind_accepts_memory64_scalar_descriptors() {
 }
 
 #[test]
-fn slice_mode_markers_apply_only_to_primitive_slices() {
+fn slice_mode_applies_only_to_typed_sequences() {
     let slice = |elem| Descriptor::Ref(Box::new(Descriptor::Slice(Box::new(elem))));
-    let vector = |elem| Descriptor::Ref(Box::new(Descriptor::Vector(Box::new(elem))));
+    let vector = |elem| Descriptor::Vector(Box::new(elem));
+    let mode = |mode, d| Descriptor::SliceMode(mode, Box::new(d));
+    let copy = |rest: &[u32]| Descriptor::decode(&[&[SLICE_MODE, SLICE_MODE_COPY], rest].concat());
+    let array =
+        |rest: &[u32]| Descriptor::decode(&[&[SLICE_MODE, SLICE_MODE_ARRAY], rest].concat());
+
     assert_eq!(
-        Descriptor::decode(&[COPY_SLICE, REF, SLICE, U8]),
-        Descriptor::CopySlice(Box::new(slice(Descriptor::U8)))
+        copy(&[REF, SLICE, U8]),
+        mode(SliceMode::Copy, slice(Descriptor::U8))
     );
     assert_eq!(
-        Descriptor::decode(&[COPY_SLICE, OPTIONAL, REF, SLICE, F64]),
-        Descriptor::CopySlice(Box::new(Descriptor::Option(Box::new(slice(
-            Descriptor::F64
-        )))))
+        array(&[OPTIONAL, REF, SLICE, F64]),
+        mode(
+            SliceMode::Array,
+            Descriptor::Option(Box::new(slice(Descriptor::F64)))
+        )
     );
     assert_eq!(
-        Descriptor::decode(&[COPY_SLICE, REF, SLICE, EXTERNREF]),
-        slice(Descriptor::Externref)
+        array(&[CLAMPED, REF, SLICE, U8]),
+        mode(SliceMode::Array, slice(Descriptor::ClampedU8))
     );
     assert_eq!(
-        Descriptor::decode(&[SLICE_TO_ARRAY, REF, SLICE, U8]),
-        vector(Descriptor::U8)
+        array(&[VECTOR, U8]),
+        mode(SliceMode::Array, vector(Descriptor::U8))
+    );
+    assert_eq!(copy(&[REF, SLICE, EXTERNREF]), slice(Descriptor::Externref));
+    assert_eq!(copy(&[VECTOR, EXTERNREF]), vector(Descriptor::Externref));
+    assert_eq!(
+        array(&[REFMUT, SLICE, U8]),
+        Descriptor::RefMut(Box::new(Descriptor::Slice(Box::new(Descriptor::U8))))
     );
     assert_eq!(
-        Descriptor::decode(&[SLICE_TO_ARRAY, OPTIONAL, REF, SLICE, F64]),
-        Descriptor::Option(Box::new(vector(Descriptor::F64)))
+        copy(&[REF, STRING]),
+        Descriptor::Ref(Box::new(Descriptor::String))
     );
-    assert_eq!(
-        Descriptor::decode(&[
-            SLICE_TO_ARRAY,
-            REF,
-            SLICE,
-            NAMED_EXTERNREF,
-            8,
-            'J' as u32,
-            's' as u32,
-            'S' as u32,
-            't' as u32,
-            'r' as u32,
-            'i' as u32,
-            'n' as u32,
-            'g' as u32
-        ]),
-        slice(Descriptor::NamedExternref("JsString".into()))
-    );
+    assert_eq!(array(&[U32]), Descriptor::U32);
 }
 
 impl Function {

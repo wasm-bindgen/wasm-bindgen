@@ -1,4 +1,4 @@
-use crate::descriptor::{Descriptor, Function};
+use crate::descriptor::{Descriptor, Function, SliceMode};
 use crate::wasm_conventions::get_function_table_entry;
 use crate::wit::{AdapterType, ClosureDtor, Instruction, InstructionBuilder};
 use crate::wit::{InstructionData, StackChange};
@@ -180,6 +180,7 @@ impl InstructionBuilder<'_, '_> {
                         kind: kind.clone(),
                         mem,
                         free,
+                        mode: self.slice_mode,
                     },
                     &[AdapterType::Vector(kind)],
                 );
@@ -216,39 +217,13 @@ impl InstructionBuilder<'_, '_> {
                 self.outgoing_function(d.mutable, &d.function, Some(d.owned))?
             }
 
-            Descriptor::CopySlice(d) => self.outgoing_copy_slice(d)?,
+            Descriptor::SliceMode(mode, d) => {
+                self.slice_mode = *mode;
+                let result = self.outgoing(d);
+                self.slice_mode = SliceMode::View;
+                result?;
+            }
         }
-        Ok(())
-    }
-
-    fn outgoing_copy_slice(&mut self, arg: &Descriptor) -> Result<(), Error> {
-        let (slice, optional) = match arg {
-            Descriptor::Option(d) => (&**d, true),
-            d => (d, false),
-        };
-        let kind = slice
-            .vector_kind()
-            .ok_or_else(|| format_err!("unsupported copy_slice argument type {arg:?}"))?;
-        let mem = self.cx.memory()?;
-        let ptr_ty = self.outgoing_internal_word_ty();
-        let (instr, output) = if optional {
-            (
-                Instruction::OptionViewCopy {
-                    kind: kind.clone(),
-                    mem,
-                },
-                AdapterType::Vector(kind).option(),
-            )
-        } else {
-            (
-                Instruction::ViewCopy {
-                    kind: kind.clone(),
-                    mem,
-                },
-                AdapterType::Vector(kind),
-            )
-        };
-        self.instruction(&[ptr_ty.clone(), ptr_ty], instr, &[output]);
         Ok(())
     }
 
@@ -291,42 +266,7 @@ impl InstructionBuilder<'_, '_> {
                     Instruction::View {
                         kind: kind.clone(),
                         mem,
-                    },
-                    &[AdapterType::Vector(kind)],
-                );
-            }
-
-            // `slice_to_array` argument: the macro rewrites a user-facing
-            // `&[T]` into a `&Vec<T>` ABI call, which describes as
-            // `Ref(Vector(T))`. The JS-visible type is a plain `Array`
-            // rather than a typed array, so emit `VectorLoadAsArray`.
-            //
-            // Ownership depends on the element kind and is decided when
-            // the instruction is rendered (see `VectorLoadAsArray` in
-            // `js/binding.rs`): primitive elements are a *borrow* of the
-            // caller's slice and are never freed, while string/externref
-            // elements arrive in a freshly allocated index buffer that JS
-            // owns and must free.
-            //
-            // This arm is currently produced exclusively by the
-            // `slice_to_array` codegen (`&Box<[T]>` has no `IntoWasmAbi`
-            // impl, and `&Vec<T>` is not exposed as a user-writable
-            // argument type).
-            Descriptor::Vector(_) => {
-                let kind = arg.vector_kind().ok_or_else(|| {
-                    format_err!(
-                        "unsupported argument type for calling JS function from Rust {arg:?}"
-                    )
-                })?;
-                let mem = self.cx.memory()?;
-                let free = self.cx.free()?;
-                let ptr_ty = self.outgoing_internal_word_ty();
-                self.instruction(
-                    &[ptr_ty.clone(), ptr_ty],
-                    Instruction::VectorLoadAsArray {
-                        kind: kind.clone(),
-                        mem,
-                        free,
+                        mode: self.slice_mode,
                     },
                     &[AdapterType::Vector(kind)],
                 );
@@ -530,6 +470,7 @@ impl InstructionBuilder<'_, '_> {
                         kind: kind.clone(),
                         mem,
                         free,
+                        mode: self.slice_mode,
                     },
                     &[AdapterType::Vector(kind).option()],
                 );
@@ -691,7 +632,7 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Function(_)
             | Descriptor::Closure(_)
             | Descriptor::Slice(_)
-            | Descriptor::CopySlice(_)
+            | Descriptor::SliceMode(..)
             | Descriptor::Result(_) => {
                 bail!("unsupported Result type for returning from exported Rust function: {arg:?}")
             }
@@ -731,31 +672,7 @@ impl InstructionBuilder<'_, '_> {
                     Instruction::OptionView {
                         kind: kind.clone(),
                         mem,
-                    },
-                    &[AdapterType::Vector(kind).option()],
-                );
-            }
-            // `slice_to_array` for `Option<&[T]>`: same rewrite as the
-            // non-optional case yields `Option<&Vec<T>>` whose descriptor
-            // is `Option(Ref(Vector(T)))`. Same wire format as
-            // `Option<Vec<T>>` but produces a plain JS `Array` rather
-            // than a typed array for primitive element kinds. See the
-            // `Descriptor::Vector` arm in `outgoing_ref`.
-            Descriptor::Vector(_) => {
-                let kind = arg.vector_kind().ok_or_else(|| {
-                    format_err!(
-                        "unsupported optional vector type for calling JS function from Rust {arg:?}"
-                    )
-                })?;
-                let mem = self.cx.memory()?;
-                let free = self.cx.free()?;
-                let ptr_ty = self.outgoing_internal_word_ty();
-                self.instruction(
-                    &[ptr_ty.clone(), ptr_ty],
-                    Instruction::OptionVectorLoadAsArray {
-                        kind: kind.clone(),
-                        mem,
-                        free,
+                        mode: self.slice_mode,
                     },
                     &[AdapterType::Vector(kind).option()],
                 );

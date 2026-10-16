@@ -2703,13 +2703,11 @@ impl ast::ImportFunction {
                 convert_arg = quote! { #var };
             }
 
-            // `slice = array`: hand JS an owned `Array` instead of a
-            // typed-array view. See `slice_to_array_rewrite`. `slice = copy`
-            // needs no rewrite here: its wire is the argument's default
-            // borrowed ABI, and only the descriptor changes (see
-            // `copy_slice_describe_ty`).
-            if arg.slice_mode == ast::SliceMode::Array {
-                if let Some(rewrite) = slice_to_array_rewrite(wasm_bindgen, &name, &var, ty) {
+            // Under a slice mode, `&[T]` crosses through `VectorRefIntoWasmAbi`
+            // so that elements without a borrowed ABI cross at all. See
+            // `slice_rewrite`; the mode itself is only in the descriptor.
+            if arg.slice_mode != ast::SliceMode::View {
+                if let Some(rewrite) = slice_rewrite(wasm_bindgen, &name, &var, ty) {
                     abi_arguments.extend(rewrite.abi_args);
                     abi_argument_names.extend(rewrite.prim_names);
                     arg_conversions.push(rewrite.conversion);
@@ -3110,10 +3108,8 @@ impl ast::ImportFunction {
     /// (including a generic `-> T`), `catch`, `variadic`, `async` (including a
     /// generic `-> T`, since the value crossing the ABI is the `Promise` and the
     /// resolved value is converted inside `JsFuture<T>`), and the slice modes
-    /// (`slice = array` via the `VectorRefIntoWasmAbi` rewrite for a concrete
-    /// element type, or the `SliceToArray` describe marker for a generic one,
-    /// which resolves per instantiation; `slice = copy` via the `CopySlice`
-    /// marker either way). Argument-position `impl Trait`
+    /// (a generic slice element resolves the mode per instantiation).
+    /// Argument-position `impl Trait`
     /// (e.g. `fn f(x: impl Clone)`, including nested, e.g. `Vec<impl Clone>`)
     /// is also supported: it is desugared into a synthesized named type
     /// parameter with the same bounds before any of the above logic runs, so
@@ -3587,21 +3583,18 @@ impl ast::ImportFunction {
                 quote! { #name }
             };
 
-            // `slice_to_array`: hand JS an owned `Array` instead of a
-            // typed-array view, exactly as on the normal import path — via the
-            // `VectorRefIntoWasmAbi` rewrite, whose impls are keyed on
-            // concrete ABI shapes, so only when the element type is concrete.
-            let slice_arg = detect_slice_or_option_slice(ty);
-            if arg.slice_mode == ast::SliceMode::Array
-                && slice_arg
-                    .as_ref()
-                    .is_some_and(|s| !generics::uses_generic_params(&s.elem_ty, &type_params))
-            {
-                if let Some(rewrite) = slice_to_array_rewrite(wasm_bindgen, &name, &var, ty) {
+            // As on the normal import path, except that `VectorRefIntoWasmAbi`
+            // is keyed on the element type, so a generic element keeps its
+            // default borrowed ABI.
+            let rewritable = detect_slice_or_option_slice(ty)
+                .is_some_and(|s| !generics::uses_generic_params(&s.elem_ty, &type_params));
+            if arg.slice_mode != ast::SliceMode::View && rewritable {
+                if let Some(rewrite) = slice_rewrite(wasm_bindgen, &name, &var, ty) {
                     shim_abi_args.extend(rewrite.abi_args);
                     all_prim_names.extend(rewrite.prim_names);
                     arg_conversions.push(rewrite.conversion);
-                    let describe_ty = rewrite.describe_ty;
+                    let describe_ty =
+                        slice_mode_describe_ty(wasm_bindgen, ty, arg.slice_mode, true);
                     describe_args.push(quote! {
                         <#describe_ty as #wasm_bindgen::describe::WasmDescribe>::describe();
                     });
@@ -3617,21 +3610,7 @@ impl ast::ImportFunction {
                 let (#(#names),*) = <#abi as #wasm_bindgen::convert::WasmAbi>::split(#name);
             });
             all_prim_names.extend(names);
-            // `slice = copy`, and `slice = array` on a generic element type,
-            // are carried entirely by the descriptor: the wire stays the
-            // default borrowed ABI above, and the marker resolves per element
-            // kind at the CLI (a fresh typed array / `Array` for primitives; a
-            // no-op for the handle tier, which already arrives as a fresh
-            // `Array` of shared handles).
-            let describe_ty = match arg.slice_mode {
-                ast::SliceMode::Copy if slice_arg.is_some() => {
-                    quote! { #wasm_bindgen::describe::CopySlice<#ty> }
-                }
-                ast::SliceMode::Array if slice_arg.is_some() => {
-                    quote! { #wasm_bindgen::describe::SliceToArray<#ty> }
-                }
-                _ => quote! { #ty },
-            };
+            let describe_ty = slice_mode_describe_ty(wasm_bindgen, ty, arg.slice_mode, false);
             describe_args.push(quote! {
                 <#describe_ty as #wasm_bindgen::describe::WasmDescribe>::describe();
             });
@@ -5079,26 +5058,15 @@ impl TryToTokens for DescribeImport<'_> {
                     &fn_class_generics.concrete_defaults,
                     &fn_lifetime_params,
                 )?;
-                // Must match the ABI rewrite in `ImportFunction::try_to_tokens`;
-                // both go through the same helper. Non-slice args under a fn- or
-                // block-level slice mode fall through to their default
-                // describe.
-                match arg.slice_mode {
-                    ast::SliceMode::Array => {
-                        if let Some(describe_ty) =
-                            slice_to_array_describe_ty(self.wasm_bindgen, &ty)
-                        {
-                            return Ok(describe_ty);
-                        }
-                    }
-                    ast::SliceMode::Copy => {
-                        if let Some(describe_ty) = copy_slice_describe_ty(self.wasm_bindgen, &ty) {
-                            return Ok(describe_ty);
-                        }
-                    }
-                    ast::SliceMode::View => {}
-                }
-                Ok(ty)
+                // Matches `slice_rewrite` in `ImportFunction::try_to_tokens`,
+                // which applies to every slice-shaped argument here (the
+                // parser leaves no generic element under a mode on this path).
+                Ok(slice_mode_describe_ty(
+                    self.wasm_bindgen,
+                    &ty,
+                    arg.slice_mode,
+                    true,
+                ))
             })
             .collect::<Result<Vec<syn::Type>, Diagnostic>>()?;
         let nargs = f.function.arguments.len() as u32;
@@ -5657,16 +5625,20 @@ pub(crate) struct SliceArg {
     pub is_option: bool,
     /// Whether the reference was `&mut` rather than `&`.
     ///
-    /// Neither slice mode can honour this: each hands JS an owned copy, and
+    /// Neither copying mode can honour this: each hands JS an owned copy, and
     /// mutations to that copy are not written back into the caller's slice.
     /// The parser rejects the combination rather than silently dropping the
     /// write-back; see `check_slice_mode_arg` in `parser.rs`.
     pub is_mut: bool,
+    /// Whether the slice was wrapped in `Clamped`, which has its own borrowed
+    /// ABI and so is never rewritten.
+    pub is_clamped: bool,
 }
 
-/// Recognise `&[T]`, `&mut [T]`, and either wrapped in `Option`. Used by the
-/// slice-mode codegen to rewrite the ABI or describe paths, and by the parser
-/// to reject the mutable form and resolve the generic-element one.
+/// Recognise `&[T]`, `&mut [T]`, either wrapped in `Clamped`, and any of those
+/// wrapped in `Option`. Used by the slice-mode codegen to rewrite the ABI, and
+/// by the parser to reject the mutable form and resolve the generic-element
+/// one.
 pub(crate) fn detect_slice_or_option_slice(ty: &syn::Type) -> Option<SliceArg> {
     // Direct `&[T]` / `&mut [T]`.
     if let syn::Type::Reference(syn::TypeReference {
@@ -5678,10 +5650,11 @@ pub(crate) fn detect_slice_or_option_slice(ty: &syn::Type) -> Option<SliceArg> {
                 elem_ty: (**inner).clone(),
                 is_option: false,
                 is_mut: mutability.is_some(),
+                is_clamped: false,
             });
         }
     }
-    // `Option<&[T]>` — match shape `Option<...>` and recurse once.
+    // `Option<..>` or `Clamped<..>` — match the wrapper and recurse.
     if let syn::Type::Path(syn::TypePath {
         attrs: _,
         qself: None,
@@ -5689,19 +5662,22 @@ pub(crate) fn detect_slice_or_option_slice(ty: &syn::Type) -> Option<SliceArg> {
     }) = ty
     {
         if let Some(seg) = path.segments.last() {
-            if seg.ident == "Option" {
-                if let syn::PathArguments::AngleBracketed(args) = &seg.arguments {
-                    if args.args.len() == 1 {
-                        if let syn::GenericArgument::Type(inner) = &args.args[0] {
-                            if let Some(inner) = detect_slice_or_option_slice(inner) {
-                                if !inner.is_option {
-                                    return Some(SliceArg {
-                                        is_option: true,
-                                        ..inner
-                                    });
-                                }
-                            }
-                        }
+            if let syn::PathArguments::AngleBracketed(args) = &seg.arguments {
+                if let (1, Some(syn::GenericArgument::Type(inner))) =
+                    (args.args.len(), args.args.first())
+                {
+                    let inner = detect_slice_or_option_slice(inner)?;
+                    if seg.ident == "Option" && !inner.is_option {
+                        return Some(SliceArg {
+                            is_option: true,
+                            ..inner
+                        });
+                    }
+                    if seg.ident == "Clamped" && !inner.is_option && !inner.is_clamped {
+                        return Some(SliceArg {
+                            is_clamped: true,
+                            ..inner
+                        });
                     }
                 }
             }
@@ -5737,90 +5713,87 @@ fn result_err_ty(ty: &syn::Type) -> Option<&syn::Type> {
     }
 }
 
-/// The type to hand `WasmDescribe::describe` for a `slice_to_array` argument,
-/// or `None` if `ty` is not slice-shaped.
+/// The type describing an import argument under slice mode `mode`.
 ///
-/// Describing through `&Vec<T>` / `Option<&Vec<T>>` makes the descriptor
-/// `Ref(Vector(T))` / `Option(Ref(Vector(T)))`, which is what cli-support
-/// recognises as "hand JS an owned `Array`" rather than "hand JS a typed-array
-/// view". This must stay in lockstep with the ABI rewrite in
-/// [`slice_to_array_rewrite`]: the descriptor is what selects the JS shim, and
-/// the ABI is what the shim is handed.
-fn slice_to_array_describe_ty(wasm_bindgen: &syn::Path, ty: &syn::Type) -> Option<syn::Type> {
+/// The mode is a bit on every argument in its scope, wrapped around the
+/// describe of the argument's actual wire: the CLI applies it to typed
+/// sequences (borrowed or owned, clamped or not) and drops it on every other
+/// shape, so nothing here inspects the argument beyond `rewritten`, which says
+/// whether the wire is [`slice_rewrite`]'s (when `ty` is rewritable at all).
+fn slice_mode_describe_ty(
+    wasm_bindgen: &syn::Path,
+    ty: &syn::Type,
+    mode: ast::SliceMode,
+    rewritten: bool,
+) -> syn::Type {
+    let mode = match mode {
+        ast::SliceMode::View => return ty.clone(),
+        ast::SliceMode::Array => shared::tys::SLICE_MODE_ARRAY,
+        ast::SliceMode::Copy => shared::tys::SLICE_MODE_COPY,
+    };
+    let wire = rewritten
+        .then(|| slice_rewrite_wire_ty(wasm_bindgen, ty))
+        .flatten()
+        .unwrap_or_else(|| ty.clone());
+    parse_quote! { #wasm_bindgen::describe::SliceMode<#wire, #mode> }
+}
+
+/// The type describing [`slice_rewrite`]'s wire for `ty`, or `None` if `ty`
+/// is not rewritten.
+fn slice_rewrite_wire_ty(wasm_bindgen: &syn::Path, ty: &syn::Type) -> Option<syn::Type> {
     let SliceArg {
-        elem_ty, is_option, ..
-    } = detect_slice_or_option_slice(ty)?;
-    // `alloc`, not `std`: `wasm-bindgen` is `#![no_std]` and supports `no_std`
-    // consumers, so generated code must never name `::std`.
-    let vec = quote! { #wasm_bindgen::__rt::alloc::vec::Vec };
-    // `Option` likewise goes through the `__rt::core` re-export rather than a
-    // bare `::core`, for the same call-site-hygiene reason as `Vec` above.
-    let option = quote! { #wasm_bindgen::__rt::core::option::Option };
+        elem_ty,
+        is_option,
+        is_clamped: false,
+        ..
+    } = detect_slice_or_option_slice(ty)?
+    else {
+        return None;
+    };
+    let wire = quote! { <#elem_ty as #wasm_bindgen::convert::VectorRefIntoWasmAbi>::Wire };
+    // `Option` goes through the `__rt::core` re-export rather than a bare
+    // `::core`, as generated code is expanded with call-site hygiene.
     Some(if is_option {
-        parse_quote! { #option<&#vec<#elem_ty>> }
+        parse_quote! { #wasm_bindgen::__rt::core::option::Option<#wire> }
     } else {
-        parse_quote! { &#vec<#elem_ty> }
+        parse_quote! { #wire }
     })
 }
 
-/// The type to hand `WasmDescribe::describe` for a `slice = copy` argument,
-/// or `None` if `ty` is not slice-shaped.
-///
-/// Unlike `slice = array`, `slice = copy` leaves the argument's ABI untouched
-/// — the wire is the default borrowed `WasmSlice` — so the describe type is
-/// just the argument's own type under the `CopySlice` marker. The CLI resolves
-/// the marker per element kind: a fresh typed array for primitives, a no-op
-/// otherwise (see `COPY_SLICE` in cli-support's `descriptor.rs`).
-fn copy_slice_describe_ty(wasm_bindgen: &syn::Path, ty: &syn::Type) -> Option<syn::Type> {
-    detect_slice_or_option_slice(ty)?;
-    Some(parse_quote! { #wasm_bindgen::describe::CopySlice<#ty> })
-}
-
-/// The pieces of the `slice_to_array` rewrite for one argument.
-struct SliceToArrayRewrite {
+/// The pieces of the slice-mode ABI rewrite for one argument.
+struct SliceRewrite {
     /// Flattened wasm ABI parameters to splice into the shim signature.
     abi_args: Vec<TokenStream>,
     /// The names `conversion` binds, in ABI order.
     prim_names: Vec<Ident>,
     /// Statements converting the user-facing argument into `prim_names`.
     conversion: TokenStream,
-    /// The type to describe, per [`slice_to_array_describe_ty`].
-    describe_ty: syn::Type,
 }
 
-/// Build the `slice_to_array` rewrite for one argument, or `None` if `ty` is not
-/// slice-shaped (`&[T]` / `Option<&[T]>`).
+/// Build the slice-mode ABI rewrite for one argument, or `None` if `ty` is not
+/// `&[T]` / `Option<&[T]>`.
 ///
-/// This re-routes the argument through `<T as VectorRefIntoWasmAbi>` instead of
-/// the default `&[T]: IntoWasmAbi`. The user-facing parameter is unchanged; only
-/// the ABI and describe paths move. `VectorRefIntoWasmAbi`'s impls cover the two
-/// genuine ABI shapes (zero-copy borrow for primitive elements, freshly
-/// allocated `Box<[u32]>` for handle-shaped ones), so no `T: Clone` bound is
-/// introduced. The wire format is `WasmSlice` either way; cli-support picks the
-/// right JS shim from the element `VectorKind` in the descriptor.
-///
-/// `slice_to_array` is set per argument, per fn, or per `extern "C"` block and
-/// applies to every slice-shaped argument it covers. Arguments that are not
-/// slice-shaped (the `this: &Foo` receiver of a method, a `Vec<T>`, any scalar)
-/// return `None` and take the default ABI path — there is no per-argument
-/// opt-out in Rust attribute syntax to require, so a silent no-op is the only
-/// sensible behaviour.
+/// `&[String]` (like any element without a borrowed slice ABI) can only reach
+/// JS as a fresh `Array`, which is what a slice mode asks for, so under a mode
+/// the argument crosses through `<T as VectorRefIntoWasmAbi>` instead of the
+/// default `&[T]: IntoWasmAbi`: a borrow for primitive elements, a fresh
+/// buffer for the rest. The user-facing parameter is unchanged, and the
+/// describe is the wire's own (see [`slice_rewrite_wire_ty`]).
 ///
 /// A `&mut [T]` never reaches here (the parser rejects it; see
 /// `check_slice_mode_arg` in `parser.rs`), and nor does a generic element
 /// type: the parser downgrades it to the default mode on the type-erasure
-/// path, and the per-mono codegen routes it through the `SliceToArray`
-/// describe marker instead of this rewrite.
-fn slice_to_array_rewrite(
+/// path, and the per-mono codegen keeps its default ABI.
+fn slice_rewrite(
     wasm_bindgen: &syn::Path,
     name: &Ident,
     var: &TokenStream,
     ty: &syn::Type,
-) -> Option<SliceToArrayRewrite> {
+) -> Option<SliceRewrite> {
+    slice_rewrite_wire_ty(wasm_bindgen, ty)?;
     let SliceArg {
         elem_ty, is_option, ..
     } = detect_slice_or_option_slice(ty)?;
-    let describe_ty = slice_to_array_describe_ty(wasm_bindgen, ty)?;
 
     let abi = quote! { #wasm_bindgen::convert::WasmSlice };
     let (abi_args, prim_names) = splat(wasm_bindgen, name, &abi, Span::call_site());
@@ -5849,11 +5822,10 @@ fn slice_to_array_rewrite(
                 ::split(#name);
     };
 
-    Some(SliceToArrayRewrite {
+    Some(SliceRewrite {
         abi_args,
         prim_names,
         conversion,
-        describe_ty,
     })
 }
 

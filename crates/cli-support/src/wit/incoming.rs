@@ -188,7 +188,7 @@ impl InstructionBuilder<'_, '_> {
 
             Descriptor::Result(_) |
             // Only on imported function arguments
-            Descriptor::CopySlice(_) |
+            Descriptor::SliceMode(..) |
             // Always behind a `Ref`
             Descriptor::Slice(_) => bail!(
                 "unsupported argument type for calling Rust function from JS: {arg:?}"

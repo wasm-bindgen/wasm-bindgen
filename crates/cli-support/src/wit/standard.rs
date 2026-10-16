@@ -1,4 +1,4 @@
-use crate::descriptor::VectorKind;
+use crate::descriptor::{SliceMode, VectorKind};
 use std::borrow::Cow;
 use std::collections::{BTreeMap, HashSet};
 use walrus::{ExportId, FunctionId, ImportId, RefType, TypedCustomSectionId};
@@ -334,40 +334,20 @@ pub enum Instruction {
         /// If we're in reference-types mode, the externref table ID to get the cached string from.
         table: Option<walrus::TableId>,
     },
-    /// pops ptr/length, pushes a vector, frees the original data
+    /// pops ptr/length, pushes a vector, frees the original data. Freed data
+    /// cannot be left as a view, so `SliceMode::View` renders as `Copy`.
     VectorLoad {
         kind: VectorKind,
         mem: walrus::MemoryId,
         free: walrus::FunctionId,
-    },
-    /// pops ptr/length, pushes a plain JS `Array`, frees the original data.
-    ///
-    /// Identical to `VectorLoad` but, for primitive element kinds, the
-    /// transferred typed-array view is wrapped in `Array.from(...)` so the
-    /// JS side observes a plain heterogeneous `Array` rather than a typed
-    /// array. Used for outgoing `&Vec<T>` arguments where the JS-visible
-    /// type contract is "Array of values" instead of "buffer of bytes".
-    /// For string / externref vector kinds the existing helper already
-    /// builds a plain `Array`, so this instruction behaves identically to
-    /// `VectorLoad` for those kinds.
-    VectorLoadAsArray {
-        kind: VectorKind,
-        mem: walrus::MemoryId,
-        free: walrus::FunctionId,
+        mode: SliceMode,
     },
     /// pops ptr/length, pushes a vector, frees the original data
     OptionVectorLoad {
         kind: VectorKind,
         mem: walrus::MemoryId,
         free: walrus::FunctionId,
-    },
-    /// pops ptr/length, pushes an optional plain JS `Array`, frees the
-    /// original data. Counterpart of `VectorLoadAsArray` for
-    /// `Option<&Vec<T>>` outgoing arguments.
-    OptionVectorLoadAsArray {
-        kind: VectorKind,
-        mem: walrus::MemoryId,
-        free: walrus::FunctionId,
+        mode: SliceMode,
     },
     /// pops i32, loads externref from externref table
     TableGet,
@@ -378,27 +358,19 @@ pub enum Instruction {
         mutable: bool,
         dtor: ClosureDtor,
     },
-    /// pops two i32 data pointers, pushes a vector view
+    /// pops two i32 data pointers, pushes a vector view (or a copy of it, per
+    /// `mode`); the borrowed data is not freed
     View {
         kind: VectorKind,
         mem: walrus::MemoryId,
+        mode: SliceMode,
     },
-    /// pops two i32 data pointers, pushes a vector view
+    /// pops two i32 data pointers, pushes an optional vector view (or a copy
+    /// of it, per `mode`); the borrowed data is not freed
     OptionView {
         kind: VectorKind,
         mem: walrus::MemoryId,
-    },
-    /// pops two i32 data pointers, pushes a copy of the typed-array view;
-    /// the borrowed data is not freed
-    ViewCopy {
-        kind: VectorKind,
-        mem: walrus::MemoryId,
-    },
-    /// pops two i32 data pointers, pushes an optional copy of the typed-array
-    /// view; the borrowed data is not freed
-    OptionViewCopy {
-        kind: VectorKind,
-        mem: walrus::MemoryId,
+        mode: SliceMode,
     },
     /// pops f64, pushes it viewed as an optional value with a known sentinel
     OptionF64Sentinel,
@@ -540,8 +512,6 @@ impl walrus::CustomSection for NonstandardWitSection {
                     | LoadRetptr { mem, .. }
                     | View { mem, .. }
                     | OptionView { mem, .. }
-                    | ViewCopy { mem, .. }
-                    | OptionViewCopy { mem, .. }
                     | MemoryToString(mem) => {
                         roots.push_memory(mem);
                     }
@@ -554,9 +524,7 @@ impl walrus::CustomSection for NonstandardWitSection {
                         roots.push_func(malloc);
                     }
                     VectorLoad { free, mem, .. }
-                    | VectorLoadAsArray { free, mem, .. }
                     | OptionVectorLoad { free, mem, .. }
-                    | OptionVectorLoadAsArray { free, mem, .. }
                     | CachedStringLoad { free, mem, .. } => {
                         roots.push_memory(mem);
                         roots.push_func(free);

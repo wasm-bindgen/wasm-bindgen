@@ -256,9 +256,8 @@ export function __wbindgen_generic_000000000000001a(arg0) {
     return ret;
 }
 export function __wbindgen_generic_000000000000001b(arg0, arg1, arg2) {
-    var v0 = Array.from(getArrayU16FromWasm0(arg0, arg1));
-    // generic import `logBlockSlice`: [Ref(Vector(U16)), U32] -> Unit
-    logBlockSlice(v0, arg2 >>> 0);
+    // generic import `logBlockSlice`: [SliceMode(Array, Ref(Slice(U16))), U32] -> Unit
+    logBlockSlice(Array.from(getArrayU16FromWasm0(arg0, arg1)), arg2 >>> 0);
 }
 export function __wbindgen_generic_000000000000001c(arg0, arg1) {
     // generic import `logGenericSlice`: [Ref(Slice(F64))] -> Unit
@@ -289,12 +288,8 @@ export function __wbindgen_generic_0000000000000021(arg0, arg1) {
     logNestedImplTrait(v0);
 }
 export function __wbindgen_generic_0000000000000022(arg0, arg1, arg2) {
-    let v0;
-    if (arg0 !== 0) {
-        v0 = Array.from(getArrayU16FromWasm0(arg0, arg1));
-    }
-    // generic import `logOptSlice`: [Option(Ref(Vector(U16))), U32] -> Unit
-    logOptSlice(v0, arg2 >>> 0);
+    // generic import `logOptSlice`: [SliceMode(Array, Option(Ref(Slice(U16)))), U32] -> Unit
+    logOptSlice(arg0 === 0 ? undefined : Array.from(getArrayU16FromWasm0(arg0, arg1)), arg2 >>> 0);
 }
 export function __wbindgen_generic_0000000000000023(arg0, arg1, arg2) {
     let v0;
@@ -302,7 +297,7 @@ export function __wbindgen_generic_0000000000000023(arg0, arg1, arg2) {
         v0 = getArrayJsValueFromWasm0(arg0, arg1);
         wasm.__wbindgen_free(arg0, arg1 * 4, 4);
     }
-    // generic import `logOptStrSlice`: [Option(Ref(Vector(NamedExternref("string")))), U32] -> Unit
+    // generic import `logOptStrSlice`: [Option(Vector(Externref)), U32] -> Unit
     logOptStrSlice(v0, arg2 >>> 0);
 }
 export function __wbindgen_generic_0000000000000024(arg0) {
@@ -310,19 +305,17 @@ export function __wbindgen_generic_0000000000000024(arg0) {
     logRef(arg0);
 }
 export function __wbindgen_generic_0000000000000025(arg0, arg1, arg2) {
-    var v0 = Array.from(getArrayU16FromWasm0(arg0, arg1));
-    // generic import `logSlice`: [Ref(Vector(U16)), F64] -> Unit
-    logSlice(v0, arg2);
+    // generic import `logSlice`: [SliceMode(Array, Ref(Slice(U16))), F64] -> Unit
+    logSlice(Array.from(getArrayU16FromWasm0(arg0, arg1)), arg2);
 }
 export function __wbindgen_generic_0000000000000026(arg0, arg1, arg2) {
-    var v0 = Array.from(getArrayU16FromWasm0(arg0, arg1));
-    // generic import `logSlice`: [Ref(Vector(U16)), U32] -> Unit
-    logSlice(v0, arg2 >>> 0);
+    // generic import `logSlice`: [SliceMode(Array, Ref(Slice(U16))), U32] -> Unit
+    logSlice(Array.from(getArrayU16FromWasm0(arg0, arg1)), arg2 >>> 0);
 }
 export function __wbindgen_generic_0000000000000027(arg0, arg1, arg2) {
     var v0 = getArrayJsValueFromWasm0(arg0, arg1);
     wasm.__wbindgen_free(arg0, arg1 * 4, 4);
-    // generic import `logStrSlice`: [Ref(Vector(NamedExternref("string"))), U32] -> Unit
+    // generic import `logStrSlice`: [Vector(Externref), U32] -> Unit
     logStrSlice(v0, arg2 >>> 0);
 }
 export function __wbindgen_generic_0000000000000028(arg0) {
