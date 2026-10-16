@@ -48,6 +48,7 @@ pub mod generics;
 pub mod getters_and_setters;
 pub mod ignore;
 pub mod import_class;
+pub mod import_type_eq;
 pub mod imports;
 pub mod inheritance;
 pub mod inner_self;

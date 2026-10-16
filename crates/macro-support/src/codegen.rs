@@ -308,6 +308,53 @@ fn cfg_union_attrs(
     }
 }
 
+/// Removes `PartialEq` and `Eq` from any `#[derive(...)]` in `attrs`, reporting
+/// which were present so the caller can emit them by hand.
+fn split_eq_derives(attrs: &[syn::Attribute]) -> (Vec<syn::Attribute>, bool, bool) {
+    let mut partial_eq = false;
+    let mut eq = false;
+    let attrs = attrs
+        .iter()
+        .filter_map(|attr| {
+            if !attr.path().is_ident("derive") {
+                return Some(attr.clone());
+            }
+            let Ok(paths) = attr.parse_args_with(
+                syn::punctuated::Punctuated::<syn::Path, syn::Token![,]>::parse_terminated,
+            ) else {
+                return Some(attr.clone());
+            };
+            let kept: Vec<_> = paths
+                .into_iter()
+                .filter(|path| {
+                    // `PartialEq`, `core::cmp::PartialEq`, `::std::cmp::PartialEq`.
+                    let is_eq = |name: &str| {
+                        let mut segments = path.segments.iter().rev();
+                        segments.next().is_some_and(|seg| seg.ident == name)
+                            && path.segments.len() <= 3
+                            && segments.next().map_or(true, |seg| seg.ident == "cmp")
+                    };
+                    if is_eq("PartialEq") {
+                        partial_eq = true;
+                        false
+                    } else if is_eq("Eq") {
+                        eq = true;
+                        false
+                    } else {
+                        true
+                    }
+                })
+                .collect();
+            if kept.is_empty() {
+                None
+            } else {
+                Some(syn::parse_quote!(#[derive(#(#kept),*)]))
+            }
+        })
+        .collect();
+    (attrs, partial_eq, eq)
+}
+
 fn same_class_path(left: &syn::Path, right: &syn::Path) -> bool {
     if left.leading_colon.is_some() != right.leading_colon.is_some() {
         return false;
@@ -1379,8 +1426,8 @@ impl TryToTokens for ast::ImportType {
     fn try_to_tokens(&self, tokens: &mut TokenStream) -> Result<(), Diagnostic> {
         let vis = &self.vis;
         let rust_name = &self.rust_name;
-        let attrs = &self.attrs;
-        let cfg_attrs = crate::cfg_gate_attrs(attrs);
+        let cfg_attrs = crate::cfg_gate_attrs(&self.attrs);
+        let (attrs, derive_partial_eq, derive_eq) = split_eq_derives(&self.attrs);
         let doc_comment = match &self.doc_comment {
             None => "",
             Some(comment) => comment,
@@ -1560,6 +1607,34 @@ impl TryToTokens for ast::ImportType {
             }
         };
 
+        // Equality of an imported type is identity of the JS handle, which
+        // does not depend on the type parameters, so `derive` is wrong here:
+        // it would bound each parameter with `PartialEq`/`Eq`, and through
+        // `extends` chains that bottoms out at `JsValue: Eq`, which is not
+        // implemented. Emit the impls with the type's own generics instead.
+        let partial_eq_impl = derive_partial_eq.then(|| {
+            quote! {
+                #(#cfg_attrs)*
+                #[automatically_derived]
+                impl #impl_generics #wasm_bindgen::__rt::core::cmp::PartialEq
+                    for #rust_name #ty_generics #where_clause
+                {
+                    #[inline]
+                    fn eq(&self, other: &Self) -> bool {
+                        self.obj == other.obj
+                    }
+                }
+            }
+        });
+        let eq_impl = derive_eq.then(|| {
+            quote! {
+                #(#cfg_attrs)*
+                #[automatically_derived]
+                impl #impl_generics #wasm_bindgen::__rt::core::cmp::Eq
+                    for #rust_name #ty_generics #where_clause {}
+            }
+        });
+
         (quote! {
             #(#attrs)*
             #doc
@@ -1568,6 +1643,9 @@ impl TryToTokens for ast::ImportType {
                 obj: #internal_obj,
                 #phantom
             }
+
+            #partial_eq_impl
+            #eq_impl
 
             #(#cfg_attrs)*
             #[automatically_derived]

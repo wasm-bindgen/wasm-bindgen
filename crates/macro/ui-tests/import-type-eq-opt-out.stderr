@@ -1,0 +1,29 @@
+error[E0277]: the trait bound `PartialOnly: std::cmp::Eq` is not satisfied
+  --> ui-tests/import-type-eq-opt-out.rs:16:17
+   |
+16 |     assert_eq::<PartialOnly>();
+   |                 ^^^^^^^^^^^ the trait `std::cmp::Eq` is not implemented for `PartialOnly`
+   |
+note: required by a bound in `assert_eq`
+  --> ui-tests/import-type-eq-opt-out.rs:12:17
+   |
+12 | fn assert_eq<T: Eq>() {}
+   |                 ^^ required by this bound in `assert_eq`
+
+error[E0277]: can't compare `NoEq` with `NoEq`
+  --> ui-tests/import-type-eq-opt-out.rs:17:25
+   |
+17 |     assert_partial_eq::<NoEq>();
+   |                         ^^^^ no implementation for `NoEq == NoEq`
+   |
+   = help: the trait `PartialEq` is not implemented for `NoEq`
+note: required by a bound in `assert_partial_eq`
+  --> ui-tests/import-type-eq-opt-out.rs:13:25
+   |
+13 | fn assert_partial_eq<T: PartialEq>() {}
+   |                         ^^^^^^^^^ required by this bound in `assert_partial_eq`
+help: consider annotating `NoEq` with `#[derive(PartialEq)]`
+   |
+3  + #[derive(PartialEq)]
+4  | #[wasm_bindgen]
+   |

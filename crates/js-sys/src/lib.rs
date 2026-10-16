@@ -7478,14 +7478,18 @@ impl Object {
     }
 }
 
-impl PartialEq for Object {
+// `Object.is`, not the derived `===`: subclasses like `Number` can hold
+// `NaN`, for which `===` is not reflexive as `Eq` requires. Next major: add
+// a reference-value base type excluding primitives, move `Number` onto
+// `JsValue`, and derive.
+impl<T> PartialEq for Object<T> {
     #[inline]
-    fn eq(&self, other: &Object) -> bool {
+    fn eq(&self, other: &Object<T>) -> bool {
         Object::is(self.as_ref(), other.as_ref())
     }
 }
 
-impl Eq for Object {}
+impl<T> Eq for Object<T> {}
 
 impl Default for Object<JsValue> {
     fn default() -> Self {
