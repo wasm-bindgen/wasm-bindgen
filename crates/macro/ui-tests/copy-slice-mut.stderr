@@ -1,0 +1,23 @@
+error: `copy_slice` cannot be applied to a `&mut` slice: JS receives an owned typed array, so its writes are never written back into the caller's slice — use a shared slice if JS only needs to read the elements, or remove `copy_slice` (it may be inherited from the function or the enclosing `extern "C"` block) to keep the writable typed-array view
+  --> ui-tests/copy-slice-mut.rs:13:47
+   |
+13 |     fn direct(#[wasm_bindgen(copy_slice)] xs: &mut [u16]);
+   |                                               ^^^^^^^^^^
+
+error: `copy_slice` cannot be applied to a `&mut` slice: JS receives an owned typed array, so its writes are never written back into the caller's slice — use a shared slice if JS only needs to read the elements, or remove `copy_slice` (it may be inherited from the function or the enclosing `extern "C"` block) to keep the writable typed-array view
+  --> ui-tests/copy-slice-mut.rs:17:19
+   |
+17 |     fn per_fn(xs: &mut [u32]);
+   |                   ^^^^^^^^^^
+
+error: `copy_slice` cannot be applied to a `&mut` slice: JS receives an owned typed array, so its writes are never written back into the caller's slice — use a shared slice if JS only needs to read the elements, or remove `copy_slice` (it may be inherited from the function or the enclosing `extern "C"` block) to keep the writable typed-array view
+  --> ui-tests/copy-slice-mut.rs:21:21
+   |
+21 |     fn optional(xs: Option<&mut [f64]>);
+   |                     ^^^^^^^^^^^^^^^^^^
+
+error: `copy_slice` cannot be applied to a `&mut` slice: JS receives an owned typed array, so its writes are never written back into the caller's slice — use a shared slice if JS only needs to read the elements, or remove `copy_slice` (it may be inherited from the function or the enclosing `extern "C"` block) to keep the writable typed-array view
+  --> ui-tests/copy-slice-mut.rs:27:22
+   |
+27 |     fn per_block(xs: &mut [i32]);
+   |                      ^^^^^^^^^^

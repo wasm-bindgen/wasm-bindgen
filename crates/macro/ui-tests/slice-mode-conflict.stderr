@@ -1,0 +1,35 @@
+error: cannot specify both `slice_to_array` and `copy_slice`
+  --> ui-tests/slice-mode-conflict.rs:11:31
+   |
+11 |     fn per_arg(#[wasm_bindgen(slice_to_array, copy_slice)] xs: &[u8]);
+   |                               ^^^^^^^^^^^^^^
+
+error: cannot specify both `slice_to_array` and `copy_slice`
+  --> ui-tests/slice-mode-conflict.rs:11:47
+   |
+11 |     fn per_arg(#[wasm_bindgen(slice_to_array, copy_slice)] xs: &[u8]);
+   |                                               ^^^^^^^^^^
+
+error: cannot specify both `slice_to_array` and `copy_slice`
+  --> ui-tests/slice-mode-conflict.rs:14:20
+   |
+14 |     #[wasm_bindgen(slice_to_array, copy_slice)]
+   |                    ^^^^^^^^^^^^^^
+
+error: cannot specify both `slice_to_array` and `copy_slice`
+  --> ui-tests/slice-mode-conflict.rs:14:36
+   |
+14 |     #[wasm_bindgen(slice_to_array, copy_slice)]
+   |                                    ^^^^^^^^^^
+
+error: cannot specify both `slice_to_array` and `copy_slice`
+  --> ui-tests/slice-mode-conflict.rs:19:16
+   |
+19 | #[wasm_bindgen(slice_to_array, copy_slice)]
+   |                ^^^^^^^^^^^^^^
+
+error: cannot specify both `slice_to_array` and `copy_slice`
+  --> ui-tests/slice-mode-conflict.rs:19:32
+   |
+19 | #[wasm_bindgen(slice_to_array, copy_slice)]
+   |                                ^^^^^^^^^^

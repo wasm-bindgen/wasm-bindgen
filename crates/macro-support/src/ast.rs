@@ -524,11 +524,22 @@ pub struct FunctionArgumentData {
     pub optional: bool,
     /// Specifies the argument description
     pub desc: Option<String>,
-    /// When set, an `&[T]` (or `Option<&[T]>`) argument is converted to a
-    /// freshly-allocated buffer the JS side observes as a plain `Array`
-    /// rather than a typed array. Only meaningful for outgoing arguments
-    /// (Rust calling JS); ignored on exported functions.
-    pub slice_to_array: bool,
+    /// How an `&[T]` (or `Option<&[T]>`) argument reaches JS. Only meaningful
+    /// for outgoing arguments (Rust calling JS); ignored on exported functions.
+    pub slice_mode: SliceMode,
+}
+
+/// How an imported function's `&[T]` / `Option<&[T]>` argument reaches JS.
+#[cfg_attr(feature = "extra-traits", derive(Debug))]
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
+pub enum SliceMode {
+    /// A typed-array view of linear memory for primitive `T`.
+    #[default]
+    View,
+    /// `slice_to_array`: a fresh plain `Array`.
+    Array,
+    /// `copy_slice`: a fresh typed array for primitive `T`.
+    Copy,
 }
 
 /// Information about a Struct being exported

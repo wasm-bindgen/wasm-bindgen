@@ -29,6 +29,7 @@ pub mod char;
 pub mod classes;
 pub mod closures;
 pub mod comments;
+pub mod copy_slice;
 pub mod duplicate_deps;
 pub mod duplicates;
 pub mod enum_vecs;

@@ -278,3 +278,32 @@ where
         T::describe();
     }
 }
+
+/// Describes a `#[wasm_bindgen(copy_slice)]` import argument `T` (`&[E]` or
+/// `Option<&[E]>`), which crosses with `T`'s own ABI. The CLI hands JS a fresh
+/// typed array for primitive `E`, and treats any other `E` as plain `T`.
+pub struct CopySlice<T>(core::marker::PhantomData<T>);
+
+impl<T: WasmDescribe> WasmDescribe for CopySlice<T> {
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe() {
+        inform(COPY_SLICE);
+        T::describe();
+    }
+}
+
+/// Describes a `#[wasm_bindgen(slice_to_array)]` import argument `T` whose
+/// slice element type is a `experimental_generic_mono` type parameter, so the
+/// concrete-element rewrite through `VectorRefIntoWasmAbi` cannot be named.
+/// `T` crosses with its own ABI; the CLI hands JS a fresh plain `Array` for
+/// primitive elements, and treats any other element kind as plain `T` (the
+/// handle tier already arrives as a fresh `Array`).
+pub struct SliceToArray<T>(core::marker::PhantomData<T>);
+
+impl<T: WasmDescribe> WasmDescribe for SliceToArray<T> {
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe() {
+        inform(SLICE_TO_ARRAY);
+        T::describe();
+    }
+}

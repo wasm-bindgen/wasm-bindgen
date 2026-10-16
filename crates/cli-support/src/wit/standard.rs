@@ -388,6 +388,18 @@ pub enum Instruction {
         kind: VectorKind,
         mem: walrus::MemoryId,
     },
+    /// pops two i32 data pointers, pushes a copy of the typed-array view;
+    /// the borrowed data is not freed
+    ViewCopy {
+        kind: VectorKind,
+        mem: walrus::MemoryId,
+    },
+    /// pops two i32 data pointers, pushes an optional copy of the typed-array
+    /// view; the borrowed data is not freed
+    OptionViewCopy {
+        kind: VectorKind,
+        mem: walrus::MemoryId,
+    },
     /// pops f64, pushes it viewed as an optional value with a known sentinel
     OptionF64Sentinel,
     /// pops i32, pushes it viewed as an optional value with a known sentinel
@@ -528,6 +540,8 @@ impl walrus::CustomSection for NonstandardWitSection {
                     | LoadRetptr { mem, .. }
                     | View { mem, .. }
                     | OptionView { mem, .. }
+                    | ViewCopy { mem, .. }
+                    | OptionViewCopy { mem, .. }
                     | MemoryToString(mem) => {
                         roots.push_memory(mem);
                     }

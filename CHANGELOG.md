@@ -5,6 +5,17 @@
 
 ### Added
 
+* Added the `copy_slice` attribute for imported JS functions, accepted per
+  argument, per function, and per `extern "C"` block like `slice_to_array`.
+  A `&[T]` / `Option<&[T]>` argument with a primitive element type reaches JS
+  as a fresh typed array it owns (`.slice()` of the view, never freed), rather
+  than the default typed-array view of wasm memory, with no Rust-side copy.
+  A more specific level now overrides a broader one for both slice-mode
+  attributes, and a generic element type resolves per instantiation under
+  `experimental_generic_mono` (previously a hard error for `slice_to_array`)
+  while remaining a no-op on the type-erasure path.
+  [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
+
 * String enums implement `TryFromJsValue`, accepting only their listed values,
   so they can be used as dynamic-union variant payloads.
   [#5376](https://github.com/wasm-bindgen/wasm-bindgen/pull/5376)
