@@ -1004,7 +1004,7 @@ impl<'a>
             });
         let generic_per_mono = fn_generic_per_mono || (block_generic_per_mono && is_generic);
 
-        // The slice mode (`slice = ..`, or its `slice_to_array` alias) is
+        // The slice mode (`slice = ..`, or the deprecated `slice_to_array`) is
         // inherited from the enclosing `extern "C"` block; a fn-level
         // attribute *overrides* the block default, and a per-arg attribute
         // overrides both (including back to the `view` default).
@@ -1225,10 +1225,17 @@ impl<'a>
                     .arguments
                     .iter()
                     .enumerate()
+                    .filter(|(_, arg)| arg.slice_mode == ast::SliceMode::SliceToArray)
+                    .map(|(i, _)| i)
+                    .collect(),
+                array: wasm
+                    .arguments
+                    .iter()
+                    .enumerate()
                     .filter(|(_, arg)| arg.slice_mode == ast::SliceMode::Array)
                     .map(|(i, _)| i)
                     .collect(),
-                copy_slice: wasm
+                copy: wasm
                     .arguments
                     .iter()
                     .enumerate()
@@ -1896,15 +1903,32 @@ struct FnArgAttrs {
 }
 
 /// The slice mode selected by a `#[wasm_bindgen(..)]` attribute set, or `None`
-/// if neither `slice = ..` nor its `slice_to_array` alias is present. Both at
-/// one level could only agree or contradict, so the pair is an error naming
-/// both spans.
+/// if neither `slice = ..` nor the deprecated `slice_to_array` is present.
+/// Both at one level could only agree or contradict, so the pair is an error
+/// naming both spans.
+//
+// TODO(next major): bare borrowed slices default to `copy`, and `slice = view`
+// is only accepted on an `unsafe fn` (a view the callee retains dangles, and a
+// shared view JS writes through breaks the borrow), so the zero-copy obligation
+// is written where the binding is declared. The last 0.2 release warns on bare
+// borrowed slices in user `extern` blocks ahead of the flip. `slice_to_array`
+// is removed.
 fn import_slice_mode(attrs: &BindgenAttrs) -> Result<Option<ast::SliceMode>, Diagnostic> {
     let mode = match attrs.slice() {
         Some(ident) => Some(match ident.to_string().as_str() {
             "view" => ast::SliceMode::View,
             "array" => ast::SliceMode::Array,
             "copy" => ast::SliceMode::Copy,
+            // TODO(next major): once JS can mint a view that no other view can
+            // be derived from (so a finalizer on it is a sound free), `transfer`
+            // hands an owned `Vec<T>` to JS without a copy, and becomes the
+            // owned default; `copy` is then its opt-out.
+            "transfer" => {
+                return Err(Diagnostic::span_error(
+                    ident.span(),
+                    "`slice = transfer` is reserved and not yet supported",
+                ))
+            }
             other => {
                 return Err(Diagnostic::span_error(
                     ident.span(),
@@ -1921,17 +1945,15 @@ fn import_slice_mode(attrs: &BindgenAttrs) -> Result<Option<ast::SliceMode>, Dia
         (Some(alias_span), Some(_)) => Diagnostic::from_vec(vec![
             Diagnostic::span_error(
                 *alias_span,
-                "cannot specify both `slice_to_array` and `slice`; `slice_to_array` \
-                 is an alias of `slice = array`",
+                "cannot specify both `slice_to_array` and `slice`; use `slice = array`",
             ),
             Diagnostic::span_error(
                 attrs.slice().unwrap().span(),
-                "cannot specify both `slice_to_array` and `slice`; `slice_to_array` \
-                 is an alias of `slice = array`",
+                "cannot specify both `slice_to_array` and `slice`; use `slice = array`",
             ),
         ])
         .map(|()| None),
-        (Some(_), None) => Ok(Some(ast::SliceMode::Array)),
+        (Some(_), None) => Ok(Some(ast::SliceMode::SliceToArray)),
         (None, mode) => Ok(mode),
     }
 }
@@ -1959,9 +1981,13 @@ fn check_slice_mode_arg(
     let Some(slice) = crate::codegen::detect_slice_or_option_slice(ty) else {
         return Ok(mode);
     };
+    // TODO(next major): under the `copy` default a `&mut [T]` is copied in and
+    // copied back after the call, so `array` and `copy` stop being errors here
+    // and only `view` (on an `unsafe fn`) gives JS the writable alias.
     if slice.is_mut {
         let (attr, shape) = match mode {
             ast::SliceMode::Array => ("slice = array", "plain `Array`"),
+            ast::SliceMode::SliceToArray => ("slice_to_array", "plain `Array`"),
             ast::SliceMode::Copy => ("slice = copy", "typed array"),
             ast::SliceMode::View => unreachable!("only non-default modes are checked"),
         };
@@ -2113,7 +2139,13 @@ fn extract_args_attrs(
                         }
                     }
                 }
-                None => ast::SliceMode::View,
+                None => {
+                    // Inert on exports, but an invalid value is still an error.
+                    if let Err(diagnostic) = own_slice_mode {
+                        slice_mode_errors.push(diagnostic);
+                    }
+                    ast::SliceMode::View
+                }
             };
 
             let arg_attrs = FnArgAttrs {
@@ -3149,7 +3181,7 @@ fn block_type_class(
 struct ForeignItemCtx<'a> {
     module: Option<ast::ImportModule>,
     js_namespace: Option<JsNamespace>,
-    /// Block-level slice mode (`slice = ..`, or its `slice_to_array` alias)
+    /// Block-level slice mode (`slice = ..`, or the deprecated `slice_to_array`)
     /// inherited by every foreign function inside the `extern "C"` block. A
     /// per-fn or per-arg attribute overrides this.
     slice_mode: ast::SliceMode,
@@ -3396,17 +3428,18 @@ struct ImportCallStyle<'a> {
     method_kind: Option<&'a ast::MethodKind>,
     /// The indices of the arguments passed with `slice_to_array`.
     slice_to_array: Vec<usize>,
+    /// The indices of the arguments passed with `slice = array`.
+    array: Vec<usize>,
     /// The indices of the arguments passed with `slice = copy`.
-    copy_slice: Vec<usize>,
+    copy: Vec<usize>,
     /// The JS name, if the shim name can't spell it.
     js_name: Option<&'a String>,
 }
 
-/// Written by hand rather than derived so that `copy_slice` contributes to
-/// the hash only when non-empty: shim names of imports predating the
-/// `slice = copy` mode stay unchanged. `slice_to_array` holds `Array`-mode
-/// indices however the mode was spelled, so the alias and `slice = array`
-/// hash identically, as they must — they are one binding shape.
+/// Written by hand rather than derived so that the `slice` modes contribute
+/// to the hash only when used: shim names of imports predating them stay
+/// unchanged. `slice = array` hashes apart from `slice_to_array`, since the
+/// two differ on owned and `Clamped` arguments.
 impl Hash for ImportCallStyle<'_> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         let Self {
@@ -3417,7 +3450,8 @@ impl Hash for ImportCallStyle<'_> {
             generic_per_mono,
             method_kind,
             slice_to_array,
-            copy_slice,
+            array,
+            copy,
             js_name,
         } = self;
         (
@@ -3431,8 +3465,10 @@ impl Hash for ImportCallStyle<'_> {
             js_name,
         )
             .hash(state);
-        if !copy_slice.is_empty() {
-            copy_slice.hash(state);
+        for (tag, indices) in [(0u8, array), (1u8, copy)] {
+            if !indices.is_empty() {
+                (tag, indices).hash(state);
+            }
         }
     }
 }
@@ -3448,13 +3484,15 @@ impl ImportCallStyle<'_> {
             generic_per_mono,
             method_kind,
             slice_to_array,
-            copy_slice,
+            array,
+            copy,
             js_name,
         } = self;
         !(*catch || *variadic || *r#final || *suspending || *generic_per_mono)
             && method_kind.is_none()
             && slice_to_array.is_empty()
-            && copy_slice.is_empty()
+            && array.is_empty()
+            && copy.is_empty()
             && js_name.is_none()
     }
 }

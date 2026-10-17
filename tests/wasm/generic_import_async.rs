@@ -54,8 +54,8 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono, js_name = kindOf)]
     fn kind_of_slice_plain<T>(xs: &[u16], other: T) -> String;
 
-    // The mode applies by shape, so an owned `Vec<T>` arrives as an `Array`
-    // too, resolved per instantiation.
+    // `slice_to_array` is not slice-shaped-only-by-accident: `Vec<T>` is not a
+    // slice, so the attribute is a documented no-op there.
     #[wasm_bindgen(experimental_generic_mono, slice_to_array, js_name = kindOf)]
     fn kind_of_vec<T>(xs: Vec<T>) -> String;
 }
@@ -129,7 +129,8 @@ fn slice_to_array_hands_js_an_array() {
     );
     assert_eq!(join_of_opt_str_slice(None, 0u32), "undefined");
 
-    assert_eq!(kind_of_vec(vec![1u16, 2]), "Array");
+    // `Vec<T>` is not slice-shaped, so the attribute is a no-op.
+    assert_eq!(kind_of_vec(vec![1u16, 2]), "Uint16Array");
 }
 
 #[wasm_bindgen_test]

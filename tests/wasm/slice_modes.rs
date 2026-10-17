@@ -19,15 +19,17 @@
 //!   the other two modes — including `slice = view`, the opt-out back to the
 //!   default that only the valued syntax can spell — and the reverse
 //!   nesting under a block-level `slice_to_array` alias
-//! - `slice = array` and its released `slice_to_array` alias produce the same
-//!   shape
+//! - `slice = array` and the deprecated `slice_to_array` agree on `&[T]`, and
+//!   `slice_to_array` keeps its released no-op on owned and `Clamped`
+//!   arguments
 //! - every other sequence shape: `Clamped<&[u8]>`, owned `Vec<T>` /
 //!   `Box<[T]>` / `Option<Vec<T>>` / `Clamped<Vec<u8>>` (already fresh, so
-//!   `copy` is a no-op and `array` converts), and `&[String]`, which has no
-//!   typed form and crosses as a fresh `Array` under either mode
-//! - per-mono generics: `&[T]` under `slice = copy`, instantiated at `u8`
-//!   (typed copy) and at `JsString` (handle tier, already a fresh `Array`,
-//!   where the mode is a no-op)
+//!   `copy` is a no-op and `array` converts), and `&[String]`, which crosses
+//!   as a fresh `Array` under `array`; string and handle slices are untouched
+//!   by `copy`
+//! - per-mono generics: `&[T]` under `slice = copy`, instantiated at `u8` and
+//!   `f64` (a fresh typed copy, not a view) and at `JsString` (handle tier,
+//!   already a fresh `Array`, where the mode is a no-op)
 //! - fast-path guard: a bare `&[u8]` import still hands JS a view of wasm
 //!   memory (no accidental default flip)
 
@@ -115,8 +117,13 @@ extern "C" {
     // instantiation. At a primitive element it is a typed copy; at a handle
     // element (`JsString`) it is a no-op, and JS receives the fresh `Array`
     // the handle tier always produces.
-    #[wasm_bindgen(experimental_generic_mono, js_name = kindOf)]
-    fn kind_of_generic<T>(v: &[T]) -> String;
+    #[wasm_bindgen(experimental_generic_mono, js_name = kindsOf)]
+    fn describe_generic<T>(v: &[T]) -> String;
+
+    // String and handle slices are untouched by `copy`: exactly as without a
+    // mode, a fresh `Array` of the same handles, with no Rust-side copy.
+    #[wasm_bindgen(js_name = joined)]
+    fn joined_handles_copy(v: &[JsString]) -> String;
 }
 
 // The reverse nesting: block-level `slice_to_array` (the released alias) with
@@ -152,10 +159,16 @@ extern "C" {
 
     #[wasm_bindgen(slice = array)]
     fn joined(v: Vec<u16>) -> String;
-    #[wasm_bindgen(slice = copy, js_name = joined)]
-    fn joined_strings_copy(v: &[String]) -> String;
     #[wasm_bindgen(slice = array, js_name = joined)]
     fn joined_strings_array(v: Option<&[String]>) -> String;
+}
+
+// `slice_to_array` keeps its released reach: `&[T]` only, leaving owned and
+// `Clamped` sequences untouched.
+#[wasm_bindgen(module = "tests/wasm/slice_modes.js", slice_to_array)]
+extern "C" {
+    #[wasm_bindgen(js_name = kindsOf)]
+    fn kinds_of_alias_shapes(owned: Vec<u8>, clamped: Clamped<&[u8]>, slice: &[u8]) -> String;
 }
 
 #[wasm_bindgen_test]
@@ -176,9 +189,18 @@ fn every_sequence_shape() {
     );
     assert_eq!(joined(vec![1, 2, 3]), "Array:1,2,3");
     let strings = ["a".to_string(), "b".to_string()];
-    assert_eq!(joined_strings_copy(&strings), "Array:a,b");
     assert_eq!(joined_strings_array(Some(&strings)), "Array:a,b");
     assert_eq!(joined_strings_array(None), "undefined");
+    let handles = [JsString::from("a"), JsString::from("b")];
+    assert_eq!(joined_handles_copy(&handles), "Array:a,b");
+}
+
+#[wasm_bindgen_test]
+fn slice_to_array_keeps_released_reach() {
+    assert_eq!(
+        kinds_of_alias_shapes(vec![1], Clamped(&[2]), &[3]),
+        "Uint8Array:fresh,Uint8ClampedArray:view,Array"
+    );
 }
 
 #[wasm_bindgen_test]
@@ -250,8 +272,8 @@ fn block_level_and_overrides() {
 
 #[wasm_bindgen_test]
 fn per_mono_generic_resolves_per_instantiation() {
-    assert_eq!(kind_of_generic(&[1u8, 2]), "Uint8Array");
-    assert_eq!(kind_of_generic(&[1.5f64]), "Float64Array");
+    assert_eq!(describe_generic(&[1u8, 2]), "Uint8Array:fresh");
+    assert_eq!(describe_generic(&[1.5f64]), "Float64Array:fresh");
     let strings = [JsString::from("a"), JsString::from("b")];
-    assert_eq!(kind_of_generic(&strings), "Array");
+    assert_eq!(describe_generic(&strings), "Array");
 }

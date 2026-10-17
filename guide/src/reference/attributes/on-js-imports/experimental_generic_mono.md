@@ -384,8 +384,8 @@ trait objects nested in another type do not receive this lowering.
 `experimental_generic_mono` composes with the usual import attributes — `method`,
 `static_method_of`, `constructor`, `getter`, `setter`, `structural`, `final`,
 `indexing_getter`, `indexing_setter`, `indexing_deleter`, `js_namespace`,
-`js_name`, `catch`, `variadic`, and the [`slice` modes](slice.md) (including
-the `slice_to_array` alias) — and the resulting JS binding is shaped exactly
+`js_name`, `catch`, `variadic`, and the [`slice` modes](slice.md) — and the
+resulting JS binding is shaped exactly
 as it would be for the equivalent non-generic import. A slice whose element
 type is a type parameter resolves `slice = array` / `slice = copy` per
 instantiation: a primitive element gets the fresh `Array` / typed-array copy,

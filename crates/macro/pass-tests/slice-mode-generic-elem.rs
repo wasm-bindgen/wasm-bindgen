@@ -24,8 +24,8 @@ extern "C" {
     fn per_mono_nested_elem<T>(xs: &[Vec<T>], other: T);
 }
 
-// Inherited from the enclosing block on both paths, through the released
-// `slice_to_array` alias.
+// Inherited from the enclosing block on both paths, through the deprecated
+// `slice_to_array`.
 #[wasm_bindgen(slice_to_array)]
 extern "C" {
     fn erased_array<T>(xs: &[T]);

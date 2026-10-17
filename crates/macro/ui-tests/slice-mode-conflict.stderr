@@ -1,41 +1,53 @@
-error: cannot specify both `slice_to_array` and `slice`; `slice_to_array` is an alias of `slice = array`
-  --> ui-tests/slice-mode-conflict.rs:11:31
+error: cannot specify both `slice_to_array` and `slice`; use `slice = array`
+  --> ui-tests/slice-mode-conflict.rs:12:31
    |
-11 |     fn per_arg(#[wasm_bindgen(slice_to_array, slice = copy)] xs: &[u8]);
+12 |     fn per_arg(#[wasm_bindgen(slice_to_array, slice = copy)] xs: &[u8]);
    |                               ^^^^^^^^^^^^^^
 
-error: cannot specify both `slice_to_array` and `slice`; `slice_to_array` is an alias of `slice = array`
-  --> ui-tests/slice-mode-conflict.rs:11:55
+error: cannot specify both `slice_to_array` and `slice`; use `slice = array`
+  --> ui-tests/slice-mode-conflict.rs:12:55
    |
-11 |     fn per_arg(#[wasm_bindgen(slice_to_array, slice = copy)] xs: &[u8]);
+12 |     fn per_arg(#[wasm_bindgen(slice_to_array, slice = copy)] xs: &[u8]);
    |                                                       ^^^^
 
-error: cannot specify both `slice_to_array` and `slice`; `slice_to_array` is an alias of `slice = array`
-  --> ui-tests/slice-mode-conflict.rs:14:20
+error: cannot specify both `slice_to_array` and `slice`; use `slice = array`
+  --> ui-tests/slice-mode-conflict.rs:15:20
    |
-14 |     #[wasm_bindgen(slice_to_array, slice = array)]
+15 |     #[wasm_bindgen(slice_to_array, slice = array)]
    |                    ^^^^^^^^^^^^^^
 
-error: cannot specify both `slice_to_array` and `slice`; `slice_to_array` is an alias of `slice = array`
-  --> ui-tests/slice-mode-conflict.rs:14:44
+error: cannot specify both `slice_to_array` and `slice`; use `slice = array`
+  --> ui-tests/slice-mode-conflict.rs:15:44
    |
-14 |     #[wasm_bindgen(slice_to_array, slice = array)]
+15 |     #[wasm_bindgen(slice_to_array, slice = array)]
    |                                            ^^^^^
 
 error: unknown slice mode `borrow`; expected `slice = view`, `slice = array` or `slice = copy`
-  --> ui-tests/slice-mode-conflict.rs:18:28
+  --> ui-tests/slice-mode-conflict.rs:19:28
    |
-18 |     #[wasm_bindgen(slice = borrow)]
+19 |     #[wasm_bindgen(slice = borrow)]
    |                            ^^^^^^
 
-error: cannot specify both `slice_to_array` and `slice`; `slice_to_array` is an alias of `slice = array`
-  --> ui-tests/slice-mode-conflict.rs:23:16
+error: `slice = transfer` is reserved and not yet supported
+  --> ui-tests/slice-mode-conflict.rs:23:28
    |
-23 | #[wasm_bindgen(slice_to_array, slice = copy)]
+23 |     #[wasm_bindgen(slice = transfer)]
+   |                            ^^^^^^^^
+
+error: cannot specify both `slice_to_array` and `slice`; use `slice = array`
+  --> ui-tests/slice-mode-conflict.rs:28:16
+   |
+28 | #[wasm_bindgen(slice_to_array, slice = copy)]
    |                ^^^^^^^^^^^^^^
 
-error: cannot specify both `slice_to_array` and `slice`; `slice_to_array` is an alias of `slice = array`
-  --> ui-tests/slice-mode-conflict.rs:23:40
+error: cannot specify both `slice_to_array` and `slice`; use `slice = array`
+  --> ui-tests/slice-mode-conflict.rs:28:40
    |
-23 | #[wasm_bindgen(slice_to_array, slice = copy)]
+28 | #[wasm_bindgen(slice_to_array, slice = copy)]
    |                                        ^^^^
+
+error: unknown slice mode `borrow`; expected `slice = view`, `slice = array` or `slice = copy`
+  --> ui-tests/slice-mode-conflict.rs:35:51
+   |
+35 | pub fn export_unknown_mode(#[wasm_bindgen(slice = borrow)] _xs: &[u8]) {}
+   |                                                   ^^^^^^
