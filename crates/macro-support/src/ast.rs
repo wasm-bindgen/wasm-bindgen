@@ -529,20 +529,48 @@ pub struct FunctionArgumentData {
     pub slice_mode: SliceMode,
 }
 
-/// How an imported function's `&[T]` / `Option<&[T]>` argument reaches JS
-/// (`slice = view | array | copy`).
+/// How a sequence argument of an imported function (`&[T]`, `Vec<T>`,
+/// `Clamped<..>`, or an `Option` of one) reaches JS (`slice = view | array |
+/// copy`). Only typed (numeric) elements have a choice: string and handle
+/// elements always reach JS as a fresh `Array`.
+//
+// TODO(next major): the modes are staged towards this final state, in which
+// an explicit mode never changes meaning and only bare arguments flip:
+//
+// | argument   | default                    | opt-in / out              |
+// |------------|----------------------------|---------------------------|
+// | `&[T]`     | `copy`                     | `view` (on `unsafe fn`)   |
+// | `&mut [T]` | `copy`, copied back after  | `view` (on `unsafe fn`)   |
+// | `Vec<T>`   | `transfer`                 | `copy`                    |
+// | any        |                            | `array` (implies a copy)  |
+//
+// `transfer` needs a JS view no other view can be derived from (so freeing on
+// its finalization is sound), and arrives only once engines support one; until
+// then `Vec<T>` stays `copy`, which JS cannot tell apart from `transfer`.
 #[cfg_attr(feature = "extra-traits", derive(Debug))]
 #[derive(Clone, Copy, Default, PartialEq, Eq)]
 pub enum SliceMode {
-    /// `slice = view`: a typed-array view of wasm linear memory for primitive
-    /// `T`. The default, planned to flip to [`Copy`](Self::Copy) in the next
-    /// major release, making the zero-copy view the explicit opt-in.
+    /// `slice = view`: a borrowed typed sequence is a view of wasm memory,
+    /// valid for the duration of the call. Owned data is still copied, since
+    /// it is freed after the call.
     #[default]
     View,
-    /// `slice = array` (alias `slice_to_array`): a fresh plain `Array`.
+    /// `slice = array`: a fresh plain `Array`.
     Array,
-    /// `slice = copy`: a fresh typed array for primitive `T`.
+    /// `slice = copy`: a fresh typed array.
     Copy,
+    /// The deprecated `slice_to_array`: `Array` mode on `&[T]` and
+    /// `Option<&[T]>` only, keeping its released behaviour of leaving every
+    /// other argument (owned or `Clamped` sequences included) untouched.
+    // TODO(next major): remove, along with the `slice_to_array` attribute.
+    SliceToArray,
+}
+
+impl SliceMode {
+    /// Whether this mode hands JS a plain `Array`.
+    pub fn is_array(self) -> bool {
+        matches!(self, SliceMode::Array | SliceMode::SliceToArray)
+    }
 }
 
 /// Information about a Struct being exported

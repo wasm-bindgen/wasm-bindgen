@@ -92,7 +92,6 @@
       - [`no_promising`](./reference/attributes/on-js-imports/no_promising.md)
       - [`reexport`](./reference/attributes/on-js-imports/reexport.md)
       - [`slice`](./reference/attributes/on-js-imports/slice.md)
-      - [`slice_to_array`](./reference/attributes/on-js-imports/slice_to_array.md)
       - [`static_method_of = Blah`](./reference/attributes/on-js-imports/static_method_of.md)
       - [`structural`](./reference/attributes/on-js-imports/structural.md)
       - [`typescript_type`](./reference/attributes/on-js-imports/typescript_type.md)

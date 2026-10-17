@@ -2064,6 +2064,10 @@ fn instruction(
             let ptr = js.pop();
             let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
             // The data is freed below, so it can never be left as a view.
+            // TODO(next major): a `transfer` mode instead hands JS a view no
+            // other view can be derived from, freed by a finalizer rather than
+            // here (falling back to this copy where engines lack such views),
+            // and becomes the default for owned data.
             let mode = match mode {
                 SliceMode::View => SliceMode::Copy,
                 mode => *mode,

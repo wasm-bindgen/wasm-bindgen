@@ -2703,10 +2703,11 @@ impl ast::ImportFunction {
                 convert_arg = quote! { #var };
             }
 
-            // Under a slice mode, `&[T]` crosses through `VectorRefIntoWasmAbi`
-            // so that elements without a borrowed ABI cross at all. See
-            // `slice_rewrite`; the mode itself is only in the descriptor.
-            if arg.slice_mode != ast::SliceMode::View {
+            // Under an `Array` mode, `&[T]` crosses through
+            // `VectorRefIntoWasmAbi` so that elements without a borrowed ABI
+            // cross at all. See `slice_rewrite`; the mode itself is only in
+            // the descriptor.
+            if arg.slice_mode.is_array() {
                 if let Some(rewrite) = slice_rewrite(wasm_bindgen, &name, &var, ty) {
                     abi_arguments.extend(rewrite.abi_args);
                     abi_argument_names.extend(rewrite.prim_names);
@@ -3540,7 +3541,7 @@ impl ast::ImportFunction {
                 // another type (e.g. `Option<&T>`, `(T, &T)`, `[&T; N]`,
                 // `&&T`), which need the type-erasure path.
                 //
-                // Note this cannot fire for an argument the `slice_to_array`
+                // Note this cannot fire for an argument the `Array`-mode
                 // rewrite below will take over: the rewrite only applies to a
                 // concrete element type, and a concrete-element slice never
                 // mentions a type parameter. A slice whose element type *is*
@@ -3588,7 +3589,7 @@ impl ast::ImportFunction {
             // default borrowed ABI.
             let rewritable = detect_slice_or_option_slice(ty)
                 .is_some_and(|s| !generics::uses_generic_params(&s.elem_ty, &type_params));
-            if arg.slice_mode != ast::SliceMode::View && rewritable {
+            if arg.slice_mode.is_array() && rewritable {
                 if let Some(rewrite) = slice_rewrite(wasm_bindgen, &name, &var, ty) {
                     shim_abi_args.extend(rewrite.abi_args);
                     all_prim_names.extend(rewrite.prim_names);
@@ -5718,23 +5719,31 @@ fn result_err_ty(ty: &syn::Type) -> Option<&syn::Type> {
 /// The mode is a bit on every argument in its scope, wrapped around the
 /// describe of the argument's actual wire: the CLI applies it to typed
 /// sequences (borrowed or owned, clamped or not) and drops it on every other
-/// shape, so nothing here inspects the argument beyond `rewritten`, which says
-/// whether the wire is [`slice_rewrite`]'s (when `ty` is rewritable at all).
+/// shape, so nothing here inspects the argument beyond `rewritable`, which
+/// says whether an `Array` mode crosses through [`slice_rewrite`] (when `ty`
+/// is rewritable at all). The deprecated `slice_to_array` is the exception,
+/// keeping its released reach of `&[T]` and `Option<&[T]>` only.
 fn slice_mode_describe_ty(
     wasm_bindgen: &syn::Path,
     ty: &syn::Type,
     mode: ast::SliceMode,
-    rewritten: bool,
+    rewritable: bool,
 ) -> syn::Type {
+    let wire = slice_rewrite_wire_ty(wasm_bindgen, ty);
     let mode = match mode {
         ast::SliceMode::View => return ty.clone(),
-        ast::SliceMode::Array => shared::tys::SLICE_MODE_ARRAY,
+        ast::SliceMode::SliceToArray
+            if !detect_slice_or_option_slice(ty).is_some_and(|s| !s.is_clamped) =>
+        {
+            return ty.clone()
+        }
+        ast::SliceMode::Array | ast::SliceMode::SliceToArray => shared::tys::SLICE_MODE_ARRAY,
         ast::SliceMode::Copy => shared::tys::SLICE_MODE_COPY,
     };
-    let wire = rewritten
-        .then(|| slice_rewrite_wire_ty(wasm_bindgen, ty))
-        .flatten()
-        .unwrap_or_else(|| ty.clone());
+    let wire = match wire {
+        Some(wire) if rewritable && mode == shared::tys::SLICE_MODE_ARRAY => wire,
+        _ => ty.clone(),
+    };
     parse_quote! { #wasm_bindgen::describe::SliceMode<#wire, #mode> }
 }
 
@@ -5770,15 +5779,17 @@ struct SliceRewrite {
     conversion: TokenStream,
 }
 
-/// Build the slice-mode ABI rewrite for one argument, or `None` if `ty` is not
-/// `&[T]` / `Option<&[T]>`.
+/// Build the `Array`-mode ABI rewrite for one argument, or `None` if `ty` is
+/// not `&[T]` / `Option<&[T]>`.
 ///
-/// `&[String]` (like any element without a borrowed slice ABI) can only reach
-/// JS as a fresh `Array`, which is what a slice mode asks for, so under a mode
-/// the argument crosses through `<T as VectorRefIntoWasmAbi>` instead of the
-/// default `&[T]: IntoWasmAbi`: a borrow for primitive elements, a fresh
-/// buffer for the rest. The user-facing parameter is unchanged, and the
-/// describe is the wire's own (see [`slice_rewrite_wire_ty`]).
+/// `&[String]` has no borrowed slice ABI, but can reach JS as the fresh
+/// `Array` an `Array` mode asks for, so under one the argument crosses through
+/// `<T as VectorRefIntoWasmAbi>` instead of the default `&[T]: IntoWasmAbi`: a
+/// borrow for primitive elements, a fresh buffer of JS values for the rest.
+/// The user-facing parameter is unchanged, and the describe is the wire's own
+/// (see [`slice_rewrite_wire_ty`]). `copy` and `view` never rewrite: they
+/// keep the argument's default ABI, so string and handle slices are exactly
+/// as without a mode.
 ///
 /// A `&mut [T]` never reaches here (the parser rejects it; see
 /// `check_slice_mode_arg` in `parser.rs`), and nor does a generic element

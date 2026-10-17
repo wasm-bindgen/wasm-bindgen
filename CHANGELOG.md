@@ -6,16 +6,19 @@
 ### Added
 
 * Added the `slice = view | array | copy` attribute for imported JS
-  functions, accepted per argument, per function, and per `extern "C"` block
-  (`slice_to_array` remains as an alias of `slice = array`). Under
-  `slice = copy`, a `&[T]` / `Option<&[T]>` argument with a primitive element
-  type reaches JS as a fresh typed array it owns (`.slice()` of the view,
-  never freed), rather than the default typed-array view of wasm memory, with
-  no Rust-side copy. A more specific level overrides a broader one — an
-  explicit `slice = view` opts an argument back out of an inherited mode —
-  and a generic element type resolves per instantiation under
-  `experimental_generic_mono` (previously a hard error for `slice_to_array`)
-  while remaining a no-op on the type-erasure path.
+  functions, accepted per argument, per function, and per `extern "C"` block,
+  with a more specific level overriding a broader one. It applies to any
+  sequence argument with numeric elements: borrowed (`&[T]`, `Option<&[T]>`),
+  owned (`Vec<T>`, `Box<[T]>`, `Option<Vec<T>>`), and `Clamped` forms of
+  either. `slice = copy` hands JS a fresh typed array (`.slice()` of the view,
+  with no Rust-side copy) instead of the default view of wasm memory;
+  `slice = array` a fresh plain `Array`; and an explicit `slice = view` opts
+  an argument back out of an inherited mode. String and handle slices are
+  unaffected by `view` and `copy`. A generic element type resolves the mode
+  per instantiation under `experimental_generic_mono` (previously a hard
+  error for `slice_to_array`). `slice_to_array` is deprecated in favour of
+  `slice = array`, and keeps its existing behaviour: it acts on `&[T]` and
+  `Option<&[T]>` only.
   [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
 
 * String enums implement `TryFromJsValue`, accepting only their listed values,
