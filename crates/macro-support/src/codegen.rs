@@ -3633,7 +3633,18 @@ impl ast::ImportFunction {
         // rustc suggests a missing `where` clause just after the token that
         // precedes it, so the tokens ending each generated signature are
         // placed at the end of the declared one.
-        let sig_end_span = Span::call_site().located_at(self.function.paren_span);
+        let paren_span = Span::call_site().located_at(self.function.paren_span);
+        let sig_end_span = Span::call_site().located_at(
+            self.function
+                .ret
+                .as_ref()
+                .and_then(|ret| ret.r#type.to_token_stream().into_iter().last())
+                .map(|token| match token {
+                    proc_macro2::TokenTree::Group(g) => g.span_close(),
+                    token => token.span(),
+                })
+                .unwrap_or(self.function.paren_span),
+        );
         let marker_call = respan_all(
             quote! {
                 #wasm_bindgen::describe::describe_generic_import(
@@ -3673,8 +3684,9 @@ impl ast::ImportFunction {
                 } else {
                     original_ty.clone()
                 };
+                let close = quote_spanned! { sig_end_span => > };
                 shim_ret_ty = quote_spanned! { ret_span =>
-                    #wasm_bindgen::convert::WasmRet<<#ty as #wasm_bindgen::convert::FromWasmAbi>::Abi>
+                    #wasm_bindgen::convert::WasmRet<<#ty as #wasm_bindgen::convert::FromWasmAbi>::Abi #close
                 };
                 convert_ret = quote_spanned! { ret_span =>
                     <#ty as #wasm_bindgen::convert::FromWasmAbi>::from_abi(#ret_ident.join())
@@ -3914,7 +3926,7 @@ impl ast::ImportFunction {
             proc_macro2::Delimiter::Parenthesis,
             quote! { #me #(#wrapper_args),* },
         );
-        wrapper_params.set_span(sig_end_span);
+        wrapper_params.set_span(paren_span);
         let invocation = quote! {
             #[allow(nonstandard_style)]
             #[allow(clippy::all, clippy::nursery, clippy::pedantic, clippy::restriction)]

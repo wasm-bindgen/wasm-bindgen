@@ -15,6 +15,10 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono)]
     fn reference_argument<T>(x: &T);
 
+    // The suggested `where` clause follows the whole declared return type.
+    #[wasm_bindgen(experimental_generic_mono, catch)]
+    fn reference_argument_catch<T>(x: &T) -> Result<Option<u32>, JsValue>;
+
     // Needs `T: FromWasmAbi`.
     #[wasm_bindgen(experimental_generic_mono)]
     fn ret<T>() -> T;
