@@ -7,6 +7,7 @@
 //! the `Promise` as if it were a `u32`) or that silently ignored
 //! `slice_to_array` (handing JS a typed-array view instead of an `Array`).
 
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
@@ -15,19 +16,22 @@ extern "C" {
     // An `async` import returns a `Promise` across the ABI whatever it resolves
     // to, so a monomorphised `-> T` works even when `T` is not handle-shaped.
     #[wasm_bindgen(experimental_generic_mono, js_name = asyncEcho)]
-    async fn async_echo<T>(x: T) -> T;
+    async fn async_echo<T: IntoWasmAbi + FromWasmAbi + 'static>(x: T) -> T;
 
     // A concrete, non-handle return type through the same path.
     #[wasm_bindgen(experimental_generic_mono, js_name = asyncLen)]
-    async fn async_len<T>(x: T) -> u32;
+    async fn async_len<T: IntoWasmAbi>(x: T) -> u32;
 
     // `catch` monomorphises the `Ok` type and hard-codes `JsValue` as the error.
     #[wasm_bindgen(experimental_generic_mono, catch, js_name = asyncTryEcho)]
-    async fn async_try_echo<T>(x: T, fail: bool) -> Result<T, JsValue>;
+    async fn async_try_echo<T: IntoWasmAbi + FromWasmAbi + 'static>(
+        x: T,
+        fail: bool,
+    ) -> Result<T, JsValue>;
 
     // An `async` import with no return value still resolves to `JsValue`.
     #[wasm_bindgen(experimental_generic_mono, js_name = asyncRecord)]
-    async fn async_record<T>(x: T);
+    async fn async_record<T: IntoWasmAbi>(x: T);
 
     #[wasm_bindgen(js_name = takeLog)]
     fn take_log() -> String;
@@ -36,35 +40,37 @@ extern "C" {
     // A primitive element type borrows the caller's slice; a `String` element
     // type hands over a freshly allocated buffer JS must free.
     #[wasm_bindgen(experimental_generic_mono, slice_to_array, js_name = kindOf)]
-    fn kind_of_slice<T>(xs: &[u16], other: T) -> String;
+    fn kind_of_slice<T: IntoWasmAbi>(xs: &[u16], other: T) -> String;
 
     #[wasm_bindgen(experimental_generic_mono, slice_to_array, js_name = kindOf)]
-    fn kind_of_str_slice<T>(xs: &[String], other: T) -> String;
+    fn kind_of_str_slice<T: IntoWasmAbi>(xs: &[String], other: T) -> String;
 
     #[wasm_bindgen(experimental_generic_mono, slice_to_array, js_name = kindOf)]
-    fn kind_of_opt_slice<T>(xs: Option<&[u16]>, other: T) -> String;
+    fn kind_of_opt_slice<T: IntoWasmAbi>(xs: Option<&[u16]>, other: T) -> String;
 
     // `Option<&[String]>` is the allocating-and-freeing element path *and* the
     // `Option` path at once.
     #[wasm_bindgen(experimental_generic_mono, slice_to_array, js_name = joinOf)]
-    fn join_of_opt_str_slice<T>(xs: Option<&[String]>, other: T) -> String;
+    fn join_of_opt_str_slice<T: IntoWasmAbi>(xs: Option<&[String]>, other: T) -> String;
 
     // Without the attribute the same signature must still hand JS a view, so
     // these two together prove the attribute is what makes the difference.
     #[wasm_bindgen(experimental_generic_mono, js_name = kindOf)]
-    fn kind_of_slice_plain<T>(xs: &[u16], other: T) -> String;
+    fn kind_of_slice_plain<T: IntoWasmAbi>(xs: &[u16], other: T) -> String;
 
     // `slice_to_array` is not slice-shaped-only-by-accident: `Vec<T>` is not a
     // slice, so the attribute is a documented no-op there.
     #[wasm_bindgen(experimental_generic_mono, slice_to_array, js_name = kindOf)]
-    fn kind_of_vec<T>(xs: Vec<T>) -> String;
+    fn kind_of_vec<T>(xs: Vec<T>) -> String
+    where
+        Vec<T>: IntoWasmAbi;
 }
 
 // `slice_to_array` is inheritable from the enclosing block.
 #[wasm_bindgen(module = "tests/wasm/generic_import_async.js", slice_to_array)]
 extern "C" {
     #[wasm_bindgen(experimental_generic_mono, js_name = kindOf)]
-    fn kind_of_block_slice<T>(xs: &[u16], other: T) -> String;
+    fn kind_of_block_slice<T: IntoWasmAbi>(xs: &[u16], other: T) -> String;
 }
 
 #[wasm_bindgen_test]

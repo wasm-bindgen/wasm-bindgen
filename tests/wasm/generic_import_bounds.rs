@@ -52,45 +52,46 @@ extern "C" {
 
     // Inline bound.
     #[wasm_bindgen(experimental_generic_mono, js_name = record)]
-    fn record_inline<T: Copy + Clone>(x: T);
+    fn record_inline<T: Copy + Clone + IntoWasmAbi>(x: T);
 
     // `where` predicate.
     #[wasm_bindgen(experimental_generic_mono, js_name = record)]
     fn record_where<T>(x: T)
     where
-        T: Clone;
+        T: Clone + IntoWasmAbi;
 
     // Inline and `where` bounds on the same signature, across two parameters.
     #[wasm_bindgen(experimental_generic_mono, js_name = sum)]
-    fn sum_bounded<T: Copy, U>(a: T, b: U) -> f64
+    fn sum_bounded<T: Copy + IntoWasmAbi, U>(a: T, b: U) -> f64
     where
-        U: Copy;
+        U: Copy + IntoWasmAbi;
 
     // Argument-position `impl Trait`: desugars into a synthesized named type
     // parameter with the same bound, so it exercises the identical
     // bound-carrying machinery as `record_inline` above, just declared the
     // sugared way with no named type parameter of its own.
     #[wasm_bindgen(experimental_generic_mono, js_name = record)]
-    fn record_impl_trait(x: impl Copy + Clone);
+    fn record_impl_trait(x: impl Copy + Clone + IntoWasmAbi);
 
     // `impl Trait` mixed with a real, named, bounded type parameter in the
     // same signature.
     #[wasm_bindgen(experimental_generic_mono, js_name = sum)]
-    fn sum_impl_trait_mixed<U: Copy>(a: impl Copy, b: U) -> f64;
+    fn sum_impl_trait_mixed<U: Copy + IntoWasmAbi>(a: impl Copy + IntoWasmAbi, b: U) -> f64;
 
     // The bound's associated type appears in argument and return position, so
     // the bound has to reach the shim for `T::Wire`'s ABI to resolve.
     #[wasm_bindgen(experimental_generic_mono, js_name = echo)]
     fn echo_wire<T>(x: T::Wire) -> T::Wire
     where
-        T: Wire;
+        T: Wire,
+        T::Wire: IntoWasmAbi + FromWasmAbi;
 
     // Higher-ranked `where` predicate.
     #[wasm_bindgen(experimental_generic_mono, js_name = echo)]
     fn echo_hrtb<T>(x: T) -> T
     where
         for<'a> &'a T: Clone,
-        T: Clone;
+        T: Clone + IntoWasmAbi + FromWasmAbi;
 
     // --- Real library traits ---
 
@@ -106,14 +107,16 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono, js_name = echo)]
     fn echo_iter_item<T>(x: T::Item) -> T::Item
     where
-        T: Iterator;
+        T: Iterator,
+        T::Item: IntoWasmAbi + FromWasmAbi;
 
     // Only `ExactSizeIterator` is named, so `T::Item` resolves through its
     // `Iterator` supertrait rather than the bound's own trait.
     #[wasm_bindgen(experimental_generic_mono, js_name = echo)]
     fn echo_exact_size_item<T>(x: T::Item) -> T::Item
     where
-        T: ExactSizeIterator;
+        T: ExactSizeIterator,
+        T::Item: IntoWasmAbi + FromWasmAbi;
 
     // A predicate whose bounded type is a projection rather than a bare
     // parameter, next to the bound that makes the projection nameable.
@@ -121,21 +124,21 @@ extern "C" {
     fn echo_cloneable_item<T>(x: T::Item) -> T::Item
     where
         T: Iterator,
-        T::Item: Clone;
+        T::Item: Clone + IntoWasmAbi + FromWasmAbi;
 
-    // Here the bounded parameter is itself the value crossing the ABI, so the
-    // user's bounds and the synthesized `IntoWasmAbi`/`WasmDescribe` ones land
-    // on the same parameter. `AsRef<[u32]>` also puts a plain type argument
+    // Here the bounded parameter is itself the value crossing the ABI, so its
+    // library bounds sit alongside its declared `IntoWasmAbi` bound. `AsRef<[u32]>` also puts a plain type argument
     // (rather than an associated-type binding) in a bound path.
     #[wasm_bindgen(experimental_generic_mono, js_name = sumAll)]
-    fn sum_all<T: IntoIterator<Item = u32> + AsRef<[u32]>>(xs: T) -> f64;
+    fn sum_all<T: IntoIterator<Item = u32> + AsRef<[u32]> + IntoWasmAbi>(xs: T) -> f64;
 
     // Higher-ranked predicate over a real trait: it is the *reference* that must
     // be iterable, which `T: IntoIterator` alone would not give.
     #[wasm_bindgen(experimental_generic_mono, js_name = sumAll)]
     fn sum_all_by_ref<T>(xs: T) -> f64
     where
-        for<'a> &'a T: IntoIterator;
+        for<'a> &'a T: IntoIterator,
+        T: IntoWasmAbi;
 }
 
 /// A caller that must itself satisfy the import's bounds to name `T::Wire`.

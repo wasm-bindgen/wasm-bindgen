@@ -155,7 +155,7 @@ fn experimental_generic_mono_js_namespace_does_not_collide_on_the_shim_key() {
                     #[wasm_bindgen]
                     extern "C" {
                         #[wasm_bindgen(js_namespace = a, experimental_generic_mono)]
-                        pub fn log<T>(x: T);
+                        pub fn log<T: wasm_bindgen::convert::IntoWasmAbi>(x: T);
                     }
                 }
 
@@ -164,7 +164,7 @@ fn experimental_generic_mono_js_namespace_does_not_collide_on_the_shim_key() {
                     #[wasm_bindgen]
                     extern "C" {
                         #[wasm_bindgen(js_namespace = b, experimental_generic_mono)]
-                        pub fn log<T>(x: T);
+                        pub fn log<T: wasm_bindgen::convert::IntoWasmAbi>(x: T);
                     }
                 }
 
@@ -217,7 +217,7 @@ fn experimental_generic_mono_identical_imports_deduplicate() {
                     #[wasm_bindgen]
                     extern "C" {
                         #[wasm_bindgen(js_namespace = console, experimental_generic_mono)]
-                        pub fn log<T>(x: T);
+                        pub fn log<T: wasm_bindgen::convert::IntoWasmAbi>(x: T);
                     }
                 }
 
@@ -226,7 +226,7 @@ fn experimental_generic_mono_identical_imports_deduplicate() {
                     #[wasm_bindgen]
                     extern "C" {
                         #[wasm_bindgen(js_namespace = console, experimental_generic_mono)]
-                        pub fn log<T>(x: T);
+                        pub fn log<T: wasm_bindgen::convert::IntoWasmAbi>(x: T);
                     }
                 }
 
@@ -270,7 +270,7 @@ fn experimental_generic_mono_variadic_does_not_collide_on_the_shim_key() {
                     #[wasm_bindgen]
                     extern "C" {
                         #[wasm_bindgen(js_namespace = console, experimental_generic_mono)]
-                        pub fn log<T>(xs: Vec<T>);
+                        pub fn log<T>(xs: Vec<T>) where Vec<T>: wasm_bindgen::convert::IntoWasmAbi;
                     }
                 }
 
@@ -281,7 +281,7 @@ fn experimental_generic_mono_variadic_does_not_collide_on_the_shim_key() {
                         // Differs from `one::log` only in `variadic`, which
                         // leaves the signature tokens byte-identical.
                         #[wasm_bindgen(js_namespace = console, experimental_generic_mono, variadic)]
-                        pub fn log<T>(xs: Vec<T>);
+                        pub fn log<T>(xs: Vec<T>) where Vec<T>: wasm_bindgen::convert::IntoWasmAbi;
                     }
                 }
 
