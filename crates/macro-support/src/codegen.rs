@@ -1724,6 +1724,10 @@ impl TryToTokens for ast::ImportType {
                 // borrowed as is.
                 #[automatically_derived]
                 impl #impl_generics #wasm_bindgen::convert::VectorRefIntoWasmAbi for #rust_name #ty_generics #where_clause {
+                    fn describe_cell() {
+                        <Self as WasmDescribe>::describe();
+                    }
+
                     #[inline]
                     fn slice_into_abi(slice: &[Self]) -> #wasm_bindgen::convert::WasmSlice {
                         #wasm_bindgen::convert::borrowed_slice_into_abi(slice)
@@ -2145,6 +2149,12 @@ impl ToTokens for ast::StringEnum {
 
             #[automatically_derived]
             impl #wasm_bindgen::convert::VectorRefIntoWasmAbi for #enum_name {
+                fn describe_cell() {
+                    use #wasm_bindgen::describe::*;
+                    inform(ENCODED);
+                    <Self as WasmDescribe>::describe();
+                }
+
                 fn slice_into_abi(slice: &[Self]) -> #wasm_bindgen::convert::WasmSlice {
                     #wasm_bindgen::convert::encoded_slice_into_abi(slice, |e| match e {
                         #(#variant_paths_ref => #variant_indices,)*
@@ -2225,7 +2235,7 @@ fn encoded_vector_impls(wasm_bindgen: &syn::Path, enum_name: &Ident) -> TokenStr
             fn describe_vector() {
                 use #wasm_bindgen::describe::*;
                 inform(VECTOR);
-                <#enum_name as #wasm_bindgen::describe::WasmDescribe>::describe();
+                <#enum_name as #wasm_bindgen::convert::VectorRefIntoWasmAbi>::describe_cell();
             }
         }
 
@@ -5188,6 +5198,12 @@ impl ToTokens for ast::Enum {
 
             #[automatically_derived]
             impl #wasm_bindgen::convert::VectorRefIntoWasmAbi for #enum_name {
+                fn describe_cell() {
+                    use #wasm_bindgen::describe::*;
+                    inform(ENCODED);
+                    <Self as WasmDescribe>::describe();
+                }
+
                 fn slice_into_abi(slice: &[Self]) -> #wasm_bindgen::convert::WasmSlice {
                     #wasm_bindgen::convert::encoded_slice_into_abi(slice, |e| match e {
                         #(#enum_name::#variant_names => #enum_name::#variant_names as #underlying,)*

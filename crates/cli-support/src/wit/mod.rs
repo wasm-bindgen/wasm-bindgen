@@ -151,42 +151,6 @@ struct InstructionBuilder<'a, 'b> {
     slice_mode: SliceMode,
 }
 
-/// Whether a sequence of `elem` is in memory exactly as its elements' ABIs:
-/// numbers, and JS handles (table indices). Such a sequence is passed as its
-/// own memory; any other element crosses as a buffer of its ABIs.
-pub(crate) fn is_memory_abi(elem: &Descriptor) -> bool {
-    matches!(
-        elem,
-        Descriptor::I8
-            | Descriptor::U8
-            | Descriptor::ClampedU8
-            | Descriptor::I16
-            | Descriptor::U16
-            | Descriptor::I32
-            | Descriptor::U32
-            | Descriptor::I64
-            | Descriptor::U64
-            | Descriptor::I64AsF64
-            | Descriptor::U64AsF64
-            | Descriptor::F32
-            | Descriptor::F64
-            | Descriptor::Externref
-            | Descriptor::NamedExternref(_)
-    )
-}
-
-/// Whether an owned vector of `elem` crosses as a buffer of its elements'
-/// ABIs, as its slices do. These are the elements whose Rust vector impls
-/// encode them (`encoded_vectors!` and string enums); other vectors are their
-/// own memory or hold `JsValue` handles.
-pub(crate) fn is_encoded_vector(elem: &Descriptor) -> bool {
-    match elem {
-        Descriptor::Boolean | Descriptor::Char | Descriptor::StringEnum { .. } => true,
-        Descriptor::Ref(d) => matches!(**d, Descriptor::String | Descriptor::CachedString),
-        _ => false,
-    }
-}
-
 impl InstructionBuilder<'_, '_> {
     /// Returns `AdapterType::I64` for memory64 modules, `AdapterType::I32` for wasm32.
     fn ptr_ty(&self) -> AdapterType {
