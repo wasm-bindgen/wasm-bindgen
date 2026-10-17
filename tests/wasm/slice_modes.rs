@@ -229,6 +229,14 @@ extern "C" {
         view: &[T],
     ) -> String;
 
+    // `array` fits every instantiation, written on the argument too, and a
+    // generic `Vec<T>` resolves `vec` per instantiation in the same way.
+    #[wasm_bindgen(experimental_generic_mono, js_name = kindsOf)]
+    fn kinds_generic_explicit_array<T>(
+        #[wasm_bindgen(slice = array)] borrowed: &[T],
+        #[wasm_bindgen(vec = array)] owned: Vec<T>,
+    ) -> String;
+
     // A concrete element alongside a type parameter.
     #[wasm_bindgen(experimental_generic_mono, js_name = joined)]
     fn joined_strings_per_mono<T>(v: &[String], marker: T) -> String;
@@ -401,4 +409,10 @@ fn per_mono_per_arg_modes_resolve_per_instantiation() {
         kinds_generic_mixed(&[1u8], &[2u8], &[3u8]),
         "Uint8Array:fresh,Array,Uint8Array:view"
     );
+    assert_eq!(
+        kinds_generic_explicit_array(&[1u8], vec![2u8]),
+        "Array,Array"
+    );
+    let s = ["a".to_string()];
+    assert_eq!(kinds_generic_explicit_array(&s, s.to_vec()), "Array,Array");
 }

@@ -90,7 +90,7 @@ pub enum Descriptor {
     RawPointer,
     /// An imported function argument under a `slice = ..` or `vec = ..` mode
     /// that applies to it, or that was written on it, for the binding to
-    /// validate (see [`Descriptor::seq_mode_error`]).
+    /// validate (see [`Descriptor::seq_mode_fit`]).
     SliceMode(SeqMode, Box<Descriptor>),
     /// A sequence cell holding the element's scalar ABI rather than the
     /// element itself. Only ever directly inside a `Vector` or `Slice`.
@@ -317,9 +317,10 @@ impl Descriptor {
             CLAMPED => Descriptor::_decode(data, true),
             NONNULL => Descriptor::NonNull,
             RAW_POINTER => Descriptor::RawPointer,
-            // The macro marks every argument in an inherited mode's scope,
-            // where it only means something for its own shape, so every other
-            // shape drops it here and keeps its default handling.
+            // The macro marks every argument in an inherited mode's scope, so
+            // a mode with nothing to do drops here, and the argument keeps its
+            // default handling. One that can't be honoured is kept for the
+            // binding to reject.
             SLICE_MODE => {
                 let word = get(data);
                 let mode = SeqMode {
@@ -333,10 +334,10 @@ impl Descriptor {
                     explicit: word & SLICE_MODE_EXPLICIT != 0,
                 };
                 let contents = Descriptor::_decode(data, clamped);
-                if mode.explicit || contents.seq_mode_error(mode).is_none() {
-                    Descriptor::SliceMode(mode, Box::new(contents))
-                } else {
+                if contents.seq_mode_fit(mode) == Ok(false) {
                     contents
+                } else {
+                    Descriptor::SliceMode(mode, Box::new(contents))
                 }
             }
             ENCODED => panic!("`ENCODED` outside a sequence"),
@@ -443,10 +444,13 @@ impl Descriptor {
         }
     }
 
-    /// Why `mode` can't act on this import argument, if it can't: a mode acts
-    /// only on a sequence of its key's shape whose element has a typed-array
-    /// form.
-    pub fn seq_mode_error(&self, mode: SeqMode) -> Option<&'static str> {
+    /// How `mode` fits this import argument: whether it acts, which it does
+    /// only on a sequence of its key's shape with a typed-array form, or why it
+    /// can't be honoured. Elsewhere an inherited mode has nothing to do, as
+    /// does `array` on a sequence that is a fresh `Array` anyway, but a mode
+    /// written on the argument is an error, and so is any mode but `view` on
+    /// a `&mut` slice, which would discard JS's writes.
+    pub fn seq_mode_fit(&self, mode: SeqMode) -> Result<bool, &'static str> {
         let mut d = self;
         while let Descriptor::SliceMode(_, inner) = d {
             d = inner;
@@ -466,16 +470,26 @@ impl Descriptor {
                 VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_)
             )
         });
-        if mode.vec && !matches!(d, Descriptor::Vector(_)) {
-            Some("`vec` applies to owned vectors; for a borrowed `&[T]` use `slice = view | copy | array`")
+        let owned = matches!(d, Descriptor::Vector(_));
+        let misfit = if mode.vec && borrowed {
+            "`vec` applies to owned vectors; for a borrowed `&[T]` use `slice = view | copy | array`"
+        } else if mode.vec && !owned {
+            "`vec` applies to owned vector arguments (`Vec<T>`, `Box<[T]>`)"
+        } else if !mode.vec && owned {
+            "`slice` applies to borrowed slices; for an owned `Vec<T>` use `vec = copy | array`"
         } else if !mode.vec && !borrowed {
-            Some("`slice` applies to borrowed slices; for an owned `Vec<T>` use `vec = copy | array`")
+            "`slice` applies to borrowed slice arguments (`&[T]`)"
         } else if mutable && mode.value != SliceMode::View {
-            Some("JS would receive a copy, whose writes never reach the `&mut [T]`; only `slice = view` applies")
-        } else if !typed {
-            Some("its elements aren't numeric, so it always reaches JS as a fresh `Array`")
+            return Err("JS would receive a copy, whose writes never reach the `&mut [T]`; only `slice = view` applies");
+        } else if !typed && mode.value != SliceMode::Array {
+            "it has no typed-array form, so it always reaches JS as a fresh `Array`"
         } else {
-            None
+            return Ok(typed);
+        };
+        if mode.explicit {
+            Err(misfit)
+        } else {
+            Ok(false)
         }
     }
 
@@ -612,31 +626,37 @@ fn encoded_outside_a_sequence() {
 #[test]
 fn seq_modes_apply_by_shape() {
     let decode = |word, rest: &[u32]| Descriptor::decode(&[&[SLICE_MODE, word], rest].concat());
-    let kept = |word, rest: &[u32]| matches!(decode(word, rest), Descriptor::SliceMode(..));
-    // Inherited, a mode acts only on its key's shape with a typed element.
-    let (copy, array) = (SLICE_MODE_COPY, SLICE_MODE_ARRAY);
-    let vec_array = SLICE_MODE_VEC | SLICE_MODE_ARRAY;
-    assert!(kept(copy, &[REF, SLICE, U8]));
-    assert!(kept(array, &[OPTIONAL, REF, SLICE, F64]));
-    assert!(kept(array, &[CLAMPED, REF, SLICE, U8]));
-    assert!(kept(vec_array, &[OPTIONAL, VECTOR, U8]));
-    assert!(!kept(array, &[VECTOR, U8]));
-    assert!(!kept(vec_array, &[REF, SLICE, U8]));
-    assert!(!kept(array, &[REFMUT, SLICE, U8]));
-    assert!(!kept(copy, &[REF, SLICE, EXTERNREF]));
-    assert!(!kept(copy, &[REF, SLICE, ENCODED, BOOLEAN]));
-    assert!(!kept(copy, &[REF, STRING]));
-    assert!(!kept(array, &[U32]));
-    // Written on the argument, it is kept for the binding to reject.
-    let error = |word, rest: &[u32]| match decode(word | SLICE_MODE_EXPLICIT, rest) {
-        Descriptor::SliceMode(mode, d) => d.seq_mode_error(mode),
-        d => panic!("dropped: {d:?}"),
+    let fit = |word, rest: &[u32]| match decode(word, rest) {
+        Descriptor::SliceMode(mode, d) => d.seq_mode_fit(mode),
+        _ => Ok(false),
     };
-    assert_eq!(error(SLICE_MODE_VIEW, &[REFMUT, SLICE, U8]), None);
-    assert!(error(SLICE_MODE_VEC | copy, &[REF, SLICE, U8]).is_some());
-    assert!(error(array, &[VECTOR, U8]).is_some());
-    assert!(error(copy, &[REFMUT, SLICE, U8]).is_some());
-    assert!(error(SLICE_MODE_VIEW, &[REF, SLICE, ENCODED, REF, STRING]).is_some());
+    let (copy, array, explicit) = (SLICE_MODE_COPY, SLICE_MODE_ARRAY, SLICE_MODE_EXPLICIT);
+    let vec_array = SLICE_MODE_VEC | SLICE_MODE_ARRAY;
+    // A mode acts only on its key's shape with a typed element.
+    assert_eq!(fit(copy, &[REF, SLICE, U8]), Ok(true));
+    assert_eq!(fit(array, &[OPTIONAL, REF, SLICE, F64]), Ok(true));
+    assert_eq!(fit(array, &[CLAMPED, REF, SLICE, U8]), Ok(true));
+    assert_eq!(fit(vec_array, &[OPTIONAL, VECTOR, U8]), Ok(true));
+    assert_eq!(fit(explicit, &[REFMUT, SLICE, U8]), Ok(true));
+    // Inherited, it has nothing to do elsewhere, and is dropped.
+    assert_eq!(fit(array, &[VECTOR, U8]), Ok(false));
+    assert_eq!(fit(vec_array, &[REF, SLICE, U8]), Ok(false));
+    assert_eq!(fit(copy, &[REF, SLICE, EXTERNREF]), Ok(false));
+    assert_eq!(fit(copy, &[REF, SLICE, ENCODED, BOOLEAN]), Ok(false));
+    assert_eq!(fit(copy, &[REF, STRING]), Ok(false));
+    assert_eq!(fit(array, &[U32]), Ok(false));
+    // A sequence of anything else already arrives as a fresh `Array`.
+    assert_eq!(
+        fit(explicit | array, &[REF, SLICE, ENCODED, REF, STRING]),
+        Ok(false)
+    );
+    // Written on the argument, any other misfit is an error, and on a `&mut`
+    // slice so is an inherited mode.
+    assert!(fit(explicit | SLICE_MODE_VEC | copy, &[REF, SLICE, U8]).is_err());
+    assert!(fit(explicit | array, &[VECTOR, U8]).is_err());
+    assert!(fit(explicit, &[REF, SLICE, ENCODED, REF, STRING]).is_err());
+    assert!(fit(copy, &[REFMUT, SLICE, U8]).is_err());
+    assert!(fit(copy, &[OPTIONAL, REFMUT, SLICE, U8]).is_err());
 }
 
 impl Function {

@@ -14,23 +14,15 @@ receives:
 * `copy`: a fresh typed array.
 * `array`: a fresh plain `Array`.
 
-Owned data is freed once the call returns, so it is never a view. The
-user-facing Rust signature is unchanged by the mode — `&[T]` stays `&[T]`.
+Owned data is freed once the call returns, so it is never a view.
 
-Every sequence holds its elements in one of two ways:
+Only numeric elements have a choice. A sequence of anything else
+(`String`, `&str`, `bool`, `char`, exported enums, `JsValue` or imported
+JS types) always arrives as a fresh `Array`, so `array` is the only mode
+that fits it.
 
-* In place: the element is its own JS encoding, so the slice's memory is
-  read directly. That is numbers, and JS handles (`JsValue`, `JsString`,
-  imported JS types), whose memory is their table indices.
-* Encoded: each element crosses as a single argument of its type would,
-  through a temporary buffer. That is `String`, `&str`, `bool`, `char` and
-  exported enums.
-
-The modes only apply to numeric `T`. Any other sequence has no typed-array
-form and always reaches JS as a fresh `Array`.
-
-A borrowed slice of exported structs is not supported, as a struct has no
-borrowed ABI; an owned `Vec<T>` moves its elements to JS instead.
+Borrowed slices of exported structs aren't supported; pass a `Vec<T>`
+instead, which moves the elements to JS.
 
 ## `view`
 
@@ -43,9 +35,9 @@ out of an inherited `copy` or `array`.
 
 ## `copy`
 
-JS receives a *fresh typed array* it owns outright. For a borrowed slice the
-wire format is unchanged (the borrowed slice; no Rust-side allocation) —
-only the JS glue changes, copying the view before the call:
+The `vec` default: JS receives a *fresh typed array* it owns outright. For a
+borrowed slice, Rust passes the slice as usual, and the generated JS copies
+it before the call:
 
 ```js
 var v0 = getArrayU8FromWasm0(ptr0, len0).slice();
@@ -54,7 +46,7 @@ var v0 = getArrayU8FromWasm0(ptr0, len0).slice();
 After the call returns, the wasm buffer and the JS array are unrelated.
 This is the mode for JS APIs that retain the buffer past the call, or that
 are typed `Uint8Array` / `BufferSource` and so would reject a plain
-`Array`. It is the `vec` default, as owned data is copied anyway.
+`Array`.
 
 ```rust
 #[wasm_bindgen]
@@ -68,9 +60,9 @@ extern "C" {
 ## `array`
 
 JS receives a plain `Array`, for APIs that expect `T[]` (e.g.
-`Array<number>`) rather than a typed array. For a borrowed slice the wire is
-the same zero-copy borrow as the default, and the JS glue materialises the
-`Array` with `Array.from(..)`.
+`Array<number>`) rather than a typed array. For a borrowed slice, the
+generated JS builds the `Array` straight from wasm memory, with no copy in
+Rust.
 
 ```rust
 #[wasm_bindgen]
@@ -108,17 +100,18 @@ shape with numeric elements, and is a silent no-op on every other argument
 (a method's `this` receiver, scalars, other sequences), so it is safe on a
 whole `extern "C"` block of mixed-shape imports.
 
-Written on an argument, a mode must fit it. `wasm-bindgen` reports an error
-for `slice` on an owned argument or `vec` on a borrowed one, for a mode
-other than `slice = view` on a `&mut` slice, and for any mode on a sequence
-of non-numeric elements. The argument's actual type is checked, through
-type aliases and generic instantiations.
+A mode written on an argument must fit it. When generating bindings, the
+`wasm-bindgen` CLI checks the argument's actual type, through type aliases
+and generic instantiations. It reports an error for `slice` on an owned
+argument or `vec` on a borrowed one, for `view` or `copy` on non-numeric
+elements, and for any `slice` mode other than `view` on a `&mut` slice,
+including one inherited from the function or block.
 
 ## Generic element types
 
 Under [`experimental_generic_mono`](experimental_generic_mono.md), a
 `&[T]` or `Option<&[T]>` argument whose element is a type parameter
-crosses, at each instantiation, exactly as the concrete slice would, its
+arrives, at each instantiation, exactly as the concrete slice would, its
 mode included:
 
 ```rust
@@ -132,17 +125,12 @@ log_items(&[1u8, 2]);                      // zero-copy Uint8Array view
 log_items(&["a".to_string()]);             // fresh Array of strings
 ```
 
-On the type-erasure generic path the slice instead erases to the handle
-tier, which requires a JS-handle element type and already hands JS a fresh
-`Array`, so it has no typed-array form for a mode to act on.
+A generic `Vec<T>` argument resolves its `vec` mode at each instantiation in
+the same way.
+
+Without `experimental_generic_mono`, a generic slice's elements must be JS
+types, so it always arrives as a fresh `Array`.
 
 ## What this is not
 
-* Neither key applies to exported functions; only outgoing arguments
-  (Rust calling JS) are affected.
-* `slice = copy` and `slice = array` **cannot** be combined with a `&mut`
-  slice, and the combination is rejected at compile time: JS receives an
-  owned copy, so its writes would be silently discarded rather than written
-  back through the `&mut`. Use a shared slice if JS only needs to read the
-  elements, or set `slice = view` on that argument to keep the writable
-  view.
+* Both keys are accepted on exported functions, where they have no effect.

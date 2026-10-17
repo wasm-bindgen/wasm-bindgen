@@ -704,7 +704,8 @@ fn dep_crate_toml(name: &str) -> String {
 
 /// A `slice` / `vec` mode written on an argument is validated against the
 /// argument's resolved type, which only the CLI sees through aliases and
-/// generics. Inherited, the same modes are a no-op wherever they don't apply.
+/// generics. Inherited, the same modes are a no-op wherever they have nothing
+/// to do, except on a `&mut` slice, where they can't be honoured.
 #[test]
 fn seq_modes_are_validated_when_explicit() {
     let bind = |name: &str, block: &str, run: &str| {
@@ -724,44 +725,50 @@ fn seq_modes_are_validated_when_explicit() {
             )
             .wasm_bindgen("")
     };
-    let leaked = "Box::leak(vec![1u8].into_boxed_slice())";
-    for (name, arg, value, expected) in [
+    for (name, decl, value, expected) in [
         (
             "seq_mode_vec_on_borrowed",
-            "#[wasm_bindgen(vec = copy)] xs: &[u8]",
+            "fn f(#[wasm_bindgen(vec = copy)] xs: &[u8]);",
             "&[1]",
             "`vec = copy` can't apply to this argument: `vec` applies to owned vectors; for a \
              borrowed `&[T]` use `slice = view | copy | array`",
         ),
         (
             "seq_mode_slice_on_owned",
-            "#[wasm_bindgen(slice = copy)] xs: Vec<u8>",
+            "fn f(#[wasm_bindgen(slice = copy)] xs: Vec<u8>);",
             "vec![1]",
             "`slice = copy` can't apply to this argument: `slice` applies to borrowed slices; \
              for an owned `Vec<T>` use `vec = copy | array`",
         ),
         (
             "seq_mode_slice_on_aliased_owned",
-            "#[wasm_bindgen(slice = array)] xs: Bytes",
+            "fn f(#[wasm_bindgen(slice = array)] xs: Bytes);",
             "vec![1]",
             "`slice = array` can't apply to this argument: `slice` applies to borrowed slices",
         ),
         (
-            "seq_mode_copy_on_mut_slice",
-            "#[wasm_bindgen(slice = copy)] xs: Buf",
-            leaked,
+            "seq_mode_inherited_copy_on_aliased_mut_slice",
+            "#[wasm_bindgen(slice = copy)] fn f(xs: Buf);",
+            "Box::leak(vec![1u8].into_boxed_slice())",
             "`slice = copy` can't apply to this argument: JS would receive a copy, whose writes \
              never reach the `&mut [T]`; only `slice = view` applies",
         ),
         (
-            "seq_mode_on_untyped_elements",
-            "#[wasm_bindgen(slice = view)] xs: &[String]",
+            "seq_mode_view_on_untyped_elements",
+            "fn f(#[wasm_bindgen(slice = view)] xs: &[String]);",
             r#"&["a".to_string()]"#,
-            "`slice = view` can't apply to this argument: its elements aren't numeric, so it \
+            "`slice = view` can't apply to this argument: it has no typed-array form, so it \
              always reaches JS as a fresh `Array`",
         ),
+        (
+            "seq_mode_slice_on_scalar",
+            "fn f(#[wasm_bindgen(slice = copy)] x: u32);",
+            "1",
+            "`slice = copy` can't apply to this argument: `slice` applies to borrowed slice \
+             arguments (`&[T]`)",
+        ),
     ] {
-        let block = format!(r#"#[wasm_bindgen] extern "C" {{ fn f({arg}); }}"#);
+        let block = format!(r#"#[wasm_bindgen] extern "C" {{ {decl} }}"#);
         let err = format!(
             "{:#}",
             bind(name, &block, &format!("f({value});")).unwrap_err()
@@ -772,12 +779,23 @@ fn seq_modes_are_validated_when_explicit() {
         );
         assert!(err.contains(expected), "{err}");
     }
+    // `array` fits a sequence that arrives as a fresh `Array` anyway.
     bind(
-        "seq_mode_inherited_is_a_no_op_elsewhere",
-        r#"#[wasm_bindgen(slice = copy, vec = array)] extern "C" {
-            fn f(xs: &[u8], ys: Vec<u8>, aliased: Bytes, buf: Buf, strings: &[String]);
-        }"#,
-        &format!(r#"f(&[1], vec![2], vec![3], {leaked}, &["a".to_string()]);"#),
+        "seq_mode_no_op_elsewhere",
+        r#"
+            #[wasm_bindgen(slice = copy, vec = array)]
+            extern "C" {
+                fn f(xs: &[u8], ys: Vec<u8>, aliased: Bytes, strings: &[String]);
+                fn g(
+                    #[wasm_bindgen(slice = array)] strings: &[String],
+                    #[wasm_bindgen(vec = array)] owned: Vec<String>,
+                );
+            }
+        "#,
+        r#"
+            f(&[1], vec![2], vec![3], &["a".to_string()]);
+            g(&["a".to_string()], vec!["b".to_string()]);
+        "#,
     )
     .unwrap();
 }

@@ -12,22 +12,21 @@
   borrowed slices (`&[T]`, `Option<&[T]>`, `Clamped<&[u8]>`) and `vec` to
   owned ones (`Vec<T>`, `Box<[T]>`, `Option<Vec<T>>`, `Clamped<Vec<u8>>`).
   Each key is accepted per argument, per function and per `extern "C"` block,
-  with a more specific level overriding a broader one. Inherited, a key only
-  acts on its own shape; written on an argument that it doesn't fit, it is
-  an error. A generic element type resolves the mode per instantiation under
-  `experimental_generic_mono`, where `Option<&[T]>` is now supported too.
+  with a more specific level overriding a broader one. Inherited from a
+  function or block, a key only affects arguments of its own shape; written
+  on an argument it doesn't fit, it is an error. A generic element type
+  resolves the mode per instantiation under `experimental_generic_mono`,
+  where `Option<&[T]>` is now supported too.
   [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
 
 * Borrowed slices of `String`, `&str`, `bool`, `char` and exported enums
-  (`&[T]` and `Option<&[T]>`) can be passed to imported JS functions, arriving
-  as a fresh `Array`. Numbers and JS handles are still read in place; any
-  other element crosses as a single argument of its type would, through a
-  temporary buffer.
+  (`&[T]` and `Option<&[T]>`) can be passed to imported JS functions,
+  arriving as a fresh `Array`.
   [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
 
 * Owned vectors (`Vec<T>`, `Box<[T]>`, `Option<Vec<T>>`) of `bool`, `char`
-  and string enums can be passed both ways, and `Vec<&str>` to JS, encoded
-  like their borrowed slices.
+  and string enums can be passed to and from JS, and `Vec<&str>` can be
+  passed to JS.
   [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
 
 * String enums implement `TryFromJsValue`, accepting only their listed values,
