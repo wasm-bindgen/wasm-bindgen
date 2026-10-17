@@ -120,7 +120,8 @@
 * Numeric enums are passed between JS and Rust as an `f64`, so a value from
   JS that isn't one of the enum's values, such as `'abc'`, `NaN`, `1.5` or
   `2 ** 32`, throws "invalid enum value passed" in release builds too,
-  rather than becoming variant 0 or being truncated. Values above
+  rather than becoming variant 0 or being truncated. Conversions from
+  `JsValue` likewise reject `NaN` and fractions. Values above
   `i32::MAX` in a `#[repr(u32)]` enum are now returned to JS unchanged
   rather than as negative numbers.
   [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
