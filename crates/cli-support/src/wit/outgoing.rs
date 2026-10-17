@@ -253,6 +253,9 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::String],
                 );
             }
+            Descriptor::Slice(elem) if !is_memory_abi(elem) => {
+                self.outgoing_encoded_slice(elem, false)?
+            }
             Descriptor::Slice(_) => {
                 let kind = arg.vector_kind().ok_or_else(|| {
                     format_err!(
@@ -659,6 +662,9 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
             Descriptor::CachedString => self.cached_string(false)?,
+            Descriptor::Slice(elem) if !is_memory_abi(elem) => {
+                self.outgoing_encoded_slice(elem, true)?
+            }
             Descriptor::String | Descriptor::Slice(_) => {
                 let kind = arg.vector_kind().ok_or_else(|| {
                     format_err!(
@@ -681,6 +687,66 @@ impl InstructionBuilder<'_, '_> {
                 "unsupported optional ref argument type for calling JS function from Rust: {arg:?}"
             ),
         }
+        Ok(())
+    }
+
+    /// A borrowed slice of elements whose memory is not their ABI crosses as a
+    /// buffer of their ABIs (see `VectorRefIntoWasmAbi`). JS reads each
+    /// element's ABI words from the buffer and decodes them with the
+    /// element's own instructions, as for an argument of the element type.
+    fn outgoing_encoded_slice(&mut self, elem: &Descriptor, optional: bool) -> Result<(), Error> {
+        // `&[&str]`: the element is a reference, decoded as borrowed anyway.
+        let elem = match elem {
+            Descriptor::Ref(d) => &**d,
+            d => d,
+        };
+        let mut decode = InstructionBuilder {
+            input: Vec::new(),
+            output: Vec::new(),
+            instructions: Vec::new(),
+            cx: &mut *self.cx,
+            // The words are read from the buffer onto the stack, not fetched
+            // as arguments. This also types a pointer word as the `f64` that
+            // `WasmWord` is in memory on memory64, so the words' layout
+            // matches the Rust ABI types in the buffer.
+            return_position: true,
+            slice_mode: SliceMode::View,
+        };
+        // Element decoders must neither call into wasm nor free: the glue
+        // reads the whole buffer through one view and frees it after the
+        // loop. That rules out owned elements, such as an owned string or a
+        // Rust struct.
+        match elem {
+            Descriptor::String | Descriptor::CachedString => decode.outgoing_ref(false, elem)?,
+            Descriptor::Boolean
+            | Descriptor::Char
+            | Descriptor::Enum { .. }
+            | Descriptor::StringEnum { .. } => decode._outgoing(elem)?,
+            _ => {
+                bail!("unsupported slice element type for calling JS function from Rust: {elem:?}")
+            }
+        }
+        let InstructionBuilder {
+            input: words,
+            mut output,
+            instructions: elem,
+            ..
+        } = decode;
+        let array = AdapterType::Array(Box::new(output.remove(0)));
+        let mem = self.cx.memory()?;
+        let free = self.cx.free()?;
+        let ptr_ty = self.outgoing_internal_word_ty();
+        self.instruction(
+            &[ptr_ty.clone(), ptr_ty],
+            Instruction::EncodedSliceLoad {
+                words,
+                elem,
+                mem,
+                free,
+                optional,
+            },
+            &[if optional { array.option() } else { array }],
+        );
         Ok(())
     }
 
@@ -772,6 +838,30 @@ impl InstructionBuilder<'_, '_> {
             self.ptr_ty()
         }
     }
+}
+
+/// Whether a slice of `elem` is in memory exactly as its elements' ABIs:
+/// numbers, and JS handles (table indices). Such a slice is borrowed as a view
+/// of its own memory; any other element crosses as a buffer of its ABIs.
+fn is_memory_abi(elem: &Descriptor) -> bool {
+    matches!(
+        elem,
+        Descriptor::I8
+            | Descriptor::U8
+            | Descriptor::ClampedU8
+            | Descriptor::I16
+            | Descriptor::U16
+            | Descriptor::I32
+            | Descriptor::U32
+            | Descriptor::I64
+            | Descriptor::U64
+            | Descriptor::I64AsF64
+            | Descriptor::U64AsF64
+            | Descriptor::F32
+            | Descriptor::F64
+            | Descriptor::Externref
+            | Descriptor::NamedExternref(_)
+    )
 }
 
 #[test]

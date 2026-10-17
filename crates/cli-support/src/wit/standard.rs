@@ -50,6 +50,33 @@ pub struct InstructionData {
     pub stack_change: StackChange,
 }
 
+/// Calls `f` on every instruction in `instrs`, including those nested in an
+/// `EncodedSliceLoad`'s element decoder, which a pass that rewrites or roots
+/// instructions must reach too. Passes over the adapter's stack shape must
+/// not use this: the nested instructions run on the loop's own stack, so to
+/// them an `EncodedSliceLoad` is a single instruction.
+pub fn visit_instructions(instrs: &[InstructionData], f: &mut impl FnMut(&InstructionData)) {
+    for instr in instrs {
+        f(instr);
+        if let Instruction::EncodedSliceLoad { elem, .. } = &instr.instr {
+            visit_instructions(elem, f);
+        }
+    }
+}
+
+/// [`visit_instructions`], mutably.
+pub fn visit_instructions_mut(
+    instrs: &mut [InstructionData],
+    f: &mut impl FnMut(&mut InstructionData),
+) {
+    for instr in instrs {
+        f(instr);
+        if let Instruction::EncodedSliceLoad { elem, .. } = &mut instr.instr {
+            visit_instructions_mut(elem, f);
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum StackChange {
     Modified { pushed: usize, popped: usize },
@@ -87,6 +114,8 @@ pub enum AdapterType {
     I32,
     I64,
     Vector(VectorKind),
+    /// A plain array of the element type.
+    Array(Box<AdapterType>),
     /// A `&mut [T]` argument. Unlike `Vector`, the contents are copied back
     /// into the buffer of the passed typed array after the call, so it can't
     /// be a plain array.
@@ -349,6 +378,16 @@ pub enum Instruction {
         free: walrus::FunctionId,
         mode: SliceMode,
     },
+    /// pops ptr/length of a buffer holding `length` element ABIs, each laid
+    /// out as `words`, pushes the array `elem` decodes them into (or
+    /// `undefined` for a null `optional` buffer), frees the buffer
+    EncodedSliceLoad {
+        words: Vec<AdapterType>,
+        elem: Vec<InstructionData>,
+        mem: walrus::MemoryId,
+        free: walrus::FunctionId,
+        optional: bool,
+    },
     /// pops i32, loads externref from externref table
     TableGet,
     /// pops two i32 data pointers, pushes an externref closure
@@ -503,63 +542,62 @@ impl walrus::CustomSection for NonstandardWitSection {
                 AdapterKind::Local { instructions } => instructions,
                 AdapterKind::Import { .. } => continue,
             };
-            for instr in instrs {
-                match instr.instr {
-                    DeferFree { free: f, .. } => {
-                        roots.push_func(f);
-                    }
-                    StoreRetptr { mem, .. }
-                    | LoadRetptr { mem, .. }
-                    | View { mem, .. }
-                    | OptionView { mem, .. }
-                    | MemoryToString(mem) => {
-                        roots.push_memory(mem);
-                    }
-                    VectorToMemory { malloc, mem, .. } | OptionVector { malloc, mem, .. } => {
-                        roots.push_memory(mem);
-                        roots.push_func(malloc);
-                    }
-                    MutableSliceToMemory { malloc, mem, .. } => {
-                        roots.push_memory(mem);
-                        roots.push_func(malloc);
-                    }
-                    VectorLoad { free, mem, .. }
-                    | OptionVectorLoad { free, mem, .. }
-                    | CachedStringLoad { free, mem, .. } => {
-                        roots.push_memory(mem);
-                        roots.push_func(free);
-                    }
-                    OptionString {
-                        mem,
-                        malloc,
-                        realloc,
-                    }
-                    | StringToMemory {
-                        mem,
-                        malloc,
-                        realloc,
-                    } => {
-                        roots.push_memory(mem);
-                        roots.push_func(malloc);
-                        if let Some(id) = realloc {
-                            roots.push_func(id);
-                        }
-                    }
-                    I32FromOptionExternref {
-                        table_and_alloc: Some((table, alloc)),
-                    } => {
-                        roots.push_table(table);
-                        roots.push_func(alloc);
-                    }
-                    UnwrapResult { table_and_drop } | UnwrapResultString { table_and_drop } => {
-                        if let Some((table, drop)) = table_and_drop {
-                            roots.push_table(table);
-                            roots.push_func(drop);
-                        }
-                    }
-                    _ => {}
+            visit_instructions(instrs, &mut |instr| match instr.instr {
+                DeferFree { free: f, .. } => {
+                    roots.push_func(f);
                 }
-            }
+                StoreRetptr { mem, .. }
+                | LoadRetptr { mem, .. }
+                | View { mem, .. }
+                | OptionView { mem, .. }
+                | MemoryToString(mem) => {
+                    roots.push_memory(mem);
+                }
+                VectorToMemory { malloc, mem, .. } | OptionVector { malloc, mem, .. } => {
+                    roots.push_memory(mem);
+                    roots.push_func(malloc);
+                }
+                MutableSliceToMemory { malloc, mem, .. } => {
+                    roots.push_memory(mem);
+                    roots.push_func(malloc);
+                }
+                VectorLoad { free, mem, .. }
+                | OptionVectorLoad { free, mem, .. }
+                | EncodedSliceLoad { free, mem, .. }
+                | CachedStringLoad { free, mem, .. } => {
+                    roots.push_memory(mem);
+                    roots.push_func(free);
+                }
+                OptionString {
+                    mem,
+                    malloc,
+                    realloc,
+                }
+                | StringToMemory {
+                    mem,
+                    malloc,
+                    realloc,
+                } => {
+                    roots.push_memory(mem);
+                    roots.push_func(malloc);
+                    if let Some(id) = realloc {
+                        roots.push_func(id);
+                    }
+                }
+                I32FromOptionExternref {
+                    table_and_alloc: Some((table, alloc)),
+                } => {
+                    roots.push_table(table);
+                    roots.push_func(alloc);
+                }
+                UnwrapResult { table_and_drop } | UnwrapResultString { table_and_drop } => {
+                    if let Some((table, drop)) = table_and_drop {
+                        roots.push_table(table);
+                        roots.push_func(drop);
+                    }
+                }
+                _ => {}
+            });
         }
     }
 }

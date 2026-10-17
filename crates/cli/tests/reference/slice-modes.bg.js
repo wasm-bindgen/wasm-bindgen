@@ -1,9 +1,6 @@
 export function driver() {
     wasm.driver();
 }
-export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {
-    throw new Error(getStringFromWasm0(arg0, arg1));
-}
 export function __wbg_js_block_mixed_2c5572af51372175(arg0, arg1, arg2, arg3, arg4, arg5) {
     js_block_mixed(getArrayU16FromWasm0(arg0, arg1).slice(), Array.from(getArrayU16FromWasm0(arg2, arg3)), getArrayU16FromWasm0(arg4, arg5));
 }
@@ -21,17 +18,38 @@ export function __wbg_js_shapes_0af45ab96e7304c4(arg0, arg1, arg2, arg3, arg4, a
     wasm.__wbindgen_free(arg0, arg1 * 1, 1);
     var v1 = Array.from(getArrayF64FromWasm0(arg2, arg3));
     wasm.__wbindgen_free(arg2, arg3 * 8, 8);
-    var v2 = getArrayJsValueFromWasm0(arg6, arg7);
-    wasm.__wbindgen_free(arg6, arg7 * 4, 4);
+    const v2 = [];
+    let p2 = arg6;
+    p2 = p2 >>> 0;
+    const view2 = getDataViewMemory0();
+    for (const end2 = p2 + arg7 * 8; p2 < end2; p2 += 8) {
+        v2.push(getStringFromWasm0(view2.getInt32(p2 + 0, true), view2.getInt32(p2 + 4, true)));
+    }
+    wasm.__wbindgen_free(arg6, arg7 * 8, 4);
     js_shapes(v0, v1, Array.from(getClampedArrayU8FromWasm0(arg4, arg5)), v2);
 }
 export function __wbg_js_view_u8_121c4880f6a160aa(arg0, arg1) {
     js_view_u8(getArrayU8FromWasm0(arg0, arg1));
 }
 export function __wbindgen_generic_0000000000000000(arg0, arg1) {
-    // Cast intrinsic for `Ref(String) -> Externref`.
-    const ret = getStringFromWasm0(arg0, arg1);
-    return ret;
+    const v0 = [];
+    let p0 = arg0;
+    p0 = p0 >>> 0;
+    const view0 = getDataViewMemory0();
+    for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
+        v0.push(getStringFromWasm0(view0.getInt32(p0 + 0, true), view0.getInt32(p0 + 4, true)));
+    }
+    wasm.__wbindgen_free(arg0, arg1 * 8, 4);
+    // generic import `js_generic_slice`: [Ref(Slice(String))] -> Unit
+    js_generic_slice(v0);
+}
+export function __wbindgen_generic_0000000000000001(arg0, arg1) {
+    // generic import `js_generic_slice`: [Ref(Slice(U16))] -> Unit
+    js_generic_slice(getArrayU16FromWasm0(arg0, arg1));
+}
+export function __wbindgen_generic_0000000000000002(arg0, arg1) {
+    // generic import `js_generic_slice`: [SliceMode(Copy, Option(Ref(Slice(U8))))] -> Unit
+    js_generic_slice(arg0 === 0 ? undefined : getArrayU8FromWasm0(arg0, arg1).slice());
 }
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;
@@ -45,17 +63,6 @@ export function __wbindgen_init_externref_table() {
 function getArrayF64FromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return getFloat64ArrayMemory0().subarray(ptr / 8, ptr / 8 + len);
-}
-
-function getArrayJsValueFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    const mem = getDataViewMemory0();
-    const result = [];
-    for (let i = ptr; i < ptr + 4 * len; i += 4) {
-        result.push(wasm.__wbindgen_externrefs.get(mem.getUint32(i, true)));
-    }
-    wasm.__externref_drop_slice(ptr, len);
-    return result;
 }
 
 function getArrayU16FromWasm0(ptr, len) {

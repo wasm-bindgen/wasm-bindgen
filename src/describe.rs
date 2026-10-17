@@ -283,9 +283,9 @@ where
 /// `#[wasm_bindgen(slice = ..)]` mode (`SLICE_MODE_ARRAY` or
 /// `SLICE_MODE_COPY`). The CLI applies the mode to typed-array sequence shapes
 /// and ignores it on every other shape.
-pub struct SliceMode<T: ?Sized, const MODE: u32>(core::marker::PhantomData<T>);
+pub struct WasmDescribeSliceMode<T: ?Sized, const MODE: u32>(core::marker::PhantomData<T>);
 
-impl<T: WasmDescribe + ?Sized, const MODE: u32> WasmDescribe for SliceMode<T, MODE> {
+impl<T: WasmDescribe + ?Sized, const MODE: u32> WasmDescribe for WasmDescribeSliceMode<T, MODE> {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
         inform(SLICE_MODE);

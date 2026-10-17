@@ -22,6 +22,25 @@ extern "C" {
     // resolves per instantiation too.
     #[wasm_bindgen(experimental_generic_mono, slice = array)]
     fn per_mono_nested_elem<T>(xs: &[Vec<T>], other: T);
+
+    // On the per-mono path a slice needs only its element's
+    // `VectorRefIntoWasmAbi`, so a bare generic slice needs no mode,
+    // `Option<&[T]>` is not a rejected "nested reference", and `String` is a
+    // valid element (and, at the call site, a valid `T`).
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn per_mono_bare<T>(xs: &[T], other: T);
+
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn per_mono_option<T>(xs: Option<&[T]>, other: T);
+
+    #[wasm_bindgen(experimental_generic_mono, slice = copy)]
+    fn per_mono_option_copy<T>(xs: Option<&[T]>, other: T);
+
+    #[wasm_bindgen(experimental_generic_mono, slice = array)]
+    fn per_mono_option_array<T>(xs: Option<&[T]>, other: T);
+
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn per_mono_concrete_strings<T>(xs: &[String], other: T);
 }
 
 // Inherited from the enclosing block on both paths, through the deprecated

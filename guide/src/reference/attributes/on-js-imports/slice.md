@@ -1,12 +1,11 @@
 # `slice`
 
 The `slice` attribute selects how a sequence argument of an imported
-function reaches JS. It applies to borrowed slices (`&[T]`,
-`Option<&[T]>`), owned sequences (`Vec<T>`, `Box<[T]>`, `Option<Vec<T>>`)
-and their `Clamped` forms alike. For numeric element types (`u8`, `i32`,
-`f64`, ...) there are three modes:
+function reaches JS when its element type `T` is numeric (`u8`, `i32`,
+`f64`, ...). A sequence is a borrowed slice (`&[T]`), an owned `Vec<T>` or
+`Box<[T]>`, or an `Option` or `Clamped` form of either:
 
-| mode | borrowed `&[T]` | owned `Vec<T>` |
+| mode | borrowed `&[T]` | owned `Vec<T>` / `Box<[T]>` |
 |---|---|---|
 | `slice = view` *(default)* | typed-array view of wasm memory | fresh typed array |
 | `slice = array` | fresh plain `Array` | fresh plain `Array` |
@@ -16,9 +15,18 @@ Owned data is freed once the call returns, so it always reaches JS as a
 copy. The user-facing Rust signature is unchanged by the mode — `&[T]`
 stays `&[T]`.
 
-String and handle elements (`&[String]`, `&[JsValue]`, `&[JsString]`,
-imported JS types) have no typed-array form and always reach JS as a fresh
-`Array`; `view` and `copy` leave them exactly as they are without a mode.
+The modes only apply to numeric `T`. A borrowed slice of any other element
+type has no typed-array form: it crosses as each element's own ABI and
+reaches JS as a fresh `Array`, whatever the mode.
+
+* JS handles (`JsValue`, `JsString`, imported JS types) are read in place,
+  since the slice's memory is their table indices.
+* `String`, `&str`, `bool`, `char` and exported enums are encoded into a
+  temporary buffer of their ABIs, which the glue decodes with each
+  element's own conversion and then frees.
+
+A borrowed slice of exported structs is not supported, as a struct has no
+borrowed ABI; an owned `Vec<T>` moves its elements to JS instead.
 
 ## `slice = view`
 
@@ -58,12 +66,8 @@ extern "C" {
 JS receives a plain `Array`, for APIs that expect `T[]` (e.g.
 `Array<number>`) rather than a typed array.
 
-For numeric elements of a borrowed slice the wire is the same zero-copy
-borrow as the default, and the JS glue materialises the `Array` with
-`Array.from(..)`. Under `array`, a `&[String]` argument is also supported
-(it has no default ABI): the Rust side builds a fresh buffer of JS values,
-one per element, which JS reads into an `Array` and frees. For handle
-elements this is a refcount bump each; for `String` a fresh JS string.
+For a borrowed slice the wire is the same zero-copy borrow as the default,
+and the JS glue materialises the `Array` with `Array.from(..)`.
 
 ```rust
 #[wasm_bindgen]
@@ -71,9 +75,6 @@ extern "C" {
     // JS receives `Array<number>` rather than `Uint16Array`.
     #[wasm_bindgen(slice = array)]
     fn set_indices(values: &[u16]);
-
-    #[wasm_bindgen(slice = array)]
-    fn set_names(values: &[String]);
 }
 ```
 
@@ -102,15 +103,25 @@ mixed-shape imports.
 
 ## Generic element types
 
-A slice whose element type is a type parameter resolves its mode per
-concrete instantiation under
-[`experimental_generic_mono`](experimental_generic_mono.md) — e.g. a typed
-copy at `T = u8` and the handle tier's fresh `Array` at `T = JsString` —
-and is a no-op on the type-erasure generic path, where the slice erases to
-the handle tier. On the per-mono path a generic element keeps the slice's
-default borrowed ABI, so `T = String` fails to compile exactly as without
-the attribute, even though the concrete `&[String]` spelling is supported
-under `array`.
+Under [`experimental_generic_mono`](experimental_generic_mono.md), a
+`&[T]` or `Option<&[T]>` argument whose element is a type parameter
+crosses, at each instantiation, exactly as the concrete slice would, its
+mode included:
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn log_items<T>(items: &[T]);
+}
+
+log_items(&[1u8, 2]);                      // zero-copy Uint8Array view
+log_items(&["a".to_string()]);             // fresh Array of strings
+```
+
+On the type-erasure generic path the slice instead erases to the handle
+tier, which requires a JS-handle element type and already hands JS a fresh
+`Array`, so the modes are a documented no-op.
 
 ## What this is not
 

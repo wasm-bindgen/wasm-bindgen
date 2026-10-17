@@ -1890,23 +1890,12 @@ struct FnArgAttrs {
 /// if neither `slice = ..` nor the deprecated `slice_to_array` is present.
 /// Both at one level could only agree or contradict, so the pair is an error
 /// naming both spans.
-//
-// TODO(next major): bare borrowed slices default to `copy`, and `slice = view`
-// is only accepted on an `unsafe fn` (a view the callee retains dangles, and a
-// shared view JS writes through breaks the borrow), so the zero-copy obligation
-// is written where the binding is declared. The last 0.2 release warns on bare
-// borrowed slices in user `extern` blocks ahead of the flip. `slice_to_array`
-// is removed.
 fn import_slice_mode(attrs: &BindgenAttrs) -> Result<Option<ast::SliceMode>, Diagnostic> {
     let mode = match attrs.slice() {
         Some(ident) => Some(match ident.to_string().as_str() {
             "view" => ast::SliceMode::View,
             "array" => ast::SliceMode::Array,
             "copy" => ast::SliceMode::Copy,
-            // TODO(next major): once JS can mint a view that no other view can
-            // be derived from (so a finalizer on it is a sound free), `transfer`
-            // hands an owned `Vec<T>` to JS without a copy, and becomes the
-            // owned default; `copy` is then its opt-out.
             "transfer" => {
                 return Err(Diagnostic::span_error(
                     ident.span(),
@@ -1965,9 +1954,6 @@ fn check_slice_mode_arg(
     let Some(slice) = crate::codegen::detect_slice_or_option_slice(ty) else {
         return Ok(mode);
     };
-    // TODO(next major): under the `copy` default a `&mut [T]` is copied in and
-    // copied back after the call, so `array` and `copy` stop being errors here
-    // and only `view` (on an `unsafe fn`) gives JS the writable alias.
     if slice.is_mut {
         let (attr, shape) = match mode {
             ast::SliceMode::Array => ("slice = array", "plain `Array`"),

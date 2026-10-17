@@ -2064,10 +2064,10 @@ fn instruction(
             let ptr = js.pop();
             let f = js.cx.expose_get_vector_from_wasm(kind.clone(), *mem);
             // The data is freed below, so it can never be left as a view.
-            // TODO(next major): a `transfer` mode instead hands JS a view no
-            // other view can be derived from, freed by a finalizer rather than
-            // here (falling back to this copy where engines lack such views),
-            // and becomes the default for owned data.
+            // TODO(next major): default to `slice = transfer` here and in
+            // `OptionVectorLoad`, once supported. It needs a view no other view
+            // can be derived from, so that a finalizer can free the data:
+            // https://github.com/tc39/proposal-limited-arraybuffer/issues/19.
             let mode = match mode {
                 SliceMode::View => SliceMode::Copy,
                 mode => *mode,
@@ -2109,6 +2109,81 @@ fn instruction(
             ));
             js.prelude("}");
             let v = js.local(format!("v{i}"));
+            js.push(v);
+        }
+
+        Instruction::EncodedSliceLoad {
+            words,
+            elem,
+            mem,
+            free,
+            optional,
+        } => {
+            let len = js.pop();
+            let ptr = js.pop();
+            let i = js.tmp();
+            let p = js.local(format!("p{i}"));
+            let end = js.local(format!("end{i}"));
+            let memory = js.cx.expose_dataview_memory(*mem);
+            let memory = if js.cx.config.mode.emscripten() {
+                memory.name.to_string()
+            } else {
+                format!("{memory}()")
+            };
+            // Decoding never calls into wasm, so memory cannot grow under the
+            // loop and one view serves the whole buffer.
+            let view = js.local(format!("view{i}"));
+            // Each element's words at their natural alignment, as in the
+            // `#[repr(C)]` ABI types the buffer holds.
+            let mut reads = Vec::new();
+            let mut stride: usize = 0;
+            let mut align: usize = 1;
+            for word in words {
+                let (size, get) = match word {
+                    AdapterType::I32 => (4, "getInt32"),
+                    AdapterType::F32 => (4, "getFloat32"),
+                    AdapterType::I64 => (8, "getBigInt64"),
+                    AdapterType::F64 => (8, "getFloat64"),
+                    _ => bail!("unsupported slice element word {word:?}"),
+                };
+                stride = stride.next_multiple_of(size);
+                reads.push(format!("{view}.{get}({p} + {stride}, true)"));
+                stride += size;
+                align = align.max(size);
+            }
+            let stride = stride.next_multiple_of(align);
+            // Decode one element from its words with its own instructions,
+            // into the loop body.
+            let stack = std::mem::replace(&mut js.stack, reads);
+            let prelude = std::mem::take(&mut js.prelude);
+            for instr in elem {
+                instruction(js, &instr.instr, log_error, constructor)?;
+            }
+            let value = js.pop();
+            let body = std::mem::replace(&mut js.prelude, prelude);
+            js.stack = stack;
+            let v = js.local(format!("v{i}"));
+            let free = js.cx.wasm_export_of(*free);
+            let coerce = js.cx.coerce_ptr_assign(&p);
+            if *optional {
+                js.prelude(&format!("let {v};\nif ({ptr} !== 0) {{\n{v} = [];"));
+            } else {
+                js.prelude(&format!("const {v} = [];"));
+            }
+            js.prelude(&format!(
+                "
+                let {p} = {ptr};
+                {coerce}
+                const {view} = {memory};
+                for (const {end} = {p} + {len} * {stride}; {p} < {end}; {p} += {stride}) {{
+                {body}{v}.push({value});
+                }}
+                {free}({ptr}, {len} * {stride}, {align});
+                "
+            ));
+            if *optional {
+                js.prelude("}");
+            }
             js.push(v);
         }
 
@@ -2410,6 +2485,22 @@ pub(crate) fn adapter2ts(
                 }
             }
         },
+        AdapterType::Array(elem) => {
+            let mut elem_ty = String::new();
+            adapter2ts(
+                elem,
+                position,
+                &mut elem_ty,
+                refs,
+                name_map,
+                typed_array_buffers,
+            );
+            if is_valid_ident(&elem_ty) {
+                dst.push_str(&format!("{elem_ty}[]"));
+            } else {
+                dst.push_str(&format!("({elem_ty})[]"));
+            }
+        }
         AdapterType::MutableSlice(kind) => dst.push_str(&kind.js_ty()),
         AdapterType::Option(ty) => {
             adapter2ts(ty, position, dst, refs, name_map, typed_array_buffers);
