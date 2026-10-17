@@ -24,6 +24,10 @@ pub trait Promising {
     type Resolution;
 }
 
+impl<T: Promising + ?Sized> Promising for &T {
+    type Resolution = T::Resolution;
+}
+
 // Undefined
 #[wasm_bindgen(wasm_bindgen = crate)]
 extern "C" {
