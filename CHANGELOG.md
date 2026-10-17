@@ -21,17 +21,14 @@
 
 * Borrowed slices of `String`, `&str`, `bool`, `char` and exported enums
   (`&[T]` and `Option<&[T]>`) can be passed to imported JS functions, arriving
-  as a fresh `Array`. A borrowed slice now crosses as each element's own ABI:
-  numbers and JS handles are still read in place, and any other element is
-  encoded into a temporary buffer of its ABIs, which the glue decodes and
-  frees.
+  as a fresh `Array`. Numbers and JS handles are still read in place; any
+  other element crosses as a single argument of its type would, through a
+  temporary buffer.
   [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
 
 * Owned vectors (`Vec<T>`, `Box<[T]>`, `Option<Vec<T>>`) of `bool`, `char`
-  and string enums can be passed both ways, and `Vec<&str>` to JS, crossing
-  the same way as their borrowed slices: the glue decodes a buffer of the
-  elements' ABIs into a fresh `Array`, or encodes an `Array` into one that
-  Rust takes ownership of.
+  and string enums can be passed both ways, and `Vec<&str>` to JS, encoded
+  like their borrowed slices.
   [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
 
 * String enums implement `TryFromJsValue`, accepting only their listed values,

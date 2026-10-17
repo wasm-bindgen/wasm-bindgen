@@ -14,6 +14,15 @@ You can pass boxed slices and `Vec`s of several different types to and from JS:
 - `bool`s and `char`s.
 - `&str`s, to JS only.
 
+Imported JS types and `JsValue`s are passed as their handles. `bool`s,
+`char`s, string enums and `&str`s cross element by element, each as a single
+value of its type would. `String`s, exported Rust types and C-style enums
+cross as JS values, and each is checked as it comes into Rust, so an element
+of the wrong type throws.
+
+Borrowed slices (`&[T]`) of the same element types, apart from exported Rust
+types, can be passed to imported JS functions.
+
 [You can also pass boxed slices of numbers to JS](boxed-number-slices.html),
 except that they're converted to typed arrays (`Uint8Array`, `Int32Array`, etc.)
 instead of regular arrays.
