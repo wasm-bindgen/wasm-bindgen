@@ -693,6 +693,15 @@ impl<T: OptionFromWasmAbi> FromWasmAbi for Option<T> {
             Some(T::from_abi(js))
         }
     }
+
+    #[inline]
+    unsafe fn try_from_abi(js: T::Abi) -> Result<Self, &'static str> {
+        if T::is_none(&js) {
+            Ok(None)
+        } else {
+            T::try_from_abi(js).map(Some)
+        }
+    }
 }
 
 impl<T: OptionIntoWasmAbi + ErasableGeneric<Repr = JsValue> + Promising> Promising for Option<T> {
@@ -714,6 +723,11 @@ impl<T: FromWasmAbi> FromWasmAbi for Clamped<T> {
     #[inline]
     unsafe fn from_abi(js: T::Abi) -> Self {
         Clamped(T::from_abi(js))
+    }
+
+    #[inline]
+    unsafe fn try_from_abi(js: T::Abi) -> Result<Self, &'static str> {
+        T::try_from_abi(js).map(Clamped)
     }
 }
 
@@ -888,16 +902,31 @@ pub fn js_value_vector_into_abi<T: Into<JsValue>>(
 pub unsafe fn js_value_vector_from_abi<T: TryFromJsValue>(
     js: <Box<[JsValue]> as FromWasmAbi>::Abi,
 ) -> Box<[T]> {
-    let js_vals = <Vec<JsValue> as FromWasmAbi>::from_abi(js);
-    // A throw runs no destructors, so collecting stops at the first element of
-    // the wrong type and drops everything Rust owns first: the buffer, the
-    // handles not yet converted and the elements converted so far. `.ok()`
-    // drops the rejected handle too. Throwing directly here, rather than
-    // inside the iterator chain or a closure, keeps the function that took
-    // the `Vec` within the debug-mode error stack's frame limit.
-    let result: Result<Box<[T]>, JsValue> = js_vals.into_iter().map(T::try_from_js_value).collect();
-    match result.ok() {
-        Some(result) => result,
-        None => throw_str("array contains a value of the wrong type"),
+    // Thrown directly, rather than inside the iterator chain or a closure, to
+    // keep the function that took the `Vec` within the debug-mode error
+    // stack's frame limit.
+    match try_js_value_vector_from_abi(js) {
+        Ok(result) => result,
+        Err(msg) => throw_str(msg),
     }
+}
+
+/// The fallible form of [`js_value_vector_from_abi`].
+///
+/// Collecting stops at the first element of the wrong type and drops
+/// everything Rust owns: the buffer, the handles not yet converted, the
+/// rejected handle and the elements converted so far.
+///
+/// # ⚠️ Unstable
+///
+/// This is part of the internal [`convert`](crate::convert) module, **no
+/// stability guarantees** are provided. Use at your own risk. See its
+/// documentation for more details.
+pub unsafe fn try_js_value_vector_from_abi<T: TryFromJsValue>(
+    js: <Box<[JsValue]> as FromWasmAbi>::Abi,
+) -> Result<Box<[T]>, &'static str> {
+    <Vec<JsValue> as FromWasmAbi>::from_abi(js)
+        .into_iter()
+        .map(|value| T::try_from_js_value(value).map_err(|_| crate::__rt::WRONG_TYPE_ERROR))
+        .collect()
 }

@@ -140,6 +140,24 @@
   numeric enum.
   [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
 
+* An exported function or closure that rejects an argument from JS, such as
+  an invalid numeric enum value or an exported struct that is still borrowed,
+  no longer leaks its other arguments or leaves an exported object it borrowed,
+  including `self`, permanently borrowed. Field setters, `free()` on a
+  borrowed object, closures called after being dropped and `FnOnce` closures
+  called twice also release what JS passed them. The same holds when the
+  generated JS rejects an argument before calling Rust, such as an object of
+  the wrong class or a number passed for a `u64`, after copying an earlier
+  string or array into Wasm memory.
+  [#5388](https://github.com/wasm-bindgen/wasm-bindgen/pull/5388)
+
+* An `async` export now converts its arguments when it is called, rather than
+  when its future is first polled. A rejected argument rejects the returned
+  promise, instead of throwing from the task queue, and an `async` method's
+  `self` stays borrowed from the call on, so freeing the object before the
+  future runs throws instead of leaving the method with a freed `self`.
+  [#5388](https://github.com/wasm-bindgen/wasm-bindgen/pull/5388)
+
 * Reference types are now detected from the runtime's externref intrinsics when
   the `target_features` section is missing, as with `strip = true`. Previously
   such builds skipped the externref transform, and `#[wasm_bindgen(catch)]`

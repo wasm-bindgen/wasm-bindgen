@@ -300,26 +300,33 @@ pub enum Instruction {
     /// Pops a vector value of `kind` from the stack, allocates memory with
     /// `malloc`, and then copies all the data into `mem`. Pushes the pointer
     /// and length as i32.
+    ///
+    /// These allocating instructions also carry `free`, which releases the
+    /// allocation when a later argument throws before Rust takes it.
     VectorToMemory {
         kind: VectorKind,
         malloc: walrus::FunctionId,
+        free: walrus::FunctionId,
         mem: walrus::MemoryId,
     },
     MutableSliceToMemory {
         kind: VectorKind,
         malloc: walrus::FunctionId,
+        free: walrus::FunctionId,
         mem: walrus::MemoryId,
     },
 
     /// Pops a string, pushes pointer/length or all zeros
     OptionString {
         malloc: walrus::FunctionId,
+        free: walrus::FunctionId,
         mem: walrus::MemoryId,
         realloc: Option<walrus::FunctionId>,
     },
     /// Pops a string, pushes pointer/length
     StringToMemory {
         malloc: walrus::FunctionId,
+        free: walrus::FunctionId,
         mem: walrus::MemoryId,
         realloc: Option<walrus::FunctionId>,
     },
@@ -330,6 +337,7 @@ pub enum Instruction {
     OptionVector {
         kind: VectorKind,
         malloc: walrus::FunctionId,
+        free: walrus::FunctionId,
         mem: walrus::MemoryId,
     },
 
@@ -571,13 +579,18 @@ impl walrus::CustomSection for NonstandardWitSection {
                 | MemoryToString(mem) => {
                     roots.push_memory(mem);
                 }
-                VectorToMemory { malloc, mem, .. } | OptionVector { malloc, mem, .. } => {
-                    roots.push_memory(mem);
-                    roots.push_func(malloc);
+                VectorToMemory {
+                    malloc, free, mem, ..
                 }
-                MutableSliceToMemory { malloc, mem, .. } => {
+                | OptionVector {
+                    malloc, free, mem, ..
+                }
+                | MutableSliceToMemory {
+                    malloc, free, mem, ..
+                } => {
                     roots.push_memory(mem);
                     roots.push_func(malloc);
+                    roots.push_func(free);
                 }
                 EncodedSliceStore {
                     malloc, free, mem, ..
@@ -596,15 +609,18 @@ impl walrus::CustomSection for NonstandardWitSection {
                 OptionString {
                     mem,
                     malloc,
+                    free,
                     realloc,
                 }
                 | StringToMemory {
                     mem,
                     malloc,
+                    free,
                     realloc,
                 } => {
                     roots.push_memory(mem);
                     roots.push_func(malloc);
+                    roots.push_func(free);
                     if let Some(id) = realloc {
                         roots.push_func(id);
                     }

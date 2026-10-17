@@ -7,6 +7,10 @@ export function run(widget, lifetime_holder) {
     const ret = wasm.run(widget, lifetime_holder);
     return ret;
 }
+export function __wbg_Error_30c8987f7c2ed4e2(arg0, arg1) {
+    const ret = Error(getStringFromWasm0(arg0, arg1));
+    return ret;
+}
 export function __wbg___wbindgen_debug_string_4687d8d8c2017d52(arg0, arg1) {
     const ret = debugString(arg1);
     const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);

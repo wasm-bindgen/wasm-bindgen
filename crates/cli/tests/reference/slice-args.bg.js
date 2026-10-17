@@ -285,13 +285,24 @@ export function take_mut_usize(a) {
  * @param {Point[]} c
  */
 export function take_non_numbers(a, b, c) {
-    const ptr0 = passArrayJsValueToWasm0(a, wasm.__wbindgen_malloc);
-    const len0 = WASM_VECTOR_LEN;
-    const ptr1 = passArrayJsValueToWasm0(b, wasm.__wbindgen_malloc);
-    const len1 = WASM_VECTOR_LEN;
-    const ptr2 = passArrayJsValueToWasm0(c, wasm.__wbindgen_malloc);
-    const len2 = WASM_VECTOR_LEN;
-    wasm.take_non_numbers(ptr0, len0, ptr1, len1, ptr2, len2);
+    let entered = false;
+    try {
+        var ptr0 = passArrayJsValueToWasm0(a, wasm.__wbindgen_malloc);
+        var len0 = WASM_VECTOR_LEN;
+        var ptr1 = passArrayJsValueToWasm0(b, wasm.__wbindgen_malloc);
+        var len1 = WASM_VECTOR_LEN;
+        var ptr2 = passArrayJsValueToWasm0(c, wasm.__wbindgen_malloc);
+        var len2 = WASM_VECTOR_LEN;
+        entered = true;
+        wasm.take_non_numbers(ptr0, len0, ptr1, len1, ptr2, len2);
+    } catch (e) {
+        if (!entered) {
+            if (ptr2) { wasm.__externref_drop_slice(ptr2, len2); wasm.__wbindgen_free(ptr2, len2 * 4, 4); }
+            if (ptr1) { wasm.__externref_drop_slice(ptr1, len1); wasm.__wbindgen_free(ptr1, len1 * 4, 4); }
+            if (ptr0) { wasm.__externref_drop_slice(ptr0, len0); wasm.__wbindgen_free(ptr0, len0 * 4, 4); }
+        }
+        throw e;
+    }
 }
 
 /**
@@ -300,11 +311,22 @@ export function take_non_numbers(a, b, c) {
  * @param {BigUint64Array | bigint[] | null} [c]
  */
 export function take_optional(a, b, c) {
-    var ptr0 = isLikeNone(a) ? 0 : passArrayF32ToWasm0(a, wasm.__wbindgen_malloc);
-    var len0 = WASM_VECTOR_LEN;
-    var ptr1 = isLikeNone(c) ? 0 : passArray64ToWasm0(c, wasm.__wbindgen_malloc);
-    var len1 = WASM_VECTOR_LEN;
-    wasm.take_optional(ptr0, len0, b, ptr1, len1);
+    const val3 = +b;
+    let entered = false;
+    try {
+        var ptr0 = isLikeNone(a) ? 0 : passArrayF32ToWasm0(a, wasm.__wbindgen_malloc);
+        var len0 = WASM_VECTOR_LEN;
+        var ptr1 = isLikeNone(c) ? 0 : passArray64ToWasm0(c, wasm.__wbindgen_malloc);
+        var len1 = WASM_VECTOR_LEN;
+        entered = true;
+        wasm.take_optional(ptr0, len0, val3, ptr1, len1);
+    } catch (e) {
+        if (!entered) {
+            if (ptr1) { wasm.__wbindgen_free(ptr1, len1 * 8, 8); }
+            if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 4, 4); }
+        }
+        throw e;
+    }
 }
 
 /**
@@ -312,11 +334,21 @@ export function take_optional(a, b, c) {
  * @param {BigInt64Array | bigint[]} b
  */
 export function take_owned(a, b) {
-    const ptr0 = passArray16ToWasm0(a, wasm.__wbindgen_malloc);
-    const len0 = WASM_VECTOR_LEN;
-    const ptr1 = passArray64ToWasm0(b, wasm.__wbindgen_malloc);
-    const len1 = WASM_VECTOR_LEN;
-    wasm.take_owned(ptr0, len0, ptr1, len1);
+    let entered = false;
+    try {
+        var ptr0 = passArray16ToWasm0(a, wasm.__wbindgen_malloc);
+        var len0 = WASM_VECTOR_LEN;
+        var ptr1 = passArray64ToWasm0(b, wasm.__wbindgen_malloc);
+        var len1 = WASM_VECTOR_LEN;
+        entered = true;
+        wasm.take_owned(ptr0, len0, ptr1, len1);
+    } catch (e) {
+        if (!entered) {
+            if (ptr1) { wasm.__wbindgen_free(ptr1, len1 * 8, 8); }
+            if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 2, 2); }
+        }
+        throw e;
+    }
 }
 
 /**

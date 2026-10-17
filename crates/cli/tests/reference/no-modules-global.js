@@ -17,6 +17,9 @@ let custom_global = (function(exports) {
     function __wbg_get_imports() {
         const import0 = {
             __proto__: null,
+            __wbg___wbindgen_throw_41e9ee4f547fc59a: function(arg0, arg1) {
+                throw new Error(getStringFromWasm0(arg0, arg1));
+            },
             __wbindgen_init_externref_table: function() {
                 const table = wasm.__wbindgen_externrefs;
                 const offset = table.grow(4);
@@ -33,11 +36,31 @@ let custom_global = (function(exports) {
         };
     }
 
+    function getStringFromWasm0(ptr, len) {
+        ptr = ptr >>> 0;
+        return decodeText(getUint8ArrayMemory0().subarray(ptr, ptr + len));
+    }
+
+    let cachedUint8ArrayMemory0 = null;
+    function getUint8ArrayMemory0() {
+        if (cachedUint8ArrayMemory0 === null || cachedUint8ArrayMemory0.byteLength === 0) {
+            cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
+        }
+        return cachedUint8ArrayMemory0;
+    }
+
+    let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true });
+    cachedTextDecoder.decode();
+    function decodeText(bytes) {
+        return cachedTextDecoder.decode(bytes);
+    }
+
     let wasmModule, wasmInstance, wasm;
     function __wbg_finalize_init(instance, module) {
         wasmInstance = instance;
         wasm = instance.exports;
         wasmModule = module;
+        cachedUint8ArrayMemory0 = null;
         wasm.__wbindgen_start();
         return wasm;
     }

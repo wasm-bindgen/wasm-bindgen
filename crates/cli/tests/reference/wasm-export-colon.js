@@ -158,19 +158,31 @@ export function __wbgtest_cov_dump() {
  * @returns {string}
  */
 export function __wbgtest_coverage_path(env, pid, temp_dir, module_signature) {
-    let deferred3_0;
-    let deferred3_1;
+    let deferred5_0;
+    let deferred5_1;
     try {
-        var ptr0 = isLikeNone(env) ? 0 : passStringToWasm0(env, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        var len0 = WASM_VECTOR_LEN;
-        const ptr1 = passStringToWasm0(temp_dir, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        const len1 = WASM_VECTOR_LEN;
-        const ret = wasm.__wbgtest_coverage_path(ptr0, len0, pid, ptr1, len1, module_signature);
-        deferred3_0 = ret[0];
-        deferred3_1 = ret[1];
-        return getStringFromWasm0(ret[0], ret[1]);
+        const val3 = +pid;
+        const val4 = BigInt.asIntN(64, module_signature);
+        let entered = false;
+        try {
+            var ptr0 = isLikeNone(env) ? 0 : passStringToWasm0(env, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            var len0 = WASM_VECTOR_LEN;
+            var ptr1 = passStringToWasm0(temp_dir, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            var len1 = WASM_VECTOR_LEN;
+            entered = true;
+            const ret = wasm.__wbgtest_coverage_path(ptr0, len0, val3, ptr1, len1, val4);
+            deferred5_0 = ret[0];
+            deferred5_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } catch (e) {
+            if (!entered) {
+                if (ptr1) { wasm.__wbindgen_free(ptr1, len1 * 1, 1); }
+                if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 1, 1); }
+            }
+            throw e;
+        }
     } finally {
-        wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
+        wasm.__wbindgen_free(deferred5_0, deferred5_1, 1);
     }
 }
 
