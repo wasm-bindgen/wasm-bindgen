@@ -9,6 +9,7 @@
 //! `generic_import_ref.rs`'s cases but with an explicit, named lifetime
 //! instead of an elided one.
 
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
@@ -17,11 +18,15 @@ extern "C" {
     // A named (rather than elided) lifetime on a bare shared reference to a
     // generic type parameter (`&'a T`).
     #[wasm_bindgen(experimental_generic_mono, js_name = takeRefPrimitive)]
-    fn take_ref_lifetime<'a, T>(x: &'a T) -> f64;
+    fn take_ref_lifetime<'a, T>(x: &'a T) -> f64
+    where
+        for<'x> &'x T: IntoWasmAbi;
 
     // The same lifetime also appears in a `where T: 'a` bound.
     #[wasm_bindgen(experimental_generic_mono, js_name = doubleRef)]
-    fn double_ref<'a, T: 'a>(x: &'a T) -> T;
+    fn double_ref<'a, T: 'a + FromWasmAbi>(x: &'a T) -> T
+    where
+        for<'x> &'x T: IntoWasmAbi;
 
     // A named lifetime on a concrete (non-generic) argument, alongside an
     // unrelated type parameter `T`. Unlike the two above, `'a` here doesn't
@@ -30,14 +35,14 @@ extern "C" {
     // exercises the shim redeclaring `'a` purely to name
     // `<&'a str as IntoWasmAbi>::Abi` in its own signature.
     #[wasm_bindgen(experimental_generic_mono, js_name = concatStr)]
-    fn concat_str<'a, T>(s: &'a str, suffix: T) -> String;
+    fn concat_str<'a, T: IntoWasmAbi>(s: &'a str, suffix: T) -> String;
 
     // Two lifetimes related by an *inline* outlives predicate (`<'a: 'b, 'b>`),
     // which — unlike a `where` predicate — has no carrier other than the
     // parameter list itself, so the shim has to reproduce the whole
     // declaration rather than just the bare names.
     #[wasm_bindgen(experimental_generic_mono, js_name = joinStrs)]
-    fn join_outlives<'a: 'b, 'b, T>(a: &'a str, b: &'b str, suffix: T) -> String;
+    fn join_outlives<'a: 'b, 'b, T: IntoWasmAbi>(a: &'a str, b: &'b str, suffix: T) -> String;
 
     type Scaler;
 
@@ -49,12 +54,14 @@ extern "C" {
     // it as `&'a self`; a plain `&self` would borrow at an anonymous
     // caller-chosen lifetime that rustc cannot prove outlives `'a`.
     #[wasm_bindgen(method, experimental_generic_mono, js_name = scale)]
-    fn scale<'a, T>(this: &'a Scaler, x: T) -> f64;
+    fn scale<'a, T: IntoWasmAbi>(this: &'a Scaler, x: T) -> f64;
 
     // The receiver's lifetime is shared with another argument, tying the two
     // borrows together for the duration of the call.
     #[wasm_bindgen(method, experimental_generic_mono, js_name = scaleRef)]
-    fn scale_ref<'a, T>(this: &'a Scaler, x: &'a T) -> f64;
+    fn scale_ref<'a, T>(this: &'a Scaler, x: &'a T) -> f64
+    where
+        for<'x> &'x T: IntoWasmAbi;
 }
 
 #[wasm_bindgen_test]

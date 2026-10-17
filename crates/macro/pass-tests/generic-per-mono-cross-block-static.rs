@@ -9,7 +9,7 @@ extern "C" {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(static_method_of = External, experimental_generic_mono)]
-    fn external_static<T>(value: T);
+    fn external_static<T: wasm_bindgen::convert::IntoWasmAbi>(value: T);
 }
 
 fn assert_cross_block_static(value: JsValue) {

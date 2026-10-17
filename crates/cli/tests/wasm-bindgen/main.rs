@@ -309,7 +309,7 @@ fn cross_crate_experimental_generic_mono_only_block() {
                 #[wasm_bindgen]
                 extern "C" {
                     #[wasm_bindgen(experimental_generic_mono)]
-                    pub fn shared_log<T>(x: T);
+                    pub fn shared_log<T: wasm_bindgen::convert::IntoWasmAbi>(x: T);
                 }
             "#,
         )
@@ -379,18 +379,18 @@ fn experimental_generic_mono_shim_paths_survive_shadowing() {
             extern "C" {
                 // Covers the `WasmRet<..>`-returning shim shape.
                 #[wasm_bindgen(experimental_generic_mono)]
-                fn echo<T>(x: T) -> T;
+                fn echo<T: wasm_bindgen::convert::IntoWasmAbi + wasm_bindgen::convert::FromWasmAbi>(x: T) -> T;
                 // Covers the unit-returning shim shape, which builds its marker
                 // call as a statement rather than a tail expression.
                 #[wasm_bindgen(experimental_generic_mono)]
-                fn sink<T>(x: T);
+                fn sink<T: wasm_bindgen::convert::IntoWasmAbi>(x: T);
                 // Covers the `slice_to_array` rewrite, which names both
                 // `alloc::vec::Vec` (in the describe type) and `core::option::Option`
                 // (in the ABI conversion for the `Option<&[T]>` shape).
                 #[wasm_bindgen(experimental_generic_mono, slice_to_array)]
-                fn take_slice<T>(xs: &[u32], t: T);
+                fn take_slice<T: wasm_bindgen::convert::IntoWasmAbi>(xs: &[u32], t: T);
                 #[wasm_bindgen(experimental_generic_mono, slice_to_array)]
-                fn take_opt_slice<T>(xs: Option<&[u32]>, t: T);
+                fn take_opt_slice<T: wasm_bindgen::convert::IntoWasmAbi>(xs: Option<&[u32]>, t: T);
             }
 
             #[wasm_bindgen]
@@ -435,15 +435,15 @@ fn experimental_generic_mono_unsafe_op_in_unsafe_fn() {
             extern "C" {
                 // Covers the `WasmRet<..>`-returning shim shape.
                 #[wasm_bindgen(experimental_generic_mono)]
-                fn echo<T>(x: T) -> T;
+                fn echo<T: wasm_bindgen::convert::IntoWasmAbi + wasm_bindgen::convert::FromWasmAbi>(x: T) -> T;
                 // Covers the unit-returning shim shape, which builds its marker
                 // call as a statement rather than a tail expression.
                 #[wasm_bindgen(experimental_generic_mono)]
-                fn sink<T>(x: T);
+                fn sink<T: wasm_bindgen::convert::IntoWasmAbi>(x: T);
                 // Covers the `slice_to_array` rewrite, whose ABI conversion is
                 // spliced into the same unsafe body.
                 #[wasm_bindgen(experimental_generic_mono, slice_to_array)]
-                fn take_slice<T>(xs: &[u32], t: T);
+                fn take_slice<T: wasm_bindgen::convert::IntoWasmAbi>(xs: &[u32], t: T);
             }
 
             #[wasm_bindgen]

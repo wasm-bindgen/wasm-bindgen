@@ -8966,7 +8966,9 @@ pub mod Reflect {
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/get)
         #[cfg(js_sys_unstable_apis)]
         #[wasm_bindgen(js_namespace = Reflect, catch, experimental_generic_mono)]
-        pub fn get<T, K: PropertyKey>(target: &Object<T>, key: K) -> Result<Option<T>, JsValue>;
+        pub fn get<T, K: PropertyKey>(target: &Object<T>, key: K) -> Result<Option<T>, JsValue>
+        where
+            Option<T>: FromWasmAbi;
 
         /// The static `Reflect.get()` method works like getting a property from
         /// an object (`target[propertyKey]`) as a function.
@@ -9139,7 +9141,9 @@ pub mod Reflect {
             target: &Object<T>,
             property_key: K,
             value: &T,
-        ) -> Result<bool, JsValue>;
+        ) -> Result<bool, JsValue>
+        where
+            for<'a> &'a T: IntoWasmAbi;
 
         /// The static `Reflect.set()` method works like setting a
         /// property on an object.
