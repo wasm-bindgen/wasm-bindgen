@@ -217,7 +217,7 @@ impl InstructionBuilder<'_, '_> {
             }
 
             Descriptor::SliceMode(mode, d) => {
-                if let Some(reason) = d.seq_mode_error(*mode) {
+                if let Err(reason) = d.seq_mode_fit(*mode) {
                     bail!("`{mode:?}` can't apply to this argument: {reason}");
                 }
                 self.slice_mode = mode.value;

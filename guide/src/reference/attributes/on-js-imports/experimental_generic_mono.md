@@ -381,19 +381,19 @@ trait objects nested in another type do not receive this lowering.
 
 ## Other attributes
 
-`experimental_generic_mono` composes with the usual import attributes — `method`,
-`static_method_of`, `constructor`, `getter`, `setter`, `structural`, `final`,
-`indexing_getter`, `indexing_setter`, `indexing_deleter`, `js_namespace`,
-`js_name`, `catch`, `variadic`, and the [`slice` and `vec` modes](slice.md) — and the
-resulting JS binding is shaped exactly
-as it would be for the equivalent non-generic import.
+`experimental_generic_mono` composes with the usual import attributes —
+`method`, `static_method_of`, `constructor`, `getter`, `setter`,
+`structural`, `final`, `indexing_getter`, `indexing_setter`,
+`indexing_deleter`, `js_namespace`, `js_name`, `catch`, `variadic`, and the
+[`slice` and `vec` modes](slice.md) — and the resulting JS binding is shaped
+exactly as it would be for the equivalent non-generic import.
 
-A slice argument (`&[T]` or `Option<&[T]>`) whose element is a type parameter
-crosses, at each instantiation, exactly as the concrete slice would: a
-numeric element as a typed-array view (or whatever its `slice` mode selects),
-any other element, `String` included, as a fresh `Array` (see
-[`slice` and `vec`](slice.md)). So one attribute can cover a whole `extern "C"` block
-without inspecting element types.
+At each instantiation, a slice argument (`&[T]` or `Option<&[T]>`) whose
+element is a type parameter crosses exactly as the concrete slice would. A
+numeric element arrives as a typed-array view, or as its `slice` mode
+selects; any other element, `String` included, arrives as a fresh `Array`.
+So one attribute on an `extern "C"` block covers generic and concrete
+imports alike.
 
 The two that do *not* compose are `assert_no_shim` and `reexport`; both are
 rejected, see [Unsupported shapes](#unsupported-shapes).
@@ -445,9 +445,9 @@ usually to drop `experimental_generic_mono`:
 * **A mutable reference to a type parameter** (`&mut T`, `&mut [T]`, or any
   other `&mut` whose referent mentions a type parameter), and a reference to
   a type parameter **nested inside another type** (e.g. `Option<&T>`). A bare
-  `&T` *is* supported, slices are supported (`Option<&[T]>` included — a
-  slice crosses by its element's ABI, so it is not subject to the nesting
-  restriction), and mutable references to *concrete* types (e.g.
+  `&T` *is* supported, slices are supported, `Option<&[T]>` included, since
+  a slice crosses by its element's ABI rather than as a nested reference,
+  and mutable references to *concrete* types (e.g.
   `&mut [u16]`, `&mut dyn FnMut(u32)`) bind exactly as they do on the
   non-generic import path — the restriction is only about references to type
   parameters. Top-level callbacks whose owned input or return types are generic
@@ -499,8 +499,8 @@ hash.
 A monomorphisation records only a shim key, which is a hash over the Rust
 function name, the `js_name` (when one is given), the `js_namespace`, the
 signature tokens, the `module`, and any `cfg` attributes. It does *not* cover
-`catch`, `variadic`, the `slice` modes, `structural`/`final`, or
-the getter/setter accessor kind. Two imports differing only in one of those claim
+`catch`, `variadic`, the `slice` and `vec` modes, `structural`/`final`, or the
+getter/setter accessor kind. Two imports differing only in one of those claim
 the same key, and the CLI cannot tell which binding a given instantiation meant.
 Rather than silently binding one of them, which would mis-bind every
 monomorphisation of the other, it fails with an error naming both JS targets.
