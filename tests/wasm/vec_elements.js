@@ -8,6 +8,18 @@ exports.describe = (v) =>
 
 exports.modesWithUnknown = () => ['read', 'nope'];
 
+exports.throwingElementFreesBuffer = (memory) => {
+    const chars = Array.from({ length: 100000 }, () => 'a');
+    chars.push('🌍'.split('')[0]);
+    const before = memory.buffer.byteLength;
+    for (let i = 0; i < 100; i++) {
+        assert.throws(() => wasm.vec_elements_next_chars(chars), /Unicode scalar value/);
+    }
+    // Each attempt allocates a 400 KB buffer: leaked, memory would grow by
+    // 40 MB.
+    assert.ok(memory.buffer.byteLength - before < 4 * 1024 * 1024);
+};
+
 exports.callExports = () => {
     assert.deepStrictEqual(wasm.vec_elements_not([true, false, true]), [false, true, false]);
     assert.deepStrictEqual(wasm.vec_elements_not([]), []);

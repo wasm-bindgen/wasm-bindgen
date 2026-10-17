@@ -38,6 +38,12 @@ extern "C" {
     #[wasm_bindgen(js_name = modesWithUnknown)]
     fn modes_with_unknown() -> Vec<VecMode>;
 
+    #[wasm_bindgen(js_name = describe)]
+    fn describe_value(v: &JsValue) -> String;
+
+    #[wasm_bindgen(js_name = throwingElementFreesBuffer)]
+    fn throwing_element_frees_buffer(memory: JsValue);
+
     #[wasm_bindgen(js_name = callExports)]
     fn call_exports();
 }
@@ -115,4 +121,18 @@ fn unknown_string_enum_values() {
 #[wasm_bindgen_test]
 fn js_to_rust() {
     call_exports();
+}
+
+#[wasm_bindgen_test]
+fn throwing_element() {
+    throwing_element_frees_buffer(wasm_bindgen::memory());
+}
+
+#[wasm_bindgen_test]
+fn into_js_value() {
+    let describe = |v: JsValue| describe_value(&v);
+    assert_eq!(describe(vec![true, false].into()), "Array:[true,false]");
+    assert_eq!(describe(vec!['🌍'].into()), r#"Array:["🌍"]"#);
+    assert_eq!(describe(vec![VecMode::Write].into()), r#"Array:["write"]"#);
+    assert_eq!(describe(vec!["x"].into()), r#"Array:["x"]"#);
 }

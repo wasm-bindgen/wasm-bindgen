@@ -602,9 +602,9 @@ impl InstructionBuilder<'_, '_> {
             return_position: true,
             slice_mode: SliceMode::View,
         };
-        // Element encoders must neither call into wasm nor allocate: the glue
-        // writes the whole buffer through one view after allocating it. That
-        // rules out elements that own memory, such as a string.
+        // Element encoders must not call into wasm: the glue writes the whole
+        // buffer through one view after allocating it. That rules out elements
+        // that own memory, such as a string.
         match elem {
             Descriptor::Boolean | Descriptor::Char | Descriptor::StringEnum { .. } => {
                 encode._incoming(elem)?
@@ -621,6 +621,7 @@ impl InstructionBuilder<'_, '_> {
         } = encode;
         let array = AdapterType::Array(Box::new(input.remove(0)));
         let malloc = self.cx.malloc()?;
+        let free = self.cx.free()?;
         let mem = self.cx.memory()?;
         let ptr_ty = self.incoming_internal_word_ty();
         self.instruction(
@@ -629,6 +630,7 @@ impl InstructionBuilder<'_, '_> {
                 words,
                 elem,
                 malloc,
+                free,
                 mem,
                 optional,
             },

@@ -176,19 +176,15 @@ pub(crate) fn is_memory_abi(elem: &Descriptor) -> bool {
 }
 
 /// Whether an owned vector of `elem` crosses as a buffer of its elements'
-/// ABIs, as its slices do. Vectors of exported structs and numeric enums
-/// instead hold JS handles, to the structs' wrappers and the enums' numbers,
-/// which JS checks when converting back. Owned strings can't be encoded, as
-/// the element glue can't free them.
+/// ABIs, as its slices do. These are the elements whose Rust vector impls
+/// encode them (`encoded_vectors!` and string enums); other vectors are their
+/// own memory or hold `JsValue` handles.
 pub(crate) fn is_encoded_vector(elem: &Descriptor) -> bool {
-    !is_memory_abi(elem)
-        && !matches!(
-            elem,
-            Descriptor::RustStruct { .. }
-                | Descriptor::Enum { .. }
-                | Descriptor::String
-                | Descriptor::CachedString
-        )
+    match elem {
+        Descriptor::Boolean | Descriptor::Char | Descriptor::StringEnum { .. } => true,
+        Descriptor::Ref(d) => matches!(**d, Descriptor::String | Descriptor::CachedString),
+        _ => false,
+    }
 }
 
 impl InstructionBuilder<'_, '_> {

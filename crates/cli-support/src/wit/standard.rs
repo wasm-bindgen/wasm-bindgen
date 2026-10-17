@@ -393,12 +393,14 @@ pub enum Instruction {
         optional: bool,
     },
     /// pops an array (or, `optional`, `undefined`), encodes each element with
-    /// `elem` into the `words` of its ABI in a buffer allocated with `malloc`,
-    /// pushes the buffer's ptr/length (ptr 0 for `undefined`)
+    /// `elem` into the `words` of its ABI in a buffer allocated with `malloc`
+    /// (freed with `free` if an element throws), pushes the buffer's
+    /// ptr/length (ptr 0 for `undefined`)
     EncodedSliceStore {
         words: Vec<AdapterType>,
         elem: Vec<InstructionData>,
         malloc: walrus::FunctionId,
+        free: walrus::FunctionId,
         mem: walrus::MemoryId,
         optional: bool,
     },
@@ -571,10 +573,16 @@ impl walrus::CustomSection for NonstandardWitSection {
                     roots.push_memory(mem);
                     roots.push_func(malloc);
                 }
-                MutableSliceToMemory { malloc, mem, .. }
-                | EncodedSliceStore { malloc, mem, .. } => {
+                MutableSliceToMemory { malloc, mem, .. } => {
                     roots.push_memory(mem);
                     roots.push_func(malloc);
+                }
+                EncodedSliceStore {
+                    malloc, free, mem, ..
+                } => {
+                    roots.push_memory(mem);
+                    roots.push_func(malloc);
+                    roots.push_func(free);
                 }
                 VectorLoad { free, mem, .. }
                 | OptionVectorLoad { free, mem, .. }
