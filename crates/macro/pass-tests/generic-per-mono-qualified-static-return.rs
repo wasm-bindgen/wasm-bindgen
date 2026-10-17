@@ -8,7 +8,7 @@ extern "C" {
     // `self::Qualified` names the same local imported class as `Qualified` and
     // must still trigger self-returning static-method hoisting.
     #[wasm_bindgen(static_method_of = Qualified, experimental_generic_mono, js_name = of)]
-    fn qualified_static<T>(value: T) -> self::Qualified<T>;
+    fn qualified_static<T: wasm_bindgen::convert::IntoWasmAbi>(value: T) -> self::Qualified<T>;
 }
 
 fn assert_qualified_return(value: Value) -> Qualified<Value> {

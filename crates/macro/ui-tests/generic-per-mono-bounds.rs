@@ -1,3 +1,4 @@
+use wasm_bindgen::convert::IntoWasmAbi;
 use wasm_bindgen::prelude::*;
 
 // Trait bounds declared on a per-monomorphisation generic import
@@ -12,28 +13,27 @@ use wasm_bindgen::prelude::*;
 // arguments inside a bound path (`IntoIterator<Item = String>`) are covered:
 // carrying only the trait name would let the last call below compile.
 
-// `u32` satisfies the `IntoWasmAbi`/`WasmDescribe` bounds the codegen
-// synthesizes, so only the user-written bound can be what fails below. The same
-// holds for `Vec<u32>`.
+// `u32` satisfies the declared `IntoWasmAbi` bound, so only the other
+// user-written bound can be what fails below. The same holds for `Vec<u32>`.
 trait Marker {}
 
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(experimental_generic_mono)]
-    fn inline_bound<T: Marker>(x: T);
+    fn inline_bound<T: Marker + IntoWasmAbi>(x: T);
 
     #[wasm_bindgen(experimental_generic_mono)]
     fn where_bound<T>(x: T)
     where
-        T: Marker;
+        T: Marker + IntoWasmAbi;
 
     #[wasm_bindgen(experimental_generic_mono)]
-    fn iter_bound<T: Iterator>(x: T);
+    fn iter_bound<T: Iterator + IntoWasmAbi>(x: T);
 
     #[wasm_bindgen(experimental_generic_mono)]
     fn iter_item_bound<T>(x: T)
     where
-        T: IntoIterator<Item = String>;
+        T: IntoIterator<Item = String> + IntoWasmAbi;
 }
 
 fn violates_inline_bound() {

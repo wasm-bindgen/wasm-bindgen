@@ -9,6 +9,7 @@
 //! index written to the wrong key all produce perfectly plausible glue. These
 //! tests execute each shape and assert on observable state.
 
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
@@ -20,56 +21,58 @@ extern "C" {
     // generated `impl` block to the *return* type's class, so the manufactured
     // binding attaches to `new Widget(..)`.
     #[wasm_bindgen(constructor, experimental_generic_mono)]
-    fn new<T>(value: T) -> Widget;
+    fn new<T: IntoWasmAbi>(value: T) -> Widget;
 
     // Instance method. Two instantiations prove distinct per-mono shims on the
     // method path.
     #[wasm_bindgen(method, experimental_generic_mono, js_name = set)]
-    fn set<T>(this: &Widget, value: T);
+    fn set<T: IntoWasmAbi>(this: &Widget, value: T);
 
     // `&T` in a method argument, monomorphised at a JS-handle type, so the
     // handle's `IntoWasmAbi for &Widget` impl is what marshals it.
     #[wasm_bindgen(method, experimental_generic_mono, js_name = attach)]
-    fn attach<T>(this: &Widget, other: &T);
+    fn attach<T>(this: &Widget, other: &T)
+    where
+        for<'a> &'a T: IntoWasmAbi;
 
     // Static method.
     #[wasm_bindgen(static_method_of = Widget, experimental_generic_mono, js_name = of)]
-    fn of<T>(value: T) -> Widget;
+    fn of<T: IntoWasmAbi>(value: T) -> Widget;
 
     // Getter with a generic *return*: every monomorphisation reads the same JS
     // property but marshals the result at its own concrete type.
     #[wasm_bindgen(method, getter, experimental_generic_mono, js_name = value)]
-    fn value<T>(this: &Widget) -> T;
+    fn value<T: FromWasmAbi>(this: &Widget) -> T;
 
     #[wasm_bindgen(method, setter, experimental_generic_mono, js_name = value)]
-    fn set_value<T>(this: &Widget, v: T);
+    fn set_value<T: IntoWasmAbi>(this: &Widget, v: T);
 
     // `structural` accessors read/write the property directly on the receiver
     // rather than through a captured descriptor.
     #[wasm_bindgen(method, getter, structural, experimental_generic_mono, js_name = tag)]
-    fn tag<T>(this: &Widget) -> T;
+    fn tag<T: FromWasmAbi>(this: &Widget) -> T;
 
     #[wasm_bindgen(method, setter, structural, experimental_generic_mono, js_name = tag)]
-    fn set_tag<T>(this: &Widget, v: T);
+    fn set_tag<T: IntoWasmAbi>(this: &Widget, v: T);
 
     // `final` captures the property descriptor from `Widget.prototype` once, at
     // instantiation time, and invokes it with `.call(receiver)`. Getting the
     // receiver wrong here is exactly the silent failure a snapshot cannot see.
     #[wasm_bindgen(method, getter, final, experimental_generic_mono, js_name = kind)]
-    fn kind<T>(this: &Widget) -> T;
+    fn kind<T: FromWasmAbi>(this: &Widget) -> T;
 
     // `indexing_*` emit `obj[prop]`, `obj[prop] = val` and `delete obj[prop]`,
     // and always require `structural` + `method`.
     #[wasm_bindgen(method, structural, indexing_getter, experimental_generic_mono)]
-    fn get<T>(this: &Widget, prop: &str) -> T;
+    fn get<T: FromWasmAbi>(this: &Widget, prop: &str) -> T;
 
     #[wasm_bindgen(method, structural, indexing_setter, experimental_generic_mono)]
-    fn set_indexed<T>(this: &Widget, prop: &str, val: T);
+    fn set_indexed<T: IntoWasmAbi>(this: &Widget, prop: &str, val: T);
 
     // The deleter has no value parameter, so its type parameter appears only in
     // the *index* position.
     #[wasm_bindgen(method, structural, indexing_deleter, experimental_generic_mono)]
-    fn delete_indexed<T>(this: &Widget, prop: T);
+    fn delete_indexed<T: IntoWasmAbi>(this: &Widget, prop: T);
 
     #[wasm_bindgen(js_name = widgetValue)]
     fn widget_value(w: &Widget) -> JsValue;
