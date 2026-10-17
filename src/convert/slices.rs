@@ -181,7 +181,7 @@ macro_rules! vectors_internal {
 
             #[inline]
             fn slice_into_abi(slice: &[$t]) -> WasmSlice {
-                borrowed_slice_into_abi(slice)
+                WasmSlice::borrow(slice)
             }
         }
 
@@ -309,14 +309,15 @@ where
     }
 }
 
-/// How a borrowed `&[Self]` crosses to JS: each element's own ABI, `len`
-/// times.
+/// How a borrowed `&[Self]` crosses to JS, and the cell its sequences use.
 ///
-/// Where an element's memory already is its ABI (numbers, and JS handles,
-/// which are table indices) that is the slice's own memory, borrowed with no
-/// copy ([`borrowed_slice_into_abi`]). Any other element is encoded into a
-/// fresh buffer of its ABIs, which JS decodes and frees
-/// ([`encoded_slice_into_abi`]).
+/// A sequence crosses as a [`WasmSlice`] of `len` cells. In place, the cell is
+/// the element itself, which the impl claims is its JS encoding (numbers, and
+/// JS handles as table indices), so the slice is borrowed
+/// ([`WasmSlice::borrow`]). Encoded, the cell is the element's scalar ABI, in
+/// a fresh buffer that JS decodes with the element's own glue and frees
+/// ([`WasmSlice::encode`]). Encoded elements are declared once, with
+/// `__wbindgen_encoded_sequence!`.
 pub trait VectorRefIntoWasmAbi: WasmDescribe + Sized {
     /// Describes the sequence's cell, from the same impl that fills it: in
     /// place, `Self`'s own descriptor; encoded, `ENCODED` followed by it.
@@ -341,127 +342,137 @@ impl<T: VectorRefIntoWasmAbi> OptionIntoWasmAbi for &[T] {
     }
 }
 
-/// [`VectorRefIntoWasmAbi`] for an element whose memory is its ABI.
-#[inline]
-pub fn borrowed_slice_into_abi<T>(slice: &[T]) -> WasmSlice {
-    WasmSlice::from_usize(slice.as_ptr() as usize, slice.len())
+/// An encoded sequence's cell: the `#[repr(C)]` record of a scalar ABI's
+/// primitives, with unused ones `()`. That is the same split as the wasm
+/// signature, which is how the CLI lays out the cell's words, so both sides
+/// agree on the layout by definition.
+#[repr(C)]
+struct AbiCell<A: WasmAbi>(A::Prim1, A::Prim2, A::Prim3, A::Prim4);
+
+// A `(ptr, len)` cell is two pointer words, which are `f64`s on memory64.
+#[cfg(target_arch = "wasm64")]
+const _: () = assert!(mem::size_of::<AbiCell<WasmSlice>>() == 16);
+#[cfg(target_arch = "wasm64")]
+const _: () = assert!(mem::align_of::<AbiCell<WasmSlice>>() == 8);
+#[cfg(not(target_arch = "wasm64"))]
+const _: () = assert!(mem::size_of::<AbiCell<WasmSlice>>() == 8);
+#[cfg(not(target_arch = "wasm64"))]
+const _: () = assert!(mem::align_of::<AbiCell<WasmSlice>>() == 4);
+
+impl WasmSlice {
+    /// An in-place sequence: `slice`'s own memory, borrowed.
+    #[inline]
+    pub fn borrow<T>(slice: &[T]) -> Self {
+        Self::from_usize(slice.as_ptr() as usize, slice.len())
+    }
+
+    /// An encoded sequence: a fresh buffer of each element's cell, its scalar
+    /// ABI by `f`, which JS decodes and frees.
+    pub fn encode<'a, T: IntoWasmAbi + 'a>(
+        slice: &'a [T],
+        mut f: impl FnMut(&'a T) -> T::Abi,
+    ) -> Self {
+        let cells: Box<[AbiCell<T::Abi>]> = slice
+            .iter()
+            .map(|elem| {
+                let (p1, p2, p3, p4) = f(elem).split();
+                AbiCell(p1, p2, p3, p4)
+            })
+            .collect();
+        let len = cells.len();
+        Self::from_usize(Box::into_raw(cells) as *mut AbiCell<T::Abi> as usize, len)
+    }
+
+    /// Takes an encoded sequence from JS, decoding each element from its
+    /// cell.
+    ///
+    /// # Safety
+    ///
+    /// `self` must be `len` cells of `T::Abi` that JS allocated at the cell's
+    /// alignment, for Rust to own.
+    pub unsafe fn decode<T: FromWasmAbi>(self) -> Box<[T]> {
+        let ptr = self.ptr.into_usize() as *mut AbiCell<T::Abi>;
+        let len = self.len.into_usize();
+        Vec::from_raw_parts(ptr, len, len)
+            .into_iter()
+            .map(|AbiCell(p1, p2, p3, p4)| T::from_abi(T::Abi::join(p1, p2, p3, p4)))
+            .collect()
+    }
 }
 
-/// [`VectorRefIntoWasmAbi`] for any other element, encoding each with
-/// `encode`.
-pub fn encoded_slice_into_abi<'a, T, A: WasmAbi>(
-    slice: &'a [T],
-    encode: impl FnMut(&'a T) -> A,
-) -> WasmSlice {
-    let abis: Box<[A]> = slice.iter().map(encode).collect();
-    let len = abis.len();
-    WasmSlice::from_usize(Box::into_raw(abis) as *mut A as usize, len)
-}
+/// Declares a sequence of `$t` with encoded cells, emitting every impl it
+/// needs together with its descriptor, for each side listed: `ref_into`
+/// (`&[T]` to JS), `into` (`Vec<T>` / `Box<[T]>` to JS) and `from` (`Vec<T>`
+/// / `Box<[T]>` from JS). `$encode` gives a borrowed element's scalar ABI. An
+/// owned vector to JS encodes as its borrowed slice, so `into` is only for
+/// elements that own nothing, which it checks at compile time.
+#[macro_export]
+#[doc(hidden)]
+macro_rules! __wbindgen_encoded_sequence {
+    ($t:ty, $encode:expr, [$($side:ident),+ $(,)?]) => {
+        $($crate::__wbindgen_encoded_sequence!(@$side $t, $encode);)+
+    };
+    (@ref_into $t:ty, $encode:expr) => {
+        $crate::__wbindgen_coverage! {
+            #[automatically_derived]
+            impl $crate::convert::VectorRefIntoWasmAbi for $t {
+                fn describe_cell() {
+                    $crate::describe::inform($crate::describe::ENCODED);
+                    <Self as $crate::describe::WasmDescribe>::describe();
+                }
 
-/// [`VectorFromWasmAbi`] for an element whose memory is not its ABI: decodes
-/// each element from the buffer of their ABIs that JS encoded.
-///
-/// # Safety
-///
-/// `js` must be a buffer of `T::Abi`s allocated by JS for Rust to own.
-pub unsafe fn encoded_vector_from_abi<T: FromWasmAbi>(js: WasmSlice) -> Box<[T]> {
-    let ptr = js.ptr.into_usize() as *mut T::Abi;
-    let len = js.len.into_usize();
-    Vec::from_raw_parts(ptr, len, len)
-        .into_iter()
-        .map(|abi| T::from_abi(abi))
-        .collect()
-}
+                #[inline]
+                fn slice_into_abi(slice: &[Self]) -> $crate::convert::WasmSlice {
+                    $crate::convert::WasmSlice::encode(slice, $encode)
+                }
+            }
+        }
+    };
+    (@into $t:ty, $encode:expr) => {
+        const _: () = assert!(!$crate::__rt::core::mem::needs_drop::<$t>());
 
-// An owned vector of elements that own nothing encodes as its borrowed slice.
-macro_rules! encoded_vectors {
-    ($($t:ty)*) => ($(
-        impl WasmDescribeVector for $t {
-            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-            fn describe_vector() {
-                inform(VECTOR);
-                <$t>::describe_cell();
+        $crate::__wbindgen_coverage! {
+            #[automatically_derived]
+            impl $crate::describe::WasmDescribeVector for $t {
+                fn describe_vector() {
+                    $crate::describe::inform($crate::describe::VECTOR);
+                    <Self as $crate::convert::VectorRefIntoWasmAbi>::describe_cell();
+                }
             }
         }
 
-        impl VectorIntoWasmAbi for $t {
-            type Abi = WasmSlice;
+        #[automatically_derived]
+        impl $crate::convert::VectorIntoWasmAbi for $t {
+            type Abi = $crate::convert::WasmSlice;
 
             #[inline]
-            fn vector_into_abi(vector: Box<[$t]>) -> WasmSlice {
-                <$t>::slice_into_abi(&vector)
+            fn vector_into_abi(
+                vector: $crate::__rt::alloc::boxed::Box<[Self]>,
+            ) -> $crate::convert::WasmSlice {
+                <Self as $crate::convert::VectorRefIntoWasmAbi>::slice_into_abi(&vector)
             }
         }
-    )*)
+    };
+    (@from $t:ty, $encode:expr) => {
+        #[automatically_derived]
+        impl $crate::convert::VectorFromWasmAbi for $t {
+            type Abi = $crate::convert::WasmSlice;
+
+            #[inline]
+            unsafe fn vector_from_abi(
+                js: $crate::convert::WasmSlice,
+            ) -> $crate::__rt::alloc::boxed::Box<[Self]> {
+                js.decode()
+            }
+        }
+    };
 }
 
-encoded_vectors! { bool char &str }
-
-impl VectorFromWasmAbi for bool {
-    type Abi = WasmSlice;
-
-    #[inline]
-    unsafe fn vector_from_abi(js: WasmSlice) -> Box<[bool]> {
-        encoded_vector_from_abi(js)
-    }
-}
-
-impl VectorFromWasmAbi for char {
-    type Abi = WasmSlice;
-
-    #[inline]
-    unsafe fn vector_from_abi(js: WasmSlice) -> Box<[char]> {
-        encoded_vector_from_abi(js)
-    }
-}
-
-impl VectorRefIntoWasmAbi for String {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe_cell() {
-        inform(ENCODED);
-        Self::describe();
-    }
-
-    fn slice_into_abi(slice: &[Self]) -> WasmSlice {
-        encoded_slice_into_abi(slice, |s| s.into_abi())
-    }
-}
-
-impl VectorRefIntoWasmAbi for &str {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe_cell() {
-        inform(ENCODED);
-        Self::describe();
-    }
-
-    fn slice_into_abi(slice: &[Self]) -> WasmSlice {
-        encoded_slice_into_abi(slice, |s| (*s).into_abi())
-    }
-}
-
-impl VectorRefIntoWasmAbi for bool {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe_cell() {
-        inform(ENCODED);
-        Self::describe();
-    }
-
-    fn slice_into_abi(slice: &[Self]) -> WasmSlice {
-        encoded_slice_into_abi(slice, |b| (*b).into_abi())
-    }
-}
-
-impl VectorRefIntoWasmAbi for char {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe_cell() {
-        inform(ENCODED);
-        Self::describe();
-    }
-
-    fn slice_into_abi(slice: &[Self]) -> WasmSlice {
-        encoded_slice_into_abi(slice, |c| (*c).into_abi())
-    }
-}
+crate::__wbindgen_encoded_sequence!(bool, |b| (*b).into_abi(), [ref_into, into, from]);
+crate::__wbindgen_encoded_sequence!(char, |c| (*c).into_abi(), [ref_into, into, from]);
+crate::__wbindgen_encoded_sequence!(&str, |s| (*s).into_abi(), [ref_into, into]);
+// An owned `Vec<String>` keeps its released `JsValue` form.
+crate::__wbindgen_encoded_sequence!(String, |s| s.into_abi(), [ref_into]);
 
 impl VectorRefIntoWasmAbi for JsValue {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
@@ -471,7 +482,7 @@ impl VectorRefIntoWasmAbi for JsValue {
 
     #[inline]
     fn slice_into_abi(slice: &[Self]) -> WasmSlice {
-        borrowed_slice_into_abi(slice)
+        WasmSlice::borrow(slice)
     }
 }
 
@@ -483,7 +494,7 @@ impl VectorRefIntoWasmAbi for JsError {
 
     #[inline]
     fn slice_into_abi(slice: &[Self]) -> WasmSlice {
-        borrowed_slice_into_abi(slice)
+        WasmSlice::borrow(slice)
     }
 }
 
