@@ -258,6 +258,29 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::String],
                 );
             }
+
+            // A shared reference to a primitive crosses as the value itself.
+            Descriptor::Boolean
+            | Descriptor::Char
+            | Descriptor::I8
+            | Descriptor::U8
+            | Descriptor::I16
+            | Descriptor::U16
+            | Descriptor::I32
+            | Descriptor::U32
+            | Descriptor::I64
+            | Descriptor::U64
+            | Descriptor::I64AsF64
+            | Descriptor::U64AsF64
+            | Descriptor::I128
+            | Descriptor::U128
+            | Descriptor::F32
+            | Descriptor::F64
+                if !mutable =>
+            {
+                self._outgoing(arg)?
+            }
+
             Descriptor::Slice(cell) => {
                 let kind = match cell.sequence_cell() {
                     SequenceCell::InPlace(kind) => kind,

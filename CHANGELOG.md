@@ -25,6 +25,20 @@
   arriving as a fresh `Array`.
   [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
 
+* Under `js_sys_unstable_apis`, the element APIs of `Array<T>`, `Map<K, V>`,
+  `Set<T>`, `Iterator<T>`, `AsyncIterator<T>` and `Promise<T>` are
+  `experimental_generic_mono` imports, so element types can be Rust types
+  such as `String`, `bool` and `f64`, each crossing as itself. Writes take
+  `&T`, so borrows still deref-coerce to the element type. `Array<T>`
+  implements `From<Vec<T>>` and `From<&[T]>`, and `FromIterator` / `Extend`
+  collect `T` or `&T` items into a typed `Array<T>`. Generic callers state
+  the ABI bounds the methods now need.
+  [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
+
+* Shared references to primitives (`&bool`, `&char`, `&f64`, `&i64`, ...)
+  can be passed to imported JS functions, arriving as the value.
+  [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
+
 * Slices of every `JsStringLike` shape, including `&String`, `&Box<str>`,
   `&Cow<str>` and `&JsString`, can be passed to imported JS functions, and
   `JsStringLike` alone bounds a `&[T]` argument of an
