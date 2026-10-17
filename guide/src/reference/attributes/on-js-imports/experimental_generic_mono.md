@@ -77,12 +77,18 @@ both, so it never needs stating. A trait whose supertraits include the right
 ABI trait satisfies the bound too, as with [`JsStringLike`](#string-bounds).
 
 The bound is on the type in that position, so a compound type is bounded as a
-whole, such as `Option<T>: IntoWasmAbi` or `Vec<T>: IntoWasmAbi`. A position
+whole, such as `Option<T>: IntoWasmAbi` or `Vec<T>: IntoWasmAbi`. A callback
+return is bounded by `ReturnWasmAbi`, which `IntoWasmAbi` implies for a bare
+`R`, so a `Result` callback return is written
+`Result<R, JsValue>: ReturnWasmAbi`. A position
 whose type marshals for every `T`, like `&Holder<T>` for an imported type
 `Holder<T>`, needs no bound.
 
 A missing bound is reported by rustc at the position in the declaration that
-needs it, with a suggestion naming the bound.
+needs it. For a bare type parameter rustc suggests the exact restriction. For
+other predicates it suggests a `where` clause that may need adjusting, such as
+`&T: IntoWasmAbi` where the higher-ranked `for<'a> &'a T: IntoWasmAbi` is
+needed.
 
 ## Trait bounds
 
@@ -244,8 +250,9 @@ extern "C" {
 ```
 
 A synthesized parameter has no name to bound its containing type by, so a
-nested `impl Trait` carries whatever bound makes the container marshal
-(`OptionIntoWasmAbi` for `Option`).
+nested `impl Trait` carries whatever bound makes the container marshal:
+`OptionIntoWasmAbi` for `Option`, or `VectorIntoWasmAbi<Abi = WasmSlice>` for
+`Vec`.
 
 Bounds on a synthesized parameter are enforced exactly as if you had written
 them out by hand: a caller that violates one gets a diagnostic pointing at the
