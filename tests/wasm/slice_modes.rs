@@ -24,12 +24,16 @@
 //!   arguments
 //! - every other sequence shape: `Clamped<&[u8]>`, owned `Vec<T>` /
 //!   `Box<[T]>` / `Option<Vec<T>>` / `Clamped<Vec<u8>>` (already fresh, so
-//!   `copy` is a no-op and `array` converts), and `&[String]`, which crosses
-//!   as a fresh `Array` under `array`; string and handle slices are untouched
-//!   by `copy`
+//!   `copy` is a no-op and `array` converts), and string and handle slices,
+//!   which are a fresh `Array` under every mode
 //! - per-mono generics: `&[T]` under `slice = copy`, instantiated at `u8` and
-//!   `f64` (a fresh typed copy, not a view) and at `JsString` (handle tier,
-//!   already a fresh `Array`, where the mode is a no-op)
+//!   `f64` (a fresh typed copy, not a view) and at `JsString` and `String`
+//!   (fresh `Array`, where the mode is a no-op)
+//! - per-mono generics with no mode: each instantiation crosses as the
+//!   concrete slice would, so numeric instantiations keep the zero-copy view
+//!   while `String` / `JsString` / `JsValue` arrive as a fresh `Array`, plus
+//!   `Option<&[T]>` (bare and under `copy` / `array`) and per-arg modes on one
+//!   generic import
 //! - fast-path guard: a bare `&[u8]` import still hands JS a view of wasm
 //!   memory (no accidental default flip)
 
@@ -171,6 +175,41 @@ extern "C" {
     fn kinds_of_alias_shapes(owned: Vec<u8>, clamped: Clamped<&[u8]>, slice: &[u8]) -> String;
 }
 
+// On the per-mono path each instantiation of a generic slice crosses as the
+// concrete slice would: a numeric element keeps the default zero-copy view,
+// and a string or handle element arrives as a fresh `Array`.
+#[wasm_bindgen(module = "tests/wasm/slice_modes.js")]
+extern "C" {
+    #[wasm_bindgen(experimental_generic_mono, js_name = kindsOf)]
+    fn kinds_generic<T>(v: &[T]) -> String;
+
+    #[wasm_bindgen(experimental_generic_mono, js_name = joined)]
+    fn joined_generic<T>(v: &[T]) -> String;
+
+    #[wasm_bindgen(experimental_generic_mono, js_name = kindsOf)]
+    fn kinds_generic_opt<T>(v: Option<&[T]>) -> String;
+
+    // `Option<&[T]>` under a mode: formerly a "nested reference" compile
+    // error on this path, now just a slice.
+    #[wasm_bindgen(experimental_generic_mono, slice = copy, js_name = kindsOf)]
+    fn kinds_generic_opt_copy<T>(v: Option<&[T]>) -> String;
+
+    #[wasm_bindgen(experimental_generic_mono, slice = array, js_name = kindsOf)]
+    fn kinds_generic_opt_array<T>(v: Option<&[T]>) -> String;
+
+    // Per-arg modes on one generic import, each resolved per instantiation.
+    #[wasm_bindgen(experimental_generic_mono, js_name = kindsOf)]
+    fn kinds_generic_mixed<T>(
+        #[wasm_bindgen(slice = copy)] copied: &[T],
+        #[wasm_bindgen(slice = array)] as_array: &[T],
+        view: &[T],
+    ) -> String;
+
+    // A concrete element alongside a type parameter.
+    #[wasm_bindgen(experimental_generic_mono, js_name = joined)]
+    fn joined_strings_per_mono<T>(v: &[String], marker: T) -> String;
+}
+
 #[wasm_bindgen_test]
 fn every_sequence_shape() {
     assert_eq!(
@@ -276,4 +315,59 @@ fn per_mono_generic_resolves_per_instantiation() {
     assert_eq!(describe_generic(&[1.5f64]), "Float64Array:fresh");
     let strings = [JsString::from("a"), JsString::from("b")];
     assert_eq!(describe_generic(&strings), "Array");
+    // `T = String` has no typed form, so the block's `copy` is a no-op on it.
+    let owned = ["a".to_string()];
+    assert_eq!(describe_generic(&owned), "Array");
+}
+
+#[wasm_bindgen_test]
+fn per_mono_bare_slices_use_element_abi() {
+    // Numeric elements keep the zero-copy view by default.
+    assert_eq!(kinds_generic(&[1u8, 2]), "Uint8Array:view");
+    assert_eq!(kinds_generic(&[1.5f64]), "Float64Array:view");
+    assert_eq!(kinds_generic(&[-1i64]), "BigInt64Array:view");
+
+    // Non-numeric elements arrive as a fresh `Array` — values included, not
+    // just the shape.
+    let strings = ["a".to_string(), "b".to_string()];
+    assert_eq!(kinds_generic(&strings), "Array");
+    assert_eq!(joined_generic(&strings), "Array:a,b");
+    let handles = [JsString::from("a"), JsString::from("b")];
+    assert_eq!(kinds_generic(&handles), "Array");
+    assert_eq!(joined_generic(&handles), "Array:a,b");
+    let values = [JsValue::from_f64(1.0), JsValue::from_str("x")];
+    assert_eq!(kinds_generic(&values), "Array");
+    assert_eq!(joined_generic(&values), "Array:1,x");
+
+    // The concrete `&[String]` spelling, bare.
+    assert_eq!(joined_strings_per_mono(&strings, 0u32), "Array:a,b");
+}
+
+#[wasm_bindgen_test]
+fn per_mono_option_slices() {
+    assert_eq!(kinds_generic_opt(Some(&[1u8, 2][..])), "Uint8Array:view");
+    assert_eq!(kinds_generic_opt::<u8>(None), "undefined");
+    let strings = ["a".to_string()];
+    assert_eq!(kinds_generic_opt(Some(&strings[..])), "Array");
+    assert_eq!(kinds_generic_opt::<String>(None), "undefined");
+
+    assert_eq!(
+        kinds_generic_opt_copy(Some(&[1u16, 2][..])),
+        "Uint16Array:fresh"
+    );
+    assert_eq!(kinds_generic_opt_copy::<u16>(None), "undefined");
+    assert_eq!(kinds_generic_opt_copy(Some(&strings[..])), "Array");
+
+    assert_eq!(kinds_generic_opt_array(Some(&[1u16][..])), "Array");
+    assert_eq!(kinds_generic_opt_array::<u16>(None), "undefined");
+}
+
+#[wasm_bindgen_test]
+fn per_mono_per_arg_modes_resolve_per_instantiation() {
+    assert_eq!(
+        kinds_generic_mixed(&[1u8], &[2u8], &[3u8]),
+        "Uint8Array:fresh,Array,Uint8Array:view"
+    );
+    let s = ["a".to_string()];
+    assert_eq!(kinds_generic_mixed(&s, &s, &s), "Array,Array,Array");
 }

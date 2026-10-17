@@ -533,26 +533,14 @@ pub struct FunctionArgumentData {
 /// `Clamped<..>`, or an `Option` of one) reaches JS (`slice = view | array |
 /// copy`). Only typed (numeric) elements have a choice: string and handle
 /// elements always reach JS as a fresh `Array`.
-//
-// TODO(next major): the modes are staged towards this final state, in which
-// an explicit mode never changes meaning and only bare arguments flip:
-//
-// | argument   | default                    | opt-in / out              |
-// |------------|----------------------------|---------------------------|
-// | `&[T]`     | `copy`                     | `view` (on `unsafe fn`)   |
-// | `&mut [T]` | `copy`, copied back after  | `view` (on `unsafe fn`)   |
-// | `Vec<T>`   | `transfer`                 | `copy`                    |
-// | any        |                            | `array` (implies a copy)  |
-//
-// `transfer` needs a JS view no other view can be derived from (so freeing on
-// its finalization is sound), and arrives only once engines support one; until
-// then `Vec<T>` stays `copy`, which JS cannot tell apart from `transfer`.
 #[cfg_attr(feature = "extra-traits", derive(Debug))]
 #[derive(Clone, Copy, Default, PartialEq, Eq)]
 pub enum SliceMode {
     /// `slice = view`: a borrowed typed sequence is a view of wasm memory,
     /// valid for the duration of the call. Owned data is still copied, since
     /// it is freed after the call.
+    // TODO(next major): make `Copy` the default. Bare `&mut [T]` then needs
+    // copying back after the call, which `check_slice_mode_arg` rejects today.
     #[default]
     View,
     /// `slice = array`: a fresh plain `Array`.
@@ -564,13 +552,6 @@ pub enum SliceMode {
     /// other argument (owned or `Clamped` sequences included) untouched.
     // TODO(next major): remove, along with the `slice_to_array` attribute.
     SliceToArray,
-}
-
-impl SliceMode {
-    /// Whether this mode hands JS a plain `Array`.
-    pub fn is_array(self) -> bool {
-        matches!(self, SliceMode::Array | SliceMode::SliceToArray)
-    }
 }
 
 /// Information about a Struct being exported

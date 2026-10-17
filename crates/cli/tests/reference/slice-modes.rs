@@ -37,11 +37,22 @@ extern "C" {
 }
 
 // The mode applies by shape: owned data is already fresh (`array` converts
-// it), `Clamped` gets the same treatment as any typed slice, and `&[String]`
-// crosses as a freshly allocated buffer of handles.
+// it), `Clamped` gets the same treatment as any typed slice, and `&[String]`,
+// which has no typed form, is a fresh `Array` regardless.
 #[wasm_bindgen(slice = array)]
 extern "C" {
     fn js_shapes(owned: Vec<u8>, boxed: Box<[f64]>, clamped: Clamped<&[u8]>, strings: &[String]);
+}
+
+// On the per-mono path each instantiation crosses as the concrete slice
+// would: with no mode a numeric instantiation keeps the zero-copy view glue,
+// while `String` is decoded from its buffer of `(ptr, len)` pairs.
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn js_generic_slice<T>(v: &[T]);
+    #[wasm_bindgen(experimental_generic_mono, js_name = js_generic_slice)]
+    fn js_generic_opt<T>(#[wasm_bindgen(slice = copy)] v: Option<&[T]>);
 }
 
 #[wasm_bindgen]
@@ -59,4 +70,8 @@ pub fn driver() {
     js_block_mixed(&v16, &v16, &v16);
 
     js_shapes(v.clone(), Box::new([1.5]), Clamped(&v), &["a".to_string()]);
+
+    js_generic_slice(&[1u16, 2]);
+    js_generic_slice(&["a".to_string()]);
+    js_generic_opt(Some(&[1u8][..]));
 }

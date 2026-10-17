@@ -395,8 +395,6 @@ impl Descriptor {
             Descriptor::Option(d) => d,
             d => d,
         };
-        // TODO(next major): `RefMut(Slice(_))` joins, with `copy` writing the
-        // JS copy back into wasm memory after the call.
         let shaped = match d {
             Descriptor::Ref(d) => matches!(**d, Descriptor::Slice(_)),
             Descriptor::Vector(_) => true,

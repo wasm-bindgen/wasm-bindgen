@@ -386,11 +386,13 @@ trait objects nested in another type do not receive this lowering.
 `indexing_getter`, `indexing_setter`, `indexing_deleter`, `js_namespace`,
 `js_name`, `catch`, `variadic`, and the [`slice` modes](slice.md) — and the
 resulting JS binding is shaped exactly
-as it would be for the equivalent non-generic import. A slice whose element
-type is a type parameter resolves `slice = array` / `slice = copy` per
-instantiation: a primitive element gets the fresh `Array` / typed-array copy,
-while a handle-shaped element (e.g. `JsString`) keeps its default fresh
-`Array` of handles, so the attribute can cover a whole `extern "C"` block
+as it would be for the equivalent non-generic import.
+
+A slice argument (`&[T]` or `Option<&[T]>`) whose element is a type parameter
+crosses, at each instantiation, exactly as the concrete slice would: a
+numeric element as a typed-array view (or whatever its `slice` mode selects),
+any other element, `String` included, as a fresh `Array` (see
+[`slice`](slice.md)). So one attribute can cover a whole `extern "C"` block
 without inspecting element types.
 
 The two that do *not* compose are `assert_no_shim` and `reexport`; both are
@@ -440,10 +442,12 @@ These are rejected at compile time with a diagnostic pointing at the offending
 declaration. Each generally keeps working on the type-erasure path, so the fix is
 usually to drop `experimental_generic_mono`:
 
-* **A mutable reference to a type parameter** (`&mut T`, or `&mut Vec<T>`, or
-  any other `&mut` whose referent mentions a type parameter), and a reference to
+* **A mutable reference to a type parameter** (`&mut T`, `&mut [T]`, or any
+  other `&mut` whose referent mentions a type parameter), and a reference to
   a type parameter **nested inside another type** (e.g. `Option<&T>`). A bare
-  `&T` *is* supported, and mutable references to *concrete* types (e.g.
+  `&T` *is* supported, slices are supported (`Option<&[T]>` included — a
+  slice crosses by its element's ABI, so it is not subject to the nesting
+  restriction), and mutable references to *concrete* types (e.g.
   `&mut [u16]`, `&mut dyn FnMut(u32)`) bind exactly as they do on the
   non-generic import path — the restriction is only about references to type
   parameters. Top-level callbacks whose owned input or return types are generic

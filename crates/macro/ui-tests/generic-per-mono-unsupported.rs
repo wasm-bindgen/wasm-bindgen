@@ -23,14 +23,12 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono)]
     fn nested_ref_to_generic<T>(x: Option<&T>);
 
-    // The same nesting rejection applies with a slice mode set: a generic
-    // `&[T]` resolves its mode per monomorphisation (see the pass tests), but
-    // `Option<&[T]>` is a nested reference and still needs the erasure path.
-    #[wasm_bindgen(experimental_generic_mono, slice = array)]
-    fn slice_to_array_option_elem<T>(xs: Option<&[T]>, other: T);
-
-    #[wasm_bindgen(experimental_generic_mono, slice = copy)]
-    fn copy_slice_option_elem<T>(xs: Option<&[T]>, other: T);
+    // Slices (`Option<&[T]>` included — not a "nested reference", since only
+    // the element's `VectorRefIntoWasmAbi` is needed; see the pass tests) are
+    // supported, but a `&mut` slice is not: its element has no borrowed wire
+    // for JS to write back through.
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn mut_slice_generic_elem<T>(xs: &mut [T], other: T);
 
     // Returning a reference is not supported.
     #[wasm_bindgen(experimental_generic_mono)]

@@ -11,5 +11,7 @@ mod slices;
 mod traits;
 
 pub use self::impls::*;
-pub use self::slices::{VectorRefIntoWasmAbi, WasmSlice};
+pub use self::slices::{
+    borrowed_slice_into_abi, encoded_slice_into_abi, VectorRefIntoWasmAbi, WasmSlice,
+};
 pub use self::traits::*;

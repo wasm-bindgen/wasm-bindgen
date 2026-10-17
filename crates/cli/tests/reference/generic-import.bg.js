@@ -294,10 +294,16 @@ export function __wbindgen_generic_0000000000000022(arg0, arg1, arg2) {
 export function __wbindgen_generic_0000000000000023(arg0, arg1, arg2) {
     let v0;
     if (arg0 !== 0) {
-        v0 = getArrayJsValueFromWasm0(arg0, arg1);
-        wasm.__wbindgen_free(arg0, arg1 * 4, 4);
+        v0 = [];
+        let p0 = arg0;
+        p0 = p0 >>> 0;
+        const view0 = getDataViewMemory0();
+        for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
+            v0.push(getStringFromWasm0(view0.getInt32(p0 + 0, true), view0.getInt32(p0 + 4, true)));
+        }
+        wasm.__wbindgen_free(arg0, arg1 * 8, 4);
     }
-    // generic import `logOptStrSlice`: [Option(Vector(Externref)), U32] -> Unit
+    // generic import `logOptStrSlice`: [Option(Ref(Slice(String))), U32] -> Unit
     logOptStrSlice(v0, arg2 >>> 0);
 }
 export function __wbindgen_generic_0000000000000024(arg0) {
@@ -313,9 +319,15 @@ export function __wbindgen_generic_0000000000000026(arg0, arg1, arg2) {
     logSlice(Array.from(getArrayU16FromWasm0(arg0, arg1)), arg2 >>> 0);
 }
 export function __wbindgen_generic_0000000000000027(arg0, arg1, arg2) {
-    var v0 = getArrayJsValueFromWasm0(arg0, arg1);
-    wasm.__wbindgen_free(arg0, arg1 * 4, 4);
-    // generic import `logStrSlice`: [Vector(Externref), U32] -> Unit
+    const v0 = [];
+    let p0 = arg0;
+    p0 = p0 >>> 0;
+    const view0 = getDataViewMemory0();
+    for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
+        v0.push(getStringFromWasm0(view0.getInt32(p0 + 0, true), view0.getInt32(p0 + 4, true)));
+    }
+    wasm.__wbindgen_free(arg0, arg1 * 8, 4);
+    // generic import `logStrSlice`: [Ref(Slice(String)), U32] -> Unit
     logStrSlice(v0, arg2 >>> 0);
 }
 export function __wbindgen_generic_0000000000000028(arg0) {
@@ -630,17 +642,6 @@ function debugString(val) {
 function getArrayF64FromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return getFloat64ArrayMemory0().subarray(ptr / 8, ptr / 8 + len);
-}
-
-function getArrayJsValueFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    const mem = getDataViewMemory0();
-    const result = [];
-    for (let i = ptr; i < ptr + 4 * len; i += 4) {
-        result.push(wasm.__wbindgen_externrefs.get(mem.getUint32(i, true)));
-    }
-    wasm.__externref_drop_slice(ptr, len);
-    return result;
 }
 
 function getArrayU16FromWasm0(ptr, len) {
