@@ -471,6 +471,8 @@ pub struct Function {
     pub name: String,
     /// The span of the function's name in Rust code
     pub name_span: Span,
+    /// The span of the function's parenthesized argument list
+    pub paren_span: Span,
     /// The arguments to the function
     pub arguments: Vec<FunctionArgumentData>,
     /// The data of return type of the function

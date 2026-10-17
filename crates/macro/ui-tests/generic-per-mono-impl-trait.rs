@@ -1,4 +1,4 @@
-use wasm_bindgen::convert::{IntoWasmAbi, OptionIntoWasmAbi};
+use wasm_bindgen::convert::{IntoWasmAbi, VectorIntoWasmAbi, WasmSlice};
 use wasm_bindgen::prelude::*;
 
 // Argument-position `impl Trait` in a per-monomorphisation generic import
@@ -24,7 +24,10 @@ extern "C" {
 
     // `impl Trait` nested inside another type.
     #[wasm_bindgen(experimental_generic_mono)]
-    fn nested_impl_trait<T: IntoWasmAbi>(x: Option<impl Marker + OptionIntoWasmAbi>, y: T);
+    fn nested_impl_trait<T: IntoWasmAbi>(
+        x: Vec<impl Marker + VectorIntoWasmAbi<Abi = WasmSlice>>,
+        y: T,
+    );
 
     // Two `impl Trait` arguments in the same function, each with a different
     // bound: both need their own synthesized parameter with distinct names.
@@ -43,7 +46,7 @@ fn violates_impl_trait_with_type_param() {
 }
 
 fn violates_nested_impl_trait() {
-    nested_impl_trait(Some(1u8), 2u32);
+    nested_impl_trait(vec![1u32], 2u32);
 }
 
 fn violates_two_impl_trait_args() {
