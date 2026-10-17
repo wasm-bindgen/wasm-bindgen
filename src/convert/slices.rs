@@ -395,7 +395,12 @@ impl WasmSlice {
             .map(|AbiCell(p1, p2, p3, p4)| T::Abi::join(p1, p2, p3, p4))
             .map(convert)
             .collect();
-        decoded.unwrap_or_else(|msg| crate::throw_str(msg))
+        // Thrown directly, as a closure's frames would push the caller past
+        // the debug-mode error stack's frame limit.
+        match decoded {
+            Ok(decoded) => decoded,
+            Err(msg) => crate::throw_str(msg),
+        }
     }
 }
 
