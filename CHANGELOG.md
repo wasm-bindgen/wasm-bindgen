@@ -125,6 +125,11 @@
   rather than as negative numbers.
   [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
 
+* A `Vec<T>` of a numeric enum passed from JS checks each element as a
+  single enum value, so a wrong element throws the same error a single
+  argument would, rather than "array contains a value of the wrong type".
+  [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
+
 ### Fixed
 
 * Reference types are now detected from the runtime's externref intrinsics when

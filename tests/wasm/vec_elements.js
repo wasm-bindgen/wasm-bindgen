@@ -27,6 +27,9 @@ exports.callExports = () => {
     assert.deepStrictEqual(wasm.vec_elements_flip_modes(['read', 'write']), ['write', 'read']);
     assert.deepStrictEqual(wasm.vec_elements_flip_modes([]), []);
     assert.strictEqual(wasm.vec_elements_flip_modes(undefined), undefined);
+    assert.deepStrictEqual(wasm.vec_elements_flip_levels([-1, 7]), [7, -1]);
+    assert.strictEqual(wasm.vec_elements_flip_levels(undefined), undefined);
+    assert.deepStrictEqual(wasm.vec_elements_boxed_levels([7, -1]), [7, -1]);
     assert.deepStrictEqual(wasm.vec_elements_strs(), ['a', '', 'ü🌍']);
 
     const many = Array.from({ length: 100000 }, (_, i) => i % 3 === 0);
