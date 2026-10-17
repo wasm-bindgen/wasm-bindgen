@@ -334,7 +334,7 @@ function __wbg_get_imports() {
         __wbg_queueMicrotask_a72f977e97f23c5f: function(arg0) {
             queueMicrotask(arg0);
         },
-        __wbg_resolve_5556851ee5625d79: function(arg0) {
+        __wbg_resolve_05cca9f78fd16401: function(arg0) {
             const ret = Promise.resolve(arg0);
             return ret;
         },

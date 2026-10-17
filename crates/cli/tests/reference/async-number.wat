@@ -26,7 +26,7 @@
   (import "./reference_test_bg.js" "__wbg_new_typed_1b466b4a87f4f6fa" (func (;6;) (type 11)))
   (import "./reference_test_bg.js" "__wbg_queueMicrotask_2030f4836bf1c47b" (func (;7;) (type 3)))
   (import "./reference_test_bg.js" "__wbg_queueMicrotask_a72f977e97f23c5f" (func (;8;) (type 5)))
-  (import "./reference_test_bg.js" "__wbg_resolve_5556851ee5625d79" (func (;9;) (type 3)))
+  (import "./reference_test_bg.js" "__wbg_resolve_05cca9f78fd16401" (func (;9;) (type 3)))
   (import "./reference_test_bg.js" "__wbg_run_6e1f787af721bfe6" (func (;10;) (type 2)))
   (import "./reference_test_bg.js" "__wbg_static_accessor_CREATE_TASK_7e310091636beacc" (func (;11;) (type 16)))
   (import "./reference_test_bg.js" "__wbg_static_accessor_GLOBAL_266715b9d96ba635" (func (;12;) (type 16)))

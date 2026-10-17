@@ -30,6 +30,8 @@ pub mod Object;
 pub mod Promise;
 pub mod Proxy;
 pub mod RangeError;
+#[cfg(js_sys_unstable_apis)]
+pub mod RealGenerics;
 pub mod ReferenceError;
 pub mod Reflect;
 pub mod RegExp;

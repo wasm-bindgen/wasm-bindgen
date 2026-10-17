@@ -141,6 +141,10 @@ macro_rules! type_wasm_native {
         impl UpcastFrom<$t> for JsOption<JsValue> {}
         impl UpcastFrom<$t> for JsNullable<JsValue> {}
         impl UpcastFrom<$t> for $t {}
+
+        impl Promising for $t {
+            type Resolution = $t;
+        }
     )*)
 }
 
@@ -468,6 +472,25 @@ impl UpcastFrom<char> for JsValue {}
 impl UpcastFrom<char> for JsOption<JsValue> {}
 impl UpcastFrom<char> for JsNullable<JsValue> {}
 impl UpcastFrom<char> for char {}
+
+// A shared reference to a primitive crosses as the value, so imports can take
+// `&T` for primitive and JS element types alike.
+macro_rules! primitive_ref_into_wasm_abi {
+    ($($t:ty)*) => ($(
+        impl IntoWasmAbi for &$t {
+            type Abi = <$t as IntoWasmAbi>::Abi;
+
+            #[inline]
+            fn into_abi(self) -> Self::Abi {
+                (*self).into_abi()
+            }
+        }
+    )*)
+}
+
+primitive_ref_into_wasm_abi!(
+    bool char i8 u8 i16 u16 i32 u32 i64 u64 i128 u128 isize usize f32 f64
+);
 
 impl<T> IntoWasmAbi for *const T {
     type Abi = WasmWordRepr;
