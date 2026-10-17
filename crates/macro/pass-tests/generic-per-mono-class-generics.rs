@@ -21,6 +21,7 @@
 // dead-code warnings are expected and suppressed.
 #![allow(dead_code)]
 
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -31,25 +32,25 @@ extern "C" {
     // becomes `impl<T> Holder<T>` rather than a bare `impl Holder`, since `T`
     // is hoisted off the constructor's own parameter list.
     #[wasm_bindgen(constructor, experimental_generic_mono)]
-    fn new<T>(value: T) -> Holder<T>;
+    fn new<T: IntoWasmAbi>(value: T) -> Holder<T>;
 
     // Instance method: `T` is hoisted from the receiver `&Holder<T>` and
     // reused for the return type (mirrors `Array::at`/`Array::get`).
     #[wasm_bindgen(method, experimental_generic_mono)]
-    fn get<T>(this: &Holder<T>) -> T;
+    fn get<T: FromWasmAbi>(this: &Holder<T>) -> T;
 
     // Self-returning static method (mirrors `Array::of`): `class_return_path`
     // retargets the `impl` block to the return type's class the same way it
     // does for the constructor above.
     #[wasm_bindgen(static_method_of = Holder, experimental_generic_mono, js_name = of)]
-    fn holder_of<T>(value: T) -> Holder<T>;
+    fn holder_of<T: IntoWasmAbi>(value: T) -> Holder<T>;
 
     // A hoisted class-level parameter (`T`) mixed with an additional,
     // non-hoisted function-only parameter (`U`): proves the split between
     // `class_generic_params` and `fn_generic_params` in `get_fn_generics`
     // works, and that both still end up correctly marshalled.
     #[wasm_bindgen(method, experimental_generic_mono)]
-    fn combine<T, U>(this: &Holder<T>, other: U);
+    fn combine<T, U: IntoWasmAbi>(this: &Holder<T>, other: U);
 }
 
 #[wasm_bindgen]
@@ -65,21 +66,21 @@ extern "C" {
     // Mixed: `u32` is concrete, `T` is hoisted, so the header is `impl<T>
     // Concrete<u32, T>`.
     #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
-    fn mixed_concrete_class_arg<T>(this: &Concrete<u32, T>) -> T;
+    fn mixed_concrete_class_arg<T: FromWasmAbi>(this: &Concrete<u32, T>) -> T;
 
     // Fully concrete: nothing is hoisted, so the header has no parameters of
     // its own and is simply `impl Concrete<u32, String>`. The function's own
     // `T` stays on the method, which is what makes this a per-mono import at
     // all.
     #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
-    fn concrete_class_arg<T>(this: &Concrete<u32, String>, v: T);
+    fn concrete_class_arg<T: IntoWasmAbi>(this: &Concrete<u32, String>, v: T);
 
     // The same, reached through the constructor route (`class_return_path`)
     // rather than a method receiver: a concrete argument list is vacuously
     // "constraining", so the return type is used as the class and its
     // arguments are re-emitted the same way.
     #[wasm_bindgen(constructor, experimental_generic_mono)]
-    fn new_concrete<T>(v: T) -> Concrete<u32, String>;
+    fn new_concrete<T: IntoWasmAbi>(v: T) -> Concrete<u32, String>;
 }
 
 #[wasm_bindgen]
@@ -88,7 +89,7 @@ extern "C" {
     type LifetimeHolder<'a>;
 
     #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
-    fn get_lifetime<'a, T>(this: &'a LifetimeHolder<'a>) -> T;
+    fn get_lifetime<'a, T: FromWasmAbi>(this: &'a LifetimeHolder<'a>) -> T;
 }
 
 // An explicit static class path carries the arguments needed to form the
@@ -105,7 +106,7 @@ extern "C" {
         experimental_generic_mono,
         js_name = create
     )]
-    fn external_lifetime_create<'a, T>(value: T);
+    fn external_lifetime_create<'a, T: IntoWasmAbi>(value: T);
 }
 
 #[wasm_bindgen]
@@ -117,7 +118,7 @@ extern "C" {
     type Tagged<'x>;
 
     #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
-    fn tagged_get<'x, T>(this: &'x Tagged<'x>) -> T;
+    fn tagged_get<'x, T: FromWasmAbi>(this: &'x Tagged<'x>) -> T;
 }
 
 #[wasm_bindgen]
@@ -131,12 +132,12 @@ extern "C" {
     type TwoLifetimes<'a, 'b>;
 
     #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
-    fn two_lifetimes_get<'a, 'b, T>(this: &'a TwoLifetimes<'b, 'a>) -> T;
+    fn two_lifetimes_get<'a, 'b, T: FromWasmAbi>(this: &'a TwoLifetimes<'b, 'a>) -> T;
 
     // The same lifetime used for both arguments: the header binds it once
     // while the self type still takes two arguments.
     #[wasm_bindgen(method, experimental_generic_mono, js_name = both)]
-    fn two_lifetimes_same<'a, T>(this: &'a TwoLifetimes<'a, 'a>) -> T;
+    fn two_lifetimes_same<'a, T: FromWasmAbi>(this: &'a TwoLifetimes<'a, 'a>) -> T;
 }
 
 #[wasm_bindgen]
@@ -154,24 +155,26 @@ extern "C" {
     type LtHolder<'a, T>;
 
     #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
-    fn class_lifetime_and_type_param<'a, T>(this: &'a LtHolder<'a, T>) -> T;
+    fn class_lifetime_and_type_param<'a, T: FromWasmAbi>(this: &'a LtHolder<'a, T>) -> T;
 
     // Same shape reached through the constructor route (`class_return_path`)
     // rather than a method receiver.
     #[wasm_bindgen(constructor, experimental_generic_mono)]
-    fn new_class_lifetime_and_type_param<'a, T>(v: &'a T) -> LtHolder<'a, T>;
+    fn new_class_lifetime_and_type_param<'a, T>(v: &'a T) -> LtHolder<'a, T>
+    where
+        for<'x> &'x T: IntoWasmAbi;
 
     // A concrete `'static` class argument does not need a lifetime declaration
     // on the generated `impl` header. It must survive in the self type for all
     // three class-wrapper routes.
     #[wasm_bindgen(method, experimental_generic_mono, js_name = get_static)]
-    fn static_lifetime_get<T>(this: &LtHolder<'static, T>) -> T;
+    fn static_lifetime_get<T: FromWasmAbi>(this: &LtHolder<'static, T>) -> T;
 
     #[wasm_bindgen(constructor, experimental_generic_mono)]
-    fn new_static_lifetime<T>(v: T) -> LtHolder<'static, T>;
+    fn new_static_lifetime<T: IntoWasmAbi>(v: T) -> LtHolder<'static, T>;
 
     #[wasm_bindgen(static_method_of = LtHolder, experimental_generic_mono, js_name = of_static)]
-    fn static_lifetime_of<T>(v: T) -> LtHolder<'static, T>;
+    fn static_lifetime_of<T: IntoWasmAbi>(v: T) -> LtHolder<'static, T>;
 }
 
 #[wasm_bindgen]
@@ -192,7 +195,7 @@ extern "C" {
     type Pair<K, V>;
 
     #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
-    fn pair_get<K, V>(this: &Pair<K, V>) -> V;
+    fn pair_get<K, V: FromWasmAbi>(this: &Pair<K, V>) -> V;
 
     // Declaration order deliberately non-alphabetical and reversed relative to
     // the class argument list. `class_generic_params` is a `BTreeSet`, so it is
@@ -200,12 +203,12 @@ extern "C" {
     // declaration-ordered `class_generic_exprs`; this pins that the two cannot
     // desync into `impl<K, V> Pair<V, K>`-style mismatches.
     #[wasm_bindgen(method, experimental_generic_mono, js_name = swap)]
-    fn pair_swap<V, K>(this: &Pair<V, K>) -> K;
+    fn pair_swap<V, K: FromWasmAbi>(this: &Pair<V, K>) -> K;
 
     // The same parameter used twice: `class_generic_params` dedups to one entry
     // while `class_generic_exprs` stays two elements long.
     #[wasm_bindgen(method, experimental_generic_mono, js_name = both)]
-    fn pair_both<T>(this: &Pair<T, T>) -> T;
+    fn pair_both<T: FromWasmAbi>(this: &Pair<T, T>) -> T;
 }
 
 #[wasm_bindgen]
@@ -244,13 +247,14 @@ extern "C" {
     #[wasm_bindgen(method, experimental_generic_mono, js_name = first)]
     fn boxed_where_projection<T>(this: &Boxed<T>, v: T::Item) -> u32
     where
-        T: IntoIterator;
+        T: IntoIterator,
+        T::Item: IntoWasmAbi;
 
     // The same bound written inline. This already worked (the shim's own
     // parameter list re-emits inline bounds via `type_params_with_bounds`), and
     // pins that the two spellings stay equivalent.
     #[wasm_bindgen(method, experimental_generic_mono, js_name = first)]
-    fn boxed_inline_projection<T: IntoIterator>(this: &Boxed<T>, v: T::Item) -> u32;
+    fn boxed_inline_projection<T: IntoIterator<Item: IntoWasmAbi>>(this: &Boxed<T>, v: T::Item) -> u32;
 }
 
 #[wasm_bindgen]
@@ -288,7 +292,7 @@ extern "C" {
     // parse time, so `class_return_path` sees `Fallible<T>` through a different
     // route than the plain constructor above.
     #[wasm_bindgen(constructor, experimental_generic_mono, catch)]
-    fn new_fallible<T>(value: T) -> Result<Fallible<T>, JsValue>;
+    fn new_fallible<T: IntoWasmAbi>(value: T) -> Result<Fallible<T>, JsValue>;
 }
 
 #[wasm_bindgen]
@@ -309,7 +313,9 @@ extern "C" {
     // JsValue` the implied bounds of the argument position are enough to prove
     // the predicate on their own, and dropping `'a: 'b` goes unnoticed.
     #[wasm_bindgen(method, experimental_generic_mono, js_name = take)]
-    fn take_bounded<'a: 'b, 'b, T: AsRef<JsValue>>(this: &Bounded, a: &'a T, b: &'b T);
+    fn take_bounded<'a: 'b, 'b, T: AsRef<JsValue>>(this: &Bounded, a: &'a T, b: &'b T)
+    where
+        for<'x> &'x T: IntoWasmAbi;
 }
 
 trait HasAssociatedType {
@@ -341,13 +347,13 @@ extern "C" {
     type BoundedHolder<T: Clone>;
 
     #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
-    fn bounded_holder_get<T>(this: &BoundedHolder<T>) -> T;
+    fn bounded_holder_get<T: FromWasmAbi>(this: &BoundedHolder<T>) -> T;
 
     // The same requirement applies to declaration-level lifetime bounds.
     type LifetimeBoundedHolder<'a: 'b, 'b, T>;
 
     #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
-    fn lifetime_bounded_holder_get<'a, 'b, T>(
+    fn lifetime_bounded_holder_get<'a, 'b, T: FromWasmAbi>(
         this: &LifetimeBoundedHolder<'a, 'b, T>,
     ) -> T;
 
@@ -359,19 +365,22 @@ extern "C" {
     #[wasm_bindgen(method, experimental_generic_mono, js_name = assoc)]
     fn associated_type_bound<F, U>(this: &GenericBoundHolder<F>, value: U)
     where
-        F: HasAssociatedType<Output = U>;
+        F: HasAssociatedType<Output = U>,
+        U: IntoWasmAbi;
 
     #[wasm_bindgen(method, experimental_generic_mono, js_name = ordinary)]
     fn ordinary_trait_argument<F, U>(this: &GenericBoundHolder<F>, value: U)
     where
-        F: TakesType<U>;
+        F: TakesType<U>,
+        U: IntoWasmAbi;
 
     // An equality RHS is not safe to hoist when its predicate also has an
     // ordinary function-level trait argument.
     #[wasm_bindgen(method, experimental_generic_mono, js_name = mixed)]
     fn mixed_associated_type_bound<F, U, V>(this: &GenericBoundHolder<F>, value: V)
     where
-        F: Relates<V, Output = U>;
+        F: Relates<V, Output = U>,
+        V: IntoWasmAbi;
 
     // A projection in an equality RHS does not determine its base parameter.
     #[wasm_bindgen(method, experimental_generic_mono, js_name = projected)]
@@ -387,14 +396,15 @@ extern "C" {
         this: &GenericBoundHolder<F>,
         value: &'a U,
     ) where
-        F: HasReferenceOutput<Output = &'a U>;
+        F: HasReferenceOutput<Output = &'a U>,
+        for<'x> &'x U: IntoWasmAbi;
 
     // Omitted imported-type defaults are substituted through earlier arguments
     // before their declaration bounds are emitted on the generated impl.
     type DefaultedBoundedHolder<T: Clone, U: Clone = Vec<T>>;
 
     #[wasm_bindgen(method, experimental_generic_mono, js_name = defaulted)]
-    fn defaulted_bounded_holder<X>(this: &DefaultedBoundedHolder<u32>, value: X);
+    fn defaulted_bounded_holder<X: IntoWasmAbi>(this: &DefaultedBoundedHolder<u32>, value: X);
 
     // Substitution is simultaneous: swapping class arguments must not recurse
     // indefinitely while propagating the declaration's `K: Clone` bound.
@@ -408,13 +418,13 @@ extern "C" {
     type RenamedBoundedHolder<T: Clone>;
 
     #[wasm_bindgen(method, js_class = RenamedHolder, experimental_generic_mono, js_name = get)]
-    fn renamed_bounded_holder_get<T>(this: &RenamedBoundedHolder<T>) -> T;
+    fn renamed_bounded_holder_get<T: FromWasmAbi>(this: &RenamedBoundedHolder<T>) -> T;
 
     // Class-return matching uses the Rust type identity, not the JS class name.
     type RenamedConstructed<T>;
 
     #[wasm_bindgen(constructor, js_class = RenamedJs, experimental_generic_mono)]
-    fn renamed_new<T>(value: T) -> RenamedConstructed<T>;
+    fn renamed_new<T: IntoWasmAbi>(value: T) -> RenamedConstructed<T>;
 
     #[wasm_bindgen(
         static_method_of = RenamedConstructed,
@@ -422,14 +432,14 @@ extern "C" {
         experimental_generic_mono,
         js_name = of
     )]
-    fn renamed_of<T>(value: T) -> RenamedConstructed<T>;
+    fn renamed_of<T: IntoWasmAbi>(value: T) -> RenamedConstructed<T>;
 
     // A qualified path to this module's imported type retains its declaration
     // bounds without matching unrelated `module::Type` names.
     type CrateBoundedHolder<T: Clone>;
 
     #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
-    fn crate_bounded_holder_get<T>(this: &self::CrateBoundedHolder<T>) -> T;
+    fn crate_bounded_holder_get<T: FromWasmAbi>(this: &self::CrateBoundedHolder<T>) -> T;
 
 }
 
@@ -538,7 +548,7 @@ extern "C" {
     type TypeLifetimeBounds<'a: 'b, 'b, T>;
 
     #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
-    fn type_lifetime_bounds_get<'a: 'b, 'b, T>(
+    fn type_lifetime_bounds_get<'a: 'b, 'b, T: FromWasmAbi>(
         this: &'a TypeLifetimeBounds<'a, 'b, T>,
     ) -> T;
 
@@ -547,7 +557,7 @@ extern "C" {
     type RefNamed<'__wbg_ref, T>;
 
     #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
-    fn ref_named_get<'__wbg_ref, T>(
+    fn ref_named_get<'__wbg_ref, T: FromWasmAbi>(
         this: &'__wbg_ref RefNamed<'__wbg_ref, T>,
     ) -> T;
 
@@ -559,7 +569,8 @@ extern "C" {
     fn take_class_lifetime_bound<'a: 'b, 'b, T: AsRef<JsValue>>(
         this: &'a LifetimeBounded<'a>,
         value: &'b T,
-    );
+    ) where
+        for<'x> &'x T: IntoWasmAbi;
 
     type TransitiveBounded<F>;
 
@@ -568,7 +579,8 @@ extern "C" {
     #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
     fn transitive_bound<F, R>(this: &TransitiveBounded<F>) -> R
     where
-        F: HasReturn<Return = R>;
+        F: HasReturn<Return = R>,
+        R: FromWasmAbi;
 }
 
 fn use_class_lifetime_bound<'a: 'b, 'b>(
@@ -589,7 +601,7 @@ fn use_type_lifetime_bounds<'a: 'b, 'b>(
 fn use_transitive_bound<F, R>(holder: &TransitiveBounded<F>) -> R
 where
     F: HasReturn<Return = R>,
-    R: wasm_bindgen::convert::FromWasmAbi,
+    R: FromWasmAbi,
 {
     holder.transitive_bound()
 }

@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi};
 use wasm_bindgen::prelude::*;
 
 trait HrtbBound<'a> {}
@@ -30,7 +31,7 @@ extern "C" {
         experimental_generic_mono,
         js_name = convert
     )]
-    fn explicit_static_class_wins<T: Clone, U>(value: T) -> ExplicitBounded<T>;
+    fn explicit_static_class_wins<T: Clone + IntoWasmAbi, U>(value: T) -> ExplicitBounded<T>;
 
     type HrtbHolder<'class, T>
     where
@@ -40,7 +41,7 @@ extern "C" {
     fn hrtb_erased<'scope, T>(this: &'scope HrtbHolder<'scope, T>, value: T);
 
     #[wasm_bindgen(method, experimental_generic_mono, js_name = mono)]
-    fn hrtb_mono<'scope, T>(this: &'scope HrtbHolder<'scope, T>, value: T);
+    fn hrtb_mono<'scope, T: IntoWasmAbi>(this: &'scope HrtbHolder<'scope, T>, value: T);
 }
 
 #[wasm_bindgen]
@@ -56,7 +57,7 @@ extern "C" {
     fn conditional_erased<T>(this: &Conditional<T>) -> T;
 
     #[wasm_bindgen(method, experimental_generic_mono, js_name = mono)]
-    fn conditional_mono<T>(this: &Conditional<T>) -> T;
+    fn conditional_mono<T: FromWasmAbi>(this: &Conditional<T>) -> T;
 
     #[cfg_attr(all(), cfg(not(any())))]
     type AttrConditional<T: ActiveBound>;
@@ -97,14 +98,14 @@ mod qualified {
         pub fn erased_new<T>(value: T) -> crate::qualified::Qualified<T>;
 
         #[wasm_bindgen(constructor, experimental_generic_mono)]
-        pub fn mono_new<T>(value: T) -> crate::qualified::Qualified<T>;
+        pub fn mono_new<T: IntoWasmAbi>(value: T) -> crate::qualified::Qualified<T>;
 
         #[wasm_bindgen(
             static_method_of = crate::qualified::Qualified,
             experimental_generic_mono,
             js_name = of
         )]
-        pub fn qualified_static<T>(value: T) -> crate::qualified::Qualified<T>;
+        pub fn qualified_static<T: IntoWasmAbi>(value: T) -> crate::qualified::Qualified<T>;
     }
 
     pub fn assert_qualified(value1: JsValue, value2: JsValue, value3: JsValue) {
