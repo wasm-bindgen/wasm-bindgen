@@ -42,7 +42,7 @@ extern "C" {
         Option<T>: IntoWasmAbi + FromWasmAbi;
 }
 
-fn forward<T: IntoWasmAbi + FromWasmAbi + 'static>(x: T) -> T {
+fn forward<T: IntoWasmAbi + FromWasmAbi>(x: T) -> T {
     argument(x);
     ret()
 }
