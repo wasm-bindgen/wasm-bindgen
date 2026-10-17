@@ -2133,25 +2133,11 @@ fn instruction(
             // Decoding never calls into wasm, so memory cannot grow under the
             // loop and one view serves the whole buffer.
             let view = js.local(format!("view{i}"));
-            // Each element's words at their natural alignment, as in the
-            // `#[repr(C)]` ABI types the buffer holds.
-            let mut reads = Vec::new();
-            let mut stride: usize = 0;
-            let mut align: usize = 1;
-            for word in words {
-                let (size, get) = match word {
-                    AdapterType::I32 => (4, "getInt32"),
-                    AdapterType::F32 => (4, "getFloat32"),
-                    AdapterType::I64 => (8, "getBigInt64"),
-                    AdapterType::F64 => (8, "getFloat64"),
-                    _ => bail!("unsupported slice element word {word:?}"),
-                };
-                stride = stride.next_multiple_of(size);
-                reads.push(format!("{view}.{get}({p} + {stride}, true)"));
-                stride += size;
-                align = align.max(size);
-            }
-            let stride = stride.next_multiple_of(align);
+            let (fields, stride, align) = encoded_slice_layout(words)?;
+            let reads = fields
+                .iter()
+                .map(|(offset, ty)| format!("{view}.get{ty}({p} + {offset}, true)"))
+                .collect();
             // Decode one element from its words with its own instructions,
             // into the loop body.
             let stack = std::mem::replace(&mut js.stack, reads);
@@ -2185,6 +2171,71 @@ fn instruction(
                 js.prelude("}");
             }
             js.push(v);
+        }
+
+        Instruction::EncodedSliceStore {
+            words,
+            elem,
+            malloc,
+            mem,
+            optional,
+        } => {
+            let val = js.pop();
+            let i = js.tmp();
+            let ptr = js.local(format!("ptr{i}"));
+            let len = js.local(format!("len{i}"));
+            let j = js.local(format!("j{i}"));
+            let p = js.local(format!("p{i}"));
+            let e = js.local(format!("e{i}"));
+            let memory = js.cx.expose_dataview_memory(*mem);
+            let memory = if js.cx.config.mode.emscripten() {
+                memory.name.to_string()
+            } else {
+                format!("{memory}()")
+            };
+            // Encoding never calls into wasm, so the view taken after the
+            // allocation serves the whole buffer.
+            let view = js.local(format!("view{i}"));
+            let (fields, stride, align) = encoded_slice_layout(words)?;
+            // Encode one element into its words with its own instructions,
+            // into the loop body.
+            let stack = std::mem::replace(&mut js.stack, vec![e.clone()]);
+            let prelude = std::mem::take(&mut js.prelude);
+            for instr in elem {
+                instruction(js, &instr.instr, log_error, constructor)?;
+            }
+            let values = std::mem::replace(&mut js.stack, stack);
+            let mut body = std::mem::replace(&mut js.prelude, prelude);
+            for ((offset, ty), value) in fields.iter().zip(values) {
+                body.push_str(&format!("{view}.set{ty}({p} + {offset}, {value}, true);\n"));
+            }
+            let malloc = js.cx.wasm_export_of(*malloc);
+            let coerce = js.cx.coerce_ptr_suffix();
+            let alloc = format!("{malloc}({len} * {stride}, {align}){coerce}");
+            if *optional {
+                js.cx.expose_is_like_none();
+                js.prelude(&format!(
+                    "let {ptr} = 0;\nlet {len} = 0;\nif (!isLikeNone({val})) {{\n{len} = {val}.length;\n{ptr} = {alloc};"
+                ));
+            } else {
+                js.prelude(&format!(
+                    "const {len} = {val}.length;\nconst {ptr} = {alloc};"
+                ));
+            }
+            js.prelude(&format!(
+                "
+                const {view} = {memory};
+                for (let {j} = 0; {j} < {len}; {j}++) {{
+                const {e} = {val}[{j}];
+                const {p} = {ptr} + {j} * {stride};
+                {body}}}
+                "
+            ));
+            if *optional {
+                js.prelude("}");
+            }
+            js.push(ptr);
+            js.push(len);
         }
 
         Instruction::View { kind, mem, mode } => {
@@ -2283,6 +2334,31 @@ fn view_from_wasm(js: &mut JsBuilder, kind: &VectorKind, mem: walrus::MemoryId) 
 /// The JS value for the vector `load` of `kind` per `mode`. Only typed kinds
 /// load as a view of wasm memory; string and externref loaders already build
 /// a fresh value, which no mode changes.
+/// The layout of an encoded slice element's ABI `words`, each at its natural
+/// alignment as in the `#[repr(C)]` ABI types the buffer holds: each word's
+/// offset and `DataView` accessor suffix, the stride and the alignment.
+fn encoded_slice_layout(
+    words: &[AdapterType],
+) -> Result<(Vec<(usize, &'static str)>, usize, usize), Error> {
+    let mut fields = Vec::new();
+    let mut stride: usize = 0;
+    let mut align: usize = 1;
+    for word in words {
+        let (size, ty) = match word {
+            AdapterType::I32 => (4, "Int32"),
+            AdapterType::F32 => (4, "Float32"),
+            AdapterType::I64 => (8, "BigInt64"),
+            AdapterType::F64 => (8, "Float64"),
+            _ => bail!("unsupported slice element word {word:?}"),
+        };
+        stride = stride.next_multiple_of(size);
+        fields.push((stride, ty));
+        stride += size;
+        align = align.max(size);
+    }
+    Ok((fields, stride.next_multiple_of(align), align))
+}
+
 fn slice_mode_expr(load: String, kind: &VectorKind, mode: SliceMode) -> String {
     match (kind, mode) {
         (VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_), _)

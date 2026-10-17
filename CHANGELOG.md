@@ -27,6 +27,13 @@
   frees.
   [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
 
+* Owned vectors (`Vec<T>`, `Box<[T]>`, `Option<Vec<T>>`) of `bool`, `char`
+  and string enums can be passed both ways, and `Vec<&str>` to JS, crossing
+  the same way as their borrowed slices: the glue decodes a buffer of the
+  elements' ABIs into a fresh `Array`, or encodes an `Array` into one that
+  Rust takes ownership of.
+  [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
+
 * String enums implement `TryFromJsValue`, accepting only their listed values,
   so they can be used as dynamic-union variant payloads.
   [#5376](https://github.com/wasm-bindgen/wasm-bindgen/pull/5376)

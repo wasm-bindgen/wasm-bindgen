@@ -90,6 +90,7 @@ pub mod unwind;
 pub mod usize;
 pub mod validate_prt;
 pub mod variadic;
+pub mod vec_elements;
 pub mod vendor_prefix;
 #[cfg(target_arch = "wasm64")]
 pub mod wasm64;
