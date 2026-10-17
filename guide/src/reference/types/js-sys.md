@@ -32,6 +32,36 @@ All generic types listed implement `JsGeneric` and default to `JsValue` when typ
 | `Undefined` | JavaScript `undefined` value |
 | `Null` | JavaScript `null` value |
 
+### Rust element types (unstable)
+
+Under `--cfg=js_sys_unstable_apis`, the element APIs of `Array<T>`,
+`Map<K, V>`, `Set<T>`, `Iterator<T>`, `AsyncIterator<T>` and `Promise<T>`
+are [`experimental_generic_mono`](../attributes/on-js-imports/experimental_generic_mono.md)
+imports, so `T` can be any type with an ABI, such as `String`, `bool` or
+`f64`, crossing as itself:
+
+```rust
+use js_sys::{Array, Map, Promise};
+
+let a: Array<String> = ["a", "b"].into_iter().map(String::from).collect();
+a.push(&"c".into());
+assert_eq!(a.get(0).as_deref(), Some("a"));
+assert_eq!(a.iter().collect::<Vec<String>>(), ["a", "b", "c"]);
+
+let m: Map<String, f64> = Map::new_typed();
+m.set(&"k".into(), &1.0);
+assert_eq!(m.get(&"k".into()), Some(1.0));
+
+let v: String = Promise::resolve("x").await?;
+```
+
+Reads bound the element by `FromWasmAbi`, and writes take `&T` bounded by
+`for<'a> &'a T: IntoWasmAbi`, which holds for JS types, `String` and every
+primitive. Borrows deref-coerce to the element type, so
+`Array<JsValue>::push(&js_string)` still works. Each element type gets its own
+JS shim. Generic code over these types states the same ABI bounds, as
+`T: JsGeneric` alone no longer implies them.
+
 ---
 
 ## Array\<T\>
