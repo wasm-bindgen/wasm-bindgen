@@ -272,9 +272,11 @@ pub enum Instruction {
     /// Pops an `externref` from the stack, pushes a sentinel for "none" or the
     /// value if it's "some"
     I32FromOptionChar,
+    /// Pops a numeric enum's number and pushes it unchanged as an `f64`.
+    F64FromEnum,
     /// Pops an `externref` from the stack, pushes `hole` for "none" or the
     /// value if it's "some"
-    I32FromOptionEnum {
+    F64FromOptionEnum {
         hole: u32,
     },
     /// Pops an `externref` from the stack, pushes either a sentinel value if it's
@@ -438,7 +440,7 @@ pub enum Instruction {
     },
     OptionBoolFromI32,
     OptionCharFromI32,
-    OptionEnumFromI32 {
+    OptionEnumFromF64 {
         hole: u32,
     },
     I32FromOptionNonNull,
@@ -464,7 +466,7 @@ impl AdapterType {
             AdapterType::I64 => walrus::ValType::I64,
             AdapterType::F32 => walrus::ValType::F32,
             AdapterType::F64 => walrus::ValType::F64,
-            AdapterType::Enum(_) => walrus::ValType::I32,
+            AdapterType::Enum(_) => walrus::ValType::F64,
             AdapterType::Externref | AdapterType::NamedExternref(_) => {
                 walrus::ValType::Ref(RefType::EXTERNREF)
             }

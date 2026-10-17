@@ -1600,7 +1600,13 @@ fn instruction(
             js.push(val);
         }
 
-        Instruction::I32FromOptionEnum { hole } => {
+        Instruction::F64FromEnum => {
+            let val = js.pop();
+            js.assert_number(&val);
+            js.push(val);
+        }
+
+        Instruction::F64FromOptionEnum { hole } => {
             let val = js.pop();
             js.cx.expose_is_like_none();
             js.assert_optional_number(&val);
@@ -2304,7 +2310,7 @@ fn instruction(
             ));
         }
 
-        Instruction::OptionEnumFromI32 { hole } => {
+        Instruction::OptionEnumFromF64 { hole } => {
             let val = js.pop();
             js.push(format!("{val} === {hole} ? undefined : {val}"));
         }

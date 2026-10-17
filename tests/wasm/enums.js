@@ -43,6 +43,27 @@ exports.js_enum_with_error_variant = () => {
     assert.strictEqual(wasm.EnumWithErrorVariant.Error, 2);
 };
 
+exports.js_numeric_enum_abi = () => {
+    assert.strictEqual(wasm.signed_enum_flip(wasm.SignedEnum.Max), -2147483648);
+    assert.strictEqual(wasm.signed_enum_flip(-2147483648), wasm.SignedEnum.Max);
+    assert.strictEqual(wasm.unsigned_top_enum(), 4294967295);
+    for (const bad of [NaN, 1.5, 2 ** 32]) {
+        assert.throws(() => wasm.enum_cycle(bad), /invalid enum value passed/);
+        assert.throws(() => wasm.handle_optional_enums(bad), /invalid enum value passed/);
+    }
+    assert.strictEqual(wasm.handle_optional_enums(undefined), undefined);
+};
+
+exports.js_echo_signed_enum = e => {
+    assert.strictEqual(e, -2147483648);
+    return e;
+};
+
+exports.js_echo_unsigned_top_enum = e => {
+    assert.strictEqual(e, 4294967295);
+    return e;
+};
+
 // Helper to create a Foo object for testing
 exports.makeFoo = () => {
     return { type: 'Foo', data: 'test' };

@@ -5126,7 +5126,16 @@ impl ToTokens for ast::Enum {
                 }
             }
         });
-        let try_from_cast_clauses = cast_clauses.clone();
+        // Every discriminant is exact as an `f64`, and any other number,
+        // including NaN or a fraction, matches none of them.
+        let abi_clauses = self.variants.iter().map(|variant| {
+            let variant_name = &variant.rust_name;
+            quote! {
+                if js == #enum_name::#variant_name as #underlying as f64 {
+                    #enum_name::#variant_name
+                }
+            }
+        });
         let variant_names = self
             .variants
             .iter()
@@ -5134,13 +5143,15 @@ impl ToTokens for ast::Enum {
             .collect::<Vec<_>>();
         let wasm_bindgen = &self.wasm_bindgen;
         (quote! {
+            // An `f64` rather than an integer, which JS would coerce with
+            // ToInt32, turning `'abc'` or `1.5` into a valid discriminant.
             #[automatically_derived]
             impl #wasm_bindgen::convert::IntoWasmAbi for #enum_name {
-                type Abi = #underlying;
+                type Abi = f64;
 
                 #[inline]
-                fn into_abi(self) -> #underlying {
-                    self as #underlying
+                fn into_abi(self) -> f64 {
+                    self as #underlying as f64
                 }
             }
 
@@ -5148,18 +5159,18 @@ impl ToTokens for ast::Enum {
             #wasm_bindgen::__wbindgen_encoded_sequence!(
                 #enum_name,
                 |e| match e {
-                    #(#enum_name::#variant_names => #enum_name::#variant_names as #underlying,)*
+                    #(#enum_name::#variant_names => #enum_name::#variant_names as #underlying as f64,)*
                 },
                 [ref_into]
             );
 
             #[automatically_derived]
             impl #wasm_bindgen::convert::FromWasmAbi for #enum_name {
-                type Abi = #underlying;
+                type Abi = f64;
 
                 #[inline]
-                unsafe fn from_abi(js: #underlying) -> Self {
-                    #(#cast_clauses else)* {
+                unsafe fn from_abi(js: f64) -> Self {
+                    #(#abi_clauses else)* {
                         #wasm_bindgen::throw_str("invalid enum value passed")
                     }
                 }
@@ -5168,13 +5179,13 @@ impl ToTokens for ast::Enum {
             #[automatically_derived]
             impl #wasm_bindgen::convert::OptionFromWasmAbi for #enum_name {
                 #[inline]
-                fn is_none(val: &Self::Abi) -> bool { *val == #hole as #underlying }
+                fn is_none(val: &Self::Abi) -> bool { *val == #hole as f64 }
             }
 
             #[automatically_derived]
             impl #wasm_bindgen::convert::OptionIntoWasmAbi for #enum_name {
                 #[inline]
-                fn none() -> Self::Abi { #hole as #underlying }
+                fn none() -> Self::Abi { #hole as f64 }
             }
 
             #[automatically_derived]
@@ -5204,7 +5215,7 @@ impl ToTokens for ast::Enum {
                     let js = value.as_f64()? as #underlying;
 
                     #wasm_bindgen::__rt::core::option::Option::Some(
-                        #(#try_from_cast_clauses else)* {
+                        #(#cast_clauses else)* {
                             return #wasm_bindgen::__rt::core::option::Option::None;
                         }
                     )

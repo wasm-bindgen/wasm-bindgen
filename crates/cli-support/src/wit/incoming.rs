@@ -127,8 +127,8 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Enum { name, .. } => {
                 self.instruction(
                     &[AdapterType::Enum(name.clone())],
-                    Instruction::Int32ToWasm,
-                    &[AdapterType::I32],
+                    Instruction::F64FromEnum,
+                    &[AdapterType::F64],
                 );
             },
             Descriptor::StringEnum { name, invalid, .. } => {
@@ -377,8 +377,8 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Enum { name, hole, .. } => {
                 self.instruction(
                     &[AdapterType::Enum(name.clone()).option()],
-                    Instruction::I32FromOptionEnum { hole: *hole },
-                    &[AdapterType::I32],
+                    Instruction::F64FromOptionEnum { hole: *hole },
+                    &[AdapterType::F64],
                 );
             }
             Descriptor::StringEnum {
