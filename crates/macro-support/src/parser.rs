@@ -1900,6 +1900,28 @@ const SEQ_KEYS: [ast::SeqKey; 2] = [ast::SeqKey::Slice, ast::SeqKey::Vec];
 /// attribute set. The deprecated `slice_to_array` is `slice = array`, so it
 /// and `slice = ..` at one level could only agree or contradict, and are an
 /// error naming both spans.
+/// The `slice` and `vec` keys written on an exported function or argument,
+/// each an error at its key. They only select what an imported function's
+/// arguments become in JS.
+fn export_seq_mode_errors(attrs: &BindgenAttrs) -> Vec<Diagnostic> {
+    attrs
+        .attrs
+        .iter()
+        .filter_map(|(used, attr)| {
+            let (span, key) = match attr {
+                BindgenAttr::Slice(span, _) => (span, "slice"),
+                BindgenAttr::Vec(span, _) => (span, "vec"),
+                _ => return None,
+            };
+            used.set(true);
+            Some(Diagnostic::span_error(
+                *span,
+                format!("`{key}` only applies to arguments of imported JS functions"),
+            ))
+        })
+        .collect()
+}
+
 fn seq_values(attrs: &BindgenAttrs) -> Result<SeqValues, Diagnostic> {
     let mut values = [None; 2];
     for key in SEQ_KEYS {
@@ -2055,39 +2077,44 @@ fn extract_args_attrs(
                 }
             }
 
-            // Parsed even for exports, where the modes are inert, so that an
-            // invalid value is still an error and a valid one is marked used.
-            let own = seq_values(&attrs).unwrap_or_else(|diagnostic| {
-                seq_mode_errors.push(diagnostic);
-                [None; 2]
-            });
             let seq_modes = match &import {
-                Some(inherited) => SEQ_KEYS
-                    .into_iter()
-                    .filter_map(|key| {
-                        let own = own[key as usize];
-                        let value = own.or(inherited[key as usize])?;
-                        let mode = ast::SeqMode {
-                            key,
-                            value,
-                            // `slice_to_array` keeps its released no-op on an
-                            // argument it doesn't apply to.
-                            explicit: own.is_some() && value != ast::SeqValue::SliceToArray,
-                        };
-                        let default = match key {
-                            ast::SeqKey::Slice => ast::SeqValue::View,
-                            ast::SeqKey::Vec => ast::SeqValue::Copy,
-                        };
-                        if !mode.explicit && value == default {
-                            return None;
-                        }
-                        check_mut_slice(&pat_type.ty, mode)
-                            .map_err(|diagnostic| seq_mode_errors.push(diagnostic))
-                            .ok()?;
-                        Some(mode)
-                    })
-                    .collect(),
-                None => vec![],
+                Some(inherited) => {
+                    let own = seq_values(&attrs).unwrap_or_else(|diagnostic| {
+                        seq_mode_errors.push(diagnostic);
+                        [None; 2]
+                    });
+                    SEQ_KEYS
+                        .into_iter()
+                        .filter_map(|key| {
+                            let own = own[key as usize];
+                            let value = own.or(inherited[key as usize])?;
+                            let mode = ast::SeqMode {
+                                key,
+                                value,
+                                // `slice_to_array` keeps its released no-op on an
+                                // argument it doesn't apply to.
+                                explicit: own.is_some() && value != ast::SeqValue::SliceToArray,
+                            };
+                            let default = match key {
+                                ast::SeqKey::Slice => ast::SeqValue::View,
+                                ast::SeqKey::Vec => ast::SeqValue::Copy,
+                            };
+                            if !mode.explicit && value == default {
+                                return None;
+                            }
+                            check_mut_slice(&pat_type.ty, mode)
+                                .map_err(|diagnostic| seq_mode_errors.push(diagnostic))
+                                .ok()?;
+                            Some(mode)
+                        })
+                        .collect()
+                }
+                None => {
+                    // `slice_to_array` keeps its released no-op on exports.
+                    attrs.slice_to_array();
+                    seq_mode_errors.extend(export_seq_mode_errors(&attrs));
+                    vec![]
+                }
             };
 
             let arg_attrs = FnArgAttrs {
@@ -2164,9 +2191,8 @@ impl<'a> MacroParse<(Option<BindgenAttrs>, &'a mut TokenStream)> for syn::Item {
                 if let Some((i, _)) = no_mangle {
                     f.attrs.remove(i);
                 }
-                // extract fn args attributes before parsing to tokens stream;
-                // the slice-mode attributes are irrelevant (a documented
-                // no-op) for exported free functions.
+                Diagnostic::from_vec(export_seq_mode_errors(&opts))?;
+                // extract fn args attributes before parsing to tokens stream
                 let args_attrs = extract_args_attrs(&mut f.sig, None)?;
                 let comments = extract_doc_comments(&f.attrs);
                 // If the function isn't used for anything other than being exported to JS,
@@ -2233,6 +2259,7 @@ impl<'a> MacroParse<(Option<BindgenAttrs>, &'a mut TokenStream)> for syn::Item {
                 if let Some(path) = opts.wasm_bindgen_futures() {
                     program.wasm_bindgen_futures = path.clone();
                 }
+                Diagnostic::from_vec(export_seq_mode_errors(&opts))?;
                 (&mut i).macro_parse(program, opts)?;
                 i.to_tokens(tokens);
             }
@@ -2450,6 +2477,7 @@ impl MacroParse<&ClassMarker> for &mut syn::ImplItemFn {
         }
 
         let opts = BindgenAttrs::find(&mut self.attrs)?;
+        Diagnostic::from_vec(export_seq_mode_errors(&opts))?;
 
         if opts.this().is_some() {
             bail_span!(
@@ -2460,9 +2488,6 @@ impl MacroParse<&ClassMarker> for &mut syn::ImplItemFn {
         }
 
         let comments = extract_doc_comments(&self.attrs);
-        // The slice-mode attributes are meaningless (a documented no-op) on
-        // exported impl-block methods; they only change the
-        // outgoing-argument codegen for imported functions.
         let args_attrs: Vec<FnArgAttrs> = extract_args_attrs(&mut self.sig, None)?;
         let (function, method_self) = function_from_decl(
             &self.sig.ident,

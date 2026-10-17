@@ -133,4 +133,5 @@ types, so it always arrives as a fresh `Array`.
 
 ## What this is not
 
-* Both keys are accepted on exported functions, where they have no effect.
+* Neither key applies to exported functions: on an export, its arguments, an
+  exported method or its `impl` block, either one is an error.

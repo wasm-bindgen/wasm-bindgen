@@ -41,11 +41,33 @@ extern "C" {
     fn per_block(xs: &[u8]);
 }
 
-// On an export argument.
+// Both keys are rejected on exports, whatever their value, where
+// `slice_to_array` keeps its released no-op.
 #[wasm_bindgen]
-pub fn export_unknown_mode(#[wasm_bindgen(slice = borrow)] _xs: &[u8]) {}
+pub fn export_slice(
+    #[wasm_bindgen(slice = copy)] _xs: &[u8],
+    #[wasm_bindgen(vec = borrow)] _ys: Vec<u8>,
+    #[wasm_bindgen(slice_to_array)] _zs: &[u8],
+) {
+}
+
+#[wasm_bindgen(slice = copy)]
+pub fn export_fn_slice(_xs: &[u8]) {}
 
 #[wasm_bindgen]
-pub fn export_unknown_vec_mode(#[wasm_bindgen(vec = borrow)] _xs: Vec<u8>) {}
+pub struct Exported;
+
+#[wasm_bindgen]
+impl Exported {
+    pub fn method(#[wasm_bindgen(vec = array)] _xs: Vec<u8>) {}
+
+    #[wasm_bindgen(slice = array)]
+    pub fn fn_method(_xs: &[u8]) {}
+}
+
+#[wasm_bindgen(vec = copy)]
+impl Exported {
+    pub fn block_method(_xs: Vec<u8>) {}
+}
 
 fn main() {}
