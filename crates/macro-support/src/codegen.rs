@@ -5114,14 +5114,6 @@ impl ToTokens for ast::Enum {
         } else {
             quote! { u32 }
         };
-        let cast_clauses = self.variants.iter().map(|variant| {
-            let variant_name = &variant.rust_name;
-            quote! {
-                if js == #enum_name::#variant_name as #underlying {
-                    #enum_name::#variant_name
-                }
-            }
-        });
         // Every discriminant is exact as an `f64`, and any other number,
         // including NaN or a fraction, matches none of them.
         let abi_clauses = self.variants.iter().map(|variant| {
@@ -5223,13 +5215,7 @@ impl ToTokens for ast::Enum {
             #[automatically_derived]
             impl #wasm_bindgen::convert::TryFromJsValue for #enum_name {
                 fn try_from_js_value_ref(value: &#wasm_bindgen::JsValue) -> #wasm_bindgen::__rt::core::option::Option<Self> {
-                    let js = value.as_f64()? as #underlying;
-
-                    #wasm_bindgen::__rt::core::option::Option::Some(
-                        #(#cast_clauses else)* {
-                            return #wasm_bindgen::__rt::core::option::Option::None;
-                        }
-                    )
+                    Self::__wbindgen_try_from_abi(value.as_f64()?)
                 }
             }
         })

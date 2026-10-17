@@ -174,6 +174,28 @@ fn test_numeric_enum_abi() {
     js_numeric_enum_abi();
 }
 
+#[wasm_bindgen_test]
+fn test_numeric_enum_try_from_js_value() {
+    use wasm_bindgen::convert::TryFromJsValue;
+
+    for bad in [1.5, f64::NAN] {
+        assert_eq!(Color::try_from_js_value_ref(&JsValue::from(bad)), None);
+    }
+    assert_eq!(Color::try_from_js_value_ref(&JsValue::from("1")), None);
+    assert_eq!(
+        Color::try_from_js_value_ref(&JsValue::from(1)),
+        Some(Color::Yellow)
+    );
+    assert_eq!(
+        SignedEnum::try_from_js_value_ref(&JsValue::from(-2147483648)),
+        Some(SignedEnum::Min)
+    );
+    assert_eq!(
+        UnsignedTopEnum::try_from_js_value_ref(&JsValue::from(u32::MAX)),
+        Some(UnsignedTopEnum::Top)
+    );
+}
+
 // Exported struct for testing enum variants
 #[wasm_bindgen]
 #[derive(PartialEq, Debug)]
