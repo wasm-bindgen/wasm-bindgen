@@ -110,9 +110,12 @@ extern "C" {
 `&Cow<str>`, `js_sys::JsString` and `&js_sys::JsString`, so a caller can pass
 whichever it already holds and each monomorphisation crosses at that shape's
 native wire format — UTF-8 buffers for the Rust strings, a handle for
-`JsString` — all arriving in JS as a string value. Nullable positions work
-under the same bound (`Option<T>`), since the trait carries `OptionIntoWasmAbi`
-as a supertrait. The trait is sealed to exactly these string shapes. Like
+`JsString` — all arriving in JS as a string value. Nullable positions
+(`Option<T>`) and slices (`&[T]`, arriving as an `Array` of strings) work under
+the same bound, since the trait carries `OptionIntoWasmAbi` and
+`VectorRefIntoWasmAbi` as supertraits. So a plain Rust function bounded by
+`JsStringLike` alone can forward a `&[T]` to such an import. The trait is
+sealed to exactly these string shapes. Like
 `experimental_generic_mono` itself, the trait is experimental and may change
 as the feature stabilizes.
 

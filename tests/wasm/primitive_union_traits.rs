@@ -44,6 +44,9 @@ macro_rules! assert_string_members {
         assert_types_implement!(
             $trait: String,
             &'static str,
+            &'static String,
+            &'static Box<str>,
+            &'static std::borrow::Cow<'static, str>,
             JsString,
             &'static JsString,
         )

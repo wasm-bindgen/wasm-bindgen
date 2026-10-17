@@ -6,8 +6,11 @@
 //! `slice` mode, with `Option`, empty and large slices, several slices in one
 //! call, and the same shapes through `experimental_generic_mono`.
 
+use std::borrow::Cow;
+
 use js_sys::JsString;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsStringLike;
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen]
@@ -68,6 +71,17 @@ extern "C" {
     #[wasm_bindgen(js_name = retain)]
     fn retain_strings(v: &[String]);
     fn retained() -> String;
+
+    #[wasm_bindgen(js_name = describe)]
+    fn string_refs(v: &[&String]) -> String;
+    #[wasm_bindgen(js_name = describe)]
+    fn boxed_str_refs(v: &[&Box<str>]) -> String;
+    #[wasm_bindgen(js_name = describe)]
+    fn cow_refs(v: &[&Cow<str>]) -> String;
+    #[wasm_bindgen(js_name = describe)]
+    fn handle_refs(v: &[&JsString]) -> String;
+    #[wasm_bindgen(js_name = describe)]
+    fn opt_handle_refs(v: Option<&[&JsString]>) -> String;
 }
 
 // The modes act on typed sequences only: inherited, they leave an encoded
@@ -107,6 +121,14 @@ extern "C" {
 
     #[wasm_bindgen(experimental_generic_mono, js_name = describe)]
     fn generic_opt<T>(v: Option<&[T]>) -> String;
+
+    #[wasm_bindgen(experimental_generic_mono, js_name = describe)]
+    fn js_strings(v: &[impl JsStringLike]) -> String;
+}
+
+// `JsStringLike` alone proves the slice ABI, so plain Rust code can forward.
+fn forward_js_strings(v: &[impl JsStringLike]) -> String {
+    js_strings(v)
 }
 
 #[wasm_bindgen_test]
@@ -230,6 +252,45 @@ fn per_mono_uses_the_same_element_abi() {
     assert_eq!(generic(&[1u16, 2]), "Uint16Array:[1,2]");
     assert_eq!(generic_opt(Some(&[false][..])), "Array:[false]");
     assert_eq!(generic_opt::<String>(None), "undefined");
+}
+
+#[wasm_bindgen_test]
+fn string_shape_refs() {
+    let owned = ["a".to_string(), "é".to_string()];
+    assert_eq!(string_refs(&[&owned[0], &owned[1]]), r#"Array:["a","é"]"#);
+    let boxed: [Box<str>; 2] = ["b".into(), "".into()];
+    assert_eq!(boxed_str_refs(&[&boxed[0], &boxed[1]]), r#"Array:["b",""]"#);
+    let cows = [Cow::Borrowed("c"), Cow::Owned("d".to_string())];
+    assert_eq!(cow_refs(&[&cows[0], &cows[1]]), r#"Array:["c","d"]"#);
+}
+
+#[wasm_bindgen_test]
+fn handle_refs_are_borrowed() {
+    let h = [JsString::from("x"), JsString::from("y")];
+    assert_eq!(
+        handle_refs(&[&h[0], &h[1], &h[0]]),
+        r#"Array:["x","y","x"]"#
+    );
+    assert_eq!(handle_refs(&[]), "Array:[]");
+    assert_eq!(opt_handle_refs(Some(&[&h[1]])), r#"Array:["y"]"#);
+    assert_eq!(opt_handle_refs(None), "undefined");
+    // Borrowed, not moved: the handles are still usable.
+    assert_eq!(handles(&h), r#"Array:["x","y"]"#);
+}
+
+#[wasm_bindgen_test]
+fn every_js_string_like_slice() {
+    let owned = ["a".to_string()];
+    let boxed: Box<str> = "b".into();
+    let cow = Cow::Borrowed("c");
+    let js = JsString::from("d");
+    assert_eq!(forward_js_strings(&owned), r#"Array:["a"]"#);
+    assert_eq!(forward_js_strings(&["a"]), r#"Array:["a"]"#);
+    assert_eq!(forward_js_strings(&[&owned[0]]), r#"Array:["a"]"#);
+    assert_eq!(forward_js_strings(&[&boxed]), r#"Array:["b"]"#);
+    assert_eq!(forward_js_strings(&[&cow]), r#"Array:["c"]"#);
+    assert_eq!(forward_js_strings(&[js.clone()]), r#"Array:["d"]"#);
+    assert_eq!(forward_js_strings(&[&js]), r#"Array:["d"]"#);
 }
 
 #[wasm_bindgen_test]

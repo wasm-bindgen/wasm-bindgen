@@ -25,6 +25,12 @@
   arriving as a fresh `Array`.
   [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
 
+* Slices of every `JsStringLike` shape, including `&String`, `&Box<str>`,
+  `&Cow<str>` and `&JsString`, can be passed to imported JS functions, and
+  `JsStringLike` alone bounds a `&[T]` argument of an
+  `experimental_generic_mono` import.
+  [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
+
 * Owned vectors (`Vec<T>`, `Box<[T]>`, `Option<Vec<T>>`) of `bool`, `char`
   and string enums can be passed to and from JS, and `Vec<&str>` can be
   passed to JS.
