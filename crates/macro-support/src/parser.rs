@@ -1896,10 +1896,6 @@ type SeqValues = [Option<ast::SeqValue>; 2];
 
 const SEQ_KEYS: [ast::SeqKey; 2] = [ast::SeqKey::Slice, ast::SeqKey::Vec];
 
-/// The `slice = ..` and `vec = ..` values in a `#[wasm_bindgen(..)]`
-/// attribute set. The deprecated `slice_to_array` is `slice = array`, so it
-/// and `slice = ..` at one level could only agree or contradict, and are an
-/// error naming both spans.
 /// The `slice` and `vec` keys written on an exported function or argument,
 /// each an error at its key. They only select what an imported function's
 /// arguments become in JS.
@@ -1922,6 +1918,10 @@ fn export_seq_mode_errors(attrs: &BindgenAttrs) -> Vec<Diagnostic> {
         .collect()
 }
 
+/// The `slice = ..` and `vec = ..` values in a `#[wasm_bindgen(..)]`
+/// attribute set. The deprecated `slice_to_array` is `slice = array`, so it
+/// and `slice = ..` at one level could only agree or contradict, and are an
+/// error naming both spans.
 fn seq_values(attrs: &BindgenAttrs) -> Result<SeqValues, Diagnostic> {
     let mut values = [None; 2];
     for key in SEQ_KEYS {
