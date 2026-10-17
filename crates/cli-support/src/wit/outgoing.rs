@@ -1,6 +1,8 @@
 use crate::descriptor::{Descriptor, Function, SliceMode};
 use crate::wasm_conventions::get_function_table_entry;
-use crate::wit::{AdapterType, ClosureDtor, Instruction, InstructionBuilder};
+use crate::wit::{
+    is_encoded_vector, is_memory_abi, AdapterType, ClosureDtor, Instruction, InstructionBuilder,
+};
 use crate::wit::{InstructionData, StackChange};
 use anyhow::{bail, format_err, Error};
 use walrus::{ExportId, ValType};
@@ -165,6 +167,9 @@ impl InstructionBuilder<'_, '_> {
                 self.output.push(AdapterType::String);
             }
 
+            Descriptor::Vector(elem) if is_encoded_vector(elem) => {
+                self.outgoing_encoded_slice(elem, false)?
+            }
             Descriptor::Vector(_) => {
                 let kind = arg.vector_kind().ok_or_else(|| {
                     format_err!(
@@ -458,6 +463,9 @@ impl InstructionBuilder<'_, '_> {
 
             Descriptor::CachedString => self.cached_string(true)?,
 
+            Descriptor::Vector(elem) if is_encoded_vector(elem) => {
+                self.outgoing_encoded_slice(elem, true)?
+            }
             Descriptor::String | Descriptor::Vector(_) => {
                 let kind = arg.vector_kind().ok_or_else(|| {
                     format_err!(
@@ -690,12 +698,14 @@ impl InstructionBuilder<'_, '_> {
         Ok(())
     }
 
-    /// A borrowed slice of elements whose memory is not their ABI crosses as a
-    /// buffer of their ABIs (see `VectorRefIntoWasmAbi`). JS reads each
-    /// element's ABI words from the buffer and decodes them with the
-    /// element's own instructions, as for an argument of the element type.
+    /// A sequence of elements whose memory is not their ABI, borrowed or
+    /// owned, crosses as a buffer of their ABIs (see `VectorRefIntoWasmAbi`
+    /// and `VectorIntoWasmAbi`). JS reads each element's ABI words from the
+    /// buffer and decodes them with the element's own instructions, as for an
+    /// argument of the element type.
     fn outgoing_encoded_slice(&mut self, elem: &Descriptor, optional: bool) -> Result<(), Error> {
-        // `&[&str]`: the element is a reference, decoded as borrowed anyway.
+        // `&[&str]` / `Vec<&str>`: the element is a reference, decoded as
+        // borrowed anyway.
         let elem = match elem {
             Descriptor::Ref(d) => &**d,
             d => d,
@@ -838,30 +848,6 @@ impl InstructionBuilder<'_, '_> {
             self.ptr_ty()
         }
     }
-}
-
-/// Whether a slice of `elem` is in memory exactly as its elements' ABIs:
-/// numbers, and JS handles (table indices). Such a slice is borrowed as a view
-/// of its own memory; any other element crosses as a buffer of its ABIs.
-fn is_memory_abi(elem: &Descriptor) -> bool {
-    matches!(
-        elem,
-        Descriptor::I8
-            | Descriptor::U8
-            | Descriptor::ClampedU8
-            | Descriptor::I16
-            | Descriptor::U16
-            | Descriptor::I32
-            | Descriptor::U32
-            | Descriptor::I64
-            | Descriptor::U64
-            | Descriptor::I64AsF64
-            | Descriptor::U64AsF64
-            | Descriptor::F32
-            | Descriptor::F64
-            | Descriptor::Externref
-            | Descriptor::NamedExternref(_)
-    )
 }
 
 #[test]

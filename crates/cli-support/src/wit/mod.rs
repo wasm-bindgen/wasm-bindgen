@@ -151,6 +151,46 @@ struct InstructionBuilder<'a, 'b> {
     slice_mode: SliceMode,
 }
 
+/// Whether a sequence of `elem` is in memory exactly as its elements' ABIs:
+/// numbers, and JS handles (table indices). Such a sequence is passed as its
+/// own memory; any other element crosses as a buffer of its ABIs.
+pub(crate) fn is_memory_abi(elem: &Descriptor) -> bool {
+    matches!(
+        elem,
+        Descriptor::I8
+            | Descriptor::U8
+            | Descriptor::ClampedU8
+            | Descriptor::I16
+            | Descriptor::U16
+            | Descriptor::I32
+            | Descriptor::U32
+            | Descriptor::I64
+            | Descriptor::U64
+            | Descriptor::I64AsF64
+            | Descriptor::U64AsF64
+            | Descriptor::F32
+            | Descriptor::F64
+            | Descriptor::Externref
+            | Descriptor::NamedExternref(_)
+    )
+}
+
+/// Whether an owned vector of `elem` crosses as a buffer of its elements'
+/// ABIs, as its slices do. Vectors of exported structs and numeric enums
+/// instead hold JS handles, to the structs' wrappers and the enums' numbers,
+/// which JS checks when converting back. Owned strings can't be encoded, as
+/// the element glue can't free them.
+pub(crate) fn is_encoded_vector(elem: &Descriptor) -> bool {
+    !is_memory_abi(elem)
+        && !matches!(
+            elem,
+            Descriptor::RustStruct { .. }
+                | Descriptor::Enum { .. }
+                | Descriptor::String
+                | Descriptor::CachedString
+        )
+}
+
 impl InstructionBuilder<'_, '_> {
     /// Returns `AdapterType::I64` for memory64 modules, `AdapterType::I32` for wasm32.
     fn ptr_ty(&self) -> AdapterType {

@@ -51,14 +51,16 @@ pub struct InstructionData {
 }
 
 /// Calls `f` on every instruction in `instrs`, including those nested in an
-/// `EncodedSliceLoad`'s element decoder, which a pass that rewrites or roots
-/// instructions must reach too. Passes over the adapter's stack shape must
-/// not use this: the nested instructions run on the loop's own stack, so to
-/// them an `EncodedSliceLoad` is a single instruction.
+/// `EncodedSliceLoad` / `EncodedSliceStore` element coder, which a pass that
+/// rewrites or roots instructions must reach too. Passes over the adapter's
+/// stack shape must not use this: the nested instructions run on the loop's
+/// own stack, so to them the enclosing instruction is a single one.
 pub fn visit_instructions(instrs: &[InstructionData], f: &mut impl FnMut(&InstructionData)) {
     for instr in instrs {
         f(instr);
-        if let Instruction::EncodedSliceLoad { elem, .. } = &instr.instr {
+        if let Instruction::EncodedSliceLoad { elem, .. }
+        | Instruction::EncodedSliceStore { elem, .. } = &instr.instr
+        {
             visit_instructions(elem, f);
         }
     }
@@ -71,7 +73,9 @@ pub fn visit_instructions_mut(
 ) {
     for instr in instrs {
         f(instr);
-        if let Instruction::EncodedSliceLoad { elem, .. } = &mut instr.instr {
+        if let Instruction::EncodedSliceLoad { elem, .. }
+        | Instruction::EncodedSliceStore { elem, .. } = &mut instr.instr
+        {
             visit_instructions_mut(elem, f);
         }
     }
@@ -388,6 +392,16 @@ pub enum Instruction {
         free: walrus::FunctionId,
         optional: bool,
     },
+    /// pops an array (or, `optional`, `undefined`), encodes each element with
+    /// `elem` into the `words` of its ABI in a buffer allocated with `malloc`,
+    /// pushes the buffer's ptr/length (ptr 0 for `undefined`)
+    EncodedSliceStore {
+        words: Vec<AdapterType>,
+        elem: Vec<InstructionData>,
+        malloc: walrus::FunctionId,
+        mem: walrus::MemoryId,
+        optional: bool,
+    },
     /// pops i32, loads externref from externref table
     TableGet,
     /// pops two i32 data pointers, pushes an externref closure
@@ -557,7 +571,8 @@ impl walrus::CustomSection for NonstandardWitSection {
                     roots.push_memory(mem);
                     roots.push_func(malloc);
                 }
-                MutableSliceToMemory { malloc, mem, .. } => {
+                MutableSliceToMemory { malloc, mem, .. }
+                | EncodedSliceStore { malloc, mem, .. } => {
                     roots.push_memory(mem);
                     roots.push_func(malloc);
                 }

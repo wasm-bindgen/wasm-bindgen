@@ -349,6 +349,63 @@ pub fn encoded_slice_into_abi<'a, T, A: WasmAbi>(
     WasmSlice::from_usize(Box::into_raw(abis) as *mut A as usize, len)
 }
 
+/// [`VectorFromWasmAbi`] for an element whose memory is not its ABI: decodes
+/// each element from the buffer of their ABIs that JS encoded.
+///
+/// # Safety
+///
+/// `js` must be a buffer of `T::Abi`s allocated by JS for Rust to own.
+pub unsafe fn encoded_vector_from_abi<T: FromWasmAbi>(js: WasmSlice) -> Box<[T]> {
+    let ptr = js.ptr.into_usize() as *mut T::Abi;
+    let len = js.len.into_usize();
+    Vec::from_raw_parts(ptr, len, len)
+        .into_iter()
+        .map(|abi| T::from_abi(abi))
+        .collect()
+}
+
+// An owned vector of elements that own nothing encodes as its borrowed slice.
+macro_rules! encoded_vectors {
+    ($($t:ty)*) => ($(
+        impl WasmDescribeVector for $t {
+            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+            fn describe_vector() {
+                inform(VECTOR);
+                <$t>::describe();
+            }
+        }
+
+        impl VectorIntoWasmAbi for $t {
+            type Abi = WasmSlice;
+
+            #[inline]
+            fn vector_into_abi(vector: Box<[$t]>) -> WasmSlice {
+                <$t>::slice_into_abi(&vector)
+            }
+        }
+    )*)
+}
+
+encoded_vectors! { bool char &str }
+
+impl VectorFromWasmAbi for bool {
+    type Abi = WasmSlice;
+
+    #[inline]
+    unsafe fn vector_from_abi(js: WasmSlice) -> Box<[bool]> {
+        encoded_vector_from_abi(js)
+    }
+}
+
+impl VectorFromWasmAbi for char {
+    type Abi = WasmSlice;
+
+    #[inline]
+    unsafe fn vector_from_abi(js: WasmSlice) -> Box<[char]> {
+        encoded_vector_from_abi(js)
+    }
+}
+
 impl VectorRefIntoWasmAbi for String {
     fn slice_into_abi(slice: &[Self]) -> WasmSlice {
         encoded_slice_into_abi(slice, |s| s.into_abi())

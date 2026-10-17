@@ -7,9 +7,9 @@
 //! Note that the mirror operation, going from WebAssembly to JS, is found in
 //! the `outgoing.rs` module.
 
-use crate::descriptor::Descriptor;
+use crate::descriptor::{Descriptor, SliceMode};
 use crate::wit::InstructionData;
-use crate::wit::{AdapterType, Instruction, InstructionBuilder, StackChange};
+use crate::wit::{is_encoded_vector, AdapterType, Instruction, InstructionBuilder, StackChange};
 use anyhow::{bail, format_err, Error};
 use walrus::ValType;
 
@@ -166,6 +166,9 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
 
+            Descriptor::Vector(elem) if is_encoded_vector(elem) => {
+                self.incoming_encoded_vector(elem, false)?
+            }
             Descriptor::Vector(_) => {
                 let kind = arg.vector_kind().ok_or_else(|| {
                     format_err!("unsupported argument type for calling Rust function from JS {arg:?}")
@@ -425,6 +428,9 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
 
+            Descriptor::Vector(elem) if is_encoded_vector(elem) => {
+                self.incoming_encoded_vector(elem, true)?
+            }
             Descriptor::Vector(_) => {
                 let kind = arg.vector_kind().ok_or_else(|| {
                     format_err!(
@@ -578,6 +584,57 @@ impl InstructionBuilder<'_, '_> {
             Instruction::F64FromOptionSentinelNumber,
             &[AdapterType::F64],
         );
+    }
+
+    /// An owned vector of elements whose memory is not their ABI crosses as a
+    /// buffer of their ABIs (see `VectorFromWasmAbi`), the mirror of
+    /// `outgoing_encoded_slice`. JS encodes each element with the element's
+    /// own instructions, as for an argument of the element type, and writes
+    /// its ABI words into the buffer, which Rust takes ownership of.
+    fn incoming_encoded_vector(&mut self, elem: &Descriptor, optional: bool) -> Result<(), Error> {
+        let mut encode = InstructionBuilder {
+            input: Vec::new(),
+            output: Vec::new(),
+            instructions: Vec::new(),
+            cx: &mut *self.cx,
+            // The element is pushed onto the stack by the loop, not fetched
+            // as an argument.
+            return_position: true,
+            slice_mode: SliceMode::View,
+        };
+        // Element encoders must neither call into wasm nor allocate: the glue
+        // writes the whole buffer through one view after allocating it. That
+        // rules out elements that own memory, such as a string.
+        match elem {
+            Descriptor::Boolean | Descriptor::Char | Descriptor::StringEnum { .. } => {
+                encode._incoming(elem)?
+            }
+            _ => {
+                bail!("unsupported vector element type for calling Rust function from JS: {elem:?}")
+            }
+        }
+        let InstructionBuilder {
+            mut input,
+            output: words,
+            instructions: elem,
+            ..
+        } = encode;
+        let array = AdapterType::Array(Box::new(input.remove(0)));
+        let malloc = self.cx.malloc()?;
+        let mem = self.cx.memory()?;
+        let ptr_ty = self.incoming_internal_word_ty();
+        self.instruction(
+            &[if optional { array.option() } else { array }],
+            Instruction::EncodedSliceStore {
+                words,
+                elem,
+                malloc,
+                mem,
+                optional,
+            },
+            &[ptr_ty.clone(), ptr_ty],
+        );
+        Ok(())
     }
 
     fn incoming_internal_word_ty(&self) -> AdapterType {
