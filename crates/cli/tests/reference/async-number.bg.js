@@ -55,7 +55,7 @@ export function __wbg_queueMicrotask_2030f4836bf1c47b(arg0) {
 export function __wbg_queueMicrotask_a72f977e97f23c5f(arg0) {
     queueMicrotask(arg0);
 }
-export function __wbg_resolve_5556851ee5625d79(arg0) {
+export function __wbg_resolve_05cca9f78fd16401(arg0) {
     const ret = Promise.resolve(arg0);
     return ret;
 }

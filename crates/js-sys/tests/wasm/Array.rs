@@ -125,9 +125,21 @@ fn from_iter_owned_wasm_bindgen_type_infers() {
     }
 
     // Stable: erased `Array<JsValue>` (= `Array`).
-    let obj = Object::new();
-    let arr = Array::from_iter([obj]);
-    take_value_array(&arr);
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        let obj = Object::new();
+        let arr = Array::from_iter([obj]);
+        take_value_array(&arr);
+    }
+    // Unstable: the element type is the item's.
+    #[cfg(js_sys_unstable_apis)]
+    {
+        let obj = Object::new();
+        let arr = Array::from_iter([obj]);
+        take_object_array(&arr);
+        let arr = Array::from_iter([JsValue::from(Object::new())]);
+        take_value_array(&arr);
+    }
 
     // Typed: `Array<Object>` via `IntoJsGeneric` inference.
     let obj = Object::new();

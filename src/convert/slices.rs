@@ -698,6 +698,14 @@ impl UpcastFrom<&str> for JsValue {}
 impl UpcastFrom<&str> for JsOption<JsValue> {}
 impl UpcastFrom<&str> for JsNullable<JsValue> {}
 
+impl crate::sys::Promising for String {
+    type Resolution = String;
+}
+
+impl crate::sys::Promising for str {
+    type Resolution = String;
+}
+
 impl<T, Target> UpcastFrom<Box<[T]>> for Box<[Target]> where Target: UpcastFrom<T> {}
 
 unsafe impl<T: ErasableGeneric> ErasableGeneric for Vec<T> {
