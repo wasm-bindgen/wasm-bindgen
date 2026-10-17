@@ -13,9 +13,10 @@
   either. `slice = copy` hands JS a fresh typed array (`.slice()` of the view,
   with no Rust-side copy) instead of the default view of wasm memory;
   `slice = array` a fresh plain `Array`; and an explicit `slice = view` opts
-  an argument back out of an inherited mode. A generic element type resolves
-  the mode per instantiation under `experimental_generic_mono` (previously a
-  hard error for `slice_to_array`), where `Option<&[T]>` is now supported too.
+  a borrowed argument back out of an inherited mode (on owned data, which is
+  never a view, it is an error). A generic element type resolves the mode per
+  instantiation under `experimental_generic_mono` (previously a hard error for
+  `slice_to_array`), where `Option<&[T]>` is now supported too.
   `slice_to_array` is deprecated in favour of `slice = array`, and keeps its
   existing behaviour: it acts on `&[T]` and `Option<&[T]>` only.
   [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)

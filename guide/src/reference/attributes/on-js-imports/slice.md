@@ -7,13 +7,15 @@ function reaches JS when its element type `T` is numeric (`u8`, `i32`,
 
 | mode | borrowed `&[T]` | owned `Vec<T>` / `Box<[T]>` |
 |---|---|---|
-| `slice = view` *(default)* | typed-array view of wasm memory | fresh typed array |
+| *(none)* | typed-array view of wasm memory | fresh typed array |
+| `slice = view` | typed-array view of wasm memory | *(error)* |
 | `slice = array` | fresh plain `Array` | fresh plain `Array` |
 | `slice = copy` | fresh typed array | fresh typed array |
 
 Owned data is freed once the call returns, so it always reaches JS as a
-copy. The user-facing Rust signature is unchanged by the mode — `&[T]`
-stays `&[T]`.
+copy, and `slice = view` written on an owned argument is a compile error
+(inherited from a function or block, it is a no-op there). The user-facing
+Rust signature is unchanged by the mode — `&[T]` stays `&[T]`.
 
 The modes only apply to numeric `T`. A borrowed slice of any other element
 type has no typed-array form: it crosses as each element's own ABI and
@@ -35,7 +37,8 @@ typed-array view into wasm linear memory (e.g. `Uint8Array`,
 `Float64Array`). The view is only valid for the duration of the call: it
 dangles if the callee retains it, and detaches if wasm memory grows during
 the call (any allocation in a re-entrant callback). Writing the mode
-explicitly opts an argument back out of an inherited `array` or `copy`.
+explicitly opts a borrowed argument back out of an inherited `array` or
+`copy`; an owned argument opts out with `slice = copy`.
 
 ## `slice = copy`
 

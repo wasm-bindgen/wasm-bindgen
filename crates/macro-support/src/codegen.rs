@@ -5692,6 +5692,34 @@ pub(crate) fn detect_slice_or_option_slice(ty: &syn::Type) -> Option<SliceArg> {
     None
 }
 
+/// Recognise an owned sequence: `Vec<T>` or `Box<[T]>`, optionally wrapped in
+/// `Clamped`, `Option`, or both.
+pub(crate) fn is_owned_sequence(ty: &syn::Type) -> bool {
+    let syn::Type::Path(syn::TypePath {
+        attrs: _,
+        qself: None,
+        path,
+    }) = get_ty(ty)
+    else {
+        return false;
+    };
+    let Some(seg) = path.segments.last() else {
+        return false;
+    };
+    let syn::PathArguments::AngleBracketed(args) = &seg.arguments else {
+        return false;
+    };
+    let (1, Some(syn::GenericArgument::Type(inner))) = (args.args.len(), args.args.first()) else {
+        return false;
+    };
+    match seg.ident.to_string().as_str() {
+        "Vec" => true,
+        "Box" => matches!(get_ty(inner), syn::Type::Slice(_)),
+        "Option" | "Clamped" => is_owned_sequence(inner),
+        _ => false,
+    }
+}
+
 /// The error type `E` of a `Result<T, E>` return type, if `ty` looks like a
 /// `Result` with two type arguments.
 ///

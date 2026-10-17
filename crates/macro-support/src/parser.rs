@@ -2091,6 +2091,18 @@ fn extract_args_attrs(
                             None
                         }
                     };
+                    // Owned data is freed after the call, so it is never a
+                    // view. Inherited, `view` is a no-op here as on any other
+                    // argument it does not apply to.
+                    if own == Some(ast::SliceMode::View)
+                        && crate::codegen::is_owned_sequence(&pat_type.ty)
+                    {
+                        slice_mode_errors.push(Diagnostic::span_error(
+                            attrs.slice().unwrap().span(),
+                            "`slice = view` cannot be applied to owned data, which is freed \
+                             after the call; use `slice = copy` to opt out of an inherited mode",
+                        ));
+                    }
                     let mode = own.unwrap_or(ctx.slice_mode);
                     if mode == ast::SliceMode::View {
                         mode
