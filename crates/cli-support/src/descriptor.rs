@@ -88,9 +88,10 @@ pub enum Descriptor {
     Unit,
     NonNull,
     RawPointer,
-    /// An imported function argument under a non-default `slice = ..` mode.
-    /// Only ever wraps a typed sequence (see [`Descriptor::is_typed_sequence`]).
-    SliceMode(SliceMode, Box<Descriptor>),
+    /// An imported function argument under a `slice = ..` or `vec = ..` mode
+    /// that applies to it, or that was written on it, for the binding to
+    /// validate (see [`Descriptor::seq_mode_error`]).
+    SliceMode(SeqMode, Box<Descriptor>),
     /// A sequence cell holding the element's scalar ABI rather than the
     /// element itself. Only ever directly inside a `Vector` or `Slice`.
     Encoded(Box<Descriptor>),
@@ -114,6 +115,29 @@ pub enum SliceMode {
     View,
     Array,
     Copy,
+}
+
+/// An imported function argument's `slice = ..` or `vec = ..` mode.
+#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct SeqMode {
+    /// `vec = ..`, for owned sequences, rather than `slice = ..`.
+    pub vec: bool,
+    pub value: SliceMode,
+    /// Written on the argument rather than inherited.
+    pub explicit: bool,
+}
+
+/// As written: `slice = copy`.
+impl std::fmt::Debug for SeqMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let key = if self.vec { "vec" } else { "slice" };
+        let value = match self.value {
+            SliceMode::View => "view",
+            SliceMode::Array => "array",
+            SliceMode::Copy => "copy",
+        };
+        write!(f, "{key} = {value}")
+    }
 }
 
 /// Kinds of exported items that share the one JS/TypeScript name space.
@@ -293,17 +317,23 @@ impl Descriptor {
             CLAMPED => Descriptor::_decode(data, true),
             NONNULL => Descriptor::NonNull,
             RAW_POINTER => Descriptor::RawPointer,
-            // The macro marks every argument in a mode's scope; the mode only
-            // means something for a typed sequence, so every other shape
-            // drops it here and keeps its default handling.
+            // The macro marks every argument in an inherited mode's scope,
+            // where it only means something for its own shape, so every other
+            // shape drops it here and keeps its default handling.
             SLICE_MODE => {
-                let mode = match get(data) {
-                    SLICE_MODE_ARRAY => SliceMode::Array,
-                    SLICE_MODE_COPY => SliceMode::Copy,
-                    other => panic!("unknown slice mode: {other}"),
+                let word = get(data);
+                let mode = SeqMode {
+                    vec: word & SLICE_MODE_VEC != 0,
+                    value: match word & !(SLICE_MODE_VEC | SLICE_MODE_EXPLICIT) {
+                        SLICE_MODE_VIEW => SliceMode::View,
+                        SLICE_MODE_COPY => SliceMode::Copy,
+                        SLICE_MODE_ARRAY => SliceMode::Array,
+                        other => panic!("unknown slice mode: {other}"),
+                    },
+                    explicit: word & SLICE_MODE_EXPLICIT != 0,
                 };
                 let contents = Descriptor::_decode(data, clamped);
-                if contents.is_typed_sequence() {
+                if mode.explicit || contents.seq_mode_error(mode).is_none() {
                     Descriptor::SliceMode(mode, Box::new(contents))
                 } else {
                     contents
@@ -413,25 +443,40 @@ impl Descriptor {
         }
     }
 
-    /// Whether this is a borrowed `Ref(Slice(_))` or owned `Vector(_)`, or an
-    /// `Option` of either, whose element kind has a typed-array form.
-    pub fn is_typed_sequence(&self) -> bool {
-        let d = match self {
+    /// Why `mode` can't act on this import argument, if it can't: a mode acts
+    /// only on a sequence of its key's shape whose element has a typed-array
+    /// form.
+    pub fn seq_mode_error(&self, mode: SeqMode) -> Option<&'static str> {
+        let mut d = self;
+        while let Descriptor::SliceMode(_, inner) = d {
+            d = inner;
+        }
+        let d = match d {
             Descriptor::Option(d) => d,
             d => d,
         };
-        let shaped = match d {
-            Descriptor::Ref(d) => matches!(**d, Descriptor::Slice(_)),
-            Descriptor::Vector(_) => true,
-            _ => false,
+        let (borrowed, mutable) = match d {
+            Descriptor::Ref(s) => (matches!(**s, Descriptor::Slice(_)), false),
+            Descriptor::RefMut(s) => (matches!(**s, Descriptor::Slice(_)), true),
+            _ => (false, false),
         };
-        shaped
-            && d.vector_kind().is_some_and(|kind| {
-                !matches!(
-                    kind,
-                    VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_)
-                )
-            })
+        let typed = d.vector_kind().is_some_and(|kind| {
+            !matches!(
+                kind,
+                VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_)
+            )
+        });
+        if mode.vec && !matches!(d, Descriptor::Vector(_)) {
+            Some("`vec` applies to owned vectors; for a borrowed `&[T]` use `slice = view | copy | array`")
+        } else if !mode.vec && !borrowed {
+            Some("`slice` applies to borrowed slices; for an owned `Vec<T>` use `vec = copy | array`")
+        } else if mutable && mode.value != SliceMode::View {
+            Some("JS would receive a copy, whose writes never reach the `&mut [T]`; only `slice = view` applies")
+        } else if !typed {
+            Some("its elements aren't numeric, so it always reaches JS as a fresh `Array`")
+        } else {
+            None
+        }
     }
 
     pub fn vector_kind(&self) -> Option<VectorKind> {
@@ -556,13 +601,6 @@ fn encoded_cells() {
         Descriptor::decode(&[REF, SLICE, BOOLEAN]).vector_kind(),
         None
     );
-    // The modes only apply to typed in-place sequences.
-    assert_eq!(
-        Descriptor::decode(&[SLICE_MODE, SLICE_MODE_COPY, REF, SLICE, ENCODED, BOOLEAN]),
-        Descriptor::Ref(Box::new(Descriptor::Slice(Box::new(encoded(
-            Descriptor::Boolean
-        )))))
-    );
 }
 
 #[test]
@@ -572,44 +610,33 @@ fn encoded_outside_a_sequence() {
 }
 
 #[test]
-fn slice_mode_applies_only_to_typed_sequences() {
-    let slice = |elem| Descriptor::Ref(Box::new(Descriptor::Slice(Box::new(elem))));
-    let vector = |elem| Descriptor::Vector(Box::new(elem));
-    let mode = |mode, d| Descriptor::SliceMode(mode, Box::new(d));
-    let copy = |rest: &[u32]| Descriptor::decode(&[&[SLICE_MODE, SLICE_MODE_COPY], rest].concat());
-    let array =
-        |rest: &[u32]| Descriptor::decode(&[&[SLICE_MODE, SLICE_MODE_ARRAY], rest].concat());
-
-    assert_eq!(
-        copy(&[REF, SLICE, U8]),
-        mode(SliceMode::Copy, slice(Descriptor::U8))
-    );
-    assert_eq!(
-        array(&[OPTIONAL, REF, SLICE, F64]),
-        mode(
-            SliceMode::Array,
-            Descriptor::Option(Box::new(slice(Descriptor::F64)))
-        )
-    );
-    assert_eq!(
-        array(&[CLAMPED, REF, SLICE, U8]),
-        mode(SliceMode::Array, slice(Descriptor::ClampedU8))
-    );
-    assert_eq!(
-        array(&[VECTOR, U8]),
-        mode(SliceMode::Array, vector(Descriptor::U8))
-    );
-    assert_eq!(copy(&[REF, SLICE, EXTERNREF]), slice(Descriptor::Externref));
-    assert_eq!(copy(&[VECTOR, EXTERNREF]), vector(Descriptor::Externref));
-    assert_eq!(
-        array(&[REFMUT, SLICE, U8]),
-        Descriptor::RefMut(Box::new(Descriptor::Slice(Box::new(Descriptor::U8))))
-    );
-    assert_eq!(
-        copy(&[REF, STRING]),
-        Descriptor::Ref(Box::new(Descriptor::String))
-    );
-    assert_eq!(array(&[U32]), Descriptor::U32);
+fn seq_modes_apply_by_shape() {
+    let decode = |word, rest: &[u32]| Descriptor::decode(&[&[SLICE_MODE, word], rest].concat());
+    let kept = |word, rest: &[u32]| matches!(decode(word, rest), Descriptor::SliceMode(..));
+    // Inherited, a mode acts only on its key's shape with a typed element.
+    let (copy, array) = (SLICE_MODE_COPY, SLICE_MODE_ARRAY);
+    let vec_array = SLICE_MODE_VEC | SLICE_MODE_ARRAY;
+    assert!(kept(copy, &[REF, SLICE, U8]));
+    assert!(kept(array, &[OPTIONAL, REF, SLICE, F64]));
+    assert!(kept(array, &[CLAMPED, REF, SLICE, U8]));
+    assert!(kept(vec_array, &[OPTIONAL, VECTOR, U8]));
+    assert!(!kept(array, &[VECTOR, U8]));
+    assert!(!kept(vec_array, &[REF, SLICE, U8]));
+    assert!(!kept(array, &[REFMUT, SLICE, U8]));
+    assert!(!kept(copy, &[REF, SLICE, EXTERNREF]));
+    assert!(!kept(copy, &[REF, SLICE, ENCODED, BOOLEAN]));
+    assert!(!kept(copy, &[REF, STRING]));
+    assert!(!kept(array, &[U32]));
+    // Written on the argument, it is kept for the binding to reject.
+    let error = |word, rest: &[u32]| match decode(word | SLICE_MODE_EXPLICIT, rest) {
+        Descriptor::SliceMode(mode, d) => d.seq_mode_error(mode),
+        d => panic!("dropped: {d:?}"),
+    };
+    assert_eq!(error(SLICE_MODE_VIEW, &[REFMUT, SLICE, U8]), None);
+    assert!(error(SLICE_MODE_VEC | copy, &[REF, SLICE, U8]).is_some());
+    assert!(error(array, &[VECTOR, U8]).is_some());
+    assert!(error(copy, &[REFMUT, SLICE, U8]).is_some());
+    assert!(error(SLICE_MODE_VIEW, &[REF, SLICE, ENCODED, REF, STRING]).is_some());
 }
 
 impl Function {

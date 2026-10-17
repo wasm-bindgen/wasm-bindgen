@@ -1,8 +1,8 @@
 // A slice whose element type is a type parameter resolves its slice mode
 // (`slice = array | copy`) per concrete instantiation on the
-// `experimental_generic_mono` path, and downgrades to the default view mode on
-// the type-erasure path, where the slice erases to the handle tier (which
-// already hands JS a fresh `Array`) and both modes are documented no-ops.
+// `experimental_generic_mono` path, and against the erased slice on the
+// type-erasure path. Either way the CLI resolves it, as it can see the
+// element.
 //
 // Either way the declaration compiles; this used to be a hard parse error for
 // `slice_to_array`. This is what lets one attribute cover a whole

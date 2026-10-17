@@ -281,9 +281,8 @@ where
 }
 
 /// Describes an import argument whose wire is described by `T` under a
-/// `#[wasm_bindgen(slice = ..)]` mode (`SLICE_MODE_ARRAY` or
-/// `SLICE_MODE_COPY`). The CLI applies the mode to typed-array sequence shapes
-/// and ignores it on every other shape.
+/// `slice = ..` or `vec = ..` mode word (see `SLICE_MODE_*`). The CLI applies
+/// the mode to sequences of its key's shape with typed elements.
 pub struct WasmDescribeSliceMode<T: ?Sized, const MODE: u32>(core::marker::PhantomData<T>);
 
 impl<T: WasmDescribe + ?Sized, const MODE: u32> WasmDescribe for WasmDescribeSliceMode<T, MODE> {
