@@ -15,10 +15,8 @@
   `slice = array` a fresh plain `Array`; and an explicit `slice = view` opts
   a borrowed argument back out of an inherited mode (on owned data, which is
   never a view, it is an error). A generic element type resolves the mode per
-  instantiation under `experimental_generic_mono` (previously a hard error for
-  `slice_to_array`), where `Option<&[T]>` is now supported too.
-  `slice_to_array` is deprecated in favour of `slice = array`, and keeps its
-  existing behaviour: it acts on `&[T]` and `Option<&[T]>` only.
+  instantiation under `experimental_generic_mono`, where `Option<&[T]>` is now
+  supported too.
   [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
 
 * Borrowed slices of `String`, `&str`, `bool`, `char` and exported enums
@@ -26,8 +24,7 @@
   as a fresh `Array`. A borrowed slice now crosses as each element's own ABI:
   numbers and JS handles are still read in place, and any other element is
   encoded into a temporary buffer of its ABIs, which the glue decodes and
-  frees. `&[String]` previously required `slice_to_array`, which converted
-  each string to a `JsValue` in Rust.
+  frees.
   [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
 
 * String enums implement `TryFromJsValue`, accepting only their listed values,

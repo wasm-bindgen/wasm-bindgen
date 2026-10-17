@@ -135,9 +135,3 @@ tier, which requires a JS-handle element type and already hands JS a fresh
   its writes would be silently discarded rather than written back through
   the `&mut`. Use a shared slice if JS only needs to read the elements, or
   set `slice = view` on that argument to keep the writable view.
-
-## `slice_to_array`
-
-`slice_to_array` is the deprecated predecessor of `slice = array`. It acts
-on `&[T]` and `Option<&[T]>` arguments only, and leaves owned and `Clamped`
-sequences unchanged.
