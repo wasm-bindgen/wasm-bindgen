@@ -2617,3 +2617,17 @@ pub(crate) fn adapter2ts(
         AdapterType::Function => dst.push_str("any"),
     }
 }
+
+#[test]
+fn encoded_slice_layout_matches_repr_c() {
+    let layout = |words: &[AdapterType]| encoded_slice_layout(words).unwrap();
+    assert_eq!(layout(&[AdapterType::I32]), (vec![(0, "Int32")], 4, 4));
+    assert_eq!(
+        layout(&[AdapterType::F64, AdapterType::F64]),
+        (vec![(0, "Float64"), (8, "Float64")], 16, 8)
+    );
+    assert_eq!(
+        layout(&[AdapterType::I32, AdapterType::F64]),
+        (vec![(0, "Int32"), (8, "Float64")], 16, 8)
+    );
+}

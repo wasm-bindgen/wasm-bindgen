@@ -1730,7 +1730,7 @@ impl TryToTokens for ast::ImportType {
 
                     #[inline]
                     fn slice_into_abi(slice: &[Self]) -> #wasm_bindgen::convert::WasmSlice {
-                        #wasm_bindgen::convert::borrowed_slice_into_abi(slice)
+                        #wasm_bindgen::convert::WasmSlice::borrow(slice)
                     }
                 }
 
@@ -2103,7 +2103,6 @@ impl ToTokens for ast::StringEnum {
         let variant_paths_ref = &variant_paths;
 
         let wasm_bindgen = &self.wasm_bindgen;
-        let encoded_vector_impls = encoded_vector_impls(wasm_bindgen, enum_name);
 
         (quote! {
             #(#attrs)*
@@ -2147,21 +2146,14 @@ impl ToTokens for ast::StringEnum {
                 }
             }
 
-            #[automatically_derived]
-            impl #wasm_bindgen::convert::VectorRefIntoWasmAbi for #enum_name {
-                fn describe_cell() {
-                    use #wasm_bindgen::describe::*;
-                    inform(ENCODED);
-                    <Self as WasmDescribe>::describe();
-                }
-
-                fn slice_into_abi(slice: &[Self]) -> #wasm_bindgen::convert::WasmSlice {
-                    #wasm_bindgen::convert::encoded_slice_into_abi(slice, |e| match e {
-                        #(#variant_paths_ref => #variant_indices,)*
-                        #enum_name::__Invalid => #invalid,
-                    })
-                }
-            }
+            #wasm_bindgen::__wbindgen_encoded_sequence!(
+                #enum_name,
+                |e| match e {
+                    #(#variant_paths_ref => #variant_indices,)*
+                    #enum_name::__Invalid => #invalid,
+                },
+                [ref_into, into, from]
+            );
 
             #[automatically_derived]
             impl #wasm_bindgen::convert::FromWasmAbi for #enum_name {
@@ -2220,48 +2212,8 @@ impl ToTokens for ast::StringEnum {
                 }
             }
 
-            #encoded_vector_impls
         })
         .to_tokens(tokens);
-    }
-}
-
-/// A string enum's owned vectors cross as its slices do, as a buffer of the
-/// variants' ABIs.
-fn encoded_vector_impls(wasm_bindgen: &syn::Path, enum_name: &Ident) -> TokenStream {
-    quote! {
-        #[automatically_derived]
-        impl #wasm_bindgen::describe::WasmDescribeVector for #enum_name {
-            fn describe_vector() {
-                use #wasm_bindgen::describe::*;
-                inform(VECTOR);
-                <#enum_name as #wasm_bindgen::convert::VectorRefIntoWasmAbi>::describe_cell();
-            }
-        }
-
-        #[automatically_derived]
-        impl #wasm_bindgen::convert::VectorIntoWasmAbi for #enum_name {
-            type Abi = #wasm_bindgen::convert::WasmSlice;
-
-            fn vector_into_abi(
-                vector: #wasm_bindgen::__rt::alloc::boxed::Box<[#enum_name]>
-            ) -> Self::Abi {
-                <#enum_name as #wasm_bindgen::convert::VectorRefIntoWasmAbi>::slice_into_abi(
-                    &vector,
-                )
-            }
-        }
-
-        #[automatically_derived]
-        impl #wasm_bindgen::convert::VectorFromWasmAbi for #enum_name {
-            type Abi = #wasm_bindgen::convert::WasmSlice;
-
-            unsafe fn vector_from_abi(
-                js: Self::Abi
-            ) -> #wasm_bindgen::__rt::alloc::boxed::Box<[#enum_name]> {
-                #wasm_bindgen::convert::encoded_vector_from_abi(js)
-            }
-        }
     }
 }
 
@@ -5196,20 +5148,14 @@ impl ToTokens for ast::Enum {
                 }
             }
 
-            #[automatically_derived]
-            impl #wasm_bindgen::convert::VectorRefIntoWasmAbi for #enum_name {
-                fn describe_cell() {
-                    use #wasm_bindgen::describe::*;
-                    inform(ENCODED);
-                    <Self as WasmDescribe>::describe();
-                }
-
-                fn slice_into_abi(slice: &[Self]) -> #wasm_bindgen::convert::WasmSlice {
-                    #wasm_bindgen::convert::encoded_slice_into_abi(slice, |e| match e {
-                        #(#enum_name::#variant_names => #enum_name::#variant_names as #underlying,)*
-                    })
-                }
-            }
+            // An owned `Vec` keeps its released `JsValue` form below.
+            #wasm_bindgen::__wbindgen_encoded_sequence!(
+                #enum_name,
+                |e| match e {
+                    #(#enum_name::#variant_names => #enum_name::#variant_names as #underlying,)*
+                },
+                [ref_into]
+            );
 
             #[automatically_derived]
             impl #wasm_bindgen::convert::FromWasmAbi for #enum_name {
