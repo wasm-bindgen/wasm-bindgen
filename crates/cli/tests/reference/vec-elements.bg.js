@@ -5,11 +5,16 @@
 export function bools(v) {
     const len0 = v.length;
     const ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
-    const view0 = getDataViewMemory0();
-    for (let j0 = 0; j0 < len0; j0++) {
-        const e0 = v[j0];
-        const p0 = ptr0 + j0 * 4;
-        view0.setInt32(p0 + 0, e0, true);
+    try {
+        const view0 = getDataViewMemory0();
+        for (let j0 = 0; j0 < len0; j0++) {
+            const e0 = v[j0];
+            const p0 = ptr0 + j0 * 4;
+            view0.setInt32(p0 + 0, e0, true);
+        }
+    } catch (err0) {
+        wasm.__wbindgen_free(ptr0, len0 * 4, 4);
+        throw err0;
     }
     const ret = wasm.bools(ptr0, len0);
     const v2 = [];
@@ -34,11 +39,16 @@ export function driver() {
 export function modes(v) {
     const len0 = v.length;
     const ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
-    const view0 = getDataViewMemory0();
-    for (let j0 = 0; j0 < len0; j0++) {
-        const e0 = v[j0];
-        const p0 = ptr0 + j0 * 4;
-        view0.setInt32(p0 + 0, (__wbindgen_enum_Mode.indexOf(e0) + 1 || 3) - 1, true);
+    try {
+        const view0 = getDataViewMemory0();
+        for (let j0 = 0; j0 < len0; j0++) {
+            const e0 = v[j0];
+            const p0 = ptr0 + j0 * 4;
+            view0.setInt32(p0 + 0, (__wbindgen_enum_Mode.indexOf(e0) + 1 || 3) - 1, true);
+        }
+    } catch (err0) {
+        wasm.__wbindgen_free(ptr0, len0 * 4, 4);
+        throw err0;
     }
     const ret = wasm.modes(ptr0, len0);
     const v2 = [];
@@ -62,13 +72,18 @@ export function opt_chars(v) {
     if (!isLikeNone(v)) {
         len0 = v.length;
         ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
-        const view0 = getDataViewMemory0();
-        for (let j0 = 0; j0 < len0; j0++) {
-            const e0 = v[j0];
-            const p0 = ptr0 + j0 * 4;
-            const char1 = e0.codePointAt(0);
-            _assertChar(char1);
-            view0.setInt32(p0 + 0, char1, true);
+        try {
+            const view0 = getDataViewMemory0();
+            for (let j0 = 0; j0 < len0; j0++) {
+                const e0 = v[j0];
+                const p0 = ptr0 + j0 * 4;
+                const char1 = e0.codePointAt(0);
+                _assertChar(char1);
+                view0.setInt32(p0 + 0, char1, true);
+            }
+        } catch (err0) {
+            wasm.__wbindgen_free(ptr0, len0 * 4, 4);
+            throw err0;
         }
     }
     const ret = wasm.opt_chars(ptr0, len0);
@@ -116,11 +131,16 @@ export function __wbg_js_bools_30fc8a2bc11a9f84(arg0, arg1, arg2) {
     const ret = js_bools(v0);
     const len2 = ret.length;
     const ptr2 = wasm.__wbindgen_malloc(len2 * 4, 4) >>> 0;
-    const view2 = getDataViewMemory0();
-    for (let j2 = 0; j2 < len2; j2++) {
-        const e2 = ret[j2];
-        const p2 = ptr2 + j2 * 4;
-        view2.setInt32(p2 + 0, e2, true);
+    try {
+        const view2 = getDataViewMemory0();
+        for (let j2 = 0; j2 < len2; j2++) {
+            const e2 = ret[j2];
+            const p2 = ptr2 + j2 * 4;
+            view2.setInt32(p2 + 0, e2, true);
+        }
+    } catch (err2) {
+        wasm.__wbindgen_free(ptr2, len2 * 4, 4);
+        throw err2;
     }
     getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 1, len2, true);
     getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr2, true);

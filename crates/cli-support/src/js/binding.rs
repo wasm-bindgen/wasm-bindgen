@@ -2177,6 +2177,7 @@ fn instruction(
             words,
             elem,
             malloc,
+            free,
             mem,
             optional,
         } => {
@@ -2210,6 +2211,7 @@ fn instruction(
                 body.push_str(&format!("{view}.set{ty}({p} + {offset}, {value}, true);\n"));
             }
             let malloc = js.cx.wasm_export_of(*malloc);
+            let free = js.cx.wasm_export_of(*free);
             let coerce = js.cx.coerce_ptr_suffix();
             let alloc = format!("{malloc}({len} * {stride}, {align}){coerce}");
             if *optional {
@@ -2222,13 +2224,21 @@ fn instruction(
                     "const {len} = {val}.length;\nconst {ptr} = {alloc};"
                 ));
             }
+            // An element encoder may throw (an invalid `char`, say), which
+            // must not leak the buffer.
+            let err = js.local(format!("err{i}"));
             js.prelude(&format!(
                 "
+                try {{
                 const {view} = {memory};
                 for (let {j} = 0; {j} < {len}; {j}++) {{
                 const {e} = {val}[{j}];
                 const {p} = {ptr} + {j} * {stride};
                 {body}}}
+                }} catch ({err}) {{
+                {free}({ptr}, {len} * {stride}, {align});
+                throw {err};
+                }}
                 "
             ));
             if *optional {
@@ -2331,9 +2341,6 @@ fn view_from_wasm(js: &mut JsBuilder, kind: &VectorKind, mem: walrus::MemoryId) 
     }
 }
 
-/// The JS value for the vector `load` of `kind` per `mode`. Only typed kinds
-/// load as a view of wasm memory; string and externref loaders already build
-/// a fresh value, which no mode changes.
 /// The layout of an encoded slice element's ABI `words`, each at its natural
 /// alignment as in the `#[repr(C)]` ABI types the buffer holds: each word's
 /// offset and `DataView` accessor suffix, the stride and the alignment.
@@ -2359,6 +2366,9 @@ fn encoded_slice_layout(
     Ok((fields, stride.next_multiple_of(align), align))
 }
 
+/// The JS value for the vector `load` of `kind` per `mode`. Only typed kinds
+/// load as a view of wasm memory; string and externref loaders already build
+/// a fresh value, which no mode changes.
 fn slice_mode_expr(load: String, kind: &VectorKind, mode: SliceMode) -> String {
     match (kind, mode) {
         (VectorKind::String | VectorKind::Externref | VectorKind::NamedExternref(_), _)
