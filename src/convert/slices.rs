@@ -375,20 +375,27 @@ impl WasmSlice {
         Self::from_usize(Box::into_raw(cells) as *mut AbiCell<T::Abi> as usize, len)
     }
 
-    /// Takes an encoded sequence from JS, decoding each element from its
-    /// cell.
+    /// Takes an encoded sequence from JS, converting each element from its
+    /// cell's ABI with `convert`, which may reject it with a message to throw.
+    /// A throw runs no destructors, so a rejection first drops the buffer and
+    /// every element converted so far.
     ///
     /// # Safety
     ///
     /// `self` must be `len` cells of `T::Abi` that JS allocated at the cell's
     /// alignment, for Rust to own.
-    pub unsafe fn decode<T: FromWasmAbi>(self) -> Box<[T]> {
+    pub unsafe fn decode<T: FromWasmAbi>(
+        self,
+        convert: impl FnMut(T::Abi) -> Result<T, &'static str>,
+    ) -> Box<[T]> {
         let ptr = self.ptr.into_usize() as *mut AbiCell<T::Abi>;
         let len = self.len.into_usize();
-        Vec::from_raw_parts(ptr, len, len)
+        let decoded: Result<Box<[T]>, &'static str> = Vec::from_raw_parts(ptr, len, len)
             .into_iter()
-            .map(|AbiCell(p1, p2, p3, p4)| T::from_abi(T::Abi::join(p1, p2, p3, p4)))
-            .collect()
+            .map(|AbiCell(p1, p2, p3, p4)| T::Abi::join(p1, p2, p3, p4))
+            .map(convert)
+            .collect();
+        decoded.unwrap_or_else(|msg| crate::throw_str(msg))
     }
 }
 
@@ -397,12 +404,14 @@ impl WasmSlice {
 /// (`&[T]` to JS), `into` (`Vec<T>` / `Box<[T]>` to JS) and `from` (`Vec<T>`
 /// / `Box<[T]>` from JS). `$encode` gives a borrowed element's scalar ABI. An
 /// owned vector to JS encodes as its borrowed slice, so `into` is only for
-/// elements that own nothing, which it checks at compile time.
+/// elements that own nothing, which it checks at compile time. `from` takes
+/// its element with `FromWasmAbi`, or with `from($convert)` for an element
+/// that Rust can reject (see [`WasmSlice::decode`]).
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __wbindgen_encoded_sequence {
-    ($t:ty, $encode:expr, [$($side:ident),+ $(,)?]) => {
-        $($crate::__wbindgen_encoded_sequence!(@$side $t, $encode);)+
+    ($t:ty, $encode:expr, [$($side:ident $(($convert:expr))?),+ $(,)?]) => {
+        $($crate::__wbindgen_encoded_sequence!(@$side $t, $encode $(, $convert)?);)+
     };
     (@ref_into $t:ty, $encode:expr) => {
         $crate::__wbindgen_coverage! {
@@ -441,6 +450,13 @@ macro_rules! __wbindgen_encoded_sequence {
         }
     };
     (@from $t:ty, $encode:expr) => {
+        $crate::__wbindgen_encoded_sequence!(
+            @from $t,
+            $encode,
+            |abi| Ok(<$t as $crate::convert::FromWasmAbi>::from_abi(abi))
+        );
+    };
+    (@from $t:ty, $encode:expr, $convert:expr) => {
         #[automatically_derived]
         impl $crate::convert::VectorFromWasmAbi for $t {
             type Abi = $crate::convert::WasmSlice;
@@ -449,7 +465,7 @@ macro_rules! __wbindgen_encoded_sequence {
             unsafe fn vector_from_abi(
                 js: $crate::convert::WasmSlice,
             ) -> $crate::__rt::alloc::boxed::Box<[Self]> {
-                js.decode()
+                js.decode($convert)
             }
         }
     };

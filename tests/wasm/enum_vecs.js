@@ -26,9 +26,7 @@ exports.pass_invalid_enum_vec = () => {
         } catch (e) {
             threw = true;
             assert.match(e.message, message);
-            if (typeof vec[0] === 'string') {
-                assert.match(e.stack, /consume_enum_vec/);
-            }
+            assert.match(e.stack, /consume_enum_vec/);
         }
         assert.ok(threw, `expected consume_enum_vec to throw on ${vec}`);
     }

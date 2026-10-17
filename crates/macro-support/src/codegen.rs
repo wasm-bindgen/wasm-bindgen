@@ -5151,12 +5151,29 @@ impl ToTokens for ast::Enum {
                 }
             }
 
+            #[automatically_derived]
+            impl #enum_name {
+                #[doc(hidden)]
+                #[inline]
+                fn __wbindgen_try_from_abi(js: f64) -> #wasm_bindgen::__rt::core::option::Option<Self> {
+                    #wasm_bindgen::__rt::core::option::Option::Some(
+                        #(#abi_clauses else)* {
+                            return #wasm_bindgen::__rt::core::option::Option::None;
+                        }
+                    )
+                }
+            }
+
             #wasm_bindgen::__wbindgen_encoded_sequence!(
                 #enum_name,
                 |e| match e {
                     #(#enum_name::#variant_names => #enum_name::#variant_names as #underlying as f64,)*
                 },
-                [ref_into, into, from]
+                [
+                    ref_into,
+                    into,
+                    from(|abi| #enum_name::__wbindgen_try_from_abi(abi).ok_or("invalid enum value passed")),
+                ]
             );
 
             #[automatically_derived]
@@ -5165,9 +5182,8 @@ impl ToTokens for ast::Enum {
 
                 #[inline]
                 unsafe fn from_abi(js: f64) -> Self {
-                    #(#abi_clauses else)* {
-                        #wasm_bindgen::throw_str("invalid enum value passed")
-                    }
+                    Self::__wbindgen_try_from_abi(js)
+                        .unwrap_or_else(|| #wasm_bindgen::throw_str("invalid enum value passed"))
                 }
             }
 
