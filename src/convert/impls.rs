@@ -892,11 +892,12 @@ pub unsafe fn js_value_vector_from_abi<T: TryFromJsValue>(
     // A throw runs no destructors, so collecting stops at the first element of
     // the wrong type and drops everything Rust owns first: the buffer, the
     // handles not yet converted and the elements converted so far. `.ok()`
-    // drops the rejected handle too. Throwing here rather than inside the
-    // iterator chain also keeps the function that took the `Vec` on the
-    // debug-mode error stack, which the chain's frames would push off it.
+    // drops the rejected handle too. Throwing directly here, rather than
+    // inside the iterator chain or a closure, keeps the function that took
+    // the `Vec` within the debug-mode error stack's frame limit.
     let result: Result<Box<[T]>, JsValue> = js_vals.into_iter().map(T::try_from_js_value).collect();
-    result
-        .ok()
-        .unwrap_or_else(|| throw_str("array contains a value of the wrong type"))
+    match result.ok() {
+        Some(result) => result,
+        None => throw_str("array contains a value of the wrong type"),
+    }
 }
