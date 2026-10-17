@@ -16,7 +16,8 @@
   function or block, a key only affects arguments of its own shape; written
   on an argument it doesn't fit, it is an error. A generic element type
   resolves the mode per instantiation under `experimental_generic_mono`,
-  where `Option<&[T]>` is now supported too.
+  where `Option<&[T]>` is now supported too. Neither key is accepted on
+  exported functions.
   [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
 
 * Borrowed slices of `String`, `&str`, `bool`, `char` and exported enums

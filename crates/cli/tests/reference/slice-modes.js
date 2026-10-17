@@ -5,5 +5,5 @@ import { __wbg_set_wasm } from "./reference_test_bg.js";
 __wbg_set_wasm(wasm);
 wasm.__wbindgen_start();
 export {
-    driver, rust_inert
+    driver
 } from "./reference_test_bg.js";

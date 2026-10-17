@@ -53,14 +53,6 @@ extern "C" {
     fn js_fn_keys(borrowed: &[u8], owned: Vec<u8>);
 }
 
-// Both keys are inert on exports.
-#[wasm_bindgen]
-pub fn rust_inert(
-    #[wasm_bindgen(slice = copy)] _borrowed: &[u8],
-    #[wasm_bindgen(vec = array)] _owned: Vec<u8>,
-) {
-}
-
 // On the per-mono path each instantiation crosses as the concrete slice
 // would: with no mode a numeric instantiation keeps the zero-copy view glue,
 // while `String` is decoded from its buffer of `(ptr, len)` pairs.

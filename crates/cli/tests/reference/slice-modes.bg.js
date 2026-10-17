@@ -1,21 +1,6 @@
 export function driver() {
     wasm.driver();
 }
-
-/**
- * @param {Uint8Array | number[]} _borrowed
- * @param {Uint8Array | number[]} _owned
- */
-export function rust_inert(_borrowed, _owned) {
-    const ptr0 = passArray8ToWasm0(_borrowed, wasm.__wbindgen_malloc);
-    const len0 = WASM_VECTOR_LEN;
-    const ptr1 = passArray8ToWasm0(_owned, wasm.__wbindgen_malloc);
-    const len1 = WASM_VECTOR_LEN;
-    wasm.rust_inert(ptr0, len0, ptr1, len1);
-}
-export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {
-    throw new Error(getStringFromWasm0(arg0, arg1));
-}
 export function __wbg_js_block_mixed_08a87d87e1eb2b52(arg0, arg1, arg2, arg3, arg4, arg5) {
     js_block_mixed(getArrayU16FromWasm0(arg0, arg1).slice(), Array.from(getArrayU16FromWasm0(arg2, arg3)), getArrayU16FromWasm0(arg4, arg5));
 }
@@ -152,13 +137,6 @@ function getUint8ClampedArrayMemory0() {
     return cachedUint8ClampedArrayMemory0;
 }
 
-function passArray8ToWasm0(arg, malloc) {
-    const ptr = malloc(arg.length * 1, 1) >>> 0;
-    getUint8ArrayMemory0().set(arg, ptr / 1);
-    WASM_VECTOR_LEN = arg.length;
-    return ptr;
-}
-
 let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true });
 cachedTextDecoder.decode();
 const MAX_SAFARI_DECODE_BYTES = 2146435072;
@@ -172,8 +150,6 @@ function decodeText(bytes) {
     }
     return cachedTextDecoder.decode(bytes);
 }
-
-let WASM_VECTOR_LEN = 0;
 
 
 let wasm;
