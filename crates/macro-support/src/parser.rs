@@ -7,7 +7,7 @@ use ast::OperationKind;
 use proc_macro2::{Ident, Span, TokenStream, TokenTree};
 use quote::ToTokens;
 use syn::ext::IdentExt;
-use syn::parse::{Parse, ParseStream, Result as SynResult};
+use syn::parse::{Parse, ParseStream, Parser, Result as SynResult};
 use syn::spanned::Spanned;
 use syn::visit_mut::VisitMut;
 use syn::Token;
@@ -295,6 +295,21 @@ impl BindgenAttrs {
             }
         }
         Ok(ret)
+    }
+
+    /// For positions where the macro sees `cfg_attr`s unexpanded.
+    fn find_no_cfg_attr(attrs: &mut Vec<syn::Attribute>) -> Result<BindgenAttrs, Diagnostic> {
+        if let Some(attr) = attrs
+            .iter()
+            .find(|attr| cfg_attr_wraps_wasm_bindgen(&attr.meta))
+        {
+            bail_span!(
+                attr,
+                "cfg_attr can't wrap wasm_bindgen attributes here; \
+                 put #[cfg(...)] on the whole function instead"
+            );
+        }
+        BindgenAttrs::find(attrs)
     }
 
     fn get_thread_local(&self) -> Result<Option<ThreadLocal>, Diagnostic> {
@@ -1903,6 +1918,23 @@ fn check_slice_to_array_arg(ty: &syn::Type, type_param_names: &[&Ident]) -> Resu
     Ok(())
 }
 
+fn cfg_attr_wraps_wasm_bindgen(meta: &syn::Meta) -> bool {
+    let syn::Meta::List(list) = meta else {
+        return false;
+    };
+    if !list.path.is_ident("cfg_attr") {
+        return false;
+    }
+    let Ok(args) = syn::punctuated::Punctuated::<syn::Meta, Token![,]>::parse_terminated
+        .parse2(list.tokens.clone())
+    else {
+        return false;
+    };
+    args.iter().skip(1).any(|meta| {
+        meta.path().segments[0].ident == "wasm_bindgen" || cfg_attr_wraps_wasm_bindgen(meta)
+    })
+}
+
 /// Extracts function arguments attributes.
 ///
 /// `import_slice_to_array` is `Some(inherited)` only when `sig` belongs to an
@@ -1925,7 +1957,7 @@ fn extract_args_attrs(
     let mut slice_to_array_errors = vec![];
     for input in sig.inputs.iter_mut() {
         if let syn::FnArg::Typed(pat_type) = input {
-            let attrs = BindgenAttrs::find(&mut pat_type.attrs)?;
+            let attrs = BindgenAttrs::find_no_cfg_attr(&mut pat_type.attrs)?;
 
             // Check for mutually exclusive param type attributes
             let param_type = attrs.unchecked_param_type();
@@ -2990,7 +3022,7 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
                 syn::ForeignItem::Verbatim(v) => {
                     let mut item: syn::ItemStatic =
                         syn::parse(v.into()).expect("only foreign functions/types allowed for now");
-                    let item_opts = BindgenAttrs::find(&mut item.attrs)?;
+                    let item_opts = BindgenAttrs::find_no_cfg_attr(&mut item.attrs)?;
                     let reexport = item_opts.reexport().cloned();
                     let kind = item.convert((program, item_opts, &ctx.module))?;
 
@@ -3005,7 +3037,7 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
                 }
                 _ => panic!("only foreign functions/types allowed for now"),
             };
-            BindgenAttrs::find(attrs)?
+            BindgenAttrs::find_no_cfg_attr(attrs)?
         };
 
         // Put the full namespace path in one attribute.

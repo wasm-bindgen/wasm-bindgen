@@ -95,6 +95,10 @@
 
 ### Fixed
 
+* `cfg_attr`-wrapped `wasm_bindgen` attributes on imported items and function
+  parameters, which could not be applied, are now a clear compile error.
+  [#5387](https://github.com/wasm-bindgen/wasm-bindgen/pull/5387)
+
 * Reference types are now detected from the runtime's externref intrinsics when
   the `target_features` section is missing, as with `strip = true`. Previously
   such builds skipped the externref transform, and `#[wasm_bindgen(catch)]`

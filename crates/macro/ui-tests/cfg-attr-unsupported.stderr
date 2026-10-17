@@ -1,0 +1,23 @@
+error: cfg_attr can't wrap wasm_bindgen attributes here; put #[cfg(...)] on the whole function instead
+ --> ui-tests/cfg-attr-unsupported.rs:5:21
+  |
+5 |     fn import_param(#[cfg_attr(all(), wasm_bindgen(slice_to_array))] _x: &[f64]);
+  |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: cfg_attr can't wrap wasm_bindgen attributes here; put #[cfg(...)] on the whole function instead
+  --> ui-tests/cfg-attr-unsupported.rs:10:5
+   |
+10 |     #[cfg_attr(all(), wasm_bindgen(js_name = renamed))]
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: cfg_attr can't wrap wasm_bindgen attributes here; put #[cfg(...)] on the whole function instead
+  --> ui-tests/cfg-attr-unsupported.rs:15:21
+   |
+15 | pub fn export_param(#[cfg_attr(all(), wasm_bindgen(unchecked_param_type = "number"))] _x: u32) {}
+   |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: cfg_attr can't wrap wasm_bindgen attributes here; put #[cfg(...)] on the whole function instead
+  --> ui-tests/cfg-attr-unsupported.rs:23:9
+   |
+23 |         #[cfg_attr(all(), wasm_bindgen(unchecked_param_type = "number"))] _x: u32,
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
