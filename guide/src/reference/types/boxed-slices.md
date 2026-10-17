@@ -15,10 +15,10 @@ You can pass boxed slices and `Vec`s of several different types to and from JS:
 - `&str`s, to JS only.
 
 Imported JS types and `JsValue`s are passed as their handles. `bool`s,
-`char`s, string enums and `&str`s are converted element by element, the same
-way a single value of that type is. `String`s, exported Rust types and
-C-style enums are passed as JS values, and each is checked as it comes into
-Rust, so an element of the wrong type throws.
+`char`s, C-style and string enums, and `&str`s are converted element by
+element, the same way a single value of that type is. `String`s and
+exported Rust types are passed as JS values, and each is checked as it
+comes into Rust, so an element of the wrong type throws.
 
 Borrowed slices (`&[T]`) of the same element types, apart from exported Rust
 types, can be passed to imported JS functions; see

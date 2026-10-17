@@ -167,7 +167,7 @@ impl InstructionBuilder<'_, '_> {
             }
 
             Descriptor::Vector(cell) => {
-                let kind = match cell.sequence_cell()? {
+                let kind = match cell.sequence_cell() {
                     SequenceCell::InPlace(kind) => kind,
                     SequenceCell::Encoded(elem) => return self.incoming_encoded_vector(elem, false),
                 };
@@ -191,9 +191,7 @@ impl InstructionBuilder<'_, '_> {
             // Only on imported function arguments
             Descriptor::SeqMode(..) |
             // Always behind a `Ref`
-            Descriptor::Slice(_) |
-            // Always inside a sequence
-            Descriptor::Encoded(_) => bail!(
+            Descriptor::Slice(_) => bail!(
                 "unsupported argument type for calling Rust function from JS: {arg:?}"
             ),
 
@@ -429,7 +427,7 @@ impl InstructionBuilder<'_, '_> {
             }
 
             Descriptor::Vector(cell) => {
-                let kind = match cell.sequence_cell()? {
+                let kind = match cell.sequence_cell() {
                     SequenceCell::InPlace(kind) => kind,
                     SequenceCell::Encoded(elem) => return self.incoming_encoded_vector(elem, true),
                 };
@@ -582,7 +580,7 @@ impl InstructionBuilder<'_, '_> {
         );
     }
 
-    /// An owned vector with `Encoded` cells is a buffer of its elements'
+    /// An owned vector with encoded cells is a buffer of its elements'
     /// scalar ABIs, the mirror of `outgoing_encoded_slice`. JS encodes each
     /// element with the element's own instructions, as for an argument of the
     /// element type, and writes its ABI words into the buffer, which Rust
@@ -598,14 +596,16 @@ impl InstructionBuilder<'_, '_> {
             return_position: true,
             seq_value: SeqValue::View,
         };
-        // The element's kind comes from its `Encoded` cell; this only checks
-        // the glue can run it. Element encoders must not call into wasm: the
-        // glue writes the whole buffer through one view after allocating it.
-        // That rules out elements that own memory, such as a string.
+        // Every element that isn't in place reaches here, so this is what
+        // rejects one the glue can't encode. Element encoders must not call
+        // into wasm: the glue writes the whole buffer through one view after
+        // allocating it. That rules out elements that own memory, such as a
+        // string.
         match elem {
-            Descriptor::Boolean | Descriptor::Char | Descriptor::StringEnum { .. } => {
-                encode._incoming(elem)?
-            }
+            Descriptor::Boolean
+            | Descriptor::Char
+            | Descriptor::Enum { .. }
+            | Descriptor::StringEnum { .. } => encode._incoming(elem)?,
             _ => {
                 bail!("unsupported vector element type for calling Rust function from JS: {elem:?}")
             }

@@ -10,7 +10,6 @@ use alloc::vec::Vec;
 use core::panic::AssertUnwindSafe;
 use core::{mem::MaybeUninit, ptr::NonNull};
 
-use crate::convert::VectorRefIntoWasmAbi;
 use crate::{__rt::marker::ErasableGeneric, Clamped, JsError, JsValue};
 use cfg_if::cfg_if;
 
@@ -149,11 +148,11 @@ impl<T> WasmDescribe for NonNull<T> {
     }
 }
 
-impl<T: VectorRefIntoWasmAbi> WasmDescribe for [T] {
+impl<T: WasmDescribe> WasmDescribe for [T] {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
         inform(SLICE);
-        T::describe_cell();
+        T::describe();
     }
 }
 

@@ -1724,10 +1724,6 @@ impl TryToTokens for ast::ImportType {
                 // borrowed as is.
                 #[automatically_derived]
                 impl #impl_generics #wasm_bindgen::convert::VectorRefIntoWasmAbi for #rust_name #ty_generics #where_clause {
-                    fn describe_cell() {
-                        <Self as WasmDescribe>::describe();
-                    }
-
                     #[inline]
                     fn slice_into_abi(slice: &[Self]) -> #wasm_bindgen::convert::WasmSlice {
                         #wasm_bindgen::convert::WasmSlice::borrow(slice)
@@ -5155,13 +5151,12 @@ impl ToTokens for ast::Enum {
                 }
             }
 
-            // An owned `Vec` keeps its released `JsValue` form below.
             #wasm_bindgen::__wbindgen_encoded_sequence!(
                 #enum_name,
                 |e| match e {
                     #(#enum_name::#variant_names => #enum_name::#variant_names as #underlying as f64,)*
                 },
-                [ref_into]
+                [ref_into, into, from]
             );
 
             #[automatically_derived]
@@ -5219,43 +5214,6 @@ impl ToTokens for ast::Enum {
                             return #wasm_bindgen::__rt::core::option::Option::None;
                         }
                     )
-                }
-            }
-
-            #[automatically_derived]
-            impl #wasm_bindgen::describe::WasmDescribeVector for #enum_name {
-                fn describe_vector() {
-                    use #wasm_bindgen::describe::*;
-                    inform(VECTOR);
-                    <#enum_name as #wasm_bindgen::describe::WasmDescribe>::describe();
-                }
-            }
-
-            #[automatically_derived]
-            impl #wasm_bindgen::convert::VectorIntoWasmAbi for #enum_name {
-                type Abi = <
-                    #wasm_bindgen::__rt::alloc::boxed::Box<[#wasm_bindgen::JsValue]>
-                    as #wasm_bindgen::convert::IntoWasmAbi
-                >::Abi;
-
-                fn vector_into_abi(
-                    vector: #wasm_bindgen::__rt::alloc::boxed::Box<[#enum_name]>
-                ) -> Self::Abi {
-                    #wasm_bindgen::convert::js_value_vector_into_abi(vector)
-                }
-            }
-
-            #[automatically_derived]
-            impl #wasm_bindgen::convert::VectorFromWasmAbi for #enum_name {
-                type Abi = <
-                    #wasm_bindgen::__rt::alloc::boxed::Box<[#wasm_bindgen::JsValue]>
-                    as #wasm_bindgen::convert::FromWasmAbi
-                >::Abi;
-
-                unsafe fn vector_from_abi(
-                    js: Self::Abi
-                ) -> #wasm_bindgen::__rt::alloc::boxed::Box<[#enum_name]> {
-                    #wasm_bindgen::convert::js_value_vector_from_abi(js)
                 }
             }
         })

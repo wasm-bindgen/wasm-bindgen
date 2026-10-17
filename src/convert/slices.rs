@@ -174,11 +174,6 @@ macro_rules! vectors_internal {
         }
 
         impl VectorRefIntoWasmAbi for $t {
-            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-            fn describe_cell() {
-                <$t>::describe();
-            }
-
             #[inline]
             fn slice_into_abi(slice: &[$t]) -> WasmSlice {
                 WasmSlice::borrow(slice)
@@ -309,20 +304,17 @@ where
     }
 }
 
-/// How a borrowed `&[Self]` crosses to JS, and the cell its sequences use.
+/// How a borrowed `&[Self]` crosses to JS.
 ///
 /// A sequence crosses as a [`WasmSlice`] of `len` cells. In place, the cell is
-/// the element itself, which the impl claims is its JS encoding (numbers, and
-/// JS handles as table indices), so the slice is borrowed
-/// ([`WasmSlice::borrow`]). Encoded, the cell is the element's scalar ABI, in
-/// a fresh buffer that JS decodes with the element's own glue and frees
-/// ([`WasmSlice::encode`]). Encoded elements are declared once, with
-/// `__wbindgen_encoded_sequence!`.
+/// the element itself, which is its JS encoding (numbers, and JS handles as
+/// table indices), so the slice is borrowed ([`WasmSlice::borrow`]). Encoded,
+/// the cell is the element's scalar ABI, in a fresh buffer that JS decodes
+/// with the element's own glue and frees ([`WasmSlice::encode`]). The CLI
+/// tells them apart by the element's descriptor alone: numbers and JS handles
+/// are in place, and anything else is encoded. Encoded elements are declared
+/// once, with `__wbindgen_encoded_sequence!`.
 pub trait VectorRefIntoWasmAbi: WasmDescribe + Sized {
-    /// Describes the sequence's cell, from the same impl that fills it: in
-    /// place, `Self`'s own descriptor; encoded, `ENCODED` followed by it.
-    fn describe_cell();
-
     fn slice_into_abi(slice: &[Self]) -> WasmSlice;
 }
 
@@ -416,11 +408,6 @@ macro_rules! __wbindgen_encoded_sequence {
         $crate::__wbindgen_coverage! {
             #[automatically_derived]
             impl $crate::convert::VectorRefIntoWasmAbi for $t {
-                fn describe_cell() {
-                    $crate::describe::inform($crate::describe::ENCODED);
-                    <Self as $crate::describe::WasmDescribe>::describe();
-                }
-
                 #[inline]
                 fn slice_into_abi(slice: &[Self]) -> $crate::convert::WasmSlice {
                     $crate::convert::WasmSlice::encode(slice, $encode)
@@ -436,7 +423,7 @@ macro_rules! __wbindgen_encoded_sequence {
             impl $crate::describe::WasmDescribeVector for $t {
                 fn describe_vector() {
                     $crate::describe::inform($crate::describe::VECTOR);
-                    <Self as $crate::convert::VectorRefIntoWasmAbi>::describe_cell();
+                    <Self as $crate::describe::WasmDescribe>::describe();
                 }
             }
         }
@@ -475,11 +462,6 @@ crate::__wbindgen_encoded_sequence!(&str, |s| (*s).into_abi(), [ref_into, into])
 crate::__wbindgen_encoded_sequence!(String, |s| s.into_abi(), [ref_into]);
 
 impl VectorRefIntoWasmAbi for JsValue {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe_cell() {
-        Self::describe();
-    }
-
     #[inline]
     fn slice_into_abi(slice: &[Self]) -> WasmSlice {
         WasmSlice::borrow(slice)
@@ -487,11 +469,6 @@ impl VectorRefIntoWasmAbi for JsValue {
 }
 
 impl VectorRefIntoWasmAbi for JsError {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe_cell() {
-        Self::describe();
-    }
-
     #[inline]
     fn slice_into_abi(slice: &[Self]) -> WasmSlice {
         WasmSlice::borrow(slice)

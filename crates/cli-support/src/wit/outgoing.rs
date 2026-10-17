@@ -169,7 +169,7 @@ impl InstructionBuilder<'_, '_> {
             }
 
             Descriptor::Vector(cell) => {
-                let kind = match cell.sequence_cell()? {
+                let kind = match cell.sequence_cell() {
                     SequenceCell::InPlace(kind) => kind,
                     SequenceCell::Encoded(elem) => return self.outgoing_encoded_slice(elem, false),
                 };
@@ -196,7 +196,7 @@ impl InstructionBuilder<'_, '_> {
                 self.outgoing_function(false, descriptor, None)?;
             }
 
-            Descriptor::Slice(_) | Descriptor::Encoded(_) => {
+            Descriptor::Slice(_) => {
                 bail!("unsupported argument type for calling JS function from Rust: {arg:?}")
             }
 
@@ -259,7 +259,7 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
             Descriptor::Slice(cell) => {
-                let kind = match cell.sequence_cell()? {
+                let kind = match cell.sequence_cell() {
                     SequenceCell::InPlace(kind) => kind,
                     SequenceCell::Encoded(elem) => return self.outgoing_encoded_slice(elem, false),
                 };
@@ -461,7 +461,7 @@ impl InstructionBuilder<'_, '_> {
 
             Descriptor::String | Descriptor::Vector(_) => {
                 let kind = match arg {
-                    Descriptor::Vector(cell) => match cell.sequence_cell()? {
+                    Descriptor::Vector(cell) => match cell.sequence_cell() {
                         SequenceCell::InPlace(kind) => kind,
                         SequenceCell::Encoded(elem) => {
                             return self.outgoing_encoded_slice(elem, true)
@@ -641,7 +641,6 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Closure(_)
             | Descriptor::Slice(_)
             | Descriptor::SeqMode(..)
-            | Descriptor::Encoded(_)
             | Descriptor::Result(_) => {
                 bail!("unsupported Result type for returning from exported Rust function: {arg:?}")
             }
@@ -670,7 +669,7 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::CachedString => self.cached_string(false)?,
             Descriptor::String | Descriptor::Slice(_) => {
                 let kind = match arg {
-                    Descriptor::Slice(cell) => match cell.sequence_cell()? {
+                    Descriptor::Slice(cell) => match cell.sequence_cell() {
                         SequenceCell::InPlace(kind) => kind,
                         SequenceCell::Encoded(elem) => {
                             return self.outgoing_encoded_slice(elem, true)
@@ -697,7 +696,7 @@ impl InstructionBuilder<'_, '_> {
         Ok(())
     }
 
-    /// A sequence with `Encoded` cells, borrowed or owned, is a buffer of its
+    /// A sequence with encoded cells, borrowed or owned, is a buffer of its
     /// elements' scalar ABIs. JS reads each element's ABI words from the
     /// buffer and decodes them with the element's own instructions, as for an
     /// argument of the element type.
@@ -720,8 +719,8 @@ impl InstructionBuilder<'_, '_> {
             return_position: true,
             seq_value: SeqValue::View,
         };
-        // The element's kind comes from its `Encoded` cell; this only checks
-        // the glue can run it. Element decoders must neither call into wasm
+        // Every element that isn't in place reaches here, so this is what
+        // rejects one the glue can't decode. Element decoders must neither call into wasm
         // nor free: the glue reads the whole buffer through one view and frees
         // it after the loop. That rules out owned elements, such as an owned
         // string or a Rust struct.
