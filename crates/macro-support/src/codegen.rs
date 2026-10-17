@@ -5733,28 +5733,27 @@ fn seq_mode_describe_ty(
     let mut describe = ty.clone();
     for mode in modes {
         let value = match mode.value {
-            ast::SeqValue::View => shared::tys::SLICE_MODE_VIEW,
-            ast::SeqValue::Copy => shared::tys::SLICE_MODE_COPY,
-            ast::SeqValue::Array => shared::tys::SLICE_MODE_ARRAY,
+            ast::SeqValue::View => shared::tys::SEQ_MODE_VIEW,
+            ast::SeqValue::Copy => shared::tys::SEQ_MODE_COPY,
+            ast::SeqValue::Array => shared::tys::SEQ_MODE_ARRAY,
             ast::SeqValue::SliceToArray
                 if detect_slice_or_option_slice(ty).is_some_and(|s| !s.is_clamped) =>
             {
-                shared::tys::SLICE_MODE_ARRAY
+                shared::tys::SEQ_MODE_ARRAY
             }
             ast::SeqValue::SliceToArray => continue,
         };
         let key = match mode.key {
             ast::SeqKey::Slice => 0,
-            ast::SeqKey::Vec => shared::tys::SLICE_MODE_VEC,
+            ast::SeqKey::Vec => shared::tys::SEQ_MODE_VEC,
         };
         let explicit = if mode.explicit {
-            shared::tys::SLICE_MODE_EXPLICIT
+            shared::tys::SEQ_MODE_EXPLICIT
         } else {
             0
         };
         let word = value | key | explicit;
-        describe =
-            parse_quote! { #wasm_bindgen::describe::WasmDescribeSliceMode<#describe, #word> };
+        describe = parse_quote! { #wasm_bindgen::describe::WasmDescribeSeqMode<#describe, #word> };
     }
     describe
 }

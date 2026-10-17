@@ -1,5 +1,5 @@
 use crate::decode::{ImportModule, LocalModule};
-use crate::descriptor::{Descriptor, Function, GenericImportKey, ItemKind, ItemOrigin, SliceMode};
+use crate::descriptor::{Descriptor, Function, GenericImportKey, ItemKind, ItemOrigin, SeqValue};
 use crate::descriptors::WasmBindgenDescriptorsSection;
 use crate::intrinsic::Intrinsic;
 use crate::transforms::threads::ThreadCount;
@@ -146,9 +146,9 @@ struct InstructionBuilder<'a, 'b> {
     instructions: Vec<InstructionData>,
     cx: &'a mut Context<'b>,
     return_position: bool,
-    /// The mode of the `Descriptor::SliceMode` being lowered, read where the
+    /// The mode of the `Descriptor::SeqMode` being lowered, read where the
     /// typed sequence it wraps is materialised.
-    slice_mode: SliceMode,
+    seq_value: SeqValue,
 }
 
 impl InstructionBuilder<'_, '_> {
@@ -2730,7 +2730,7 @@ impl<'a> Context<'a> {
             output: Vec::new(),
             instructions: Vec::new(),
             return_position,
-            slice_mode: SliceMode::View,
+            seq_value: SeqValue::View,
         }
     }
 

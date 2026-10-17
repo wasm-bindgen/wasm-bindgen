@@ -256,7 +256,7 @@ export function __wbindgen_generic_000000000000001a(arg0) {
     return ret;
 }
 export function __wbindgen_generic_000000000000001b(arg0, arg1, arg2) {
-    // generic import `logBlockSlice`: [SliceMode(slice = array, Ref(Slice(U16))), U32] -> Unit
+    // generic import `logBlockSlice`: [SeqMode(slice = array, Ref(Slice(U16))), U32] -> Unit
     logBlockSlice(Array.from(getArrayU16FromWasm0(arg0, arg1)), arg2 >>> 0);
 }
 export function __wbindgen_generic_000000000000001c(arg0, arg1) {
@@ -288,7 +288,7 @@ export function __wbindgen_generic_0000000000000021(arg0, arg1) {
     logNestedImplTrait(v0);
 }
 export function __wbindgen_generic_0000000000000022(arg0, arg1, arg2) {
-    // generic import `logOptSlice`: [SliceMode(slice = array, Option(Ref(Slice(U16)))), U32] -> Unit
+    // generic import `logOptSlice`: [SeqMode(slice = array, Option(Ref(Slice(U16)))), U32] -> Unit
     logOptSlice(arg0 === 0 ? undefined : Array.from(getArrayU16FromWasm0(arg0, arg1)), arg2 >>> 0);
 }
 export function __wbindgen_generic_0000000000000023(arg0, arg1, arg2) {
@@ -311,11 +311,11 @@ export function __wbindgen_generic_0000000000000024(arg0) {
     logRef(arg0);
 }
 export function __wbindgen_generic_0000000000000025(arg0, arg1, arg2) {
-    // generic import `logSlice`: [SliceMode(slice = array, Ref(Slice(U16))), F64] -> Unit
+    // generic import `logSlice`: [SeqMode(slice = array, Ref(Slice(U16))), F64] -> Unit
     logSlice(Array.from(getArrayU16FromWasm0(arg0, arg1)), arg2);
 }
 export function __wbindgen_generic_0000000000000026(arg0, arg1, arg2) {
-    // generic import `logSlice`: [SliceMode(slice = array, Ref(Slice(U16))), U32] -> Unit
+    // generic import `logSlice`: [SeqMode(slice = array, Ref(Slice(U16))), U32] -> Unit
     logSlice(Array.from(getArrayU16FromWasm0(arg0, arg1)), arg2 >>> 0);
 }
 export function __wbindgen_generic_0000000000000027(arg0, arg1, arg2) {

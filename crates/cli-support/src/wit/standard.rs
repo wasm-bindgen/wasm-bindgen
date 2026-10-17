@@ -1,4 +1,4 @@
-use crate::descriptor::{SliceMode, VectorKind};
+use crate::descriptor::{SeqValue, VectorKind};
 use std::borrow::Cow;
 use std::collections::{BTreeMap, HashSet};
 use walrus::{ExportId, FunctionId, ImportId, RefType, TypedCustomSectionId};
@@ -368,19 +368,19 @@ pub enum Instruction {
         table: Option<walrus::TableId>,
     },
     /// pops ptr/length, pushes a vector, frees the original data. Freed data
-    /// cannot be left as a view, so `SliceMode::View` renders as `Copy`.
+    /// cannot be left as a view, so `SeqValue::View` renders as `Copy`.
     VectorLoad {
         kind: VectorKind,
         mem: walrus::MemoryId,
         free: walrus::FunctionId,
-        mode: SliceMode,
+        mode: SeqValue,
     },
     /// pops ptr/length, pushes a vector, frees the original data
     OptionVectorLoad {
         kind: VectorKind,
         mem: walrus::MemoryId,
         free: walrus::FunctionId,
-        mode: SliceMode,
+        mode: SeqValue,
     },
     /// pops ptr/length of a buffer holding `length` element ABIs, each laid
     /// out as `words`, pushes the array `elem` decodes them into (or
@@ -418,14 +418,14 @@ pub enum Instruction {
     View {
         kind: VectorKind,
         mem: walrus::MemoryId,
-        mode: SliceMode,
+        mode: SeqValue,
     },
     /// pops two i32 data pointers, pushes an optional vector view (or a copy
     /// of it, per `mode`); the borrowed data is not freed
     OptionView {
         kind: VectorKind,
         mem: walrus::MemoryId,
-        mode: SliceMode,
+        mode: SeqValue,
     },
     /// pops f64, pushes it viewed as an optional value with a known sentinel
     OptionF64Sentinel,

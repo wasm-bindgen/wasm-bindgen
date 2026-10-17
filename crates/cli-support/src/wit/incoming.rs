@@ -7,7 +7,7 @@
 //! Note that the mirror operation, going from WebAssembly to JS, is found in
 //! the `outgoing.rs` module.
 
-use crate::descriptor::{Descriptor, SequenceCell, SliceMode};
+use crate::descriptor::{Descriptor, SeqValue, SequenceCell};
 use crate::wit::InstructionData;
 use crate::wit::{AdapterType, Instruction, InstructionBuilder, StackChange};
 use anyhow::{bail, format_err, Error};
@@ -189,7 +189,7 @@ impl InstructionBuilder<'_, '_> {
 
             Descriptor::Result(_) |
             // Only on imported function arguments
-            Descriptor::SliceMode(..) |
+            Descriptor::SeqMode(..) |
             // Always behind a `Ref`
             Descriptor::Slice(_) |
             // Always inside a sequence
@@ -596,7 +596,7 @@ impl InstructionBuilder<'_, '_> {
             // The element is pushed onto the stack by the loop, not fetched
             // as an argument.
             return_position: true,
-            slice_mode: SliceMode::View,
+            seq_value: SeqValue::View,
         };
         // The element's kind comes from its `Encoded` cell; this only checks
         // the glue can run it. Element encoders must not call into wasm: the

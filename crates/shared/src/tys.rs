@@ -45,15 +45,15 @@ tys! {
     CLAMPED
     NONNULL
     RAW_POINTER
-    SLICE_MODE
+    SEQ_MODE
     ENCODED
 }
 
-/// The word following a `SLICE_MODE` tag: what JS receives, ORed with flags.
-pub const SLICE_MODE_VIEW: u32 = 0;
-pub const SLICE_MODE_COPY: u32 = 1;
-pub const SLICE_MODE_ARRAY: u32 = 2;
+/// The word following a `SEQ_MODE` tag: what JS receives, ORed with flags.
+pub const SEQ_MODE_VIEW: u32 = 0;
+pub const SEQ_MODE_COPY: u32 = 1;
+pub const SEQ_MODE_ARRAY: u32 = 2;
 /// A `vec = ..` mode, for owned sequences, rather than `slice = ..`.
-pub const SLICE_MODE_VEC: u32 = 1 << 2;
+pub const SEQ_MODE_VEC: u32 = 1 << 2;
 /// Written on the argument rather than inherited, so the CLI validates it.
-pub const SLICE_MODE_EXPLICIT: u32 = 1 << 3;
+pub const SEQ_MODE_EXPLICIT: u32 = 1 << 3;
