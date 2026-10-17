@@ -725,7 +725,11 @@ impl InstructionBuilder<'_, '_> {
         // it after the loop. That rules out owned elements, such as an owned
         // string or a Rust struct.
         match elem {
-            Descriptor::String | Descriptor::CachedString => decode.outgoing_ref(false, elem)?,
+            // `&[&JsString]`: the cell is the borrowed handle.
+            Descriptor::String
+            | Descriptor::CachedString
+            | Descriptor::Externref
+            | Descriptor::NamedExternref(_) => decode.outgoing_ref(false, elem)?,
             Descriptor::Boolean
             | Descriptor::Char
             | Descriptor::Enum { .. }

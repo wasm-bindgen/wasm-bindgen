@@ -19,7 +19,9 @@ Owned data is freed once the call returns, so it is never a view.
 Only numeric elements have a choice. A sequence of anything else
 (`String`, `&str`, `bool`, `char`, exported enums, `JsValue` or imported
 JS types) always arrives as a fresh `Array`, so `array` is the only mode
-that fits it.
+that fits it. Every [`JsStringLike`](experimental_generic_mono.md#string-bounds)
+shape is a slice element, `&String`, `&Box<str>`, `&Cow<str>` and
+`&JsString` included.
 
 Borrowed slices of exported structs aren't supported; pass a `Vec<T>`
 instead, which moves the elements to JS.

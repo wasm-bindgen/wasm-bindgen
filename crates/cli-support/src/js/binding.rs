@@ -1975,8 +1975,19 @@ fn instruction(
 
         Instruction::TableGet => {
             let val = js.pop();
-            js.cx.expose_get_object();
-            js.push(format!("getObject({val})"));
+            // With externref the pass sinks every argument's `TableGet` into
+            // wasm, leaving only an encoded cell's, read from memory in JS.
+            match js.cx.aux.externref_table {
+                Some(table) => {
+                    let table = js.cx.export_name_of(table);
+                    let table = js.cx.wasm_export_ref(&table);
+                    js.push(format!("{table}.get({val})"));
+                }
+                None => {
+                    js.cx.expose_get_object();
+                    js.push(format!("getObject({val})"));
+                }
+            }
         }
 
         Instruction::Closure {

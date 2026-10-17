@@ -479,6 +479,9 @@ macro_rules! __wbindgen_encoded_sequence {
 crate::__wbindgen_encoded_sequence!(bool, |b| (*b).into_abi(), [ref_into, into, from]);
 crate::__wbindgen_encoded_sequence!(char, |c| (*c).into_abi(), [ref_into, into, from]);
 crate::__wbindgen_encoded_sequence!(&str, |s| (*s).into_abi(), [ref_into, into]);
+crate::__wbindgen_encoded_sequence!(&String, |s| (*s).into_abi(), [ref_into]);
+crate::__wbindgen_encoded_sequence!(&Box<str>, |s| (*s).into_abi(), [ref_into]);
+crate::__wbindgen_encoded_sequence!(&Cow<'_, str>, |s| (*s).into_abi(), [ref_into]);
 // An owned `Vec<String>` keeps its released `JsValue` form.
 crate::__wbindgen_encoded_sequence!(String, |s| s.into_abi(), [ref_into]);
 
