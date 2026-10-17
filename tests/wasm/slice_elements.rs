@@ -70,17 +70,14 @@ extern "C" {
     fn retained() -> String;
 }
 
-// The modes act on typed sequences only; an encoded slice is a fresh `Array`
-// under every one of them.
-#[wasm_bindgen(module = "tests/wasm/slice_elements.js")]
+// The modes act on typed sequences only: inherited, they leave an encoded
+// slice a fresh `Array`, as without a mode.
+#[wasm_bindgen(module = "tests/wasm/slice_elements.js", slice = copy)]
 extern "C" {
     #[wasm_bindgen(js_name = describeAll)]
-    fn strings_under_modes(
-        #[wasm_bindgen(slice = view)] view: &[String],
-        #[wasm_bindgen(slice = copy)] copy: &[String],
-        #[wasm_bindgen(slice = array)] array: &[String],
-        #[wasm_bindgen(slice = copy)] bools: &[bool],
-    ) -> String;
+    fn strings_under_copy(strings: &[String], bools: &[bool]) -> String;
+    #[wasm_bindgen(slice = array, js_name = describeAll)]
+    fn strings_under_array(strings: &[String], bools: &[bool]) -> String;
 
     #[wasm_bindgen(slice_to_array, js_name = describe)]
     fn strings_slice_to_array(v: &[String]) -> String;
@@ -216,10 +213,9 @@ fn borrowed_tiers_are_unchanged() {
 #[wasm_bindgen_test]
 fn modes_leave_encoded_slices_alone() {
     let v = ["a".to_string()];
-    assert_eq!(
-        strings_under_modes(&v, &v, &v, &[true]),
-        r#"Array:["a"] Array:["a"] Array:["a"] Array:[true]"#
-    );
+    for under_mode in [strings_under_copy, strings_under_array] {
+        assert_eq!(under_mode(&v, &[true]), r#"Array:["a"] Array:[true]"#);
+    }
     assert_eq!(strings_slice_to_array(&v), r#"Array:["a"]"#);
 }
 

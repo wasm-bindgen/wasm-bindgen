@@ -3611,7 +3611,7 @@ impl ast::ImportFunction {
                 let (#(#names),*) = <#abi as #wasm_bindgen::convert::WasmAbi>::split(#name);
             });
             all_prim_names.extend(names);
-            let describe_ty = slice_mode_describe_ty(wasm_bindgen, ty, arg.slice_mode);
+            let describe_ty = seq_mode_describe_ty(wasm_bindgen, ty, &arg.seq_modes);
             describe_args.push(quote! {
                 <#describe_ty as #wasm_bindgen::describe::WasmDescribe>::describe();
             });
@@ -5059,11 +5059,7 @@ impl TryToTokens for DescribeImport<'_> {
                     &fn_class_generics.concrete_defaults,
                     &fn_lifetime_params,
                 )?;
-                Ok(slice_mode_describe_ty(
-                    self.wasm_bindgen,
-                    &ty,
-                    arg.slice_mode,
-                ))
+                Ok(seq_mode_describe_ty(self.wasm_bindgen, &ty, &arg.seq_modes))
             })
             .collect::<Result<Vec<syn::Type>, Diagnostic>>()?;
         let nargs = f.function.arguments.len() as u32;
@@ -5639,7 +5635,7 @@ pub(crate) struct SliceArg {
     /// Neither copying mode can honour this: each hands JS an owned copy, and
     /// mutations to that copy are not written back into the caller's slice.
     /// The parser rejects the combination rather than silently dropping the
-    /// write-back; see `check_slice_mode_arg` in `parser.rs`.
+    /// write-back; see `check_mut_slice` in `parser.rs`.
     pub is_mut: bool,
     /// Whether the slice was wrapped in `Clamped`, which has its own borrowed
     /// ABI.
@@ -5696,34 +5692,6 @@ pub(crate) fn detect_slice_or_option_slice(ty: &syn::Type) -> Option<SliceArg> {
     None
 }
 
-/// Recognise an owned sequence: `Vec<T>` or `Box<[T]>`, optionally wrapped in
-/// `Clamped`, `Option`, or both.
-pub(crate) fn is_owned_sequence(ty: &syn::Type) -> bool {
-    let syn::Type::Path(syn::TypePath {
-        attrs: _,
-        qself: None,
-        path,
-    }) = get_ty(ty)
-    else {
-        return false;
-    };
-    let Some(seg) = path.segments.last() else {
-        return false;
-    };
-    let syn::PathArguments::AngleBracketed(args) = &seg.arguments else {
-        return false;
-    };
-    let (1, Some(syn::GenericArgument::Type(inner))) = (args.args.len(), args.args.first()) else {
-        return false;
-    };
-    match seg.ident.to_string().as_str() {
-        "Vec" => true,
-        "Box" => matches!(get_ty(inner), syn::Type::Slice(_)),
-        "Option" | "Clamped" => is_owned_sequence(inner),
-        _ => false,
-    }
-}
-
 /// The error type `E` of a `Result<T, E>` return type, if `ty` looks like a
 /// `Result` with two type arguments.
 ///
@@ -5751,29 +5719,44 @@ fn result_err_ty(ty: &syn::Type) -> Option<&syn::Type> {
     }
 }
 
-/// The type describing an import argument under slice mode `mode`.
+/// The type describing an import argument under its `slice` / `vec` modes.
 ///
-/// The mode is a bit on every argument in its scope, wrapped around the
-/// argument's own describe: the CLI applies it to typed sequences (borrowed
-/// or owned, clamped or not) and drops it on every other shape, so nothing
-/// here inspects the argument. The deprecated `slice_to_array` is the
-/// exception, keeping its released reach of `&[T]` and `Option<&[T]>` only.
-fn slice_mode_describe_ty(
+/// Each mode is a word wrapped around the argument's own describe, which the
+/// CLI resolves against the argument's shape, so nothing here inspects the
+/// argument. The deprecated `slice_to_array` is the exception, keeping its
+/// released reach of `&[T]` and `Option<&[T]>` only.
+fn seq_mode_describe_ty(
     wasm_bindgen: &syn::Path,
     ty: &syn::Type,
-    mode: ast::SliceMode,
+    modes: &[ast::SeqMode],
 ) -> syn::Type {
-    let mode = match mode {
-        ast::SliceMode::View => return ty.clone(),
-        ast::SliceMode::SliceToArray
-            if !detect_slice_or_option_slice(ty).is_some_and(|s| !s.is_clamped) =>
-        {
-            return ty.clone()
-        }
-        ast::SliceMode::Array | ast::SliceMode::SliceToArray => shared::tys::SLICE_MODE_ARRAY,
-        ast::SliceMode::Copy => shared::tys::SLICE_MODE_COPY,
-    };
-    parse_quote! { #wasm_bindgen::describe::WasmDescribeSliceMode<#ty, #mode> }
+    let mut describe = ty.clone();
+    for mode in modes {
+        let value = match mode.value {
+            ast::SeqValue::View => shared::tys::SLICE_MODE_VIEW,
+            ast::SeqValue::Copy => shared::tys::SLICE_MODE_COPY,
+            ast::SeqValue::Array => shared::tys::SLICE_MODE_ARRAY,
+            ast::SeqValue::SliceToArray
+                if detect_slice_or_option_slice(ty).is_some_and(|s| !s.is_clamped) =>
+            {
+                shared::tys::SLICE_MODE_ARRAY
+            }
+            ast::SeqValue::SliceToArray => continue,
+        };
+        let key = match mode.key {
+            ast::SeqKey::Slice => 0,
+            ast::SeqKey::Vec => shared::tys::SLICE_MODE_VEC,
+        };
+        let explicit = if mode.explicit {
+            shared::tys::SLICE_MODE_EXPLICIT
+        } else {
+            0
+        };
+        let word = value | key | explicit;
+        describe =
+            parse_quote! { #wasm_bindgen::describe::WasmDescribeSliceMode<#describe, #word> };
+    }
+    describe
 }
 
 /// Detects whether a type is a raw `&dyn Fn(...)` or `&mut dyn FnMut(...)` argument.

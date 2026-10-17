@@ -126,6 +126,7 @@ macro_rules! attrgen {
             (skip, false, Skip(Span)),
             (slice_to_array, false, SliceToArray(Span)),
             (slice, false, Slice(Span, Ident)),
+            (vec, false, Vec(Span, Ident)),
             (typescript_type, false, TypeScriptType(Span, String, Span)),
             (getter_with_clone, false, GetterWithClone(Span)),
             (static_string, false, StaticString(Span)),
@@ -943,7 +944,7 @@ impl<'a>
         &ast::Program,
         BindgenAttrs,
         &'a Option<ast::ImportModule>,
-        ast::SliceMode,
+        SeqValues,
         bool,
         &'a mut Option<Vec<String>>,
         &'a BlockTypes,
@@ -957,7 +958,7 @@ impl<'a>
             program,
             opts,
             module,
-            block_slice_mode,
+            block_seq_values,
             block_generic_per_mono,
             js_namespace,
             block_types,
@@ -965,7 +966,7 @@ impl<'a>
             &ast::Program,
             BindgenAttrs,
             &'a Option<ast::ImportModule>,
-            ast::SliceMode,
+            SeqValues,
             bool,
             &'a mut Option<Vec<String>>,
             &'a BlockTypes,
@@ -985,11 +986,6 @@ impl<'a>
         // Writing the attribute *on* a non-generic function is still an error
         // (raised in codegen): there the user named a specific function and the
         // request cannot be honoured, so silence would hide a real mistake.
-        //
-        // Resolved before the arguments because a slice argument with a generic
-        // element type resolves its slice mode per monomorphisation on the
-        // per-mono path, but erases to the handle tier (where both attributes
-        // are documented no-ops) on the type-erasure path.
         let fn_generic_per_mono = opts.experimental_generic_mono().is_some();
         // A named type parameter isn't the only way a signature is generic:
         // argument-position `impl Trait` desugars to an anonymous one that
@@ -1004,18 +1000,14 @@ impl<'a>
             });
         let generic_per_mono = fn_generic_per_mono || (block_generic_per_mono && is_generic);
 
-        // The slice mode (`slice = ..`, or the deprecated `slice_to_array`) is
-        // inherited from the enclosing `extern "C"` block; a fn-level
-        // attribute *overrides* the block default, and a per-arg attribute
-        // overrides both (including back to the `view` default).
-        let fn_slice_mode = import_slice_mode(&opts)?.unwrap_or(block_slice_mode);
-        let args_attrs = extract_args_attrs(
-            &mut self.sig,
-            Some(ImportedArgsCtx {
-                slice_mode: fn_slice_mode,
-                generic_per_mono,
-            }),
-        )?;
+        // `slice = ..` and `vec = ..` are each inherited from the enclosing
+        // `extern "C"` block, overridden by a fn-level attribute, and then by a
+        // per-arg one.
+        let mut inherited = seq_values(&opts)?;
+        for (value, block) in inherited.iter_mut().zip(block_seq_values) {
+            *value = value.or(block);
+        }
+        let args_attrs = extract_args_attrs(&mut self.sig, Some(inherited))?;
         let (mut wasm, _) = function_from_decl(
             &self.sig.ident,
             &opts,
@@ -1225,22 +1217,20 @@ impl<'a>
                     .arguments
                     .iter()
                     .enumerate()
-                    .filter(|(_, arg)| arg.slice_mode == ast::SliceMode::SliceToArray)
+                    .filter(|(_, arg)| {
+                        (arg.seq_modes.iter()).any(|m| m.value == ast::SeqValue::SliceToArray)
+                    })
                     .map(|(i, _)| i)
                     .collect(),
-                array: wasm
+                seq_modes: wasm
                     .arguments
                     .iter()
                     .enumerate()
-                    .filter(|(_, arg)| arg.slice_mode == ast::SliceMode::Array)
-                    .map(|(i, _)| i)
-                    .collect(),
-                copy: wasm
-                    .arguments
-                    .iter()
-                    .enumerate()
-                    .filter(|(_, arg)| arg.slice_mode == ast::SliceMode::Copy)
-                    .map(|(i, _)| i)
+                    .flat_map(|(i, arg)| {
+                        (arg.seq_modes.iter())
+                            .filter(|m| m.value != ast::SeqValue::SliceToArray)
+                            .map(move |m| (i, *m))
+                    })
                     .collect(),
                 js_name: (name != wasm.name).then_some(&wasm.name),
             };
@@ -1881,7 +1871,7 @@ fn function_from_decl(
                     js_type: attrs.js_type,
                     optional: attrs.optional,
                     desc: attrs.desc,
-                    slice_mode: attrs.slice_mode,
+                    seq_modes: attrs.seq_modes,
                 })
                 .collect(),
         },
@@ -1896,136 +1886,106 @@ struct FnArgAttrs {
     js_type: Option<String>,
     optional: bool,
     desc: Option<String>,
-    /// How an `&[T]` / `Option<&[T]>` argument reaches JS; see
-    /// [`ast::SliceMode`]. Resolved from the per-arg attribute, or inherited
-    /// from the function / `extern "C"` block.
-    slice_mode: ast::SliceMode,
+    /// See [`ast::FunctionArgumentData::seq_modes`].
+    seq_modes: Vec<ast::SeqMode>,
 }
 
-/// The slice mode selected by a `#[wasm_bindgen(..)]` attribute set, or `None`
-/// if neither `slice = ..` nor the deprecated `slice_to_array` is present.
-/// Both at one level could only agree or contradict, so the pair is an error
-/// naming both spans.
-fn import_slice_mode(attrs: &BindgenAttrs) -> Result<Option<ast::SliceMode>, Diagnostic> {
-    let mode = match attrs.slice() {
-        Some(ident) => Some(match ident.to_string().as_str() {
-            "view" => ast::SliceMode::View,
-            "array" => ast::SliceMode::Array,
-            "copy" => ast::SliceMode::Copy,
-            "transfer" => {
-                return Err(Diagnostic::span_error(
-                    ident.span(),
-                    "`slice = transfer` is reserved and not yet supported",
-                ))
-            }
-            other => {
-                return Err(Diagnostic::span_error(
-                    ident.span(),
-                    format!(
-                        "unknown slice mode `{other}`; expected `slice = view`, \
-                         `slice = array` or `slice = copy`"
-                    ),
-                ))
-            }
-        }),
-        None => None,
-    };
-    match (attrs.slice_to_array(), mode) {
-        (Some(alias_span), Some(_)) => Diagnostic::from_vec(vec![
-            Diagnostic::span_error(
-                *alias_span,
-                "cannot specify both `slice_to_array` and `slice`; use `slice = array`",
-            ),
-            Diagnostic::span_error(
-                attrs.slice().unwrap().span(),
-                "cannot specify both `slice_to_array` and `slice`; use `slice = array`",
-            ),
-        ])
-        .map(|()| None),
-        (Some(_), None) => Ok(Some(ast::SliceMode::SliceToArray)),
-        (None, mode) => Ok(mode),
-    }
-}
+/// The `slice = ..` and `vec = ..` values given at one level, indexed by
+/// [`ast::SeqKey`].
+type SeqValues = [Option<ast::SeqValue>; 2];
 
-/// Resolves a non-default slice mode against the argument's shape on an
-/// imported function, however the mode was applied (argument, function, or
-/// enclosing `extern "C"` block):
-///
-/// * `&mut [T]` / `Option<&mut [T]>`: both modes hand JS an owned copy, so
-///   JS's writes are silently discarded rather than written back through the
-///   `&mut` — silent data loss, so a compile error rather than a no-op.
-/// * a slice element type mentioning a type parameter resolves per concrete
-///   instantiation on the per-monomorphisation path, and is a documented
-///   no-op on the type-erasure path (the slice erases to the handle tier,
-///   which already hands JS a fresh `Array`), so the mode downgrades to
-///   [`ast::SliceMode::View`] there.
-/// * anything that isn't slice-shaped keeps the mode, which the codegen
-///   ignores (the documented silent no-op for e.g. a method's `this`).
-fn check_slice_mode_arg(
-    ty: &syn::Type,
-    type_param_names: &[&Ident],
-    mode: ast::SliceMode,
-    generic_per_mono: bool,
-) -> Result<ast::SliceMode, Diagnostic> {
-    let Some(slice) = crate::codegen::detect_slice_or_option_slice(ty) else {
-        return Ok(mode);
-    };
-    if slice.is_mut {
-        let (attr, shape) = match mode {
-            ast::SliceMode::Array => ("slice = array", "plain `Array`"),
-            ast::SliceMode::SliceToArray => ("slice_to_array", "plain `Array`"),
-            ast::SliceMode::Copy => ("slice = copy", "typed array"),
-            ast::SliceMode::View => unreachable!("only non-default modes are checked"),
+const SEQ_KEYS: [ast::SeqKey; 2] = [ast::SeqKey::Slice, ast::SeqKey::Vec];
+
+/// The `slice = ..` and `vec = ..` values in a `#[wasm_bindgen(..)]`
+/// attribute set. The deprecated `slice_to_array` is `slice = array`, so it
+/// and `slice = ..` at one level could only agree or contradict, and are an
+/// error naming both spans.
+fn seq_values(attrs: &BindgenAttrs) -> Result<SeqValues, Diagnostic> {
+    let mut values = [None; 2];
+    for key in SEQ_KEYS {
+        let ident = match key {
+            ast::SeqKey::Slice => attrs.slice(),
+            ast::SeqKey::Vec => attrs.vec(),
         };
-        return Err(Diagnostic::spanned_error(
-            ty,
-            format!(
-                "`{attr}` cannot be applied to a `&mut` slice: JS receives an owned \
-                 {shape}, so its writes are never written back into the caller's slice — use a \
-                 shared slice if JS only needs to read the elements, or set `slice = view` on \
-                 this argument (the mode may be inherited from the function or the enclosing \
-                 `extern \"C\"` block) to keep the writable typed-array view"
+        let Some(ident) = ident else { continue };
+        values[key as usize] = Some(match (key, ident.to_string().as_str()) {
+            (ast::SeqKey::Slice, "view") => ast::SeqValue::View,
+            (_, "copy") => ast::SeqValue::Copy,
+            (_, "array") => ast::SeqValue::Array,
+            (ast::SeqKey::Slice, "transfer") => {
+                bail_span!(
+                    ident,
+                    "`slice = transfer` is reserved and not yet supported"
+                )
+            }
+            (ast::SeqKey::Vec, "view") => bail_span!(
+                ident,
+                "`vec = view` is not supported: owned data is freed after the call, so JS \
+                 always receives a copy; use `vec = copy` or `vec = array`"
             ),
-        ));
+            (ast::SeqKey::Slice, other) => bail_span!(
+                ident,
+                "unknown slice mode `{other}`; expected `slice = view`, `slice = array` or \
+                 `slice = copy`"
+            ),
+            (ast::SeqKey::Vec, other) => bail_span!(
+                ident,
+                "unknown vec mode `{other}`; expected `vec = copy` or `vec = array`"
+            ),
+        });
     }
-    if !generic_per_mono
-        && !type_param_names.is_empty()
-        && crate::generics::uses_generic_params(&slice.elem_ty, &type_param_names.to_vec())
-    {
-        return Ok(ast::SliceMode::View);
+    if let Some(alias_span) = attrs.slice_to_array() {
+        if let Some(slice) = attrs.slice() {
+            let msg = "cannot specify both `slice_to_array` and `slice`; use `slice = array`";
+            Diagnostic::from_vec(vec![
+                Diagnostic::span_error(*alias_span, msg),
+                Diagnostic::span_error(slice.span(), msg),
+            ])?;
+        }
+        values[ast::SeqKey::Slice as usize] = Some(ast::SeqValue::SliceToArray);
     }
-    Ok(mode)
+    Ok(values)
 }
 
-/// Context for resolving slice-mode attributes on an imported (`extern "C"`)
-/// function's arguments, where they actually change the outgoing-argument
-/// codegen.
-struct ImportedArgsCtx {
-    /// The mode inherited from the function / `extern "C"` block, which a
-    /// per-arg attribute overrides.
-    slice_mode: ast::SliceMode,
-    /// Whether the function is on the per-monomorphisation generic path,
-    /// where a generic slice element type resolves per instantiation instead
-    /// of erasing to the handle tier.
-    generic_per_mono: bool,
+/// A `&mut [T]` only works as a view: any other `slice` mode hands JS a copy,
+/// so its writes would be silently discarded rather than written back. Checked
+/// wherever the `&mut` is visible, inherited modes included, as for the
+/// released `slice_to_array`; the CLI checks a mode written on an aliased one.
+fn check_mut_slice(ty: &syn::Type, mode: ast::SeqMode) -> Result<(), Diagnostic> {
+    let is_mut = crate::codegen::detect_slice_or_option_slice(ty).is_some_and(|s| s.is_mut);
+    let (attr, shape) = match mode.value {
+        _ if !is_mut || mode.key != ast::SeqKey::Slice => return Ok(()),
+        ast::SeqValue::View => return Ok(()),
+        ast::SeqValue::Array => ("slice = array", "plain `Array`"),
+        ast::SeqValue::SliceToArray => ("slice_to_array", "plain `Array`"),
+        ast::SeqValue::Copy => ("slice = copy", "typed array"),
+    };
+    Err(Diagnostic::spanned_error(
+        ty,
+        format!(
+            "`{attr}` cannot be applied to a `&mut` slice: JS receives an owned \
+             {shape}, so its writes are never written back into the caller's slice — use a \
+             shared slice if JS only needs to read the elements, or set `slice = view` on \
+             this argument (the mode may be inherited from the function or the enclosing \
+             `extern \"C\"` block) to keep the writable typed-array view"
+        ),
+    ))
 }
 
 /// Extracts function arguments attributes.
 ///
-/// `import` is `Some` only when `sig` belongs to an imported (`extern "C"`)
-/// function. It is `None` for exported free functions and impl-block methods,
-/// where the slice-mode attributes are a documented no-op: misapplied there
-/// they stay inert instead of tripping the import-only shape checks.
+/// `import` holds the inherited `slice` / `vec` values when `sig` belongs to
+/// an imported (`extern "C"`) function. It is `None` for exported free
+/// functions and impl-block methods, where the modes are a documented no-op.
 fn extract_args_attrs(
     sig: &mut syn::Signature,
-    import: Option<ImportedArgsCtx>,
+    import: Option<SeqValues>,
 ) -> Result<Vec<FnArgAttrs>, Diagnostic> {
-    let type_param_names: Vec<&Ident> = sig.generics.type_params().map(|tp| &tp.ident).collect();
     let mut args_attrs = vec![];
     let mut seen_optional: Option<Span> = None;
     // Collected rather than returned eagerly so that every offending
-    // slice-mode argument in the signature is reported in one compile.
-    let mut slice_mode_errors = vec![];
+    // mode in the signature is reported in one compile.
+    let mut seq_mode_errors = vec![];
     for input in sig.inputs.iter_mut() {
         if let syn::FnArg::Typed(pat_type) = input {
             let attrs = BindgenAttrs::find(&mut pat_type.attrs)?;
@@ -2095,55 +2055,39 @@ fn extract_args_attrs(
                 }
             }
 
-            // Resolved even for exports, so a (no-op) slice-mode attribute
-            // there is marked used instead of tripping `enforce_used`.
-            let own_slice_mode = import_slice_mode(&attrs);
-            let slice_mode = match &import {
-                Some(ctx) => {
-                    let own = match own_slice_mode {
-                        Ok(own) => own,
-                        Err(diagnostic) => {
-                            slice_mode_errors.push(diagnostic);
-                            None
+            // Parsed even for exports, where the modes are inert, so that an
+            // invalid value is still an error and a valid one is marked used.
+            let own = seq_values(&attrs).unwrap_or_else(|diagnostic| {
+                seq_mode_errors.push(diagnostic);
+                [None; 2]
+            });
+            let seq_modes = match &import {
+                Some(inherited) => SEQ_KEYS
+                    .into_iter()
+                    .filter_map(|key| {
+                        let own = own[key as usize];
+                        let value = own.or(inherited[key as usize])?;
+                        let mode = ast::SeqMode {
+                            key,
+                            value,
+                            // `slice_to_array` keeps its released no-op on an
+                            // argument it doesn't apply to.
+                            explicit: own.is_some() && value != ast::SeqValue::SliceToArray,
+                        };
+                        let default = match key {
+                            ast::SeqKey::Slice => ast::SeqValue::View,
+                            ast::SeqKey::Vec => ast::SeqValue::Copy,
+                        };
+                        if !mode.explicit && value == default {
+                            return None;
                         }
-                    };
-                    // Owned data is freed after the call, so it is never a
-                    // view. Inherited, `view` is a no-op here as on any other
-                    // argument it does not apply to.
-                    if own == Some(ast::SliceMode::View)
-                        && crate::codegen::is_owned_sequence(&pat_type.ty)
-                    {
-                        slice_mode_errors.push(Diagnostic::span_error(
-                            attrs.slice().unwrap().span(),
-                            "`slice = view` cannot be applied to owned data, which is freed \
-                             after the call; use `slice = copy` to opt out of an inherited mode",
-                        ));
-                    }
-                    let mode = own.unwrap_or(ctx.slice_mode);
-                    if mode == ast::SliceMode::View {
-                        mode
-                    } else {
-                        match check_slice_mode_arg(
-                            &pat_type.ty,
-                            &type_param_names,
-                            mode,
-                            ctx.generic_per_mono,
-                        ) {
-                            Ok(mode) => mode,
-                            Err(diagnostic) => {
-                                slice_mode_errors.push(diagnostic);
-                                ast::SliceMode::View
-                            }
-                        }
-                    }
-                }
-                None => {
-                    // Inert on exports, but an invalid value is still an error.
-                    if let Err(diagnostic) = own_slice_mode {
-                        slice_mode_errors.push(diagnostic);
-                    }
-                    ast::SliceMode::View
-                }
+                        check_mut_slice(&pat_type.ty, mode)
+                            .map_err(|diagnostic| seq_mode_errors.push(diagnostic))
+                            .ok()?;
+                        Some(mode)
+                    })
+                    .collect(),
+                None => vec![],
             };
 
             let arg_attrs = FnArgAttrs {
@@ -2169,14 +2113,14 @@ fn extract_args_attrs(
                         check_js_comment_close(description, span)?;
                         Ok(Some(description.to_string()))
                     })?,
-                slice_mode,
+                seq_modes,
             };
             // throw error for any unused attrs
             attrs.enforce_used()?;
             args_attrs.push(arg_attrs);
         }
     }
-    Diagnostic::from_vec(slice_mode_errors)?;
+    Diagnostic::from_vec(seq_mode_errors)?;
     Ok(args_attrs)
 }
 
@@ -3021,20 +2965,17 @@ impl MacroParse<BindgenAttrs> for syn::ItemForeignMod {
         let module = module_from_opts(program, &opts)
             .map_err(|e| errors.push(e))
             .unwrap_or_default();
-        let slice_mode = match import_slice_mode(&opts) {
-            Ok(mode) => mode.unwrap_or_default(),
-            Err(diagnostic) => {
-                errors.push(diagnostic);
-                ast::SliceMode::default()
-            }
-        };
+        let seq_values = seq_values(&opts).unwrap_or_else(|diagnostic| {
+            errors.push(diagnostic);
+            [None; 2]
+        });
         let generic_per_mono = opts.experimental_generic_mono().is_some();
         let block_types = block_types(&self.items);
         for item in self.items.into_iter() {
             let ctx = ForeignItemCtx {
                 module: module.clone(),
                 js_namespace: js_namespace.clone(),
-                slice_mode,
+                seq_values,
                 generic_per_mono,
                 block_types: &block_types,
             };
@@ -3179,10 +3120,10 @@ fn block_type_class(
 struct ForeignItemCtx<'a> {
     module: Option<ast::ImportModule>,
     js_namespace: Option<JsNamespace>,
-    /// Block-level slice mode (`slice = ..`, or the deprecated `slice_to_array`)
-    /// inherited by every foreign function inside the `extern "C"` block. A
-    /// per-fn or per-arg attribute overrides this.
-    slice_mode: ast::SliceMode,
+    /// Block-level `slice = ..` / `vec = ..` values inherited by every foreign
+    /// function inside the `extern "C"` block. A per-fn or per-arg attribute
+    /// overrides each.
+    seq_values: SeqValues,
     /// Block-level `experimental_generic_mono` flag inherited by every *generic* foreign
     /// function inside the `extern "C"` block, opting them onto the
     /// per-monomorphisation codegen path. A per-fn `experimental_generic_mono` ORs on
@@ -3247,7 +3188,7 @@ impl<'a> MacroParse<ForeignItemCtx<'a>> for syn::ForeignItem {
             .or(ctx.js_namespace)
             .map(|s| s.0);
         let module = ctx.module;
-        let block_slice_mode = ctx.slice_mode;
+        let block_seq_values = ctx.seq_values;
         let block_generic_per_mono = ctx.generic_per_mono;
         let reexport = item_opts.reexport().cloned();
 
@@ -3279,7 +3220,7 @@ impl<'a> MacroParse<ForeignItemCtx<'a>> for syn::ForeignItem {
                 program,
                 item_opts,
                 &module,
-                block_slice_mode,
+                block_seq_values,
                 block_generic_per_mono,
                 &mut js_namespace,
                 ctx.block_types,
@@ -3426,18 +3367,16 @@ struct ImportCallStyle<'a> {
     method_kind: Option<&'a ast::MethodKind>,
     /// The indices of the arguments passed with `slice_to_array`.
     slice_to_array: Vec<usize>,
-    /// The indices of the arguments passed with `slice = array`.
-    array: Vec<usize>,
-    /// The indices of the arguments passed with `slice = copy`.
-    copy: Vec<usize>,
+    /// Every other `slice` / `vec` mode, by argument index.
+    seq_modes: Vec<(usize, ast::SeqMode)>,
     /// The JS name, if the shim name can't spell it.
     js_name: Option<&'a String>,
 }
 
-/// Written by hand rather than derived so that the `slice` modes contribute
-/// to the hash only when used: shim names of imports predating them stay
-/// unchanged. `slice = array` hashes apart from `slice_to_array`, since the
-/// two differ on owned and `Clamped` arguments.
+/// Written by hand rather than derived so that the `slice` / `vec` modes
+/// contribute to the hash only when used: shim names of imports predating
+/// them stay unchanged. `slice = array` hashes apart from `slice_to_array`,
+/// since the two differ on `Clamped` arguments and in validation.
 impl Hash for ImportCallStyle<'_> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         let Self {
@@ -3448,8 +3387,7 @@ impl Hash for ImportCallStyle<'_> {
             generic_per_mono,
             method_kind,
             slice_to_array,
-            array,
-            copy,
+            seq_modes,
             js_name,
         } = self;
         (
@@ -3463,10 +3401,8 @@ impl Hash for ImportCallStyle<'_> {
             js_name,
         )
             .hash(state);
-        for (tag, indices) in [(0u8, array), (1u8, copy)] {
-            if !indices.is_empty() {
-                (tag, indices).hash(state);
-            }
+        if !seq_modes.is_empty() {
+            seq_modes.hash(state);
         }
     }
 }
@@ -3482,15 +3418,13 @@ impl ImportCallStyle<'_> {
             generic_per_mono,
             method_kind,
             slice_to_array,
-            array,
-            copy,
+            seq_modes,
             js_name,
         } = self;
         !(*catch || *variadic || *r#final || *suspending || *generic_per_mono)
             && method_kind.is_none()
             && slice_to_array.is_empty()
-            && array.is_empty()
-            && copy.is_empty()
+            && seq_modes.is_empty()
             && js_name.is_none()
     }
 }

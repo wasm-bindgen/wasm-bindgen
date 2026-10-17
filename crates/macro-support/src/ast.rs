@@ -524,32 +524,49 @@ pub struct FunctionArgumentData {
     pub optional: bool,
     /// Specifies the argument description
     pub desc: Option<String>,
-    /// How an `&[T]` (or `Option<&[T]>`) argument reaches JS. Only meaningful
-    /// for outgoing arguments (Rust calling JS); ignored on exported functions.
-    pub slice_mode: SliceMode,
+    /// The `slice = ..` / `vec = ..` modes on an imported function's
+    /// argument, written on it or inherited. Ignored on exported functions.
+    pub seq_modes: Vec<SeqMode>,
 }
 
-/// How a sequence argument of an imported function (`&[T]`, `Vec<T>`,
-/// `Clamped<..>`, or an `Option` of one) reaches JS (`slice = view | array |
-/// copy`). Only typed (numeric) elements have a choice: string and handle
-/// elements always reach JS as a fresh `Array`.
+/// A sequence argument mode of an imported function. The key names the Rust
+/// shape it applies to and the value what JS receives. Only typed (numeric)
+/// elements have a choice: string and handle elements always reach JS as a
+/// fresh `Array`.
 #[cfg_attr(feature = "extra-traits", derive(Debug))]
-#[derive(Clone, Copy, Default, PartialEq, Eq)]
-pub enum SliceMode {
-    /// `slice = view`: a borrowed typed sequence is a view of wasm memory,
-    /// valid for the duration of the call. Owned data is still copied, since
-    /// it is freed after the call.
-    // TODO(next major): make `Copy` the default. Bare `&mut [T]` then needs
-    // copying back after the call, which `check_slice_mode_arg` rejects today.
-    #[default]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub struct SeqMode {
+    pub key: SeqKey,
+    pub value: SeqValue,
+    /// Written on the argument rather than inherited, so the CLI validates it
+    /// against the argument's resolved type.
+    pub explicit: bool,
+}
+
+#[cfg_attr(feature = "extra-traits", derive(Debug))]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub enum SeqKey {
+    /// `slice = ..`: `&[T]`, `&mut [T]`, `Clamped<&[u8]>`, or an `Option` of
+    /// one.
+    Slice,
+    /// `vec = ..`: `Vec<T>`, `Box<[T]>`, `Clamped<Vec<u8>>`, or an `Option` of
+    /// one.
+    Vec,
+}
+
+#[cfg_attr(feature = "extra-traits", derive(Debug))]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub enum SeqValue {
+    /// A live typed array over wasm memory, the `slice` default.
+    // TODO(next major): make `Copy` the `slice` default. Bare `&mut [T]` then
+    // needs copying back after the call, which `check_mut_slice` rejects today.
     View,
-    /// `slice = array`: a fresh plain `Array`.
-    Array,
-    /// `slice = copy`: a fresh typed array.
+    /// A fresh typed array, the `vec` default.
     Copy,
-    /// The deprecated `slice_to_array`: `Array` mode on `&[T]` and
-    /// `Option<&[T]>` only, keeping its released behaviour of leaving every
-    /// other argument (owned or `Clamped` sequences included) untouched.
+    /// A fresh plain `Array`.
+    Array,
+    /// The deprecated `slice_to_array`: `slice = array`, kept to its released
+    /// reach of `&[T]` and `Option<&[T]>`.
     // TODO(next major): remove, along with the `slice_to_array` attribute.
     SliceToArray,
 }

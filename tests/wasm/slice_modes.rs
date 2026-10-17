@@ -1,5 +1,5 @@
-//! Tests for the `slice = view | array | copy` modes on imported functions,
-//! primarily `slice = copy`.
+//! Tests for the `slice = view | copy | array` and `vec = copy | array` modes
+//! on imported functions, primarily `slice = copy`.
 //!
 //! `slice = copy` lets a `&[T]` (or `Option<&[T]>`) outgoing argument with a
 //! primitive element type arrive on the JS side as a *fresh typed array* JS
@@ -23,9 +23,10 @@
 //!   `slice_to_array` keeps its released no-op on owned and `Clamped`
 //!   arguments
 //! - every other sequence shape: `Clamped<&[u8]>`, owned `Vec<T>` /
-//!   `Box<[T]>` / `Option<Vec<T>>` / `Clamped<Vec<u8>>` (already fresh, so
-//!   `copy` is a no-op and `array` converts), and string and handle slices,
-//!   which are a fresh `Array` under every mode
+//!   `Box<[T]>` / `Option<Vec<T>>` / `Clamped<Vec<u8>>` under `vec` (already
+//!   fresh, so `copy` is the default and `array` converts), and string and
+//!   handle slices, which are a fresh `Array` under every inherited mode
+//! - each key acts only on its own shape, at block and function level
 //! - per-mono generics: `&[T]` under `slice = copy`, instantiated at `u8` and
 //!   `f64` (a fresh typed copy, not a view) and at `JsString` and `String`
 //!   (fresh `Array`, where the mode is a no-op)
@@ -154,15 +155,38 @@ extern "C" {
 
     #[wasm_bindgen(js_name = kindsOf)]
     fn kinds_of_owned(
-        #[wasm_bindgen(slice = copy)] copied: Vec<u8>,
-        #[wasm_bindgen(slice = array)] as_array: Vec<u8>,
-        #[wasm_bindgen(slice = array)] boxed: Box<[f64]>,
-        #[wasm_bindgen(slice = array)] optional: Option<Vec<u8>>,
-        #[wasm_bindgen(slice = array)] clamped: Clamped<Vec<u8>>,
+        #[wasm_bindgen(vec = copy)] copied: Vec<u8>,
+        #[wasm_bindgen(vec = array)] as_array: Vec<u8>,
+        #[wasm_bindgen(vec = array)] boxed: Box<[f64]>,
+        #[wasm_bindgen(vec = array)] optional: Option<Vec<u8>>,
+        #[wasm_bindgen(vec = array)] clamped: Clamped<Vec<u8>>,
     ) -> String;
 
-    #[wasm_bindgen(slice = array)]
+    #[wasm_bindgen(vec = array)]
     fn joined(v: Vec<u16>) -> String;
+
+    // Both keys at function level.
+    #[wasm_bindgen(slice = copy, vec = array, js_name = kindsOf)]
+    fn kinds_of_fn_keys(borrowed: &[u8], owned: Vec<u8>) -> String;
+}
+
+// Each key acts only on its own shape: a block-level `slice = array` leaves
+// owned arguments as typed arrays, and a block-level `vec = array` leaves
+// borrowed ones as views, with a per-arg `vec = copy` opting back out.
+#[wasm_bindgen(module = "tests/wasm/slice_modes.js", slice = array)]
+extern "C" {
+    #[wasm_bindgen(js_name = kindsOf)]
+    fn kinds_of_slice_block(borrowed: &[u8], owned: Vec<u8>) -> String;
+}
+
+#[wasm_bindgen(module = "tests/wasm/slice_modes.js", vec = array)]
+extern "C" {
+    #[wasm_bindgen(js_name = kindsOf)]
+    fn kinds_of_vec_block(
+        borrowed: &[u8],
+        owned: Vec<u8>,
+        #[wasm_bindgen(vec = copy)] opted_out: Vec<u8>,
+    ) -> String;
     #[wasm_bindgen(slice = array, js_name = joined)]
     fn joined_strings_array(v: Option<&[String]>) -> String;
 }
@@ -227,6 +251,15 @@ fn every_sequence_shape() {
         "Uint8Array:fresh,Array,Array,Array,Array"
     );
     assert_eq!(joined(vec![1, 2, 3]), "Array:1,2,3");
+    assert_eq!(kinds_of_fn_keys(&[1], vec![2]), "Uint8Array:fresh,Array");
+    assert_eq!(
+        kinds_of_slice_block(&[1], vec![2]),
+        "Array,Uint8Array:fresh"
+    );
+    assert_eq!(
+        kinds_of_vec_block(&[1], vec![2], vec![3]),
+        "Uint8Array:view,Array,Uint8Array:fresh"
+    );
     let strings = ["a".to_string(), "b".to_string()];
     assert_eq!(joined_strings_array(Some(&strings)), "Array:a,b");
     assert_eq!(joined_strings_array(None), "undefined");
@@ -368,6 +401,4 @@ fn per_mono_per_arg_modes_resolve_per_instantiation() {
         kinds_generic_mixed(&[1u8], &[2u8], &[3u8]),
         "Uint8Array:fresh,Array,Uint8Array:view"
     );
-    let s = ["a".to_string()];
-    assert_eq!(kinds_generic_mixed(&s, &s, &s), "Array,Array,Array");
 }

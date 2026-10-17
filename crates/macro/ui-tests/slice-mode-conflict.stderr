@@ -1,53 +1,71 @@
 error: cannot specify both `slice_to_array` and `slice`; use `slice = array`
-  --> ui-tests/slice-mode-conflict.rs:12:31
+  --> ui-tests/slice-mode-conflict.rs:13:31
    |
-12 |     fn per_arg(#[wasm_bindgen(slice_to_array, slice = copy)] xs: &[u8]);
+13 |     fn per_arg(#[wasm_bindgen(slice_to_array, slice = copy)] xs: &[u8]);
    |                               ^^^^^^^^^^^^^^
 
 error: cannot specify both `slice_to_array` and `slice`; use `slice = array`
-  --> ui-tests/slice-mode-conflict.rs:12:55
+  --> ui-tests/slice-mode-conflict.rs:13:55
    |
-12 |     fn per_arg(#[wasm_bindgen(slice_to_array, slice = copy)] xs: &[u8]);
+13 |     fn per_arg(#[wasm_bindgen(slice_to_array, slice = copy)] xs: &[u8]);
    |                                                       ^^^^
 
 error: cannot specify both `slice_to_array` and `slice`; use `slice = array`
-  --> ui-tests/slice-mode-conflict.rs:15:20
+  --> ui-tests/slice-mode-conflict.rs:16:20
    |
-15 |     #[wasm_bindgen(slice_to_array, slice = array)]
+16 |     #[wasm_bindgen(slice_to_array, slice = array)]
    |                    ^^^^^^^^^^^^^^
 
 error: cannot specify both `slice_to_array` and `slice`; use `slice = array`
-  --> ui-tests/slice-mode-conflict.rs:15:44
+  --> ui-tests/slice-mode-conflict.rs:16:44
    |
-15 |     #[wasm_bindgen(slice_to_array, slice = array)]
+16 |     #[wasm_bindgen(slice_to_array, slice = array)]
    |                                            ^^^^^
 
 error: unknown slice mode `borrow`; expected `slice = view`, `slice = array` or `slice = copy`
-  --> ui-tests/slice-mode-conflict.rs:19:28
+  --> ui-tests/slice-mode-conflict.rs:20:28
    |
-19 |     #[wasm_bindgen(slice = borrow)]
+20 |     #[wasm_bindgen(slice = borrow)]
    |                            ^^^^^^
 
 error: `slice = transfer` is reserved and not yet supported
-  --> ui-tests/slice-mode-conflict.rs:23:28
+  --> ui-tests/slice-mode-conflict.rs:24:28
    |
-23 |     #[wasm_bindgen(slice = transfer)]
+24 |     #[wasm_bindgen(slice = transfer)]
    |                            ^^^^^^^^
 
-error: cannot specify both `slice_to_array` and `slice`; use `slice = array`
-  --> ui-tests/slice-mode-conflict.rs:28:16
+error: `vec = view` is not supported: owned data is freed after the call, so JS always receives a copy; use `vec = copy` or `vec = array`
+  --> ui-tests/slice-mode-conflict.rs:28:38
    |
-28 | #[wasm_bindgen(slice_to_array, slice = copy)]
+28 |     fn vec_view(#[wasm_bindgen(vec = view)] xs: Vec<u8>);
+   |                                      ^^^^
+
+error: unknown vec mode `borrow`; expected `vec = copy` or `vec = array`
+  --> ui-tests/slice-mode-conflict.rs:30:26
+   |
+30 |     #[wasm_bindgen(vec = borrow)]
+   |                          ^^^^^^
+
+error: cannot specify both `slice_to_array` and `slice`; use `slice = array`
+  --> ui-tests/slice-mode-conflict.rs:39:16
+   |
+39 | #[wasm_bindgen(slice_to_array, slice = copy)]
    |                ^^^^^^^^^^^^^^
 
 error: cannot specify both `slice_to_array` and `slice`; use `slice = array`
-  --> ui-tests/slice-mode-conflict.rs:28:40
+  --> ui-tests/slice-mode-conflict.rs:39:40
    |
-28 | #[wasm_bindgen(slice_to_array, slice = copy)]
+39 | #[wasm_bindgen(slice_to_array, slice = copy)]
    |                                        ^^^^
 
 error: unknown slice mode `borrow`; expected `slice = view`, `slice = array` or `slice = copy`
-  --> ui-tests/slice-mode-conflict.rs:35:51
+  --> ui-tests/slice-mode-conflict.rs:46:51
    |
-35 | pub fn export_unknown_mode(#[wasm_bindgen(slice = borrow)] _xs: &[u8]) {}
+46 | pub fn export_unknown_mode(#[wasm_bindgen(slice = borrow)] _xs: &[u8]) {}
    |                                                   ^^^^^^
+
+error: unknown vec mode `borrow`; expected `vec = copy` or `vec = array`
+  --> ui-tests/slice-mode-conflict.rs:49:53
+   |
+49 | pub fn export_unknown_vec_mode(#[wasm_bindgen(vec = borrow)] _xs: Vec<u8>) {}
+   |                                                     ^^^^^^

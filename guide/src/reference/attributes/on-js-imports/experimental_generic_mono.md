@@ -384,7 +384,7 @@ trait objects nested in another type do not receive this lowering.
 `experimental_generic_mono` composes with the usual import attributes — `method`,
 `static_method_of`, `constructor`, `getter`, `setter`, `structural`, `final`,
 `indexing_getter`, `indexing_setter`, `indexing_deleter`, `js_namespace`,
-`js_name`, `catch`, `variadic`, and the [`slice` modes](slice.md) — and the
+`js_name`, `catch`, `variadic`, and the [`slice` and `vec` modes](slice.md) — and the
 resulting JS binding is shaped exactly
 as it would be for the equivalent non-generic import.
 
@@ -392,7 +392,7 @@ A slice argument (`&[T]` or `Option<&[T]>`) whose element is a type parameter
 crosses, at each instantiation, exactly as the concrete slice would: a
 numeric element as a typed-array view (or whatever its `slice` mode selects),
 any other element, `String` included, as a fresh `Array` (see
-[`slice`](slice.md)). So one attribute can cover a whole `extern "C"` block
+[`slice` and `vec`](slice.md)). So one attribute can cover a whole `extern "C"` block
 without inspecting element types.
 
 The two that do *not* compose are `assert_no_shim` and `reexport`; both are

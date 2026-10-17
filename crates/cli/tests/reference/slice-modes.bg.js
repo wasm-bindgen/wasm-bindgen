@@ -1,22 +1,42 @@
 export function driver() {
     wasm.driver();
 }
-export function __wbg_js_block_mixed_2c5572af51372175(arg0, arg1, arg2, arg3, arg4, arg5) {
+
+/**
+ * @param {Uint8Array | number[]} _borrowed
+ * @param {Uint8Array | number[]} _owned
+ */
+export function rust_inert(_borrowed, _owned) {
+    const ptr0 = passArray8ToWasm0(_borrowed, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passArray8ToWasm0(_owned, wasm.__wbindgen_malloc);
+    const len1 = WASM_VECTOR_LEN;
+    wasm.rust_inert(ptr0, len0, ptr1, len1);
+}
+export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {
+    throw new Error(getStringFromWasm0(arg0, arg1));
+}
+export function __wbg_js_block_mixed_08a87d87e1eb2b52(arg0, arg1, arg2, arg3, arg4, arg5) {
     js_block_mixed(getArrayU16FromWasm0(arg0, arg1).slice(), Array.from(getArrayU16FromWasm0(arg2, arg3)), getArrayU16FromWasm0(arg4, arg5));
 }
-export function __wbg_js_copy_f64_ee4f91cb0c300621(arg0, arg1) {
+export function __wbg_js_copy_f64_b88d26e583920037(arg0, arg1) {
     js_copy_f64(getArrayF64FromWasm0(arg0, arg1).slice());
 }
-export function __wbg_js_copy_optional_u16_ae5d2263643d02de(arg0, arg1) {
+export function __wbg_js_copy_optional_u16_3fa3a11b6b0a1e6b(arg0, arg1) {
     js_copy_optional_u16(arg0 === 0 ? undefined : getArrayU16FromWasm0(arg0, arg1).slice());
 }
-export function __wbg_js_copy_u8_aa48a1ab3a44ac8e(arg0, arg1) {
+export function __wbg_js_copy_u8_9b039b67f112bc7a(arg0, arg1) {
     js_copy_u8(getArrayU8FromWasm0(arg0, arg1).slice());
 }
-export function __wbg_js_shapes_0af45ab96e7304c4(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
-    var v0 = Array.from(getArrayU8FromWasm0(arg0, arg1));
+export function __wbg_js_fn_keys_1ccf98d6a63ca6c5(arg0, arg1, arg2, arg3) {
+    var v0 = getArrayU8FromWasm0(arg2, arg3).slice();
+    wasm.__wbindgen_free(arg2, arg3 * 1, 1);
+    js_fn_keys(getArrayU8FromWasm0(arg0, arg1).slice(), v0);
+}
+export function __wbg_js_shapes_bd63f6912e6d4d8c(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
+    var v0 = getArrayU8FromWasm0(arg0, arg1).slice();
     wasm.__wbindgen_free(arg0, arg1 * 1, 1);
-    var v1 = Array.from(getArrayF64FromWasm0(arg2, arg3));
+    var v1 = getArrayF64FromWasm0(arg2, arg3).slice();
     wasm.__wbindgen_free(arg2, arg3 * 8, 8);
     const v2 = [];
     let p2 = arg6;
@@ -27,6 +47,13 @@ export function __wbg_js_shapes_0af45ab96e7304c4(arg0, arg1, arg2, arg3, arg4, a
     }
     wasm.__wbindgen_free(arg6, arg7 * 8, 4);
     js_shapes(v0, v1, Array.from(getClampedArrayU8FromWasm0(arg4, arg5)), v2);
+}
+export function __wbg_js_vec_block_d2b61694b56cf97a(arg0, arg1, arg2, arg3, arg4, arg5) {
+    var v0 = Array.from(getArrayU8FromWasm0(arg2, arg3));
+    wasm.__wbindgen_free(arg2, arg3 * 1, 1);
+    var v1 = getArrayU8FromWasm0(arg4, arg5).slice();
+    wasm.__wbindgen_free(arg4, arg5 * 1, 1);
+    js_vec_block(getArrayU8FromWasm0(arg0, arg1), v0, v1);
 }
 export function __wbg_js_view_u8_121c4880f6a160aa(arg0, arg1) {
     js_view_u8(getArrayU8FromWasm0(arg0, arg1));
@@ -48,7 +75,7 @@ export function __wbindgen_generic_0000000000000001(arg0, arg1) {
     js_generic_slice(getArrayU16FromWasm0(arg0, arg1));
 }
 export function __wbindgen_generic_0000000000000002(arg0, arg1) {
-    // generic import `js_generic_slice`: [SliceMode(Copy, Option(Ref(Slice(U8))))] -> Unit
+    // generic import `js_generic_slice`: [SliceMode(slice = copy, Option(Ref(Slice(U8))))] -> Unit
     js_generic_slice(arg0 === 0 ? undefined : getArrayU8FromWasm0(arg0, arg1).slice());
 }
 export function __wbindgen_init_externref_table() {
@@ -125,6 +152,13 @@ function getUint8ClampedArrayMemory0() {
     return cachedUint8ClampedArrayMemory0;
 }
 
+function passArray8ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 1, 1) >>> 0;
+    getUint8ArrayMemory0().set(arg, ptr / 1);
+    WASM_VECTOR_LEN = arg.length;
+    return ptr;
+}
+
 let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true });
 cachedTextDecoder.decode();
 const MAX_SAFARI_DECODE_BYTES = 2146435072;
@@ -138,6 +172,8 @@ function decodeText(bytes) {
     }
     return cachedTextDecoder.decode(bytes);
 }
+
+let WASM_VECTOR_LEN = 0;
 
 
 let wasm;

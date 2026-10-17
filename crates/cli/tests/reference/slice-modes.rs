@@ -1,5 +1,5 @@
-// Reference test for the `slice = view | array | copy` import argument
-// modes, primarily `slice = copy`.
+// Reference test for the `slice = view | copy | array` and `vec = copy |
+// array` import argument modes, primarily `slice = copy`.
 //
 // `slice = copy` keeps the user-facing argument type as `&[T]` and its
 // default borrowed wire format, while the JS glue materialises a fresh
@@ -36,12 +36,29 @@ extern "C" {
     );
 }
 
-// The mode applies by shape: owned data is already fresh (`array` converts
-// it), `Clamped` gets the same treatment as any typed slice, and `&[String]`,
-// which has no typed form, is a fresh `Array` regardless.
+// Each key acts only on its own shape: under `slice = array` owned data stays
+// a fresh typed array, `Clamped` gets the same treatment as any typed slice,
+// and `&[String]`, which has no typed form, is a fresh `Array` regardless.
 #[wasm_bindgen(slice = array)]
 extern "C" {
     fn js_shapes(owned: Vec<u8>, boxed: Box<[f64]>, clamped: Clamped<&[u8]>, strings: &[String]);
+}
+
+// Under `vec = array` borrowed data stays a view, and a per-arg `vec = copy`
+// opts back out. A fn-level mode overrides the block's for its own key.
+#[wasm_bindgen(vec = array)]
+extern "C" {
+    fn js_vec_block(borrowed: &[u8], owned: Vec<u8>, #[wasm_bindgen(vec = copy)] opted_out: Vec<u8>);
+    #[wasm_bindgen(slice = copy, vec = copy)]
+    fn js_fn_keys(borrowed: &[u8], owned: Vec<u8>);
+}
+
+// Both keys are inert on exports.
+#[wasm_bindgen]
+pub fn rust_inert(
+    #[wasm_bindgen(slice = copy)] _borrowed: &[u8],
+    #[wasm_bindgen(vec = array)] _owned: Vec<u8>,
+) {
 }
 
 // On the per-mono path each instantiation crosses as the concrete slice
@@ -70,6 +87,8 @@ pub fn driver() {
     js_block_mixed(&v16, &v16, &v16);
 
     js_shapes(v.clone(), Box::new([1.5]), Clamped(&v), &["a".to_string()]);
+    js_vec_block(&v, v.clone(), v.clone());
+    js_fn_keys(&v, v.clone());
 
     js_generic_slice(&[1u16, 2]);
     js_generic_slice(&["a".to_string()]);

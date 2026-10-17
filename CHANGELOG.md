@@ -5,18 +5,17 @@
 
 ### Added
 
-* Added the `slice = view | array | copy` attribute for imported JS
-  functions, accepted per argument, per function, and per `extern "C"` block,
-  with a more specific level overriding a broader one. It applies to any
-  sequence argument with numeric elements: borrowed (`&[T]`, `Option<&[T]>`),
-  owned (`Vec<T>`, `Box<[T]>`, `Option<Vec<T>>`), and `Clamped` forms of
-  either. `slice = copy` hands JS a fresh typed array (`.slice()` of the view,
-  with no Rust-side copy) instead of the default view of wasm memory;
-  `slice = array` a fresh plain `Array`; and an explicit `slice = view` opts
-  a borrowed argument back out of an inherited mode (on owned data, which is
-  never a view, it is an error). A generic element type resolves the mode per
-  instantiation under `experimental_generic_mono`, where `Option<&[T]>` is now
-  supported too.
+* Added the `slice = view | copy | array` and `vec = copy | array`
+  attributes for imported JS functions, choosing what JS receives for a
+  sequence argument with numeric elements: a live typed array over wasm
+  memory, a fresh typed array, or a fresh plain `Array`. `slice` applies to
+  borrowed slices (`&[T]`, `Option<&[T]>`, `Clamped<&[u8]>`) and `vec` to
+  owned ones (`Vec<T>`, `Box<[T]>`, `Option<Vec<T>>`, `Clamped<Vec<u8>>`).
+  Each key is accepted per argument, per function and per `extern "C"` block,
+  with a more specific level overriding a broader one. Inherited, a key only
+  acts on its own shape; written on an argument that it doesn't fit, it is
+  an error. A generic element type resolves the mode per instantiation under
+  `experimental_generic_mono`, where `Option<&[T]>` is now supported too.
   [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
 
 * Borrowed slices of `String`, `&str`, `bool`, `char` and exported enums
