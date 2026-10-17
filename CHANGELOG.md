@@ -117,6 +117,14 @@
   instead of being clamped.
   [#4504](https://github.com/wasm-bindgen/wasm-bindgen/issues/4504)
 
+* Numeric enums are passed between JS and Rust as an `f64`, so a value from
+  JS that isn't one of the enum's values, such as `'abc'`, `NaN`, `1.5` or
+  `2 ** 32`, throws "invalid enum value passed" in release builds too,
+  rather than becoming variant 0 or being truncated. Values above
+  `i32::MAX` in a `#[repr(u32)]` enum are now returned to JS unchanged
+  rather than as negative numbers.
+  [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
+
 ### Fixed
 
 * Imported methods, static methods and constructors without a `js_class` now

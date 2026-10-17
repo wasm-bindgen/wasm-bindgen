@@ -31,10 +31,10 @@ export function __wbg_js_levels_92d6261cd8377562(arg0, arg1) {
     let p0 = arg0;
     p0 = p0 >>> 0;
     const view0 = getDataViewMemory0();
-    for (const end0 = p0 + arg1 * 4; p0 < end0; p0 += 4) {
-        v0.push(view0.getInt32(p0 + 0, true));
+    for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
+        v0.push(view0.getFloat64(p0 + 0, true));
     }
-    wasm.__wbindgen_free(arg0, arg1 * 4, 4);
+    wasm.__wbindgen_free(arg0, arg1 * 8, 8);
     js_levels(v0);
 }
 export function __wbg_js_modes_bb53fb3d0fbfa09c(arg0, arg1) {

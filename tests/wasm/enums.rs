@@ -11,6 +11,9 @@ extern "C" {
     fn js_expect_enum_none(x: Option<Color>);
     fn js_renamed_enum(b: RenamedEnum);
     fn js_enum_with_error_variant();
+    fn js_numeric_enum_abi();
+    fn js_echo_signed_enum(e: SignedEnum) -> SignedEnum;
+    fn js_echo_unsigned_top_enum(e: UnsignedTopEnum) -> UnsignedTopEnum;
 
     pub type FooCase;
     #[wasm_bindgen(js_name = makeFoo)]
@@ -130,6 +133,45 @@ fn test_renamed_enum() {
 #[wasm_bindgen_test]
 fn test_enum_with_error_variant() {
     js_enum_with_error_variant();
+}
+
+#[wasm_bindgen]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum SignedEnum {
+    Min = -2147483648,
+    Max = 2147483647,
+}
+
+#[wasm_bindgen]
+#[repr(u32)]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum UnsignedTopEnum {
+    Top = 4294967295,
+}
+
+#[wasm_bindgen]
+pub fn signed_enum_flip(e: SignedEnum) -> SignedEnum {
+    match e {
+        SignedEnum::Min => SignedEnum::Max,
+        SignedEnum::Max => SignedEnum::Min,
+    }
+}
+
+#[wasm_bindgen]
+pub fn unsigned_top_enum() -> UnsignedTopEnum {
+    UnsignedTopEnum::Top
+}
+
+// A value from JS that is no discriminant, such as NaN or a fraction, throws
+// rather than being coerced to one, and every discriminant crosses exactly.
+#[wasm_bindgen_test]
+fn test_numeric_enum_abi() {
+    assert_eq!(js_echo_signed_enum(SignedEnum::Min), SignedEnum::Min);
+    assert_eq!(
+        js_echo_unsigned_top_enum(UnsignedTopEnum::Top),
+        UnsignedTopEnum::Top
+    );
+    js_numeric_enum_abi();
 }
 
 // Exported struct for testing enum variants
