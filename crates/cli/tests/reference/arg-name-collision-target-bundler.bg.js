@@ -30,8 +30,9 @@ export class Foo {
      * @returns {number}
      */
     consume(ptr2) {
+        const val1 = +ptr2;
         const ptr = this.__destroy_into_raw();
-        const ret = wasm.foo_consume(ptr, ptr2);
+        const ret = wasm.foo_consume(ptr, val1);
         return ret >>> 0;
     }
     /**
@@ -76,17 +77,19 @@ export function global_args(isLikeNone2, undefined2) {
  * @returns {string}
  */
 export function local_args(ptr02, len02, ret2) {
-    let deferred2_0;
-    let deferred2_1;
+    let deferred4_0;
+    let deferred4_1;
     try {
+        const val2 = +len02;
+        const val3 = +ret2;
         const ptr0 = passStringToWasm0(ptr02, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
-        const ret = wasm.local_args(ptr0, len0, len02, ret2);
-        deferred2_0 = ret[0];
-        deferred2_1 = ret[1];
+        const ret = wasm.local_args(ptr0, len0, val2, val3);
+        deferred4_0 = ret[0];
+        deferred4_1 = ret[1];
         return getStringFromWasm0(ret[0], ret[1]);
     } finally {
-        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+        wasm.__wbindgen_free(deferred4_0, deferred4_1, 1);
     }
 }
 
@@ -97,17 +100,18 @@ export function local_args(ptr02, len02, ret2) {
  * @returns {string}
  */
 export function wasm_args(wasm3, wasm2) {
-    let deferred2_0;
-    let deferred2_1;
+    let deferred3_0;
+    let deferred3_1;
     try {
+        const val2 = +wasm2;
         const ptr0 = passArray8ToWasm0(wasm3, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
-        const ret = wasm.wasm_args(ptr0, len0, wasm2);
-        deferred2_0 = ret[0];
-        deferred2_1 = ret[1];
+        const ret = wasm.wasm_args(ptr0, len0, val2);
+        deferred3_0 = ret[0];
+        deferred3_1 = ret[1];
         return getStringFromWasm0(ret[0], ret[1]);
     } finally {
-        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+        wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
     }
 }
 export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {

@@ -21,6 +21,7 @@ use wasm_bindgen::prelude::*;
 #[path = "3944.rs"]
 pub mod _3944;
 pub mod api;
+pub mod arg_leaks;
 pub mod arg_names;
 pub mod async_import;
 pub mod async_vecs;

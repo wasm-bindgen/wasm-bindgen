@@ -86,14 +86,26 @@ export class NamespaceConsumer {
      * @param {bar__Status} bar_status
      */
     constructor(foo_point, bar_point, foo_status, bar_status) {
-        _assertClass(foo_point, foo__Point);
-        var ptr0 = foo_point.__destroy_into_raw();
-        _assertClass(bar_point, bar__Point);
-        var ptr1 = bar_point.__destroy_into_raw();
-        const ret = wasm.namespaceconsumer_new(ptr0, ptr1, foo_status, bar_status);
-        this.__wbg_ptr = ret;
-        NamespaceConsumerFinalization.register(this, this.__wbg_ptr, this);
-        return this;
+        const val3 = +foo_status;
+        const val4 = +bar_status;
+        let entered = false;
+        try {
+            _assertClass(foo_point, foo__Point);
+            var ptr0 = foo_point.__destroy_into_raw();
+            _assertClass(bar_point, bar__Point);
+            var ptr1 = bar_point.__destroy_into_raw();
+            entered = true;
+            const ret = wasm.namespaceconsumer_new(ptr0, ptr1, val3, val4);
+            this.__wbg_ptr = ret;
+            NamespaceConsumerFinalization.register(this, this.__wbg_ptr, this);
+            return this;
+        } catch (e) {
+            if (!entered) {
+                if (ptr1) wasm.__wbg_bar__point_free(ptr1, 1);
+                if (ptr0) wasm.__wbg_foo__point_free(ptr0, 1);
+            }
+            throw e;
+        }
     }
     /**
      * @param {bar__Status} status
@@ -318,9 +330,10 @@ class bar__RefToFoo {
      * @param {foo__Status} foo_status
      */
     constructor(foo_point, foo_status) {
+        const val2 = +foo_status;
         _assertClass(foo_point, foo__Point);
         var ptr0 = foo_point.__destroy_into_raw();
-        const ret = wasm.bar__reftofoo_new(ptr0, foo_status);
+        const ret = wasm.bar__reftofoo_new(ptr0, val2);
         this.__wbg_ptr = ret;
         bar__RefToFooFinalization.register(this, this.__wbg_ptr, this);
         return this;
@@ -510,9 +523,10 @@ class foo__RefToBar {
      * @param {bar__Status} bar_status
      */
     constructor(bar_point, bar_status) {
+        const val2 = +bar_status;
         _assertClass(bar_point, bar__Point);
         var ptr0 = bar_point.__destroy_into_raw();
-        const ret = wasm.foo__reftobar_new(ptr0, bar_status);
+        const ret = wasm.foo__reftobar_new(ptr0, val2);
         this.__wbg_ptr = ret;
         foo__RefToBarFinalization.register(this, this.__wbg_ptr, this);
         return this;

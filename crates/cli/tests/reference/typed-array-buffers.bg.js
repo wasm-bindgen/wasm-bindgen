@@ -45,14 +45,24 @@ export function owned_floats() {
  * @returns {Uint8Array<ArrayBuffer>}
  */
 export function roundtrip(borrowed, owned) {
-    const ptr0 = passArray8ToWasm0(borrowed, wasm.__wbindgen_malloc);
-    const len0 = WASM_VECTOR_LEN;
-    const ptr1 = passArray8ToWasm0(owned, wasm.__wbindgen_malloc);
-    const len1 = WASM_VECTOR_LEN;
-    const ret = wasm.roundtrip(ptr0, len0, ptr1, len1);
-    var v3 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
-    wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
-    return v3;
+    let entered = false;
+    try {
+        var ptr0 = passArray8ToWasm0(borrowed, wasm.__wbindgen_malloc);
+        var len0 = WASM_VECTOR_LEN;
+        var ptr1 = passArray8ToWasm0(owned, wasm.__wbindgen_malloc);
+        var len1 = WASM_VECTOR_LEN;
+        entered = true;
+        const ret = wasm.roundtrip(ptr0, len0, ptr1, len1);
+        var v3 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+        return v3;
+    } catch (e) {
+        if (!entered) {
+            if (ptr1) { wasm.__wbindgen_free(ptr1, len1 * 1, 1); }
+            if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 1, 1); }
+        }
+        throw e;
+    }
 }
 
 /**
