@@ -13,7 +13,7 @@ use crate::convert::{
 };
 use crate::sys::Promising;
 use crate::sys::{JsNullable, JsOption, Undefined};
-use crate::{Clamped, JsError, JsValue, UnwrapThrowExt};
+use crate::{throw_str, Clamped, JsError, JsValue};
 
 // Primitive types can always be passed over the ABI.
 impl<T: WasmPrimitive> WasmAbi for T {
@@ -889,22 +889,14 @@ pub unsafe fn js_value_vector_from_abi<T: TryFromJsValue>(
     js: <Box<[JsValue]> as FromWasmAbi>::Abi,
 ) -> Box<[T]> {
     let js_vals = <Vec<JsValue> as FromWasmAbi>::from_abi(js);
-
-    let mut result = Vec::with_capacity(js_vals.len());
-    for value in js_vals {
-        // We push elements one-by-one instead of using `collect` in order to improve
-        // error messages. When using `collect`, this `expect_throw` is buried in a
-        // giant chain of internal iterator functions, which results in the actual
-        // function that takes this `Vec` falling off the end of the call stack.
-        // So instead, make sure to call it directly within this function.
-        //
-        // This is only a problem in debug mode. Since this is the browser's error stack
-        // we're talking about, it can only see functions that actually make it to the
-        // final Wasm binary (i.e., not inlined functions). All of those internal
-        // iterator functions get inlined in release mode, and so they don't show up.
-        result.push(
-            T::try_from_js_value(value).expect_throw("array contains a value of the wrong type"),
-        );
-    }
-    result.into_boxed_slice()
+    // A throw runs no destructors, so collecting stops at the first element of
+    // the wrong type and drops everything Rust owns first: the buffer, the
+    // handles not yet converted and the elements converted so far. `.ok()`
+    // drops the rejected handle too. Throwing here rather than inside the
+    // iterator chain also keeps the function that took the `Vec` on the
+    // debug-mode error stack, which the chain's frames would push off it.
+    let result: Result<Box<[T]>, JsValue> = js_vals.into_iter().map(T::try_from_js_value).collect();
+    result
+        .ok()
+        .unwrap_or_else(|| throw_str("array contains a value of the wrong type"))
 }

@@ -22,6 +22,19 @@ pub enum VecLevel {
     High = 7,
 }
 
+#[wasm_bindgen]
+pub struct VecItem {
+    _payload: [u32; 16],
+}
+
+#[wasm_bindgen]
+impl VecItem {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> VecItem {
+        VecItem { _payload: [0; 16] }
+    }
+}
+
 #[wasm_bindgen(module = "tests/wasm/vec_elements.js")]
 extern "C" {
     #[wasm_bindgen(js_name = echo)]
@@ -58,6 +71,8 @@ extern "C" {
 
     #[wasm_bindgen(js_name = throwingElementFreesBuffer)]
     fn throwing_element_frees_buffer(memory: JsValue);
+    #[wasm_bindgen(js_name = rejectedElementLeaksNothing)]
+    fn rejected_element_leaks_nothing(memory: JsValue);
 
     #[wasm_bindgen(js_name = callExports)]
     fn call_exports();
@@ -102,6 +117,16 @@ pub fn vec_elements_flip_levels(v: Option<Vec<VecLevel>>) -> Option<Vec<VecLevel
 #[wasm_bindgen]
 pub fn vec_elements_boxed_levels(v: Box<[VecLevel]>) -> Box<[VecLevel]> {
     v
+}
+
+#[wasm_bindgen]
+pub fn vec_elements_count_strings(v: Vec<String>) -> usize {
+    v.len()
+}
+
+#[wasm_bindgen]
+pub fn vec_elements_count_items(v: Vec<VecItem>) -> usize {
+    v.len()
 }
 
 #[wasm_bindgen]
@@ -175,6 +200,13 @@ fn js_to_rust() {
 #[wasm_bindgen_test]
 fn throwing_element() {
     throwing_element_frees_buffer(wasm_bindgen::memory());
+}
+
+// Rust rejects the element by throwing, which runs no destructors, so it must
+// already have dropped the list and the elements it converted.
+#[wasm_bindgen_test]
+fn rejected_element() {
+    rejected_element_leaks_nothing(wasm_bindgen::memory());
 }
 
 #[wasm_bindgen_test]
