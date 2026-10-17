@@ -16,3 +16,7 @@ exports.retain = (v) => {
     retained = v;
 };
 exports.retained = () => describe(retained);
+
+exports.makeThing = (id) => ({ id });
+exports.thingIds = (v) =>
+    v === undefined ? 'undefined' : `${Array.isArray(v) ? 'Array' : v.constructor.name}:${v.map((t) => t.id).join(',')}`;

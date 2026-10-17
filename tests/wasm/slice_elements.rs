@@ -86,6 +86,22 @@ extern "C" {
     fn strings_slice_to_array(v: &[String]) -> String;
 }
 
+// Any imported type is a handle, so its slices are borrowed in place.
+#[wasm_bindgen(module = "tests/wasm/slice_elements.js")]
+extern "C" {
+    pub type Thing;
+    #[wasm_bindgen(js_name = makeThing)]
+    fn make_thing(id: u32) -> Thing;
+    #[wasm_bindgen(js_name = thingIds)]
+    fn thing_ids(v: &[Thing]) -> String;
+    #[wasm_bindgen(js_name = thingIds)]
+    fn opt_thing_ids(v: Option<&[Thing]>) -> String;
+    #[wasm_bindgen(js_name = thingIds, slice = array)]
+    fn thing_ids_array(v: &[Thing]) -> String;
+    #[wasm_bindgen(experimental_generic_mono, js_name = thingIds)]
+    fn generic_thing_ids<T>(v: &[T]) -> String;
+}
+
 // Per instantiation, through the same element impls.
 #[wasm_bindgen(module = "tests/wasm/slice_elements.js")]
 extern "C" {
@@ -218,4 +234,17 @@ fn per_mono_uses_the_same_element_abi() {
     assert_eq!(generic(&[1u16, 2]), "Uint16Array:[1,2]");
     assert_eq!(generic_opt(Some(&[false][..])), "Array:[false]");
     assert_eq!(generic_opt::<String>(None), "undefined");
+}
+
+#[wasm_bindgen_test]
+fn imported_types_are_borrowed_handles() {
+    let things = [make_thing(1), make_thing(2)];
+    assert_eq!(thing_ids(&things), "Array:1,2");
+    assert_eq!(thing_ids(&[]), "Array:");
+    assert_eq!(opt_thing_ids(Some(&things)), "Array:1,2");
+    assert_eq!(opt_thing_ids(None), "undefined");
+    assert_eq!(thing_ids_array(&things), "Array:1,2");
+    assert_eq!(generic_thing_ids(&things), "Array:1,2");
+    // Borrowed, not moved: the handles are still usable.
+    assert_eq!(thing_ids(&things), "Array:1,2");
 }
