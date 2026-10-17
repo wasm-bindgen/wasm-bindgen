@@ -303,7 +303,7 @@ export function __wbindgen_generic_0000000000000023(arg0, arg1, arg2) {
         }
         wasm.__wbindgen_free(arg0, arg1 * 8, 4);
     }
-    // generic import `logOptStrSlice`: [Option(Ref(Slice(String))), U32] -> Unit
+    // generic import `logOptStrSlice`: [Option(Ref(Slice(Encoded(String)))), U32] -> Unit
     logOptStrSlice(v0, arg2 >>> 0);
 }
 export function __wbindgen_generic_0000000000000024(arg0) {
@@ -327,7 +327,7 @@ export function __wbindgen_generic_0000000000000027(arg0, arg1, arg2) {
         v0.push(getStringFromWasm0(view0.getInt32(p0 + 0, true), view0.getInt32(p0 + 4, true)));
     }
     wasm.__wbindgen_free(arg0, arg1 * 8, 4);
-    // generic import `logStrSlice`: [Ref(Slice(String)), U32] -> Unit
+    // generic import `logStrSlice`: [Ref(Slice(Encoded(String))), U32] -> Unit
     logStrSlice(v0, arg2 >>> 0);
 }
 export function __wbindgen_generic_0000000000000028(arg0) {

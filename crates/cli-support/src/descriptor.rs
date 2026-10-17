@@ -1,5 +1,6 @@
 use std::char;
 
+use anyhow::{bail, Error};
 use wasm_bindgen_shared::identifier::is_valid_ident;
 use wasm_bindgen_shared::tys::*;
 
@@ -90,6 +91,19 @@ pub enum Descriptor {
     /// An imported function argument under a non-default `slice = ..` mode.
     /// Only ever wraps a typed sequence (see [`Descriptor::is_typed_sequence`]).
     SliceMode(SliceMode, Box<Descriptor>),
+    /// A sequence cell holding the element's scalar ABI rather than the
+    /// element itself. Only ever directly inside a `Vector` or `Slice`.
+    Encoded(Box<Descriptor>),
+}
+
+/// How a sequence's cells hold its elements, as the element's own impl
+/// describes them.
+#[derive(Debug, PartialEq, Eq)]
+pub enum SequenceCell<'a> {
+    /// The cell is the element itself: a number, or a JS handle's index.
+    InPlace(VectorKind),
+    /// The cell is the element's scalar ABI, converted by its own glue.
+    Encoded(&'a Descriptor),
 }
 
 /// How a typed sequence reaches JS: as a view of wasm memory, a fresh plain
@@ -212,8 +226,8 @@ impl Descriptor {
                     _ => Descriptor::Ref(Box::new(contents)),
                 }
             }
-            SLICE => Descriptor::Slice(Box::new(Descriptor::_decode(data, clamped))),
-            VECTOR => Descriptor::Vector(Box::new(Descriptor::_decode(data, clamped))),
+            SLICE => Descriptor::Slice(Box::new(Descriptor::decode_cell(data, clamped))),
+            VECTOR => Descriptor::Vector(Box::new(Descriptor::decode_cell(data, clamped))),
             OPTIONAL => Descriptor::Option(Box::new(Descriptor::_decode(data, clamped))),
             RESULT => Descriptor::Result(Box::new(Descriptor::_decode(data, clamped))),
             CACHED_STRING => Descriptor::CachedString,
@@ -295,7 +309,17 @@ impl Descriptor {
                     contents
                 }
             }
+            ENCODED => panic!("`ENCODED` outside a sequence"),
             other => panic!("unknown descriptor: {other}"),
+        }
+    }
+
+    fn decode_cell(data: &mut &[u32], clamped: bool) -> Descriptor {
+        if data.first() == Some(&ENCODED) {
+            get(data);
+            Descriptor::Encoded(Box::new(Descriptor::_decode(data, clamped)))
+        } else {
+            Descriptor::_decode(data, clamped)
         }
     }
 
@@ -314,6 +338,7 @@ impl Descriptor {
             | Descriptor::RefMut(d)
             | Descriptor::Slice(d)
             | Descriptor::Vector(d)
+            | Descriptor::Encoded(d)
             | Descriptor::Option(d)
             | Descriptor::Result(d) => d.visit_named_types_mut(f),
             // An externref has no defining crate, so a JS type whose name
@@ -425,7 +450,23 @@ impl Descriptor {
             },
             _ => return None,
         };
-        match *inner {
+        inner.in_place_kind()
+    }
+
+    /// The cell of a sequence whose element is `self`. Any element that is
+    /// neither an in-place kind nor `Encoded` can't be in a sequence.
+    pub fn sequence_cell(&self) -> Result<SequenceCell<'_>, Error> {
+        match self {
+            Descriptor::Encoded(elem) => Ok(SequenceCell::Encoded(elem)),
+            elem => match elem.in_place_kind() {
+                Some(kind) => Ok(SequenceCell::InPlace(kind)),
+                None => bail!("unsupported sequence element type: {elem:?}"),
+            },
+        }
+    }
+
+    fn in_place_kind(&self) -> Option<VectorKind> {
+        match *self {
             Descriptor::I8 => Some(VectorKind::I8),
             Descriptor::I16 => Some(VectorKind::I16),
             Descriptor::I32 => Some(VectorKind::I32),
@@ -484,6 +525,50 @@ fn vector_kind_accepts_memory64_scalar_descriptors() {
         Descriptor::Ref(Box::new(Descriptor::Slice(Box::new(Descriptor::I64AsF64)))).vector_kind(),
         Some(VectorKind::I64)
     );
+}
+
+#[test]
+fn encoded_cells() {
+    let encoded = |elem| Descriptor::Encoded(Box::new(elem));
+    assert_eq!(
+        Descriptor::decode(&[VECTOR, ENCODED, BOOLEAN]),
+        Descriptor::Vector(Box::new(encoded(Descriptor::Boolean)))
+    );
+    assert_eq!(
+        Descriptor::decode(&[REF, SLICE, ENCODED, REF, STRING]),
+        Descriptor::Ref(Box::new(Descriptor::Slice(Box::new(encoded(
+            Descriptor::Ref(Box::new(Descriptor::String))
+        )))))
+    );
+    assert_eq!(
+        encoded(Descriptor::Char).sequence_cell().unwrap(),
+        SequenceCell::Encoded(&Descriptor::Char)
+    );
+    assert_eq!(
+        Descriptor::U8.sequence_cell().unwrap(),
+        SequenceCell::InPlace(VectorKind::U8)
+    );
+    // Without the tag the element's kind is never inferred: an untagged
+    // `VECTOR BOOLEAN` or `SLICE BOOLEAN` has no cell, and the CLI rejects it.
+    assert!(Descriptor::Boolean.sequence_cell().is_err());
+    assert_eq!(Descriptor::decode(&[VECTOR, BOOLEAN]).vector_kind(), None);
+    assert_eq!(
+        Descriptor::decode(&[REF, SLICE, BOOLEAN]).vector_kind(),
+        None
+    );
+    // The modes only apply to typed in-place sequences.
+    assert_eq!(
+        Descriptor::decode(&[SLICE_MODE, SLICE_MODE_COPY, REF, SLICE, ENCODED, BOOLEAN]),
+        Descriptor::Ref(Box::new(Descriptor::Slice(Box::new(encoded(
+            Descriptor::Boolean
+        )))))
+    );
+}
+
+#[test]
+#[should_panic(expected = "`ENCODED` outside a sequence")]
+fn encoded_outside_a_sequence() {
+    Descriptor::decode(&[OPTIONAL, ENCODED, BOOLEAN]);
 }
 
 #[test]

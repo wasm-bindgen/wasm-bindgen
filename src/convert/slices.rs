@@ -174,6 +174,11 @@ macro_rules! vectors_internal {
         }
 
         impl VectorRefIntoWasmAbi for $t {
+            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+            fn describe_cell() {
+                <$t>::describe();
+            }
+
             #[inline]
             fn slice_into_abi(slice: &[$t]) -> WasmSlice {
                 borrowed_slice_into_abi(slice)
@@ -313,6 +318,10 @@ where
 /// fresh buffer of its ABIs, which JS decodes and frees
 /// ([`encoded_slice_into_abi`]).
 pub trait VectorRefIntoWasmAbi: WasmDescribe + Sized {
+    /// Describes the sequence's cell, from the same impl that fills it: in
+    /// place, `Self`'s own descriptor; encoded, `ENCODED` followed by it.
+    fn describe_cell();
+
     fn slice_into_abi(slice: &[Self]) -> WasmSlice;
 }
 
@@ -371,7 +380,7 @@ macro_rules! encoded_vectors {
             #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
             fn describe_vector() {
                 inform(VECTOR);
-                <$t>::describe();
+                <$t>::describe_cell();
             }
         }
 
@@ -407,30 +416,59 @@ impl VectorFromWasmAbi for char {
 }
 
 impl VectorRefIntoWasmAbi for String {
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe_cell() {
+        inform(ENCODED);
+        Self::describe();
+    }
+
     fn slice_into_abi(slice: &[Self]) -> WasmSlice {
         encoded_slice_into_abi(slice, |s| s.into_abi())
     }
 }
 
 impl VectorRefIntoWasmAbi for &str {
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe_cell() {
+        inform(ENCODED);
+        Self::describe();
+    }
+
     fn slice_into_abi(slice: &[Self]) -> WasmSlice {
         encoded_slice_into_abi(slice, |s| (*s).into_abi())
     }
 }
 
 impl VectorRefIntoWasmAbi for bool {
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe_cell() {
+        inform(ENCODED);
+        Self::describe();
+    }
+
     fn slice_into_abi(slice: &[Self]) -> WasmSlice {
         encoded_slice_into_abi(slice, |b| (*b).into_abi())
     }
 }
 
 impl VectorRefIntoWasmAbi for char {
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe_cell() {
+        inform(ENCODED);
+        Self::describe();
+    }
+
     fn slice_into_abi(slice: &[Self]) -> WasmSlice {
         encoded_slice_into_abi(slice, |c| (*c).into_abi())
     }
 }
 
 impl VectorRefIntoWasmAbi for JsValue {
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe_cell() {
+        Self::describe();
+    }
+
     #[inline]
     fn slice_into_abi(slice: &[Self]) -> WasmSlice {
         borrowed_slice_into_abi(slice)
@@ -438,6 +476,11 @@ impl VectorRefIntoWasmAbi for JsValue {
 }
 
 impl VectorRefIntoWasmAbi for JsError {
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe_cell() {
+        Self::describe();
+    }
+
     #[inline]
     fn slice_into_abi(slice: &[Self]) -> WasmSlice {
         borrowed_slice_into_abi(slice)

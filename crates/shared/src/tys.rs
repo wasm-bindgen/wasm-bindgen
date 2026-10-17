@@ -46,6 +46,7 @@ tys! {
     NONNULL
     RAW_POINTER
     SLICE_MODE
+    ENCODED
 }
 
 /// The mode word following a `SLICE_MODE` tag.
