@@ -3462,9 +3462,8 @@ impl ast::ImportFunction {
             // at the type's location in the call-site context. rustc reports an
             // unsatisfied bound at the join of a node's first and last spans,
             // which falls back to the `#[wasm_bindgen]` attribute across
-            // locations or contexts, and identical errors on the same span are
-            // deduplicated across the wrapper and shim. The call-site context
-            // also keeps lints off this generated code.
+            // locations or contexts. The call-site context also keeps lints off
+            // this generated code.
             let ty_span = Span::call_site().located_at(arg.pat_type.ty.span());
             let abi_ty = respan_all(ty.to_token_stream(), ty_span);
             let wasm_bindgen = &respan_path(wasm_bindgen, ty_span);
@@ -3621,9 +3620,13 @@ impl ast::ImportFunction {
         //
         // Naming the shim at an instantiation needs every declared ABI bound
         // to normalize its signature, so both the shim's marker and the
-        // wrapper's call are spanned wholly at the import's name: a missing
-        // bound is then reported there once, rather than at the attribute.
+        // wrapper's call are spanned wholly at the import's name, where rustc
+        // merges their identical errors, rather than at the attribute.
         let fn_span = Span::call_site().located_at(self.rust_name.span());
+        // rustc suggests a missing `where` clause just after the token that
+        // precedes it, so the tokens ending each generated signature are
+        // placed at the end of the declared one.
+        let sig_end_span = Span::call_site().located_at(self.function.paren_span);
         let marker_call = respan_all(
             quote! {
                 #wasm_bindgen::describe::describe_generic_import(
@@ -3650,6 +3653,10 @@ impl ast::ImportFunction {
                 // As for arguments, every site that needs the declared return
                 // bound is spanned at the return type.
                 let ret_span = Span::call_site().located_at(original_ty.span());
+                describe_ret = respan_all(
+                    import_describe_ret(wasm_bindgen, Some(original_ty), self.function.r#async),
+                    ret_span,
+                );
                 let original_ty = respan_all(original_ty.to_token_stream(), ret_span);
                 let wasm_bindgen = &respan_path(wasm_bindgen, ret_span);
                 let promise = respan_all(promise.clone(), ret_span);
@@ -3661,13 +3668,6 @@ impl ast::ImportFunction {
                 };
                 shim_ret_ty = quote_spanned! { ret_span =>
                     #wasm_bindgen::convert::WasmRet<<#ty as #wasm_bindgen::convert::FromWasmAbi>::Abi>
-                };
-                describe_ret = if self.function.r#async {
-                    import_describe_ret(wasm_bindgen, None, true)
-                } else {
-                    quote_spanned! { ret_span =>
-                        <#original_ty as #wasm_bindgen::describe::WasmDescribe>::describe();
-                    }
                 };
                 convert_ret = quote_spanned! { ret_span =>
                     <#ty as #wasm_bindgen::convert::FromWasmAbi>::from_abi(#ret_ident.join())
@@ -3688,9 +3688,12 @@ impl ast::ImportFunction {
             }
             None => {
                 if self.function.r#async {
-                    shim_ret_ty = quote! {
-                        #wasm_bindgen::convert::WasmRet<<#promise as #wasm_bindgen::convert::FromWasmAbi>::Abi>
-                    };
+                    shim_ret_ty = respan_all(
+                        quote! {
+                            #wasm_bindgen::convert::WasmRet<<#promise as #wasm_bindgen::convert::FromWasmAbi>::Abi>
+                        },
+                        sig_end_span,
+                    );
                     shim_ret_expr = quote! { unsafe { #wasm_bindgen::__rt::core::ptr::read(#marker_call as _) } };
                     describe_ret = import_describe_ret(wasm_bindgen, None, true);
                     let future = quote! {
@@ -3705,7 +3708,7 @@ impl ast::ImportFunction {
                         quote! { #future.expect("uncaught exception"); }
                     };
                 } else {
-                    shim_ret_ty = quote_spanned! { fn_span => () };
+                    shim_ret_ty = quote_spanned! { sig_end_span => () };
                     shim_ret_expr = quote! { let _ = unsafe { #marker_call }; };
                     describe_ret = import_describe_ret(wasm_bindgen, None, false);
                     convert_ret = quote! { () };
@@ -3854,10 +3857,10 @@ impl ast::ImportFunction {
 
         // The shim's ABI projections, describes and generics keep the spans of
         // the declaration they came from, so that an unsatisfied ABI bound is
-        // reported (and deduplicated against the wrapper's identical error) at
-        // the offending type, with a restriction suggestion on the user's own
-        // generics. The rest of the shim is generated, so it is placed on the
-        // function's name rather than the `#[wasm_bindgen]` attribute.
+        // reported at the offending type, with a restriction suggestion on the
+        // user's own generics. The rest of the shim is generated, so it is
+        // placed on the function's name rather than the `#[wasm_bindgen]`
+        // attribute.
         let shim_wasm_bindgen = respan_path(wasm_bindgen, fn_span);
         let shim = quote_spanned! { fn_span =>
             // Route through `__wbindgen_coverage!` rather than writing
@@ -3900,12 +3903,17 @@ impl ast::ImportFunction {
                     #convert_ret
                 }
         };
+        let mut wrapper_params = proc_macro2::Group::new(
+            proc_macro2::Delimiter::Parenthesis,
+            quote! { #me #(#wrapper_args),* },
+        );
+        wrapper_params.set_span(sig_end_span);
         let invocation = quote! {
             #[allow(nonstandard_style)]
             #[allow(clippy::all, clippy::nursery, clippy::pedantic, clippy::restriction)]
             #(#attrs)*
             #doc
-            #vis #maybe_async #maybe_unsafe fn #rust_name <#generic_params> (#me #(#wrapper_args),*) #ret #where_clause {
+            #vis #maybe_async #maybe_unsafe fn #rust_name <#generic_params> #wrapper_params #ret #where_clause {
                 #shim
 
                 #body
