@@ -26,11 +26,11 @@ pub enum SliceSigned {
     High = 7,
 }
 
-// Deliberately named like the `describe` module's slice-mode marker, which
-// the generated describe code glob-imports: user types must not resolve to it.
+// Deliberately named like the `describe` module's seq-mode marker, which the
+// generated describe code glob-imports: user types must not resolve to it.
 #[wasm_bindgen]
 #[derive(Clone, Copy)]
-pub enum SliceMode {
+pub enum SeqMode {
     Read = "read",
     Write = "write",
 }
@@ -50,7 +50,7 @@ extern "C" {
     #[wasm_bindgen(js_name = describe)]
     fn signed(v: &[SliceSigned]) -> String;
     #[wasm_bindgen(js_name = describe)]
-    fn modes(v: &[SliceMode]) -> String;
+    fn modes(v: &[SeqMode]) -> String;
     #[wasm_bindgen(js_name = describe)]
     fn opt_strings(v: Option<&[String]>) -> String;
     #[wasm_bindgen(js_name = describe)]
@@ -63,7 +63,7 @@ extern "C" {
     fn errors(v: &[JsError]) -> String;
 
     #[wasm_bindgen(js_name = describeAll)]
-    fn mixed(a: &[String], b: &[bool], c: &[u8], d: Option<&[char]>, e: &[SliceMode]) -> String;
+    fn mixed(a: &[String], b: &[bool], c: &[u8], d: Option<&[char]>, e: &[SeqMode]) -> String;
 
     #[wasm_bindgen(js_name = retain)]
     fn retain_strings(v: &[String]);
@@ -144,7 +144,7 @@ fn enums_cross_as_their_own_abi() {
         "Array:[-5,0,7]"
     );
     assert_eq!(
-        modes(&[SliceMode::Write, SliceMode::Read]),
+        modes(&[SeqMode::Write, SeqMode::Read]),
         r#"Array:["write","read"]"#
     );
 }
@@ -183,7 +183,7 @@ fn several_slices_in_one_call() {
             &[true],
             &[7],
             Some(&['c']),
-            &[SliceMode::Read]
+            &[SeqMode::Read]
         ),
         r#"Array:["s"] Array:[true] Uint8Array:[7] Array:["c"] Array:["read"]"#
     );
@@ -226,7 +226,7 @@ fn per_mono_uses_the_same_element_abi() {
     assert_eq!(generic(&[true, false]), "Array:[true,false]");
     assert_eq!(generic(&['z']), r#"Array:["z"]"#);
     assert_eq!(generic(&[SliceColor::Blue]), "Array:[40]");
-    assert_eq!(generic(&[SliceMode::Write]), r#"Array:["write"]"#);
+    assert_eq!(generic(&[SeqMode::Write]), r#"Array:["write"]"#);
     assert_eq!(generic(&[1u16, 2]), "Uint16Array:[1,2]");
     assert_eq!(generic_opt(Some(&[false][..])), "Array:[false]");
     assert_eq!(generic_opt::<String>(None), "undefined");

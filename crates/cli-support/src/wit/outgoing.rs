@@ -1,4 +1,4 @@
-use crate::descriptor::{Descriptor, Function, SequenceCell, SliceMode, VectorKind};
+use crate::descriptor::{Descriptor, Function, SeqValue, SequenceCell, VectorKind};
 use crate::wasm_conventions::get_function_table_entry;
 use crate::wit::{AdapterType, ClosureDtor, Instruction, InstructionBuilder};
 use crate::wit::{InstructionData, StackChange};
@@ -179,7 +179,7 @@ impl InstructionBuilder<'_, '_> {
                         kind: kind.clone(),
                         mem,
                         free,
-                        mode: self.slice_mode,
+                        mode: self.seq_value,
                     },
                     &[AdapterType::Vector(kind)],
                 );
@@ -216,13 +216,13 @@ impl InstructionBuilder<'_, '_> {
                 self.outgoing_function(d.mutable, &d.function, Some(d.owned))?
             }
 
-            Descriptor::SliceMode(mode, d) => {
+            Descriptor::SeqMode(mode, d) => {
                 if let Err(reason) = d.seq_mode_fit(*mode) {
                     bail!("`{mode:?}` can't apply to this argument: {reason}");
                 }
-                self.slice_mode = mode.value;
+                self.seq_value = mode.value;
                 let result = self.outgoing(d);
-                self.slice_mode = SliceMode::View;
+                self.seq_value = SeqValue::View;
                 result?;
             }
         }
@@ -267,7 +267,7 @@ impl InstructionBuilder<'_, '_> {
                     Instruction::View {
                         kind: kind.clone(),
                         mem,
-                        mode: self.slice_mode,
+                        mode: self.seq_value,
                     },
                     &[AdapterType::Vector(kind)],
                 );
@@ -475,7 +475,7 @@ impl InstructionBuilder<'_, '_> {
                         kind: kind.clone(),
                         mem,
                         free,
-                        mode: self.slice_mode,
+                        mode: self.seq_value,
                     },
                     &[AdapterType::Vector(kind).option()],
                 );
@@ -637,7 +637,7 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Function(_)
             | Descriptor::Closure(_)
             | Descriptor::Slice(_)
-            | Descriptor::SliceMode(..)
+            | Descriptor::SeqMode(..)
             | Descriptor::Encoded(_)
             | Descriptor::Result(_) => {
                 bail!("unsupported Result type for returning from exported Rust function: {arg:?}")
@@ -682,7 +682,7 @@ impl InstructionBuilder<'_, '_> {
                     Instruction::OptionView {
                         kind: kind.clone(),
                         mem,
-                        mode: self.slice_mode,
+                        mode: self.seq_value,
                     },
                     &[AdapterType::Vector(kind).option()],
                 );
@@ -715,7 +715,7 @@ impl InstructionBuilder<'_, '_> {
             // `WasmWord` is in memory on memory64, so the words' layout
             // matches the Rust ABI types in the buffer.
             return_position: true,
-            slice_mode: SliceMode::View,
+            seq_value: SeqValue::View,
         };
         // The element's kind comes from its `Encoded` cell; this only checks
         // the glue can run it. Element decoders must neither call into wasm
