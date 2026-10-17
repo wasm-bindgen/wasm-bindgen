@@ -28,28 +28,43 @@ help: consider introducing a `where` clause, but there might be an alternative b
 16 |     fn reference_argument<T>(x: &T) where &T: IntoWasmAbi;
    |                                     +++++++++++++++++++++
 
-error[E0277]: the trait bound `T: FromWasmAbi` is not satisfied
-  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:20:20
+error[E0277]: the trait bound `&T: IntoWasmAbi` is not satisfied
+  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:20:39
    |
 8  | #[wasm_bindgen]
    | --------------- in this procedural macro expansion
 ...
-20 |     fn ret<T>() -> T;
+20 |     fn reference_argument_catch<T>(x: &T) -> Result<Option<u32>, JsValue>;
+   |                                       ^ the trait `IntoWasmAbi` is not implemented for `&T`
+   |
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider introducing a `where` clause, but there might be an alternative better way to express this requirement
+   |
+20 |     fn reference_argument_catch<T>(x: &T) -> Result<Option<u32>, JsValue> where &T: IntoWasmAbi;
+   |                                                                           +++++++++++++++++++++
+
+error[E0277]: the trait bound `T: FromWasmAbi` is not satisfied
+  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:24:20
+   |
+8  | #[wasm_bindgen]
+   | --------------- in this procedural macro expansion
+...
+24 |     fn ret<T>() -> T;
    |                    ^ the trait `FromWasmAbi` is not implemented for `T`
    |
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 help: consider restricting type parameter `T` with trait `FromWasmAbi`
    |
-20 |     fn ret<T: wasm_bindgen::convert::FromWasmAbi>() -> T;
+24 |     fn ret<T: wasm_bindgen::convert::FromWasmAbi>() -> T;
    |             ++++++++++++++++++++++++++++++++++++
 
 error[E0277]: the trait bound `A: FromWasmAbi` is not satisfied
-  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:31:32
+  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:35:32
    |
 8  | #[wasm_bindgen]
    | --------------- in this procedural macro expansion
 ...
-31 |     fn callback_argument<A>(f: &dyn Fn(A));
+35 |     fn callback_argument<A>(f: &dyn Fn(A));
    |                                ^ the trait `FromWasmAbi` is not implemented for `A`
    |
    = note: required for `dyn Fn(A)` to implement `WasmDescribe`
@@ -63,16 +78,16 @@ note: required by a bound in `IntoWasmAbi`
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 help: consider restricting type parameter `A` with trait `FromWasmAbi`
    |
-31 |     fn callback_argument<A: wasm_bindgen::convert::FromWasmAbi>(f: &dyn Fn(A));
+35 |     fn callback_argument<A: wasm_bindgen::convert::FromWasmAbi>(f: &dyn Fn(A));
    |                           ++++++++++++++++++++++++++++++++++++
 
 error[E0277]: the trait bound `R: IntoWasmAbi` is not satisfied
-  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:35:30
+  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:39:30
    |
 8  | #[wasm_bindgen]
    | --------------- in this procedural macro expansion
 ...
-35 |     fn callback_return<R>(f: &dyn Fn() -> R);
+39 |     fn callback_return<R>(f: &dyn Fn() -> R);
    |                              ^ the trait `IntoWasmAbi` is not implemented for `R`
    |
    = note: required for `R` to implement `ReturnWasmAbi`
@@ -87,32 +102,32 @@ note: required by a bound in `IntoWasmAbi`
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 help: consider restricting type parameter `R` with trait `IntoWasmAbi`
    |
-35 |     fn callback_return<R: wasm_bindgen::convert::IntoWasmAbi>(f: &dyn Fn() -> R);
+39 |     fn callback_return<R: wasm_bindgen::convert::IntoWasmAbi>(f: &dyn Fn() -> R);
    |                         ++++++++++++++++++++++++++++++++++++
 
 error[E0277]: the trait bound `T: FromWasmAbi` is not satisfied
-  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:24:35
+  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:28:35
    |
 8  | #[wasm_bindgen]
    | --------------- in this procedural macro expansion
 ...
-24 |     async fn async_return<T>() -> T;
+28 |     async fn async_return<T>() -> T;
    |                                   ^ the trait `FromWasmAbi` is not implemented for `T`
    |
    = note: required for `JsFuture<T>` to implement `From<Promise<T>>`
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 help: consider restricting type parameter `T` with trait `FromWasmAbi`
    |
-24 |     async fn async_return<T: wasm_bindgen::convert::FromWasmAbi>() -> T;
+28 |     async fn async_return<T: wasm_bindgen::convert::FromWasmAbi>() -> T;
    |                            ++++++++++++++++++++++++++++++++++++
 
 error[E0310]: the parameter type `T` may not live long enough
-  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:27:55
+  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:31:55
    |
 8  | #[wasm_bindgen]
    | --------------- in this procedural macro expansion
 ...
-27 |     async fn async_return_static<T: FromWasmAbi>() -> T;
+31 |     async fn async_return_static<T: FromWasmAbi>() -> T;
    |                                                       ^
    |                                                       |
    |                                                       the parameter type `T` must be valid for the static lifetime...
@@ -121,7 +136,7 @@ error[E0310]: the parameter type `T` may not live long enough
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 help: consider adding an explicit lifetime bound
    |
-27 |     async fn async_return_static<T: FromWasmAbi + 'static>() -> T;
+31 |     async fn async_return_static<T: FromWasmAbi + 'static>() -> T;
    |                                                 +++++++++
 
 error[E0277]: the trait bound `T: IntoWasmAbi` is not satisfied
@@ -209,28 +224,113 @@ help: consider introducing a `where` clause, but there might be an alternative b
 16 |     fn reference_argument<T>(x: &T) where for<'a> &'a T: IntoWasmAbi;
    |                                     ++++++++++++++++++++++++++++++++
 
-error[E0277]: the trait bound `T: FromWasmAbi` is not satisfied
+error[E0277]: the trait bound `&T: IntoWasmAbi` is not satisfied
+  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:20:39
+   |
+8  | #[wasm_bindgen]
+   | --------------- in this procedural macro expansion
+...
+20 |     fn reference_argument_catch<T>(x: &T) -> Result<Option<u32>, JsValue>;
+   |                                       ^ the trait `IntoWasmAbi` is not implemented for `&T`
+   |
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider introducing a `where` clause, but there might be an alternative better way to express this requirement
+   |
+20 |     fn reference_argument_catch<T>(x: &T) -> Result<Option<u32>, JsValue> where &T: IntoWasmAbi;
+   |                                                                           +++++++++++++++++++++
+
+error[E0277]: the trait bound `T: WasmDescribe` is not satisfied
+  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:20:39
+   |
+8  | #[wasm_bindgen]
+   | --------------- in this procedural macro expansion
+...
+20 |     fn reference_argument_catch<T>(x: &T) -> Result<Option<u32>, JsValue>;
+   |                                       ^ the trait `WasmDescribe` is not implemented for `T`
+   |
+   = note: required for `&T` to implement `WasmDescribe`
+note: required by a bound in `into_abi`
+  --> $WORKSPACE/src/convert/traits.rs
+   |
+   | pub trait IntoWasmAbi: WasmDescribe {
+   |                        ^^^^^^^^^^^^ required by this bound in `IntoWasmAbi::into_abi`
+...
+   |     fn into_abi(self) -> Self::Abi;
+   |        -------- required by a bound in this associated function
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider restricting type parameter `T` with trait `WasmDescribe`
+   |
+20 |     fn reference_argument_catch<T: wasm_bindgen::describe::WasmDescribe>(x: &T) -> Result<Option<u32>, JsValue>;
+   |                                  ++++++++++++++++++++++++++++++++++++++
+
+error[E0277]: the trait bound `&T: IntoWasmAbi` is not satisfied
   --> ui-tests/generic-per-mono-missing-abi-bounds.rs:20:8
    |
 8  | #[wasm_bindgen]
    | --------------- in this procedural macro expansion
 ...
-20 |     fn ret<T>() -> T;
+20 |     fn reference_argument_catch<T>(x: &T) -> Result<Option<u32>, JsValue>;
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^ the trait `IntoWasmAbi` is not implemented for `&T`
+   |
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider introducing a `where` clause, but there might be an alternative better way to express this requirement
+   |
+20 |     fn reference_argument_catch<T>(x: &T) -> Result<Option<u32>, JsValue> where &T: IntoWasmAbi;
+   |                                                                           +++++++++++++++++++++
+
+error[E0277]: the trait bound `T: WasmDescribe` is not satisfied
+  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:20:39
+   |
+8  | #[wasm_bindgen]
+   | --------------- in this procedural macro expansion
+...
+20 |     fn reference_argument_catch<T>(x: &T) -> Result<Option<u32>, JsValue>;
+   |                                       ^ the trait `WasmDescribe` is not implemented for `T`
+   |
+   = note: required for `&T` to implement `WasmDescribe`
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider restricting type parameter `T` with trait `WasmDescribe`
+   |
+20 |     fn reference_argument_catch<T: wasm_bindgen::describe::WasmDescribe>(x: &T) -> Result<Option<u32>, JsValue>;
+   |                                  ++++++++++++++++++++++++++++++++++++++
+
+error[E0277]: the trait bound `for<'a> &'a T: IntoWasmAbi` is not satisfied
+  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:20:8
+   |
+8  | #[wasm_bindgen]
+   | --------------- in this procedural macro expansion
+...
+20 |     fn reference_argument_catch<T>(x: &T) -> Result<Option<u32>, JsValue>;
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^ the trait `for<'a> IntoWasmAbi` is not implemented for `&T`
+   |
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: consider introducing a `where` clause, but there might be an alternative better way to express this requirement
+   |
+20 |     fn reference_argument_catch<T>(x: &T) -> Result<Option<u32>, JsValue> where for<'a> &'a T: IntoWasmAbi;
+   |                                                                           ++++++++++++++++++++++++++++++++
+
+error[E0277]: the trait bound `T: FromWasmAbi` is not satisfied
+  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:24:8
+   |
+8  | #[wasm_bindgen]
+   | --------------- in this procedural macro expansion
+...
+24 |     fn ret<T>() -> T;
    |        ^^^ the trait `FromWasmAbi` is not implemented for `T`
    |
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 help: consider restricting type parameter `T` with trait `FromWasmAbi`
    |
-20 |     fn ret<T: wasm_bindgen::convert::FromWasmAbi>() -> T;
+24 |     fn ret<T: wasm_bindgen::convert::FromWasmAbi>() -> T;
    |             ++++++++++++++++++++++++++++++++++++
 
 error[E0277]: the trait bound `A: FromWasmAbi` is not satisfied
-  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:31:32
+  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:35:32
    |
 8  | #[wasm_bindgen]
    | --------------- in this procedural macro expansion
 ...
-31 |     fn callback_argument<A>(f: &dyn Fn(A));
+35 |     fn callback_argument<A>(f: &dyn Fn(A));
    |                                ^ the trait `FromWasmAbi` is not implemented for `A`
    |
    = note: required for `dyn Fn(A)` to implement `WasmDescribe`
@@ -247,16 +347,16 @@ note: required by a bound in `into_abi`
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 help: consider restricting type parameter `A` with trait `FromWasmAbi`
    |
-31 |     fn callback_argument<A: wasm_bindgen::convert::FromWasmAbi>(f: &dyn Fn(A));
+35 |     fn callback_argument<A: wasm_bindgen::convert::FromWasmAbi>(f: &dyn Fn(A));
    |                           ++++++++++++++++++++++++++++++++++++
 
 error[E0277]: the trait bound `A: FromWasmAbi` is not satisfied
-  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:31:8
+  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:35:8
    |
 8  | #[wasm_bindgen]
    | --------------- in this procedural macro expansion
 ...
-31 |     fn callback_argument<A>(f: &dyn Fn(A));
+35 |     fn callback_argument<A>(f: &dyn Fn(A));
    |        ^^^^^^^^^^^^^^^^^ the trait `FromWasmAbi` is not implemented for `A`
    |
    = note: required for `dyn Fn(A)` to implement `WasmDescribe`
@@ -266,16 +366,16 @@ error[E0277]: the trait bound `A: FromWasmAbi` is not satisfied
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 help: consider restricting type parameter `A` with trait `FromWasmAbi`
    |
-31 |     fn callback_argument<A: wasm_bindgen::convert::FromWasmAbi>(f: &dyn Fn(A));
+35 |     fn callback_argument<A: wasm_bindgen::convert::FromWasmAbi>(f: &dyn Fn(A));
    |                           ++++++++++++++++++++++++++++++++++++
 
 error[E0277]: the trait bound `A: FromWasmAbi` is not satisfied
-  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:31:32
+  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:35:32
    |
 8  | #[wasm_bindgen]
    | --------------- in this procedural macro expansion
 ...
-31 |     fn callback_argument<A>(f: &dyn Fn(A));
+35 |     fn callback_argument<A>(f: &dyn Fn(A));
    |                                ^ the trait `FromWasmAbi` is not implemented for `A`
    |
    = note: required for `dyn Fn(A)` to implement `WasmDescribe`
@@ -285,16 +385,16 @@ error[E0277]: the trait bound `A: FromWasmAbi` is not satisfied
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 help: consider restricting type parameter `A` with trait `FromWasmAbi`
    |
-31 |     fn callback_argument<A: wasm_bindgen::convert::FromWasmAbi>(f: &dyn Fn(A));
+35 |     fn callback_argument<A: wasm_bindgen::convert::FromWasmAbi>(f: &dyn Fn(A));
    |                           ++++++++++++++++++++++++++++++++++++
 
 error[E0277]: the trait bound `A: FromWasmAbi` is not satisfied
-  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:31:8
+  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:35:8
    |
 8  | #[wasm_bindgen]
    | --------------- in this procedural macro expansion
 ...
-31 |     fn callback_argument<A>(f: &dyn Fn(A));
+35 |     fn callback_argument<A>(f: &dyn Fn(A));
    |        ^^^^^^^^^^^^^^^^^ the trait `FromWasmAbi` is not implemented for `A`
    |
    = note: required for `dyn Fn(A)` to implement `WasmDescribe`
@@ -304,16 +404,16 @@ error[E0277]: the trait bound `A: FromWasmAbi` is not satisfied
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 help: consider restricting type parameter `A` with trait `FromWasmAbi`
    |
-31 |     fn callback_argument<A: wasm_bindgen::convert::FromWasmAbi>(f: &dyn Fn(A));
+35 |     fn callback_argument<A: wasm_bindgen::convert::FromWasmAbi>(f: &dyn Fn(A));
    |                           ++++++++++++++++++++++++++++++++++++
 
 error[E0277]: the trait bound `R: IntoWasmAbi` is not satisfied
-  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:35:30
+  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:39:30
    |
 8  | #[wasm_bindgen]
    | --------------- in this procedural macro expansion
 ...
-35 |     fn callback_return<R>(f: &dyn Fn() -> R);
+39 |     fn callback_return<R>(f: &dyn Fn() -> R);
    |                              ^ the trait `IntoWasmAbi` is not implemented for `R`
    |
    = note: required for `R` to implement `ReturnWasmAbi`
@@ -331,16 +431,16 @@ note: required by a bound in `into_abi`
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 help: consider restricting type parameter `R` with trait `IntoWasmAbi`
    |
-35 |     fn callback_return<R: wasm_bindgen::convert::IntoWasmAbi>(f: &dyn Fn() -> R);
+39 |     fn callback_return<R: wasm_bindgen::convert::IntoWasmAbi>(f: &dyn Fn() -> R);
    |                         ++++++++++++++++++++++++++++++++++++
 
 error[E0277]: the trait bound `R: IntoWasmAbi` is not satisfied
-  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:35:8
+  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:39:8
    |
 8  | #[wasm_bindgen]
    | --------------- in this procedural macro expansion
 ...
-35 |     fn callback_return<R>(f: &dyn Fn() -> R);
+39 |     fn callback_return<R>(f: &dyn Fn() -> R);
    |        ^^^^^^^^^^^^^^^ the trait `IntoWasmAbi` is not implemented for `R`
    |
    = note: required for `R` to implement `ReturnWasmAbi`
@@ -351,16 +451,16 @@ error[E0277]: the trait bound `R: IntoWasmAbi` is not satisfied
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 help: consider restricting type parameter `R` with trait `IntoWasmAbi`
    |
-35 |     fn callback_return<R: wasm_bindgen::convert::IntoWasmAbi>(f: &dyn Fn() -> R);
+39 |     fn callback_return<R: wasm_bindgen::convert::IntoWasmAbi>(f: &dyn Fn() -> R);
    |                         ++++++++++++++++++++++++++++++++++++
 
 error[E0277]: the trait bound `R: IntoWasmAbi` is not satisfied
-  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:35:30
+  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:39:30
    |
 8  | #[wasm_bindgen]
    | --------------- in this procedural macro expansion
 ...
-35 |     fn callback_return<R>(f: &dyn Fn() -> R);
+39 |     fn callback_return<R>(f: &dyn Fn() -> R);
    |                              ^ the trait `IntoWasmAbi` is not implemented for `R`
    |
    = note: required for `R` to implement `ReturnWasmAbi`
@@ -371,16 +471,16 @@ error[E0277]: the trait bound `R: IntoWasmAbi` is not satisfied
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 help: consider restricting type parameter `R` with trait `IntoWasmAbi`
    |
-35 |     fn callback_return<R: wasm_bindgen::convert::IntoWasmAbi>(f: &dyn Fn() -> R);
+39 |     fn callback_return<R: wasm_bindgen::convert::IntoWasmAbi>(f: &dyn Fn() -> R);
    |                         ++++++++++++++++++++++++++++++++++++
 
 error[E0277]: the trait bound `R: IntoWasmAbi` is not satisfied
-  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:35:8
+  --> ui-tests/generic-per-mono-missing-abi-bounds.rs:39:8
    |
 8  | #[wasm_bindgen]
    | --------------- in this procedural macro expansion
 ...
-35 |     fn callback_return<R>(f: &dyn Fn() -> R);
+39 |     fn callback_return<R>(f: &dyn Fn() -> R);
    |        ^^^^^^^^^^^^^^^ the trait `IntoWasmAbi` is not implemented for `R`
    |
    = note: required for `R` to implement `ReturnWasmAbi`
@@ -391,5 +491,5 @@ error[E0277]: the trait bound `R: IntoWasmAbi` is not satisfied
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 help: consider restricting type parameter `R` with trait `IntoWasmAbi`
    |
-35 |     fn callback_return<R: wasm_bindgen::convert::IntoWasmAbi>(f: &dyn Fn() -> R);
+39 |     fn callback_return<R: wasm_bindgen::convert::IntoWasmAbi>(f: &dyn Fn() -> R);
    |                         ++++++++++++++++++++++++++++++++++++
