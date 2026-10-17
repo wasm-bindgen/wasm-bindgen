@@ -366,13 +366,6 @@ export function take_usize(a) {
 export function __wbg___wbindgen_copy_to_typed_array_88899a52af046901(arg0, arg1, arg2) {
     new Uint8Array(arg2.buffer, arg2.byteOffset, arg2.byteLength).set(getArrayU8FromWasm0(arg0, arg1));
 }
-export function __wbg___wbindgen_debug_string_4687d8d8c2017d52(arg0, arg1) {
-    const ret = debugString(arg1);
-    const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    const len1 = WASM_VECTOR_LEN;
-    getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 1, len1, true);
-    getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr1, true);
-}
 export function __wbg___wbindgen_string_get_0380ccaa2f57f0d9(arg0, arg1) {
     const obj = arg1;
     const ret = typeof(obj) === 'string' ? obj : undefined;
@@ -408,64 +401,6 @@ function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
     return idx;
-}
-
-function debugString(val) {
-    switch (typeof val) {
-        // primitive types
-        case 'number':
-        case 'boolean':
-        case 'undefined':
-        return `${val}`;
-        case 'string':
-        return JSON.stringify(val);
-        case 'bigint':
-        return `${val}n`;
-        case 'symbol':
-        return val.description !== undefined
-            ? `Symbol(${val.description})`
-            : 'Symbol';
-        case 'function':
-        return typeof val.name === 'string' && val.name !== ''
-            ? `Function(${val.name})`
-            : 'Function';
-        case 'object': {
-            if (val === null) {
-                return 'null';
-            }
-            // objects
-            if (Array.isArray(val)) {
-                return '[' + Array.from(val, debugString).join(', ') + ']';
-            }
-            // errors
-            if (val instanceof Error) {
-                return `${val.name}: ${val.message}\n${val.stack}`;
-            }
-
-            const toStringOutput = toString.call(val);
-            // Test for built-in
-            const className = /\[object ([^\]]+)\]/.exec(toStringOutput)?.[1];
-
-            // Failed to match the standard '[object ClassName]'
-            if (className === undefined) {
-                return toStringOutput;
-            }
-            if (className === 'Object') {
-                // we're a user defined class or Object
-                // JSON.stringify avoids problems with cycles, and is generally much
-                // easier than looping through ownProperties of `val`.
-                try {
-                    return 'Object(' + JSON.stringify(val) + ')';
-                } catch (_) {
-                    return 'Object';
-                }
-            }
-            // TODO we could test for more things here, like `Set`s and `Map`s.
-            return className;
-        }
-        // Per MDN: 'This list of values is exhaustive.'
-        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof#description
-    }
 }
 
 function getArrayF64FromWasm0(ptr, len) {

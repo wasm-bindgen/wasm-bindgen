@@ -1,0 +1,39 @@
+error[E0277]: the trait bound `Point: VectorRefIntoWasmAbi` is not satisfied
+  --> ui-tests/slice-of-struct.rs:13:8
+   |
+11 | #[wasm_bindgen]
+   | --------------- in this procedural macro expansion
+12 | extern "C" {
+13 |     fn take_points(points: &[Point]);
+   |        ^^^^^^^^^^^ the trait `VectorRefIntoWasmAbi` is not implemented for `Point`
+   |
+   = help: the following other types implement trait `VectorRefIntoWasmAbi`:
+             &Box<str>
+             &Cow<'_, str>
+             &String
+             &str
+             JsError
+             JsNullable<T>
+             JsOption<T>
+             JsValue
+           and $N others
+   = note: required for `&[Point]` to implement `IntoWasmAbi`
+   = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `Point: VectorRefIntoWasmAbi` is not satisfied
+  --> ui-tests/slice-of-struct.rs:13:28
+   |
+13 |     fn take_points(points: &[Point]);
+   |                            ^ the trait `VectorRefIntoWasmAbi` is not implemented for `Point`
+   |
+   = help: the following other types implement trait `VectorRefIntoWasmAbi`:
+             &Box<str>
+             &Cow<'_, str>
+             &String
+             &str
+             JsError
+             JsNullable<T>
+             JsOption<T>
+             JsValue
+           and $N others
+   = note: required for `&[Point]` to implement `IntoWasmAbi`

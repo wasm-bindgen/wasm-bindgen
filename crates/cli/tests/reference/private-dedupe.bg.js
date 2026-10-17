@@ -115,8 +115,14 @@ if (Symbol.dispose) Status2.prototype[Symbol.dispose] = Status2.prototype.free;
  */
 export function a_levels() {
     const ret = wasm.a_levels();
-    var v1 = getArrayJsValueFromWasm0(ret[0], ret[1]);
-    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    const v1 = [];
+    let p1 = ret[0];
+    p1 = p1 >>> 0;
+    const view1 = getDataViewMemory0();
+    for (const end1 = p1 + ret[1] * 8; p1 < end1; p1 += 8) {
+        v1.push(view1.getFloat64(p1 + 0, true));
+    }
+    wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
     return v1;
 }
 
@@ -125,8 +131,14 @@ export function a_levels() {
  */
 export function b_levels() {
     const ret = wasm.b_levels();
-    var v1 = getArrayJsValueFromWasm0(ret[0], ret[1]);
-    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    const v1 = [];
+    let p1 = ret[0];
+    p1 = p1 >>> 0;
+    const view1 = getDataViewMemory0();
+    for (const end1 = p1 + ret[1] * 8; p1 < end1; p1 += 8) {
+        v1.push(view1.getFloat64(p1 + 0, true));
+    }
+    wasm.__wbindgen_free(ret[0], ret[1] * 8, 8);
     return v1;
 }
 
@@ -158,11 +170,6 @@ export function __wbg_status2_new(arg0) {
 }
 export function __wbg_status_new(arg0) {
     const ret = Status.__wrap(arg0);
-    return ret;
-}
-export function __wbindgen_generic_0000000000000000(arg0) {
-    // Cast intrinsic for `F64 -> Externref`.
-    const ret = arg0;
     return ret;
 }
 export function __wbindgen_init_externref_table() {

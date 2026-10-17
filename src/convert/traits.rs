@@ -658,13 +658,17 @@ impl<T: IntoJsGeneric + Clone> IntoJsGeneric for &T {
 /// This trait is sealed: it is implemented only for the string shapes above,
 /// each of which is guaranteed to produce a JS string on the other side.
 ///
-/// `OptionIntoWasmAbi` is a supertrait so that nullable string positions
-/// (`Option<T>`) work under the same bound.
+/// `OptionIntoWasmAbi` and `VectorRefIntoWasmAbi` are supertraits so that
+/// nullable string positions (`Option<T>`) and string slices (`&[T]`) work
+/// under the same bound. A slice arrives in JS as an `Array` of strings.
 ///
 /// This trait is experimental, like `experimental_generic_mono` itself, and
 /// may change or be removed as that feature stabilizes.
 pub trait JsStringLike:
-    IntoWasmAbi + OptionIntoWasmAbi + crate::__rt::marker::JsStringLikeSealed
+    IntoWasmAbi
+    + OptionIntoWasmAbi
+    + crate::convert::VectorRefIntoWasmAbi
+    + crate::__rt::marker::JsStringLikeSealed
 {
 }
 

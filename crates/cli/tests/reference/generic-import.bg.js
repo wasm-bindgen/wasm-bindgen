@@ -256,9 +256,8 @@ export function __wbindgen_generic_000000000000001a(arg0) {
     return ret;
 }
 export function __wbindgen_generic_000000000000001b(arg0, arg1, arg2) {
-    var v0 = Array.from(getArrayU16FromWasm0(arg0, arg1));
-    // generic import `logBlockSlice`: [Ref(Vector(U16)), U32] -> Unit
-    logBlockSlice(v0, arg2 >>> 0);
+    // generic import `logBlockSlice`: [SeqMode(slice = array, Ref(Slice(U16))), U32] -> Unit
+    logBlockSlice(Array.from(getArrayU16FromWasm0(arg0, arg1)), arg2 >>> 0);
 }
 export function __wbindgen_generic_000000000000001c(arg0, arg1) {
     // generic import `logGenericSlice`: [Ref(Slice(F64))] -> Unit
@@ -289,20 +288,22 @@ export function __wbindgen_generic_0000000000000021(arg0, arg1) {
     logNestedImplTrait(v0);
 }
 export function __wbindgen_generic_0000000000000022(arg0, arg1, arg2) {
-    let v0;
-    if (arg0 !== 0) {
-        v0 = Array.from(getArrayU16FromWasm0(arg0, arg1));
-    }
-    // generic import `logOptSlice`: [Option(Ref(Vector(U16))), U32] -> Unit
-    logOptSlice(v0, arg2 >>> 0);
+    // generic import `logOptSlice`: [SeqMode(slice = array, Option(Ref(Slice(U16)))), U32] -> Unit
+    logOptSlice(arg0 === 0 ? undefined : Array.from(getArrayU16FromWasm0(arg0, arg1)), arg2 >>> 0);
 }
 export function __wbindgen_generic_0000000000000023(arg0, arg1, arg2) {
     let v0;
     if (arg0 !== 0) {
-        v0 = getArrayJsValueFromWasm0(arg0, arg1);
-        wasm.__wbindgen_free(arg0, arg1 * 4, 4);
+        v0 = [];
+        let p0 = arg0;
+        p0 = p0 >>> 0;
+        const view0 = getDataViewMemory0();
+        for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
+            v0.push(getStringFromWasm0(view0.getInt32(p0 + 0, true), view0.getInt32(p0 + 4, true)));
+        }
+        wasm.__wbindgen_free(arg0, arg1 * 8, 4);
     }
-    // generic import `logOptStrSlice`: [Option(Ref(Vector(NamedExternref("string")))), U32] -> Unit
+    // generic import `logOptStrSlice`: [Option(Ref(Slice(String))), U32] -> Unit
     logOptStrSlice(v0, arg2 >>> 0);
 }
 export function __wbindgen_generic_0000000000000024(arg0) {
@@ -310,19 +311,23 @@ export function __wbindgen_generic_0000000000000024(arg0) {
     logRef(arg0);
 }
 export function __wbindgen_generic_0000000000000025(arg0, arg1, arg2) {
-    var v0 = Array.from(getArrayU16FromWasm0(arg0, arg1));
-    // generic import `logSlice`: [Ref(Vector(U16)), F64] -> Unit
-    logSlice(v0, arg2);
+    // generic import `logSlice`: [SeqMode(slice = array, Ref(Slice(U16))), F64] -> Unit
+    logSlice(Array.from(getArrayU16FromWasm0(arg0, arg1)), arg2);
 }
 export function __wbindgen_generic_0000000000000026(arg0, arg1, arg2) {
-    var v0 = Array.from(getArrayU16FromWasm0(arg0, arg1));
-    // generic import `logSlice`: [Ref(Vector(U16)), U32] -> Unit
-    logSlice(v0, arg2 >>> 0);
+    // generic import `logSlice`: [SeqMode(slice = array, Ref(Slice(U16))), U32] -> Unit
+    logSlice(Array.from(getArrayU16FromWasm0(arg0, arg1)), arg2 >>> 0);
 }
 export function __wbindgen_generic_0000000000000027(arg0, arg1, arg2) {
-    var v0 = getArrayJsValueFromWasm0(arg0, arg1);
-    wasm.__wbindgen_free(arg0, arg1 * 4, 4);
-    // generic import `logStrSlice`: [Ref(Vector(NamedExternref("string"))), U32] -> Unit
+    const v0 = [];
+    let p0 = arg0;
+    p0 = p0 >>> 0;
+    const view0 = getDataViewMemory0();
+    for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
+        v0.push(getStringFromWasm0(view0.getInt32(p0 + 0, true), view0.getInt32(p0 + 4, true)));
+    }
+    wasm.__wbindgen_free(arg0, arg1 * 8, 4);
+    // generic import `logStrSlice`: [Ref(Slice(String)), U32] -> Unit
     logStrSlice(v0, arg2 >>> 0);
 }
 export function __wbindgen_generic_0000000000000028(arg0) {
@@ -637,17 +642,6 @@ function debugString(val) {
 function getArrayF64FromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return getFloat64ArrayMemory0().subarray(ptr / 8, ptr / 8 + len);
-}
-
-function getArrayJsValueFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    const mem = getDataViewMemory0();
-    const result = [];
-    for (let i = ptr; i < ptr + 4 * len; i += 4) {
-        result.push(wasm.__wbindgen_externrefs.get(mem.getUint32(i, true)));
-    }
-    wasm.__externref_drop_slice(ptr, len);
-    return result;
 }
 
 function getArrayU16FromWasm0(ptr, len) {

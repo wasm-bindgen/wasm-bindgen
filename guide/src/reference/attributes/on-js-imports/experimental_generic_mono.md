@@ -110,9 +110,12 @@ extern "C" {
 `&Cow<str>`, `js_sys::JsString` and `&js_sys::JsString`, so a caller can pass
 whichever it already holds and each monomorphisation crosses at that shape's
 native wire format — UTF-8 buffers for the Rust strings, a handle for
-`JsString` — all arriving in JS as a string value. Nullable positions work
-under the same bound (`Option<T>`), since the trait carries `OptionIntoWasmAbi`
-as a supertrait. The trait is sealed to exactly these string shapes. Like
+`JsString` — all arriving in JS as a string value. Nullable positions
+(`Option<T>`) and slices (`&[T]`, arriving as an `Array` of strings) work under
+the same bound, since the trait carries `OptionIntoWasmAbi` and
+`VectorRefIntoWasmAbi` as supertraits. So a plain Rust function bounded by
+`JsStringLike` alone can forward a `&[T]` to such an import. The trait is
+sealed to exactly these string shapes. Like
 `experimental_generic_mono` itself, the trait is experimental and may change
 as the feature stabilizes.
 
@@ -381,11 +384,19 @@ trait objects nested in another type do not receive this lowering.
 
 ## Other attributes
 
-`experimental_generic_mono` composes with the usual import attributes — `method`,
-`static_method_of`, `constructor`, `getter`, `setter`, `structural`, `final`,
-`indexing_getter`, `indexing_setter`, `indexing_deleter`, `js_namespace`,
-`js_name`, `catch`, `variadic`, and `slice_to_array` — and the resulting JS
-binding is shaped exactly as it would be for the equivalent non-generic import.
+`experimental_generic_mono` composes with the usual import attributes —
+`method`, `static_method_of`, `constructor`, `getter`, `setter`,
+`structural`, `final`, `indexing_getter`, `indexing_setter`,
+`indexing_deleter`, `js_namespace`, `js_name`, `catch`, `variadic`, and the
+[`slice` and `vec` modes](slice.md) — and the resulting JS binding is shaped
+exactly as it would be for the equivalent non-generic import.
+
+At each instantiation, a slice argument (`&[T]` or `Option<&[T]>`) whose
+element is a type parameter crosses exactly as the concrete slice would. A
+numeric element arrives as a typed-array view, or as its `slice` mode
+selects; any other element, `String` included, arrives as a fresh `Array`.
+So one attribute on an `extern "C"` block covers generic and concrete
+imports alike.
 
 The two that do *not* compose are `assert_no_shim` and `reexport`; both are
 rejected, see [Unsupported shapes](#unsupported-shapes).
@@ -434,10 +445,12 @@ These are rejected at compile time with a diagnostic pointing at the offending
 declaration. Each generally keeps working on the type-erasure path, so the fix is
 usually to drop `experimental_generic_mono`:
 
-* **A mutable reference to a type parameter** (`&mut T`, or `&mut Vec<T>`, or
-  any other `&mut` whose referent mentions a type parameter), and a reference to
+* **A mutable reference to a type parameter** (`&mut T`, `&mut [T]`, or any
+  other `&mut` whose referent mentions a type parameter), and a reference to
   a type parameter **nested inside another type** (e.g. `Option<&T>`). A bare
-  `&T` *is* supported, and mutable references to *concrete* types (e.g.
+  `&T` *is* supported, slices are supported, `Option<&[T]>` included, since
+  a slice crosses by its element's ABI rather than as a nested reference,
+  and mutable references to *concrete* types (e.g.
   `&mut [u16]`, `&mut dyn FnMut(u32)`) bind exactly as they do on the
   non-generic import path — the restriction is only about references to type
   parameters. Top-level callbacks whose owned input or return types are generic
@@ -450,11 +463,6 @@ usually to drop `experimental_generic_mono`:
 * **A type parameter in the error position of a `catch` import**
   (`Result<T, E>` with generic `E`): only the `Ok` type is monomorphised, and the
   error type is always `JsValue`.
-* **`slice_to_array` on a slice whose element type mentions a type parameter**
-  (`&[T]`, `&[Vec<T>]`, `Option<&[T]>`). `VectorRefIntoWasmAbi` is implemented
-  per concrete ABI shape, so no bound the caller can write makes an arbitrary `T`
-  satisfy it; the element type must be concrete. See
-  [`slice_to_array`](./slice_to_array.md).
 * **`reexport`**, which has no well-defined target when one binding is
   manufactured per monomorphisation.
 * **`assert_no_shim`**, which asserts that no shim function is generated for the
@@ -494,7 +502,7 @@ hash.
 A monomorphisation records only a shim key, which is a hash over the Rust
 function name, the `js_name` (when one is given), the `js_namespace`, the
 signature tokens, the `module`, and any `cfg` attributes. It does *not* cover
-`catch`, `variadic`, `slice_to_array`, `structural`/`final`, or the
+`catch`, `variadic`, the `slice` and `vec` modes, `structural`/`final`, or the
 getter/setter accessor kind. Two imports differing only in one of those claim
 the same key, and the CLI cannot tell which binding a given instantiation meant.
 Rather than silently binding one of them, which would mis-bind every

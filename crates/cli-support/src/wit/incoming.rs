@@ -7,7 +7,7 @@
 //! Note that the mirror operation, going from WebAssembly to JS, is found in
 //! the `outgoing.rs` module.
 
-use crate::descriptor::Descriptor;
+use crate::descriptor::{Descriptor, SeqValue, SequenceCell};
 use crate::wit::InstructionData;
 use crate::wit::{AdapterType, Instruction, InstructionBuilder, StackChange};
 use anyhow::{bail, format_err, Error};
@@ -127,8 +127,8 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Enum { name, .. } => {
                 self.instruction(
                     &[AdapterType::Enum(name.clone())],
-                    Instruction::Int32ToWasm,
-                    &[AdapterType::I32],
+                    Instruction::F64FromEnum,
+                    &[AdapterType::F64],
                 );
             },
             Descriptor::StringEnum { name, invalid, .. } => {
@@ -166,10 +166,11 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
 
-            Descriptor::Vector(_) => {
-                let kind = arg.vector_kind().ok_or_else(|| {
-                    format_err!("unsupported argument type for calling Rust function from JS {arg:?}")
-                })?;
+            Descriptor::Vector(cell) => {
+                let kind = match cell.sequence_cell() {
+                    SequenceCell::InPlace(kind) => kind,
+                    SequenceCell::Encoded(elem) => return self.incoming_encoded_vector(elem, false),
+                };
                 let ptr_ty = self.incoming_internal_word_ty();
                 self.instruction(
                     &[AdapterType::Vector(kind.clone())],
@@ -187,6 +188,8 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Closure(_) |
 
             Descriptor::Result(_) |
+            // Only on imported function arguments
+            Descriptor::SeqMode(..) |
             // Always behind a `Ref`
             Descriptor::Slice(_) => bail!(
                 "unsupported argument type for calling Rust function from JS: {arg:?}"
@@ -372,8 +375,8 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Enum { name, hole, .. } => {
                 self.instruction(
                     &[AdapterType::Enum(name.clone()).option()],
-                    Instruction::I32FromOptionEnum { hole: *hole },
-                    &[AdapterType::I32],
+                    Instruction::F64FromOptionEnum { hole: *hole },
+                    &[AdapterType::F64],
                 );
             }
             Descriptor::StringEnum {
@@ -423,12 +426,11 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
 
-            Descriptor::Vector(_) => {
-                let kind = arg.vector_kind().ok_or_else(|| {
-                    format_err!(
-                        "unsupported optional slice type for calling Rust function from JS {arg:?}"
-                    )
-                })?;
+            Descriptor::Vector(cell) => {
+                let kind = match cell.sequence_cell() {
+                    SequenceCell::InPlace(kind) => kind,
+                    SequenceCell::Encoded(elem) => return self.incoming_encoded_vector(elem, true),
+                };
                 let malloc = self.cx.malloc()?;
                 let mem = self.cx.memory()?;
                 let ptr_ty = self.incoming_internal_word_ty();
@@ -576,6 +578,62 @@ impl InstructionBuilder<'_, '_> {
             Instruction::F64FromOptionSentinelNumber,
             &[AdapterType::F64],
         );
+    }
+
+    /// An owned vector with encoded cells is a buffer of its elements'
+    /// scalar ABIs, the mirror of `outgoing_encoded_slice`. JS encodes each
+    /// element with the element's own instructions, as for an argument of the
+    /// element type, and writes its ABI words into the buffer, which Rust
+    /// takes ownership of.
+    fn incoming_encoded_vector(&mut self, elem: &Descriptor, optional: bool) -> Result<(), Error> {
+        let mut encode = InstructionBuilder {
+            input: Vec::new(),
+            output: Vec::new(),
+            instructions: Vec::new(),
+            cx: &mut *self.cx,
+            // The element is pushed onto the stack by the loop, not fetched
+            // as an argument.
+            return_position: true,
+            seq_value: SeqValue::View,
+        };
+        // Every element that isn't in place reaches here, so this is what
+        // rejects one the glue can't encode. Element encoders must not call
+        // into wasm: the glue writes the whole buffer through one view after
+        // allocating it. That rules out elements that own memory, such as a
+        // string.
+        match elem {
+            Descriptor::Boolean
+            | Descriptor::Char
+            | Descriptor::Enum { .. }
+            | Descriptor::StringEnum { .. } => encode._incoming(elem)?,
+            _ => {
+                bail!("unsupported vector element type for calling Rust function from JS: {elem:?}")
+            }
+        }
+        let InstructionBuilder {
+            mut input,
+            output: words,
+            instructions: elem,
+            ..
+        } = encode;
+        let array = AdapterType::Array(Box::new(input.remove(0)));
+        let malloc = self.cx.malloc()?;
+        let free = self.cx.free()?;
+        let mem = self.cx.memory()?;
+        let ptr_ty = self.incoming_internal_word_ty();
+        self.instruction(
+            &[if optional { array.option() } else { array }],
+            Instruction::EncodedSliceStore {
+                words,
+                elem,
+                malloc,
+                free,
+                mem,
+                optional,
+            },
+            &[ptr_ty.clone(), ptr_ty],
+        );
+        Ok(())
     }
 
     fn incoming_internal_word_ty(&self) -> AdapterType {

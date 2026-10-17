@@ -136,8 +136,7 @@ the concrete marshalling is the point, e.g. a `log<T>` that should pass a `u32`
 as a number rather than boxing it.
 
 `experimental_generic_mono` also rejects a number of shapes that erasure accepts
-(generic parameters on the imported *type*, `&mut T`, generic `slice_to_array`
-element types, and others); those are listed on
+(generic parameters on the imported *type*, `&mut T`, and others), listed on
 [its own page](./attributes/on-js-imports/experimental_generic_mono.md#unsupported-shapes).
 
 ## The ErasableGeneric Trait

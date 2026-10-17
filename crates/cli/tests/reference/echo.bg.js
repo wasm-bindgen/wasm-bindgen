@@ -897,13 +897,6 @@ export function echo_vec_uninit_u8(a) {
     wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
     return v2;
 }
-export function __wbg___wbindgen_debug_string_4687d8d8c2017d52(arg0, arg1) {
-    const ret = debugString(arg1);
-    const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    const len1 = WASM_VECTOR_LEN;
-    getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 1, len1, true);
-    getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr1, true);
-}
 export function __wbg___wbindgen_string_get_0380ccaa2f57f0d9(arg0, arg1) {
     const obj = arg1;
     const ret = typeof(obj) === 'string' ? obj : undefined;
@@ -954,64 +947,6 @@ function _assertChar(c) {
 function _assertClass(instance, klass) {
     if (!(instance instanceof klass)) {
         throw new Error(`expected instance of ${klass.name}`);
-    }
-}
-
-function debugString(val) {
-    switch (typeof val) {
-        // primitive types
-        case 'number':
-        case 'boolean':
-        case 'undefined':
-        return `${val}`;
-        case 'string':
-        return JSON.stringify(val);
-        case 'bigint':
-        return `${val}n`;
-        case 'symbol':
-        return val.description !== undefined
-            ? `Symbol(${val.description})`
-            : 'Symbol';
-        case 'function':
-        return typeof val.name === 'string' && val.name !== ''
-            ? `Function(${val.name})`
-            : 'Function';
-        case 'object': {
-            if (val === null) {
-                return 'null';
-            }
-            // objects
-            if (Array.isArray(val)) {
-                return '[' + Array.from(val, debugString).join(', ') + ']';
-            }
-            // errors
-            if (val instanceof Error) {
-                return `${val.name}: ${val.message}\n${val.stack}`;
-            }
-
-            const toStringOutput = toString.call(val);
-            // Test for built-in
-            const className = /\[object ([^\]]+)\]/.exec(toStringOutput)?.[1];
-
-            // Failed to match the standard '[object ClassName]'
-            if (className === undefined) {
-                return toStringOutput;
-            }
-            if (className === 'Object') {
-                // we're a user defined class or Object
-                // JSON.stringify avoids problems with cycles, and is generally much
-                // easier than looping through ownProperties of `val`.
-                try {
-                    return 'Object(' + JSON.stringify(val) + ')';
-                } catch (_) {
-                    return 'Object';
-                }
-            }
-            // TODO we could test for more things here, like `Set`s and `Map`s.
-            return className;
-        }
-        // Per MDN: 'This list of values is exhaustive.'
-        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof#description
     }
 }
 

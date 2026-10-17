@@ -23,6 +23,13 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono)]
     fn nested_ref_to_generic<T>(x: Option<&T>);
 
+    // Slices (`Option<&[T]>` included — not a "nested reference", since only
+    // the element's `VectorRefIntoWasmAbi` is needed; see the pass tests) are
+    // supported, but a `&mut` slice is not: its element has no borrowed wire
+    // for JS to write back through.
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn mut_slice_generic_elem<T>(xs: &mut [T], other: T);
+
     // Returning a reference is not supported.
     #[wasm_bindgen(experimental_generic_mono)]
     fn return_ref<T>(x: T) -> &JsValue;
@@ -172,29 +179,6 @@ extern "C" {
     // per-mono one -- the erasure path already covers the same message.
     #[wasm_bindgen(experimental_generic_mono)]
     fn unsized_type_param<T: ?Sized>(x: &T);
-
-    // `slice_to_array` needs a concrete element type: `VectorRefIntoWasmAbi` is
-    // implemented per concrete ABI shape, so no bound makes `&[T]` work. This is
-    // also a parse-time rejection, so it belongs in this block: leaving it in the
-    // codegen-time block above would abort that block and swallow every
-    // diagnostic in it.
-    #[wasm_bindgen(experimental_generic_mono, slice_to_array)]
-    fn slice_to_array_generic_elem<T>(xs: &[T], other: T);
-
-    // Also rejected when only nested inside the element type...
-    #[wasm_bindgen(experimental_generic_mono, slice_to_array)]
-    fn slice_to_array_nested_elem<T>(xs: &[Vec<T>], other: T);
-
-    // ...and through the `Option<&[T]>` form.
-    #[wasm_bindgen(experimental_generic_mono, slice_to_array)]
-    fn slice_to_array_option_elem<T>(xs: Option<&[T]>, other: T);
-}
-
-// `slice_to_array` is inherited from the enclosing block, and the same rejection
-// applies on the type-erasure generic path, which has no `experimental_generic_mono`.
-#[wasm_bindgen(slice_to_array)]
-extern "C" {
-    fn erased_slice_to_array_generic_elem<T>(xs: &[T]);
 }
 
 #[wasm_bindgen]

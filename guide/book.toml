@@ -7,3 +7,6 @@ title = "The `wasm-bindgen` Guide"
 build-dir = "book/html"
 
 [output.html]
+
+[output.html.redirect]
+"/reference/attributes/on-js-imports/slice_to_array.html" = "slice.html"

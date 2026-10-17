@@ -1,41 +1,39 @@
 export function driver() {
     wasm.driver();
 }
-export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {
-    throw new Error(getStringFromWasm0(arg0, arg1));
-}
 export function __wbg_js_block_slice_u16_351329232b16999d(arg0, arg1) {
-    var v0 = Array.from(getArrayU16FromWasm0(arg0, arg1));
-    js_block_slice_u16(v0);
+    js_block_slice_u16(Array.from(getArrayU16FromWasm0(arg0, arg1)));
 }
 export function __wbg_js_slice_optional_string_as_array_ce9ccdb9300131fd(arg0, arg1) {
     let v0;
     if (arg0 !== 0) {
-        v0 = getArrayJsValueFromWasm0(arg0, arg1);
-        wasm.__wbindgen_free(arg0, arg1 * 4, 4);
+        v0 = [];
+        let p0 = arg0;
+        p0 = p0 >>> 0;
+        const view0 = getDataViewMemory0();
+        for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
+            v0.push(getStringFromWasm0(view0.getInt32(p0 + 0, true), view0.getInt32(p0 + 4, true)));
+        }
+        wasm.__wbindgen_free(arg0, arg1 * 8, 4);
     }
     js_slice_optional_string_as_array(v0);
 }
 export function __wbg_js_slice_optional_u16_as_array_f119bb99afccb33c(arg0, arg1) {
-    let v0;
-    if (arg0 !== 0) {
-        v0 = Array.from(getArrayU16FromWasm0(arg0, arg1));
-    }
-    js_slice_optional_u16_as_array(v0);
+    js_slice_optional_u16_as_array(arg0 === 0 ? undefined : Array.from(getArrayU16FromWasm0(arg0, arg1)));
 }
 export function __wbg_js_slice_string_as_array_03aefca66a560a29(arg0, arg1) {
-    var v0 = getArrayJsValueFromWasm0(arg0, arg1);
-    wasm.__wbindgen_free(arg0, arg1 * 4, 4);
+    const v0 = [];
+    let p0 = arg0;
+    p0 = p0 >>> 0;
+    const view0 = getDataViewMemory0();
+    for (const end0 = p0 + arg1 * 8; p0 < end0; p0 += 8) {
+        v0.push(getStringFromWasm0(view0.getInt32(p0 + 0, true), view0.getInt32(p0 + 4, true)));
+    }
+    wasm.__wbindgen_free(arg0, arg1 * 8, 4);
     js_slice_string_as_array(v0);
 }
 export function __wbg_js_slice_u16_as_array_78e736a5d5adf04b(arg0, arg1) {
-    var v0 = Array.from(getArrayU16FromWasm0(arg0, arg1));
-    js_slice_u16_as_array(v0);
-}
-export function __wbindgen_generic_0000000000000000(arg0, arg1) {
-    // Cast intrinsic for `Ref(String) -> Externref`.
-    const ret = getStringFromWasm0(arg0, arg1);
-    return ret;
+    js_slice_u16_as_array(Array.from(getArrayU16FromWasm0(arg0, arg1)));
 }
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;
@@ -46,17 +44,6 @@ export function __wbindgen_init_externref_table() {
     table.set(offset + 2, true);
     table.set(offset + 3, false);
 }
-function getArrayJsValueFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    const mem = getDataViewMemory0();
-    const result = [];
-    for (let i = ptr; i < ptr + 4 * len; i += 4) {
-        result.push(wasm.__wbindgen_externrefs.get(mem.getUint32(i, true)));
-    }
-    wasm.__externref_drop_slice(ptr, len);
-    return result;
-}
-
 function getArrayU16FromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return getUint16ArrayMemory0().subarray(ptr / 2, ptr / 2 + len);

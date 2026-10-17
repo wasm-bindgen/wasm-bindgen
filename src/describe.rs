@@ -278,3 +278,19 @@ where
         T::describe();
     }
 }
+
+/// Describes an import argument whose wire is described by `T` under a
+/// `slice = ..` or `vec = ..` mode word (see `SEQ_MODE_*`). The CLI applies
+/// the mode to sequences of its key's shape with typed elements. Prefixed
+/// because generated describe code glob-imports this module, where a plain
+/// `SeqMode` would shadow a user type of that name.
+pub struct WasmDescribeSeqMode<T: ?Sized, const MODE: u32>(core::marker::PhantomData<T>);
+
+impl<T: WasmDescribe + ?Sized, const MODE: u32> WasmDescribe for WasmDescribeSeqMode<T, MODE> {
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe() {
+        inform(SEQ_MODE);
+        inform(MODE);
+        T::describe();
+    }
+}

@@ -5,6 +5,37 @@
 
 ### Added
 
+* Added the `slice = view | copy | array` and `vec = copy | array`
+  attributes for imported JS functions, choosing what JS receives for a
+  sequence argument with numeric elements: a live typed array over wasm
+  memory, a fresh typed array, or a fresh plain `Array`. `slice` applies to
+  borrowed slices (`&[T]`, `Option<&[T]>`, `Clamped<&[u8]>`) and `vec` to
+  owned ones (`Vec<T>`, `Box<[T]>`, `Option<Vec<T>>`, `Clamped<Vec<u8>>`).
+  Each key is accepted per argument, per function and per `extern "C"` block,
+  with a more specific level overriding a broader one. Inherited from a
+  function or block, a key only affects arguments of its own shape; written
+  on an argument it doesn't fit, it is an error. A generic element type
+  resolves the mode per instantiation under `experimental_generic_mono`,
+  where `Option<&[T]>` is now supported too. Neither key is accepted on
+  exported functions.
+  [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
+
+* Borrowed slices of `String`, `&str`, `bool`, `char` and exported enums
+  (`&[T]` and `Option<&[T]>`) can be passed to imported JS functions,
+  arriving as a fresh `Array`.
+  [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
+
+* Slices of every `JsStringLike` shape, including `&String`, `&Box<str>`,
+  `&Cow<str>` and `&JsString`, can be passed to imported JS functions, and
+  `JsStringLike` alone bounds a `&[T]` argument of an
+  `experimental_generic_mono` import.
+  [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
+
+* Owned vectors (`Vec<T>`, `Box<[T]>`, `Option<Vec<T>>`) of `bool`, `char`
+  and string enums can be passed to and from JS, and `Vec<&str>` can be
+  passed to JS.
+  [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
+
 * String enums implement `TryFromJsValue`, accepting only their listed values,
   so they can be used as dynamic-union variant payloads.
   [#5376](https://github.com/wasm-bindgen/wasm-bindgen/pull/5376)
@@ -93,7 +124,27 @@
   instead of being clamped.
   [#4504](https://github.com/wasm-bindgen/wasm-bindgen/issues/4504)
 
+* Numeric enums are passed between JS and Rust as an `f64`, so a value from
+  JS that isn't one of the enum's values, such as `'abc'`, `NaN`, `1.5` or
+  `2 ** 32`, throws "invalid enum value passed" in release builds too,
+  rather than becoming variant 0 or being truncated. Conversions from
+  `JsValue` likewise reject `NaN` and fractions. Values above
+  `i32::MAX` in a `#[repr(u32)]` enum are now returned to JS unchanged
+  rather than as negative numbers.
+  [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
+
+* A `Vec<T>` of a numeric enum passed from JS checks each element as a
+  single enum value, so a wrong element throws the same error a single
+  argument would, rather than "array contains a value of the wrong type".
+  [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
+
 ### Fixed
+
+* Lists passed from JS to Rust no longer leak memory when an element is
+  rejected, such as a value of the wrong type in a `Vec<String>` or
+  `Vec<T>` of exported structs, or an invalid value in a `Vec<T>` of a
+  numeric enum.
+  [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
 
 * Reference types are now detected from the runtime's externref intrinsics when
   the `target_features` section is missing, as with `strip = true`. Previously

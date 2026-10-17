@@ -5926,6 +5926,7 @@ addToLibrary({
                 // they're coerced into i32/f32/f64 appropriately.
                 Int32ToWasm => {}
                 Int64ToWasm => {}
+                F64FromEnum => {}
 
                 // Converting into a u32 isn't supported because we
                 // need to generate glue to change the sign.

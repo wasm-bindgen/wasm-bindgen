@@ -1,4 +1,4 @@
-use crate::descriptor::VectorKind;
+use crate::descriptor::{SeqValue, VectorKind};
 use std::borrow::Cow;
 use std::collections::{BTreeMap, HashSet};
 use walrus::{ExportId, FunctionId, ImportId, RefType, TypedCustomSectionId};
@@ -50,6 +50,37 @@ pub struct InstructionData {
     pub stack_change: StackChange,
 }
 
+/// Calls `f` on every instruction in `instrs`, including those nested in an
+/// `EncodedSliceLoad` / `EncodedSliceStore` element coder, which a pass that
+/// rewrites or roots instructions must reach too. Passes over the adapter's
+/// stack shape must not use this: the nested instructions run on the loop's
+/// own stack, so to them the enclosing instruction is a single one.
+pub fn visit_instructions(instrs: &[InstructionData], f: &mut impl FnMut(&InstructionData)) {
+    for instr in instrs {
+        f(instr);
+        if let Instruction::EncodedSliceLoad { elem, .. }
+        | Instruction::EncodedSliceStore { elem, .. } = &instr.instr
+        {
+            visit_instructions(elem, f);
+        }
+    }
+}
+
+/// [`visit_instructions`], mutably.
+pub fn visit_instructions_mut(
+    instrs: &mut [InstructionData],
+    f: &mut impl FnMut(&mut InstructionData),
+) {
+    for instr in instrs {
+        f(instr);
+        if let Instruction::EncodedSliceLoad { elem, .. }
+        | Instruction::EncodedSliceStore { elem, .. } = &mut instr.instr
+        {
+            visit_instructions_mut(elem, f);
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum StackChange {
     Modified { pushed: usize, popped: usize },
@@ -87,6 +118,8 @@ pub enum AdapterType {
     I32,
     I64,
     Vector(VectorKind),
+    /// A plain array of the element type.
+    Array(Box<AdapterType>),
     /// A `&mut [T]` argument. Unlike `Vector`, the contents are copied back
     /// into the buffer of the passed typed array after the call, so it can't
     /// be a plain array.
@@ -239,9 +272,11 @@ pub enum Instruction {
     /// Pops an `externref` from the stack, pushes a sentinel for "none" or the
     /// value if it's "some"
     I32FromOptionChar,
+    /// Pops a numeric enum's number and pushes it unchanged as an `f64`.
+    F64FromEnum,
     /// Pops an `externref` from the stack, pushes `hole` for "none" or the
     /// value if it's "some"
-    I32FromOptionEnum {
+    F64FromOptionEnum {
         hole: u32,
     },
     /// Pops an `externref` from the stack, pushes either a sentinel value if it's
@@ -334,40 +369,42 @@ pub enum Instruction {
         /// If we're in reference-types mode, the externref table ID to get the cached string from.
         table: Option<walrus::TableId>,
     },
-    /// pops ptr/length, pushes a vector, frees the original data
+    /// pops ptr/length, pushes a vector, frees the original data. Freed data
+    /// cannot be left as a view, so `SeqValue::View` renders as `Copy`.
     VectorLoad {
         kind: VectorKind,
         mem: walrus::MemoryId,
         free: walrus::FunctionId,
-    },
-    /// pops ptr/length, pushes a plain JS `Array`, frees the original data.
-    ///
-    /// Identical to `VectorLoad` but, for primitive element kinds, the
-    /// transferred typed-array view is wrapped in `Array.from(...)` so the
-    /// JS side observes a plain heterogeneous `Array` rather than a typed
-    /// array. Used for outgoing `&Vec<T>` arguments where the JS-visible
-    /// type contract is "Array of values" instead of "buffer of bytes".
-    /// For string / externref vector kinds the existing helper already
-    /// builds a plain `Array`, so this instruction behaves identically to
-    /// `VectorLoad` for those kinds.
-    VectorLoadAsArray {
-        kind: VectorKind,
-        mem: walrus::MemoryId,
-        free: walrus::FunctionId,
+        mode: SeqValue,
     },
     /// pops ptr/length, pushes a vector, frees the original data
     OptionVectorLoad {
         kind: VectorKind,
         mem: walrus::MemoryId,
         free: walrus::FunctionId,
+        mode: SeqValue,
     },
-    /// pops ptr/length, pushes an optional plain JS `Array`, frees the
-    /// original data. Counterpart of `VectorLoadAsArray` for
-    /// `Option<&Vec<T>>` outgoing arguments.
-    OptionVectorLoadAsArray {
-        kind: VectorKind,
+    /// pops ptr/length of a buffer holding `length` element ABIs, each laid
+    /// out as `words`, pushes the array `elem` decodes them into (or
+    /// `undefined` for a null `optional` buffer), frees the buffer
+    EncodedSliceLoad {
+        words: Vec<AdapterType>,
+        elem: Vec<InstructionData>,
         mem: walrus::MemoryId,
         free: walrus::FunctionId,
+        optional: bool,
+    },
+    /// pops an array (or, `optional`, `undefined`), encodes each element with
+    /// `elem` into the `words` of its ABI in a buffer allocated with `malloc`
+    /// (freed with `free` if an element throws), pushes the buffer's
+    /// ptr/length (ptr 0 for `undefined`)
+    EncodedSliceStore {
+        words: Vec<AdapterType>,
+        elem: Vec<InstructionData>,
+        malloc: walrus::FunctionId,
+        free: walrus::FunctionId,
+        mem: walrus::MemoryId,
+        optional: bool,
     },
     /// pops i32, loads externref from externref table
     TableGet,
@@ -378,15 +415,19 @@ pub enum Instruction {
         mutable: bool,
         dtor: ClosureDtor,
     },
-    /// pops two i32 data pointers, pushes a vector view
+    /// pops two i32 data pointers, pushes a vector view (or a copy of it, per
+    /// `mode`); the borrowed data is not freed
     View {
         kind: VectorKind,
         mem: walrus::MemoryId,
+        mode: SeqValue,
     },
-    /// pops two i32 data pointers, pushes a vector view
+    /// pops two i32 data pointers, pushes an optional vector view (or a copy
+    /// of it, per `mode`); the borrowed data is not freed
     OptionView {
         kind: VectorKind,
         mem: walrus::MemoryId,
+        mode: SeqValue,
     },
     /// pops f64, pushes it viewed as an optional value with a known sentinel
     OptionF64Sentinel,
@@ -399,7 +440,7 @@ pub enum Instruction {
     },
     OptionBoolFromI32,
     OptionCharFromI32,
-    OptionEnumFromI32 {
+    OptionEnumFromF64 {
         hole: u32,
     },
     I32FromOptionNonNull,
@@ -425,7 +466,7 @@ impl AdapterType {
             AdapterType::I64 => walrus::ValType::I64,
             AdapterType::F32 => walrus::ValType::F32,
             AdapterType::F64 => walrus::ValType::F64,
-            AdapterType::Enum(_) => walrus::ValType::I32,
+            AdapterType::Enum(_) => walrus::ValType::F64,
             AdapterType::Externref | AdapterType::NamedExternref(_) => {
                 walrus::ValType::Ref(RefType::EXTERNREF)
             }
@@ -519,65 +560,69 @@ impl walrus::CustomSection for NonstandardWitSection {
                 AdapterKind::Local { instructions } => instructions,
                 AdapterKind::Import { .. } => continue,
             };
-            for instr in instrs {
-                match instr.instr {
-                    DeferFree { free: f, .. } => {
-                        roots.push_func(f);
-                    }
-                    StoreRetptr { mem, .. }
-                    | LoadRetptr { mem, .. }
-                    | View { mem, .. }
-                    | OptionView { mem, .. }
-                    | MemoryToString(mem) => {
-                        roots.push_memory(mem);
-                    }
-                    VectorToMemory { malloc, mem, .. } | OptionVector { malloc, mem, .. } => {
-                        roots.push_memory(mem);
-                        roots.push_func(malloc);
-                    }
-                    MutableSliceToMemory { malloc, mem, .. } => {
-                        roots.push_memory(mem);
-                        roots.push_func(malloc);
-                    }
-                    VectorLoad { free, mem, .. }
-                    | VectorLoadAsArray { free, mem, .. }
-                    | OptionVectorLoad { free, mem, .. }
-                    | OptionVectorLoadAsArray { free, mem, .. }
-                    | CachedStringLoad { free, mem, .. } => {
-                        roots.push_memory(mem);
-                        roots.push_func(free);
-                    }
-                    OptionString {
-                        mem,
-                        malloc,
-                        realloc,
-                    }
-                    | StringToMemory {
-                        mem,
-                        malloc,
-                        realloc,
-                    } => {
-                        roots.push_memory(mem);
-                        roots.push_func(malloc);
-                        if let Some(id) = realloc {
-                            roots.push_func(id);
-                        }
-                    }
-                    I32FromOptionExternref {
-                        table_and_alloc: Some((table, alloc)),
-                    } => {
-                        roots.push_table(table);
-                        roots.push_func(alloc);
-                    }
-                    UnwrapResult { table_and_drop } | UnwrapResultString { table_and_drop } => {
-                        if let Some((table, drop)) = table_and_drop {
-                            roots.push_table(table);
-                            roots.push_func(drop);
-                        }
-                    }
-                    _ => {}
+            visit_instructions(instrs, &mut |instr| match instr.instr {
+                DeferFree { free: f, .. } => {
+                    roots.push_func(f);
                 }
-            }
+                StoreRetptr { mem, .. }
+                | LoadRetptr { mem, .. }
+                | View { mem, .. }
+                | OptionView { mem, .. }
+                | MemoryToString(mem) => {
+                    roots.push_memory(mem);
+                }
+                VectorToMemory { malloc, mem, .. } | OptionVector { malloc, mem, .. } => {
+                    roots.push_memory(mem);
+                    roots.push_func(malloc);
+                }
+                MutableSliceToMemory { malloc, mem, .. } => {
+                    roots.push_memory(mem);
+                    roots.push_func(malloc);
+                }
+                EncodedSliceStore {
+                    malloc, free, mem, ..
+                } => {
+                    roots.push_memory(mem);
+                    roots.push_func(malloc);
+                    roots.push_func(free);
+                }
+                VectorLoad { free, mem, .. }
+                | OptionVectorLoad { free, mem, .. }
+                | EncodedSliceLoad { free, mem, .. }
+                | CachedStringLoad { free, mem, .. } => {
+                    roots.push_memory(mem);
+                    roots.push_func(free);
+                }
+                OptionString {
+                    mem,
+                    malloc,
+                    realloc,
+                }
+                | StringToMemory {
+                    mem,
+                    malloc,
+                    realloc,
+                } => {
+                    roots.push_memory(mem);
+                    roots.push_func(malloc);
+                    if let Some(id) = realloc {
+                        roots.push_func(id);
+                    }
+                }
+                I32FromOptionExternref {
+                    table_and_alloc: Some((table, alloc)),
+                } => {
+                    roots.push_table(table);
+                    roots.push_func(alloc);
+                }
+                UnwrapResult { table_and_drop } | UnwrapResultString { table_and_drop } => {
+                    if let Some((table, drop)) = table_and_drop {
+                        roots.push_table(table);
+                        roots.push_func(drop);
+                    }
+                }
+                _ => {}
+            });
         }
     }
 }

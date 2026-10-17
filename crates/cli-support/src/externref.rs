@@ -1,7 +1,9 @@
 use crate::descriptor::VectorKind;
 use crate::transforms::externref::Context;
+use crate::wit::{
+    visit_instructions_mut, AdapterType, InstructionData, StackChange, WasmBindgenAux,
+};
 use crate::wit::{AdapterKind, Instruction, NonstandardWitSection};
-use crate::wit::{AdapterType, InstructionData, StackChange, WasmBindgenAux};
 use anyhow::Result;
 use std::collections::HashMap;
 use walrus::ElementItems;
@@ -77,7 +79,7 @@ pub fn process(module: &mut Module) -> Result<()> {
             AdapterKind::Local { instructions } => instructions,
             AdapterKind::Import { .. } => continue,
         };
-        for instr in instrs {
+        visit_instructions_mut(instrs, &mut |instr| {
             match instr.instr {
                 // Optional externref values are now managed in the Wasm module, so
                 // we need to store where they're managed.
@@ -99,9 +101,9 @@ pub fn process(module: &mut Module) -> Result<()> {
                     *table_and_drop = meta.drop.map(|id| (meta.table, id));
                 }
                 Instruction::CachedStringLoad { ref mut table, .. } => *table = Some(meta.table),
-                _ => continue,
+                _ => {}
             };
-        }
+        });
     }
 
     module.customs.add(*aux);
@@ -319,13 +321,7 @@ fn module_needs_externref_metadata(aux: &WasmBindgenAux, section: &NonstandardWi
                 } | VectorLoad {
                     kind: VectorKind::Externref | VectorKind::NamedExternref(_),
                     ..
-                } | VectorLoadAsArray {
-                    kind: VectorKind::Externref | VectorKind::NamedExternref(_),
-                    ..
                 } | OptionVectorLoad {
-                    kind: VectorKind::Externref | VectorKind::NamedExternref(_),
-                    ..
-                } | OptionVectorLoadAsArray {
                     kind: VectorKind::Externref | VectorKind::NamedExternref(_),
                     ..
                 } | View {
