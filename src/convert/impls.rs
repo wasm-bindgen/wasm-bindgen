@@ -856,6 +856,12 @@ impl UpcastFrom<JsError> for JsOption<JsValue> {}
 impl UpcastFrom<JsError> for JsNullable<JsValue> {}
 impl UpcastFrom<JsError> for JsError {}
 
+/// The compat form of an owned vector: an in-place sequence of `JsValue`
+/// handles, converted to or from `T` in Rust. The released `Vec<String>`,
+/// `Vec`s of exported structs and numeric enums, and third-party impls cross
+/// this way. It has no new uses: an element whose single value crosses
+/// without calling into wasm is declared as an encoded sequence instead.
+///
 /// # ⚠️ Unstable
 ///
 /// This is part of the internal [`convert`](crate::convert) module, **no
@@ -871,6 +877,9 @@ pub fn js_value_vector_into_abi<T: Into<JsValue>>(
     js_vals.into_abi()
 }
 
+/// The mirror of [`js_value_vector_into_abi`], checking each element with
+/// [`TryFromJsValue`].
+///
 /// # ⚠️ Unstable
 ///
 /// This is part of the internal [`convert`](crate::convert) module, **no

@@ -17,15 +17,17 @@ copy, and `slice = view` written on an owned argument is a compile error
 (inherited from a function or block, it is a no-op there). The user-facing
 Rust signature is unchanged by the mode — `&[T]` stays `&[T]`.
 
-The modes only apply to numeric `T`. A borrowed slice of any other element
-type has no typed-array form: it crosses as each element's own ABI and
-reaches JS as a fresh `Array`, whatever the mode.
+Every sequence holds its elements in one of two ways:
 
-* JS handles (`JsValue`, `JsString`, imported JS types) are read in place,
-  since the slice's memory is their table indices.
-* `String`, `&str`, `bool`, `char` and exported enums are encoded into a
-  temporary buffer of their ABIs, which the glue decodes with each
-  element's own conversion and then frees.
+* In place: the element is its own JS encoding, so the slice's memory is
+  read directly. That is numbers, and JS handles (`JsValue`, `JsString`,
+  imported JS types), whose memory is their table indices.
+* Encoded: each element crosses as a single argument of its type would,
+  through a temporary buffer. That is `String`, `&str`, `bool`, `char` and
+  exported enums.
+
+The modes only apply to numeric `T`. Any other sequence has no typed-array
+form and reaches JS as a fresh `Array`, whatever the mode.
 
 A borrowed slice of exported structs is not supported, as a struct has no
 borrowed ABI; an owned `Vec<T>` moves its elements to JS instead.
