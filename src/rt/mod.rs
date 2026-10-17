@@ -469,7 +469,70 @@ mod tests {
 #[cold]
 #[inline(never)]
 fn throw_null() -> ! {
-    super::throw_str("null pointer passed to rust");
+    super::throw_str(NULL_ERROR);
+}
+
+pub const NULL_ERROR: &str = "null pointer passed to rust";
+pub const BORROW_ERROR: &str =
+    "recursive use of an object detected which would lead to unsafe aliasing in rust";
+pub const OWNERSHIP_ERROR: &str = "attempted to take ownership of Rust value while it was borrowed";
+pub const WRONG_TYPE_ERROR: &str = "array contains a value of the wrong type";
+
+/// Takes the value out of an exported Rust object JS gave up its pointer to.
+/// When the object is still borrowed, the pointer's strong count is released
+/// rather than leaked, so the object is freed once the borrow ends.
+///
+/// # Safety
+///
+/// `ptr` must be null or a pointer from `Rc::into_raw` that the caller owns.
+#[inline]
+pub unsafe fn take_rust_object<T>(ptr: *mut WasmRefCell<T>) -> Result<T, &'static str> {
+    if ptr.is_null() {
+        return Err(NULL_ERROR);
+    }
+    match Rc::try_unwrap(Rc::from_raw(ptr)) {
+        Ok(cell) => Ok(cell.into_inner()),
+        Err(_) => Err(OWNERSHIP_ERROR),
+    }
+}
+
+/// Borrows an exported Rust object for the duration of a call, holding a
+/// strong count of its own once the borrow succeeds.
+///
+/// # Safety
+///
+/// `ptr` must be null or a live pointer from `Rc::into_raw`.
+#[inline]
+pub unsafe fn borrow_rust_object<T>(ptr: *mut WasmRefCell<T>) -> Result<RcRef<T>, &'static str> {
+    if ptr.is_null() {
+        return Err(NULL_ERROR);
+    }
+    let ref_ = (*ptr).try_borrow().ok_or(BORROW_ERROR)?;
+    Rc::increment_strong_count(ptr);
+    Ok(RcRef {
+        ref_,
+        _rc: Rc::from_raw(ptr),
+    })
+}
+
+/// The mutable form of [`borrow_rust_object`].
+///
+/// # Safety
+///
+/// `ptr` must be null or a live pointer from `Rc::into_raw`.
+#[inline]
+pub unsafe fn borrow_mut_rust_object<T>(
+    ptr: *mut WasmRefCell<T>,
+) -> Result<RcRefMut<T>, &'static str> {
+    if ptr.is_null() {
+        return Err(NULL_ERROR);
+    }
+    let ref_ = (*ptr).try_borrow_mut().ok_or(BORROW_ERROR)?;
+    Rc::increment_strong_count(ptr);
+    Ok(RcRefMut {
+        ref_,
+        _rc: Rc::from_raw(ptr),
+    })
 }
 
 /// A wrapper around the `RefCell` from the standard library.
@@ -522,6 +585,17 @@ impl<T: ?Sized> WasmRefCell<T> {
             Ok(inner) => RefMut { inner },
             Err(_) => borrow_fail(),
         }
+    }
+
+    pub fn try_borrow(&self) -> Option<Ref<'_, T>> {
+        self.inner.try_borrow().ok().map(|inner| Ref { inner })
+    }
+
+    pub fn try_borrow_mut(&self) -> Option<RefMut<'_, T>> {
+        self.inner
+            .try_borrow_mut()
+            .ok()
+            .map(|inner| RefMut { inner })
     }
 
     pub fn into_inner(self) -> T
@@ -588,18 +662,12 @@ impl<T: ?Sized> BorrowMut<T> for RefMut<'_, T> {
 
 #[cfg(panic = "unwind")]
 fn borrow_fail() -> ! {
-    panic!(
-        "recursive use of an object detected which would lead to \
-		 unsafe aliasing in rust",
-    )
+    panic!("{}", BORROW_ERROR)
 }
 
 #[cfg(not(panic = "unwind"))]
 fn borrow_fail() -> ! {
-    super::throw_str(
-        "recursive use of an object detected which would lead to \
-		 unsafe aliasing in rust",
-    );
+    super::throw_str(BORROW_ERROR);
 }
 
 /// A type that encapsulates an `Rc<WasmRefCell<T>>` as well as a `Ref`
@@ -624,8 +692,16 @@ impl<T: ?Sized> UnwindSafe for RcRef<T> {}
 
 impl<T: ?Sized> RcRef<T> {
     pub fn new(rc: Rc<WasmRefCell<T>>) -> Self {
-        let ref_ = unsafe { (*Rc::as_ptr(&rc)).borrow() };
-        Self { _rc: rc, ref_ }
+        match Self::try_new(rc) {
+            Some(this) => this,
+            None => borrow_fail(),
+        }
+    }
+
+    /// Fails, dropping `rc`, if the object is mutably borrowed.
+    pub fn try_new(rc: Rc<WasmRefCell<T>>) -> Option<Self> {
+        let ref_ = unsafe { (*Rc::as_ptr(&rc)).try_borrow()? };
+        Some(Self { _rc: rc, ref_ })
     }
 }
 
@@ -657,8 +733,16 @@ pub struct RcRefMut<T: ?Sized + 'static> {
 
 impl<T: ?Sized> RcRefMut<T> {
     pub fn new(rc: Rc<WasmRefCell<T>>) -> Self {
-        let ref_ = unsafe { (*Rc::as_ptr(&rc)).borrow_mut() };
-        Self { _rc: rc, ref_ }
+        match Self::try_new(rc) {
+            Some(this) => this,
+            None => borrow_fail(),
+        }
+    }
+
+    /// Fails, dropping `rc`, if the object is borrowed.
+    pub fn try_new(rc: Rc<WasmRefCell<T>>) -> Option<Self> {
+        let ref_ = unsafe { (*Rc::as_ptr(&rc)).try_borrow_mut()? };
+        Some(Self { _rc: rc, ref_ })
     }
 }
 

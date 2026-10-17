@@ -159,6 +159,7 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::String],
                     Instruction::StringToMemory {
                         malloc: self.cx.malloc()?,
+                        free: self.cx.free()?,
                         realloc: self.cx.realloc(),
                         mem: self.cx.memory()?,
                     },
@@ -177,6 +178,7 @@ impl InstructionBuilder<'_, '_> {
                     Instruction::VectorToMemory {
                         kind,
                         malloc: self.cx.malloc()?,
+                        free: self.cx.free()?,
                         mem: self.cx.memory()?,
                     },
                     &[ptr_ty.clone(), ptr_ty],
@@ -254,6 +256,7 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::String],
                     Instruction::StringToMemory {
                         malloc: self.cx.malloc()?,
+                        free: self.cx.free()?,
                         realloc: self.cx.realloc(),
                         mem: self.cx.memory()?,
                     },
@@ -275,6 +278,7 @@ impl InstructionBuilder<'_, '_> {
                         Instruction::MutableSliceToMemory {
                             kind,
                             malloc: self.cx.malloc()?,
+                            free: self.cx.free()?,
                             mem: self.cx.memory()?,
                         },
                         &[ptr_ty.clone(), ptr_ty, AdapterType::Externref],
@@ -290,6 +294,7 @@ impl InstructionBuilder<'_, '_> {
                         Instruction::VectorToMemory {
                             kind,
                             malloc: self.cx.malloc()?,
+                            free: self.cx.free()?,
                             mem: self.cx.memory()?,
                         },
                         &[ptr_ty.clone(), ptr_ty],
@@ -412,6 +417,7 @@ impl InstructionBuilder<'_, '_> {
 
             Descriptor::String | Descriptor::CachedString => {
                 let malloc = self.cx.malloc()?;
+                let free = self.cx.free()?;
                 let mem = self.cx.memory()?;
                 let realloc = self.cx.realloc();
                 let ptr_ty = self.incoming_internal_word_ty();
@@ -419,6 +425,7 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::String.option()],
                     Instruction::OptionString {
                         malloc,
+                        free,
                         mem,
                         realloc,
                     },
@@ -432,11 +439,17 @@ impl InstructionBuilder<'_, '_> {
                     SequenceCell::Encoded(elem) => return self.incoming_encoded_vector(elem, true),
                 };
                 let malloc = self.cx.malloc()?;
+                let free = self.cx.free()?;
                 let mem = self.cx.memory()?;
                 let ptr_ty = self.incoming_internal_word_ty();
                 self.instruction(
                     &[AdapterType::Vector(kind.clone()).option()],
-                    Instruction::OptionVector { kind, malloc, mem },
+                    Instruction::OptionVector {
+                        kind,
+                        malloc,
+                        free,
+                        mem,
+                    },
                     &[ptr_ty.clone(), ptr_ty],
                 );
             }
