@@ -31,7 +31,7 @@ export function __wbg__wbg_cb_unref_dcc1a90847f04c41(arg0) {
 export function __wbg_blockNotGeneric_5e8959bc4144429a(arg0) {
     blockNotGeneric(arg0 >>> 0);
 }
-export function __wbg_call_a48f35d3fb7572a8() { return handleError(function (arg0, arg1, arg2) {
+export function __wbg_call_b254e041513f2aac() { return handleError(function (arg0, arg1, arg2) {
     const ret = arg0.call(arg1, arg2);
     return ret;
 }, arguments); }

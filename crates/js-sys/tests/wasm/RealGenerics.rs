@@ -14,6 +14,13 @@ extern "C" {
     fn async_strings() -> AsyncIterator<String>;
     fn strings() -> Array<String>;
     fn later() -> Promise<()>;
+    fn optionals() -> Vec<Option<String>>;
+    #[wasm_bindgen(js_name = optionalNumbers)]
+    fn optional_numbers() -> Vec<Option<f64>>;
+    #[wasm_bindgen(js_name = optionals)]
+    fn optional_handles() -> Vec<Option<JsString>>;
+    #[wasm_bindgen(experimental_generic_mono, js_name = optionals)]
+    fn optionals_of<T>() -> Vec<Option<T>>;
     #[wasm_bindgen(js_name = callWith)]
     fn call_unit(f: &Function<fn(String)>, a: &str);
     #[wasm_bindgen(js_name = throwingIterator)]
@@ -416,4 +423,35 @@ fn records_and_borrowed_arrays() {
         joined += &s;
     }
     assert_eq!(joined, "xy");
+}
+
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(extends = Map<String, f64>, extends = Object, js_name = Map)]
+    type ScoreMap;
+    #[wasm_bindgen(constructor, js_class = Map)]
+    fn new() -> ScoreMap;
+}
+
+#[wasm_bindgen_test]
+fn extends_with_type_arguments() {
+    let m = ScoreMap::new();
+    m.set(&"a".to_string(), &1.5);
+    assert_eq!(m.get("a"), Some(1.5));
+    let parent: &Map<String, f64> = m.as_ref();
+    assert_eq!(parent.size(), 1);
+    let parent: Map<String, f64> = m.into();
+    assert_eq!(parent.get("a"), Some(1.5));
+}
+
+#[wasm_bindgen_test]
+fn vectors_of_options() {
+    let some = |s: &str| Some(s.to_string());
+    assert_eq!(optionals(), [some("a"), None, None, some("b")]);
+    assert_eq!(optionals_of::<String>(), [some("a"), None, None, some("b")]);
+    assert_eq!(optional_numbers(), [Some(1.0), None, Some(2.5)]);
+    let handles = optional_handles();
+    assert_eq!(handles[0].as_ref().unwrap(), "a");
+    assert!(handles[1].is_none() && handles[2].is_none());
+    assert_eq!(optionals_of::<JsValue>()[3], Some("b".into()));
 }

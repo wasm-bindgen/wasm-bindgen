@@ -33,3 +33,11 @@ export function throwingIterator() {
 export function later() {
   return Promise.resolve();
 }
+
+export function optionals() {
+  return ['a', null, undefined, 'b'];
+}
+
+export function optionalNumbers() {
+  return [1, null, 2.5];
+}

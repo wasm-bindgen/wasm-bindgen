@@ -1719,7 +1719,7 @@ impl TryToTokens for ast::ImportType {
                     #[inline]
                     unsafe fn from_abi(js: Self::Abi) -> Self {
                         #rust_name {
-                            obj: JsValue::from_abi(js).into(),
+                            obj: <#internal_obj as #wasm_bindgen::JsCast>::unchecked_from_js(JsValue::from_abi(js)),
                             #phantom_init
                         }
                     }
@@ -1760,7 +1760,7 @@ impl TryToTokens for ast::ImportType {
                     unsafe fn ref_from_abi(js: Self::Abi) -> Self::Anchor {
                         let tmp = <JsValue as RefFromWasmAbi>::ref_from_abi(js);
                         #wasm_bindgen::__rt::core::mem::ManuallyDrop::new(#rust_name {
-                            obj: #wasm_bindgen::__rt::core::mem::ManuallyDrop::into_inner(tmp).into(),
+                            obj: <#internal_obj as #wasm_bindgen::JsCast>::unchecked_from_js(#wasm_bindgen::__rt::core::mem::ManuallyDrop::into_inner(tmp)),
                             #phantom_init
                         })
                     }
@@ -1775,7 +1775,7 @@ impl TryToTokens for ast::ImportType {
                     unsafe fn long_ref_from_abi(js: Self::Abi) -> Self::Anchor {
                         let tmp = <JsValue as LongRefFromWasmAbi>::long_ref_from_abi(js);
                         #rust_name {
-                            obj: tmp.into(),
+                            obj: <#internal_obj as #wasm_bindgen::JsCast>::unchecked_from_js(tmp),
                             #phantom_init
                         }
                     }
@@ -1803,7 +1803,7 @@ impl TryToTokens for ast::ImportType {
                     #[inline]
                     fn from(obj: JsValue) -> Self {
                         #rust_name {
-                            obj: obj.into(),
+                            obj: <#internal_obj as #wasm_bindgen::JsCast>::unchecked_from_js(obj),
                             #phantom_init
                         }
                     }
@@ -1840,7 +1840,7 @@ impl TryToTokens for ast::ImportType {
                     #[inline]
                     fn unchecked_from_js(val: JsValue) -> Self {
                         #rust_name {
-                            obj: val.into(),
+                            obj: <#internal_obj as #wasm_bindgen::JsCast>::unchecked_from_js(val),
                             #phantom_init
                         }
                     }
@@ -1895,7 +1895,7 @@ impl TryToTokens for ast::ImportType {
                     #[inline]
                     fn from(obj: #rust_name #ty_generics) -> #superclass {
                         use #wasm_bindgen::JsCast;
-                        #superclass::unchecked_from_js(obj.into())
+                        <#superclass as #wasm_bindgen::JsCast>::unchecked_from_js(obj.into())
                     }
                 }
 
@@ -1905,7 +1905,7 @@ impl TryToTokens for ast::ImportType {
                     #[inline]
                     fn as_ref(&self) -> &#superclass {
                         use #wasm_bindgen::JsCast;
-                        #superclass::unchecked_from_js_ref(self.as_ref())
+                        <#superclass as #wasm_bindgen::JsCast>::unchecked_from_js_ref(self.as_ref())
                     }
                 }
             })
@@ -3982,7 +3982,9 @@ impl ast::ImportFunction {
                 let mut stack = vec![t];
                 while let Some(t) = stack.pop() {
                     match t {
-                        proc_macro2::TokenTree::Ident(i) if synthesized.contains(&i.to_string()) => {
+                        proc_macro2::TokenTree::Ident(i)
+                            if synthesized.contains(&i.to_string()) =>
+                        {
                             return true
                         }
                         proc_macro2::TokenTree::Group(g) => stack.extend(g.stream()),
@@ -4021,7 +4023,10 @@ impl ast::ImportFunction {
         {
             (rust_name.clone(), quote! { #vis }, quote! {})
         } else {
-            let body_name = Ident::new(&format!("__wbg_mono_{}", rust_name.unraw()), rust_name.span());
+            let body_name = Ident::new(
+                &format!("__wbg_mono_{}", rust_name.unraw()),
+                rust_name.span(),
+            );
             let infer = synthesized_params.iter().map(|_| quote! { _ });
             let turbofish = quote! { ::<#(#fn_generic_params,)* #(#infer),*> };
             let call = if is_method {

@@ -266,6 +266,72 @@ impl VectorFromWasmAbi for String {
     }
 }
 
+// `Vec<Option<T>>` crosses as an array of `JsValue`s, `null` and `undefined`
+// reading as `None`. A JS handle is taken unchecked, as in a `Vec<T>`; other
+// elements are checked with `TryFromJsValue`.
+unsafe fn option_vector_from_abi<T>(
+    js: <Box<[JsValue]> as FromWasmAbi>::Abi,
+    mut some: impl FnMut(JsValue) -> Option<T>,
+) -> Box<[Option<T>]> {
+    let js_vals = <Vec<JsValue> as FromWasmAbi>::from_abi(js);
+    let result: Option<Box<[Option<T>]>> = js_vals
+        .into_iter()
+        .map(|v| {
+            if v.is_null() || v.is_undefined() {
+                Some(None)
+            } else {
+                some(v).map(Some)
+            }
+        })
+        .collect();
+    match result {
+        Some(result) => result,
+        None => crate::throw_str("array contains a value of the wrong type"),
+    }
+}
+
+impl<T: crate::JsGeneric + WasmDescribe> WasmDescribeVector for Option<T> {
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe_vector() {
+        inform(VECTOR);
+        JsValue::describe();
+    }
+}
+
+impl<T: crate::JsGeneric + WasmDescribe> VectorFromWasmAbi for Option<T> {
+    type Abi = <Box<[JsValue]> as FromWasmAbi>::Abi;
+
+    unsafe fn vector_from_abi(js: Self::Abi) -> Box<[Self]> {
+        option_vector_from_abi(js, |v| Some(crate::JsCast::unchecked_from_js(v)))
+    }
+}
+
+macro_rules! option_vectors {
+    ($($t:ty)*) => ($(
+        impl WasmDescribeVector for Option<$t> {
+            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+            fn describe_vector() {
+                inform(VECTOR);
+                JsValue::describe();
+            }
+        }
+
+        impl VectorFromWasmAbi for Option<$t> {
+            type Abi = <Box<[JsValue]> as FromWasmAbi>::Abi;
+
+            unsafe fn vector_from_abi(js: Self::Abi) -> Box<[Self]> {
+                option_vector_from_abi(js, |v| {
+                    <$t as crate::convert::TryFromJsValue>::try_from_js_value(v).ok()
+                })
+            }
+        }
+    )*)
+}
+
+option_vectors! {
+    String bool char u8 i8 u16 i16 u32 i32 u64 i64 usize isize f32 f64
+}
+
 cfg_if! {
     if #[cfg(feature = "enable-interning")] {
         #[inline]
