@@ -1572,6 +1572,25 @@ impl TryToTokens for ast::ImportType {
         // The extra `Self: JsGeneric` predicate propagates any generic
         // type-parameter requirements the `JsGeneric` blanket imposes
         // through `ErasableGeneric<Repr = JsValue>` etc.
+        // Handles with owned-once destruction must transfer, not borrow.
+        let borrowed_arg = if no_into_js_generic {
+            quote! {}
+        } else {
+            quote! {
+                #[inline]
+                fn arg_into_abi(slot: &mut core::option::Option<Self>) -> Self::Abi {
+                    match slot {
+                        core::option::Option::Some(value) => IntoWasmAbi::into_abi(&value.obj),
+                        core::option::Option::None => core::unreachable!(),
+                    }
+                }
+
+                #[inline]
+                fn describe_arg() {
+                    <&Self as WasmDescribe>::describe();
+                }
+            }
+        };
         let into_js_generic_impl = if no_into_js_generic {
             quote! {}
         } else {
@@ -1673,6 +1692,8 @@ impl TryToTokens for ast::ImportType {
                     fn into_abi(self) -> Self::Abi {
                         self.obj.into_abi()
                     }
+
+                    #borrowed_arg
                 }
 
                 #[automatically_derived]
@@ -3453,6 +3474,7 @@ impl ast::ImportFunction {
             .collect();
         let mut wrapper_args = Vec::new();
         let mut outer_args = Vec::new();
+        let mut outer_typed: Vec<(usize, Ident, syn::Type)> = Vec::new();
         let mut call_args = Vec::new();
         let mut shim_abi_args = Vec::new();
         let mut all_prim_names = Vec::new();
@@ -3541,6 +3563,7 @@ impl ast::ImportFunction {
 
             // A slice (`Option<&[T]>` included) needs only its element's
             // `VectorRefIntoWasmAbi`, resolved at each instantiation.
+            let mut borrowed_slot = false;
             let slice_elem = detect_slice_or_option_slice(ty)
                 .filter(|s| {
                     !s.is_mut
@@ -3592,6 +3615,7 @@ impl ast::ImportFunction {
                     where_bounds.push(quote! {
                         #ty: #wasm_bindgen::convert::IntoWasmAbi + #wasm_bindgen::describe::WasmDescribe
                     });
+                    borrowed_slot = true;
                 }
             }
 
@@ -3602,6 +3626,7 @@ impl ast::ImportFunction {
             } else {
                 wrapper_args.push(quote! { #name: #ty });
                 let declared = &arg.pat_type.ty;
+                outer_typed.push((outer_args.len(), name.clone(), (**declared).clone()));
                 outer_args.push(quote! { #name: #declared });
                 call_args.push(quote! { #name });
                 quote! { #name }
@@ -3610,15 +3635,31 @@ impl ast::ImportFunction {
             let abi = quote! { <#ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi };
             let (args, names) = splat(wasm_bindgen, &name, &abi, Span::call_site());
             shim_abi_args.extend(args);
-            arg_conversions.push(quote! {
-                let #name = <#ty as #wasm_bindgen::convert::IntoWasmAbi>::into_abi(#var);
-                let (#(#names),*) = <#abi as #wasm_bindgen::convert::WasmAbi>::split(#name);
-            });
+            if borrowed_slot {
+                // The slot outlives the call, so a value lowered borrowed is
+                // dropped in Rust once JS returns.
+                let slot = Ident::new(&format!("__wbg_slot_{name}"), Span::call_site());
+                arg_conversions.push(quote! {
+                    let mut #slot = #wasm_bindgen::__rt::core::option::Option::Some(#var);
+                    let #name = <#ty as #wasm_bindgen::convert::IntoWasmAbi>::arg_into_abi(&mut #slot);
+                    let (#(#names),*) = <#abi as #wasm_bindgen::convert::WasmAbi>::split(#name);
+                });
+                let modes = seq_mode_words(ty, &arg.seq_modes).into_iter().rev();
+                describe_args.push(quote! {
+                    #(inform(SEQ_MODE); inform(#modes);)*
+                    <#ty as #wasm_bindgen::convert::IntoWasmAbi>::describe_arg();
+                });
+            } else {
+                arg_conversions.push(quote! {
+                    let #name = <#ty as #wasm_bindgen::convert::IntoWasmAbi>::into_abi(#var);
+                    let (#(#names),*) = <#abi as #wasm_bindgen::convert::WasmAbi>::split(#name);
+                });
+                let describe_ty = seq_mode_describe_ty(wasm_bindgen, ty, &arg.seq_modes);
+                describe_args.push(quote! {
+                    <#describe_ty as #wasm_bindgen::describe::WasmDescribe>::describe();
+                });
+            }
             all_prim_names.extend(names);
-            let describe_ty = seq_mode_describe_ty(wasm_bindgen, ty, &arg.seq_modes);
-            describe_args.push(quote! {
-                <#describe_ty as #wasm_bindgen::describe::WasmDescribe>::describe();
-            });
         }
 
         // --- Return handling (mirrors the normal import path) ---
@@ -3917,7 +3958,60 @@ impl ast::ImportFunction {
         // Rust leaves it out of a call's turbofish. The named parameters it
         // desugared to above would count there, so keep `impl Trait` in the
         // public signature and forward to a hidden twin that names them.
-        let (body_name, body_vis, outer) = if synthesized_params.is_empty() {
+        //
+        // A bound directly on a synthesized parameter joins its `impl Trait`
+        // (`impl Clone + IntoWasmAbi`); one that only names it inside another
+        // type (`Vec<impl Clone>: IntoWasmAbi`) cannot be written there, so
+        // that signature stays desugared.
+        let synthesized: Vec<String> = synthesized_params
+            .iter()
+            .map(|p| match p {
+                syn::GenericParam::Type(tp) => tp.ident.to_string(),
+                _ => unreachable!(),
+            })
+            .collect();
+        let mentions_synthesized = |b: &TokenStream| {
+            TokenStream::clone(b).into_iter().any(|t| {
+                let mut stack = vec![t];
+                while let Some(t) = stack.pop() {
+                    match t {
+                        proc_macro2::TokenTree::Ident(i) if synthesized.contains(&i.to_string()) => {
+                            return true
+                        }
+                        proc_macro2::TokenTree::Group(g) => stack.extend(g.stream()),
+                        _ => {}
+                    }
+                }
+                false
+            })
+        };
+        let mut impl_trait_bounds: Vec<Vec<syn::TypeParamBound>> =
+            vec![Vec::new(); synthesized.len()];
+        let mut nested_synthesized_bound = false;
+        for bound in where_bounds.iter().filter(|b| mentions_synthesized(b)) {
+            let direct = syn::parse2::<syn::WherePredicate>(bound.clone())
+                .ok()
+                .and_then(|predicate| match predicate {
+                    syn::WherePredicate::Type(syn::PredicateType {
+                        lifetimes: None,
+                        bounded_ty: syn::Type::Path(path),
+                        bounds,
+                        ..
+                    }) if path.qself.is_none() => {
+                        let ident = path.path.get_ident()?.to_string();
+                        let index = synthesized.iter().position(|s| *s == ident)?;
+                        Some((index, bounds))
+                    }
+                    _ => None,
+                });
+            match direct {
+                Some((index, bounds)) => impl_trait_bounds[index].extend(bounds),
+                None => nested_synthesized_bound = true,
+            }
+        }
+        let (body_name, body_vis, outer) = if synthesized_params.is_empty()
+            || nested_synthesized_bound
+        {
             (rust_name.clone(), quote! { #vis }, quote! {})
         } else {
             let body_name = Ident::new(&format!("__wbg_mono_{rust_name}"), rust_name.span());
@@ -3936,35 +4030,21 @@ impl ast::ImportFunction {
                 (false, true) => quote! { unsafe { #call } },
                 (false, false) => call,
             };
-            let synthesized: Vec<String> = synthesized_params
-                .iter()
-                .map(|p| match p {
-                    syn::GenericParam::Type(tp) => tp.ident.to_string(),
-                    _ => unreachable!(),
-                })
-                .collect();
-            // Bounds on the synthesized parameters follow from the `impl
-            // Trait` bounds the outer signature keeps.
             let outer_bounds: Vec<&TokenStream> = where_bounds
                 .iter()
-                .filter(|b| {
-                    !TokenStream::clone(b).into_iter().any(|t| {
-                        let mut stack = vec![t];
-                        while let Some(t) = stack.pop() {
-                            match t {
-                                proc_macro2::TokenTree::Ident(i)
-                                    if synthesized.contains(&i.to_string()) =>
-                                {
-                                    return true
-                                }
-                                proc_macro2::TokenTree::Group(g) => stack.extend(g.stream()),
-                                _ => {}
-                            }
-                        }
-                        false
-                    })
-                })
+                .filter(|b| !mentions_synthesized(b))
                 .collect();
+            let mut outer_args = outer_args.clone();
+            let mut next_impl_trait = 0;
+            for (index, name, declared) in &outer_typed {
+                let mut declared = declared.clone();
+                generics::extend_impl_trait_bounds(
+                    &mut declared,
+                    &impl_trait_bounds,
+                    &mut next_impl_trait,
+                );
+                outer_args[*index] = quote! { #name: #declared };
+            }
             let outer_where = if outer_bounds.is_empty() {
                 quote! {}
             } else {
@@ -3981,7 +4061,7 @@ impl ast::ImportFunction {
             };
             (body_name, quote! { #[doc(hidden)] }, outer)
         };
-        let doc = if synthesized_params.is_empty() {
+        let doc = if synthesized_params.is_empty() || nested_synthesized_bound {
             doc
         } else {
             quote! {}
@@ -5785,6 +5865,15 @@ fn seq_mode_describe_ty(
     modes: &[ast::SeqMode],
 ) -> syn::Type {
     let mut describe = ty.clone();
+    for word in seq_mode_words(ty, modes) {
+        describe = parse_quote! { #wasm_bindgen::describe::WasmDescribeSeqMode<#describe, #word> };
+    }
+    describe
+}
+
+/// The `SEQ_MODE` words for `modes`, innermost first.
+fn seq_mode_words(ty: &syn::Type, modes: &[ast::SeqMode]) -> Vec<u32> {
+    let mut words = Vec::new();
     for mode in modes {
         let value = match mode.value {
             ast::SeqValue::View => shared::tys::SEQ_MODE_VIEW,
@@ -5806,10 +5895,9 @@ fn seq_mode_describe_ty(
         } else {
             0
         };
-        let word = value | key | explicit;
-        describe = parse_quote! { #wasm_bindgen::describe::WasmDescribeSeqMode<#describe, #word> };
+        words.push(value | key | explicit);
     }
-    describe
+    words
 }
 
 /// Detects whether a type is a raw `&dyn Fn(...)` or `&mut dyn FnMut(...)` argument.

@@ -492,6 +492,42 @@ primitive_ref_into_wasm_abi!(
     bool char i8 u8 i16 u16 i32 u32 i64 u64 i128 u128 isize usize f32 f64
 );
 
+// `&Option<T>` crosses as `Option<&T>` (the CLI reads its `REF OPTIONAL T`
+// descriptor that way), so element writes taking `&T` accept optional
+// elements.
+impl<'a, T> IntoWasmAbi for &'a Option<T>
+where
+    &'a T: OptionIntoWasmAbi,
+    T: crate::describe::WasmDescribe,
+{
+    type Abi = <&'a T as IntoWasmAbi>::Abi;
+
+    #[inline]
+    fn into_abi(self) -> Self::Abi {
+        match self {
+            Some(value) => value.into_abi(),
+            None => <&'a T as OptionIntoWasmAbi>::none(),
+        }
+    }
+}
+
+macro_rules! primitive_option_ref_into_wasm_abi {
+    ($($t:ty)*) => ($(
+        impl IntoWasmAbi for &Option<$t> {
+            type Abi = <Option<$t> as IntoWasmAbi>::Abi;
+
+            #[inline]
+            fn into_abi(self) -> Self::Abi {
+                (*self).into_abi()
+            }
+        }
+    )*)
+}
+
+primitive_option_ref_into_wasm_abi!(
+    bool char i8 u8 i16 u16 i32 u32 i64 u64 i128 u128 isize usize f32 f64
+);
+
 impl<T> IntoWasmAbi for *const T {
     type Abi = WasmWordRepr;
 
@@ -632,6 +668,19 @@ impl IntoWasmAbi for JsValue {
         mem::forget(self);
         ret
     }
+
+    #[inline]
+    fn arg_into_abi(slot: &mut Option<Self>) -> u32 {
+        match slot {
+            Some(value) => value.idx,
+            None => unreachable!(),
+        }
+    }
+
+    #[inline]
+    fn describe_arg() {
+        <&JsValue as crate::describe::WasmDescribe>::describe();
+    }
 }
 
 impl FromWasmAbi for JsValue {
@@ -702,6 +751,17 @@ impl<T: OptionIntoWasmAbi> IntoWasmAbi for Option<T> {
             None => T::none(),
             Some(me) => me.into_abi(),
         }
+    }
+
+    #[inline]
+    fn arg_into_abi(slot: &mut Option<Self>) -> T::Abi {
+        T::option_arg_into_abi(slot)
+    }
+
+    #[inline]
+    fn describe_arg() {
+        crate::describe::inform(crate::describe::OPTIONAL);
+        T::option_describe_arg();
     }
 }
 

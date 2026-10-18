@@ -530,12 +530,39 @@ impl IntoWasmAbi for String {
         // then returned, so use-after-free cannot occur.
         unsafe_get_cached_str(&self).unwrap_or_else(|| self.into_bytes().into_abi())
     }
+
+    #[inline]
+    fn arg_into_abi(slot: &mut Option<Self>) -> Self::Abi {
+        match slot {
+            Some(s) => <&str as IntoWasmAbi>::into_abi(s),
+            None => unreachable!(),
+        }
+    }
+
+    #[inline]
+    fn describe_arg() {
+        <&str as WasmDescribe>::describe();
+    }
 }
 
 impl OptionIntoWasmAbi for String {
     #[inline]
     fn none() -> Self::Abi {
         null_slice()
+    }
+
+    #[inline]
+    fn option_arg_into_abi(slot: &mut Option<Option<Self>>) -> Self::Abi {
+        match slot {
+            Some(Some(s)) => <&str as IntoWasmAbi>::into_abi(s),
+            Some(None) => null_slice(),
+            None => unreachable!(),
+        }
+    }
+
+    #[inline]
+    fn option_describe_arg() {
+        <&str as WasmDescribe>::describe();
     }
 }
 

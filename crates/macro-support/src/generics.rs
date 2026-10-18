@@ -187,7 +187,13 @@ pub(crate) fn type_params_with_bounds(generics: &syn::Generics) -> Vec<proc_macr
         .type_params()
         .map(|tp| {
             let ident = &tp.ident;
-            let bounds = &tp.bounds;
+            // A relaxed `?Sized` may only be stated once, and the shim's
+            // `where` clause already restates every inline bound.
+            let bounds: syn::punctuated::Punctuated<&syn::TypeParamBound, syn::Token![+]> = tp
+                .bounds
+                .iter()
+                .filter(|b| !matches!(b, syn::TypeParamBound::Trait(t) if t.maybe.is_some()))
+                .collect();
             if bounds.is_empty() {
                 quote::quote! { #ident }
             } else {
@@ -569,6 +575,34 @@ impl<'a> VisitMut for ImplTraitDesugar<'a> {
 /// `params` is threaded across every argument of a single function so that
 /// synthesized names stay unique across the whole signature; pass the same
 /// `Vec` for each call.
+struct ImplTraitExtend<'a> {
+    bounds: &'a [Vec<syn::TypeParamBound>],
+    next: &'a mut usize,
+}
+
+impl VisitMut for ImplTraitExtend<'_> {
+    fn visit_type_mut(&mut self, ty: &mut syn::Type) {
+        let syn::Type::ImplTrait(impl_trait) = ty else {
+            visit_mut::visit_type_mut(self, ty);
+            return;
+        };
+        if let Some(bounds) = self.bounds.get(*self.next) {
+            impl_trait.bounds.extend(bounds.iter().cloned());
+        }
+        *self.next += 1;
+    }
+}
+
+/// Appends `bounds[n]` to the `n`th `impl Trait` in `ty`, counting from
+/// `next` in the order [`desugar_impl_trait`] numbers them.
+pub(crate) fn extend_impl_trait_bounds(
+    ty: &mut syn::Type,
+    bounds: &[Vec<syn::TypeParamBound>],
+    next: &mut usize,
+) {
+    ImplTraitExtend { bounds, next }.visit_type_mut(ty);
+}
+
 pub(crate) fn desugar_impl_trait(ty: &mut syn::Type, params: &mut Vec<syn::GenericParam>) {
     let mut visitor = ImplTraitDesugar { params };
     visitor.visit_type_mut(ty);

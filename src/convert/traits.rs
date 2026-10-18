@@ -24,6 +24,30 @@ pub trait IntoWasmAbi: WasmDescribe {
     /// Convert `self` into `Self::Abi` so that it can be sent across the wasm
     /// ABI boundary.
     fn into_abi(self) -> Self::Abi;
+
+    /// Lowers an import argument held in `slot`, which the caller drops after
+    /// the call returns. Owning types whose borrow crosses identically (`String`
+    /// as `&str`, a JS handle as `&JsValue`) leave the value in the slot and
+    /// cross borrowed, so the owned and borrowed forms of a type share one
+    /// wire format; everything else takes the value.
+    #[doc(hidden)]
+    #[inline]
+    fn arg_into_abi(slot: &mut Option<Self>) -> Self::Abi
+    where
+        Self: Sized,
+    {
+        match slot.take() {
+            Some(value) => value.into_abi(),
+            None => unreachable!(),
+        }
+    }
+
+    /// Describes the wire format [`IntoWasmAbi::arg_into_abi`] produces.
+    #[doc(hidden)]
+    #[inline]
+    fn describe_arg() {
+        Self::describe()
+    }
 }
 
 /// A trait for anything that can be recovered by-value from the Wasm ABI
@@ -144,6 +168,27 @@ pub trait OptionIntoWasmAbi: IntoWasmAbi {
     /// It should be guaranteed that the `IntoWasmAbi` can never produce the ABI
     /// value returned here.
     fn none() -> Self::Abi;
+
+    /// [`IntoWasmAbi::arg_into_abi`] for `Option<Self>`.
+    #[doc(hidden)]
+    #[inline]
+    fn option_arg_into_abi(slot: &mut Option<Option<Self>>) -> Self::Abi
+    where
+        Self: Sized,
+    {
+        match slot.take() {
+            Some(Some(value)) => value.into_abi(),
+            Some(None) => Self::none(),
+            None => unreachable!(),
+        }
+    }
+
+    /// [`IntoWasmAbi::describe_arg`] for `Option<Self>`, after `OPTIONAL`.
+    #[doc(hidden)]
+    #[inline]
+    fn option_describe_arg() {
+        Self::describe()
+    }
 }
 
 /// Indicates that this type can be received from JS as `Option<Self>`.

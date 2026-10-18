@@ -196,6 +196,45 @@ impl Descriptor {
         descriptor
     }
 
+    fn is_primitive(&self) -> bool {
+        matches!(
+            self,
+            Descriptor::I8
+                | Descriptor::U8
+                | Descriptor::ClampedU8
+                | Descriptor::I16
+                | Descriptor::U16
+                | Descriptor::I32
+                | Descriptor::U32
+                | Descriptor::I64
+                | Descriptor::U64
+                | Descriptor::I64AsF64
+                | Descriptor::U64AsF64
+                | Descriptor::I128
+                | Descriptor::U128
+                | Descriptor::F32
+                | Descriptor::F64
+                | Descriptor::Boolean
+                | Descriptor::Char
+        )
+    }
+
+    /// Replaces `NamedExternref` with `Externref`, through references,
+    /// options and sequences.
+    pub fn erase_externref_names(&mut self) {
+        match self {
+            Descriptor::NamedExternref(_) => *self = Descriptor::Externref,
+            Descriptor::Ref(d)
+            | Descriptor::RefMut(d)
+            | Descriptor::Slice(d)
+            | Descriptor::Vector(d)
+            | Descriptor::Option(d)
+            | Descriptor::Result(d)
+            | Descriptor::SeqMode(_, d) => d.erase_externref_names(),
+            _ => {}
+        }
+    }
+
     /// Decode a per-monomorphisation generic-import descriptor stream.
     ///
     /// The stream is a length-prefixed `shim` key string (identifying which
@@ -235,7 +274,13 @@ impl Descriptor {
             BOOLEAN => Descriptor::Boolean,
             FUNCTION => Descriptor::Function(Box::new(Function::decode(data))),
             CLOSURE => Descriptor::Closure(Box::new(Closure::decode(data))),
-            REF => Descriptor::Ref(Box::new(Descriptor::_decode(data, clamped))),
+            REF => match Descriptor::_decode(data, clamped) {
+                // `&Option<T>` crosses as `Option<&T>`, and a primitive's
+                // reference as the value.
+                Descriptor::Option(inner) if inner.is_primitive() => Descriptor::Option(inner),
+                Descriptor::Option(inner) => Descriptor::Option(Box::new(Descriptor::Ref(inner))),
+                contents => Descriptor::Ref(Box::new(contents)),
+            },
             REFMUT => Descriptor::RefMut(Box::new(Descriptor::_decode(data, clamped))),
             LONGREF => {
                 // This descriptor basically just serves as a macro, where most things
