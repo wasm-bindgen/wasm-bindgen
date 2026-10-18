@@ -29,3 +29,7 @@ export function throwingIterator() {
     },
   };
 }
+
+export function later() {
+  return Promise.resolve();
+}

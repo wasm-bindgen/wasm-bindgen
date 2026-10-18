@@ -5686,6 +5686,18 @@ impl<F: JsFunction> Function<F> {
     }
 }
 
+impl<F, C> From<ScopedClosure<'static, C>> for Function<F>
+where
+    F: JsFunction + FunctionIntoClosure,
+    C: WasmClosure + ?Sized,
+    <F as FunctionIntoClosure>::ClosureTypeMut: UpcastFrom<<C as WasmClosure>::AsMut>,
+{
+    /// See [`Function::from_closure`].
+    fn from(closure: ScopedClosure<'static, C>) -> Self {
+        Function::from_closure(closure)
+    }
+}
+
 #[cfg(js_sys_unstable_apis)]
 impl<F: FunctionIntoClosure> Function<F> {
     /// A typed JavaScript Function backed by a Rust closure, whose argument

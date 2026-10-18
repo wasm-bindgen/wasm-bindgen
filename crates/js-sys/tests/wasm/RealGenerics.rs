@@ -13,6 +13,9 @@ extern "C" {
     #[wasm_bindgen(js_name = asyncStrings)]
     fn async_strings() -> AsyncIterator<String>;
     fn strings() -> Array<String>;
+    fn later() -> Promise<()>;
+    #[wasm_bindgen(js_name = callWith)]
+    fn call_unit(f: &Function<fn(String)>, a: &str);
     #[wasm_bindgen(js_name = throwingIterator)]
     fn throwing_iterator() -> Iterator<String>;
 
@@ -368,4 +371,25 @@ fn resolver_upcasts_to_untyped_function() {
         let untyped: &Function = resolve.upcast();
         untyped.call1(&JsValue::NULL, &JsValue::NULL).unwrap();
     });
+}
+
+#[wasm_bindgen_test]
+async fn unit_promises_and_callbacks() {
+    let () = later().await.unwrap();
+
+    let seen = std::rc::Rc::new(std::cell::RefCell::new(String::new()));
+    let s = seen.clone();
+    let c = Closure::<dyn FnMut(String)>::new(move |v: String| *s.borrow_mut() = v);
+    let f: Function<fn(String)> = c.into();
+    call_unit(&f, "x");
+    assert_eq!(*seen.borrow(), "x");
+}
+
+// A `Function` of a generic callback signature crosses with no bounds on its
+// argument types.
+#[allow(dead_code)]
+fn generic_function_abi<E, R>(f: &Function<fn(E, String) -> R>) {
+    fn crosses<T: wasm_bindgen::convert::IntoWasmAbi + wasm_bindgen::describe::WasmDescribe>(_: T) {
+    }
+    crosses(f);
 }
