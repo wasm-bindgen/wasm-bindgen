@@ -304,13 +304,19 @@ where
 {
     let mut future = Some(future);
 
-    Promise::new_typed(&mut move |resolve, reject| {
+    Promise::new_typed::<JsValue>(&mut move |resolve, reject| {
         let future = future.take().unwrap_throw();
 
         spawn_local(async move {
             match future.await {
                 Ok(val) => {
+                    #[cfg(not(js_sys_unstable_apis))]
                     resolve.call(&JsValue::UNDEFINED, (&val,)).unwrap_throw();
+                    #[cfg(js_sys_unstable_apis)]
+                    resolve
+                        .unchecked_ref::<crate::Function<fn(JsValue) -> crate::Undefined>>()
+                        .call(&JsValue::UNDEFINED, (val.as_ref(),))
+                        .unwrap_throw();
                 }
                 Err(val) => {
                     reject.call(&JsValue::UNDEFINED, (&val,)).unwrap_throw();
@@ -399,12 +405,18 @@ where
 {
     let mut future = Some(future);
 
-    Promise::new_typed(&mut move |resolve, reject| {
+    Promise::new_typed::<T>(&mut move |resolve, reject| {
         let future = future.take().unwrap_throw();
         spawn_local(async move {
             match future.await {
                 Ok(val) => {
+                    #[cfg(not(js_sys_unstable_apis))]
                     resolve.call(&JsValue::UNDEFINED, (&val,)).unwrap_throw();
+                    #[cfg(js_sys_unstable_apis)]
+                    resolve
+                        .unchecked_ref::<crate::Function<fn(JsValue) -> crate::Undefined>>()
+                        .call(&JsValue::UNDEFINED, (val.as_ref(),))
+                        .unwrap_throw();
                 }
                 Err(val) => {
                     reject.call(&JsValue::UNDEFINED, (&val,)).unwrap_throw();

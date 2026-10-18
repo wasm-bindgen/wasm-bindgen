@@ -4302,6 +4302,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = call)]
     pub fn call0<Ret: JsGeneric, F: JsFunction<Ret = Ret> = fn() -> JsValue>(
         this: &Function<F>,
@@ -4315,6 +4316,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = call)]
     pub fn call1<
         Ret: JsGeneric,
@@ -4333,6 +4335,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = call)]
     pub fn call2<
         Ret: JsGeneric,
@@ -4356,6 +4359,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = call)]
     pub fn call3<
         Ret: JsGeneric,
@@ -4382,6 +4386,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = call)]
     pub fn call4<
         Ret: JsGeneric,
@@ -4411,6 +4416,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = call)]
     pub fn call5<
         Ret: JsGeneric,
@@ -4444,6 +4450,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = call)]
     pub fn call6<
         Ret: JsGeneric,
@@ -4480,6 +4487,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = call)]
     pub fn call7<
         Ret: JsGeneric,
@@ -4527,6 +4535,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = call)]
     pub fn call8<
         Ret: JsGeneric,
@@ -4975,6 +4984,44 @@ extern "C" {
     pub fn to_string<T: JsFunction = fn() -> JsValue>(this: &Function<T>) -> JsString;
 }
 
+// Under `js_sys_unstable_apis` the `callN` methods are monomorphised over the
+// function signature, so arguments and returns cross as Rust types.
+#[cfg(js_sys_unstable_apis)]
+macro_rules! mono_function_calls {
+    ($($call:ident $trait:ident [$($arg:ident $A:ident)*];)*) => {
+        #[wasm_bindgen]
+        extern "C" {
+            $(
+                /// The `call()` method calls a function with a given this value and
+                /// arguments provided individually.
+                ///
+                /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+                #[wasm_bindgen(method, catch, js_name = call, experimental_generic_mono)]
+                pub fn $call<F: $trait>(
+                    this: &Function<F>,
+                    context: &JsValue,
+                    $($arg: &F::$A),*
+                ) -> Result<F::Ret, JsValue>
+                where
+                    F::Ret: FromWasmAbi;
+            )*
+        }
+    };
+}
+
+#[cfg(js_sys_unstable_apis)]
+mono_function_calls! {
+    call0 JsFunction [];
+    call1 JsFunction1 [arg1 Arg1];
+    call2 JsFunction2 [arg1 Arg1 arg2 Arg2];
+    call3 JsFunction3 [arg1 Arg1 arg2 Arg2 arg3 Arg3];
+    call4 JsFunction4 [arg1 Arg1 arg2 Arg2 arg3 Arg3 arg4 Arg4];
+    call5 JsFunction5 [arg1 Arg1 arg2 Arg2 arg3 Arg3 arg4 Arg4 arg5 Arg5];
+    call6 JsFunction6 [arg1 Arg1 arg2 Arg2 arg3 Arg3 arg4 Arg4 arg5 Arg5 arg6 Arg6];
+    call7 JsFunction7 [arg1 Arg1 arg2 Arg2 arg3 Arg3 arg4 Arg4 arg5 Arg5 arg6 Arg6 arg7 Arg7];
+    call8 JsFunction8 [arg1 Arg1 arg2 Arg2 arg3 Arg3 arg4 Arg4 arg5 Arg5 arg6 Arg6 arg7 Arg7 arg8 Arg8];
+}
+
 // Basic UpcastFrom impls for Function<T>
 impl<T: JsFunction> UpcastFrom<Function<T>> for JsValue {}
 impl<T: JsFunction> UpcastFrom<Function<T>> for JsOption<JsValue> {}
@@ -5003,50 +5050,61 @@ impl<T: JsFunction> Function<T> {
 }
 
 // Base traits for function signature types.
+#[cfg(not(js_sys_unstable_apis))]
 pub trait JsFunction {
     type Ret: JsGeneric;
     const ARITY: usize;
 }
 
+#[cfg(not(js_sys_unstable_apis))]
 pub trait JsFunction1: JsFunction {
     type Arg1: JsGeneric;
     type Bind1: JsFunction;
 }
+#[cfg(not(js_sys_unstable_apis))]
 pub trait JsFunction2: JsFunction1 {
     type Arg2: JsGeneric;
     type Bind2: JsFunction;
 }
+#[cfg(not(js_sys_unstable_apis))]
 pub trait JsFunction3: JsFunction2 {
     type Arg3: JsGeneric;
     type Bind3: JsFunction;
 }
+#[cfg(not(js_sys_unstable_apis))]
 pub trait JsFunction4: JsFunction3 {
     type Arg4: JsGeneric;
     type Bind4: JsFunction;
 }
+#[cfg(not(js_sys_unstable_apis))]
 pub trait JsFunction5: JsFunction4 {
     type Arg5: JsGeneric;
     type Bind5: JsFunction;
 }
+#[cfg(not(js_sys_unstable_apis))]
 pub trait JsFunction6: JsFunction5 {
     type Arg6: JsGeneric;
     type Bind6: JsFunction;
 }
+#[cfg(not(js_sys_unstable_apis))]
 pub trait JsFunction7: JsFunction6 {
     type Arg7: JsGeneric;
     type Bind7: JsFunction;
 }
+#[cfg(not(js_sys_unstable_apis))]
 pub trait JsFunction8: JsFunction7 {
     type Arg8: JsGeneric;
     type Bind8: JsFunction;
 }
 
 // Manual impl for fn() -> R
+#[cfg(not(js_sys_unstable_apis))]
 impl<Ret: JsGeneric> JsFunction for fn() -> Ret {
     type Ret = Ret;
     const ARITY: usize = 0;
 }
 
+#[cfg(not(js_sys_unstable_apis))]
 macro_rules! impl_fn {
     () => {
         impl_fn!(@impl 1 [Arg1] [
@@ -5124,9 +5182,149 @@ macro_rules! impl_fn {
     };
 }
 
+#[cfg(not(js_sys_unstable_apis))]
+impl_fn!();
+
+// Under `js_sys_unstable_apis` a signature's arguments and return are any
+// types, so a `Function<fn(String) -> bool>` types a callback with Rust leaves.
+// Base traits for function signature types.
+#[cfg(js_sys_unstable_apis)]
+pub trait JsFunction {
+    type Ret;
+    const ARITY: usize;
+}
+
+#[cfg(js_sys_unstable_apis)]
+pub trait JsFunction1: JsFunction {
+    type Arg1;
+    type Bind1: JsFunction;
+}
+#[cfg(js_sys_unstable_apis)]
+pub trait JsFunction2: JsFunction1 {
+    type Arg2;
+    type Bind2: JsFunction;
+}
+#[cfg(js_sys_unstable_apis)]
+pub trait JsFunction3: JsFunction2 {
+    type Arg3;
+    type Bind3: JsFunction;
+}
+#[cfg(js_sys_unstable_apis)]
+pub trait JsFunction4: JsFunction3 {
+    type Arg4;
+    type Bind4: JsFunction;
+}
+#[cfg(js_sys_unstable_apis)]
+pub trait JsFunction5: JsFunction4 {
+    type Arg5;
+    type Bind5: JsFunction;
+}
+#[cfg(js_sys_unstable_apis)]
+pub trait JsFunction6: JsFunction5 {
+    type Arg6;
+    type Bind6: JsFunction;
+}
+#[cfg(js_sys_unstable_apis)]
+pub trait JsFunction7: JsFunction6 {
+    type Arg7;
+    type Bind7: JsFunction;
+}
+#[cfg(js_sys_unstable_apis)]
+pub trait JsFunction8: JsFunction7 {
+    type Arg8;
+    type Bind8: JsFunction;
+}
+
+// Manual impl for fn() -> R
+#[cfg(js_sys_unstable_apis)]
+impl<Ret> JsFunction for fn() -> Ret {
+    type Ret = Ret;
+    const ARITY: usize = 0;
+}
+
+#[cfg(js_sys_unstable_apis)]
+macro_rules! impl_fn {
+    () => {
+        impl_fn!(@impl 1 [Arg1] [
+            JsFunction1 Arg1 Bind1 {fn() -> Ret}
+        ]);
+        impl_fn!(@impl 2 [Arg1 Arg2] [
+            JsFunction1 Arg1 Bind1 {fn(Arg2) -> Ret}
+            JsFunction2 Arg2 Bind2 {fn() -> Ret}
+        ]);
+        impl_fn!(@impl 3 [Arg1 Arg2 Arg3] [
+            JsFunction1 Arg1 Bind1 {fn(Arg2, Arg3) -> Ret}
+            JsFunction2 Arg2 Bind2 {fn(Arg3) -> Ret}
+            JsFunction3 Arg3 Bind3 {fn() -> Ret}
+        ]);
+        impl_fn!(@impl 4 [Arg1 Arg2 Arg3 Arg4] [
+            JsFunction1 Arg1 Bind1 {fn(Arg2, Arg3, Arg4) -> Ret}
+            JsFunction2 Arg2 Bind2 {fn(Arg3, Arg4) -> Ret}
+            JsFunction3 Arg3 Bind3 {fn(Arg4) -> Ret}
+            JsFunction4 Arg4 Bind4 {fn() -> Ret}
+        ]);
+        impl_fn!(@impl 5 [Arg1 Arg2 Arg3 Arg4 Arg5] [
+            JsFunction1 Arg1 Bind1 {fn(Arg2, Arg3, Arg4, Arg5) -> Ret}
+            JsFunction2 Arg2 Bind2 {fn(Arg3, Arg4, Arg5) -> Ret}
+            JsFunction3 Arg3 Bind3 {fn(Arg4, Arg5) -> Ret}
+            JsFunction4 Arg4 Bind4 {fn(Arg5) -> Ret}
+            JsFunction5 Arg5 Bind5 {fn() -> Ret}
+        ]);
+        impl_fn!(@impl 6 [Arg1 Arg2 Arg3 Arg4 Arg5 Arg6] [
+            JsFunction1 Arg1 Bind1 {fn(Arg2, Arg3, Arg4, Arg5, Arg6) -> Ret}
+            JsFunction2 Arg2 Bind2 {fn(Arg3, Arg4, Arg5, Arg6) -> Ret}
+            JsFunction3 Arg3 Bind3 {fn(Arg4, Arg5, Arg6) -> Ret}
+            JsFunction4 Arg4 Bind4 {fn(Arg5, Arg6) -> Ret}
+            JsFunction5 Arg5 Bind5 {fn(Arg6) -> Ret}
+            JsFunction6 Arg6 Bind6 {fn() -> Ret}
+        ]);
+        impl_fn!(@impl 7 [Arg1 Arg2 Arg3 Arg4 Arg5 Arg6 Arg7] [
+            JsFunction1 Arg1 Bind1 {fn(Arg2, Arg3, Arg4, Arg5, Arg6, Arg7) -> Ret}
+            JsFunction2 Arg2 Bind2 {fn(Arg3, Arg4, Arg5, Arg6, Arg7) -> Ret}
+            JsFunction3 Arg3 Bind3 {fn(Arg4, Arg5, Arg6, Arg7) -> Ret}
+            JsFunction4 Arg4 Bind4 {fn(Arg5, Arg6, Arg7) -> Ret}
+            JsFunction5 Arg5 Bind5 {fn(Arg6, Arg7) -> Ret}
+            JsFunction6 Arg6 Bind6 {fn(Arg7) -> Ret}
+            JsFunction7 Arg7 Bind7 {fn() -> Ret}
+        ]);
+        impl_fn!(@impl 8 [Arg1 Arg2 Arg3 Arg4 Arg5 Arg6 Arg7 Arg8] [
+            JsFunction1 Arg1 Bind1 {fn(Arg2, Arg3, Arg4, Arg5, Arg6, Arg7, Arg8) -> Ret}
+            JsFunction2 Arg2 Bind2 {fn(Arg3, Arg4, Arg5, Arg6, Arg7, Arg8) -> Ret}
+            JsFunction3 Arg3 Bind3 {fn(Arg4, Arg5, Arg6, Arg7, Arg8) -> Ret}
+            JsFunction4 Arg4 Bind4 {fn(Arg5, Arg6, Arg7, Arg8) -> Ret}
+            JsFunction5 Arg5 Bind5 {fn(Arg6, Arg7, Arg8) -> Ret}
+            JsFunction6 Arg6 Bind6 {fn(Arg7, Arg8) -> Ret}
+            JsFunction7 Arg7 Bind7 {fn(Arg8) -> Ret}
+            JsFunction8 Arg8 Bind8 {fn() -> Ret}
+        ]);
+    };
+
+    (@impl $arity:literal [$($A:ident)+] [$($trait:ident $arg:ident $bind:ident {$bind_ty:ty})+]) => {
+        impl<Ret $(, $A)+> JsFunction for fn($($A),+) -> Ret {
+            type Ret = Ret;
+            const ARITY: usize = $arity;
+        }
+
+        impl_fn!(@traits [$($A)+] [$($trait $arg $bind {$bind_ty})+]);
+    };
+
+    (@traits [$($A:ident)+] []) => {};
+
+    (@traits [$($A:ident)+] [$trait:ident $arg:ident $bind:ident {$bind_ty:ty} $($rest:tt)*]) => {
+        impl<Ret $(, $A)+> $trait for fn($($A),+) -> Ret {
+            type $arg = $arg;
+            type $bind = $bind_ty;
+        }
+
+        impl_fn!(@traits [$($A)+] [$($rest)*]);
+    };
+}
+
+#[cfg(js_sys_unstable_apis)]
 impl_fn!();
 
 /// Trait for argument tuples that can call or bind a `Function<T>`.
+#[cfg(not(js_sys_unstable_apis))]
 pub trait JsArgs<T: JsFunction> {
     type BindOutput;
     fn apply_call(self, func: &Function<T>, context: &JsValue) -> Result<T::Ret, JsValue>;
@@ -5134,6 +5332,7 @@ pub trait JsArgs<T: JsFunction> {
 }
 
 // Manual impl for 0-arg
+#[cfg(not(js_sys_unstable_apis))]
 impl<Ret: JsGeneric, F: JsFunction<Ret = Ret>> JsArgs<F> for () {
     type BindOutput = Function<F>;
 
@@ -5148,6 +5347,7 @@ impl<Ret: JsGeneric, F: JsFunction<Ret = Ret>> JsArgs<F> for () {
     }
 }
 
+#[cfg(not(js_sys_unstable_apis))]
 macro_rules! impl_js_args {
     ($arity:literal $trait:ident $bind_output:ident [$($A:ident)+] [$($idx:tt)+] $call:ident $bind:ident) => {
         impl<Ret: JsGeneric, $($A: JsGeneric,)+ F: $trait<Ret = Ret, $($A = $A,)*>> JsArgs<F> for ($(&$A,)+)
@@ -5167,13 +5367,99 @@ macro_rules! impl_js_args {
     };
 }
 
+#[cfg(not(js_sys_unstable_apis))]
 impl_js_args!(1 JsFunction1 Bind1 [Arg1] [0] call1 bind1);
+#[cfg(not(js_sys_unstable_apis))]
 impl_js_args!(2 JsFunction2 Bind2 [Arg1 Arg2] [0 1] call2 bind2);
+#[cfg(not(js_sys_unstable_apis))]
 impl_js_args!(3 JsFunction3 Bind3 [Arg1 Arg2 Arg3] [0 1 2] call3 bind3);
+#[cfg(not(js_sys_unstable_apis))]
 impl_js_args!(4 JsFunction4 Bind4 [Arg1 Arg2 Arg3 Arg4] [0 1 2 3] call4 bind4);
+#[cfg(not(js_sys_unstable_apis))]
 impl_js_args!(5 JsFunction5 Bind5 [Arg1 Arg2 Arg3 Arg4 Arg5] [0 1 2 3 4] call5 bind5);
+#[cfg(not(js_sys_unstable_apis))]
 impl_js_args!(6 JsFunction6 Bind6 [Arg1 Arg2 Arg3 Arg4 Arg5 Arg6] [0 1 2 3 4 5] call6 bind6);
+#[cfg(not(js_sys_unstable_apis))]
 impl_js_args!(7 JsFunction7 Bind7 [Arg1 Arg2 Arg3 Arg4 Arg5 Arg6 Arg7] [0 1 2 3 4 5 6] call7 bind7);
+#[cfg(not(js_sys_unstable_apis))]
+impl_js_args!(8 JsFunction8 Bind8 [Arg1 Arg2 Arg3 Arg4 Arg5 Arg6 Arg7 Arg8] [0 1 2 3 4 5 6 7] call8 bind8);
+
+/// Trait for argument tuples that can bind a `Function<T>`.
+#[cfg(js_sys_unstable_apis)]
+pub trait JsArgs<T: JsFunction> {
+    type BindOutput;
+    fn apply_bind(self, func: &Function<T>, context: &JsValue) -> Self::BindOutput;
+}
+
+/// Trait for argument tuples that can call a `Function<T>`: references to
+/// its argument types, each crossing as itself.
+#[cfg(js_sys_unstable_apis)]
+pub trait JsCallArgs<T: JsFunction> {
+    fn apply_call(self, func: &Function<T>, context: &JsValue) -> Result<T::Ret, JsValue>;
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<Ret: JsGeneric, F: JsFunction<Ret = Ret>> JsArgs<F> for () {
+    type BindOutput = Function<F>;
+
+    #[inline]
+    fn apply_bind(self, func: &Function<F>, context: &JsValue) -> Self::BindOutput {
+        func.bind0(context)
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<F: JsFunction> JsCallArgs<F> for ()
+where
+    F::Ret: FromWasmAbi,
+{
+    #[inline]
+    fn apply_call(self, func: &Function<F>, context: &JsValue) -> Result<F::Ret, JsValue> {
+        func.call0(context)
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+macro_rules! impl_js_args {
+    ($arity:literal $trait:ident $bind_output:ident [$($A:ident)+] [$($idx:tt)+] $call:ident $bind:ident) => {
+        impl<Ret: JsGeneric, $($A: JsGeneric,)+ F: $trait<Ret = Ret, $($A = $A,)*>> JsArgs<F> for ($(&$A,)+)
+        {
+            type BindOutput = Function<<F as $trait>::$bind_output>;
+
+            #[inline]
+            fn apply_bind(self, func: &Function<F>, context: &JsValue) -> Self::BindOutput {
+                func.$bind(context, $(self.$idx),+)
+            }
+        }
+
+        impl<F: $trait> JsCallArgs<F> for ($(&F::$A,)+)
+        where
+            F::Ret: FromWasmAbi,
+            $(for<'a> &'a F::$A: IntoWasmAbi,)+
+        {
+            #[inline]
+            fn apply_call(self, func: &Function<F>, context: &JsValue) -> Result<F::Ret, JsValue> {
+                func.$call(context, $(self.$idx),+)
+            }
+        }
+    };
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl_js_args!(1 JsFunction1 Bind1 [Arg1] [0] call1 bind1);
+#[cfg(js_sys_unstable_apis)]
+impl_js_args!(2 JsFunction2 Bind2 [Arg1 Arg2] [0 1] call2 bind2);
+#[cfg(js_sys_unstable_apis)]
+impl_js_args!(3 JsFunction3 Bind3 [Arg1 Arg2 Arg3] [0 1 2] call3 bind3);
+#[cfg(js_sys_unstable_apis)]
+impl_js_args!(4 JsFunction4 Bind4 [Arg1 Arg2 Arg3 Arg4] [0 1 2 3] call4 bind4);
+#[cfg(js_sys_unstable_apis)]
+impl_js_args!(5 JsFunction5 Bind5 [Arg1 Arg2 Arg3 Arg4 Arg5] [0 1 2 3 4] call5 bind5);
+#[cfg(js_sys_unstable_apis)]
+impl_js_args!(6 JsFunction6 Bind6 [Arg1 Arg2 Arg3 Arg4 Arg5 Arg6] [0 1 2 3 4 5] call6 bind6);
+#[cfg(js_sys_unstable_apis)]
+impl_js_args!(7 JsFunction7 Bind7 [Arg1 Arg2 Arg3 Arg4 Arg5 Arg6 Arg7] [0 1 2 3 4 5 6] call7 bind7);
+#[cfg(js_sys_unstable_apis)]
 impl_js_args!(8 JsFunction8 Bind8 [Arg1 Arg2 Arg3 Arg4 Arg5 Arg6 Arg7 Arg8] [0 1 2 3 4 5 6 7] call8 bind8);
 
 impl<T: JsFunction> Function<T> {
@@ -5200,8 +5486,20 @@ impl<T: JsFunction> Function<T> {
     /// ```
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(not(js_sys_unstable_apis))]
     #[inline]
     pub fn call<Args: JsArgs<T>>(&self, context: &JsValue, args: Args) -> Result<T::Ret, JsValue> {
+        args.apply_call(self, context)
+    }
+
+    /// The `call()` method calls a function with a given `this` value and
+    /// arguments provided as a tuple of references to its argument types,
+    /// which may be Rust types: `f.call(&JsValue::NULL, (&"a".to_string(), &1.0))`.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(js_sys_unstable_apis)]
+    #[inline]
+    pub fn call<Args: JsCallArgs<T>>(&self, context: &JsValue, args: Args) -> Result<T::Ret, JsValue> {
         args.apply_call(self, context)
     }
 
@@ -5265,9 +5563,19 @@ pub trait FunctionIntoClosure: JsFunction {
     type ClosureTypeMut: WasmClosure + ?Sized;
 }
 
+#[cfg(not(js_sys_unstable_apis))]
 macro_rules! impl_function_into_closure {
     ( $(($($var:ident)*))* ) => {$(
         impl<$($var: FromWasmAbi + JsGeneric,)* R: IntoWasmAbi + JsGeneric> FunctionIntoClosure for fn($($var),*) -> R {
+            type ClosureTypeMut = dyn FnMut($($var),*) -> R;
+        }
+    )*};
+}
+
+#[cfg(js_sys_unstable_apis)]
+macro_rules! impl_function_into_closure {
+    ( $(($($var:ident)*))* ) => {$(
+        impl<$($var: FromWasmAbi,)* R: wasm_bindgen::convert::ReturnWasmAbi> FunctionIntoClosure for fn($($var),*) -> R {
             type ClosureTypeMut = dyn FnMut($($var),*) -> R;
         }
     )*};
@@ -5325,6 +5633,27 @@ impl<F: JsFunction> Function<F> {
         <F as FunctionIntoClosure>::ClosureTypeMut: UpcastFrom<<C as WasmClosure>::AsMut>,
     {
         closure.into_js_value().unchecked_into()
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<F: FunctionIntoClosure> Function<F> {
+    /// A typed JavaScript Function backed by a Rust closure, whose argument
+    /// types are inferred from `F`:
+    /// `Function::<fn(String) -> bool>::from_fn(|s| s.is_empty())`.
+    ///
+    /// Like [`Function::from_closure`], ownership of the closure passes to
+    /// JS.
+    #[inline]
+    pub fn from_fn<C>(f: C) -> Self
+    where
+        C: wasm_bindgen::closure::IntoWasmClosure<F::ClosureTypeMut>
+            + wasm_bindgen::__rt::marker::MaybeUnwindSafe
+            + 'static,
+    {
+        ScopedClosure::<'static, F::ClosureTypeMut>::new(f)
+            .into_js_value()
+            .unchecked_into()
     }
 }
 
@@ -14061,9 +14390,12 @@ extern "C" {
     /// The return value of the executor is ignored.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
+    ///
+    /// `T` is any type with an ABI: a `Promise<String>`'s `resolve` takes a
+    /// `&String` through [`Function::call`].
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(constructor)]
-    pub fn new<T: JsGeneric>(
+    #[wasm_bindgen(constructor, experimental_generic_mono)]
+    pub fn new<T>(
         cb: &mut dyn FnMut(Function<fn(T) -> Undefined>, Function<fn(JsValue) -> Undefined>),
     ) -> Promise<T>;
 

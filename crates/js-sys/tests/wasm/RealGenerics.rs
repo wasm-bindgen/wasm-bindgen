@@ -16,6 +16,9 @@ extern "C" {
 
     #[wasm_bindgen(experimental_generic_mono, js_name = describe)]
     fn describe_like(values: &Array<impl JsStringLike>) -> String;
+
+    #[wasm_bindgen(js_name = callWith)]
+    fn call_with(f: &Function<fn(String, f64) -> String>, a: &str, b: f64) -> String;
 }
 
 #[wasm_bindgen_test]
@@ -210,4 +213,36 @@ async fn iterators_of_rust_types() {
         collected.push(next.value());
     }
     assert_eq!(collected, ["a", "b"]);
+}
+
+#[wasm_bindgen_test]
+fn functions_of_rust_types() {
+    let f: Function<fn(String, f64) -> String> = Function::from_fn(|s, n| format!("{s}{n}"));
+    assert_eq!(call_with(&f, "a", 1.0), "a1");
+
+    let closure = Closure::<dyn FnMut(String, f64) -> String>::new(|s, n| format!("{n}{s}"));
+    assert_eq!(call_with(Function::closure_ref(&closure), "b", 2.0), "2b");
+}
+
+#[wasm_bindgen_test]
+fn function_calls_with_rust_types() {
+    let f: Function<fn(String, f64) -> String> = Function::from_fn(|s, n| format!("{s}{n}"));
+    assert_eq!(f.call(&JsValue::NULL, (&"x".to_string(), &2.0)).unwrap(), "x2");
+    assert_eq!(f.call2(&JsValue::NULL, &"y".to_string(), &3.0).unwrap(), "y3");
+
+    let g: Function<fn() -> bool> = Function::from_fn(|| true);
+    assert!(g.call(&JsValue::NULL, ()).unwrap());
+}
+
+#[wasm_bindgen_test]
+async fn typed_promise_new() {
+    let p: Promise<String> = Promise::new(&mut |resolve, _reject| {
+        resolve.call(&JsValue::NULL, (&"done".to_string(),)).unwrap();
+    });
+    assert_eq!(p.await.unwrap(), "done");
+
+    let p = Promise::<f64>::new(&mut |resolve, _reject| {
+        resolve.call1(&JsValue::NULL, &1.5).unwrap();
+    });
+    assert_eq!(p.await.unwrap(), 1.5);
 }

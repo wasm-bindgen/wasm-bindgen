@@ -13,3 +13,7 @@ export async function* asyncStrings() {
 export function strings() {
   return ['x', 'y'];
 }
+
+export function callWith(f, a, b) {
+  return f(a, b);
+}
