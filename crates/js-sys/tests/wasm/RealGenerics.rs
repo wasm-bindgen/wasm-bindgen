@@ -140,10 +140,10 @@ fn map_of_rust_types() {
     let m: Map<String, f64> = Map::new_typed();
     m.set(&"k".into(), &1.0);
     m.set(&"j".into(), &2.0);
-    assert_eq!(m.get(&"k".into()), Some(1.0));
-    assert_eq!(m.get(&"j".into()), Some(2.0));
-    assert_eq!(m.get(&"missing".into()), None);
-    assert!(m.has(&"k".into()));
+    assert_eq!(m.get("k"), Some(1.0));
+    assert_eq!(m.get(&"j".to_string()), Some(2.0));
+    assert_eq!(m.get("missing"), None);
+    assert!(m.has("k"));
     assert_eq!(m.size(), 2);
 
     let keys: Vec<String> = m.keys().into_iter().map(Result::unwrap).collect();
@@ -155,8 +155,21 @@ fn map_of_rust_types() {
     m.for_each(&mut |value, key| seen.push((key, value)));
     assert_eq!(seen, [("k".to_string(), 1.0), ("j".to_string(), 2.0)]);
 
-    assert!(m.delete(&"k".into()));
-    assert!(!m.has(&"k".into()));
+    assert!(m.delete("k"));
+    assert!(!m.has("k"));
+
+    // A present key reads as `Some` even when its value is `null`.
+    let m: Map<String, Option<String>> = Map::new_typed();
+    m.set(&"a".into(), &Some("x".into()));
+    m.set(&"b".into(), &None);
+    assert_eq!(m.get("a"), Some(Some("x".to_string())));
+    assert_eq!(m.get("b"), Some(None));
+    assert_eq!(m.get("c"), None);
+
+    let m: Map<JsValue, f64> = Map::new_typed();
+    let key = JsValue::from("k");
+    m.set(&key, &1.0);
+    assert_eq!(m.get(&key), Some(1.0));
 }
 
 #[wasm_bindgen_test]

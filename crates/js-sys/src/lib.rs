@@ -37,6 +37,8 @@ extern crate alloc;
 
 use alloc::string::String;
 use alloc::vec::Vec;
+#[cfg(js_sys_unstable_apis)]
+use core::borrow::Borrow;
 use core::cmp::Ordering;
 #[cfg(not(js_sys_unstable_apis))]
 use core::convert::Infallible;
@@ -5611,9 +5613,9 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/delete)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, experimental_generic_mono)]
-    pub fn delete<K, V, Q: MapKey<K>>(this: &Map<K, V>, key: Q) -> bool
+    pub fn delete<K, V, Q: ?Sized>(this: &Map<K, V>, key: &Q) -> bool
     where
-        Q: IntoWasmAbi;
+        K: Borrow<Q>;
 
     /// The `forEach()` method executes a provided function once per each
     /// key/value pair in the Map object, in insertion order.
@@ -5678,16 +5680,17 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn get<K, V>(this: &Map<K, V>, key: &K) -> V;
 
-    /// The `get()` method returns a specified element from a Map object.
-    /// Returns `None` if the key is not found.
+    /// The `get()` method returns a specified element from a Map object,
+    /// read as `V` whether or not the key is present.
+    ///
+    /// **Note:** [`Map::get`] returns `None` for a missing key instead.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/get)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, experimental_generic_mono)]
-    pub fn get<K, V, Q: MapKey<K>>(this: &Map<K, V>, key: Q) -> Option<V>
+    #[wasm_bindgen(method, js_name = get, experimental_generic_mono)]
+    pub fn get_unchecked<K, V: FromWasmAbi, Q: ?Sized>(this: &Map<K, V>, key: &Q) -> V
     where
-        Option<V>: FromWasmAbi,
-        Q: IntoWasmAbi;
+        K: Borrow<Q>;
 
     /// The `get()` method returns a specified element from a Map object.
     /// Returns `None` if the key is not found.
@@ -5710,9 +5713,9 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/has)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, experimental_generic_mono)]
-    pub fn has<K, V, Q: MapKey<K>>(this: &Map<K, V>, key: Q) -> bool
+    pub fn has<K, V, Q: ?Sized>(this: &Map<K, V>, key: &Q) -> bool
     where
-        Q: IntoWasmAbi;
+        K: Borrow<Q>;
 
     /// The `set()` method adds or updates an element with a specified key
     /// and value to a Map object.
@@ -5742,16 +5745,30 @@ extern "C" {
     pub fn size<K, V>(this: &Map<K, V>) -> u32;
 }
 
-/// A borrowed form of a `Map<K, _>` key, as `HashMap::get` takes `&Q` where
-/// `K: Borrow<Q>`: `&K` always, and `&str` for `String` keys.
 #[cfg(js_sys_unstable_apis)]
-pub trait MapKey<K> {}
-
-#[cfg(js_sys_unstable_apis)]
-impl<K> MapKey<K> for &K {}
-
-#[cfg(js_sys_unstable_apis)]
-impl MapKey<String> for &str {}
+impl<K, V> Map<K, V> {
+    /// The `get()` method returns a specified element from a Map object.
+    /// Returns `None` if the key is not found.
+    ///
+    /// Like `HashMap::get`, the key may be any borrowed form of `K`: `"k"`
+    /// for a `Map<String, V>`. A present key reads as `Some` even when its
+    /// value is `undefined` or `null`, so `Map<String, Option<String>>`
+    /// gives `Option<Option<String>>`.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/get)
+    pub fn get<Q: ?Sized>(&self, key: &Q) -> Option<V>
+    where
+        K: Borrow<Q>,
+        V: FromWasmAbi,
+        for<'a> &'a Q: IntoWasmAbi,
+    {
+        if self.has(key) {
+            Some(self.get_unchecked(key))
+        } else {
+            None
+        }
+    }
+}
 
 impl Default for Map<JsValue, JsValue> {
     fn default() -> Self {
