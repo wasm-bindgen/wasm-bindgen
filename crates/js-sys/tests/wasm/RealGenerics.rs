@@ -38,6 +38,14 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono, js_name = show)]
     fn show_view<T: TypedArray>(view: &T) -> String;
 
+    #[wasm_bindgen(experimental_generic_mono, js_name = bufferKind)]
+    fn buffer_kind(bytes: impl BufferSourceLike) -> String;
+    #[wasm_bindgen(experimental_generic_mono, js_name = bufferKind)]
+    fn maybe_buffer_kind(bytes: Option<impl BufferSourceLike>) -> String;
+
+    #[wasm_bindgen(experimental_generic_mono, js_name = callThunk)]
+    fn call_thunk<T>(f: &Function<fn() -> T>) -> T;
+
     #[wasm_bindgen(js_name = callWith)]
     fn call_with(f: &Function<fn(String, f64) -> String>, a: &str, b: f64) -> String;
 }
@@ -503,4 +511,26 @@ fn handle_params_need_no_abi_bounds() {
     assert_eq!(show_any_handle(Some(&JsString::from("x"))), "string x");
     assert_eq!(show_any_handle(None::<&JsString>), "undefined undefined");
     assert_eq!(show_any_handle(None::<&JsValue>), "undefined undefined");
+}
+
+#[wasm_bindgen_test]
+fn buffer_sources() {
+    let bytes = [1u8, 2, 3];
+    assert_eq!(buffer_kind(&bytes[..]), "Uint8Array:1,2,3");
+    assert_eq!(buffer_kind(bytes.to_vec()), "Uint8Array:1,2,3");
+    let buf = ArrayBuffer::from(&bytes[..]);
+    assert_eq!(buffer_kind(&buf), "ArrayBuffer:1,2,3");
+    let view = Uint8Array::new_from_slice(&bytes);
+    assert_eq!(buffer_kind(&view), "Uint8Array:1,2,3");
+    assert_eq!(buffer_kind(view.subarray(1, 3)), "Uint8Array:2,3");
+    assert_eq!(buffer_kind(DataView::new(&buf, 1, 1)), "DataView:2");
+    assert_eq!(maybe_buffer_kind(Some(&buf)), "ArrayBuffer:1,2,3");
+    assert_eq!(maybe_buffer_kind(None::<&[u8]>), "none");
+}
+
+#[wasm_bindgen_test]
+fn function_once() {
+    let s = String::from("moved");
+    let out = call_thunk(&Function::once(move || s));
+    assert_eq!(out, "moved");
 }

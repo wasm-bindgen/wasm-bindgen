@@ -41,3 +41,13 @@ export function optionals() {
 export function optionalNumbers() {
   return [1, null, 2.5];
 }
+
+export function bufferKind(b) {
+  if (b === undefined || b === null) return 'none';
+  const bytes = b instanceof ArrayBuffer ? new Uint8Array(b) : new Uint8Array(b.buffer, b.byteOffset, b.byteLength);
+  return `${b.constructor.name}:${Array.from(bytes)}`;
+}
+
+export function callThunk(f) {
+  return f();
+}

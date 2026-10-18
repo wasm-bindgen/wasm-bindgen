@@ -5768,6 +5768,21 @@ impl<F: FunctionIntoClosure> Function<F> {
     }
 }
 
+#[cfg(js_sys_unstable_apis)]
+impl<F: FunctionIntoClosure> Function<F> {
+    /// A typed JavaScript Function backed by a Rust `FnOnce`, whose argument
+    /// types are inferred from `F` as for [`Function::from_fn`]. Calling it a
+    /// second time throws.
+    #[inline]
+    pub fn once<C, A, R>(f: C) -> Self
+    where
+        C: wasm_bindgen::closure::WasmClosureFnOnce<F::ClosureTypeMut, A, R>
+            + wasm_bindgen::__rt::marker::MaybeUnwindSafe,
+    {
+        ScopedClosure::<'static, F::ClosureTypeMut>::once_into_js(f).unchecked_into()
+    }
+}
+
 #[cfg(not(js_sys_unstable_apis))]
 impl Function {
     /// Returns the `Function` value of this JS value if it's an instance of a
@@ -16128,6 +16143,54 @@ arrays! {
     /// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigUint64Array
     BigUint64Array: u64,
 }
+
+mod buffer_source_sealed {
+    pub trait Sealed {}
+}
+
+/// TypeScript's `BufferSource` (`ArrayBuffer | ArrayBufferView`), as the
+/// argument bound of an `experimental_generic_mono` import. Each form crosses
+/// as itself: `&[u8]` as a view of wasm memory, `Vec<u8>` as a copy, and an
+/// `ArrayBuffer`, typed array or `DataView` (owned or borrowed) as that
+/// handle, so all of the handles share one import.
+///
+/// This trait is experimental and may change or be removed as
+/// `experimental_generic_mono` evolves.
+pub trait BufferSourceLike:
+    IntoWasmAbi + wasm_bindgen::convert::OptionIntoWasmAbi + buffer_source_sealed::Sealed
+{
+}
+
+macro_rules! impl_buffer_source_like {
+    ($($t:ty),* $(,)?) => ($(
+        impl buffer_source_sealed::Sealed for $t {}
+        impl BufferSourceLike for $t {}
+        impl buffer_source_sealed::Sealed for &$t {}
+        impl BufferSourceLike for &$t {}
+    )*)
+}
+
+impl_buffer_source_like!(
+    ArrayBuffer,
+    DataView,
+    Int8Array,
+    Int16Array,
+    Int32Array,
+    Uint8Array,
+    Uint8ClampedArray,
+    Uint16Array,
+    Uint32Array,
+    Float16Array,
+    Float32Array,
+    Float64Array,
+    BigInt64Array,
+    BigUint64Array,
+);
+
+impl buffer_source_sealed::Sealed for &[u8] {}
+impl BufferSourceLike for &[u8] {}
+impl buffer_source_sealed::Sealed for Vec<u8> {}
+impl BufferSourceLike for Vec<u8> {}
 
 /// Bridging between JavaScript `Promise`s and Rust `Future`s.
 ///
