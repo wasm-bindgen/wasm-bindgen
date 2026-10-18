@@ -4,6 +4,22 @@ use wasm_bindgen::JsCast;
 use wasm_bindgen::JsValue;
 use wasm_bindgen_test::*;
 
+trait Text {
+    fn text(&self) -> String;
+}
+
+impl Text for JsString {
+    fn text(&self) -> String {
+        self.into()
+    }
+}
+
+impl Text for String {
+    fn text(&self) -> String {
+        self.clone()
+    }
+}
+
 #[wasm_bindgen_test]
 fn get_canonical_locales() {
     #[cfg(not(js_sys_unstable_apis))]
@@ -129,7 +145,7 @@ fn date_time_format() {
         let c = Intl::DateTimeFormat::new(&locales, &Default::default()).unwrap();
         // format is now a direct method, not a getter
         let formatted = c.format(&epoch);
-        assert!(formatted.length() > 0);
+        assert!(formatted.text().len() > 0);
         assert!(c.format_to_parts(&epoch).is_instance_of::<Array<Object>>());
         assert!(c.resolved_options().is_instance_of::<Object>());
 
@@ -188,7 +204,7 @@ fn number_format() {
         let n = Intl::NumberFormat::new(&locales, &Default::default()).unwrap();
         // format is now a direct method accepting JsString
         let formatted = n.format(&JsString::from("42.5"));
-        assert!(formatted.length() > 0);
+        assert!(formatted.text().len() > 0);
         assert!(n
             .format_to_parts(&JsString::from("42.5"))
             .is_instance_of::<Array<Object>>());
@@ -257,7 +273,7 @@ fn date_time_format_range() {
         let end = Date::new(&wasm_bindgen::JsValue::from_f64(1579046400000.0));
 
         let range_str = c.format_range(&start, &end).unwrap();
-        assert!(range_str.length() > 0);
+        assert!(range_str.text().len() > 0);
 
         let parts = c.format_range_to_parts(&start, &end).unwrap();
         assert!(parts.length() > 0);
@@ -270,7 +286,7 @@ fn date_time_format_range() {
                 || source == RangeSource::EndRange
                 || source == RangeSource::Shared
         );
-        assert!(first.value().length() > 0);
+        assert!(first.value().text().len() > 0);
     }
 }
 
@@ -303,7 +319,7 @@ fn number_format_range() {
         let range_str = n
             .format_range(&JsString::from("100"), &JsString::from("200"))
             .unwrap();
-        assert!(range_str.length() > 0);
+        assert!(range_str.text().len() > 0);
 
         let parts = n
             .format_range_to_parts(&JsString::from("100"), &JsString::from("200"))
@@ -318,7 +334,7 @@ fn number_format_range() {
                 || source == RangeSource::EndRange
                 || source == RangeSource::Shared
         );
-        assert!(first.value().length() > 0);
+        assert!(first.value().text().len() > 0);
 
         // Test BigInt-style string formatting
         let big_range = n
@@ -327,7 +343,7 @@ fn number_format_range() {
                 &JsString::from("2000000000000000220000"),
             )
             .unwrap();
-        assert!(big_range.length() > 0);
+        assert!(big_range.text().len() > 0);
     }
 }
 
@@ -417,7 +433,7 @@ fn relative_time_format() {
         let locales = [JsString::from("en-US")];
 
         let c = Intl::RelativeTimeFormat::new(&locales).unwrap();
-        assert!(c.format(1_f64, RelativeTimeFormatUnit::Second).is_string());
+        assert!(c.format(1_f64, RelativeTimeFormatUnit::Second).text().len() > 0);
         assert!(c
             .format_to_parts(1_f64, RelativeTimeFormatUnit::Second)
             .is_instance_of::<Array<RelativeTimeFormatPart>>());
@@ -456,7 +472,7 @@ fn relative_time_format() {
             Some(RelativeTimeFormatNumeric::Auto)
         );
         assert_eq!(resolved.get_style(), Some(RelativeTimeFormatStyle::Long));
-        assert!(resolved.get_locale().length() > 0);
+        assert!(resolved.get_locale().text().len() > 0);
 
         // Test formatToParts returns typed parts
         let parts = c.format_to_parts(1_f64, RelativeTimeFormatUnit::Day);
@@ -464,27 +480,33 @@ fn relative_time_format() {
         let first_part: RelativeTimeFormatPart = parts.get(0).unwrap().unchecked_into();
         // First part should be "literal" with value "in "
         assert_eq!(first_part.type_(), RelativeTimeFormatPartType::Literal);
-        assert!(first_part.value().length() > 0);
+        assert!(first_part.value().text().len() > 0);
 
         // Test different units
         assert!(c
             .format(2_f64, RelativeTimeFormatUnit::Years)
-            .includes("2", 0));
+            .text()
+            .contains("2"));
         assert!(c
             .format(3_f64, RelativeTimeFormatUnit::Months)
-            .includes("3", 0));
+            .text()
+            .contains("3"));
         assert!(c
             .format(4_f64, RelativeTimeFormatUnit::Weeks)
-            .includes("4", 0));
+            .text()
+            .contains("4"));
         assert!(c
             .format(5_f64, RelativeTimeFormatUnit::Days)
-            .includes("5", 0));
+            .text()
+            .contains("5"));
         assert!(c
             .format(6_f64, RelativeTimeFormatUnit::Hours)
-            .includes("6", 0));
+            .text()
+            .contains("6"));
         assert!(c
             .format(7_f64, RelativeTimeFormatUnit::Minutes)
-            .includes("7", 0));
+            .text()
+            .contains("7"));
     }
 }
 
@@ -559,15 +581,15 @@ fn list_format() {
 
         let lf = Intl::ListFormat::new(&locales, &Default::default()).unwrap();
         let result = lf.format(&list);
-        assert!(result.includes("Apple", 0));
-        assert!(result.includes("Banana", 0));
-        assert!(result.includes("Orange", 0));
+        assert!(result.text().contains("Apple"));
+        assert!(result.text().contains("Banana"));
+        assert!(result.text().contains("Orange"));
 
         // Test formatToParts
         let parts = lf.format_to_parts(&list);
         assert!(parts.length() > 0);
         let first: ListFormatPart = parts.get(0).unwrap().unchecked_into();
-        assert!(first.value().length() > 0);
+        assert!(first.value().text().len() > 0);
 
         // Test with options
         let opts = ListFormatOptions::new();
@@ -576,7 +598,7 @@ fn list_format() {
         let lf2 = Intl::ListFormat::new(&locales, &opts).unwrap();
         let result2 = lf2.format(&list);
         // Disjunction should contain "or"
-        assert!(result2.includes("or", 0));
+        assert!(result2.text().contains("or"));
     }
 }
 
@@ -621,7 +643,7 @@ fn segmenter() {
         let segments2 = seg2.segment("👨‍👩‍👧‍👦");
         let data2 = segments2.containing(0).unwrap();
         // Family emoji is a single grapheme cluster
-        assert!(data2.segment().length() > 0);
+        assert!(data2.segment().text().len() > 0);
     }
 }
 
@@ -674,7 +696,7 @@ fn locale() {
     let locale = Intl::Locale::new("en-US").unwrap();
     assert_eq!(locale.language(), "en");
     assert_eq!(locale.region(), Some(JsString::from("US")));
-    assert!(locale.base_name().length() > 0);
+    assert!(locale.base_name().text().len() > 0);
 
     // Test maximize/minimize
     let minimal = Intl::Locale::new("en").unwrap();
@@ -770,22 +792,22 @@ fn duration_format() {
     // Test with default options
     let df = DurationFormat::new(&locales, &Default::default()).unwrap();
     let result = df.format(&duration);
-    assert!(result.length() > 0);
-    assert!(result.includes("1", 0)); // Should contain "1" for hours
+    assert!(result.text().len() > 0);
+    assert!(result.text().contains("1")); // Should contain "1" for hours
 
     // Test with long style
     let opts = DurationFormatOptions::new();
     opts.set_style(DurationFormatStyle::Long);
     let df_long = DurationFormat::new(&locales, &opts).unwrap();
     let result_long = df_long.format(&duration);
-    assert!(result_long.includes("hour", 0)); // Long style should have "hour"
+    assert!(result_long.text().contains("hour")); // Long style should have "hour"
 
     // Test with short style
     let opts_short = DurationFormatOptions::new();
     opts_short.set_style(DurationFormatStyle::Short);
     let df_short = DurationFormat::new(&locales, &opts_short).unwrap();
     let result_short = df_short.format(&duration);
-    assert!(result_short.length() > 0);
+    assert!(result_short.text().len() > 0);
 
     // Test formatToParts
     let parts = df.format_to_parts(&duration);
@@ -793,7 +815,7 @@ fn duration_format() {
 
     // Test resolvedOptions
     let resolved = df_long.resolved_options();
-    assert!(resolved.get_locale().length() > 0);
+    assert!(resolved.get_locale().text().len() > 0);
     assert_eq!(resolved.get_style(), Some(DurationFormatStyle::Long));
 
     // Test supportedLocalesOf
@@ -804,5 +826,5 @@ fn duration_format() {
     let fr_locales = [JsString::from("fr-FR")];
     let df_fr = DurationFormat::new(&fr_locales, &opts).unwrap();
     let result_fr = df_fr.format(&duration);
-    assert!(result_fr.includes("heure", 0)); // French for "hour"
+    assert!(result_fr.text().contains("heure")); // French for "hour"
 }

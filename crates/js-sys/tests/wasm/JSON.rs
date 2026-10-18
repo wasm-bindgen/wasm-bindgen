@@ -83,13 +83,22 @@ fn stringify() {
     arr.push(&JsValue::from(true));
     arr.push(&JsValue::from("hello"));
 
+    #[cfg(not(js_sys_unstable_apis))]
     let str1: String = JSON::stringify(&JsValue::from(arr)).unwrap().into();
+    #[cfg(js_sys_unstable_apis)]
+    let str1 = JSON::stringify(&JsValue::from(arr)).unwrap().unwrap();
     assert_eq!(str1, "[1,true,\"hello\"]");
 
     let obj = Object::new();
     Reflect::set_str(obj.as_ref(), &"foo".into(), &JsValue::from("bar")).unwrap();
+    #[cfg(not(js_sys_unstable_apis))]
     let str2: String = JSON::stringify(&JsValue::from(obj)).unwrap().into();
+    #[cfg(js_sys_unstable_apis)]
+    let str2 = JSON::stringify(&JsValue::from(obj)).unwrap().unwrap();
     assert_eq!(str2, "{\"foo\":\"bar\"}");
+
+    #[cfg(js_sys_unstable_apis)]
+    assert_eq!(JSON::stringify(&JsValue::UNDEFINED).unwrap(), None);
 }
 
 #[wasm_bindgen_test]
@@ -151,7 +160,7 @@ fn stringify_with_replacer() {
     {
         output2 = JSON::stringify_with_replacer(
             &JsValue::from(obj),
-            &mut |k: JsString, v: JsValue| {
+            &mut |k: String, v: JsValue| {
                 if k == "hello" {
                     Ok(None)
                 } else {
@@ -161,7 +170,7 @@ fn stringify_with_replacer() {
             None,
         )
         .unwrap()
-        .into();
+        .unwrap();
     }
     assert_eq!(output2, "{\"foo\":\"bar\"}");
 }
@@ -183,7 +192,7 @@ fn stringify_with_replacer_error() {
     {
         result = JSON::stringify_with_replacer(
             &JsValue::from(arr),
-            &mut |_: JsString, _: JsValue| Err(JsError::new("rust really rocks")),
+            &mut |_: String, _: JsValue| Err(JsError::new("rust really rocks")),
             None,
         );
     }
