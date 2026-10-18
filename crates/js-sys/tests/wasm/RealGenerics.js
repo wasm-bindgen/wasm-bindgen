@@ -51,3 +51,21 @@ export function bufferKind(b) {
 export function callThunk(f) {
   return f();
 }
+
+export function maybeAsync(fail) {
+  if (fail) throw new Error('sync');
+  return Promise.resolve('ok');
+}
+
+export class Thrower {
+  static maybeAsync(fail) {
+    return maybeAsync(fail);
+  }
+  maybeAsync(fail) {
+    return maybeAsync(fail);
+  }
+  echo(value, fail) {
+    if (fail) throw new Error('sync');
+    return Promise.resolve(value);
+  }
+}

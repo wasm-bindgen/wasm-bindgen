@@ -1024,7 +1024,12 @@ impl<'a>
         )?;
         let catch = opts.catch().is_some();
         let variadic = opts.variadic().is_some();
-        let js_ret = if catch {
+        let catch_rejects = catch
+            && wasm
+                .ret
+                .as_ref()
+                .is_some_and(|ret| last_segment_is(&ret.r#type, "Promise"));
+        let js_ret = if catch && !catch_rejects {
             // TODO: this assumes a whole bunch:
             //
             // * The outer type is actually a `Result`
@@ -1326,6 +1331,7 @@ impl<'a>
             kind,
             js_ret,
             catch,
+            catch_rejects,
             variadic,
             structural: opts.structural().is_some() || opts.r#final().is_none(),
             rust_name: self.sig.ident,
@@ -3793,6 +3799,15 @@ fn main(program: &ast::Program, mut f: ItemFn, tokens: &mut TokenStream) -> Resu
     f.to_tokens(tokens);
 
     Ok(())
+}
+
+fn last_segment_is(ty: &syn::Type, name: &str) -> bool {
+    match get_ty(ty) {
+        syn::Type::Path(syn::TypePath {
+            qself: None, path, ..
+        }) => path.segments.last().is_some_and(|seg| seg.ident == name),
+        _ => false,
+    }
 }
 
 #[cfg(test)]

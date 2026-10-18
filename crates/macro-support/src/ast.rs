@@ -207,6 +207,9 @@ pub struct ImportFunction {
     pub js_ret: Option<syn::Type>,
     /// Whether to catch JS exceptions
     pub catch: bool,
+    /// `catch` on a `Promise<..>` return: a synchronous throw is returned
+    /// through `FromCaughtException` as a rejected promise.
+    pub catch_rejects: bool,
     /// Whether the function is variadic on the JS side
     pub variadic: bool,
     /// Whether the function should use structural type checking
