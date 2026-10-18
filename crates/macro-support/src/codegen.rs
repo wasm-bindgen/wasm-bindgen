@@ -3597,6 +3597,13 @@ impl ast::ImportFunction {
                     where_bounds.push(quote! {
                         #elem: #wasm_bindgen::convert::VectorRefIntoWasmAbi
                     });
+                } else if let Some(elem) = option_shared_ref_elem(ty)
+                    .filter(|elem| !generics::references_generic_param(elem, &type_params))
+                {
+                    where_bounds.push(quote! {
+                        for<'__wbg> #wasm_bindgen::__rt::core::option::Option<&'__wbg #elem>:
+                            #wasm_bindgen::convert::IntoWasmAbi + #wasm_bindgen::describe::WasmDescribe
+                    });
                 } else if let (true, syn::Type::Reference(r)) = (top_level_shared_ref, ty) {
                     let elem = &r.elem;
                     where_bounds.push(quote! {
@@ -3638,7 +3645,7 @@ impl ast::ImportFunction {
             if borrowed_slot {
                 // The slot outlives the call, so a value lowered borrowed is
                 // dropped in Rust once JS returns.
-                let slot = Ident::new(&format!("__wbg_slot_{name}"), Span::call_site());
+                let slot = Ident::new(&format!("__wbg_slot_{}", name.unraw()), Span::call_site());
                 arg_conversions.push(quote! {
                     let mut #slot = #wasm_bindgen::__rt::core::option::Option::Some(#var);
                     let #name = <#ty as #wasm_bindgen::convert::IntoWasmAbi>::arg_into_abi(&mut #slot);
@@ -4014,7 +4021,7 @@ impl ast::ImportFunction {
         {
             (rust_name.clone(), quote! { #vis }, quote! {})
         } else {
-            let body_name = Ident::new(&format!("__wbg_mono_{rust_name}"), rust_name.span());
+            let body_name = Ident::new(&format!("__wbg_mono_{}", rust_name.unraw()), rust_name.span());
             let infer = synthesized_params.iter().map(|_| quote! { _ });
             let turbofish = quote! { ::<#(#fn_generic_params,)* #(#infer),*> };
             let call = if is_method {
@@ -5859,6 +5866,28 @@ fn result_err_ty(ty: &syn::Type) -> Option<&syn::Type> {
 /// CLI resolves against the argument's shape, so nothing here inspects the
 /// argument. The deprecated `slice_to_array` is the exception, keeping its
 /// released reach of `&[T]` and `Option<&[T]>` only.
+/// The referent of an `Option<&T>` argument.
+fn option_shared_ref_elem(ty: &syn::Type) -> Option<&syn::Type> {
+    let syn::Type::Path(path) = ty else {
+        return None;
+    };
+    let segment = path.path.segments.last()?;
+    if path.qself.is_some() || segment.ident != "Option" {
+        return None;
+    }
+    let syn::PathArguments::AngleBracketed(args) = &segment.arguments else {
+        return None;
+    };
+    match args.args.first()? {
+        syn::GenericArgument::Type(syn::Type::Reference(r))
+            if r.mutability.is_none() && args.args.len() == 1 =>
+        {
+            Some(&r.elem)
+        }
+        _ => None,
+    }
+}
+
 fn seq_mode_describe_ty(
     wasm_bindgen: &syn::Path,
     ty: &syn::Type,

@@ -293,7 +293,11 @@ impl Descriptor {
             }
             SLICE => Descriptor::Slice(Box::new(Descriptor::_decode(data, clamped))),
             VECTOR => Descriptor::Vector(Box::new(Descriptor::_decode(data, clamped))),
-            OPTIONAL => Descriptor::Option(Box::new(Descriptor::_decode(data, clamped))),
+            OPTIONAL => match Descriptor::_decode(data, clamped) {
+                // `Option<&f64>` crosses as `Option<f64>`.
+                Descriptor::Ref(inner) if inner.is_primitive() => Descriptor::Option(inner),
+                contents => Descriptor::Option(Box::new(contents)),
+            },
             RESULT => Descriptor::Result(Box::new(Descriptor::_decode(data, clamped))),
             CACHED_STRING => Descriptor::CachedString,
             STRING => Descriptor::String,

@@ -528,6 +528,26 @@ primitive_option_ref_into_wasm_abi!(
     bool char i8 u8 i16 u16 i32 u32 i64 u64 i128 u128 isize usize f32 f64
 );
 
+// `Option<&f64>` crosses as `Option<f64>` (the CLI reads its
+// `OPTIONAL REF F64` descriptor that way), so `Option<&T>` arguments take
+// primitives as well as handles and strings.
+macro_rules! primitive_ref_option_into_wasm_abi {
+    ($($t:ty)*) => ($(
+        impl IntoWasmAbi for Option<&$t> {
+            type Abi = <Option<$t> as IntoWasmAbi>::Abi;
+
+            #[inline]
+            fn into_abi(self) -> Self::Abi {
+                self.copied().into_abi()
+            }
+        }
+    )*)
+}
+
+primitive_ref_option_into_wasm_abi!(
+    bool char i8 u8 i16 u16 i32 u32 i64 u64 i128 u128 isize usize f32 f64
+);
+
 impl<T> IntoWasmAbi for *const T {
     type Abi = WasmWordRepr;
 
