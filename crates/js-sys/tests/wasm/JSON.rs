@@ -47,9 +47,9 @@ fn parse_object() {
     }
     #[cfg(js_sys_unstable_apis)]
     {
-        assert_eq!(keys.pop().unwrap().as_string().unwrap(), "z");
-        assert_eq!(keys.pop().unwrap().as_string().unwrap(), "y");
-        assert_eq!(keys.pop().unwrap().as_string().unwrap(), "x");
+        assert_eq!(keys.pop().unwrap(), "z");
+        assert_eq!(keys.pop().unwrap(), "y");
+        assert_eq!(keys.pop().unwrap(), "x");
 
         values = Object::values(&obj).unwrap();
         assert_eq!(values.length(), 3);

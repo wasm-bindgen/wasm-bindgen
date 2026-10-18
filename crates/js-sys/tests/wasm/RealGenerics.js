@@ -21,3 +21,11 @@ export function callWith(f, a, b) {
 export function show(v) {
   return `${typeof v} ${v}`;
 }
+
+export function throwingIterator() {
+  return {
+    next() {
+      throw 'boom';
+    },
+  };
+}

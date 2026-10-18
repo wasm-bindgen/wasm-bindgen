@@ -13,6 +13,8 @@ extern "C" {
     #[wasm_bindgen(js_name = asyncStrings)]
     fn async_strings() -> AsyncIterator<String>;
     fn strings() -> Array<String>;
+    #[wasm_bindgen(js_name = throwingIterator)]
+    fn throwing_iterator() -> Iterator<String>;
 
     #[wasm_bindgen(experimental_generic_mono, js_name = describe)]
     fn describe_like(values: &Array<impl JsStringLike>) -> String;
@@ -155,10 +157,24 @@ fn map_of_rust_types() {
     assert!(m.has("k"));
     assert_eq!(m.size(), 2);
 
-    let keys: Vec<String> = m.keys().into_iter().map(Result::unwrap).collect();
+    let keys: Vec<String> = m.keys().into_iter().collect();
     assert_eq!(keys, ["k", "j"]);
-    let values: Vec<f64> = m.values().into_iter().map(Result::unwrap).collect();
+    let values: Vec<f64> = m.values().into_iter().collect();
     assert_eq!(values, [1.0, 2.0]);
+    let entries: Vec<(String, f64)> = m.iter().collect();
+    assert_eq!(entries, [("k".to_string(), 1.0), ("j".to_string(), 2.0)]);
+    let mut total = 0.0;
+    for (_, v) in &m {
+        total += v;
+    }
+    assert_eq!(total, 3.0);
+
+    let copy: Map<String, f64> = m.iter().collect();
+    assert_eq!(copy.get("j"), Some(2.0));
+    let mut extended = copy.clone();
+    extended.extend([("z".to_string(), 9.0)]);
+    assert_eq!(m.size(), 2);
+    assert_eq!(copy.get("z"), Some(9.0));
 
     let mut seen = Vec::new();
     m.for_each(&mut |value, key| seen.push((key, value)));
@@ -186,28 +202,60 @@ fn set_of_rust_types() {
     let s: Set<String> = Set::new_from_items(&["a".to_string()]);
     s.add(&"b".into()).add(&"a".into());
     assert_eq!(s.size(), 2);
-    assert!(s.has(&"b".into()));
-    let values: Vec<String> = s.values().into_iter().map(Result::unwrap).collect();
+    assert!(s.has("b"));
+    let values: Vec<String> = s.values().into_iter().collect();
     assert_eq!(values, ["a", "b"]);
+    assert_eq!(s.iter().collect::<Vec<_>>(), ["a", "b"]);
+    let mut joined = String::new();
+    for v in &s {
+        joined += &v;
+    }
+    assert_eq!(joined, "ab");
+    let pairs: Vec<(String, String)> = Entries::from(s.entries()).collect();
+    assert_eq!(pairs[1], ("b".to_string(), "b".to_string()));
 
     let mut seen = Vec::new();
     s.for_each(&mut |value: String| seen.push(value));
     assert_eq!(seen, ["a", "b"]);
 
-    assert!(s.delete(&"a".into()));
-    assert!(!s.has(&"a".into()));
+    assert!(s.delete("a"));
+    assert!(!s.has(&"a".to_string()));
 
     let numbers: Set<u32> = Set::new_typed();
     numbers.add(&1).add(&1).add(&2);
     assert_eq!(numbers.size(), 2);
+
+    let mut numbers: Set<u32> = [3, 1, 3].into_iter().collect();
+    numbers.extend(&[4, 1]);
+    assert_eq!(numbers.iter().collect::<Vec<_>>(), [3, 1, 4]);
 }
 
 #[wasm_bindgen_test]
 async fn iterators_of_rust_types() {
     let values: Array<String> = strings();
     let it: Iterator<String> = values.values();
-    let collected: Vec<String> = it.into_iter().map(Result::unwrap).collect();
+    let collected: Vec<String> = it.into_iter().collect();
     assert_eq!(collected, ["x", "y"]);
+    let mut seen = Vec::new();
+    for v in &values.values() {
+        seen.push(v);
+    }
+    assert_eq!(seen, ["x", "y"]);
+
+    let fallible: Result<Vec<String>, JsValue> = values.values().try_iter().collect();
+    assert_eq!(fallible.unwrap(), ["x", "y"]);
+    let thrown = throwing_iterator()
+        .try_iter()
+        .collect::<Result<Vec<_>, _>>();
+    assert_eq!(thrown.unwrap_err().as_string().as_deref(), Some("boom"));
+
+    let indexed: Vec<(u32, String)> = Entries::from(values.entries()).collect();
+    assert_eq!(indexed, [(0, "x".to_string()), (1, "y".to_string())]);
+    let pair: (u32, String) = values.entries().into_iter().next().unwrap().into();
+    assert_eq!(pair, (0, "x".to_string()));
+
+    let keys: Array<String> = Object::keys(&values.unchecked_ref::<Object>());
+    assert_eq!(keys.to_vec(), ["0", "1"]);
 
     let it = async_strings();
     let mut collected = Vec::new();
@@ -219,6 +267,15 @@ async fn iterators_of_rust_types() {
         collected.push(next.value());
     }
     assert_eq!(collected, ["a", "b"]);
+
+    #[cfg(feature = "futures-core-03-stream")]
+    {
+        use futures_lite::stream::StreamExt;
+        let mut stream = js_sys::futures::stream::JsStream::from(async_strings());
+        assert_eq!(stream.next().await, Some(Ok("a".to_string())));
+        assert_eq!(stream.next().await, Some(Ok("b".to_string())));
+        assert_eq!(stream.next().await, None);
+    }
 }
 
 #[wasm_bindgen_test]
@@ -233,8 +290,14 @@ fn functions_of_rust_types() {
 #[wasm_bindgen_test]
 fn function_calls_with_rust_types() {
     let f: Function<fn(String, f64) -> String> = Function::from_fn(|s, n| format!("{s}{n}"));
-    assert_eq!(f.call(&JsValue::NULL, (&"x".to_string(), &2.0)).unwrap(), "x2");
-    assert_eq!(f.call2(&JsValue::NULL, &"y".to_string(), &3.0).unwrap(), "y3");
+    assert_eq!(
+        f.call(&JsValue::NULL, (&"x".to_string(), &2.0)).unwrap(),
+        "x2"
+    );
+    assert_eq!(
+        f.call2(&JsValue::NULL, &"y".to_string(), &3.0).unwrap(),
+        "y3"
+    );
 
     let g: Function<fn() -> bool> = Function::from_fn(|| true);
     assert!(g.call(&JsValue::NULL, ()).unwrap());
@@ -243,7 +306,9 @@ fn function_calls_with_rust_types() {
 #[wasm_bindgen_test]
 async fn typed_promise_new() {
     let p: Promise<String> = Promise::new(&mut |resolve, _reject| {
-        resolve.call(&JsValue::NULL, (&"done".to_string(),)).unwrap();
+        resolve
+            .call(&JsValue::NULL, (&"done".to_string(),))
+            .unwrap();
     });
     assert_eq!(p.await.unwrap(), "done");
 
@@ -284,8 +349,14 @@ fn rust_string_returns() {
 
     let d = Date::new_with_value(0.0);
     assert_eq!(d.to_iso_string(), "1970-01-01T00:00:00.000Z");
-    assert_eq!(Date::new_with_value("1970-01-01T00:00:00.000Z").get_time(), 0.0);
-    assert_eq!(Date::new_with_value(86_400_000u32).to_iso_string(), "1970-01-02T00:00:00.000Z");
+    assert_eq!(
+        Date::new_with_value("1970-01-01T00:00:00.000Z").get_time(),
+        0.0
+    );
+    assert_eq!(
+        Date::new_with_value(86_400_000u32).to_iso_string(),
+        "1970-01-02T00:00:00.000Z"
+    );
 
     let f: Function<fn() -> bool> = Function::from_fn(|| true);
     let _name: String = f.name();

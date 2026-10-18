@@ -120,7 +120,7 @@ fn keys() {
 
     let list = set
         .keys()
-        .into_iter()
+        .into_try_iter()
         .map(|e| e.unwrap())
         .collect::<Vec<_>>();
     assert_eq!(list.len(), 3);
@@ -138,7 +138,7 @@ fn values() {
 
     let list = set
         .values()
-        .into_iter()
+        .into_try_iter()
         .map(|e| e.unwrap())
         .collect::<Vec<_>>();
     assert_eq!(list.len(), 3);
@@ -212,7 +212,7 @@ fn typed_values_iterator() {
     set.add(&JsString::from("y"));
     set.add(&JsString::from("z"));
 
-    let values: Vec<JsString> = set.values().into_iter().map(|v| v.unwrap()).collect();
+    let values: Vec<JsString> = set.values().into_try_iter().map(|v| v.unwrap()).collect();
     assert_eq!(values.len(), 3);
     assert!(values.iter().any(|v| *v == "x"));
     assert!(values.iter().any(|v| *v == "y"));
@@ -225,7 +225,7 @@ fn typed_keys_iterator() {
     set.add(&JsString::from("key1"));
     set.add(&JsString::from("key2"));
 
-    let keys: Vec<JsString> = set.keys().into_iter().map(|k| k.unwrap()).collect();
+    let keys: Vec<JsString> = set.keys().into_try_iter().map(|k| k.unwrap()).collect();
     assert_eq!(keys.len(), 2);
     assert!(keys.iter().any(|k| *k == "key1"));
     assert!(keys.iter().any(|k| *k == "key2"));
@@ -239,7 +239,7 @@ fn typed_entries_iterator() {
 
     let entries = set.entries_typed();
     let mut count = 0;
-    for result in entries.into_iter() {
+    for result in entries.into_try_iter() {
         // entries_typed returns Iterator<ArrayTuple<T, T>> - the tuple is an Array
         let arr: Array = result.unwrap().unchecked_into();
         // For Set, entries are [value, value] pairs

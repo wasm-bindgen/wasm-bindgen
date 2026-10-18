@@ -919,8 +919,18 @@ extern "C" {
     /// **Note:** Consider using [`Array::try_for_each`] if the callback might throw an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = forEach)]
     pub fn for_each<T: JsGeneric>(this: &Array<T>, callback: &mut dyn FnMut(T, u32, Array<T>));
+
+    /// The `forEach()` method executes a provided function once for each array element.
+    ///
+    /// **Note:** Consider using [`Array::try_for_each`] if the callback might throw an error.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = forEach, experimental_generic_mono)]
+    pub fn for_each<T: FromWasmAbi>(this: &Array<T>, callback: &mut dyn FnMut(T, u32, Array<T>));
 
     /// The `forEach()` method executes a provided function once for each array element. _(Fallible variation)_
     ///
@@ -2005,6 +2015,13 @@ macro_rules! impl_tuple_access {
                 self.into_tuple()
             }
         }
+
+        #[$cfg]
+        impl<$($T: $bound),+> From<ArrayTuple<($($T),+,)>> for ($($T,)+) {
+            fn from(tuple: ArrayTuple<($($T),+,)>) -> Self {
+                tuple.into_tuple()
+            }
+        }
     };
 }
 
@@ -2893,7 +2910,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/entries)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method)]
-    pub fn entries<T: JsGeneric>(this: &Array<T>) -> Iterator<ArrayTuple<(Number, T)>>;
+    pub fn entries<T>(this: &Array<T>) -> Iterator<ArrayTuple<(u32, T)>>;
 
     // Next major: deprecate
     /// The `entries()` method returns a new Array Iterator object that contains
@@ -5528,7 +5545,11 @@ impl<T: JsFunction> Function<T> {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
     #[cfg(js_sys_unstable_apis)]
     #[inline]
-    pub fn call<Args: JsCallArgs<T>>(&self, context: &JsValue, args: Args) -> Result<T::Ret, JsValue> {
+    pub fn call<Args: JsCallArgs<T>>(
+        &self,
+        context: &JsValue,
+        args: Args,
+    ) -> Result<T::Ret, JsValue> {
         args.apply_call(self, context)
     }
 
@@ -6185,37 +6206,57 @@ impl<K, V> Iterable for Map<K, V> {
     type Item = ArrayTuple<(K, V)>;
 }
 
-/// The `[key, value]` pairs of a [`Map`] as Rust tuples, in insertion order.
 #[cfg(js_sys_unstable_apis)]
-pub struct MapEntries<K, V>(IntoIter<ArrayTuple<(K, V)>>);
-
-#[cfg(js_sys_unstable_apis)]
-impl<K: FromWasmAbi, V: FromWasmAbi> core::iter::Iterator for MapEntries<K, V> {
-    type Item = (K, V);
-
-    fn next(&mut self) -> Option<(K, V)> {
-        // A `Map` iterator only throws if `next` is called on a non-iterator.
-        Some(self.0.next()?.unwrap_throw().into_tuple())
+impl<K, V> Map<K, V> {
+    /// Iterates the `(key, value)` pairs in insertion order.
+    pub fn iter(&self) -> Entries<K, V> {
+        self.entries().into()
     }
 }
 
 #[cfg(js_sys_unstable_apis)]
 impl<K: FromWasmAbi, V: FromWasmAbi> IntoIterator for &Map<K, V> {
     type Item = (K, V);
-    type IntoIter = MapEntries<K, V>;
+    type IntoIter = Entries<K, V>;
 
-    fn into_iter(self) -> MapEntries<K, V> {
-        MapEntries(self.entries().into_iter())
+    fn into_iter(self) -> Entries<K, V> {
+        self.iter()
     }
 }
 
 #[cfg(js_sys_unstable_apis)]
 impl<K: FromWasmAbi, V: FromWasmAbi> IntoIterator for Map<K, V> {
     type Item = (K, V);
-    type IntoIter = MapEntries<K, V>;
+    type IntoIter = Entries<K, V>;
 
-    fn into_iter(self) -> MapEntries<K, V> {
-        (&self).into_iter()
+    fn into_iter(self) -> Entries<K, V> {
+        self.iter()
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<K, V> core::iter::FromIterator<(K, V)> for Map<K, V>
+where
+    for<'a> &'a K: IntoWasmAbi,
+    for<'a> &'a V: IntoWasmAbi,
+{
+    fn from_iter<I: IntoIterator<Item = (K, V)>>(iter: I) -> Self {
+        let mut map = Map::new();
+        map.extend(iter);
+        map
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<K, V> core::iter::Extend<(K, V)> for Map<K, V>
+where
+    for<'a> &'a K: IntoWasmAbi,
+    for<'a> &'a V: IntoWasmAbi,
+{
+    fn extend<I: IntoIterator<Item = (K, V)>>(&mut self, iter: I) {
+        for (k, v) in iter {
+            self.set(&k, &v);
+        }
     }
 }
 
@@ -6335,35 +6376,11 @@ struct IterState {
 
 macro_rules! iterator_impls {
     ($($bound:tt)*) => {
-        impl<'a, T: $($bound)*> IntoIterator for &'a Iterator<T> {
-            type Item = Result<T, JsValue>;
-            type IntoIter = Iter<'a, T>;
-
-            fn into_iter(self) -> Iter<'a, T> {
-                Iter {
-                    js: self,
-                    state: IterState::new(),
-                }
-            }
-        }
-
         impl<T: $($bound)*> core::iter::Iterator for Iter<'_, T> {
             type Item = Result<T, JsValue>;
 
             fn next(&mut self) -> Option<Self::Item> {
                 self.state.next(self.js)
-            }
-        }
-
-        impl<T: $($bound)*> IntoIterator for Iterator<T> {
-            type Item = Result<T, JsValue>;
-            type IntoIter = IntoIter<T>;
-
-            fn into_iter(self) -> IntoIter<T> {
-                IntoIter {
-                    js: self,
-                    state: IterState::new(),
-                }
             }
         }
 
@@ -6408,6 +6425,134 @@ iterator_impls!(FromWasmAbi + JsGeneric);
 #[cfg(js_sys_unstable_apis)]
 iterator_impls!(FromWasmAbi);
 
+#[cfg(not(js_sys_unstable_apis))]
+impl<'a, T: FromWasmAbi + JsGeneric> IntoIterator for &'a Iterator<T> {
+    type Item = Result<T, JsValue>;
+    type IntoIter = Iter<'a, T>;
+
+    fn into_iter(self) -> Iter<'a, T> {
+        Iter {
+            js: self,
+            state: IterState::new(),
+        }
+    }
+}
+
+#[cfg(not(js_sys_unstable_apis))]
+impl<T: FromWasmAbi + JsGeneric> IntoIterator for Iterator<T> {
+    type Item = Result<T, JsValue>;
+    type IntoIter = IntoIter<T>;
+
+    fn into_iter(self) -> IntoIter<T> {
+        IntoIter {
+            js: self,
+            state: IterState::new(),
+        }
+    }
+}
+
+impl<T> Iterator<T> {
+    /// Iterates with the protocol's errors as `Err` items: a throwing
+    /// `next()` yields one `Err` and ends the iteration.
+    pub fn try_iter(&self) -> Iter<'_, T> {
+        Iter {
+            js: self,
+            state: IterState::new(),
+        }
+    }
+
+    /// Owned form of [`Iterator::try_iter`].
+    pub fn into_try_iter(self) -> IntoIter<T> {
+        IntoIter {
+            js: self,
+            state: IterState::new(),
+        }
+    }
+}
+
+/// The values of a JS iterator. A throwing `next()` rethrows into JS, as
+/// `for...of` does; use [`Iterator::try_iter`] to handle it in Rust.
+#[cfg(js_sys_unstable_apis)]
+pub struct Values<'a, T = JsValue>(Iter<'a, T>);
+
+/// Owned form of [`Values`].
+#[cfg(js_sys_unstable_apis)]
+pub struct IntoValues<T = JsValue>(IntoIter<T>);
+
+#[cfg(js_sys_unstable_apis)]
+impl<T> From<IntoIter<T>> for IntoValues<T> {
+    fn from(iter: IntoIter<T>) -> Self {
+        IntoValues(iter)
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<T: FromWasmAbi> core::iter::Iterator for Values<'_, T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<T> {
+        Some(
+            self.0
+                .next()?
+                .unwrap_or_else(|e| wasm_bindgen::throw_val(e)),
+        )
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<T: FromWasmAbi> core::iter::Iterator for IntoValues<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<T> {
+        Some(
+            self.0
+                .next()?
+                .unwrap_or_else(|e| wasm_bindgen::throw_val(e)),
+        )
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<'a, T: FromWasmAbi> IntoIterator for &'a Iterator<T> {
+    type Item = T;
+    type IntoIter = Values<'a, T>;
+
+    fn into_iter(self) -> Values<'a, T> {
+        Values(self.try_iter())
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<T: FromWasmAbi> IntoIterator for Iterator<T> {
+    type Item = T;
+    type IntoIter = IntoValues<T>;
+
+    fn into_iter(self) -> IntoValues<T> {
+        IntoValues(self.into_try_iter())
+    }
+}
+
+/// The `[key, value]` entries of a JS iterator as Rust tuples, from
+/// `Map::entries`, `Headers::entries` and the like.
+#[cfg(js_sys_unstable_apis)]
+pub struct Entries<K, V>(IntoValues<ArrayTuple<(K, V)>>);
+
+#[cfg(js_sys_unstable_apis)]
+impl<K, V> From<Iterator<ArrayTuple<(K, V)>>> for Entries<K, V> {
+    fn from(iter: Iterator<ArrayTuple<(K, V)>>) -> Self {
+        Entries(IntoValues(iter.into_try_iter()))
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<K: FromWasmAbi, V: FromWasmAbi> core::iter::Iterator for Entries<K, V> {
+    type Item = (K, V);
+
+    fn next(&mut self) -> Option<(K, V)> {
+        Some(self.0.next()?.into_tuple())
+    }
+}
+
 /// Create an iterator over `val` using the JS iteration protocol and
 /// `Symbol.iterator`.
 // #[cfg(not(js_sys_unstable_apis))]
@@ -6425,7 +6570,7 @@ pub fn try_iter(val: &JsValue) -> Result<Option<IntoIter<JsValue>>, JsValue> {
         Err(_) => return Ok(None),
     };
 
-    Ok(Some(it.into_iter()))
+    Ok(Some(it.into_try_iter()))
 }
 
 /// Trait for JavaScript types that implement the iterable protocol via `Symbol.iterator`.
@@ -8297,7 +8442,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(static_method_of = Object)]
-    pub fn keys<T>(object: &Object<T>) -> Array<JsString>;
+    pub fn keys<T>(object: &Object<T>) -> Array<String>;
 
     /// The [`Object`] constructor creates an object wrapper.
     ///
@@ -9286,9 +9431,9 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/delete)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, experimental_generic_mono)]
-    pub fn delete<T>(this: &Set<T>, value: &T) -> bool
+    pub fn delete<T, Q: ?Sized>(this: &Set<T>, value: &Q) -> bool
     where
-        for<'a> &'a T: IntoWasmAbi;
+        T: Borrow<Q>;
 
     /// The `forEach()` method executes a provided function once for each value
     /// in the Set object, in insertion order.
@@ -9330,9 +9475,9 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/has)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, experimental_generic_mono)]
-    pub fn has<T>(this: &Set<T>, value: &T) -> bool
+    pub fn has<T, Q: ?Sized>(this: &Set<T>, value: &Q) -> bool
     where
-        for<'a> &'a T: IntoWasmAbi;
+        T: Borrow<Q>;
 
     /// The size accessor property returns the number of elements in a [`Set`]
     /// object.
@@ -9401,6 +9546,82 @@ impl<T> Iterable for Set<T> {
     type Item = T;
 }
 
+#[cfg(js_sys_unstable_apis)]
+impl<T> Set<T> {
+    /// Iterates the values in insertion order.
+    pub fn iter(&self) -> IntoValues<T> {
+        self.values().into_try_iter().into()
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<T: FromWasmAbi> IntoIterator for &Set<T> {
+    type Item = T;
+    type IntoIter = IntoValues<T>;
+
+    fn into_iter(self) -> IntoValues<T> {
+        self.iter()
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<T: FromWasmAbi> IntoIterator for Set<T> {
+    type Item = T;
+    type IntoIter = IntoValues<T>;
+
+    fn into_iter(self) -> IntoValues<T> {
+        self.iter()
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<T> core::iter::FromIterator<T> for Set<T>
+where
+    for<'a> &'a T: IntoWasmAbi,
+{
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+        let mut set = Set::new();
+        set.extend(iter);
+        set
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<'a, T: 'a> core::iter::FromIterator<&'a T> for Set<T>
+where
+    for<'b> &'b T: IntoWasmAbi,
+{
+    fn from_iter<I: IntoIterator<Item = &'a T>>(iter: I) -> Self {
+        let mut set = Set::new();
+        set.extend(iter);
+        set
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<T> core::iter::Extend<T> for Set<T>
+where
+    for<'a> &'a T: IntoWasmAbi,
+{
+    fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
+        for value in iter {
+            self.add(&value);
+        }
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<'a, T: 'a> core::iter::Extend<&'a T> for Set<T>
+where
+    for<'b> &'b T: IntoWasmAbi,
+{
+    fn extend<I: IntoIterator<Item = &'a T>>(&mut self, iter: I) {
+        for value in iter {
+            self.add(value);
+        }
+    }
+}
+
 // SetIterator
 #[wasm_bindgen]
 extern "C" {
@@ -9424,7 +9645,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/entries)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, js_name = entries)]
-    pub fn entries<T: JsGeneric>(set: &Set<T>) -> Iterator<ArrayTuple<(T, T)>>;
+    pub fn entries<T>(set: &Set<T>) -> Iterator<ArrayTuple<(T, T)>>;
 
     // Next major: deprecate
     /// The `entries()` method returns a new Iterator object that contains an
