@@ -2321,6 +2321,18 @@ macro_rules! array_iter_impls {
 
         impl<T: $($bound)*> core::iter::ExactSizeIterator for ArrayIter<'_, T> {}
 
+        impl<'a, T: $($bound)*> core::iter::IntoIterator for &'a Array<T> {
+            type Item = T;
+            type IntoIter = ArrayIter<'a, T>;
+
+            fn into_iter(self) -> Self::IntoIter {
+                ArrayIter {
+                    range: 0..self.length(),
+                    array: self,
+                }
+            }
+        }
+
         impl<T: $($bound)*> core::iter::IntoIterator for Array<T> {
             type Item = T;
             type IntoIter = ArrayIntoIter<T>;
@@ -8592,6 +8604,55 @@ extern "C" {
     #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(static_method_of = Object, catch, js_name = values)]
     pub fn try_values<T>(object: &Object<T>) -> Result<Array<T>, JsValue>;
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<T> Object<T> {
+    /// Iterates the own enumerable string-keyed `(key, value)` properties,
+    /// as `Object.entries`.
+    pub fn iter(&self) -> Entries<String, T> {
+        Object::entries(self)
+            .unwrap_or_else(|e| wasm_bindgen::throw_val(e))
+            .values()
+            .into()
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<T: FromWasmAbi> IntoIterator for &Object<T> {
+    type Item = (String, T);
+    type IntoIter = Entries<String, T>;
+
+    fn into_iter(self) -> Entries<String, T> {
+        self.iter()
+    }
+}
+
+/// Collects `(key, value)` pairs into a record, the values by owned or
+/// borrowed form: `map.iter().collect::<Object<String>>()` for a
+/// `HashMap<String, String>`.
+#[cfg(js_sys_unstable_apis)]
+impl<K: PropertyKey, V: Borrow<T>, T> core::iter::FromIterator<(K, V)> for Object<T>
+where
+    for<'a> &'a T: IntoWasmAbi,
+{
+    fn from_iter<I: IntoIterator<Item = (K, V)>>(iter: I) -> Self {
+        let mut obj = Object::new_typed();
+        obj.extend(iter);
+        obj
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<K: PropertyKey, V: Borrow<T>, T> core::iter::Extend<(K, V)> for Object<T>
+where
+    for<'a> &'a T: IntoWasmAbi,
+{
+    fn extend<I: IntoIterator<Item = (K, V)>>(&mut self, iter: I) {
+        for (k, v) in iter {
+            Reflect::set(self, k, v.borrow()).unwrap_or_else(|e| wasm_bindgen::throw_val(e));
+        }
+    }
 }
 
 impl Object {

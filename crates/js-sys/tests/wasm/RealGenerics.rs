@@ -393,3 +393,27 @@ fn generic_function_abi<E, R>(f: &Function<fn(E, String) -> R>) {
     }
     crosses(f);
 }
+
+#[wasm_bindgen_test]
+fn records_and_borrowed_arrays() {
+    let mut map = std::collections::HashMap::new();
+    map.insert("a".to_string(), "x".to_string());
+    let record: Object<String> = map.iter().collect();
+    let mut record2: Object<String> = [("b", "y".to_string())].into_iter().collect();
+    record2.extend(&map);
+    let mut entries: Vec<(String, String)> = record2.iter().collect();
+    entries.sort();
+    assert_eq!(
+        entries,
+        [("a".into(), "x".into()), ("b".into(), "y".into())]
+    );
+    let back: std::collections::HashMap<String, String> = (&record).into_iter().collect();
+    assert_eq!(back, map);
+
+    let a: Array<String> = strings();
+    let mut joined = String::new();
+    for s in &a {
+        joined += &s;
+    }
+    assert_eq!(joined, "xy");
+}
