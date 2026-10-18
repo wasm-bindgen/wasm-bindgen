@@ -2774,6 +2774,43 @@ extern "C" {
 
 impl UpcastFrom<&[u8]> for ArrayBuffer {}
 
+#[cfg(js_sys_unstable_apis)]
+impl ArrayBuffer {
+    /// Copies the buffer's bytes into a `Vec`.
+    pub fn to_vec(&self) -> Vec<u8> {
+        Uint8Array::new(self).to_vec()
+    }
+}
+
+/// A fresh buffer holding a copy of the bytes.
+#[cfg(js_sys_unstable_apis)]
+impl From<&[u8]> for ArrayBuffer {
+    fn from(bytes: &[u8]) -> ArrayBuffer {
+        Uint8Array::new_from_slice(bytes).buffer()
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl From<Vec<u8>> for ArrayBuffer {
+    fn from(bytes: Vec<u8>) -> ArrayBuffer {
+        bytes.as_slice().into()
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl From<&ArrayBuffer> for Vec<u8> {
+    fn from(buffer: &ArrayBuffer) -> Vec<u8> {
+        buffer.to_vec()
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl From<ArrayBuffer> for Vec<u8> {
+    fn from(buffer: ArrayBuffer) -> Vec<u8> {
+        buffer.to_vec()
+    }
+}
+
 // SharedArrayBuffer
 #[wasm_bindgen]
 extern "C" {

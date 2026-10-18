@@ -11,6 +11,7 @@ use crate::convert::{
     FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, OptionFromWasmAbi, OptionIntoWasmAbi,
     RefFromWasmAbi, ReturnWasmAbi, TryFromJsValue, UpcastFrom,
 };
+use crate::describe::WasmDescribe;
 use crate::sys::Promising;
 use crate::sys::{JsNullable, JsOption, Undefined};
 use crate::{throw_str, Clamped, JsError, JsValue};
@@ -712,12 +713,15 @@ impl FromWasmAbi for JsValue {
     }
 }
 
-impl IntoWasmAbi for &JsValue {
+// Every handle (`JsValue` and the imported types) is a `JsValue` in memory,
+// so one impl borrows them all, and `T: JsGeneric` implies `&T: IntoWasmAbi`.
+impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> IntoWasmAbi for &T {
     type Abi = u32;
 
     #[inline]
     fn into_abi(self) -> u32 {
-        self.idx
+        // SAFETY: `ErasableGeneric<Repr = JsValue>` guarantees `JsValue`'s layout.
+        unsafe { &*(self as *const T as *const JsValue) }.idx
     }
 }
 
@@ -748,7 +752,7 @@ impl OptionIntoWasmAbi for JsValue {
     }
 }
 
-impl OptionIntoWasmAbi for &JsValue {
+impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> OptionIntoWasmAbi for &T {
     #[inline]
     fn none() -> u32 {
         crate::__rt::JSIDX_UNDEFINED

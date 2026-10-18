@@ -35,6 +35,9 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono, js_name = show)]
     fn show_owned(r#type: impl JsStringLike) -> String;
 
+    #[wasm_bindgen(experimental_generic_mono, js_name = show)]
+    fn show_view<T: TypedArray>(view: &T) -> String;
+
     #[wasm_bindgen(js_name = callWith)]
     fn call_with(f: &Function<fn(String, f64) -> String>, a: &str, b: f64) -> String;
 }
@@ -431,6 +434,14 @@ extern "C" {
     type ScoreMap;
     #[wasm_bindgen(constructor, js_class = Map)]
     fn new() -> ScoreMap;
+
+    #[wasm_bindgen(extends = Map<String, T>, extends = Object, js_name = Map)]
+    type Scores<T = JsValue>;
+    #[wasm_bindgen(constructor, js_class = Map)]
+    fn new_scores<T>() -> Scores<T>;
+
+    #[wasm_bindgen(extends = Map<T, T>, extends = Object, js_name = Map)]
+    type Pairs<T>;
 }
 
 #[wasm_bindgen_test]
@@ -442,6 +453,12 @@ fn extends_with_type_arguments() {
     assert_eq!(parent.size(), 1);
     let parent: Map<String, f64> = m.into();
     assert_eq!(parent.get("a"), Some(1.5));
+
+    let s: Scores<u32> = Scores::new_scores();
+    s.set(&"b".to_string(), &2);
+    assert_eq!(s.get("b"), Some(2));
+    let parent: &Map<String, u32> = s.as_ref();
+    assert_eq!(parent.size(), 1);
 }
 
 #[wasm_bindgen_test]
@@ -454,4 +471,36 @@ fn vectors_of_options() {
     assert_eq!(handles[0].as_ref().unwrap(), "a");
     assert!(handles[1].is_none() && handles[2].is_none());
     assert_eq!(optionals_of::<JsValue>()[3], Some("b".into()));
+}
+
+#[wasm_bindgen_test]
+fn array_buffer_bytes() {
+    let buf = ArrayBuffer::from(&b"abc"[..]);
+    assert_eq!(buf.byte_length(), 3);
+    assert_eq!(buf.to_vec(), b"abc");
+    let bytes: Vec<u8> = buf.into();
+    assert_eq!(bytes, b"abc");
+    let buf: ArrayBuffer = vec![1, 2].into();
+    assert_eq!(Vec::from(&buf), [1, 2]);
+}
+
+// A `JsGeneric` (here `TypedArray`) parameter passes by reference, or as an
+// `Option<&T>`, with no `IntoWasmAbi` bound.
+fn show_any_view<T: TypedArray>(view: &T) -> String {
+    show_view(view)
+}
+
+fn show_any_handle<T: wasm_bindgen::JsGeneric>(value: Option<&T>) -> String {
+    show(value)
+}
+
+#[wasm_bindgen_test]
+fn handle_params_need_no_abi_bounds() {
+    assert_eq!(
+        show_any_view(&Uint8Array::new_from_slice(&[1, 2])),
+        "object 1,2"
+    );
+    assert_eq!(show_any_handle(Some(&JsString::from("x"))), "string x");
+    assert_eq!(show_any_handle(None::<&JsString>), "undefined undefined");
+    assert_eq!(show_any_handle(None::<&JsValue>), "undefined undefined");
 }

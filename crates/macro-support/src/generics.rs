@@ -335,25 +335,6 @@ pub(crate) fn lifetime_args(generics: &syn::Generics) -> Vec<&syn::Lifetime> {
     generics.lifetimes().map(|lp| &lp.lifetime).collect()
 }
 
-/// Generate a lifetime name that does not collide with the source generics.
-pub(crate) fn fresh_lifetime(generics: &syn::Generics, base: &str) -> syn::Lifetime {
-    let mut suffix = 0;
-    loop {
-        let name = if suffix == 0 {
-            base.to_owned()
-        } else {
-            format!("{base}_{suffix}")
-        };
-        if generics
-            .lifetimes()
-            .all(|param| param.lifetime.ident != name)
-        {
-            return syn::Lifetime::new(&format!("'{name}"), proc_macro2::Span::call_site());
-        }
-        suffix += 1;
-    }
-}
-
 /// Obtain both lifetime and type parameter names from generics
 pub(crate) fn all_param_names(generics: &syn::Generics) -> (Vec<&syn::Lifetime>, Vec<&Ident>) {
     (lifetime_args(generics), generic_param_names(generics))

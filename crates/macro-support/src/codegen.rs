@@ -1488,23 +1488,6 @@ impl TryToTokens for ast::ImportType {
         let (impl_generics, ty_generics, where_clause) = declaration_generics.split_for_impl();
 
         let lifetime_args = generics::lifetime_args(&declaration_generics);
-        // The reference impls below (`&'__wbg_ref #rust_name #ty_generics`)
-        // need to declare the type's *own* lifetime params on the impl
-        // header, not just a fresh reference lifetime and the type params:
-        // `ty_generics` re-emits every one of the type's lifetime arguments,
-        // so leaving them undeclared here is an undeclared-lifetime error
-        // (E0261) unless the type happens to have no lifetimes of its own.
-        //
-        // Keep the normalized structured declarations and only prepend a fresh
-        // borrow lifetime. Reassembling this header from lifetime names loses
-        // bounds such as `'a: 'b`.
-        let reference_lifetime = generics::fresh_lifetime(&declaration_generics, "__wbg_ref");
-        let mut reference_generics = declaration_generics.clone();
-        reference_generics.params.insert(
-            0,
-            syn::GenericParam::Lifetime(syn::LifetimeParam::new(reference_lifetime.clone())),
-        );
-        let (reference_impl_generics, _, _) = reference_generics.split_for_impl();
 
         // For struct definitions, we need generics with defaults, so use params directly
         let struct_generics = if declaration_generics.params.is_empty() {
@@ -1705,21 +1688,13 @@ impl TryToTokens for ast::ImportType {
                 }
 
                 #[automatically_derived]
-                impl #reference_impl_generics OptionIntoWasmAbi for &#reference_lifetime #rust_name #ty_generics #where_clause {
-                    #[inline]
-                    fn none() -> Self::Abi {
-                        0
-                    }
-                }
-
-                #[automatically_derived]
                 impl #impl_generics FromWasmAbi for #rust_name #ty_generics #where_clause {
                     type Abi = <JsValue as FromWasmAbi>::Abi;
 
                     #[inline]
                     unsafe fn from_abi(js: Self::Abi) -> Self {
                         #rust_name {
-                            obj: <#internal_obj as #wasm_bindgen::JsCast>::unchecked_from_js(JsValue::from_abi(js)),
+                            obj: #wasm_bindgen::JsCast::unchecked_from_js(JsValue::from_abi(js)),
                             #phantom_init
                         }
                     }
@@ -1729,16 +1704,6 @@ impl TryToTokens for ast::ImportType {
                 impl #impl_generics OptionFromWasmAbi for #rust_name #ty_generics #where_clause {
                     #[inline]
                     fn is_none(abi: &Self::Abi) -> bool { *abi == 0 }
-                }
-
-                #[automatically_derived]
-                impl #reference_impl_generics IntoWasmAbi for &#reference_lifetime #rust_name #ty_generics #where_clause {
-                    type Abi = <&#reference_lifetime JsValue as IntoWasmAbi>::Abi;
-
-                    #[inline]
-                    fn into_abi(self) -> Self::Abi {
-                        (&self.obj).into_abi()
-                    }
                 }
 
                 // A handle's memory is its table index, so a slice of them is
@@ -1760,7 +1725,7 @@ impl TryToTokens for ast::ImportType {
                     unsafe fn ref_from_abi(js: Self::Abi) -> Self::Anchor {
                         let tmp = <JsValue as RefFromWasmAbi>::ref_from_abi(js);
                         #wasm_bindgen::__rt::core::mem::ManuallyDrop::new(#rust_name {
-                            obj: <#internal_obj as #wasm_bindgen::JsCast>::unchecked_from_js(#wasm_bindgen::__rt::core::mem::ManuallyDrop::into_inner(tmp)),
+                            obj: #wasm_bindgen::JsCast::unchecked_from_js(#wasm_bindgen::__rt::core::mem::ManuallyDrop::into_inner(tmp)),
                             #phantom_init
                         })
                     }
@@ -1775,7 +1740,7 @@ impl TryToTokens for ast::ImportType {
                     unsafe fn long_ref_from_abi(js: Self::Abi) -> Self::Anchor {
                         let tmp = <JsValue as LongRefFromWasmAbi>::long_ref_from_abi(js);
                         #rust_name {
-                            obj: <#internal_obj as #wasm_bindgen::JsCast>::unchecked_from_js(tmp),
+                            obj: #wasm_bindgen::JsCast::unchecked_from_js(tmp),
                             #phantom_init
                         }
                     }
@@ -1803,7 +1768,7 @@ impl TryToTokens for ast::ImportType {
                     #[inline]
                     fn from(obj: JsValue) -> Self {
                         #rust_name {
-                            obj: <#internal_obj as #wasm_bindgen::JsCast>::unchecked_from_js(obj),
+                            obj: #wasm_bindgen::JsCast::unchecked_from_js(obj),
                             #phantom_init
                         }
                     }
@@ -1840,7 +1805,7 @@ impl TryToTokens for ast::ImportType {
                     #[inline]
                     fn unchecked_from_js(val: JsValue) -> Self {
                         #rust_name {
-                            obj: <#internal_obj as #wasm_bindgen::JsCast>::unchecked_from_js(val),
+                            obj: #wasm_bindgen::JsCast::unchecked_from_js(val),
                             #phantom_init
                         }
                     }
