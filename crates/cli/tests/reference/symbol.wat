@@ -12,7 +12,7 @@
   (import "./reference_test_bg.js" "__wbg_SymboltoPrimitive_64e6192264e6e25c" (func (;1;) (type 5)))
   (import "./reference_test_bg.js" "__wbg___wbindgen_throw_41e9ee4f547fc59a" (func (;2;) (type 5)))
   (import "./reference_test_bg.js" "__wbg_import_static_symbol_getter_81f53842c69f201c" (func (;3;) (type 8)))
-  (import "./reference_test_bg.js" "__wbg_new_75595f321ce58371" (func (;4;) (type 7)))
+  (import "./reference_test_bg.js" "__wbg_new_fc662d07311c7d03" (func (;4;) (type 7)))
   (import "./reference_test_bg.js" "__wbg_string_getter_27db002d52b3baca" (func (;5;) (type 1)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;6;) (type 8)))
   (table $__wbindgen_externrefs (;0;) 1024 externref)

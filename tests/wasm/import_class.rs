@@ -50,6 +50,33 @@ extern "C" {
     #[wasm_bindgen(method, js_class = default)]
     fn get(this: &RenamedTypes) -> i32;
 
+    #[wasm_bindgen(js_name = RenamedClass)]
+    type RenamedWithoutJsClass;
+    #[wasm_bindgen(constructor)]
+    fn new(arg: i32) -> RenamedWithoutJsClass;
+    #[wasm_bindgen(static_method_of = RenamedWithoutJsClass)]
+    fn with_offset(arg: i32) -> RenamedWithoutJsClass;
+    #[wasm_bindgen(method, final)]
+    fn get(this: &RenamedWithoutJsClass) -> i32;
+
+    #[wasm_bindgen(js_namespace = nestedNamespace, js_name = NamespacedClass)]
+    type NamespacedWithoutJsClass;
+    #[wasm_bindgen(constructor)]
+    fn new(arg: i32) -> NamespacedWithoutJsClass;
+    #[wasm_bindgen(static_method_of = NamespacedWithoutJsClass)]
+    fn with_offset(arg: i32) -> NamespacedWithoutJsClass;
+    #[wasm_bindgen(method, final)]
+    fn get(this: &NamespacedWithoutJsClass) -> i32;
+
+    #[wasm_bindgen(js_name = default)]
+    type DefaultWithoutJsClass;
+    #[wasm_bindgen(constructor)]
+    fn new(arg: i32) -> DefaultWithoutJsClass;
+    #[wasm_bindgen(static_method_of = DefaultWithoutJsClass)]
+    fn with_offset(arg: i32) -> DefaultWithoutJsClass;
+    #[wasm_bindgen(method, final)]
+    fn get(this: &DefaultWithoutJsClass) -> i32;
+
     fn switch_methods_a();
     fn switch_methods_b();
     type SwitchMethods;
@@ -172,6 +199,16 @@ fn new_constructors() {
 fn rename_type() {
     let f = RenamedTypes::new(1);
     assert_eq!(f.get(), 2);
+}
+
+#[wasm_bindgen_test]
+fn rename_type_without_js_class() {
+    assert_eq!(RenamedWithoutJsClass::new(1).get(), 2);
+    assert_eq!(RenamedWithoutJsClass::with_offset(1).get(), 11);
+    assert_eq!(NamespacedWithoutJsClass::new(1).get(), 3);
+    assert_eq!(NamespacedWithoutJsClass::with_offset(1).get(), 21);
+    assert_eq!(DefaultWithoutJsClass::new(1).get(), 2);
+    assert_eq!(DefaultWithoutJsClass::with_offset(1).get(), 12);
 }
 
 #[wasm_bindgen_test]

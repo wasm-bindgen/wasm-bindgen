@@ -943,20 +943,30 @@ impl<'a>
         &'a Option<ast::ImportModule>,
         bool,
         bool,
-        Option<&'a [String]>,
+        &'a mut Option<Vec<String>>,
+        &'a BlockTypes,
     )> for syn::ForeignItemFn
 {
     type Target = ast::ImportKind;
 
     fn convert(
         mut self,
-        (program, opts, module, block_slice_to_array, block_generic_per_mono, js_namespace): (
+        (
+            program,
+            opts,
+            module,
+            block_slice_to_array,
+            block_generic_per_mono,
+            js_namespace,
+            block_types,
+        ): (
             &ast::Program,
             BindgenAttrs,
             &'a Option<ast::ImportModule>,
             bool,
             bool,
-            Option<&'a [String]>,
+            &'a mut Option<Vec<String>>,
+            &'a BlockTypes,
         ),
     ) -> Result<Self::Target, Diagnostic> {
         // `slice_to_array` is inherited from the enclosing `extern "C"`
@@ -1023,9 +1033,13 @@ impl<'a>
                 _ => bail_span!(class_ty, "first argument of method must be a path"),
             };
 
-            let class_name_str = js_class.map(Ok).unwrap_or_else(|| {
-                extract_path_ident(class_name, true).map(|i| i.unraw().to_string())
-            })?;
+            let class_name_str = match js_class {
+                Some(class) => class,
+                None => match block_type_class(block_types, class_name, js_namespace) {
+                    Some(class) => class,
+                    None => extract_path_ident(class_name, true)?.unraw().to_string(),
+                },
+            };
 
             ast::ImportFunctionKind::Method {
                 class: class_name_str,
@@ -1039,10 +1053,11 @@ impl<'a>
                     "static_method_of does not support qualified-self projections"
                 );
             }
-            let class = opts
-                .js_class()
-                .map(|p| p.0.into())
-                .unwrap_or_else(|| cls.path.segments.last().unwrap().ident.unraw().to_string());
+            let class = match opts.js_class() {
+                Some(class) => class.0.into(),
+                None => block_type_class(block_types, &cls.path, js_namespace)
+                    .unwrap_or_else(|| cls.path.segments.last().unwrap().ident.unraw().to_string()),
+            };
 
             let ty = syn::Type::Path(cls.clone());
 
@@ -1065,11 +1080,12 @@ impl<'a>
                 }) => path,
                 _ => bail_span!(self, "return value of constructor must be a bare path"),
             };
-            let class_name = extract_path_ident(class_name, true)?;
-            let class_name = opts
-                .js_class()
-                .map(|p| p.0.into())
-                .unwrap_or_else(|| class_name.unraw().to_string());
+            let class_ident = extract_path_ident(class_name, true)?;
+            let class_name = match opts.js_class() {
+                Some(class) => class.0.into(),
+                None => block_type_class(block_types, class_name, js_namespace)
+                    .unwrap_or_else(|| class_ident.unraw().to_string()),
+            };
 
             ast::ImportFunctionKind::Method {
                 class: class_name,
@@ -1210,7 +1226,7 @@ impl<'a>
             // hashed when present, so that imports without them keep their
             // names.
             let hash = match (
-                js_namespace,
+                js_namespace.as_deref(),
                 inline_js_snippet(program, module),
                 (!call_style.is_plain()).then_some(call_style),
             ) {
@@ -2875,12 +2891,14 @@ impl MacroParse<BindgenAttrs> for syn::ItemForeignMod {
             .unwrap_or_default();
         let slice_to_array = opts.slice_to_array().is_some();
         let generic_per_mono = opts.experimental_generic_mono().is_some();
+        let block_types = block_types(&self.items);
         for item in self.items.into_iter() {
             let ctx = ForeignItemCtx {
                 module: module.clone(),
                 js_namespace: js_namespace.clone(),
                 slice_to_array,
                 generic_per_mono,
+                block_types: &block_types,
             };
             if let Err(e) = item.macro_parse(program, ctx) {
                 errors.push(e);
@@ -2956,7 +2974,71 @@ fn add_class_cfg_to_function_shims(imports: &mut [ast::Import]) {
     }
 }
 
-struct ForeignItemCtx {
+/// The JS class of each type imported by an `extern "C"` block, keyed by its
+/// Rust identifier: its `js_name` and its own `js_namespace`, if any. A type
+/// declared more than once (e.g. under different `#[cfg]`s) with differing JS
+/// classes maps to `None`, since it is then ambiguous which one is meant.
+type BlockTypes = HashMap<String, Option<(String, Option<Vec<String>>)>>;
+
+/// Collects the [`BlockTypes`] of an `extern "C"` block's items.
+fn block_types(items: &[syn::ForeignItem]) -> BlockTypes {
+    let mut types = BlockTypes::new();
+    for item in items {
+        let syn::ForeignItem::Type(t) = item else {
+            continue;
+        };
+        // Only peek at the attributes here: the type's own conversion parses
+        // them again, and reports any errors and unused attributes.
+        let Ok(opts) = BindgenAttrs::find(&mut t.attrs.clone()) else {
+            continue;
+        };
+        let class = match opts.js_name() {
+            Some((js_name, _)) if is_computed_key(js_name) => None,
+            Some((js_name, _)) => Some(js_name.to_string()),
+            None => Some(t.ident.unraw().to_string()),
+        }
+        .map(|js_name| (js_name, opts.js_namespace().map(|(ns, _)| ns.0)));
+        for (used, _) in opts.attrs.iter() {
+            used.set(true);
+        }
+        opts.check_used();
+        let Some(class) = class else {
+            continue;
+        };
+        types
+            .entry(t.ident.unraw().to_string())
+            .and_modify(|existing| {
+                if existing.as_ref() != Some(&class) {
+                    *existing = None;
+                }
+            })
+            .or_insert(Some(class));
+    }
+    types
+}
+
+/// Returns the JS class of the type `path` names, when it is the bare Rust
+/// identifier of a type imported by the same `extern "C"` block. Methods,
+/// static methods and constructors without a `js_class` then bind to the
+/// type's `js_name`, and to its `js_namespace` unless they have their own.
+fn block_type_class(
+    block_types: &BlockTypes,
+    path: &syn::Path,
+    js_namespace: &mut Option<Vec<String>>,
+) -> Option<String> {
+    if path.leading_colon.is_some() || path.segments.len() != 1 {
+        return None;
+    }
+    let (js_name, type_namespace) = block_types
+        .get(&path.segments[0].ident.unraw().to_string())?
+        .as_ref()?;
+    if js_namespace.is_none() {
+        js_namespace.clone_from(type_namespace);
+    }
+    Some(js_name.clone())
+}
+
+struct ForeignItemCtx<'a> {
     module: Option<ast::ImportModule>,
     js_namespace: Option<JsNamespace>,
     /// Block-level `slice_to_array` flag inherited by every foreign
@@ -2974,13 +3056,15 @@ struct ForeignItemCtx {
     /// being rejected. That lets one block hold both generic and non-generic
     /// imports.
     generic_per_mono: bool,
+    /// The types imported by the `extern "C"` block, see [`BlockTypes`].
+    block_types: &'a BlockTypes,
 }
 
-impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
+impl<'a> MacroParse<ForeignItemCtx<'a>> for syn::ForeignItem {
     fn macro_parse(
         mut self,
         program: &mut ast::Program,
-        ctx: ForeignItemCtx,
+        ctx: ForeignItemCtx<'a>,
     ) -> Result<(), Diagnostic> {
         let item_opts = {
             let attrs = match self {
@@ -3019,7 +3103,7 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
                 ));
             }
         }
-        let js_namespace = item_opts
+        let mut js_namespace = item_opts
             .js_namespace()
             .map(|(s, _)| s)
             .or(ctx.js_namespace)
@@ -3059,7 +3143,8 @@ impl MacroParse<ForeignItemCtx> for syn::ForeignItem {
                 &module,
                 block_slice_to_array,
                 block_generic_per_mono,
-                js_namespace.as_deref(),
+                &mut js_namespace,
+                ctx.block_types,
             ))?,
             syn::ForeignItem::Type(t) => {
                 t.convert((program, item_opts, &module, js_namespace.as_deref()))?
