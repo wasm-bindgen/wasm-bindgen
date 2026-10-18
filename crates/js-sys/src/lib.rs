@@ -4089,16 +4089,32 @@ extern "C" {
     /// The message property is a human-readable description of the error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/message)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, getter)]
     pub fn message(this: &Error) -> JsString;
+
+    /// The message property is a human-readable description of the error.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/message)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, getter)]
+    pub fn message(this: &Error) -> String;
     #[wasm_bindgen(method, setter)]
     pub fn set_message(this: &Error, message: &str);
 
     /// The name property represents a name for the type of error. The initial value is "Error".
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/name)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, getter)]
     pub fn name(this: &Error) -> JsString;
+
+    /// The name property represents a name for the type of error. The initial value is "Error".
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/name)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, getter)]
+    pub fn name(this: &Error) -> String;
     #[wasm_bindgen(method, setter)]
     pub fn set_name(this: &Error, name: &str);
 
@@ -4108,6 +4124,11 @@ extern "C" {
     #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = toString)]
     pub fn to_string(this: &Error) -> JsString;
+
+    /// The `toString()` method returns a string representing the object.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = toString)]
+    pub fn to_string(this: &Error) -> String;
 
     /// The `Error.stackTraceLimit` property controls the number of stack
     /// frames collected by a stack trace.
@@ -4973,8 +4994,16 @@ extern "C" {
     /// created anonymously.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, getter)]
     pub fn name<T: JsFunction = fn() -> JsValue>(this: &Function<T>) -> JsString;
+
+    /// A Function object's read-only name property.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, getter)]
+    pub fn name<T: JsFunction = fn() -> JsValue>(this: &Function<T>) -> String;
 
     /// The `toString()` method returns a string representing the source code of the function.
     ///
@@ -6875,22 +6904,49 @@ extern "C" {
     /// object to the specified precision.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toPrecision)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(catch, method, js_name = toPrecision)]
     pub fn to_precision(this: &Number, precision: u8) -> Result<JsString, JsValue>;
+
+    /// The `toPrecision()` method returns a string representing the Number
+    /// object to the specified precision.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toPrecision)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(catch, method, js_name = toPrecision)]
+    pub fn to_precision(this: &Number, precision: u8) -> Result<String, JsValue>;
 
     /// The `toFixed()` method returns a string representing the Number
     /// object using fixed-point notation.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toFixed)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(catch, method, js_name = toFixed)]
     pub fn to_fixed(this: &Number, digits: u8) -> Result<JsString, JsValue>;
+
+    /// The `toFixed()` method returns a string representing the Number
+    /// object using fixed-point notation.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toFixed)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(catch, method, js_name = toFixed)]
+    pub fn to_fixed(this: &Number, digits: u8) -> Result<String, JsValue>;
 
     /// The `toExponential()` method returns a string representing the Number
     /// object in exponential notation.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toExponential)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(catch, method, js_name = toExponential)]
     pub fn to_exponential(this: &Number, fraction_digits: u8) -> Result<JsString, JsValue>;
+
+    /// The `toExponential()` method returns a string representing the Number
+    /// object in exponential notation.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toExponential)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(catch, method, js_name = toExponential)]
+    pub fn to_exponential(this: &Number, fraction_digits: u8) -> Result<String, JsValue>;
 
     /// The `toString()` method returns a string representing the
     /// specified Number object.
@@ -6906,8 +6962,17 @@ extern "C" {
     /// specified Number object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toString)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(catch, method, js_name = toString)]
     pub fn to_string_with_radix(this: &Number, radix: u8) -> Result<JsString, JsValue>;
+
+    /// The `toString()` method returns a string representing the
+    /// specified Number object.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toString)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(catch, method, js_name = toString)]
+    pub fn to_string_with_radix(this: &Number, radix: u8) -> Result<String, JsValue>;
 
     /// The `valueOf()` method returns the wrapped primitive value of
     /// a Number object.
@@ -7271,6 +7336,15 @@ extern "C" {
     #[wasm_bindgen(constructor)]
     pub fn new(init: &JsValue) -> Date;
 
+    /// Creates a JavaScript `Date` from a time value in milliseconds since
+    /// 1 January 1970 UTC, or from a date string: `Date::new_with_value(0.0)`,
+    /// `Date::new_with_value("2020-01-01")`.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/Date)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(constructor, js_class = "Date", experimental_generic_mono)]
+    pub fn new_with_value(value: impl JsNumberOrStringLike) -> Date;
+
     /// Creates a JavaScript `Date` instance that represents the current moment in
     /// time.
     ///
@@ -7490,8 +7564,17 @@ extern "C" {
     /// in human readable form in American English.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toDateString)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = toDateString)]
     pub fn to_date_string(this: &Date) -> JsString;
+
+    /// The `toDateString()` method returns the date portion of a Date object
+    /// in human readable form in American English.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toDateString)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = toDateString)]
+    pub fn to_date_string(this: &Date) -> String;
 
     /// The `toISOString()` method returns a string in simplified extended ISO format (ISO
     /// 8601), which is always 24 or 27 characters long (YYYY-MM-DDTHH:mm:ss.sssZ or
@@ -7499,14 +7582,33 @@ extern "C" {
     /// as denoted by the suffix "Z"
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = toISOString)]
     pub fn to_iso_string(this: &Date) -> JsString;
+
+    /// The `toISOString()` method returns a string in simplified extended ISO format (ISO
+    /// 8601), which is always 24 or 27 characters long (YYYY-MM-DDTHH:mm:ss.sssZ or
+    /// ±YYYYYY-MM-DDTHH:mm:ss.sssZ, respectively). The timezone is always zero UTC offset,
+    /// as denoted by the suffix "Z"
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = toISOString)]
+    pub fn to_iso_string(this: &Date) -> String;
 
     /// The `toJSON()` method returns a string representation of the Date object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toJSON)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = toJSON)]
     pub fn to_json(this: &Date) -> JsString;
+
+    /// The `toJSON()` method returns a string representation of the Date object.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toJSON)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = toJSON)]
+    pub fn to_json(this: &Date) -> String;
 
     /// The `toLocaleDateString()` method returns a string with a language sensitive
     /// representation of the date portion of this date. The new locales and options
@@ -7598,19 +7700,42 @@ extern "C" {
     #[wasm_bindgen(method, js_name = toString)]
     pub fn to_string(this: &Date) -> JsString;
 
+    /// The `toString()` method returns a string representing the object.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = toString)]
+    pub fn to_string(this: &Date) -> String;
+
     /// The `toTimeString()` method returns the time portion of a Date object in human
     /// readable form in American English.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toTimeString)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = toTimeString)]
     pub fn to_time_string(this: &Date) -> JsString;
+
+    /// The `toTimeString()` method returns the time portion of a Date object in human
+    /// readable form in American English.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toTimeString)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = toTimeString)]
+    pub fn to_time_string(this: &Date) -> String;
 
     /// The `toUTCString()` method converts a date to a string,
     /// using the UTC time zone.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toUTCString)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = toUTCString)]
     pub fn to_utc_string(this: &Date) -> JsString;
+
+    /// The `toUTCString()` method converts a date to a string,
+    /// using the UTC time zone.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toUTCString)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = toUTCString)]
+    pub fn to_utc_string(this: &Date) -> String;
 
     /// The `Date.UTC()` method accepts the same parameters as the
     /// longest form of the constructor, and returns the number of
@@ -8841,8 +8966,17 @@ extern "C" {
     /// the current regular expression object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/flags)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, getter)]
     pub fn flags(this: &RegExp) -> JsString;
+
+    /// The flags property returns a string consisting of the flags of
+    /// the current regular expression object.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/flags)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, getter)]
+    pub fn flags(this: &RegExp) -> String;
 
     /// The global property indicates whether or not the "g" flag is
     /// used with the regular expression. global is a read-only
@@ -8963,8 +9097,18 @@ extern "C" {
     /// forward slashes on both sides and any flags.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/source)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, getter)]
     pub fn source(this: &RegExp) -> JsString;
+
+    /// The source property returns a String containing the source
+    /// text of the regexp object, and it doesn't contain the two
+    /// forward slashes on both sides and any flags.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/source)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, getter)]
+    pub fn source(this: &RegExp) -> String;
 
     /// The sticky property reflects whether or not the search is
     /// sticky (searches in strings only from the index indicated by
@@ -8991,6 +9135,11 @@ extern "C" {
     #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = toString)]
     pub fn to_string(this: &RegExp) -> JsString;
+
+    /// The `toString()` method returns a string representing the object.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = toString)]
+    pub fn to_string(this: &RegExp) -> String;
 
     /// The unicode property indicates whether or not the "u" flag is
     /// used with a regular expression. unicode is a read-only
@@ -11156,8 +11305,16 @@ extern "C" {
     /// The `toString()` method returns a string representing the specified Symbol object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/toString)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = toString)]
     pub fn to_string(this: &Symbol) -> JsString;
+
+    /// The `toString()` method returns a string representing the specified Symbol object.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/toString)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = toString)]
+    pub fn to_string(this: &Symbol) -> String;
 
     /// The `toString()` method returns a string representing the specified Symbol object.
     ///

@@ -17,6 +17,12 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono, js_name = describe)]
     fn describe_like(values: &Array<impl JsStringLike>) -> String;
 
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn show<T>(value: Option<&T>) -> String;
+
+    #[wasm_bindgen(experimental_generic_mono, js_name = show)]
+    fn show_owned(r#type: impl JsStringLike) -> String;
+
     #[wasm_bindgen(js_name = callWith)]
     fn call_with(f: &Function<fn(String, f64) -> String>, a: &str, b: f64) -> String;
 }
@@ -245,4 +251,50 @@ async fn typed_promise_new() {
         resolve.call1(&JsValue::NULL, &1.5).unwrap();
     });
     assert_eq!(p.await.unwrap(), 1.5);
+}
+
+#[wasm_bindgen_test]
+fn optional_references() {
+    assert_eq!(show(Some(&1.5)), "number 1.5");
+    assert_eq!(show(None::<&f64>), "undefined undefined");
+    assert_eq!(show(Some(&7u32)), "number 7");
+    assert_eq!(show(Some(&true)), "boolean true");
+    assert_eq!(show(Some(&"x".to_string())), "string x");
+    assert_eq!(show(None::<&String>), "undefined undefined");
+    assert_eq!(show(Some(&JsValue::from("h"))), "string h");
+    assert_eq!(show(Some(&JsString::from("j"))), "string j");
+}
+
+#[wasm_bindgen_test]
+fn owned_arguments_cross_borrowed() {
+    let r#type = String::from("owned");
+    assert_eq!(show_owned(r#type), "string owned");
+    assert_eq!(show_owned("borrowed"), "string borrowed");
+    assert_eq!(show_owned(JsString::from("handle")), "string handle");
+    assert_eq!(show_owned(Some("x").map(String::from).unwrap()), "string x");
+}
+
+#[wasm_bindgen_test]
+fn rust_string_returns() {
+    let e = Error::new("boom");
+    let message: String = e.message();
+    assert_eq!(message, "boom");
+    assert_eq!(e.name(), "Error");
+    assert_eq!(e.to_string(), "Error: boom");
+
+    let d = Date::new_with_value(0.0);
+    assert_eq!(d.to_iso_string(), "1970-01-01T00:00:00.000Z");
+    assert_eq!(Date::new_with_value("1970-01-01T00:00:00.000Z").get_time(), 0.0);
+    assert_eq!(Date::new_with_value(86_400_000u32).to_iso_string(), "1970-01-02T00:00:00.000Z");
+
+    let f: Function<fn() -> bool> = Function::from_fn(|| true);
+    let _name: String = f.name();
+}
+
+#[wasm_bindgen_test]
+fn resolver_upcasts_to_untyped_function() {
+    let _p = Promise::<JsValue>::new(&mut |resolve, _| {
+        let untyped: &Function = resolve.upcast();
+        untyped.call1(&JsValue::NULL, &JsValue::NULL).unwrap();
+    });
 }

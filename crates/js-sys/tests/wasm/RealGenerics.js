@@ -17,3 +17,7 @@ export function strings() {
 export function callWith(f, a, b) {
   return f(a, b);
 }
+
+export function show(v) {
+  return `${typeof v} ${v}`;
+}
