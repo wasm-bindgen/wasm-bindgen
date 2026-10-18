@@ -3452,6 +3452,8 @@ impl ast::ImportFunction {
             .map(|b| b.to_token_stream())
             .collect();
         let mut wrapper_args = Vec::new();
+        let mut outer_args = Vec::new();
+        let mut call_args = Vec::new();
         let mut shim_abi_args = Vec::new();
         let mut all_prim_names = Vec::new();
         let mut arg_conversions = Vec::new();
@@ -3514,9 +3516,12 @@ impl ast::ImportFunction {
                     } else {
                         quote! { & }
                     };
-                    wrapper_args.push(quote! {
+                    let arg = quote! {
                         #name: #amp (impl #fn_bounds + #wasm_bindgen::__rt::marker::MaybeUnwindSafe)
-                    });
+                    };
+                    outer_args.push(arg.clone());
+                    wrapper_args.push(arg);
+                    call_args.push(quote! { #name });
                     let abi_ty = quote! { #amp dyn #fn_bounds };
                     let abi = quote! { <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi };
                     let (args, names) = splat(wasm_bindgen, &name, &abi, Span::call_site());
@@ -3596,6 +3601,9 @@ impl ast::ImportFunction {
                 quote! { self }
             } else {
                 wrapper_args.push(quote! { #name: #ty });
+                let declared = &arg.pat_type.ty;
+                outer_args.push(quote! { #name: #declared });
+                call_args.push(quote! { #name });
                 quote! { #name }
             };
 
@@ -3905,12 +3913,87 @@ impl ast::ImportFunction {
             fn_span,
         );
 
+        // Argument-position `impl Trait` has no name to pass explicitly, so
+        // Rust leaves it out of a call's turbofish. The named parameters it
+        // desugared to above would count there, so keep `impl Trait` in the
+        // public signature and forward to a hidden twin that names them.
+        let (body_name, body_vis, outer) = if synthesized_params.is_empty() {
+            (rust_name.clone(), quote! { #vis }, quote! {})
+        } else {
+            let body_name = Ident::new(&format!("__wbg_mono_{rust_name}"), rust_name.span());
+            let infer = synthesized_params.iter().map(|_| quote! { _ });
+            let turbofish = quote! { ::<#(#fn_generic_params,)* #(#infer),*> };
+            let call = if is_method {
+                quote! { self.#body_name #turbofish(#(#call_args),*) }
+            } else if class.is_some() {
+                quote! { Self::#body_name #turbofish(#(#call_args),*) }
+            } else {
+                quote! { #body_name #turbofish(#(#call_args),*) }
+            };
+            let call = match (self.function.r#async, self.function.r#unsafe) {
+                (true, true) => quote! { unsafe { #call }.await },
+                (true, false) => quote! { #call.await },
+                (false, true) => quote! { unsafe { #call } },
+                (false, false) => call,
+            };
+            let synthesized: Vec<String> = synthesized_params
+                .iter()
+                .map(|p| match p {
+                    syn::GenericParam::Type(tp) => tp.ident.to_string(),
+                    _ => unreachable!(),
+                })
+                .collect();
+            // Bounds on the synthesized parameters follow from the `impl
+            // Trait` bounds the outer signature keeps.
+            let outer_bounds: Vec<&TokenStream> = where_bounds
+                .iter()
+                .filter(|b| {
+                    !TokenStream::clone(b).into_iter().any(|t| {
+                        let mut stack = vec![t];
+                        while let Some(t) = stack.pop() {
+                            match t {
+                                proc_macro2::TokenTree::Ident(i)
+                                    if synthesized.contains(&i.to_string()) =>
+                                {
+                                    return true
+                                }
+                                proc_macro2::TokenTree::Group(g) => stack.extend(g.stream()),
+                                _ => {}
+                            }
+                        }
+                        false
+                    })
+                })
+                .collect();
+            let outer_where = if outer_bounds.is_empty() {
+                quote! {}
+            } else {
+                quote! { where #(#outer_bounds),* }
+            };
+            let outer = quote! {
+                #[allow(nonstandard_style)]
+                #[allow(clippy::all, clippy::nursery, clippy::pedantic, clippy::restriction)]
+                #(#attrs)*
+                #doc
+                #vis #maybe_async #maybe_unsafe fn #rust_name <#(#fn_lifetime_params,)* #(#fn_generic_params),*> (#me #(#outer_args),*) #ret #outer_where {
+                    #call
+                }
+            };
+            (body_name, quote! { #[doc(hidden)] }, outer)
+        };
+        let doc = if synthesized_params.is_empty() {
+            doc
+        } else {
+            quote! {}
+        };
         let invocation = quote! {
+            #outer
+
             #[allow(nonstandard_style)]
             #[allow(clippy::all, clippy::nursery, clippy::pedantic, clippy::restriction)]
             #(#attrs)*
             #doc
-            #vis #maybe_async #maybe_unsafe fn #rust_name <#generic_params> (#me #(#wrapper_args),*) #ret #where_clause {
+            #body_vis #maybe_async #maybe_unsafe fn #body_name <#generic_params> (#me #(#wrapper_args),*) #ret #where_clause {
                 #shim
 
                 unsafe {
