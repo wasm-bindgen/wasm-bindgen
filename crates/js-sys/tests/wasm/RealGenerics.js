@@ -69,3 +69,11 @@ export class Thrower {
     return Promise.resolve(value);
   }
 }
+
+let keptBytesValue;
+export function keepBytes(b) {
+  keptBytesValue = b;
+}
+export function keptBytes() {
+  return bufferKind(keptBytesValue);
+}

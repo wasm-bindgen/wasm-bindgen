@@ -43,6 +43,15 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono, js_name = bufferKind)]
     fn maybe_buffer_kind(bytes: Option<impl BufferSourceLike>) -> String;
 
+    #[wasm_bindgen(experimental_generic_mono, js_name = keepBytes)]
+    fn keep_view(bytes: impl BufferSourceLike);
+    #[wasm_bindgen(experimental_generic_mono, js_name = keepBytes)]
+    fn keep_copy(#[wasm_bindgen(slice = copy)] bytes: impl BufferSourceLike);
+    #[wasm_bindgen(experimental_generic_mono, js_name = keepBytes)]
+    fn keep_maybe_copy(#[wasm_bindgen(slice = copy)] bytes: Option<impl BufferSourceLike>);
+    #[wasm_bindgen(js_name = keptBytes)]
+    fn kept_bytes() -> String;
+
     #[wasm_bindgen(experimental_generic_mono, js_name = callThunk)]
     fn call_thunk<T>(f: &Function<fn() -> T>) -> T;
 
@@ -568,4 +577,27 @@ async fn catch_rejects_sync_throws() {
     assert_eq!(message(Thrower::make(true)).await, "sync");
     assert_eq!(t.echo(&2.5, false).await.unwrap(), 2.5);
     assert_eq!(message(t.echo(&"x".to_string(), true)).await, "sync");
+}
+
+#[wasm_bindgen_test]
+fn buffer_source_stored_copy() {
+    let mut bytes = vec![1u8, 2, 3];
+    keep_view(&bytes[..]);
+    bytes[0] = 9;
+    assert_eq!(kept_bytes(), "Uint8Array:9,2,3");
+    keep_copy(&bytes[..]);
+    bytes[0] = 7;
+    assert_eq!(kept_bytes(), "Uint8Array:9,2,3");
+    keep_maybe_copy(Some(&bytes[..]));
+    bytes[0] = 5;
+    assert_eq!(kept_bytes(), "Uint8Array:7,2,3");
+    keep_copy(bytes.clone());
+    assert_eq!(kept_bytes(), "Uint8Array:5,2,3");
+    let buf = ArrayBuffer::from(&bytes[..]);
+    keep_copy(&buf);
+    assert_eq!(kept_bytes(), "ArrayBuffer:5,2,3");
+    keep_copy(Uint8Array::new_from_slice(&bytes).subarray(1, 3));
+    assert_eq!(kept_bytes(), "Uint8Array:2,3");
+    keep_maybe_copy(None::<&[u8]>);
+    assert_eq!(kept_bytes(), "none");
 }

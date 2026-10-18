@@ -3612,6 +3612,16 @@ impl ast::ImportFunction {
                 quote! { #name }
             };
 
+            // A mode written on a generic argument applies to the
+            // instantiations it fits, as an inherited mode does.
+            let seq_modes: Vec<ast::SeqMode> = arg
+                .seq_modes
+                .iter()
+                .map(|mode| ast::SeqMode {
+                    explicit: mode.explicit && !generics::uses_generic_params(ty, &type_params),
+                    ..*mode
+                })
+                .collect();
             let abi = quote! { <#ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi };
             let (args, names) = splat(wasm_bindgen, &name, &abi, Span::call_site());
             shim_abi_args.extend(args);
@@ -3624,7 +3634,7 @@ impl ast::ImportFunction {
                     let #name = <#ty as #wasm_bindgen::convert::IntoWasmAbi>::arg_into_abi(&mut #slot);
                     let (#(#names),*) = <#abi as #wasm_bindgen::convert::WasmAbi>::split(#name);
                 });
-                let modes = seq_mode_words(ty, &arg.seq_modes).into_iter().rev();
+                let modes = seq_mode_words(ty, &seq_modes).into_iter().rev();
                 describe_args.push(quote! {
                     #(inform(SEQ_MODE); inform(#modes);)*
                     <#ty as #wasm_bindgen::convert::IntoWasmAbi>::describe_arg();
@@ -3634,7 +3644,7 @@ impl ast::ImportFunction {
                     let #name = <#ty as #wasm_bindgen::convert::IntoWasmAbi>::into_abi(#var);
                     let (#(#names),*) = <#abi as #wasm_bindgen::convert::WasmAbi>::split(#name);
                 });
-                let describe_ty = seq_mode_describe_ty(wasm_bindgen, ty, &arg.seq_modes);
+                let describe_ty = seq_mode_describe_ty(wasm_bindgen, ty, &seq_modes);
                 describe_args.push(quote! {
                     <#describe_ty as #wasm_bindgen::describe::WasmDescribe>::describe();
                 });

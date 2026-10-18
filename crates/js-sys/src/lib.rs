@@ -16162,6 +16162,11 @@ mod buffer_source_sealed {
 /// `ArrayBuffer`, typed array or `DataView` (owned or borrowed) as that
 /// handle, so all of the handles share one import.
 ///
+/// The `&[u8]` view is only valid for the duration of the call. Where the
+/// callee may keep it (a dictionary field, a queued chunk), mark the argument
+/// `#[wasm_bindgen(slice = copy)]`, so that `&[u8]` crosses as a fresh
+/// `Uint8Array` copy and the other forms are unchanged.
+///
 /// This trait is experimental and may change or be removed as
 /// `experimental_generic_mono` evolves.
 pub trait BufferSourceLike:
