@@ -560,6 +560,50 @@ extern "C" {
     fn make(fail: bool) -> Promise<String>;
     #[wasm_bindgen(catch, method, experimental_generic_mono, js_name = echo)]
     fn echo<T>(this: &Thrower, value: &T, fail: bool) -> Promise<T>;
+
+    #[wasm_bindgen(catch, js_name = maybeAsync)]
+    fn maybe_async_err(fail: bool) -> Promise<String, Failed>;
+    #[wasm_bindgen(catch, method, experimental_generic_mono, js_name = echo)]
+    fn echo_err<T>(this: &Thrower, value: &T, fail: bool) -> Promise<T, Failed>;
+}
+
+#[derive(Debug, PartialEq)]
+struct Failed(String);
+
+impl From<JsValue> for Failed {
+    fn from(e: JsValue) -> Self {
+        Failed(e.unchecked_into::<Error>().message())
+    }
+}
+
+#[wasm_bindgen_test]
+async fn promise_error_type() {
+    async fn tail(fail: bool) -> Result<String, Failed> {
+        maybe_async_err(fail).await
+    }
+    async fn chained() -> Result<f64, Failed> {
+        let s = maybe_async_err(false).await?;
+        Thrower::new().echo_err(&(s.len() as f64), false).await
+    }
+    assert_eq!(tail(false).await, Ok("ok".to_string()));
+    assert_eq!(tail(true).await, Err(Failed("sync".to_string())));
+    assert_eq!(chained().await, Ok(2.0));
+    assert_eq!(
+        Thrower::new().echo_err(&1.0, true).await,
+        Err(Failed("sync".to_string()))
+    );
+
+    let p = maybe_async_err(false);
+    let js_err: &Promise<String> = p.upcast();
+    let js_err: Result<String, JsValue> = js_err.clone().await;
+    assert_eq!(js_err.unwrap(), "ok");
+    let number = Thrower::new().echo_err(&1.5, false);
+    let erased: &Promise = number.upcast();
+    assert_eq!(erased.clone().await.unwrap().as_f64(), Some(1.5));
+    let back: Promise<String, Failed> = Promise::resolve("x".to_string()).upcast_into();
+    assert_eq!(back.await, Ok("x".to_string()));
+    let fut: JsFuture<String, Failed> = JsFuture::from(p.clone());
+    assert_eq!(fut.await, Ok("ok".to_string()));
 }
 
 #[wasm_bindgen_test]

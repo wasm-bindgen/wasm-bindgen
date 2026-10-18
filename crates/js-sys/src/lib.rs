@@ -15036,11 +15036,20 @@ extern "C" {
     /// The `Promise` object represents the eventual completion (or failure) of
     /// an asynchronous operation, and its resulting value.
     ///
+    /// `E` is the error type of `.await`, which yields `Result<T, E>` with the
+    /// rejection converted by `E: From<JsValue>`. It exists only in Rust, so
+    /// [`Upcast`](wasm_bindgen::convert::Upcast) changes it freely.
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
     #[must_use]
-    #[wasm_bindgen(extends = Object, typescript_type = "Promise<any>", no_promising)]
-    #[derive(Clone, Debug)]
-    pub type Promise<T = JsValue>;
+    #[wasm_bindgen(
+        extends = Object,
+        typescript_type = "Promise<any>",
+        no_promising,
+        no_upcast
+    )]
+    #[derive(Debug)]
+    pub type Promise<T = JsValue, E = JsValue>;
 
     /// Creates a new `Promise` with the provided executor `cb`
     ///
@@ -15387,17 +15396,35 @@ impl<T: JsGeneric> Promising for Promise<T> {
 }
 
 #[cfg(js_sys_unstable_apis)]
-impl<T> Promising for Promise<T> {
+impl<T, E> Promising for Promise<T, E> {
     type Resolution = T;
 }
 
 /// A `catch` import returning `Promise<T>` returns a synchronous throw as a
 /// rejected promise.
-impl<T> wasm_bindgen::convert::FromCaughtException for Promise<T> {
+impl<T, E> wasm_bindgen::convert::FromCaughtException for Promise<T, E> {
     fn from_caught_exception(e: JsValue) -> Self {
-        Promise::reject_typed(&e)
+        Promise::<T>::reject_typed(&e).unchecked_into()
     }
 }
+
+impl<T, E> Clone for Promise<T, E> {
+    fn clone(&self) -> Self {
+        JsValue::clone(self).unchecked_into()
+    }
+}
+
+// The macro's covariance would also require `E2: UpcastFrom<E>`, but `E` has no
+// JS counterpart.
+impl<T, E, T2: UpcastFrom<T>, E2> UpcastFrom<Promise<T, E>> for Promise<T2, E2> {}
+impl<T, E, T2: UpcastFrom<T>, E2> UpcastFrom<Promise<T, E>> for JsOption<Promise<T2, E2>> {}
+impl<T, E, T2: UpcastFrom<T>, E2> UpcastFrom<Promise<T, E>> for JsNullable<Promise<T2, E2>> {}
+impl<T, E> UpcastFrom<Promise<T, E>> for JsValue {}
+impl<T, E> UpcastFrom<Promise<T, E>> for JsOption<JsValue> {}
+impl<T, E> UpcastFrom<Promise<T, E>> for JsNullable<JsValue> {}
+impl<T, E> UpcastFrom<Promise<T, E>> for Object {}
+impl<T, E> UpcastFrom<Promise<T, E>> for JsOption<Object> {}
+impl<T, E> UpcastFrom<Promise<T, E>> for JsNullable<Object> {}
 
 /// Internal: maps a tuple of `Promise<T_i>` to the result shapes of
 /// [`Promise::all_tuple`] and [`Promise::all_settled_tuple`].

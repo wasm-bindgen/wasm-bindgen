@@ -40,6 +40,7 @@ use alloc::rc::Rc;
 use core::cell::RefCell;
 use core::fmt;
 use core::future::{Future, IntoFuture};
+use core::marker::PhantomData;
 use core::panic::AssertUnwindSafe;
 use core::pin::Pin;
 use core::task::{Context, Poll, Waker};
@@ -154,21 +155,24 @@ struct Inner<T = JsValue> {
 /// with the JavaScript `Promise`.
 ///
 /// Currently this type is constructed with `JsFuture::from`.
-pub struct JsFuture<T = JsValue> {
+///
+/// It resolves to `Result<T, E>`, converting a rejection with `E::from`.
+pub struct JsFuture<T = JsValue, E = JsValue> {
     inner: Rc<RefCell<Inner<T>>>,
+    err: PhantomData<fn() -> E>,
 }
 
 impl core::panic::UnwindSafe for JsFuture {}
 
-unsafe impl<T> ErasableGeneric for JsFuture<T> {
+unsafe impl<T, E> ErasableGeneric for JsFuture<T, E> {
     type Repr = JsFuture<JsValue>;
 }
 
 // Upcast for JsFuture is covariant in T (the success type)
 // JsFuture<T> can upcast to JsFuture<Target> if T: Upcast<Target>
-impl<T, Target> Upcast<JsFuture<Target>> for JsFuture<T> where T: Upcast<Target> {}
+impl<T, E, Target> Upcast<JsFuture<Target, E>> for JsFuture<T, E> where T: Upcast<Target> {}
 
-impl<T> fmt::Debug for JsFuture<T> {
+impl<T, E> fmt::Debug for JsFuture<T, E> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "JsFuture {{ ... }}")
     }
@@ -178,8 +182,9 @@ impl<T> fmt::Debug for JsFuture<T> {
 // no layout equivalence with `JsValue` is required at this seam — the
 // per-type `from_abi` does the conversion (e.g. for dynamic unions it
 // runs the variant dispatcher).
-impl<T: FromWasmAbi + 'static> From<Promise<T>> for JsFuture<T> {
-    fn from(js: Promise<T>) -> JsFuture<T> {
+impl<T: FromWasmAbi + 'static, E> From<Promise<T, E>> for JsFuture<T, E> {
+    fn from(js: Promise<T, E>) -> JsFuture<T, E> {
+        let js: Promise<T> = js.unchecked_into();
         // Use the `then` method to schedule two callbacks, one for the
         // resolved value and one for the rejected value. We're currently
         // assuming that JS engines will unconditionally invoke precisely one of
@@ -246,19 +251,22 @@ impl<T: FromWasmAbi + 'static> From<Promise<T>> for JsFuture<T> {
 
         state.borrow_mut().callbacks = Some((resolve, reject));
 
-        JsFuture { inner: state }
+        JsFuture {
+            inner: state,
+            err: PhantomData,
+        }
     }
 }
 
-impl<T> Future for JsFuture<T> {
-    type Output = Result<T, JsValue>;
+impl<T, E: From<JsValue>> Future for JsFuture<T, E> {
+    type Output = Result<T, E>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
         let mut inner = self.inner.borrow_mut();
 
         // If our value has come in then we return it...
         if let Some(val) = inner.result.take() {
-            return Poll::Ready(val);
+            return Poll::Ready(val.map_err(E::from));
         }
 
         // ... otherwise we arrange ourselves to get woken up once the value
@@ -268,11 +276,11 @@ impl<T> Future for JsFuture<T> {
     }
 }
 
-impl<T: FromWasmAbi + 'static> IntoFuture for Promise<T> {
-    type Output = Result<T, JsValue>;
-    type IntoFuture = JsFuture<T>;
+impl<T: FromWasmAbi + 'static, E: From<JsValue>> IntoFuture for Promise<T, E> {
+    type Output = Result<T, E>;
+    type IntoFuture = JsFuture<T, E>;
 
-    fn into_future(self) -> JsFuture<T> {
+    fn into_future(self) -> JsFuture<T, E> {
         JsFuture::from(self)
     }
 }
