@@ -3573,10 +3573,9 @@ fn validate_generics(generics: &syn::Generics, allow_maybe: bool) -> Result<(), 
             match predicate {
                 syn::WherePredicate::Type(predicate_type) => {
                     // Lifetime bounds on types (for<'a>) are now supported
-                    predicate_type
-                        .bounds
-                        .iter()
-                        .try_for_each(|bound| validate_generic_type_param_bound(bound, allow_maybe))?;
+                    predicate_type.bounds.iter().try_for_each(|bound| {
+                        validate_generic_type_param_bound(bound, allow_maybe)
+                    })?;
                 }
                 syn::WherePredicate::Lifetime(_) => {
                     // Lifetime bounds (e.g., 'a: 'b) are now supported

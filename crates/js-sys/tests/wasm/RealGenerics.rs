@@ -2,7 +2,7 @@
 //! crossing as itself at each instantiation.
 
 use js_sys::*;
-use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, OptionFromWasmAbi, RefIntoWasmAbi};
+use wasm_bindgen::convert::{FromWasmAbi, RefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsStringLike;
 use wasm_bindgen_futures::JsFuture;
@@ -33,9 +33,7 @@ extern "C" {
     fn describe_like(values: &Array<impl JsStringLike>) -> String;
 
     #[wasm_bindgen(experimental_generic_mono)]
-    fn show<T>(value: Option<&T>) -> String
-    where
-        for<'a> Option<&'a T>: IntoWasmAbi;
+    fn show<T: RefIntoWasmAbi>(value: Option<&T>) -> String;
 
     #[wasm_bindgen(experimental_generic_mono, js_name = show)]
     fn show_owned(r#type: impl JsStringLike) -> String;
@@ -564,16 +562,12 @@ extern "C" {
     #[wasm_bindgen(catch, static_method_of = Thrower, js_name = maybeAsync)]
     fn make(fail: bool) -> Promise<String>;
     #[wasm_bindgen(catch, method, experimental_generic_mono, js_name = echo)]
-    fn echo<T>(this: &Thrower, value: &T, fail: bool) -> Promise<T>
-    where
-        for<'a> &'a T: IntoWasmAbi;
+    fn echo<T: RefIntoWasmAbi>(this: &Thrower, value: &T, fail: bool) -> Promise<T>;
 
     #[wasm_bindgen(catch, js_name = maybeAsync)]
     fn maybe_async_err(fail: bool) -> Promise<String, Failed>;
     #[wasm_bindgen(catch, method, experimental_generic_mono, js_name = echo)]
-    fn echo_err<T>(this: &Thrower, value: &T, fail: bool) -> Promise<T, Failed>
-    where
-        for<'a> &'a T: IntoWasmAbi;
+    fn echo_err<T: RefIntoWasmAbi>(this: &Thrower, value: &T, fail: bool) -> Promise<T, Failed>;
 }
 
 #[derive(Debug, PartialEq)]
@@ -669,7 +663,9 @@ extern "C" {
     #[wasm_bindgen(method, getter, experimental_generic_mono)]
     fn input<B, Cf>(this: &Req<B, Cf>) -> String;
     #[wasm_bindgen(method, getter, experimental_generic_mono)]
-    fn cf<B, Cf: OptionFromWasmAbi>(this: &Req<B, Cf>) -> Option<Cf>;
+    fn cf<B, Cf>(this: &Req<B, Cf>) -> Option<Cf>
+    where
+        Option<Cf>: FromWasmAbi;
 
     #[wasm_bindgen(catch, experimental_generic_mono, js_name = makeReq)]
     fn make_req<Cf>(input: impl JsStringLike, init: &Init<Cf>)
@@ -700,4 +696,31 @@ fn declared_bounds_only() {
     let req = make_req(String::from("https://b"), &init).unwrap();
     assert_eq!(req.input(), "https://b");
     assert!(req.cf().is_none());
+}
+
+#[wasm_bindgen_test]
+fn native_class_params_by_reference() {
+    let init: Init<String> = Init::new().unchecked_into();
+    let init = InitBuilder { inner: init }.cf(&"LHR".to_string()).inner;
+    assert_eq!(make_req("a", &init).unwrap().cf().as_deref(), Some("LHR"));
+    init.set_maybe_cf(Some(&"SFO".to_string()));
+    assert_eq!(make_req("a", &init).unwrap().cf().as_deref(), Some("SFO"));
+    init.set_maybe_cf(None);
+    assert_eq!(make_req("a", &init).unwrap().cf(), None);
+
+    let init: Init<f64> = Init::new().unchecked_into();
+    let init = InitBuilder { inner: init }.cf(&1.5).inner;
+    assert_eq!(make_req("a", &init).unwrap().cf(), Some(1.5));
+    init.set_maybe_cf(Some(&2.5));
+    assert_eq!(make_req("a", &init).unwrap().cf(), Some(2.5));
+    init.set_maybe_cf(None);
+    assert_eq!(make_req("a", &init).unwrap().cf(), None);
+
+    let init: Init<Option<String>> = Init::new().unchecked_into();
+    init.set_cf(&Some("x".to_string()));
+    let req: Req<JsValue, String> = make_req("a", &init).unwrap().unchecked_into();
+    assert_eq!(req.cf().as_deref(), Some("x"));
+    init.set_cf(&None);
+    let req: Req<JsValue, String> = make_req("a", &init).unwrap().unchecked_into();
+    assert_eq!(req.cf(), None);
 }

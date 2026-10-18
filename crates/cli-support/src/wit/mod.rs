@@ -3150,6 +3150,7 @@ mod tests {
             thread_count: None,
             support_start: true,
             linked_modules: false,
+            keep_debug: false,
             export_adapter_sigs: Default::default(),
             generic_import_bindings: Default::default(),
             pending_generic_imports: Default::default(),

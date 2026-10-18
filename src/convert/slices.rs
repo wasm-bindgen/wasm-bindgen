@@ -10,8 +10,8 @@ use crate::__rt::{marker::ErasableGeneric, WasmWord};
 use crate::__wbindgen_copy_to_typed_array;
 use crate::convert::{
     js_value_vector_from_abi, js_value_vector_into_abi, FromWasmAbi, IntoWasmAbi,
-    LongRefFromWasmAbi, OptionFromWasmAbi, OptionIntoWasmAbi, RefFromWasmAbi, RefMutFromWasmAbi,
-    UpcastFrom, VectorFromWasmAbi, VectorIntoWasmAbi, WasmAbi,
+    LongRefFromWasmAbi, OptionFromWasmAbi, OptionIntoWasmAbi, RefFromWasmAbi, RefIntoWasmAbi,
+    RefMutFromWasmAbi, UpcastFrom, VectorFromWasmAbi, VectorIntoWasmAbi, WasmAbi,
 };
 use crate::describe::*;
 use crate::{JsError, JsValue};
@@ -290,7 +290,7 @@ unsafe fn option_vector_from_abi<T>(
     }
 }
 
-impl<T: crate::JsGeneric + WasmDescribe> WasmDescribeVector for Option<T> {
+impl<T: crate::JsGeneric> WasmDescribeVector for Option<T> {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe_vector() {
         inform(VECTOR);
@@ -298,7 +298,7 @@ impl<T: crate::JsGeneric + WasmDescribe> WasmDescribeVector for Option<T> {
     }
 }
 
-impl<T: crate::JsGeneric + WasmDescribe> VectorFromWasmAbi for Option<T> {
+impl<T: crate::JsGeneric> VectorFromWasmAbi for Option<T> {
     type Abi = <Box<[JsValue]> as FromWasmAbi>::Abi;
 
     unsafe fn vector_from_abi(js: Self::Abi) -> Box<[Self]> {
@@ -666,6 +666,21 @@ impl OptionIntoWasmAbi for &str {
     }
 }
 
+impl RefIntoWasmAbi for str {
+    type Abi = <&'static str as IntoWasmAbi>::Abi;
+    type OptionAbi = <&'static str as IntoWasmAbi>::Abi;
+
+    #[inline]
+    fn ref_into_abi(&self) -> Self::Abi {
+        self.into_abi()
+    }
+
+    #[inline]
+    fn option_ref_into_abi(value: Option<&Self>) -> Self::OptionAbi {
+        value.into_abi()
+    }
+}
+
 // Borrowed shapes that deref to `str` cross exactly like `&str`. `&&str` is
 // omitted: the blanket `&T` describe gives `REF REF STRING`, which the CLI
 // can't bind.
@@ -684,6 +699,21 @@ macro_rules! str_ref_into_wasm_abi {
             #[inline]
             fn none() -> Self::Abi {
                 <&str as OptionIntoWasmAbi>::none()
+            }
+        }
+
+        impl RefIntoWasmAbi for $t {
+            type Abi = <str as RefIntoWasmAbi>::Abi;
+            type OptionAbi = <str as RefIntoWasmAbi>::OptionAbi;
+
+            #[inline]
+            fn ref_into_abi(&self) -> Self::Abi {
+                <str as RefIntoWasmAbi>::ref_into_abi(self)
+            }
+
+            #[inline]
+            fn option_ref_into_abi(value: Option<&Self>) -> Self::OptionAbi {
+                <str as RefIntoWasmAbi>::option_ref_into_abi(value.map(|s| &**s))
             }
         }
     )*)

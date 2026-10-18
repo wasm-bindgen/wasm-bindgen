@@ -492,61 +492,62 @@ primitive_ref_into_wasm_abi!(
     bool char i8 u8 i16 u16 i32 u32 i64 u64 i128 u128 isize usize f32 f64
 );
 
-// `&Option<T>` crosses as `Option<&T>` (the CLI reads its `REF OPTIONAL T`
-// descriptor that way), so element writes taking `&T` accept optional
-// elements.
-impl<'a, T> IntoWasmAbi for &'a Option<T>
-where
-    &'a T: OptionIntoWasmAbi,
-    T: crate::describe::WasmDescribe,
-{
-    type Abi = <&'a T as IntoWasmAbi>::Abi;
-
-    #[inline]
-    fn into_abi(self) -> Self::Abi {
-        match self {
-            Some(value) => value.into_abi(),
-            None => <&'a T as OptionIntoWasmAbi>::none(),
-        }
-    }
-}
-
-macro_rules! primitive_option_ref_into_wasm_abi {
+// A primitive's reference crosses as the value, and an `Option<&T>` of one as
+// the `Option<T>`.
+macro_rules! primitive_ref_into_wasm_abi_trait {
     ($($t:ty)*) => ($(
-        impl IntoWasmAbi for &Option<$t> {
-            type Abi = <Option<$t> as IntoWasmAbi>::Abi;
+        impl RefIntoWasmAbi for $t {
+            type Abi = <$t as IntoWasmAbi>::Abi;
+            type OptionAbi = <Option<$t> as IntoWasmAbi>::Abi;
 
             #[inline]
-            fn into_abi(self) -> Self::Abi {
+            fn ref_into_abi(&self) -> Self::Abi {
                 (*self).into_abi()
             }
-        }
-    )*)
-}
-
-primitive_option_ref_into_wasm_abi!(
-    bool char i8 u8 i16 u16 i32 u32 i64 u64 i128 u128 isize usize f32 f64
-);
-
-// `Option<&f64>` crosses as `Option<f64>` (the CLI reads its
-// `OPTIONAL REF F64` descriptor that way), so `Option<&T>` arguments take
-// primitives as well as handles and strings.
-macro_rules! primitive_ref_option_into_wasm_abi {
-    ($($t:ty)*) => ($(
-        impl IntoWasmAbi for Option<&$t> {
-            type Abi = <Option<$t> as IntoWasmAbi>::Abi;
 
             #[inline]
-            fn into_abi(self) -> Self::Abi {
-                self.copied().into_abi()
+            fn option_ref_into_abi(value: Option<&Self>) -> Self::OptionAbi {
+                value.copied().into_abi()
+            }
+
+            #[inline]
+            fn describe_option_ref() {
+                <Option<$t> as crate::describe::WasmDescribe>::describe();
             }
         }
     )*)
 }
 
-primitive_ref_option_into_wasm_abi!(
+primitive_ref_into_wasm_abi_trait!(
     bool char i8 u8 i16 u16 i32 u32 i64 u64 i128 u128 isize usize f32 f64
 );
+
+// `&Option<T>` crosses as `Option<&T>`, so element writes taking `&T` accept
+// optional elements. `Some(&None)` and `None` are both JS's one empty value.
+impl<T: RefIntoWasmAbi> RefIntoWasmAbi for Option<T> {
+    type Abi = T::OptionAbi;
+    type OptionAbi = T::OptionAbi;
+
+    #[inline]
+    fn ref_into_abi(&self) -> Self::Abi {
+        T::option_ref_into_abi(self.as_ref())
+    }
+
+    #[inline]
+    fn option_ref_into_abi(value: Option<&Self>) -> Self::OptionAbi {
+        T::option_ref_into_abi(value.and_then(Option::as_ref))
+    }
+
+    #[inline]
+    fn describe_ref() {
+        T::describe_option_ref();
+    }
+
+    #[inline]
+    fn describe_option_ref() {
+        T::describe_option_ref();
+    }
+}
 
 impl<T> IntoWasmAbi for *const T {
     type Abi = WasmWordRepr;
@@ -712,15 +713,27 @@ impl FromWasmAbi for JsValue {
     }
 }
 
-// Every handle (`JsValue` and the imported types) is a `JsValue` in memory,
-// so one impl borrows them all.
-impl<T: RefIntoWasmAbi> IntoWasmAbi for &T {
+impl IntoWasmAbi for &JsValue {
     type Abi = u32;
 
     #[inline]
     fn into_abi(self) -> u32 {
-        // SAFETY: `ErasableGeneric<Repr = JsValue>` guarantees `JsValue`'s layout.
-        unsafe { &*(self as *const T as *const JsValue) }.idx
+        self.idx
+    }
+}
+
+impl RefIntoWasmAbi for JsValue {
+    type Abi = u32;
+    type OptionAbi = u32;
+
+    #[inline]
+    fn ref_into_abi(&self) -> u32 {
+        self.idx
+    }
+
+    #[inline]
+    fn option_ref_into_abi(value: Option<&Self>) -> u32 {
+        value.into_abi()
     }
 }
 
@@ -751,7 +764,7 @@ impl OptionIntoWasmAbi for JsValue {
     }
 }
 
-impl<T: RefIntoWasmAbi> OptionIntoWasmAbi for &T {
+impl OptionIntoWasmAbi for &JsValue {
     #[inline]
     fn none() -> u32 {
         crate::__rt::JSIDX_UNDEFINED
@@ -933,7 +946,20 @@ unsafe impl ErasableGeneric for JsError {
     type Repr = JsValue;
 }
 
-impl RefIntoWasmAbi for JsError {}
+impl RefIntoWasmAbi for JsError {
+    type Abi = u32;
+    type OptionAbi = u32;
+
+    #[inline]
+    fn ref_into_abi(&self) -> u32 {
+        self.value.ref_into_abi()
+    }
+
+    #[inline]
+    fn option_ref_into_abi(value: Option<&Self>) -> u32 {
+        JsValue::option_ref_into_abi(value.map(|e| &e.value))
+    }
+}
 
 impl IntoWasmAbi for JsError {
     type Abi = <JsValue as IntoWasmAbi>::Abi;

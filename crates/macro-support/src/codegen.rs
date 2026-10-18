@@ -1488,6 +1488,23 @@ impl TryToTokens for ast::ImportType {
         let (impl_generics, ty_generics, where_clause) = declaration_generics.split_for_impl();
 
         let lifetime_args = generics::lifetime_args(&declaration_generics);
+        // The reference impls below (`&'__wbg_ref #rust_name #ty_generics`)
+        // need to declare the type's *own* lifetime params on the impl
+        // header, not just a fresh reference lifetime and the type params:
+        // `ty_generics` re-emits every one of the type's lifetime arguments,
+        // so leaving them undeclared here is an undeclared-lifetime error
+        // (E0261) unless the type happens to have no lifetimes of its own.
+        //
+        // Keep the normalized structured declarations and only prepend a fresh
+        // borrow lifetime. Reassembling this header from lifetime names loses
+        // bounds such as `'a: 'b`.
+        let reference_lifetime = generics::fresh_lifetime(&declaration_generics, "__wbg_ref");
+        let mut reference_generics = declaration_generics.clone();
+        reference_generics.params.insert(
+            0,
+            syn::GenericParam::Lifetime(syn::LifetimeParam::new(reference_lifetime.clone())),
+        );
+        let (reference_impl_generics, _, _) = reference_generics.split_for_impl();
 
         // For struct definitions, we need generics with defaults, so use params directly
         let struct_generics = if declaration_generics.params.is_empty() {
@@ -1688,6 +1705,14 @@ impl TryToTokens for ast::ImportType {
                 }
 
                 #[automatically_derived]
+                impl #reference_impl_generics OptionIntoWasmAbi for &#reference_lifetime #rust_name #ty_generics #where_clause {
+                    #[inline]
+                    fn none() -> Self::Abi {
+                        0
+                    }
+                }
+
+                #[automatically_derived]
                 impl #impl_generics FromWasmAbi for #rust_name #ty_generics #where_clause {
                     type Abi = <JsValue as FromWasmAbi>::Abi;
 
@@ -1704,6 +1729,32 @@ impl TryToTokens for ast::ImportType {
                 impl #impl_generics OptionFromWasmAbi for #rust_name #ty_generics #where_clause {
                     #[inline]
                     fn is_none(abi: &Self::Abi) -> bool { *abi == 0 }
+                }
+
+                #[automatically_derived]
+                impl #reference_impl_generics IntoWasmAbi for &#reference_lifetime #rust_name #ty_generics #where_clause {
+                    type Abi = <&#reference_lifetime JsValue as IntoWasmAbi>::Abi;
+
+                    #[inline]
+                    fn into_abi(self) -> Self::Abi {
+                        (&self.obj).into_abi()
+                    }
+                }
+
+                #[automatically_derived]
+                impl #impl_generics #wasm_bindgen::convert::RefIntoWasmAbi for #rust_name #ty_generics #where_clause {
+                    type Abi = <JsValue as #wasm_bindgen::convert::RefIntoWasmAbi>::Abi;
+                    type OptionAbi = <JsValue as #wasm_bindgen::convert::RefIntoWasmAbi>::OptionAbi;
+
+                    #[inline]
+                    fn ref_into_abi(&self) -> Self::Abi {
+                        IntoWasmAbi::into_abi(self)
+                    }
+
+                    #[inline]
+                    fn option_ref_into_abi(value: core::option::Option<&Self>) -> Self::OptionAbi {
+                        IntoWasmAbi::into_abi(value)
+                    }
                 }
 
                 // A handle's memory is its table index, so a slice of them is
@@ -1821,9 +1872,6 @@ impl TryToTokens for ast::ImportType {
                 unsafe impl #impl_generics ErasableGeneric for #rust_name #ty_generics #where_clause {
                     type Repr = JsValue;
                 }
-
-                #[automatically_derived]
-                impl #impl_generics #wasm_bindgen::convert::RefIntoWasmAbi for #rust_name #ty_generics #where_clause {}
             };
         })
         .to_tokens(tokens);
@@ -3454,6 +3502,7 @@ impl ast::ImportFunction {
         let mut all_prim_names = Vec::new();
         let mut arg_conversions = Vec::new();
         let mut describe_args = Vec::new();
+        let mut ref_outlives = Vec::new();
         for (i, arg) in self.function.arguments.iter().enumerate() {
             // Rewritten to desugar any `impl Trait`; see `arg_types` above.
             let ty = &arg_types[i];
@@ -3548,33 +3597,29 @@ impl ast::ImportFunction {
                 })
                 .map(|s| s.elem_ty);
 
+            // A generic `&T` or `Option<&T>` is lowered through the
+            // referent's `RefIntoWasmAbi`, so `T: RefIntoWasmAbi` is its whole
+            // contract. Slices keep their element's `VectorRefIntoWasmAbi`.
+            let mut ref_arg = None;
             if generics::uses_generic_params(ty, &type_params) {
-                // A bare, shared reference to a generic type parameter (`&T`)
-                // is supported: the referent's schema is emitted via `REF`
-                // (`WasmDescribe for &T`), and the value is marshalled by the
-                // referent-generic `IntoWasmAbi` impls (`&Handle`, `&JsValue`,
-                // `&str`, `&[T]`). Because
-                // the shim names `<&T as IntoWasmAbi>::Abi` under a late-bound
-                // elided lifetime, the bound the user must declare is
-                // higher-ranked over the referent (`for<'a> &'a T: IntoWasmAbi`)
-                // rather than `&T: IntoWasmAbi`.
-                //
                 // Still rejected: `&mut T`, and references nested inside
-                // another type (e.g. `Option<&T>`, `(T, &T)`, `[&T; N]`,
-                // `&&T`), which need the type-erasure path. Slices
-                // (`Option<&[T]>` included) and `Option<&T>` are lowered as
-                // themselves too.
+                // another type (e.g. `(T, &T)`, `[&T; N]`, `&&T`), which need
+                // the type-erasure path.
                 let top_level_shared_ref = match ty {
                     syn::Type::Reference(r) if r.mutability.is_none() => {
                         !generics::references_generic_param(&r.elem, &type_params)
                     }
                     _ => false,
                 };
-                let by_ref = top_level_shared_ref
-                    || slice_elem.is_some()
-                    || option_shared_ref_elem(ty).is_some_and(|elem| {
-                        !generics::references_generic_param(elem, &type_params)
-                    });
+                let option_ref = option_shared_ref(ty)
+                    .filter(|r| !generics::references_generic_param(&r.elem, &type_params));
+                if detect_slice_or_option_slice(ty).is_none() {
+                    ref_arg = match ty {
+                        syn::Type::Reference(r) if top_level_shared_ref => Some((r, false)),
+                        _ => option_ref.map(|r| (r, true)),
+                    };
+                }
+                let by_ref = top_level_shared_ref || slice_elem.is_some() || option_ref.is_some();
                 if !by_ref && generics::references_generic_param(ty, &type_params) {
                     bail_span!(
                         ty,
@@ -3609,12 +3654,50 @@ impl ast::ImportFunction {
                     ..*mode
                 })
                 .collect();
-            let abi = quote_spanned! { ty_span =>
-                <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi
+            let ref_arg = ref_arg.map(|(r, optional)| {
+                // The shim's ABI type doesn't name `&'a T`, so the `T: 'a`
+                // the argument implies is stated.
+                if let Some(lifetime) = r.lifetime.as_ref().filter(|lt| lt.ident != "_") {
+                    let elem = &r.elem;
+                    ref_outlives.push(quote! { #elem: #lifetime });
+                }
+                let elem = respan_all(r.elem.to_token_stream(), ty_span);
+                let (abi, into, describe) = if optional {
+                    ("OptionAbi", "option_ref_into_abi", "describe_option_ref")
+                } else {
+                    ("Abi", "ref_into_abi", "describe_ref")
+                };
+                let [abi, into, describe] = [abi, into, describe].map(|n| Ident::new(n, ty_span));
+                let abi = quote_spanned! { ty_span =>
+                    <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::#abi
+                };
+                let into = quote_spanned! { ty_span =>
+                    <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::#into
+                };
+                let describe = quote_spanned! { ty_span =>
+                    <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::#describe
+                };
+                (abi, into, describe)
+            });
+            let abi = match &ref_arg {
+                Some((abi, _, _)) => abi.clone(),
+                None => quote_spanned! { ty_span =>
+                    <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi
+                },
             };
             let (args, names) = splat(wasm_bindgen, &name, &abi, ty_span);
             shim_abi_args.extend(args);
-            if borrowed_slot {
+            if let Some((_, into, describe)) = &ref_arg {
+                arg_conversions.push(quote_spanned! { ty_span =>
+                    let #name = #into(#var);
+                    let (#(#names),*) = <#abi as #wasm_bindgen::convert::WasmAbi>::split(#name);
+                });
+                let modes = seq_mode_words(ty, &seq_modes).into_iter().rev();
+                describe_args.push(quote_spanned! { ty_span =>
+                    #(inform(SEQ_MODE); inform(#modes);)*
+                    #describe();
+                });
+            } else if borrowed_slot {
                 // The slot outlives the call, so a value lowered borrowed is
                 // dropped in Rust once JS returns.
                 let slot = Ident::new(&format!("__wbg_slot_{}", name.unraw()), Span::call_site());
@@ -3884,13 +3967,15 @@ impl ast::ImportFunction {
         // Inline bounds on the same parameter also arrive via the shim's own
         // parameter list (`type_params_with_bounds`), so a hoisted inline bound
         // is stated twice here. That is redundant, not an error.
-        let shim_where_clause =
-            if where_bounds.is_empty() && fn_class_generics.class_bounds.is_empty() {
-                quote! {}
-            } else {
-                let class_bounds = fn_class_generics.class_bounds.iter();
-                quote! { where #(#where_bounds,)* #(#class_bounds),* }
-            };
+        let shim_where_clause = if where_bounds.is_empty()
+            && fn_class_generics.class_bounds.is_empty()
+            && ref_outlives.is_empty()
+        {
+            quote! {}
+        } else {
+            let class_bounds = fn_class_generics.class_bounds.iter();
+            quote! { where #(#where_bounds,)* #(#class_bounds,)* #(#ref_outlives),* }
+        };
         // Bind the receiver at whatever lifetime the declaration named it with
         // (`this: &'a Foo` -> `&'a self`). The argument loop above marshals the
         // receiver as `<&'a Foo as IntoWasmAbi>::into_abi(self)`, so a plain
@@ -5858,8 +5943,8 @@ fn result_err_ty(ty: &syn::Type) -> Option<&syn::Type> {
 /// CLI resolves against the argument's shape, so nothing here inspects the
 /// argument. The deprecated `slice_to_array` is the exception, keeping its
 /// released reach of `&[T]` and `Option<&[T]>` only.
-/// The referent of an `Option<&T>` argument.
-fn option_shared_ref_elem(ty: &syn::Type) -> Option<&syn::Type> {
+/// The reference in an `Option<&T>` argument.
+fn option_shared_ref(ty: &syn::Type) -> Option<&syn::TypeReference> {
     let syn::Type::Path(path) = ty else {
         return None;
     };
@@ -5874,7 +5959,7 @@ fn option_shared_ref_elem(ty: &syn::Type) -> Option<&syn::Type> {
         syn::GenericArgument::Type(syn::Type::Reference(r))
             if r.mutability.is_none() && args.args.len() == 1 =>
         {
-            Some(&r.elem)
+            Some(r)
         }
         _ => None,
     }

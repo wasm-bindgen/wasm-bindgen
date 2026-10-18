@@ -4,7 +4,7 @@
 // `__wbindgen_generic_*` JS shim, rather than erasing type parameters to
 // `JsValue`.
 
-use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, VectorIntoWasmAbi, WasmSlice};
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi, VectorIntoWasmAbi, WasmSlice};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -67,7 +67,7 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono, js_name = logRef)]
     fn log_ref<T>(x: &T)
     where
-        for<'a> &'a T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     // A shared slice with a *generic* element type. `&[T]` takes the same
     // route as `&T` above (an HRTB `for<'a> &'a [T]: IntoWasmAbi` bound), so
@@ -235,11 +235,11 @@ extern "C" {
 
     // A generic method taking a bare shared reference `&T`. Here `T`
     // monomorphises to the JS-handle `Widget`, so `&Widget` marshals via the
-    // handle's `IntoWasmAbi for &Widget` impl.
+    // handle's `RefIntoWasmAbi for Widget` impl.
     #[wasm_bindgen(method, experimental_generic_mono, js_class = "Widget", js_name = attach)]
     fn attach<T>(this: &Widget, other: &T)
     where
-        for<'a> &'a T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     // A generic static method. Two instantiations prove distinct per-mono shims
     // for the static path.

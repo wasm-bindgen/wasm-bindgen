@@ -11,7 +11,7 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono)]
     fn argument<T>(x: T);
 
-    // Needs `for<'a> &'a T: IntoWasmAbi`.
+    // Needs `T: RefIntoWasmAbi`.
     #[wasm_bindgen(experimental_generic_mono)]
     fn reference_argument<T>(x: &T);
 

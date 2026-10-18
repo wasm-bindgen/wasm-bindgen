@@ -634,15 +634,50 @@ impl<
 {
 }
 
-/// A JS type whose reference crosses the ABI as its handle, so `&T` and
-/// `Option<&T>` are `IntoWasmAbi` for any `T: RefIntoWasmAbi`.
+/// A type whose shared reference can be passed to JS, the dual of
+/// [`RefFromWasmAbi`].
 ///
-/// This is the first-order spelling of `for<'a> &'a T: IntoWasmAbi` for a JS
-/// type parameter. It is implemented by `JsValue`, `JsError` and every
-/// imported type.
-pub trait RefIntoWasmAbi: ErasableGeneric<Repr = JsValue> + WasmDescribe {}
+/// `experimental_generic_mono` imports lower a generic `&T` argument with
+/// [`RefIntoWasmAbi::ref_into_abi`] and an `Option<&T>` argument with
+/// [`RefIntoWasmAbi::option_ref_into_abi`], so `T: RefIntoWasmAbi` is the
+/// whole contract for both. It is implemented per type: by `JsValue`,
+/// `JsError` and every imported type (crossing as the handle), by `str`,
+/// `String`, `Box<str>` and `Cow<str>` (as a string), by the primitives (as
+/// the value), and by `Option<T>` (as `T`'s optional form).
+///
+/// # ⚠️ Unstable
+///
+/// This is part of the internal [`convert`](crate::convert) module, **no
+/// stability guarantees** are provided. Use at your own risk. See its
+/// documentation for more details.
+pub trait RefIntoWasmAbi: WasmDescribe {
+    /// The Wasm ABI type a `&Self` is converted into.
+    type Abi: WasmAbi;
 
-impl RefIntoWasmAbi for JsValue {}
+    /// The Wasm ABI type an `Option<&Self>` is converted into.
+    type OptionAbi: WasmAbi;
+
+    /// Converts `&self` into `Self::Abi`.
+    fn ref_into_abi(&self) -> Self::Abi;
+
+    /// Converts `value` into `Self::OptionAbi`.
+    fn option_ref_into_abi(value: Option<&Self>) -> Self::OptionAbi;
+
+    /// Describes the wire format of [`RefIntoWasmAbi::ref_into_abi`].
+    #[doc(hidden)]
+    #[inline]
+    fn describe_ref() {
+        <&Self as WasmDescribe>::describe();
+    }
+
+    /// Describes the wire format of [`RefIntoWasmAbi::option_ref_into_abi`].
+    #[doc(hidden)]
+    #[inline]
+    fn describe_option_ref() {
+        inform(OPTIONAL);
+        Self::describe_ref();
+    }
+}
 
 /// Value conversion from a type into its canonical [`JsGeneric`] form.
 ///

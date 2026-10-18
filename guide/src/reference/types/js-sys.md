@@ -56,8 +56,7 @@ let v: String = Promise::resolve("x").await?;
 ```
 
 Reads bound the element by `FromWasmAbi`, and writes take `&T` bounded by
-`for<'a> &'a T: IntoWasmAbi`, which holds for JS types, `String` and every
-primitive. Borrows deref-coerce to the element type, so
+`T: RefIntoWasmAbi`, which holds for JS types, `String` and every primitive. Borrows deref-coerce to the element type, so
 `Array<JsValue>::push(&js_string)` still works. Each element type gets its own
 JS shim. Generic code over these types states the same ABI bounds, as
 `T: JsGeneric` alone no longer implies them.

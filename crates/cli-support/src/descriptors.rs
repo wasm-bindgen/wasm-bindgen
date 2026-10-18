@@ -132,7 +132,9 @@ impl WasmBindgenDescriptorsSection {
             // A type name only feeds TypeScript, which imports don't emit, so
             // monomorphisations that differ only in it share one binding.
             if let (GenericImportKey::Shim(_), Descriptor::Function(f)) = (&key, &mut descriptor) {
-                f.arguments.iter_mut().for_each(Descriptor::erase_externref_names);
+                f.arguments
+                    .iter_mut()
+                    .for_each(Descriptor::erase_externref_names);
                 f.ret.erase_externref_names();
                 if let Some(inner) = &mut f.inner_ret {
                     inner.erase_externref_names();

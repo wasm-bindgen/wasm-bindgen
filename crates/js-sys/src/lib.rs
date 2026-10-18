@@ -52,9 +52,9 @@ use core::str;
 use core::str::FromStr;
 pub use wasm_bindgen;
 use wasm_bindgen::closure::{ScopedClosure, WasmClosure};
-#[cfg(js_sys_unstable_apis)]
-use wasm_bindgen::convert::VectorRefIntoWasmAbi;
 use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, Upcast, UpcastFrom};
+#[cfg(js_sys_unstable_apis)]
+use wasm_bindgen::convert::{RefIntoWasmAbi, VectorRefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsError;
 
@@ -642,7 +642,7 @@ extern "C" {
     #[wasm_bindgen(method, indexing_setter, experimental_generic_mono)]
     pub fn set<T>(this: &Array<T>, index: u32, value: &T)
     where
-        for<'a> &'a T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     // Next major: deprecate
     /// Sets the element at the index (auto-enlarges the array if the index is out of range).
@@ -957,7 +957,7 @@ extern "C" {
     #[wasm_bindgen(method, experimental_generic_mono)]
     pub fn includes<T>(this: &Array<T>, value: &T, from_index: i32) -> bool
     where
-        for<'a> &'a T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     /// The `indexOf()` method returns the first index at which a given element
     /// can be found in the array, or -1 if it is not present.
@@ -975,7 +975,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = indexOf, experimental_generic_mono)]
     pub fn index_of<T>(this: &Array<T>, value: &T, from_index: i32) -> i32
     where
-        for<'a> &'a T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     /// The `Array.isArray()` method determines whether the passed value is an Array.
     ///
@@ -1008,7 +1008,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = lastIndexOf, experimental_generic_mono)]
     pub fn last_index_of<T>(this: &Array<T>, value: &T, from_index: i32) -> i32
     where
-        for<'a> &'a T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     /// The length property of an object which is an instance of type Array
     /// sets or returns the number of elements in that array. The value is an
@@ -1125,35 +1125,35 @@ extern "C" {
     #[wasm_bindgen(static_method_of = Array, js_name = of, experimental_generic_mono)]
     pub fn of1<T>(a: &T) -> Array<T>
     where
-        for<'a> &'a T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(static_method_of = Array, js_name = of, experimental_generic_mono)]
     pub fn of2<T>(a: &T, b: &T) -> Array<T>
     where
-        for<'a> &'a T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(static_method_of = Array, js_name = of, experimental_generic_mono)]
     pub fn of3<T>(a: &T, b: &T, c: &T) -> Array<T>
     where
-        for<'a> &'a T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(static_method_of = Array, js_name = of, experimental_generic_mono)]
     pub fn of4<T>(a: &T, b: &T, c: &T, d: &T) -> Array<T>
     where
-        for<'a> &'a T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(static_method_of = Array, js_name = of, experimental_generic_mono)]
     pub fn of5<T>(a: &T, b: &T, c: &T, d: &T, e: &T) -> Array<T>
     where
-        for<'a> &'a T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     // Backs `From<&[T]>` and `From<Vec<T>>`: `Array.from` copies a numeric
     // slice's view, and every other slice arrives as a fresh `Array` anyway.
@@ -1206,7 +1206,7 @@ extern "C" {
     #[wasm_bindgen(method, experimental_generic_mono)]
     pub fn push<T>(this: &Array<T>, value: &T) -> u32
     where
-        for<'a> &'a T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     /// The `push()` method adds one or more elements to the end of an array and
     /// returns the new length of the array.
@@ -1515,7 +1515,7 @@ extern "C" {
     #[wasm_bindgen(method, experimental_generic_mono)]
     pub fn unshift<T>(this: &Array<T>, value: &T) -> u32
     where
-        for<'a> &'a T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     /// The `unshift()` method adds one or more elements to the beginning of an
     /// array and returns the new length of the array.
@@ -2443,7 +2443,7 @@ where
 #[cfg(js_sys_unstable_apis)]
 impl<T> core::iter::FromIterator<T> for Array<T>
 where
-    for<'a> &'a T: IntoWasmAbi,
+    T: RefIntoWasmAbi,
 {
     fn from_iter<I>(iter: I) -> Array<T>
     where
@@ -2458,7 +2458,7 @@ where
 #[cfg(js_sys_unstable_apis)]
 impl<'a, T> core::iter::FromIterator<&'a T> for Array<T>
 where
-    for<'b> &'b T: IntoWasmAbi,
+    T: RefIntoWasmAbi,
 {
     fn from_iter<I>(iter: I) -> Array<T>
     where
@@ -2473,7 +2473,7 @@ where
 #[cfg(js_sys_unstable_apis)]
 impl<T> core::iter::Extend<T> for Array<T>
 where
-    for<'a> &'a T: IntoWasmAbi,
+    T: RefIntoWasmAbi,
 {
     fn extend<I>(&mut self, iter: I)
     where
@@ -2488,7 +2488,7 @@ where
 #[cfg(js_sys_unstable_apis)]
 impl<'a, T> core::iter::Extend<&'a T> for Array<T>
 where
-    for<'b> &'b T: IntoWasmAbi,
+    T: RefIntoWasmAbi,
 {
     fn extend<I>(&mut self, iter: I)
     where
@@ -5115,7 +5115,7 @@ macro_rules! mono_function_calls {
                 ) -> Result<F::Ret, JsValue>
                 where
                     F::Ret: FromWasmAbi,
-                    $(for<'a> &'a F::$A: IntoWasmAbi,)*;
+                    $(F::$A: RefIntoWasmAbi,)*;
             )*
         }
     };
@@ -5547,7 +5547,7 @@ macro_rules! impl_js_args {
         impl<F: $trait> JsCallArgs<F> for ($(&F::$A,)+)
         where
             F::Ret: FromWasmAbi,
-            $(for<'a> &'a F::$A: IntoWasmAbi,)+
+            $(F::$A: RefIntoWasmAbi,)+
         {
             #[inline]
             fn apply_call(self, func: &Function<F>, context: &JsValue) -> Result<F::Ret, JsValue> {
@@ -6085,10 +6085,9 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/delete)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, experimental_generic_mono)]
-    pub fn delete<K, V, Q: ?Sized>(this: &Map<K, V>, key: &Q) -> bool
+    pub fn delete<K, V, Q: ?Sized + RefIntoWasmAbi>(this: &Map<K, V>, key: &Q) -> bool
     where
-        K: Borrow<Q>,
-        for<'a> &'a Q: IntoWasmAbi;
+        K: Borrow<Q>;
 
     /// The `forEach()` method executes a provided function once per each
     /// key/value pair in the Map object, in insertion order.
@@ -6161,10 +6160,12 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/get)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, js_name = get, experimental_generic_mono)]
-    pub fn get_unchecked<K, V: FromWasmAbi, Q: ?Sized>(this: &Map<K, V>, key: &Q) -> V
+    pub fn get_unchecked<K, V: FromWasmAbi, Q: ?Sized + RefIntoWasmAbi>(
+        this: &Map<K, V>,
+        key: &Q,
+    ) -> V
     where
-        K: Borrow<Q>,
-        for<'a> &'a Q: IntoWasmAbi;
+        K: Borrow<Q>;
 
     /// The `get()` method returns a specified element from a Map object.
     /// Returns `None` if the key is not found.
@@ -6187,10 +6188,9 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/has)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, experimental_generic_mono)]
-    pub fn has<K, V, Q: ?Sized>(this: &Map<K, V>, key: &Q) -> bool
+    pub fn has<K, V, Q: ?Sized + RefIntoWasmAbi>(this: &Map<K, V>, key: &Q) -> bool
     where
-        K: Borrow<Q>,
-        for<'a> &'a Q: IntoWasmAbi;
+        K: Borrow<Q>;
 
     /// The `set()` method adds or updates an element with a specified key
     /// and value to a Map object.
@@ -6208,8 +6208,8 @@ extern "C" {
     #[wasm_bindgen(method, experimental_generic_mono)]
     pub fn set<K, V>(this: &Map<K, V>, key: &K, value: &V) -> Map<K, V>
     where
-        for<'a> &'a K: IntoWasmAbi,
-        for<'a> &'a V: IntoWasmAbi;
+        K: RefIntoWasmAbi,
+        V: RefIntoWasmAbi;
 
     /// The value of size is an integer representing how many entries
     /// the Map object has. A set accessor function for size is undefined;
@@ -6231,11 +6231,10 @@ impl<K, V> Map<K, V> {
     /// gives `Option<Option<String>>`.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/get)
-    pub fn get<Q: ?Sized>(&self, key: &Q) -> Option<V>
+    pub fn get<Q: ?Sized + RefIntoWasmAbi>(&self, key: &Q) -> Option<V>
     where
         K: Borrow<Q>,
         V: FromWasmAbi,
-        for<'a> &'a Q: IntoWasmAbi,
     {
         if self.has(key) {
             Some(self.get_unchecked(key))
@@ -6333,8 +6332,8 @@ impl<K: FromWasmAbi, V: FromWasmAbi> IntoIterator for Map<K, V> {
 #[cfg(js_sys_unstable_apis)]
 impl<K, V> core::iter::FromIterator<(K, V)> for Map<K, V>
 where
-    for<'a> &'a K: IntoWasmAbi,
-    for<'a> &'a V: IntoWasmAbi,
+    K: RefIntoWasmAbi,
+    V: RefIntoWasmAbi,
 {
     fn from_iter<I: IntoIterator<Item = (K, V)>>(iter: I) -> Self {
         let mut map = Map::new();
@@ -6346,8 +6345,8 @@ where
 #[cfg(js_sys_unstable_apis)]
 impl<K, V> core::iter::Extend<(K, V)> for Map<K, V>
 where
-    for<'a> &'a K: IntoWasmAbi,
-    for<'a> &'a V: IntoWasmAbi,
+    K: RefIntoWasmAbi,
+    V: RefIntoWasmAbi,
 {
     fn extend<I: IntoIterator<Item = (K, V)>>(&mut self, iter: I) {
         for (k, v) in iter {
@@ -8706,7 +8705,7 @@ impl<T: FromWasmAbi> IntoIterator for &Object<T> {
 #[cfg(js_sys_unstable_apis)]
 impl<K: PropertyKey, V: Borrow<T>, T> core::iter::FromIterator<(K, V)> for Object<T>
 where
-    for<'a> &'a T: IntoWasmAbi,
+    T: RefIntoWasmAbi,
 {
     fn from_iter<I: IntoIterator<Item = (K, V)>>(iter: I) -> Self {
         let mut obj = Object::new_typed();
@@ -8718,7 +8717,7 @@ where
 #[cfg(js_sys_unstable_apis)]
 impl<K: PropertyKey, V: Borrow<T>, T> core::iter::Extend<(K, V)> for Object<T>
 where
-    for<'a> &'a T: IntoWasmAbi,
+    T: RefIntoWasmAbi,
 {
     fn extend<I: IntoIterator<Item = (K, V)>>(&mut self, iter: I) {
         for (k, v) in iter {
@@ -9163,7 +9162,7 @@ pub mod Reflect {
             value: &T,
         ) -> Result<bool, JsValue>
         where
-            for<'a> &'a T: IntoWasmAbi;
+            T: RefIntoWasmAbi;
 
         /// The static `Reflect.set()` method works like setting a
         /// property on an object.
@@ -9558,7 +9557,7 @@ extern "C" {
     #[wasm_bindgen(method, experimental_generic_mono)]
     pub fn add<T>(this: &Set<T>, value: &T) -> Set<T>
     where
-        for<'a> &'a T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     /// The `clear()` method removes all elements from a [`Set`] object.
     ///
@@ -9580,10 +9579,9 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/delete)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, experimental_generic_mono)]
-    pub fn delete<T, Q: ?Sized>(this: &Set<T>, value: &Q) -> bool
+    pub fn delete<T, Q: ?Sized + RefIntoWasmAbi>(this: &Set<T>, value: &Q) -> bool
     where
-        T: Borrow<Q>,
-        for<'a> &'a Q: IntoWasmAbi;
+        T: Borrow<Q>;
 
     /// The `forEach()` method executes a provided function once for each value
     /// in the Set object, in insertion order.
@@ -9625,10 +9623,9 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/has)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, experimental_generic_mono)]
-    pub fn has<T, Q: ?Sized>(this: &Set<T>, value: &Q) -> bool
+    pub fn has<T, Q: ?Sized + RefIntoWasmAbi>(this: &Set<T>, value: &Q) -> bool
     where
-        T: Borrow<Q>,
-        for<'a> &'a Q: IntoWasmAbi;
+        T: Borrow<Q>;
 
     /// The size accessor property returns the number of elements in a [`Set`]
     /// object.
@@ -9728,7 +9725,7 @@ impl<T: FromWasmAbi> IntoIterator for Set<T> {
 #[cfg(js_sys_unstable_apis)]
 impl<T> core::iter::FromIterator<T> for Set<T>
 where
-    for<'a> &'a T: IntoWasmAbi,
+    T: RefIntoWasmAbi,
 {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
         let mut set = Set::new();
@@ -9740,7 +9737,7 @@ where
 #[cfg(js_sys_unstable_apis)]
 impl<'a, T: 'a> core::iter::FromIterator<&'a T> for Set<T>
 where
-    for<'b> &'b T: IntoWasmAbi,
+    T: RefIntoWasmAbi,
 {
     fn from_iter<I: IntoIterator<Item = &'a T>>(iter: I) -> Self {
         let mut set = Set::new();
@@ -9752,7 +9749,7 @@ where
 #[cfg(js_sys_unstable_apis)]
 impl<T> core::iter::Extend<T> for Set<T>
 where
-    for<'a> &'a T: IntoWasmAbi,
+    T: RefIntoWasmAbi,
 {
     fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
         for value in iter {
@@ -9764,7 +9761,7 @@ where
 #[cfg(js_sys_unstable_apis)]
 impl<'a, T: 'a> core::iter::Extend<&'a T> for Set<T>
 where
-    for<'b> &'b T: IntoWasmAbi,
+    T: RefIntoWasmAbi,
 {
     fn extend<I: IntoIterator<Item = &'a T>>(&mut self, iter: I) {
         for value in iter {

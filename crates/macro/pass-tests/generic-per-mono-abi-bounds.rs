@@ -1,7 +1,7 @@
 #![deny(warnings, unused_qualifications, trivial_casts, trivial_numeric_casts)]
 #![allow(dead_code)]
 
-use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, ReturnWasmAbi};
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi, ReturnWasmAbi};
 use wasm_bindgen::prelude::*;
 
 // The declared ABI bounds for each position are the whole contract: generic
@@ -14,7 +14,7 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono)]
     fn reference_argument<T>(x: &T)
     where
-        for<'a> &'a T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     #[wasm_bindgen(experimental_generic_mono)]
     fn ret<T: FromWasmAbi>() -> T;
@@ -49,7 +49,7 @@ fn forward<T: IntoWasmAbi + FromWasmAbi>(x: T) -> T {
 
 fn forward_reference<T>(x: &T)
 where
-    for<'a> &'a T: IntoWasmAbi,
+    T: RefIntoWasmAbi,
 {
     reference_argument(x);
 }

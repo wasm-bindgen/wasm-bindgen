@@ -196,29 +196,6 @@ impl Descriptor {
         descriptor
     }
 
-    fn is_primitive(&self) -> bool {
-        matches!(
-            self,
-            Descriptor::I8
-                | Descriptor::U8
-                | Descriptor::ClampedU8
-                | Descriptor::I16
-                | Descriptor::U16
-                | Descriptor::I32
-                | Descriptor::U32
-                | Descriptor::I64
-                | Descriptor::U64
-                | Descriptor::I64AsF64
-                | Descriptor::U64AsF64
-                | Descriptor::I128
-                | Descriptor::U128
-                | Descriptor::F32
-                | Descriptor::F64
-                | Descriptor::Boolean
-                | Descriptor::Char
-        )
-    }
-
     /// Replaces `NamedExternref` with `Externref`, through references,
     /// options and sequences.
     pub fn erase_externref_names(&mut self) {
@@ -274,13 +251,7 @@ impl Descriptor {
             BOOLEAN => Descriptor::Boolean,
             FUNCTION => Descriptor::Function(Box::new(Function::decode(data))),
             CLOSURE => Descriptor::Closure(Box::new(Closure::decode(data))),
-            REF => match Descriptor::_decode(data, clamped) {
-                // `&Option<T>` crosses as `Option<&T>`, and a primitive's
-                // reference as the value.
-                Descriptor::Option(inner) if inner.is_primitive() => Descriptor::Option(inner),
-                Descriptor::Option(inner) => Descriptor::Option(Box::new(Descriptor::Ref(inner))),
-                contents => Descriptor::Ref(Box::new(contents)),
-            },
+            REF => Descriptor::Ref(Box::new(Descriptor::_decode(data, clamped))),
             REFMUT => Descriptor::RefMut(Box::new(Descriptor::_decode(data, clamped))),
             LONGREF => {
                 // This descriptor basically just serves as a macro, where most things
@@ -293,11 +264,7 @@ impl Descriptor {
             }
             SLICE => Descriptor::Slice(Box::new(Descriptor::_decode(data, clamped))),
             VECTOR => Descriptor::Vector(Box::new(Descriptor::_decode(data, clamped))),
-            OPTIONAL => match Descriptor::_decode(data, clamped) {
-                // `Option<&f64>` crosses as `Option<f64>`.
-                Descriptor::Ref(inner) if inner.is_primitive() => Descriptor::Option(inner),
-                contents => Descriptor::Option(Box::new(contents)),
-            },
+            OPTIONAL => Descriptor::Option(Box::new(Descriptor::_decode(data, clamped))),
             RESULT => Descriptor::Result(Box::new(Descriptor::_decode(data, clamped))),
             CACHED_STRING => Descriptor::CachedString,
             STRING => Descriptor::String,

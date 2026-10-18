@@ -21,7 +21,7 @@
 // dead-code warnings are expected and suppressed.
 #![allow(dead_code)]
 
-use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi};
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -162,7 +162,7 @@ extern "C" {
     #[wasm_bindgen(constructor, experimental_generic_mono)]
     fn new_class_lifetime_and_type_param<'a, T>(v: &'a T) -> LtHolder<'a, T>
     where
-        for<'x> &'x T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     // A concrete `'static` class argument does not need a lifetime declaration
     // on the generated `impl` header. It must survive in the self type for all
@@ -315,7 +315,7 @@ extern "C" {
     #[wasm_bindgen(method, experimental_generic_mono, js_name = take)]
     fn take_bounded<'a: 'b, 'b, T: AsRef<JsValue>>(this: &Bounded, a: &'a T, b: &'b T)
     where
-        for<'x> &'x T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 }
 
 trait HasAssociatedType {
@@ -397,7 +397,7 @@ extern "C" {
         value: &'a U,
     ) where
         F: HasReferenceOutput<Output = &'a U>,
-        for<'x> &'x U: IntoWasmAbi;
+        U: RefIntoWasmAbi;
 
     // Omitted imported-type defaults are substituted through earlier arguments
     // before their declaration bounds are emitted on the generated impl.
@@ -570,7 +570,7 @@ extern "C" {
         this: &'a LifetimeBounded<'a>,
         value: &'b T,
     ) where
-        for<'x> &'x T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     type TransitiveBounded<F>;
 
