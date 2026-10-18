@@ -2,6 +2,7 @@
 //! crossing as itself at each instantiation.
 
 use js_sys::*;
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, OptionFromWasmAbi, RefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsStringLike;
 use wasm_bindgen_futures::JsFuture;
@@ -20,7 +21,9 @@ extern "C" {
     #[wasm_bindgen(js_name = optionals)]
     fn optional_handles() -> Vec<Option<JsString>>;
     #[wasm_bindgen(experimental_generic_mono, js_name = optionals)]
-    fn optionals_of<T>() -> Vec<Option<T>>;
+    fn optionals_of<T>() -> Vec<Option<T>>
+    where
+        Vec<Option<T>>: FromWasmAbi;
     #[wasm_bindgen(js_name = callWith)]
     fn call_unit(f: &Function<fn(String)>, a: &str);
     #[wasm_bindgen(js_name = throwingIterator)]
@@ -30,7 +33,9 @@ extern "C" {
     fn describe_like(values: &Array<impl JsStringLike>) -> String;
 
     #[wasm_bindgen(experimental_generic_mono)]
-    fn show<T>(value: Option<&T>) -> String;
+    fn show<T>(value: Option<&T>) -> String
+    where
+        for<'a> Option<&'a T>: IntoWasmAbi;
 
     #[wasm_bindgen(experimental_generic_mono, js_name = show)]
     fn show_owned(r#type: impl JsStringLike) -> String;
@@ -53,7 +58,7 @@ extern "C" {
     fn kept_bytes() -> String;
 
     #[wasm_bindgen(experimental_generic_mono, js_name = callThunk)]
-    fn call_thunk<T>(f: &Function<fn() -> T>) -> T;
+    fn call_thunk<T: FromWasmAbi>(f: &Function<fn() -> T>) -> T;
 
     #[wasm_bindgen(js_name = callWith)]
     fn call_with(f: &Function<fn(String, f64) -> String>, a: &str, b: f64) -> String;
@@ -559,12 +564,16 @@ extern "C" {
     #[wasm_bindgen(catch, static_method_of = Thrower, js_name = maybeAsync)]
     fn make(fail: bool) -> Promise<String>;
     #[wasm_bindgen(catch, method, experimental_generic_mono, js_name = echo)]
-    fn echo<T>(this: &Thrower, value: &T, fail: bool) -> Promise<T>;
+    fn echo<T>(this: &Thrower, value: &T, fail: bool) -> Promise<T>
+    where
+        for<'a> &'a T: IntoWasmAbi;
 
     #[wasm_bindgen(catch, js_name = maybeAsync)]
     fn maybe_async_err(fail: bool) -> Promise<String, Failed>;
     #[wasm_bindgen(catch, method, experimental_generic_mono, js_name = echo)]
-    fn echo_err<T>(this: &Thrower, value: &T, fail: bool) -> Promise<T, Failed>;
+    fn echo_err<T>(this: &Thrower, value: &T, fail: bool) -> Promise<T, Failed>
+    where
+        for<'a> &'a T: IntoWasmAbi;
 }
 
 #[derive(Debug, PartialEq)]
@@ -644,4 +653,51 @@ fn buffer_source_stored_copy() {
     assert_eq!(kept_bytes(), "Uint8Array:2,3");
     keep_maybe_copy(None::<&[u8]>);
     assert_eq!(kept_bytes(), "none");
+}
+
+#[wasm_bindgen(module = "tests/wasm/RealGenerics.js")]
+extern "C" {
+    type Init<Cf = JsValue>;
+    #[wasm_bindgen(constructor)]
+    fn new() -> Init;
+    #[wasm_bindgen(method, setter, experimental_generic_mono, js_name = cf)]
+    fn set_cf<Cf: RefIntoWasmAbi>(this: &Init<Cf>, val: &Cf);
+    #[wasm_bindgen(method, setter, experimental_generic_mono, js_name = cf)]
+    fn set_maybe_cf<Cf: RefIntoWasmAbi>(this: &Init<Cf>, val: Option<&Cf>);
+
+    type Req<B = JsValue, Cf = JsValue>;
+    #[wasm_bindgen(method, getter, experimental_generic_mono)]
+    fn input<B, Cf>(this: &Req<B, Cf>) -> String;
+    #[wasm_bindgen(method, getter, experimental_generic_mono)]
+    fn cf<B, Cf: OptionFromWasmAbi>(this: &Req<B, Cf>) -> Option<Cf>;
+
+    #[wasm_bindgen(catch, experimental_generic_mono, js_name = makeReq)]
+    fn make_req<Cf>(input: impl JsStringLike, init: &Init<Cf>)
+        -> Result<Req<JsValue, Cf>, JsValue>;
+}
+
+struct InitBuilder<Cf> {
+    inner: Init<Cf>,
+}
+
+impl<Cf: RefIntoWasmAbi> InitBuilder<Cf> {
+    fn cf(self, val: &Cf) -> Self {
+        self.inner.set_cf(val);
+        self
+    }
+}
+
+#[wasm_bindgen_test]
+fn declared_bounds_only() {
+    let init: Init<Object> = Init::new().unchecked_into();
+    let cf = Object::new();
+    Reflect::set(&cf, "colo", &"LHR".into()).unwrap();
+    let init = InitBuilder { inner: init }.cf(&cf).inner;
+    let req = make_req("https://a", &init).unwrap();
+    assert_eq!(req.input(), "https://a");
+    assert!(req.cf().unwrap() == cf);
+    init.set_maybe_cf(None);
+    let req = make_req(String::from("https://b"), &init).unwrap();
+    assert_eq!(req.input(), "https://b");
+    assert!(req.cf().is_none());
 }

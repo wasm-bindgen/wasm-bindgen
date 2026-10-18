@@ -1621,7 +1621,9 @@ extern "C" {
         js_name = "0",
         experimental_generic_mono
     )]
-    pub fn get0<T: JsTuple1>(this: &ArrayTuple<T>) -> <T as JsTuple1>::T1;
+    pub fn get0<T: JsTuple1>(this: &ArrayTuple<T>) -> T::T1
+    where
+        T::T1: FromWasmAbi;
 
     /// Gets the 2nd item
     #[cfg(not(js_sys_unstable_apis))]
@@ -1642,7 +1644,9 @@ extern "C" {
         js_name = "1",
         experimental_generic_mono
     )]
-    pub fn get1<T: JsTuple2>(this: &ArrayTuple<T>) -> <T as JsTuple2>::T2;
+    pub fn get1<T: JsTuple2>(this: &ArrayTuple<T>) -> T::T2
+    where
+        T::T2: FromWasmAbi;
 
     /// Gets the 3rd item
     #[cfg(not(js_sys_unstable_apis))]
@@ -1665,7 +1669,9 @@ extern "C" {
         js_name = "2",
         experimental_generic_mono
     )]
-    pub fn get2<T: JsTuple3>(this: &ArrayTuple<T>) -> <T as JsTuple3>::T3;
+    pub fn get2<T: JsTuple3>(this: &ArrayTuple<T>) -> T::T3
+    where
+        T::T3: FromWasmAbi;
 
     /// Gets the 4th item
     #[cfg(not(js_sys_unstable_apis))]
@@ -1688,7 +1694,9 @@ extern "C" {
         js_name = "3",
         experimental_generic_mono
     )]
-    pub fn get3<T: JsTuple4>(this: &ArrayTuple<T>) -> <T as JsTuple4>::T4;
+    pub fn get3<T: JsTuple4>(this: &ArrayTuple<T>) -> T::T4
+    where
+        T::T4: FromWasmAbi;
 
     /// Gets the 5th item
     #[cfg(not(js_sys_unstable_apis))]
@@ -1711,7 +1719,9 @@ extern "C" {
         js_name = "4",
         experimental_generic_mono
     )]
-    pub fn get4<T: JsTuple5>(this: &ArrayTuple<T>) -> <T as JsTuple5>::T5;
+    pub fn get4<T: JsTuple5>(this: &ArrayTuple<T>) -> T::T5
+    where
+        T::T5: FromWasmAbi;
 
     /// Gets the 6th item
     #[cfg(not(js_sys_unstable_apis))]
@@ -1734,7 +1744,9 @@ extern "C" {
         js_name = "5",
         experimental_generic_mono
     )]
-    pub fn get5<T: JsTuple6>(this: &ArrayTuple<T>) -> <T as JsTuple6>::T6;
+    pub fn get5<T: JsTuple6>(this: &ArrayTuple<T>) -> T::T6
+    where
+        T::T6: FromWasmAbi;
 
     /// Gets the 7th item
     #[cfg(not(js_sys_unstable_apis))]
@@ -1767,7 +1779,9 @@ extern "C" {
         js_name = "6",
         experimental_generic_mono
     )]
-    pub fn get6<T: JsTuple7>(this: &ArrayTuple<T>) -> <T as JsTuple7>::T7;
+    pub fn get6<T: JsTuple7>(this: &ArrayTuple<T>) -> T::T7
+    where
+        T::T7: FromWasmAbi;
 
     /// Gets the 8th item
     #[cfg(not(js_sys_unstable_apis))]
@@ -1801,7 +1815,9 @@ extern "C" {
         js_name = "7",
         experimental_generic_mono
     )]
-    pub fn get7<T: JsTuple8>(this: &ArrayTuple<T>) -> <T as JsTuple8>::T8;
+    pub fn get7<T: JsTuple8>(this: &ArrayTuple<T>) -> T::T8
+    where
+        T::T8: FromWasmAbi;
 
     /// Sets the 1st item
     #[wasm_bindgen(
@@ -5098,7 +5114,8 @@ macro_rules! mono_function_calls {
                     $($arg: &F::$A),*
                 ) -> Result<F::Ret, JsValue>
                 where
-                    F::Ret: FromWasmAbi;
+                    F::Ret: FromWasmAbi,
+                    $(for<'a> &'a F::$A: IntoWasmAbi,)*;
             )*
         }
     };
@@ -6070,7 +6087,8 @@ extern "C" {
     #[wasm_bindgen(method, experimental_generic_mono)]
     pub fn delete<K, V, Q: ?Sized>(this: &Map<K, V>, key: &Q) -> bool
     where
-        K: Borrow<Q>;
+        K: Borrow<Q>,
+        for<'a> &'a Q: IntoWasmAbi;
 
     /// The `forEach()` method executes a provided function once per each
     /// key/value pair in the Map object, in insertion order.
@@ -6145,7 +6163,8 @@ extern "C" {
     #[wasm_bindgen(method, js_name = get, experimental_generic_mono)]
     pub fn get_unchecked<K, V: FromWasmAbi, Q: ?Sized>(this: &Map<K, V>, key: &Q) -> V
     where
-        K: Borrow<Q>;
+        K: Borrow<Q>,
+        for<'a> &'a Q: IntoWasmAbi;
 
     /// The `get()` method returns a specified element from a Map object.
     /// Returns `None` if the key is not found.
@@ -6170,7 +6189,8 @@ extern "C" {
     #[wasm_bindgen(method, experimental_generic_mono)]
     pub fn has<K, V, Q: ?Sized>(this: &Map<K, V>, key: &Q) -> bool
     where
-        K: Borrow<Q>;
+        K: Borrow<Q>,
+        for<'a> &'a Q: IntoWasmAbi;
 
     /// The `set()` method adds or updates an element with a specified key
     /// and value to a Map object.
@@ -9562,7 +9582,8 @@ extern "C" {
     #[wasm_bindgen(method, experimental_generic_mono)]
     pub fn delete<T, Q: ?Sized>(this: &Set<T>, value: &Q) -> bool
     where
-        T: Borrow<Q>;
+        T: Borrow<Q>,
+        for<'a> &'a Q: IntoWasmAbi;
 
     /// The `forEach()` method executes a provided function once for each value
     /// in the Set object, in insertion order.
@@ -9606,7 +9627,8 @@ extern "C" {
     #[wasm_bindgen(method, experimental_generic_mono)]
     pub fn has<T, Q: ?Sized>(this: &Set<T>, value: &Q) -> bool
     where
-        T: Borrow<Q>;
+        T: Borrow<Q>,
+        for<'a> &'a Q: IntoWasmAbi;
 
     /// The size accessor property returns the number of elements in a [`Set`]
     /// object.

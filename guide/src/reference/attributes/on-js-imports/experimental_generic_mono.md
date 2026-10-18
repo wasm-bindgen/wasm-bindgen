@@ -66,13 +66,21 @@ everything a caller has to satisfy:
 | position | bound |
 |---|---|
 | argument `T` | `T: IntoWasmAbi` |
-| argument `&T` | `for<'a> &'a T: IntoWasmAbi` |
+| argument `&T` or `Option<&T>`, `T` a JS type | `T: RefIntoWasmAbi` |
+| argument `&T`, any `T` | `for<'a> &'a T: IntoWasmAbi` |
+| argument `&[T]` | `T: VectorRefIntoWasmAbi` |
 | return `T` | `T: FromWasmAbi` |
+| return `Option<T>` | `T: OptionFromWasmAbi` |
 | `async` return `T` | `T: FromWasmAbi + 'static` |
 | callback argument `A` (`&dyn Fn(A)`) | `A: FromWasmAbi` |
 | callback return `R` (`&dyn Fn() -> R`) | `R: IntoWasmAbi` |
 
-Both traits live in `wasm_bindgen::convert`. `WasmDescribe` is a supertrait of
+`RefIntoWasmAbi` is implemented by `JsValue` and every imported type, so it
+covers the common case of a JS type parameter (`fn set<T: RefIntoWasmAbi>(this:
+&Holder<T>, value: &T)`) without the higher-ranked bound, which stays for
+references to Rust types such as `&str` or `&u32`.
+
+These traits live in `wasm_bindgen::convert`. `WasmDescribe` is a supertrait of
 both, so it never needs stating. A trait whose supertraits include the right
 ABI trait satisfies the bound too, as with [`JsStringLike`](#string-bounds).
 

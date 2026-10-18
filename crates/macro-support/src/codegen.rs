@@ -1821,6 +1821,9 @@ impl TryToTokens for ast::ImportType {
                 unsafe impl #impl_generics ErasableGeneric for #rust_name #ty_generics #where_clause {
                     type Repr = JsValue;
                 }
+
+                #[automatically_derived]
+                impl #impl_generics #wasm_bindgen::convert::RefIntoWasmAbi for #rust_name #ty_generics #where_clause {}
             };
         })
         .to_tokens(tokens);
@@ -3831,7 +3834,8 @@ impl ast::ImportFunction {
         // appended too, with their bounds inline: they exist only in argument
         // positions, never in the class type's argument list, so they are never
         // hoisted and are not in `self.generics` for `get_fn_generics` to see.
-        let fn_generic_params = &fn_class_generics.fn_generic_params;
+        let (fn_generic_params, wrapper_bounds) =
+            inline_param_bounds(&fn_class_generics.fn_generic_params, where_bounds);
         let fn_lifetime_params = &fn_class_generics.fn_lifetime_params;
         let generic_params = quote! {
             #(#fn_lifetime_params,)* #(#fn_generic_params,)* #(#synthesized_params),*
@@ -3862,10 +3866,10 @@ impl ast::ImportFunction {
                 .chain(generics::type_params_with_bounds(&self.generics))
                 .chain(synthesized_params.iter().map(|p| quote! { #p }))
                 .collect();
-        let where_clause = if where_bounds.is_empty() {
+        let where_clause = if wrapper_bounds.is_empty() {
             quote! {}
         } else {
-            quote! { where #(#where_bounds),* }
+            quote! { where #(#wrapper_bounds),* }
         };
         // The shim needs the hoisted bounds too, even though the wrapper must
         // not have them (see the note where `where_bounds` is built: a
@@ -3970,7 +3974,8 @@ impl ast::ImportFunction {
                 rust_name.span(),
             );
             let infer = synthesized_params.iter().map(|_| quote! { _ });
-            let turbofish = quote! { ::<#(#fn_generic_params,)* #(#infer),*> };
+            let fn_generic_idents = &fn_class_generics.fn_generic_params;
+            let turbofish = quote! { ::<#(#fn_generic_idents,)* #(#infer),*> };
             let call = if is_method {
                 quote! { self.#body_name #turbofish(#(#call_args),*) }
             } else if class.is_some() {
@@ -3984,10 +3989,10 @@ impl ast::ImportFunction {
                 (false, true) => quote! { unsafe { #call } },
                 (false, false) => call,
             };
-            let outer_where = if where_bounds.is_empty() {
+            let outer_where = if wrapper_bounds.is_empty() {
                 quote! {}
             } else {
-                quote! { where #(#where_bounds),* }
+                quote! { where #(#wrapper_bounds),* }
             };
             let outer = quote! {
                 #[allow(nonstandard_style)]
@@ -4497,10 +4502,12 @@ impl<'a> FnClassGenerics<'a> {
         // anything hoisted transitively out of a bound — `Ret` in
         // `F: JsFunction<Ret = Ret>`, say — would otherwise be an unconstrained
         // impl parameter, i.e. an E0207 reported against generated code.
-        let impl_where_clause = if self.class_bounds.is_empty() {
+        let class_generic_params: Vec<&Ident> = class_generic_params.iter().collect();
+        let (class_generic_params, class_bounds) =
+            inline_param_bounds(&class_generic_params, &self.class_bounds);
+        let impl_where_clause = if class_bounds.is_empty() {
             quote! {}
         } else {
-            let class_bounds = self.class_bounds.iter();
             quote! { where #(#class_bounds),* }
         };
         quote! {
@@ -4509,6 +4516,47 @@ impl<'a> FnClassGenerics<'a> {
             #impl_where_clause
         }
     }
+}
+
+/// Moves each `P: Bounds` predicate on a parameter in `params` back inline
+/// (`<P: Bounds>`), so the generated signature reads as declared, and returns
+/// the remaining `where` predicates.
+fn inline_param_bounds<P: core::borrow::Borrow<syn::WherePredicate>>(
+    params: &[&Ident],
+    predicates: &[P],
+) -> (Vec<TokenStream>, Vec<TokenStream>) {
+    let mut inline: Vec<Vec<&syn::TypeParamBound>> = vec![Vec::new(); params.len()];
+    let mut rest = Vec::new();
+    for predicate in predicates {
+        let predicate = predicate.borrow();
+        let index = match predicate {
+            syn::WherePredicate::Type(syn::PredicateType {
+                lifetimes: None,
+                bounded_ty: syn::Type::Path(path),
+                ..
+            }) if path.qself.is_none() => path
+                .path
+                .get_ident()
+                .and_then(|ident| params.iter().position(|p| *p == ident)),
+            _ => None,
+        };
+        match (index, predicate) {
+            (Some(index), syn::WherePredicate::Type(ty)) => inline[index].extend(&ty.bounds),
+            _ => rest.push(quote! { #predicate }),
+        }
+    }
+    let params = params
+        .iter()
+        .zip(inline)
+        .map(|(param, bounds)| {
+            if bounds.is_empty() {
+                quote! { #param }
+            } else {
+                quote! { #param: #(#bounds)+* }
+            }
+        })
+        .collect();
+    (params, rest)
 }
 
 impl ast::ImportFunction {

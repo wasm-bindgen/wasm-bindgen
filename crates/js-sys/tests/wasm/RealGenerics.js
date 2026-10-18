@@ -77,3 +77,8 @@ export function keepBytes(b) {
 export function keptBytes() {
   return bufferKind(keptBytesValue);
 }
+
+export class Init {}
+export function makeReq(input, init) {
+  return { input, cf: init.cf };
+}

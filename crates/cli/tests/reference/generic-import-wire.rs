@@ -3,6 +3,7 @@
 // as do `JsString` and `&JsString`. Monomorphisations that differ only in a
 // handle's TypeScript name share one binding too.
 
+use wasm_bindgen::convert::IntoWasmAbi;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsStringLike;
 
@@ -21,7 +22,7 @@ extern "C" {
     fn take_optional(value: Option<impl JsStringLike>);
 
     #[wasm_bindgen(experimental_generic_mono, js_name = takeHandle)]
-    fn take_handle<T>(value: T);
+    fn take_handle<T: IntoWasmAbi>(value: T);
 }
 
 #[wasm_bindgen]

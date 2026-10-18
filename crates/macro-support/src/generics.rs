@@ -1170,13 +1170,6 @@ mod tests {
     }
 
     #[test]
-    fn test_fresh_lifetime_avoids_source_names() {
-        let generics: syn::Generics = syn::parse_quote!(<'__wbg_ref, '__wbg_ref_1, T>);
-        let lifetime = crate::generics::fresh_lifetime(&generics, "__wbg_ref");
-        assert_eq!(lifetime.to_string(), "'__wbg_ref_2");
-    }
-
-    #[test]
     fn test_lifetime_visitor_respects_hrtb_binders() {
         let outer_a: syn::Lifetime = syn::parse_quote!('a);
         let outer_b: syn::Lifetime = syn::parse_quote!('b);

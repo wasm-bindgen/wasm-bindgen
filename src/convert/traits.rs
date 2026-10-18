@@ -618,7 +618,7 @@ pub trait JsGeneric:
     + Upcast<Self>
     + Upcast<JsValue>
     + JsCast
-    + WasmDescribe
+    + RefIntoWasmAbi
     + 'static
 {
 }
@@ -628,11 +628,21 @@ impl<
             + UpcastFrom<T>
             + Upcast<JsValue>
             + JsCast
-            + WasmDescribe
+            + RefIntoWasmAbi
             + 'static,
     > JsGeneric for T
 {
 }
+
+/// A JS type whose reference crosses the ABI as its handle, so `&T` and
+/// `Option<&T>` are `IntoWasmAbi` for any `T: RefIntoWasmAbi`.
+///
+/// This is the first-order spelling of `for<'a> &'a T: IntoWasmAbi` for a JS
+/// type parameter. It is implemented by `JsValue`, `JsError` and every
+/// imported type.
+pub trait RefIntoWasmAbi: ErasableGeneric<Repr = JsValue> + WasmDescribe {}
+
+impl RefIntoWasmAbi for JsValue {}
 
 /// Value conversion from a type into its canonical [`JsGeneric`] form.
 ///

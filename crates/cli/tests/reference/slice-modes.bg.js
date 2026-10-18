@@ -44,6 +44,9 @@ export function __wbg_js_view_u8_121c4880f6a160aa(arg0, arg1) {
     js_view_u8(getArrayU8FromWasm0(arg0, arg1));
 }
 export function __wbindgen_generic_0000000000000000(arg0, arg1) {
+    js_generic_slice(arg0 === 0 ? undefined : getArrayU8FromWasm0(arg0, arg1).slice());
+}
+export function __wbindgen_generic_0000000000000001(arg0, arg1) {
     const v0 = [];
     let p0 = arg0;
     p0 = p0 >>> 0;
@@ -54,11 +57,8 @@ export function __wbindgen_generic_0000000000000000(arg0, arg1) {
     wasm.__wbindgen_free(arg0, arg1 * 8, 4);
     js_generic_slice(v0);
 }
-export function __wbindgen_generic_0000000000000001(arg0, arg1) {
-    js_generic_slice(getArrayU16FromWasm0(arg0, arg1));
-}
 export function __wbindgen_generic_0000000000000002(arg0, arg1) {
-    js_generic_slice(arg0 === 0 ? undefined : getArrayU8FromWasm0(arg0, arg1).slice());
+    js_generic_slice(getArrayU16FromWasm0(arg0, arg1));
 }
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;
