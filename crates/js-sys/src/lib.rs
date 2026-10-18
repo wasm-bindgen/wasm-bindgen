@@ -1591,6 +1591,7 @@ extern "C" {
     ) -> ArrayTuple<(T1, T2, T3, T4, T5, T6, T7, T8)>;
 
     /// Gets the 1st item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1599,7 +1600,19 @@ extern "C" {
     )]
     pub fn get0<T: JsTuple1 = (JsValue,)>(this: &ArrayTuple<T>) -> <T as JsTuple1>::T1;
 
+    /// Gets item 0.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "0",
+        experimental_generic_mono
+    )]
+    pub fn get0<T: JsTuple1>(this: &ArrayTuple<T>) -> <T as JsTuple1>::T1;
+
     /// Gets the 2nd item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1608,7 +1621,19 @@ extern "C" {
     )]
     pub fn get1<T: JsTuple2 = (JsValue, JsValue)>(this: &ArrayTuple<T>) -> <T as JsTuple2>::T2;
 
+    /// Gets item 1.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "1",
+        experimental_generic_mono
+    )]
+    pub fn get1<T: JsTuple2>(this: &ArrayTuple<T>) -> <T as JsTuple2>::T2;
+
     /// Gets the 3rd item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1619,7 +1644,19 @@ extern "C" {
         this: &ArrayTuple<T>,
     ) -> <T as JsTuple3>::T3;
 
+    /// Gets item 2.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "2",
+        experimental_generic_mono
+    )]
+    pub fn get2<T: JsTuple3>(this: &ArrayTuple<T>) -> <T as JsTuple3>::T3;
+
     /// Gets the 4th item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1630,7 +1667,19 @@ extern "C" {
         this: &ArrayTuple<T>,
     ) -> <T as JsTuple4>::T4;
 
+    /// Gets item 3.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "3",
+        experimental_generic_mono
+    )]
+    pub fn get3<T: JsTuple4>(this: &ArrayTuple<T>) -> <T as JsTuple4>::T4;
+
     /// Gets the 5th item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1641,7 +1690,19 @@ extern "C" {
         this: &ArrayTuple<T>,
     ) -> <T as JsTuple5>::T5;
 
+    /// Gets item 4.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "4",
+        experimental_generic_mono
+    )]
+    pub fn get4<T: JsTuple5>(this: &ArrayTuple<T>) -> <T as JsTuple5>::T5;
+
     /// Gets the 6th item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1652,7 +1713,19 @@ extern "C" {
         this: &ArrayTuple<T>,
     ) -> <T as JsTuple6>::T6;
 
+    /// Gets item 5.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "5",
+        experimental_generic_mono
+    )]
+    pub fn get5<T: JsTuple6>(this: &ArrayTuple<T>) -> <T as JsTuple6>::T6;
+
     /// Gets the 7th item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1673,7 +1746,19 @@ extern "C" {
         this: &ArrayTuple<T>,
     ) -> <T as JsTuple7>::T7;
 
+    /// Gets item 6.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "6",
+        experimental_generic_mono
+    )]
+    pub fn get6<T: JsTuple7>(this: &ArrayTuple<T>) -> <T as JsTuple7>::T7;
+
     /// Gets the 8th item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1694,6 +1779,17 @@ extern "C" {
     >(
         this: &ArrayTuple<T>,
     ) -> <T as JsTuple8>::T8;
+
+    /// Gets item 7.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "7",
+        experimental_generic_mono
+    )]
+    pub fn get7<T: JsTuple8>(this: &ArrayTuple<T>) -> <T as JsTuple8>::T8;
 
     /// Sets the 1st item
     #[wasm_bindgen(
@@ -1880,6 +1976,36 @@ impl<T: JsTuple> ArrayTuple<T> {
     }
 }
 
+// Under `js_sys_unstable_apis` the element getters are monomorphized, so
+// any `FromWasmAbi` element reads out (`ArrayTuple<(String, f64)>`).
+macro_rules! impl_tuple_access {
+    (#[$cfg:meta] [$bound:ident] [$($T:tt)+] [$($vars:tt)+] $last:ident $last_ty:tt) => {
+        #[$cfg]
+        impl<$($T: $bound),+> ArrayTuple<($($T),+,)> {
+            /// Get the first element of the ArrayTuple
+            pub fn first(&self) -> T1 {
+                self.get0()
+            }
+
+            /// Get the last element of the ArrayTuple
+            pub fn last(&self) -> $last_ty {
+                self.$last()
+            }
+
+            /// Convert the ArrayTuple into its corresponding Rust tuple.
+            pub fn into_tuple(self) -> ($($T,)+) {
+                ($(self.$vars(),)+)
+            }
+
+            /// Deprecated alias for [`ArrayTuple::into_tuple`].
+            #[deprecated(note = "renamed to `into_tuple`")]
+            pub fn into_parts(self) -> ($($T,)+) {
+                self.into_tuple()
+            }
+        }
+    };
+}
+
 macro_rules! impl_tuple {
     ($arity:literal [$($traits:ident)*] [$($T:tt)+] [$($vars:tt)+] $new:ident $last:ident $last_ty:tt) => {
         impl<$($T),+> JsTuple for ($($T),+,) {
@@ -1903,28 +2029,10 @@ macro_rules! impl_tuple {
             }
         }
 
+        impl_tuple_access!(#[cfg(not(js_sys_unstable_apis))] [JsGeneric] [$($T)+] [$($vars)+] $last $last_ty);
+        impl_tuple_access!(#[cfg(js_sys_unstable_apis)] [FromWasmAbi] [$($T)+] [$($vars)+] $last $last_ty);
+
         impl<$($T: JsGeneric),+> ArrayTuple<($($T),+,)> {
-            /// Get the first element of the ArrayTuple
-            pub fn first(&self) -> T1 {
-                self.get0()
-            }
-
-            /// Get the last element of the ArrayTuple
-            pub fn last(&self) -> $last_ty {
-                self.$last()
-            }
-
-            /// Convert the ArrayTuple into its corresponding Rust tuple.
-            pub fn into_tuple(self) -> ($($T,)+) {
-                ($(self.$vars(),)+)
-            }
-
-            /// Deprecated alias for [`ArrayTuple::into_tuple`].
-            #[deprecated(note = "renamed to `into_tuple`")]
-            pub fn into_parts(self) -> ($($T,)+) {
-                self.into_tuple()
-            }
-
             /// Create a new ArrayTuple from the corresponding parts.
             ///
             /// # Example
@@ -5503,9 +5611,9 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/delete)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, experimental_generic_mono)]
-    pub fn delete<K, V>(this: &Map<K, V>, key: &K) -> bool
+    pub fn delete<K, V, Q: MapKey<K>>(this: &Map<K, V>, key: Q) -> bool
     where
-        for<'a> &'a K: IntoWasmAbi;
+        Q: IntoWasmAbi;
 
     /// The `forEach()` method executes a provided function once per each
     /// key/value pair in the Map object, in insertion order.
@@ -5576,10 +5684,10 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/get)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, experimental_generic_mono)]
-    pub fn get<K, V>(this: &Map<K, V>, key: &K) -> Option<V>
+    pub fn get<K, V, Q: MapKey<K>>(this: &Map<K, V>, key: Q) -> Option<V>
     where
         Option<V>: FromWasmAbi,
-        for<'a> &'a K: IntoWasmAbi;
+        Q: IntoWasmAbi;
 
     /// The `get()` method returns a specified element from a Map object.
     /// Returns `None` if the key is not found.
@@ -5602,9 +5710,9 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/has)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, experimental_generic_mono)]
-    pub fn has<K, V>(this: &Map<K, V>, key: &K) -> bool
+    pub fn has<K, V, Q: MapKey<K>>(this: &Map<K, V>, key: Q) -> bool
     where
-        for<'a> &'a K: IntoWasmAbi;
+        Q: IntoWasmAbi;
 
     /// The `set()` method adds or updates an element with a specified key
     /// and value to a Map object.
@@ -5634,6 +5742,17 @@ extern "C" {
     pub fn size<K, V>(this: &Map<K, V>) -> u32;
 }
 
+/// A borrowed form of a `Map<K, _>` key, as `HashMap::get` takes `&Q` where
+/// `K: Borrow<Q>`: `&K` always, and `&str` for `String` keys.
+#[cfg(js_sys_unstable_apis)]
+pub trait MapKey<K> {}
+
+#[cfg(js_sys_unstable_apis)]
+impl<K> MapKey<K> for &K {}
+
+#[cfg(js_sys_unstable_apis)]
+impl MapKey<String> for &str {}
+
 impl Default for Map<JsValue, JsValue> {
     fn default() -> Self {
         Self::new()
@@ -5659,9 +5778,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/entries)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, js_name = entries)]
-    pub fn entries<K: JsGeneric, V: FromWasmAbi + JsGeneric>(
-        this: &Map<K, V>,
-    ) -> Iterator<ArrayTuple<(K, V)>>;
+    pub fn entries<K, V>(this: &Map<K, V>) -> Iterator<ArrayTuple<(K, V)>>;
 
     // Next major: deprecate
     /// The `entries()` method returns a new Iterator object that contains
@@ -5691,6 +5808,40 @@ extern "C" {
 
 impl<K, V> Iterable for Map<K, V> {
     type Item = ArrayTuple<(K, V)>;
+}
+
+/// The `[key, value]` pairs of a [`Map`] as Rust tuples, in insertion order.
+#[cfg(js_sys_unstable_apis)]
+pub struct MapEntries<K, V>(IntoIter<ArrayTuple<(K, V)>>);
+
+#[cfg(js_sys_unstable_apis)]
+impl<K: FromWasmAbi, V: FromWasmAbi> core::iter::Iterator for MapEntries<K, V> {
+    type Item = (K, V);
+
+    fn next(&mut self) -> Option<(K, V)> {
+        // A `Map` iterator only throws if `next` is called on a non-iterator.
+        Some(self.0.next()?.unwrap_throw().into_tuple())
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<K: FromWasmAbi, V: FromWasmAbi> IntoIterator for &Map<K, V> {
+    type Item = (K, V);
+    type IntoIter = MapEntries<K, V>;
+
+    fn into_iter(self) -> MapEntries<K, V> {
+        MapEntries(self.entries().into_iter())
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<K: FromWasmAbi, V: FromWasmAbi> IntoIterator for Map<K, V> {
+    type Item = (K, V);
+    type IntoIter = MapEntries<K, V>;
+
+    fn into_iter(self) -> MapEntries<K, V> {
+        (&self).into_iter()
+    }
 }
 
 // Iterator
@@ -7402,9 +7553,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(static_method_of = Object, js_name = entries, catch)]
-    pub fn entries<T: JsGeneric>(
-        object: &Object<T>,
-    ) -> Result<Array<ArrayTuple<(JsString, T)>>, JsValue>;
+    pub fn entries<T>(object: &Object<T>) -> Result<Array<ArrayTuple<(String, T)>>, JsValue>;
 
     // Next major: deprecate
     /// The `Object.entries()` method returns an array of a given
