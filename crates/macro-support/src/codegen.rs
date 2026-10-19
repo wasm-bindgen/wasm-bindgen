@@ -2495,6 +2495,45 @@ impl ToTokens for ast::DynamicUnion {
                 }
             }
 
+            // A `Vec` of the union crosses as an array of JS values, each
+            // element dispatched like a single value.
+            #[automatically_derived]
+            impl #wasm_bindgen::describe::WasmDescribeVector for #enum_name {
+                fn describe_vector() {
+                    use #wasm_bindgen::describe::*;
+                    inform(VECTOR);
+                    <#wasm_bindgen::JsValue as WasmDescribe>::describe();
+                }
+            }
+
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::VectorFromWasmAbi for #enum_name {
+                type Abi = <#wasm_bindgen::__rt::alloc::boxed::Box<[#wasm_bindgen::JsValue]> as #wasm_bindgen::convert::FromWasmAbi>::Abi;
+
+                unsafe fn vector_from_abi(js: Self::Abi) -> #wasm_bindgen::__rt::alloc::boxed::Box<[Self]> {
+                    use #wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi};
+                    <#wasm_bindgen::__rt::alloc::boxed::Box<[#wasm_bindgen::JsValue]> as FromWasmAbi>::from_abi(js)
+                        .into_vec()
+                        .into_iter()
+                        .map(|value| <Self as FromWasmAbi>::from_abi(value.into_abi()))
+                        .collect()
+                }
+            }
+
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::VectorIntoWasmAbi for #enum_name {
+                type Abi = <#wasm_bindgen::__rt::alloc::boxed::Box<[#wasm_bindgen::JsValue]> as #wasm_bindgen::convert::IntoWasmAbi>::Abi;
+
+                fn vector_into_abi(vector: #wasm_bindgen::__rt::alloc::boxed::Box<[Self]>) -> Self::Abi {
+                    let values: #wasm_bindgen::__rt::alloc::boxed::Box<[#wasm_bindgen::JsValue]> = vector
+                        .into_vec()
+                        .into_iter()
+                        .map(#wasm_bindgen::JsValue::from)
+                        .collect();
+                    #wasm_bindgen::convert::IntoWasmAbi::into_abi(values)
+                }
+            }
+
             // Allows this union to appear as a variant payload of another
             // dynamic union (nested unions) and anywhere else the macro
             // dispatches through `TryFromJsValue`.

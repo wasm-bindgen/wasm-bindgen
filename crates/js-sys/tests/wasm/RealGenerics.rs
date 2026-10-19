@@ -888,3 +888,36 @@ async fn option_jsvalue_reads_fold_null() {
     );
     assert_eq!(empties.to_vec(), [true, true, false]);
 }
+
+#[wasm_bindgen(module = "tests/wasm/RealGenerics.js")]
+extern "C" {
+    #[wasm_bindgen(experimental_generic_mono, js_name = bufferKinds)]
+    fn buffer_kinds(bits: &[impl BufferSourceLike]) -> String;
+    #[wasm_bindgen(experimental_generic_mono, js_name = keepBytes)]
+    fn keep_bits(bits: &[impl BufferSourceLike]);
+    #[wasm_bindgen(js_name = keptKinds)]
+    fn kept_kinds() -> String;
+}
+
+#[wasm_bindgen_test]
+fn buffer_source_slices() {
+    let mut bytes = vec![1u8, 2, 3];
+    assert_eq!(
+        buffer_kinds(&[&bytes[..], &bytes[1..]]),
+        "Uint8Array:1,2,3|Uint8Array:2,3"
+    );
+    assert_eq!(buffer_kinds(&[bytes.clone()]), "Uint8Array:1,2,3");
+    let buf = ArrayBuffer::from(&bytes[..]);
+    assert_eq!(
+        buffer_kinds(&[&buf, &buf]),
+        "ArrayBuffer:1,2,3|ArrayBuffer:1,2,3"
+    );
+    assert_eq!(
+        buffer_kinds(&[Uint8Array::new_from_slice(&bytes)]),
+        "Uint8Array:1,2,3"
+    );
+    assert_eq!(buffer_kinds(&[] as &[&[u8]]), "");
+    keep_bits(&[&bytes[..]]);
+    bytes[0] = 9;
+    assert_eq!(kept_kinds(), "Uint8Array:1,2,3");
+}

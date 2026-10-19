@@ -27,6 +27,8 @@ extern "C" {
     fn js_optional_union_roundtrip(o: Option<OuterUnion>) -> Option<OuterUnion>;
     fn js_fallback_union_roundtrip(u: FallbackUnion) -> FallbackUnion;
     fn js_shade_union_roundtrip(u: ShadeUnion) -> ShadeUnion;
+    fn js_union_vec_roundtrip(v: Vec<StringEnumWithFallback>) -> Vec<StringEnumWithFallback>;
+    fn js_union_list() -> Vec<StringEnumWithFallback>;
 
     // Async round-trip: imports an `async fn` returning a dynamic union,
     // exercising `Promise<Union>` resolution across the `JsFuture` seam.
@@ -282,6 +284,38 @@ fn test_string_enum_with_fallback() {
         js_string_enum_fallback_roundtrip(StringEnumWithFallback::Wow(None)),
         StringEnumWithFallback::Wow(None)
     ));
+}
+
+#[wasm_bindgen]
+pub fn union_vec_roundtrip(v: Vec<StringEnumWithFallback>) -> Vec<StringEnumWithFallback> {
+    v
+}
+
+#[wasm_bindgen_test]
+fn test_union_vec() {
+    let list = js_union_list();
+    assert!(matches!(
+        &list[..],
+        [
+            StringEnumWithFallback::Green,
+            StringEnumWithFallback::Other(s),
+            StringEnumWithFallback::Wow(Some(7)),
+        ] if s == "custom"
+    ));
+    let back = js_union_vec_roundtrip(vec![
+        StringEnumWithFallback::Red,
+        StringEnumWithFallback::AnotherColor(Color::Yellow),
+        StringEnumWithFallback::Other("x".to_string()),
+    ]);
+    assert!(matches!(
+        &back[..],
+        [
+            StringEnumWithFallback::Red,
+            StringEnumWithFallback::AnotherColor(Color::Yellow),
+            StringEnumWithFallback::Other(s),
+        ] if s == "x"
+    ));
+    assert!(js_union_vec_roundtrip(Vec::new()).is_empty());
 }
 
 #[wasm_bindgen]

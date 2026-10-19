@@ -95,3 +95,9 @@ export function nullableNumbers() {
 export function callWithEach(f, values) {
   return values.map((v) => f(v));
 }
+export function bufferKinds(list) {
+  return list.map(bufferKind).join('|');
+}
+export function keptKinds() {
+  return bufferKinds(keptBytesValue);
+}

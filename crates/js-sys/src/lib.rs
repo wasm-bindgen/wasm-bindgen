@@ -16217,10 +16217,16 @@ mod buffer_source_sealed {
 /// `#[wasm_bindgen(slice = copy)]`, so that `&[u8]` crosses as a fresh
 /// `Uint8Array` copy and the other forms are unchanged.
 ///
+/// A slice `&[impl BufferSourceLike]` arrives in JS as an `Array` of buffers,
+/// with `&[u8]` and `Vec<u8>` elements as `Uint8Array` copies.
+///
 /// This trait is experimental and may change or be removed as
 /// `experimental_generic_mono` evolves.
 pub trait BufferSourceLike:
-    IntoWasmAbi + wasm_bindgen::convert::OptionIntoWasmAbi + buffer_source_sealed::Sealed
+    IntoWasmAbi
+    + wasm_bindgen::convert::OptionIntoWasmAbi
+    + wasm_bindgen::convert::VectorRefIntoWasmAbi
+    + buffer_source_sealed::Sealed
 {
 }
 
@@ -16230,6 +16236,7 @@ macro_rules! impl_buffer_source_like {
         impl BufferSourceLike for $t {}
         impl buffer_source_sealed::Sealed for &$t {}
         impl BufferSourceLike for &$t {}
+        wasm_bindgen::__wbindgen_encoded_sequence!(&$t, |b| (*b).into_abi(), [ref_into]);
     )*)
 }
 

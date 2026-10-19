@@ -550,6 +550,9 @@ crate::__wbindgen_encoded_sequence!(&Box<str>, |s| (*s).into_abi(), [ref_into]);
 crate::__wbindgen_encoded_sequence!(&Cow<'_, str>, |s| (*s).into_abi(), [ref_into]);
 // An owned `Vec<String>` keeps its released `JsValue` form.
 crate::__wbindgen_encoded_sequence!(String, |s| s.into_abi(), [ref_into]);
+// Each element reaches JS as a `Uint8Array` copy.
+crate::__wbindgen_encoded_sequence!(&[u8], |s| (*s).into_abi(), [ref_into]);
+crate::__wbindgen_encoded_sequence!(Vec<u8>, |v| v.as_slice().into_abi(), [ref_into]);
 
 impl VectorRefIntoWasmAbi for JsValue {
     #[inline]
