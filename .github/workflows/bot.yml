@@ -1,6 +1,8 @@
 name: wasm-bindgen-bot
 
 on:
+  pull_request:
+    types: [opened, synchronize]
   pull_request_target:
     types: [opened, ready_for_review]
   issues:
@@ -13,6 +15,8 @@ permissions: {}
 jobs:
   analyze:
     if: >-
+      (github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository) ||
       (github.event_name == 'pull_request_target' &&
         !github.event.pull_request.draft &&
         github.event.pull_request.user.type != 'Bot') ||
