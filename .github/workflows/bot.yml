@@ -24,7 +24,7 @@ jobs:
           github.event.pull_request.head.repo.full_name == github.repository) ||
         (github.event_name == 'pull_request_target' &&
           github.event.pull_request.head.repo.full_name != github.repository)) && (
-        (github.event.action == 'labeled' && github.event.label.name == 'request-review') ||
+        (github.event.action == 'labeled' && github.event.label.name == 'bot-request-review') ||
         (github.event.action != 'labeled' && !github.event.pull_request.draft &&
           github.event.pull_request.user.type != 'Bot'))) ||
       (github.event_name == 'issues' && github.event.issue.user.type != 'Bot') ||
