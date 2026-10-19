@@ -95,6 +95,13 @@
 
 ### Fixed
 
+* Imported methods, static methods and constructors without a `js_class` now
+  bind to the `js_name` and `js_namespace` of the type they belong to when that
+  type is declared in the same `extern "C"` block. Previously they used the
+  type's Rust name, so for example a constructor of
+  `#[wasm_bindgen(js_name = CustomName)] type Type;` called `new Type()`.
+  [#5391](https://github.com/wasm-bindgen/wasm-bindgen/pull/5391)
+
 * Reference types are now detected from the runtime's externref intrinsics when
   the `target_features` section is missing, as with `strip = true`. Previously
   such builds skipped the externref transform, and `#[wasm_bindgen(catch)]`

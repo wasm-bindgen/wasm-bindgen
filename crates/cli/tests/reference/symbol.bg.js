@@ -56,8 +56,8 @@ export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {
 export function __wbg_import_static_symbol_getter_81f53842c69f201c() {
     SomeClass.import_static_symbol_getter();
 }
-export function __wbg_new_75595f321ce58371() {
-    const ret = new JsString();
+export function __wbg_new_fc662d07311c7d03() {
+    const ret = new String();
     return ret;
 }
 export function __wbg_string_getter_27db002d52b3baca(arg0, arg1) {

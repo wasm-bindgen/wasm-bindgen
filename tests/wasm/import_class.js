@@ -55,6 +55,10 @@ class NewConstructor {
     this.field = field;
   }
 
+  static with_offset(field) {
+    return new NewConstructor(field + 10);
+  }
+
   get() {
     return this.field + 1;
   }
@@ -185,6 +189,55 @@ class InnerClass {
   }
 }
 
+// The classes behind `js_name`-renamed types are also exported under the
+// types' Rust names, so binding to the Rust name instead returns wrong values
+// rather than failing to import.
+class RenamedClass {
+  constructor(x) {
+    this.x = x + 1;
+  }
+
+  static with_offset(x) {
+    return new RenamedClass(x + 9);
+  }
+
+  get() {
+    return this.x;
+  }
+}
+
+class NamespacedClass {
+  constructor(x) {
+    this.x = x + 2;
+  }
+
+  static with_offset(x) {
+    return new NamespacedClass(x + 18);
+  }
+
+  get() {
+    return this.x;
+  }
+}
+
+class RustNamedClass {
+  constructor() {}
+
+  static with_offset() {
+    return new RustNamedClass();
+  }
+
+  get() {
+    return -1;
+  }
+}
+
+exports.RenamedClass = RenamedClass;
+exports.RenamedWithoutJsClass = RustNamedClass;
+exports.NamespacedWithoutJsClass = RustNamedClass;
+exports.DefaultWithoutJsClass = RustNamedClass;
+
 exports.nestedNamespace = {
-  InnerClass: InnerClass
+  InnerClass: InnerClass,
+  NamespacedClass: NamespacedClass,
 }
