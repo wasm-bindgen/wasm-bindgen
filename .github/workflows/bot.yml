@@ -9,7 +9,7 @@ on:
   pull_request_target:
     types: [opened, ready_for_review, synchronize, labeled]
   issues:
-    types: [opened]
+    types: [opened, labeled]
   issue_comment:
     types: [created]
 
@@ -27,7 +27,9 @@ jobs:
         (github.event.action == 'labeled' && github.event.label.name == 'bot-request-review') ||
         (github.event.action != 'labeled' && !github.event.pull_request.draft &&
           github.event.pull_request.user.type != 'Bot'))) ||
-      (github.event_name == 'issues' && github.event.issue.user.type != 'Bot') ||
+      (github.event_name == 'issues' && (
+        (github.event.action == 'opened' && github.event.issue.user.type != 'Bot') ||
+        (github.event.action == 'labeled' && github.event.label.name == 'bot-issue-triage'))) ||
       (github.event_name == 'issue_comment' &&
         (startsWith(github.event.comment.body, '@wasm-bindgen-bot review') ||
           startsWith(github.event.comment.body, '@wasm-bindgen-bot triage')))
