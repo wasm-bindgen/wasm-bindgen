@@ -34,7 +34,7 @@ jobs:
       issues: read
       pull-requests: read
     steps:
-      - uses: wasm-bindgen/wasm-bindgen-bot/analyze@083028d13724fe338699af2b117caaf58a525867
+      - uses: wasm-bindgen/wasm-bindgen-bot/analyze@c98e5fcc0388ad5c47af599c37b9ab7b797270a3
         with:
           cf-aig-token: ${{ secrets.CF_AIG_TOKEN }}
           cf-account-id: ${{ vars.CF_ACCOUNT_ID }}
@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions: {}
     steps:
-      - uses: wasm-bindgen/wasm-bindgen-bot/post@083028d13724fe338699af2b117caaf58a525867
+      - uses: wasm-bindgen/wasm-bindgen-bot/post@c98e5fcc0388ad5c47af599c37b9ab7b797270a3
         with:
           app-id: ${{ vars.WASM_BINDGEN_BOT_APP_ID }}
           private-key: ${{ secrets.WASM_BINDGEN_BOT_PRIVATE_KEY }}
