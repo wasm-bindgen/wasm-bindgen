@@ -22,7 +22,8 @@ jobs:
         github.event.pull_request.user.type != 'Bot') ||
       (github.event_name == 'issues' && github.event.issue.user.type != 'Bot') ||
       (github.event_name == 'issue_comment' &&
-        startsWith(github.event.comment.body, '@wasm-bindgen-bot ') &&
+        (startsWith(github.event.comment.body, '@wasm-bindgen-bot review') ||
+          startsWith(github.event.comment.body, '@wasm-bindgen-bot triage')) &&
         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -34,7 +35,7 @@ jobs:
       issues: read
       pull-requests: read
     steps:
-      - uses: wasm-bindgen/wasm-bindgen-bot/analyze@c98e5fcc0388ad5c47af599c37b9ab7b797270a3
+      - uses: wasm-bindgen/wasm-bindgen-bot/analyze@f7ca7c2c0bc90c762822092fd416c0c779167595
         with:
           cf-aig-token: ${{ secrets.CF_AIG_TOKEN }}
           cf-account-id: ${{ vars.CF_ACCOUNT_ID }}
@@ -45,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions: {}
     steps:
-      - uses: wasm-bindgen/wasm-bindgen-bot/post@c98e5fcc0388ad5c47af599c37b9ab7b797270a3
+      - uses: wasm-bindgen/wasm-bindgen-bot/post@f7ca7c2c0bc90c762822092fd416c0c779167595
         with:
           app-id: ${{ vars.WASM_BINDGEN_BOT_APP_ID }}
           private-key: ${{ secrets.WASM_BINDGEN_BOT_PRIVATE_KEY }}
