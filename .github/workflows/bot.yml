@@ -1,0 +1,47 @@
+name: wasm-bindgen-bot
+
+on:
+  pull_request_target:
+    types: [opened, ready_for_review]
+  issues:
+    types: [opened]
+  issue_comment:
+    types: [created]
+
+permissions: {}
+
+jobs:
+  analyze:
+    if: >-
+      (github.event_name == 'pull_request_target' &&
+        !github.event.pull_request.draft &&
+        github.event.pull_request.user.type != 'Bot') ||
+      (github.event_name == 'issues' && github.event.issue.user.type != 'Bot') ||
+      (github.event_name == 'issue_comment' &&
+        startsWith(github.event.comment.body, '@wasm-bindgen-bot ') &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: wasm-bindgen-bot-${{ github.event.pull_request.number || github.event.issue.number }}
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+    steps:
+      - uses: wasm-bindgen/wasm-bindgen-bot/analyze@083028d13724fe338699af2b117caaf58a525867
+        with:
+          cf-aig-token: ${{ secrets.CF_AIG_TOKEN }}
+          cf-account-id: ${{ vars.CF_ACCOUNT_ID }}
+          cf-gateway-id: ${{ vars.CF_GATEWAY_ID }}
+
+  post:
+    needs: analyze
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - uses: wasm-bindgen/wasm-bindgen-bot/post@083028d13724fe338699af2b117caaf58a525867
+        with:
+          app-id: ${{ vars.WASM_BINDGEN_BOT_APP_ID }}
+          private-key: ${{ secrets.WASM_BINDGEN_BOT_PRIVATE_KEY }}
