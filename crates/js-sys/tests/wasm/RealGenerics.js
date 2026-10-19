@@ -82,3 +82,16 @@ export class Init {}
 export function makeReq(input, init) {
   return { input, cf: init.cf };
 }
+
+export function identity(v) {
+  return v;
+}
+export function nullableMap() {
+  return new Map([['a', 'x'], ['b', null], ['c', undefined]]);
+}
+export function nullableNumbers() {
+  return [1, null, undefined, 2.5];
+}
+export function callWithEach(f, values) {
+  return values.map((v) => f(v));
+}

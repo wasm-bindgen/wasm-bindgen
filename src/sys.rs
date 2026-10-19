@@ -2,7 +2,11 @@
 //!
 //! These types represent fundamental JavaScript values and are designed to be
 //! used as generic type parameters in typed JavaScript collections and APIs.
+#[cfg(js_sys_unstable_apis)]
+use crate::__rt::wbg_cast;
 use crate::convert::UpcastFrom;
+#[cfg(js_sys_unstable_apis)]
+use crate::convert::{FromWasmAbi, IntoWasmAbi};
 use crate::JsCast;
 use crate::JsGeneric;
 use crate::JsValue;
@@ -298,11 +302,17 @@ extern "C" {
     /// represented as a `JsValue` (e.g., `JsString`, `Number`, `Object`, etc.).
     /// `JsNullable<T>` itself implements `JsGeneric`, so it can be used in all
     /// generic positions that accept JS types.
+    ///
+    /// Under `js_sys_unstable_apis`, `T` is any type with a wasm-bindgen ABI
+    /// (`String`, `f64`, `bool`, handles, `Option<U>`, enums, ...): the value
+    /// stays a JS handle, and [`into_option`](Self::into_option) decodes it
+    /// as `T` the way an import returning `T` would.
     #[wasm_bindgen(typescript_type = "any", no_upcast)]
     #[derive(Clone, PartialEq)]
     pub type JsNullable<T>;
 }
 
+#[cfg(not(js_sys_unstable_apis))]
 impl<T: JsGeneric> JsNullable<T> {
     /// Creates an empty `JsNullable<T>` representing `null`.
     #[inline]
@@ -409,12 +419,14 @@ impl<T: JsGeneric> JsNullable<T> {
     }
 }
 
+#[cfg(not(js_sys_unstable_apis))]
 impl<T: JsGeneric> Default for JsNullable<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
+#[cfg(not(js_sys_unstable_apis))]
 impl<T: JsGeneric + fmt::Debug> fmt::Debug for JsNullable<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}?(", core::any::type_name::<T>())?;
@@ -426,6 +438,7 @@ impl<T: JsGeneric + fmt::Debug> fmt::Debug for JsNullable<T> {
     }
 }
 
+#[cfg(not(js_sys_unstable_apis))]
 impl<T: JsGeneric + fmt::Display> fmt::Display for JsNullable<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}?(", core::any::type_name::<T>())?;
@@ -434,6 +447,177 @@ impl<T: JsGeneric + fmt::Display> fmt::Display for JsNullable<T> {
             None => f.write_str("null")?,
         }
         f.write_str(")")
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<T> JsNullable<T> {
+    /// Creates an empty `JsNullable<T>` representing `null`.
+    #[inline]
+    pub fn new() -> Self {
+        Null::NULL.unchecked_into()
+    }
+
+    /// Wraps a value in a `JsNullable<T>`, converting it to JS as an import
+    /// argument of type `T` would.
+    #[inline]
+    pub fn wrap(val: T) -> Self
+    where
+        T: IntoWasmAbi,
+    {
+        wbg_cast::<T, JsValue>(val).unchecked_into()
+    }
+
+    /// Creates a `JsNullable<T>` from an `Option<T>`, with `None` as `null`.
+    #[inline]
+    pub fn from_option(opt: Option<T>) -> Self
+    where
+        T: IntoWasmAbi,
+    {
+        match opt {
+            Some(val) => Self::wrap(val),
+            None => Self::new(),
+        }
+    }
+
+    /// Tests whether this `JsNullable<T>` is empty (`null` or `undefined`).
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        JsValue::is_null(self) || JsValue::is_undefined(self)
+    }
+
+    /// Tests whether this `JsNullable<T>` is empty. Like
+    /// [`is_empty`](Self::is_empty), `undefined` counts as `null`.
+    #[inline]
+    pub fn is_null(&self) -> bool {
+        self.is_empty()
+    }
+
+    /// Decodes a copy of the value, or `None` if it is `null` or `undefined`.
+    ///
+    /// For an exported Rust struct this moves the value out of its JS object,
+    /// as any by-value crossing does; prefer [`into_option`](Self::into_option).
+    #[inline]
+    pub fn as_option(&self) -> Option<T>
+    where
+        T: FromWasmAbi,
+    {
+        if self.is_empty() {
+            None
+        } else {
+            Some(wbg_cast::<&JsValue, T>(&self.obj))
+        }
+    }
+
+    /// Decodes the value, or `None` if it is `null` or `undefined`.
+    #[inline]
+    pub fn into_option(self) -> Option<T>
+    where
+        T: FromWasmAbi,
+    {
+        if self.is_empty() {
+            None
+        } else {
+            Some(wbg_cast::<JsValue, T>(self.obj))
+        }
+    }
+
+    /// Returns the contained value, consuming `self`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value is `null` or `undefined`.
+    #[inline]
+    pub fn unwrap(self) -> T
+    where
+        T: FromWasmAbi,
+    {
+        self.expect("called `JsNullable::unwrap()` on an empty value")
+    }
+
+    /// Returns the contained value, consuming `self`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value is `null` or `undefined`, with a panic message
+    /// including the passed message.
+    #[inline]
+    pub fn expect(self, msg: &str) -> T
+    where
+        T: FromWasmAbi,
+    {
+        match self.into_option() {
+            Some(val) => val,
+            None => panic!("{}", msg),
+        }
+    }
+
+    /// Returns the contained value, or `T::default()` if it is `null` or
+    /// `undefined`.
+    #[inline]
+    pub fn unwrap_or_default(self) -> T
+    where
+        T: FromWasmAbi + Default,
+    {
+        self.into_option().unwrap_or_default()
+    }
+
+    /// Returns the contained value, or computes it from `f` if it is `null`
+    /// or `undefined`.
+    #[inline]
+    pub fn unwrap_or_else<F>(self, f: F) -> T
+    where
+        T: FromWasmAbi,
+        F: FnOnce() -> T,
+    {
+        self.into_option().unwrap_or_else(f)
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<T> Default for JsNullable<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<T: FromWasmAbi + fmt::Debug> fmt::Debug for JsNullable<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}?(", core::any::type_name::<T>())?;
+        match self.as_option() {
+            Some(v) => write!(f, "{v:?}")?,
+            None => f.write_str("null")?,
+        }
+        f.write_str(")")
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<T: FromWasmAbi + fmt::Display> fmt::Display for JsNullable<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}?(", core::any::type_name::<T>())?;
+        match self.as_option() {
+            Some(v) => write!(f, "{v}")?,
+            None => f.write_str("null")?,
+        }
+        f.write_str(")")
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<T: FromWasmAbi> From<JsNullable<T>> for Option<T> {
+    #[inline]
+    fn from(val: JsNullable<T>) -> Option<T> {
+        val.into_option()
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<T: IntoWasmAbi> From<Option<T>> for JsNullable<T> {
+    #[inline]
+    fn from(opt: Option<T>) -> JsNullable<T> {
+        JsNullable::from_option(opt)
     }
 }
 

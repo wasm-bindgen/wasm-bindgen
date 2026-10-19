@@ -724,3 +724,167 @@ fn native_class_params_by_reference() {
     let req: Req<JsValue, String> = make_req("a", &init).unwrap().unchecked_into();
     assert_eq!(req.cf(), None);
 }
+
+#[wasm_bindgen]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Colo {
+    Lhr = "LHR",
+    Sfo = "SFO",
+}
+
+#[wasm_bindgen(module = "tests/wasm/RealGenerics.js")]
+extern "C" {
+    #[wasm_bindgen(js_name = nullableMap)]
+    fn nullable_map() -> Map<String, JsNullable<String>>;
+    #[wasm_bindgen(js_name = nullableNumbers)]
+    fn nullable_numbers() -> Array<JsNullable<f64>>;
+    #[wasm_bindgen(js_name = identity)]
+    fn nullable_bool(v: &JsValue) -> JsNullable<bool>;
+    #[wasm_bindgen(js_name = identity)]
+    fn nullable_colo(v: &JsValue) -> JsNullable<Colo>;
+    #[wasm_bindgen(js_name = identity)]
+    fn nullable_maybe(v: &JsValue) -> JsNullable<Option<String>>;
+    #[wasm_bindgen(js_name = identity)]
+    fn nullable_object(v: &JsValue) -> JsNullable<Object>;
+    #[wasm_bindgen(js_name = identity)]
+    fn later_nullable(v: &JsValue) -> Promise<JsNullable<String>>;
+    #[wasm_bindgen(experimental_generic_mono, js_name = identity)]
+    fn echo_nullable<T>(v: &JsNullable<T>) -> JsNullable<T>;
+
+    #[wasm_bindgen(js_name = identity)]
+    fn maybe_value(v: &JsValue) -> Option<JsValue>;
+    #[wasm_bindgen(experimental_generic_mono, js_name = identity)]
+    fn maybe_of<T>(v: &JsValue) -> Option<T>
+    where
+        Option<T>: FromWasmAbi;
+    #[wasm_bindgen(js_name = identity)]
+    fn later_maybe(v: &JsValue) -> Promise<Option<JsValue>>;
+    #[wasm_bindgen(js_name = callWithEach)]
+    fn call_with_each(f: &Function<fn(Option<JsValue>) -> bool>, values: &Array) -> Array<bool>;
+}
+
+#[wasm_bindgen_test]
+fn nullable_reads_any_abi_type() {
+    let map = nullable_map();
+    assert_eq!(map.get("a").and_then(Option::from), Some("x".to_string()));
+    let b = map.get("b").unwrap();
+    assert!(b.is_null());
+    assert_eq!(b.into_option(), None);
+    assert!(map.get("c").unwrap().is_null());
+    assert!(map.get("d").is_none());
+
+    let numbers: Vec<Option<f64>> = nullable_numbers().iter().map(Option::from).collect();
+    assert_eq!(numbers, [Some(1.0), None, None, Some(2.5)]);
+
+    assert_eq!(nullable_bool(&JsValue::FALSE).into_option(), Some(false));
+    assert_eq!(nullable_bool(&JsValue::NULL).into_option(), None);
+    assert_eq!(nullable_colo(&"SFO".into()).into_option(), Some(Colo::Sfo));
+    assert_eq!(nullable_colo(&JsValue::UNDEFINED).into_option(), None);
+    assert_eq!(
+        nullable_maybe(&"x".into()).into_option(),
+        Some(Some("x".to_string()))
+    );
+    assert_eq!(nullable_maybe(&JsValue::NULL).into_option(), None);
+    let obj = Object::new();
+    assert!(nullable_object(&obj).into_option().unwrap() == obj);
+    assert!(nullable_object(&JsValue::NULL).is_null());
+}
+
+#[wasm_bindgen_test]
+fn nullable_writes_any_abi_type() {
+    let mut map: Map<String, JsNullable<String>> = [
+        ("a".to_string(), JsNullable::wrap("x".to_string())),
+        ("b".to_string(), JsNullable::new()),
+    ]
+    .into_iter()
+    .collect();
+    map.extend([("c".to_string(), None.into())]);
+    assert_eq!(map.get("a").unwrap().into_option().as_deref(), Some("x"));
+    assert!(map.get("b").unwrap().is_null());
+    assert!(map.get("c").unwrap().is_null());
+    assert!(JsValue::is_null(&map.get("b").unwrap()));
+
+    let numbers: Array<JsNullable<f64>> = [Some(1.5), None]
+        .into_iter()
+        .map(JsNullable::from)
+        .collect();
+    assert_eq!(numbers.length(), 2);
+    assert_eq!(numbers.get(0).unwrap().unwrap(), 1.5);
+    assert_eq!(numbers.get(1).and_then(Option::from), None::<f64>);
+    assert_eq!(JsNullable::<f64>::new().unwrap_or_default(), 0.0);
+
+    assert_eq!(
+        echo_nullable(&JsNullable::wrap(true)).into_option(),
+        Some(true)
+    );
+    assert_eq!(
+        echo_nullable(&JsNullable::wrap(Colo::Lhr)).into_option(),
+        Some(Colo::Lhr)
+    );
+    assert_eq!(
+        echo_nullable(&JsNullable::wrap(Some("y".to_string()))).into_option(),
+        Some(Some("y".to_string()))
+    );
+    assert_eq!(
+        echo_nullable(&JsNullable::<Option<String>>::from_option(None)).into_option(),
+        None
+    );
+    assert_eq!(
+        echo_nullable(&JsNullable::wrap(JsString::from("z"))).unwrap(),
+        "z"
+    );
+}
+
+#[wasm_bindgen_test]
+fn nullable_debug_and_eq() {
+    let x = JsNullable::wrap("x".to_string());
+    assert!(format!("{x:?}").ends_with("?(\"x\")"));
+    assert!(format!("{:?}", JsNullable::<f64>::new()).ends_with("?(null)"));
+    assert_eq!(x, JsNullable::wrap("x".to_string()));
+    assert_ne!(x, JsNullable::wrap("y".to_string()));
+    assert_eq!(JsNullable::wrap(1.5), JsNullable::wrap(1.5));
+    assert_eq!(JsNullable::<bool>::new(), JsNullable::default());
+}
+
+#[wasm_bindgen_test]
+async fn nullable_promise() {
+    let p = later_nullable(&Promise::resolve(&JsValue::from("x")));
+    assert_eq!(p.await.unwrap().into_option().as_deref(), Some("x"));
+    let p = later_nullable(&Promise::resolve(&JsValue::NULL));
+    assert_eq!(p.await.unwrap().into_option(), None);
+}
+
+#[wasm_bindgen_test]
+async fn option_jsvalue_reads_fold_null() {
+    assert_eq!(maybe_value(&JsValue::NULL), None);
+    assert_eq!(maybe_value(&JsValue::UNDEFINED), None);
+    assert_eq!(maybe_value(&1.into()), Some(JsValue::from(1)));
+    assert_eq!(maybe_of::<JsValue>(&JsValue::NULL), None);
+    assert_eq!(maybe_of::<JsValue>(&"v".into()), Some(JsValue::from("v")));
+    assert_eq!(maybe_of::<String>(&JsValue::NULL), None);
+    let init: Init<JsValue> = Init::new().unchecked_into();
+    init.set_cf(&JsValue::NULL);
+    assert_eq!(make_req("a", &init).unwrap().cf(), None);
+
+    assert_eq!(
+        later_maybe(&Promise::resolve(&JsValue::NULL))
+            .await
+            .unwrap(),
+        None
+    );
+    assert_eq!(
+        later_maybe(&Promise::resolve(&JsValue::from(0)))
+            .await
+            .unwrap(),
+        Some(JsValue::from(0))
+    );
+
+    let values: Array = [JsValue::NULL, JsValue::UNDEFINED, JsValue::FALSE]
+        .into_iter()
+        .collect();
+    let empties = call_with_each(
+        &Function::from_fn(|v: Option<JsValue>| v.is_none()),
+        &values,
+    );
+    assert_eq!(empties.to_vec(), [true, true, false]);
+}
