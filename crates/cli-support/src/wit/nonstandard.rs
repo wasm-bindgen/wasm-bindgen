@@ -343,6 +343,9 @@ pub struct AuxStruct {
     /// via `extends_js_namespace = ...`. Required when the parent struct
     /// uses `js_namespace`.
     pub extends_js_namespace: Option<Vec<String>>,
+    /// Whether `#[wasm_bindgen(reinit = "reconstruct")]` was set: stale JS
+    /// wrappers re-run the constructor instead of throwing.
+    pub reinit_reconstruct: bool,
 }
 
 /// All possible types of imports that can be imported by a Wasm module.
