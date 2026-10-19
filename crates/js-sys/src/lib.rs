@@ -2134,6 +2134,51 @@ impl<T: JsTuple> UpcastFrom<ArrayTuple<T>> for JsValue {}
 impl<T: JsTuple> UpcastFrom<ArrayTuple<T>> for JsOption<JsValue> {}
 impl<T: JsTuple> UpcastFrom<ArrayTuple<T>> for JsNullable<JsValue> {}
 
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen]
+extern "C" {
+    /// A JS array whose first element is an `H` and whose remaining elements
+    /// are `T`s: TypeScript's `[H, ...T[]]`.
+    ///
+    /// ```ignore
+    /// // D1's `raw({ columnNames: true })`: `[string[], ...unknown[][]]`
+    /// let (columns, rows) = stmt.raw_with_column_names().await?.into_parts();
+    /// ```
+    #[wasm_bindgen(extends = Object, js_name = Array, is_type_of = Array::is_array, typescript_type = "Array<any>")]
+    #[derive(Clone, Debug)]
+    pub type ArrayHeadRest<H = JsValue, T = JsValue>;
+
+    /// The first element.
+    #[wasm_bindgen(method, js_class = Array, getter, js_name = "0", experimental_generic_mono)]
+    pub fn head<H: FromWasmAbi, T>(this: &ArrayHeadRest<H, T>) -> H;
+
+    #[wasm_bindgen(method, js_class = Array, js_name = slice, experimental_generic_mono)]
+    fn slice_from<H, T>(this: &ArrayHeadRest<H, T>, start: u32) -> Array<T>;
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<H, T> ArrayHeadRest<H, T> {
+    /// The elements after the first, as a new array.
+    pub fn rest(&self) -> Array<T> {
+        self.slice_from(1)
+    }
+
+    /// Splits into the first element and the rest.
+    pub fn into_parts(self) -> (H, Array<T>)
+    where
+        H: FromWasmAbi,
+    {
+        (self.head(), self.rest())
+    }
+}
+
+#[cfg(js_sys_unstable_apis)]
+impl<H: FromWasmAbi, T> From<ArrayHeadRest<H, T>> for (H, Array<T>) {
+    fn from(value: ArrayHeadRest<H, T>) -> Self {
+        value.into_parts()
+    }
+}
+
 /// Iterator returned by `Array::into_iter`
 #[cfg(not(js_sys_unstable_apis))]
 #[derive(Debug, Clone)]

@@ -921,3 +921,37 @@ fn buffer_source_slices() {
     bytes[0] = 9;
     assert_eq!(kept_kinds(), "Uint8Array:1,2,3");
 }
+
+#[wasm_bindgen(module = "tests/wasm/RealGenerics.js")]
+extern "C" {
+    #[wasm_bindgen(js_name = headRest)]
+    fn head_rest() -> ArrayHeadRest<Array<String>, Array>;
+    #[wasm_bindgen(js_name = headRest)]
+    fn head_rest_typed() -> ArrayHeadRest<Vec<String>, ArrayTuple<(f64, String)>>;
+    #[wasm_bindgen(js_name = headOnly)]
+    fn head_only() -> ArrayHeadRest<Array<String>, Array>;
+    #[wasm_bindgen(js_name = identity)]
+    fn later_head_rest(v: &JsValue) -> Promise<ArrayHeadRest<Array<String>, Array>>;
+}
+
+#[wasm_bindgen_test]
+async fn head_rest_arrays() {
+    let (columns, rows) = head_rest().into_parts();
+    assert_eq!(columns.to_vec(), ["id", "name"]);
+    assert_eq!(rows.length(), 2);
+    assert_eq!(rows.get(1).unwrap().get(1).unwrap(), "b");
+
+    let typed = head_rest_typed();
+    assert_eq!(typed.head(), ["id", "name"]);
+    let rows: Vec<(f64, String)> = typed.rest().iter().map(Into::into).collect();
+    assert_eq!(rows, [(1.0, "a".to_string()), (2.0, "b".to_string())]);
+
+    let (columns, rows): (Array<String>, Array<Array>) = head_only().into();
+    assert_eq!(columns.to_vec(), ["id"]);
+    assert_eq!(rows.length(), 0);
+
+    let resolved = later_head_rest(&Promise::resolve(&head_rest()))
+        .await
+        .unwrap();
+    assert_eq!(resolved.head().to_vec(), ["id", "name"]);
+}

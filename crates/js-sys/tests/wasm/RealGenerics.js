@@ -101,3 +101,9 @@ export function bufferKinds(list) {
 export function keptKinds() {
   return bufferKinds(keptBytesValue);
 }
+export function headRest() {
+  return [['id', 'name'], [1, 'a'], [2, 'b']];
+}
+export function headOnly() {
+  return [['id']];
+}
