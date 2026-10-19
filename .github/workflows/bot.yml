@@ -30,7 +30,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     concurrency:
-      group: wasm-bindgen-bot-${{ github.event.pull_request.number || github.event.issue.number }}
+      # Comment runs start before the bot checks the commenter, so they get
+      # their own group rather than cancelling reviews in progress.
+      group: wasm-bindgen-bot-${{ github.event.pull_request.number || github.event.issue.number }}${{ github.event_name == 'issue_comment' && format('-{0}', github.event.comment.id) || '' }}
       cancel-in-progress: true
     permissions:
       contents: read
