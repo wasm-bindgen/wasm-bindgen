@@ -20,3 +20,5 @@ in `crates/shared` and the CLI side agree.
   `crates/web-sys/webidls`; edits should be to the WebIDL, not the output.
 - The MSRV is in the root `Cargo.toml`; new syntax or std APIs above it break
   the MSRV build.
+- `.github/workflows/bot.yml` deliberately uses the `wasm-bindgen-bot`
+  actions at `@main`; that repository is maintained by the same team.
