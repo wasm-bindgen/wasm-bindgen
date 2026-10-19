@@ -1,0 +1,73 @@
+name: Release tag
+
+# Tags a release commit once CI passes on it, so only green releases are
+# tagged. The tag's own CI run then builds the release and waits for publish
+# approval. Re-running failed CI jobs triggers this again.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  tag:
+    if: >-
+      github.repository == 'wasm-bindgen/wasm-bindgen' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        ref: ${{ github.event.workflow_run.head_sha }}
+        fetch-depth: 2
+        persist-credentials: false
+
+    # Only the commit that bumps the version is tagged, so a release commit
+    # whose CI never passes needs tagging by hand.
+    - id: version
+      run: |
+        set -euo pipefail
+        version() { git show "$1:Cargo.toml" | sed -n 's/^version = "\(.*\)"$/\1/p' | head -1; }
+        new=$(version HEAD)
+        old=$(version HEAD~1)
+        if [ "$new" = "$old" ]; then
+          echo "Not a release commit"
+          exit 0
+        fi
+        if git ls-remote --exit-code --tags origin "refs/tags/$new" > /dev/null; then
+          echo "Tag $new already exists"
+          exit 0
+        fi
+        if ! grep -qxF "## [$new](https://github.com/wasm-bindgen/wasm-bindgen/compare/$old...$new)" CHANGELOG.md; then
+          echo "::error::CHANGELOG.md has no $new section"
+          exit 1
+        fi
+        echo "version=$new" >> "$GITHUB_OUTPUT"
+
+    # Tags created with GITHUB_TOKEN don't trigger workflows, so the app
+    # creates it, as a bypass actor of the tag ruleset.
+    - id: app
+      if: steps.version.outputs.version
+      uses: actions/create-github-app-token@v2
+      with:
+        app-id: ${{ vars.WASM_BINDGEN_BOT_APP_ID }}
+        private-key: ${{ secrets.WASM_BINDGEN_BOT_PRIVATE_KEY }}
+        permission-contents: write
+    - if: steps.version.outputs.version
+      env:
+        GH_TOKEN: ${{ steps.app.outputs.token }}
+        VERSION: ${{ steps.version.outputs.version }}
+        SHA: ${{ github.event.workflow_run.head_sha }}
+      run: |
+        gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$VERSION" -f sha="$SHA" > /dev/null
+        echo "Tagged $SHA as $VERSION" >> "$GITHUB_STEP_SUMMARY"

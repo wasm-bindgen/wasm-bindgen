@@ -55,13 +55,32 @@ PREBUILT_EXAMPLES=1 pnpm exec playwright test -g "jspi"
 
 ## Release Process
 
-The release process for Wasm Bindgen typically consists of the following steps:
+Releases are automated, with maintainers reviewing each step:
 
-* `./publish bump`
-* Regenerate the reference tests (`just test-cli-overwrite`).
-* Check if the schema version must be bumped in crates/shared/src/lib.rs, by verifying the history of crates/shared/src/schema_hash_approval.rs.
-* Verify the schema tests pass via `cargo test -p wasm-bindgen-shared`.
-* Bump the changelog.
-* Commit and publish as a PR.
-* Merge and wait for status checks to succeed.
-* Push a new tag, which then triggers the automated release process.
+1. Run the [Release PR](https://github.com/wasm-bindgen/wasm-bindgen/actions/workflows/release-pr.yml)
+   workflow on `main`. It bumps the patch version with `./publish bump`, has
+   Claude finalize the changelog, set the schema version if the schema
+   changed, and update the README MSRV table if the MSRV changed. It then
+   regenerates the CLI reference tests and opens a `Release x.y.z` PR from
+   `wasm-bindgen-bot` whose description is the release's changelog section.
+   Claude's notes for reviewers are posted as a comment.
+2. Review the PR, pushing fixes to it as needed. If more PRs land on `main`
+   first, run the workflow again, which regenerates the branch from `main`
+   and discards changes pushed to it.
+3. Squash-merge the PR. Once CI passes on the merge commit, the
+   [Release tag](https://github.com/wasm-bindgen/wasm-bindgen/actions/workflows/release-tag.yml)
+   workflow tags it. If CI fails, re-running the failed jobs tags it once they
+   pass.
+4. CI on the tag builds the binaries into a draft GitHub release with the
+   changelog section as its notes, then waits for a member of
+   `wasm-bindgen-publish` to approve the `publish` environment.
+5. Approval publishes the crates to crates.io, then publishes the GitHub
+   release and marks it as the latest.
+
+To release by hand, run `./publish bump`, regenerate the reference tests
+(`just test-cli-overwrite`), set `SCHEMA_VERSION` in
+`crates/shared/src/lib.rs` to the new version if the schema changed since the
+last release (see `crates/shared/src/schema_hash_approval.rs`), verify
+`cargo test -p wasm-bindgen-shared` passes, finalize the changelog, and merge
+the change. A `wasm-bindgen-publish` member can then push the tag once CI
+passes, if the Release tag workflow didn't.

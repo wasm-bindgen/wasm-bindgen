@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "properties": {
+    "schema_changed": {
+      "type": "boolean",
+      "description": "Whether the encoded schema changed since the previous release"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Markdown notes for the maintainers reviewing the release PR"
+    }
+  },
+  "required": ["schema_changed", "notes"],
+  "additionalProperties": false
+}

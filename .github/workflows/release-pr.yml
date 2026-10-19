@@ -1,0 +1,267 @@
+name: Release PR
+
+# Opens the PR for the next patch release. The scripted steps bump versions
+# and regenerate outputs, while Claude finalizes the changelog with read-only
+# tools and edits confined to the files it owns, and with no GitHub write
+# access. A separate job validates the result and opens the PR as
+# wasm-bindgen-bot, since PRs opened with GITHUB_TOKEN don't run CI.
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: release-pr
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  prepare:
+    if: github.repository == 'wasm-bindgen/wasm-bindgen' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+    # The reference tests build some fixtures with nightly.
+    - uses: dtolnay/rust-toolchain@nightly
+      with:
+        targets: wasm32-unknown-unknown
+        components: rust-src
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
+    - uses: actions/setup-node@v7
+      with:
+        node-version: '24.15'
+
+    - name: Bump versions
+      id: bump
+      run: |
+        set -euo pipefail
+        version() { sed -n 's/^version = "\(.*\)"$/\1/p' Cargo.toml | head -1; }
+        prev=$(git describe --tags --abbrev=0 --match '[0-9]*.[0-9]*.[0-9]*')
+        if [ "$(version)" != "$prev" ]; then
+          echo "::error::Cargo.toml is at $(version) but the latest tag is $prev"
+          exit 1
+        fi
+        rustc publish.rs
+        ./publish bump
+        rm publish
+        version=$(version)
+        if git ls-remote --exit-code --tags origin "refs/tags/$version" > /dev/null; then
+          echo "::error::Tag $version already exists"
+          exit 1
+        fi
+        git config user.name release
+        git config user.email release@localhost
+        git commit -qam "Release $version"
+        echo "prev=$prev" >> "$GITHUB_OUTPUT"
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+
+    - name: Build prompt
+      env:
+        PREV: ${{ steps.bump.outputs.prev }}
+        VERSION: ${{ steps.bump.outputs.version }}
+      run: |
+        set -euo pipefail
+        schema_files=(crates/shared/src/lib.rs crates/shared/src/tys.rs crates/shared/src/schema_hash_approval.rs)
+        prompt=$(cat .github/release/prompt.md)
+        prompt=${prompt//'{{version}}'/$VERSION}
+        prompt=${prompt//'{{prev}}'/$PREV}
+        prompt=${prompt//'{{date}}'/$(date -u +%F)}
+        {
+          echo "$prompt"
+          echo
+          echo "## Commits since $PREV"
+          echo
+          git log --first-parent --format='- %h %s' "$PREV..HEAD~1"
+          echo
+          echo "## rust-version changes since $PREV"
+          echo
+          echo '```diff'
+          git diff -U0 -G'^rust-version' "$PREV" HEAD~1 -- '*Cargo.toml' | grep -E '^(\+\+\+|[-+]rust-version)' || true
+          echo '```'
+          echo
+          echo "## Schema file changes since $PREV"
+          echo
+          git log --format='- %h %s' "$PREV..HEAD~1" -- "${schema_files[@]}"
+          echo
+          echo '```diff'
+          git diff "$PREV" HEAD~1 -- "${schema_files[@]}" > "$RUNNER_TEMP/schema.diff"
+          head -c 200000 "$RUNNER_TEMP/schema.diff"
+          echo '```'
+        } > "$RUNNER_TEMP/prompt.md"
+
+    - run: npm install -g --no-fund --no-audit @anthropic-ai/claude-code@2.1.303
+
+    # --bare ignores any settings, hooks or MCP config in the checkout, and the
+    # environment is rebuilt so that only the gateway token reaches Claude.
+    # The path check below is what enforces the edit allowlist.
+    - name: Finalize changelog
+      timeout-minutes: 30
+      env:
+        CF_AIG_TOKEN: ${{ secrets.CF_AIG_TOKEN }}
+        CF_ACCOUNT_ID: ${{ vars.CF_ACCOUNT_ID }}
+        CF_GATEWAY_ID: ${{ vars.CF_GATEWAY_ID }}
+      run: |
+        set -euo pipefail
+        env -i PATH="$PATH" HOME="$(mktemp -d)" \
+          ANTHROPIC_BASE_URL="https://gateway.ai.cloudflare.com/v1/$CF_ACCOUNT_ID/$CF_GATEWAY_ID/anthropic" \
+          ANTHROPIC_AUTH_TOKEN="$CF_AIG_TOKEN" \
+          ANTHROPIC_CUSTOM_HEADERS="cf-aig-authorization: Bearer $CF_AIG_TOKEN" \
+          CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 \
+          claude -p \
+            --bare \
+            --strict-mcp-config \
+            --no-session-persistence \
+            --permission-mode dontAsk \
+            --model claude-opus-5-5 \
+            --effort high \
+            --max-budget-usd 5 \
+            --output-format json \
+            --json-schema "$(cat .github/release/output-schema.json)" \
+            --tools Read,Grep,Glob,Edit \
+            --allowedTools 'Edit(./CHANGELOG.md),Edit(./README.md),Edit(./crates/shared/src/lib.rs)' \
+          < "$RUNNER_TEMP/prompt.md" > "$RUNNER_TEMP/claude.json"
+        jq -er 'if type == "array" then map(select(.type == "result")) | last else . end
+          | if .is_error or .structured_output == null then error("no structured output: \(.result)") else . end
+          | "subtype=\(.subtype) turns=\(.num_turns) cost=$\(.total_cost_usd)",
+            (.permission_denials // [] | map("denied: \(.tool_name) \(.tool_input | tostring)") | .[])' \
+          "$RUNNER_TEMP/claude.json"
+        jq 'if type == "array" then map(select(.type == "result")) | last else . end | .structured_output' \
+          "$RUNNER_TEMP/claude.json" > "$RUNNER_TEMP/output.json"
+
+    - name: Check changes
+      env:
+        PREV: ${{ steps.bump.outputs.prev }}
+        VERSION: ${{ steps.bump.outputs.version }}
+      run: |
+        set -euo pipefail
+        changed=$( { git diff --name-only HEAD; git ls-files --others --exclude-standard; } | sort -u)
+        echo "Claude changed: ${changed:-(nothing)}"
+        for path in $changed; do
+          case "$path" in
+            CHANGELOG.md | README.md | crates/shared/src/lib.rs) ;;
+            *) echo "::error::Unexpected change to $path"; exit 1 ;;
+          esac
+        done
+
+        if git diff -U0 HEAD -- crates/shared/src/lib.rs | grep -E '^[-+]' | grep -vE '^(\+\+\+|---) ' \
+            | grep -vE '^[-+]pub const SCHEMA_VERSION: &str = "[0-9.]+";$'; then
+          echo "::error::crates/shared/src/lib.rs has changes besides SCHEMA_VERSION"
+          exit 1
+        fi
+        schema_version() { sed -n 's/^pub const SCHEMA_VERSION: &str = "\(.*\)";$/\1/p'; }
+        schema=$(schema_version < crates/shared/src/lib.rs)
+        prev_schema=$(git show "$PREV:crates/shared/src/lib.rs" | schema_version)
+        if [ "$(jq .schema_changed "$RUNNER_TEMP/output.json")" = true ]; then
+          if git diff --quiet "$PREV" HEAD -- crates/shared/src/schema_hash_approval.rs; then
+            echo "::error::Claude found a schema change, but the approved schema hash is unchanged since $PREV"
+            exit 1
+          fi
+          expected=$VERSION
+        else
+          expected=$prev_schema
+        fi
+        if [ "$schema" != "$expected" ]; then
+          echo "::error::SCHEMA_VERSION is $schema, expected $expected"
+          exit 1
+        fi
+
+        heading="## [$VERSION](https://github.com/wasm-bindgen/wasm-bindgen/compare/$PREV...$VERSION)"
+        if [ "$(grep -m1 -n '^## ' CHANGELOG.md)" != "$(grep -m1 -n '^## Unreleased$' CHANGELOG.md)" ] \
+            || [ "$(grep -m2 '^## ' CHANGELOG.md | tail -1)" != "$heading" ]; then
+          echo "::error::CHANGELOG.md must start with ## Unreleased followed by $heading"
+          exit 1
+        fi
+        awk -v h="$heading" '$0 == h {f = 1; next} f && /^## /{exit} f' CHANGELOG.md \
+          | sed '/./,$!d' > "$RUNNER_TEMP/notes.md"
+        if ! grep -q '^\* ' "$RUNNER_TEMP/notes.md"; then
+          echo "::error::The $VERSION changelog section has no entries"
+          exit 1
+        fi
+        git commit -qa --amend --no-edit
+
+    - name: Regenerate reference tests
+      run: BLESS=1 cargo test -p wasm-bindgen-cli --test wasm-bindgen 'reference::'
+
+    - run: cargo test -p wasm-bindgen-shared
+
+    - name: Package release commit
+      run: |
+        set -euo pipefail
+        git add -A
+        git diff --cached --name-only HEAD~1 | .github/release/check-paths.sh
+        git diff --cached --binary HEAD~1 > "$RUNNER_TEMP/release.patch"
+        mkdir release-pr
+        mv "$RUNNER_TEMP/release.patch" "$RUNNER_TEMP/notes.md" release-pr/
+        jq -r .notes "$RUNNER_TEMP/output.json" > release-pr/review-notes.md
+        cat release-pr/review-notes.md >> "$GITHUB_STEP_SUMMARY"
+    - uses: actions/upload-artifact@v7
+      with:
+        name: release-pr
+        path: release-pr
+        retention-days: 7
+
+  post:
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+    - id: app
+      uses: actions/create-github-app-token@v2
+      with:
+        app-id: ${{ vars.WASM_BINDGEN_BOT_APP_ID }}
+        private-key: ${{ secrets.WASM_BINDGEN_BOT_PRIVATE_KEY }}
+        permission-contents: write
+        permission-pull-requests: write
+    - uses: actions/checkout@v7
+      with:
+        ref: ${{ github.sha }}
+        token: ${{ steps.app.outputs.token }}
+    - uses: actions/download-artifact@v8
+      with:
+        name: release-pr
+        path: ${{ runner.temp }}/release-pr
+    - name: Open release PR
+      env:
+        GH_TOKEN: ${{ steps.app.outputs.token }}
+        VERSION: ${{ needs.prepare.outputs.version }}
+        APP_SLUG: ${{ steps.app.outputs.app-slug }}
+      run: |
+        set -euo pipefail
+        dir=$RUNNER_TEMP/release-pr
+        git apply --index "$dir/release.patch"
+        git diff --cached --name-only | .github/release/check-paths.sh
+
+        user_id=$(gh api "/users/$APP_SLUG%5Bbot%5D" --jq .id)
+        git config user.name "$APP_SLUG[bot]"
+        git config user.email "$user_id+$APP_SLUG[bot]@users.noreply.github.com"
+        branch=release/$VERSION
+        git checkout -qb "$branch"
+        git commit -qm "Release $VERSION"
+        # A rerun regenerates the branch from main.
+        git push --force origin "$branch"
+
+        pr=$(gh pr list --head "$branch" --state open --json number --jq '.[0].number // empty')
+        if [ -n "$pr" ]; then
+          jq -n --rawfile body "$dir/notes.md" '{body: $body}' \
+            | gh api -X PATCH "repos/$GITHUB_REPOSITORY/pulls/$pr" --input - > /dev/null
+        else
+          pr=$(gh pr create --base main --head "$branch" --title "Release $VERSION" \
+            --body-file "$dir/notes.md" | sed 's|.*/||')
+        fi
+        if [ -s "$dir/review-notes.md" ]; then
+          gh pr comment "$pr" --body-file "$dir/review-notes.md"
+        fi
+        echo "Release PR: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/pull/$pr" >> "$GITHUB_STEP_SUMMARY"
