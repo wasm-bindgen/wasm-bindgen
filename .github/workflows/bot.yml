@@ -17,6 +17,9 @@ on:
   # Likewise same-repo only: a collaborator's approval enables auto-merge.
   pull_request_review:
     types: [submitted]
+  # After merges, flags auto-merge PRs they left conflicting for a rebase.
+  push:
+    branches: [main, master]
   # Runs a command from the Actions tab.
   workflow_dispatch:
     inputs:
@@ -55,7 +58,7 @@ jobs:
         github.event.review.state == 'approved' &&
         github.event.review.user.type != 'Bot' &&
         github.event.pull_request.head.repo.full_name == github.repository) ||
-      github.event_name == 'workflow_dispatch'
+      github.event_name == 'workflow_dispatch' || github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 100
     concurrency:
