@@ -26,7 +26,7 @@ on:
       command:
         description: Command to run
         type: choice
-        options: [pr, investigate, triage, review, rebase]
+        options: [pr, investigate, triage, review, rebase, issue]
         default: pr
       number:
         description: Issue or PR number, optional for pr
@@ -52,8 +52,8 @@ jobs:
       ((github.event_name == 'issue_comment' ||
         (github.event_name == 'pull_request_review_comment' &&
           github.event.pull_request.head.repo.full_name == github.repository)) &&
-        (startsWith(github.event.comment.body, '@wasm-bindgen-bot ') ||
-          startsWith(github.event.comment.body, '@wbg-bot '))) ||
+        (contains(github.event.comment.body, '@wasm-bindgen-bot') ||
+          contains(github.event.comment.body, '@wbg-bot'))) ||
       (github.event_name == 'pull_request_review' &&
         github.event.review.state == 'approved' &&
         github.event.review.user.type != 'Bot' &&
