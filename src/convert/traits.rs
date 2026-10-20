@@ -2,6 +2,7 @@ use core::borrow::Borrow;
 use core::ops::{Deref, DerefMut};
 use core::panic::AssertUnwindSafe;
 
+use crate::convert::VectorRefIntoWasmAbi;
 use crate::sys::{JsNullable, JsOption};
 use crate::{describe::*, JsCast};
 use crate::{ErasableGeneric, JsValue};
@@ -42,13 +43,13 @@ pub trait IntoWasmAbi: WasmDescribe {
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
 pub trait RefIntoWasmAbi: ref_into_wasm_abi::Sealed {
-    /// The Wasm ABI type that `&Self` converts into.
+    #[doc(hidden)]
     type Abi: WasmAbi;
 
-    /// Describe `&Self`.
+    #[doc(hidden)]
     fn describe_ref();
 
-    /// Convert `&self` into `Self::Abi`.
+    #[doc(hidden)]
     fn ref_into_abi(&self) -> Self::Abi;
 }
 
@@ -793,7 +794,7 @@ impl_tuple_upcast!([T1 T2 T3 T4 T5 T6 T7 T8] [Target1 Target2 Target3 Target4 Ta
 /// # Implementors
 ///
 /// This trait is automatically implemented for all types that implement
-/// `ErasableGeneric<Repr = JsValue>` and cross the ABI as JS values, including:
+/// `ErasableGeneric<Repr = JsValue>` and [`MonoGeneric`], including:
 /// - All `js_sys` types (`Object`, `Array`, `Function`, etc.)
 /// - `JsValue` itself
 /// - Custom types imported via `#[wasm_bindgen]`
@@ -803,11 +804,9 @@ pub trait JsGeneric:
     + Upcast<Self>
     + Upcast<JsValue>
     + JsCast
-    + IntoWasmAbi
-    + FromWasmAbi
+    + MonoGeneric
     + OptionFromWasmAbi
-    + RefIntoWasmAbi
-    + 'static
+    + VectorRefIntoWasmAbi
 {
 }
 
@@ -816,13 +815,28 @@ impl<T> JsGeneric for T where
         + UpcastFrom<T>
         + Upcast<JsValue>
         + JsCast
-        + IntoWasmAbi
-        + FromWasmAbi
+        + MonoGeneric
         + OptionFromWasmAbi
-        + RefIntoWasmAbi
-        + 'static
+        + VectorRefIntoWasmAbi
 {
 }
+
+/// A type that crosses the ABI as itself, as an `experimental_generic_mono`
+/// import's type parameter does.
+///
+/// This bundles the conversion traits a mono import's argument, `&T` argument
+/// and return positions need, so generic code over Rust and JS types alike can
+/// state one bound. It holds for JS types, `String`, `bool`, `char` and every
+/// number, and every [`JsGeneric`] type is a `MonoGeneric`. Nullable and slice
+/// positions state `Option<T>: FromWasmAbi` and `T: VectorRefIntoWasmAbi`
+/// themselves, as numbers cross `Option` with their own ABI and 128-bit
+/// integers have no slice ABI.
+///
+/// This trait is experimental, like `experimental_generic_mono` itself, and
+/// may change as the feature stabilizes.
+pub trait MonoGeneric: IntoWasmAbi + FromWasmAbi + RefIntoWasmAbi + 'static {}
+
+impl<T: IntoWasmAbi + FromWasmAbi + RefIntoWasmAbi + 'static> MonoGeneric for T {}
 
 /// Value conversion from a type into its canonical [`JsGeneric`] form.
 ///
