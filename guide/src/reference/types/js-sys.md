@@ -59,9 +59,10 @@ Reads bound the element by `FromWasmAbi`, and writes take `&T` bounded by
 `T: RefIntoWasmAbi`, which holds for JS types, `String` and every primitive.
 Borrows deref-coerce to the element type, so
 `Array<JsValue>::push(&js_string)` still works. Each element type gets its own
-JS shim. `JsGeneric` carries these ABI traits as supertraits, so generic code
-bounded by `T: JsGeneric` can use the element APIs as before, while generic
-code over Rust element types states the bounds itself.
+JS shim. Generic code over Rust and JS element types alike can bound
+`T: MonoGeneric`, adding `Option<T>: FromWasmAbi` for nullable reads.
+`JsGeneric` implies all of these, so generic code bounded by `T: JsGeneric`
+can use the element APIs as before.
 
 ---
 

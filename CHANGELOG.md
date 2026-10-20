@@ -74,8 +74,10 @@
   `&T`, so borrows still deref-coerce to the element type. `Array<T>`
   implements `From<Vec<T>>` and `From<&[T]>`, and `FromIterator` / `Extend`
   collect `T` or `&T` items into a typed `Array<T>`. Writes are bounded by
-  `T: RefIntoWasmAbi` and reads by `FromWasmAbi`. `JsGeneric` now carries
-  these ABI traits as supertraits, so generic code bounded by `T: JsGeneric`
+  `T: RefIntoWasmAbi` and reads by `FromWasmAbi`. A new `MonoGeneric` trait
+  bundles the argument, `&T` and return ABI traits for generic code over Rust
+  and JS element types, and `JsGeneric` now implies it, along with the
+  nullable and slice ABI traits, so generic code bounded by `T: JsGeneric`
   keeps working.
   [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
 
