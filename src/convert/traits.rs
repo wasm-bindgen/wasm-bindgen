@@ -26,6 +26,57 @@ pub trait IntoWasmAbi: WasmDescribe {
     fn into_abi(self) -> Self::Abi;
 }
 
+/// A type whose shared references can cross the Wasm ABI, i.e.
+/// `for<'a> &'a Self: IntoWasmAbi`.
+///
+/// Rust does not imply a trait's `where` clauses on `Self` the way it implies
+/// supertraits, so an alias trait for that higher-ranked bound would not let
+/// generic code use `&T: IntoWasmAbi`. This trait carries the conversion
+/// itself instead, and `experimental_generic_mono` imports marshal a `&T`
+/// argument through it, so `T: RefIntoWasmAbi` is the bound they declare. It
+/// is sealed, holding exactly where the higher-ranked bound does.
+///
+/// # ⚠️ Unstable
+///
+/// This is part of the internal [`convert`](crate::convert) module, **no
+/// stability guarantees** are provided. Use at your own risk. See its
+/// documentation for more details.
+pub trait RefIntoWasmAbi: ref_into_wasm_abi::Sealed {
+    /// The Wasm ABI type that `&Self` converts into.
+    type Abi: WasmAbi;
+
+    /// Describe `&Self`.
+    fn describe_ref();
+
+    /// Convert `&self` into `Self::Abi`.
+    fn ref_into_abi(&self) -> Self::Abi;
+}
+
+mod ref_into_wasm_abi {
+    use super::IntoWasmAbi;
+
+    pub trait Sealed {}
+
+    impl<T: ?Sized> Sealed for T where for<'a> &'a T: IntoWasmAbi {}
+}
+
+impl<T: ?Sized, A: WasmAbi> RefIntoWasmAbi for T
+where
+    for<'a> &'a T: IntoWasmAbi<Abi = A>,
+{
+    type Abi = A;
+
+    #[inline]
+    fn describe_ref() {
+        <&T as WasmDescribe>::describe()
+    }
+
+    #[inline]
+    fn ref_into_abi(&self) -> A {
+        IntoWasmAbi::into_abi(self)
+    }
+}
+
 /// A trait for anything that can be recovered by-value from the Wasm ABI
 /// boundary, eg a Rust `u8` can be recovered from the Wasm ABI `u32` type.
 ///

@@ -66,15 +66,19 @@ everything a caller has to satisfy:
 | position | bound |
 |---|---|
 | argument `T` | `T: IntoWasmAbi` |
-| argument `&T` | `for<'a> &'a T: IntoWasmAbi` |
+| argument `&T` | `T: RefIntoWasmAbi` |
+| argument `&[T]` or `Option<&[T]>` | `T: VectorRefIntoWasmAbi` |
 | return `T` | `T: FromWasmAbi` |
 | `async` return `T` | `T: FromWasmAbi + 'static` |
 | callback argument `A` (`&dyn Fn(A)`) | `A: FromWasmAbi` |
 | callback return `R` (`&dyn Fn() -> R`) | `R: IntoWasmAbi` |
 
-Both traits live in `wasm_bindgen::convert`. `WasmDescribe` is a supertrait of
-both, so it never needs stating. A trait whose supertraits include the right
-ABI trait satisfies the bound too, as with [`JsStringLike`](#string-bounds).
+These traits live in `wasm_bindgen::convert`. `WasmDescribe` is a supertrait of
+`IntoWasmAbi` and `FromWasmAbi`, so it never needs stating. `RefIntoWasmAbi`
+holds for every `T` with `for<'a> &'a T: IntoWasmAbi`, and stands in for that
+higher-ranked bound, which generic callers could not otherwise rely on. A trait
+whose supertraits include the right ABI trait satisfies the bound too, as with
+[`JsStringLike`](#string-bounds).
 
 The bound is on the type in that position, so a compound type is bounded as a
 whole, such as `Option<T>: IntoWasmAbi` or `Vec<T>: IntoWasmAbi`. A callback
@@ -86,9 +90,7 @@ whose type marshals for every `T`, like `&Holder<T>` for an imported type
 
 A missing bound is reported by rustc at the position in the declaration that
 needs it. For a bare type parameter rustc suggests the exact restriction. For
-other predicates it suggests a `where` clause that may need adjusting, such as
-`&T: IntoWasmAbi` where the higher-ranked `for<'a> &'a T: IntoWasmAbi` is
-needed.
+other predicates it suggests a `where` clause.
 
 ## Trait bounds
 
@@ -117,8 +119,8 @@ extern "C" {
 Note that a bound only constrains which types the import can be *called* with; it
 cannot make a type marshallable. Combining a higher-ranked bound with a `&T`
 argument is a common way to write a declaration that compiles but can never be
-called: `&T` additionally requires an `IntoWasmAbi` impl for the reference,
-which exists only for `JsValue` and imported JS types, so a bound such as
+called: `&T` additionally requires `T: RefIntoWasmAbi`, which holds only for
+`JsValue` and imported JS types, so a bound such as
 `for<'a> &'a T: IntoIterator<Item = &'a u32>` leaves no type that satisfies both.
 See [Note on `&T` arguments](#note-on-t-arguments).
 
@@ -267,9 +269,7 @@ Lifetime parameters on the function are supported, including lifetime bounds
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(experimental_generic_mono)]
-    fn log_ref<'a, T>(value: &'a T)
-    where
-        for<'x> &'x T: IntoWasmAbi;
+    fn log_ref<'a, T: RefIntoWasmAbi>(value: &'a T);
 }
 ```
 
@@ -282,9 +282,7 @@ extern "C" {
     type Widget;
 
     #[wasm_bindgen(method, experimental_generic_mono)]
-    fn set<'a, T>(this: &'a Widget, value: &'a T)
-    where
-        for<'x> &'x T: IntoWasmAbi;
+    fn set<'a, T: RefIntoWasmAbi>(this: &'a Widget, value: &'a T);
 }
 ```
 
@@ -562,8 +560,8 @@ different signatures.
 
 ## Note on `&T` arguments
 
-A bare `&T` argument is supported, declared with the higher-ranked bound
-`for<'a> &'a T: IntoWasmAbi`, which holds for `JsValue` and JS handle types. Passing
+A bare `&T` argument is supported, declared with the bound
+`T: RefIntoWasmAbi`, which holds for `JsValue` and JS handle types. Passing
 `&SomeStruct` for a plain Rust struct, or `&u32` for a scalar, is rejected,
 since there is no `&T` ABI representation for them; take the value by value, or
 pass a JS type.

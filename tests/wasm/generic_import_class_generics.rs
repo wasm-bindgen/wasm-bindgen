@@ -15,7 +15,7 @@
 //! manufactured shim would all produce perfectly plausible-looking glue.
 //! These tests call each shape and assert on observable JS-side state.
 
-use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi};
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
@@ -89,7 +89,7 @@ extern "C" {
     #[wasm_bindgen(constructor, experimental_generic_mono)]
     fn new_lt_holder<'a, T>(v: &'a T) -> LtHolder<'a, T>
     where
-        for<'x> &'x T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
     fn lt_holder_get<'a, T: FromWasmAbi>(this: &'a LtHolder<'a, T>) -> T;
@@ -99,7 +99,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = LtHolder, experimental_generic_mono, js_name = of)]
     fn lt_holder_of<'a, T>(value: &'a T) -> LtHolder<'a, T>
     where
-        for<'x> &'x T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     // Two class-level generic parameters (mirrors `Map<K, V>`).
     type Pair<K, V>;

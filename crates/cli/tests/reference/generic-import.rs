@@ -4,7 +4,7 @@
 // `__wbindgen_generic_*` JS shim, rather than erasing type parameters to
 // `JsValue`.
 
-use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, VectorIntoWasmAbi, WasmSlice};
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi, VectorIntoWasmAbi, VectorRefIntoWasmAbi, WasmSlice};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -67,22 +67,22 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono, js_name = logRef)]
     fn log_ref<T>(x: &T)
     where
-        for<'a> &'a T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
-    // A shared slice with a *generic* element type. `&[T]` takes the same
-    // route as `&T` above (an HRTB `for<'a> &'a [T]: IntoWasmAbi` bound), so
-    // each element type marshals as its own typed-array view.
+    // A shared slice with a *generic* element type, bounded by
+    // `T: VectorRefIntoWasmAbi`, so each element type marshals as its own
+    // typed-array view.
     #[wasm_bindgen(experimental_generic_mono, js_name = logGenericSlice)]
     fn log_generic_slice<T>(xs: &[T])
     where
-        for<'a> &'a [T]: IntoWasmAbi;
+        T: VectorRefIntoWasmAbi;
 
     // ...including as the `variadic` argument, which the non-sequence variadic
     // diagnostic explicitly recommends.
     #[wasm_bindgen(experimental_generic_mono, variadic, js_name = spreadGeneric)]
     fn spread_generic<T>(first: u32, rest: &[T])
     where
-        for<'a> &'a [T]: IntoWasmAbi;
+        T: VectorRefIntoWasmAbi;
 
     // `catch` produces a `handleError`-wrapped shim.
     #[wasm_bindgen(experimental_generic_mono, catch, js_name = tryLog)]
@@ -239,7 +239,7 @@ extern "C" {
     #[wasm_bindgen(method, experimental_generic_mono, js_class = "Widget", js_name = attach)]
     fn attach<T>(this: &Widget, other: &T)
     where
-        for<'a> &'a T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     // A generic static method. Two instantiations prove distinct per-mono shims
     // for the static path.

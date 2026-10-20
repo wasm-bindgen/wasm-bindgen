@@ -9,7 +9,7 @@
 //! `generic_import_ref.rs`'s cases but with an explicit, named lifetime
 //! instead of an elided one.
 
-use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi};
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
@@ -20,13 +20,13 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono, js_name = takeRefPrimitive)]
     fn take_ref_lifetime<'a, T>(x: &'a T) -> f64
     where
-        for<'x> &'x T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     // The same lifetime also appears in a `where T: 'a` bound.
     #[wasm_bindgen(experimental_generic_mono, js_name = doubleRef)]
     fn double_ref<'a, T: 'a + FromWasmAbi>(x: &'a T) -> T
     where
-        for<'x> &'x T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     // A named lifetime on a concrete (non-generic) argument, alongside an
     // unrelated type parameter `T`. Unlike the two above, `'a` here doesn't
@@ -61,7 +61,7 @@ extern "C" {
     #[wasm_bindgen(method, experimental_generic_mono, js_name = scaleRef)]
     fn scale_ref<'a, T>(this: &'a Scaler, x: &'a T) -> f64
     where
-        for<'x> &'x T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 }
 
 #[wasm_bindgen_test]

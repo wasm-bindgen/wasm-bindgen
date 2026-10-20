@@ -39,6 +39,7 @@
 //!   memory (no accidental default flip)
 
 use js_sys::JsString;
+use wasm_bindgen::convert::{IntoWasmAbi, VectorRefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
 use wasm_bindgen_test::*;
@@ -123,7 +124,7 @@ extern "C" {
     // element (`JsString`) it is a no-op, and JS receives the fresh `Array`
     // the handle tier always produces.
     #[wasm_bindgen(experimental_generic_mono, js_name = kindsOf)]
-    fn describe_generic<T>(v: &[T]) -> String;
+    fn describe_generic<T: VectorRefIntoWasmAbi>(v: &[T]) -> String;
 
     // String and handle slices are untouched by `copy`: exactly as without a
     // mode, a fresh `Array` of the same handles, with no Rust-side copy.
@@ -205,25 +206,25 @@ extern "C" {
 #[wasm_bindgen(module = "tests/wasm/slice_modes.js")]
 extern "C" {
     #[wasm_bindgen(experimental_generic_mono, js_name = kindsOf)]
-    fn kinds_generic<T>(v: &[T]) -> String;
+    fn kinds_generic<T: VectorRefIntoWasmAbi>(v: &[T]) -> String;
 
     #[wasm_bindgen(experimental_generic_mono, js_name = joined)]
-    fn joined_generic<T>(v: &[T]) -> String;
+    fn joined_generic<T: VectorRefIntoWasmAbi>(v: &[T]) -> String;
 
     #[wasm_bindgen(experimental_generic_mono, js_name = kindsOf)]
-    fn kinds_generic_opt<T>(v: Option<&[T]>) -> String;
+    fn kinds_generic_opt<T: VectorRefIntoWasmAbi>(v: Option<&[T]>) -> String;
 
     // `Option<&[T]>` under a mode: formerly a "nested reference" compile
     // error on this path, now just a slice.
     #[wasm_bindgen(experimental_generic_mono, slice = copy, js_name = kindsOf)]
-    fn kinds_generic_opt_copy<T>(v: Option<&[T]>) -> String;
+    fn kinds_generic_opt_copy<T: VectorRefIntoWasmAbi>(v: Option<&[T]>) -> String;
 
     #[wasm_bindgen(experimental_generic_mono, slice = array, js_name = kindsOf)]
-    fn kinds_generic_opt_array<T>(v: Option<&[T]>) -> String;
+    fn kinds_generic_opt_array<T: VectorRefIntoWasmAbi>(v: Option<&[T]>) -> String;
 
     // Per-arg modes on one generic import, each resolved per instantiation.
     #[wasm_bindgen(experimental_generic_mono, js_name = kindsOf)]
-    fn kinds_generic_mixed<T>(
+    fn kinds_generic_mixed<T: VectorRefIntoWasmAbi>(
         #[wasm_bindgen(slice = copy)] copied: &[T],
         #[wasm_bindgen(slice = array)] as_array: &[T],
         view: &[T],
@@ -232,14 +233,16 @@ extern "C" {
     // `array` fits every instantiation, written on the argument too, and a
     // generic `Vec<T>` resolves `vec` per instantiation in the same way.
     #[wasm_bindgen(experimental_generic_mono, js_name = kindsOf)]
-    fn kinds_generic_explicit_array<T>(
+    fn kinds_generic_explicit_array<T: VectorRefIntoWasmAbi>(
         #[wasm_bindgen(slice = array)] borrowed: &[T],
         #[wasm_bindgen(vec = array)] owned: Vec<T>,
-    ) -> String;
+    ) -> String
+    where
+        Vec<T>: IntoWasmAbi;
 
     // A concrete element alongside a type parameter.
     #[wasm_bindgen(experimental_generic_mono, js_name = joined)]
-    fn joined_strings_per_mono<T>(v: &[String], marker: T) -> String;
+    fn joined_strings_per_mono<T: IntoWasmAbi>(v: &[String], marker: T) -> String;
 }
 
 #[wasm_bindgen_test]

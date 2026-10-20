@@ -9,7 +9,7 @@
 //! index written to the wrong key all produce perfectly plausible glue. These
 //! tests execute each shape and assert on observable state.
 
-use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi};
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
@@ -33,7 +33,7 @@ extern "C" {
     #[wasm_bindgen(method, experimental_generic_mono, js_name = attach)]
     fn attach<T>(this: &Widget, other: &T)
     where
-        for<'a> &'a T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 
     // Static method.
     #[wasm_bindgen(static_method_of = Widget, experimental_generic_mono, js_name = of)]

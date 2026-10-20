@@ -1731,6 +1731,9 @@ impl TryToTokens for ast::ImportType {
                 }
 
                 #[automatically_derived]
+                impl #impl_generics #wasm_bindgen::__rt::marker::VectorRefIntoWasmAbiSealed for #rust_name #ty_generics #where_clause {}
+
+                #[automatically_derived]
                 impl #impl_generics RefFromWasmAbi for #rust_name #ty_generics #where_clause {
                     type Abi = <JsValue as RefFromWasmAbi>::Abi;
                     type Anchor = #wasm_bindgen::__rt::core::mem::ManuallyDrop<#rust_name #ty_generics>;
@@ -3455,6 +3458,7 @@ impl ast::ImportFunction {
         let mut all_prim_names = Vec::new();
         let mut arg_conversions = Vec::new();
         let mut describe_args = Vec::new();
+        let mut ref_outlives = Vec::new();
         for (i, arg) in self.function.arguments.iter().enumerate() {
             // Rewritten to desugar any `impl Trait`; see `arg_types` above.
             let ty = &arg_types[i];
@@ -3535,29 +3539,58 @@ impl ast::ImportFunction {
                 }
             }
 
-            if generics::uses_generic_params(ty, &type_params) {
+            let mut ref_elem = None;
+            // A slice (`Option<&[T]>` included) is marshalled directly,
+            // needing its element's `VectorRefIntoWasmAbi`.
+            let is_slice = detect_slice_or_option_slice(ty).is_some_and(|s| {
+                !s.is_mut
+                    && !s.is_clamped
+                    && !generics::references_generic_param(&s.elem_ty, &type_params)
+            });
+            if generics::uses_generic_params(ty, &type_params) && !is_slice {
                 // A bare, shared reference to a generic type parameter (`&T`)
-                // is supported: the referent's schema is emitted via `REF`
-                // (`WasmDescribe for &T`), and the value is marshalled by the
-                // referent-generic `IntoWasmAbi` impls (`&Handle`, `&JsValue`,
-                // `&str`, `&[T]`). Because
-                // the shim names `<&T as IntoWasmAbi>::Abi` under a late-bound
-                // elided lifetime, the bound the user must declare is
-                // higher-ranked over the referent (`for<'a> &'a T: IntoWasmAbi`)
-                // rather than `&T: IntoWasmAbi`.
+                // is supported. The shim would name `<&T as IntoWasmAbi>::Abi`
+                // under a late-bound elided lifetime, needing a higher-ranked
+                // `for<'a> &'a T: IntoWasmAbi` bound, so it is marshalled
+                // through `RefIntoWasmAbi` on the referent instead, which
+                // carries that bound and is what the user declares.
                 //
                 // Still rejected: `&mut T`, and references nested inside
                 // another type (e.g. `Option<&T>`, `(T, &T)`, `[&T; N]`,
-                // `&&T`), which need the type-erasure path. Slices
-                // (`Option<&[T]>` included) are marshalled directly, needing
-                // their element's `VectorRefIntoWasmAbi`.
+                // `&&T`), which need the type-erasure path.
                 let top_level_shared_ref = match ty {
                     syn::Type::Reference(r) if r.mutability.is_none() => {
                         !generics::references_generic_param(&r.elem, &type_params)
                     }
                     _ => false,
                 };
-                if !top_level_shared_ref && generics::references_generic_param(ty, &type_params) {
+                if top_level_shared_ref {
+                    // Only a referent that is a type parameter or a projection
+                    // off one needs the higher-ranked bound. Any other
+                    // referent, like an imported `Holder<T>`, marshals through
+                    // a single `&X` impl and keeps the direct route.
+                    let ref_needs_bound = |r: &syn::TypeReference| match &*r.elem {
+                        syn::Type::Path(p) => {
+                            p.qself.is_some()
+                                || p.path.segments.first().is_some_and(|seg| {
+                                    seg.arguments.is_none() && type_params.contains(&&seg.ident)
+                                })
+                        }
+                        _ => false,
+                    };
+                    if let Some(r) = match ty {
+                        syn::Type::Reference(r) if ref_needs_bound(r) => Some(r),
+                        _ => None,
+                    } {
+                        let elem = respan_all(r.elem.to_token_stream(), ty_span);
+                        // The shim's signature no longer names `&'a T`, so it
+                        // loses the `T: 'a` the argument implies.
+                        if let Some(lt) = r.lifetime.as_ref().filter(|lt| lt.ident != "_") {
+                            ref_outlives.push(quote! { #elem: #lt });
+                        }
+                        ref_elem = Some(elem);
+                    }
+                } else if generics::references_generic_param(ty, &type_params) {
                     bail_span!(
                         ty,
                         "experimental_generic_mono only supports a bare shared reference to a generic \
@@ -3577,22 +3610,45 @@ impl ast::ImportFunction {
                 quote! { #name }
             };
 
-            let abi = quote_spanned! { ty_span =>
-                <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi
+            let (abi, into_abi, describe) = match &ref_elem {
+                Some(elem) => (
+                    quote_spanned! { ty_span =>
+                        <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::Abi
+                    },
+                    quote_spanned! { ty_span =>
+                        <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::ref_into_abi
+                    },
+                    quote_spanned! { ty_span =>
+                        <#elem as #wasm_bindgen::convert::RefIntoWasmAbi>::describe_ref
+                    },
+                ),
+                None => {
+                    let describe_ty = respan_all(
+                        seq_mode_describe_ty(wasm_bindgen, ty, &arg.seq_modes).to_token_stream(),
+                        ty_span,
+                    );
+                    (
+                        quote_spanned! { ty_span =>
+                            <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::Abi
+                        },
+                        quote_spanned! { ty_span =>
+                            <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::into_abi
+                        },
+                        quote_spanned! { ty_span =>
+                            <#describe_ty as #wasm_bindgen::describe::WasmDescribe>::describe
+                        },
+                    )
+                }
             };
             let (args, names) = splat(wasm_bindgen, &name, &abi, ty_span);
             shim_abi_args.extend(args);
             arg_conversions.push(quote_spanned! { ty_span =>
-                let #name = <#abi_ty as #wasm_bindgen::convert::IntoWasmAbi>::into_abi(#var);
+                let #name = #into_abi(#var);
                 let (#(#names),*) = <#abi as #wasm_bindgen::convert::WasmAbi>::split(#name);
             });
             all_prim_names.extend(names);
-            let describe_ty = respan_all(
-                seq_mode_describe_ty(wasm_bindgen, ty, &arg.seq_modes).to_token_stream(),
-                ty_span,
-            );
             describe_args.push(quote_spanned! { ty_span =>
-                <#describe_ty as #wasm_bindgen::describe::WasmDescribe>::describe();
+                #describe();
             });
         }
 
@@ -3827,13 +3883,15 @@ impl ast::ImportFunction {
         // Inline bounds on the same parameter also arrive via the shim's own
         // parameter list (`type_params_with_bounds`), so a hoisted inline bound
         // is stated twice here. That is redundant, not an error.
-        let shim_where_clause =
-            if where_bounds.is_empty() && fn_class_generics.class_bounds.is_empty() {
-                quote! {}
-            } else {
-                let class_bounds = fn_class_generics.class_bounds.iter();
-                quote! { where #(#where_bounds,)* #(#class_bounds),* }
-            };
+        let shim_where_clause = if where_bounds.is_empty()
+            && fn_class_generics.class_bounds.is_empty()
+            && ref_outlives.is_empty()
+        {
+            quote! {}
+        } else {
+            let class_bounds = fn_class_generics.class_bounds.iter();
+            quote! { where #(#where_bounds,)* #(#class_bounds,)* #(#ref_outlives),* }
+        };
         // Bind the receiver at whatever lifetime the declaration named it with
         // (`this: &'a Foo` -> `&'a self`). The argument loop above marshals the
         // receiver as `<&'a Foo as IntoWasmAbi>::into_abi(self)`, so a plain
@@ -5609,6 +5667,8 @@ fn get_ty(mut ty: &syn::Type) -> &syn::Type {
 
 /// A slice-shaped argument recognised by the slice-mode codegen.
 pub(crate) struct SliceArg {
+    /// The slice's element type `T`.
+    pub elem_ty: syn::Type,
     /// Whether the slice was wrapped in an outer `Option`.
     pub is_option: bool,
     /// Whether the reference was `&mut` rather than `&`.
@@ -5632,8 +5692,9 @@ pub(crate) fn detect_slice_or_option_slice(ty: &syn::Type) -> Option<SliceArg> {
         elem, mutability, ..
     }) = ty
     {
-        if let syn::Type::Slice(_) = &**elem {
+        if let syn::Type::Slice(syn::TypeSlice { elem: inner, .. }) = &**elem {
             return Some(SliceArg {
+                elem_ty: (**inner).clone(),
                 is_option: false,
                 is_mut: mutability.is_some(),
                 is_clamped: false,

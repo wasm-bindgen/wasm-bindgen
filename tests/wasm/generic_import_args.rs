@@ -15,15 +15,15 @@
 //! - one bare `T` across `&str`/`String`/`u32`: three wire protocols behind
 //!   two JS-visible types, so a shim marshalling the wrong one produces a
 //!   wrong *value*, not a crash.
-//! - `&[T]` with a generic element type: takes the `&T` HRTB route rather
-//!   than the concrete-slice route, both as a plain and a `variadic` argument.
+//! - `&[T]` with a generic element type, both as a plain and a `variadic`
+//!   argument.
 
 use js_sys::{
     BigInt, Boolean, JsBigIntOrBooleanOrNumberOrStringLike, JsNumberOrStringLike, JsString, Number,
     PropertyKey, Symbol,
 };
 use std::borrow::Cow;
-use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi};
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi, VectorRefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsStringLike;
 use wasm_bindgen_test::*;
@@ -92,14 +92,13 @@ extern "C" {
     where
         Option<T>: IntoWasmAbi;
 
-    // A shared slice with a *generic* element type: `&[T]` takes the `&T`
-    // HRTB route (`for<'a> &'a [T]: IntoWasmAbi`) rather than the
-    // concrete-slice route, and each element type gets its own typed-array
+    // A shared slice with a *generic* element type, bounded by
+    // `T: VectorRefIntoWasmAbi`: each element type gets its own typed-array
     // view.
     #[wasm_bindgen(experimental_generic_mono, js_name = sumSlice)]
     fn sum_slice<T>(xs: &[T]) -> f64
     where
-        for<'a> &'a [T]: IntoWasmAbi;
+        T: VectorRefIntoWasmAbi;
 
     // `JsStringLike` bound: every string shape crosses at its native wire
     // format (UTF-8 buffer vs handle) but must arrive in JS as a string *value*.
@@ -389,7 +388,7 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono, variadic, js_name = variadicJoin)]
     fn variadic_join_slice<T>(first: u32, rest: &[T]) -> String
     where
-        for<'a> &'a [T]: IntoWasmAbi;
+        T: VectorRefIntoWasmAbi;
 }
 
 #[wasm_bindgen_test]

@@ -9,6 +9,7 @@
 // `js_view_u8` pins the unchanged default alongside: a bare `&[u8]`
 // still hands JS the zero-copy typed-array view.
 
+use wasm_bindgen::convert::VectorRefIntoWasmAbi;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
 
@@ -59,9 +60,9 @@ extern "C" {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(experimental_generic_mono)]
-    fn js_generic_slice<T>(v: &[T]);
+    fn js_generic_slice<T: VectorRefIntoWasmAbi>(v: &[T]);
     #[wasm_bindgen(experimental_generic_mono, js_name = js_generic_slice)]
-    fn js_generic_opt<T>(#[wasm_bindgen(slice = copy)] v: Option<&[T]>);
+    fn js_generic_opt<T: VectorRefIntoWasmAbi>(#[wasm_bindgen(slice = copy)] v: Option<&[T]>);
 }
 
 #[wasm_bindgen]

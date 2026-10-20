@@ -11,13 +11,20 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono)]
     fn argument<T>(x: T);
 
-    // Needs `for<'a> &'a T: IntoWasmAbi`.
+    // Needs `T: RefIntoWasmAbi`.
     #[wasm_bindgen(experimental_generic_mono)]
     fn reference_argument<T>(x: &T);
 
     // The suggested `where` clause follows the whole declared return type.
     #[wasm_bindgen(experimental_generic_mono, catch)]
     fn reference_argument_catch<T>(x: &T) -> Result<Option<u32>, JsValue>;
+
+    // Needs `T: VectorRefIntoWasmAbi`.
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn slice_argument<T>(xs: &[T]);
+
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn option_slice_argument<T>(xs: Option<&[T]>);
 
     // Needs `T: FromWasmAbi`.
     #[wasm_bindgen(experimental_generic_mono)]

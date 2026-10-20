@@ -1,7 +1,9 @@
 #![deny(warnings, unused_qualifications, trivial_casts, trivial_numeric_casts)]
 #![allow(dead_code)]
 
-use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, ReturnWasmAbi};
+use wasm_bindgen::convert::{
+    FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi, ReturnWasmAbi, VectorRefIntoWasmAbi,
+};
 use wasm_bindgen::prelude::*;
 
 // The declared ABI bounds for each position are the whole contract: generic
@@ -12,9 +14,13 @@ extern "C" {
     fn argument<T: IntoWasmAbi>(x: T);
 
     #[wasm_bindgen(experimental_generic_mono)]
-    fn reference_argument<T>(x: &T)
-    where
-        for<'a> &'a T: IntoWasmAbi;
+    fn reference_argument<T: RefIntoWasmAbi>(x: &T);
+
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn slice_argument<T: VectorRefIntoWasmAbi>(xs: &[T]);
+
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn option_slice_argument<T: VectorRefIntoWasmAbi>(xs: Option<&[T]>);
 
     #[wasm_bindgen(experimental_generic_mono)]
     fn ret<T: FromWasmAbi>() -> T;
@@ -47,11 +53,13 @@ fn forward<T: IntoWasmAbi + FromWasmAbi>(x: T) -> T {
     ret()
 }
 
-fn forward_reference<T>(x: &T)
-where
-    for<'a> &'a T: IntoWasmAbi,
-{
+fn forward_reference<T: RefIntoWasmAbi>(x: &T) {
     reference_argument(x);
+}
+
+fn forward_slice<T: VectorRefIntoWasmAbi>(xs: &[T]) {
+    slice_argument(xs);
+    option_slice_argument(Some(xs));
 }
 
 async fn forward_async<T: FromWasmAbi + 'static>() -> T {
@@ -61,6 +69,8 @@ async fn forward_async<T: FromWasmAbi + 'static>() -> T {
 fn concrete() {
     argument(1u32);
     reference_argument(&JsValue::NULL);
+    slice_argument(&[1u32]);
+    option_slice_argument::<String>(None);
     let _: String = ret();
     let _ = ret_catch::<u32>();
     callback_argument(&|_: u32| {});

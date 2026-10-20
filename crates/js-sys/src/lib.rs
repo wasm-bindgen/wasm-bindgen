@@ -7899,7 +7899,7 @@ pub mod Reflect {
             value: &T,
         ) -> Result<bool, JsValue>
         where
-            for<'a> &'a T: IntoWasmAbi;
+            T: wasm_bindgen::convert::RefIntoWasmAbi;
 
         /// The static `Reflect.set()` method works like setting a
         /// property on an object.
