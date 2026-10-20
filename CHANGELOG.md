@@ -79,10 +79,12 @@
 * **Breaking (experimental):** `experimental_generic_mono` imports no longer add
   hidden ABI bounds to the generated wrapper. The conversion bounds each
   position needs are now declared on the import like any other bound:
-  `T: IntoWasmAbi` for an argument, `for<'a> &'a T: IntoWasmAbi` for a `&T`
-  argument, `T: FromWasmAbi` for a return (`+ 'static` when `async`),
-  `A: FromWasmAbi` for a callback argument and `R: IntoWasmAbi` for a callback
-  return. A missing bound is reported at the position that needs it.
+  `T: IntoWasmAbi` for an argument, `T: RefIntoWasmAbi` (a new trait in
+  `wasm_bindgen::convert`) for a `&T` argument, `T: VectorRefIntoWasmAbi` for a
+  `&[T]` or `Option<&[T]>` argument, `T: FromWasmAbi` for a return
+  (`+ 'static` when `async`), `A: FromWasmAbi` for a callback argument and
+  `R: IntoWasmAbi` for a callback return. A missing bound is reported at the
+  position that needs it.
   [#5385](https://github.com/wasm-bindgen/wasm-bindgen/pull/5385)
 
 * The generated `TextDecoder` no longer sets `fatal: true`. Rust `&str` is
