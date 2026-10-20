@@ -2,8 +2,9 @@
 //! crossing as itself at each instantiation.
 
 use js_sys::*;
+use wasm_bindgen::convert::FromWasmAbi;
 use wasm_bindgen::prelude::*;
-use wasm_bindgen::JsStringLike;
+use wasm_bindgen::{JsStringLike, MonoGeneric};
 use wasm_bindgen_futures::JsFuture;
 use wasm_bindgen_test::*;
 
@@ -128,12 +129,44 @@ fn round_trip<T: JsGeneric + Clone + PartialEq + core::fmt::Debug>(x: T, y: T) {
     s.add(&x).add(&x);
     assert_eq!(s.size(), 1);
     assert!(s.has(&x));
+
+    assert_eq!(Array::of(&[x.clone(), y]).length(), 2);
 }
 
 #[wasm_bindgen_test]
 fn js_generic_bound_covers_element_apis() {
     round_trip(JsString::from("a"), JsString::from("b"));
     round_trip(JsValue::from(1), JsValue::from("b"));
+}
+
+// `MonoGeneric` covers Rust and JS element types alike, with nullable reads
+// stating their `Option` bound.
+fn mono_round_trip<T>(x: T, y: T)
+where
+    T: MonoGeneric + Clone + PartialEq + core::fmt::Debug,
+    Option<T>: FromWasmAbi,
+{
+    let a: Array<T> = Array::new_typed();
+    a.push(&x);
+    a.push(&y);
+    assert_eq!(a.get(1), Some(y.clone()));
+    assert_eq!(a.index_of(&y, 0), 1);
+
+    let m: Map<T, T> = Map::new_typed();
+    m.set(&x, &y);
+    assert_eq!(m.get(&x), Some(y.clone()));
+
+    let s: Set<T> = Set::new_typed();
+    s.add(&x).add(&y).add(&x);
+    assert_eq!(s.size(), 2);
+    assert!(s.delete(&y));
+}
+
+#[wasm_bindgen_test]
+fn mono_generic_bound_covers_element_apis() {
+    mono_round_trip(String::from("a"), String::from("b"));
+    mono_round_trip(1u32, 2u32);
+    mono_round_trip(JsString::from("a"), JsString::from("b"));
 }
 
 #[wasm_bindgen_test]
