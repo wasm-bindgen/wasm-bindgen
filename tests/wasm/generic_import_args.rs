@@ -15,14 +15,15 @@
 //! - one bare `T` across `&str`/`String`/`u32`: three wire protocols behind
 //!   two JS-visible types, so a shim marshalling the wrong one produces a
 //!   wrong *value*, not a crash.
-//! - `&[T]` with a generic element type: takes the `&T` HRTB route rather
-//!   than the concrete-slice route, both as a plain and a `variadic` argument.
+//! - `&[T]` with a generic element type, both as a plain and a `variadic`
+//!   argument.
 
 use js_sys::{
     BigInt, Boolean, JsBigIntOrBooleanOrNumberOrStringLike, JsNumberOrStringLike, JsString, Number,
     PropertyKey, Symbol,
 };
 use std::borrow::Cow;
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi, VectorRefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsStringLike;
 use wasm_bindgen_test::*;
@@ -32,35 +33,45 @@ extern "C" {
     // `&mut` to a *concrete* type inside a generic import. Binds exactly as on
     // the non-generic path: a mutable typed-array view that is written back.
     #[wasm_bindgen(experimental_generic_mono, js_name = fillSlice)]
-    fn fill_slice<T>(xs: &mut [u16], base: T);
+    fn fill_slice<T: IntoWasmAbi>(xs: &mut [u16], base: T);
 
     #[wasm_bindgen(experimental_generic_mono, js_name = withCallback)]
-    fn with_callback<T>(f: &mut dyn FnMut(u32), times: T);
+    fn with_callback<T: IntoWasmAbi>(f: &mut dyn FnMut(u32), times: T);
 
     #[wasm_bindgen(experimental_generic_mono)]
-    fn transform<T, U>(value: T, f: &mut dyn FnMut(T) -> U) -> U;
+    fn transform<T, U>(value: T, f: &mut dyn FnMut(T) -> U) -> U
+    where
+        T: IntoWasmAbi + FromWasmAbi,
+        U: IntoWasmAbi + FromWasmAbi;
 
     #[wasm_bindgen(experimental_generic_mono, js_name = transform)]
-    fn transform_shared<T, U>(value: T, f: &dyn Fn(T) -> U) -> U;
+    fn transform_shared<T, U>(value: T, f: &dyn Fn(T) -> U) -> U
+    where
+        T: IntoWasmAbi + FromWasmAbi,
+        U: IntoWasmAbi + FromWasmAbi;
 
     #[wasm_bindgen(experimental_generic_mono, catch, js_name = tryGet)]
-    fn try_get<T>(key: u32) -> Result<T, JsValue>;
+    fn try_get<T: FromWasmAbi>(key: u32) -> Result<T, JsValue>;
 
     #[wasm_bindgen(experimental_generic_mono, catch, js_name = tryGetString)]
-    fn try_get_string<T>(key: u32) -> Result<T, JsValue>;
+    fn try_get_string<T: FromWasmAbi>(key: u32) -> Result<T, JsValue>;
 
     #[wasm_bindgen(experimental_generic_mono, js_name = optEcho)]
-    fn opt_echo<T>(x: Option<T>) -> Option<T>;
+    fn opt_echo<T>(x: Option<T>) -> Option<T>
+    where
+        Option<T>: IntoWasmAbi + FromWasmAbi;
 
     #[wasm_bindgen(experimental_generic_mono, js_name = optDescribe)]
-    fn opt_describe<T>(x: Option<T>) -> String;
+    fn opt_describe<T>(x: Option<T>) -> String
+    where
+        Option<T>: IntoWasmAbi;
 
     // One import across the three string/number wire shapes: `&str` crosses as
     // a borrowed (ptr, len) pair with no free, `String` as an owned buffer the
     // shim frees, `u32` as a plain scalar. JS reports `typeof` plus the value,
     // so marshalling the wrong wire form surfaces as a mismatched value.
     #[wasm_bindgen(experimental_generic_mono, js_name = describeAny)]
-    fn describe_any<T>(x: T) -> String;
+    fn describe_any<T: IntoWasmAbi>(x: T) -> String;
 
     #[wasm_bindgen(experimental_generic_mono, js_name = describeAny)]
     fn describe_primitive<T: JsBigIntOrBooleanOrNumberOrStringLike>(x: T) -> String;
@@ -77,14 +88,17 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono, js_name = optDescribe)]
     fn describe_optional_primitive<T: JsBigIntOrBooleanOrNumberOrStringLike>(
         x: Option<T>,
-    ) -> String;
+    ) -> String
+    where
+        Option<T>: IntoWasmAbi;
 
-    // A shared slice with a *generic* element type: `&[T]` takes the `&T`
-    // HRTB route (`for<'a> &'a [T]: IntoWasmAbi`) rather than the
-    // concrete-slice route, and each element type gets its own typed-array
+    // A shared slice with a *generic* element type, bounded by
+    // `T: VectorRefIntoWasmAbi`: each element type gets its own typed-array
     // view.
     #[wasm_bindgen(experimental_generic_mono, js_name = sumSlice)]
-    fn sum_slice<T>(xs: &[T]) -> f64;
+    fn sum_slice<T>(xs: &[T]) -> f64
+    where
+        T: VectorRefIntoWasmAbi;
 
     // `JsStringLike` bound: every string shape crosses at its native wire
     // format (UTF-8 buffer vs handle) but must arrive in JS as a string *value*.
@@ -364,13 +378,17 @@ extern "C" {
     // mentions a type parameter, because iterability then depends on the
     // instantiation rather than on the declaration.
     #[wasm_bindgen(experimental_generic_mono, variadic, js_name = variadicJoin)]
-    fn variadic_join<T>(first: u32, rest: Vec<T>) -> String;
+    fn variadic_join<T>(first: u32, rest: Vec<T>) -> String
+    where
+        Vec<T>: IntoWasmAbi;
 
     // The same JS function fed from a borrowed generic-element slice instead
     // of an owned `Vec<T>` — the other sequence shape the non-sequence
     // variadic diagnostic recommends.
     #[wasm_bindgen(experimental_generic_mono, variadic, js_name = variadicJoin)]
-    fn variadic_join_slice<T>(first: u32, rest: &[T]) -> String;
+    fn variadic_join_slice<T>(first: u32, rest: &[T]) -> String
+    where
+        T: VectorRefIntoWasmAbi;
 }
 
 #[wasm_bindgen_test]

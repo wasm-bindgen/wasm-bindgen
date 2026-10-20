@@ -114,13 +114,13 @@ including one inherited from the function or block.
 Under [`experimental_generic_mono`](experimental_generic_mono.md), a
 `&[T]` or `Option<&[T]>` argument whose element is a type parameter
 arrives, at each instantiation, exactly as the concrete slice would, its
-mode included:
+mode included. The element is bounded by `VectorRefIntoWasmAbi`:
 
 ```rust
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(experimental_generic_mono)]
-    fn log_items<T>(items: &[T]);
+    fn log_items<T: VectorRefIntoWasmAbi>(items: &[T]);
 }
 
 log_items(&[1u8, 2]);                      // zero-copy Uint8Array view

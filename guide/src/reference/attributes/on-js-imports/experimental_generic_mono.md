@@ -20,12 +20,13 @@ its own descriptor, so arguments and return values are marshalled at their
 concrete types:
 
 ```rust
+use wasm_bindgen::convert::IntoWasmAbi;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = console, experimental_generic_mono)]
-    fn log<T>(value: T);
+    fn log<T: IntoWasmAbi>(value: T);
 }
 
 log(42u32);        // crosses as a number
@@ -55,6 +56,42 @@ The trade-off is code size: one JS shim and one descriptor per instantiation. A
 generic import instantiated at a dozen types produces a dozen shims, so prefer
 erasure when the concrete marshalling does not matter.
 
+## ABI bounds
+
+Because each type parameter crosses the ABI as itself, the conversion traits it
+needs are part of the import's contract, and must be declared on the import
+like any other bound. They are not added implicitly, so the declaration shows
+everything a caller has to satisfy:
+
+| position | bound |
+|---|---|
+| argument `T` | `T: IntoWasmAbi` |
+| argument `&T` | `T: RefIntoWasmAbi` |
+| argument `&[T]` or `Option<&[T]>` | `T: VectorRefIntoWasmAbi` |
+| return `T` | `T: FromWasmAbi` |
+| `async` return `T` | `T: FromWasmAbi + 'static` |
+| callback argument `A` (`&dyn Fn(A)`) | `A: FromWasmAbi` |
+| callback return `R` (`&dyn Fn() -> R`) | `R: IntoWasmAbi` |
+
+These traits live in `wasm_bindgen::convert`. `WasmDescribe` is a supertrait of
+`IntoWasmAbi` and `FromWasmAbi`, so it never needs stating. `RefIntoWasmAbi`
+holds for every `T` with `for<'a> &'a T: IntoWasmAbi`, and stands in for that
+higher-ranked bound, which generic callers could not otherwise rely on. A trait
+whose supertraits include the right ABI trait satisfies the bound too, as with
+[`JsStringLike`](#string-bounds).
+
+The bound is on the type in that position, so a compound type is bounded as a
+whole, such as `Option<T>: IntoWasmAbi` or `Vec<T>: IntoWasmAbi`. A callback
+return is bounded by `ReturnWasmAbi`, which `IntoWasmAbi` implies for a bare
+`R`, so a `Result` callback return is written
+`Result<R, JsValue>: ReturnWasmAbi`. A position
+whose type marshals for every `T`, like `&Holder<T>` for an imported type
+`Holder<T>`, needs no bound.
+
+A missing bound is reported by rustc at the position in the declaration that
+needs it. For a bare type parameter rustc suggests the exact restriction. For
+other predicates it suggests a `where` clause.
+
 ## Trait bounds
 
 Bounds you declare are part of the import's contract. They are carried through to
@@ -69,20 +106,21 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono)]
     fn sum_items<T>(items: T) -> f64
     where
-        T: IntoIterator<Item = u32>;
+        T: IntoIterator<Item = u32> + IntoWasmAbi;
 
     #[wasm_bindgen(experimental_generic_mono)]
     fn double<T>(value: T) -> T
     where
-        for<'a> &'a T: core::ops::Add<&'a T, Output = T>;
+        for<'a> &'a T: core::ops::Add<&'a T, Output = T>,
+        T: IntoWasmAbi + FromWasmAbi;
 }
 ```
 
 Note that a bound only constrains which types the import can be *called* with; it
 cannot make a type marshallable. Combining a higher-ranked bound with a `&T`
 argument is a common way to write a declaration that compiles but can never be
-called: `&T` additionally requires an `IntoWasmAbi` impl for the reference,
-which exists only for `JsValue` and imported JS types, so a bound such as
+called: `&T` additionally requires `T: RefIntoWasmAbi`, which holds only for
+`JsValue` and imported JS types, so a bound such as
 `for<'a> &'a T: IntoIterator<Item = &'a u32>` leaves no type that satisfies both.
 See [Note on `&T` arguments](#note-on-t-arguments).
 
@@ -166,9 +204,8 @@ to `PropertyKey`.
 
 All supported concrete members work in nullable `Option<T>` import positions.
 The union traits do not themselves require `OptionIntoWasmAbi`, because some
-numeric types use specialized concrete `Option<T>` ABI implementations. Code
-outside generated imports that needs to prove an optional conversion must add
-the corresponding `Option<T>: IntoWasmAbi` bound itself.
+numeric types use specialized concrete `Option<T>` ABI implementations, so an
+`Option<T>` position needs its own `Option<T>: IntoWasmAbi` bound.
 
 There are 12 traits in total: the 11 combinations of at least two of the four
 categories with a Rust-native ABI representation, plus `PropertyKey`. `symbol`
@@ -190,29 +227,34 @@ interchangeable:
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = console, experimental_generic_mono)]
-    fn log(value: impl core::fmt::Debug);
+    fn log(value: impl core::fmt::Debug + IntoWasmAbi);
 }
 
 log(42u32);
 log("hello");
 ```
 
-is equivalent to writing `fn log<T: core::fmt::Debug>(value: T)`. This also
+is equivalent to writing `fn log<T: core::fmt::Debug + IntoWasmAbi>(value: T)`. This also
 means a function can have a type parameter without appearing to: `impl Trait`
 counts towards the "at least one type parameter" requirement even though it
 never appears in the function's own generic parameter list.
 
 `impl Trait` can be mixed with named type parameters, nested inside another
-type (`Vec<impl Trait>`), and repeated — each occurrence gets its own
+type (`Option<impl Trait>`), and repeated — each occurrence gets its own
 synthesized parameter:
 
 ```rust
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(experimental_generic_mono)]
-    fn mix<T>(label: T, values: Vec<impl Clone>);
+    fn mix<T: IntoWasmAbi>(label: T, value: Option<impl Clone + OptionIntoWasmAbi>);
 }
 ```
+
+A synthesized parameter has no name to bound its containing type by, so a
+nested `impl Trait` carries whatever bound makes the container marshal:
+`OptionIntoWasmAbi` for `Option`, or `VectorIntoWasmAbi<Abi = WasmSlice>` for
+`Vec`.
 
 Bounds on a synthesized parameter are enforced exactly as if you had written
 them out by hand: a caller that violates one gets a diagnostic pointing at the
@@ -227,7 +269,7 @@ Lifetime parameters on the function are supported, including lifetime bounds
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(experimental_generic_mono)]
-    fn log_ref<'a, T>(value: &'a T);
+    fn log_ref<'a, T: RefIntoWasmAbi>(value: &'a T);
 }
 ```
 
@@ -240,7 +282,7 @@ extern "C" {
     type Widget;
 
     #[wasm_bindgen(method, experimental_generic_mono)]
-    fn set<'a, T>(this: &'a Widget, value: &'a T);
+    fn set<'a, T: RefIntoWasmAbi>(this: &'a Widget, value: &'a T);
 }
 ```
 
@@ -264,10 +306,10 @@ extern "C" {
     type Holder<T>;
 
     #[wasm_bindgen(constructor, experimental_generic_mono)]
-    fn new<T>(value: T) -> Holder<T>;
+    fn new<T: IntoWasmAbi>(value: T) -> Holder<T>;
 
     #[wasm_bindgen(method, experimental_generic_mono)]
-    fn get<T>(this: &Holder<T>) -> T;
+    fn get<T: FromWasmAbi>(this: &Holder<T>) -> T;
 }
 
 let holder = Holder::new(42u32);
@@ -281,7 +323,8 @@ parameter list and onto the generated `impl` block's header instead — the
 than a bare `impl Holder`. A function parameter that is not part of the class's
 own argument list (an ordinary, non-hoisted type parameter, or one used only in
 an argument/return position) stays on the function as usual, so the two kinds
-compose in a single signature:
+compose in a single signature. Bounds on a hoisted parameter, including its ABI
+bound, move onto the `impl` header with it:
 
 ```rust
 #[wasm_bindgen]
@@ -290,7 +333,7 @@ extern "C" {
 
     // `T` is hoisted (it parameterises the receiver); `U` stays on `combine`.
     #[wasm_bindgen(method, experimental_generic_mono)]
-    fn combine<T, U>(this: &Holder<T>, other: U);
+    fn combine<T, U: IntoWasmAbi>(this: &Holder<T>, other: U);
 }
 ```
 
@@ -303,12 +346,12 @@ extern "C" {
     type LifetimeHolder<'a>;
 
     #[wasm_bindgen(method, experimental_generic_mono)]
-    fn get<'a, T>(this: &'a LifetimeHolder<'a>) -> T;
+    fn get<'a, T: FromWasmAbi>(this: &'a LifetimeHolder<'a>) -> T;
 
     type LtHolder<'a, T>;
 
     #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
-    fn lt_get<'a, T>(this: &'a LtHolder<'a, T>) -> T;
+    fn lt_get<'a, T: FromWasmAbi>(this: &'a LtHolder<'a, T>) -> T;
 }
 ```
 
@@ -369,7 +412,10 @@ extern "C" {
     fn map<T, U>(
         this: &Array<T>,
         callback: &mut dyn FnMut(T, u32, Array<T>) -> U,
-    ) -> Array<U>;
+    ) -> Array<U>
+    where
+        T: FromWasmAbi,
+        U: IntoWasmAbi;
 }
 ```
 
@@ -407,7 +453,7 @@ rejected, see [Unsupported shapes](#unsupported-shapes).
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(experimental_generic_mono)]
-    async fn round_trip<T>(value: T) -> T;
+    async fn round_trip<T: IntoWasmAbi + FromWasmAbi + 'static>(value: T) -> T;
 }
 ```
 
@@ -419,8 +465,8 @@ the block then inherits:
 ```rust
 #[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
-    fn log_one<T>(x: T);
-    fn log_two<T>(a: u32, b: T) -> T;
+    fn log_one<T: IntoWasmAbi>(x: T);
+    fn log_two<T: IntoWasmAbi + FromWasmAbi>(a: u32, b: T) -> T;
 }
 ```
 
@@ -431,7 +477,7 @@ binds through the ordinary single shim. A block can therefore mix the two freely
 ```rust
 #[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
-    fn log_generic<T>(x: T); // per-monomorphisation
+    fn log_generic<T: IntoWasmAbi>(x: T); // per-monomorphisation
     fn log_u32(x: u32);      // ordinary import, unaffected
 }
 ```
@@ -514,8 +560,8 @@ different signatures.
 
 ## Note on `&T` arguments
 
-A bare `&T` argument is supported, and requires the referent to satisfy the bound
-`wasm-bindgen` needs to marshal it — `JsValue` or a JS handle type. Passing
+A bare `&T` argument is supported, declared with the bound
+`T: RefIntoWasmAbi`, which holds for `JsValue` and JS handle types. Passing
 `&SomeStruct` for a plain Rust struct, or `&u32` for a scalar, is rejected,
 since there is no `&T` ABI representation for them; take the value by value, or
 pass a JS type.

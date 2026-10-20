@@ -4,6 +4,7 @@
 // `__wbindgen_generic_*` JS shim, rather than erasing type parameters to
 // `JsValue`.
 
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi, VectorIntoWasmAbi, VectorRefIntoWasmAbi, WasmSlice};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -11,20 +12,20 @@ extern "C" {
     // Free function, generic owned argument, unit return. Two instantiations
     // (`u32` and `f64`) each get their own shim with the correct marshalling.
     #[wasm_bindgen(experimental_generic_mono, js_name = log)]
-    fn log_generic<T>(x: T);
+    fn log_generic<T: IntoWasmAbi>(x: T);
 
     // Generic pass-through return `-> T`.
     #[wasm_bindgen(experimental_generic_mono, js_name = identity)]
-    fn identity<T>(x: T) -> T;
+    fn identity<T: IntoWasmAbi + FromWasmAbi>(x: T) -> T;
 
     // A concrete argument mixed with a generic one. Two instantiations exercise
     // per-mono shim manufacture for a mixed signature.
     #[wasm_bindgen(experimental_generic_mono, js_name = mix)]
-    fn mix<T>(label: u32, value: T);
+    fn mix<T: IntoWasmAbi>(label: u32, value: T);
 
     // Multiple generic type parameters in a single import.
     #[wasm_bindgen(experimental_generic_mono, js_name = pair)]
-    fn pair<T, U>(a: T, b: U);
+    fn pair<T: IntoWasmAbi, U: IntoWasmAbi>(a: T, b: U);
 
     // Argument-position `impl Trait` desugars into a synthesized named type
     // parameter with the same bounds, so it takes the identical per-mono path
@@ -32,16 +33,16 @@ extern "C" {
     // the same shape of manufactured binding as `log_generic` above, with no
     // named type parameter of its own.
     #[wasm_bindgen(experimental_generic_mono, js_name = logImplTrait)]
-    fn log_impl_trait(x: impl Clone);
+    fn log_impl_trait(x: impl Clone + IntoWasmAbi);
 
     // `impl Trait` mixed with a real, named type parameter in the same
     // signature; each gets its own synthesized/declared generic slot.
     #[wasm_bindgen(experimental_generic_mono, js_name = mixImplTrait)]
-    fn mix_impl_trait<T>(label: T, value: impl Clone);
+    fn mix_impl_trait<T: IntoWasmAbi>(label: T, value: impl Clone + IntoWasmAbi);
 
     // `impl Trait` nested inside another type (`Vec<impl Trait>`).
     #[wasm_bindgen(experimental_generic_mono, js_name = logNestedImplTrait)]
-    fn log_nested_impl_trait(xs: Vec<impl Clone>);
+    fn log_nested_impl_trait(xs: Vec<impl Clone + VectorIntoWasmAbi<Abi = WasmSlice>>);
 
     // A trait-bounded generic import. The bound has to be re-emitted onto the
     // manufactured shim for `T::Item` to resolve, which is the most intricate
@@ -49,7 +50,7 @@ extern "C" {
     // the wasm test suite, where a regression shows up as a runtime failure with
     // no diff to read.
     #[wasm_bindgen(experimental_generic_mono, js_name = sumItems)]
-    fn sum_items<T: IntoIterator<Item = u32>>(xs: T) -> f64;
+    fn sum_items<T: IntoIterator<Item = u32> + IntoWasmAbi>(xs: T) -> f64;
 
     // Declared but never instantiated. A `experimental_generic_mono` import with no
     // monomorphisations is what any library crate hits for the imports its
@@ -58,75 +59,83 @@ extern "C" {
     // export has to be interpreted and deleted rather than leaking into the
     // output. Nothing should be emitted for it below.
     #[wasm_bindgen(experimental_generic_mono, js_name = neverCalled)]
-    fn never_called<T>(x: T);
+    fn never_called<T: IntoWasmAbi>(x: T);
 
     // A bare shared reference to a generic type parameter (`&T`). `&JsValue`
     // marshals as an externref, JS handle referents by handle index. Each
     // instantiation gets its own per-mono shim.
     #[wasm_bindgen(experimental_generic_mono, js_name = logRef)]
-    fn log_ref<T>(x: &T);
+    fn log_ref<T>(x: &T)
+    where
+        T: RefIntoWasmAbi;
 
-    // A shared slice with a *generic* element type. `&[T]` takes the same
-    // route as `&T` above (an HRTB `for<'a> &'a [T]: IntoWasmAbi` bound), so
-    // each element type marshals as its own typed-array view.
+    // A shared slice with a *generic* element type, bounded by
+    // `T: VectorRefIntoWasmAbi`, so each element type marshals as its own
+    // typed-array view.
     #[wasm_bindgen(experimental_generic_mono, js_name = logGenericSlice)]
-    fn log_generic_slice<T>(xs: &[T]);
+    fn log_generic_slice<T>(xs: &[T])
+    where
+        T: VectorRefIntoWasmAbi;
 
     // ...including as the `variadic` argument, which the non-sequence variadic
     // diagnostic explicitly recommends.
     #[wasm_bindgen(experimental_generic_mono, variadic, js_name = spreadGeneric)]
-    fn spread_generic<T>(first: u32, rest: &[T]);
+    fn spread_generic<T>(first: u32, rest: &[T])
+    where
+        T: VectorRefIntoWasmAbi;
 
     // `catch` produces a `handleError`-wrapped shim.
     #[wasm_bindgen(experimental_generic_mono, catch, js_name = tryLog)]
-    fn try_log<T>(x: T) -> Result<(), JsValue>;
+    fn try_log<T: IntoWasmAbi>(x: T) -> Result<(), JsValue>;
 
     // `variadic` spreads the final argument. The variadic argument must be a
     // concrete iterable (here `Vec<T>`), which marshals to a spreadable JS
     // array; a bare generic `T` is rejected because it may monomorphise to a
     // non-iterable scalar.
     #[wasm_bindgen(experimental_generic_mono, variadic, js_name = variadicLog)]
-    fn variadic_log<T>(first: u32, rest: Vec<T>);
+    fn variadic_log<T>(first: u32, rest: Vec<T>)
+    where
+        Vec<T>: IntoWasmAbi;
 
     // `slice_to_array` hands JS a plain `Array` it owns rather than a
     // typed-array view into wasm memory. The slice element type must be
     // concrete, so the rewrite is independent of which monomorphisation is
     // being generated.
     #[wasm_bindgen(experimental_generic_mono, slice_to_array, js_name = logSlice)]
-    fn log_slice<T>(xs: &[u16], other: T);
+    fn log_slice<T: IntoWasmAbi>(xs: &[u16], other: T);
 
     #[wasm_bindgen(experimental_generic_mono, slice_to_array, js_name = logOptSlice)]
-    fn log_opt_slice<T>(xs: Option<&[u16]>, other: T);
+    fn log_opt_slice<T: IntoWasmAbi>(xs: Option<&[u16]>, other: T);
 
     // A `String` element type takes the *other* ownership path: JS receives a
     // freshly allocated index buffer that it must free, unlike the primitive
     // case above which borrows the caller's slice.
     #[wasm_bindgen(experimental_generic_mono, slice_to_array, js_name = logStrSlice)]
-    fn log_str_slice<T>(xs: &[String], other: T);
+    fn log_str_slice<T: IntoWasmAbi>(xs: &[String], other: T);
 
     #[wasm_bindgen(experimental_generic_mono, slice_to_array, js_name = logOptStrSlice)]
-    fn log_opt_str_slice<T>(xs: Option<&[String]>, other: T);
+    fn log_opt_str_slice<T: IntoWasmAbi>(xs: Option<&[String]>, other: T);
 
     // `async` imports return a `Promise` across the ABI whatever they resolve
     // to, so the descriptor is an externref and the resolved value is converted
     // separately inside `JsFuture<T>`. That makes a monomorphised `-> T` work,
     // including for a `T` that is not itself handle-shaped.
     #[wasm_bindgen(experimental_generic_mono, js_name = asyncIdentity)]
-    async fn async_identity<T>(x: T) -> T;
+    async fn async_identity<T: IntoWasmAbi + FromWasmAbi + 'static>(x: T) -> T;
 
     // Same, but resolving to a concrete non-handle type.
     #[wasm_bindgen(experimental_generic_mono, js_name = asyncCount)]
-    async fn async_count<T>(x: T) -> u32;
+    async fn async_count<T: IntoWasmAbi>(x: T) -> u32;
 
     // And through the `Ok` type of a `catch` import.
     #[wasm_bindgen(experimental_generic_mono, catch, js_name = asyncTry)]
-    async fn async_try<T>(x: T) -> Result<T, JsValue>;
+    async fn async_try<T: IntoWasmAbi + FromWasmAbi + 'static>(x: T) -> Result<T, JsValue>;
 
     // Non-async `catch` with a *generic* `Ok` type. Unlike `try_log` above
     // (whose `Ok` is `()`) the success value has to be marshalled at each
     // monomorphisation's concrete type, while the error stays `JsValue`.
     #[wasm_bindgen(experimental_generic_mono, catch, js_name = tryGet)]
-    fn try_get<T>(key: u32) -> Result<T, JsValue>;
+    fn try_get<T: FromWasmAbi>(key: u32) -> Result<T, JsValue>;
 
     // `&mut` to a *concrete* type inside a `experimental_generic_mono` import. These bind
     // exactly as they do on the non-generic import path: a `&mut [u16]` is a
@@ -134,10 +143,10 @@ extern "C" {
     // `&mut dyn FnMut` gets a reentrancy-guarded JS wrapper. Only a `&mut` whose
     // referent mentions a type parameter is rejected.
     #[wasm_bindgen(experimental_generic_mono, js_name = fillSlice)]
-    fn fill_slice<T>(xs: &mut [u16], other: T);
+    fn fill_slice<T: IntoWasmAbi>(xs: &mut [u16], other: T);
 
     #[wasm_bindgen(experimental_generic_mono, js_name = withCallback)]
-    fn with_callback<T>(f: &mut dyn FnMut(u32), other: T);
+    fn with_callback<T: IntoWasmAbi>(f: &mut dyn FnMut(u32), other: T);
 }
 
 // The by-value wire form of each scalar, pinned through an ordinary
@@ -158,7 +167,7 @@ extern "C" {
 #[wasm_bindgen(slice_to_array)]
 extern "C" {
     #[wasm_bindgen(experimental_generic_mono, js_name = logBlockSlice)]
-    fn log_block_slice<T>(xs: &[u16], other: T);
+    fn log_block_slice<T: IntoWasmAbi>(xs: &[u16], other: T);
 }
 
 // `experimental_generic_mono` is itself inheritable from the enclosing block, so the
@@ -168,12 +177,12 @@ extern "C" {
 #[wasm_bindgen(experimental_generic_mono)]
 extern "C" {
     #[wasm_bindgen(js_name = blockInherited)]
-    fn block_inherited<T>(x: T);
+    fn block_inherited<T: IntoWasmAbi>(x: T);
 
     // A second function in the same block, to show the flag really is
     // block-scoped rather than attaching to the first item.
     #[wasm_bindgen(js_name = blockInheritedTwo)]
-    fn block_inherited_two<T>(a: u32, b: T) -> T;
+    fn block_inherited_two<T: IntoWasmAbi + FromWasmAbi>(a: u32, b: T) -> T;
 
     // A non-generic function in the same block. The block flag cannot apply to
     // it, so it is left alone and binds through one ordinary named `__wbg_*`
@@ -187,7 +196,7 @@ extern "C" {
     // type parameter) and applies per-mono codegen without repeating the
     // attribute, exactly like `block_inherited` above.
     #[wasm_bindgen(js_name = blockInheritedImplTrait)]
-    fn block_inherited_impl_trait(x: impl Clone);
+    fn block_inherited_impl_trait(x: impl Clone + IntoWasmAbi);
 }
 
 // `js_namespace` resolves the JS import the same way it does for a non-generic
@@ -196,10 +205,10 @@ extern "C" {
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = console, experimental_generic_mono, js_name = log)]
-    fn ns_log<T>(x: T);
+    fn ns_log<T: IntoWasmAbi>(x: T);
 
     #[wasm_bindgen(js_namespace = ["a", "b"], experimental_generic_mono, js_name = deepLog)]
-    fn ns_deep_log<T>(x: T);
+    fn ns_deep_log<T: IntoWasmAbi>(x: T);
 }
 
 #[wasm_bindgen]
@@ -212,37 +221,39 @@ extern "C" {
     // type's class, so the manufactured binding attaches to `new Widget(..)`
     // rather than to the free-function path.
     #[wasm_bindgen(constructor, experimental_generic_mono, js_class = "Widget")]
-    fn new<T>(value: T) -> Widget;
+    fn new<T: IntoWasmAbi>(value: T) -> Widget;
 
     // A generic method binds as an instance method call. Two instantiations
     // prove distinct per-mono shims for the method path.
     #[wasm_bindgen(method, experimental_generic_mono, js_class = "Widget", js_name = set)]
-    fn set<T>(this: &Widget, value: T);
+    fn set<T: IntoWasmAbi>(this: &Widget, value: T);
 
     // `impl Trait` on a method argument: the receiver is untouched and the
     // synthesized type parameter behaves like any other method-level generic.
     #[wasm_bindgen(method, experimental_generic_mono, js_class = "Widget", js_name = setImplTrait)]
-    fn set_impl_trait(this: &Widget, value: impl Clone);
+    fn set_impl_trait(this: &Widget, value: impl Clone + IntoWasmAbi);
 
     // A generic method taking a bare shared reference `&T`. Here `T`
     // monomorphises to the JS-handle `Widget`, so `&Widget` marshals via the
     // handle's `IntoWasmAbi for &Widget` impl.
     #[wasm_bindgen(method, experimental_generic_mono, js_class = "Widget", js_name = attach)]
-    fn attach<T>(this: &Widget, other: &T);
+    fn attach<T>(this: &Widget, other: &T)
+    where
+        T: RefIntoWasmAbi;
 
     // A generic static method. Two instantiations prove distinct per-mono shims
     // for the static path.
     #[wasm_bindgen(static_method_of = Widget, experimental_generic_mono, js_name = of)]
-    fn of<T>(value: T) -> Widget;
+    fn of<T: IntoWasmAbi>(value: T) -> Widget;
 
     // A getter with a generic *return*: each monomorphisation reads the same JS
     // property but marshals the result at its concrete type.
     #[wasm_bindgen(method, getter, experimental_generic_mono, js_class = "Widget", js_name = value)]
-    fn value<T>(this: &Widget) -> T;
+    fn value<T: FromWasmAbi>(this: &Widget) -> T;
 
     // A setter with a generic argument.
     #[wasm_bindgen(method, setter, experimental_generic_mono, js_class = "Widget", js_name = value)]
-    fn set_value<T>(this: &Widget, v: T);
+    fn set_value<T: IntoWasmAbi>(this: &Widget, v: T);
 
     // `structural` accessors go through a property access on the receiver rather
     // than a bound function reference, and compose with per-mono the same way.
@@ -254,7 +265,7 @@ extern "C" {
         js_class = "Widget",
         js_name = tag
     )]
-    fn tag<T>(this: &Widget) -> T;
+    fn tag<T: FromWasmAbi>(this: &Widget) -> T;
 
     #[wasm_bindgen(
         method,
@@ -264,27 +275,27 @@ extern "C" {
         js_class = "Widget",
         js_name = tag
     )]
-    fn set_tag<T>(this: &Widget, v: T);
+    fn set_tag<T: IntoWasmAbi>(this: &Widget, v: T);
 
     // `final` is the opposite of `structural`: the property is looked up once at
     // instantiation time rather than on every call.
     #[wasm_bindgen(method, getter, final, experimental_generic_mono, js_class = "Widget", js_name = kind)]
-    fn kind<T>(this: &Widget) -> T;
+    fn kind<T: FromWasmAbi>(this: &Widget) -> T;
 
     // The `indexing_*` operations emit `obj[prop]`, `obj[prop] = val` and
     // `delete obj[prop]`. They always require `structural` + `method`. Here the
     // index is concrete and the value generic, so each monomorphisation differs
     // only in how the value crosses.
     #[wasm_bindgen(method, structural, indexing_getter, experimental_generic_mono)]
-    fn get<T>(this: &Widget, prop: &str) -> T;
+    fn get<T: FromWasmAbi>(this: &Widget, prop: &str) -> T;
 
     #[wasm_bindgen(method, structural, indexing_setter, experimental_generic_mono)]
-    fn set_indexed<T>(this: &Widget, prop: &str, val: T);
+    fn set_indexed<T: IntoWasmAbi>(this: &Widget, prop: &str, val: T);
 
     // A deleter has no value parameter, so its type parameter appears only in the
     // *index* position.
     #[wasm_bindgen(method, structural, indexing_deleter, experimental_generic_mono)]
-    fn delete_indexed<T>(this: &Widget, prop: T);
+    fn delete_indexed<T: IntoWasmAbi>(this: &Widget, prop: T);
 }
 
 #[wasm_bindgen]
@@ -304,26 +315,26 @@ extern "C" {
     // instantiations below prove distinct per-mono shims for the
     // constructor path.
     #[wasm_bindgen(constructor, experimental_generic_mono, js_class = "Holder")]
-    fn new_holder<T>(value: T) -> Holder<T>;
+    fn new_holder<T: IntoWasmAbi>(value: T) -> Holder<T>;
 
     // Instance method: `T` is hoisted from the receiver `&Holder<T>` and
     // reused for the return type (mirrors `Array::at`/`Array::get`). Two
     // instantiations each get their own manufactured shim.
     #[wasm_bindgen(method, experimental_generic_mono, js_class = "Holder", js_name = get)]
-    fn holder_get<T>(this: &Holder<T>) -> T;
+    fn holder_get<T: FromWasmAbi>(this: &Holder<T>) -> T;
 
     // Self-returning static method (mirrors `Array::of`): `class_return_path`
     // retargets the `impl` block to the return type's class the same way it
     // does for the constructor above.
     #[wasm_bindgen(static_method_of = Holder, experimental_generic_mono, js_name = of)]
-    fn holder_of<T>(value: T) -> Holder<T>;
+    fn holder_of<T: IntoWasmAbi>(value: T) -> Holder<T>;
 
     // A hoisted class-level parameter (`T`, from the receiver) mixed with an
     // additional, non-hoisted function-only parameter (`U`): proves the
     // split between `class_generic_params` and `fn_generic_params` in
     // `get_fn_generics` works, and both still marshal correctly.
     #[wasm_bindgen(method, experimental_generic_mono, js_class = "Holder", js_name = combine)]
-    fn holder_combine<T, U>(this: &Holder<T>, other: U);
+    fn holder_combine<T, U: IntoWasmAbi>(this: &Holder<T>, other: U);
 }
 
 #[wasm_bindgen]
@@ -336,7 +347,7 @@ extern "C" {
     // block's own header the same way a class-level type parameter is,
     // rather than staying on `get`'s own declaration.
     #[wasm_bindgen(method, experimental_generic_mono, js_class = "LifetimeHolder", js_name = get)]
-    fn lifetime_holder_get<'a, T>(this: &'a LifetimeHolder<'a>) -> T;
+    fn lifetime_holder_get<'a, T: FromWasmAbi>(this: &'a LifetimeHolder<'a>) -> T;
 }
 
 #[wasm_bindgen]

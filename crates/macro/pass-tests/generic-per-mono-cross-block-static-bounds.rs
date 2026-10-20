@@ -15,7 +15,7 @@ extern "C" {
         experimental_generic_mono,
         js_name = create
     )]
-    fn external_bounded_static<T: Clone>(value: T);
+    fn external_bounded_static<T: Clone + wasm_bindgen::convert::IntoWasmAbi>(value: T);
 }
 
 fn assert_cross_block_static_bound(value: JsValue) {

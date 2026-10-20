@@ -8,39 +8,42 @@
 // `slice_to_array`. This is what lets one attribute cover a whole
 // `extern "C"` block without inspecting every element type.
 
+use wasm_bindgen::convert::{IntoWasmAbi, VectorRefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(experimental_generic_mono, slice = array)]
-    fn per_mono_array<T>(xs: &[T], other: T);
+    fn per_mono_array<T: IntoWasmAbi + VectorRefIntoWasmAbi>(xs: &[T], other: T);
 
     #[wasm_bindgen(experimental_generic_mono, slice = copy)]
-    fn per_mono_copy<T>(xs: &[T], other: T);
+    fn per_mono_copy<T: IntoWasmAbi + VectorRefIntoWasmAbi>(xs: &[T], other: T);
 
     // Nested in the element type: the whole element is generic, so the mode
     // resolves per instantiation too.
     #[wasm_bindgen(experimental_generic_mono, slice = array)]
-    fn per_mono_nested_elem<T>(xs: &[Vec<T>], other: T);
+    fn per_mono_nested_elem<T: IntoWasmAbi>(xs: &[Vec<T>], other: T)
+    where
+        Vec<T>: VectorRefIntoWasmAbi;
 
-    // On the per-mono path a slice needs only its element's
+    // On the per-mono path a slice needs only its element's declared
     // `VectorRefIntoWasmAbi`, so a bare generic slice needs no mode,
     // `Option<&[T]>` is not a rejected "nested reference", and `String` is a
     // valid element (and, at the call site, a valid `T`).
     #[wasm_bindgen(experimental_generic_mono)]
-    fn per_mono_bare<T>(xs: &[T], other: T);
+    fn per_mono_bare<T: IntoWasmAbi + VectorRefIntoWasmAbi>(xs: &[T], other: T);
 
     #[wasm_bindgen(experimental_generic_mono)]
-    fn per_mono_option<T>(xs: Option<&[T]>, other: T);
+    fn per_mono_option<T: IntoWasmAbi + VectorRefIntoWasmAbi>(xs: Option<&[T]>, other: T);
 
     #[wasm_bindgen(experimental_generic_mono, slice = copy)]
-    fn per_mono_option_copy<T>(xs: Option<&[T]>, other: T);
+    fn per_mono_option_copy<T: IntoWasmAbi + VectorRefIntoWasmAbi>(xs: Option<&[T]>, other: T);
 
     #[wasm_bindgen(experimental_generic_mono, slice = array)]
-    fn per_mono_option_array<T>(xs: Option<&[T]>, other: T);
+    fn per_mono_option_array<T: IntoWasmAbi + VectorRefIntoWasmAbi>(xs: Option<&[T]>, other: T);
 
     #[wasm_bindgen(experimental_generic_mono)]
-    fn per_mono_concrete_strings<T>(xs: &[String], other: T);
+    fn per_mono_concrete_strings<T: IntoWasmAbi>(xs: &[String], other: T);
 }
 
 // Inherited from the enclosing block on both paths, through the deprecated
@@ -50,7 +53,7 @@ extern "C" {
     fn erased_array<T>(xs: &[T]);
 
     #[wasm_bindgen(experimental_generic_mono)]
-    fn per_mono_block_array<T>(xs: &[T], other: T);
+    fn per_mono_block_array<T: IntoWasmAbi + VectorRefIntoWasmAbi>(xs: &[T], other: T);
 }
 
 #[wasm_bindgen(slice = copy)]

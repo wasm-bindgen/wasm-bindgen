@@ -48,6 +48,11 @@ use core::panic::UnwindSafe;
 /// `wasm-bindgen` and `js-sys` may implement it.
 pub trait JsStringLikeSealed {}
 
+/// Seal for `wasm_bindgen::convert::VectorRefIntoWasmAbi`: only sequences
+/// declared by `wasm-bindgen`, `js-sys` and generated bindings may implement
+/// it.
+pub trait VectorRefIntoWasmAbiSealed {}
+
 /// Marker trait for types that are UnwindSafe only when building with panic unwind
 pub trait MaybeUnwindSafe {}
 

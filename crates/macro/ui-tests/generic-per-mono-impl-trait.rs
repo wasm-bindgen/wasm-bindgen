@@ -1,3 +1,4 @@
+use wasm_bindgen::convert::{IntoWasmAbi, VectorIntoWasmAbi, WasmSlice};
 use wasm_bindgen::prelude::*;
 
 // Argument-position `impl Trait` in a per-monomorphisation generic import
@@ -15,25 +16,27 @@ extern "C" {
     // parameter of its own: this is the shape `generic-per-mono-unsupported.rs`
     // notes would otherwise look like it has none.
     #[wasm_bindgen(experimental_generic_mono)]
-    fn bare_impl_trait(x: impl Marker);
+    fn bare_impl_trait(x: impl Marker + IntoWasmAbi);
 
     // `impl Trait` mixed with a real, named type parameter.
     #[wasm_bindgen(experimental_generic_mono)]
-    fn impl_trait_with_type_param<T>(x: impl Marker, y: T);
+    fn impl_trait_with_type_param<T: IntoWasmAbi>(x: impl Marker + IntoWasmAbi, y: T);
 
     // `impl Trait` nested inside another type.
     #[wasm_bindgen(experimental_generic_mono)]
-    fn nested_impl_trait<T>(x: Vec<impl Marker>, y: T);
+    fn nested_impl_trait<T: IntoWasmAbi>(
+        x: Vec<impl Marker + VectorIntoWasmAbi<Abi = WasmSlice>>,
+        y: T,
+    );
 
     // Two `impl Trait` arguments in the same function, each with a different
     // bound: both need their own synthesized parameter with distinct names.
     #[wasm_bindgen(experimental_generic_mono)]
-    fn two_impl_trait_args(x: impl Marker, y: impl Iterator);
+    fn two_impl_trait_args(x: impl Marker + IntoWasmAbi, y: impl Iterator + IntoWasmAbi);
 }
 
-// `u32` satisfies the `IntoWasmAbi`/`WasmDescribe` bounds the codegen
-// synthesizes, so only the user-written (here, desugared) bound can be what
-// fails below.
+// `u32` satisfies the declared ABI bounds, so only the user-written (here,
+// desugared) bound can be what fails below.
 fn violates_bare_impl_trait() {
     bare_impl_trait(1u32);
 }

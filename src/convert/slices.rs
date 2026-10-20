@@ -180,6 +180,8 @@ macro_rules! vectors_internal {
             }
         }
 
+        impl crate::__rt::marker::VectorRefIntoWasmAbiSealed for $t {}
+
         impl<'a> IntoWasmAbi for &'a mut [$t] {
             type Abi = WasmSlice;
 
@@ -314,7 +316,9 @@ where
 /// tells them apart by the element's descriptor alone: numbers and JS handles
 /// are in place, and anything else is encoded. Encoded elements are declared
 /// once, with `__wbindgen_encoded_sequence!`.
-pub trait VectorRefIntoWasmAbi: WasmDescribe + Sized {
+pub trait VectorRefIntoWasmAbi:
+    WasmDescribe + Sized + crate::__rt::marker::VectorRefIntoWasmAbiSealed
+{
     fn slice_into_abi(slice: &[Self]) -> WasmSlice;
 }
 
@@ -428,6 +432,9 @@ macro_rules! __wbindgen_encoded_sequence {
                 }
             }
         }
+
+        #[automatically_derived]
+        impl $crate::__rt::marker::VectorRefIntoWasmAbiSealed for $t {}
     };
     (@into $t:ty, $encode:expr) => {
         const _: () = assert!(!$crate::__rt::core::mem::needs_drop::<$t>());
@@ -485,12 +492,16 @@ crate::__wbindgen_encoded_sequence!(&Cow<'_, str>, |s| (*s).into_abi(), [ref_int
 // An owned `Vec<String>` keeps its released `JsValue` form.
 crate::__wbindgen_encoded_sequence!(String, |s| s.into_abi(), [ref_into]);
 
+impl crate::__rt::marker::VectorRefIntoWasmAbiSealed for JsValue {}
+
 impl VectorRefIntoWasmAbi for JsValue {
     #[inline]
     fn slice_into_abi(slice: &[Self]) -> WasmSlice {
         WasmSlice::borrow(slice)
     }
 }
+
+impl crate::__rt::marker::VectorRefIntoWasmAbiSealed for JsError {}
 
 impl VectorRefIntoWasmAbi for JsError {
     #[inline]

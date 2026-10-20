@@ -14,7 +14,7 @@ help: this trait has no implementations, consider adding one
 note: required by a bound in `inline_bound`
   --> ui-tests/generic-per-mono-bounds.rs:23:24
    |
-23 |     fn inline_bound<T: Marker>(x: T);
+23 |     fn inline_bound<T: Marker + IntoWasmAbi>(x: T);
    |                        ^^^^^^ required by this bound in `inline_bound`
 
 error[E0277]: the trait bound `u32: Marker` is not satisfied
@@ -36,7 +36,7 @@ note: required by a bound in `where_bound`
 26 |     fn where_bound<T>(x: T)
    |        ----------- required by a bound in this function
 27 |     where
-28 |         T: Marker;
+28 |         T: Marker + IntoWasmAbi;
    |            ^^^^^^ required by this bound in `where_bound`
 
 error[E0277]: `u32` is not an iterator
@@ -51,7 +51,7 @@ error[E0277]: `u32` is not an iterator
 note: required by a bound in `iter_bound`
   --> ui-tests/generic-per-mono-bounds.rs:31:22
    |
-31 |     fn iter_bound<T: Iterator>(x: T);
+31 |     fn iter_bound<T: Iterator + IntoWasmAbi>(x: T);
    |                      ^^^^^^^^ required by this bound in `iter_bound`
 
 error[E0271]: type mismatch resolving `<Vec<u32> as IntoIterator>::Item == String`
@@ -68,5 +68,5 @@ note: required by a bound in `iter_item_bound`
 34 |     fn iter_item_bound<T>(x: T)
    |        --------------- required by a bound in this function
 35 |     where
-36 |         T: IntoIterator<Item = String>;
+36 |         T: IntoIterator<Item = String> + IntoWasmAbi;
    |                         ^^^^^^^^^^^^^ required by this bound in `iter_item_bound`

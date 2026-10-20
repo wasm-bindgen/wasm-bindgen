@@ -6,6 +6,7 @@
 //! - `&RefThing`: a JS-handle type, marshalled by handle index.
 //! - `&JsValue`: marshalled as an externref.
 
+use wasm_bindgen::convert::RefIntoWasmAbi;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
@@ -19,11 +20,15 @@ extern "C" {
     // `&T` where `T` monomorphises to a JS-handle type: marshalled via the
     // handle's `IntoWasmAbi for &RefThing` impl.
     #[wasm_bindgen(experimental_generic_mono, js_name = readRefThing)]
-    fn read_ref_thing<T>(x: &T) -> f64;
+    fn read_ref_thing<T>(x: &T) -> f64
+    where
+        T: RefIntoWasmAbi;
 
     // `&T` where `T` monomorphises to `JsValue`: marshalled as an externref.
     #[wasm_bindgen(experimental_generic_mono, js_name = echoRef)]
-    fn echo_ref<T>(x: &T) -> JsValue;
+    fn echo_ref<T>(x: &T) -> JsValue
+    where
+        T: RefIntoWasmAbi;
 }
 
 #[wasm_bindgen_test]

@@ -15,6 +15,7 @@
 //! manufactured shim would all produce perfectly plausible-looking glue.
 //! These tests call each shape and assert on observable JS-side state.
 
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
@@ -26,22 +27,22 @@ extern "C" {
     // retargets the generated `impl` block to `impl<T> Holder<T>`, hoisting
     // `T` off the constructor's own parameter list.
     #[wasm_bindgen(constructor, experimental_generic_mono)]
-    fn new<T>(value: T) -> Holder<T>;
+    fn new<T: IntoWasmAbi>(value: T) -> Holder<T>;
 
     // Instance method: `T` is hoisted from the receiver `&Holder<T>` and
     // reused for the return type.
     #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
-    fn get<T>(this: &Holder<T>) -> T;
+    fn get<T: FromWasmAbi>(this: &Holder<T>) -> T;
 
     // A property accessor takes a different JS binding route than an ordinary
     // method while still hoisting `T` from the parameterised receiver.
     #[wasm_bindgen(method, getter, experimental_generic_mono, js_name = value)]
-    fn holder_property<T>(this: &Holder<T>) -> T;
+    fn holder_property<T: FromWasmAbi>(this: &Holder<T>) -> T;
 
     // Self-returning static method: `class_return_path` retargets the `impl`
     // block the same way it does for the constructor above.
     #[wasm_bindgen(static_method_of = Holder, experimental_generic_mono, js_name = of)]
-    fn holder_of<T>(value: T) -> Holder<T>;
+    fn holder_of<T: IntoWasmAbi>(value: T) -> Holder<T>;
 
     // The default generic-erasure path shares class-impl assembly with
     // `experimental_generic_mono`; exercise it at runtime so that refactor cannot only
@@ -57,7 +58,7 @@ extern "C" {
     // A hoisted class-level parameter (`T`) mixed with an additional,
     // non-hoisted function-only parameter (`U`).
     #[wasm_bindgen(method, experimental_generic_mono, js_name = combine)]
-    fn combine<T, U>(this: &Holder<T>, other: U);
+    fn combine<T, U: IntoWasmAbi>(this: &Holder<T>, other: U);
 
     // Deliberately plain (non-generic) inspection helpers: `Holder<T>` is
     // `#[repr(transparent)]` over a `JsValue` handle regardless of `T`, so
@@ -79,49 +80,53 @@ extern "C" {
     // class (`&'a LifetimeHolder<'a>`), so it is hoisted onto the `impl`
     // block's own header the same way a class-level type parameter is.
     #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
-    fn lifetime_holder_get<'a, T>(this: &'a LifetimeHolder<'a>) -> T;
+    fn lifetime_holder_get<'a, T: FromWasmAbi>(this: &'a LifetimeHolder<'a>) -> T;
 
     // A class parameterised by *both* a lifetime and a type parameter of the
     // function, with both hoisted onto the same `impl` header.
     type LtHolder<'a, T>;
 
     #[wasm_bindgen(constructor, experimental_generic_mono)]
-    fn new_lt_holder<'a, T>(v: &'a T) -> LtHolder<'a, T>;
+    fn new_lt_holder<'a, T>(v: &'a T) -> LtHolder<'a, T>
+    where
+        T: RefIntoWasmAbi;
 
     #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
-    fn lt_holder_get<'a, T>(this: &'a LtHolder<'a, T>) -> T;
+    fn lt_holder_get<'a, T: FromWasmAbi>(this: &'a LtHolder<'a, T>) -> T;
 
     // This reaches `class_return_path` with both a class lifetime and type
     // parameter, unlike the `Holder<T>` static method above.
     #[wasm_bindgen(static_method_of = LtHolder, experimental_generic_mono, js_name = of)]
-    fn lt_holder_of<'a, T>(value: &'a T) -> LtHolder<'a, T>;
+    fn lt_holder_of<'a, T>(value: &'a T) -> LtHolder<'a, T>
+    where
+        T: RefIntoWasmAbi;
 
     // Two class-level generic parameters (mirrors `Map<K, V>`).
     type Pair<K, V>;
 
     #[wasm_bindgen(constructor, experimental_generic_mono)]
-    fn new_pair<K, V>(k: K, v: V) -> Pair<K, V>;
+    fn new_pair<K: IntoWasmAbi, V: IntoWasmAbi>(k: K, v: V) -> Pair<K, V>;
 
     #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
-    fn pair_get<K, V>(this: &Pair<K, V>) -> V;
+    fn pair_get<K, V: FromWasmAbi>(this: &Pair<K, V>) -> V;
 
     // Declaration order deliberately reversed relative to the class argument
     // list, pinning that `class_generic_params` (alphabetically ordered) and
     // `class_generic_exprs` (declaration-ordered) cannot desync.
     #[wasm_bindgen(method, experimental_generic_mono, js_name = swap)]
-    fn pair_swap<V, K>(this: &Pair<V, K>) -> K;
+    fn pair_swap<V, K: FromWasmAbi>(this: &Pair<V, K>) -> K;
 
     // The same parameter used twice: `class_generic_params` dedups to one
     // entry while `class_generic_exprs` stays two elements long.
     #[wasm_bindgen(method, experimental_generic_mono, js_name = both)]
-    fn pair_both<T>(this: &Pair<T, T>) -> T;
+    fn pair_both<T: FromWasmAbi>(this: &Pair<T, T>) -> T;
 
     // A *concrete* class argument mixed with a hoisted one: `u32` is carried
     // through as written while `V` is hoisted, so the generated header is
     // `impl<V> Pair<u32, V>` — the method exists only for pairs keyed by a
     // `u32`.
     #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
-    fn pair_u32_key_get<V>(this: &Pair<u32, V>) -> V;
+    fn pair_u32_key_get<V: FromWasmAbi>(this: &Pair<u32, V>) -> V;
 
     // A *fully* concrete class argument list: nothing is hoisted, so the
     // header is the bare `impl Pair<u32, String>` and only the function's own
@@ -129,17 +134,17 @@ extern "C" {
     // class's own parameter defaults (`Pair<JsValue, JsValue>`), and the
     // receiver below would not type-check against the generated method.
     #[wasm_bindgen(method, experimental_generic_mono, js_name = key)]
-    fn pair_concrete_key<T>(this: &Pair<u32, String>, witness: T) -> u32;
+    fn pair_concrete_key<T: IntoWasmAbi>(this: &Pair<u32, String>, witness: T) -> u32;
 
     // The same fully concrete list reached through the constructor route
     // (`class_return_path`) rather than through a receiver.
     #[wasm_bindgen(constructor, experimental_generic_mono)]
-    fn new_concrete_pair<T>(k: u32, v: T) -> Pair<u32, String>;
+    fn new_concrete_pair<T: IntoWasmAbi>(k: u32, v: T) -> Pair<u32, String>;
 
     type Boxed<T>;
 
     #[wasm_bindgen(constructor, experimental_generic_mono)]
-    fn new_boxed<T>(tag: u32, value: T) -> Boxed<T>;
+    fn new_boxed<T: IntoWasmAbi>(tag: u32, value: T) -> Boxed<T>;
 
     // A hoisted class-level parameter that appears in no argument or return
     // position: the self type is the only thing constraining it.
@@ -168,12 +173,16 @@ extern "C" {
     #[wasm_bindgen(method, experimental_generic_mono, js_name = first)]
     fn boxed_where_projection<T>(this: &Boxed<T>, v: T::Item) -> u32
     where
-        T: IntoIterator;
+        T: IntoIterator,
+        T::Item: IntoWasmAbi;
 
     // The same bound written inline, pinning that the two spellings stay
     // equivalent.
     #[wasm_bindgen(method, experimental_generic_mono, js_name = first)]
-    fn boxed_inline_projection<T: IntoIterator>(this: &Boxed<T>, v: T::Item) -> u32;
+    fn boxed_inline_projection<T: IntoIterator<Item: IntoWasmAbi>>(
+        this: &Boxed<T>,
+        v: T::Item,
+    ) -> u32;
 
     type Fallible<T>;
 
@@ -181,10 +190,10 @@ extern "C" {
     // parse time, so `class_return_path` sees `Fallible<T>` through a
     // different route than the plain constructors above.
     #[wasm_bindgen(constructor, experimental_generic_mono, catch)]
-    fn new_fallible<T>(value: T, fail: bool) -> Result<Fallible<T>, JsValue>;
+    fn new_fallible<T: IntoWasmAbi>(value: T, fail: bool) -> Result<Fallible<T>, JsValue>;
 
     #[wasm_bindgen(method, experimental_generic_mono, js_name = get)]
-    fn fallible_get<T>(this: &Fallible<T>) -> T;
+    fn fallible_get<T: FromWasmAbi>(this: &Fallible<T>) -> T;
 }
 
 // Descriptors only exist on wasm targets. Keep this class absent while leaving

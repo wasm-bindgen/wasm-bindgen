@@ -209,35 +209,35 @@ export function __wbindgen_generic_0000000000000012(arg0, arg1, arg2) {
     // generic import `fillSlice`: [RefMut(Slice(U16)), U32] -> Unit
     fillSlice(getArrayU16FromWasm0(arg0, arg1), arg2 >>> 0);
 }
-export function __wbindgen_generic_0000000000000013(arg0, arg1) {
-    // generic import `get`: [Ref(Externref)] -> String
-    const ret = arg1.get();
-    const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    const len1 = WASM_VECTOR_LEN;
-    getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 1, len1, true);
-    getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr1, true);
-}
-export function __wbindgen_generic_0000000000000014(arg0) {
-    // generic import `get`: [Ref(Externref)] -> U32
-    const ret = arg0.get();
-    return ret;
-}
-export function __wbindgen_generic_0000000000000015(arg0, arg1) {
-    // generic import `get`: [Ref(Externref)] -> String
-    const ret = arg1.get();
-    const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    const len1 = WASM_VECTOR_LEN;
-    getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 1, len1, true);
-    getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr1, true);
-}
-export function __wbindgen_generic_0000000000000016(arg0) {
-    // generic import `get`: [Ref(Externref)] -> U32
-    const ret = arg0.get();
-    return ret;
-}
-export function __wbindgen_generic_0000000000000017(arg0, arg1, arg2) {
+export function __wbindgen_generic_0000000000000013(arg0, arg1, arg2) {
     // generic import `get`: [Ref(Externref), Ref(String)] -> U32
     const ret = arg0[getStringFromWasm0(arg1, arg2)];
+    return ret;
+}
+export function __wbindgen_generic_0000000000000014(arg0, arg1) {
+    // generic import `get`: [Ref(Externref)] -> String
+    const ret = arg1.get();
+    const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 1, len1, true);
+    getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr1, true);
+}
+export function __wbindgen_generic_0000000000000015(arg0) {
+    // generic import `get`: [Ref(Externref)] -> U32
+    const ret = arg0.get();
+    return ret;
+}
+export function __wbindgen_generic_0000000000000016(arg0, arg1) {
+    // generic import `get`: [Ref(Externref)] -> String
+    const ret = arg1.get();
+    const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 1, len1, true);
+    getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr1, true);
+}
+export function __wbindgen_generic_0000000000000017(arg0) {
+    // generic import `get`: [Ref(Externref)] -> U32
+    const ret = arg0.get();
     return ret;
 }
 export function __wbindgen_generic_0000000000000018(arg0) {
@@ -331,18 +331,14 @@ export function __wbindgen_generic_0000000000000027(arg0, arg1, arg2) {
     logStrSlice(v0, arg2 >>> 0);
 }
 export function __wbindgen_generic_0000000000000028(arg0) {
-    // generic import `console.log`: [U32] -> Unit
-    console.log(arg0 >>> 0);
-}
-export function __wbindgen_generic_0000000000000029(arg0) {
     // generic import `log`: [F64] -> Unit
     log(arg0);
 }
-export function __wbindgen_generic_000000000000002a(arg0, arg1) {
+export function __wbindgen_generic_0000000000000029(arg0, arg1) {
     // generic import `log`: [Ref(String)] -> Unit
     log(getStringFromWasm0(arg0, arg1));
 }
-export function __wbindgen_generic_000000000000002b(arg0, arg1) {
+export function __wbindgen_generic_000000000000002a(arg0, arg1) {
     let deferred0_0;
     let deferred0_1;
     try {
@@ -354,9 +350,13 @@ export function __wbindgen_generic_000000000000002b(arg0, arg1) {
         wasm.__wbindgen_free(deferred0_0, deferred0_1, 1);
     }
 }
-export function __wbindgen_generic_000000000000002c(arg0) {
+export function __wbindgen_generic_000000000000002b(arg0) {
     // generic import `log`: [U32] -> Unit
     log(arg0 >>> 0);
+}
+export function __wbindgen_generic_000000000000002c(arg0) {
+    // generic import `console.log`: [U32] -> Unit
+    console.log(arg0 >>> 0);
 }
 export function __wbindgen_generic_000000000000002d(arg0, arg1) {
     // generic import `mixImplTrait`: [F64, U32] -> Unit

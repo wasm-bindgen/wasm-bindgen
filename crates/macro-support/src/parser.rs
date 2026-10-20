@@ -1669,6 +1669,7 @@ fn function_from_decl(
         );
     }
 
+    let paren_span = sig.paren_token.span.join();
     let syn::Signature { inputs, output, .. } = sig;
 
     // A helper function to replace `Self` in the function signature of methods.
@@ -1816,6 +1817,7 @@ fn function_from_decl(
     Ok((
         ast::Function {
             name_span,
+            paren_span,
             name,
             rust_attrs: attrs,
             rust_vis: vis,
