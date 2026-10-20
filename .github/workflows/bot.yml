@@ -1,11 +1,9 @@
 name: wasm-bindgen-bot
 
-# Same-repo PRs use pull_request, since their authors already have write
-# access. Fork PRs use pull_request_target, which is safe because the bot only
-# reads PR content and never runs it.
+# PRs use pull_request_target, which is safe because the bot only reads PR
+# content and never runs it, and which, unlike pull_request, also runs for PRs
+# with merge conflicts.
 on:
-  pull_request:
-    types: [opened, ready_for_review, synchronize, labeled]
   pull_request_target:
     types: [opened, ready_for_review, synchronize, labeled]
   issues:
@@ -13,12 +11,29 @@ on:
   issue_comment:
     types: [created]
   # Only same-repo PRs, since GitHub gives fork PRs' review comment runs no
-  # secrets.
+  # secrets. Like approvals, these don't run on PRs with merge conflicts.
   pull_request_review_comment:
     types: [created]
   # Likewise same-repo only: a collaborator's approval enables auto-merge.
   pull_request_review:
     types: [submitted]
+  # After merges, flags auto-merge PRs they left conflicting for a rebase.
+  push:
+    branches: [main, master]
+  # Runs a command from the Actions tab.
+  workflow_dispatch:
+    inputs:
+      command:
+        description: Command to run
+        type: choice
+        options: [pr, investigate, triage, review, rebase]
+        default: pr
+      number:
+        description: Issue or PR number, optional for pr
+        required: false
+      request:
+        description: Instructions for the bot
+        required: false
 
 permissions: {}
 
@@ -27,10 +42,7 @@ jobs:
     # Pushes to PRs by non-collaborators and commands from non-collaborators
     # are skipped by the analyze action, which checks repository roles.
     if: >-
-      (((github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name == github.repository) ||
-        (github.event_name == 'pull_request_target' &&
-          github.event.pull_request.head.repo.full_name != github.repository)) && (
+      (github.event_name == 'pull_request_target' && (
         (github.event.action == 'labeled' && startsWith(github.event.label.name, 'bot-')) ||
         (github.event.action != 'labeled' && !github.event.pull_request.draft &&
           github.event.pull_request.user.type != 'Bot'))) ||
@@ -45,13 +57,14 @@ jobs:
       (github.event_name == 'pull_request_review' &&
         github.event.review.state == 'approved' &&
         github.event.review.user.type != 'Bot' &&
-        github.event.pull_request.head.repo.full_name == github.repository)
+        github.event.pull_request.head.repo.full_name == github.repository) ||
+      github.event_name == 'workflow_dispatch' || github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 100
     concurrency:
       # Comment and approval runs start before the bot checks who wrote them,
       # so they get their own group rather than cancelling reviews in progress.
-      group: wasm-bindgen-bot-${{ github.event.pull_request.number || github.event.issue.number }}${{ github.event.comment && format('-{0}', github.event.comment.id) || github.event.review && format('-review-{0}', github.event.review.id) || '' }}
+      group: wasm-bindgen-bot-${{ github.event.pull_request.number || github.event.issue.number || github.run_id }}${{ github.event.comment && format('-{0}', github.event.comment.id) || github.event.review && format('-review-{0}', github.event.review.id) || '' }}
       cancel-in-progress: true
     permissions:
       contents: read
