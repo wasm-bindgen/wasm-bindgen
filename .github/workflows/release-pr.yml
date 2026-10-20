@@ -155,12 +155,9 @@ jobs:
             *) echo "::error::Unexpected change to $path"; exit 1 ;;
           esac
         done
+        git add -A
+        .github/release/check-release.sh HEAD
 
-        if git diff -U0 HEAD -- crates/shared/src/lib.rs | grep -E '^[-+]' | grep -vE '^(\+\+\+|---) ' \
-            | grep -vE '^[-+]pub const SCHEMA_VERSION: &str = "[0-9.]+";$'; then
-          echo "::error::crates/shared/src/lib.rs has changes besides SCHEMA_VERSION"
-          exit 1
-        fi
         schema_version() { sed -n 's/^pub const SCHEMA_VERSION: &str = "\(.*\)";$/\1/p'; }
         schema=$(schema_version < crates/shared/src/lib.rs)
         prev_schema=$(git show "$PREV:crates/shared/src/lib.rs" | schema_version)
@@ -195,13 +192,31 @@ jobs:
     - name: Regenerate reference tests
       run: BLESS=1 cargo test -p wasm-bindgen-cli --test wasm-bindgen 'reference::'
 
+    # build.rs hashes all of lib.rs, so setting SCHEMA_VERSION also needs the
+    # approved hash updated to the one the failing test reports.
+    - name: Approve schema hash
+      run: |
+        set -euo pipefail
+        if git diff --quiet HEAD~1 -- crates/shared/src/lib.rs; then
+          exit 0
+        fi
+        out=$(cargo test -p wasm-bindgen-shared schema_version 2>&1 || true)
+        hash=$(sed -n 's/^ *left: "\([0-9]*\)"$/\1/p' <<< "$out" | head -1)
+        if [ -z "$hash" ]; then
+          echo "$out"
+          echo "::error::Could not read the new schema hash"
+          exit 1
+        fi
+        sed -i "s/^const APPROVED_SCHEMA_FILE_HASH: &str = \"[0-9]*\";$/const APPROVED_SCHEMA_FILE_HASH: \&str = \"$hash\";/" \
+          crates/shared/src/schema_hash_approval.rs
+
     - run: cargo test -p wasm-bindgen-shared
 
     - name: Package release commit
       run: |
         set -euo pipefail
         git add -A
-        git diff --cached --name-only HEAD~1 | .github/release/check-paths.sh
+        .github/release/check-release.sh HEAD~1
         git diff --cached --binary HEAD~1 > "$RUNNER_TEMP/release.patch"
         mkdir release-pr
         mv "$RUNNER_TEMP/release.patch" "$RUNNER_TEMP/notes.md" release-pr/
@@ -242,7 +257,7 @@ jobs:
         set -euo pipefail
         dir=$RUNNER_TEMP/release-pr
         git apply --index "$dir/release.patch"
-        git diff --cached --name-only | .github/release/check-paths.sh
+        .github/release/check-release.sh HEAD
 
         user_id=$(gh api "/users/$APP_SLUG%5Bbot%5D" --jq .id)
         git config user.name "$APP_SLUG[bot]"

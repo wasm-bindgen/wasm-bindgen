@@ -754,12 +754,20 @@ jobs:
       with:
         name: gh-pages
         path: gh-pages.tar.gz
+    # Pushes to main don't cancel each other, so only deploy from the tip of
+    # main to keep an older run from overwriting newer pages.
+    - id: tip
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: |
+        if [ "$(git ls-remote origin refs/heads/main | cut -f1)" = "$GITHUB_SHA" ]; then
+          echo "deploy=true" >> "$GITHUB_OUTPUT"
+        fi
     - uses: JamesIves/github-pages-deploy-action@v4
       with:
         branch: gh-pages
         folder: gh-pages
         single-commit: true
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      if: steps.tip.outputs.deploy
     - if: startsWith(github.ref, 'refs/tags/')
       run: |
         awk -v h="## [$GITHUB_REF_NAME](" 'index($0, h) == 1 {f = 1; next} f && /^## /{exit} f' CHANGELOG.md \
