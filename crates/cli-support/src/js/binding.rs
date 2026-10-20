@@ -1722,7 +1722,12 @@ fn instruction(
             js.cx.expose_borrowed_objects();
             js.cx.expose_global_stack_pointer();
             let val = js.pop();
-            js.push_safe(format!("addBorrowedObject({val})"));
+            // Pushed before the `try` whose `finally` pops, so a throw while
+            // converting a later argument leaves the stack balanced.
+            let i = js.tmp();
+            writeln!(js.pre_try, "const borrow{i} = addBorrowedObject({val});").unwrap();
+            let borrow = js.local(format!("borrow{i}"));
+            js.push(borrow);
             js.finally("heap[stack_pointer++] = undefined;");
         }
 

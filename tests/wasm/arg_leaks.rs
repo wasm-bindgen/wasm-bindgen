@@ -33,6 +33,8 @@ extern "C" {
     fn rejected_in_js(memory: JsValue);
     #[wasm_bindgen(js_name = rejectedObjectInJs)]
     fn rejected_object_in_js();
+    #[wasm_bindgen(js_name = rejectedAfterBorrowedJs)]
+    fn rejected_after_borrowed_js();
     #[wasm_bindgen(catch, js_name = asyncBorrowsAtCall)]
     async fn async_borrows_at_call() -> Result<(), JsValue>;
 }
@@ -147,6 +149,14 @@ pub fn arg_leaks_object_u64(_o: ArgLeakObject, _n: u64) {}
 pub fn arg_leaks_owned_and_ref(_o: ArgLeakObject, _r: &ArgLeakObject) {}
 
 #[wasm_bindgen]
+pub fn arg_leaks_borrowed_js(_a: &JsValue, _s: String, _n: u64) {}
+
+#[wasm_bindgen]
+pub fn arg_leaks_null() -> JsValue {
+    JsValue::NULL
+}
+
+#[wasm_bindgen]
 pub fn arg_leaks_live_count() -> u32 {
     wasm_bindgen::externref_heap_live_count()
 }
@@ -214,4 +224,9 @@ fn rejected_in_js_frees_earlier_arguments() {
 #[wasm_bindgen_test]
 fn rejected_in_js_releases_objects() {
     rejected_object_in_js();
+}
+
+#[wasm_bindgen_test]
+fn rejected_after_borrowed_js_balances_stack() {
+    rejected_after_borrowed_js();
 }

@@ -150,3 +150,14 @@ exports.rejectedObjectInJs = () => {
     );
     assert.strictEqual(wasm.arg_leaks_drops() - drops, 3);
 };
+
+// Without reference types a borrowed `JsValue` lives on the JS heap's stack,
+// popped in a `finally`. A rejected later argument must not pop a slot that
+// was never pushed, which would walk the stack into the reserved
+// `undefined` and `null` slots.
+exports.rejectedAfterBorrowedJs = () => {
+    for (let i = 0; i < 3; i++) {
+        assert.throws(() => wasm.arg_leaks_borrowed_js({}, 'x', 1), /bigint/i);
+    }
+    assert.strictEqual(wasm.arg_leaks_null(), null);
+};
