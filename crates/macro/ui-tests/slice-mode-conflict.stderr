@@ -1,0 +1,95 @@
+error: cannot specify both `slice_to_array` and `slice`; use `slice = array`
+  --> ui-tests/slice-mode-conflict.rs:13:31
+   |
+13 |     fn per_arg(#[wasm_bindgen(slice_to_array, slice = copy)] xs: &[u8]);
+   |                               ^^^^^^^^^^^^^^
+
+error: cannot specify both `slice_to_array` and `slice`; use `slice = array`
+  --> ui-tests/slice-mode-conflict.rs:13:55
+   |
+13 |     fn per_arg(#[wasm_bindgen(slice_to_array, slice = copy)] xs: &[u8]);
+   |                                                       ^^^^
+
+error: cannot specify both `slice_to_array` and `slice`; use `slice = array`
+  --> ui-tests/slice-mode-conflict.rs:16:20
+   |
+16 |     #[wasm_bindgen(slice_to_array, slice = array)]
+   |                    ^^^^^^^^^^^^^^
+
+error: cannot specify both `slice_to_array` and `slice`; use `slice = array`
+  --> ui-tests/slice-mode-conflict.rs:16:44
+   |
+16 |     #[wasm_bindgen(slice_to_array, slice = array)]
+   |                                            ^^^^^
+
+error: unknown slice mode `borrow`; expected `slice = view`, `slice = array` or `slice = copy`
+  --> ui-tests/slice-mode-conflict.rs:20:28
+   |
+20 |     #[wasm_bindgen(slice = borrow)]
+   |                            ^^^^^^
+
+error: `slice = transfer` is reserved and not yet supported
+  --> ui-tests/slice-mode-conflict.rs:24:28
+   |
+24 |     #[wasm_bindgen(slice = transfer)]
+   |                            ^^^^^^^^
+
+error: `vec = view` is not supported: owned data is freed after the call, so JS always receives a copy; use `vec = copy` or `vec = array`
+  --> ui-tests/slice-mode-conflict.rs:28:38
+   |
+28 |     fn vec_view(#[wasm_bindgen(vec = view)] xs: Vec<u8>);
+   |                                      ^^^^
+
+error: unknown vec mode `borrow`; expected `vec = copy` or `vec = array`
+  --> ui-tests/slice-mode-conflict.rs:30:26
+   |
+30 |     #[wasm_bindgen(vec = borrow)]
+   |                          ^^^^^^
+
+error: cannot specify both `slice_to_array` and `slice`; use `slice = array`
+  --> ui-tests/slice-mode-conflict.rs:39:16
+   |
+39 | #[wasm_bindgen(slice_to_array, slice = copy)]
+   |                ^^^^^^^^^^^^^^
+
+error: cannot specify both `slice_to_array` and `slice`; use `slice = array`
+  --> ui-tests/slice-mode-conflict.rs:39:40
+   |
+39 | #[wasm_bindgen(slice_to_array, slice = copy)]
+   |                                        ^^^^
+
+error: `slice` only applies to arguments of imported JS functions
+  --> ui-tests/slice-mode-conflict.rs:48:20
+   |
+48 |     #[wasm_bindgen(slice = copy)] _xs: &[u8],
+   |                    ^^^^^
+
+error: `vec` only applies to arguments of imported JS functions
+  --> ui-tests/slice-mode-conflict.rs:49:20
+   |
+49 |     #[wasm_bindgen(vec = borrow)] _ys: Vec<u8>,
+   |                    ^^^
+
+error: `slice` only applies to arguments of imported JS functions
+  --> ui-tests/slice-mode-conflict.rs:54:16
+   |
+54 | #[wasm_bindgen(slice = copy)]
+   |                ^^^^^
+
+error: `vec` only applies to arguments of imported JS functions
+  --> ui-tests/slice-mode-conflict.rs:62:34
+   |
+62 |     pub fn method(#[wasm_bindgen(vec = array)] _xs: Vec<u8>) {}
+   |                                  ^^^
+
+error: `slice` only applies to arguments of imported JS functions
+  --> ui-tests/slice-mode-conflict.rs:64:20
+   |
+64 |     #[wasm_bindgen(slice = array)]
+   |                    ^^^^^
+
+error: `vec` only applies to arguments of imported JS functions
+  --> ui-tests/slice-mode-conflict.rs:68:16
+   |
+68 | #[wasm_bindgen(vec = copy)]
+   |                ^^^

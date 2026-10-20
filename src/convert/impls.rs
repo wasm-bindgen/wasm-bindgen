@@ -13,7 +13,7 @@ use crate::convert::{
 };
 use crate::sys::Promising;
 use crate::sys::{JsNullable, JsOption, Undefined};
-use crate::{Clamped, JsError, JsValue, UnwrapThrowExt};
+use crate::{throw_str, Clamped, JsError, JsValue};
 
 // Primitive types can always be passed over the ABI.
 impl<T: WasmPrimitive> WasmAbi for T {
@@ -856,6 +856,12 @@ impl UpcastFrom<JsError> for JsOption<JsValue> {}
 impl UpcastFrom<JsError> for JsNullable<JsValue> {}
 impl UpcastFrom<JsError> for JsError {}
 
+/// The compat form of an owned vector: an in-place sequence of `JsValue`
+/// handles, converted to or from `T` in Rust. The released `Vec<String>`,
+/// `Vec`s of exported structs and numeric enums, and third-party impls cross
+/// this way. It has no new uses: an element whose single value crosses
+/// without calling into wasm is declared as an encoded sequence instead.
+///
 /// # ⚠️ Unstable
 ///
 /// This is part of the internal [`convert`](crate::convert) module, **no
@@ -871,6 +877,9 @@ pub fn js_value_vector_into_abi<T: Into<JsValue>>(
     js_vals.into_abi()
 }
 
+/// The mirror of [`js_value_vector_into_abi`], checking each element with
+/// [`TryFromJsValue`].
+///
 /// # ⚠️ Unstable
 ///
 /// This is part of the internal [`convert`](crate::convert) module, **no
@@ -880,22 +889,15 @@ pub unsafe fn js_value_vector_from_abi<T: TryFromJsValue>(
     js: <Box<[JsValue]> as FromWasmAbi>::Abi,
 ) -> Box<[T]> {
     let js_vals = <Vec<JsValue> as FromWasmAbi>::from_abi(js);
-
-    let mut result = Vec::with_capacity(js_vals.len());
-    for value in js_vals {
-        // We push elements one-by-one instead of using `collect` in order to improve
-        // error messages. When using `collect`, this `expect_throw` is buried in a
-        // giant chain of internal iterator functions, which results in the actual
-        // function that takes this `Vec` falling off the end of the call stack.
-        // So instead, make sure to call it directly within this function.
-        //
-        // This is only a problem in debug mode. Since this is the browser's error stack
-        // we're talking about, it can only see functions that actually make it to the
-        // final Wasm binary (i.e., not inlined functions). All of those internal
-        // iterator functions get inlined in release mode, and so they don't show up.
-        result.push(
-            T::try_from_js_value(value).expect_throw("array contains a value of the wrong type"),
-        );
+    // A throw runs no destructors, so collecting stops at the first element of
+    // the wrong type and drops everything Rust owns first: the buffer, the
+    // handles not yet converted and the elements converted so far. `.ok()`
+    // drops the rejected handle too. Throwing directly here, rather than
+    // inside the iterator chain or a closure, keeps the function that took
+    // the `Vec` within the debug-mode error stack's frame limit.
+    let result: Result<Box<[T]>, JsValue> = js_vals.into_iter().map(T::try_from_js_value).collect();
+    match result.ok() {
+        Some(result) => result,
+        None => throw_str("array contains a value of the wrong type"),
     }
-    result.into_boxed_slice()
 }

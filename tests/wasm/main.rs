@@ -76,7 +76,9 @@ pub mod same_name_items;
 pub mod should_panic;
 pub mod simple;
 pub mod slice;
+pub mod slice_elements;
 pub mod slice_jsvalue;
+pub mod slice_modes;
 pub mod slice_to_array;
 pub mod string_vecs;
 pub mod struct_vecs;
@@ -88,6 +90,7 @@ pub mod unwind;
 pub mod usize;
 pub mod validate_prt;
 pub mod variadic;
+pub mod vec_elements;
 pub mod vendor_prefix;
 #[cfg(target_arch = "wasm64")]
 pub mod wasm64;

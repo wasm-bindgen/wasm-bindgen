@@ -1,5 +1,5 @@
 use crate::decode::{ImportModule, LocalModule};
-use crate::descriptor::{Descriptor, Function, GenericImportKey, ItemKind, ItemOrigin};
+use crate::descriptor::{Descriptor, Function, GenericImportKey, ItemKind, ItemOrigin, SeqValue};
 use crate::descriptors::WasmBindgenDescriptorsSection;
 use crate::intrinsic::Intrinsic;
 use crate::transforms::threads::ThreadCount;
@@ -146,6 +146,9 @@ struct InstructionBuilder<'a, 'b> {
     instructions: Vec<InstructionData>,
     cx: &'a mut Context<'b>,
     return_position: bool,
+    /// The mode of the `Descriptor::SeqMode` being lowered, read where the
+    /// typed sequence it wraps is materialised.
+    seq_value: SeqValue,
 }
 
 impl InstructionBuilder<'_, '_> {
@@ -2727,6 +2730,7 @@ impl<'a> Context<'a> {
             output: Vec::new(),
             instructions: Vec::new(),
             return_position,
+            seq_value: SeqValue::View,
         }
     }
 
@@ -3116,15 +3120,15 @@ mod tests {
         (module, mem)
     }
 
-    fn run_discover_main(module: &mut Module, memory: MemoryId) -> bool {
-        let mut cx = Context {
+    fn test_context(module: &mut Module, memory: Option<MemoryId>) -> Context<'_> {
+        Context {
             start_found: false,
             module,
             adapters: Default::default(),
             aux: Default::default(),
             function_exports: Default::default(),
             function_imports: Default::default(),
-            memory: Some(memory),
+            memory,
             vendor_prefixes: Default::default(),
             unique_crate_identifier: "",
             module_path: "",
@@ -3141,9 +3145,32 @@ mod tests {
             colliding_items: Default::default(),
             ambiguous_items: Default::default(),
             demangled_exports: Default::default(),
-        };
+        }
+    }
+
+    fn run_discover_main(module: &mut Module, memory: MemoryId) -> bool {
+        let mut cx = test_context(module, Some(memory));
         cx.discover_main().unwrap();
         cx.start_found
+    }
+
+    // Any sequence element that isn't in place is encoded, so the encoded
+    // glue is what must reject one it can't convert.
+    #[test]
+    fn unsupported_sequence_elements_are_rejected() {
+        let mut module = Module::default();
+        let mut cx = test_context(&mut module, None);
+        let vector = Descriptor::Vector(Box::new(Descriptor::Unit));
+        let err = cx.instruction_builder(false).outgoing(&vector).unwrap_err();
+        assert!(
+            err.to_string().contains("unsupported slice element type"),
+            "{err}"
+        );
+        let err = cx.instruction_builder(false).incoming(&vector).unwrap_err();
+        assert!(
+            err.to_string().contains("unsupported vector element type"),
+            "{err}"
+        );
     }
 
     /// Collect argv and argc constants.

@@ -127,22 +127,22 @@ export function __wbg_then_e71170d78fcf8954(arg0, arg1) {
 }
 export function __wbindgen_generic_0000000000000000(arg0, arg1) {
     // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [Externref], shim_idx: 10, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, wasm_bindgen_0000000000000005___convert__closures_____invoke___async_import_reftest_0000000000000007___Widget__core_0000000000000008___result__Result_____wasm_bindgen_0000000000000005___JsError___true_);
+    const ret = makeMutClosure(arg0, arg1, wasm_bindgen_0000000000000005___convert__closures_____invoke___wasm_bindgen_0000000000000005___JsValue__core_0000000000000007___result__Result_____wasm_bindgen_0000000000000005___JsError___true_);
     return ret;
 }
 export function __wbindgen_generic_0000000000000001(arg0, arg1) {
     // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [Externref], shim_idx: 11, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, wasm_bindgen_0000000000000005___convert__closures_____invoke___wasm_bindgen_0000000000000005___JsValue__core_0000000000000008___result__Result_____wasm_bindgen_0000000000000005___JsError___true_);
+    const ret = makeMutClosure(arg0, arg1, wasm_bindgen_0000000000000005___convert__closures_____invoke___async_import_reftest_0000000000000008___Widget__core_0000000000000007___result__Result_____wasm_bindgen_0000000000000005___JsError___true_);
     return ret;
 }
 export function __wbindgen_generic_0000000000000002(arg0, arg1) {
     // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [String], shim_idx: 12, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, wasm_bindgen_0000000000000005___convert__closures_____invoke___alloc_0000000000000009___string__String__core_0000000000000008___result__Result_____wasm_bindgen_0000000000000005___JsError___true_);
+    const ret = makeMutClosure(arg0, arg1, wasm_bindgen_0000000000000005___convert__closures_____invoke___alloc_0000000000000009___string__String__core_0000000000000007___result__Result_____wasm_bindgen_0000000000000005___JsError___true_);
     return ret;
 }
 export function __wbindgen_generic_0000000000000003(arg0, arg1) {
     // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [U32], shim_idx: 13, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
-    const ret = makeMutClosure(arg0, arg1, wasm_bindgen_0000000000000005___convert__closures_____invoke___u32__core_0000000000000008___result__Result_____wasm_bindgen_0000000000000005___JsError___true_);
+    const ret = makeMutClosure(arg0, arg1, wasm_bindgen_0000000000000005___convert__closures_____invoke___u32__core_0000000000000007___result__Result_____wasm_bindgen_0000000000000005___JsError___true_);
     return ret;
 }
 export function __wbindgen_generic_0000000000000004(arg0, arg1) {
@@ -164,15 +164,15 @@ function wasm_bindgen_0000000000000005___convert__closures_____invoke___bool__tr
     return ret !== 0;
 }
 
-function wasm_bindgen_0000000000000005___convert__closures_____invoke___async_import_reftest_0000000000000007___Widget__core_0000000000000008___result__Result_____wasm_bindgen_0000000000000005___JsError___true_(arg0, arg1, arg2) {
-    const ret = wasm.wasm_bindgen_0000000000000005___convert__closures_____invoke___async_import_reftest_0000000000000007___Widget__core_0000000000000008___result__Result_____wasm_bindgen_0000000000000005___JsError___true_(arg0, arg1, arg2);
+function wasm_bindgen_0000000000000005___convert__closures_____invoke___wasm_bindgen_0000000000000005___JsValue__core_0000000000000007___result__Result_____wasm_bindgen_0000000000000005___JsError___true_(arg0, arg1, arg2) {
+    const ret = wasm.wasm_bindgen_0000000000000005___convert__closures_____invoke___wasm_bindgen_0000000000000005___JsValue__core_0000000000000007___result__Result_____wasm_bindgen_0000000000000005___JsError___true_(arg0, arg1, arg2);
     if (ret[1]) {
         throw takeFromExternrefTable0(ret[0]);
     }
 }
 
-function wasm_bindgen_0000000000000005___convert__closures_____invoke___wasm_bindgen_0000000000000005___JsValue__core_0000000000000008___result__Result_____wasm_bindgen_0000000000000005___JsError___true_(arg0, arg1, arg2) {
-    const ret = wasm.wasm_bindgen_0000000000000005___convert__closures_____invoke___wasm_bindgen_0000000000000005___JsValue__core_0000000000000008___result__Result_____wasm_bindgen_0000000000000005___JsError___true_(arg0, arg1, arg2);
+function wasm_bindgen_0000000000000005___convert__closures_____invoke___async_import_reftest_0000000000000008___Widget__core_0000000000000007___result__Result_____wasm_bindgen_0000000000000005___JsError___true_(arg0, arg1, arg2) {
+    const ret = wasm.wasm_bindgen_0000000000000005___convert__closures_____invoke___async_import_reftest_0000000000000008___Widget__core_0000000000000007___result__Result_____wasm_bindgen_0000000000000005___JsError___true_(arg0, arg1, arg2);
     if (ret[1]) {
         throw takeFromExternrefTable0(ret[0]);
     }
@@ -182,17 +182,17 @@ function wasm_bindgen_0000000000000005___convert__closures_____invoke___js_sys_0
     wasm.wasm_bindgen_0000000000000005___convert__closures_____invoke___js_sys_0000000000000006___Function_fn_wasm_bindgen_0000000000000005___JsValue_____wasm_bindgen_0000000000000005___sys__Undefined___js_sys_0000000000000006___Function_fn_wasm_bindgen_0000000000000005___JsValue_____wasm_bindgen_0000000000000005___sys__Undefined_______true_(arg0, arg1, arg2, arg3);
 }
 
-function wasm_bindgen_0000000000000005___convert__closures_____invoke___u32__core_0000000000000008___result__Result_____wasm_bindgen_0000000000000005___JsError___true_(arg0, arg1, arg2) {
-    const ret = wasm.wasm_bindgen_0000000000000005___convert__closures_____invoke___u32__core_0000000000000008___result__Result_____wasm_bindgen_0000000000000005___JsError___true_(arg0, arg1, arg2);
+function wasm_bindgen_0000000000000005___convert__closures_____invoke___u32__core_0000000000000007___result__Result_____wasm_bindgen_0000000000000005___JsError___true_(arg0, arg1, arg2) {
+    const ret = wasm.wasm_bindgen_0000000000000005___convert__closures_____invoke___u32__core_0000000000000007___result__Result_____wasm_bindgen_0000000000000005___JsError___true_(arg0, arg1, arg2);
     if (ret[1]) {
         throw takeFromExternrefTable0(ret[0]);
     }
 }
 
-function wasm_bindgen_0000000000000005___convert__closures_____invoke___alloc_0000000000000009___string__String__core_0000000000000008___result__Result_____wasm_bindgen_0000000000000005___JsError___true_(arg0, arg1, arg2) {
+function wasm_bindgen_0000000000000005___convert__closures_____invoke___alloc_0000000000000009___string__String__core_0000000000000007___result__Result_____wasm_bindgen_0000000000000005___JsError___true_(arg0, arg1, arg2) {
     const ptr0 = passStringToWasm0(arg2, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.wasm_bindgen_0000000000000005___convert__closures_____invoke___alloc_0000000000000009___string__String__core_0000000000000008___result__Result_____wasm_bindgen_0000000000000005___JsError___true_(arg0, arg1, ptr0, len0);
+    const ret = wasm.wasm_bindgen_0000000000000005___convert__closures_____invoke___alloc_0000000000000009___string__String__core_0000000000000007___result__Result_____wasm_bindgen_0000000000000005___JsError___true_(arg0, arg1, ptr0, len0);
     if (ret[1]) {
         throw takeFromExternrefTable0(ret[0]);
     }

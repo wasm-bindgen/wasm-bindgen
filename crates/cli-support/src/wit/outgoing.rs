@@ -1,8 +1,8 @@
-use crate::descriptor::{Descriptor, Function};
+use crate::descriptor::{Descriptor, Function, SeqValue, SequenceCell, VectorKind};
 use crate::wasm_conventions::get_function_table_entry;
 use crate::wit::{AdapterType, ClosureDtor, Instruction, InstructionBuilder};
 use crate::wit::{InstructionData, StackChange};
-use anyhow::{bail, format_err, Error};
+use anyhow::{bail, Error};
 use walrus::{ExportId, ValType};
 use wasm_bindgen_shared::identifier::to_valid_ident;
 
@@ -107,7 +107,10 @@ impl InstructionBuilder<'_, '_> {
                 self.get(AdapterType::F64);
                 self.output.push(AdapterType::F64);
             }
-            Descriptor::Enum { name, .. } => self.outgoing_i32(AdapterType::Enum(name.clone())),
+            Descriptor::Enum { name, .. } => {
+                self.get(AdapterType::F64);
+                self.output.push(AdapterType::Enum(name.clone()));
+            }
             Descriptor::StringEnum { name, .. } => self.outgoing_string_enum(name),
             Descriptor::DynamicUnion { name, .. } => self.outgoing_dynamic_union(name)?,
 
@@ -165,12 +168,11 @@ impl InstructionBuilder<'_, '_> {
                 self.output.push(AdapterType::String);
             }
 
-            Descriptor::Vector(_) => {
-                let kind = arg.vector_kind().ok_or_else(|| {
-                    format_err!(
-                        "unsupported argument type for calling JS function from Rust {arg:?}"
-                    )
-                })?;
+            Descriptor::Vector(cell) => {
+                let kind = match cell.sequence_cell() {
+                    SequenceCell::InPlace(kind) => kind,
+                    SequenceCell::Encoded(elem) => return self.outgoing_encoded_slice(elem, false),
+                };
                 let mem = self.cx.memory()?;
                 let free = self.cx.free()?;
                 let ptr_ty = self.outgoing_internal_word_ty();
@@ -180,6 +182,7 @@ impl InstructionBuilder<'_, '_> {
                         kind: kind.clone(),
                         mem,
                         free,
+                        mode: self.seq_value,
                     },
                     &[AdapterType::Vector(kind)],
                 );
@@ -215,6 +218,16 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Closure(d) => {
                 self.outgoing_function(d.mutable, &d.function, Some(d.owned))?
             }
+
+            Descriptor::SeqMode(mode, d) => {
+                if let Err(reason) = d.seq_mode_fit(*mode) {
+                    bail!("`{mode:?}` can't apply to this argument: {reason}");
+                }
+                self.seq_value = mode.value;
+                let result = self.outgoing(d);
+                self.seq_value = SeqValue::View;
+                result?;
+            }
         }
         Ok(())
     }
@@ -245,12 +258,11 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::String],
                 );
             }
-            Descriptor::Slice(_) => {
-                let kind = arg.vector_kind().ok_or_else(|| {
-                    format_err!(
-                        "unsupported argument type for calling JS function from Rust {arg:?}"
-                    )
-                })?;
+            Descriptor::Slice(cell) => {
+                let kind = match cell.sequence_cell() {
+                    SequenceCell::InPlace(kind) => kind,
+                    SequenceCell::Encoded(elem) => return self.outgoing_encoded_slice(elem, false),
+                };
                 let mem = self.cx.memory()?;
                 let ptr_ty = self.outgoing_internal_word_ty();
                 self.instruction(
@@ -258,42 +270,7 @@ impl InstructionBuilder<'_, '_> {
                     Instruction::View {
                         kind: kind.clone(),
                         mem,
-                    },
-                    &[AdapterType::Vector(kind)],
-                );
-            }
-
-            // `slice_to_array` argument: the macro rewrites a user-facing
-            // `&[T]` into a `&Vec<T>` ABI call, which describes as
-            // `Ref(Vector(T))`. The JS-visible type is a plain `Array`
-            // rather than a typed array, so emit `VectorLoadAsArray`.
-            //
-            // Ownership depends on the element kind and is decided when
-            // the instruction is rendered (see `VectorLoadAsArray` in
-            // `js/binding.rs`): primitive elements are a *borrow* of the
-            // caller's slice and are never freed, while string/externref
-            // elements arrive in a freshly allocated index buffer that JS
-            // owns and must free.
-            //
-            // This arm is currently produced exclusively by the
-            // `slice_to_array` codegen (`&Box<[T]>` has no `IntoWasmAbi`
-            // impl, and `&Vec<T>` is not exposed as a user-writable
-            // argument type).
-            Descriptor::Vector(_) => {
-                let kind = arg.vector_kind().ok_or_else(|| {
-                    format_err!(
-                        "unsupported argument type for calling JS function from Rust {arg:?}"
-                    )
-                })?;
-                let mem = self.cx.memory()?;
-                let free = self.cx.free()?;
-                let ptr_ty = self.outgoing_internal_word_ty();
-                self.instruction(
-                    &[ptr_ty.clone(), ptr_ty],
-                    Instruction::VectorLoadAsArray {
-                        kind: kind.clone(),
-                        mem,
-                        free,
+                        mode: self.seq_value,
                     },
                     &[AdapterType::Vector(kind)],
                 );
@@ -451,8 +428,8 @@ impl InstructionBuilder<'_, '_> {
             }
             Descriptor::Enum { name, hole, .. } => {
                 self.instruction(
-                    &[AdapterType::I32],
-                    Instruction::OptionEnumFromI32 { hole: *hole },
+                    &[AdapterType::F64],
+                    Instruction::OptionEnumFromF64 { hole: *hole },
                     &[AdapterType::Enum(name.clone()).option()],
                 );
             }
@@ -483,11 +460,15 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::CachedString => self.cached_string(true)?,
 
             Descriptor::String | Descriptor::Vector(_) => {
-                let kind = arg.vector_kind().ok_or_else(|| {
-                    format_err!(
-                        "unsupported optional slice type for calling JS function from Rust {arg:?}"
-                    )
-                })?;
+                let kind = match arg {
+                    Descriptor::Vector(cell) => match cell.sequence_cell() {
+                        SequenceCell::InPlace(kind) => kind,
+                        SequenceCell::Encoded(elem) => {
+                            return self.outgoing_encoded_slice(elem, true)
+                        }
+                    },
+                    _ => VectorKind::String,
+                };
                 let mem = self.cx.memory()?;
                 let free = self.cx.free()?;
                 let ptr_ty = self.outgoing_internal_word_ty();
@@ -497,6 +478,7 @@ impl InstructionBuilder<'_, '_> {
                         kind: kind.clone(),
                         mem,
                         free,
+                        mode: self.seq_value,
                     },
                     &[AdapterType::Vector(kind).option()],
                 );
@@ -658,6 +640,7 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Function(_)
             | Descriptor::Closure(_)
             | Descriptor::Slice(_)
+            | Descriptor::SeqMode(..)
             | Descriptor::Result(_) => {
                 bail!("unsupported Result type for returning from exported Rust function: {arg:?}")
             }
@@ -685,11 +668,15 @@ impl InstructionBuilder<'_, '_> {
             }
             Descriptor::CachedString => self.cached_string(false)?,
             Descriptor::String | Descriptor::Slice(_) => {
-                let kind = arg.vector_kind().ok_or_else(|| {
-                    format_err!(
-                        "unsupported optional slice type for calling JS function from Rust {arg:?}"
-                    )
-                })?;
+                let kind = match arg {
+                    Descriptor::Slice(cell) => match cell.sequence_cell() {
+                        SequenceCell::InPlace(kind) => kind,
+                        SequenceCell::Encoded(elem) => {
+                            return self.outgoing_encoded_slice(elem, true)
+                        }
+                    },
+                    _ => VectorKind::String,
+                };
                 let mem = self.cx.memory()?;
                 let ptr_ty = self.outgoing_internal_word_ty();
                 self.instruction(
@@ -697,31 +684,7 @@ impl InstructionBuilder<'_, '_> {
                     Instruction::OptionView {
                         kind: kind.clone(),
                         mem,
-                    },
-                    &[AdapterType::Vector(kind).option()],
-                );
-            }
-            // `slice_to_array` for `Option<&[T]>`: same rewrite as the
-            // non-optional case yields `Option<&Vec<T>>` whose descriptor
-            // is `Option(Ref(Vector(T)))`. Same wire format as
-            // `Option<Vec<T>>` but produces a plain JS `Array` rather
-            // than a typed array for primitive element kinds. See the
-            // `Descriptor::Vector` arm in `outgoing_ref`.
-            Descriptor::Vector(_) => {
-                let kind = arg.vector_kind().ok_or_else(|| {
-                    format_err!(
-                        "unsupported optional vector type for calling JS function from Rust {arg:?}"
-                    )
-                })?;
-                let mem = self.cx.memory()?;
-                let free = self.cx.free()?;
-                let ptr_ty = self.outgoing_internal_word_ty();
-                self.instruction(
-                    &[ptr_ty.clone(), ptr_ty],
-                    Instruction::OptionVectorLoadAsArray {
-                        kind: kind.clone(),
-                        mem,
-                        free,
+                        mode: self.seq_value,
                     },
                     &[AdapterType::Vector(kind).option()],
                 );
@@ -730,6 +693,72 @@ impl InstructionBuilder<'_, '_> {
                 "unsupported optional ref argument type for calling JS function from Rust: {arg:?}"
             ),
         }
+        Ok(())
+    }
+
+    /// A sequence with encoded cells, borrowed or owned, is a buffer of its
+    /// elements' scalar ABIs. JS reads each element's ABI words from the
+    /// buffer and decodes them with the element's own instructions, as for an
+    /// argument of the element type.
+    fn outgoing_encoded_slice(&mut self, elem: &Descriptor, optional: bool) -> Result<(), Error> {
+        // `&[&str]` / `Vec<&str>`: the element is a reference, decoded as
+        // borrowed anyway.
+        let elem = match elem {
+            Descriptor::Ref(d) => &**d,
+            d => d,
+        };
+        let mut decode = InstructionBuilder {
+            input: Vec::new(),
+            output: Vec::new(),
+            instructions: Vec::new(),
+            cx: &mut *self.cx,
+            // The words are read from the buffer onto the stack, not fetched
+            // as arguments. This also types a pointer word as the `f64` that
+            // `WasmWord` is in memory on memory64, so the words' layout
+            // matches the Rust ABI types in the buffer.
+            return_position: true,
+            seq_value: SeqValue::View,
+        };
+        // Every element that isn't in place reaches here, so this is what
+        // rejects one the glue can't decode. Element decoders must neither call into wasm
+        // nor free: the glue reads the whole buffer through one view and frees
+        // it after the loop. That rules out owned elements, such as an owned
+        // string or a Rust struct.
+        match elem {
+            // `&[&JsString]`: the cell is the borrowed handle.
+            Descriptor::String
+            | Descriptor::CachedString
+            | Descriptor::Externref
+            | Descriptor::NamedExternref(_) => decode.outgoing_ref(false, elem)?,
+            Descriptor::Boolean
+            | Descriptor::Char
+            | Descriptor::Enum { .. }
+            | Descriptor::StringEnum { .. } => decode._outgoing(elem)?,
+            _ => {
+                bail!("unsupported slice element type for calling JS function from Rust: {elem:?}")
+            }
+        }
+        let InstructionBuilder {
+            input: words,
+            mut output,
+            instructions: elem,
+            ..
+        } = decode;
+        let array = AdapterType::Array(Box::new(output.remove(0)));
+        let mem = self.cx.memory()?;
+        let free = self.cx.free()?;
+        let ptr_ty = self.outgoing_internal_word_ty();
+        self.instruction(
+            &[ptr_ty.clone(), ptr_ty],
+            Instruction::EncodedSliceLoad {
+                words,
+                elem,
+                mem,
+                free,
+                optional,
+            },
+            &[if optional { array.option() } else { array }],
+        );
         Ok(())
     }
 

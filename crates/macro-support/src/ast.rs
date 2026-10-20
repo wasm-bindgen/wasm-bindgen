@@ -524,11 +524,51 @@ pub struct FunctionArgumentData {
     pub optional: bool,
     /// Specifies the argument description
     pub desc: Option<String>,
-    /// When set, an `&[T]` (or `Option<&[T]>`) argument is converted to a
-    /// freshly-allocated buffer the JS side observes as a plain `Array`
-    /// rather than a typed array. Only meaningful for outgoing arguments
-    /// (Rust calling JS); ignored on exported functions.
-    pub slice_to_array: bool,
+    /// The `slice = ..` / `vec = ..` modes on an imported function's
+    /// argument, written on it or inherited. Ignored on exported functions.
+    pub seq_modes: Vec<SeqMode>,
+}
+
+/// A sequence argument mode of an imported function. The key names the Rust
+/// shape it applies to and the value what JS receives. Only typed (numeric)
+/// elements have a choice: string and handle elements always reach JS as a
+/// fresh `Array`.
+#[cfg_attr(feature = "extra-traits", derive(Debug))]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub struct SeqMode {
+    pub key: SeqKey,
+    pub value: SeqValue,
+    /// Written on the argument rather than inherited, so the CLI validates it
+    /// against the argument's resolved type.
+    pub explicit: bool,
+}
+
+#[cfg_attr(feature = "extra-traits", derive(Debug))]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub enum SeqKey {
+    /// `slice = ..`: `&[T]`, `&mut [T]`, `Clamped<&[u8]>`, or an `Option` of
+    /// one.
+    Slice,
+    /// `vec = ..`: `Vec<T>`, `Box<[T]>`, `Clamped<Vec<u8>>`, or an `Option` of
+    /// one.
+    Vec,
+}
+
+#[cfg_attr(feature = "extra-traits", derive(Debug))]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub enum SeqValue {
+    /// A live typed array over wasm memory, the `slice` default.
+    // TODO(next major): make `Copy` the `slice` default. Bare `&mut [T]` then
+    // needs copying back after the call, which `check_mut_slice` rejects today.
+    View,
+    /// A fresh typed array, the `vec` default.
+    Copy,
+    /// A fresh plain `Array`.
+    Array,
+    /// The deprecated `slice_to_array`: `slice = array`, kept to its released
+    /// reach of `&[T]` and `Option<&[T]>`.
+    // TODO(next major): remove, along with the `slice_to_array` attribute.
+    SliceToArray,
 }
 
 /// Information about a Struct being exported

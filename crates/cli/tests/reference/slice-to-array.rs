@@ -1,14 +1,10 @@
 // Reference test for the `slice_to_array` attribute.
 //
-// `slice_to_array` keeps the user-facing argument type as `&[T]` while
-// rewriting the ABI path so the JS-visible type lands as a plain
-// `Array` rather than a typed array.
-//
-// Ownership depends on the element kind: for primitive elements the
-// wire is a *borrow* of the caller's slice and the typed-array view is
-// wrapped in `Array.from(...)` with no allocation and no free, while
-// string/externref elements arrive in a freshly allocated index buffer
-// that JS owns and frees.
+// `slice_to_array` keeps the user-facing argument type as `&[T]` and its
+// ABI, so the JS-visible type lands as a plain `Array` rather than a typed
+// array: for primitive elements the typed-array view of the caller's slice
+// is wrapped in `Array.from(...)`, with no allocation and no free, while
+// elements with no typed form are already a fresh `Array`.
 
 use wasm_bindgen::prelude::*;
 

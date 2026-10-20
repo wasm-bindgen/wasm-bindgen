@@ -13,14 +13,21 @@ exports.pass_enum_vec = () => {
     assert.strictEqual(wasm.consume_optional_enum_vec(undefined), undefined);
 };
 
+// Each element is checked as a single enum argument would be.
 exports.pass_invalid_enum_vec = () => {
-    let threw = false;
-    try {
-        wasm.consume_enum_vec(['not an enum value']);
-    } catch (e) {
-        threw = true;
-        assert.match(e.message, /array contains a value of the wrong type/);
-        assert.match(e.stack, /consume_enum_vec/);
+    for (const [vec, message] of [
+        [['not an enum value'], /expected a number argument/],
+        [[1.5], /invalid enum value passed/],
+        [[NaN], /invalid enum value passed/],
+    ]) {
+        let threw = false;
+        try {
+            wasm.consume_enum_vec(vec);
+        } catch (e) {
+            threw = true;
+            assert.match(e.message, message);
+            assert.match(e.stack, /consume_enum_vec/);
+        }
+        assert.ok(threw, `expected consume_enum_vec to throw on ${vec}`);
     }
-    assert.ok(threw, 'expected consume_enum_vec to throw on a non-numeric element');
 };
