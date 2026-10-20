@@ -75,8 +75,9 @@ everything a caller has to satisfy:
 
 These traits live in `wasm_bindgen::convert`. `WasmDescribe` is a supertrait of
 `IntoWasmAbi` and `FromWasmAbi`, so it never needs stating. `RefIntoWasmAbi`
-holds for every `T` with `for<'a> &'a T: IntoWasmAbi`, and stands in for that
-higher-ranked bound, which generic callers could not otherwise rely on. A trait
+holds for every type whose shared references cross the ABI, and is the bound
+generic callers forward for a `&T` argument. `MonoGeneric` bundles the
+argument, `&T` and return bounds into one for generic code. A trait
 whose supertraits include the right ABI trait satisfies the bound too, as with
 [`JsStringLike`](#string-bounds).
 
