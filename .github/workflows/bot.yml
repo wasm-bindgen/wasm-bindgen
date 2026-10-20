@@ -1,11 +1,9 @@
 name: wasm-bindgen-bot
 
-# Same-repo PRs use pull_request, since their authors already have write
-# access. Fork PRs use pull_request_target, which is safe because the bot only
-# reads PR content and never runs it.
+# PRs use pull_request_target, which is safe because the bot only reads PR
+# content and never runs it, and which, unlike pull_request, also runs for PRs
+# with merge conflicts.
 on:
-  pull_request:
-    types: [opened, ready_for_review, synchronize, labeled]
   pull_request_target:
     types: [opened, ready_for_review, synchronize, labeled]
   issues:
@@ -13,7 +11,7 @@ on:
   issue_comment:
     types: [created]
   # Only same-repo PRs, since GitHub gives fork PRs' review comment runs no
-  # secrets.
+  # secrets. Like approvals, these don't run on PRs with merge conflicts.
   pull_request_review_comment:
     types: [created]
   # Likewise same-repo only: a collaborator's approval enables auto-merge.
@@ -27,10 +25,7 @@ jobs:
     # Pushes to PRs by non-collaborators and commands from non-collaborators
     # are skipped by the analyze action, which checks repository roles.
     if: >-
-      (((github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name == github.repository) ||
-        (github.event_name == 'pull_request_target' &&
-          github.event.pull_request.head.repo.full_name != github.repository)) && (
+      (github.event_name == 'pull_request_target' && (
         (github.event.action == 'labeled' && startsWith(github.event.label.name, 'bot-')) ||
         (github.event.action != 'labeled' && !github.event.pull_request.draft &&
           github.event.pull_request.user.type != 'Bot'))) ||
