@@ -17,6 +17,20 @@ on:
   # Likewise same-repo only: a collaborator's approval enables auto-merge.
   pull_request_review:
     types: [submitted]
+  # Runs a command from the Actions tab.
+  workflow_dispatch:
+    inputs:
+      command:
+        description: Command to run
+        type: choice
+        options: [pr, investigate, triage, review, rebase]
+        default: pr
+      number:
+        description: Issue or PR number, optional for pr
+        required: false
+      request:
+        description: Instructions for the bot
+        required: false
 
 permissions: {}
 
@@ -40,13 +54,14 @@ jobs:
       (github.event_name == 'pull_request_review' &&
         github.event.review.state == 'approved' &&
         github.event.review.user.type != 'Bot' &&
-        github.event.pull_request.head.repo.full_name == github.repository)
+        github.event.pull_request.head.repo.full_name == github.repository) ||
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 100
     concurrency:
       # Comment and approval runs start before the bot checks who wrote them,
       # so they get their own group rather than cancelling reviews in progress.
-      group: wasm-bindgen-bot-${{ github.event.pull_request.number || github.event.issue.number }}${{ github.event.comment && format('-{0}', github.event.comment.id) || github.event.review && format('-review-{0}', github.event.review.id) || '' }}
+      group: wasm-bindgen-bot-${{ github.event.pull_request.number || github.event.issue.number || github.run_id }}${{ github.event.comment && format('-{0}', github.event.comment.id) || github.event.review && format('-review-{0}', github.event.review.id) || '' }}
       cancel-in-progress: true
     permissions:
       contents: read
