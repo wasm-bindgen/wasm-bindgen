@@ -1,6 +1,6 @@
 //! A shared reference to a primitive crosses to an import as the value.
 
-use wasm_bindgen::convert::IntoWasmAbi;
+use wasm_bindgen::convert::RefIntoWasmAbi;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
@@ -16,7 +16,7 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono, js_name = describe)]
     fn describe<T>(v: &T) -> String
     where
-        for<'a> &'a T: IntoWasmAbi;
+        T: RefIntoWasmAbi;
 }
 
 #[wasm_bindgen_test]
