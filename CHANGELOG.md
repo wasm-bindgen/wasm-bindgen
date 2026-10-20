@@ -128,8 +128,10 @@
   such as `String`, `bool` and `f64`, each crossing as itself. Writes take
   `&T`, so borrows still deref-coerce to the element type. `Array<T>`
   implements `From<Vec<T>>` and `From<&[T]>`, and `FromIterator` / `Extend`
-  collect `T` or `&T` items into a typed `Array<T>`. Generic callers state
-  the ABI bounds the methods now need.
+  collect `T` or `&T` items into a typed `Array<T>`. Writes are bounded by
+  `T: RefIntoWasmAbi` and reads by `FromWasmAbi`. `JsGeneric` now carries
+  these ABI traits as supertraits, so generic code bounded by `T: JsGeneric`
+  keeps working.
   [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
 
 * Shared references to primitives (`&bool`, `&char`, `&f64`, `&i64`, ...)
