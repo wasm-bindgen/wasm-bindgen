@@ -734,6 +734,10 @@ impl_tuple_upcast!([T1 T2 T3 T4 T5 T6 T7 T8] [Target1 Target2 Target3 Target4 Ta
 /// This is a shorthand for `ErasableGeneric<Repr = JsValue>`, used as a bound
 /// on generic parameters that must be representable as JavaScript values.
 ///
+/// It also carries the ABI conversion traits every such type implements, so
+/// generic code bounded by `JsGeneric` alone can pass `T` and `&T` to
+/// `experimental_generic_mono` imports.
+///
 /// # When to Use
 ///
 /// Use `JsGeneric` as a trait bound when you need a generic type that:
@@ -753,7 +757,7 @@ impl_tuple_upcast!([T1 T2 T3 T4 T5 T6 T7 T8] [Target1 Target2 Target3 Target4 Ta
 /// # Implementors
 ///
 /// This trait is automatically implemented for all types that implement
-/// `ErasableGeneric<Repr = JsValue>`, including:
+/// `ErasableGeneric<Repr = JsValue>` and cross the ABI as JS values, including:
 /// - All `js_sys` types (`Object`, `Array`, `Function`, etc.)
 /// - `JsValue` itself
 /// - Custom types imported via `#[wasm_bindgen]`
@@ -763,12 +767,24 @@ pub trait JsGeneric:
     + Upcast<Self>
     + Upcast<JsValue>
     + JsCast
+    + IntoWasmAbi
+    + FromWasmAbi
+    + OptionFromWasmAbi
+    + RefIntoWasmAbi
     + 'static
 {
 }
 
-impl<T: ErasableGeneric<Repr = JsValue> + UpcastFrom<T> + Upcast<JsValue> + JsCast + 'static>
-    JsGeneric for T
+impl<T> JsGeneric for T where
+    T: ErasableGeneric<Repr = JsValue>
+        + UpcastFrom<T>
+        + Upcast<JsValue>
+        + JsCast
+        + IntoWasmAbi
+        + FromWasmAbi
+        + OptionFromWasmAbi
+        + RefIntoWasmAbi
+        + 'static
 {
 }
 
