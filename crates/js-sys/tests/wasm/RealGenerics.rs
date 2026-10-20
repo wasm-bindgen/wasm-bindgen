@@ -109,6 +109,33 @@ fn array_of_handles() {
     assert_eq!(collected.get(1), Some(JsValue::from("b")));
 }
 
+// `JsGeneric` carries the element ABI bounds, so generic code bounded by it
+// alone can use the element APIs.
+fn round_trip<T: JsGeneric + Clone + PartialEq + core::fmt::Debug>(x: T, y: T) {
+    let a: Array<T> = Array::new_typed();
+    a.push(&x);
+    a.set(1, &y);
+    assert_eq!(a.get(0), Some(x.clone()));
+    assert!(a.includes(&y, 0));
+    assert_eq!(a.to_vec(), [x.clone(), y.clone()]);
+
+    let m: Map<T, T> = Map::new_typed();
+    m.set(&x, &y);
+    assert_eq!(m.get(&x), Some(y.clone()));
+    assert!(m.delete(&x));
+
+    let s: Set<T> = Set::new_typed();
+    s.add(&x).add(&x);
+    assert_eq!(s.size(), 1);
+    assert!(s.has(&x));
+}
+
+#[wasm_bindgen_test]
+fn js_generic_bound_covers_element_apis() {
+    round_trip(JsString::from("a"), JsString::from("b"));
+    round_trip(JsValue::from(1), JsValue::from("b"));
+}
+
 #[wasm_bindgen_test]
 fn js_string_like_arrays_reach_js_as_strings() {
     let owned: Array<String> = ["a", "b"].into_iter().map(String::from).collect();
