@@ -792,7 +792,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant)
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type Instant;
 
     /// The `Temporal.Instant()` constructor creates `Temporal.Instant` objects.
@@ -993,7 +993,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime)
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type PlainDateTime;
 
     /// The `Temporal.PlainDateTime()` constructor creates `Temporal.PlainDateTime` objects
@@ -1411,7 +1411,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime)
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type ZonedDateTime;
 
     /// The `Temporal.ZonedDateTime()` constructor creates `Temporal.ZonedDateTime` objects
@@ -1807,8 +1807,7 @@ extern "C" {
     /// given direction, or `None` if there is none.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `direction` is not set, and a `RangeError` if it
-    /// is invalid.
+    /// Throws a `RangeError` if `direction` is not set or is invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/getTimeZoneTransition)
     #[wasm_bindgen(method, js_name = getTimeZoneTransition, catch)]
@@ -1890,7 +1889,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration)
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type Duration;
 
     /// The `Temporal.Duration()` constructor creates `Temporal.Duration` objects.
@@ -2135,7 +2134,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime)
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type PlainTime;
 
     /// The `Temporal.PlainTime()` constructor creates `Temporal.PlainTime` objects.
@@ -2353,7 +2352,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth)
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type PlainYearMonth;
 
     /// The `Temporal.PlainYearMonth()` constructor creates `Temporal.PlainYearMonth` objects
@@ -2617,7 +2616,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay)
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type PlainMonthDay;
 
     /// The `Temporal.PlainMonthDay()` constructor creates `Temporal.PlainMonthDay` objects
@@ -2762,7 +2761,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate)
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Clone, Debug)]
     pub type PlainDate;
 
     /// The `Temporal.PlainDate()` constructor creates `Temporal.PlainDate` objects

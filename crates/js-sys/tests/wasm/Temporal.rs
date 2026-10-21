@@ -5,6 +5,7 @@ use wasm_bindgen_test::*;
 #[wasm_bindgen(module = "tests/wasm/Temporal.js")]
 extern "C" {
     fn is_temporal_supported() -> bool;
+    fn is_temporal_required() -> bool;
     fn get_test_instant() -> Temporal::Instant;
     fn get_test_zoned_date_time() -> Temporal::ZonedDateTime;
     fn get_test_plain_date_time() -> Temporal::PlainDateTime;
@@ -15,6 +16,14 @@ extern "C" {
     fn get_test_duration() -> Temporal::Duration;
     fn create_day_object(day: u32) -> JsValue;
     fn create_year_object(year: i32) -> JsValue;
+}
+
+#[wasm_bindgen_test]
+fn temporal_available_where_required() {
+    assert!(
+        is_temporal_supported() || !is_temporal_required(),
+        "Temporal is missing on a runtime that ships it, so the other tests are being skipped"
+    );
 }
 
 // ============================================================================
@@ -372,9 +381,10 @@ fn zoned_date_time_offset_and_transitions() {
     assert!(utc.get_time_zone_transition(&opts).unwrap().is_none());
 
     // `direction` is required
-    assert!(zdt
+    let err = zdt
         .get_time_zone_transition(&Temporal::TimeZoneTransitionOptions::new())
-        .is_err());
+        .unwrap_err();
+    assert!(err.is_instance_of::<RangeError>());
 }
 
 #[wasm_bindgen_test]
