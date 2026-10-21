@@ -75,6 +75,7 @@ let f: Function<fn(String, u32) -> String> =
     Function::new_with_args_typed("s, n", "return s.repeat(n)");
 assert_eq!(f.call(&JsValue::NULL, (&"ab".into(), &2))?, "abab");
 
+let a: Array<String> = ["a", "bb"].into_iter().map(String::from).collect();
 let lengths: Array<u32> = a.map(&mut |s: String, _, _| s.len() as u32);
 let pair: ArrayTuple<(String, u32)> = ArrayTuple::new2(&"a".into(), &1);
 assert_eq!(pair.into_tuple(), ("a".to_string(), 1));

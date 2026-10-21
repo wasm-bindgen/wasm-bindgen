@@ -280,13 +280,16 @@
   parameter defaults. A generic callback return in a `Result`, as in
   `Promise::then`, `Array::try_map` and `Array::try_reduce`, needs
   `Result<R, JsError>: ReturnWasmAbi` stated by generic callers bounding `R`
-  by `MonoGeneric`, which `R: JsGeneric` implies.
+  by `MonoGeneric`, which `R: JsGeneric` implies. `Array::from_iterable_map`
+  and `from_async_map` bound their input by `RefIntoWasmAbi` and its items by
+  `FromWasmAbi`, `Generator::next` and `return_` bound `T` by `RefIntoWasmAbi`,
+  and `Promise::catch` / `catch_map` pass the rejection reason as `JsValue`.
   [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
 
 * `JsGeneric` now has `MonoGeneric`, `OptionFromWasmAbi` and
-  `VectorRefIntoWasmAbi` as supertraits, and bounds its `IntoWasmAbi::Abi` to a
-  single-value ABI, so generic code bounded only by `T: JsGeneric` can call the `experimental_generic_mono` element APIs. This
-  applies without `js_sys_unstable_apis`. As `IntoWasmAbi`, `FromWasmAbi` and
+  `VectorRefIntoWasmAbi` as supertraits, and bounds its `IntoWasmAbi::Abi` to
+  fit a `Result` return, so generic code bounded only by `T: JsGeneric` can
+  call the `experimental_generic_mono` element APIs. This applies without `js_sys_unstable_apis`. As `IntoWasmAbi`, `FromWasmAbi` and
   `RefIntoWasmAbi` each declare an `Abi` type, `T::Abi` under a `JsGeneric`
   bound is now ambiguous and needs writing as `<T as IntoWasmAbi>::Abi`.
   `Promising` is now implemented for `&T` where `T: Promising`, and for
