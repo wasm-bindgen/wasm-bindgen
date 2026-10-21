@@ -1176,7 +1176,9 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, js_name = forEach, experimental_generic_mono)]
-    pub fn for_each<T: FromWasmAbi>(this: &Array<T>, callback: &mut dyn FnMut(T, u32, Array<T>));
+    pub fn for_each<T>(this: &Array<T>, callback: &mut dyn FnMut(T, u32, Array<T>))
+    where
+        T: FromWasmAbi;
 
     /// The `forEach()` method executes a provided function once for each array element. _(Fallible variation)_
     ///
@@ -1634,7 +1636,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = reduceRight, catch, experimental_generic_mono)]
     pub fn try_reduce_right<T, A>(
         this: &Array<T>,
-        predicate: &mut dyn FnMut(JsValue, T, u32) -> Result<A, JsError>,
+        predicate: &mut dyn FnMut(A, T, u32) -> Result<A, JsError>,
         initial_value: &A,
     ) -> Result<A, JsValue>
     where
@@ -7406,11 +7408,16 @@ extern "C" {
         callback: &mut dyn FnMut(V, K) -> Result<(), JsError>,
     ) -> Result<(), JsValue>;
 
+    /// The `forEach()` method executes a provided function once per each
+    /// key/value pair in the Map object, in insertion order. _(Fallible variation)_
+    /// Note that in Javascript land the `Key` and `Value` are reversed compared to normal expectations:
+    /// # Examples
+    /// ```
+    /// let js_map = Map::new();
+    /// js_map.for_each(&mut |value, key| {
     ///     // Do something here...
     /// })
     /// ```
-    ///
-    /// **Note:** Consider using [`Map::try_for_each`] if the callback might throw an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/forEach)
     #[cfg(js_sys_unstable_apis)]
@@ -16760,10 +16767,9 @@ extern "C" {
     #[wasm_bindgen(method, js_name = catch, experimental_generic_mono)]
     pub fn catch<'a, T, R: Promising>(
         this: &Promise<T>,
-        cb: &ScopedClosure<'a, dyn FnMut(T) -> Result<R, JsError>>,
+        cb: &ScopedClosure<'a, dyn FnMut(JsValue) -> Result<R, JsError>>,
     ) -> Promise<R::Resolution>
     where
-        T: FromWasmAbi,
         Result<R, JsError>: ReturnWasmAbi;
 
     // Next major: deprecate
@@ -16780,10 +16786,9 @@ extern "C" {
     #[wasm_bindgen(method, js_name = catch, experimental_generic_mono)]
     pub fn catch_map<'a, T, R: Promising>(
         this: &Promise<T>,
-        cb: &ScopedClosure<'a, dyn FnMut(T) -> Result<R, JsError>>,
+        cb: &ScopedClosure<'a, dyn FnMut(JsValue) -> Result<R, JsError>>,
     ) -> Promise<R::Resolution>
     where
-        T: FromWasmAbi,
         Result<R, JsError>: ReturnWasmAbi;
 
     /// The `then()` method returns a `Promise`. It takes up to two arguments:
@@ -16917,7 +16922,7 @@ impl<T> Promising for Promise<T> {
 /// Internal: maps a tuple of `Promise<T_i>` to the result shapes of
 /// [`Promise::all_tuple`] and [`Promise::all_settled_tuple`].
 ///
-/// Implemented for every tuple arity 1..=8 of `Promise<T: JsGeneric>`. The
+/// Implemented for every tuple arity 1..=8 of `Promise<T>`. The
 /// associated `Joined` / `Settled` types pin down the [`ArrayTuple`] shape
 /// of the result so the one [`JsCast::unchecked_into`] needed to reinterpret
 /// the [`Array<JsValue>`] returned by `Promise.all` / `Promise.allSettled`
@@ -16988,9 +16993,8 @@ macro_rules! impl_promise_tuple {
 
     (@impl $bound:ident [$($T:ident)+] [$($idx:tt)+]) => {
         // Rust tuple of `Promise<T_i>`. Builds the heterogeneous
-        // `ArrayTuple` of promises via the existing `From<(...)>` impl
-        // (each element upcasts through `JsGeneric`), then delegates to
-        // the `ArrayTuple` impl below.
+        // `ArrayTuple` of promises via the existing `From<(...)>` impl,
+        // then delegates to the `ArrayTuple` impl below.
         impl<$($T: $bound),+> PromiseTuple for ($(Promise<$T>,)+) {
             type Joined = ArrayTuple<($($T,)+)>;
             type Settled = ArrayTuple<($(PromiseState<$T>,)+)>;
