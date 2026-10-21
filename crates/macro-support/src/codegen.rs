@@ -529,18 +529,7 @@ impl ToTokens for ast::Struct {
                 // `allow_delayed` is whether it's ok to not actually free the `ptr` immediately
                 // if it's still borrowed.
                 pub unsafe extern "C-unwind" fn #free_fn(ptr: #class_abi, allow_delayed: u32) {
-                    use #wasm_bindgen::__rt::alloc::rc::Rc;
-
-                    if allow_delayed != 0 {
-                        // Just drop the implicit `Rc` owned by JS, and then if the value is still
-                        // referenced it'll be kept alive by its other `Rc`s.
-                        let ptr = ptr.into_ptr();
-                        #wasm_bindgen::__rt::assert_not_null(ptr);
-                        drop(Rc::from_raw(ptr));
-                    } else {
-                        // Claim ownership of the value, which will panic if it's borrowed.
-                        let _ = <#name as #wasm_bindgen::convert::FromWasmAbi>::from_abi(ptr);
-                    }
+                    #wasm_bindgen::__rt::free_rust_object(ptr.into_ptr(), allow_delayed != 0);
                 }
                 }
             };

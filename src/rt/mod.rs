@@ -496,6 +496,27 @@ pub unsafe fn take_rust_object<T>(ptr: *mut WasmRefCell<T>) -> Result<T, &'stati
     }
 }
 
+/// Releases the pointer JS held to an exported Rust object, dropping the
+/// object in place unless a borrow still holds it, in which case it's dropped
+/// once the borrow ends. `free()` reports that as an error, while finalization
+/// and consuming a borrowed `self` accept it as `allow_delayed`.
+///
+/// # Safety
+///
+/// `ptr` must be null or a pointer from `Rc::into_raw` that the caller owns.
+#[inline]
+pub unsafe fn free_rust_object<T>(ptr: *mut WasmRefCell<T>, allow_delayed: bool) {
+    if ptr.is_null() {
+        throw_null();
+    }
+    let rc = Rc::from_raw(ptr);
+    let unique = Rc::strong_count(&rc) == 1;
+    drop(rc);
+    if !unique && !allow_delayed {
+        super::throw_str(OWNERSHIP_ERROR);
+    }
+}
+
 /// Borrows an exported Rust object for the duration of a call, holding a
 /// strong count of its own once the borrow succeeds.
 ///
