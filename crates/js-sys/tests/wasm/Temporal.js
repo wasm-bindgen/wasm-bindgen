@@ -42,3 +42,9 @@ exports.create_day_object = function (day) {
 exports.create_year_object = function (year) {
     return { year: year };
 };
+
+// Node 26 ships Temporal, so a missing global there means the tests are
+// being skipped rather than Temporal being unavailable.
+exports.is_temporal_required = function () {
+    return typeof process === 'object' && parseInt(process.versions.node) >= 26;
+};
