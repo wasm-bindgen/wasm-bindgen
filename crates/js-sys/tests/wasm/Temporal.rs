@@ -26,6 +26,66 @@ fn temporal_available_where_required() {
     );
 }
 
+#[wasm_bindgen_test]
+fn to_locale_string() {
+    if !is_temporal_supported() {
+        return;
+    }
+    let en_us = [JsString::from("en-US")];
+    let pd = get_test_plain_date();
+    let opts = Intl::DateTimeFormatOptions::new();
+    assert_eq!(pd.to_locale_string(&en_us, &opts).unwrap(), "6/15/2022");
+
+    opts.set_time_zone("UTC");
+    assert_eq!(
+        get_test_instant().to_locale_string(&en_us, &opts).unwrap(),
+        "6/15/2022, 12:30:45 PM"
+    );
+    assert_eq!(
+        get_test_plain_time()
+            .to_locale_string(&en_us, &Intl::DateTimeFormatOptions::new())
+            .unwrap(),
+        "12:30:45 PM"
+    );
+
+    // An ISO year-month cannot be formatted in the locale's Gregorian calendar
+    let pym = get_test_plain_year_month();
+    let err = pym
+        .to_locale_string(&en_us, &Intl::DateTimeFormatOptions::new())
+        .unwrap_err();
+    assert!(err.is_instance_of::<RangeError>());
+    assert!(
+        pym.to_locale_string(
+            &[JsString::from("en-US-u-ca-iso8601")],
+            &Intl::DateTimeFormatOptions::new()
+        )
+        .unwrap()
+        .length()
+            > 0
+    );
+
+    // A `timeZone` option conflicts with a ZonedDateTime's own time zone
+    let err = get_test_zoned_date_time()
+        .to_locale_string(&en_us, &opts)
+        .unwrap_err();
+    assert!(err.is_instance_of::<TypeError>());
+
+    // Invalid language tag
+    let err = pd
+        .to_locale_string(
+            &[JsString::from("en_US")],
+            &Intl::DateTimeFormatOptions::new(),
+        )
+        .unwrap_err();
+    assert!(err.is_instance_of::<RangeError>());
+
+    let dur = get_test_duration();
+    let s = dur
+        .to_locale_string(&en_us, &Intl::DurationFormatOptions::new())
+        .unwrap();
+    assert!(s.length() > 0);
+}
+
 // ============================================================================
 // Temporal.Now tests
 // ============================================================================

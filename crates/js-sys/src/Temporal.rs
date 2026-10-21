@@ -951,13 +951,18 @@ extern "C" {
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this instant.
     ///
+    /// # Errors
+    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
+    /// not match this value's calendar, and a `TypeError` for options that do not
+    /// apply to this type.
+    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/toLocaleString)
-    #[wasm_bindgen(method, js_name = toLocaleString)]
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string(
         this: &Instant,
         locales: &[JsString],
         options: &super::Intl::DateTimeFormatOptions,
-    ) -> JsString;
+    ) -> Result<JsString, JsValue>;
 
     /// The `toJSON()` method returns a string representation of this instant suitable
     /// for JSON serialization.
@@ -1368,13 +1373,18 @@ extern "C" {
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this date-time.
     ///
+    /// # Errors
+    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
+    /// not match this value's calendar, and a `TypeError` for options that do not
+    /// apply to this type.
+    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/toLocaleString)
-    #[wasm_bindgen(method, js_name = toLocaleString)]
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string(
         this: &PlainDateTime,
         locales: &[JsString],
         options: &super::Intl::DateTimeFormatOptions,
-    ) -> JsString;
+    ) -> Result<JsString, JsValue>;
 
     /// The `toJSON()` method returns a string representation of this date-time suitable
     /// for JSON serialization.
@@ -1847,13 +1857,18 @@ extern "C" {
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this zoned date-time.
     ///
+    /// # Errors
+    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
+    /// not match this value's calendar, and a `TypeError` for options that do not
+    /// apply to this type.
+    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/toLocaleString)
-    #[wasm_bindgen(method, js_name = toLocaleString)]
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string(
         this: &ZonedDateTime,
         locales: &[JsString],
         options: &super::Intl::DateTimeFormatOptions,
-    ) -> JsString;
+    ) -> Result<JsString, JsValue>;
 
     /// The `toJSON()` method returns a string representation of this zoned date-time
     /// suitable for JSON serialization.
@@ -2092,13 +2107,18 @@ extern "C" {
     ///
     /// `options` are `Intl.DurationFormat` options.
     ///
+    /// # Errors
+    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
+    /// not match this value's calendar, and a `TypeError` for options that do not
+    /// apply to this type.
+    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/toLocaleString)
-    #[wasm_bindgen(method, js_name = toLocaleString)]
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string(
         this: &Duration,
         locales: &[JsString],
         options: &super::Intl::DurationFormatOptions,
-    ) -> JsString;
+    ) -> Result<JsString, JsValue>;
 
     /// The `toJSON()` method returns a string representation of this duration
     /// suitable for JSON serialization (same as `toString()`).
@@ -2308,13 +2328,18 @@ extern "C" {
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this time.
     ///
+    /// # Errors
+    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
+    /// not match this value's calendar, and a `TypeError` for options that do not
+    /// apply to this type.
+    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/toLocaleString)
-    #[wasm_bindgen(method, js_name = toLocaleString)]
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string(
         this: &PlainTime,
         locales: &[JsString],
         options: &super::Intl::DateTimeFormatOptions,
-    ) -> JsString;
+    ) -> Result<JsString, JsValue>;
 
     /// The `toJSON()` method returns a string representation of this time
     /// suitable for JSON serialization.
@@ -2573,13 +2598,18 @@ extern "C" {
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this year-month.
     ///
+    /// # Errors
+    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
+    /// not match this value's calendar, and a `TypeError` for options that do not
+    /// apply to this type.
+    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/toLocaleString)
-    #[wasm_bindgen(method, js_name = toLocaleString)]
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string(
         this: &PlainYearMonth,
         locales: &[JsString],
         options: &super::Intl::DateTimeFormatOptions,
-    ) -> JsString;
+    ) -> Result<JsString, JsValue>;
 
     /// The `toJSON()` method returns a string representation of this year-month
     /// suitable for JSON serialization.
@@ -2718,13 +2748,18 @@ extern "C" {
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this month-day.
     ///
+    /// # Errors
+    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
+    /// not match this value's calendar, and a `TypeError` for options that do not
+    /// apply to this type.
+    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/toLocaleString)
-    #[wasm_bindgen(method, js_name = toLocaleString)]
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string(
         this: &PlainMonthDay,
         locales: &[JsString],
         options: &super::Intl::DateTimeFormatOptions,
-    ) -> JsString;
+    ) -> Result<JsString, JsValue>;
 
     /// The `toJSON()` method returns a string representation of this month-day
     /// suitable for JSON serialization.
@@ -3061,13 +3096,18 @@ extern "C" {
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this date.
     ///
+    /// # Errors
+    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
+    /// not match this value's calendar, and a `TypeError` for options that do not
+    /// apply to this type.
+    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toLocaleString)
-    #[wasm_bindgen(method, js_name = toLocaleString)]
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string(
         this: &PlainDate,
         locales: &[JsString],
         options: &super::Intl::DateTimeFormatOptions,
-    ) -> JsString;
+    ) -> Result<JsString, JsValue>;
 
     /// The `toJSON()` method returns a string representation of this date
     /// suitable for JSON serialization.
