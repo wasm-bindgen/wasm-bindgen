@@ -2,7 +2,7 @@
 //! crossing as itself at each instantiation.
 
 use js_sys::*;
-use wasm_bindgen::convert::{FromWasmAbi, VectorRefIntoWasmAbi};
+use wasm_bindgen::convert::{FromWasmAbi, ReturnWasmAbi, VectorRefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::{JsStringLike, MonoGeneric};
 use wasm_bindgen_futures::JsFuture;
@@ -419,7 +419,7 @@ async fn promise_tuples_of_rust_types() {
         .await
         .unwrap()
         .into_tuple();
-    assert!(s.is_fulfilled());
+    assert_eq!(s.get_value(), Some(true));
 }
 
 fn tuple_generic<T: JsGeneric + Clone + PartialEq + core::fmt::Debug>(x: T, y: T) {
@@ -623,4 +623,155 @@ fn generic_bounds_cover_array_callbacks() {
     callbacks_mono(String::from("a"), String::from("b"));
     callbacks_mono(1u32, 2u32);
     callbacks_mono(JsString::from("a"), JsString::from("b"));
+}
+
+#[wasm_bindgen_test]
+async fn promise_callbacks_of_rust_types() {
+    let doubled = Closure::new(|n: u32| Ok(n * 2));
+    let p: Promise<u32> = Promise::resolve(21u32).then(&doubled);
+    assert_eq!(p.await.unwrap(), 42);
+
+    let len = Closure::new(|s: String| Ok(s.len() as f64));
+    let p: Promise<f64> = Promise::resolve("abc").then_map(&len);
+    assert_eq!(p.await.unwrap(), 3.0);
+
+    let on_ok = Closure::new(|s: String| Ok(s + "!"));
+    let on_err = Closure::new(|_: JsValue| Ok("err".to_string()));
+    let p: Promise<String> = Promise::resolve("ok").then_with_reject(&on_ok, &on_err);
+    assert_eq!(p.await.unwrap(), "ok!");
+    let rejected: Promise<String> = Promise::reject(&"bad".into());
+    let p: Promise<String> = rejected.then_with_reject(&on_ok, &on_err);
+    assert_eq!(p.await.unwrap(), "err");
+
+    let recover = Closure::new(|reason: JsValue| Ok(reason.as_string().unwrap().len() as u32));
+    let rejected: Promise<JsValue> = Promise::reject(&"bad".into());
+    let p: Promise<u32> = rejected.catch(&recover);
+    assert_eq!(p.await.unwrap(), 3);
+    let rejected: Promise<JsValue> = Promise::reject(&"four".into());
+    let p: Promise<u32> = rejected.catch_map(&recover);
+    assert_eq!(p.await.unwrap(), 4);
+
+    let fail = Closure::new(|_: String| Err::<u32, _>(JsError::new("no")));
+    assert!(Promise::resolve("x").then(&fail).await.is_err());
+
+    let (state,) = Promise::all_settled_tuple((Promise::resolve(true),))
+        .await
+        .unwrap()
+        .into_tuple();
+    assert_eq!(state.get_value(), Some(true));
+    assert_eq!(Result::from(state), Ok(true));
+}
+
+#[wasm_bindgen(module = "tests/wasm/RealGenerics.js")]
+extern "C" {
+    #[wasm_bindgen(js_name = echoGenerator)]
+    fn echo_generator() -> Generator<String>;
+    #[wasm_bindgen(js_name = echoAsyncGenerator)]
+    fn echo_async_generator() -> AsyncGenerator<u32>;
+}
+
+#[wasm_bindgen_test]
+async fn generators_of_rust_types() {
+    let g = echo_generator();
+    assert_eq!(g.next(&"ignored".into()).unwrap().value(), "start");
+    assert_eq!(g.next(&"a".into()).unwrap().value(), "a");
+    assert_eq!(g.next_iterator(&"b".into()).unwrap().value(), "b");
+    let done = g.return_(&"end".into()).unwrap();
+    assert!(done.done());
+    assert_eq!(done.value(), "end");
+    assert!(g.try_return(&"again".into()).unwrap().done());
+
+    let g = echo_async_generator();
+    assert_eq!(g.next(&0).unwrap().await.unwrap().value(), 0);
+    assert_eq!(g.next(&7).unwrap().await.unwrap().value(), 7);
+    let done = g.return_(&9).unwrap().await.unwrap();
+    assert!(done.done());
+    assert_eq!(done.value(), 9);
+}
+
+#[wasm_bindgen_test]
+fn keyed_collections_of_rust_types() {
+    let m: Map<String, u32> = Map::new_typed();
+    m.set(&"a".into(), &1).set(&"b".into(), &2);
+    assert_eq!(m.get_checked(&"b".into()), Some(2));
+    assert_eq!(m.get_checked(&"z".into()), None);
+    let mut total = 0;
+    m.try_for_each(&mut |v, k: String| {
+        total += v + k.len() as u32;
+        Ok(())
+    })
+    .unwrap();
+    assert_eq!(total, 5);
+
+    let s: Set<f64> = Set::new_from_items(&[1.5, 2.5]);
+    let mut sum = 0.0;
+    s.try_for_each(&mut |v| {
+        sum += v;
+        Ok(())
+    })
+    .unwrap();
+    assert_eq!(sum, 4.0);
+    assert!(s.try_for_each(&mut |_| Err(JsError::new("no"))).is_err());
+
+    let obj: Object<String> = Object::new_typed();
+    assert!(Reflect::set_str(&obj, &"k".into(), &"v".into()).unwrap());
+    assert_eq!(
+        Reflect::get_str(&obj, &"k".into()).unwrap().as_deref(),
+        Some("v")
+    );
+    assert_eq!(Reflect::get_str(&obj, &"missing".into()).unwrap(), None);
+
+    let wm: WeakMap<Object, String> = WeakMap::new();
+    let key = Object::new();
+    wm.set(&key, &"v".into());
+    assert_eq!(wm.get(&key).as_deref(), Some("v"));
+    assert_eq!(wm.get_checked(&Object::new()), None);
+    let wm: WeakMap<Object, u32> = WeakMap::new_typed();
+    wm.set(&key, &3);
+    assert_eq!(wm.get_checked(&key), Some(3));
+    assert!(wm.has(&key));
+}
+
+// A generic callback return states its `Result` ABI bound, as a mono
+// callback's return crosses at its own ABI.
+async fn promise_generic<T>(x: T)
+where
+    T: JsGeneric + Promising<Resolution = T> + Clone + PartialEq + core::fmt::Debug,
+    Result<T, JsError>: ReturnWasmAbi,
+{
+    let identity = Closure::new(|v: T| Ok(v));
+    let p: Promise<T> = Promise::new(&mut |resolve, _| {
+        resolve.call1(&JsValue::NULL, &x).unwrap();
+    });
+    assert_eq!(p.then(&identity).await.unwrap(), x);
+    let wm: WeakMap<Object, T> = WeakMap::new_typed();
+    let key = Object::new();
+    wm.set(&key, &x);
+    assert_eq!(wm.get_checked(&key), Some(x));
+}
+
+async fn promise_mono<T>(x: T)
+where
+    T: MonoGeneric + Promising<Resolution = T> + Clone + PartialEq + core::fmt::Debug,
+    Option<T>: FromWasmAbi,
+    Result<T, JsError>: ReturnWasmAbi,
+{
+    let identity = Closure::new(|v: T| Ok(v));
+    let p: Promise<T> = Promise::resolve(x.clone()).then(&identity);
+    assert_eq!(p.await.unwrap(), x);
+    let m: Map<T, T> = Map::new_typed();
+    m.set(&x, &x);
+    assert_eq!(m.get_checked(&x), Some(x.clone()));
+    let wm: WeakMap<Object, T> = WeakMap::new_typed();
+    let key = Object::new();
+    wm.set(&key, &x);
+    assert_eq!(wm.get_checked(&key), Some(x));
+}
+
+#[wasm_bindgen_test]
+async fn generic_bounds_cover_promise_and_keyed_apis() {
+    promise_generic(JsString::from("a")).await;
+    promise_mono(String::from("a")).await;
+    promise_mono(1u32).await;
+    promise_mono(JsString::from("b")).await;
 }
