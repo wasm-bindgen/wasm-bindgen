@@ -520,9 +520,9 @@ fn array_fallible_callbacks_of_rust_types() {
         6
     );
     assert_eq!(
-        a.try_reduce_right(&mut |_, s, _| Ok(s), &String::new())
+        a.try_reduce_right(&mut |acc, s, _| Ok(acc + s.as_str()), &String::new())
             .unwrap(),
-        "a"
+        "cccbba"
     );
     let chars: Array<String> = a
         .try_flat_map(&mut |s, _| s.chars().map(String::from).collect())
@@ -606,6 +606,11 @@ fn callbacks_generic<T: JsGeneric + Clone + PartialEq + core::fmt::Debug>(x: T, 
     let copied: Array<T> = a.map(&mut |v, _, _| v);
     assert_eq!(copied.to_vec(), [x.clone(), y.clone()]);
     assert_eq!(a.reduce(&mut |_, v, _, _| v, &x), y);
+    let copied: Array<T> = a.try_map(&mut |v, _| Ok(v)).unwrap();
+    assert_eq!(copied.to_vec(), [x.clone(), y.clone()]);
+    assert_eq!(a.try_reduce(&mut |_, v, _| Ok(v), &x).unwrap(), y);
+    let copied: Array<T> = Array::from_iterable_map(&a, &mut |v: T, _| Ok(v)).unwrap();
+    assert_eq!(copied.to_vec(), [x.clone(), y.clone()]);
     a.splice_many(0, 0, &[y.clone()]);
     assert_eq!(a.pop_checked(), Some(y));
 }
@@ -659,7 +664,7 @@ async fn promise_callbacks_of_rust_types() {
     let rejected: Promise<JsValue> = Promise::reject(&"bad".into());
     let p: Promise<u32> = rejected.catch(&recover);
     assert_eq!(p.await.unwrap(), 3);
-    let rejected: Promise<JsValue> = Promise::reject(&"four".into());
+    let rejected: Promise<String> = Promise::reject(&"four".into());
     let p: Promise<u32> = rejected.catch_map(&recover);
     assert_eq!(p.await.unwrap(), 4);
 
