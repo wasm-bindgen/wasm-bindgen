@@ -12,18 +12,6 @@ pub enum TemporalOverflow {
     Reject = "reject",
 }
 
-/// Overflow handling mode for Duration operations.
-///
-/// Used by `Duration.from()` and `Duration.with()`.
-#[wasm_bindgen]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum DurationOverflow {
-    /// Out-of-range values are clamped to the nearest in-range value.
-    Constrain = "constrain",
-    /// Out-of-range values are resolved by balancing them with the next highest unit.
-    Balance = "balance",
-}
-
 /// Disambiguation mode for handling ambiguous times during DST transitions.
 ///
 /// Used when converting `PlainDateTime` to `Instant` or `ZonedDateTime`.
@@ -57,7 +45,11 @@ pub enum TemporalOffsetOption {
     Reject = "reject",
 }
 
-/// Temporal unit for date operations (singular forms).
+/// A date or time unit, as accepted by the `smallestUnit` and `unit` options.
+///
+/// Each method accepts only a subset of these; for example `Instant` methods
+/// reject calendar units and `toString()` accepts `Minute` and smaller only.
+/// Out-of-range units are reported as a `RangeError` by the engine.
 #[wasm_bindgen]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TemporalUnit {
@@ -73,106 +65,21 @@ pub enum TemporalUnit {
     Nanosecond = "nanosecond",
 }
 
-/// Temporal unit for date operations (plural forms).
-#[wasm_bindgen]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum TemporalPluralUnit {
-    Years = "years",
-    Months = "months",
-    Weeks = "weeks",
-    Days = "days",
-    Hours = "hours",
-    Minutes = "minutes",
-    Seconds = "seconds",
-    Milliseconds = "milliseconds",
-    Microseconds = "microseconds",
-    Nanoseconds = "nanoseconds",
-}
-
-/// Smallest unit option for rounding and difference operations.
-///
-/// Includes both singular and plural forms of all temporal units.
-#[wasm_bindgen]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum SmallestUnit {
-    Year = "year",
-    Years = "years",
-    Month = "month",
-    Months = "months",
-    Week = "week",
-    Weeks = "weeks",
-    Day = "day",
-    Days = "days",
-    Hour = "hour",
-    Hours = "hours",
-    Minute = "minute",
-    Minutes = "minutes",
-    Second = "second",
-    Seconds = "seconds",
-    Millisecond = "millisecond",
-    Milliseconds = "milliseconds",
-    Microsecond = "microsecond",
-    Microseconds = "microseconds",
-    Nanosecond = "nanosecond",
-    Nanoseconds = "nanoseconds",
-}
-
-/// Largest unit option for difference and duration operations.
-///
-/// Includes 'auto' plus all singular and plural temporal units.
+/// A date or time unit, or `Auto`, as accepted by the `largestUnit` option.
 #[wasm_bindgen]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LargestUnit {
-    /// Automatically determine the largest unit based on context.
     Auto = "auto",
     Year = "year",
-    Years = "years",
     Month = "month",
-    Months = "months",
     Week = "week",
-    Weeks = "weeks",
     Day = "day",
-    Days = "days",
     Hour = "hour",
-    Hours = "hours",
     Minute = "minute",
-    Minutes = "minutes",
     Second = "second",
-    Seconds = "seconds",
     Millisecond = "millisecond",
-    Milliseconds = "milliseconds",
     Microsecond = "microsecond",
-    Microseconds = "microseconds",
     Nanosecond = "nanosecond",
-    Nanoseconds = "nanoseconds",
-}
-
-/// Total unit option for Duration.total().
-///
-/// Includes all singular and plural temporal units.
-#[wasm_bindgen]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum TotalUnit {
-    Year = "year",
-    Years = "years",
-    Month = "month",
-    Months = "months",
-    Week = "week",
-    Weeks = "weeks",
-    Day = "day",
-    Days = "days",
-    Hour = "hour",
-    Hours = "hours",
-    Minute = "minute",
-    Minutes = "minutes",
-    Second = "second",
-    Seconds = "seconds",
-    Millisecond = "millisecond",
-    Milliseconds = "milliseconds",
-    Microsecond = "microsecond",
-    Microseconds = "microseconds",
-    Nanosecond = "nanosecond",
-    Nanoseconds = "nanoseconds",
 }
 
 /// Calendar display option for `toString()` methods.
@@ -221,36 +128,6 @@ pub enum TransitionDirection {
     Previous = "previous",
 }
 
-/// Fractional second digits option for `toString()` methods.
-///
-/// Specifies the number of fractional second digits to display (0-9) or 'auto'.
-#[wasm_bindgen]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum FractionalSecondDigits {
-    /// Automatically determine the number of fractional digits.
-    Auto = "auto",
-    /// Display 0 fractional digits.
-    Zero = "0",
-    /// Display 1 fractional digit.
-    One = "1",
-    /// Display 2 fractional digits.
-    Two = "2",
-    /// Display 3 fractional digits (milliseconds precision).
-    Three = "3",
-    /// Display 4 fractional digits.
-    Four = "4",
-    /// Display 5 fractional digits.
-    Five = "5",
-    /// Display 6 fractional digits (microseconds precision).
-    Six = "6",
-    /// Display 7 fractional digits.
-    Seven = "7",
-    /// Display 8 fractional digits.
-    Eight = "8",
-    /// Display 9 fractional digits (nanoseconds precision).
-    Nine = "9",
-}
-
 // AssignmentOptions - for from() and with() methods
 #[wasm_bindgen]
 extern "C" {
@@ -286,54 +163,19 @@ impl Default for AssignmentOptions {
     }
 }
 
-// DurationOptions - for Duration.from() and Duration.with()
+// ToZonedDateTimeOptions - for PlainDateTime.toZonedDateTime()
 #[wasm_bindgen]
 extern "C" {
-    /// Options for `Duration.from()` and `Duration.with()`.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/from)
-    #[wasm_bindgen(extends = Object)]
-    #[derive(Clone, Debug)]
-    pub type DurationAssignmentOptions;
-
-    /// Get the overflow handling mode.
-    #[wasm_bindgen(method, getter = overflow)]
-    pub fn get_overflow(this: &DurationAssignmentOptions) -> Option<DurationOverflow>;
-
-    /// Set the overflow handling mode.
-    ///
-    /// - `'constrain'` (default): Out-of-range values are clamped.
-    /// - `'balance'`: Out-of-range values are balanced with the next highest unit.
-    #[wasm_bindgen(method, setter = overflow)]
-    pub fn set_overflow(this: &DurationAssignmentOptions, value: DurationOverflow);
-}
-
-impl DurationAssignmentOptions {
-    /// Creates a new `DurationAssignmentOptions` object.
-    pub fn new() -> DurationAssignmentOptions {
-        JsCast::unchecked_into(Object::new())
-    }
-}
-
-impl Default for DurationAssignmentOptions {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-// ToInstantOptions - for PlainDateTime to Instant conversion
-#[wasm_bindgen]
-extern "C" {
-    /// Options for conversions of `PlainDateTime` to `Instant`.
+    /// Options for `PlainDateTime.toZonedDateTime()`.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/toZonedDateTime#options)
     #[wasm_bindgen(extends = Object)]
     #[derive(Clone, Debug)]
-    pub type ToInstantOptions;
+    pub type ToZonedDateTimeOptions;
 
     /// Get the disambiguation mode.
     #[wasm_bindgen(method, getter = disambiguation)]
-    pub fn get_disambiguation(this: &ToInstantOptions) -> Option<TemporalDisambiguation>;
+    pub fn get_disambiguation(this: &ToZonedDateTimeOptions) -> Option<TemporalDisambiguation>;
 
     /// Set the disambiguation mode for handling ambiguous times.
     ///
@@ -343,63 +185,29 @@ extern "C" {
     /// - `'later'`: The later of two possible times.
     /// - `'reject'`: Throw a RangeError instead.
     #[wasm_bindgen(method, setter = disambiguation)]
-    pub fn set_disambiguation(this: &ToInstantOptions, value: TemporalDisambiguation);
+    pub fn set_disambiguation(this: &ToZonedDateTimeOptions, value: TemporalDisambiguation);
 }
 
-impl ToInstantOptions {
-    /// Creates a new `ToInstantOptions` object.
-    pub fn new() -> ToInstantOptions {
+impl ToZonedDateTimeOptions {
+    /// Creates a new `ToZonedDateTimeOptions` object.
+    pub fn new() -> ToZonedDateTimeOptions {
         JsCast::unchecked_into(Object::new())
     }
 }
 
-impl Default for ToInstantOptions {
+impl Default for ToZonedDateTimeOptions {
     fn default() -> Self {
         Self::new()
     }
 }
 
-// OffsetDisambiguationOptions
-#[wasm_bindgen]
-extern "C" {
-    /// Options for handling offset disambiguation in ZonedDateTime.
-    #[wasm_bindgen(extends = Object)]
-    #[derive(Clone, Debug)]
-    pub type OffsetDisambiguationOptions;
-
-    /// Get the offset option.
-    #[wasm_bindgen(method, getter = offset)]
-    pub fn get_offset(this: &OffsetDisambiguationOptions) -> Option<TemporalOffsetOption>;
-
-    /// Set the offset option.
-    ///
-    /// - `'use'`: Always use the offset to calculate the instant.
-    /// - `'prefer'`: Use the offset if it's valid, otherwise use the time zone.
-    /// - `'ignore'`: Disregard the offset and use the time zone.
-    /// - `'reject'`: Throw a RangeError if the offset is not valid.
-    #[wasm_bindgen(method, setter = offset)]
-    pub fn set_offset(this: &OffsetDisambiguationOptions, value: TemporalOffsetOption);
-}
-
-impl OffsetDisambiguationOptions {
-    /// Creates a new `OffsetDisambiguationOptions` object.
-    pub fn new() -> OffsetDisambiguationOptions {
-        JsCast::unchecked_into(Object::new())
-    }
-}
-
-impl Default for OffsetDisambiguationOptions {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-// ZonedDateTimeAssignmentOptions - combines AssignmentOptions + ToInstantOptions + OffsetDisambiguationOptions
+// ZonedDateTimeAssignmentOptions - for ZonedDateTime.from() and ZonedDateTime.with()
 #[wasm_bindgen]
 extern "C" {
     /// Options for `ZonedDateTime.from()` and `ZonedDateTime.with()`.
     ///
-    /// Combines overflow, disambiguation, and offset options.
+    /// The `offset` option defaults to `'reject'` for `from()` and to
+    /// `'prefer'` for `with()`.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/from#options)
     #[wasm_bindgen(extends = Object)]
@@ -493,24 +301,21 @@ extern "C" {
 
     /// Get the fractional second digits option.
     #[wasm_bindgen(method, getter = fractionalSecondDigits)]
-    pub fn get_fractional_second_digits(
-        this: &ToStringPrecisionOptions,
-    ) -> Option<FractionalSecondDigits>;
+    pub fn get_fractional_second_digits(this: &ToStringPrecisionOptions) -> Option<u8>;
 
-    /// Set the number of fractional second digits to display.
+    /// Set the number of fractional second digits to display, from 0 to 9.
+    ///
+    /// When unset, as many digits as needed to represent the value are shown.
     #[wasm_bindgen(method, setter = fractionalSecondDigits)]
-    pub fn set_fractional_second_digits(
-        this: &ToStringPrecisionOptions,
-        value: FractionalSecondDigits,
-    );
+    pub fn set_fractional_second_digits(this: &ToStringPrecisionOptions, value: u8);
 
     /// Get the smallest unit option.
     #[wasm_bindgen(method, getter = smallestUnit)]
-    pub fn get_smallest_unit(this: &ToStringPrecisionOptions) -> Option<SmallestUnit>;
+    pub fn get_smallest_unit(this: &ToStringPrecisionOptions) -> Option<TemporalUnit>;
 
     /// Set the smallest unit to display.
     #[wasm_bindgen(method, setter = smallestUnit)]
-    pub fn set_smallest_unit(this: &ToStringPrecisionOptions, value: SmallestUnit);
+    pub fn set_smallest_unit(this: &ToStringPrecisionOptions, value: TemporalUnit);
 
     /// Get the rounding mode.
     /// Note: Reuses `Intl::RoundingMode` which has identical values.
@@ -665,9 +470,9 @@ extern "C" {
     #[derive(Clone, Debug)]
     pub type InstantToStringOptions;
 
-    /// Get the time zone for display (returns a JsValue that may be a string or undefined).
+    /// Get the time zone for display.
     #[wasm_bindgen(method, getter = timeZone)]
-    pub fn get_time_zone(this: &InstantToStringOptions) -> JsValue;
+    pub fn get_time_zone(this: &InstantToStringOptions) -> Option<JsString>;
 
     /// Set the time zone for display.
     ///
@@ -702,11 +507,11 @@ extern "C" {
 
     /// Get the smallest unit option.
     #[wasm_bindgen(method, getter = smallestUnit)]
-    pub fn get_smallest_unit(this: &DifferenceOptions) -> Option<SmallestUnit>;
+    pub fn get_smallest_unit(this: &DifferenceOptions) -> Option<TemporalUnit>;
 
     /// Set the smallest unit to round to.
     #[wasm_bindgen(method, setter = smallestUnit)]
-    pub fn set_smallest_unit(this: &DifferenceOptions, value: SmallestUnit);
+    pub fn set_smallest_unit(this: &DifferenceOptions, value: TemporalUnit);
 
     /// Get the largest unit option.
     #[wasm_bindgen(method, getter = largestUnit)]
@@ -762,11 +567,11 @@ extern "C" {
 
     /// Get the smallest unit option.
     #[wasm_bindgen(method, getter = smallestUnit)]
-    pub fn get_smallest_unit(this: &RoundToOptions) -> Option<SmallestUnit>;
+    pub fn get_smallest_unit(this: &RoundToOptions) -> Option<TemporalUnit>;
 
     /// Set the unit to round to. This option is required.
     #[wasm_bindgen(method, setter = smallestUnit)]
-    pub fn set_smallest_unit(this: &RoundToOptions, value: SmallestUnit);
+    pub fn set_smallest_unit(this: &RoundToOptions, value: TemporalUnit);
 
     /// Get the rounding increment.
     #[wasm_bindgen(method, getter = roundingIncrement)]
@@ -812,11 +617,11 @@ extern "C" {
 
     /// Get the smallest unit option.
     #[wasm_bindgen(method, getter = smallestUnit)]
-    pub fn get_smallest_unit(this: &DurationRoundToOptions) -> Option<SmallestUnit>;
+    pub fn get_smallest_unit(this: &DurationRoundToOptions) -> Option<TemporalUnit>;
 
     /// Set the unit to round to.
     #[wasm_bindgen(method, setter = smallestUnit)]
-    pub fn set_smallest_unit(this: &DurationRoundToOptions, value: SmallestUnit);
+    pub fn set_smallest_unit(this: &DurationRoundToOptions, value: TemporalUnit);
 
     /// Get the largest unit option.
     #[wasm_bindgen(method, getter = largestUnit)]
@@ -849,8 +654,8 @@ extern "C" {
     /// Set the relativeTo option.
     ///
     /// Required when using variable-length units (years, months, weeks).
-    /// Can be a `PlainDateTime`, `ZonedDateTime`, or a string/object that
-    /// can be parsed as one of those types.
+    /// Can be a `PlainDate`, `ZonedDateTime`, or a string/object that
+    /// can be converted to one of those types.
     #[wasm_bindgen(method, setter = relativeTo)]
     pub fn set_relative_to(this: &DurationRoundToOptions, value: &JsValue);
 }
@@ -880,11 +685,11 @@ extern "C" {
 
     /// Get the unit option.
     #[wasm_bindgen(method, getter = unit)]
-    pub fn get_unit(this: &DurationTotalOptions) -> Option<TotalUnit>;
+    pub fn get_unit(this: &DurationTotalOptions) -> Option<TemporalUnit>;
 
     /// Set the unit to convert the duration to. This option is required.
     #[wasm_bindgen(method, setter = unit)]
-    pub fn set_unit(this: &DurationTotalOptions, value: TotalUnit);
+    pub fn set_unit(this: &DurationTotalOptions, value: TemporalUnit);
 
     /// Get the relativeTo option.
     #[wasm_bindgen(method, getter = relativeTo)]
@@ -910,7 +715,7 @@ impl Default for DurationTotalOptions {
     }
 }
 
-// DurationArithmeticOptions - for Duration.compare()
+// DurationCompareOptions - for Duration.compare()
 #[wasm_bindgen]
 extern "C" {
     /// Options for `Duration.compare()`.
@@ -918,27 +723,27 @@ extern "C" {
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/compare#options)
     #[wasm_bindgen(extends = Object)]
     #[derive(Clone, Debug)]
-    pub type DurationArithmeticOptions;
+    pub type DurationCompareOptions;
 
     /// Get the relativeTo option.
     #[wasm_bindgen(method, getter = relativeTo)]
-    pub fn get_relative_to(this: &DurationArithmeticOptions) -> JsValue;
+    pub fn get_relative_to(this: &DurationCompareOptions) -> JsValue;
 
     /// Set the relativeTo option.
     ///
     /// Required when either duration has nonzero weeks or larger units.
     #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to(this: &DurationArithmeticOptions, value: &JsValue);
+    pub fn set_relative_to(this: &DurationCompareOptions, value: &JsValue);
 }
 
-impl DurationArithmeticOptions {
-    /// Creates a new `DurationArithmeticOptions` object.
-    pub fn new() -> DurationArithmeticOptions {
+impl DurationCompareOptions {
+    /// Creates a new `DurationCompareOptions` object.
+    pub fn new() -> DurationCompareOptions {
         JsCast::unchecked_into(Object::new())
     }
 }
 
-impl Default for DurationArithmeticOptions {
+impl Default for DurationCompareOptions {
     fn default() -> Self {
         Self::new()
     }
@@ -987,7 +792,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant)
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type Instant;
 
     /// The `Temporal.Instant()` constructor creates `Temporal.Instant` objects.
@@ -1094,7 +899,7 @@ extern "C" {
     ///
     /// # Errors
     /// Throws a `TypeError` if `other` is not a valid Instant or string.
-    /// Throws a `RangeError` if options specify invalid units (calendar units are not allowed).
+    /// Throws a `RangeError` if options specify invalid units (days and calendar units are not allowed).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/until)
     #[wasm_bindgen(method, catch)]
@@ -1109,7 +914,7 @@ extern "C" {
     ///
     /// # Errors
     /// Throws a `TypeError` if `other` is not a valid Instant or string.
-    /// Throws a `RangeError` if options specify invalid units (calendar units are not allowed).
+    /// Throws a `RangeError` if options specify invalid units (days and calendar units are not allowed).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/since)
     #[wasm_bindgen(method, catch)]
@@ -1130,10 +935,17 @@ extern "C" {
     #[wasm_bindgen(method, catch)]
     pub fn round(this: &Instant, round_to: &RoundToOptions) -> Result<Instant, JsValue>;
 
+    /// The `toZonedDateTimeISO()` method returns a `Temporal.ZonedDateTime`
+    /// representing this instant in the ISO 8601 calendar and the given time zone.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if `time_zone` is not a valid time zone identifier.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/toZonedDateTimeISO)
     #[wasm_bindgen(method, js_name = toZonedDateTimeISO, catch)]
-    fn to_zoned_date_time_iso_internal(
+    pub fn to_zoned_date_time_iso(
         this: &Instant,
-        time_zone: &JsValue,
+        time_zone: &str,
     ) -> Result<ZonedDateTime, JsValue>;
 
     /// The `toLocaleString()` method returns a language-sensitive string representation
@@ -1141,7 +953,11 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString)]
-    pub fn to_locale_string(this: &Instant, locales: &[JsString], options: &JsValue) -> JsString;
+    pub fn to_locale_string(
+        this: &Instant,
+        locales: &[JsString],
+        options: &super::Intl::DateTimeFormatOptions,
+    ) -> JsString;
 
     /// The `toJSON()` method returns a string representation of this instant suitable
     /// for JSON serialization.
@@ -1154,35 +970,20 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/toString)
     #[wasm_bindgen(method, js_name = toString)]
-    pub fn to_js_string(this: &Instant, options: &InstantToStringOptions) -> JsString;
-}
+    pub fn to_js_string(this: &Instant) -> JsString;
 
-impl Instant {
-    /// Returns a `Temporal.ZonedDateTime` representing this instant in the
-    /// ISO 8601 calendar and the specified time zone (from a `ZonedDateTime`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/toZonedDateTimeISO)
-    #[inline]
-    pub fn to_zoned_date_time_iso_with_timezone(&self, time_zone: &ZonedDateTime) -> ZonedDateTime {
-        // SAFETY: A valid ZonedDateTime always has a valid time zone
-        self.to_zoned_date_time_iso_internal(time_zone.as_ref())
-            .unwrap()
-    }
-
-    /// Returns a `Temporal.ZonedDateTime` representing this instant in the
-    /// ISO 8601 calendar and the specified time zone (as a string identifier).
+    /// The `toString()` method returns an RFC 9557 string representation of this instant,
+    /// formatted according to `options`.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the time zone identifier is invalid.
+    /// Throws a `RangeError` if the options are invalid for this type.
     ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/toZonedDateTimeISO)
-    #[inline]
-    pub fn to_zoned_date_time_iso_with_timezone_str(
-        &self,
-        time_zone: &str,
-    ) -> Result<ZonedDateTime, JsValue> {
-        self.to_zoned_date_time_iso_internal(&JsValue::from_str(time_zone))
-    }
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/toString)
+    #[wasm_bindgen(method, js_name = toString, catch)]
+    pub fn to_js_string_with_options(
+        this: &Instant,
+        options: &InstantToStringOptions,
+    ) -> Result<JsString, JsValue>;
 }
 
 #[wasm_bindgen]
@@ -1192,18 +993,39 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime)
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type PlainDateTime;
 
-    /// The `Temporal.PlainDateTime()` constructor creates `Temporal.PlainDateTime` objects.
+    /// The `Temporal.PlainDateTime()` constructor creates `Temporal.PlainDateTime` objects
+    /// in the ISO 8601 calendar.
     ///
     /// # Errors
-    /// Throws a `RangeError` if any date or time component is out of range,
-    /// if the date is invalid, or if the calendar identifier is invalid.
+    /// Throws a `RangeError` if any field is out of range.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/PlainDateTime)
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
     pub fn new(
+        iso_year: i32,
+        iso_month: u32,
+        iso_day: u32,
+        hour: u32,
+        minute: u32,
+        second: u32,
+        millisecond: u32,
+        microsecond: u32,
+        nanosecond: u32,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `Temporal.PlainDateTime()` constructor creates `Temporal.PlainDateTime` objects
+    /// in the given calendar.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if any field is out of range.
+    /// Throws a `RangeError` if `calendar` is not a supported calendar identifier.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/PlainDateTime)
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_calendar(
         iso_year: i32,
         iso_month: u32,
         iso_day: u32,
@@ -1238,21 +1060,19 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
     pub fn compare(one: &JsValue, two: &JsValue) -> Result<i32, JsValue>;
 
-    // Next major: `-> Option<JsString>`
     /// The `era` accessor property returns a calendar-specific lowercase string
-    /// representing the era of this date, or `undefined` if the calendar does not use eras.
+    /// representing the era of this date, or `None` if the calendar does not use eras.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/era)
     #[wasm_bindgen(method, getter, structural)]
-    pub fn era(this: &PlainDateTime) -> JsValue;
+    pub fn era(this: &PlainDateTime) -> Option<JsString>;
 
-    // Next major: `-> Option<f64>`
     /// The `eraYear` accessor property returns a non-negative integer representing the
-    /// year of this date within the era, or `undefined` if the calendar does not use eras.
+    /// year of this date within the era, or `None` if the calendar does not use eras.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/eraYear)
     #[wasm_bindgen(method, getter, structural, js_name = eraYear)]
-    pub fn era_year(this: &PlainDateTime) -> JsValue;
+    pub fn era_year(this: &PlainDateTime) -> Option<i32>;
 
     /// The `year` accessor property returns an integer representing the number of years
     /// of this date relative to the start of a calendar-specific epoch year.
@@ -1346,20 +1166,20 @@ extern "C" {
     pub fn day_of_year(this: &PlainDateTime) -> u32;
 
     /// The `weekOfYear` accessor property returns a positive integer representing the
-    /// 1-based week index in the `yearOfWeek` of this date, or `undefined` if the
+    /// 1-based week index in the `yearOfWeek` of this date, or `None` if the
     /// calendar does not have a well-defined week system.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/weekOfYear)
     #[wasm_bindgen(method, getter, structural, js_name = weekOfYear)]
-    pub fn week_of_year(this: &PlainDateTime) -> JsValue;
+    pub fn week_of_year(this: &PlainDateTime) -> Option<u32>;
 
     /// The `yearOfWeek` accessor property returns an integer representing the year
-    /// to be paired with `weekOfYear`, or `undefined` if the calendar does not have
+    /// to be paired with `weekOfYear`, or `None` if the calendar does not have
     /// a well-defined week system.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/yearOfWeek)
     #[wasm_bindgen(method, getter, structural, js_name = yearOfWeek)]
-    pub fn year_of_week(this: &PlainDateTime) -> JsValue;
+    pub fn year_of_week(this: &PlainDateTime) -> Option<i32>;
 
     /// The `daysInWeek` accessor property returns a positive integer representing the
     /// number of days in the week of this date.
@@ -1515,11 +1335,20 @@ extern "C" {
     pub fn round(this: &PlainDateTime, round_to: &RoundToOptions)
         -> Result<PlainDateTime, JsValue>;
 
+    /// The `toZonedDateTime()` method returns a `Temporal.ZonedDateTime` with the
+    /// same calendar date and wall-clock time in the given time zone.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if `time_zone` is not a valid time zone identifier,
+    /// or if `disambiguation` is `'reject'` and the wall-clock time is ambiguous
+    /// or does not exist in that time zone.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/toZonedDateTime)
     #[wasm_bindgen(method, js_name = toZonedDateTime, catch)]
-    fn to_zoned_date_time_internal(
+    pub fn to_zoned_date_time(
         this: &PlainDateTime,
-        time_zone: &JsValue,
-        options: &ToInstantOptions,
+        time_zone: &str,
+        options: &ToZonedDateTimeOptions,
     ) -> Result<ZonedDateTime, JsValue>;
 
     /// The `toPlainDate()` method returns a `Temporal.PlainDate` object representing
@@ -1536,20 +1365,6 @@ extern "C" {
     #[wasm_bindgen(method, js_name = toPlainTime)]
     pub fn to_plain_time(this: &PlainDateTime) -> PlainTime;
 
-    /// The `toPlainYearMonth()` method returns a `Temporal.PlainYearMonth` object representing
-    /// the year and month of this date-time.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/toPlainYearMonth)
-    #[wasm_bindgen(method, js_name = toPlainYearMonth)]
-    pub fn to_plain_year_month(this: &PlainDateTime) -> PlainYearMonth;
-
-    /// The `toPlainMonthDay()` method returns a `Temporal.PlainMonthDay` object representing
-    /// the month and day of this date-time.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/toPlainMonthDay)
-    #[wasm_bindgen(method, js_name = toPlainMonthDay)]
-    pub fn to_plain_month_day(this: &PlainDateTime) -> PlainMonthDay;
-
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this date-time.
     ///
@@ -1558,7 +1373,7 @@ extern "C" {
     pub fn to_locale_string(
         this: &PlainDateTime,
         locales: &[JsString],
-        options: &JsValue,
+        options: &super::Intl::DateTimeFormatOptions,
     ) -> JsString;
 
     /// The `toJSON()` method returns a string representation of this date-time suitable
@@ -1568,47 +1383,24 @@ extern "C" {
     #[wasm_bindgen(method, js_name = toJSON)]
     pub fn to_json(this: &PlainDateTime) -> JsString;
 
-    /// The `toString()` method returns an ISO 8601 string representation of this date-time.
+    /// The `toString()` method returns an RFC 9557 string representation of this date-time.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/toString)
     #[wasm_bindgen(method, js_name = toString)]
-    pub fn to_js_string(this: &PlainDateTime, options: &CalendarTypeToStringOptions) -> JsString;
-}
+    pub fn to_js_string(this: &PlainDateTime) -> JsString;
 
-impl PlainDateTime {
-    /// Returns a `Temporal.ZonedDateTime` representing this date-time in the
-    /// specified time zone (from a `ZonedDateTime`).
+    /// The `toString()` method returns an RFC 9557 string representation of this date-time,
+    /// formatted according to `options`.
     ///
     /// # Errors
-    /// Throws a `RangeError` if `disambiguation` is `'reject'` and the time is ambiguous
-    /// or non-existent in the target time zone.
+    /// Throws a `RangeError` if the options are invalid for this type.
     ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/toZonedDateTime)
-    #[inline]
-    pub fn to_zoned_date_time_with_timezone(
-        &self,
-        time_zone: &ZonedDateTime,
-        options: &ToInstantOptions,
-    ) -> Result<ZonedDateTime, JsValue> {
-        self.to_zoned_date_time_internal(time_zone.as_ref(), options)
-    }
-
-    /// Returns a `Temporal.ZonedDateTime` representing this date-time in the
-    /// specified time zone (as a string identifier).
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the time zone identifier is invalid, or if `disambiguation`
-    /// is `'reject'` and the time is ambiguous or non-existent in the target time zone.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/toZonedDateTime)
-    #[inline]
-    pub fn to_zoned_date_time_with_timezone_str(
-        &self,
-        time_zone: &str,
-        options: &ToInstantOptions,
-    ) -> Result<ZonedDateTime, JsValue> {
-        self.to_zoned_date_time_internal(&JsValue::from_str(time_zone), options)
-    }
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/toString)
+    #[wasm_bindgen(method, js_name = toString, catch)]
+    pub fn to_js_string_with_options(
+        this: &PlainDateTime,
+        options: &CalendarTypeToStringOptions,
+    ) -> Result<JsString, JsValue>;
 }
 
 #[wasm_bindgen]
@@ -1619,18 +1411,31 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime)
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type ZonedDateTime;
 
-    /// The `Temporal.ZonedDateTime()` constructor creates `Temporal.ZonedDateTime` objects.
+    /// The `Temporal.ZonedDateTime()` constructor creates `Temporal.ZonedDateTime` objects
+    /// in the ISO 8601 calendar.
     ///
     /// # Errors
-    /// Throws a `RangeError` if `epoch_nanoseconds` is outside the valid range,
-    /// or if the time zone or calendar identifier is invalid.
+    /// Throws a `RangeError` if `epoch_nanoseconds` is outside the valid range or
+    /// `time_zone` is not a valid time zone identifier.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/ZonedDateTime)
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
-    pub fn new(
+    pub fn new(epoch_nanoseconds: &BigInt, time_zone: &str) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `Temporal.ZonedDateTime()` constructor creates `Temporal.ZonedDateTime` objects
+    /// in the given calendar.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if `epoch_nanoseconds` is outside the valid range or
+    /// `time_zone` is not a valid time zone identifier.
+    /// Throws a `RangeError` if `calendar` is not a supported calendar identifier.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/ZonedDateTime)
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_calendar(
         epoch_nanoseconds: &BigInt,
         time_zone: &str,
         calendar: &str,
@@ -1661,21 +1466,19 @@ extern "C" {
     #[wasm_bindgen(static_method_of = ZonedDateTime, js_namespace = Temporal, catch)]
     pub fn compare(one: &JsValue, two: &JsValue) -> Result<i32, JsValue>;
 
-    // Next major: `-> Option<JsString>`
     /// The `era` accessor property returns a calendar-specific lowercase string
-    /// representing the era of this date, or `undefined` if the calendar does not use eras.
+    /// representing the era of this date, or `None` if the calendar does not use eras.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/era)
     #[wasm_bindgen(method, getter, structural)]
-    pub fn era(this: &ZonedDateTime) -> JsValue;
+    pub fn era(this: &ZonedDateTime) -> Option<JsString>;
 
-    // Next major: `-> Option<f64>`
     /// The `eraYear` accessor property returns a non-negative integer representing the
-    /// year of this date within the era, or `undefined` if the calendar does not use eras.
+    /// year of this date within the era, or `None` if the calendar does not use eras.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/eraYear)
     #[wasm_bindgen(method, getter, structural, js_name = eraYear)]
-    pub fn era_year(this: &ZonedDateTime) -> JsValue;
+    pub fn era_year(this: &ZonedDateTime) -> Option<i32>;
 
     /// The `year` accessor property returns an integer representing the number of years
     /// of this date relative to the start of a calendar-specific epoch year.
@@ -1776,20 +1579,20 @@ extern "C" {
     pub fn day_of_year(this: &ZonedDateTime) -> u32;
 
     /// The `weekOfYear` accessor property returns a positive integer representing the
-    /// 1-based week index in the `yearOfWeek` of this date, or `undefined` if the
+    /// 1-based week index in the `yearOfWeek` of this date, or `None` if the
     /// calendar does not have a well-defined week system.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/weekOfYear)
     #[wasm_bindgen(method, getter, structural, js_name = weekOfYear)]
-    pub fn week_of_year(this: &ZonedDateTime) -> JsValue;
+    pub fn week_of_year(this: &ZonedDateTime) -> Option<u32>;
 
     /// The `yearOfWeek` accessor property returns an integer representing the year
-    /// to be paired with `weekOfYear`, or `undefined` if the calendar does not have
+    /// to be paired with `weekOfYear`, or `None` if the calendar does not have
     /// a well-defined week system.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/yearOfWeek)
     #[wasm_bindgen(method, getter, structural, js_name = yearOfWeek)]
-    pub fn year_of_week(this: &ZonedDateTime) -> JsValue;
+    pub fn year_of_week(this: &ZonedDateTime) -> Option<i32>;
 
     /// The `hoursInDay` accessor property returns a positive number representing the
     /// number of hours in the current day. Usually 24, but may differ due to DST.
@@ -1838,7 +1641,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/offsetNanoseconds)
     #[wasm_bindgen(method, getter, structural, js_name = offsetNanoseconds)]
-    pub fn offset_nanoseconds(this: &ZonedDateTime) -> i64;
+    pub fn offset_nanoseconds(this: &ZonedDateTime) -> f64;
 
     /// The `offset` accessor property returns a string representing the offset from UTC
     /// (e.g., '-08:00' or '+05:30').
@@ -1899,19 +1702,6 @@ extern "C" {
         plain_time: &JsValue,
     ) -> Result<ZonedDateTime, JsValue>;
 
-    /// The `withPlainDate()` method returns a new `Temporal.ZonedDateTime` object with
-    /// the date part replaced by the given date.
-    ///
-    /// # Errors
-    /// Throws a `TypeError` if `plain_date` is not a valid PlainDate or date-like.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/withPlainDate)
-    #[wasm_bindgen(method, js_name = withPlainDate, catch)]
-    pub fn with_plain_date(
-        this: &ZonedDateTime,
-        plain_date: &JsValue,
-    ) -> Result<ZonedDateTime, JsValue>;
-
     /// The `withCalendar()` method returns a new `Temporal.ZonedDateTime` object with
     /// the calendar replaced.
     ///
@@ -1922,11 +1712,15 @@ extern "C" {
     #[wasm_bindgen(method, js_name = withCalendar, catch)]
     pub fn with_calendar(this: &ZonedDateTime, calendar: &str) -> Result<ZonedDateTime, JsValue>;
 
+    /// The `withTimeZone()` method returns a new `Temporal.ZonedDateTime` object
+    /// representing the same instant in the given time zone.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if `time_zone` is not a valid time zone identifier.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/withTimeZone)
     #[wasm_bindgen(method, js_name = withTimeZone, catch)]
-    fn with_time_zone_internal(
-        this: &ZonedDateTime,
-        time_zone: &JsValue,
-    ) -> Result<ZonedDateTime, JsValue>;
+    pub fn with_time_zone(this: &ZonedDateTime, time_zone: &str) -> Result<ZonedDateTime, JsValue>;
 
     /// The `add()` method returns a new `Temporal.ZonedDateTime` object with the
     /// duration added to this zoned date-time.
@@ -2007,16 +1801,21 @@ extern "C" {
     #[wasm_bindgen(method, js_name = startOfDay)]
     pub fn start_of_day(this: &ZonedDateTime) -> ZonedDateTime;
 
-    // Next major: `-> Nullable<ZonedDateTime>`
-    /// The `getTimeZoneTransition()` method returns the next or previous time zone
-    /// transition from this zoned date-time.
+    // Next major: `-> Result<Nullable<ZonedDateTime>, JsValue>`
+    /// The `getTimeZoneTransition()` method returns a `Temporal.ZonedDateTime`
+    /// representing the closest UTC offset transition in this time zone in the
+    /// given direction, or `None` if there is none.
+    ///
+    /// # Errors
+    /// Throws a `TypeError` if `direction` is not set, and a `RangeError` if it
+    /// is invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/getTimeZoneTransition)
-    #[wasm_bindgen(method, js_name = getTimeZoneTransition)]
+    #[wasm_bindgen(method, js_name = getTimeZoneTransition, catch)]
     pub fn get_time_zone_transition(
         this: &ZonedDateTime,
-        direction: &TimeZoneTransitionOptions,
-    ) -> JsValue;
+        options: &TimeZoneTransitionOptions,
+    ) -> Result<Option<ZonedDateTime>, JsValue>;
 
     /// The `toInstant()` method returns a `Temporal.Instant` object representing the
     /// same instant as this zoned date-time.
@@ -2046,20 +1845,6 @@ extern "C" {
     #[wasm_bindgen(method, js_name = toPlainTime)]
     pub fn to_plain_time(this: &ZonedDateTime) -> PlainTime;
 
-    /// The `toPlainYearMonth()` method returns a `Temporal.PlainYearMonth` object representing
-    /// the year and month of this zoned date-time.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/toPlainYearMonth)
-    #[wasm_bindgen(method, js_name = toPlainYearMonth)]
-    pub fn to_plain_year_month(this: &ZonedDateTime) -> PlainYearMonth;
-
-    /// The `toPlainMonthDay()` method returns a `Temporal.PlainMonthDay` object representing
-    /// the month and day of this zoned date-time.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/toPlainMonthDay)
-    #[wasm_bindgen(method, js_name = toPlainMonthDay)]
-    pub fn to_plain_month_day(this: &ZonedDateTime) -> PlainMonthDay;
-
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this zoned date-time.
     ///
@@ -2068,7 +1853,7 @@ extern "C" {
     pub fn to_locale_string(
         this: &ZonedDateTime,
         locales: &[JsString],
-        options: &JsValue,
+        options: &super::Intl::DateTimeFormatOptions,
     ) -> JsString;
 
     /// The `toJSON()` method returns a string representation of this zoned date-time
@@ -2078,36 +1863,24 @@ extern "C" {
     #[wasm_bindgen(method, js_name = toJSON)]
     pub fn to_json(this: &ZonedDateTime) -> JsString;
 
-    /// The `toString()` method returns an RFC 9557 string representation of this
-    /// zoned date-time.
+    /// The `toString()` method returns an RFC 9557 string representation of this date-time.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/toString)
     #[wasm_bindgen(method, js_name = toString)]
-    pub fn to_js_string(this: &ZonedDateTime, options: &ZonedDateTimeToStringOptions) -> JsString;
-}
+    pub fn to_js_string(this: &ZonedDateTime) -> JsString;
 
-impl ZonedDateTime {
-    /// Returns a new `Temporal.ZonedDateTime` with the time zone replaced
-    /// (using a `ZonedDateTime` to specify the time zone), keeping the same instant.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/withTimeZone)
-    #[inline]
-    pub fn with_time_zone(&self, time_zone: &ZonedDateTime) -> ZonedDateTime {
-        // SAFETY: A valid ZonedDateTime always has a valid time zone
-        self.with_time_zone_internal(time_zone.as_ref()).unwrap()
-    }
-
-    /// Returns a new `Temporal.ZonedDateTime` with the time zone replaced
-    /// (using a string identifier), keeping the same instant.
+    /// The `toString()` method returns an RFC 9557 string representation of this date-time,
+    /// formatted according to `options`.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the time zone identifier is invalid.
+    /// Throws a `RangeError` if the options are invalid for this type.
     ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/withTimeZone)
-    #[inline]
-    pub fn with_time_zone_str(&self, time_zone: &str) -> Result<ZonedDateTime, JsValue> {
-        self.with_time_zone_internal(&JsValue::from_str(time_zone))
-    }
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/toString)
+    #[wasm_bindgen(method, js_name = toString, catch)]
+    pub fn to_js_string_with_options(
+        this: &ZonedDateTime,
+        options: &ZonedDateTimeToStringOptions,
+    ) -> Result<JsString, JsValue>;
 }
 
 #[wasm_bindgen]
@@ -2117,7 +1890,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration)
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type Duration;
 
     /// The `Temporal.Duration()` constructor creates `Temporal.Duration` objects.
@@ -2166,7 +1939,7 @@ extern "C" {
     pub fn compare(
         one: &JsValue,
         two: &JsValue,
-        options: &DurationArithmeticOptions,
+        options: &DurationCompareOptions,
     ) -> Result<i32, JsValue>;
 
     /// The `sign` accessor property returns -1, 0, or 1 depending on whether
@@ -2273,7 +2046,8 @@ extern "C" {
     ///
     /// # Errors
     /// Throws a `TypeError` if `other` is not a valid Duration or duration-like.
-    /// Throws a `RangeError` if the result would have mixed signs or exceed valid range.
+    /// Throws a `RangeError` if either duration has nonzero years, months or weeks,
+    /// or if the result would exceed the valid range.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/add)
     #[wasm_bindgen(method, catch)]
@@ -2284,7 +2058,8 @@ extern "C" {
     ///
     /// # Errors
     /// Throws a `TypeError` if `other` is not a valid Duration or duration-like.
-    /// Throws a `RangeError` if the result would have mixed signs or exceed valid range.
+    /// Throws a `RangeError` if either duration has nonzero years, months or weeks,
+    /// or if the result would exceed the valid range.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/subtract)
     #[wasm_bindgen(method, catch)]
@@ -2316,9 +2091,15 @@ extern "C" {
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this duration.
     ///
+    /// `options` are `Intl.DurationFormat` options.
+    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString)]
-    pub fn to_locale_string(this: &Duration, locales: &[JsString], options: &JsValue) -> JsString;
+    pub fn to_locale_string(
+        this: &Duration,
+        locales: &[JsString],
+        options: &super::Intl::DurationFormatOptions,
+    ) -> JsString;
 
     /// The `toJSON()` method returns a string representation of this duration
     /// suitable for JSON serialization (same as `toString()`).
@@ -2327,11 +2108,24 @@ extern "C" {
     #[wasm_bindgen(method, js_name = toJSON)]
     pub fn to_json(this: &Duration) -> JsString;
 
-    /// The `toString()` method returns an ISO 8601 string representation of this duration.
+    /// The `toString()` method returns an RFC 9557 string representation of this duration.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/toString)
     #[wasm_bindgen(method, js_name = toString)]
-    pub fn to_js_string(this: &Duration, options: &ToStringPrecisionOptions) -> JsString;
+    pub fn to_js_string(this: &Duration) -> JsString;
+
+    /// The `toString()` method returns an RFC 9557 string representation of this duration,
+    /// formatted according to `options`.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the options are invalid for this type.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/toString)
+    #[wasm_bindgen(method, js_name = toString, catch)]
+    pub fn to_js_string_with_options(
+        this: &Duration,
+        options: &ToStringPrecisionOptions,
+    ) -> Result<JsString, JsValue>;
 }
 
 #[wasm_bindgen]
@@ -2341,7 +2135,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime)
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type PlainTime;
 
     /// The `Temporal.PlainTime()` constructor creates `Temporal.PlainTime` objects.
@@ -2517,7 +2311,11 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString)]
-    pub fn to_locale_string(this: &PlainTime, locales: &[JsString], options: &JsValue) -> JsString;
+    pub fn to_locale_string(
+        this: &PlainTime,
+        locales: &[JsString],
+        options: &super::Intl::DateTimeFormatOptions,
+    ) -> JsString;
 
     /// The `toJSON()` method returns a string representation of this time
     /// suitable for JSON serialization.
@@ -2526,24 +2324,25 @@ extern "C" {
     #[wasm_bindgen(method, js_name = toJSON)]
     pub fn to_json(this: &PlainTime) -> JsString;
 
-    /// The `toString()` method returns an ISO 8601 string representation of this time.
+    /// The `toString()` method returns an RFC 9557 string representation of this time.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/toString)
     #[wasm_bindgen(method, js_name = toString)]
-    pub fn to_js_string(this: &PlainTime, options: &ToStringPrecisionOptions) -> JsString;
+    pub fn to_js_string(this: &PlainTime) -> JsString;
 
-    /// The `toPlainDateTime()` method returns a `Temporal.PlainDateTime` object combining
-    /// this time with the given date.
+    /// The `toString()` method returns an RFC 9557 string representation of this time,
+    /// formatted according to `options`.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `plain_date` is not a valid PlainDate or date-like.
+    /// Throws a `RangeError` if the options are invalid for this type.
     ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/toPlainDateTime)
-    #[wasm_bindgen(method, js_name = toPlainDateTime, catch)]
-    pub fn to_plain_date_time(
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/toString)
+    #[wasm_bindgen(method, js_name = toString, catch)]
+    pub fn to_js_string_with_options(
         this: &PlainTime,
-        plain_date: &JsValue,
-    ) -> Result<PlainDateTime, JsValue>;
+        options: &ToStringPrecisionOptions,
+    ) -> Result<JsString, JsValue>;
+
 }
 
 #[wasm_bindgen]
@@ -2554,18 +2353,31 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth)
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type PlainYearMonth;
 
-    /// The `Temporal.PlainYearMonth()` constructor creates `Temporal.PlainYearMonth` objects.
+    /// The `Temporal.PlainYearMonth()` constructor creates `Temporal.PlainYearMonth` objects
+    /// in the ISO 8601 calendar.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the date components are out of range or form an invalid date,
-    /// or if the calendar identifier is invalid.
+    /// Throws a `RangeError` if any field is out of range.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/PlainYearMonth)
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
-    pub fn new(
+    pub fn new(iso_year: i32, iso_month: u32) -> Result<PlainYearMonth, JsValue>;
+
+    /// The `Temporal.PlainYearMonth()` constructor creates `Temporal.PlainYearMonth` objects
+    /// in the given calendar.
+    /// `reference_iso_day` selects the ISO day used to represent the month in
+    /// non-ISO calendars.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if any field is out of range.
+    /// Throws a `RangeError` if `calendar` is not a supported calendar identifier.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/PlainYearMonth)
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_calendar(
         iso_year: i32,
         iso_month: u32,
         calendar: &str,
@@ -2594,21 +2406,19 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, catch)]
     pub fn compare(one: &JsValue, two: &JsValue) -> Result<i32, JsValue>;
 
-    // Next major: `-> Option<JsString>`
     /// The `era` accessor property returns a calendar-specific lowercase string
-    /// representing the era of this year-month, or `undefined` if the calendar does not use eras.
+    /// representing the era of this year-month, or `None` if the calendar does not use eras.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/era)
     #[wasm_bindgen(method, getter, structural)]
-    pub fn era(this: &PlainYearMonth) -> JsValue;
+    pub fn era(this: &PlainYearMonth) -> Option<JsString>;
 
-    // Next major: `-> Option<f64>`
     /// The `eraYear` accessor property returns a non-negative integer representing the
-    /// year of this year-month within the era, or `undefined` if the calendar does not use eras.
+    /// year of this year-month within the era, or `None` if the calendar does not use eras.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/eraYear)
     #[wasm_bindgen(method, getter, structural, js_name = eraYear)]
-    pub fn era_year(this: &PlainYearMonth) -> JsValue;
+    pub fn era_year(this: &PlainYearMonth) -> Option<i32>;
 
     /// The `year` accessor property returns an integer representing the number of years
     /// of this year-month relative to the start of a calendar-specific epoch year.
@@ -2769,7 +2579,7 @@ extern "C" {
     pub fn to_locale_string(
         this: &PlainYearMonth,
         locales: &[JsString],
-        options: &JsValue,
+        options: &super::Intl::DateTimeFormatOptions,
     ) -> JsString;
 
     /// The `toJSON()` method returns a string representation of this year-month
@@ -2779,11 +2589,24 @@ extern "C" {
     #[wasm_bindgen(method, js_name = toJSON)]
     pub fn to_json(this: &PlainYearMonth) -> JsString;
 
-    /// The `toString()` method returns an ISO 8601 string representation of this year-month.
+    /// The `toString()` method returns an RFC 9557 string representation of this year-month.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/toString)
     #[wasm_bindgen(method, js_name = toString)]
-    pub fn to_js_string(this: &PlainYearMonth, options: &ShowCalendarOptions) -> JsString;
+    pub fn to_js_string(this: &PlainYearMonth) -> JsString;
+
+    /// The `toString()` method returns an RFC 9557 string representation of this year-month,
+    /// formatted according to `options`.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the options are invalid for this type.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/toString)
+    #[wasm_bindgen(method, js_name = toString, catch)]
+    pub fn to_js_string_with_options(
+        this: &PlainYearMonth,
+        options: &ShowCalendarOptions,
+    ) -> Result<JsString, JsValue>;
 }
 
 #[wasm_bindgen]
@@ -2794,18 +2617,31 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay)
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type PlainMonthDay;
 
-    /// The `Temporal.PlainMonthDay()` constructor creates `Temporal.PlainMonthDay` objects.
+    /// The `Temporal.PlainMonthDay()` constructor creates `Temporal.PlainMonthDay` objects
+    /// in the ISO 8601 calendar.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the date components are out of range or form an invalid date,
-    /// or if the calendar identifier is invalid.
+    /// Throws a `RangeError` if any field is out of range.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/PlainMonthDay)
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
-    pub fn new(
+    pub fn new(iso_month: u32, iso_day: u32) -> Result<PlainMonthDay, JsValue>;
+
+    /// The `Temporal.PlainMonthDay()` constructor creates `Temporal.PlainMonthDay` objects
+    /// in the given calendar.
+    /// `reference_iso_year` selects the ISO year used to represent the month-day
+    /// in non-ISO calendars.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if any field is out of range.
+    /// Throws a `RangeError` if `calendar` is not a supported calendar identifier.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/PlainMonthDay)
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_calendar(
         iso_month: u32,
         iso_day: u32,
         calendar: &str,
@@ -2888,7 +2724,7 @@ extern "C" {
     pub fn to_locale_string(
         this: &PlainMonthDay,
         locales: &[JsString],
-        options: &JsValue,
+        options: &super::Intl::DateTimeFormatOptions,
     ) -> JsString;
 
     /// The `toJSON()` method returns a string representation of this month-day
@@ -2898,11 +2734,24 @@ extern "C" {
     #[wasm_bindgen(method, js_name = toJSON)]
     pub fn to_json(this: &PlainMonthDay) -> JsString;
 
-    /// The `toString()` method returns an ISO 8601 string representation of this month-day.
+    /// The `toString()` method returns an RFC 9557 string representation of this month-day.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/toString)
     #[wasm_bindgen(method, js_name = toString)]
-    pub fn to_js_string(this: &PlainMonthDay, options: &ShowCalendarOptions) -> JsString;
+    pub fn to_js_string(this: &PlainMonthDay) -> JsString;
+
+    /// The `toString()` method returns an RFC 9557 string representation of this month-day,
+    /// formatted according to `options`.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the options are invalid for this type.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/toString)
+    #[wasm_bindgen(method, js_name = toString, catch)]
+    pub fn to_js_string_with_options(
+        this: &PlainMonthDay,
+        options: &ShowCalendarOptions,
+    ) -> Result<JsString, JsValue>;
 }
 
 #[wasm_bindgen]
@@ -2913,18 +2762,29 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate)
     #[wasm_bindgen(js_namespace = Temporal, extends = Object)]
-    #[derive(Clone, Debug)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub type PlainDate;
 
-    /// The `Temporal.PlainDate()` constructor creates `Temporal.PlainDate` objects.
+    /// The `Temporal.PlainDate()` constructor creates `Temporal.PlainDate` objects
+    /// in the ISO 8601 calendar.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the date components are out of range or form an invalid date,
-    /// or if the calendar identifier is invalid.
+    /// Throws a `RangeError` if any field is out of range.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/PlainDate)
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
-    pub fn new(
+    pub fn new(iso_year: i32, iso_month: u32, iso_day: u32) -> Result<PlainDate, JsValue>;
+
+    /// The `Temporal.PlainDate()` constructor creates `Temporal.PlainDate` objects
+    /// in the given calendar.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if any field is out of range.
+    /// Throws a `RangeError` if `calendar` is not a supported calendar identifier.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/PlainDate)
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_calendar(
         iso_year: i32,
         iso_month: u32,
         iso_day: u32,
@@ -2953,21 +2813,19 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, catch)]
     pub fn compare(one: &JsValue, two: &JsValue) -> Result<i32, JsValue>;
 
-    // Next major: `-> Option<JsString>`
     /// The `era` accessor property returns a calendar-specific lowercase string
-    /// representing the era of this date, or `undefined` if the calendar does not use eras.
+    /// representing the era of this date, or `None` if the calendar does not use eras.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/era)
     #[wasm_bindgen(method, getter, structural)]
-    pub fn era(this: &PlainDate) -> JsValue;
+    pub fn era(this: &PlainDate) -> Option<JsString>;
 
-    // Next major: `-> Option<f64>`
     /// The `eraYear` accessor property returns a non-negative integer representing the
-    /// year of this date within the era, or `undefined` if the calendar does not use eras.
+    /// year of this date within the era, or `None` if the calendar does not use eras.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/eraYear)
     #[wasm_bindgen(method, getter, structural, js_name = eraYear)]
-    pub fn era_year(this: &PlainDate) -> JsValue;
+    pub fn era_year(this: &PlainDate) -> Option<i32>;
 
     /// The `year` accessor property returns an integer representing the number of years
     /// of this date relative to the start of a calendar-specific epoch year.
@@ -3019,20 +2877,20 @@ extern "C" {
     pub fn day_of_year(this: &PlainDate) -> u32;
 
     /// The `weekOfYear` accessor property returns a positive integer representing the
-    /// 1-based week index in the `yearOfWeek` of this date, or `undefined` if the
+    /// 1-based week index in the `yearOfWeek` of this date, or `None` if the
     /// calendar does not have a well-defined week system.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/weekOfYear)
     #[wasm_bindgen(method, getter, structural, js_name = weekOfYear)]
-    pub fn week_of_year(this: &PlainDate) -> JsValue;
+    pub fn week_of_year(this: &PlainDate) -> Option<u32>;
 
     /// The `yearOfWeek` accessor property returns an integer representing the year
-    /// to be paired with `weekOfYear`, or `undefined` if the calendar does not have
+    /// to be paired with `weekOfYear`, or `None` if the calendar does not have
     /// a well-defined week system.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/yearOfWeek)
     #[wasm_bindgen(method, getter, structural, js_name = yearOfWeek)]
-    pub fn year_of_week(this: &PlainDate) -> JsValue;
+    pub fn year_of_week(this: &PlainDate) -> Option<i32>;
 
     /// The `daysInWeek` accessor property returns a positive integer representing the
     /// number of days in the week of this date.
@@ -3176,10 +3034,12 @@ extern "C" {
     /// The `toZonedDateTime()` method returns a `Temporal.ZonedDateTime` object representing
     /// this date at the given time in the given time zone.
     ///
+    /// `item` is either a time zone identifier string, or an object with a
+    /// `timeZone` property and an optional `plainTime` property.
+    ///
     /// # Errors
-    /// Throws a `TypeError` if `item` is not a valid time zone info object.
-    /// Throws a `RangeError` if the time zone identifier is invalid or with `disambiguation: reject`
-    /// during ambiguous times.
+    /// Throws a `TypeError` if `item` is not a string or an object with a `timeZone`.
+    /// Throws a `RangeError` if the time zone identifier is invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toZonedDateTime)
     #[wasm_bindgen(method, js_name = toZonedDateTime, catch)]
@@ -3204,7 +3064,11 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString)]
-    pub fn to_locale_string(this: &PlainDate, locales: &[JsString], options: &JsValue) -> JsString;
+    pub fn to_locale_string(
+        this: &PlainDate,
+        locales: &[JsString],
+        options: &super::Intl::DateTimeFormatOptions,
+    ) -> JsString;
 
     /// The `toJSON()` method returns a string representation of this date
     /// suitable for JSON serialization.
@@ -3213,11 +3077,24 @@ extern "C" {
     #[wasm_bindgen(method, js_name = toJSON)]
     pub fn to_json(this: &PlainDate) -> JsString;
 
-    /// The `toString()` method returns an ISO 8601 string representation of this date.
+    /// The `toString()` method returns an RFC 9557 string representation of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toString)
     #[wasm_bindgen(method, js_name = toString)]
-    pub fn to_js_string(this: &PlainDate, options: &ShowCalendarOptions) -> JsString;
+    pub fn to_js_string(this: &PlainDate) -> JsString;
+
+    /// The `toString()` method returns an RFC 9557 string representation of this date,
+    /// formatted according to `options`.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the options are invalid for this type.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toString)
+    #[wasm_bindgen(method, js_name = toString, catch)]
+    pub fn to_js_string_with_options(
+        this: &PlainDate,
+        options: &ShowCalendarOptions,
+    ) -> Result<JsString, JsValue>;
 }
 
 /// The `Temporal.Now` object has several methods which give information about
@@ -3236,158 +3113,91 @@ pub mod Now {
         #[wasm_bindgen(js_namespace = ["Temporal", "Now"])]
         pub fn instant() -> Instant;
 
-        #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = zonedDateTimeISO, catch)]
-        fn zoned_date_time_iso_internal(time_zone: &JsValue) -> Result<ZonedDateTime, JsValue>;
-
-        #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = plainDateTimeISO, catch)]
-        fn plain_date_time_iso_internal(time_zone: &JsValue) -> Result<PlainDateTime, JsValue>;
-
-        #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = plainDateISO, catch)]
-        fn plain_date_iso_internal(time_zone: &JsValue) -> Result<PlainDate, JsValue>;
-
-        #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = plainTimeISO, catch)]
-        fn plain_time_iso_internal(time_zone: &JsValue) -> Result<PlainTime, JsValue>;
-
         /// The `Temporal.Now.timeZoneId()` static method returns the identifier of
         /// the system's current time zone.
         ///
         /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/timeZoneId)
         #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = timeZoneId)]
         pub fn time_zone_id() -> JsString;
-    }
 
-    /// Returns the current date and time as a `Temporal.ZonedDateTime` in the
-    /// ISO 8601 calendar and the system's current time zone.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/zonedDateTimeISO)
-    #[inline]
-    pub fn zoned_date_time_iso() -> ZonedDateTime {
-        // SAFETY: undefined is always a valid time zone input (uses system timezone)
-        zoned_date_time_iso_internal(&JsValue::UNDEFINED).unwrap()
-    }
+        /// The `Temporal.Now.zonedDateTimeISO()` static method returns the current date and time as a
+        /// `Temporal.ZonedDateTime` in the ISO 8601 calendar and
+        /// the system's current time zone.
+        ///
+        /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/zonedDateTimeISO)
+        #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = zonedDateTimeISO)]
+        pub fn zoned_date_time_iso() -> ZonedDateTime;
 
-    /// Returns the current date and time as a `Temporal.ZonedDateTime` in the
-    /// ISO 8601 calendar and the specified time zone (from a `ZonedDateTime`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/zonedDateTimeISO)
-    #[inline]
-    pub fn zoned_date_time_iso_with_timezone(time_zone: &ZonedDateTime) -> ZonedDateTime {
-        // SAFETY: A valid ZonedDateTime always has a valid time zone
-        zoned_date_time_iso_internal(time_zone.as_ref()).unwrap()
-    }
+        /// The `Temporal.Now.zonedDateTimeISO()` static method returns the current date and time as a
+        /// `Temporal.ZonedDateTime` in the ISO 8601 calendar and
+        /// the given time zone.
+        ///
+        /// # Errors
+        /// Throws a `RangeError` if `time_zone` is not a valid time zone identifier.
+        ///
+        /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/zonedDateTimeISO)
+        #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = zonedDateTimeISO, catch)]
+        pub fn zoned_date_time_iso_with_time_zone(
+            time_zone: &str,
+        ) -> Result<ZonedDateTime, JsValue>;
 
-    /// Returns the current date and time as a `Temporal.ZonedDateTime` in the
-    /// ISO 8601 calendar and the specified time zone (as a string identifier).
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the time zone identifier is invalid.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/zonedDateTimeISO)
-    #[inline]
-    pub fn zoned_date_time_iso_with_timezone_str(
-        time_zone: &str,
-    ) -> Result<ZonedDateTime, JsValue> {
-        zoned_date_time_iso_internal(&JsValue::from_str(time_zone))
-    }
+        /// The `Temporal.Now.plainDateTimeISO()` static method returns the current date and wall-clock time
+        /// as a `Temporal.PlainDateTime` in the ISO 8601 calendar and
+        /// the system's current time zone.
+        ///
+        /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/plainDateTimeISO)
+        #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = plainDateTimeISO)]
+        pub fn plain_date_time_iso() -> PlainDateTime;
 
-    /// Returns the current date and time as a `Temporal.PlainDateTime` in the
-    /// ISO 8601 calendar and the system's current time zone.
-    ///
-    /// Note that `Temporal.PlainDateTime` does not persist the time zone.
-    /// For most time-zone-related use cases, `zoned_date_time_iso()` is recommended.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/plainDateTimeISO)
-    #[inline]
-    pub fn plain_date_time_iso() -> PlainDateTime {
-        // SAFETY: undefined is always a valid time zone input (uses system timezone)
-        plain_date_time_iso_internal(&JsValue::UNDEFINED).unwrap()
-    }
+        /// The `Temporal.Now.plainDateTimeISO()` static method returns the current date and wall-clock time
+        /// as a `Temporal.PlainDateTime` in the ISO 8601 calendar and
+        /// the given time zone.
+        ///
+        /// # Errors
+        /// Throws a `RangeError` if `time_zone` is not a valid time zone identifier.
+        ///
+        /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/plainDateTimeISO)
+        #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = plainDateTimeISO, catch)]
+        pub fn plain_date_time_iso_with_time_zone(
+            time_zone: &str,
+        ) -> Result<PlainDateTime, JsValue>;
 
-    /// Returns the current date and time as a `Temporal.PlainDateTime` in the
-    /// ISO 8601 calendar and the specified time zone (from a `ZonedDateTime`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/plainDateTimeISO)
-    #[inline]
-    pub fn plain_date_time_iso_with_timezone(time_zone: &ZonedDateTime) -> PlainDateTime {
-        // SAFETY: A valid ZonedDateTime always has a valid time zone
-        plain_date_time_iso_internal(time_zone.as_ref()).unwrap()
-    }
+        /// The `Temporal.Now.plainDateISO()` static method returns the current date as a `Temporal.PlainDate`
+        /// in the ISO 8601 calendar and
+        /// the system's current time zone.
+        ///
+        /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/plainDateISO)
+        #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = plainDateISO)]
+        pub fn plain_date_iso() -> PlainDate;
 
-    /// Returns the current date and time as a `Temporal.PlainDateTime` in the
-    /// ISO 8601 calendar and the specified time zone (as a string identifier).
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the time zone identifier is invalid.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/plainDateTimeISO)
-    #[inline]
-    pub fn plain_date_time_iso_with_timezone_str(
-        time_zone: &str,
-    ) -> Result<PlainDateTime, JsValue> {
-        plain_date_time_iso_internal(&JsValue::from_str(time_zone))
-    }
+        /// The `Temporal.Now.plainDateISO()` static method returns the current date as a `Temporal.PlainDate`
+        /// in the ISO 8601 calendar and
+        /// the given time zone.
+        ///
+        /// # Errors
+        /// Throws a `RangeError` if `time_zone` is not a valid time zone identifier.
+        ///
+        /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/plainDateISO)
+        #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = plainDateISO, catch)]
+        pub fn plain_date_iso_with_time_zone(time_zone: &str) -> Result<PlainDate, JsValue>;
 
-    /// Returns the current date as a `Temporal.PlainDate` in the ISO 8601
-    /// calendar and the system's current time zone.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/plainDateISO)
-    #[inline]
-    pub fn plain_date_iso() -> PlainDate {
-        // SAFETY: undefined is always a valid time zone input (uses system timezone)
-        plain_date_iso_internal(&JsValue::UNDEFINED).unwrap()
-    }
+        /// The `Temporal.Now.plainTimeISO()` static method returns the current wall-clock time as a
+        /// `Temporal.PlainTime`
+        /// in the system's current time zone.
+        ///
+        /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/plainTimeISO)
+        #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = plainTimeISO)]
+        pub fn plain_time_iso() -> PlainTime;
 
-    /// Returns the current date as a `Temporal.PlainDate` in the ISO 8601
-    /// calendar and the specified time zone (from a `ZonedDateTime`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/plainDateISO)
-    #[inline]
-    pub fn plain_date_iso_with_timezone(time_zone: &ZonedDateTime) -> PlainDate {
-        // SAFETY: A valid ZonedDateTime always has a valid time zone
-        plain_date_iso_internal(time_zone.as_ref()).unwrap()
-    }
-
-    /// Returns the current date as a `Temporal.PlainDate` in the ISO 8601
-    /// calendar and the specified time zone (as a string identifier).
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the time zone identifier is invalid.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/plainDateISO)
-    #[inline]
-    pub fn plain_date_iso_with_timezone_str(time_zone: &str) -> Result<PlainDate, JsValue> {
-        plain_date_iso_internal(&JsValue::from_str(time_zone))
-    }
-
-    /// Returns the current time as a `Temporal.PlainTime` in the ISO 8601
-    /// calendar and the system's current time zone.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/plainTimeISO)
-    #[inline]
-    pub fn plain_time_iso() -> PlainTime {
-        // SAFETY: undefined is always a valid time zone input (uses system timezone)
-        plain_time_iso_internal(&JsValue::UNDEFINED).unwrap()
-    }
-
-    /// Returns the current time as a `Temporal.PlainTime` in the ISO 8601
-    /// calendar and the specified time zone (from a `ZonedDateTime`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/plainTimeISO)
-    #[inline]
-    pub fn plain_time_iso_with_timezone(time_zone: &ZonedDateTime) -> PlainTime {
-        // SAFETY: A valid ZonedDateTime always has a valid time zone
-        plain_time_iso_internal(time_zone.as_ref()).unwrap()
-    }
-
-    /// Returns the current time as a `Temporal.PlainTime` in the ISO 8601
-    /// calendar and the specified time zone (as a string identifier).
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the time zone identifier is invalid.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/plainTimeISO)
-    #[inline]
-    pub fn plain_time_iso_with_timezone_str(time_zone: &str) -> Result<PlainTime, JsValue> {
-        plain_time_iso_internal(&JsValue::from_str(time_zone))
+        /// The `Temporal.Now.plainTimeISO()` static method returns the current wall-clock time as a
+        /// `Temporal.PlainTime`
+        /// in the given time zone.
+        ///
+        /// # Errors
+        /// Throws a `RangeError` if `time_zone` is not a valid time zone identifier.
+        ///
+        /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/plainTimeISO)
+        #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = plainTimeISO, catch)]
+        pub fn plain_time_iso_with_time_zone(time_zone: &str) -> Result<PlainTime, JsValue>;
     }
 }
