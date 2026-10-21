@@ -55,6 +55,8 @@ use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, Upcast, UpcastFrom};
 use wasm_bindgen::convert::{RefIntoWasmAbi, VectorRefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsError;
+#[cfg(js_sys_unstable_apis)]
+use wasm_bindgen::MonoGeneric;
 
 // Re-export sys types as js-sys types
 pub use wasm_bindgen::sys::{JsNullable, JsOption, Null, Promising, Undefined};
@@ -4352,12 +4354,27 @@ extern "C" {
     /// (or an array-like object).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch)]
     pub fn apply<T: JsFunction = fn() -> JsValue>(
         this: &Function<T>,
         context: &JsValue,
         args: &Array,
     ) -> Result<<T as JsFunction>::Ret, JsValue>;
+
+    /// The `apply()` method calls a function with a given this value, and arguments provided as an array
+    /// (or an array-like object).
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, catch, experimental_generic_mono)]
+    pub fn apply<T: JsFunction>(
+        this: &Function<T>,
+        context: &JsValue,
+        args: &Array,
+    ) -> Result<<T as JsFunction>::Ret, JsValue>
+    where
+        <T as JsFunction>::Ret: FromWasmAbi;
 
     // Next major: Deprecate, and separately provide provide impl
     /// The `call()` method calls a function with a given this value and
@@ -4366,8 +4383,22 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = call)]
     pub fn call0<Ret: JsGeneric, F: JsFunction<Ret = Ret> = fn() -> JsValue>(
+        this: &Function<F>,
+        context: &JsValue,
+    ) -> Result<Ret, JsValue>;
+
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, catch, js_name = call, experimental_generic_mono)]
+    pub fn call0<Ret: FromWasmAbi, F: JsFunction<Ret = Ret>>(
         this: &Function<F>,
         context: &JsValue,
     ) -> Result<Ret, JsValue>;
@@ -4379,11 +4410,30 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = call)]
     pub fn call1<
         Ret: JsGeneric,
         Arg1: JsGeneric,
         F: JsFunction<Ret = Ret> + JsFunction1<Arg1 = Arg1> = fn(JsValue) -> JsValue,
+    >(
+        this: &Function<F>,
+        context: &JsValue,
+        arg1: &Arg1,
+    ) -> Result<Ret, JsValue>;
+
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, catch, js_name = call, experimental_generic_mono)]
+    pub fn call1<
+        Ret: FromWasmAbi,
+        Arg1: RefIntoWasmAbi,
+        F: JsFunction<Ret = Ret> + JsFunction1<Arg1 = Arg1>,
     >(
         this: &Function<F>,
         context: &JsValue,
@@ -4397,6 +4447,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = call)]
     pub fn call2<
         Ret: JsGeneric,
@@ -4413,6 +4464,26 @@ extern "C" {
         arg2: &Arg2,
     ) -> Result<Ret, JsValue>;
 
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, catch, js_name = call, experimental_generic_mono)]
+    pub fn call2<
+        Ret: FromWasmAbi,
+        Arg1: RefIntoWasmAbi,
+        Arg2: RefIntoWasmAbi,
+        F: JsFunction<Ret = Ret> + JsFunction1<Arg1 = Arg1> + JsFunction2<Arg2 = Arg2>,
+    >(
+        this: &Function<F>,
+        context: &JsValue,
+        arg1: &Arg1,
+        arg2: &Arg2,
+    ) -> Result<Ret, JsValue>;
+
     // Next major: Deprecate, and separately provide provide impl
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
@@ -4420,6 +4491,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = call)]
     pub fn call3<
         Ret: JsGeneric,
@@ -4439,6 +4511,28 @@ extern "C" {
         arg3: &Arg3,
     ) -> Result<Ret, JsValue>;
 
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, catch, js_name = call, experimental_generic_mono)]
+    pub fn call3<
+        Ret: FromWasmAbi,
+        Arg1: RefIntoWasmAbi,
+        Arg2: RefIntoWasmAbi,
+        Arg3: RefIntoWasmAbi,
+        F: JsFunction<Ret = Ret> + JsFunction3<Arg1 = Arg1, Arg2 = Arg2, Arg3 = Arg3>,
+    >(
+        this: &Function<F>,
+        context: &JsValue,
+        arg1: &Arg1,
+        arg2: &Arg2,
+        arg3: &Arg3,
+    ) -> Result<Ret, JsValue>;
+
     // Next major: Deprecate, and separately provide provide impl
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
@@ -4446,6 +4540,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = call)]
     pub fn call4<
         Ret: JsGeneric,
@@ -4468,6 +4563,30 @@ extern "C" {
         arg4: &Arg4,
     ) -> Result<Ret, JsValue>;
 
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, catch, js_name = call, experimental_generic_mono)]
+    pub fn call4<
+        Ret: FromWasmAbi,
+        Arg1: RefIntoWasmAbi,
+        Arg2: RefIntoWasmAbi,
+        Arg3: RefIntoWasmAbi,
+        Arg4: RefIntoWasmAbi,
+        F: JsFunction<Ret = Ret> + JsFunction4<Arg1 = Arg1, Arg2 = Arg2, Arg3 = Arg3, Arg4 = Arg4>,
+    >(
+        this: &Function<F>,
+        context: &JsValue,
+        arg1: &Arg1,
+        arg2: &Arg2,
+        arg3: &Arg3,
+        arg4: &Arg4,
+    ) -> Result<Ret, JsValue>;
+
     // Next major: Deprecate, and separately provide provide impl
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
@@ -4475,6 +4594,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = call)]
     pub fn call5<
         Ret: JsGeneric,
@@ -4501,6 +4621,33 @@ extern "C" {
         arg5: &Arg5,
     ) -> Result<Ret, JsValue>;
 
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, catch, js_name = call, experimental_generic_mono)]
+    pub fn call5<
+        Ret: FromWasmAbi,
+        Arg1: RefIntoWasmAbi,
+        Arg2: RefIntoWasmAbi,
+        Arg3: RefIntoWasmAbi,
+        Arg4: RefIntoWasmAbi,
+        Arg5: RefIntoWasmAbi,
+        F: JsFunction<Ret = Ret>
+            + JsFunction5<Arg1 = Arg1, Arg2 = Arg2, Arg3 = Arg3, Arg4 = Arg4, Arg5 = Arg5>,
+    >(
+        this: &Function<F>,
+        context: &JsValue,
+        arg1: &Arg1,
+        arg2: &Arg2,
+        arg3: &Arg3,
+        arg4: &Arg4,
+        arg5: &Arg5,
+    ) -> Result<Ret, JsValue>;
+
     // Next major: Deprecate, and separately provide provide impl
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
@@ -4508,6 +4655,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = call)]
     pub fn call6<
         Ret: JsGeneric,
@@ -4537,6 +4685,42 @@ extern "C" {
         arg6: &Arg6,
     ) -> Result<Ret, JsValue>;
 
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, catch, js_name = call, experimental_generic_mono)]
+    pub fn call6<
+        Ret: FromWasmAbi,
+        Arg1: RefIntoWasmAbi,
+        Arg2: RefIntoWasmAbi,
+        Arg3: RefIntoWasmAbi,
+        Arg4: RefIntoWasmAbi,
+        Arg5: RefIntoWasmAbi,
+        Arg6: RefIntoWasmAbi,
+        F: JsFunction<Ret = Ret>
+            + JsFunction6<
+                Arg1 = Arg1,
+                Arg2 = Arg2,
+                Arg3 = Arg3,
+                Arg4 = Arg4,
+                Arg5 = Arg5,
+                Arg6 = Arg6,
+            >,
+    >(
+        this: &Function<F>,
+        context: &JsValue,
+        arg1: &Arg1,
+        arg2: &Arg2,
+        arg3: &Arg3,
+        arg4: &Arg4,
+        arg5: &Arg5,
+        arg6: &Arg6,
+    ) -> Result<Ret, JsValue>;
+
     // Next major: Deprecate, and separately provide provide impl
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
@@ -4544,6 +4728,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = call)]
     pub fn call7<
         Ret: JsGeneric,
@@ -4584,6 +4769,45 @@ extern "C" {
         arg7: &Arg7,
     ) -> Result<Ret, JsValue>;
 
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, catch, js_name = call, experimental_generic_mono)]
+    pub fn call7<
+        Ret: FromWasmAbi,
+        Arg1: RefIntoWasmAbi,
+        Arg2: RefIntoWasmAbi,
+        Arg3: RefIntoWasmAbi,
+        Arg4: RefIntoWasmAbi,
+        Arg5: RefIntoWasmAbi,
+        Arg6: RefIntoWasmAbi,
+        Arg7: RefIntoWasmAbi,
+        F: JsFunction<Ret = Ret>
+            + JsFunction7<
+                Arg1 = Arg1,
+                Arg2 = Arg2,
+                Arg3 = Arg3,
+                Arg4 = Arg4,
+                Arg5 = Arg5,
+                Arg6 = Arg6,
+                Arg7 = Arg7,
+            >,
+    >(
+        this: &Function<F>,
+        context: &JsValue,
+        arg1: &Arg1,
+        arg2: &Arg2,
+        arg3: &Arg3,
+        arg4: &Arg4,
+        arg5: &Arg5,
+        arg6: &Arg6,
+        arg7: &Arg7,
+    ) -> Result<Ret, JsValue>;
+
     // Next major: Deprecate, and separately provide provide impl
     /// The `call()` method calls a function with a given this value and
     /// arguments provided individually.
@@ -4591,6 +4815,7 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = call)]
     pub fn call8<
         Ret: JsGeneric,
@@ -4641,6 +4866,49 @@ extern "C" {
     /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, catch, js_name = call, experimental_generic_mono)]
+    pub fn call8<
+        Ret: FromWasmAbi,
+        Arg1: RefIntoWasmAbi,
+        Arg2: RefIntoWasmAbi,
+        Arg3: RefIntoWasmAbi,
+        Arg4: RefIntoWasmAbi,
+        Arg5: RefIntoWasmAbi,
+        Arg6: RefIntoWasmAbi,
+        Arg7: RefIntoWasmAbi,
+        Arg8: RefIntoWasmAbi,
+        F: JsFunction8<
+            Ret = Ret,
+            Arg1 = Arg1,
+            Arg2 = Arg2,
+            Arg3 = Arg3,
+            Arg4 = Arg4,
+            Arg5 = Arg5,
+            Arg6 = Arg6,
+            Arg7 = Arg7,
+            Arg8 = Arg8,
+        >,
+    >(
+        this: &Function<F>,
+        context: &JsValue,
+        arg1: &Arg1,
+        arg2: &Arg2,
+        arg3: &Arg3,
+        arg4: &Arg4,
+        arg5: &Arg5,
+        arg6: &Arg6,
+        arg7: &Arg7,
+        arg8: &Arg8,
+    ) -> Result<Ret, JsValue>;
+
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(not(js_sys_unstable_apis))]
     #[deprecated]
     #[allow(deprecated)]
     #[wasm_bindgen(method, catch, js_name = call)]
@@ -4688,6 +4956,51 @@ extern "C" {
         arg9: &JsValue,
     ) -> Result<Ret, JsValue>;
 
+    /// The `call()` method calls a function with a given this value and
+    /// arguments provided individually.
+    ///
+    /// **Note: Use [`call()`](Function::call) to get exact arity and also checked generic type casting.**
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)
+    #[cfg(js_sys_unstable_apis)]
+    #[deprecated]
+    #[allow(deprecated)]
+    #[wasm_bindgen(method, catch, js_name = call, experimental_generic_mono)]
+    pub fn call9<
+        Ret: FromWasmAbi,
+        Arg1: RefIntoWasmAbi,
+        Arg2: RefIntoWasmAbi,
+        Arg3: RefIntoWasmAbi,
+        Arg4: RefIntoWasmAbi,
+        Arg5: RefIntoWasmAbi,
+        Arg6: RefIntoWasmAbi,
+        Arg7: RefIntoWasmAbi,
+        Arg8: RefIntoWasmAbi,
+        F: JsFunction8<
+            Ret = Ret,
+            Arg1 = Arg1,
+            Arg2 = Arg2,
+            Arg3 = Arg3,
+            Arg4 = Arg4,
+            Arg5 = Arg5,
+            Arg6 = Arg6,
+            Arg7 = Arg7,
+            Arg8 = Arg8,
+        >,
+    >(
+        this: &Function<F>,
+        context: &JsValue,
+        arg1: &Arg1,
+        arg2: &Arg2,
+        arg3: &Arg3,
+        arg4: &Arg4,
+        arg5: &Arg5,
+        arg6: &Arg6,
+        arg7: &Arg7,
+        arg8: &Arg8,
+        arg9: &JsValue,
+    ) -> Result<Ret, JsValue>;
+
     /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
     /// with a given sequence of arguments preceding any provided when the new function is called.
     ///
@@ -4719,6 +5032,7 @@ extern "C" {
     /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = bind)]
     pub fn bind1<
         Ret: JsGeneric,
@@ -4736,6 +5050,21 @@ extern "C" {
     /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = bind, experimental_generic_mono)]
+    pub fn bind1<Ret, Arg1: RefIntoWasmAbi, F: JsFunction1<Ret = Ret, Arg1 = Arg1>>(
+        this: &Function<F>,
+        context: &JsValue,
+        arg1: &Arg1,
+    ) -> Function<<F as JsFunction1>::Bind1>;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = bind)]
     pub fn bind2<
         Ret: JsGeneric,
@@ -4755,6 +5084,27 @@ extern "C" {
     /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = bind, experimental_generic_mono)]
+    pub fn bind2<
+        Ret,
+        Arg1: RefIntoWasmAbi,
+        Arg2: RefIntoWasmAbi,
+        F: JsFunction2<Ret = Ret, Arg1 = Arg1, Arg2 = Arg2>,
+    >(
+        this: &Function<F>,
+        context: &JsValue,
+        arg1: &Arg1,
+        arg2: &Arg2,
+    ) -> Function<<F as JsFunction2>::Bind2>;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = bind)]
     pub fn bind3<
         Ret: JsGeneric,
@@ -4780,6 +5130,29 @@ extern "C" {
     /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = bind, experimental_generic_mono)]
+    pub fn bind3<
+        Ret,
+        Arg1: RefIntoWasmAbi,
+        Arg2: RefIntoWasmAbi,
+        Arg3: RefIntoWasmAbi,
+        F: JsFunction3<Ret = Ret, Arg1 = Arg1, Arg2 = Arg2, Arg3 = Arg3>,
+    >(
+        this: &Function<F>,
+        context: &JsValue,
+        arg1: &Arg1,
+        arg2: &Arg2,
+        arg3: &Arg3,
+    ) -> Function<<F as JsFunction3>::Bind3>;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = bind)]
     pub fn bind4<
         Ret: JsGeneric,
@@ -4808,6 +5181,31 @@ extern "C" {
     /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = bind, experimental_generic_mono)]
+    pub fn bind4<
+        Ret,
+        Arg1: RefIntoWasmAbi,
+        Arg2: RefIntoWasmAbi,
+        Arg3: RefIntoWasmAbi,
+        Arg4: RefIntoWasmAbi,
+        F: JsFunction4<Ret = Ret, Arg1 = Arg1, Arg2 = Arg2, Arg3 = Arg3, Arg4 = Arg4>,
+    >(
+        this: &Function<F>,
+        context: &JsValue,
+        arg1: &Arg1,
+        arg2: &Arg2,
+        arg3: &Arg3,
+        arg4: &Arg4,
+    ) -> Function<<F as JsFunction4>::Bind4>;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = bind)]
     pub fn bind5<
         Ret: JsGeneric,
@@ -4839,6 +5237,33 @@ extern "C" {
     /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = bind, experimental_generic_mono)]
+    pub fn bind5<
+        Ret,
+        Arg1: RefIntoWasmAbi,
+        Arg2: RefIntoWasmAbi,
+        Arg3: RefIntoWasmAbi,
+        Arg4: RefIntoWasmAbi,
+        Arg5: RefIntoWasmAbi,
+        F: JsFunction5<Ret = Ret, Arg1 = Arg1, Arg2 = Arg2, Arg3 = Arg3, Arg4 = Arg4, Arg5 = Arg5>,
+    >(
+        this: &Function<F>,
+        context: &JsValue,
+        arg1: &Arg1,
+        arg2: &Arg2,
+        arg3: &Arg3,
+        arg4: &Arg4,
+        arg5: &Arg5,
+    ) -> Function<<F as JsFunction5>::Bind5>;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = bind)]
     pub fn bind6<
         Ret: JsGeneric,
@@ -4874,6 +5299,43 @@ extern "C" {
     /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = bind, experimental_generic_mono)]
+    pub fn bind6<
+        Ret,
+        Arg1: RefIntoWasmAbi,
+        Arg2: RefIntoWasmAbi,
+        Arg3: RefIntoWasmAbi,
+        Arg4: RefIntoWasmAbi,
+        Arg5: RefIntoWasmAbi,
+        Arg6: RefIntoWasmAbi,
+        F: JsFunction6<
+            Ret = Ret,
+            Arg1 = Arg1,
+            Arg2 = Arg2,
+            Arg3 = Arg3,
+            Arg4 = Arg4,
+            Arg5 = Arg5,
+            Arg6 = Arg6,
+        >,
+    >(
+        this: &Function<F>,
+        context: &JsValue,
+        arg1: &Arg1,
+        arg2: &Arg2,
+        arg3: &Arg3,
+        arg4: &Arg4,
+        arg5: &Arg5,
+        arg6: &Arg6,
+    ) -> Function<<F as JsFunction6>::Bind6>;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = bind)]
     pub fn bind7<
         Ret: JsGeneric,
@@ -4920,6 +5382,46 @@ extern "C" {
     /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = bind, experimental_generic_mono)]
+    pub fn bind7<
+        Ret,
+        Arg1: RefIntoWasmAbi,
+        Arg2: RefIntoWasmAbi,
+        Arg3: RefIntoWasmAbi,
+        Arg4: RefIntoWasmAbi,
+        Arg5: RefIntoWasmAbi,
+        Arg6: RefIntoWasmAbi,
+        Arg7: RefIntoWasmAbi,
+        F: JsFunction7<
+            Ret = Ret,
+            Arg1 = Arg1,
+            Arg2 = Arg2,
+            Arg3 = Arg3,
+            Arg4 = Arg4,
+            Arg5 = Arg5,
+            Arg6 = Arg6,
+            Arg7 = Arg7,
+        >,
+    >(
+        this: &Function<F>,
+        context: &JsValue,
+        arg1: &Arg1,
+        arg2: &Arg2,
+        arg3: &Arg3,
+        arg4: &Arg4,
+        arg5: &Arg5,
+        arg6: &Arg6,
+        arg7: &Arg7,
+    ) -> Function<<F as JsFunction7>::Bind7>;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = bind)]
     pub fn bind8<
         Ret: JsGeneric,
@@ -4970,6 +5472,49 @@ extern "C" {
     /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = bind, experimental_generic_mono)]
+    pub fn bind8<
+        Ret,
+        Arg1: RefIntoWasmAbi,
+        Arg2: RefIntoWasmAbi,
+        Arg3: RefIntoWasmAbi,
+        Arg4: RefIntoWasmAbi,
+        Arg5: RefIntoWasmAbi,
+        Arg6: RefIntoWasmAbi,
+        Arg7: RefIntoWasmAbi,
+        Arg8: RefIntoWasmAbi,
+        F: JsFunction8<
+            Ret = Ret,
+            Arg1 = Arg1,
+            Arg2 = Arg2,
+            Arg3 = Arg3,
+            Arg4 = Arg4,
+            Arg5 = Arg5,
+            Arg6 = Arg6,
+            Arg7 = Arg7,
+            Arg8 = Arg8,
+        >,
+    >(
+        this: &Function<F>,
+        context: &JsValue,
+        arg1: &Arg1,
+        arg2: &Arg2,
+        arg3: &Arg3,
+        arg4: &Arg4,
+        arg5: &Arg5,
+        arg6: &Arg6,
+        arg7: &Arg7,
+        arg8: &Arg8,
+    ) -> Function<<F as JsFunction8>::Bind8>;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[cfg(not(js_sys_unstable_apis))]
     #[deprecated]
     #[allow(deprecated)]
     #[wasm_bindgen(method, js_name = bind)]
@@ -5003,6 +5548,51 @@ extern "C" {
             JsValue,
             JsValue,
         ) -> JsValue,
+    >(
+        this: &Function<F>,
+        context: &JsValue,
+        arg1: &Arg1,
+        arg2: &Arg2,
+        arg3: &Arg3,
+        arg4: &Arg4,
+        arg5: &Arg5,
+        arg6: &Arg6,
+        arg7: &Arg7,
+        arg8: &Arg8,
+        arg9: &JsValue,
+    ) -> Function<fn() -> Ret>;
+
+    /// The `bind()` method creates a new function that, when called, has its this keyword set to the provided value,
+    /// with a given sequence of arguments preceding any provided when the new function is called.
+    ///
+    /// *Note:* See [`Function::bindn`] for arbitrary binding with function arity checking.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
+    #[cfg(js_sys_unstable_apis)]
+    #[deprecated]
+    #[allow(deprecated)]
+    #[wasm_bindgen(method, js_name = bind, experimental_generic_mono)]
+    pub fn bind9<
+        Ret: MonoGeneric,
+        Arg1: RefIntoWasmAbi,
+        Arg2: RefIntoWasmAbi,
+        Arg3: RefIntoWasmAbi,
+        Arg4: RefIntoWasmAbi,
+        Arg5: RefIntoWasmAbi,
+        Arg6: RefIntoWasmAbi,
+        Arg7: RefIntoWasmAbi,
+        Arg8: RefIntoWasmAbi,
+        F: JsFunction8<
+            Ret = Ret,
+            Arg1 = Arg1,
+            Arg2 = Arg2,
+            Arg3 = Arg3,
+            Arg4 = Arg4,
+            Arg5 = Arg5,
+            Arg6 = Arg6,
+            Arg7 = Arg7,
+            Arg8 = Arg8,
+        >,
     >(
         this: &Function<F>,
         context: &JsValue,
@@ -5207,6 +5797,7 @@ pub trait JsArgs<T: JsFunction> {
 }
 
 // Manual impl for 0-arg
+#[cfg(not(js_sys_unstable_apis))]
 impl<Ret: JsGeneric, F: JsFunction<Ret = Ret>> JsArgs<F> for () {
     type BindOutput = Function<F>;
 
@@ -5221,9 +5812,35 @@ impl<Ret: JsGeneric, F: JsFunction<Ret = Ret>> JsArgs<F> for () {
     }
 }
 
+#[cfg(js_sys_unstable_apis)]
+impl<Ret: MonoGeneric, F: JsFunction<Ret = Ret>> JsArgs<F> for () {
+    type BindOutput = Function<F>;
+
+    #[inline]
+    fn apply_call(self, func: &Function<F>, context: &JsValue) -> Result<Ret, JsValue> {
+        func.call0(context)
+    }
+
+    #[inline]
+    fn apply_bind(self, func: &Function<F>, context: &JsValue) -> Self::BindOutput {
+        func.bind0(context)
+    }
+}
+
 macro_rules! impl_js_args {
-    ($arity:literal $trait:ident $bind_output:ident [$($A:ident)+] [$($idx:tt)+] $call:ident $bind:ident) => {
-        impl<Ret: JsGeneric, $($A: JsGeneric,)+ F: $trait<Ret = Ret, $($A = $A,)*>> JsArgs<F> for ($(&$A,)+)
+    ($bound:ident) => {
+        impl_js_args!(@impl $bound 1 JsFunction1 Bind1 [Arg1] [0] call1 bind1);
+        impl_js_args!(@impl $bound 2 JsFunction2 Bind2 [Arg1 Arg2] [0 1] call2 bind2);
+        impl_js_args!(@impl $bound 3 JsFunction3 Bind3 [Arg1 Arg2 Arg3] [0 1 2] call3 bind3);
+        impl_js_args!(@impl $bound 4 JsFunction4 Bind4 [Arg1 Arg2 Arg3 Arg4] [0 1 2 3] call4 bind4);
+        impl_js_args!(@impl $bound 5 JsFunction5 Bind5 [Arg1 Arg2 Arg3 Arg4 Arg5] [0 1 2 3 4] call5 bind5);
+        impl_js_args!(@impl $bound 6 JsFunction6 Bind6 [Arg1 Arg2 Arg3 Arg4 Arg5 Arg6] [0 1 2 3 4 5] call6 bind6);
+        impl_js_args!(@impl $bound 7 JsFunction7 Bind7 [Arg1 Arg2 Arg3 Arg4 Arg5 Arg6 Arg7] [0 1 2 3 4 5 6] call7 bind7);
+        impl_js_args!(@impl $bound 8 JsFunction8 Bind8 [Arg1 Arg2 Arg3 Arg4 Arg5 Arg6 Arg7 Arg8] [0 1 2 3 4 5 6 7] call8 bind8);
+    };
+
+    (@impl $bound:ident $arity:literal $trait:ident $bind_output:ident [$($A:ident)+] [$($idx:tt)+] $call:ident $bind:ident) => {
+        impl<Ret: $bound, $($A: $bound,)+ F: $trait<Ret = Ret, $($A = $A,)*>> JsArgs<F> for ($(&$A,)+)
         {
             type BindOutput = Function<<F as $trait>::$bind_output>;
 
@@ -5240,14 +5857,11 @@ macro_rules! impl_js_args {
     };
 }
 
-impl_js_args!(1 JsFunction1 Bind1 [Arg1] [0] call1 bind1);
-impl_js_args!(2 JsFunction2 Bind2 [Arg1 Arg2] [0 1] call2 bind2);
-impl_js_args!(3 JsFunction3 Bind3 [Arg1 Arg2 Arg3] [0 1 2] call3 bind3);
-impl_js_args!(4 JsFunction4 Bind4 [Arg1 Arg2 Arg3 Arg4] [0 1 2 3] call4 bind4);
-impl_js_args!(5 JsFunction5 Bind5 [Arg1 Arg2 Arg3 Arg4 Arg5] [0 1 2 3 4] call5 bind5);
-impl_js_args!(6 JsFunction6 Bind6 [Arg1 Arg2 Arg3 Arg4 Arg5 Arg6] [0 1 2 3 4 5] call6 bind6);
-impl_js_args!(7 JsFunction7 Bind7 [Arg1 Arg2 Arg3 Arg4 Arg5 Arg6 Arg7] [0 1 2 3 4 5 6] call7 bind7);
-impl_js_args!(8 JsFunction8 Bind8 [Arg1 Arg2 Arg3 Arg4 Arg5 Arg6 Arg7 Arg8] [0 1 2 3 4 5 6 7] call8 bind8);
+#[cfg(not(js_sys_unstable_apis))]
+impl_js_args!(JsGeneric);
+
+#[cfg(js_sys_unstable_apis)]
+impl_js_args!(MonoGeneric);
 
 impl<T: JsFunction> Function<T> {
     /// The `call()` method calls a function with a given `this` value and
@@ -7523,23 +8137,59 @@ extern "C" {
     #[wasm_bindgen(method, setter = configurable)]
     pub fn set_configurable<T>(this: &PropertyDescriptor<T>, configurable: bool);
 
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, getter = get)]
     pub fn get_get<T>(this: &PropertyDescriptor<T>) -> Option<Function<fn() -> T>>;
 
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, getter = get)]
+    pub fn get_get<T: MonoGeneric>(this: &PropertyDescriptor<T>) -> Option<Function<fn() -> T>>;
+
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, setter = get)]
     pub fn set_get<T>(this: &PropertyDescriptor<T>, get: Function<fn() -> T>);
 
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, setter = get)]
+    pub fn set_get<T: MonoGeneric>(this: &PropertyDescriptor<T>, get: Function<fn() -> T>);
+
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, getter = set)]
     pub fn get_set<T>(this: &PropertyDescriptor<T>) -> Option<Function<fn(T) -> JsValue>>;
 
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, getter = set)]
+    pub fn get_set<T: MonoGeneric>(
+        this: &PropertyDescriptor<T>,
+    ) -> Option<Function<fn(T) -> JsValue>>;
+
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, setter = set)]
     pub fn set_set<T>(this: &PropertyDescriptor<T>, set: Function<fn(T) -> JsValue>);
 
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, setter = set)]
+    pub fn set_set<T: MonoGeneric>(this: &PropertyDescriptor<T>, set: Function<fn(T) -> JsValue>);
+
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, getter = value)]
     pub fn get_value<T>(this: &PropertyDescriptor<T>) -> Option<T>;
 
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, getter = value, experimental_generic_mono)]
+    pub fn get_value<T>(this: &PropertyDescriptor<T>) -> Option<T>
+    where
+        Option<T>: FromWasmAbi;
+
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, setter = value)]
     pub fn set_value<T>(this: &PropertyDescriptor<T>, value: &T);
+
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, setter = value, experimental_generic_mono)]
+    pub fn set_value<T>(this: &PropertyDescriptor<T>, value: &T)
+    where
+        T: RefIntoWasmAbi;
 }
 
 impl PropertyDescriptor {
@@ -7561,7 +8211,7 @@ impl PropertyDescriptor {
     }
 
     #[cfg(js_sys_unstable_apis)]
-    pub fn new_value<T: JsGeneric>(value: &T) -> PropertyDescriptor<T> {
+    pub fn new_value<T: RefIntoWasmAbi>(value: &T) -> PropertyDescriptor<T> {
         let desc: PropertyDescriptor<T> = JsCast::unchecked_into(Object::<JsValue>::new());
         desc.set_value(value);
         desc
@@ -8304,12 +8954,27 @@ pub mod Reflect {
         /// arguments as specified.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/apply)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, catch)]
         pub fn apply<T: JsFunction = fn() -> JsValue>(
             target: &Function<T>,
             this_argument: &JsValue,
             arguments_list: &Array,
         ) -> Result<<T as JsFunction>::Ret, JsValue>;
+
+        /// The static `Reflect.apply()` method calls a target function with
+        /// arguments as specified.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/apply)
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(js_namespace = Reflect, catch, experimental_generic_mono)]
+        pub fn apply<T: JsFunction>(
+            target: &Function<T>,
+            this_argument: &JsValue,
+            arguments_list: &Array,
+        ) -> Result<<T as JsFunction>::Ret, JsValue>
+        where
+            <T as JsFunction>::Ret: FromWasmAbi;
 
         /// The static `Reflect.construct()` method acts like the new operator, but
         /// as a function.  It is equivalent to calling `new target(...args)`. It
@@ -14682,8 +15347,18 @@ extern "C" {
     /// Creates a new `Promise` with the provided executor `cb`
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(constructor)]
     pub fn new_typed<T: Promising>(
+        cb: &mut dyn FnMut(Function<fn(T) -> Undefined>, Function<fn(JsValue) -> Undefined>),
+    ) -> Promise<<T as Promising>::Resolution>;
+
+    /// Creates a new `Promise` with the provided executor `cb`
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(constructor)]
+    pub fn new_typed<T: Promising + MonoGeneric>(
         cb: &mut dyn FnMut(Function<fn(T) -> Undefined>, Function<fn(JsValue) -> Undefined>),
     ) -> Promise<<T as Promising>::Resolution>;
 
