@@ -563,8 +563,9 @@ different signatures.
 ## Note on `&T` arguments
 
 A bare `&T` argument is supported, declared with the bound
-`T: RefIntoWasmAbi`, which holds for `JsValue` and JS handle types, `String`,
-`str`, numbers, `bool`, `char`, and `Option<T>` or `Nullable<T>` of any of
-them; a borrowed number crosses by copy. Passing `&SomeStruct` for a plain
-Rust struct is rejected, since there is no `&T` ABI representation for it;
-take the value by value, or pass a JS type.
+`T: RefIntoWasmAbi`. It holds for `JsValue` and JS handle types, which cross as
+the handle, for `bool`, `char` and every number, which cross as the value, for
+`String`, `str`, `Box<str>` and `Cow<str>`, which cross as a string, and for
+`Option<T>` or `Nullable<T>` of any of them. Passing `&SomeStruct` for a plain
+Rust struct, or `&Vec<T>` for a collection, is rejected, since there is no `&T`
+ABI representation for them; take the value by value, or pass a JS type.
