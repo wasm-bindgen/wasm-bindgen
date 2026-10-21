@@ -181,6 +181,12 @@
   for a `u64`.
   [#5404](https://github.com/wasm-bindgen/wasm-bindgen/issues/5404)
 
+* The test runner works again with `WASM_BINDGEN_NO_DEBUG=1`, so a test suite
+  can run against the glue a release build gets. The tests are reached through
+  the `__wasm` export, which only debug glue has had since #4879; the new
+  `Bindgen::export_wasm` option exports it on its own.
+  [#5404](https://github.com/wasm-bindgen/wasm-bindgen/issues/5404)
+
 * An `async` export now converts its arguments when it is called, rather than
   when its future is first polled. A rejected argument rejects the returned
   promise, instead of throwing from the task queue, and an `async` method's

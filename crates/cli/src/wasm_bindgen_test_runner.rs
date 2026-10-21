@@ -369,7 +369,10 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
     // code.
     //
     // It has nothing to do with Rust.
+    //
+    // The tests are plain Wasm exports, reached through `__wasm`.
     b.debug(debug)
+        .export_wasm(true)
         .input_module(module, wasm)
         .emit_start(false)
         .generate(&tmpdir_path)

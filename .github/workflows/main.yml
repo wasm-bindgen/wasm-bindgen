@@ -112,6 +112,8 @@ jobs:
             run: cargo test --target wasm32-unknown-unknown --features serde-serialize
           - name: enable-interning
             run: cargo test --target wasm32-unknown-unknown --features enable-interning
+          - name: no-debug
+            run: WASM_BINDGEN_NO_DEBUG=1 cargo test --target wasm32-unknown-unknown
     name: "Run wasm-bindgen crate tests (${{ matrix.runs.name }})"
     runs-on: ubuntu-latest
     env:

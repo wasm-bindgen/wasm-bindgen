@@ -913,7 +913,7 @@ impl<'a> Context<'a> {
 
         let already_exports_wasm_for_node_esm_threads =
             self.threads_enabled && matches!(self.config.mode, OutputMode::Node { module: true });
-        if self.config.debug
+        if (self.config.debug || self.config.export_wasm)
             && !already_exports_wasm_for_node_esm_threads
             && !matches!(self.config.mode, OutputMode::Emscripten)
         {

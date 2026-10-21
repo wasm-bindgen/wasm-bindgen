@@ -13,10 +13,12 @@ exports.pass_enum_vec = () => {
     assert.strictEqual(wasm.consume_optional_enum_vec(undefined), undefined);
 };
 
-// Each element is checked as a single enum argument would be.
+// Each element is checked as a single enum argument would be; only debug
+// glue checks the type before the value.
 exports.pass_invalid_enum_vec = () => {
+    const debug = process.env.WASM_BINDGEN_NO_DEBUG == null;
     for (const [vec, message] of [
-        [['not an enum value'], /expected a number argument/],
+        [['not an enum value'], debug ? /expected a number argument/ : /invalid enum value passed/],
         [[1.5], /invalid enum value passed/],
         [[NaN], /invalid enum value passed/],
     ]) {
