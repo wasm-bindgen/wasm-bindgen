@@ -1,15 +1,22 @@
 //! A small test suite for the `wasm-bindgen-test-runner` CLI command itself
+//!
+//! Every scenario is a test binary in the `fixture` crate, which is built once with a
+//! single `cargo test --no-run`. Each binary is then run by `wasm-bindgen-test-runner`
+//! directly, and a run is shared by every test that inspects its output, so each browser
+//! session is started only once. To add a scenario, prefer adding a test to an existing
+//! binary with the same mode, arguments and outcome (tests in a binary must log unique
+//! markers), and only add a new file in `fixture/tests` when none fits.
 
 mod headless_streaming_tests;
 
-use assert_cmd::Command;
-use predicates::str;
+use std::collections::HashMap;
 use std::env;
-use std::fs;
-use std::io::BufRead;
-use std::path::PathBuf;
-use std::process::Output;
+use std::ffi::OsStr;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::sync::LazyLock;
+
+const RUNNER: &str = env!("CARGO_BIN_EXE_wasm-bindgen-test-runner");
 
 static TARGET_DIR: LazyLock<PathBuf> = LazyLock::new(|| {
     let mut dir = env::current_exe().unwrap();
@@ -21,155 +28,113 @@ static TARGET_DIR: LazyLock<PathBuf> = LazyLock::new(|| {
     dir
 });
 
-static REPO_ROOT: LazyLock<PathBuf> = LazyLock::new(|| {
-    let mut repo_root = env::current_dir().unwrap();
-    repo_root.pop(); // remove 'cli'
-    repo_root.pop(); // remove 'crates'
-    repo_root
+static FIXTURE_DIR: LazyLock<PathBuf> = LazyLock::new(|| {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("wasm-bindgen-test-runner")
+        .join("fixture")
 });
 
-struct Project {
-    root: PathBuf,
-    name: String,
-    deps: String,
-    dev_deps: String,
+/// The fixture's test binaries, keyed by target name.
+static FIXTURE: LazyLock<HashMap<String, PathBuf>> = LazyLock::new(|| {
+    let output = Command::new("cargo")
+        .current_dir(&*FIXTURE_DIR)
+        .args(["test", "--target", "wasm32-unknown-unknown", "--no-run"])
+        .arg("--message-format=json-render-diagnostics")
+        .env("CARGO_TARGET_DIR", &*TARGET_DIR)
+        .output()
+        .expect("failed to execute cargo");
+    assert!(
+        output.status.success(),
+        "failed to build the test runner fixture:\n{}",
+        String::from_utf8_lossy(&output.stderr),
+    );
+    String::from_utf8(output.stdout)
+        .unwrap()
+        .lines()
+        .filter_map(|line| {
+            let message: serde_json::Value = serde_json::from_str(line).ok()?;
+            if message["reason"] != "compiler-artifact" || message["profile"]["test"] != true {
+                return None;
+            }
+            let name = message["target"]["name"].as_str()?;
+            let executable = message["executable"].as_str()?;
+            Some((name.to_owned(), PathBuf::from(executable)))
+        })
+        .collect()
+});
+
+/// The output of running one fixture binary.
+struct Run {
+    stdout: String,
+    stderr: String,
+    success: bool,
 }
 
-impl Project {
-    fn new(name: impl Into<String>) -> Project {
-        let name = name.into();
-        let root = TARGET_DIR.join("cli-tests").join(&name);
-        drop(fs::remove_dir_all(&root));
-        fs::create_dir_all(&root).unwrap();
-        Project {
-            root,
-            name,
-            deps: "wasm-bindgen = { path = '{root}' }\n".to_owned(),
-            dev_deps: "wasm-bindgen-test = { path = '{root}/crates/test' }\n".to_owned(),
-        }
+impl Run {
+    fn count(&self, needle: &str) -> usize {
+        self.stdout.matches(needle).count() + self.stderr.matches(needle).count()
     }
 
-    fn file(&mut self, name: &str, contents: &str) -> &mut Project {
-        let dst = self.root.join(name);
-        fs::create_dir_all(dst.parent().unwrap()).unwrap();
-        fs::write(&dst, contents).unwrap();
-        self
+    fn dump(&self) -> String {
+        format!("stdout:\n{}\nstderr:\n{}", self.stdout, self.stderr)
     }
 
-    fn wasm_bindgen_test(&mut self, args: &str) -> anyhow::Result<Output> {
-        self.cargo_toml();
-        let mut cargo_cmd = Command::new("cargo");
-        let runner = REPO_ROOT.join("crates").join("cli").join("Cargo.toml");
-        let output = cargo_cmd
-            .current_dir(&self.root)
-            .arg("test")
-            .arg("--target")
-            .arg("wasm32-unknown-unknown")
-            .arg("--")
-            .args(args.split_whitespace())
-            .env("CARGO_TARGET_DIR", &*TARGET_DIR)
-            .env(
-                "CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER",
-                format!(
-                    "cargo run --manifest-path {} --bin wasm-bindgen-test-runner --",
-                    runner.display()
-                ),
-            )
-            .output()?;
-        Ok(output)
+    #[track_caller]
+    fn assert_success(&self) {
+        assert!(self.success, "Test should pass.\n{}", self.dump());
     }
 
-    fn cargo_toml(&mut self) {
-        if !self.root.join("Cargo.toml").is_file() {
-            self.file(
-                "Cargo.toml",
-                &format!(
-                    "
-                        [package]
-                        name = \"{}\"
-                        authors = []
-                        version = \"1.0.0\"
-                        edition = '2021'
+    #[track_caller]
+    fn assert_failure(&self) {
+        assert!(!self.success, "Test should fail.\n{}", self.dump());
+    }
 
-                        [dependencies]
-                        {}
+    #[track_caller]
+    fn assert_contains(&self, needle: &str) {
+        assert!(
+            self.count(needle) > 0,
+            "Expected {needle:?} in output.\n{}",
+            self.dump(),
+        );
+    }
 
+    #[track_caller]
+    fn assert_count(&self, needle: &str, expected: usize) {
+        let count = self.count(needle);
+        assert_eq!(
+            count,
+            expected,
+            "Expected {needle:?} to appear {expected} times, but it appeared {count} times.\n{}",
+            self.dump(),
+        );
+    }
+}
 
-                        [dev-dependencies]
-                        {}
-
-                        [lib]
-                        crate-type = ['cdylib']
-
-                        [workspace]
-
-                        [profile.dev]
-                        codegen-units = 1
-                    ",
-                    self.name,
-                    self.deps.replace("{root}", REPO_ROOT.to_str().unwrap()),
-                    self.dev_deps.replace("{root}", REPO_ROOT.to_str().unwrap())
-                ),
-            );
-        }
+/// Runs the fixture binary `target` with `wasm-bindgen-test-runner`.
+fn run(target: &str, args: &[&str], envs: &[(&str, &OsStr)]) -> Run {
+    let wasm = FIXTURE
+        .get(target)
+        .unwrap_or_else(|| panic!("the fixture has no test binary named `{target}`"));
+    let output = Command::new(RUNNER)
+        .current_dir(&*FIXTURE_DIR)
+        .arg(wasm)
+        .args(args)
+        .envs(envs.iter().copied())
+        .output()
+        .expect("failed to execute wasm-bindgen-test-runner");
+    Run {
+        stdout: String::from_utf8_lossy(&output.stdout).into_owned(),
+        stderr: String::from_utf8_lossy(&output.stderr).into_owned(),
+        success: output.status.success(),
     }
 }
 
 #[test]
 fn test_wasm_bindgen_test_runner_list() {
-    let output = Project::new("test_wasm_bindgen_test_runner_list")
-        .file(
-            "src/lib.rs",
-            r#"
-            #[cfg(test)]
-            mod tests {
-                use wasm_bindgen_test::*;
-
-                #[wasm_bindgen_test]
-                fn test_foo() {}
-            }
-        "#,
-        )
-        .wasm_bindgen_test("--list")
-        .unwrap();
-    let mut lines = output.stdout.lines().map(|l| l.unwrap());
-    assert_eq!(lines.next().as_deref(), Some("tests::test_foo: test"));
+    let run = run("list", &["--list"], &[]);
+    run.assert_success();
+    let mut lines = run.stdout.lines();
+    assert_eq!(lines.next(), Some("tests::test_foo: test"));
     assert_eq!(lines.next(), None);
-}
-
-/// Test that console.log output in dedicated worker mode is not duplicated.
-/// See: https://github.com/wasm-bindgen/wasm-bindgen/pull/4845#issuecomment-3660688206
-#[test]
-fn test_worker_console_log_no_duplicates() {
-    let output = Project::new("test_worker_console_log_no_duplicates")
-        .file(
-            "src/lib.rs",
-            r#"
-            #[cfg(test)]
-            mod tests {
-                use wasm_bindgen_test::*;
-
-                wasm_bindgen_test_configure!(run_in_dedicated_worker);
-
-                #[wasm_bindgen_test]
-                fn test_console_log() {
-                    console_log!("UNIQUE_TEST_MESSAGE_12345");
-                }
-            }
-        "#,
-        )
-        .wasm_bindgen_test("--nocapture")
-        .unwrap();
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    let combined = format!("{stdout}{stderr}");
-
-    // Count occurrences of the unique message
-    let count = combined.matches("UNIQUE_TEST_MESSAGE_12345").count();
-
-    assert_eq!(
-        count, 1,
-        "Expected console_log message to appear exactly once, but it appeared {count} times.\nstdout:\n{stdout}\nstderr:\n{stderr}"
-    );
 }

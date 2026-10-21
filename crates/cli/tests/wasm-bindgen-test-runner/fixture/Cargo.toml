@@ -1,0 +1,45 @@
+# Fixture for the `wasm-bindgen-test-runner` tests. Every file in `tests/` is its own
+# test binary, so the whole fixture builds with a single `cargo test --no-run`
+# and each binary is then handed to `wasm-bindgen-test-runner` directly.
+
+[package]
+authors = ["The wasm-bindgen Developers"]
+edition = "2021"
+name = "wasm-bindgen-test-runner-fixture"
+publish = false
+version = "0.0.0"
+
+[lib]
+doctest = false
+test = false
+
+[dependencies]
+js-sys = { path = "../../../../js-sys" }
+wasm-bindgen = { path = "../../../../.." }
+wasm-bindgen-futures = { path = "../../../../futures" }
+
+[dependencies.web-sys]
+features = [
+  "Blob",
+  "BlobPropertyBag",
+  "ErrorEvent",
+  "MessageEvent",
+  "MessagePort",
+  "SharedWorker",
+  "Url",
+  "Window",
+  "Worker",
+  "WorkerOptions",
+  "WorkerType",
+]
+path = "../../../../web-sys"
+
+[dev-dependencies]
+wasm-bindgen-test = { path = "../../../../test" }
+
+# Without DWARF the test binaries are much smaller, and the debug build of
+# `wasm-bindgen-test-runner` processes each one in about a second instead of four.
+[profile.dev]
+debug = false
+
+[workspace]
