@@ -1530,23 +1530,82 @@ extern "C" {
     pub type ArrayTuple<T: JsTuple = (JsValue,)>;
 
     /// Creates a new JS array typed as a 1-tuple.
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(js_class = Array, static_method_of = ArrayTuple, js_name = of)]
     pub fn new1<T1>(t1: &T1) -> ArrayTuple<(T1,)>;
 
+    /// Creates a new JS array typed as a 1-tuple.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        js_class = Array,
+        static_method_of = ArrayTuple,
+        js_name = of,
+        experimental_generic_mono
+    )]
+    pub fn new1<T1>(t1: &T1) -> ArrayTuple<(T1,)>
+    where
+        T1: RefIntoWasmAbi;
+
     /// Creates a new JS array typed as a 2-tuple.
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(js_class = Array, static_method_of = ArrayTuple, js_name = of)]
     pub fn new2<T1, T2>(t1: &T1, t2: &T2) -> ArrayTuple<(T1, T2)>;
 
+    /// Creates a new JS array typed as a 2-tuple.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        js_class = Array,
+        static_method_of = ArrayTuple,
+        js_name = of,
+        experimental_generic_mono
+    )]
+    pub fn new2<T1, T2>(t1: &T1, t2: &T2) -> ArrayTuple<(T1, T2)>
+    where
+        T1: RefIntoWasmAbi,
+        T2: RefIntoWasmAbi;
+
     /// Creates a new JS array typed as a 3-tuple.
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(js_class = Array, static_method_of = ArrayTuple, js_name = of)]
     pub fn new3<T1, T2, T3>(t1: &T1, t2: &T2, t3: &T3) -> ArrayTuple<(T1, T2, T3)>;
 
+    /// Creates a new JS array typed as a 3-tuple.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        js_class = Array,
+        static_method_of = ArrayTuple,
+        js_name = of,
+        experimental_generic_mono
+    )]
+    pub fn new3<T1, T2, T3>(t1: &T1, t2: &T2, t3: &T3) -> ArrayTuple<(T1, T2, T3)>
+    where
+        T1: RefIntoWasmAbi,
+        T2: RefIntoWasmAbi,
+        T3: RefIntoWasmAbi;
+
     /// Creates a new JS array typed as a 4-tuple.
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(js_class = Array, static_method_of = ArrayTuple, js_name = of)]
     pub fn new4<T1, T2, T3, T4>(t1: &T1, t2: &T2, t3: &T3, t4: &T4)
         -> ArrayTuple<(T1, T2, T3, T4)>;
 
+    /// Creates a new JS array typed as a 4-tuple.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        js_class = Array,
+        static_method_of = ArrayTuple,
+        js_name = of,
+        experimental_generic_mono
+    )]
+    pub fn new4<T1, T2, T3, T4>(t1: &T1, t2: &T2, t3: &T3, t4: &T4) -> ArrayTuple<(T1, T2, T3, T4)>
+    where
+        T1: RefIntoWasmAbi,
+        T2: RefIntoWasmAbi,
+        T3: RefIntoWasmAbi,
+        T4: RefIntoWasmAbi;
+
     /// Creates a new JS array typed as a 5-tuple.
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(js_class = Array, static_method_of = ArrayTuple, js_name = of)]
     pub fn new5<T1, T2, T3, T4, T5>(
         t1: &T1,
@@ -1556,7 +1615,30 @@ extern "C" {
         t5: &T5,
     ) -> ArrayTuple<(T1, T2, T3, T4, T5)>;
 
+    /// Creates a new JS array typed as a 5-tuple.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        js_class = Array,
+        static_method_of = ArrayTuple,
+        js_name = of,
+        experimental_generic_mono
+    )]
+    pub fn new5<T1, T2, T3, T4, T5>(
+        t1: &T1,
+        t2: &T2,
+        t3: &T3,
+        t4: &T4,
+        t5: &T5,
+    ) -> ArrayTuple<(T1, T2, T3, T4, T5)>
+    where
+        T1: RefIntoWasmAbi,
+        T2: RefIntoWasmAbi,
+        T3: RefIntoWasmAbi,
+        T4: RefIntoWasmAbi,
+        T5: RefIntoWasmAbi;
+
     /// Creates a new JS array typed as a 6-tuple.
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(js_class = Array, static_method_of = ArrayTuple, js_name = of)]
     pub fn new6<T1, T2, T3, T4, T5, T6>(
         t1: &T1,
@@ -1567,7 +1649,32 @@ extern "C" {
         t6: &T6,
     ) -> ArrayTuple<(T1, T2, T3, T4, T5, T6)>;
 
+    /// Creates a new JS array typed as a 6-tuple.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        js_class = Array,
+        static_method_of = ArrayTuple,
+        js_name = of,
+        experimental_generic_mono
+    )]
+    pub fn new6<T1, T2, T3, T4, T5, T6>(
+        t1: &T1,
+        t2: &T2,
+        t3: &T3,
+        t4: &T4,
+        t5: &T5,
+        t6: &T6,
+    ) -> ArrayTuple<(T1, T2, T3, T4, T5, T6)>
+    where
+        T1: RefIntoWasmAbi,
+        T2: RefIntoWasmAbi,
+        T3: RefIntoWasmAbi,
+        T4: RefIntoWasmAbi,
+        T5: RefIntoWasmAbi,
+        T6: RefIntoWasmAbi;
+
     /// Creates a new JS array typed as a 7-tuple.
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(js_class = Array, static_method_of = ArrayTuple, js_name = of)]
     pub fn new7<T1, T2, T3, T4, T5, T6, T7>(
         t1: &T1,
@@ -1579,7 +1686,34 @@ extern "C" {
         t7: &T7,
     ) -> ArrayTuple<(T1, T2, T3, T4, T5, T6, T7)>;
 
+    /// Creates a new JS array typed as a 7-tuple.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        js_class = Array,
+        static_method_of = ArrayTuple,
+        js_name = of,
+        experimental_generic_mono
+    )]
+    pub fn new7<T1, T2, T3, T4, T5, T6, T7>(
+        t1: &T1,
+        t2: &T2,
+        t3: &T3,
+        t4: &T4,
+        t5: &T5,
+        t6: &T6,
+        t7: &T7,
+    ) -> ArrayTuple<(T1, T2, T3, T4, T5, T6, T7)>
+    where
+        T1: RefIntoWasmAbi,
+        T2: RefIntoWasmAbi,
+        T3: RefIntoWasmAbi,
+        T4: RefIntoWasmAbi,
+        T5: RefIntoWasmAbi,
+        T6: RefIntoWasmAbi,
+        T7: RefIntoWasmAbi;
+
     /// Creates a new JS array typed as a 8-tuple.
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(js_class = Array, static_method_of = ArrayTuple, js_name = of)]
     pub fn new8<T1, T2, T3, T4, T5, T6, T7, T8>(
         t1: &T1,
@@ -1592,7 +1726,36 @@ extern "C" {
         t8: &T8,
     ) -> ArrayTuple<(T1, T2, T3, T4, T5, T6, T7, T8)>;
 
+    /// Creates a new JS array typed as a 8-tuple.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        js_class = Array,
+        static_method_of = ArrayTuple,
+        js_name = of,
+        experimental_generic_mono
+    )]
+    pub fn new8<T1, T2, T3, T4, T5, T6, T7, T8>(
+        t1: &T1,
+        t2: &T2,
+        t3: &T3,
+        t4: &T4,
+        t5: &T5,
+        t6: &T6,
+        t7: &T7,
+        t8: &T8,
+    ) -> ArrayTuple<(T1, T2, T3, T4, T5, T6, T7, T8)>
+    where
+        T1: RefIntoWasmAbi,
+        T2: RefIntoWasmAbi,
+        T3: RefIntoWasmAbi,
+        T4: RefIntoWasmAbi,
+        T5: RefIntoWasmAbi,
+        T6: RefIntoWasmAbi,
+        T7: RefIntoWasmAbi,
+        T8: RefIntoWasmAbi;
+
     /// Gets the 1st item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1601,7 +1764,21 @@ extern "C" {
     )]
     pub fn get0<T: JsTuple1 = (JsValue,)>(this: &ArrayTuple<T>) -> <T as JsTuple1>::T1;
 
+    /// Gets the 1st item
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "0",
+        experimental_generic_mono
+    )]
+    pub fn get0<T: JsTuple1>(this: &ArrayTuple<T>) -> <T as JsTuple1>::T1
+    where
+        <T as JsTuple1>::T1: FromWasmAbi;
+
     /// Gets the 2nd item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1610,7 +1787,21 @@ extern "C" {
     )]
     pub fn get1<T: JsTuple2 = (JsValue, JsValue)>(this: &ArrayTuple<T>) -> <T as JsTuple2>::T2;
 
+    /// Gets the 2nd item
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "1",
+        experimental_generic_mono
+    )]
+    pub fn get1<T: JsTuple2>(this: &ArrayTuple<T>) -> <T as JsTuple2>::T2
+    where
+        <T as JsTuple2>::T2: FromWasmAbi;
+
     /// Gets the 3rd item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1621,7 +1812,21 @@ extern "C" {
         this: &ArrayTuple<T>,
     ) -> <T as JsTuple3>::T3;
 
+    /// Gets the 3rd item
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "2",
+        experimental_generic_mono
+    )]
+    pub fn get2<T: JsTuple3>(this: &ArrayTuple<T>) -> <T as JsTuple3>::T3
+    where
+        <T as JsTuple3>::T3: FromWasmAbi;
+
     /// Gets the 4th item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1632,7 +1837,21 @@ extern "C" {
         this: &ArrayTuple<T>,
     ) -> <T as JsTuple4>::T4;
 
+    /// Gets the 4th item
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "3",
+        experimental_generic_mono
+    )]
+    pub fn get3<T: JsTuple4>(this: &ArrayTuple<T>) -> <T as JsTuple4>::T4
+    where
+        <T as JsTuple4>::T4: FromWasmAbi;
+
     /// Gets the 5th item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1643,7 +1862,21 @@ extern "C" {
         this: &ArrayTuple<T>,
     ) -> <T as JsTuple5>::T5;
 
+    /// Gets the 5th item
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "4",
+        experimental_generic_mono
+    )]
+    pub fn get4<T: JsTuple5>(this: &ArrayTuple<T>) -> <T as JsTuple5>::T5
+    where
+        <T as JsTuple5>::T5: FromWasmAbi;
+
     /// Gets the 6th item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1654,7 +1887,21 @@ extern "C" {
         this: &ArrayTuple<T>,
     ) -> <T as JsTuple6>::T6;
 
+    /// Gets the 6th item
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "5",
+        experimental_generic_mono
+    )]
+    pub fn get5<T: JsTuple6>(this: &ArrayTuple<T>) -> <T as JsTuple6>::T6
+    where
+        <T as JsTuple6>::T6: FromWasmAbi;
+
     /// Gets the 7th item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1675,7 +1922,21 @@ extern "C" {
         this: &ArrayTuple<T>,
     ) -> <T as JsTuple7>::T7;
 
+    /// Gets the 7th item
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "6",
+        experimental_generic_mono
+    )]
+    pub fn get6<T: JsTuple7>(this: &ArrayTuple<T>) -> <T as JsTuple7>::T7
+    where
+        <T as JsTuple7>::T7: FromWasmAbi;
+
     /// Gets the 8th item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1697,7 +1958,21 @@ extern "C" {
         this: &ArrayTuple<T>,
     ) -> <T as JsTuple8>::T8;
 
+    /// Gets the 8th item
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        getter,
+        js_name = "7",
+        experimental_generic_mono
+    )]
+    pub fn get7<T: JsTuple8>(this: &ArrayTuple<T>) -> <T as JsTuple8>::T8
+    where
+        <T as JsTuple8>::T8: FromWasmAbi;
+
     /// Sets the 1st item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1706,7 +1981,21 @@ extern "C" {
     )]
     pub fn set0<T: JsTuple1 = (JsValue,)>(this: &ArrayTuple<T>, value: &<T as JsTuple1>::T1);
 
+    /// Sets the 1st item
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        setter,
+        js_name = "0",
+        experimental_generic_mono
+    )]
+    pub fn set0<T: JsTuple1>(this: &ArrayTuple<T>, value: &<T as JsTuple1>::T1)
+    where
+        <T as JsTuple1>::T1: RefIntoWasmAbi;
+
     /// Sets the 2nd item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1718,7 +2007,21 @@ extern "C" {
         value: &<T as JsTuple2>::T2,
     );
 
+    /// Sets the 2nd item
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        setter,
+        js_name = "1",
+        experimental_generic_mono
+    )]
+    pub fn set1<T: JsTuple2>(this: &ArrayTuple<T>, value: &<T as JsTuple2>::T2)
+    where
+        <T as JsTuple2>::T2: RefIntoWasmAbi;
+
     /// Sets the 3rd item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1730,7 +2033,21 @@ extern "C" {
         value: &<T as JsTuple3>::T3,
     );
 
+    /// Sets the 3rd item
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        setter,
+        js_name = "2",
+        experimental_generic_mono
+    )]
+    pub fn set2<T: JsTuple3>(this: &ArrayTuple<T>, value: &<T as JsTuple3>::T3)
+    where
+        <T as JsTuple3>::T3: RefIntoWasmAbi;
+
     /// Sets the 4th item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1742,7 +2059,21 @@ extern "C" {
         value: &<T as JsTuple4>::T4,
     );
 
+    /// Sets the 4th item
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        setter,
+        js_name = "3",
+        experimental_generic_mono
+    )]
+    pub fn set3<T: JsTuple4>(this: &ArrayTuple<T>, value: &<T as JsTuple4>::T4)
+    where
+        <T as JsTuple4>::T4: RefIntoWasmAbi;
+
     /// Sets the 5th item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1754,7 +2085,21 @@ extern "C" {
         value: &<T as JsTuple5>::T5,
     );
 
+    /// Sets the 5th item
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        setter,
+        js_name = "4",
+        experimental_generic_mono
+    )]
+    pub fn set4<T: JsTuple5>(this: &ArrayTuple<T>, value: &<T as JsTuple5>::T5)
+    where
+        <T as JsTuple5>::T5: RefIntoWasmAbi;
+
     /// Sets the 6th item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1766,7 +2111,21 @@ extern "C" {
         value: &<T as JsTuple6>::T6,
     );
 
+    /// Sets the 6th item
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        setter,
+        js_name = "5",
+        experimental_generic_mono
+    )]
+    pub fn set5<T: JsTuple6>(this: &ArrayTuple<T>, value: &<T as JsTuple6>::T6)
+    where
+        <T as JsTuple6>::T6: RefIntoWasmAbi;
+
     /// Sets the 7th item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1788,7 +2147,21 @@ extern "C" {
         value: &<T as JsTuple7>::T7,
     );
 
+    /// Sets the 7th item
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        setter,
+        js_name = "6",
+        experimental_generic_mono
+    )]
+    pub fn set6<T: JsTuple7>(this: &ArrayTuple<T>, value: &<T as JsTuple7>::T7)
+    where
+        <T as JsTuple7>::T7: RefIntoWasmAbi;
+
     /// Sets the 8th item
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(
         method,
         js_class = Array,
@@ -1810,6 +2183,19 @@ extern "C" {
         this: &ArrayTuple<T>,
         value: &<T as JsTuple8>::T8,
     );
+
+    /// Sets the 8th item
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(
+        method,
+        js_class = Array,
+        setter,
+        js_name = "7",
+        experimental_generic_mono
+    )]
+    pub fn set7<T: JsTuple8>(this: &ArrayTuple<T>, value: &<T as JsTuple8>::T8)
+    where
+        <T as JsTuple8>::T8: RefIntoWasmAbi;
 }
 
 /// Base trait for tuple types.
@@ -1890,6 +2276,7 @@ macro_rules! impl_tuple {
 
         impl_parent_traits!([$($T),+] [$($traits)*] [$($T)*]);
 
+        #[cfg(not(js_sys_unstable_apis))]
         impl<$($T: JsGeneric),+> From<($($T,)+)> for ArrayTuple<($($T),+,)> {
             fn from(($($vars,)+): ($($T,)+)) -> Self {
                 $(let $vars: JsValue = $vars.upcast_into();)+
@@ -1897,7 +2284,22 @@ macro_rules! impl_tuple {
             }
         }
 
-        impl<$($T: JsGeneric + Default),+> Default for ArrayTuple<($($T),+,)> {
+        #[cfg(js_sys_unstable_apis)]
+        impl<$($T: RefIntoWasmAbi),+> From<($($T,)+)> for ArrayTuple<($($T),+,)> {
+            fn from(($($vars,)+): ($($T,)+)) -> Self {
+                ArrayTuple::$new($(&$vars),+)
+            }
+        }
+
+        #[cfg(not(js_sys_unstable_apis))]
+        impl_tuple!(@methods JsGeneric [$($T)+] [$($vars)+] $new $last $last_ty);
+
+        #[cfg(js_sys_unstable_apis)]
+        impl_tuple!(@methods MonoGeneric [$($T)+] [$($vars)+] $new $last $last_ty);
+    };
+
+    (@methods $bound:ident [$($T:tt)+] [$($vars:tt)+] $new:ident $last:ident $last_ty:tt) => {
+        impl<$($T: $bound + Default),+> Default for ArrayTuple<($($T),+,)> {
             fn default() -> Self {
                 (
                     $($T::default(),)+
@@ -1905,7 +2307,7 @@ macro_rules! impl_tuple {
             }
         }
 
-        impl<$($T: JsGeneric),+> ArrayTuple<($($T),+,)> {
+        impl<$($T: $bound),+> ArrayTuple<($($T),+,)> {
             /// Get the first element of the ArrayTuple
             pub fn first(&self) -> T1 {
                 self.get0()
@@ -2790,6 +3192,15 @@ extern "C" {
     /// the key/value pairs for each index in the array.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/entries)
+    #[cfg(not(js_sys_unstable_apis))]
+    #[wasm_bindgen(method, js_name = entries)]
+    pub fn entries_typed<T>(this: &Array<T>) -> Iterator<ArrayTuple<(Number, T)>>;
+
+    /// The `entries()` method returns a new Array Iterator object that contains
+    /// the key/value pairs for each index in the array.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/entries)
+    #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, js_name = entries)]
     pub fn entries_typed<T>(this: &Array<T>) -> Iterator<ArrayTuple<(Number, T)>>;
 
@@ -6492,6 +6903,16 @@ extern "C" {
     /// insertion order.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/entries)
+    #[cfg(not(js_sys_unstable_apis))]
+    #[wasm_bindgen(method, js_name = entries)]
+    pub fn entries_typed<K, V>(this: &Map<K, V>) -> Iterator<ArrayTuple<(K, V)>>;
+
+    /// The `entries()` method returns a new Iterator object that contains
+    /// the [key, value] pairs for each element in the Map object in
+    /// insertion order.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/entries)
+    #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, js_name = entries)]
     pub fn entries_typed<K, V>(this: &Map<K, V>) -> Iterator<ArrayTuple<(K, V)>>;
 
@@ -8414,6 +8835,7 @@ extern "C" {
     /// prototype chain as well).
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(static_method_of = Object, js_name = entries, catch)]
     pub fn entries_typed<T>(
         object: &Object<T>,
@@ -8429,6 +8851,19 @@ extern "C" {
         items: &I,
         callback: &mut dyn FnMut(T, u32) -> K,
     ) -> Result<Object<Array<T>>, JsValue>;
+
+    /// The `Object.entries()` method returns an array of a given
+    /// object's own enumerable property [key, value] pairs, in the
+    /// same order as that provided by a for...in loop (the difference
+    /// being that a for-in loop enumerates properties in the
+    /// prototype chain as well).
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(static_method_of = Object, js_name = entries, catch)]
+    pub fn entries_typed<T>(
+        object: &Object<T>,
+    ) -> Result<Array<ArrayTuple<(JsString, T)>>, JsValue>;
 
     /// The `Object.freeze()` method freezes an object: that is, prevents new
     /// properties from being added to it; prevents existing properties from
@@ -8468,6 +8903,17 @@ extern "C" {
     /// into an object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/fromEntries)
+    #[cfg(not(js_sys_unstable_apis))]
+    #[wasm_bindgen(static_method_of = Object, catch, js_name = fromEntries)]
+    pub fn from_entries_typed<T, I: Iterable<Item = ArrayTuple<(JsString, T)>>>(
+        entries: &I,
+    ) -> Result<Object<T>, JsValue>;
+
+    /// The `Object.fromEntries()` method transforms a list of key-value pairs
+    /// into an object.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/fromEntries)
+    #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(static_method_of = Object, catch, js_name = fromEntries)]
     pub fn from_entries_typed<T, I: Iterable<Item = ArrayTuple<(JsString, T)>>>(
         entries: &I,
@@ -9854,6 +10300,18 @@ extern "C" {
     /// for its key and value here, so that an array [value, value] is returned.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/entries)
+    #[cfg(not(js_sys_unstable_apis))]
+    #[wasm_bindgen(method, js_name = entries)]
+    pub fn entries_typed<T>(set: &Set<T>) -> Iterator<ArrayTuple<(T, T)>>;
+
+    /// The `entries()` method returns a new Iterator object that contains an
+    /// array of [value, value] for each element in the Set object, in insertion
+    /// order. For Set objects there is no key like in Map objects. However, to
+    /// keep the API similar to the Map object, each entry has the same value
+    /// for its key and value here, so that an array [value, value] is returned.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/entries)
+    #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, js_name = entries)]
     pub fn entries_typed<T>(set: &Set<T>) -> Iterator<ArrayTuple<(T, T)>>;
 
