@@ -289,7 +289,8 @@
 * `JsGeneric` now has `MonoGeneric`, `OptionFromWasmAbi` and
   `VectorRefIntoWasmAbi` as supertraits, and bounds its `IntoWasmAbi::Abi` to
   fit a `Result` return, so generic code bounded only by `T: JsGeneric` can
-  call the `experimental_generic_mono` element APIs. This applies without `js_sys_unstable_apis`. As `IntoWasmAbi`, `FromWasmAbi` and
+  call the `experimental_generic_mono` element APIs. This applies without
+  `js_sys_unstable_apis`. As `IntoWasmAbi`, `FromWasmAbi` and
   `RefIntoWasmAbi` each declare an `Abi` type, `T::Abi` under a `JsGeneric`
   bound is now ambiguous and needs writing as `<T as IntoWasmAbi>::Abi`.
   `Promising` is now implemented for `&T` where `T: Promising`, and for
