@@ -138,16 +138,17 @@ exports.rejectedObjectInJs = () => {
     assert.strictEqual(o.value(), 1);
     o.free();
     assert.strictEqual(wasm.arg_leaks_drops() - drops, 1);
-    // Rejected after, the object is freed, as when Rust rejects the call.
-    assert.throws(() => wasm.arg_leaks_owned_and_ref(new wasm.ArgLeakObject(), {}), /expected instance of/);
+    // A later argument's class check also runs before any argument is taken.
+    const q = new wasm.ArgLeakObject();
+    assert.throws(() => wasm.arg_leaks_owned_and_ref(q, {}), /expected instance of/);
+    q.set(1);
+    assert.strictEqual(q.value(), 1);
+    q.free();
     assert.strictEqual(wasm.arg_leaks_drops() - drops, 2);
     // Taken by value first, the object is moved by the time it is borrowed,
-    // which debug glue rejects in JS and Rust rejects as null.
+    // which Rust rejects as null, releasing the taken object.
     const p = new wasm.ArgLeakObject();
-    assert.throws(
-        () => wasm.arg_leaks_owned_and_ref(p, p),
-        /Attempt to use a moved value|null pointer passed to rust/,
-    );
+    assert.throws(() => wasm.arg_leaks_owned_and_ref(p, p), /null pointer passed to rust/);
     assert.strictEqual(wasm.arg_leaks_drops() - drops, 3);
 };
 

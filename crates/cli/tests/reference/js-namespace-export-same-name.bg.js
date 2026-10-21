@@ -88,24 +88,21 @@ export class NamespaceConsumer {
     constructor(foo_point, bar_point, foo_status, bar_status) {
         const val3 = +foo_status;
         const val4 = +bar_status;
-        let entered = false;
+        let ptr0, ptr1;
         try {
             _assertClass(foo_point, foo__Point);
-            var ptr0 = foo_point.__destroy_into_raw();
+            ptr0 = foo_point.__destroy_into_raw();
             _assertClass(bar_point, bar__Point);
-            var ptr1 = bar_point.__destroy_into_raw();
-            entered = true;
-            const ret = wasm.namespaceconsumer_new(ptr0, ptr1, val3, val4);
-            this.__wbg_ptr = ret;
-            NamespaceConsumerFinalization.register(this, this.__wbg_ptr, this);
-            return this;
+            ptr1 = bar_point.__destroy_into_raw();
         } catch (e) {
-            if (!entered) {
-                if (ptr1) wasm.__wbg_bar__point_free(ptr1, 1);
-                if (ptr0) wasm.__wbg_foo__point_free(ptr0, 1);
-            }
+            if (ptr1) wasm.__wbg_bar__point_free(ptr1, 1);
+            if (ptr0) wasm.__wbg_foo__point_free(ptr0, 1);
             throw e;
         }
+        const ret = wasm.namespaceconsumer_new(ptr0, ptr1, val3, val4);
+        this.__wbg_ptr = ret;
+        NamespaceConsumerFinalization.register(this, this.__wbg_ptr, this);
+        return this;
     }
     /**
      * @param {bar__Status} status

@@ -36,21 +36,18 @@ export class Foo {
      */
     consume(ptr2) {
         if (this.__wbg_ptr == 0) throw new Error('Attempt to use a moved value');
+        _assertNum(ptr2);
         const val1 = +ptr2;
-        let entered = false;
+        let ptr;
         try {
-            var ptr = this.__destroy_into_raw();
+            ptr = this.__destroy_into_raw();
             _assertNum(ptr);
-            _assertNum(ptr2);
-            entered = true;
-            const ret = wasm.foo_consume(ptr, val1);
-            return ret >>> 0;
         } catch (e) {
-            if (!entered) {
-                if (ptr) wasm.__wbg_foo_free(ptr, 1);
-            }
+            if (ptr) wasm.__wbg_foo_free(ptr, 1);
             throw e;
         }
+        const ret = wasm.foo_consume(ptr, val1);
+        return ret >>> 0;
     }
     /**
      * @param {number} value
@@ -105,25 +102,16 @@ export function local_args(ptr02, len02, ret2) {
     let deferred4_0;
     let deferred4_1;
     try {
+        _assertNum(len02);
+        _assertNum(ret2);
         const val2 = +len02;
         const val3 = +ret2;
-        let entered = false;
-        try {
-            var ptr0 = passStringToWasm0(ptr02, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-            var len0 = WASM_VECTOR_LEN;
-            _assertNum(len02);
-            _assertNum(ret2);
-            entered = true;
-            const ret = wasm.local_args(ptr0, len0, val2, val3);
-            deferred4_0 = ret[0];
-            deferred4_1 = ret[1];
-            return getStringFromWasm0(ret[0], ret[1]);
-        } catch (e) {
-            if (!entered) {
-                if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 1, 1); }
-            }
-            throw e;
-        }
+        const ptr0 = passStringToWasm0(ptr02, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.local_args(ptr0, len0, val2, val3);
+        deferred4_0 = ret[0];
+        deferred4_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
     } finally {
         wasm.__wbindgen_free(deferred4_0, deferred4_1, 1);
     }
@@ -139,24 +127,15 @@ export function wasm_args(wasm3, wasm2) {
     let deferred3_0;
     let deferred3_1;
     try {
+        _assertNum(wasm2);
         const val2 = +wasm2;
-        let entered = false;
-        try {
-            _assertArrayLike(wasm3, 'Uint8Array');
-            var ptr0 = passArray8ToWasm0(wasm3, wasm.__wbindgen_malloc);
-            var len0 = WASM_VECTOR_LEN;
-            _assertNum(wasm2);
-            entered = true;
-            const ret = wasm.wasm_args(ptr0, len0, val2);
-            deferred3_0 = ret[0];
-            deferred3_1 = ret[1];
-            return getStringFromWasm0(ret[0], ret[1]);
-        } catch (e) {
-            if (!entered) {
-                if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 1, 1); }
-            }
-            throw e;
-        }
+        _assertArrayLike(wasm3, 'Uint8Array');
+        const ptr0 = passArray8ToWasm0(wasm3, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.wasm_args(ptr0, len0, val2);
+        deferred3_0 = ret[0];
+        deferred3_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
     } finally {
         wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
     }

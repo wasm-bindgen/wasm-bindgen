@@ -127,27 +127,24 @@ class ns__NsChild extends ns__NsParent {
     constructor(label, note) {
         super(__wbgSuperSkip);
         if (arguments[0] === __wbgSuperSkip) return;
-        let entered = false;
+        let ptr0, len0, ptr1, len1;
         try {
-            var ptr0 = passStringToWasm0(label, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-            var len0 = WASM_VECTOR_LEN;
-            var ptr1 = passStringToWasm0(note, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-            var len1 = WASM_VECTOR_LEN;
-            entered = true;
-            const ret = wasm.ns__nschild_new(ptr0, len0, ptr1, len1);
-            this.__wbg_ptr = ret >>> 0;
-            this.__wbg_ptr_ns__NsChild = ret >>> 0;
-            const __wbg_anc_0 = wasm.__wbg_upcast_ns__nschild_to_ns__nsparent(ret >>> 0) >>> 0;
-            this.__wbg_ptr_ns__NsParent = __wbg_anc_0;
-            ns__NsChildFinalization.register(this, { __wbg_ptr_ns__NsChild: ret >>> 0, __wbg_ptr_ns__NsParent: __wbg_anc_0 }, this);
-            return this;
+            ptr0 = passStringToWasm0(label, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            len0 = WASM_VECTOR_LEN;
+            ptr1 = passStringToWasm0(note, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            len1 = WASM_VECTOR_LEN;
         } catch (e) {
-            if (!entered) {
-                if (ptr1) { wasm.__wbindgen_free(ptr1, len1 * 1, 1); }
-                if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 1, 1); }
-            }
+            if (ptr1) { wasm.__wbindgen_free(ptr1, len1 * 1, 1); }
+            if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 1, 1); }
             throw e;
         }
+        const ret = wasm.ns__nschild_new(ptr0, len0, ptr1, len1);
+        this.__wbg_ptr = ret >>> 0;
+        this.__wbg_ptr_ns__NsChild = ret >>> 0;
+        const __wbg_anc_0 = wasm.__wbg_upcast_ns__nschild_to_ns__nsparent(ret >>> 0) >>> 0;
+        this.__wbg_ptr_ns__NsParent = __wbg_anc_0;
+        ns__NsChildFinalization.register(this, { __wbg_ptr_ns__NsChild: ret >>> 0, __wbg_ptr_ns__NsParent: __wbg_anc_0 }, this);
+        return this;
     }
     /**
      * @returns {string}
@@ -209,27 +206,24 @@ export class InheritanceChild extends InheritanceParent {
     constructor(name, extra) {
         super(__wbgSuperSkip);
         if (arguments[0] === __wbgSuperSkip) return;
-        let entered = false;
+        let ptr0, len0, ptr1, len1;
         try {
-            var ptr0 = passStringToWasm0(name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-            var len0 = WASM_VECTOR_LEN;
-            var ptr1 = passStringToWasm0(extra, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-            var len1 = WASM_VECTOR_LEN;
-            entered = true;
-            const ret = wasm.inheritancechild_new(ptr0, len0, ptr1, len1);
-            this.__wbg_ptr = ret >>> 0;
-            this.__wbg_ptr_InheritanceChild = ret >>> 0;
-            const __wbg_anc_0 = wasm.__wbg_upcast_inheritancechild_to_inheritanceparent(ret >>> 0) >>> 0;
-            this.__wbg_ptr_InheritanceParent = __wbg_anc_0;
-            InheritanceChildFinalization.register(this, { __wbg_ptr_InheritanceChild: ret >>> 0, __wbg_ptr_InheritanceParent: __wbg_anc_0 }, this);
-            return this;
+            ptr0 = passStringToWasm0(name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            len0 = WASM_VECTOR_LEN;
+            ptr1 = passStringToWasm0(extra, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            len1 = WASM_VECTOR_LEN;
         } catch (e) {
-            if (!entered) {
-                if (ptr1) { wasm.__wbindgen_free(ptr1, len1 * 1, 1); }
-                if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 1, 1); }
-            }
+            if (ptr1) { wasm.__wbindgen_free(ptr1, len1 * 1, 1); }
+            if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 1, 1); }
             throw e;
         }
+        const ret = wasm.inheritancechild_new(ptr0, len0, ptr1, len1);
+        this.__wbg_ptr = ret >>> 0;
+        this.__wbg_ptr_InheritanceChild = ret >>> 0;
+        const __wbg_anc_0 = wasm.__wbg_upcast_inheritancechild_to_inheritanceparent(ret >>> 0) >>> 0;
+        this.__wbg_ptr_InheritanceParent = __wbg_anc_0;
+        InheritanceChildFinalization.register(this, { __wbg_ptr_InheritanceChild: ret >>> 0, __wbg_ptr_InheritanceParent: __wbg_anc_0 }, this);
+        return this;
     }
 }
 if (Symbol.dispose) InheritanceChild.prototype[Symbol.dispose] = InheritanceChild.prototype.free;
@@ -261,32 +255,29 @@ export class InheritanceGrandchild extends InheritanceChild {
     constructor(name, extra, tag) {
         super(__wbgSuperSkip);
         if (arguments[0] === __wbgSuperSkip) return;
-        let entered = false;
+        let ptr0, len0, ptr1, len1, ptr2, len2;
         try {
-            var ptr0 = passStringToWasm0(name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-            var len0 = WASM_VECTOR_LEN;
-            var ptr1 = passStringToWasm0(extra, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-            var len1 = WASM_VECTOR_LEN;
-            var ptr2 = passStringToWasm0(tag, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-            var len2 = WASM_VECTOR_LEN;
-            entered = true;
-            const ret = wasm.inheritancegrandchild_new(ptr0, len0, ptr1, len1, ptr2, len2);
-            this.__wbg_ptr = ret >>> 0;
-            this.__wbg_ptr_InheritanceGrandchild = ret >>> 0;
-            const __wbg_anc_0 = wasm.__wbg_upcast_inheritancegrandchild_to_inheritancechild(ret >>> 0) >>> 0;
-            this.__wbg_ptr_InheritanceChild = __wbg_anc_0;
-            const __wbg_anc_1 = wasm.__wbg_upcast_inheritancechild_to_inheritanceparent(__wbg_anc_0) >>> 0;
-            this.__wbg_ptr_InheritanceParent = __wbg_anc_1;
-            InheritanceGrandchildFinalization.register(this, { __wbg_ptr_InheritanceGrandchild: ret >>> 0, __wbg_ptr_InheritanceChild: __wbg_anc_0, __wbg_ptr_InheritanceParent: __wbg_anc_1 }, this);
-            return this;
+            ptr0 = passStringToWasm0(name, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            len0 = WASM_VECTOR_LEN;
+            ptr1 = passStringToWasm0(extra, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            len1 = WASM_VECTOR_LEN;
+            ptr2 = passStringToWasm0(tag, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            len2 = WASM_VECTOR_LEN;
         } catch (e) {
-            if (!entered) {
-                if (ptr2) { wasm.__wbindgen_free(ptr2, len2 * 1, 1); }
-                if (ptr1) { wasm.__wbindgen_free(ptr1, len1 * 1, 1); }
-                if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 1, 1); }
-            }
+            if (ptr2) { wasm.__wbindgen_free(ptr2, len2 * 1, 1); }
+            if (ptr1) { wasm.__wbindgen_free(ptr1, len1 * 1, 1); }
+            if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 1, 1); }
             throw e;
         }
+        const ret = wasm.inheritancegrandchild_new(ptr0, len0, ptr1, len1, ptr2, len2);
+        this.__wbg_ptr = ret >>> 0;
+        this.__wbg_ptr_InheritanceGrandchild = ret >>> 0;
+        const __wbg_anc_0 = wasm.__wbg_upcast_inheritancegrandchild_to_inheritancechild(ret >>> 0) >>> 0;
+        this.__wbg_ptr_InheritanceChild = __wbg_anc_0;
+        const __wbg_anc_1 = wasm.__wbg_upcast_inheritancechild_to_inheritanceparent(__wbg_anc_0) >>> 0;
+        this.__wbg_ptr_InheritanceParent = __wbg_anc_1;
+        InheritanceGrandchildFinalization.register(this, { __wbg_ptr_InheritanceGrandchild: ret >>> 0, __wbg_ptr_InheritanceChild: __wbg_anc_0, __wbg_ptr_InheritanceParent: __wbg_anc_1 }, this);
+        return this;
     }
     /**
      * @returns {string}

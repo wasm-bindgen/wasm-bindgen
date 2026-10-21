@@ -14,6 +14,7 @@ use crate::OutputMode;
 use anyhow::{bail, Error};
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
+use std::fmt;
 use std::fmt::Write;
 use walrus::{Module, ValType};
 use wasm_bindgen_shared::identifier::is_valid_ident;
@@ -56,9 +57,8 @@ pub struct JsBuilder<'a, 'b> {
     /// A debug name for the function being generated, used for error messages
     debug_name: &'a str,
 
-    /// The "prelude" of the function, or largely just the JS function we've
-    /// built so far.
-    prelude: String,
+    /// The statements of the function body built so far.
+    prelude: Vec<Stmt>,
 
     /// Code which should go before the `try {` in a try-finally block.
     pre_try: String,
@@ -66,49 +66,130 @@ pub struct JsBuilder<'a, 'b> {
     /// JS code to execute in a `finally` block in case any exceptions happen.
     finally: String,
 
-    /// Statements releasing what the arguments have allocated so far, should
-    /// JS throw before Rust is called to take them, and the locals they read.
-    releases: Vec<String>,
-    release_vars: Vec<String>,
+    /// The instruction being translated.
+    instr: InstrState,
 
-    /// Where the prelude stood before and after the first allocation.
-    first_release: Option<(usize, usize)>,
-
-    /// Where the prelude stood before the instruction being translated.
-    instr_start: usize,
-
-    /// Whether Rust has been called, after which nothing needs releasing.
-    called: bool,
-
-    /// The `catch` of the `try` that releases the arguments, closed after
-    /// the body.
-    release_catch: Option<String>,
-
-    /// Expressions that throw neither when evaluated nor when Wasm converts
-    /// them to its parameter type.
-    safe: HashSet<String>,
-
-    /// The index in `args` of the first JS argument, after any receiver.
-    params_start: usize,
+    /// What the arguments have allocated so far, until Rust is called.
+    guard: Option<ArgGuard>,
 
     /// An index used to manage allocation of temporary indices, used to name
     /// variables to ensure nothing clashes with anything else.
     tmp: usize,
 
-    /// Names or expressions representing the arguments to the adapter. This is
-    /// use to translate the `arg.get` instruction.
-    args: Vec<String>,
+    /// The arguments to the adapter, which the `arg.get` instruction pushes.
+    args: Vec<Value>,
 
     /// Identifiers bound in the function body, which the arguments must not
     /// shadow.
     locals: HashSet<String>,
 
-    /// The Wasm interface types "stack". The expressions pushed onto this stack
-    /// are intended to be *pure*, and if they're not, they should be pushed
-    /// into the `prelude`, assigned to a variable, and the variable should be
-    /// pushed to the stack. We're not super principled about this though, so
-    /// improvements will likely happen here over time.
-    stack: Vec<String>,
+    /// The Wasm interface types "stack". Expressions that aren't pure are
+    /// bound in the `prelude` and pushed as locals.
+    stack: Vec<Value>,
+}
+
+/// A statement of the function body. It is `pure` when it reads only the JS
+/// arguments and does nothing but throw or bind a local, so it can run ahead
+/// of any allocation.
+struct Stmt {
+    pure: bool,
+    kind: StmtKind,
+}
+
+/// Bindings are kept apart from their text so a `try` wrapped around them can
+/// lift them out as a `let`.
+enum StmtKind {
+    Raw(String),
+    /// `keyword` declares the binding, or is `None` once lifted.
+    Decl {
+        keyword: Option<&'static str>,
+        name: String,
+        expr: String,
+    },
+}
+
+fn render(stmts: &[Stmt]) -> String {
+    let mut code = String::new();
+    for stmt in stmts {
+        match &stmt.kind {
+            StmtKind::Raw(text) => code.push_str(text),
+            StmtKind::Decl {
+                keyword: Some(keyword),
+                name,
+                expr,
+            } => writeln!(code, "{keyword} {name} = {expr};").unwrap(),
+            StmtKind::Decl {
+                keyword: None,
+                name,
+                expr,
+            } => writeln!(code, "{name} = {expr};").unwrap(),
+        }
+    }
+    code
+}
+
+/// What the instruction being translated has done so far, which decides
+/// whether its statements, and the values it pushes, depend on the prelude.
+#[derive(Default)]
+struct InstrState {
+    /// Where the prelude stood when it began.
+    start: usize,
+    /// Whether it read a local, or an expression over one.
+    reads_local: bool,
+    /// Whether it bound a local.
+    binds_local: bool,
+    /// Whether it allocated or registered a `finally`.
+    effects: bool,
+}
+
+/// A value on the stack, with how it came to be, which decides what the call
+/// into Wasm must do before it can take it.
+#[derive(Clone)]
+enum Value {
+    /// A JS argument as the caller passed it.
+    Param(String),
+    /// A local the prelude bound.
+    Local(String),
+    /// An expression that throws neither when evaluated nor when Wasm
+    /// converts it to its parameter type.
+    Safe(String),
+    /// Any other expression; `pure` when it reads only the JS arguments, so
+    /// it can be evaluated before anything is allocated.
+    Expr { expr: String, pure: bool },
+}
+
+impl Value {
+    fn expr(&self) -> &str {
+        match self {
+            Value::Param(e) | Value::Local(e) | Value::Safe(e) | Value::Expr { expr: e, .. } => e,
+        }
+    }
+
+    fn into_expr(self) -> String {
+        match self {
+            Value::Param(e) | Value::Local(e) | Value::Safe(e) | Value::Expr { expr: e, .. } => e,
+        }
+    }
+}
+
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.expr())
+    }
+}
+
+/// What the arguments have allocated so far, to release should JS throw
+/// before Rust is called to take them. A throw runs no destructors, and the
+/// arguments are converted in order, so a later argument that JS rejects, or
+/// that Wasm fails to convert such as a number passed for an `i64`, would
+/// leak the earlier ones.
+struct ArgGuard {
+    /// Where the prelude stood before the first allocating instruction, and
+    /// how many statements that instruction emitted.
+    start: usize,
+    first: usize,
+    /// Statements releasing each allocation, in allocation order.
+    releases: Vec<String>,
 }
 
 pub struct JsFunction {
@@ -437,13 +518,15 @@ impl<'a, 'b> Builder<'a, 'b> {
         }
         code.push_str(") {\n");
 
+        let prelude = render(&js.prelude);
         let call = if !js.finally.is_empty() {
             format!(
-                "{}try {{\n{}}} finally {{\n{}}}\n",
-                js.pre_try, js.prelude, js.finally
+                "{pre_try}try {{\n{prelude}}} finally {{\n{finally}}}\n",
+                pre_try = js.pre_try,
+                finally = js.finally
             )
         } else {
-            js.pre_try + &js.prelude
+            js.pre_try + &prelude
         };
 
         // Generate a try/catch block in debug mode which handles unexpected and
@@ -857,30 +940,32 @@ impl<'p> BodyParams<'p> {
                 );
             }
             match receiver {
-                Receiver::Expr(expr) => {
-                    js.safe.insert(expr.clone());
-                    js.args.push(expr.clone());
-                }
+                Receiver::Expr(expr) => js.args.push(Value::Safe(expr.clone())),
                 Receiver::Consumed => {
                     if let Some(guard) = self.consumes_self_subclass_guard {
                         js.prelude(guard);
                     }
-                    js.instr_start = js.prelude.len();
-                    js.prelude("const ptr = this.__destroy_into_raw();");
-                    let ptr = js.local("ptr".into());
+                    js.begin_instr();
+                    let ptr = js.declare("const", "ptr".into(), "this.__destroy_into_raw()".into());
                     if let Some(class) = self.method_class {
                         let free = js.class_free(class);
-                        js.release(format!("if (ptr) {free}(ptr, 1);"), &["ptr"]);
+                        js.release(format!("if ({ptr}) {free}({ptr}, 1);"));
                     }
-                    js.args.push(ptr);
+                    js.end_instr();
+                    js.args.push(Value::Local(ptr));
                 }
             }
         }
-        js.params_start = js.args.len();
-        js.args.extend(arg_names.iter().cloned());
-        if self.closure_invoke {
-            js.safe.extend(arg_names.iter().take(2).cloned());
-        }
+        // A closure's first two arguments are its state from the glue.
+        let state = if self.closure_invoke { 2 } else { 0 };
+        js.args
+            .extend(arg_names.iter().enumerate().map(|(i, name)| {
+                if i < state {
+                    Value::Safe(name.clone())
+                } else {
+                    Value::Param(name.clone())
+                }
+            }));
 
         // Translate all instructions, the fun loop!
         //
@@ -895,8 +980,9 @@ impl<'p> BodyParams<'p> {
         // more JIT-friendly. The generated code should be equivalent to the
         // Wasm interface types stack machine, however.
         for instr in self.instructions {
-            js.instr_start = js.prelude.len();
+            js.begin_instr();
             instruction(&mut js, &instr.instr, log_error, self.constructor)?;
+            js.end_instr();
         }
 
         assert_eq!(
@@ -924,9 +1010,6 @@ impl<'p> BodyParams<'p> {
             //     js.prelude(&format!("return [{}];", expr));
             // }
         }
-        if let Some(catch) = js.release_catch.take() {
-            js.prelude.push_str(&catch);
-        }
         assert!(js.stack.is_empty());
         Ok(js)
     }
@@ -943,27 +1026,64 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             tmp: 0,
             pre_try: String::new(),
             finally: String::new(),
-            releases: Vec::new(),
-            release_vars: Vec::new(),
-            first_release: None,
-            instr_start: 0,
-            called: false,
-            release_catch: None,
-            safe: HashSet::new(),
-            params_start: 0,
-            prelude: String::new(),
+            instr: InstrState::default(),
+            guard: None,
+            prelude: Vec::new(),
             stack: Vec::new(),
         }
     }
 
     pub fn arg(&self, idx: u32) -> &str {
-        &self.args[idx as usize]
+        self.args[idx as usize].expr()
+    }
+
+    fn begin_instr(&mut self) {
+        self.instr = InstrState {
+            start: self.prelude.len(),
+            ..InstrState::default()
+        };
+    }
+
+    /// Tags the instruction's statements, and measures the first allocating
+    /// instruction for the guard.
+    fn end_instr(&mut self) {
+        let InstrState {
+            start,
+            reads_local,
+            effects,
+            ..
+        } = self.instr;
+        if reads_local || effects {
+            for stmt in &mut self.prelude[start..] {
+                stmt.pure = false;
+            }
+        }
+        if let Some(guard) = &mut self.guard {
+            if guard.start == start {
+                guard.first = self.prelude.len() - start;
+            }
+        }
     }
 
     /// Records `name` as bound in the function body and returns it.
     fn local(&mut self, name: String) -> String {
+        self.instr.binds_local = true;
         self.locals.insert(name.clone());
         name
+    }
+
+    fn stmt(&mut self, kind: StmtKind) {
+        self.prelude.push(Stmt { pure: true, kind });
+    }
+
+    /// Binds `name` to `expr`, declared with `keyword`.
+    fn declare(&mut self, keyword: &'static str, name: String, expr: String) -> String {
+        self.stmt(StmtKind::Decl {
+            keyword: Some(keyword),
+            name: name.clone(),
+            expr,
+        });
+        self.local(name)
     }
 
     /// Whether an argument named `name` would shadow an identifier the body
@@ -988,15 +1108,20 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     }
 
     pub fn prelude(&mut self, prelude: &str) {
+        let mut text = String::new();
         for line in prelude.trim().lines().map(|l| l.trim()) {
             if !line.is_empty() {
-                self.prelude.push_str(line);
-                self.prelude.push('\n');
+                text.push_str(line);
+                text.push('\n');
             }
+        }
+        if !text.is_empty() {
+            self.stmt(StmtKind::Raw(text));
         }
     }
 
     pub fn finally(&mut self, finally: &str) {
+        self.instr.effects = true;
         for line in finally.trim().lines().map(|l| l.trim()) {
             if !line.is_empty() {
                 self.finally.push_str(line);
@@ -1006,55 +1131,61 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     }
 
     /// Registers `stmt` to release what the current instruction allocated
-    /// for an argument, reading the locals `vars`.
-    fn release(&mut self, stmt: String, vars: &[&str]) {
-        if self.called {
-            return;
-        }
-        if self.first_release.is_none() {
-            self.first_release = Some((self.instr_start, self.prelude.len()));
-        }
-        self.releases.push(stmt);
-        self.release_vars.extend(vars.iter().map(|v| v.to_string()));
+    /// for an argument.
+    fn release(&mut self, stmt: String) {
+        self.instr.effects = true;
+        let start = self.instr.start;
+        self.guard
+            .get_or_insert_with(|| ArgGuard {
+                start,
+                first: 0,
+                releases: Vec::new(),
+            })
+            .releases
+            .push(stmt);
     }
 
     fn push_safe(&mut self, arg: String) {
-        self.safe.insert(arg.clone());
-        self.push(arg);
+        self.stack.push(Value::Safe(arg));
     }
 
-    /// A throw runs before Rust takes the arguments when a later argument's
-    /// prelude rejects it, or when Wasm fails to convert an argument to its
-    /// parameter type, such as a number passed for an `i64`. Arguments are
-    /// allocated in order, so either would leak the earlier ones.
+    /// Renders the arguments of the call into Wasm, whose parameter types are
+    /// `params` when it's a core function.
     ///
-    /// Arguments computed from the JS arguments alone are converted up front,
-    /// before anything is allocated, as Wasm would convert them. Any other
-    /// expression that could throw is converted after the preludes.
-    /// When anything can still throw after the first allocation, the body is
-    /// wrapped in a `try` whose `catch` releases the allocations unless Rust
-    /// was already called.
-    fn guard_call(&mut self, args: &mut [String], params: &[ValType]) {
-        let Some((start, end)) = self.first_release else {
-            return;
+    /// When the arguments allocated, a throw before the call leaks what they
+    /// allocated. So everything that depends only on the JS arguments runs
+    /// ahead of the first allocation: the statements that read them, then the
+    /// conversions Wasm applies to them (`+x`, `BigInt.asIntN(64, x)`), so a
+    /// number passed for an `i64` throws before anything is allocated. When
+    /// what remains can still throw after the first allocation, it is
+    /// wrapped in a `try` whose `catch` releases the allocations, and the call
+    /// follows it.
+    fn take_args(&mut self, values: Vec<Value>, params: Option<&[ValType]>) -> Vec<String> {
+        let (Some(guard), Some(params)) = (self.guard.take(), params) else {
+            return values.into_iter().map(Value::into_expr).collect();
         };
-        let mut guarded = self.prelude.len() > end;
-        let mut hoisted = String::new();
-        for (arg, ty) in args.iter_mut().zip(params) {
-            if self.safe.contains(arg.as_str()) || self.locals.contains(arg.as_str()) {
-                continue;
-            }
-            let is_param = self.args[self.params_start..].contains(arg);
-            // An expression over the JS arguments alone, such as an
-            // `Option`'s sentinel, can be converted up front too.
-            let hoist = is_param
-                || !arg
-                    .split(|c: char| !(c.is_alphanumeric() || c == '_' || c == '$'))
-                    .any(|word| self.locals.contains(word));
-            let expr = if is_param {
-                arg.clone()
-            } else {
-                format!("({arg})")
+        let (pure, mut rest): (Vec<_>, Vec<_>) = self
+            .prelude
+            .split_off(guard.start)
+            .into_iter()
+            .partition(|stmt| stmt.pure);
+        self.prelude.extend(pure);
+        let mut guarded = rest.len() > guard.first;
+        let mut args = Vec::with_capacity(values.len());
+        for (value, ty) in values.into_iter().zip(params) {
+            let (expr, pure) = match value {
+                Value::Local(expr) | Value::Safe(expr) => {
+                    args.push(expr);
+                    continue;
+                }
+                Value::Param(expr) => match ty {
+                    ValType::I32 | ValType::F32 | ValType::F64 | ValType::I64 => (expr, true),
+                    _ => {
+                        args.push(expr);
+                        continue;
+                    }
+                },
+                Value::Expr { expr, pure } => (format!("({expr})"), pure),
             };
             // The conversion Wasm applies, which throws on the same values
             // with the same errors: `ToNumber` before `ToInt32` or rounding,
@@ -1062,48 +1193,69 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             let coerced = match ty {
                 ValType::I32 | ValType::F32 | ValType::F64 => format!("+{expr}"),
                 ValType::I64 => format!("BigInt.asIntN(64, {expr})"),
-                _ if is_param => continue,
                 _ => expr,
             };
             let i = self.tmp();
             let name = self.local(format!("val{i}"));
-            let decl = format!("const {name} = {coerced};\n");
-            if hoist {
-                hoisted.push_str(&decl);
+            let decl = Stmt {
+                pure,
+                kind: StmtKind::Decl {
+                    keyword: Some("const"),
+                    name: name.clone(),
+                    expr: coerced,
+                },
+            };
+            if pure {
+                self.prelude.push(decl);
             } else {
-                self.prelude.push_str(&decl);
+                rest.push(decl);
                 guarded = true;
             }
-            *arg = name;
+            args.push(name);
         }
-        self.prelude.insert_str(start, &hoisted);
         if !guarded {
-            return;
+            self.prelude.extend(rest);
+            return args;
         }
-        let entered = self.local("entered".to_string());
-        self.prelude.insert_str(
-            start + hoisted.len(),
-            &format!("let {entered} = false;\ntry {{\n"),
-        );
-        // The `catch` reads the allocations' locals, so they can't be scoped
-        // to the `try`.
-        for var in &self.release_vars {
-            for decl in ["const", "let"] {
-                let from = format!("\n{decl} {var} = ");
-                if let Some(at) = self.prelude.find(&from) {
-                    let to = format!("\nvar {var} = ");
-                    self.prelude.replace_range(at..at + from.len(), &to);
-                }
+        // The `catch` and the call read what the `try` binds, so the
+        // bindings are lifted into a `let`, taking literal initializers along.
+        let mut names = Vec::new();
+        rest.retain_mut(|stmt| {
+            let StmtKind::Decl {
+                keyword,
+                name,
+                expr,
+                ..
+            } = &mut stmt.kind
+            else {
+                return true;
+            };
+            if keyword.take().is_none() {
+                return true;
             }
+            let literal = expr.bytes().all(|b| b.is_ascii_digit());
+            names.push(if literal {
+                format!("{name} = {expr}")
+            } else {
+                name.clone()
+            });
+            !literal
+        });
+        let mut open = String::new();
+        if !names.is_empty() {
+            writeln!(open, "let {};", names.join(", ")).unwrap();
         }
-        writeln!(self.prelude, "{entered} = true;").unwrap();
-        let mut catch = format!("}} catch (e) {{\nif (!{entered}) {{\n");
-        for release in self.releases.iter().rev() {
-            catch.push_str(release);
-            catch.push('\n');
+        open.push_str("try {\n");
+        let mut close = String::from("} catch (e) {\n");
+        for release in guard.releases.iter().rev() {
+            close.push_str(release);
+            close.push('\n');
         }
-        catch.push_str("}\nthrow e;\n}\n");
-        self.release_catch = Some(catch);
+        close.push_str("throw e;\n}\n");
+        self.stmt(StmtKind::Raw(open));
+        self.prelude.extend(rest);
+        self.stmt(StmtKind::Raw(close));
+        args
     }
 
     pub fn tmp(&mut self) -> usize {
@@ -1112,15 +1264,34 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         ret
     }
 
-    fn pop(&mut self) -> String {
+    fn pop_value(&mut self) -> Value {
         match self.stack.pop() {
-            Some(s) => s,
+            Some(value) => value,
             None => panic!("popping an empty stack in {}", self.debug_name),
         }
     }
 
+    fn pop(&mut self) -> String {
+        let value = self.pop_value();
+        if matches!(value, Value::Local(_) | Value::Expr { pure: false, .. }) {
+            self.instr.reads_local = true;
+        }
+        value.into_expr()
+    }
+
+    /// Pushes `arg`; an argument or local pushed back unchanged stays one.
     fn push(&mut self, arg: String) {
-        self.stack.push(arg);
+        let value = if let Some(value) = self.args.iter().find(|a| a.expr() == arg) {
+            value.clone()
+        } else if self.locals.contains(&arg) {
+            Value::Local(arg)
+        } else {
+            Value::Expr {
+                expr: arg,
+                pure: !(self.instr.reads_local || self.instr.binds_local),
+            }
+        };
+        self.stack.push(value);
     }
 
     fn class_free(&mut self, class: &str) -> String {
@@ -1309,12 +1480,14 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         let i = self.tmp();
         let malloc = self.cx.wasm_export_ref(&malloc);
         let realloc = self.cx.optional_func_arg(realloc);
-        self.prelude(&format!("const ptr{i} = {pass}({val}, {malloc}{realloc});",));
-        self.prelude(&format!("const len{i} = WASM_VECTOR_LEN;"));
-        let ptr = self.local(format!("ptr{i}"));
-        let len = self.local(format!("len{i}"));
+        let ptr = self.declare(
+            "const",
+            format!("ptr{i}"),
+            format!("{pass}({val}, {malloc}{realloc})"),
+        );
+        let len = self.declare("const", format!("len{i}"), "WASM_VECTOR_LEN".into());
         let release = self.vector_release(&VectorKind::String, mem, free, &ptr, &len);
-        self.release(release, &[&ptr, &len]);
+        self.release(release);
         self.push(ptr);
         self.push(len);
     }
@@ -1404,8 +1577,8 @@ fn instruction(
 
     match instr {
         Instruction::ArgGet(n) => {
-            let arg = js.arg(*n).to_string();
-            js.push(arg);
+            let arg = js.args[*n as usize].clone();
+            js.stack.push(arg);
         }
 
         Instruction::CallExport(_)
@@ -1439,7 +1612,7 @@ fn instruction(
                     let arg = &js.stack[js.stack.len() - params + i];
                     let name = format!("deferred{tmp}_{i}");
                     writeln!(js.pre_try, "let {name};").unwrap();
-                    writeln!(js.prelude, "{name} = {arg};").unwrap();
+                    js.prelude(&format!("{name} = {arg};"));
                     args.push(js.local(name));
                 }
                 if let Instruction::DeferFree { align, .. } = instr {
@@ -1448,23 +1621,25 @@ fn instruction(
                 }
             } else {
                 // Otherwise, pop off the number of parameters for the function we're calling.
+                let mut values = Vec::with_capacity(params);
                 for _ in 0..params {
-                    args.push(js.pop());
+                    values.push(js.pop_value());
                 }
-                args.reverse();
-            }
-
-            if !invoc.defer() {
-                if let Invocation::Core { id, .. } = invoc {
-                    let ty = js.cx.module.funcs.get(id).ty();
-                    let params = js.cx.module.types.get(ty).params().to_vec();
-                    js.guard_call(&mut args, &params);
-                }
-                js.called = true;
+                values.reverse();
+                let core_params = match invoc {
+                    Invocation::Core { id, .. } => {
+                        let ty = js.cx.module.funcs.get(id).ty();
+                        Some(js.cx.module.types.get(ty).params().to_vec())
+                    }
+                    _ => None,
+                };
+                args = js.take_args(values, core_params.as_deref());
             }
 
             // Call the function through an export of the underlying module.
-            let call = invoc.invoke(js.cx, &args, &mut js.prelude, log_error, &mut guard)?;
+            let mut comments = String::new();
+            let call = invoc.invoke(js.cx, &args, &mut comments, log_error, &mut guard)?;
+            js.prelude(&comments);
 
             // And then figure out how to actually handle where the call
             // happens. This is pretty conditional depending on the number of
@@ -1640,10 +1815,9 @@ fn instruction(
             js.cx.inject_stack_pointer_shim()?;
             let sp = js.cx.wasm_export_ref("__wbindgen_add_to_stack_pointer");
             let coerce = js.cx.coerce_ptr_suffix();
-            js.prelude(&format!("const retptr = {sp}(-{size}){coerce};"));
+            let retptr = js.declare("const", "retptr".into(), format!("{sp}(-{size}){coerce}"));
             js.finally(&format!("{sp}({size});"));
-            let retptr = js.local("retptr".to_string());
-            js.stack.push(retptr);
+            js.push(retptr);
         }
 
         Instruction::StoreRetptr { ty, offset, mem } => {
@@ -1706,8 +1880,7 @@ fn instruction(
         Instruction::I32FromStringFirstChar => {
             let val = js.pop();
             let i = js.tmp();
-            js.prelude(&format!("const char{i} = {val}.codePointAt(0);"));
-            let val = js.local(format!("char{i}"));
+            let val = js.declare("const", format!("char{i}"), format!("{val}.codePointAt(0)"));
             js.assert_char(&val);
             js.push(val);
         }
@@ -1736,10 +1909,13 @@ fn instruction(
             js.assert_owned_class(&val, class);
             js.assert_not_moved(&val);
             let i = js.tmp();
-            js.prelude(&format!("var ptr{i} = {val}.__destroy_into_raw();"));
-            let ptr = js.local(format!("ptr{i}"));
+            let ptr = js.declare(
+                "var",
+                format!("ptr{i}"),
+                format!("{val}.__destroy_into_raw()"),
+            );
             let free = js.class_free(class);
-            js.release(format!("if ({ptr}) {free}({ptr}, 1);"), &[&ptr]);
+            js.release(format!("if ({ptr}) {free}({ptr}, 1);"));
             js.push(ptr);
         }
 
@@ -1777,15 +1953,14 @@ fn instruction(
             let val = js.pop();
             js.cx.expose_is_like_none();
             let i = js.tmp();
-            js.prelude(&format!("let ptr{i} = 0;"));
+            let ptr = js.declare("let", format!("ptr{i}"), "0".into());
             js.prelude(&format!("if (!isLikeNone({val})) {{"));
             js.assert_owned_class(&val, class);
             js.assert_not_moved(&val);
-            js.prelude(&format!("ptr{i} = {val}.__destroy_into_raw();"));
+            js.prelude(&format!("{ptr} = {val}.__destroy_into_raw();"));
             js.prelude("}");
-            let ptr = js.local(format!("ptr{i}"));
             let free = js.class_free(class);
-            js.release(format!("if ({ptr}) {free}({ptr}, 1);"), &[&ptr]);
+            js.release(format!("if ({ptr}) {free}({ptr}, 1);"));
             js.push(ptr);
         }
 
@@ -1822,10 +1997,11 @@ fn instruction(
             let val = js.pop();
             let i = js.tmp();
             js.cx.expose_is_like_none();
-            js.prelude(&format!(
-                "const char{i} = isLikeNone({val}) ? 0xFFFFFF : {val}.codePointAt(0);"
-            ));
-            let val = js.local(format!("char{i}"));
+            let val = js.declare(
+                "const",
+                format!("char{i}"),
+                format!("isLikeNone({val}) ? 0xFFFFFF : {val}.codePointAt(0)"),
+            );
             js.cx.expose_assert_char();
             js.prelude(&format!(
                 "if ({val} !== 0xFFFFFF) {{ _assertChar({val}); }}"
@@ -1928,12 +2104,14 @@ fn instruction(
             let func = js.cx.pass_to_wasm_function(kind.clone(), *mem);
             let malloc = js.cx.wasm_export_of(*malloc);
             let i = js.tmp();
-            js.prelude(&format!("const ptr{i} = {func}({val}, {malloc});",));
-            js.prelude(&format!("const len{i} = WASM_VECTOR_LEN;"));
-            let ptr = js.local(format!("ptr{i}"));
-            let len = js.local(format!("len{i}"));
+            let ptr = js.declare(
+                "const",
+                format!("ptr{i}"),
+                format!("{func}({val}, {malloc})"),
+            );
+            let len = js.declare("const", format!("len{i}"), "WASM_VECTOR_LEN".into());
             let release = js.vector_release(kind, *mem, *free, &ptr, &len);
-            js.release(release, &[&ptr, &len]);
+            js.release(release);
             js.push(ptr);
             js.push(len);
         }
@@ -2006,14 +2184,14 @@ fn instruction(
             let malloc = js.cx.wasm_export_of(*malloc);
             let val = js.pop();
             let realloc = js.cx.optional_func_arg(*realloc);
-            js.prelude(&format!(
-                "var ptr{i} = isLikeNone({val}) ? 0 : {func}({val}, {malloc}{realloc});",
-            ));
-            js.prelude(&format!("var len{i} = WASM_VECTOR_LEN;"));
-            let ptr = js.local(format!("ptr{i}"));
-            let len = js.local(format!("len{i}"));
+            let ptr = js.declare(
+                "var",
+                format!("ptr{i}"),
+                format!("isLikeNone({val}) ? 0 : {func}({val}, {malloc}{realloc})"),
+            );
+            let len = js.declare("var", format!("len{i}"), "WASM_VECTOR_LEN".into());
             let release = js.vector_release(&VectorKind::String, *mem, *free, &ptr, &len);
-            js.release(release, &[&ptr, &len]);
+            js.release(release);
             js.push(ptr);
             js.push(len);
         }
@@ -2030,14 +2208,14 @@ fn instruction(
             let malloc = js.cx.wasm_export_of(*malloc);
             let val = js.pop();
             js.assert_optional_array_like(&val, kind);
-            js.prelude(&format!(
-                "var ptr{i} = isLikeNone({val}) ? 0 : {func}({val}, {malloc});",
-            ));
-            js.prelude(&format!("var len{i} = WASM_VECTOR_LEN;"));
-            let ptr = js.local(format!("ptr{i}"));
-            let len = js.local(format!("len{i}"));
+            let ptr = js.declare(
+                "var",
+                format!("ptr{i}"),
+                format!("isLikeNone({val}) ? 0 : {func}({val}, {malloc})"),
+            );
+            let len = js.declare("var", format!("len{i}"), "WASM_VECTOR_LEN".into());
             let release = js.vector_release(kind, *mem, *free, &ptr, &len);
-            js.release(release, &[&ptr, &len]);
+            js.release(release);
             js.push(ptr);
             js.push(len);
         }
@@ -2054,13 +2232,11 @@ fn instruction(
             let func = js.cx.pass_to_wasm_function(kind.clone(), *mem);
             let malloc = js.cx.wasm_export_of(*malloc);
             let i = js.tmp();
-            js.prelude(&format!("var ptr{i} = {func}({val}, {malloc});",));
-            js.prelude(&format!("var len{i} = WASM_VECTOR_LEN;"));
+            let ptr = js.declare("var", format!("ptr{i}"), format!("{func}({val}, {malloc})"));
+            let len = js.declare("var", format!("len{i}"), "WASM_VECTOR_LEN".into());
             // Then pass it the pointer and the length of where we copied it.
-            let ptr = js.local(format!("ptr{i}"));
-            let len = js.local(format!("len{i}"));
             let release = js.vector_release(kind, *mem, *free, &ptr, &len);
-            js.release(release, &[&ptr, &len]);
+            js.release(release);
             js.push(ptr);
             js.push(len);
             // Then we give Wasm a reference to the original typed array, so that it can
@@ -2411,16 +2587,20 @@ fn instruction(
             let reads = fields
                 .iter()
                 .map(|(offset, ty)| format!("{view}.get{ty}({p} + {offset}, true)"))
-                .collect();
+                .collect::<Vec<_>>();
             // Decode one element from its words with its own instructions,
             // into the loop body.
+            let reads = reads
+                .into_iter()
+                .map(|expr| Value::Expr { expr, pure: false })
+                .collect();
             let stack = std::mem::replace(&mut js.stack, reads);
             let prelude = std::mem::take(&mut js.prelude);
             for instr in elem {
                 instruction(js, &instr.instr, log_error, constructor)?;
             }
             let value = js.pop();
-            let body = std::mem::replace(&mut js.prelude, prelude);
+            let body = render(&std::mem::replace(&mut js.prelude, prelude));
             js.stack = stack;
             let v = js.local(format!("v{i}"));
             let free = js.cx.wasm_export_of(*free);
@@ -2474,13 +2654,18 @@ fn instruction(
             let (fields, stride, align) = encoded_slice_layout(words)?;
             // Encode one element into its words with its own instructions,
             // into the loop body.
-            let stack = std::mem::replace(&mut js.stack, vec![e.clone()]);
+            // The element reads the loop's local, so it's never hoisted
+            // ahead of it; the guard belongs to the enclosing arguments.
+            let guard = js.guard.take();
+            let stack = std::mem::replace(&mut js.stack, vec![Value::Local(e.clone())]);
             let prelude = std::mem::take(&mut js.prelude);
             for instr in elem {
                 instruction(js, &instr.instr, log_error, constructor)?;
             }
             let values = std::mem::replace(&mut js.stack, stack);
-            let mut body = std::mem::replace(&mut js.prelude, prelude);
+            let mut body = render(&std::mem::replace(&mut js.prelude, prelude));
+            debug_assert!(js.guard.is_none(), "an encoded element allocated");
+            js.guard = guard;
             for ((offset, ty), value) in fields.iter().zip(values) {
                 body.push_str(&format!("{view}.set{ty}({p} + {offset}, {value}, true);\n"));
             }
@@ -2490,13 +2675,14 @@ fn instruction(
             let alloc = format!("{malloc}({len} * {stride}, {align}){coerce}");
             if *optional {
                 js.cx.expose_is_like_none();
+                js.declare("let", ptr.clone(), "0".into());
+                js.declare("let", len.clone(), "0".into());
                 js.prelude(&format!(
-                    "let {ptr} = 0;\nlet {len} = 0;\nif (!isLikeNone({val})) {{\n{len} = {val}.length;\n{ptr} = {alloc};"
+                    "if (!isLikeNone({val})) {{\n{len} = {val}.length;\n{ptr} = {alloc};"
                 ));
             } else {
-                js.prelude(&format!(
-                    "const {len} = {val}.length;\nconst {ptr} = {alloc};"
-                ));
+                js.declare("const", len.clone(), format!("{val}.length"));
+                js.declare("const", ptr.clone(), alloc);
             }
             // An element encoder may throw (an invalid `char`, say), which
             // must not leak the buffer.
@@ -2518,10 +2704,9 @@ fn instruction(
             if *optional {
                 js.prelude("}");
             }
-            js.release(
-                format!("if ({ptr}) {free}({ptr}, {len} * {stride}, {align});"),
-                &[&ptr, &len],
-            );
+            js.release(format!(
+                "if ({ptr}) {free}({ptr}, {len} * {stride}, {align});"
+            ));
             js.push(ptr);
             js.push(len);
         }

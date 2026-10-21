@@ -163,24 +163,21 @@ export function __wbgtest_coverage_path(env, pid, temp_dir, module_signature) {
     try {
         const val3 = +pid;
         const val4 = BigInt.asIntN(64, module_signature);
-        let entered = false;
+        let ptr0, len0, ptr1, len1;
         try {
-            var ptr0 = isLikeNone(env) ? 0 : passStringToWasm0(env, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-            var len0 = WASM_VECTOR_LEN;
-            var ptr1 = passStringToWasm0(temp_dir, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-            var len1 = WASM_VECTOR_LEN;
-            entered = true;
-            const ret = wasm.__wbgtest_coverage_path(ptr0, len0, val3, ptr1, len1, val4);
-            deferred5_0 = ret[0];
-            deferred5_1 = ret[1];
-            return getStringFromWasm0(ret[0], ret[1]);
+            ptr0 = isLikeNone(env) ? 0 : passStringToWasm0(env, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            len0 = WASM_VECTOR_LEN;
+            ptr1 = passStringToWasm0(temp_dir, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            len1 = WASM_VECTOR_LEN;
         } catch (e) {
-            if (!entered) {
-                if (ptr1) { wasm.__wbindgen_free(ptr1, len1 * 1, 1); }
-                if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 1, 1); }
-            }
+            if (ptr1) { wasm.__wbindgen_free(ptr1, len1 * 1, 1); }
+            if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 1, 1); }
             throw e;
         }
+        const ret = wasm.__wbgtest_coverage_path(ptr0, len0, val3, ptr1, len1, val4);
+        deferred5_0 = ret[0];
+        deferred5_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
     } finally {
         wasm.__wbindgen_free(deferred5_0, deferred5_1, 1);
     }
