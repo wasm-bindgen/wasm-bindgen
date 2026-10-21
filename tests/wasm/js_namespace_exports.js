@@ -1,6 +1,11 @@
 const wasm = require('wasm-bindgen-test.js');
 const assert = require('assert');
 
+// Only debug glue rejects constructing a class that has no constructor.
+const assertNoConstructor = process.env.WASM_BINDGEN_NO_DEBUG == null
+  ? (f, message) => assert.throws(f, message)
+  : () => {};
+
 exports.test_api_namespace = function() {
   assert.ok(wasm.api, "api namespace should exist");
 
@@ -64,7 +69,7 @@ exports.test_struct_namespace = function() {
   assert.ok(wasm.shapes, "shapes namespace should exist");
   assert.ok(wasm.shapes.Point, "shapes.Point class should exist");
 
-  assert.throws(() => new wasm.shapes.Point(), "Point constructor should be private");
+  assertNoConstructor(() => new wasm.shapes.Point(), "Point constructor should be private");
 };
 
 // Struct uses `js_name` + `js_namespace`; impl uses `js_class` + `js_namespace`.
@@ -146,5 +151,5 @@ exports.test_nested_struct_namespace = function() {
   assert.ok(wasm.shapes["3d"], "shapes.3d namespace should exist");
   assert.ok(wasm.shapes["3d"].Point3D, "shapes.3d.Point3D class should exist");
 
-  assert.throws(() => new wasm.shapes["3d"].Point3D(), "Point3D constructor should be private");
+  assertNoConstructor(() => new wasm.shapes["3d"].Point3D(), "Point3D constructor should be private");
 };

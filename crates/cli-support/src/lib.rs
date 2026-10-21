@@ -32,6 +32,7 @@ pub struct Bindgen {
     omit_imports: bool,
     demangle: bool,
     keep_lld_exports: bool,
+    export_wasm: bool,
     keep_debug: bool,
     split_debug_info: bool,
     debug_info_url: Option<String>,
@@ -112,6 +113,7 @@ impl Bindgen {
             omit_imports: false,
             demangle: true,
             keep_lld_exports: false,
+            export_wasm: false,
             keep_debug: false,
             split_debug_info: false,
             debug_info_url: None,
@@ -273,6 +275,12 @@ impl Bindgen {
 
     pub fn keep_lld_exports(&mut self, keep_lld_exports: bool) -> &mut Bindgen {
         self.keep_lld_exports = keep_lld_exports;
+        self
+    }
+
+    /// Exports the instance's exports as `__wasm`, as `debug` also does.
+    pub fn export_wasm(&mut self, export_wasm: bool) -> &mut Bindgen {
+        self.export_wasm = export_wasm;
         self
     }
 
