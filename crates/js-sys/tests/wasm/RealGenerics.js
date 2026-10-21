@@ -13,3 +13,17 @@ export async function* asyncStrings() {
 export function strings() {
   return ['x', 'y'];
 }
+
+export function* echoGenerator() {
+  let received = yield 'start';
+  while (true) {
+    received = yield received;
+  }
+}
+
+export async function* echoAsyncGenerator() {
+  let received = yield 0;
+  while (true) {
+    received = yield received;
+  }
+}
