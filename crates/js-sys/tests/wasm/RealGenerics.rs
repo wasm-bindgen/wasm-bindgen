@@ -2,7 +2,7 @@
 //! crossing as itself at each instantiation.
 
 use js_sys::*;
-use wasm_bindgen::convert::FromWasmAbi;
+use wasm_bindgen::convert::{FromWasmAbi, VectorRefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::{JsStringLike, MonoGeneric};
 use wasm_bindgen_futures::JsFuture;
@@ -441,4 +441,186 @@ fn generic_bounds_cover_tuple_apis() {
     tuple_mono(String::from("a"), String::from("b"));
     tuple_mono(1u32, 2u32);
     tuple_mono(JsString::from("a"), JsString::from("b"));
+}
+
+fn string_array(values: &[&str]) -> Array<String> {
+    values.iter().map(|s| s.to_string()).collect()
+}
+
+#[wasm_bindgen_test]
+fn array_callbacks_of_rust_types() {
+    let a = string_array(&["a", "bb", "ccc"]);
+    assert!(a.every(&mut |s, _, _| !s.is_empty()));
+    assert!(a.some(&mut |s| s == "bb"));
+    assert_eq!(a.filter(&mut |s, _, _| s.len() > 1).to_vec(), ["bb", "ccc"]);
+    assert_eq!(a.find(&mut |s, _, _| s.len() > 1).as_deref(), Some("bb"));
+    assert_eq!(a.find(&mut |s, _, _| s.len() > 9), None);
+    assert_eq!(a.find_index(&mut |s, _, _| s == "ccc"), 2);
+    assert_eq!(a.find_last(&mut |s, _| s.len() < 3).as_deref(), Some("bb"));
+    assert_eq!(a.find_last_index(&mut |s, _, _| s == "a"), 0);
+
+    let lengths: Array<u32> = a.map(&mut |s, _, _| s.len() as u32);
+    assert_eq!(lengths.to_vec(), [1, 2, 3]);
+    assert_eq!(
+        describe(&lengths),
+        r#"Array:["number 1","number 2","number 3"]"#
+    );
+    assert_eq!(lengths.reduce(&mut |acc, n, _, _| acc + n, &10), 16);
+    assert_eq!(
+        a.reduce_right(&mut |acc: String, s, _, _| acc + &s, &String::new()),
+        "cccbba"
+    );
+    let chars: Array<String> = a.flat_map(&mut |s, _, _| s.chars().map(String::from).collect());
+    assert_eq!(chars.length(), 6);
+
+    let mut seen = Vec::new();
+    a.for_each(&mut |s, i, _| seen.push((i, s)));
+    assert_eq!(seen[2], (2, "ccc".to_string()));
+
+    let numbers: Array<f64> = vec![3.0, 1.0, 2.0].into();
+    assert_eq!(
+        numbers.to_sorted_by(&mut |x, y| (x - y) as i32).to_vec(),
+        [1.0, 2.0, 3.0]
+    );
+    numbers.sort_by(&mut |x, y| (y - x) as i32);
+    assert_eq!(numbers.to_vec(), [3.0, 2.0, 1.0]);
+
+    let handles: Array<JsString> = ["x", "yy"].into_iter().map(JsString::from).collect();
+    let lengths: Array<u32> = handles.map(&mut |s, _, _| s.length());
+    assert_eq!(lengths.to_vec(), [1, 2]);
+}
+
+#[wasm_bindgen_test]
+fn array_fallible_callbacks_of_rust_types() {
+    let a = string_array(&["a", "bb", "ccc"]);
+    assert!(a.try_every(&mut |s, _| Ok(!s.is_empty())).unwrap());
+    assert!(a.try_some(&mut |s| Ok(s == "a")).unwrap());
+    assert_eq!(
+        a.try_filter(&mut |s, _| Ok(s.len() > 2)).unwrap().to_vec(),
+        ["ccc"]
+    );
+    assert_eq!(
+        a.try_find(&mut |s, _| Ok(s.len() == 2)).unwrap().as_deref(),
+        Some("bb")
+    );
+    assert_eq!(a.try_find_index(&mut |s, _| Ok(s == "bb")).unwrap(), 1);
+    assert_eq!(
+        a.try_find_last(&mut |s, _| Ok(s.len() < 3))
+            .unwrap()
+            .as_deref(),
+        Some("bb")
+    );
+    assert_eq!(a.try_find_last_index(&mut |s, _| Ok(s == "a")).unwrap(), 0);
+    let lengths: Array<u32> = a.try_map(&mut |s, _| Ok(s.len() as u32)).unwrap();
+    assert_eq!(lengths.to_vec(), [1, 2, 3]);
+    assert_eq!(
+        lengths
+            .try_reduce(&mut |acc, n, _| Ok(acc + n), &0)
+            .unwrap(),
+        6
+    );
+    assert_eq!(
+        a.try_reduce_right(&mut |_, s, _| Ok(s), &String::new())
+            .unwrap(),
+        "a"
+    );
+    let chars: Array<String> = a
+        .try_flat_map(&mut |s, _| s.chars().map(String::from).collect())
+        .unwrap();
+    assert_eq!(chars.length(), 6);
+    let mut total = 0;
+    a.try_for_each(&mut |s, _| {
+        total += s.len();
+        Ok(())
+    })
+    .unwrap();
+    assert_eq!(total, 6);
+    assert_eq!(
+        a.try_to_sorted_by(&mut |x, y| Ok(y.len() as i32 - x.len() as i32))
+            .unwrap()
+            .to_vec(),
+        ["ccc", "bb", "a"]
+    );
+    a.try_sort_by(&mut |x, y| Ok(x.len() as i32 - y.len() as i32))
+        .unwrap();
+    assert_eq!(a.to_vec(), ["a", "bb", "ccc"]);
+
+    assert!(a.try_every(&mut |_, _| Err(JsError::new("no"))).is_err());
+    assert!(a
+        .try_map::<String>(&mut |_, _| Err(JsError::new("no")))
+        .is_err());
+}
+
+#[wasm_bindgen_test]
+fn array_element_methods_of_rust_types() {
+    let a = string_array(&["a", "b"]);
+    assert_eq!(a.get_checked(1).as_deref(), Some("b"));
+    assert_eq!(a.get_checked(5), None);
+    a.set_ref(2, &"c".into());
+    assert_eq!(a.push_many(&["d".to_string(), "e".to_string()]), 5);
+    assert_eq!(a.unshift_many(&["z".to_string()]), 6);
+    assert_eq!(a.shift_checked().as_deref(), Some("z"));
+    assert_eq!(a.pop_checked().as_deref(), Some("e"));
+    assert_eq!(a.with(0, &"A".into()).to_vec(), ["A", "b", "c", "d"]);
+    assert_eq!(
+        a.to_spliced(1, 2, &["x".to_string()]).to_vec(),
+        ["a", "x", "d"]
+    );
+    assert_eq!(a.splice(0, 1, &"q".into()).to_vec(), ["a"]);
+    assert_eq!(
+        a.splice_many(1, 1, &["r".to_string(), "s".to_string()])
+            .to_vec(),
+        ["b"]
+    );
+    assert_eq!(a.to_vec(), ["q", "r", "s", "c", "d"]);
+    assert_eq!(
+        a.fill(&"f".into(), 1, 3).to_vec(),
+        ["q", "f", "f", "c", "d"]
+    );
+
+    let numbers: Array<u32> = Array::new_typed();
+    numbers.push_many(&[1, 2, 3]);
+    assert_eq!(
+        describe(&numbers),
+        r#"Array:["number 1","number 2","number 3"]"#
+    );
+    assert_eq!(numbers.pop_checked(), Some(3));
+}
+
+fn callbacks_generic<T: JsGeneric + Clone + PartialEq + core::fmt::Debug>(x: T, y: T) {
+    let a: Array<T> = Array::of2(&x, &y);
+    assert_eq!(a.filter(&mut |v, _, _| v == y).to_vec(), [y.clone()]);
+    assert_eq!(a.find(&mut |v, _, _| v == x), Some(x.clone()));
+    let copied: Array<T> = a.map(&mut |v, _, _| v);
+    assert_eq!(copied.to_vec(), [x.clone(), y.clone()]);
+    assert_eq!(a.reduce(&mut |_, v, _, _| v, &x), y);
+    a.splice_many(0, 0, &[y.clone()]);
+    assert_eq!(a.pop_checked(), Some(y));
+}
+
+fn callbacks_mono<T>(x: T, y: T)
+where
+    T: MonoGeneric + VectorRefIntoWasmAbi + Clone + PartialEq + core::fmt::Debug,
+    Option<T>: FromWasmAbi,
+{
+    let a: Array<T> = Array::of2(&x, &y);
+    assert_eq!(
+        a.filter(&mut |v, _, _| v == y).iter().collect::<Vec<_>>(),
+        [y.clone()]
+    );
+    assert_eq!(a.find(&mut |v, _, _| v == x), Some(x.clone()));
+    let copied: Array<T> = a.map(&mut |v, _, _| v);
+    assert_eq!(copied.iter().collect::<Vec<_>>(), [x.clone(), y.clone()]);
+    assert_eq!(a.reduce(&mut |_, v, _, _| v, &x), y);
+    a.splice_many(0, 0, &[y.clone()]);
+    assert_eq!(a.pop_checked(), Some(y));
+}
+
+#[wasm_bindgen_test]
+fn generic_bounds_cover_array_callbacks() {
+    callbacks_generic(JsString::from("a"), JsString::from("b"));
+    callbacks_generic(JsValue::from(1), JsValue::from("b"));
+    callbacks_mono(String::from("a"), String::from("b"));
+    callbacks_mono(1u32, 2u32);
+    callbacks_mono(JsString::from("a"), JsString::from("b"));
 }
