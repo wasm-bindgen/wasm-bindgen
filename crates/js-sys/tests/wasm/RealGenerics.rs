@@ -258,3 +258,88 @@ async fn iterators_of_rust_types() {
     }
     assert_eq!(collected, ["a", "b"]);
 }
+
+#[wasm_bindgen_test]
+fn functions_of_rust_types() {
+    let f: Function<fn(String, u32) -> String> =
+        Function::new_with_args_typed("s, n", "return s.repeat(n)");
+    assert_eq!(f.call2(&JsValue::NULL, &"ab".into(), &2).unwrap(), "abab");
+    assert_eq!(f.call(&JsValue::NULL, (&"c".into(), &3)).unwrap(), "ccc");
+
+    let bound: Function<fn(u32) -> String> = f.bind1(&JsValue::NULL, &"x".into());
+    assert_eq!(bound.call1(&JsValue::NULL, &2).unwrap(), "xx");
+    let bound: Function<fn() -> String> = f.bindn(&JsValue::NULL, (&"y".into(), &1));
+    assert_eq!(bound.call0(&JsValue::NULL).unwrap(), "y");
+
+    let args: Array<JsValue> = Array::of2(&"z".into(), &2.into());
+    assert_eq!(f.apply(&JsValue::NULL, &args).unwrap(), "zz");
+    assert_eq!(Reflect::apply(&f, &JsValue::NULL, &args).unwrap(), "zz");
+
+    let len: Function<fn(JsString) -> f64> = Function::new_with_args_typed("s", "return s.length");
+    assert_eq!(len.call1(&JsValue::NULL, &"abc".into()).unwrap(), 3.0);
+
+    let mut calls = Vec::new();
+    let mut record = |s: String, n: u32| -> bool {
+        calls.push(s.repeat(n as usize));
+        n > 1
+    };
+    let closure = ScopedClosure::borrow_mut(&mut record);
+    let func: &Function<fn(String, u32) -> bool> = Function::closure_ref(&closure);
+    assert!(func.call(&JsValue::NULL, (&"q".into(), &2)).unwrap());
+    assert!(!func.call2(&JsValue::NULL, &"r".into(), &1).unwrap());
+    drop(closure);
+    assert_eq!(calls, ["qq", "r"]);
+
+    let owned: Function<fn(f64) -> f64> =
+        Function::from_closure(Closure::<dyn FnMut(f64) -> f64>::new(|x| x * 2.0));
+    assert_eq!(owned.call1(&JsValue::NULL, &1.5).unwrap(), 3.0);
+}
+
+#[wasm_bindgen_test]
+fn property_descriptors_of_rust_types() {
+    let desc = PropertyDescriptor::new_value(&"v".to_string());
+    assert_eq!(desc.get_value().as_deref(), Some("v"));
+    desc.set_value(&"w".into());
+    assert_eq!(desc.get_value().as_deref(), Some("w"));
+
+    let desc: PropertyDescriptor<u32> = PropertyDescriptor::new();
+    desc.set_get(Function::new_no_args_typed("return 7"));
+    let obj: Object<u32> = Object::new_typed();
+    Object::define_property_str(&obj, &"seven".into(), &desc).unwrap();
+    assert_eq!(Reflect::get(&obj, "seven").unwrap(), Some(7));
+    let getter = desc.get_get().unwrap();
+    assert_eq!(getter.call0(&JsValue::NULL).unwrap(), 7);
+}
+
+#[wasm_bindgen_test]
+async fn promise_new_of_rust_types() {
+    let p: Promise<String> = Promise::new(&mut |resolve, _reject| {
+        resolve.call1(&JsValue::NULL, &"done".into()).unwrap();
+    });
+    assert_eq!(p.await.unwrap(), "done");
+}
+
+fn call_generic<T: JsGeneric + PartialEq + core::fmt::Debug>(x: T) {
+    let identity: Function<fn(T) -> T> = Function::new_with_args_typed("x", "return x");
+    assert_eq!(identity.call1(&JsValue::NULL, &x).unwrap(), x);
+    assert_eq!(identity.call(&JsValue::NULL, (&x,)).unwrap(), x);
+    let bound: Function<fn() -> T> = identity.bind1(&JsValue::NULL, &x);
+    assert_eq!(bound.call0(&JsValue::NULL).unwrap(), x);
+}
+
+fn call_mono<T: MonoGeneric + PartialEq + core::fmt::Debug>(x: T) {
+    let identity: Function<fn(T) -> T> = Function::new_with_args_typed("x", "return x");
+    assert_eq!(identity.call1(&JsValue::NULL, &x).unwrap(), x);
+    assert_eq!(identity.call(&JsValue::NULL, (&x,)).unwrap(), x);
+    let bound: Function<fn() -> T> = identity.bindn(&JsValue::NULL, (&x,));
+    assert_eq!(bound.call0(&JsValue::NULL).unwrap(), x);
+}
+
+#[wasm_bindgen_test]
+fn generic_bounds_cover_function_apis() {
+    call_generic(JsString::from("a"));
+    call_generic(JsValue::from(1));
+    call_mono(String::from("a"));
+    call_mono(2u32);
+    call_mono(JsString::from("b"));
+}
