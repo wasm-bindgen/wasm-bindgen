@@ -148,6 +148,12 @@ primitives like `u32`, and all exported `#[wasm_bindgen]` types. In general,
 you should be able to write code without having too many explicit conversions,
 and the macro should take care of the rest!
 
+The arguments of an exported `async fn` are converted when JS calls it, before
+its future first runs. An argument Rust rejects, such as an invalid enum value,
+rejects the returned promise. A borrowed argument, including `&self` or
+`&mut self`, stays borrowed until the future completes, so freeing that object
+or calling a `&mut self` method on it in the meantime throws.
+
 ## `spawn_local` and `future_to_promise`
 
 Use [`spawn_local`] to run a `Future<Output = ()>` on the current thread

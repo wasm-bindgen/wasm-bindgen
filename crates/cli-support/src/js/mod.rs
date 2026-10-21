@@ -5358,7 +5358,8 @@ addToLibrary({
                 }
             }
             ContextAdapterKind::Import(_) => {}
-            ContextAdapterKind::Adapter => {}
+            // The only adapters neither exported nor imported invoke closures.
+            ContextAdapterKind::Adapter => builder.closure_invoke(),
         }
 
         // an internal debug name to help with error messages

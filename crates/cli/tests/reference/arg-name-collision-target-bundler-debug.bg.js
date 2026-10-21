@@ -36,10 +36,17 @@ export class Foo {
      */
     consume(ptr2) {
         if (this.__wbg_ptr == 0) throw new Error('Attempt to use a moved value');
-        const ptr = this.__destroy_into_raw();
-        _assertNum(ptr);
         _assertNum(ptr2);
-        const ret = wasm.foo_consume(ptr, ptr2);
+        const val1 = +ptr2;
+        let ptr;
+        try {
+            ptr = this.__destroy_into_raw();
+            _assertNum(ptr);
+        } catch (e) {
+            if (ptr) wasm.__wbg_foo_free(ptr, 1);
+            throw e;
+        }
+        const ret = wasm.foo_consume(ptr, val1);
         return ret >>> 0;
     }
     /**
@@ -92,19 +99,21 @@ export function global_args(isLikeNone2, undefined2) {
  * @returns {string}
  */
 export function local_args(ptr02, len02, ret2) {
-    let deferred2_0;
-    let deferred2_1;
+    let deferred4_0;
+    let deferred4_1;
     try {
-        const ptr0 = passStringToWasm0(ptr02, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        const len0 = WASM_VECTOR_LEN;
         _assertNum(len02);
         _assertNum(ret2);
-        const ret = wasm.local_args(ptr0, len0, len02, ret2);
-        deferred2_0 = ret[0];
-        deferred2_1 = ret[1];
+        const val2 = +len02;
+        const val3 = +ret2;
+        const ptr0 = passStringToWasm0(ptr02, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.local_args(ptr0, len0, val2, val3);
+        deferred4_0 = ret[0];
+        deferred4_1 = ret[1];
         return getStringFromWasm0(ret[0], ret[1]);
     } finally {
-        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+        wasm.__wbindgen_free(deferred4_0, deferred4_1, 1);
     }
 }
 
@@ -115,19 +124,20 @@ export function local_args(ptr02, len02, ret2) {
  * @returns {string}
  */
 export function wasm_args(wasm3, wasm2) {
-    let deferred2_0;
-    let deferred2_1;
+    let deferred3_0;
+    let deferred3_1;
     try {
+        _assertNum(wasm2);
+        const val2 = +wasm2;
         _assertArrayLike(wasm3, 'Uint8Array');
         const ptr0 = passArray8ToWasm0(wasm3, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
-        _assertNum(wasm2);
-        const ret = wasm.wasm_args(ptr0, len0, wasm2);
-        deferred2_0 = ret[0];
-        deferred2_1 = ret[1];
+        const ret = wasm.wasm_args(ptr0, len0, val2);
+        deferred3_0 = ret[0];
+        deferred3_1 = ret[1];
         return getStringFromWasm0(ret[0], ret[1]);
     } finally {
-        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+        wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
     }
 }
 
