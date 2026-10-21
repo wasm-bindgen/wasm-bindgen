@@ -186,14 +186,17 @@ exports.js_assert_none = x => {
 exports.js_assert_some = x => {
   assert.ok(x instanceof wasm.OptionClass);
 };
-exports.js_return_none1 = () => null;
+// `null` is only `None` without `wasm_bindgen_unstable_strict_option`.
+exports.js_return_none1 = () => wasm.strict_option_enabled() ? undefined : null;
 exports.js_return_none2 = () => undefined;
 exports.js_return_some = x => x;
 
 exports.js_test_option_classes = () => {
   assert.strictEqual(wasm.option_class_none(), undefined);
   wasm.option_class_assert_none(undefined);
-  wasm.option_class_assert_none(null);
+  if (!wasm.strict_option_enabled()) {
+    wasm.option_class_assert_none(null);
+  }
   const c = wasm.option_class_some();
   assert.ok(c instanceof wasm.OptionClass);
   wasm.option_class_assert_some(c);

@@ -656,7 +656,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                 ts.push_str(v);
             } else {
                 match ty {
-                    AdapterType::Option(ty) if omittable => {
+                    AdapterType::Option { ty, strict } if omittable => {
                         // e.g. `foo?: string | null`
                         arg.push_str("?: ");
                         adapter2ts(
@@ -667,7 +667,9 @@ impl<'a, 'b> Builder<'a, 'b> {
                             &self.cx.qualified_to_identifier,
                             self.cx.config.ts_typed_array_buffers,
                         );
-                        ts.push_str(" | null");
+                        if !*strict {
+                            ts.push_str(" | null");
+                        }
                     }
                     ty => {
                         adapter2ts(
@@ -784,7 +786,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                 }
             } else {
                 match ty {
-                    AdapterType::Option(ty) if omittable => {
+                    AdapterType::Option { ty, strict } if omittable => {
                         adapter2ts(
                             ty,
                             TypePosition::Argument,
@@ -793,7 +795,10 @@ impl<'a, 'b> Builder<'a, 'b> {
                             &self.cx.qualified_to_identifier,
                             self.cx.config.ts_typed_array_buffers,
                         );
-                        arg.push_str(" | null} ");
+                        if !*strict {
+                            arg.push_str(" | null");
+                        }
+                        arg.push_str("} ");
                         arg.push('[');
                         arg.push_str(name);
                         arg.push(']');
@@ -1414,12 +1419,32 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         self.prelude(&format!("_assertBoolean({arg});"));
     }
 
-    fn assert_optional_number(&mut self, arg: &str) {
+    /// The test for an incoming `Option` being `None`: only `undefined`
+    /// when `strict`, otherwise `undefined` or `null`.
+    fn is_none(&mut self, val: &str, strict: bool) -> String {
+        if strict {
+            format!("{val} === undefined")
+        } else {
+            self.cx.expose_is_like_none();
+            format!("isLikeNone({val})")
+        }
+    }
+
+    fn is_some(&mut self, val: &str, strict: bool) -> String {
+        if strict {
+            format!("{val} !== undefined")
+        } else {
+            self.cx.expose_is_like_none();
+            format!("!isLikeNone({val})")
+        }
+    }
+
+    fn assert_optional_number(&mut self, arg: &str, strict: bool) {
         if !self.cx.config.debug {
             return;
         }
-        self.cx.expose_is_like_none();
-        self.prelude(&format!("if (!isLikeNone({arg})) {{"));
+        let some = self.is_some(arg, strict);
+        self.prelude(&format!("if ({some}) {{"));
         self.assert_number(arg);
         self.prelude("}");
     }
@@ -1434,22 +1459,22 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         self.prelude(&format!("_assertChar({arg});"));
     }
 
-    fn assert_optional_bigint(&mut self, arg: &str) {
+    fn assert_optional_bigint(&mut self, arg: &str, strict: bool) {
         if !self.cx.config.debug {
             return;
         }
-        self.cx.expose_is_like_none();
-        self.prelude(&format!("if (!isLikeNone({arg})) {{"));
+        let some = self.is_some(arg, strict);
+        self.prelude(&format!("if ({some}) {{"));
         self.assert_bigint(arg);
         self.prelude("}");
     }
 
-    fn assert_optional_bool(&mut self, arg: &str) {
+    fn assert_optional_bool(&mut self, arg: &str, strict: bool) {
         if !self.cx.config.debug {
             return;
         }
-        self.cx.expose_is_like_none();
-        self.prelude(&format!("if (!isLikeNone({arg})) {{"));
+        let some = self.is_some(arg, strict);
+        self.prelude(&format!("if ({some}) {{"));
         self.assert_bool(arg);
         self.prelude("}");
     }
@@ -1473,12 +1498,12 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         }
     }
 
-    fn assert_optional_array_like(&mut self, arg: &str, kind: &VectorKind) {
+    fn assert_optional_array_like(&mut self, arg: &str, kind: &VectorKind, strict: bool) {
         if !self.cx.config.debug {
             return;
         }
-        self.cx.expose_is_like_none();
-        self.prelude(&format!("if (!isLikeNone({arg})) {{"));
+        let some = self.is_some(arg, strict);
+        self.prelude(&format!("if ({some}) {{"));
         self.assert_array_like(arg, kind);
         self.prelude("}");
     }
@@ -1795,14 +1820,15 @@ fn instruction(
             js.push(int64x2_to_int128(low, high, *signed));
         }
 
-        Instruction::OptionInt128ToWasm => {
+        Instruction::OptionInt128ToWasm { strict } => {
             let val = js.pop();
-            js.cx.expose_is_like_none();
-            js.assert_optional_bigint(&val);
+            js.assert_optional_bigint(&val, *strict);
             let (low, high) = int128_to_int64x2(&val);
-            js.push(format!("!isLikeNone({val})"));
-            js.push(format!("isLikeNone({val}) ? BigInt(0) : {low}"));
-            js.push(format!("isLikeNone({val}) ? BigInt(0) : {high}"));
+            let none = js.is_none(&val, *strict);
+            let some = js.is_some(&val, *strict);
+            js.push(some);
+            js.push(format!("{none} ? BigInt(0) : {low}"));
+            js.push(format!("{none} ? BigInt(0) : {high}"));
         }
         Instruction::OptionWasmToInt128 { signed } => {
             let high = js.pop();
@@ -1837,16 +1863,15 @@ fn instruction(
             name,
             invalid,
             hole,
+            strict,
         } => {
             let enum_val = js.pop();
             js.cx.expose_string_enum(name);
             let enum_val_expr = string_enum_to_wasm(name, *invalid, &enum_val);
-            js.cx.expose_is_like_none();
+            let none = js.is_none(&enum_val, *strict);
 
             // e.g. isLikeNone(someEnumVal) ? 4 : (string_enum_to_wasm(someEnumVal))
-            js.push_safe(format!(
-                "isLikeNone({enum_val}) ? {hole} : ({enum_val_expr})"
-            ))
+            js.push_safe(format!("{none} ? {hole} : ({enum_val_expr})"))
         }
 
         Instruction::MemoryToString(mem) => {
@@ -2003,12 +2028,12 @@ fn instruction(
             }
         }
 
-        Instruction::I32FromOptionRust { class } => {
+        Instruction::I32FromOptionRust { class, strict } => {
             let val = js.pop();
-            js.cx.expose_is_like_none();
             let i = js.tmp();
             let ptr = js.declare("let", format!("ptr{i}"), "0".into());
-            js.prelude(&format!("if (!isLikeNone({val})) {{"));
+            let some = js.is_some(&val, *strict);
+            js.prelude(&format!("if ({some}) {{"));
             js.assert_owned_class(&val, class);
             js.assert_not_moved(&val);
             js.prelude(&format!("{ptr} = {val}.__destroy_into_raw();"));
@@ -2018,43 +2043,46 @@ fn instruction(
             js.push(ptr);
         }
 
-        Instruction::I32FromOptionExternref { table_and_alloc } => {
+        Instruction::I32FromOptionExternref {
+            table_and_alloc,
+            strict,
+        } => {
             let val = js.pop();
-            js.cx.expose_is_like_none();
+            let none = js.is_none(&val, *strict);
             match table_and_alloc {
                 Some((table, alloc)) => {
                     let alloc = js.cx.expose_add_to_externref_table(*table, *alloc);
-                    js.push_alloc(format!("isLikeNone({val}) ? 0 : {alloc}({val})"));
+                    js.push_alloc(format!("{none} ? 0 : {alloc}({val})"));
                 }
                 None => {
                     js.cx.expose_add_heap_object();
-                    js.push_alloc(format!("isLikeNone({val}) ? 0 : addHeapObject({val})"));
+                    js.push_alloc(format!("{none} ? 0 : addHeapObject({val})"));
                 }
             }
         }
 
-        Instruction::I32FromOptionU32Sentinel => {
+        Instruction::I32FromOptionU32Sentinel { strict } => {
             let val = js.pop();
-            js.cx.expose_is_like_none();
-            js.assert_optional_number(&val);
-            js.push(format!("isLikeNone({val}) ? 0xFFFFFF : {val}"));
+            js.assert_optional_number(&val, *strict);
+            let none = js.is_none(&val, *strict);
+            js.push(format!("{none} ? 0xFFFFFF : {val}"));
         }
 
-        Instruction::I32FromOptionBool => {
+        Instruction::I32FromOptionBool { strict } => {
             let val = js.pop();
-            js.cx.expose_is_like_none();
-            js.assert_optional_bool(&val);
-            js.push_safe(format!("isLikeNone({val}) ? 0xFFFFFF : {val} ? 1 : 0"));
+            js.assert_optional_bool(&val, *strict);
+            let none = js.is_none(&val, *strict);
+            js.push_safe(format!("{none} ? 0xFFFFFF : {val} ? 1 : 0"));
         }
 
-        Instruction::I32FromOptionChar => {
+        Instruction::I32FromOptionChar { strict } => {
             let val = js.pop();
             let i = js.tmp();
-            js.cx.expose_is_like_none();
+            let none = js.is_none(&val, *strict);
             let val = js.declare(
                 "const",
                 format!("char{i}"),
-                format!("isLikeNone({val}) ? 0xFFFFFF : {val}.codePointAt(0)"),
+                format!("{none} ? 0xFFFFFF : {val}.codePointAt(0)"),
             );
             js.cx.expose_assert_char();
             js.prelude(&format!(
@@ -2069,17 +2097,17 @@ fn instruction(
             js.push(val);
         }
 
-        Instruction::F64FromOptionEnum { hole } => {
+        Instruction::F64FromOptionEnum { hole, strict } => {
             let val = js.pop();
-            js.cx.expose_is_like_none();
-            js.assert_optional_number(&val);
-            js.push(format!("isLikeNone({val}) ? {hole} : {val}"));
+            js.assert_optional_number(&val, *strict);
+            let none = js.is_none(&val, *strict);
+            js.push(format!("{none} ? {hole} : {val}"));
         }
 
-        Instruction::F64FromOptionSentinelInt { signed } => {
+        Instruction::F64FromOptionSentinelInt { signed, strict } => {
             let val = js.pop();
-            js.cx.expose_is_like_none();
-            js.assert_optional_number(&val);
+            js.assert_optional_number(&val, *strict);
+            let none = js.is_none(&val, *strict);
 
             // We need to convert the given number to a 32-bit integer before
             // passing it to the ABI for 2 reasons:
@@ -2097,24 +2125,20 @@ fn instruction(
             // u32.
 
             let op = if *signed { ">>" } else { ">>>" };
-            js.push(format!(
-                "isLikeNone({val}) ? {F64_OPTION_SENTINEL} : ({val}) {op} 0"
-            ));
+            js.push(format!("{none} ? {F64_OPTION_SENTINEL} : ({val}) {op} 0"));
         }
-        Instruction::F64FromOptionSentinelNumber => {
+        Instruction::F64FromOptionSentinelNumber { strict } => {
             // Used when the underlying integer spans the full f64-safe range
             // (e.g. i64/u64 on wasm64). No narrowing; just coerce to number.
             let val = js.pop();
-            js.cx.expose_is_like_none();
-            js.assert_optional_number(&val);
-            js.push(format!(
-                "isLikeNone({val}) ? {F64_OPTION_SENTINEL} : Number({val})"
-            ));
+            js.assert_optional_number(&val, *strict);
+            let none = js.is_none(&val, *strict);
+            js.push(format!("{none} ? {F64_OPTION_SENTINEL} : Number({val})"));
         }
-        Instruction::F64FromOptionSentinelF32 => {
+        Instruction::F64FromOptionSentinelF32 { strict } => {
             let val = js.pop();
-            js.cx.expose_is_like_none();
-            js.assert_optional_number(&val);
+            js.assert_optional_number(&val, *strict);
+            let none = js.is_none(&val, *strict);
 
             // Similar to the above 32-bit integer variant, we convert the
             // number to a 32-bit *float* before passing it to the ABI. This
@@ -2122,21 +2146,22 @@ fn instruction(
             // possible to use a sentinel value.
 
             js.push(format!(
-                "isLikeNone({val}) ? {F64_OPTION_SENTINEL} : Math.fround({val})"
+                "{none} ? {F64_OPTION_SENTINEL} : Math.fround({val})"
             ));
         }
 
-        Instruction::FromOptionNative { ty } => {
+        Instruction::FromOptionNative { ty, strict } => {
             let val = js.pop();
-            js.cx.expose_is_like_none();
             if *ty == ValType::I64 {
-                js.assert_optional_bigint(&val);
+                js.assert_optional_bigint(&val, *strict);
             } else {
-                js.assert_optional_number(&val);
+                js.assert_optional_number(&val, *strict);
             }
-            js.push_safe(format!("!isLikeNone({val})"));
+            let none = js.is_none(&val, *strict);
+            let some = js.is_some(&val, *strict);
+            js.push_safe(some);
             js.push(format!(
-                "isLikeNone({val}) ? {zero} : {val}",
+                "{none} ? {zero} : {val}",
                 zero = if *ty == ValType::I64 {
                     // We can't use bigint literals for now. See:
                     // https://github.com/wasm-bindgen/wasm-bindgen/issues/4246
@@ -2231,17 +2256,18 @@ fn instruction(
             malloc,
             free,
             realloc,
+            strict,
         } => {
             let func = js.cx.expose_pass_string_to_wasm(*mem);
-            js.cx.expose_is_like_none();
             let i = js.tmp();
             let malloc = js.cx.wasm_export_of(*malloc);
             let val = js.pop();
             let realloc = js.cx.optional_func_arg(*realloc);
+            let none = js.is_none(&val, *strict);
             let ptr = js.declare(
                 "var",
                 format!("ptr{i}"),
-                format!("isLikeNone({val}) ? 0 : {func}({val}, {malloc}{realloc})"),
+                format!("{none} ? 0 : {func}({val}, {malloc}{realloc})"),
             );
             let len = js.declare("var", format!("len{i}"), "WASM_VECTOR_LEN".into());
             let release = js.vector_release(&VectorKind::String, *mem, *free, &ptr, &len);
@@ -2255,17 +2281,18 @@ fn instruction(
             mem,
             malloc,
             free,
+            strict,
         } => {
             let func = js.cx.pass_to_wasm_function(kind.clone(), *mem);
-            js.cx.expose_is_like_none();
             let i = js.tmp();
             let malloc = js.cx.wasm_export_of(*malloc);
             let val = js.pop();
-            js.assert_optional_array_like(&val, kind);
+            js.assert_optional_array_like(&val, kind, *strict);
+            let none = js.is_none(&val, *strict);
             let ptr = js.declare(
                 "var",
                 format!("ptr{i}"),
-                format!("isLikeNone({val}) ? 0 : {func}({val}, {malloc})"),
+                format!("{none} ? 0 : {func}({val}, {malloc})"),
             );
             let len = js.declare("var", format!("len{i}"), "WASM_VECTOR_LEN".into());
             let release = js.vector_release(kind, *mem, *free, &ptr, &len);
@@ -2688,6 +2715,7 @@ fn instruction(
             free,
             mem,
             optional,
+            strict,
         } => {
             let val = js.pop();
             let i = js.tmp();
@@ -2728,11 +2756,11 @@ fn instruction(
             let coerce = js.cx.coerce_ptr_suffix();
             let alloc = format!("{malloc}({len} * {stride}, {align}){coerce}");
             if *optional {
-                js.cx.expose_is_like_none();
                 js.declare("let", ptr.clone(), "0".into());
                 js.declare("let", len.clone(), "0".into());
+                let some = js.is_some(&val, *strict);
                 js.prelude(&format!(
-                    "if (!isLikeNone({val})) {{\n{len} = {val}.length;\n{ptr} = {alloc};"
+                    "if ({some}) {{\n{len} = {val}.length;\n{ptr} = {alloc};"
                 ));
             } else {
                 js.declare("const", len.clone(), format!("{val}.length"));
@@ -2826,11 +2854,11 @@ fn instruction(
             js.push(val);
         }
 
-        Instruction::I32FromOptionNonNull => {
+        Instruction::I32FromOptionNonNull { strict } => {
             let val = js.pop();
-            js.cx.expose_is_like_none();
-            js.assert_optional_number(&val);
-            js.push(format!("isLikeNone({val}) ? 0 : {val}"));
+            js.assert_optional_number(&val, *strict);
+            let none = js.is_none(&val, *strict);
+            js.push(format!("{none} ? 0 : {val}"));
         }
 
         Instruction::OptionNonNullFromI32 => {
@@ -3099,11 +3127,11 @@ pub(crate) fn adapter2ts(
             }
         }
         AdapterType::MutableSlice(kind) => dst.push_str(&kind.js_ty()),
-        AdapterType::Option(ty) => {
+        AdapterType::Option { ty, strict } => {
             adapter2ts(ty, position, dst, refs, name_map, typed_array_buffers);
             dst.push_str(match position {
-                TypePosition::Argument => " | null | undefined",
-                TypePosition::Return => " | undefined",
+                TypePosition::Argument if !*strict => " | null | undefined",
+                TypePosition::Argument | TypePosition::Return => " | undefined",
             });
         }
         AdapterType::NamedExternref(name) => dst.push_str(name),

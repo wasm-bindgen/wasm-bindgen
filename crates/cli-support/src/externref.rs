@@ -118,6 +118,7 @@ pub fn process(module: &mut Module) -> Result<()> {
                 // we need to store where they're managed.
                 Instruction::I32FromOptionExternref {
                     ref mut table_and_alloc,
+                    ..
                 } => {
                     *table_and_alloc = meta.alloc.map(|id| (meta.table, id));
                 }

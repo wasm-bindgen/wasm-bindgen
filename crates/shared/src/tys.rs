@@ -46,6 +46,7 @@ tys! {
     NONNULL
     RAW_POINTER
     SEQ_MODE
+    OPTIONAL_STRICT
 }
 
 /// The word following a `SEQ_MODE` tag: what JS receives, ORed with flags.

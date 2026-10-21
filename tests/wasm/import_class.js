@@ -143,7 +143,7 @@ exports.return_some = function() {
 
 exports.run_rust_option_tests = function() {
   wasm.rust_take_none();
-  wasm.rust_take_none(null)
+  if (!wasm.strict_option_enabled()) wasm.rust_take_none(null)
   wasm.rust_take_none(undefined);
   wasm.rust_take_some(new Options());
   assert.strictEqual(wasm.rust_return_none(), undefined);

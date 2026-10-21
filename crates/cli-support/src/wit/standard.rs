@@ -124,7 +124,12 @@ pub enum AdapterType {
     /// into the buffer of the passed typed array after the call, so it can't
     /// be a plain array.
     MutableSlice(VectorKind),
-    Option(Box<AdapterType>),
+    /// `strict` when the JS → Rust glue treats only `undefined` as `None`,
+    /// which leaves `null` out of the TypeScript argument type.
+    Option {
+        ty: Box<AdapterType>,
+        strict: bool,
+    },
     Struct(String),
     Enum(String),
     StringEnum(String),
@@ -204,7 +209,9 @@ pub enum Instruction {
         signed: bool,
     },
 
-    OptionInt128ToWasm,
+    OptionInt128ToWasm {
+        strict: bool,
+    },
     OptionWasmToInt128 {
         signed: bool,
     },
@@ -228,6 +235,7 @@ pub enum Instruction {
         name: String,
         invalid: u32,
         hole: u32,
+        strict: bool,
     },
 
     /// Pops a `bool` from the stack and pushes an `i32` equivalent
@@ -255,6 +263,7 @@ pub enum Instruction {
     /// consumed pointer value if it's "some".
     I32FromOptionRust {
         class: String,
+        strict: bool,
     },
     /// Pops an `externref` from the stack, pushes either 0 if it's "none" or and
     /// index into the owned Wasm table it was stored at if it's "some"
@@ -262,39 +271,53 @@ pub enum Instruction {
         /// Set to `Some` by the externref pass of where to put it in the wasm
         /// module, otherwise it's shoved into the JS shim.
         table_and_alloc: Option<(walrus::TableId, walrus::FunctionId)>,
+        strict: bool,
     },
     /// Pops an `externref` from the stack, pushes either a sentinel value if it's
     /// "none" or the integer value of it if it's "some"
-    I32FromOptionU32Sentinel,
+    I32FromOptionU32Sentinel {
+        strict: bool,
+    },
     /// Pops an `externref` from the stack, pushes 0 for "none", 1 for
     /// "some(false)', and 2 for "some(true)"
-    I32FromOptionBool,
+    I32FromOptionBool {
+        strict: bool,
+    },
     /// Pops an `externref` from the stack, pushes a sentinel for "none" or the
     /// value if it's "some"
-    I32FromOptionChar,
+    I32FromOptionChar {
+        strict: bool,
+    },
     /// Pops a numeric enum's number and pushes it unchanged as an `f64`.
     F64FromEnum,
     /// Pops an `externref` from the stack, pushes `hole` for "none" or the
     /// value if it's "some"
     F64FromOptionEnum {
         hole: u32,
+        strict: bool,
     },
     /// Pops an `externref` from the stack, pushes either a sentinel value if it's
     /// "none" or the integer value of it if it's "some"
     F64FromOptionSentinelInt {
         signed: bool,
+        strict: bool,
     },
     /// Pops an optional JS number, preserving its numeric value while reserving
     /// `Number.MAX_SAFE_INTEGER` as the ABI sentinel for pointer-sized options.
-    F64FromOptionSentinelNumber,
+    F64FromOptionSentinelNumber {
+        strict: bool,
+    },
     /// Pops an `externref` from the stack, pushes either a sentinel value if it's
     /// "none" or the f32 value of it if it's "some"
-    F64FromOptionSentinelF32,
+    F64FromOptionSentinelF32 {
+        strict: bool,
+    },
     /// Pops any externref from the stack and then pushes two values. First is a
     /// 0/1 if it's none/some and second is `ty` value if it was there or 0 if
     /// it wasn't there.
     FromOptionNative {
         ty: walrus::ValType,
+        strict: bool,
     },
 
     /// Pops a vector value of `kind` from the stack, allocates memory with
@@ -322,6 +345,7 @@ pub enum Instruction {
         free: walrus::FunctionId,
         mem: walrus::MemoryId,
         realloc: Option<walrus::FunctionId>,
+        strict: bool,
     },
     /// Pops a string, pushes pointer/length
     StringToMemory {
@@ -339,6 +363,7 @@ pub enum Instruction {
         malloc: walrus::FunctionId,
         free: walrus::FunctionId,
         mem: walrus::MemoryId,
+        strict: bool,
     },
 
     /// Pops a nullable externref; if it is non-zero, throws it.
@@ -413,6 +438,7 @@ pub enum Instruction {
         free: walrus::FunctionId,
         mem: walrus::MemoryId,
         optional: bool,
+        strict: bool,
     },
     /// pops i32, loads externref from externref table
     TableGet,
@@ -451,7 +477,9 @@ pub enum Instruction {
     OptionEnumFromF64 {
         hole: u32,
     },
-    I32FromOptionNonNull,
+    I32FromOptionNonNull {
+        strict: bool,
+    },
     OptionNonNullFromI32,
     I32FromNonNull,
 }
@@ -483,7 +511,14 @@ impl AdapterType {
     }
 
     pub fn option(self) -> AdapterType {
-        AdapterType::Option(Box::new(self))
+        self.option_strict(false)
+    }
+
+    pub fn option_strict(self, strict: bool) -> AdapterType {
+        AdapterType::Option {
+            ty: Box::new(self),
+            strict,
+        }
     }
 }
 
@@ -611,6 +646,7 @@ impl walrus::CustomSection for NonstandardWitSection {
                     malloc,
                     free,
                     realloc,
+                    ..
                 }
                 | StringToMemory {
                     mem,
@@ -627,6 +663,7 @@ impl walrus::CustomSection for NonstandardWitSection {
                 }
                 I32FromOptionExternref {
                     table_and_alloc: Some((table, alloc)),
+                    ..
                 } => {
                     roots.push_table(table);
                     roots.push_func(alloc);

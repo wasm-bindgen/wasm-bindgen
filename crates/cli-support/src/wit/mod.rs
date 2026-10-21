@@ -1828,7 +1828,7 @@ impl<'a> Context<'a> {
             Some(d) => d,
         };
         self.resolve_descriptor(&mut descriptor)?;
-        let optional = matches!(descriptor, Descriptor::Option(_));
+        let optional = matches!(descriptor, Descriptor::Option { .. });
 
         // Register the signature of this imported shim
         let id = self.import_adapter(
@@ -2772,7 +2772,7 @@ impl<'a> Context<'a> {
             return;
         }
 
-        if let Descriptor::Option(inner) = descriptor {
+        if let Descriptor::Option { inner, .. } = descriptor {
             match inner.as_mut() {
                 Descriptor::I64 => **inner = Descriptor::I64AsF64,
                 Descriptor::U64 => **inner = Descriptor::U64AsF64,
@@ -2904,7 +2904,7 @@ fn verify_constructor_return(class: &str, ret: &Descriptor) -> Result<(), Error>
         | Descriptor::Char
         | Descriptor::CachedString
         | Descriptor::String
-        | Descriptor::Option(_)
+        | Descriptor::Option { .. }
         | Descriptor::Enum { .. }
         | Descriptor::Unit
         | Descriptor::RawPointer => {
@@ -3138,20 +3138,35 @@ mod tests {
 
     #[test]
     fn normalize_memory64_descriptor_only_rewrites_explicit_number_abi_options() {
-        let mut number_option = Descriptor::Option(Box::new(Descriptor::I64));
+        let mut number_option = Descriptor::Option {
+            inner: Box::new(Descriptor::I64),
+            strict: false,
+        };
         Context::normalize_memory64_descriptor(&mut number_option, walrus::ValType::F64);
         assert_eq!(
             number_option,
-            Descriptor::Option(Box::new(Descriptor::I64AsF64))
+            Descriptor::Option {
+                inner: Box::new(Descriptor::I64AsF64),
+                strict: false,
+            }
         );
 
         let mut exact_i64 = Descriptor::I64;
         Context::normalize_memory64_descriptor(&mut exact_i64, walrus::ValType::I64);
         assert_eq!(exact_i64, Descriptor::I64);
 
-        let mut exact_option = Descriptor::Option(Box::new(Descriptor::I64));
+        let mut exact_option = Descriptor::Option {
+            inner: Box::new(Descriptor::I64),
+            strict: false,
+        };
         Context::normalize_memory64_descriptor(&mut exact_option, walrus::ValType::I64);
-        assert_eq!(exact_option, Descriptor::Option(Box::new(Descriptor::I64)));
+        assert_eq!(
+            exact_option,
+            Descriptor::Option {
+                inner: Box::new(Descriptor::I64),
+                strict: false,
+            }
+        );
     }
 
     /// Build a minimal module containing a 32-bit or 64-bit memory and an exported

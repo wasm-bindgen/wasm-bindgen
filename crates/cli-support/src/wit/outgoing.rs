@@ -188,7 +188,7 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
 
-            Descriptor::Option(d) => self.outgoing_option(d)?,
+            Descriptor::Option { inner, .. } => self.outgoing_option(inner)?,
             Descriptor::Result(d) => self.outgoing_result(d)?,
 
             Descriptor::Function(descriptor) => {
@@ -534,7 +534,7 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Ref(_)
             | Descriptor::RefMut(_)
             | Descriptor::CachedString
-            | Descriptor::Option(_)
+            | Descriptor::Option { .. }
             | Descriptor::Vector(_)
             | Descriptor::Unit
             | Descriptor::NonNull

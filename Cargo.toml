@@ -86,6 +86,7 @@ unexpected_cfgs = { level = "warn", check-cfg = [
   'cfg(tokio_unstable)',
   'cfg(wasm_bindgen_unstable_tokio)',
   'cfg(wasm_bindgen_unstable_jspi)',
+  'cfg(wasm_bindgen_unstable_strict_option)',
 ] }
 unused_lifetimes = "warn"
 

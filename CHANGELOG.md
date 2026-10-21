@@ -13,6 +13,15 @@
   cloning and dropping them is free and never calls into JS.
   [#5401](https://github.com/wasm-bindgen/wasm-bindgen/pull/5401)
 
+* Added `--cfg wasm_bindgen_unstable_strict_option`, under which a JS to Rust
+  `Option<T>` treats only `undefined` as `None`: `null` goes to `T`'s own
+  conversion, as any other non-`T` value does, and an exported optional
+  argument or field is typed `T | undefined` rather than `T | null | undefined`.
+  `None` is still `undefined` going out. This becomes the default in the next
+  breaking release; code relying on `null` becoming `None` should move to
+  `Nullable<T>`.
+  [#5410](https://github.com/wasm-bindgen/wasm-bindgen/pull/5410)
+
 * Added the `slice = view | copy | array` and `vec = copy | array`
   attributes for imported JS functions, choosing what JS receives for a
   sequence argument with numeric elements: a live typed array over wasm

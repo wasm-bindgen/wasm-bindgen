@@ -349,7 +349,9 @@ exports.js_wrong_types = () => {
     assert.strictEqual(wasm.wrong_types_vec_len([1, 2]), 2);
     assert.strictEqual(wasm.wrong_types_optional_vec_len([1, 2]), 2);
     assert.strictEqual(wasm.wrong_types_optional_vec_len(undefined), undefined);
-    assert.strictEqual(wasm.wrong_types_optional_vec_len(null), undefined);
+    if (!wasm.strict_option_enabled()) {
+        assert.strictEqual(wasm.wrong_types_optional_vec_len(null), undefined);
+    }
     assert.strictEqual(wasm.wrong_types_jsvalue_vec_len(['a', 'b']), 2);
 
     // Mutable slices need a typed array with the same element size and the
