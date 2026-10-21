@@ -133,3 +133,58 @@ fn get_option() {
 
     assert_eq!(map.get_checked(&some_key()), None);
 }
+
+fn has_get_or_insert() -> bool {
+    Reflect::has_str(
+        &WeakMap::<Object, Object>::new_typed(),
+        &"getOrInsert".into(),
+    )
+    .unwrap()
+}
+
+#[wasm_bindgen_test]
+fn get_or_insert() {
+    if !has_get_or_insert() {
+        return;
+    }
+    let map: WeakMap<Object, JsString> = WeakMap::new_typed();
+    let key = some_key();
+    assert_eq!(map.get_or_insert(&key, &"first".into()).unwrap(), "first");
+    assert_eq!(map.get_or_insert(&key, &"second".into()).unwrap(), "first");
+    assert_eq!(map.get_checked(&key), Some(JsString::from("first")));
+    assert_eq!(map.get_checked(&some_key()), None);
+
+    let invalid: WeakMap<JsValue, JsString> = map.unchecked_into();
+    assert!(invalid.get_or_insert(&1.into(), &"x".into()).is_err());
+}
+
+#[wasm_bindgen_test]
+fn get_or_insert_computed() {
+    if !has_get_or_insert() {
+        return;
+    }
+    let map: WeakMap<Object, Object> = WeakMap::new_typed();
+    let key = some_key();
+    let mut calls = 0;
+    let mut compute = |k: Object| {
+        calls += 1;
+        k
+    };
+    let value = map.get_or_insert_computed(&key, &mut compute).unwrap();
+    assert_eq!(JsValue::from(value), JsValue::from(&key));
+    let value = map.get_or_insert_computed(&key, &mut compute).unwrap();
+    assert_eq!(JsValue::from(value), JsValue::from(&key));
+    assert_eq!(calls, 1);
+
+    let other = some_key();
+    map.set(&other, &Object::new());
+    map.get_or_insert_computed(&other, &mut |_| {
+        panic!("callback must not run for a present key")
+    })
+    .unwrap();
+
+    let invalid: WeakMap<JsValue, Object> = map.unchecked_into();
+    assert!(invalid
+        .get_or_insert_computed(&"str".into(), &mut |_| Object::new())
+        .is_err());
+}

@@ -136,3 +136,51 @@ fn value_of() {
     let a = gensym(JsValue::undefined());
     assert_eq!(JsValue::from(a.value_of()), JsValue::from(a));
 }
+
+fn has_symbol_dispose() -> bool {
+    Reflect::get_str(global().as_ref(), &"Symbol".into())
+        .ok()
+        .flatten()
+        .map(|sym| {
+            Reflect::has_str(sym.unchecked_ref::<Object>(), &"dispose".into()).unwrap_or(false)
+        })
+        .unwrap_or(false)
+}
+
+#[wasm_bindgen_test]
+fn dispose() {
+    if !has_symbol_dispose() {
+        return;
+    }
+    let sym = Symbol::dispose();
+    assert_eq!(sym.js_typeof(), "symbol");
+    assert_eq!(
+        JsValue::from(sym.value_of()),
+        JsValue::from(Symbol::dispose())
+    );
+    assert!(String::from(sym.description().unwrap()).ends_with("dispose"));
+}
+
+#[wasm_bindgen_test]
+fn async_dispose() {
+    if !has_symbol_dispose() {
+        return;
+    }
+    let sym = Symbol::async_dispose();
+    assert_eq!(sym.js_typeof(), "symbol");
+    assert_eq!(
+        JsValue::from(sym.value_of()),
+        JsValue::from(Symbol::async_dispose())
+    );
+    assert!(String::from(sym.description().unwrap()).ends_with("asyncDispose"));
+    assert_ne!(JsValue::from(sym), JsValue::from(Symbol::dispose()));
+}
+
+#[wasm_bindgen_test]
+fn description() {
+    assert_eq!(gensym("desc".into()).description().unwrap(), "desc");
+    assert_eq!(gensym("".into()).description().unwrap(), "");
+    assert!(gensym(JsValue::undefined()).description().is_none());
+    assert_eq!(Symbol::for_("foo").description().unwrap(), "foo");
+    assert_eq!(Symbol::iterator().description().unwrap(), "Symbol.iterator");
+}

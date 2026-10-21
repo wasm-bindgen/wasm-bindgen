@@ -806,3 +806,24 @@ fn duration_format() {
     let result_fr = df_fr.format(&duration);
     assert!(result_fr.includes("heure", 0)); // French for "hour"
 }
+
+#[wasm_bindgen_test]
+fn locale_first_day_of_week() {
+    let locale = Intl::Locale::new("en-u-fw-tue").unwrap();
+    if !Reflect::has_str(locale.as_ref(), &"firstDayOfWeek".into()).unwrap() {
+        return;
+    }
+    assert_eq!(locale.first_day_of_week(), Some(JsString::from("tue")));
+    assert_eq!(Intl::Locale::new("en").unwrap().first_day_of_week(), None);
+}
+
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen_test]
+fn locale_variants() {
+    let locale = Intl::Locale::new("de-1996-fonipa").unwrap();
+    if !Reflect::has_str(locale.as_ref(), &"variants".into()).unwrap() {
+        return;
+    }
+    assert_eq!(locale.variants(), Some(JsString::from("1996-fonipa")));
+    assert_eq!(Intl::Locale::new("de").unwrap().variants(), None);
+}

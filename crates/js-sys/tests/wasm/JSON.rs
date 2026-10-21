@@ -3,6 +3,14 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsError;
 use wasm_bindgen_test::*;
 
+fn has_raw_json() -> bool {
+    let json: Object = Reflect::get_str(global().as_ref(), &"JSON".into())
+        .unwrap()
+        .unwrap()
+        .unchecked_into();
+    Reflect::has_str(&json, &"rawJSON".into()).unwrap_or(false)
+}
+
 #[wasm_bindgen_test]
 fn parse_array() {
     let js_array = JSON::parse("[1, 2, 3]").unwrap();
@@ -300,4 +308,37 @@ fn stringify_with_replacer_list_typed() {
     .unwrap()
     .into();
     assert_eq!(output, "{\"a\":1,\"c\":3}");
+}
+
+#[wasm_bindgen_test]
+fn raw_json() {
+    if !has_raw_json() {
+        return;
+    }
+
+    let raw = JSON::raw_json("12345678901234567890").unwrap();
+    assert!(JSON::is_raw_json(&JsValue::from(raw.clone())));
+    assert!(!JSON::is_raw_json(&JsValue::from(Object::new())));
+    assert!(!JSON::is_raw_json(&JsValue::from("12345678901234567890")));
+    assert!(!JSON::is_raw_json(&JsValue::from(1)));
+
+    let output: String = JSON::stringify(&JsValue::from(raw.clone())).unwrap().into();
+    assert_eq!(output, "12345678901234567890");
+
+    let obj = Object::new();
+    Reflect::set_str(obj.as_ref(), &"id".into(), &JsValue::from(raw)).unwrap();
+    Reflect::set_str(obj.as_ref(), &"n".into(), &JsValue::from(1)).unwrap();
+    let output: String = JSON::stringify(&JsValue::from(obj)).unwrap().into();
+    assert_eq!(output, "{\"id\":12345678901234567890,\"n\":1}");
+
+    let raw_str = JSON::raw_json("\"text\"").unwrap();
+    let output: String = JSON::stringify(&JsValue::from(raw_str)).unwrap().into();
+    assert_eq!(output, "\"text\"");
+
+    assert!(JSON::raw_json("{}")
+        .unwrap_err()
+        .is_instance_of::<SyntaxError>());
+    assert!(JSON::raw_json("[1]").is_err());
+    assert!(JSON::raw_json("").is_err());
+    assert!(JSON::raw_json(" 1").is_err());
 }

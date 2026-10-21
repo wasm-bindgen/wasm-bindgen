@@ -9,6 +9,10 @@ fn has_float16_array() -> bool {
     Reflect::has_str(global().as_ref(), &"Float16Array".into()).unwrap_or(false)
 }
 
+fn has_base64_methods() -> bool {
+    Reflect::has_str(Uint8Array::new_with_length(0).as_ref(), &"toBase64".into()).unwrap_or(false)
+}
+
 macro_rules! each {
     ($m:ident) => {
         $m!(Uint8Array);
@@ -148,6 +152,112 @@ macro_rules! test_slice {
 #[wasm_bindgen_test]
 fn new_slice() {
     each!(test_slice);
+}
+
+macro_rules! test_to_reversed_sorted {
+    ($arr:ident) => {{
+        let arr = $arr::new(&3.into());
+        arr.set_index(0, 3 as _);
+        arr.set_index(1, 1 as _);
+        arr.set_index(2, 2 as _);
+        let reversed = arr.to_reversed();
+        assert_eq!(reversed.get_index(0) as f64, 2.0);
+        assert_eq!(reversed.get_index(1) as f64, 1.0);
+        assert_eq!(reversed.get_index(2) as f64, 3.0);
+        let sorted = arr.to_sorted();
+        assert_eq!(sorted.get_index(0) as f64, 1.0);
+        assert_eq!(sorted.get_index(1) as f64, 2.0);
+        assert_eq!(sorted.get_index(2) as f64, 3.0);
+        assert_eq!(arr.get_index(0) as f64, 3.0);
+        assert_eq!(arr.get_index(2) as f64, 2.0);
+    }};
+}
+#[wasm_bindgen_test]
+fn new_to_reversed_sorted() {
+    each!(test_to_reversed_sorted);
+}
+
+macro_rules! test_with {
+    ($arr:ident) => {{
+        let arr = $arr::new(&2.into());
+        let replaced = arr.with(1, 7 as _).unwrap();
+        assert_eq!(replaced.get_index(1) as f64, 7.0);
+        assert_eq!(arr.get_index(1) as f64, 0.0);
+        assert_eq!(arr.with(-1, 5 as _).unwrap().get_index(1) as f64, 5.0);
+        assert!(arr
+            .with(2, 7 as _)
+            .unwrap_err()
+            .is_instance_of::<RangeError>());
+    }};
+}
+#[wasm_bindgen_test]
+fn new_with() {
+    each!(test_with);
+}
+
+macro_rules! test_find_last {
+    ($arr:ident) => {{
+        let arr = $arr::new(&4.into());
+        arr.set_index(1, 5 as _);
+        arr.set_index(3, 5 as _);
+        assert_eq!(
+            arr.find_last(&mut |x, _, _| x as f64 == 5.0).unwrap() as f64,
+            5.0
+        );
+        assert!(arr.find_last(&mut |x, _, _| x as f64 == 9.0).is_none());
+        assert_eq!(arr.find_last_index(&mut |x, _, _| x as f64 == 5.0), 3);
+        assert_eq!(arr.find_last_index(&mut |x, _, _| x as f64 == 9.0), -1);
+        assert_eq!(
+            arr.find_last_index(&mut |_, i, a| i < 2 && a.length() == 4),
+            1
+        );
+    }};
+}
+#[wasm_bindgen_test]
+fn new_find_last() {
+    each!(test_find_last);
+}
+
+macro_rules! test_includes_index_of {
+    ($arr:ident) => {{
+        let arr = $arr::new(&4.into());
+        arr.set_index(1, 5 as _);
+        arr.set_index(3, 5 as _);
+        assert!(arr.includes(5 as _, 0));
+        assert!(arr.includes(5 as _, 2));
+        assert!(!arr.includes(5 as _, 4));
+        assert!(!arr.includes(9 as _, 0));
+        assert_eq!(arr.index_of(5 as _, 0), 1);
+        assert_eq!(arr.index_of(5 as _, 2), 3);
+        assert_eq!(arr.index_of(5 as _, 4), -1);
+        assert_eq!(arr.index_of(9 as _, 0), -1);
+    }};
+}
+#[wasm_bindgen_test]
+fn new_includes_index_of() {
+    each!(test_includes_index_of);
+}
+
+#[wasm_bindgen_test]
+fn bigint64array_es2023_methods() {
+    let arr = BigInt64Array::new_from_slice(&[3, -1, 2]);
+    assert_eq!(arr.to_sorted().to_vec(), vec![-1, 2, 3]);
+    assert_eq!(arr.to_reversed().to_vec(), vec![2, -1, 3]);
+    assert_eq!(arr.to_vec(), vec![3, -1, 2]);
+    assert_eq!(arr.with(0, i64::MIN).unwrap().get_index(0), i64::MIN);
+    assert!(arr.with(3, 0).is_err());
+    assert_eq!(arr.find_last(&mut |x, _, _| x < 0), Some(-1));
+    assert_eq!(arr.find_last(&mut |x, _, _| x > 10), None);
+    assert_eq!(arr.find_last_index(&mut |x, _, _| x > 0), 2);
+    assert!(arr.includes(-1, 0));
+    assert!(!arr.includes(3, 1));
+    assert_eq!(arr.index_of(2, 0), 2);
+    assert_eq!(arr.index_of(3, 1), -1);
+
+    let arr = BigUint64Array::new_from_slice(&[1, u64::MAX]);
+    assert!(arr.includes(u64::MAX, 0));
+    assert_eq!(arr.index_of(u64::MAX, 0), 1);
+    assert_eq!(arr.find_last(&mut |x, _, _| x > 1), Some(u64::MAX));
 }
 
 #[wasm_bindgen_test]
@@ -416,4 +526,144 @@ gen_integer_tests! {
 gen_float_tests! {
     (test_f32_copy, Float32Array, f32),
     (test_f64_copy, Float64Array, f64),
+}
+
+#[wasm_bindgen_test]
+fn uint8array_base64_hex_round_trip() {
+    if !has_base64_methods() {
+        return;
+    }
+
+    let bytes = vec![0xfb, 0xff, 0xbf, 0x01];
+    let arr = Uint8Array::new_from_slice(&bytes);
+    assert_eq!(arr.to_base64(), "+/+/AQ==");
+    assert_eq!(arr.to_hex(), "fbffbf01");
+    assert_eq!(Uint8Array::new_with_length(0).to_base64(), "");
+    assert_eq!(Uint8Array::new_with_length(0).to_hex(), "");
+
+    assert_eq!(Uint8Array::from_base64("+/+/AQ==").unwrap().to_vec(), bytes);
+    assert_eq!(Uint8Array::from_hex("fbffbf01").unwrap().to_vec(), bytes);
+    assert_eq!(Uint8Array::from_hex("FBFFBF01").unwrap().to_vec(), bytes);
+    assert_eq!(Uint8Array::from_base64("").unwrap().length(), 0);
+
+    let all: Vec<u8> = (0..=255).collect();
+    let all_arr = Uint8Array::new_from_slice(&all);
+    assert_eq!(
+        Uint8Array::from_base64(&String::from(all_arr.to_base64()))
+            .unwrap()
+            .to_vec(),
+        all
+    );
+    assert_eq!(
+        Uint8Array::from_hex(&String::from(all_arr.to_hex()))
+            .unwrap()
+            .to_vec(),
+        all
+    );
+}
+
+#[wasm_bindgen_test]
+fn uint8array_base64_options() {
+    if !has_base64_methods() {
+        return;
+    }
+
+    let options = Base64Options::new();
+    assert!(options.get_alphabet().is_none());
+    assert!(options.get_last_chunk_handling().is_none());
+    assert!(options.get_omit_padding().is_none());
+
+    options.set_alphabet("base64url");
+    options.set_last_chunk_handling("strict");
+    options.set_omit_padding(true);
+    assert_eq!(options.get_alphabet().unwrap(), "base64url");
+    assert_eq!(options.get_last_chunk_handling().unwrap(), "strict");
+    assert_eq!(options.get_omit_padding(), Some(true));
+
+    let bytes = vec![0xfb, 0xff, 0xbf, 0x01];
+    let arr = Uint8Array::new_from_slice(&bytes);
+    assert_eq!(arr.to_base64_with_options(&options), "-_-_AQ");
+    options.set_omit_padding(false);
+    assert_eq!(arr.to_base64_with_options(&options), "-_-_AQ==");
+
+    assert!(Uint8Array::from_base64_with_options("-_-_AQ", &options)
+        .unwrap_err()
+        .is_instance_of::<SyntaxError>());
+    assert_eq!(
+        Uint8Array::from_base64_with_options("-_-_AQ==", &options)
+            .unwrap()
+            .to_vec(),
+        bytes
+    );
+    options.set_last_chunk_handling("loose");
+    assert_eq!(
+        Uint8Array::from_base64_with_options("-_-_AQ", &options)
+            .unwrap()
+            .to_vec(),
+        bytes
+    );
+    assert!(Uint8Array::from_base64_with_options("+/+/AQ==", &options).is_err());
+}
+
+#[wasm_bindgen_test]
+fn uint8array_base64_hex_invalid() {
+    if !has_base64_methods() {
+        return;
+    }
+
+    assert!(Uint8Array::from_base64("!!!!")
+        .unwrap_err()
+        .is_instance_of::<SyntaxError>());
+    assert!(Uint8Array::from_base64("A")
+        .unwrap_err()
+        .is_instance_of::<SyntaxError>());
+    assert!(Uint8Array::from_hex("abc")
+        .unwrap_err()
+        .is_instance_of::<SyntaxError>());
+    assert!(Uint8Array::from_hex("zz")
+        .unwrap_err()
+        .is_instance_of::<SyntaxError>());
+    assert!(Uint8Array::new_with_length(4)
+        .set_from_base64("!!!!")
+        .unwrap_err()
+        .is_instance_of::<SyntaxError>());
+    assert!(Uint8Array::new_with_length(4)
+        .set_from_hex("zz")
+        .unwrap_err()
+        .is_instance_of::<SyntaxError>());
+}
+
+#[wasm_bindgen_test]
+fn uint8array_set_from_base64_hex() {
+    if !has_base64_methods() {
+        return;
+    }
+
+    let target = Uint8Array::new_with_length(4);
+    let result = target.set_from_base64("+/+/AQ==").unwrap();
+    assert_eq!(result.read(), 8);
+    assert_eq!(result.written(), 4);
+    assert_eq!(target.to_vec(), vec![0xfb, 0xff, 0xbf, 0x01]);
+
+    let short = Uint8Array::new_with_length(5);
+    let result = short.set_from_base64("AAECAwQFBgcI").unwrap();
+    assert_eq!(result.read(), 4);
+    assert_eq!(result.written(), 3);
+    assert_eq!(short.to_vec(), vec![0, 1, 2, 0, 0]);
+
+    let options = Base64Options::new();
+    options.set_alphabet("base64url");
+    let target = Uint8Array::new_with_length(4);
+    let result = target
+        .set_from_base64_with_options("-_-_AQ", &options)
+        .unwrap();
+    assert_eq!(result.read(), 6);
+    assert_eq!(result.written(), 4);
+    assert_eq!(target.to_vec(), vec![0xfb, 0xff, 0xbf, 0x01]);
+
+    let short = Uint8Array::new_with_length(2);
+    let result = short.set_from_hex("0001020304").unwrap();
+    assert_eq!(result.read(), 4);
+    assert_eq!(result.written(), 2);
+    assert_eq!(short.to_vec(), vec![0, 1]);
 }

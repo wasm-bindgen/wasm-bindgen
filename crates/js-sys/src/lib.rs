@@ -3650,6 +3650,164 @@ extern "C" {
     pub fn set_float64_endian(this: &DataView, byte_offset: usize, value: f64, little_endian: bool);
 }
 
+// DisposableStack
+#[wasm_bindgen]
+extern "C" {
+    /// A `DisposableStack` aggregates disposable resources, disposing them
+    /// in reverse order of registration when `dispose()` is called.
+    ///
+    /// Callbacks registered with `adopt()` and `defer()` run later, at
+    /// disposal time, so they are taken as [`ScopedClosure`]s which must
+    /// outlive the stack's disposal.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DisposableStack)
+    #[wasm_bindgen(extends = Object, typescript_type = "DisposableStack")]
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub type DisposableStack;
+
+    /// Creates a new, empty `DisposableStack`.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DisposableStack/DisposableStack)
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> DisposableStack;
+
+    /// The `disposed` accessor property returns whether this stack has
+    /// already been disposed.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DisposableStack/disposed)
+    #[wasm_bindgen(method, getter)]
+    pub fn disposed(this: &DisposableStack) -> bool;
+
+    /// The `dispose()` method disposes every resource in the stack in
+    /// reverse order of registration. Errors thrown by disposers are
+    /// collected into a [`SuppressedError`] chain and rethrown.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DisposableStack/dispose)
+    #[wasm_bindgen(method, catch)]
+    pub fn dispose(this: &DisposableStack) -> Result<(), JsValue>;
+
+    /// The `use()` method registers a value implementing `Symbol.dispose`
+    /// for disposal and returns it. Throws a `TypeError` if the value is
+    /// not `null`, `undefined` or disposable.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DisposableStack/use)
+    #[wasm_bindgen(method, catch, js_name = use)]
+    pub fn use_<T>(this: &DisposableStack, value: &T) -> Result<T, JsValue>;
+
+    /// The `adopt()` method registers a non-disposable value together with
+    /// a callback to dispose it, and returns the value.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DisposableStack/adopt)
+    #[wasm_bindgen(method, catch)]
+    pub fn adopt<'a, T>(
+        this: &DisposableStack,
+        value: &T,
+        on_dispose: &ScopedClosure<'a, dyn FnMut(T)>,
+    ) -> Result<T, JsValue>;
+
+    /// The `defer()` method registers a callback to run when the stack is
+    /// disposed.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DisposableStack/defer)
+    #[wasm_bindgen(method, catch)]
+    pub fn defer(
+        this: &DisposableStack,
+        on_dispose: &ScopedClosure<dyn FnMut()>,
+    ) -> Result<(), JsValue>;
+
+    /// The `move()` method transfers every resource into a new
+    /// `DisposableStack`, marking this one as disposed.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DisposableStack/move)
+    #[wasm_bindgen(method, catch, js_name = move)]
+    pub fn move_(this: &DisposableStack) -> Result<DisposableStack, JsValue>;
+}
+
+impl Default for DisposableStack {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// AsyncDisposableStack
+#[wasm_bindgen]
+extern "C" {
+    /// An `AsyncDisposableStack` aggregates async-disposable resources,
+    /// disposing them in reverse order of registration when
+    /// `disposeAsync()` is called.
+    ///
+    /// Callbacks registered with `adopt()` and `defer()` run later, at
+    /// disposal time, so they are taken as [`ScopedClosure`]s which must
+    /// outlive the stack's disposal.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncDisposableStack)
+    #[wasm_bindgen(extends = Object, typescript_type = "AsyncDisposableStack")]
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub type AsyncDisposableStack;
+
+    /// Creates a new, empty `AsyncDisposableStack`.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncDisposableStack/AsyncDisposableStack)
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> AsyncDisposableStack;
+
+    /// The `disposed` accessor property returns whether this stack has
+    /// already been disposed.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncDisposableStack/disposed)
+    #[wasm_bindgen(method, getter)]
+    pub fn disposed(this: &AsyncDisposableStack) -> bool;
+
+    /// The `disposeAsync()` method disposes every resource in the stack in
+    /// reverse order of registration, awaiting each, and returns a promise
+    /// that settles once all have completed.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncDisposableStack/disposeAsync)
+    #[wasm_bindgen(method, js_name = disposeAsync)]
+    pub fn dispose_async(this: &AsyncDisposableStack) -> Promise<Undefined>;
+
+    /// The `use()` method registers a value implementing `Symbol.asyncDispose`
+    /// or `Symbol.dispose` for disposal and returns it.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncDisposableStack/use)
+    #[wasm_bindgen(method, catch, js_name = use)]
+    pub fn use_<T>(this: &AsyncDisposableStack, value: &T) -> Result<T, JsValue>;
+
+    /// The `adopt()` method registers a non-disposable value together with
+    /// an async callback to dispose it, and returns the value.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncDisposableStack/adopt)
+    #[wasm_bindgen(method, catch)]
+    pub fn adopt<'a, T, R: Promising>(
+        this: &AsyncDisposableStack,
+        value: &T,
+        on_dispose_async: &ScopedClosure<'a, dyn FnMut(T) -> R>,
+    ) -> Result<T, JsValue>;
+
+    /// The `defer()` method registers an async callback to run when the
+    /// stack is disposed.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncDisposableStack/defer)
+    #[wasm_bindgen(method, catch)]
+    pub fn defer<'a, R: Promising>(
+        this: &AsyncDisposableStack,
+        on_dispose_async: &ScopedClosure<'a, dyn FnMut() -> R>,
+    ) -> Result<(), JsValue>;
+
+    /// The `move()` method transfers every resource into a new
+    /// `AsyncDisposableStack`, marking this one as disposed.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncDisposableStack/move)
+    #[wasm_bindgen(method, catch, js_name = move)]
+    pub fn move_(this: &AsyncDisposableStack) -> Result<AsyncDisposableStack, JsValue>;
+}
+
+impl Default for AsyncDisposableStack {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 // Error
 #[wasm_bindgen]
 extern "C" {
@@ -3734,6 +3892,14 @@ extern "C" {
     /// [V8 documentation](https://v8.dev/docs/stack-trace-api#stack-trace-collection-for-custom-exceptions)
     #[wasm_bindgen(static_method_of = Error, setter, js_name = stackTraceLimit)]
     pub fn set_stack_trace_limit(value: &JsValue);
+
+    /// The `Error.isError()` static method determines whether the passed
+    /// value is an `Error` instance, including across realms, by checking
+    /// for the internal `[[ErrorData]]` slot rather than the prototype chain.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/isError)
+    #[wasm_bindgen(static_method_of = Error, js_name = isError)]
+    pub fn is_error(value: &JsValue) -> bool;
 }
 
 partialord_ord!(JsString);
@@ -5295,6 +5461,36 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/size)
     #[wasm_bindgen(method, getter)]
     pub fn size<K, V>(this: &Map<K, V>) -> u32;
+
+    /// The `getOrInsert()` method returns the value for `key`, first
+    /// inserting `default_value` under it if the key is absent.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/getOrInsert)
+    #[wasm_bindgen(method, js_name = getOrInsert)]
+    pub fn get_or_insert<K, V>(this: &Map<K, V>, key: &K, default_value: &V) -> V;
+
+    /// The `getOrInsertComputed()` method returns the value for `key`,
+    /// first inserting the result of `callback(key)` under it if the key
+    /// is absent.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/getOrInsertComputed)
+    #[wasm_bindgen(method, js_name = getOrInsertComputed)]
+    pub fn get_or_insert_computed<K, V>(
+        this: &Map<K, V>,
+        key: &K,
+        callback: &mut dyn FnMut(K) -> V,
+    ) -> V;
+
+    /// The `Map.groupBy()` static method groups the values of an iterable
+    /// into a `Map` keyed by the result of `callback`, which may be any
+    /// value, compared with SameValueZero.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/groupBy)
+    #[wasm_bindgen(static_method_of = Map, catch, js_name = groupBy)]
+    pub fn group_by<T, K, I: Iterable<Item = T>>(
+        items: &I,
+        callback: &mut dyn FnMut(T, u32) -> K,
+    ) -> Result<Map<K, Array<T>>, JsValue>;
 }
 
 impl Default for Map<JsValue, JsValue> {
@@ -5373,6 +5569,136 @@ extern "C" {
     /// non-object value") will be thrown.
     #[wasm_bindgen(catch, method)]
     pub fn next<T: FromWasmAbi>(this: &Iterator<T>) -> Result<IteratorNext<T>, JsValue>;
+
+    /// The `Iterator.from()` static method wraps any iterable or
+    /// iterator-like object in an `Iterator` inheriting from
+    /// `Iterator.prototype`, so the helper methods below are available on
+    /// it. Named `from_iterable` as `from` is taken by `From<JsValue>`.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/from)
+    #[wasm_bindgen(static_method_of = Iterator, catch, js_name = from)]
+    pub fn from_iterable<I: Iterable>(obj: &I) -> Result<Iterator<I::Item>, JsValue>;
+
+    /// The `Iterator.concat()` static method returns an iterator yielding
+    /// the values of each given iterable in turn.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/concat)
+    #[wasm_bindgen(static_method_of = Iterator, catch, variadic)]
+    pub fn concat<I: Iterable>(iterables: &[I]) -> Result<Iterator<I::Item>, JsValue>;
+
+    /// The `map()` method returns a new iterator helper that yields each
+    /// value of this iterator transformed by `mapper`.
+    ///
+    /// The mapper runs lazily, as the returned iterator is consumed, so it
+    /// is taken as a [`ScopedClosure`] which must outlive that consumption.
+    ///
+    /// Like every helper here, this throws a `TypeError` on an iterator
+    /// that does not inherit from `Iterator.prototype`, such as a plain
+    /// `{ next }` object; wrap those with [`Iterator::from_iterable`] first.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/map)
+    #[wasm_bindgen(method, catch)]
+    pub fn map<'a, T, U>(
+        this: &Iterator<T>,
+        mapper: &ScopedClosure<'a, dyn FnMut(T, u32) -> U>,
+    ) -> Result<Iterator<U>, JsValue>;
+
+    /// The `filter()` method returns a new iterator helper that yields only
+    /// the values of this iterator for which `predicate` returns `true`.
+    ///
+    /// The predicate runs lazily, as the returned iterator is consumed, so
+    /// it is taken as a [`ScopedClosure`] which must outlive that
+    /// consumption.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/filter)
+    #[wasm_bindgen(method, catch)]
+    pub fn filter<'a, T>(
+        this: &Iterator<T>,
+        predicate: &ScopedClosure<'a, dyn FnMut(T, u32) -> bool>,
+    ) -> Result<Iterator<T>, JsValue>;
+
+    /// The `take()` method returns a new iterator helper that yields at
+    /// most `limit` values of this iterator.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/take)
+    #[wasm_bindgen(method, catch)]
+    pub fn take<T>(this: &Iterator<T>, limit: u32) -> Result<Iterator<T>, JsValue>;
+
+    /// The `drop()` method returns a new iterator helper that skips the
+    /// first `limit` values of this iterator and yields the rest.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/drop)
+    #[wasm_bindgen(method, catch)]
+    pub fn drop<T>(this: &Iterator<T>, limit: u32) -> Result<Iterator<T>, JsValue>;
+
+    /// The `flatMap()` method returns a new iterator helper that yields the
+    /// values of each iterable or iterator returned by `mapper`.
+    ///
+    /// The mapper runs lazily, as the returned iterator is consumed, so it
+    /// is taken as a [`ScopedClosure`] which must outlive that consumption.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/flatMap)
+    #[wasm_bindgen(method, catch, js_name = flatMap)]
+    pub fn flat_map<'a, T, I: Iterable>(
+        this: &Iterator<T>,
+        mapper: &ScopedClosure<'a, dyn FnMut(T, u32) -> I>,
+    ) -> Result<Iterator<I::Item>, JsValue>;
+
+    /// The `reduce()` method consumes this iterator, folding every value
+    /// into an accumulator starting from `initial_value`.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/reduce)
+    #[wasm_bindgen(method, catch)]
+    pub fn reduce<T, A>(
+        this: &Iterator<T>,
+        reducer: &mut dyn FnMut(A, T, u32) -> A,
+        initial_value: &A,
+    ) -> Result<A, JsValue>;
+
+    /// The `toArray()` method consumes this iterator, collecting its values
+    /// into an `Array`.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/toArray)
+    #[wasm_bindgen(method, catch, js_name = toArray)]
+    pub fn to_array<T>(this: &Iterator<T>) -> Result<Array<T>, JsValue>;
+
+    /// The `forEach()` method consumes this iterator, calling `callback`
+    /// with each value and its index.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/forEach)
+    #[wasm_bindgen(method, catch, js_name = forEach)]
+    pub fn for_each<T>(this: &Iterator<T>, callback: &mut dyn FnMut(T, u32))
+        -> Result<(), JsValue>;
+
+    /// The `some()` method consumes this iterator until `predicate` returns
+    /// `true` for a value, returning whether it did.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/some)
+    #[wasm_bindgen(method, catch)]
+    pub fn some<T>(
+        this: &Iterator<T>,
+        predicate: &mut dyn FnMut(T, u32) -> bool,
+    ) -> Result<bool, JsValue>;
+
+    /// The `every()` method consumes this iterator until `predicate` returns
+    /// `false` for a value, returning whether it never did.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/every)
+    #[wasm_bindgen(method, catch)]
+    pub fn every<T>(
+        this: &Iterator<T>,
+        predicate: &mut dyn FnMut(T, u32) -> bool,
+    ) -> Result<bool, JsValue>;
+
+    /// The `find()` method consumes this iterator until `predicate` returns
+    /// `true` for a value, returning that value if any.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/find)
+    #[wasm_bindgen(method, catch)]
+    pub fn find<T>(
+        this: &Iterator<T>,
+        predicate: &mut dyn FnMut(T, u32) -> bool,
+    ) -> Result<Option<T>, JsValue>;
 }
 
 impl<T> UpcastFrom<Iterator<T>> for Object {}
@@ -5929,6 +6255,22 @@ pub mod Math {
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/trunc)
         #[wasm_bindgen(js_namespace = Math)]
         pub fn trunc(x: f64) -> f64;
+
+        /// The `Math.f16round()` function returns the nearest 16-bit half
+        /// precision float representation of a number.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/f16round)
+        #[wasm_bindgen(js_namespace = Math)]
+        pub fn f16round(x: f64) -> f64;
+
+        /// The `Math.sumPrecise()` function takes an iterable of numbers and
+        /// returns their sum, computed as if with infinite precision and
+        /// rounded once at the end, so it is more accurate than a naive
+        /// running sum.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/sumPrecise)
+        #[wasm_bindgen(js_namespace = Math, js_name = sumPrecise, catch)]
+        pub fn sum_precise<I: Iterable>(values: &I) -> Result<f64, JsValue>;
 
         /// The `Math.PI` property represents the ratio of the circumference of a circle to its diameter,
         /// approximately 3.14159.
@@ -7065,6 +7407,17 @@ extern "C" {
         object: &Object<T>,
     ) -> Result<Array<ArrayTuple<(JsString, T)>>, JsValue>;
 
+    /// The `Object.groupBy()` static method groups the values of an
+    /// iterable into a null-prototype object keyed by the property key
+    /// returned by `callback`.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/groupBy)
+    #[wasm_bindgen(static_method_of = Object, catch, js_name = groupBy)]
+    pub fn group_by<T, K, I: Iterable<Item = T>>(
+        items: &I,
+        callback: &mut dyn FnMut(T, u32) -> K,
+    ) -> Result<Object<Array<T>>, JsValue>;
+
     /// The `Object.freeze()` method freezes an object: that is, prevents new
     /// properties from being added to it; prevents existing properties from
     /// being removed; and prevents existing properties, or their enumerability,
@@ -8154,6 +8507,35 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/unicode)
     #[wasm_bindgen(method, getter)]
     pub fn unicode(this: &RegExp) -> bool;
+
+    /// The `dotAll` property indicates whether the `s` flag is set, making
+    /// `.` match line terminators too.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/dotAll)
+    #[wasm_bindgen(method, getter, js_name = dotAll)]
+    pub fn dot_all(this: &RegExp) -> bool;
+
+    /// The `hasIndices` property indicates whether the `d` flag is set,
+    /// recording capture group start and end indices on match results.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/hasIndices)
+    #[wasm_bindgen(method, getter, js_name = hasIndices)]
+    pub fn has_indices(this: &RegExp) -> bool;
+
+    /// The `unicodeSets` property indicates whether the `v` flag is set,
+    /// enabling set notation and string properties in character classes.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/unicodeSets)
+    #[wasm_bindgen(method, getter, js_name = unicodeSets)]
+    pub fn unicode_sets(this: &RegExp) -> bool;
+
+    /// The `RegExp.escape()` static method escapes any characters with
+    /// special meaning in a regular expression so the result matches the
+    /// input literally when used as a pattern.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/escape)
+    #[wasm_bindgen(static_method_of = RegExp)]
+    pub fn escape(text: &str) -> JsString;
 }
 
 // RegExpMatchArray
@@ -8417,6 +8799,37 @@ extern "C" {
     pub fn values<T>(set: &Set<T>) -> Iterator<T>;
 }
 
+// SuppressedError
+#[wasm_bindgen]
+extern "C" {
+    /// A `SuppressedError` is thrown when disposing a [`DisposableStack`]
+    /// and one disposer's error masks another; `error` is the newer error
+    /// and `suppressed` the one it hid.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SuppressedError)
+    #[wasm_bindgen(extends = Object, extends = Error, typescript_type = "SuppressedError")]
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub type SuppressedError;
+
+    /// Creates a new `SuppressedError` wrapping `error` and `suppressed`.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SuppressedError/SuppressedError)
+    #[wasm_bindgen(constructor)]
+    pub fn new(error: &JsValue, suppressed: &JsValue, message: &str) -> SuppressedError;
+
+    /// The error that was thrown most recently.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SuppressedError/error)
+    #[wasm_bindgen(method, getter)]
+    pub fn error(this: &SuppressedError) -> JsValue;
+
+    /// The error that was suppressed by `error`.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SuppressedError/suppressed)
+    #[wasm_bindgen(method, getter)]
+    pub fn suppressed(this: &SuppressedError) -> JsValue;
+}
+
 // SyntaxError
 #[wasm_bindgen]
 extern "C" {
@@ -8581,6 +8994,29 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap/delete)
     #[wasm_bindgen(method)]
     pub fn delete<K, V>(this: &WeakMap<K, V>, key: &K) -> bool;
+
+    /// The `getOrInsert()` method returns the value for `key`, first
+    /// inserting `default_value` under it if the key is absent.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap/getOrInsert)
+    #[wasm_bindgen(method, catch, js_name = getOrInsert)]
+    pub fn get_or_insert<K, V>(
+        this: &WeakMap<K, V>,
+        key: &K,
+        default_value: &V,
+    ) -> Result<V, JsValue>;
+
+    /// The `getOrInsertComputed()` method returns the value for `key`,
+    /// first inserting the result of `callback(key)` under it if the key
+    /// is absent.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap/getOrInsertComputed)
+    #[wasm_bindgen(method, catch, js_name = getOrInsertComputed)]
+    pub fn get_or_insert_computed<K, V>(
+        this: &WeakMap<K, V>,
+        key: &K,
+        callback: &mut dyn FnMut(K) -> V,
+    ) -> Result<V, JsValue>;
 }
 
 impl Default for WeakMap {
@@ -8781,6 +9217,87 @@ pub mod WebAssembly {
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/validate)
         #[wasm_bindgen(js_namespace = WebAssembly, catch)]
         pub fn validate(buffer_source: &JsValue) -> Result<bool, JsValue>;
+
+        /// The `WebAssembly.validate()` function validates the given bytes
+        /// under the given compile options, such as
+        /// `{ builtins: ["js-string"], importedStringConstants: "..." }`.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/validate)
+        #[wasm_bindgen(js_namespace = WebAssembly, js_name = validate, catch)]
+        pub fn validate_with_options(
+            buffer_source: &JsValue,
+            options: &Object,
+        ) -> Result<bool, JsValue>;
+
+        /// The `WebAssembly.compile()` function compiles the given bytes
+        /// under the given compile options, such as
+        /// `{ builtins: ["js-string"], importedStringConstants: "..." }`.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/compile)
+        #[wasm_bindgen(js_namespace = WebAssembly, js_name = compile)]
+        pub fn compile_with_options(buffer_source: &JsValue, options: &Object) -> Promise<Module>;
+
+        /// The `WebAssembly.compileStreaming()` function compiles a module
+        /// from a streamed `Response` under the given compile options.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/compileStreaming)
+        #[wasm_bindgen(js_namespace = WebAssembly, js_name = compileStreaming)]
+        pub fn compile_streaming_with_options(
+            response: &Promise,
+            options: &Object,
+        ) -> Promise<Module>;
+
+        /// The `WebAssembly.instantiate()` function compiles and instantiates
+        /// the given bytes under the given compile options, resolving to an
+        /// [`InstantiatedSource`] holding both the module and the instance.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/instantiate)
+        #[wasm_bindgen(js_namespace = WebAssembly, js_name = instantiate)]
+        pub fn instantiate_buffer_with_options(
+            buffer: &[u8],
+            imports: &Object,
+            options: &Object,
+        ) -> Promise<InstantiatedSource>;
+
+        /// The `WebAssembly.instantiateStreaming()` function compiles and
+        /// instantiates a module from a streamed `Response` under the given
+        /// compile options, resolving to an [`InstantiatedSource`].
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/instantiateStreaming)
+        #[wasm_bindgen(js_namespace = WebAssembly, js_name = instantiateStreaming)]
+        pub fn instantiate_streaming_with_options(
+            response: &JsValue,
+            imports: &Object,
+            options: &Object,
+        ) -> Promise<InstantiatedSource>;
+
+        /// The `WebAssembly.JSTag` property is the [`Tag`] under which
+        /// JavaScript exceptions are thrown into and caught from Wasm code.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/JSTag)
+        #[wasm_bindgen(thread_local_v2, js_namespace = WebAssembly, js_name = JSTag)]
+        pub static JS_TAG: Tag;
+    }
+
+    // WebAssembly.InstantiatedSource
+    #[wasm_bindgen]
+    extern "C" {
+        /// The `{ module, instance }` pair that `WebAssembly.instantiate()`
+        /// and `WebAssembly.instantiateStreaming()` resolve to when given
+        /// bytes rather than a compiled `Module`.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/instantiate#return_value)
+        #[wasm_bindgen(extends = Object, typescript_type = "WebAssembly.WebAssemblyInstantiatedSource")]
+        #[derive(Clone, Debug, PartialEq, Eq)]
+        pub type InstantiatedSource;
+
+        /// The compiled module.
+        #[wasm_bindgen(method, getter)]
+        pub fn module(this: &InstantiatedSource) -> Module;
+
+        /// The instance of that module.
+        #[wasm_bindgen(method, getter)]
+        pub fn instance(this: &InstantiatedSource) -> Instance;
     }
 
     // WebAssembly.CompileError
@@ -8921,6 +9438,17 @@ pub mod WebAssembly {
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Module)
         #[wasm_bindgen(constructor, js_namespace = WebAssembly, catch)]
         pub fn new(buffer_source: &JsValue) -> Result<Module, JsValue>;
+
+        /// The `WebAssembly.Module()` constructor compiles the given bytes
+        /// synchronously under the given compile options, such as
+        /// `{ builtins: ["js-string"], importedStringConstants: "..." }`.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Module/Module)
+        #[wasm_bindgen(constructor, js_namespace = WebAssembly, catch)]
+        pub fn new_with_options(
+            buffer_source: &JsValue,
+            options: &Object,
+        ) -> Result<Module, JsValue>;
 
         /// The `WebAssembly.customSections()` function returns a copy of the
         /// contents of all custom sections in the given module with the given
@@ -9083,6 +9611,14 @@ pub mod WebAssembly {
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Exception/getArg)
         #[wasm_bindgen(method, js_namespace = WebAssembly, js_name = getArg, catch)]
         pub fn get_arg(this: &Exception, tag: &Tag, index: u32) -> Result<JsValue, JsValue>;
+
+        /// The `stack` property holds a stack trace when the exception was
+        /// created with `{ traceStack: true }`, and is `undefined`
+        /// otherwise.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Exception/stack)
+        #[wasm_bindgen(method, getter, js_namespace = WebAssembly)]
+        pub fn stack(this: &Exception) -> Option<JsString>;
     }
 
     // WebAssembly.Global
@@ -9111,6 +9647,12 @@ pub mod WebAssembly {
         pub fn value(this: &Global) -> JsValue;
         #[wasm_bindgen(method, setter = value, js_namespace = WebAssembly)]
         pub fn set_value(this: &Global, value: &JsValue);
+
+        /// The `valueOf()` method returns the global's current value.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Global/valueOf)
+        #[wasm_bindgen(method, js_namespace = WebAssembly, js_name = valueOf)]
+        pub fn value_of(this: &Global) -> JsValue;
     }
 
     // WebAssembly.Memory
@@ -9149,6 +9691,23 @@ pub mod WebAssembly {
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Memory/grow)
         #[wasm_bindgen(method, js_namespace = WebAssembly)]
         pub fn grow(this: &Memory, pages: u32) -> u32;
+
+        /// The `toResizableBuffer()` method makes `buffer` a resizable
+        /// `ArrayBuffer` (or growable `SharedArrayBuffer`) that tracks the
+        /// memory as it grows, and returns it. Throws a `TypeError` if the
+        /// memory has no maximum size.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Memory/toResizableBuffer)
+        #[wasm_bindgen(method, js_namespace = WebAssembly, js_name = toResizableBuffer, catch)]
+        pub fn to_resizable_buffer(this: &Memory) -> Result<JsValue, JsValue>;
+
+        /// The `toFixedLengthBuffer()` method makes `buffer` a fixed-length
+        /// `ArrayBuffer` (or `SharedArrayBuffer`) again, detaching the
+        /// previous one, and returns it.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Memory/toFixedLengthBuffer)
+        #[wasm_bindgen(method, js_namespace = WebAssembly, js_name = toFixedLengthBuffer, catch)]
+        pub fn to_fixed_length_buffer(this: &Memory) -> Result<JsValue, JsValue>;
     }
 
     // WebAssembly.Suspending / WebAssembly.promising (JSPI — JS Promise Integration)
@@ -9218,6 +9777,22 @@ pub mod JSON {
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify)
         #[wasm_bindgen(catch, js_namespace = JSON)]
         pub fn stringify(obj: &JsValue) -> Result<JsString, JsValue>;
+
+        /// The `JSON.rawJSON()` method creates a raw JSON object whose text
+        /// is emitted verbatim by `JSON.stringify()`, allowing values such
+        /// as large integers to round-trip without precision loss. Throws
+        /// a `SyntaxError` unless `text` is valid JSON for a primitive.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/rawJSON)
+        #[wasm_bindgen(catch, js_namespace = JSON, js_name = rawJSON)]
+        pub fn raw_json(text: &str) -> Result<Object, JsValue>;
+
+        /// The `JSON.isRawJSON()` method returns whether a value is a raw
+        /// JSON object created by `JSON.rawJSON()`.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/isRawJSON)
+        #[wasm_bindgen(js_namespace = JSON, js_name = isRawJSON)]
+        pub fn is_raw_json(value: &JsValue) -> bool;
 
         /// The `JSON.stringify()` method converts a JavaScript value to a JSON string.
         ///
@@ -9835,6 +10410,20 @@ extern "C" {
     #[wasm_bindgen(method, js_class = "String")]
     pub fn trim(this: &JsString) -> JsString;
 
+    /// The `isWellFormed()` method returns whether this string contains no
+    /// lone surrogates.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/isWellFormed)
+    #[wasm_bindgen(method, js_class = "String", js_name = isWellFormed)]
+    pub fn is_well_formed(this: &JsString) -> bool;
+
+    /// The `toWellFormed()` method returns a copy of this string with every
+    /// lone surrogate replaced by U+FFFD.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/toWellFormed)
+    #[wasm_bindgen(method, js_class = "String", js_name = toWellFormed)]
+    pub fn to_well_formed(this: &JsString) -> JsString;
+
     /// The `trimEnd()` method removes whitespace from the end of a string.
     /// `trimRight()` is an alias of this method.
     ///
@@ -10180,6 +10769,21 @@ extern "C" {
     #[wasm_bindgen(static_method_of = Symbol, getter, js_name = asyncIterator)]
     pub fn async_iterator() -> Symbol;
 
+    /// The `Symbol.dispose` well-known symbol names the method that
+    /// disposes a resource, as used by [`DisposableStack`] and `using`.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/dispose)
+    #[wasm_bindgen(static_method_of = Symbol, getter)]
+    pub fn dispose() -> Symbol;
+
+    /// The `Symbol.asyncDispose` well-known symbol names the method that
+    /// asynchronously disposes a resource, as used by
+    /// [`AsyncDisposableStack`] and `await using`.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/asyncDispose)
+    #[wasm_bindgen(static_method_of = Symbol, getter, js_name = asyncDispose)]
+    pub fn async_dispose() -> Symbol;
+
     /// The `Symbol.iterator` well-known symbol specifies the default iterator
     /// for an object.  Used by `for...of`.
     ///
@@ -10291,6 +10895,13 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/valueOf)
     #[wasm_bindgen(method, js_name = valueOf)]
     pub fn value_of(this: &Symbol) -> Symbol;
+
+    /// The `description` accessor property returns the optional description
+    /// this symbol was created with.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/description)
+    #[wasm_bindgen(method, getter)]
+    pub fn description(this: &Symbol) -> Option<JsString>;
 }
 
 mod primitive_union_sealed {
@@ -12921,6 +13532,25 @@ pub mod Intl {
         #[wasm_bindgen(method, getter)]
         pub fn script(this: &Locale) -> Option<JsString>;
 
+        /// The `firstDayOfWeek` accessor property returns the first day of
+        /// the week for this locale, as a weekday code such as `"mon"`,
+        /// when one was given via the `fw` extension or constructor option.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/firstDayOfWeek)
+        #[wasm_bindgen(method, getter, js_namespace = Intl, js_name = firstDayOfWeek)]
+        pub fn first_day_of_week(this: &Locale) -> Option<JsString>;
+
+        /// The `variants` accessor property returns the variant subtags of
+        /// this locale, joined by `-`, if any.
+        ///
+        /// This is a stage 3 proposal, so it is only available with
+        /// `--cfg=js_sys_unstable_apis`.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/variants)
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(method, getter, js_namespace = Intl)]
+        pub fn variants(this: &Locale) -> Option<JsString>;
+
         /// Returns an array of available calendars for the locale.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/getCalendars)
@@ -13455,6 +14085,30 @@ impl<T: JsGeneric + FromWasmAbi> From<PromiseState<T>> for Result<T, JsValue> {
     }
 }
 
+// PromiseWithResolvers
+#[wasm_bindgen]
+extern "C" {
+    /// The object returned by [`Promise::with_resolvers`], bundling a
+    /// pending promise with the functions that settle it.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/withResolvers)
+    #[wasm_bindgen(extends = Object, typescript_type = "PromiseWithResolvers<any>")]
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub type PromiseWithResolvers<T = JsValue>;
+
+    /// The pending promise.
+    #[wasm_bindgen(method, getter)]
+    pub fn promise<T>(this: &PromiseWithResolvers<T>) -> Promise<T>;
+
+    /// The function that fulfills the promise with a value.
+    #[wasm_bindgen(method, getter)]
+    pub fn resolve<T: JsGeneric>(this: &PromiseWithResolvers<T>) -> Function<fn(T) -> Undefined>;
+
+    /// The function that rejects the promise with a reason.
+    #[wasm_bindgen(method, getter)]
+    pub fn reject<T>(this: &PromiseWithResolvers<T>) -> Function<fn(JsValue) -> Undefined>;
+}
+
 // Promise
 #[wasm_bindgen]
 extern "C" {
@@ -13782,6 +14436,22 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/finally)
     #[wasm_bindgen(method)]
     pub fn finally<T>(this: &Promise<T>, cb: &ScopedClosure<dyn FnMut()>) -> Promise<JsValue>;
+
+    /// The `Promise.try()` static method calls `cb` synchronously and
+    /// wraps its outcome in a promise: a returned value or promise is
+    /// adopted, and a thrown error becomes a rejection.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/try)
+    #[wasm_bindgen(static_method_of = Promise, js_name = try)]
+    pub fn try_<R: Promising>(cb: &mut dyn FnMut() -> Result<R, JsError>)
+        -> Promise<R::Resolution>;
+
+    /// The `Promise.withResolvers()` static method returns a new promise
+    /// together with its `resolve` and `reject` functions.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/withResolvers)
+    #[wasm_bindgen(static_method_of = Promise, js_name = withResolvers)]
+    pub fn with_resolvers<T>() -> PromiseWithResolvers<T>;
 }
 
 impl<T: JsGeneric> Promising for Promise<T> {
@@ -14276,6 +14946,45 @@ macro_rules! arrays {
             #[wasm_bindgen(method)]
             pub fn slice(this: &$name, begin: u32, end: u32) -> $name;
 
+            /// The `toReversed()` method returns a new typed array with the
+            /// elements in reverse order, leaving this one unchanged.
+            #[wasm_bindgen(method, js_name = toReversed)]
+            pub fn to_reversed(this: &$name) -> $name;
+
+            /// The `toSorted()` method returns a new typed array with the
+            /// elements sorted in ascending numeric order, leaving this one
+            /// unchanged.
+            #[wasm_bindgen(method, js_name = toSorted)]
+            pub fn to_sorted(this: &$name) -> $name;
+
+            /// The `with()` method returns a new typed array with the element
+            /// at `index` replaced by `value`, leaving this one unchanged.
+            /// Throws a `RangeError` if `index` is out of bounds.
+            #[wasm_bindgen(method, catch)]
+            pub fn with(this: &$name, index: i32, value: $ty) -> Result<$name, JsValue>;
+
+            /// The `findLast()` method returns the last element for which
+            /// `predicate` returns `true`, if any.
+            #[wasm_bindgen(method, js_name = findLast)]
+            pub fn find_last(this: &$name, predicate: &mut dyn FnMut($ty, u32, $name) -> bool) -> Option<$ty>;
+
+            /// The `findLastIndex()` method returns the index of the last
+            /// element for which `predicate` returns `true`, or `-1`.
+            #[wasm_bindgen(method, js_name = findLastIndex)]
+            pub fn find_last_index(this: &$name, predicate: &mut dyn FnMut($ty, u32, $name) -> bool) -> i32;
+
+            /// The `includes()` method returns whether the typed array
+            /// contains `value`, searching from `from_index`, which counts
+            /// from the end when negative.
+            #[wasm_bindgen(method)]
+            pub fn includes(this: &$name, value: $ty, from_index: i32) -> bool;
+
+            /// The `indexOf()` method returns the first index at which
+            /// `value` is found, searching from `from_index`, which counts
+            /// from the end when negative, or `-1`.
+            #[wasm_bindgen(method, js_name = indexOf)]
+            pub fn index_of(this: &$name, value: $ty, from_index: i32) -> i32;
+
             /// The `forEach()` method executes a provided function once per array
             /// element. This method has the same algorithm as
             /// `Array.prototype.forEach()`. `TypedArray` is one of the typed array
@@ -14539,6 +15248,157 @@ arrays! {
     /// `BigUint64Array()`
     /// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigUint64Array
     BigUint64Array: u64,
+}
+
+// Base64Options
+#[wasm_bindgen]
+extern "C" {
+    /// Options for the `Uint8Array` base64 methods: `alphabet` is
+    /// `"base64"` (default) or `"base64url"`; `lastChunkHandling`, for
+    /// decoding, is `"loose"` (default), `"strict"` or
+    /// `"stop-before-partial"`; `omitPadding`, for encoding, drops the
+    /// trailing `=` characters.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/fromBase64#options)
+    #[wasm_bindgen(extends = Object, typescript_type = "object")]
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub type Base64Options;
+
+    /// Sets the alphabet, `"base64"` or `"base64url"`.
+    #[wasm_bindgen(method, setter)]
+    pub fn set_alphabet(this: &Base64Options, alphabet: &str);
+
+    /// The alphabet, `"base64"` or `"base64url"`, if set.
+    #[wasm_bindgen(method, getter, js_name = alphabet)]
+    pub fn get_alphabet(this: &Base64Options) -> Option<JsString>;
+
+    /// Sets how a trailing partial chunk is decoded: `"loose"`, `"strict"`
+    /// or `"stop-before-partial"`.
+    #[wasm_bindgen(method, setter, js_name = lastChunkHandling)]
+    pub fn set_last_chunk_handling(this: &Base64Options, last_chunk_handling: &str);
+
+    /// How a trailing partial chunk is decoded, if set.
+    #[wasm_bindgen(method, getter, js_name = lastChunkHandling)]
+    pub fn get_last_chunk_handling(this: &Base64Options) -> Option<JsString>;
+
+    /// Sets whether encoding omits the trailing `=` padding.
+    #[wasm_bindgen(method, setter, js_name = omitPadding)]
+    pub fn set_omit_padding(this: &Base64Options, omit_padding: bool);
+
+    /// Whether encoding omits the trailing `=` padding, if set.
+    #[wasm_bindgen(method, getter, js_name = omitPadding)]
+    pub fn get_omit_padding(this: &Base64Options) -> Option<bool>;
+}
+
+impl Base64Options {
+    pub fn new() -> Base64Options {
+        JsCast::unchecked_into::<Base64Options>(Object::<JsValue>::new())
+    }
+}
+
+impl Default for Base64Options {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// SetFromResult
+#[wasm_bindgen]
+extern "C" {
+    /// The `{ read, written }` result of [`Uint8Array::set_from_base64`]
+    /// and [`Uint8Array::set_from_hex`]: how many characters of the input
+    /// were consumed and how many bytes were written.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/setFromBase64#return_value)
+    #[wasm_bindgen(extends = Object, typescript_type = "object")]
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub type SetFromResult;
+
+    /// The number of input characters consumed.
+    #[wasm_bindgen(method, getter)]
+    pub fn read(this: &SetFromResult) -> u32;
+
+    /// The number of bytes written into the array.
+    #[wasm_bindgen(method, getter)]
+    pub fn written(this: &SetFromResult) -> u32;
+}
+
+// Uint8Array base64 / hex
+#[wasm_bindgen]
+extern "C" {
+    /// The `Uint8Array.fromBase64()` static method decodes a base64 string
+    /// into a new `Uint8Array`. Throws a `SyntaxError` on invalid input.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/fromBase64)
+    #[wasm_bindgen(static_method_of = Uint8Array, catch, js_name = fromBase64)]
+    pub fn from_base64(text: &str) -> Result<Uint8Array, JsValue>;
+
+    /// The `Uint8Array.fromBase64()` static method decodes a base64 string
+    /// into a new `Uint8Array`, with the given alphabet and last chunk
+    /// handling. Throws a `SyntaxError` on invalid input.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/fromBase64)
+    #[wasm_bindgen(static_method_of = Uint8Array, catch, js_name = fromBase64)]
+    pub fn from_base64_with_options(
+        text: &str,
+        options: &Base64Options,
+    ) -> Result<Uint8Array, JsValue>;
+
+    /// The `Uint8Array.fromHex()` static method decodes a hex string into a
+    /// new `Uint8Array`. Throws a `SyntaxError` on invalid input.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/fromHex)
+    #[wasm_bindgen(static_method_of = Uint8Array, catch, js_name = fromHex)]
+    pub fn from_hex(text: &str) -> Result<Uint8Array, JsValue>;
+
+    /// The `toBase64()` method encodes the bytes of this array as a base64
+    /// string.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/toBase64)
+    #[wasm_bindgen(method, js_name = toBase64)]
+    pub fn to_base64(this: &Uint8Array) -> JsString;
+
+    /// The `toBase64()` method encodes the bytes of this array as a base64
+    /// string, with the given alphabet and padding.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/toBase64)
+    #[wasm_bindgen(method, js_name = toBase64)]
+    pub fn to_base64_with_options(this: &Uint8Array, options: &Base64Options) -> JsString;
+
+    /// The `toHex()` method encodes the bytes of this array as a lowercase
+    /// hex string.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/toHex)
+    #[wasm_bindgen(method, js_name = toHex)]
+    pub fn to_hex(this: &Uint8Array) -> JsString;
+
+    /// The `setFromBase64()` method decodes a base64 string into this
+    /// array in place, stopping when the array is full, and reports how
+    /// much was read and written.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/setFromBase64)
+    #[wasm_bindgen(method, catch, js_name = setFromBase64)]
+    pub fn set_from_base64(this: &Uint8Array, text: &str) -> Result<SetFromResult, JsValue>;
+
+    /// The `setFromBase64()` method decodes a base64 string into this
+    /// array in place with the given options, stopping when the array is
+    /// full, and reports how much was read and written.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/setFromBase64)
+    #[wasm_bindgen(method, catch, js_name = setFromBase64)]
+    pub fn set_from_base64_with_options(
+        this: &Uint8Array,
+        text: &str,
+        options: &Base64Options,
+    ) -> Result<SetFromResult, JsValue>;
+
+    /// The `setFromHex()` method decodes a hex string into this array in
+    /// place, stopping when the array is full, and reports how much was
+    /// read and written.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/setFromHex)
+    #[wasm_bindgen(method, catch, js_name = setFromHex)]
+    pub fn set_from_hex(this: &Uint8Array, text: &str) -> Result<SetFromResult, JsValue>;
 }
 
 /// Bridging between JavaScript `Promise`s and Rust `Future`s.

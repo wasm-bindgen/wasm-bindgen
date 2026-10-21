@@ -3,6 +3,14 @@ use wasm_bindgen::JsCast;
 use wasm_bindgen::JsValue;
 use wasm_bindgen_test::*;
 
+fn has_is_error() -> bool {
+    let ctor: Object = Reflect::get_str(global().as_ref(), &"Error".into())
+        .unwrap()
+        .unwrap()
+        .unchecked_into();
+    Reflect::has_str(&ctor, &"isError".into()).unwrap_or(false)
+}
+
 #[wasm_bindgen_test]
 fn new() {
     let error = Error::new("some message");
@@ -81,4 +89,28 @@ fn error_inheritance() {
     assert!(error.is_instance_of::<Error>());
     assert!(error.is_instance_of::<Object>());
     let _: &Object = error.as_ref();
+}
+
+#[wasm_bindgen_test]
+fn is_error() {
+    if !has_is_error() {
+        return;
+    }
+
+    assert!(Error::is_error(&Error::new("test").into()));
+    assert!(Error::is_error(&TypeError::new("test").into()));
+
+    let fake = Object::new();
+    Reflect::set_str(fake.as_ref(), &"name".into(), &JsValue::from("Error")).unwrap();
+    Reflect::set_str(fake.as_ref(), &"message".into(), &JsValue::from("test")).unwrap();
+    Reflect::set_str(fake.as_ref(), &"stack".into(), &JsValue::from("")).unwrap();
+    assert!(!Error::is_error(&fake.into()));
+
+    let inherited = Object::create(Error::new("test").as_ref());
+    assert!(!Error::is_error(&inherited.into()));
+
+    assert!(!Error::is_error(&JsValue::from(42)));
+    assert!(!Error::is_error(&JsValue::from("Error")));
+    assert!(!Error::is_error(&JsValue::NULL));
+    assert!(!Error::is_error(&JsValue::UNDEFINED));
 }

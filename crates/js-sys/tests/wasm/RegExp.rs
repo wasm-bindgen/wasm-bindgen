@@ -2,6 +2,14 @@ use js_sys::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen_test::*;
 
+fn has_regexp_escape() -> bool {
+    let ctor: Object = Reflect::get_str(js_sys::global().as_ref(), &"RegExp".into())
+        .unwrap()
+        .unwrap()
+        .unchecked_into();
+    Reflect::has_str(&ctor, &"escape".into()).unwrap_or(false)
+}
+
 #[wasm_bindgen_test]
 fn regexp_inheritance() {
     let re = RegExp::new(".", "");
@@ -177,4 +185,52 @@ fn to_string() {
 fn unicode() {
     let re = RegExp::new("\u{61}", "u");
     assert!(re.unicode());
+}
+
+#[wasm_bindgen_test]
+fn dot_all() {
+    let re = RegExp::new("foo.bar", "s");
+    assert!(re.dot_all());
+    assert!(re.test("foo\nbar"));
+
+    let re = RegExp::new("foo.bar", "");
+    assert!(!re.dot_all());
+    assert!(!re.test("foo\nbar"));
+}
+
+#[wasm_bindgen_test]
+fn has_indices() {
+    let re = RegExp::new("foo", "d");
+    assert!(re.has_indices());
+
+    let re = RegExp::new("foo", "g");
+    assert!(!re.has_indices());
+}
+
+#[wasm_bindgen_test]
+fn unicode_sets() {
+    let re = RegExp::new(r"[\p{L}--[a-z]]", "v");
+    assert!(re.unicode_sets());
+    assert!(re.test("A"));
+    assert!(!re.test("a"));
+
+    let re = RegExp::new("foo", "u");
+    assert!(!re.unicode_sets());
+}
+
+#[wasm_bindgen_test]
+fn escape() {
+    if !has_regexp_escape() {
+        return;
+    }
+
+    let escaped = RegExp::escape("a.b*c");
+    assert_eq!(escaped, r"\x61\.b\*c");
+    let re = RegExp::new(&String::from(&escaped), "");
+    assert!(re.test("a.b*c"));
+    assert!(!re.test("axb*c"));
+    assert!(!re.test("abbc"));
+
+    assert_eq!(RegExp::escape(""), "");
+    assert_eq!(RegExp::escape("-"), r"\x2d");
 }

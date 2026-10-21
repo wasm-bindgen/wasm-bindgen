@@ -561,3 +561,51 @@ fn from_entries_typed() {
         "qux"
     );
 }
+
+fn has_group_by() -> bool {
+    let ctor: Object = Reflect::get_str(&global(), &"Object".into())
+        .unwrap()
+        .unwrap()
+        .unchecked_into();
+    Reflect::has_str(&ctor, &"groupBy".into()).unwrap()
+}
+
+#[wasm_bindgen_test]
+fn group_by() {
+    if !has_group_by() {
+        return;
+    }
+    let items = Array::<Number>::of(&[1.into(), 2.into(), 3.into(), 4.into(), 5.into()]);
+    let groups = Object::group_by(&items, &mut |n: Number, i: u32| {
+        if i == 4 {
+            JsString::from("last")
+        } else if n.value_of() % 2.0 == 0.0 {
+            JsString::from("even")
+        } else {
+            JsString::from("odd")
+        }
+    })
+    .unwrap();
+
+    assert!(JsValue::from(Object::get_prototype_of(&groups)).is_null());
+    assert_eq!(Object::keys(&groups).length(), 3);
+
+    let odd = Reflect::get_str(&groups, &"odd".into()).unwrap().unwrap();
+    assert_eq!(odd.length(), 2);
+    assert_eq!(odd.get_checked(0).unwrap(), 1);
+    assert_eq!(odd.get_checked(1).unwrap(), 3);
+    let even = Reflect::get_str(&groups, &"even".into()).unwrap().unwrap();
+    assert_eq!(even.length(), 2);
+    assert_eq!(even.get_checked(0).unwrap(), 2);
+    assert_eq!(even.get_checked(1).unwrap(), 4);
+    let last = Reflect::get_str(&groups, &"last".into()).unwrap().unwrap();
+    assert_eq!(last.length(), 1);
+    assert_eq!(last.get_checked(0).unwrap(), 5);
+    assert!(Reflect::get_str(&groups, &"none".into()).unwrap().is_none());
+
+    let empty = Object::group_by(&Array::<Number>::new_typed(), &mut |_, _| {
+        JsString::from("k")
+    })
+    .unwrap();
+    assert_eq!(Object::keys(&empty).length(), 0);
+}
