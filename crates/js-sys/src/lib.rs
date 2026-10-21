@@ -7089,17 +7089,31 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/next)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, catch, js_name = next)]
-    pub fn next<T: FromWasmAbi>(this: &Generator<T>, value: &T)
-        -> Result<IteratorNext<T>, JsValue>;
+    #[wasm_bindgen(method, catch, js_name = next, experimental_generic_mono)]
+    pub fn next<T: RefIntoWasmAbi>(
+        this: &Generator<T>,
+        value: &T,
+    ) -> Result<IteratorNext<T>, JsValue>;
 
     // Next major: deprecate
     /// The `next()` method returns an object with two properties done and value.
     /// You can also provide a parameter to the next method to send a value to the generator.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/next)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch)]
     pub fn next_iterator<T: FromWasmAbi>(
+        this: &Generator<T>,
+        value: &T,
+    ) -> Result<IteratorNext<T>, JsValue>;
+
+    /// The `next()` method returns an object with two properties done and value.
+    /// You can also provide a parameter to the next method to send a value to the generator.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/next)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, catch, js_name = next, experimental_generic_mono)]
+    pub fn next_iterator<T: RefIntoWasmAbi>(
         this: &Generator<T>,
         value: &T,
     ) -> Result<IteratorNext<T>, JsValue>;
@@ -7115,8 +7129,8 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/return)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, catch, js_name = "return")]
-    pub fn return_<T: FromWasmAbi>(
+    #[wasm_bindgen(method, catch, js_name = "return", experimental_generic_mono)]
+    pub fn return_<T: RefIntoWasmAbi>(
         this: &Generator<T>,
         value: &T,
     ) -> Result<IteratorNext<T>, JsValue>;
@@ -7125,8 +7139,19 @@ extern "C" {
     /// The `return()` method returns the given value and finishes the generator.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/return)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = "return")]
     pub fn try_return<T: FromWasmAbi>(
+        this: &Generator<T>,
+        value: &T,
+    ) -> Result<IteratorNext<T>, JsValue>;
+
+    /// The `return()` method returns the given value and finishes the generator.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/return)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, catch, js_name = "return", experimental_generic_mono)]
+    pub fn try_return<T: RefIntoWasmAbi>(
         this: &Generator<T>,
         value: &T,
     ) -> Result<IteratorNext<T>, JsValue>;
@@ -7177,8 +7202,32 @@ extern "C" {
     /// You can also provide a parameter to the next method to send a value to the generator.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncGenerator/next)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch)]
     pub fn next<T>(
+        this: &AsyncGenerator<T>,
+        value: &T,
+    ) -> Result<Promise<IteratorNext<T>>, JsValue>;
+
+    /// The `next()` method returns an object with two properties done and value.
+    /// You can also provide a parameter to the next method to send a value to the generator.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncGenerator/next)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, catch, experimental_generic_mono)]
+    pub fn next<T>(
+        this: &AsyncGenerator<T>,
+        value: &T,
+    ) -> Result<Promise<IteratorNext<T>>, JsValue>
+    where
+        T: RefIntoWasmAbi;
+
+    /// The `return()` method returns the given value and finishes the generator.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncGenerator/return)
+    #[cfg(not(js_sys_unstable_apis))]
+    #[wasm_bindgen(method, js_name = "return", catch)]
+    pub fn return_<T>(
         this: &AsyncGenerator<T>,
         value: &T,
     ) -> Result<Promise<IteratorNext<T>>, JsValue>;
@@ -7186,11 +7235,14 @@ extern "C" {
     /// The `return()` method returns the given value and finishes the generator.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncGenerator/return)
-    #[wasm_bindgen(method, js_name = "return", catch)]
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = "return", catch, experimental_generic_mono)]
     pub fn return_<T>(
         this: &AsyncGenerator<T>,
         value: &T,
-    ) -> Result<Promise<IteratorNext<T>>, JsValue>;
+    ) -> Result<Promise<IteratorNext<T>>, JsValue>
+    where
+        T: RefIntoWasmAbi;
 
     /// The `throw()` method resumes the execution of a generator by throwing an error into it
     /// and returns an object with two properties done and value.
@@ -7317,11 +7369,29 @@ extern "C" {
     /// **Note:** Consider using [`Map::try_for_each`] if the callback might throw an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/forEach)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = forEach, catch)]
     pub fn try_for_each<K, V>(
         this: &Map<K, V>,
         callback: &mut dyn FnMut(V, K) -> Result<(), JsError>,
     ) -> Result<(), JsValue>;
+
+    ///     // Do something here...
+    /// })
+    /// ```
+    ///
+    /// **Note:** Consider using [`Map::try_for_each`] if the callback might throw an error.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/forEach)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = forEach, catch, experimental_generic_mono)]
+    pub fn try_for_each<K, V>(
+        this: &Map<K, V>,
+        callback: &mut dyn FnMut(V, K) -> Result<(), JsError>,
+    ) -> Result<(), JsValue>
+    where
+        K: FromWasmAbi,
+        V: FromWasmAbi;
 
     /// The `get()` method returns a specified element from a Map object.
     /// Returns `undefined` if the key is not found.
@@ -7348,8 +7418,20 @@ extern "C" {
     /// Returns `None` if the key is not found.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/get)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = get)]
     pub fn get_checked<K, V>(this: &Map<K, V>, key: &K) -> Option<V>;
+
+    /// The `get()` method returns a specified element from a Map object.
+    /// Returns `None` if the key is not found.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/get)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = get, experimental_generic_mono)]
+    pub fn get_checked<K, V>(this: &Map<K, V>, key: &K) -> Option<V>
+    where
+        K: RefIntoWasmAbi,
+        Option<V>: FromWasmAbi;
 
     /// The `has()` method returns a boolean indicating whether an element with
     /// the specified key exists or not.
@@ -10119,8 +10201,19 @@ pub mod Reflect {
         /// an object (`target[propertyKey]`) as a function.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/get)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, js_name = get, catch)]
         pub fn get_str<T>(target: &Object<T>, key: &JsString) -> Result<Option<T>, JsValue>;
+
+        /// The static `Reflect.get()` method works like getting a property from
+        /// an object (`target[propertyKey]`) as a function.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/get)
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = get, catch, experimental_generic_mono)]
+        pub fn get_str<T>(target: &Object<T>, key: &JsString) -> Result<Option<T>, JsValue>
+        where
+            Option<T>: FromWasmAbi;
 
         /// The static `Reflect.get()` method works like getting a property from
         /// an object (`target[propertyKey]`) as a function.
@@ -10309,12 +10402,27 @@ pub mod Reflect {
         /// property on an object.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/set)
+        #[cfg(not(js_sys_unstable_apis))]
         #[wasm_bindgen(js_namespace = Reflect, js_name = set, catch)]
         pub fn set_str<T>(
             target: &Object<T>,
             property_key: &JsString,
             value: &T,
         ) -> Result<bool, JsValue>;
+
+        /// The static `Reflect.set()` method works like setting a
+        /// property on an object.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/set)
+        #[cfg(js_sys_unstable_apis)]
+        #[wasm_bindgen(js_namespace = Reflect, js_name = set, catch, experimental_generic_mono)]
+        pub fn set_str<T>(
+            target: &Object<T>,
+            property_key: &JsString,
+            value: &T,
+        ) -> Result<bool, JsValue>
+        where
+            T: RefIntoWasmAbi;
 
         /// The same as [`set`](fn.set.html)
         /// except the key is an `f64`, which is slightly faster.
@@ -10737,11 +10845,25 @@ extern "C" {
     /// in the Set object, in insertion order.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/forEach)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = forEach, catch)]
     pub fn try_for_each<T>(
         this: &Set<T>,
         callback: &mut dyn FnMut(T) -> Result<(), JsError>,
     ) -> Result<(), JsValue>;
+
+    /// The `forEach()` method executes a provided function once for each value
+    /// in the Set object, in insertion order.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/forEach)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = forEach, catch, experimental_generic_mono)]
+    pub fn try_for_each<T>(
+        this: &Set<T>,
+        callback: &mut dyn FnMut(T) -> Result<(), JsError>,
+    ) -> Result<(), JsValue>
+    where
+        T: FromWasmAbi;
 
     /// The `has()` method returns a boolean indicating whether an element with
     /// the specified value exists in a [`Set`] object or not.
@@ -11048,7 +11170,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(constructor)]
-    pub fn new<K: JsGeneric = Object, V: JsGeneric = Object>() -> WeakMap<K, V>;
+    pub fn new<K: JsGeneric = Object, V = Object>() -> WeakMap<K, V>;
 
     // Next major: deprecate
     /// The [`WeakMap`] object is a collection of key/value pairs in which the
@@ -11056,15 +11178,37 @@ extern "C" {
     /// be arbitrary values.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(constructor)]
     pub fn new_typed<K: JsGeneric = Object, V: JsGeneric = Object>() -> WeakMap<K, V>;
+
+    /// The [`WeakMap`] object is a collection of key/value pairs in which the
+    /// keys are weakly referenced.  The keys must be objects and the values can
+    /// be arbitrary values.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(constructor)]
+    pub fn new_typed<K: JsGeneric = Object, V = Object>() -> WeakMap<K, V>;
 
     /// The `set()` method sets the value for the key in the [`WeakMap`] object.
     /// Returns the [`WeakMap`] object.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap/set)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_class = "WeakMap")]
     pub fn set<K, V>(this: &WeakMap<K, V>, key: &K, value: &V) -> WeakMap<K, V>;
+
+    /// The `set()` method sets the value for the key in the [`WeakMap`] object.
+    /// Returns the [`WeakMap`] object.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap/set)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_class = "WeakMap", experimental_generic_mono)]
+    pub fn set<K, V>(this: &WeakMap<K, V>, key: &K, value: &V) -> WeakMap<K, V>
+    where
+        K: JsGeneric,
+        V: RefIntoWasmAbi;
 
     /// The `get()` method returns a specified by key element
     /// from a [`WeakMap`] object. Returns `undefined` if the key is not found.
@@ -11081,15 +11225,30 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap/get)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method)]
-    pub fn get<K, V>(this: &WeakMap<K, V>, key: &K) -> Option<V>;
+    #[wasm_bindgen(method, experimental_generic_mono)]
+    pub fn get<K, V>(this: &WeakMap<K, V>, key: &K) -> Option<V>
+    where
+        K: JsGeneric,
+        Option<V>: FromWasmAbi;
 
     /// The `get()` method returns a specified by key element
     /// from a [`WeakMap`] object. Returns `None` if the key is not found.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap/get)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = get)]
     pub fn get_checked<K, V>(this: &WeakMap<K, V>, key: &K) -> Option<V>;
+
+    /// The `get()` method returns a specified by key element
+    /// from a [`WeakMap`] object. Returns `None` if the key is not found.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap/get)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = get, experimental_generic_mono)]
+    pub fn get_checked<K, V>(this: &WeakMap<K, V>, key: &K) -> Option<V>
+    where
+        K: JsGeneric,
+        Option<V>: FromWasmAbi;
 
     /// The `has()` method returns a boolean indicating whether an element with
     /// the specified key exists in the [`WeakMap`] object or not.
@@ -16210,8 +16369,16 @@ extern "C" {
     pub fn get_status<T>(this: &PromiseState<T>) -> String;
 
     /// Only present if status is "fulfilled". The value that the promise was fulfilled with.
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, getter = value)]
     pub fn get_value<T>(this: &PromiseState<T>) -> Option<T>;
+
+    /// Only present if status is "fulfilled". The value that the promise was fulfilled with.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, getter = value, experimental_generic_mono)]
+    pub fn get_value<T>(this: &PromiseState<T>) -> Option<T>
+    where
+        Option<T>: FromWasmAbi;
 
     /// Only present if status is "rejected". The reason that the promise was rejected with.
     #[wasm_bindgen(method, getter = reason)]
@@ -16231,6 +16398,7 @@ impl<T> PromiseState<T> {
 /// Converts a `PromiseState<T>` into a `Result<T, JsValue>`, matching the
 /// spec invariant that exactly one of the fulfilled value or the rejection
 /// reason is populated per slot.
+#[cfg(not(js_sys_unstable_apis))]
 impl<T: JsGeneric + FromWasmAbi> From<PromiseState<T>> for Result<T, JsValue> {
     fn from(state: PromiseState<T>) -> Result<T, JsValue> {
         if state.is_fulfilled() {
@@ -16263,6 +16431,23 @@ extern "C" {
     /// The function that rejects the promise with a reason.
     #[wasm_bindgen(method, getter)]
     pub fn reject<T>(this: &PromiseWithResolvers<T>) -> Function<fn(JsValue) -> Undefined>;
+}
+
+/// Converts a `PromiseState<T>` into a `Result<T, JsValue>`, matching the
+/// spec invariant that exactly one of the fulfilled value or the rejection
+/// reason is populated per slot.
+#[cfg(js_sys_unstable_apis)]
+impl<T> From<PromiseState<T>> for Result<T, JsValue>
+where
+    Option<T>: FromWasmAbi,
+{
+    fn from(state: PromiseState<T>) -> Result<T, JsValue> {
+        if state.is_fulfilled() {
+            Ok(state.get_value().unwrap())
+        } else {
+            Err(state.get_reason().unwrap())
+        }
+    }
 }
 
 // Promise
@@ -16542,19 +16727,34 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/catch)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, js_name = catch)]
+    #[wasm_bindgen(method, js_name = catch, experimental_generic_mono)]
     pub fn catch<'a, T, R: Promising>(
         this: &Promise<T>,
         cb: &ScopedClosure<'a, dyn FnMut(T) -> Result<R, JsError>>,
-    ) -> Promise<R::Resolution>;
+    ) -> Promise<R::Resolution>
+    where
+        T: FromWasmAbi,
+        Result<R, JsError>: ReturnWasmAbi;
 
     // Next major: deprecate
     /// Same as `catch`, but returning a result to become the new Promise value.
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = catch)]
     pub fn catch_map<'a, T, R: Promising>(
         this: &Promise<T>,
         cb: &ScopedClosure<'a, dyn FnMut(T) -> Result<R, JsError>>,
     ) -> Promise<R::Resolution>;
+
+    /// Same as `catch`, but returning a result to become the new Promise value.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = catch, experimental_generic_mono)]
+    pub fn catch_map<'a, T, R: Promising>(
+        this: &Promise<T>,
+        cb: &ScopedClosure<'a, dyn FnMut(T) -> Result<R, JsError>>,
+    ) -> Promise<R::Resolution>
+    where
+        T: FromWasmAbi,
+        Result<R, JsError>: ReturnWasmAbi;
 
     /// The `then()` method returns a `Promise`. It takes up to two arguments:
     /// callback functions for the success and failure cases of the `Promise`.
@@ -16570,16 +16770,20 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then)
     #[cfg(js_sys_unstable_apis)]
-    #[wasm_bindgen(method, js_name = then)]
+    #[wasm_bindgen(method, js_name = then, experimental_generic_mono)]
     pub fn then<'a, T, R: Promising>(
         this: &Promise<T>,
         cb: &ScopedClosure<'a, dyn FnMut(T) -> Result<R, JsError>>,
-    ) -> Promise<R::Resolution>;
+    ) -> Promise<R::Resolution>
+    where
+        T: FromWasmAbi,
+        Result<R, JsError>: ReturnWasmAbi;
 
     /// The `then()` method returns a `Promise`. It takes up to two arguments:
     /// callback functions for the success and failure cases of the `Promise`.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = then)]
     pub fn then_with_reject<'a, T, R: Promising>(
         this: &Promise<T>,
@@ -16587,17 +16791,48 @@ extern "C" {
         reject: &ScopedClosure<'a, dyn FnMut(JsValue) -> Result<R, JsError>>,
     ) -> Promise<R::Resolution>;
 
+    /// The `then()` method returns a `Promise`. It takes up to two arguments:
+    /// callback functions for the success and failure cases of the `Promise`.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = then, experimental_generic_mono)]
+    pub fn then_with_reject<'a, T, R: Promising>(
+        this: &Promise<T>,
+        resolve: &ScopedClosure<'a, dyn FnMut(T) -> Result<R, JsError>>,
+        reject: &ScopedClosure<'a, dyn FnMut(JsValue) -> Result<R, JsError>>,
+    ) -> Promise<R::Resolution>
+    where
+        T: FromWasmAbi,
+        Result<R, JsError>: ReturnWasmAbi;
+
     // Next major: deprecate
     /// Alias for `then()` with a return value.
     /// The `then()` method returns a `Promise`. It takes up to two arguments:
     /// callback functions for the success and failure cases of the `Promise`.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = then)]
     pub fn then_map<'a, T, R: Promising>(
         this: &Promise<T>,
         cb: &ScopedClosure<'a, dyn FnMut(T) -> Result<R, JsError>>,
     ) -> Promise<R::Resolution>;
+
+    /// Alias for `then()` with a return value.
+    /// The `then()` method returns a `Promise`. It takes up to two arguments:
+    /// callback functions for the success and failure cases of the `Promise`.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = then, experimental_generic_mono)]
+    pub fn then_map<'a, T, R: Promising>(
+        this: &Promise<T>,
+        cb: &ScopedClosure<'a, dyn FnMut(T) -> Result<R, JsError>>,
+    ) -> Promise<R::Resolution>
+    where
+        T: FromWasmAbi,
+        Result<R, JsError>: ReturnWasmAbi;
 
     /// Same as `then`, only with both arguments provided.
     ///
