@@ -558,6 +558,13 @@ async fn array_from_maps_of_rust_types() {
         Array::from_iterable_map(&a, &mut |s: String, i| Ok(s.len() as u32 + i)).unwrap();
     assert_eq!(lengths.to_vec(), [1, 3]);
 
+    let array_constructor = Array::<JsValue>::new().constructor();
+    if Reflect::get_str(array_constructor.as_ref(), &"fromAsync".into())
+        .unwrap()
+        .is_none()
+    {
+        return;
+    }
     let map = Closure::new(|s: String, i: u32| Ok(format!("{s}{i}")));
     let p: Promise<Array<String>> = Array::from_async_map(&async_strings(), &map).unwrap();
     assert_eq!(p.await.unwrap().to_vec(), ["a0", "b1"]);
