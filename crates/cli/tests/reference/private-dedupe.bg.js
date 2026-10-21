@@ -174,12 +174,11 @@ export function __wbg_status_new(arg0) {
 }
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;
-    const offset = table.grow(4);
     table.set(0, undefined);
-    table.set(offset + 0, undefined);
-    table.set(offset + 1, null);
-    table.set(offset + 2, true);
-    table.set(offset + 3, false);
+    table.set(1024, undefined);
+    table.set(1025, null);
+    table.set(1026, true);
+    table.set(1027, false);
 }
 const StatusFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }

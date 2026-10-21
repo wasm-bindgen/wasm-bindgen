@@ -28,7 +28,7 @@
   (import "./reference_test_bg.js" "__wbg_zoo__base_new" (func (;17;) (type 5)))
   (import "./reference_test_bg.js" "__wbg_zoo__base_unwrap" (func (;18;) (type 0)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;19;) (type 8)))
-  (table $__wbindgen_externrefs (;0;) 1024 externref)
+  (table $__wbindgen_externrefs (;0;) 1028 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "__wbg_animal_free" (func $__wbg_animal_free))

@@ -9,6 +9,12 @@ use walrus::Module;
 
 pub(crate) const PLACEHOLDER_MODULE: &str = "__wbindgen_placeholder__";
 
+/// The fixed layout of the `externref` table and JS heap: slots below
+/// `INITIAL_HEAP_OFFSET` are the stack, followed by `INITIAL_HEAP_VALUES`.
+/// Must be kept in sync with `src/rt/mod.rs` of the `wasm-bindgen` crate.
+pub(crate) const INITIAL_HEAP_OFFSET: usize = 1024;
+pub(crate) const INITIAL_HEAP_VALUES: &[&str] = &["undefined", "null", "true", "false"];
+
 mod decode;
 mod descriptor;
 mod descriptors;

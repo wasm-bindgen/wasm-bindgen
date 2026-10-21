@@ -4,6 +4,7 @@ use crate::wit::{
     visit_instructions_mut, AdapterType, InstructionData, StackChange, WasmBindgenAux,
 };
 use crate::wit::{AdapterKind, Instruction, NonstandardWitSection};
+use crate::{INITIAL_HEAP_OFFSET, INITIAL_HEAP_VALUES};
 use anyhow::Result;
 use std::collections::HashMap;
 use walrus::ElementItems;
@@ -44,6 +45,8 @@ pub fn process(module: &mut Module) -> Result<()> {
     }
 
     let meta = cfg.run(module)?;
+    module.tables.get_mut(meta.table).initial =
+        (INITIAL_HEAP_OFFSET + INITIAL_HEAP_VALUES.len()) as u64;
 
     let mut aux = module
         .customs

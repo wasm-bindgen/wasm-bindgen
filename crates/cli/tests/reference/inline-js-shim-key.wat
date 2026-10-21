@@ -11,7 +11,7 @@
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;4;) (type 4)))
   (import "./snippets/inline_js_shim_key_reftest-e174048be1be8309/inline0.js" "get" (func (;5;) (type 3)))
   (import "./snippets/inline_js_shim_key_reftest-e174048be1be8309/inline1.js" "get" (func (;6;) (type 3)))
-  (table $__wbindgen_externrefs (;0;) 1024 externref)
+  (table $__wbindgen_externrefs (;0;) 1028 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "read" (func $read))

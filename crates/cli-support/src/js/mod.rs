@@ -11,7 +11,9 @@ use crate::wit::{
 use crate::wit::{AdapterKind, Instruction, InstructionData};
 use crate::wit::{AuxEnum, AuxExport, AuxExportKind, AuxImport, AuxStruct};
 use crate::wit::{JsImport, JsImportName, NonstandardWitSection, WasmBindgenAux};
-use crate::{Bindgen, EncodeInto, OutputMode, PLACEHOLDER_MODULE};
+use crate::{
+    Bindgen, EncodeInto, OutputMode, INITIAL_HEAP_OFFSET, INITIAL_HEAP_VALUES, PLACEHOLDER_MODULE,
+};
 use anyhow::{anyhow, bail, Context as _, Error};
 use binding::TsReference;
 use std::borrow::Cow;
@@ -332,10 +334,6 @@ struct FieldAccessor {
     docs: String,
     is_optional: bool,
 }
-
-const INITIAL_HEAP_VALUES: &[&str] = &["undefined", "null", "true", "false"];
-// Must be kept in sync with `src/lib.rs` of the `wasm-bindgen` crate
-const INITIAL_HEAP_OFFSET: usize = 1024;
 
 impl<'a> Context<'a> {
     pub fn new(
@@ -6631,22 +6629,22 @@ addToLibrary({
                 let name = self.export_name_of(table);
                 let table_ref = self.wasm_export_ref(&name);
 
-                // Grow the table to insert our initial values, and then also
-                // set the 0th slot to `undefined` since that's what we've
-                // historically used for our ABI which is that the index of 0
-                // returns `undefined` for types like `None` going out.
+                // The table is sized to hold the initial values at their
+                // fixed slots, so just fill them in, and also set the 0th
+                // slot to `undefined` since that's what we've historically
+                // used for our ABI which is that the index of 0 returns
+                // `undefined` for types like `None` going out.
                 let mut base = format!(
                     "
                       const table = {table_ref};
-                      const offset = table.grow({});
                       table.set(0, undefined);
-                    ",
-                    INITIAL_HEAP_VALUES.len(),
+                    "
                 );
                 for (i, value) in INITIAL_HEAP_VALUES.iter().enumerate() {
                     base.push_str(&format!(
-                        "{}table.set(offset + {i}, {value})",
-                        if i > 0 { ";\n" } else { "" }
+                        "{}table.set({}, {value})",
+                        if i > 0 { ";\n" } else { "" },
+                        INITIAL_HEAP_OFFSET + i,
                     ));
                 }
                 base

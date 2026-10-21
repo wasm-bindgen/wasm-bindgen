@@ -9,7 +9,7 @@
   (import "./reference_test_bg.js" "__wbg_js_bools_30fc8a2bc11a9f84" (func (;1;) (type 0)))
   (import "./reference_test_bg.js" "__wbg_js_strs_d7bff571d595ef45" (func (;2;) (type 3)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;3;) (type 5)))
-  (table $__wbindgen_externrefs (;0;) 1024 externref)
+  (table $__wbindgen_externrefs (;0;) 1028 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "bools" (func $"bools multivalue shim"))

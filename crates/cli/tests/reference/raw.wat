@@ -9,7 +9,7 @@
   (import "./reference_test_bg.js" "__wbg_new_b4330c6bd880e041" (func (;2;) (type 3)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;3;) (type 4)))
   (import "test" "test2" (func (;4;) (type 3)))
-  (table $__wbindgen_externrefs (;0;) 1024 externref)
+  (table $__wbindgen_externrefs (;0;) 1028 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "__wbg_test_free" (func $__wbg_test_free))

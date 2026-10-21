@@ -8,7 +8,7 @@
   (import "./reference_test_bg.js" "__wbg_js_slice_string_as_array_03aefca66a560a29" (func (;3;) (type 1)))
   (import "./reference_test_bg.js" "__wbg_js_slice_u16_as_array_78e736a5d5adf04b" (func (;4;) (type 1)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;5;) (type 2)))
-  (table $__wbindgen_externrefs (;0;) 1024 externref)
+  (table $__wbindgen_externrefs (;0;) 1028 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "driver" (func $driver))

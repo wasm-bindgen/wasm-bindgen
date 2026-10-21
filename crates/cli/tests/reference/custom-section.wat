@@ -3,7 +3,7 @@
   (type (;1;) (func (result i32 i32)))
   (type (;2;) (func))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;0;) (type 2)))
-  (table $__wbindgen_externrefs (;0;) 1024 externref)
+  (table $__wbindgen_externrefs (;0;) 1028 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "test_function" (func $"test_function multivalue shim"))

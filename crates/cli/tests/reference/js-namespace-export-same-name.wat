@@ -23,7 +23,7 @@
   (import "./reference_test_bg.js" "__wbg_foo__point_new" (func (;3;) (type 11)))
   (import "./reference_test_bg.js" "__wbg_foo__point_unwrap" (func (;4;) (type 0)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;5;) (type 17)))
-  (table $__wbindgen_externrefs (;0;) 1024 externref)
+  (table $__wbindgen_externrefs (;0;) 1028 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "__wbg_bar__nested__point_free" (func $__wbg_bar__nested__point_free))
