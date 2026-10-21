@@ -84,7 +84,7 @@
   the `Array` methods, `Promise::then` / `catch`, generators and `Map` / `Set`
   iteration receive and return Rust element types. `WeakMap` values can be
   Rust types, while its keys stay JS objects.
-  [#XXXX](https://github.com/wasm-bindgen/wasm-bindgen/pull/XXXX)
+  [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
 
 * Added the experimental `wasm_bindgen::MonoGeneric` trait, which bundles the
   argument, `&T` and return ABI traits of `experimental_generic_mono` imports
@@ -199,12 +199,13 @@
   `ArrayTuple::get0` to `get7` / `set0` to `set7` no longer have type
   parameter defaults. A generic callback return in a `Result`, as in
   `Promise::then`, `Array::try_map` and `Array::try_reduce`, needs
-  `Result<R, JsError>: ReturnWasmAbi` stated by generic callers.
-  [#XXXX](https://github.com/wasm-bindgen/wasm-bindgen/pull/XXXX)
+  `Result<R, JsError>: ReturnWasmAbi` stated by generic callers bounding `R`
+  by `MonoGeneric`, which `R: JsGeneric` implies.
+  [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
 
 * `JsGeneric` now has `MonoGeneric`, `OptionFromWasmAbi` and
-  `VectorRefIntoWasmAbi` as supertraits, so generic code bounded only by
-  `T: JsGeneric` can call the `experimental_generic_mono` element APIs. This
+  `VectorRefIntoWasmAbi` as supertraits, and bounds its `IntoWasmAbi::Abi` to a
+  single-value ABI, so generic code bounded only by `T: JsGeneric` can call the `experimental_generic_mono` element APIs. This
   applies without `js_sys_unstable_apis`. As `IntoWasmAbi`, `FromWasmAbi` and
   `RefIntoWasmAbi` each declare an `Abi` type, `T::Abi` under a `JsGeneric`
   bound is now ambiguous and needs writing as `<T as IntoWasmAbi>::Abi`.
@@ -308,9 +309,9 @@
   at the first `undefined` element.
   [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
 
-* Under `js_sys_unstable_apis`, `Generator::next_iterator` calls the
-  generator's `next` method rather than a nonexistent `next_iterator`.
-  [#XXXX](https://github.com/wasm-bindgen/wasm-bindgen/pull/XXXX)
+* `Generator::next_iterator` calls the generator's `next` method rather than a
+  nonexistent `next_iterator`.
+  [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
 
 * Imported methods, static methods and constructors without a `js_class` now
   bind to the `js_name` and `js_namespace` of the type they belong to when that
