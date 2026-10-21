@@ -343,3 +343,102 @@ fn generic_bounds_cover_function_apis() {
     call_mono(2u32);
     call_mono(JsString::from("b"));
 }
+
+#[wasm_bindgen_test]
+fn tuples_of_rust_types() {
+    let t: ArrayTuple<(String, u32)> = ArrayTuple::new2(&"a".into(), &1);
+    assert_eq!(t.get0(), "a");
+    assert_eq!(t.get1(), 1);
+    t.set0(&"b".into());
+    t.set1(&2);
+    assert_eq!(t.first(), "b");
+    assert_eq!(t.last(), 2);
+    assert_eq!(describe(&t), r#"Array:["string b","number 2"]"#);
+    assert_eq!(t.into_tuple(), ("b".to_string(), 2));
+
+    let t: ArrayTuple<(f64, String, JsString)> = (1.5, "x".to_string(), JsString::from("y")).into();
+    assert_eq!(t.get0(), 1.5);
+    assert_eq!(t.get1(), "x");
+    assert_eq!(t.get2(), "y");
+    let t: ArrayTuple<(bool, u32)> = Default::default();
+    assert_eq!(t.into_tuple(), (false, 0));
+}
+
+#[wasm_bindgen_test]
+fn entries_of_rust_types() {
+    let entries = Array::of2(
+        &ArrayTuple::new2(&"k".to_string(), &1.0),
+        &ArrayTuple::new2(&"j".to_string(), &2.0),
+    );
+    let m: Map<String, f64> = Map::new_from_entries(&entries);
+    assert_eq!(m.get(&"j".into()), Some(2.0));
+    let pairs: Vec<(String, f64)> = m
+        .entries()
+        .into_iter()
+        .map(|entry| entry.unwrap().into_tuple())
+        .collect();
+    assert_eq!(pairs, [("k".to_string(), 1.0), ("j".to_string(), 2.0)]);
+
+    let a: Array<String> = strings();
+    let pairs: Vec<(Number, String)> = a
+        .entries()
+        .into_iter()
+        .map(|entry| entry.unwrap().into_tuple())
+        .collect();
+    assert_eq!(pairs[1].0, 1);
+    assert_eq!(pairs[1].1, "y");
+
+    let s: Set<u32> = Set::new_from_items(&[3, 4]);
+    let pairs: Vec<(u32, u32)> = s
+        .entries()
+        .into_iter()
+        .map(|entry| entry.unwrap().into_tuple())
+        .collect();
+    assert_eq!(pairs, [(3, 3), (4, 4)]);
+
+    let o: Object<u32> =
+        Object::from_entries(&Array::of1(&ArrayTuple::new2(&"n".to_string(), &5u32))).unwrap();
+    let pairs: Vec<(JsString, u32)> = Object::entries(&o)
+        .unwrap()
+        .iter()
+        .map(|entry| entry.into_tuple())
+        .collect();
+    assert_eq!(pairs, [(JsString::from("n"), 5)]);
+}
+
+#[wasm_bindgen_test]
+async fn promise_tuples_of_rust_types() {
+    let (s, n) = Promise::all_tuple((Promise::resolve("a"), Promise::resolve(2u32)))
+        .await
+        .unwrap()
+        .into_tuple();
+    assert_eq!(s, "a");
+    assert_eq!(n, 2);
+
+    let (s,) = Promise::all_settled_tuple((Promise::resolve(true),))
+        .await
+        .unwrap()
+        .into_tuple();
+    assert!(s.is_fulfilled());
+}
+
+fn tuple_generic<T: JsGeneric + Clone + PartialEq + core::fmt::Debug>(x: T, y: T) {
+    let t = ArrayTuple::new2(&x, &y);
+    t.set0(&y);
+    assert_eq!(t.into_tuple(), (y.clone(), y));
+}
+
+fn tuple_mono<T: MonoGeneric + Clone + PartialEq + core::fmt::Debug>(x: T, y: T) {
+    let t: ArrayTuple<(T, T)> = (x.clone(), y.clone()).into();
+    assert_eq!(t.get0(), x);
+    t.set1(&x);
+    assert_eq!(t.into_tuple(), (x.clone(), x));
+}
+
+#[wasm_bindgen_test]
+fn generic_bounds_cover_tuple_apis() {
+    tuple_generic(JsString::from("a"), JsString::from("b"));
+    tuple_mono(String::from("a"), String::from("b"));
+    tuple_mono(1u32, 2u32);
+    tuple_mono(JsString::from("a"), JsString::from("b"));
+}
