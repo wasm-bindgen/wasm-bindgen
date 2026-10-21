@@ -45,6 +45,7 @@ const CRATES_TO_AVOID_PUBLISH: &[&str] = &[
     "msrv-resolver-test",
     "private-dedupe-a",
     "private-dedupe-b",
+    "wasm-bindgen-test-runner-fixture",
 ];
 
 struct Crate {
