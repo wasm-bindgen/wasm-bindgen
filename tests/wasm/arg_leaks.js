@@ -165,6 +165,24 @@ exports.rejectedAfterBorrowedJs = () => {
     assert.strictEqual(wasm.arg_leaks_null(), null);
 };
 
+// An owned `JsValue` is put in the externref table, or on the JS heap
+// without reference types, as it is passed, before Wasm converts a later
+// argument, which must not leak its slot when it throws.
+exports.rejectedAfterOwnedJs = () => {
+    const live = wasm.arg_leaks_live_count();
+    for (let i = 0; i < 100; i++) {
+        assert.throws(() => wasm.arg_leaks_js_u64({ i }, 1), /bigint/i);
+        assert.throws(() => wasm.arg_leaks_option_js_u64({ i }, 1), /bigint/i);
+        assert.throws(() => wasm.arg_leaks_js_u32({ i }, 1n), /bigint/i);
+        assert.throws(() => wasm.arg_leaks_js_u32({ i }, Symbol()), /symbol/i);
+    }
+    assert.strictEqual(wasm.arg_leaks_live_count(), live);
+    wasm.arg_leaks_js_u64({}, 1n);
+    wasm.arg_leaks_option_js_u64(undefined, 1n);
+    wasm.arg_leaks_js_u32({}, 1);
+    assert.strictEqual(wasm.arg_leaks_live_count(), live);
+};
+
 exports.memoryLength = (memory) => memory.buffer.byteLength;
 
 // 200 KB of valid chars, then one that throws after the buffer is allocated.

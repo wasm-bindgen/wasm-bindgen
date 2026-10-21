@@ -155,6 +155,10 @@ enum Value {
     /// An expression that throws neither when evaluated nor when Wasm
     /// converts it to its parameter type.
     Safe(String),
+    /// A `Safe` expression that allocates when evaluated, such as an owned
+    /// `JsValue` put in the externref table or on the JS heap. It's
+    /// evaluated in the call, where nothing Wasm converts may throw after it.
+    Alloc(String),
     /// Any other expression; `pure` when it reads only the JS arguments, so
     /// it can be evaluated before anything is allocated.
     Expr { expr: String, pure: bool },
@@ -163,13 +167,21 @@ enum Value {
 impl Value {
     fn expr(&self) -> &str {
         match self {
-            Value::Param(e) | Value::Local(e) | Value::Safe(e) | Value::Expr { expr: e, .. } => e,
+            Value::Param(e)
+            | Value::Local(e)
+            | Value::Safe(e)
+            | Value::Alloc(e)
+            | Value::Expr { expr: e, .. } => e,
         }
     }
 
     fn into_expr(self) -> String {
         match self {
-            Value::Param(e) | Value::Local(e) | Value::Safe(e) | Value::Expr { expr: e, .. } => e,
+            Value::Param(e)
+            | Value::Local(e)
+            | Value::Safe(e)
+            | Value::Alloc(e)
+            | Value::Expr { expr: e, .. } => e,
         }
     }
 }
@@ -1163,6 +1175,10 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         self.stack.push(Value::Safe(arg));
     }
 
+    fn push_alloc(&mut self, arg: String) {
+        self.stack.push(Value::Alloc(arg));
+    }
+
     /// Renders the arguments of the call into Wasm, whose parameter types are
     /// `params` when it's a core function.
     ///
@@ -1174,15 +1190,23 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     /// what remains can still throw after the first allocation, it is
     /// wrapped in a `try` whose `catch` releases the allocations, and the call
     /// follows it.
+    ///
+    /// An argument that allocates in the call itself, with nothing allocated
+    /// before it, needs no `try`: the conversions alone run ahead of the call.
     fn take_args(&mut self, values: Vec<Value>, params: Option<&[ValType]>) -> Vec<String> {
-        let (Some(guard), Some(params)) = (self.guard.take(), params) else {
+        let guard = self.guard.take();
+        let allocs = values.iter().any(|v| matches!(v, Value::Alloc(_)));
+        let Some(params) = params.filter(|_| guard.is_some() || allocs) else {
             return values.into_iter().map(Value::into_expr).collect();
         };
-        let (mut rest, mut guarded) = self.split_guard(&guard);
+        let (mut rest, mut guarded) = match &guard {
+            Some(guard) => self.split_guard(guard),
+            None => (Vec::new(), false),
+        };
         let mut args = Vec::with_capacity(values.len());
         for (value, ty) in values.into_iter().zip(params) {
             let (expr, pure) = match value {
-                Value::Local(expr) | Value::Safe(expr) => {
+                Value::Local(expr) | Value::Safe(expr) | Value::Alloc(expr) => {
                     args.push(expr);
                     continue;
                 }
@@ -1213,7 +1237,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
                     expr: coerced,
                 },
             };
-            if pure {
+            if pure || guard.is_none() {
                 self.prelude.push(decl);
             } else {
                 rest.push(decl);
@@ -1221,7 +1245,9 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             }
             args.push(name);
         }
-        self.close_guard(guard, rest, guarded);
+        if let Some(guard) = guard {
+            self.close_guard(guard, rest, guarded);
+        }
         args
     }
 
@@ -1916,7 +1942,7 @@ fn instruction(
         Instruction::I32FromExternrefOwned => {
             js.cx.expose_add_heap_object();
             let val = js.pop();
-            js.push_safe(format!("addHeapObject({val})"));
+            js.push_alloc(format!("addHeapObject({val})"));
         }
 
         Instruction::I32FromExternrefBorrow => {
@@ -1998,11 +2024,11 @@ fn instruction(
             match table_and_alloc {
                 Some((table, alloc)) => {
                     let alloc = js.cx.expose_add_to_externref_table(*table, *alloc);
-                    js.push_safe(format!("isLikeNone({val}) ? 0 : {alloc}({val})"));
+                    js.push_alloc(format!("isLikeNone({val}) ? 0 : {alloc}({val})"));
                 }
                 None => {
                     js.cx.expose_add_heap_object();
-                    js.push_safe(format!("isLikeNone({val}) ? 0 : addHeapObject({val})"));
+                    js.push_alloc(format!("isLikeNone({val}) ? 0 : addHeapObject({val})"));
                 }
             }
         }

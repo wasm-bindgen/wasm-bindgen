@@ -175,6 +175,12 @@
   string or array into Wasm memory.
   [#5388](https://github.com/wasm-bindgen/wasm-bindgen/pull/5388)
 
+* An exported function taking an `Option<JsValue>`, or without reference
+  types an owned `JsValue`, no longer leaks an externref table or JS heap
+  slot when Wasm rejects a later numeric argument, such as a number passed
+  for a `u64`.
+  [#5404](https://github.com/wasm-bindgen/wasm-bindgen/issues/5404)
+
 * An `async` export now converts its arguments when it is called, rather than
   when its future is first polled. A rejected argument rejects the returned
   promise, instead of throwing from the task queue, and an `async` method's

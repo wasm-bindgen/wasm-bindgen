@@ -35,6 +35,8 @@ extern "C" {
     fn rejected_object_in_js();
     #[wasm_bindgen(js_name = rejectedAfterBorrowedJs)]
     fn rejected_after_borrowed_js();
+    #[wasm_bindgen(js_name = rejectedAfterOwnedJs)]
+    fn rejected_after_owned_js();
     #[wasm_bindgen(catch, js_name = badChars)]
     fn bad_chars() -> Result<Vec<char>, JsValue>;
     #[wasm_bindgen(js_name = memoryLength)]
@@ -159,6 +161,15 @@ pub fn arg_leaks_owned_and_ref(_o: ArgLeakObject, _r: &ArgLeakObject) {}
 pub fn arg_leaks_borrowed_js(_a: &JsValue, _s: String, _n: u64) {}
 
 #[wasm_bindgen]
+pub fn arg_leaks_js_u64(_a: JsValue, _n: u64) {}
+
+#[wasm_bindgen]
+pub fn arg_leaks_option_js_u64(_a: Option<JsValue>, _n: u64) {}
+
+#[wasm_bindgen]
+pub fn arg_leaks_js_u32(_a: JsValue, _n: u32) {}
+
+#[wasm_bindgen]
 pub fn arg_leaks_null() -> JsValue {
     JsValue::NULL
 }
@@ -236,6 +247,11 @@ fn rejected_in_js_releases_objects() {
 #[wasm_bindgen_test]
 fn rejected_after_borrowed_js_balances_stack() {
     rejected_after_borrowed_js();
+}
+
+#[wasm_bindgen_test]
+fn rejected_after_owned_js_releases_slot() {
+    rejected_after_owned_js();
 }
 
 // An array JS returns is encoded into Wasm memory with no call to take it,
