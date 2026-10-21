@@ -64,6 +64,27 @@ JS shim. Generic code over Rust and JS element types alike can bound
 `JsGeneric` implies all of these, so generic code bounded by `T: JsGeneric`
 can use the element APIs as before.
 
+The same holds for `Function` signatures, `ArrayTuple` elements, `WeakMap`
+values and element callbacks, such as those of `Array::map` and
+`Promise::then`:
+
+```rust
+use js_sys::{Array, ArrayTuple, Function};
+
+let f: Function<fn(String, u32) -> String> =
+    Function::new_with_args_typed("s, n", "return s.repeat(n)");
+assert_eq!(f.call(&JsValue::NULL, (&"ab".into(), &2))?, "abab");
+
+let lengths: Array<u32> = a.map(&mut |s: String, _, _| s.len() as u32);
+let pair: ArrayTuple<(String, u32)> = ArrayTuple::new2(&"a".into(), &1);
+assert_eq!(pair.into_tuple(), ("a".to_string(), 1));
+```
+
+The `JsFunction` traits bound their argument and return types by
+`MonoGeneric`. A generic callback return in a `Result`, as in
+`Promise::then` or `Array::try_map`, is bounded by
+`Result<R, JsError>: ReturnWasmAbi`, which generic callers state themselves.
+
 ---
 
 ## Array\<T\>
