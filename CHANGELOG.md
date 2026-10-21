@@ -203,7 +203,8 @@
   `era`, `era_year`, `week_of_year` and `year_of_week` return `Option`s,
   `fractionalSecondDigits` is a `u8`, `get_time_zone_transition` returns
   `Result<Option<ZonedDateTime>, JsValue>`, `toString` has a plain
-  `to_js_string()` and a fallible `to_js_string_with_options()`, time zones are
+  `to_js_string()` and a fallible `to_js_string_with_options()`,
+  `to_locale_string` is fallible, time zones are
   passed as `&str`, constructors take the calendar through `new_with_calendar`
   overloads, and the unit enums are `TemporalUnit` and `LargestUnit`.
   [#5402](https://github.com/wasm-bindgen/wasm-bindgen/pull/5402)
