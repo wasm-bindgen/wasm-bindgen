@@ -55,12 +55,10 @@ use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, Upcast, UpcastFrom};
 use wasm_bindgen::convert::{RefIntoWasmAbi, ReturnWasmAbi, VectorRefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsError;
-#[cfg(js_sys_unstable_apis)]
-use wasm_bindgen::MonoGeneric;
 
 // Re-export sys types as js-sys types
 pub use wasm_bindgen::sys::{JsNullable, JsOption, Null, Promising, Undefined};
-pub use wasm_bindgen::{IntoJsGeneric, JsGeneric, Nullable};
+pub use wasm_bindgen::{IntoJsGeneric, JsGeneric, MonoGeneric, Nullable};
 
 // When adding new imports:
 //
@@ -703,11 +701,27 @@ extern "C" {
     /// to each value.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(static_method_of = Array, catch, js_name = from)]
     pub fn from_iterable_map<I: Iterable, U>(
         val: &I,
         map: &mut dyn FnMut(I::Item, u32) -> Result<U, JsError>,
     ) -> Result<Array<U>, JsValue>;
+
+    /// The `Array.from()` static method with a map function creates a new, shallow-copied
+    /// `Array` instance from an array-like or iterable object, applying the map function
+    /// to each value.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(static_method_of = Array, catch, js_name = from, experimental_generic_mono)]
+    pub fn from_iterable_map<I: Iterable + RefIntoWasmAbi, U>(
+        val: &I,
+        map: &mut dyn FnMut(I::Item, u32) -> Result<U, JsError>,
+    ) -> Result<Array<U>, JsValue>
+    where
+        I::Item: FromWasmAbi,
+        Result<U, JsError>: ReturnWasmAbi;
 
     /// The `Array.fromAsync()` static method creates a new, shallow-copied `Array` instance
     /// from an async iterable, iterable or array-like object.
@@ -721,11 +735,27 @@ extern "C" {
     /// function to each value.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/fromAsync)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(static_method_of = Array, catch, js_name = fromAsync)]
     pub fn from_async_map<'a, I: AsyncIterable, R: Promising>(
         val: &I,
         map: &ScopedClosure<'a, dyn FnMut(I::Item, u32) -> Result<R, JsError>>,
     ) -> Result<Promise<Array<R::Resolution>>, JsValue>;
+
+    /// The `Array.fromAsync()` static method with a map function creates a new, shallow-copied
+    /// `Array` instance from an async iterable, iterable or array-like object, applying the map
+    /// function to each value.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/fromAsync)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(static_method_of = Array, catch, js_name = fromAsync, experimental_generic_mono)]
+    pub fn from_async_map<'a, I: AsyncIterable + RefIntoWasmAbi, R: Promising>(
+        val: &I,
+        map: &ScopedClosure<'a, dyn FnMut(I::Item, u32) -> Result<R, JsError>>,
+    ) -> Result<Promise<Array<R::Resolution>>, JsValue>
+    where
+        I::Item: FromWasmAbi,
+        Result<R, JsError>: ReturnWasmAbi;
 
     /// The `copyWithin()` method shallow copies part of an array to another
     /// location in the same array and returns it, without modifying its size.
@@ -7025,7 +7055,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/next)
     #[cfg(not(js_sys_unstable_apis))]
-    #[wasm_bindgen(method, catch)]
+    #[wasm_bindgen(method, catch, js_name = next)]
     pub fn next_iterator<T: FromWasmAbi>(
         this: &Generator<T>,
         value: &T,

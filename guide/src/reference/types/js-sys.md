@@ -83,7 +83,8 @@ assert_eq!(pair.into_tuple(), ("a".to_string(), 1));
 The `JsFunction` traits bound their argument and return types by
 `MonoGeneric`. A generic callback return in a `Result`, as in
 `Promise::then` or `Array::try_map`, is bounded by
-`Result<R, JsError>: ReturnWasmAbi`, which generic callers state themselves.
+`Result<R, JsError>: ReturnWasmAbi`. `R: JsGeneric` implies it, while generic
+callers bounding `R` by `MonoGeneric` state it themselves.
 
 ---
 

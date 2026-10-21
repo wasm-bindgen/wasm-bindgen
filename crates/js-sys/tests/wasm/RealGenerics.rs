@@ -552,6 +552,18 @@ fn array_fallible_callbacks_of_rust_types() {
 }
 
 #[wasm_bindgen_test]
+async fn array_from_maps_of_rust_types() {
+    let a = string_array(&["a", "bb"]);
+    let lengths: Array<u32> =
+        Array::from_iterable_map(&a, &mut |s: String, i| Ok(s.len() as u32 + i)).unwrap();
+    assert_eq!(lengths.to_vec(), [1, 3]);
+
+    let map = Closure::new(|s: String, i: u32| Ok(format!("{s}{i}")));
+    let p: Promise<Array<String>> = Array::from_async_map(&async_strings(), &map).unwrap();
+    assert_eq!(p.await.unwrap().to_vec(), ["a0", "b1"]);
+}
+
+#[wasm_bindgen_test]
 fn array_element_methods_of_rust_types() {
     let a = string_array(&["a", "b"]);
     assert_eq!(a.get_checked(1).as_deref(), Some("b"));
@@ -732,12 +744,9 @@ fn keyed_collections_of_rust_types() {
     assert!(wm.has(&key));
 }
 
-// A generic callback return states its `Result` ABI bound, as a mono
-// callback's return crosses at its own ABI.
 async fn promise_generic<T>(x: T)
 where
     T: JsGeneric + Promising<Resolution = T> + Clone + PartialEq + core::fmt::Debug,
-    Result<T, JsError>: ReturnWasmAbi,
 {
     let identity = Closure::new(|v: T| Ok(v));
     let p: Promise<T> = Promise::new(&mut |resolve, _| {
@@ -750,6 +759,8 @@ where
     assert_eq!(wm.get_checked(&key), Some(x));
 }
 
+// A `MonoGeneric` callback return states its `Result` ABI bound, as a mono
+// callback's return crosses at its own ABI. `JsGeneric` implies it.
 async fn promise_mono<T>(x: T)
 where
     T: MonoGeneric + Promising<Resolution = T> + Clone + PartialEq + core::fmt::Debug,
