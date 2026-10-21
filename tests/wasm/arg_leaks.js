@@ -117,6 +117,8 @@ exports.rejectedInJs = (memory) => {
         [wasm.arg_leaks_class_ref, {}, /expected instance of/],
         [wasm.arg_leaks_bytes, null, Error],
         [wasm.arg_leaks_option_u32, 1n, /bigint/i],
+        // Thrown by an element after its buffer is allocated.
+        [wasm.arg_leaks_chars, ['a', 5], TypeError],
     ]) {
         assertFlat(memory, () => assert.throws(() => f(big, bad), message));
     }
@@ -161,4 +163,13 @@ exports.rejectedAfterBorrowedJs = () => {
         assert.throws(() => wasm.arg_leaks_borrowed_js({}, 'x', 1), /bigint/i);
     }
     assert.strictEqual(wasm.arg_leaks_null(), null);
+};
+
+exports.memoryLength = (memory) => memory.buffer.byteLength;
+
+// 200 KB of valid chars, then one that throws after the buffer is allocated.
+exports.badChars = () => {
+    const chars = new Array(50 * 1024).fill('a');
+    chars.push(5);
+    return chars;
 };

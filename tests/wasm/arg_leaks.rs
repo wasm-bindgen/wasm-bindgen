@@ -35,6 +35,10 @@ extern "C" {
     fn rejected_object_in_js();
     #[wasm_bindgen(js_name = rejectedAfterBorrowedJs)]
     fn rejected_after_borrowed_js();
+    #[wasm_bindgen(catch, js_name = badChars)]
+    fn bad_chars() -> Result<Vec<char>, JsValue>;
+    #[wasm_bindgen(js_name = memoryLength)]
+    fn memory_length(memory: JsValue) -> u32;
     #[wasm_bindgen(catch, js_name = asyncBorrowsAtCall)]
     async fn async_borrows_at_call() -> Result<(), JsValue>;
 }
@@ -140,6 +144,9 @@ pub fn arg_leaks_bytes(_s: String, _v: Vec<u8>) {}
 pub fn arg_leaks_option_u32(_s: String, _n: Option<u32>) {}
 
 #[wasm_bindgen]
+pub fn arg_leaks_chars(_s: String, _v: Vec<char>) {}
+
+#[wasm_bindgen]
 pub fn arg_leaks_values(_v: Vec<JsValue>, _o: &ArgLeakObject) {}
 
 #[wasm_bindgen]
@@ -229,4 +236,17 @@ fn rejected_in_js_releases_objects() {
 #[wasm_bindgen_test]
 fn rejected_after_borrowed_js_balances_stack() {
     rejected_after_borrowed_js();
+}
+
+// An array JS returns is encoded into Wasm memory with no call to take it,
+// so an element that throws must free the buffer there.
+#[wasm_bindgen_test]
+fn rejected_import_element_frees_buffer() {
+    let memory = wasm_bindgen::memory();
+    assert!(bad_chars().is_err());
+    let before = memory_length(memory.clone());
+    for _ in 0..100 {
+        assert!(bad_chars().is_err());
+    }
+    assert!(memory_length(memory) - before < 4 * 1024 * 1024);
 }

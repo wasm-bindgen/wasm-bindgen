@@ -28,18 +28,19 @@ export const RenamedErr = Object.freeze({
  * @returns {Color[]}
  */
 export function enum_vec_echo(values) {
-    const len0 = values.length;
-    const ptr0 = wasm.__wbindgen_malloc(len0 * 8, 8) >>> 0;
+    let len0, ptr0;
     try {
+        len0 = values.length;
+        ptr0 = wasm.__wbindgen_malloc(len0 * 8, 8) >>> 0;
         const view0 = getDataViewMemory0();
         for (let j0 = 0; j0 < len0; j0++) {
             const e0 = values[j0];
             const p0 = ptr0 + j0 * 8;
             view0.setFloat64(p0 + 0, e0, true);
         }
-    } catch (err0) {
-        wasm.__wbindgen_free(ptr0, len0 * 8, 8);
-        throw err0;
+    } catch (e) {
+        if (ptr0) wasm.__wbindgen_free(ptr0, len0 * 8, 8);
+        throw e;
     }
     const ret = wasm.enum_vec_echo(ptr0, len0);
     const v2 = [];
@@ -58,18 +59,19 @@ export function enum_vec_echo(values) {
  * @returns {HiddenErr[]}
  */
 export function hidden_err_vec_echo(values) {
-    const len0 = values.length;
-    const ptr0 = wasm.__wbindgen_malloc(len0 * 8, 8) >>> 0;
+    let len0, ptr0;
     try {
+        len0 = values.length;
+        ptr0 = wasm.__wbindgen_malloc(len0 * 8, 8) >>> 0;
         const view0 = getDataViewMemory0();
         for (let j0 = 0; j0 < len0; j0++) {
             const e0 = values[j0];
             const p0 = ptr0 + j0 * 8;
             view0.setFloat64(p0 + 0, e0, true);
         }
-    } catch (err0) {
-        wasm.__wbindgen_free(ptr0, len0 * 8, 8);
-        throw err0;
+    } catch (e) {
+        if (ptr0) wasm.__wbindgen_free(ptr0, len0 * 8, 8);
+        throw e;
     }
     const ret = wasm.hidden_err_vec_echo(ptr0, len0);
     const v2 = [];
@@ -99,18 +101,19 @@ ns.NsErr = ns__NsErr;
  * @returns {ns__NsErr[]}
  */
 export function ns_err_vec_echo(values) {
-    const len0 = values.length;
-    const ptr0 = wasm.__wbindgen_malloc(len0 * 8, 8) >>> 0;
+    let len0, ptr0;
     try {
+        len0 = values.length;
+        ptr0 = wasm.__wbindgen_malloc(len0 * 8, 8) >>> 0;
         const view0 = getDataViewMemory0();
         for (let j0 = 0; j0 < len0; j0++) {
             const e0 = values[j0];
             const p0 = ptr0 + j0 * 8;
             view0.setFloat64(p0 + 0, e0, true);
         }
-    } catch (err0) {
-        wasm.__wbindgen_free(ptr0, len0 * 8, 8);
-        throw err0;
+    } catch (e) {
+        if (ptr0) wasm.__wbindgen_free(ptr0, len0 * 8, 8);
+        throw e;
     }
     const ret = wasm.ns_err_vec_echo(ptr0, len0);
     const v2 = [];
@@ -129,22 +132,21 @@ export function ns_err_vec_echo(values) {
  * @returns {Color[] | undefined}
  */
 export function option_enum_vec_echo(values) {
-    let ptr0 = 0;
-    let len0 = 0;
-    if (!isLikeNone(values)) {
-        len0 = values.length;
-        ptr0 = wasm.__wbindgen_malloc(len0 * 8, 8) >>> 0;
-        try {
+    let ptr0 = 0, len0 = 0;
+    try {
+        if (!isLikeNone(values)) {
+            len0 = values.length;
+            ptr0 = wasm.__wbindgen_malloc(len0 * 8, 8) >>> 0;
             const view0 = getDataViewMemory0();
             for (let j0 = 0; j0 < len0; j0++) {
                 const e0 = values[j0];
                 const p0 = ptr0 + j0 * 8;
                 view0.setFloat64(p0 + 0, e0, true);
             }
-        } catch (err0) {
-            wasm.__wbindgen_free(ptr0, len0 * 8, 8);
-            throw err0;
         }
+    } catch (e) {
+        if (ptr0) wasm.__wbindgen_free(ptr0, len0 * 8, 8);
+        throw e;
     }
     const ret = wasm.option_enum_vec_echo(ptr0, len0);
     let v2;
@@ -166,18 +168,19 @@ export function option_enum_vec_echo(values) {
  * @returns {RenamedErr[]}
  */
 export function renamed_err_vec_echo(values) {
-    const len0 = values.length;
-    const ptr0 = wasm.__wbindgen_malloc(len0 * 8, 8) >>> 0;
+    let len0, ptr0;
     try {
+        len0 = values.length;
+        ptr0 = wasm.__wbindgen_malloc(len0 * 8, 8) >>> 0;
         const view0 = getDataViewMemory0();
         for (let j0 = 0; j0 < len0; j0++) {
             const e0 = values[j0];
             const p0 = ptr0 + j0 * 8;
             view0.setFloat64(p0 + 0, e0, true);
         }
-    } catch (err0) {
-        wasm.__wbindgen_free(ptr0, len0 * 8, 8);
-        throw err0;
+    } catch (e) {
+        if (ptr0) wasm.__wbindgen_free(ptr0, len0 * 8, 8);
+        throw e;
     }
     const ret = wasm.renamed_err_vec_echo(ptr0, len0);
     const v2 = [];

@@ -140,6 +140,8 @@ struct InstrState {
     binds_local: bool,
     /// Whether it allocated or registered a `finally`.
     effects: bool,
+    /// Where the prelude stood at its last allocation.
+    allocated_at: Option<usize>,
 }
 
 /// A value on the stack, with how it came to be, which decides what the call
@@ -185,9 +187,12 @@ impl fmt::Display for Value {
 /// leak the earlier ones.
 struct ArgGuard {
     /// Where the prelude stood before the first allocating instruction, and
-    /// how many statements that instruction emitted.
+    /// how many statements it emitted up to its allocation.
     start: usize,
     first: usize,
+    /// Whether an allocating instruction went on after allocating, such as
+    /// an encoded slice's element loop, which may throw.
+    tail: bool,
     /// Statements releasing each allocation, in allocation order.
     releases: Vec<String>,
 }
@@ -984,6 +989,14 @@ impl<'p> BodyParams<'p> {
             instruction(&mut js, &instr.instr, log_error, self.constructor)?;
             js.end_instr();
         }
+        // An allocation made for a value returned to Wasm has no call to
+        // take it, and only the allocating instruction's own tail can still
+        // throw.
+        if let Some(guard) = js.guard.take() {
+            let (rest, _) = js.split_guard(&guard);
+            let tail = guard.tail;
+            js.close_guard(guard, rest, tail);
+        }
 
         assert_eq!(
             js.stack.len(),
@@ -1044,13 +1057,13 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         };
     }
 
-    /// Tags the instruction's statements, and measures the first allocating
-    /// instruction for the guard.
+    /// Tags the instruction's statements.
     fn end_instr(&mut self) {
         let InstrState {
             start,
             reads_local,
             effects,
+            allocated_at,
             ..
         } = self.instr;
         if reads_local || effects {
@@ -1058,10 +1071,8 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
                 stmt.pure = false;
             }
         }
-        if let Some(guard) = &mut self.guard {
-            if guard.start == start {
-                guard.first = self.prelude.len() - start;
-            }
+        if let (Some(at), Some(guard)) = (allocated_at, &mut self.guard) {
+            guard.tail |= self.prelude.len() > at;
         }
     }
 
@@ -1131,14 +1142,17 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     }
 
     /// Registers `stmt` to release what the current instruction allocated
-    /// for an argument.
+    /// for an argument. Called as soon as the allocation is made: whatever
+    /// the instruction emits after it may throw and is guarded.
     fn release(&mut self, stmt: String) {
         self.instr.effects = true;
-        let start = self.instr.start;
+        let (start, len) = (self.instr.start, self.prelude.len());
+        self.instr.allocated_at = Some(len);
         self.guard
             .get_or_insert_with(|| ArgGuard {
                 start,
-                first: 0,
+                first: len - start,
+                tail: false,
                 releases: Vec::new(),
             })
             .releases
@@ -1164,13 +1178,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         let (Some(guard), Some(params)) = (self.guard.take(), params) else {
             return values.into_iter().map(Value::into_expr).collect();
         };
-        let (pure, mut rest): (Vec<_>, Vec<_>) = self
-            .prelude
-            .split_off(guard.start)
-            .into_iter()
-            .partition(|stmt| stmt.pure);
-        self.prelude.extend(pure);
-        let mut guarded = rest.len() > guard.first;
+        let (mut rest, mut guarded) = self.split_guard(&guard);
         let mut args = Vec::with_capacity(values.len());
         for (value, ty) in values.into_iter().zip(params) {
             let (expr, pure) = match value {
@@ -1213,12 +1221,33 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
             }
             args.push(name);
         }
+        self.close_guard(guard, rest, guarded);
+        args
+    }
+
+    /// Moves the pure statements since the first allocation ahead of it,
+    /// returning the rest and whether anything after the allocation is left
+    /// to throw.
+    fn split_guard(&mut self, guard: &ArgGuard) -> (Vec<Stmt>, bool) {
+        let (pure, rest): (Vec<_>, Vec<_>) = self
+            .prelude
+            .split_off(guard.start)
+            .into_iter()
+            .partition(|stmt| stmt.pure);
+        self.prelude.extend(pure);
+        let guarded = rest.len() > guard.first;
+        (rest, guarded)
+    }
+
+    /// Emits `rest`, wrapped in the `try` that releases the allocations when
+    /// `guarded`.
+    fn close_guard(&mut self, guard: ArgGuard, mut rest: Vec<Stmt>, guarded: bool) {
         if !guarded {
             self.prelude.extend(rest);
-            return args;
+            return;
         }
-        // The `catch` and the call read what the `try` binds, so the
-        // bindings are lifted into a `let`, taking literal initializers along.
+        // What follows the `try` reads what it binds, so the bindings are
+        // lifted into a `let`, taking literal initializers along.
         let mut names = Vec::new();
         rest.retain_mut(|stmt| {
             let StmtKind::Decl {
@@ -1255,7 +1284,6 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         self.stmt(StmtKind::Raw(open));
         self.prelude.extend(rest);
         self.stmt(StmtKind::Raw(close));
-        args
     }
 
     pub fn tmp(&mut self) -> usize {
@@ -2685,28 +2713,22 @@ fn instruction(
                 js.declare("const", ptr.clone(), alloc);
             }
             // An element encoder may throw (an invalid `char`, say), which
-            // must not leak the buffer.
-            let err = js.local(format!("err{i}"));
+            // the guard frees the buffer for.
+            js.release(format!(
+                "if ({ptr}) {free}({ptr}, {len} * {stride}, {align});"
+            ));
             js.prelude(&format!(
                 "
-                try {{
                 const {view} = {memory};
                 for (let {j} = 0; {j} < {len}; {j}++) {{
                 const {e} = {val}[{j}];
                 const {p} = {ptr} + {j} * {stride};
                 {body}}}
-                }} catch ({err}) {{
-                {free}({ptr}, {len} * {stride}, {align});
-                throw {err};
-                }}
                 "
             ));
             if *optional {
                 js.prelude("}");
             }
-            js.release(format!(
-                "if ({ptr}) {free}({ptr}, {len} * {stride}, {align});"
-            ));
             js.push(ptr);
             js.push(len);
         }
