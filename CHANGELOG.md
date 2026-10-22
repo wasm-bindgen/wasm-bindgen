@@ -166,10 +166,11 @@
 
 ### Fixed
 
-* Large JS snippets (`module = "..."`, `inline_js`) no longer make compilation
-  slow or print "constant evaluation is taking a long time" warnings. The
-  macro now lays out the `__wasm_bindgen_unstable` custom section as a
-  `#[repr(C)]` struct of byte arrays, so const evaluation copies each literal
+* Large JS snippets (`module = "..."`, `inline_js`) and
+  `typescript_custom_section` expressions such as `include_str!` no longer make
+  compilation slow or print "constant evaluation is taking a long time"
+  warnings. The macro now lays out the `__wasm_bindgen_unstable` custom section
+  as a `#[repr(C)]` struct of byte arrays, so const evaluation copies each
   chunk at once instead of byte by byte. A crate with a 5 MB snippet went from
   64 s to under a second for `cargo check`; the section's bytes are unchanged.
   [#5413](https://github.com/wasm-bindgen/wasm-bindgen/pull/5413)

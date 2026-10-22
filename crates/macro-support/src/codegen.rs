@@ -155,10 +155,10 @@ impl TryToTokens for ast::Program {
         // The custom section is laid out as a `#[repr(C)]` struct of byte
         // arrays: the prefix, the payload length, then every chunk. All fields
         // are `[u8; N]`, so the struct has alignment 1 and no padding, and its
-        // bytes are exactly the concatenation of its fields. Literal chunks
-        // (whose length is known here) are copied by const eval in one
-        // operation, instead of byte by byte, so large JS snippets do not make
-        // const evaluation slow.
+        // bytes are exactly the concatenation of its fields. Every chunk is
+        // copied by const eval in one operation, instead of byte by byte, so
+        // large JS snippets and TypeScript sections do not make const
+        // evaluation slow.
         let mut chunk_consts = Vec::new();
         let mut field_types = Vec::new();
         let mut field_values = Vec::new();
@@ -173,27 +173,30 @@ impl TryToTokens for ast::Program {
                     chunk_lens.push(quote!(#len));
                 }
                 EncodeChunk::StrExpr(expr) => {
-                    let bytes = quote::format_ident!("_CHUNK_{}_BYTES", i);
+                    // The expression's length is only known to const eval, so
+                    // the chunk is a 5-byte length header and a body array
+                    // sized by the expression. The body is copied in one
+                    // operation through `first_chunk`, which always succeeds
+                    // because its length is the string's length.
+                    let s = quote::format_ident!("_CHUNK_{}_STR", i);
                     let len = quote::format_ident!("_CHUNK_{}_LEN", i);
-                    // encode expr as str
+                    let header = quote::format_ident!("_CHUNK_{}_HEADER", i);
+                    let body = quote::format_ident!("_CHUNK_{}_BODY", i);
                     chunk_consts.push(quote! {
-                        const #len: usize = {
-                            const _STR_EXPR: &str = #expr;
-                            _STR_EXPR.len() + 5
-                        };
-                        const #bytes: [u8; #len] = {
-                            use #wasm_bindgen::__rt::{encode_u32_to_fixed_len_bytes};
-                            const _STR_EXPR: &str = #expr;
-                            const _STR_EXPR_BYTES: &[u8] = _STR_EXPR.as_bytes();
-                            flat_byte_slices([
-                                &encode_u32_to_fixed_len_bytes(_STR_EXPR_BYTES.len() as u32),
-                                _STR_EXPR_BYTES,
-                            ])
+                        const #s: &str = #expr;
+                        const #len: usize = #s.len();
+                        const #header: [u8; 5] =
+                            #wasm_bindgen::__rt::encode_u32_to_fixed_len_bytes(#len as u32);
+                        const #body: [u8; #len] = match #s.as_bytes().first_chunk::<#len>() {
+                            ::core::option::Option::Some(bytes) => *bytes,
+                            ::core::option::Option::None => ::core::panic!(),
                         };
                     });
+                    field_types.push(quote!([u8; 5]));
                     field_types.push(quote!([u8; #len]));
-                    field_values.push(quote!(#bytes));
-                    chunk_lens.push(quote!(#len));
+                    field_values.push(quote!(#header));
+                    field_values.push(quote!(#body));
+                    chunk_lens.push(quote!(5 + #len));
                 }
             }
         }
@@ -220,9 +223,6 @@ impl TryToTokens for ast::Program {
             #[cfg(all(target_family = "wasm", not(target_os = "wasi")))]
             #[automatically_derived]
             const _: () = {
-                #[allow(unused_imports)]
-                use #wasm_bindgen::__rt::flat_byte_slices;
-
                 static _INCLUDED_FILES: &[&str] = &[#(#file_dependencies),*];
 
                 #(#chunk_consts)*
