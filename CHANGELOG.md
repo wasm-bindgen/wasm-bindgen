@@ -34,7 +34,8 @@
   are `TemporalUnit` and `LargestUnit`, and `catch` follows the specification:
   `equals`, `compare` and
   the option-less `Instant`/`PlainTime` arithmetic are infallible, while
-  `ZonedDateTime::start_of_day` and `hours_in_day` are fallible.
+  `ZonedDateTime::start_of_day`, `hours_in_day` and
+  `PlainDate::to_plain_year_month` are fallible.
   [#5402](https://github.com/wasm-bindgen/wasm-bindgen/pull/5402)
 
 * Added `--cfg wasm_bindgen_unstable_strict_option`, under which a JS to Rust

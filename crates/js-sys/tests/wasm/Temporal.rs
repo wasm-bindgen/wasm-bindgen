@@ -687,11 +687,21 @@ fn plain_date_methods() {
     assert_eq!(pdt.year(), pd.year());
     assert_eq!(pdt.hour(), 0); // Default to midnight
 
-    let pym = pd.to_plain_year_month();
+    let pym = pd.to_plain_year_month().unwrap();
     assert_eq!(pym.year(), pd.year());
     assert_eq!(pym.month(), pd.month());
 
     let pmd = pd.to_plain_month_day();
+    // The Coptic month containing the earliest ISO date starts before it.
+    let coptic = Temporal::PlainDate::from_with_str("-271821-04-19")
+        .unwrap()
+        .with_calendar("coptic")
+        .unwrap();
+    assert!(coptic
+        .to_plain_year_month()
+        .unwrap_err()
+        .is_instance_of::<RangeError>());
+    assert_eq!(coptic.to_plain_month_day().calendar_id(), "coptic");
     assert_eq!(pmd.day(), pd.day());
 
     // Test withCalendar

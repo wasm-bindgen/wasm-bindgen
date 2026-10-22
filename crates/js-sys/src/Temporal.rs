@@ -651,9 +651,10 @@ extern "C" {
     #[wasm_bindgen(method, getter = relativeTo)]
     pub fn get_relative_to(this: &DurationRoundToOptions) -> JsValue;
 
-    /// Set the relativeTo option, required for rounding calendar units
-    /// (years, months, weeks). Accepts a `PlainDate`, `PlainDateTime`,
-    /// `ZonedDateTime`, or a string or property bag convertible to one.
+    /// Set the relativeTo option, required when rounding to or from weeks or
+    /// larger units, whose lengths depend on the calendar date.
+    /// Accepts a `PlainDate`, `PlainDateTime`, `ZonedDateTime`, or a string or
+    /// property bag convertible to one.
     #[wasm_bindgen(method, setter = relativeTo)]
     pub fn set_relative_to(this: &DurationRoundToOptions, value: &JsValue);
     #[wasm_bindgen(method, setter = relativeTo)]
@@ -703,9 +704,10 @@ extern "C" {
     #[wasm_bindgen(method, getter = relativeTo)]
     pub fn get_relative_to(this: &DurationTotalOptions) -> JsValue;
 
-    /// Set the relativeTo option, required for rounding calendar units
-    /// (years, months, weeks). Accepts a `PlainDate`, `PlainDateTime`,
-    /// `ZonedDateTime`, or a string or property bag convertible to one.
+    /// Set the relativeTo option, required when the duration has nonzero weeks
+    /// or larger units, or when totalling in such a unit.
+    /// Accepts a `PlainDate`, `PlainDateTime`, `ZonedDateTime`, or a string or
+    /// property bag convertible to one.
     #[wasm_bindgen(method, setter = relativeTo)]
     pub fn set_relative_to(this: &DurationTotalOptions, value: &JsValue);
     #[wasm_bindgen(method, setter = relativeTo)]
@@ -747,9 +749,10 @@ extern "C" {
     #[wasm_bindgen(method, getter = relativeTo)]
     pub fn get_relative_to(this: &DurationCompareOptions) -> JsValue;
 
-    /// Set the relativeTo option, required for rounding calendar units
-    /// (years, months, weeks). Accepts a `PlainDate`, `PlainDateTime`,
-    /// `ZonedDateTime`, or a string or property bag convertible to one.
+    /// Set the relativeTo option, required when either duration has nonzero
+    /// weeks or larger units.
+    /// Accepts a `PlainDate`, `PlainDateTime`, `ZonedDateTime`, or a string or
+    /// property bag convertible to one.
     #[wasm_bindgen(method, setter = relativeTo)]
     pub fn set_relative_to(this: &DurationCompareOptions, value: &JsValue);
     #[wasm_bindgen(method, setter = relativeTo)]
@@ -3754,9 +3757,14 @@ extern "C" {
     /// The `toPlainYearMonth()` method returns a `Temporal.PlainYearMonth` object representing
     /// the year and month of this date.
     ///
+    /// # Errors
+    /// Throws a `RangeError` if the first day of this date's calendar month falls
+    /// before the representable range, which can happen for non-ISO calendars at
+    /// the lower limit.
+    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toPlainYearMonth)
-    #[wasm_bindgen(method, js_name = toPlainYearMonth)]
-    pub fn to_plain_year_month(this: &PlainDate) -> PlainYearMonth;
+    #[wasm_bindgen(method, js_name = toPlainYearMonth, catch)]
+    pub fn to_plain_year_month(this: &PlainDate) -> Result<PlainYearMonth, JsValue>;
 
     /// The `toPlainMonthDay()` method returns a `Temporal.PlainMonthDay` object representing
     /// the month and day of this date.
