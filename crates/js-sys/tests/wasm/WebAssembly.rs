@@ -191,9 +191,9 @@ fn memory_works() {
     assert!(mem.is_instance_of::<WebAssembly::Memory>());
     assert!(mem.is_instance_of::<Object>());
     assert!(mem.buffer().is_instance_of::<ArrayBuffer>());
-    assert_eq!(mem.grow(1), 1);
-    assert_eq!(mem.grow(2), 2);
-    assert_eq!(mem.grow(3), 4);
+    assert_eq!(mem.grow(1), Ok(1));
+    assert_eq!(mem.grow(2), Ok(2));
+    assert_eq!(mem.grow(3), Ok(4));
     assert_eq!(
         mem.buffer()
             .dyn_into::<ArrayBuffer>()
