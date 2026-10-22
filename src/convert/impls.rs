@@ -804,8 +804,15 @@ impl<T> FromWasmAbi for Nullable<NonNull<T>> {
 
     #[inline]
     unsafe fn from_abi(js: Self::Abi) -> Self {
-        // SAFETY: Checked in bindings.
-        nullable_ptr_from_abi(js).map(|ptr| NonNull::new_unchecked(ptr as *mut T))
+        match nullable_ptr_from_abi(js) {
+            Nullable::Null => Nullable::Null,
+            Nullable::Undefined => Nullable::Undefined,
+            // `0` is `Undefined`, as it is `None` for `Option<NonNull<T>>`.
+            Nullable::Value(ptr) => match NonNull::new(ptr as *mut T) {
+                Some(ptr) => Nullable::Value(ptr),
+                None => Nullable::Undefined,
+            },
+        }
     }
 }
 

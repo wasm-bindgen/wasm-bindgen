@@ -34,6 +34,9 @@ exports.nullable_type_js_exports = () => {
     ]) {
         roundtrip(f, 3);
     }
+    // A JS `0` is the null pointer, which is `Undefined` as it is `None` for
+    // `Option<NonNull<T>>`.
+    assert.strictEqual(wasm.nullable_type_nonnull(0), undefined);
     roundtrip(wasm.nullable_type_f32, 1.5);
     roundtrip(wasm.nullable_type_f64, 1.5);
     roundtrip(wasm.nullable_type_i64, -3n);
@@ -49,6 +52,18 @@ exports.nullable_type_js_exports = () => {
     roundtrip(wasm.nullable_type_enum, wasm.NullableColor.Blue);
     roundtrip(wasm.nullable_type_string_enum, 'beta');
     roundtrip(wasm.nullable_type_jsvalue, {}, (a, b) => assert.strictEqual(a, b));
+
+    // `null` into a JS-typed nullable is the fixed handle, not a fresh slot.
+    const table = Object.values(wasm.__wasm).find(v => v instanceof WebAssembly.Table);
+    if (table) {
+        wasm.nullable_type_jsvalue(null);
+        const before = table.length;
+        for (let i = 0; i < 2000; i++) {
+            wasm.nullable_type_jsvalue(null);
+            wasm.nullable_type_js_type(null);
+        }
+        assert.strictEqual(table.length, before);
+    }
     roundtrip(wasm.nullable_type_js_type, {}, (a, b) => assert.strictEqual(a, b));
 
     assert.strictEqual(wasm.nullable_type_struct(null), null);

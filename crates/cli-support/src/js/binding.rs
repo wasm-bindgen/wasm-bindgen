@@ -2156,22 +2156,28 @@ fn instruction(
             kind,
         } => {
             let val = js.pop();
-            // The handle carries `null`, so a nullable `null` takes a slot
-            // like any value and only `undefined` is the empty index.
-            let none = match kind {
-                OptionKind::Nullable => format!("{val} === undefined"),
-                kind => js.is_none(&val, *kind),
-            };
-            match table_and_alloc {
-                Some((table, alloc)) => {
-                    let alloc = js.cx.expose_add_to_externref_table(*table, *alloc);
-                    js.push_alloc(format!("{none} ? 0 : {alloc}({val})"));
-                }
+            let alloc = match table_and_alloc {
+                Some((table, alloc)) => js
+                    .cx
+                    .expose_add_to_externref_table(*table, *alloc)
+                    .to_string(),
                 None => {
                     js.cx.expose_add_heap_object();
-                    js.push_alloc(format!("{none} ? 0 : addHeapObject({val})"));
+                    "addHeapObject".to_string()
                 }
-            }
+            };
+            // A nullable `null` is the fixed handle, which Rust reads as
+            // `Null` without owning a slot.
+            let abi = match kind {
+                OptionKind::Nullable => format!(
+                    "{val} === undefined ? 0 : {val} === null ? {NULL_HANDLE} : {alloc}({val})"
+                ),
+                kind => {
+                    let none = js.is_none(&val, *kind);
+                    format!("{none} ? 0 : {alloc}({val})")
+                }
+            };
+            js.push_alloc(abi);
         }
 
         Instruction::I32FromOptionU32Sentinel { kind } => {

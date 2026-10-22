@@ -96,7 +96,7 @@ export function nullable_struct(o, v) {
         _assertClass(o, Opt);
         ptr0 = o.__destroy_into_raw();
     }
-    const ret = wasm.nullable_struct(ptr0, v === undefined ? 0 : addToExternrefTable0(v));
+    const ret = wasm.nullable_struct(ptr0, v === undefined ? 0 : v === null ? 1025 : addToExternrefTable0(v));
     return ret === 0 ? undefined : ret === 1 ? null : Opt.__wrap(ret);
 }
 

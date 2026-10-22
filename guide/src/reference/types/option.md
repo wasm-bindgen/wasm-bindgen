@@ -15,6 +15,13 @@ conversion of `Option<T>` treat only `undefined` as `None`. `null` is passed
 to `T`'s own conversion, exactly as any other value that isn't a `T` would be.
 Rust to JS is unchanged: `None` is still `undefined`.
 
+The cfg applies to `js-sys` and `web-sys` as well, which still use `Option<T>`
+for JS APIs that return `null`: under it, `RegExp::exec` with no match and
+`Document::get_element_by_id` with a missing id return `Some(null)`, and
+`Storage::get_item` on a missing key returns `Err` rather than `Ok(None)`.
+Those bindings move to `Nullable<T>` before the default flips, so the cfg is
+only suitable for testing a crate's own boundary today.
+
 The cfg must be set for the whole build, since the `wasm-bindgen` crate itself
 records the choice when it describes the type, so it goes in `RUSTFLAGS` or in
 `.cargo/config.toml` rather than on a single crate:
