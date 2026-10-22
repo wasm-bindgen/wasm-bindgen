@@ -166,6 +166,14 @@
 
 ### Fixed
 
+* Large JS snippets (`module = "..."`, `inline_js`) no longer make compilation
+  slow or print "constant evaluation is taking a long time" warnings. The
+  macro now lays out the `__wasm_bindgen_unstable` custom section as a
+  `#[repr(C)]` struct of byte arrays, so const evaluation copies each literal
+  chunk at once instead of byte by byte. A crate with a 5 MB snippet went from
+  64 s to under a second for `cargo check`; the section's bytes are unchanged.
+  [#5413](https://github.com/wasm-bindgen/wasm-bindgen/pull/5413)
+
 * Imported methods, static methods and constructors without a `js_class` now
   bind to the `js_name` and `js_namespace` of the type they belong to when that
   type is declared in the same `extern "C"` block. Previously they used the
