@@ -34,6 +34,11 @@
   `T: JsGeneric`.
   [#5410](https://github.com/wasm-bindgen/wasm-bindgen/pull/5410)
 
+* Under `js_sys_unstable_apis`, `RegExp::exec` and `JsString::match_` return
+  `Nullable<T>` rather than `Option<T>`, as the JS APIs return `null` on no
+  match.
+  [#5410](https://github.com/wasm-bindgen/wasm-bindgen/pull/5410)
+
 * Added the `slice = view | copy | array` and `vec = copy | array`
   attributes for imported JS functions, choosing what JS receives for a
   sequence argument with numeric elements: a live typed array over wasm

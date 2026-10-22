@@ -20,7 +20,9 @@ for JS APIs that return `null`: under it, `RegExp::exec` with no match and
 `Document::get_element_by_id` with a missing id return `Some(null)`, and
 `Storage::get_item` on a missing key returns `Err` rather than `Ok(None)`.
 Those bindings move to [`Nullable<T>`](./nullable.md) before the default
-flips, so the cfg is only suitable for testing a crate's own boundary today.
+flips. `js-sys` already does so under `--cfg js_sys_unstable_apis`, where
+`RegExp::exec` and `JsString::match_` return `Nullable<T>`, so the strict cfg
+is only suitable for testing a crate's own boundary today.
 
 The cfg must be set for the whole build, since the `wasm-bindgen` crate itself
 records the choice when it describes the type, so it goes in `RUSTFLAGS` or in
