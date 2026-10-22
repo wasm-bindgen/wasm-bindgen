@@ -18,9 +18,6 @@ extern "C" {
 
     fn get_symbol_iterator_returns_object_without_next() -> Object;
 
-    #[wasm_bindgen(js_name = get_symbol_iterator_throws)]
-    fn get_symbol_iterator_throws_typed() -> Array<JsString>;
-
     fn get_iterator_like() -> Iterator<JsString>;
 
     fn get_naturals() -> Iterator<Number>;
@@ -127,21 +124,18 @@ fn from() {
     if !has_iterator_helper("from") {
         return;
     }
-    let iter = Iterator::from_iterable(&strings(&["a", "b"])).unwrap();
+    let iter = Iterator::from_iterable(&strings(&["a", "b"]));
     assert_eq!(to_vec(iter), ["a", "b"]);
 
-    let iter = Iterator::from_iterable(&get_iterator_like()).unwrap();
+    let iter = Iterator::from_iterable(&get_iterator_like());
     assert_eq!(to_vec(iter), ["one", "two"]);
 
-    assert!(Iterator::from_iterable(&get_symbol_iterator_throws_typed()).is_err());
-
-    // A bare `{ next }` object passes `is_type_of` but lacks the prototype
-    // helpers until wrapped.
-    assert!(get_iterator_like().take(1).is_err());
-    assert!(Iterator::from_iterable(&get_iterator_like())
-        .unwrap()
-        .take(1)
-        .is_ok());
+    // The helpers dispatch through `Iterator.prototype`, so a bare `{ next }`
+    // object works without wrapping, but it is not iterable for `concat`.
+    assert_eq!(to_vec(get_iterator_like().take(1)), ["one"]);
+    assert!(Iterator::concat(&[get_iterator_like()])
+        .unwrap_err()
+        .is_instance_of::<TypeError>());
 }
 
 #[wasm_bindgen_test]
@@ -172,7 +166,7 @@ fn map_is_lazy() {
         JsString::from(format!("{}{i}", String::from(x.to_upper_case())))
     };
     let mapper = ScopedClosure::<dyn FnMut(JsString, u32) -> JsString>::borrow_mut(&mut f);
-    let mapped = strings(&["a", "b", "c"]).values().map(&mapper).unwrap();
+    let mapped = strings(&["a", "b", "c"]).values().map(&mapper);
     assert_eq!(calls.get(), 0);
 
     let first = mapped.next().unwrap();
@@ -193,8 +187,7 @@ fn filter() {
         Closure::new(|x: JsString, i: u32| x != "b" && i != 3);
     let filtered = strings(&["a", "b", "c", "d", "e"])
         .values()
-        .filter(&predicate)
-        .unwrap();
+        .filter(&predicate);
     assert_eq!(to_vec(filtered), ["a", "c", "e"]);
 }
 
@@ -203,30 +196,21 @@ fn take_and_drop() {
     if !has_iterator_helper("from") {
         return;
     }
-    let taken = get_naturals().take(3).unwrap().to_array().unwrap();
+    let taken = get_naturals().take(3).to_array().unwrap();
     assert_eq!(taken.length(), 3);
     assert_eq!(taken.get_checked(0).unwrap(), 0);
     assert_eq!(taken.get_checked(2).unwrap(), 2);
 
-    let dropped = get_naturals()
-        .drop(5)
-        .unwrap()
-        .take(2)
-        .unwrap()
-        .to_array()
-        .unwrap();
+    let dropped = get_naturals().drop(5).take(2).to_array().unwrap();
     assert_eq!(dropped.length(), 2);
     assert_eq!(dropped.get_checked(0).unwrap(), 5);
     assert_eq!(dropped.get_checked(1).unwrap(), 6);
 
     assert_eq!(
-        to_vec(strings(&["a", "b", "c"]).values().drop(1).unwrap()),
+        to_vec(strings(&["a", "b", "c"]).values().drop(1)),
         ["b", "c"]
     );
-    assert_eq!(
-        to_vec(strings(&["a", "b"]).values().take(0).unwrap()),
-        [""; 0]
-    );
+    assert_eq!(to_vec(strings(&["a", "b"]).values().take(0)), [""; 0]);
 }
 
 #[wasm_bindgen_test]
@@ -242,10 +226,7 @@ fn flat_map() {
             }
             arr
         });
-    let flattened = strings(&["a", "b", "c"])
-        .values()
-        .flat_map(&mapper)
-        .unwrap();
+    let flattened = strings(&["a", "b", "c"]).values().flat_map(&mapper);
     assert_eq!(to_vec(flattened), ["a", "b", "b", "c", "c", "c"]);
 }
 
@@ -260,13 +241,9 @@ fn chained_helpers() {
         Closure::new(|x: Number, _: u32| x.value_of() % 3.0 == 0.0);
     let result = get_naturals()
         .map(&mapper)
-        .unwrap()
         .filter(&predicate)
-        .unwrap()
         .drop(1)
-        .unwrap()
         .take(3)
-        .unwrap()
         .to_array()
         .unwrap();
     assert_eq!(result.length(), 3);
@@ -380,10 +357,10 @@ fn errors_propagate() {
 
     let mapper: Closure<dyn FnMut(JsString, u32) -> JsString> =
         Closure::new(|x: JsString, _: u32| x);
-    let mapped = get_throwing_iterator().map(&mapper).unwrap();
+    let mapped = get_throwing_iterator().map(&mapper);
     assert_eq!(mapped.next().unwrap().value(), "one");
     assert!(mapped.next().is_err());
 
-    assert!(get_throwing_iterator().take(1).unwrap().to_array().is_ok());
-    assert!(get_throwing_iterator().drop(1).unwrap().to_array().is_err());
+    assert!(get_throwing_iterator().take(1).to_array().is_ok());
+    assert!(get_throwing_iterator().drop(1).to_array().is_err());
 }

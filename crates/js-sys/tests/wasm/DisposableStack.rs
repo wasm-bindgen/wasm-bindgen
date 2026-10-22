@@ -131,7 +131,8 @@ fn suppressed_error() {
     }
     let error = JsValue::from(Error::new("outer"));
     let suppressed = JsValue::from(Error::new("inner"));
-    let err = SuppressedError::new(&error, &suppressed, "both");
+    assert_eq!(SuppressedError::new(&error, &suppressed).message(), "");
+    let err = SuppressedError::new_with_message(&error, &suppressed, "both");
 
     assert!(err.is_instance_of::<Error>());
     assert!(err.is_instance_of::<SuppressedError>());

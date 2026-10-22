@@ -250,11 +250,13 @@ fn wasm_has(name: &str) -> bool {
     Reflect::has_str(ns.unchecked_ref::<Object>(), &name.into()).unwrap_or(false)
 }
 
-fn compile_options() -> Object {
-    let builtins = Array::<JsValue>::new();
-    builtins.push(&"js-string".into());
-    let options = Object::new();
-    Reflect::set(options.as_ref(), &JsString::from("builtins"), &builtins).unwrap();
+fn compile_options() -> WebAssembly::CompileOptions {
+    let options = WebAssembly::CompileOptions::new();
+    assert!(options.get_builtins().is_none());
+    options.set_builtins(&[JsString::from("js-string")]);
+    options.set_imported_string_constants("strings");
+    assert_eq!(options.get_builtins().unwrap().length(), 1);
+    assert_eq!(options.get_imported_string_constants().unwrap(), "strings");
     options
 }
 

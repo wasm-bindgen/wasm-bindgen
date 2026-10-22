@@ -5572,15 +5572,19 @@ extern "C" {
 
     /// The `Iterator.from()` static method wraps any iterable or
     /// iterator-like object in an `Iterator` inheriting from
-    /// `Iterator.prototype`, so the helper methods below are available on
-    /// it. Named `from_iterable` as `from` is taken by `From<JsValue>`.
+    /// `Iterator.prototype`. Named `from_iterable` as `from` is taken by
+    /// `From<JsValue>`.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/from)
-    #[wasm_bindgen(static_method_of = Iterator, catch, js_name = from)]
-    pub fn from_iterable<I: Iterable>(obj: &I) -> Result<Iterator<I::Item>, JsValue>;
+    #[wasm_bindgen(static_method_of = Iterator, js_name = from)]
+    pub fn from_iterable<I: Iterable>(obj: &I) -> Iterator<I::Item>;
 
     /// The `Iterator.concat()` static method returns an iterator yielding
     /// the values of each given iterable in turn.
+    ///
+    /// # Errors
+    /// Throws a `TypeError` for an `Iterator<T>` that is a bare `{ next }`
+    /// object, as those have no `Symbol.iterator`.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/concat)
     #[wasm_bindgen(static_method_of = Iterator, catch, variadic)]
@@ -5592,16 +5596,12 @@ extern "C" {
     /// The mapper runs lazily, as the returned iterator is consumed, so it
     /// is taken as a [`ScopedClosure`] which must outlive that consumption.
     ///
-    /// Like every helper here, this throws a `TypeError` on an iterator
-    /// that does not inherit from `Iterator.prototype`, such as a plain
-    /// `{ next }` object; wrap those with [`Iterator::from_iterable`] first.
-    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/map)
-    #[wasm_bindgen(method, catch)]
+    #[wasm_bindgen(method, final)]
     pub fn map<'a, T, U>(
         this: &Iterator<T>,
         mapper: &ScopedClosure<'a, dyn FnMut(T, u32) -> U>,
-    ) -> Result<Iterator<U>, JsValue>;
+    ) -> Iterator<U>;
 
     /// The `filter()` method returns a new iterator helper that yields only
     /// the values of this iterator for which `predicate` returns `true`.
@@ -5611,25 +5611,25 @@ extern "C" {
     /// consumption.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/filter)
-    #[wasm_bindgen(method, catch)]
+    #[wasm_bindgen(method, final)]
     pub fn filter<'a, T>(
         this: &Iterator<T>,
         predicate: &ScopedClosure<'a, dyn FnMut(T, u32) -> bool>,
-    ) -> Result<Iterator<T>, JsValue>;
+    ) -> Iterator<T>;
 
     /// The `take()` method returns a new iterator helper that yields at
     /// most `limit` values of this iterator.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/take)
-    #[wasm_bindgen(method, catch)]
-    pub fn take<T>(this: &Iterator<T>, limit: u32) -> Result<Iterator<T>, JsValue>;
+    #[wasm_bindgen(method, final)]
+    pub fn take<T>(this: &Iterator<T>, limit: u32) -> Iterator<T>;
 
     /// The `drop()` method returns a new iterator helper that skips the
     /// first `limit` values of this iterator and yields the rest.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/drop)
-    #[wasm_bindgen(method, catch)]
-    pub fn drop<T>(this: &Iterator<T>, limit: u32) -> Result<Iterator<T>, JsValue>;
+    #[wasm_bindgen(method, final)]
+    pub fn drop<T>(this: &Iterator<T>, limit: u32) -> Iterator<T>;
 
     /// The `flatMap()` method returns a new iterator helper that yields the
     /// values of each iterable or iterator returned by `mapper`.
@@ -5638,17 +5638,17 @@ extern "C" {
     /// is taken as a [`ScopedClosure`] which must outlive that consumption.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/flatMap)
-    #[wasm_bindgen(method, catch, js_name = flatMap)]
+    #[wasm_bindgen(method, final, js_name = flatMap)]
     pub fn flat_map<'a, T, I: Iterable>(
         this: &Iterator<T>,
         mapper: &ScopedClosure<'a, dyn FnMut(T, u32) -> I>,
-    ) -> Result<Iterator<I::Item>, JsValue>;
+    ) -> Iterator<I::Item>;
 
     /// The `reduce()` method consumes this iterator, folding every value
     /// into an accumulator starting from `initial_value`.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/reduce)
-    #[wasm_bindgen(method, catch)]
+    #[wasm_bindgen(method, final, catch)]
     pub fn reduce<T, A>(
         this: &Iterator<T>,
         reducer: &mut dyn FnMut(A, T, u32) -> A,
@@ -5659,14 +5659,14 @@ extern "C" {
     /// into an `Array`.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/toArray)
-    #[wasm_bindgen(method, catch, js_name = toArray)]
+    #[wasm_bindgen(method, final, catch, js_name = toArray)]
     pub fn to_array<T>(this: &Iterator<T>) -> Result<Array<T>, JsValue>;
 
     /// The `forEach()` method consumes this iterator, calling `callback`
     /// with each value and its index.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/forEach)
-    #[wasm_bindgen(method, catch, js_name = forEach)]
+    #[wasm_bindgen(method, final, catch, js_name = forEach)]
     pub fn for_each<T>(this: &Iterator<T>, callback: &mut dyn FnMut(T, u32))
         -> Result<(), JsValue>;
 
@@ -5674,7 +5674,7 @@ extern "C" {
     /// `true` for a value, returning whether it did.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/some)
-    #[wasm_bindgen(method, catch)]
+    #[wasm_bindgen(method, final, catch)]
     pub fn some<T>(
         this: &Iterator<T>,
         predicate: &mut dyn FnMut(T, u32) -> bool,
@@ -5684,7 +5684,7 @@ extern "C" {
     /// `false` for a value, returning whether it never did.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/every)
-    #[wasm_bindgen(method, catch)]
+    #[wasm_bindgen(method, final, catch)]
     pub fn every<T>(
         this: &Iterator<T>,
         predicate: &mut dyn FnMut(T, u32) -> bool,
@@ -5694,7 +5694,7 @@ extern "C" {
     /// `true` for a value, returning that value if any.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/find)
-    #[wasm_bindgen(method, catch)]
+    #[wasm_bindgen(method, final, catch)]
     pub fn find<T>(
         this: &Iterator<T>,
         predicate: &mut dyn FnMut(T, u32) -> bool,
@@ -8807,7 +8807,7 @@ extern "C" {
     /// and `suppressed` the one it hid.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SuppressedError)
-    #[wasm_bindgen(extends = Object, extends = Error, typescript_type = "SuppressedError")]
+    #[wasm_bindgen(extends = Error, extends = Object, typescript_type = "SuppressedError")]
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub type SuppressedError;
 
@@ -8815,7 +8815,24 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SuppressedError/SuppressedError)
     #[wasm_bindgen(constructor)]
-    pub fn new(error: &JsValue, suppressed: &JsValue, message: &str) -> SuppressedError;
+    pub fn new(error: &JsValue, suppressed: &JsValue) -> SuppressedError;
+
+    /// Creates a new `SuppressedError` with a message.
+    #[wasm_bindgen(constructor)]
+    pub fn new_with_message(
+        error: &JsValue,
+        suppressed: &JsValue,
+        message: &str,
+    ) -> SuppressedError;
+
+    /// Creates a new `SuppressedError` with a message and options such as `cause`.
+    #[wasm_bindgen(constructor)]
+    pub fn new_with_message_and_error_options(
+        error: &JsValue,
+        suppressed: &JsValue,
+        message: &str,
+        options: &ErrorOptions,
+    ) -> SuppressedError;
 
     /// The error that was thrown most recently.
     ///
@@ -9219,23 +9236,24 @@ pub mod WebAssembly {
         pub fn validate(buffer_source: &JsValue) -> Result<bool, JsValue>;
 
         /// The `WebAssembly.validate()` function validates the given bytes
-        /// under the given compile options, such as
-        /// `{ builtins: ["js-string"], importedStringConstants: "..." }`.
+        /// under the given compile options.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/validate)
         #[wasm_bindgen(js_namespace = WebAssembly, js_name = validate, catch)]
         pub fn validate_with_options(
             buffer_source: &JsValue,
-            options: &Object,
+            options: &CompileOptions,
         ) -> Result<bool, JsValue>;
 
         /// The `WebAssembly.compile()` function compiles the given bytes
-        /// under the given compile options, such as
-        /// `{ builtins: ["js-string"], importedStringConstants: "..." }`.
+        /// under the given compile options.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/compile)
         #[wasm_bindgen(js_namespace = WebAssembly, js_name = compile)]
-        pub fn compile_with_options(buffer_source: &JsValue, options: &Object) -> Promise<Module>;
+        pub fn compile_with_options(
+            buffer_source: &JsValue,
+            options: &CompileOptions,
+        ) -> Promise<Module>;
 
         /// The `WebAssembly.compileStreaming()` function compiles a module
         /// from a streamed `Response` under the given compile options.
@@ -9244,7 +9262,7 @@ pub mod WebAssembly {
         #[wasm_bindgen(js_namespace = WebAssembly, js_name = compileStreaming)]
         pub fn compile_streaming_with_options(
             response: &Promise,
-            options: &Object,
+            options: &CompileOptions,
         ) -> Promise<Module>;
 
         /// The `WebAssembly.instantiate()` function compiles and instantiates
@@ -9256,7 +9274,7 @@ pub mod WebAssembly {
         pub fn instantiate_buffer_with_options(
             buffer: &[u8],
             imports: &Object,
-            options: &Object,
+            options: &CompileOptions,
         ) -> Promise<InstantiatedSource>;
 
         /// The `WebAssembly.instantiateStreaming()` function compiles and
@@ -9268,7 +9286,7 @@ pub mod WebAssembly {
         pub fn instantiate_streaming_with_options(
             response: &JsValue,
             imports: &Object,
-            options: &Object,
+            options: &CompileOptions,
         ) -> Promise<InstantiatedSource>;
 
         /// The `WebAssembly.JSTag` property is the [`Tag`] under which
@@ -9280,6 +9298,47 @@ pub mod WebAssembly {
     }
 
     // WebAssembly.InstantiatedSource
+    // CompileOptions
+    #[wasm_bindgen]
+    extern "C" {
+        /// The compile options accepted by `WebAssembly.validate()`,
+        /// `compile()`, `instantiate()`, their streaming forms and the
+        /// `Module` constructor: the JS builtins to enable and the import
+        /// module name for imported string constants.
+        ///
+        /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/compile#compileoptions)
+        #[wasm_bindgen(extends = Object)]
+        #[derive(Clone, Debug)]
+        pub type CompileOptions;
+
+        /// The enabled builtin sets, such as `"js-string"`, if set.
+        #[wasm_bindgen(method, getter, js_name = builtins)]
+        pub fn get_builtins(this: &CompileOptions) -> Option<Array<JsString>>;
+        /// Sets the builtin sets to enable, such as `"js-string"`.
+        #[wasm_bindgen(method, setter)]
+        pub fn set_builtins(this: &CompileOptions, builtins: &[JsString]);
+
+        /// The import module name for imported string constants, if set.
+        #[wasm_bindgen(method, getter, js_name = importedStringConstants)]
+        pub fn get_imported_string_constants(this: &CompileOptions) -> Option<JsString>;
+        /// Sets the import module name for imported string constants.
+        #[wasm_bindgen(method, setter, js_name = importedStringConstants)]
+        pub fn set_imported_string_constants(this: &CompileOptions, name: &str);
+    }
+
+    impl CompileOptions {
+        /// Creates empty `CompileOptions`.
+        pub fn new() -> CompileOptions {
+            JsCast::unchecked_into::<CompileOptions>(Object::<JsValue>::new())
+        }
+    }
+
+    impl Default for CompileOptions {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     #[wasm_bindgen]
     extern "C" {
         /// The `{ module, instance }` pair that `WebAssembly.instantiate()`
@@ -9440,14 +9499,13 @@ pub mod WebAssembly {
         pub fn new(buffer_source: &JsValue) -> Result<Module, JsValue>;
 
         /// The `WebAssembly.Module()` constructor compiles the given bytes
-        /// synchronously under the given compile options, such as
-        /// `{ builtins: ["js-string"], importedStringConstants: "..." }`.
+        /// synchronously under the given compile options.
         ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly/Module/Module)
         #[wasm_bindgen(constructor, js_namespace = WebAssembly, catch)]
         pub fn new_with_options(
             buffer_source: &JsValue,
-            options: &Object,
+            options: &CompileOptions,
         ) -> Result<Module, JsValue>;
 
         /// The `WebAssembly.customSections()` function returns a copy of the
@@ -15264,22 +15322,24 @@ extern "C" {
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub type Base64Options;
 
-    /// Sets the alphabet, `"base64"` or `"base64url"`.
+    /// Sets the alphabet.
     #[wasm_bindgen(method, setter)]
-    pub fn set_alphabet(this: &Base64Options, alphabet: &str);
+    pub fn set_alphabet(this: &Base64Options, alphabet: Base64Alphabet);
 
-    /// The alphabet, `"base64"` or `"base64url"`, if set.
+    /// The alphabet, if set.
     #[wasm_bindgen(method, getter, js_name = alphabet)]
-    pub fn get_alphabet(this: &Base64Options) -> Option<JsString>;
+    pub fn get_alphabet(this: &Base64Options) -> Option<Base64Alphabet>;
 
-    /// Sets how a trailing partial chunk is decoded: `"loose"`, `"strict"`
-    /// or `"stop-before-partial"`.
+    /// Sets how a trailing partial chunk is decoded.
     #[wasm_bindgen(method, setter, js_name = lastChunkHandling)]
-    pub fn set_last_chunk_handling(this: &Base64Options, last_chunk_handling: &str);
+    pub fn set_last_chunk_handling(
+        this: &Base64Options,
+        last_chunk_handling: Base64LastChunkHandling,
+    );
 
     /// How a trailing partial chunk is decoded, if set.
     #[wasm_bindgen(method, getter, js_name = lastChunkHandling)]
-    pub fn get_last_chunk_handling(this: &Base64Options) -> Option<JsString>;
+    pub fn get_last_chunk_handling(this: &Base64Options) -> Option<Base64LastChunkHandling>;
 
     /// Sets whether encoding omits the trailing `=` padding.
     #[wasm_bindgen(method, setter, js_name = omitPadding)]
@@ -15288,6 +15348,28 @@ extern "C" {
     /// Whether encoding omits the trailing `=` padding, if set.
     #[wasm_bindgen(method, getter, js_name = omitPadding)]
     pub fn get_omit_padding(this: &Base64Options) -> Option<bool>;
+}
+
+/// The `alphabet` option of the `Uint8Array` base64 methods.
+#[wasm_bindgen]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Base64Alphabet {
+    /// The standard alphabet with `+` and `/`.
+    Base64 = "base64",
+    /// The URL-safe alphabet with `-` and `_`.
+    Base64Url = "base64url",
+}
+
+/// The `lastChunkHandling` option of the `Uint8Array` base64 decoders.
+#[wasm_bindgen]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Base64LastChunkHandling {
+    /// A trailing partial chunk is decoded if it is well formed.
+    Loose = "loose",
+    /// A trailing partial chunk is a `SyntaxError`.
+    Strict = "strict",
+    /// A trailing partial chunk is left in the input.
+    StopBeforePartial = "stop-before-partial",
 }
 
 impl Base64Options {

@@ -573,11 +573,14 @@ fn uint8array_base64_options() {
     assert!(options.get_last_chunk_handling().is_none());
     assert!(options.get_omit_padding().is_none());
 
-    options.set_alphabet("base64url");
-    options.set_last_chunk_handling("strict");
+    options.set_alphabet(Base64Alphabet::Base64Url);
+    options.set_last_chunk_handling(Base64LastChunkHandling::Strict);
     options.set_omit_padding(true);
-    assert_eq!(options.get_alphabet().unwrap(), "base64url");
-    assert_eq!(options.get_last_chunk_handling().unwrap(), "strict");
+    assert_eq!(options.get_alphabet(), Some(Base64Alphabet::Base64Url));
+    assert_eq!(
+        options.get_last_chunk_handling(),
+        Some(Base64LastChunkHandling::Strict)
+    );
     assert_eq!(options.get_omit_padding(), Some(true));
 
     let bytes = vec![0xfb, 0xff, 0xbf, 0x01];
@@ -595,7 +598,7 @@ fn uint8array_base64_options() {
             .to_vec(),
         bytes
     );
-    options.set_last_chunk_handling("loose");
+    options.set_last_chunk_handling(Base64LastChunkHandling::Loose);
     assert_eq!(
         Uint8Array::from_base64_with_options("-_-_AQ", &options)
             .unwrap()
@@ -652,7 +655,7 @@ fn uint8array_set_from_base64_hex() {
     assert_eq!(short.to_vec(), vec![0, 1, 2, 0, 0]);
 
     let options = Base64Options::new();
-    options.set_alphabet("base64url");
+    options.set_alphabet(Base64Alphabet::Base64Url);
     let target = Uint8Array::new_with_length(4);
     let result = target
         .set_from_base64_with_options("-_-_AQ", &options)
