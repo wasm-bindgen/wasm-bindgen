@@ -17,6 +17,30 @@ externs! {
     }
 }
 
+// Replaced by the CLI with an `i32.const` of the first table slot after the
+// fixed ones: `JSIDX_RESERVED` plus the number of `static_string` constants.
+// Not declared through `externs!` since `Clone` and `Drop` need a real value
+// natively rather than a panic.
+#[cfg(all(target_family = "wasm", not(target_os = "wasi")))]
+#[link(wasm_import_module = "__wbindgen_externref_xform__")]
+extern "C" {
+    fn __wbindgen_externref_statics_end() -> u32;
+}
+
+/// One past the last fixed table slot. Where the intrinsic can't exist there
+/// are no `static_string` slots, and the fixed slots end with the reserved ones.
+#[inline]
+pub(crate) fn statics_end() -> u32 {
+    #[cfg(all(target_family = "wasm", not(target_os = "wasi")))]
+    {
+        let end = unsafe { __wbindgen_externref_statics_end() };
+        debug_assert!(end >= __rt::JSIDX_RESERVED);
+        end
+    }
+    #[cfg(not(all(target_family = "wasm", not(target_os = "wasi"))))]
+    __rt::JSIDX_RESERVED
+}
+
 struct Slab {
     data: Vec<usize>,
     head: usize,
@@ -141,7 +165,7 @@ pub extern "C" fn __externref_table_alloc() -> u32 {
 #[no_mangle]
 pub extern "C" fn __externref_table_dealloc(idx: u32) {
     let idx = idx as usize;
-    if idx < __rt::JSIDX_RESERVED as usize {
+    if idx < statics_end() as usize {
         return;
     }
     // clear this value from the table so while the table slot is un-allocated

@@ -1355,10 +1355,25 @@ externs! {
     }
 }
 
+/// One past the last fixed `externref` table slot: the reserved constants
+/// and the `static_string` constants. Those slots are shared by every
+/// `JsValue` with that index, so they are never dropped and clone for free.
+#[inline]
+fn externref_statics_end() -> u32 {
+    #[cfg(wbg_reference_types)]
+    return externref::statics_end();
+    #[cfg(not(wbg_reference_types))]
+    __rt::JSIDX_RESERVED
+}
+
 impl Clone for JsValue {
     #[inline]
     fn clone(&self) -> JsValue {
-        JsValue::_new(unsafe { __wbindgen_object_clone_ref(self.idx) })
+        if (__rt::JSIDX_OFFSET..externref_statics_end()).contains(&self.idx) {
+            JsValue::_new(self.idx)
+        } else {
+            JsValue::_new(unsafe { __wbindgen_object_clone_ref(self.idx) })
+        }
     }
 }
 
@@ -1379,10 +1394,10 @@ impl Drop for JsValue {
                 self.idx
             );
 
-            // Otherwise if we're not dropping one of our reserved values,
+            // Otherwise if we're not dropping one of our fixed values,
             // actually call the intrinsic. See #1054 for eventually removing
             // this branch.
-            if self.idx >= __rt::JSIDX_RESERVED {
+            if self.idx >= externref_statics_end() {
                 __wbindgen_object_drop_ref(self.idx);
             }
         }

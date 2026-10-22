@@ -98,3 +98,8 @@ exports.assert_instance = (instance, wasmExports) => {
     assert.ok(instance instanceof WebAssembly.Instance);
     assert.strictEqual(instance.exports, wasmExports);
 };
+
+exports.clone_borrowed_roundtrip = () => {
+    const o = {};
+    assert.strictEqual(wasm.clone_borrowed(o), o);
+};
