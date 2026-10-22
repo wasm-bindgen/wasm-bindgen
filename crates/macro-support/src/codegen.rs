@@ -152,49 +152,54 @@ impl TryToTokens for ast::Program {
 
         let encoded = encode::encode(self)?;
 
-        let encoded_chunks: Vec<_> = encoded
-            .custom_section
-            .iter()
-            .map(|chunk| match chunk {
+        // The custom section is laid out as a `#[repr(C)]` struct of byte
+        // arrays: the prefix, the payload length, then every chunk. All fields
+        // are `[u8; N]`, so the struct has alignment 1 and no padding, and its
+        // bytes are exactly the concatenation of its fields. Every chunk is
+        // copied by const eval in one operation, instead of byte by byte, so
+        // large JS snippets and TypeScript sections do not make const
+        // evaluation slow.
+        let mut chunk_consts = Vec::new();
+        let mut field_types = Vec::new();
+        let mut field_values = Vec::new();
+        let mut chunk_lens = Vec::new();
+        for (i, chunk) in encoded.custom_section.iter().enumerate() {
+            match chunk {
                 EncodeChunk::EncodedBuf(buf) => {
-                    let buf = syn::LitByteStr::new(buf.as_slice(), Span::call_site());
-                    quote!(#buf)
+                    let len = buf.len();
+                    let lit = syn::LitByteStr::new(buf.as_slice(), Span::call_site());
+                    field_types.push(quote!([u8; #len]));
+                    field_values.push(quote!(*#lit));
+                    chunk_lens.push(quote!(#len));
                 }
                 EncodeChunk::StrExpr(expr) => {
-                    // encode expr as str
-                    quote!({
-                        use #wasm_bindgen::__rt::{encode_u32_to_fixed_len_bytes};
-                        const _STR_EXPR: &str = #expr;
-                        const _STR_EXPR_BYTES: &[u8] = _STR_EXPR.as_bytes();
-                        const _STR_EXPR_BYTES_LEN: usize = _STR_EXPR_BYTES.len() + 5;
-                        const _ENCODED_BYTES: [u8; _STR_EXPR_BYTES_LEN] = flat_byte_slices([
-                            &encode_u32_to_fixed_len_bytes(_STR_EXPR_BYTES.len() as u32),
-                            _STR_EXPR_BYTES,
-                        ]);
-                        &_ENCODED_BYTES
-                    })
+                    // The expression's length is only known to const eval, so
+                    // the chunk is a 5-byte length header and a body array
+                    // sized by the expression. The body is copied in one
+                    // operation through `first_chunk`, which always succeeds
+                    // because its length is the string's length.
+                    let s = quote::format_ident!("_CHUNK_{}_STR", i);
+                    let len = quote::format_ident!("_CHUNK_{}_LEN", i);
+                    let header = quote::format_ident!("_CHUNK_{}_HEADER", i);
+                    let body = quote::format_ident!("_CHUNK_{}_BODY", i);
+                    chunk_consts.push(quote! {
+                        const #s: &str = #expr;
+                        const #len: usize = #s.len();
+                        const #header: [u8; 5] =
+                            #wasm_bindgen::__rt::encode_u32_to_fixed_len_bytes(#len as u32);
+                        const #body: [u8; #len] = match #s.as_bytes().first_chunk::<#len>() {
+                            ::core::option::Option::Some(bytes) => *bytes,
+                            ::core::option::Option::None => ::core::panic!(),
+                        };
+                    });
+                    field_types.push(quote!([u8; 5]));
+                    field_types.push(quote!([u8; #len]));
+                    field_values.push(quote!(#header));
+                    field_values.push(quote!(#body));
+                    chunk_lens.push(quote!(5 + #len));
                 }
-            })
-            .collect();
-
-        let chunk_len = encoded_chunks.len();
-
-        // concatenate all encoded chunks and write the length in front of the chunk;
-        let encode_bytes = quote!({
-            const _CHUNK_SLICES: [&[u8]; #chunk_len] = [
-                #(#encoded_chunks,)*
-            ];
-            #[allow(long_running_const_eval)]
-            const _CHUNK_LEN: usize = flat_len(_CHUNK_SLICES);
-            #[allow(long_running_const_eval)]
-            const _CHUNKS: [u8; _CHUNK_LEN] = flat_byte_slices(_CHUNK_SLICES);
-
-            const _LEN_BYTES: [u8; 4] = (_CHUNK_LEN as u32).to_le_bytes();
-            const _ENCODED_BYTES_LEN: usize = _CHUNK_LEN + 4;
-            #[allow(long_running_const_eval)]
-            const _ENCODED_BYTES: [u8; _ENCODED_BYTES_LEN] = flat_byte_slices([&_LEN_BYTES, &_CHUNKS]);
-            &_ENCODED_BYTES
-        });
+            }
+        }
 
         // We already consumed the contents of included files when generating
         // the custom section, but we want to make sure that updates to the
@@ -211,25 +216,28 @@ impl TryToTokens for ast::Program {
 
         let len = prefix_json.len() as u32;
         let prefix_json_bytes = [&len.to_le_bytes()[..], prefix_json.as_bytes()].concat();
+        let prefix_len = prefix_json_bytes.len();
         let prefix_json_bytes = syn::LitByteStr::new(&prefix_json_bytes, Span::call_site());
 
         (quote! {
             #[cfg(all(target_family = "wasm", not(target_os = "wasi")))]
             #[automatically_derived]
             const _: () = {
-                use #wasm_bindgen::__rt::{flat_len, flat_byte_slices};
-
                 static _INCLUDED_FILES: &[&str] = &[#(#file_dependencies),*];
 
-                const _ENCODED_BYTES: &[u8] = #encode_bytes;
-                const _PREFIX_JSON_BYTES: &[u8] = #prefix_json_bytes;
-                const _ENCODED_BYTES_LEN: usize  = _ENCODED_BYTES.len();
-                const _PREFIX_JSON_BYTES_LEN: usize =  _PREFIX_JSON_BYTES.len();
-                const _LEN: usize = _PREFIX_JSON_BYTES_LEN + _ENCODED_BYTES_LEN;
+                #(#chunk_consts)*
+
+                const _CHUNK_LEN: usize = 0 #(+ #chunk_lens)*;
+
+                #[repr(C)]
+                struct _Section([u8; #prefix_len], [u8; 4], #(#field_types,)*);
 
                 #[link_section = "__wasm_bindgen_unstable"]
-                #[allow(long_running_const_eval)]
-                static _GENERATED: [u8; _LEN] = flat_byte_slices([_PREFIX_JSON_BYTES, _ENCODED_BYTES]);
+                static _GENERATED: _Section = _Section(
+                    *#prefix_json_bytes,
+                    (_CHUNK_LEN as u32).to_le_bytes(),
+                    #(#field_values,)*
+                );
             };
         })
         .to_tokens(tokens);
