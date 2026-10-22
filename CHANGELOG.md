@@ -20,7 +20,8 @@
   dictionaries such as `PlainDateLike` for `from` and `with`, `&str` time zones
   and calendars, `&Self` for `until`/`since`/`equals`/`compare`), unions expand
   to `from_with_str`/`from_with_plain_date_like`/`from_with_plain_date_time` and
-  `to_zoned_date_time_with_str`/`_with_object`, and optional arguments expand
+  `to_zoned_date_time_with_str`/`_with_to_zoned_date_time_item`, and optional
+  arguments expand
   to a plain method plus `_with_options`/`_and_options` or
   `with_plain_time`/`with_plain_time_with_plain_time`. `round`, `total` and
   `get_time_zone_transition` take the unit or direction directly or an options
