@@ -848,8 +848,8 @@ extern "C" {
     /// on whether `one` comes before, is equal to, or comes after `two`.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/compare)
-    #[wasm_bindgen(static_method_of = Instant, js_namespace = Temporal, catch)]
-    pub fn compare(one: &Instant, two: &Instant) -> Result<i32, JsValue>;
+    #[wasm_bindgen(static_method_of = Instant, js_namespace = Temporal)]
+    pub fn compare(one: &Instant, two: &Instant) -> i32;
 
     /// The `epochMilliseconds` accessor property returns an integer representing the
     /// number of milliseconds since the Unix epoch.
@@ -868,8 +868,8 @@ extern "C" {
     /// The `equals()` method returns `true` if this instant is equivalent to `other`.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/equals)
-    #[wasm_bindgen(method, catch)]
-    pub fn equals(this: &Instant, other: &Instant) -> Result<bool, JsValue>;
+    #[wasm_bindgen(method)]
+    pub fn equals(this: &Instant, other: &Instant) -> bool;
 
     /// The `add()` method returns a new `Temporal.Instant` object with the duration
     /// added to this instant. The years, months, weeks, and days fields of the
@@ -898,12 +898,10 @@ extern "C" {
     /// The `until()` method returns a `Temporal.Duration` representing the duration
     /// from this instant until `other`.
     ///
-    /// # Errors
-    /// Throws a `RangeError` if options specify invalid units (days and calendar units are not allowed).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/until)
-    #[wasm_bindgen(method, catch)]
-    pub fn until(this: &Instant, other: &Instant) -> Result<Duration, JsValue>;
+    #[wasm_bindgen(method)]
+    pub fn until(this: &Instant, other: &Instant) -> Duration;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
     /// from this instant until `other`.
@@ -922,12 +920,10 @@ extern "C" {
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this instant.
     ///
-    /// # Errors
-    /// Throws a `RangeError` if options specify invalid units (days and calendar units are not allowed).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/since)
-    #[wasm_bindgen(method, catch)]
-    pub fn since(this: &Instant, other: &Instant) -> Result<Duration, JsValue>;
+    #[wasm_bindgen(method)]
+    pub fn since(this: &Instant, other: &Instant) -> Duration;
 
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this instant.
@@ -1128,8 +1124,8 @@ extern "C" {
     /// on whether `one` comes before, is equal to, or comes after `two`.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/compare)
-    #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
-    pub fn compare(one: &PlainDateTime, two: &PlainDateTime) -> Result<i32, JsValue>;
+    #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal)]
+    pub fn compare(one: &PlainDateTime, two: &PlainDateTime) -> i32;
 
     /// The `era` accessor property returns a calendar-specific lowercase string
     /// representing the era of this date, or `None` if the calendar does not use eras.
@@ -1290,8 +1286,8 @@ extern "C" {
     /// The `equals()` method returns `true` if this date-time is equivalent to `other`.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/equals)
-    #[wasm_bindgen(method, catch)]
-    pub fn equals(this: &PlainDateTime, other: &PlainDateTime) -> Result<bool, JsValue>;
+    #[wasm_bindgen(method)]
+    pub fn equals(this: &PlainDateTime, other: &PlainDateTime) -> bool;
 
     /// The `with()` method returns a new `Temporal.PlainDateTime` object with some
     /// fields replaced by new values.
@@ -1647,8 +1643,8 @@ extern "C" {
     /// on whether `one` comes before, is equal to, or comes after `two`.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/compare)
-    #[wasm_bindgen(static_method_of = ZonedDateTime, js_namespace = Temporal, catch)]
-    pub fn compare(one: &ZonedDateTime, two: &ZonedDateTime) -> Result<i32, JsValue>;
+    #[wasm_bindgen(static_method_of = ZonedDateTime, js_namespace = Temporal)]
+    pub fn compare(one: &ZonedDateTime, two: &ZonedDateTime) -> i32;
 
     /// The `era` accessor property returns a calendar-specific lowercase string
     /// representing the era of this date, or `None` if the calendar does not use eras.
@@ -1782,8 +1778,11 @@ extern "C" {
     /// number of hours in the current day. Usually 24, but may differ due to DST.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/hoursInDay)
-    #[wasm_bindgen(method, getter, structural, js_name = hoursInDay)]
-    pub fn hours_in_day(this: &ZonedDateTime) -> f64;
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the start of this or the following day falls outside the representable instant range.
+    #[wasm_bindgen(method, getter, structural, js_name = hoursInDay, catch)]
+    pub fn hours_in_day(this: &ZonedDateTime) -> Result<f64, JsValue>;
 
     /// The `daysInWeek` accessor property returns a positive integer representing the
     /// number of days in the week of this date.
@@ -1851,8 +1850,8 @@ extern "C" {
     /// The `equals()` method returns `true` if this zoned date-time is equivalent to `other`.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/equals)
-    #[wasm_bindgen(method, catch)]
-    pub fn equals(this: &ZonedDateTime, other: &ZonedDateTime) -> Result<bool, JsValue>;
+    #[wasm_bindgen(method)]
+    pub fn equals(this: &ZonedDateTime, other: &ZonedDateTime) -> bool;
 
     /// The `with()` method returns a new `Temporal.ZonedDateTime` object with some fields
     /// replaced by new values.
@@ -2021,6 +2020,7 @@ extern "C" {
     /// or if `roundingIncrement` is invalid for the unit.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/round)
+    ///
     #[wasm_bindgen(method, catch)]
     pub fn round(this: &ZonedDateTime, round_to: &RoundToOptions)
         -> Result<ZonedDateTime, JsValue>;
@@ -2028,9 +2028,12 @@ extern "C" {
     /// The `startOfDay()` method returns a `Temporal.ZonedDateTime` object representing
     /// the start of the day (usually midnight) of this zoned date-time.
     ///
+    /// # Errors
+    /// Throws a `RangeError` if the start of the day falls outside the representable instant range.
+    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/startOfDay)
-    #[wasm_bindgen(method, js_name = startOfDay)]
-    pub fn start_of_day(this: &ZonedDateTime) -> ZonedDateTime;
+    #[wasm_bindgen(method, js_name = startOfDay, catch)]
+    pub fn start_of_day(this: &ZonedDateTime) -> Result<ZonedDateTime, JsValue>;
 
     // Next major: `-> Result<Nullable<ZonedDateTime>, JsValue>`
     /// The `getTimeZoneTransition()` method returns a `Temporal.ZonedDateTime`
@@ -2495,8 +2498,8 @@ extern "C" {
     /// on whether `one` comes before, is equal to, or comes after `two`.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/compare)
-    #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, catch)]
-    pub fn compare(one: &PlainTime, two: &PlainTime) -> Result<i32, JsValue>;
+    #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal)]
+    pub fn compare(one: &PlainTime, two: &PlainTime) -> i32;
 
     /// The `hour` accessor property returns an integer from 0 to 23 representing
     /// the hour component of this time.
@@ -2543,8 +2546,8 @@ extern "C" {
     /// The `equals()` method returns `true` if this time is equal to `other`.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/equals)
-    #[wasm_bindgen(method, catch)]
-    pub fn equals(this: &PlainTime, other: &PlainTime) -> Result<bool, JsValue>;
+    #[wasm_bindgen(method)]
+    pub fn equals(this: &PlainTime, other: &PlainTime) -> bool;
 
     /// The `with()` method returns a new `Temporal.PlainTime` object with some
     /// fields replaced by new values.
@@ -2573,32 +2576,26 @@ extern "C" {
     /// The `add()` method returns a new `Temporal.PlainTime` object with the
     /// duration added to this time (wrapping around midnight if necessary).
     ///
-    /// # Errors
-    /// Throws a `RangeError` if the duration has non-zero calendar units (years, months, weeks, days).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/add)
-    #[wasm_bindgen(method, catch)]
-    pub fn add(this: &PlainTime, duration: &Duration) -> Result<PlainTime, JsValue>;
+    #[wasm_bindgen(method)]
+    pub fn add(this: &PlainTime, duration: &Duration) -> PlainTime;
 
     /// The `subtract()` method returns a new `Temporal.PlainTime` object with the
     /// duration subtracted from this time (wrapping around midnight if necessary).
     ///
-    /// # Errors
-    /// Throws a `RangeError` if the duration has non-zero calendar units (years, months, weeks, days).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/subtract)
-    #[wasm_bindgen(method, catch)]
-    pub fn subtract(this: &PlainTime, duration: &Duration) -> Result<PlainTime, JsValue>;
+    #[wasm_bindgen(method)]
+    pub fn subtract(this: &PlainTime, duration: &Duration) -> PlainTime;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
     /// from this time until `other`.
     ///
-    /// # Errors
-    /// Throws a `RangeError` if options specify calendar units or are otherwise invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/until)
-    #[wasm_bindgen(method, catch)]
-    pub fn until(this: &PlainTime, other: &PlainTime) -> Result<Duration, JsValue>;
+    #[wasm_bindgen(method)]
+    pub fn until(this: &PlainTime, other: &PlainTime) -> Duration;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
     /// from this time until `other`.
@@ -2617,12 +2614,10 @@ extern "C" {
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this time.
     ///
-    /// # Errors
-    /// Throws a `RangeError` if options specify calendar units or are otherwise invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/since)
-    #[wasm_bindgen(method, catch)]
-    pub fn since(this: &PlainTime, other: &PlainTime) -> Result<Duration, JsValue>;
+    #[wasm_bindgen(method)]
+    pub fn since(this: &PlainTime, other: &PlainTime) -> Duration;
 
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this time.
@@ -2798,8 +2793,8 @@ extern "C" {
     /// on whether `one` comes before, is equal to, or comes after `two`.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/compare)
-    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, catch)]
-    pub fn compare(one: &PlainYearMonth, two: &PlainYearMonth) -> Result<i32, JsValue>;
+    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal)]
+    pub fn compare(one: &PlainYearMonth, two: &PlainYearMonth) -> i32;
 
     /// The `era` accessor property returns a calendar-specific lowercase string
     /// representing the era of this year-month, or `None` if the calendar does not use eras.
@@ -2874,8 +2869,8 @@ extern "C" {
     /// The `equals()` method returns `true` if this year-month is equivalent to `other`.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/equals)
-    #[wasm_bindgen(method, catch)]
-    pub fn equals(this: &PlainYearMonth, other: &PlainYearMonth) -> Result<bool, JsValue>;
+    #[wasm_bindgen(method)]
+    pub fn equals(this: &PlainYearMonth, other: &PlainYearMonth) -> bool;
 
     /// The `with()` method returns a new `Temporal.PlainYearMonth` object with some
     /// fields replaced by new values.
@@ -3178,8 +3173,8 @@ extern "C" {
     /// The `equals()` method returns `true` if this month-day is equivalent to `other`.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/equals)
-    #[wasm_bindgen(method, catch)]
-    pub fn equals(this: &PlainMonthDay, other: &PlainMonthDay) -> Result<bool, JsValue>;
+    #[wasm_bindgen(method)]
+    pub fn equals(this: &PlainMonthDay, other: &PlainMonthDay) -> bool;
 
     /// The `with()` method returns a new `Temporal.PlainMonthDay` object with some
     /// fields replaced by new values.
@@ -3364,8 +3359,8 @@ extern "C" {
     /// on whether `one` comes before, is equal to, or comes after `two`.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/compare)
-    #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, catch)]
-    pub fn compare(one: &PlainDate, two: &PlainDate) -> Result<i32, JsValue>;
+    #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal)]
+    pub fn compare(one: &PlainDate, two: &PlainDate) -> i32;
 
     /// The `era` accessor property returns a calendar-specific lowercase string
     /// representing the era of this date, or `None` if the calendar does not use eras.
@@ -3484,8 +3479,8 @@ extern "C" {
     /// The `equals()` method returns `true` if this date is equivalent to `other`.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/equals)
-    #[wasm_bindgen(method, catch)]
-    pub fn equals(this: &PlainDate, other: &PlainDate) -> Result<bool, JsValue>;
+    #[wasm_bindgen(method)]
+    pub fn equals(this: &PlainDate, other: &PlainDate) -> bool;
 
     /// The `with()` method returns a new `Temporal.PlainDate` object with some
     /// fields replaced by new values.

@@ -506,6 +506,8 @@ extern "C" {
     /// The `cause` property indicates the underlying cause of an error.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause)
+    // Next major: dictionary getters throughout js-sys become `foo()` alongside
+    // `set_foo()`, matching web-sys interface attributes.
     #[wasm_bindgen(method, getter = "cause")]
     pub fn get_cause(this: &ErrorOptions) -> JsValue;
 
