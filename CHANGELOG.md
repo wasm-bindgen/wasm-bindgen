@@ -28,8 +28,11 @@
   `year_of_week` return `Option`s, `fractionalSecondDigits` is a `u8`,
   `get_time_zone_transition` returns `Result<Option<ZonedDateTime>, JsValue>`,
   `to_js_string_with_options` and `to_locale_string` are fallible, constructors
-  take the calendar through `new_with_calendar` overloads, and the unit enums
-  are `TemporalUnit` and `LargestUnit`.
+  take the calendar through `new_with_calendar` overloads, the unit enums
+  are `TemporalUnit` and `LargestUnit`, and `catch` follows the specification:
+  `equals`, `compare` and
+  the option-less `Instant`/`PlainTime` arithmetic are infallible, while
+  `ZonedDateTime::start_of_day` and `hours_in_day` are fallible.
   [#5402](https://github.com/wasm-bindgen/wasm-bindgen/pull/5402)
 
 * Added `--cfg wasm_bindgen_unstable_strict_option`, under which a JS to Rust

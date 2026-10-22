@@ -176,7 +176,7 @@ fn instant_constructor_and_static_methods() {
     assert!(instant2.epoch_milliseconds() > 0.0);
 
     // Test compare
-    let cmp = Temporal::Instant::compare(&instant, &instant2).unwrap();
+    let cmp = Temporal::Instant::compare(&instant, &instant2);
     assert!(cmp == -1 || cmp == 0 || cmp == 1);
 }
 
@@ -189,7 +189,7 @@ fn instant_methods() {
 
     // Test equals
     let instant2 = Temporal::Instant::from_with_str(&String::from(instant.to_js_string())).unwrap();
-    assert!(instant.equals(&instant2).unwrap());
+    assert!(instant.equals(&instant2));
 
     // Test add/subtract
     let later = instant
@@ -203,7 +203,7 @@ fn instant_methods() {
     assert!(earlier.epoch_milliseconds() < instant.epoch_milliseconds());
 
     // Test until/since with typed options; the default largest unit is seconds
-    let duration = instant.until(&later).unwrap();
+    let duration = instant.until(&later);
     assert_eq!(duration.seconds(), 3600.0);
 
     let diff_opts = Temporal::DifferenceOptions::new();
@@ -262,9 +262,7 @@ fn instant_constructor() {
     let instant = Temporal::Instant::new(&ns).unwrap();
     assert_eq!(instant.epoch_milliseconds(), 1655296245123.0);
     assert_eq!(instant.epoch_nanoseconds(), ns);
-    assert!(instant
-        .equals(&Temporal::Instant::from_epoch_nanoseconds(&ns).unwrap())
-        .unwrap());
+    assert!(instant.equals(&Temporal::Instant::from_epoch_nanoseconds(&ns).unwrap()));
 
     let too_large = BigInt::new(&JsValue::from_str("9000000000000000000000")).unwrap();
     assert!(Temporal::Instant::new(&too_large).is_err());
@@ -317,7 +315,7 @@ fn zoned_date_time_properties() {
     assert!(zdt.days_in_month() >= 28 && zdt.days_in_month() <= 31);
     assert!(zdt.days_in_year() >= 365 && zdt.days_in_year() <= 366);
     assert!(zdt.months_in_year() >= 12);
-    assert!(zdt.hours_in_day() > 0.0);
+    assert!(zdt.hours_in_day().unwrap() > 0.0);
 
     // Test offset
     assert!(zdt.offset().length() > 0);
@@ -333,7 +331,7 @@ fn zoned_date_time_methods() {
 
     // Test equals
     let zdt2 = Temporal::ZonedDateTime::from_with_str(&String::from(zdt.to_js_string())).unwrap();
-    assert!(zdt.equals(&zdt2).unwrap());
+    assert!(zdt.equals(&zdt2));
 
     // Test withCalendar
     let with_calendar = zdt.with_calendar("iso8601").unwrap();
@@ -349,7 +347,7 @@ fn zoned_date_time_methods() {
     assert!(later.day() != earlier.day() || later.month() != earlier.month());
 
     // Test startOfDay
-    let start = zdt.start_of_day();
+    let start = zdt.start_of_day().unwrap();
     assert_eq!(start.hour(), 0);
     assert_eq!(start.minute(), 0);
     assert_eq!(start.second(), 0);
@@ -452,6 +450,29 @@ fn zoned_date_time_constructor() {
     assert!(Temporal::ZonedDateTime::new_with_calendar(&ns, "UTC", "nocalendar").is_err());
 }
 
+#[wasm_bindgen_test]
+fn zoned_date_time_start_of_day_limits() {
+    if !is_temporal_supported() {
+        return;
+    }
+    // The minimum instant in a negative-offset zone has a local midnight before the
+    // representable range, so the start of day cannot be an Instant.
+    let min_ns = BigInt::new(&JsValue::from_str("-8640000000000000000000")).unwrap();
+    let zdt = Temporal::ZonedDateTime::new(&min_ns, "America/New_York").unwrap();
+    assert!(zdt
+        .start_of_day()
+        .unwrap_err()
+        .is_instance_of::<RangeError>());
+    assert!(zdt
+        .hours_in_day()
+        .unwrap_err()
+        .is_instance_of::<RangeError>());
+
+    let utc = Temporal::ZonedDateTime::new(&min_ns, "UTC").unwrap();
+    assert_eq!(utc.start_of_day().unwrap().epoch_nanoseconds(), min_ns);
+    assert_eq!(utc.hours_in_day().unwrap(), 24.0);
+}
+
 // ============================================================================
 // Temporal.PlainDateTime tests
 // ============================================================================
@@ -496,7 +517,7 @@ fn plain_date_time_methods() {
 
     // Test equals
     let pdt2 = Temporal::PlainDateTime::from_with_str(&String::from(pdt.to_js_string())).unwrap();
-    assert!(pdt.equals(&pdt2).unwrap());
+    assert!(pdt.equals(&pdt2));
 
     // Test add/subtract with typed options
     let later = pdt
@@ -563,7 +584,7 @@ fn plain_date_time_constructor() {
         return;
     }
     let pdt = Temporal::PlainDateTime::new(2022, 6, 15, 12, 30, 45, 123, 456, 789).unwrap();
-    assert!(pdt.equals(&get_test_plain_date_time()).unwrap());
+    assert!(pdt.equals(&get_test_plain_date_time()));
     assert_eq!(pdt.era(), None);
     assert_eq!(pdt.era_year(), None);
     assert_eq!(pdt.week_of_year(), Some(24));
@@ -616,7 +637,7 @@ fn plain_date_methods() {
 
     // Test equals
     let pd2 = Temporal::PlainDate::from_with_str(&String::from(pd.to_js_string())).unwrap();
-    assert!(pd.equals(&pd2).unwrap());
+    assert!(pd.equals(&pd2));
 
     // Test add/subtract with typed options
     let later = pd
@@ -671,7 +692,7 @@ fn plain_date_constructor() {
         return;
     }
     let pd = Temporal::PlainDate::new(2022, 6, 15).unwrap();
-    assert!(pd.equals(&get_test_plain_date()).unwrap());
+    assert!(pd.equals(&get_test_plain_date()));
     assert_eq!(pd.era(), None);
     assert_eq!(pd.era_year(), None);
     assert_eq!(pd.week_of_year(), Some(24));
@@ -695,9 +716,9 @@ fn plain_date_compare() {
     let pd1 = Temporal::PlainDate::from_with_str("2022-01-01").unwrap();
     let pd2 = Temporal::PlainDate::from_with_str("2022-06-15").unwrap();
 
-    assert_eq!(Temporal::PlainDate::compare(&pd1, &pd2).unwrap(), -1);
-    assert_eq!(Temporal::PlainDate::compare(&pd2, &pd1).unwrap(), 1);
-    assert_eq!(Temporal::PlainDate::compare(&pd1, &pd1).unwrap(), 0);
+    assert_eq!(Temporal::PlainDate::compare(&pd1, &pd2), -1);
+    assert_eq!(Temporal::PlainDate::compare(&pd2, &pd1), 1);
+    assert_eq!(Temporal::PlainDate::compare(&pd1, &pd1), 0);
 }
 
 // ============================================================================
@@ -728,20 +749,23 @@ fn plain_time_methods() {
 
     // Test equals
     let pt2 = Temporal::PlainTime::from_with_str(&String::from(pt.to_js_string())).unwrap();
-    assert!(pt.equals(&pt2).unwrap());
+    assert!(pt.equals(&pt2));
 
     // Test add/subtract (wraps around midnight)
-    let _later = pt
-        .add(&Temporal::Duration::from_with_str("PT1H").unwrap())
-        .unwrap();
-    let _earlier = pt
-        .subtract(&Temporal::Duration::from_with_str("PT1H").unwrap())
-        .unwrap();
+    let later = pt.add(&Temporal::Duration::from_with_str("PT1H").unwrap());
+    assert_eq!(later.hour(), (pt.hour() + 1) % 24);
+    let earlier = pt.subtract(&Temporal::Duration::from_with_str("PT1H").unwrap());
+    assert_eq!(earlier.hour(), (pt.hour() + 23) % 24);
+    assert_eq!(
+        pt.add(&Temporal::Duration::from_with_str("P1Y").unwrap())
+            .hour(),
+        pt.hour()
+    );
 
     // Test until/since with typed options
     let pt_start = Temporal::PlainTime::from_with_str("10:00:00").unwrap();
     let pt_end = Temporal::PlainTime::from_with_str("12:30:00").unwrap();
-    let duration = pt_start.until(&pt_end).unwrap();
+    let duration = pt_start.until(&pt_end);
     assert_eq!(duration.hours(), 2.0);
     assert_eq!(duration.minutes(), 30.0);
 
@@ -774,7 +798,7 @@ fn plain_time_methods() {
     assert_eq!(pt.to_js_string_with_options(&opts).unwrap(), "12:30:46");
 
     let new_pt = Temporal::PlainTime::new(12, 30, 45, 123, 456, 789).unwrap();
-    assert!(new_pt.equals(&pt).unwrap());
+    assert!(new_pt.equals(&pt));
     assert!(Temporal::PlainTime::new(24, 0, 0, 0, 0, 0).is_err());
 }
 
@@ -786,9 +810,9 @@ fn plain_time_compare() {
     let pt1 = Temporal::PlainTime::from_with_str("10:00:00").unwrap();
     let pt2 = Temporal::PlainTime::from_with_str("14:30:00").unwrap();
 
-    assert_eq!(Temporal::PlainTime::compare(&pt1, &pt2).unwrap(), -1);
-    assert_eq!(Temporal::PlainTime::compare(&pt2, &pt1).unwrap(), 1);
-    assert_eq!(Temporal::PlainTime::compare(&pt1, &pt1).unwrap(), 0);
+    assert_eq!(Temporal::PlainTime::compare(&pt1, &pt2), -1);
+    assert_eq!(Temporal::PlainTime::compare(&pt2, &pt1), 1);
+    assert_eq!(Temporal::PlainTime::compare(&pt1, &pt1), 0);
 }
 
 // ============================================================================
@@ -820,7 +844,7 @@ fn plain_year_month_methods() {
 
     // Test equals
     let pym2 = Temporal::PlainYearMonth::from_with_str(&String::from(pym.to_js_string())).unwrap();
-    assert!(pym.equals(&pym2).unwrap());
+    assert!(pym.equals(&pym2));
 
     // Test add/subtract with typed options
     let later = pym
@@ -853,7 +877,7 @@ fn plain_year_month_methods() {
 
     // Test constructors
     let new_pym = Temporal::PlainYearMonth::new(2022, 6).unwrap();
-    assert!(new_pym.equals(&pym).unwrap());
+    assert!(new_pym.equals(&pym));
     assert_eq!(new_pym.era(), None);
     assert_eq!(new_pym.era_year(), None);
 
@@ -872,9 +896,9 @@ fn plain_year_month_compare() {
     let pym1 = Temporal::PlainYearMonth::from_with_str("2022-01").unwrap();
     let pym2 = Temporal::PlainYearMonth::from_with_str("2022-06").unwrap();
 
-    assert_eq!(Temporal::PlainYearMonth::compare(&pym1, &pym2).unwrap(), -1);
-    assert_eq!(Temporal::PlainYearMonth::compare(&pym2, &pym1).unwrap(), 1);
-    assert_eq!(Temporal::PlainYearMonth::compare(&pym1, &pym1).unwrap(), 0);
+    assert_eq!(Temporal::PlainYearMonth::compare(&pym1, &pym2), -1);
+    assert_eq!(Temporal::PlainYearMonth::compare(&pym2, &pym1), 1);
+    assert_eq!(Temporal::PlainYearMonth::compare(&pym1, &pym1), 0);
 }
 
 // ============================================================================
@@ -902,7 +926,7 @@ fn plain_month_day_methods() {
 
     // Test equals
     let pmd2 = Temporal::PlainMonthDay::from_with_str(&String::from(pmd.to_js_string())).unwrap();
-    assert!(pmd.equals(&pmd2).unwrap());
+    assert!(pmd.equals(&pmd2));
 
     // Test toPlainDate
     let pd = pmd.to_plain_date(&create_year_object(2022)).unwrap();
@@ -921,7 +945,7 @@ fn plain_month_day_methods() {
 
     // Test constructors
     let new_pmd = Temporal::PlainMonthDay::new(6, 15).unwrap();
-    assert!(new_pmd.equals(&pmd).unwrap());
+    assert!(new_pmd.equals(&pmd));
 
     let gregory = Temporal::PlainMonthDay::new_with_calendar(6, 15, "gregory", 2022).unwrap();
     assert_eq!(gregory.calendar_id(), "gregory");
