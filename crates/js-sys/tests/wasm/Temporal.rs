@@ -14,8 +14,101 @@ extern "C" {
     fn get_test_plain_year_month() -> Temporal::PlainYearMonth;
     fn get_test_plain_month_day() -> Temporal::PlainMonthDay;
     fn get_test_duration() -> Temporal::Duration;
-    fn create_day_object(day: u32) -> Object;
-    fn create_year_object(year: i32) -> Object;
+}
+
+fn day_fields(day: u32) -> Temporal::PlainDateLike {
+    let fields = Temporal::PlainDateLike::new();
+    fields.set_day(day);
+    fields
+}
+
+fn year_fields(year: i32) -> Temporal::PlainDateLike {
+    let fields = Temporal::PlainDateLike::new();
+    fields.set_year(year);
+    fields
+}
+
+#[wasm_bindgen_test]
+fn like_dictionaries() {
+    if !is_temporal_supported() {
+        return;
+    }
+    let fields = Temporal::PlainDateLike::new();
+    fields.set_year(2022);
+    fields.set_month(6);
+    fields.set_day(15);
+    assert_eq!(fields.get_day(), Some(15));
+    assert_eq!(fields.get_calendar(), None);
+    let pd = Temporal::PlainDate::from_with_plain_date_like(&fields).unwrap();
+    assert!(pd.equals(&get_test_plain_date()));
+    assert!(pd.with(&day_fields(31)).is_ok());
+    let reject = Temporal::AssignmentOptions::new();
+    reject.set_overflow(Temporal::TemporalOverflow::Reject);
+    assert!(pd.with_with_options(&day_fields(31), &reject).is_err());
+
+    // from() also accepts the richer Temporal instances
+    let pdt = get_test_plain_date_time();
+    assert!(Temporal::PlainDate::from_with_plain_date_time(&pdt)
+        .unwrap()
+        .equals(&pd));
+    assert_eq!(
+        Temporal::PlainTime::from_with_zoned_date_time(&get_test_zoned_date_time())
+            .unwrap()
+            .hour(),
+        12
+    );
+    assert_eq!(
+        Temporal::PlainDateTime::from_with_plain_date(&pd)
+            .unwrap()
+            .hour(),
+        0
+    );
+    let zdt = get_test_zoned_date_time();
+    assert_eq!(
+        Temporal::Instant::from_with_zoned_date_time(&zdt)
+            .unwrap()
+            .epoch_nanoseconds(),
+        zdt.epoch_nanoseconds()
+    );
+
+    let zdt_fields = Temporal::ZonedDateTimeLike::new();
+    zdt_fields.set_year(2022);
+    zdt_fields.set_month(6);
+    zdt_fields.set_day(15);
+    zdt_fields.set_hour(12);
+    zdt_fields.set_time_zone("UTC");
+    let zdt = Temporal::ZonedDateTime::from_with_zoned_date_time_like(&zdt_fields).unwrap();
+    assert_eq!(zdt.time_zone_id(), "UTC");
+    let shifted = Temporal::ZonedDateTimeLike::new();
+    shifted.set_hour(18);
+    assert_eq!(zdt.with(&shifted).unwrap().hour(), 18);
+
+    let item = Temporal::ToZonedDateTimeItem::new("Asia/Tokyo");
+    item.set_plain_time_str("09:00");
+    let tokyo = pd
+        .to_zoned_date_time_with_to_zoned_date_time_item(&item)
+        .unwrap();
+    assert_eq!(tokyo.hour(), 9);
+    assert_eq!(tokyo.time_zone_id(), "Asia/Tokyo");
+    item.set_plain_time(&get_test_plain_time());
+    assert_eq!(
+        pd.to_zoned_date_time_with_to_zoned_date_time_item(&item)
+            .unwrap()
+            .minute(),
+        30
+    );
+
+    let opts = Temporal::DurationCompareOptions::new();
+    opts.set_relative_to_plain_date_like(&fields);
+    assert_eq!(
+        Temporal::Duration::compare_with_options(
+            &Temporal::Duration::from_with_str("P1M").unwrap(),
+            &Temporal::Duration::from_with_str("P30D").unwrap(),
+            &opts
+        )
+        .unwrap(),
+        0
+    );
 }
 
 #[wasm_bindgen_test]
@@ -905,7 +998,7 @@ fn plain_year_month_methods() {
     assert_eq!(duration.months(), 3.0);
 
     // Test toPlainDate
-    let pd = pym.to_plain_date(&create_day_object(15)).unwrap();
+    let pd = pym.to_plain_date(&day_fields(15)).unwrap();
     assert_eq!(pd.year(), pym.year());
     assert_eq!(pd.month(), pym.month());
 
@@ -978,7 +1071,7 @@ fn plain_month_day_methods() {
     assert!(pmd.equals(&pmd2));
 
     // Test toPlainDate
-    let pd = pmd.to_plain_date(&create_year_object(2022)).unwrap();
+    let pd = pmd.to_plain_date(&year_fields(2022)).unwrap();
     assert_eq!(pd.day(), pmd.day());
 
     // Test toString/toJSON
@@ -1117,9 +1210,10 @@ fn duration_methods() {
     );
 
     // Test with
-    let with = dur
-        .with(&Temporal::Duration::from_with_str("PT2H").unwrap())
-        .unwrap();
+    let two_hours = Temporal::DurationLike::new();
+    two_hours.set_hours(2.0);
+    two_hours.set_minutes(0.0);
+    let with = dur.with(&two_hours).unwrap();
     assert_eq!(with.hours(), 2.0);
     assert_eq!(with.minutes(), 0.0);
 

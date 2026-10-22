@@ -660,7 +660,12 @@ extern "C" {
     #[wasm_bindgen(method, setter = relativeTo)]
     pub fn set_relative_to_str(this: &DurationRoundToOptions, value: &str);
     #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to_object(this: &DurationRoundToOptions, value: &Object);
+    pub fn set_relative_to_plain_date_like(this: &DurationRoundToOptions, value: &PlainDateLike);
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_zoned_date_time_like(
+        this: &DurationRoundToOptions,
+        value: &ZonedDateTimeLike,
+    );
     #[wasm_bindgen(method, setter = relativeTo)]
     pub fn set_relative_to_plain_date(this: &DurationRoundToOptions, value: &PlainDate);
     #[wasm_bindgen(method, setter = relativeTo)]
@@ -713,7 +718,12 @@ extern "C" {
     #[wasm_bindgen(method, setter = relativeTo)]
     pub fn set_relative_to_str(this: &DurationTotalOptions, value: &str);
     #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to_object(this: &DurationTotalOptions, value: &Object);
+    pub fn set_relative_to_plain_date_like(this: &DurationTotalOptions, value: &PlainDateLike);
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_zoned_date_time_like(
+        this: &DurationTotalOptions,
+        value: &ZonedDateTimeLike,
+    );
     #[wasm_bindgen(method, setter = relativeTo)]
     pub fn set_relative_to_plain_date(this: &DurationTotalOptions, value: &PlainDate);
     #[wasm_bindgen(method, setter = relativeTo)]
@@ -758,7 +768,12 @@ extern "C" {
     #[wasm_bindgen(method, setter = relativeTo)]
     pub fn set_relative_to_str(this: &DurationCompareOptions, value: &str);
     #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to_object(this: &DurationCompareOptions, value: &Object);
+    pub fn set_relative_to_plain_date_like(this: &DurationCompareOptions, value: &PlainDateLike);
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_zoned_date_time_like(
+        this: &DurationCompareOptions,
+        value: &ZonedDateTimeLike,
+    );
     #[wasm_bindgen(method, setter = relativeTo)]
     pub fn set_relative_to_plain_date(this: &DurationCompareOptions, value: &PlainDate);
     #[wasm_bindgen(method, setter = relativeTo)]
@@ -817,6 +832,447 @@ impl Default for TimeZoneTransitionOptions {
 
 #[wasm_bindgen]
 extern "C" {
+    /// Fields of a `Temporal.PlainDate`, as accepted by `PlainDate.from()` and `with()`. Every field is optional.
+    #[wasm_bindgen(extends = Object)]
+    #[derive(Clone, Debug)]
+    pub type PlainDateLike;
+
+    #[wasm_bindgen(method, getter = era)]
+    pub fn get_era(this: &PlainDateLike) -> Option<JsString>;
+    #[wasm_bindgen(method, setter = era)]
+    pub fn set_era(this: &PlainDateLike, value: &str);
+    #[wasm_bindgen(method, getter = eraYear)]
+    pub fn get_era_year(this: &PlainDateLike) -> Option<i32>;
+    #[wasm_bindgen(method, setter = eraYear)]
+    pub fn set_era_year(this: &PlainDateLike, value: i32);
+    #[wasm_bindgen(method, getter = year)]
+    pub fn get_year(this: &PlainDateLike) -> Option<i32>;
+    #[wasm_bindgen(method, setter = year)]
+    pub fn set_year(this: &PlainDateLike, value: i32);
+    #[wasm_bindgen(method, getter = month)]
+    pub fn get_month(this: &PlainDateLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = month)]
+    pub fn set_month(this: &PlainDateLike, value: u32);
+    #[wasm_bindgen(method, getter = monthCode)]
+    pub fn get_month_code(this: &PlainDateLike) -> Option<JsString>;
+    #[wasm_bindgen(method, setter = monthCode)]
+    pub fn set_month_code(this: &PlainDateLike, value: &str);
+    #[wasm_bindgen(method, getter = day)]
+    pub fn get_day(this: &PlainDateLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = day)]
+    pub fn set_day(this: &PlainDateLike, value: u32);
+    #[wasm_bindgen(method, getter = calendar)]
+    pub fn get_calendar(this: &PlainDateLike) -> Option<JsString>;
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar(this: &PlainDateLike, value: &str);
+}
+
+impl PlainDateLike {
+    /// Creates an empty `PlainDateLike`.
+    pub fn new() -> PlainDateLike {
+        JsCast::unchecked_into(Object::new())
+    }
+}
+
+impl Default for PlainDateLike {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[wasm_bindgen]
+extern "C" {
+    /// Fields of a `Temporal.PlainTime`, as accepted by `PlainTime.from()` and `with()`. Every field is optional.
+    #[wasm_bindgen(extends = Object)]
+    #[derive(Clone, Debug)]
+    pub type PlainTimeLike;
+
+    #[wasm_bindgen(method, getter = hour)]
+    pub fn get_hour(this: &PlainTimeLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = hour)]
+    pub fn set_hour(this: &PlainTimeLike, value: u32);
+    #[wasm_bindgen(method, getter = minute)]
+    pub fn get_minute(this: &PlainTimeLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = minute)]
+    pub fn set_minute(this: &PlainTimeLike, value: u32);
+    #[wasm_bindgen(method, getter = second)]
+    pub fn get_second(this: &PlainTimeLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = second)]
+    pub fn set_second(this: &PlainTimeLike, value: u32);
+    #[wasm_bindgen(method, getter = millisecond)]
+    pub fn get_millisecond(this: &PlainTimeLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = millisecond)]
+    pub fn set_millisecond(this: &PlainTimeLike, value: u32);
+    #[wasm_bindgen(method, getter = microsecond)]
+    pub fn get_microsecond(this: &PlainTimeLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = microsecond)]
+    pub fn set_microsecond(this: &PlainTimeLike, value: u32);
+    #[wasm_bindgen(method, getter = nanosecond)]
+    pub fn get_nanosecond(this: &PlainTimeLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = nanosecond)]
+    pub fn set_nanosecond(this: &PlainTimeLike, value: u32);
+}
+
+impl PlainTimeLike {
+    /// Creates an empty `PlainTimeLike`.
+    pub fn new() -> PlainTimeLike {
+        JsCast::unchecked_into(Object::new())
+    }
+}
+
+impl Default for PlainTimeLike {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[wasm_bindgen]
+extern "C" {
+    /// Fields of a `Temporal.PlainDateTime`, as accepted by `PlainDateTime.from()` and `with()`. Every field is optional.
+    #[wasm_bindgen(extends = Object)]
+    #[derive(Clone, Debug)]
+    pub type PlainDateTimeLike;
+
+    #[wasm_bindgen(method, getter = era)]
+    pub fn get_era(this: &PlainDateTimeLike) -> Option<JsString>;
+    #[wasm_bindgen(method, setter = era)]
+    pub fn set_era(this: &PlainDateTimeLike, value: &str);
+    #[wasm_bindgen(method, getter = eraYear)]
+    pub fn get_era_year(this: &PlainDateTimeLike) -> Option<i32>;
+    #[wasm_bindgen(method, setter = eraYear)]
+    pub fn set_era_year(this: &PlainDateTimeLike, value: i32);
+    #[wasm_bindgen(method, getter = year)]
+    pub fn get_year(this: &PlainDateTimeLike) -> Option<i32>;
+    #[wasm_bindgen(method, setter = year)]
+    pub fn set_year(this: &PlainDateTimeLike, value: i32);
+    #[wasm_bindgen(method, getter = month)]
+    pub fn get_month(this: &PlainDateTimeLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = month)]
+    pub fn set_month(this: &PlainDateTimeLike, value: u32);
+    #[wasm_bindgen(method, getter = monthCode)]
+    pub fn get_month_code(this: &PlainDateTimeLike) -> Option<JsString>;
+    #[wasm_bindgen(method, setter = monthCode)]
+    pub fn set_month_code(this: &PlainDateTimeLike, value: &str);
+    #[wasm_bindgen(method, getter = day)]
+    pub fn get_day(this: &PlainDateTimeLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = day)]
+    pub fn set_day(this: &PlainDateTimeLike, value: u32);
+    #[wasm_bindgen(method, getter = calendar)]
+    pub fn get_calendar(this: &PlainDateTimeLike) -> Option<JsString>;
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar(this: &PlainDateTimeLike, value: &str);
+    #[wasm_bindgen(method, getter = hour)]
+    pub fn get_hour(this: &PlainDateTimeLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = hour)]
+    pub fn set_hour(this: &PlainDateTimeLike, value: u32);
+    #[wasm_bindgen(method, getter = minute)]
+    pub fn get_minute(this: &PlainDateTimeLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = minute)]
+    pub fn set_minute(this: &PlainDateTimeLike, value: u32);
+    #[wasm_bindgen(method, getter = second)]
+    pub fn get_second(this: &PlainDateTimeLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = second)]
+    pub fn set_second(this: &PlainDateTimeLike, value: u32);
+    #[wasm_bindgen(method, getter = millisecond)]
+    pub fn get_millisecond(this: &PlainDateTimeLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = millisecond)]
+    pub fn set_millisecond(this: &PlainDateTimeLike, value: u32);
+    #[wasm_bindgen(method, getter = microsecond)]
+    pub fn get_microsecond(this: &PlainDateTimeLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = microsecond)]
+    pub fn set_microsecond(this: &PlainDateTimeLike, value: u32);
+    #[wasm_bindgen(method, getter = nanosecond)]
+    pub fn get_nanosecond(this: &PlainDateTimeLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = nanosecond)]
+    pub fn set_nanosecond(this: &PlainDateTimeLike, value: u32);
+}
+
+impl PlainDateTimeLike {
+    /// Creates an empty `PlainDateTimeLike`.
+    pub fn new() -> PlainDateTimeLike {
+        JsCast::unchecked_into(Object::new())
+    }
+}
+
+impl Default for PlainDateTimeLike {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[wasm_bindgen]
+extern "C" {
+    /// Fields of a `Temporal.ZonedDateTime`, as accepted by `ZonedDateTime.from()` and `with()`. Every field is optional.
+    #[wasm_bindgen(extends = Object)]
+    #[derive(Clone, Debug)]
+    pub type ZonedDateTimeLike;
+
+    #[wasm_bindgen(method, getter = era)]
+    pub fn get_era(this: &ZonedDateTimeLike) -> Option<JsString>;
+    #[wasm_bindgen(method, setter = era)]
+    pub fn set_era(this: &ZonedDateTimeLike, value: &str);
+    #[wasm_bindgen(method, getter = eraYear)]
+    pub fn get_era_year(this: &ZonedDateTimeLike) -> Option<i32>;
+    #[wasm_bindgen(method, setter = eraYear)]
+    pub fn set_era_year(this: &ZonedDateTimeLike, value: i32);
+    #[wasm_bindgen(method, getter = year)]
+    pub fn get_year(this: &ZonedDateTimeLike) -> Option<i32>;
+    #[wasm_bindgen(method, setter = year)]
+    pub fn set_year(this: &ZonedDateTimeLike, value: i32);
+    #[wasm_bindgen(method, getter = month)]
+    pub fn get_month(this: &ZonedDateTimeLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = month)]
+    pub fn set_month(this: &ZonedDateTimeLike, value: u32);
+    #[wasm_bindgen(method, getter = monthCode)]
+    pub fn get_month_code(this: &ZonedDateTimeLike) -> Option<JsString>;
+    #[wasm_bindgen(method, setter = monthCode)]
+    pub fn set_month_code(this: &ZonedDateTimeLike, value: &str);
+    #[wasm_bindgen(method, getter = day)]
+    pub fn get_day(this: &ZonedDateTimeLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = day)]
+    pub fn set_day(this: &ZonedDateTimeLike, value: u32);
+    #[wasm_bindgen(method, getter = calendar)]
+    pub fn get_calendar(this: &ZonedDateTimeLike) -> Option<JsString>;
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar(this: &ZonedDateTimeLike, value: &str);
+    #[wasm_bindgen(method, getter = hour)]
+    pub fn get_hour(this: &ZonedDateTimeLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = hour)]
+    pub fn set_hour(this: &ZonedDateTimeLike, value: u32);
+    #[wasm_bindgen(method, getter = minute)]
+    pub fn get_minute(this: &ZonedDateTimeLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = minute)]
+    pub fn set_minute(this: &ZonedDateTimeLike, value: u32);
+    #[wasm_bindgen(method, getter = second)]
+    pub fn get_second(this: &ZonedDateTimeLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = second)]
+    pub fn set_second(this: &ZonedDateTimeLike, value: u32);
+    #[wasm_bindgen(method, getter = millisecond)]
+    pub fn get_millisecond(this: &ZonedDateTimeLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = millisecond)]
+    pub fn set_millisecond(this: &ZonedDateTimeLike, value: u32);
+    #[wasm_bindgen(method, getter = microsecond)]
+    pub fn get_microsecond(this: &ZonedDateTimeLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = microsecond)]
+    pub fn set_microsecond(this: &ZonedDateTimeLike, value: u32);
+    #[wasm_bindgen(method, getter = nanosecond)]
+    pub fn get_nanosecond(this: &ZonedDateTimeLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = nanosecond)]
+    pub fn set_nanosecond(this: &ZonedDateTimeLike, value: u32);
+    #[wasm_bindgen(method, getter = timeZone)]
+    pub fn get_time_zone(this: &ZonedDateTimeLike) -> Option<JsString>;
+    #[wasm_bindgen(method, setter = timeZone)]
+    pub fn set_time_zone(this: &ZonedDateTimeLike, value: &str);
+    #[wasm_bindgen(method, getter = offset)]
+    pub fn get_offset(this: &ZonedDateTimeLike) -> Option<JsString>;
+    #[wasm_bindgen(method, setter = offset)]
+    pub fn set_offset(this: &ZonedDateTimeLike, value: &str);
+}
+
+impl ZonedDateTimeLike {
+    /// Creates an empty `ZonedDateTimeLike`.
+    pub fn new() -> ZonedDateTimeLike {
+        JsCast::unchecked_into(Object::new())
+    }
+}
+
+impl Default for ZonedDateTimeLike {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[wasm_bindgen]
+extern "C" {
+    /// Fields of a `Temporal.PlainYearMonth`, as accepted by `PlainYearMonth.from()` and `with()`. Every field is optional.
+    #[wasm_bindgen(extends = Object)]
+    #[derive(Clone, Debug)]
+    pub type PlainYearMonthLike;
+
+    #[wasm_bindgen(method, getter = era)]
+    pub fn get_era(this: &PlainYearMonthLike) -> Option<JsString>;
+    #[wasm_bindgen(method, setter = era)]
+    pub fn set_era(this: &PlainYearMonthLike, value: &str);
+    #[wasm_bindgen(method, getter = eraYear)]
+    pub fn get_era_year(this: &PlainYearMonthLike) -> Option<i32>;
+    #[wasm_bindgen(method, setter = eraYear)]
+    pub fn set_era_year(this: &PlainYearMonthLike, value: i32);
+    #[wasm_bindgen(method, getter = year)]
+    pub fn get_year(this: &PlainYearMonthLike) -> Option<i32>;
+    #[wasm_bindgen(method, setter = year)]
+    pub fn set_year(this: &PlainYearMonthLike, value: i32);
+    #[wasm_bindgen(method, getter = month)]
+    pub fn get_month(this: &PlainYearMonthLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = month)]
+    pub fn set_month(this: &PlainYearMonthLike, value: u32);
+    #[wasm_bindgen(method, getter = monthCode)]
+    pub fn get_month_code(this: &PlainYearMonthLike) -> Option<JsString>;
+    #[wasm_bindgen(method, setter = monthCode)]
+    pub fn set_month_code(this: &PlainYearMonthLike, value: &str);
+    #[wasm_bindgen(method, getter = calendar)]
+    pub fn get_calendar(this: &PlainYearMonthLike) -> Option<JsString>;
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar(this: &PlainYearMonthLike, value: &str);
+}
+
+impl PlainYearMonthLike {
+    /// Creates an empty `PlainYearMonthLike`.
+    pub fn new() -> PlainYearMonthLike {
+        JsCast::unchecked_into(Object::new())
+    }
+}
+
+impl Default for PlainYearMonthLike {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[wasm_bindgen]
+extern "C" {
+    /// Fields of a `Temporal.PlainMonthDay`, as accepted by `PlainMonthDay.from()` and `with()`. Every field is optional.
+    #[wasm_bindgen(extends = Object)]
+    #[derive(Clone, Debug)]
+    pub type PlainMonthDayLike;
+
+    #[wasm_bindgen(method, getter = era)]
+    pub fn get_era(this: &PlainMonthDayLike) -> Option<JsString>;
+    #[wasm_bindgen(method, setter = era)]
+    pub fn set_era(this: &PlainMonthDayLike, value: &str);
+    #[wasm_bindgen(method, getter = eraYear)]
+    pub fn get_era_year(this: &PlainMonthDayLike) -> Option<i32>;
+    #[wasm_bindgen(method, setter = eraYear)]
+    pub fn set_era_year(this: &PlainMonthDayLike, value: i32);
+    #[wasm_bindgen(method, getter = year)]
+    pub fn get_year(this: &PlainMonthDayLike) -> Option<i32>;
+    #[wasm_bindgen(method, setter = year)]
+    pub fn set_year(this: &PlainMonthDayLike, value: i32);
+    #[wasm_bindgen(method, getter = month)]
+    pub fn get_month(this: &PlainMonthDayLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = month)]
+    pub fn set_month(this: &PlainMonthDayLike, value: u32);
+    #[wasm_bindgen(method, getter = monthCode)]
+    pub fn get_month_code(this: &PlainMonthDayLike) -> Option<JsString>;
+    #[wasm_bindgen(method, setter = monthCode)]
+    pub fn set_month_code(this: &PlainMonthDayLike, value: &str);
+    #[wasm_bindgen(method, getter = day)]
+    pub fn get_day(this: &PlainMonthDayLike) -> Option<u32>;
+    #[wasm_bindgen(method, setter = day)]
+    pub fn set_day(this: &PlainMonthDayLike, value: u32);
+    #[wasm_bindgen(method, getter = calendar)]
+    pub fn get_calendar(this: &PlainMonthDayLike) -> Option<JsString>;
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar(this: &PlainMonthDayLike, value: &str);
+}
+
+impl PlainMonthDayLike {
+    /// Creates an empty `PlainMonthDayLike`.
+    pub fn new() -> PlainMonthDayLike {
+        JsCast::unchecked_into(Object::new())
+    }
+}
+
+impl Default for PlainMonthDayLike {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[wasm_bindgen]
+extern "C" {
+    /// Fields of a `Temporal.Duration`, as accepted by `Duration.from()` and `with()`. Every field is optional.
+    #[wasm_bindgen(extends = Object)]
+    #[derive(Clone, Debug)]
+    pub type DurationLike;
+
+    #[wasm_bindgen(method, getter = years)]
+    pub fn get_years(this: &DurationLike) -> Option<f64>;
+    #[wasm_bindgen(method, setter = years)]
+    pub fn set_years(this: &DurationLike, value: f64);
+    #[wasm_bindgen(method, getter = months)]
+    pub fn get_months(this: &DurationLike) -> Option<f64>;
+    #[wasm_bindgen(method, setter = months)]
+    pub fn set_months(this: &DurationLike, value: f64);
+    #[wasm_bindgen(method, getter = weeks)]
+    pub fn get_weeks(this: &DurationLike) -> Option<f64>;
+    #[wasm_bindgen(method, setter = weeks)]
+    pub fn set_weeks(this: &DurationLike, value: f64);
+    #[wasm_bindgen(method, getter = days)]
+    pub fn get_days(this: &DurationLike) -> Option<f64>;
+    #[wasm_bindgen(method, setter = days)]
+    pub fn set_days(this: &DurationLike, value: f64);
+    #[wasm_bindgen(method, getter = hours)]
+    pub fn get_hours(this: &DurationLike) -> Option<f64>;
+    #[wasm_bindgen(method, setter = hours)]
+    pub fn set_hours(this: &DurationLike, value: f64);
+    #[wasm_bindgen(method, getter = minutes)]
+    pub fn get_minutes(this: &DurationLike) -> Option<f64>;
+    #[wasm_bindgen(method, setter = minutes)]
+    pub fn set_minutes(this: &DurationLike, value: f64);
+    #[wasm_bindgen(method, getter = seconds)]
+    pub fn get_seconds(this: &DurationLike) -> Option<f64>;
+    #[wasm_bindgen(method, setter = seconds)]
+    pub fn set_seconds(this: &DurationLike, value: f64);
+    #[wasm_bindgen(method, getter = milliseconds)]
+    pub fn get_milliseconds(this: &DurationLike) -> Option<f64>;
+    #[wasm_bindgen(method, setter = milliseconds)]
+    pub fn set_milliseconds(this: &DurationLike, value: f64);
+    #[wasm_bindgen(method, getter = microseconds)]
+    pub fn get_microseconds(this: &DurationLike) -> Option<f64>;
+    #[wasm_bindgen(method, setter = microseconds)]
+    pub fn set_microseconds(this: &DurationLike, value: f64);
+    #[wasm_bindgen(method, getter = nanoseconds)]
+    pub fn get_nanoseconds(this: &DurationLike) -> Option<f64>;
+    #[wasm_bindgen(method, setter = nanoseconds)]
+    pub fn set_nanoseconds(this: &DurationLike, value: f64);
+}
+
+impl DurationLike {
+    /// Creates an empty `DurationLike`.
+    pub fn new() -> DurationLike {
+        JsCast::unchecked_into(Object::new())
+    }
+}
+
+impl Default for DurationLike {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[wasm_bindgen]
+extern "C" {
+    /// The object form of the `PlainDate.toZonedDateTime()` argument: a time zone
+    /// and an optional time of day.
+    #[wasm_bindgen(extends = Object)]
+    #[derive(Clone, Debug)]
+    pub type ToZonedDateTimeItem;
+
+    #[wasm_bindgen(method, getter = timeZone)]
+    pub fn get_time_zone(this: &ToZonedDateTimeItem) -> Option<JsString>;
+    #[wasm_bindgen(method, setter = timeZone)]
+    pub fn set_time_zone(this: &ToZonedDateTimeItem, value: &str);
+    #[wasm_bindgen(method, getter = plainTime)]
+    pub fn get_plain_time(this: &ToZonedDateTimeItem) -> JsValue;
+    #[wasm_bindgen(method, setter = plainTime)]
+    pub fn set_plain_time(this: &ToZonedDateTimeItem, value: &PlainTime);
+    #[wasm_bindgen(method, setter = plainTime)]
+    pub fn set_plain_time_str(this: &ToZonedDateTimeItem, value: &str);
+    #[wasm_bindgen(method, setter = plainTime)]
+    pub fn set_plain_time_plain_time_like(this: &ToZonedDateTimeItem, value: &PlainTimeLike);
+}
+
+impl ToZonedDateTimeItem {
+    /// Creates a `ToZonedDateTimeItem` for the given time zone.
+    pub fn new(time_zone: &str) -> ToZonedDateTimeItem {
+        let item: ToZonedDateTimeItem = JsCast::unchecked_into(Object::new());
+        item.set_time_zone(time_zone);
+        item
+    }
+}
+
+#[wasm_bindgen]
+extern "C" {
     /// A `Temporal.Instant` is an exact point in time, with a precision in
     /// nanoseconds. No time zone or calendar information is present. Therefore,
     /// `Temporal.Instant` has no concept of days, months, or even hours.
@@ -845,15 +1301,13 @@ extern "C" {
     #[wasm_bindgen(js_name = from, static_method_of = Instant, js_namespace = Temporal, catch)]
     pub fn from_with_str(item: &str) -> Result<Instant, JsValue>;
 
-    /// The `Temporal.Instant.from()` static method creates a new `Temporal.Instant`
-    /// object from another `Temporal.Instant` or an RFC 9557 string.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the string is not a valid RFC 9557 format.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/from)
+    /// The `Temporal.Instant.from()` static method; see [`Instant::from_with_str`] for errors.
     #[wasm_bindgen(js_name = from, static_method_of = Instant, js_namespace = Temporal, catch)]
-    pub fn from_with_object(item: &Object) -> Result<Instant, JsValue>;
+    pub fn from_with_instant(item: &Instant) -> Result<Instant, JsValue>;
+
+    /// The `Temporal.Instant.from()` static method; see [`Instant::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = Instant, js_namespace = Temporal, catch)]
+    pub fn from_with_zoned_date_time(item: &ZonedDateTime) -> Result<Instant, JsValue>;
 
     /// The `Temporal.Instant.fromEpochMilliseconds()` static method creates a new
     /// `Temporal.Instant` object from the number of milliseconds since the Unix epoch.
@@ -1186,42 +1640,56 @@ extern "C" {
     #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
     pub fn from_with_str(item: &str) -> Result<PlainDateTime, JsValue>;
 
-    /// The `Temporal.PlainDateTime.from()` static method creates a new `Temporal.PlainDateTime`
-    /// object from another value.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the string is invalid or values are out of range
-    /// (when `overflow` is `'reject'`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/from)
-    #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
-    pub fn from_with_object(item: &Object) -> Result<PlainDateTime, JsValue>;
-
-    /// The `Temporal.PlainDateTime.from()` static method creates a new `Temporal.PlainDateTime`
-    /// object from another value.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the string is invalid or values are out of range
-    /// (when `overflow` is `'reject'`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/from)
+    /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_str`] for errors.
     #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
     pub fn from_with_str_and_options(
         item: &str,
         options: &AssignmentOptions,
     ) -> Result<PlainDateTime, JsValue>;
 
-    /// The `Temporal.PlainDateTime.from()` static method creates a new `Temporal.PlainDateTime`
-    /// object from another value.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the string is invalid or values are out of range
-    /// (when `overflow` is `'reject'`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/from)
+    /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_str`] for errors.
     #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
-    pub fn from_with_object_and_options(
-        item: &Object,
+    pub fn from_with_plain_date_time_like(
+        item: &PlainDateTimeLike,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
+    pub fn from_with_plain_date_time_like_and_options(
+        item: &PlainDateTimeLike,
+        options: &AssignmentOptions,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
+    pub fn from_with_plain_date_time(item: &PlainDateTime) -> Result<PlainDateTime, JsValue>;
+
+    /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
+    pub fn from_with_plain_date_time_and_options(
+        item: &PlainDateTime,
+        options: &AssignmentOptions,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
+    pub fn from_with_plain_date(item: &PlainDate) -> Result<PlainDateTime, JsValue>;
+
+    /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
+    pub fn from_with_plain_date_and_options(
+        item: &PlainDate,
+        options: &AssignmentOptions,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
+    pub fn from_with_zoned_date_time(item: &ZonedDateTime) -> Result<PlainDateTime, JsValue>;
+
+    /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
+    pub fn from_with_zoned_date_time_and_options(
+        item: &ZonedDateTime,
         options: &AssignmentOptions,
     ) -> Result<PlainDateTime, JsValue>;
 
@@ -1402,7 +1870,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(this: &PlainDateTime, info: &Object) -> Result<PlainDateTime, JsValue>;
+    pub fn with(this: &PlainDateTime, info: &PlainDateTimeLike) -> Result<PlainDateTime, JsValue>;
 
     /// The `with()` method returns a new `Temporal.PlainDateTime` object with some
     /// fields replaced by new values.
@@ -1414,7 +1882,7 @@ extern "C" {
     #[wasm_bindgen(js_name = with, method, catch)]
     pub fn with_with_options(
         this: &PlainDateTime,
-        info: &Object,
+        info: &PlainDateTimeLike,
         options: &AssignmentOptions,
     ) -> Result<PlainDateTime, JsValue>;
 
@@ -1725,42 +2193,34 @@ extern "C" {
     #[wasm_bindgen(js_name = from, static_method_of = ZonedDateTime, js_namespace = Temporal, catch)]
     pub fn from_with_str(item: &str) -> Result<ZonedDateTime, JsValue>;
 
-    /// The `Temporal.ZonedDateTime.from()` static method creates a new `Temporal.ZonedDateTime`
-    /// object from another value.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the string is invalid, values are out of range
-    /// (when `overflow` is `'reject'`), or the offset is invalid (when `offset` is `'reject'`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/from)
-    #[wasm_bindgen(js_name = from, static_method_of = ZonedDateTime, js_namespace = Temporal, catch)]
-    pub fn from_with_object(item: &Object) -> Result<ZonedDateTime, JsValue>;
-
-    /// The `Temporal.ZonedDateTime.from()` static method creates a new `Temporal.ZonedDateTime`
-    /// object from another value.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the string is invalid, values are out of range
-    /// (when `overflow` is `'reject'`), or the offset is invalid (when `offset` is `'reject'`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/from)
+    /// The `Temporal.ZonedDateTime.from()` static method; see [`ZonedDateTime::from_with_str`] for errors.
     #[wasm_bindgen(js_name = from, static_method_of = ZonedDateTime, js_namespace = Temporal, catch)]
     pub fn from_with_str_and_options(
         item: &str,
         options: &ZonedDateTimeAssignmentOptions,
     ) -> Result<ZonedDateTime, JsValue>;
 
-    /// The `Temporal.ZonedDateTime.from()` static method creates a new `Temporal.ZonedDateTime`
-    /// object from another value.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the string is invalid, values are out of range
-    /// (when `overflow` is `'reject'`), or the offset is invalid (when `offset` is `'reject'`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/from)
+    /// The `Temporal.ZonedDateTime.from()` static method; see [`ZonedDateTime::from_with_str`] for errors.
     #[wasm_bindgen(js_name = from, static_method_of = ZonedDateTime, js_namespace = Temporal, catch)]
-    pub fn from_with_object_and_options(
-        item: &Object,
+    pub fn from_with_zoned_date_time_like(
+        item: &ZonedDateTimeLike,
+    ) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `Temporal.ZonedDateTime.from()` static method; see [`ZonedDateTime::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = ZonedDateTime, js_namespace = Temporal, catch)]
+    pub fn from_with_zoned_date_time_like_and_options(
+        item: &ZonedDateTimeLike,
+        options: &ZonedDateTimeAssignmentOptions,
+    ) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `Temporal.ZonedDateTime.from()` static method; see [`ZonedDateTime::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = ZonedDateTime, js_namespace = Temporal, catch)]
+    pub fn from_with_zoned_date_time(item: &ZonedDateTime) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `Temporal.ZonedDateTime.from()` static method; see [`ZonedDateTime::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = ZonedDateTime, js_namespace = Temporal, catch)]
+    pub fn from_with_zoned_date_time_and_options(
+        item: &ZonedDateTime,
         options: &ZonedDateTimeAssignmentOptions,
     ) -> Result<ZonedDateTime, JsValue>;
 
@@ -1987,7 +2447,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(this: &ZonedDateTime, info: &Object) -> Result<ZonedDateTime, JsValue>;
+    pub fn with(this: &ZonedDateTime, info: &ZonedDateTimeLike) -> Result<ZonedDateTime, JsValue>;
 
     /// The `with()` method returns a new `Temporal.ZonedDateTime` object with some fields
     /// replaced by new values.
@@ -2000,7 +2460,7 @@ extern "C" {
     #[wasm_bindgen(js_name = with, method, catch)]
     pub fn with_with_options(
         this: &ZonedDateTime,
-        info: &Object,
+        info: &ZonedDateTimeLike,
         options: &ZonedDateTimeAssignmentOptions,
     ) -> Result<ZonedDateTime, JsValue>;
 
@@ -2420,16 +2880,13 @@ extern "C" {
     #[wasm_bindgen(js_name = from, static_method_of = Duration, js_namespace = Temporal, catch)]
     pub fn from_with_str(item: &str) -> Result<Duration, JsValue>;
 
-    /// The `Temporal.Duration.from()` static method creates a new `Temporal.Duration`
-    /// object from another Duration, an object with duration properties, or an ISO 8601 string.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the string is not a valid ISO 8601 duration format,
-    /// or if any numeric values are invalid.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/from)
+    /// The `Temporal.Duration.from()` static method; see [`Duration::from_with_str`] for errors.
     #[wasm_bindgen(js_name = from, static_method_of = Duration, js_namespace = Temporal, catch)]
-    pub fn from_with_object(item: &Object) -> Result<Duration, JsValue>;
+    pub fn from_with_duration_like(item: &DurationLike) -> Result<Duration, JsValue>;
+
+    /// The `Temporal.Duration.from()` static method; see [`Duration::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = Duration, js_namespace = Temporal, catch)]
+    pub fn from_with_duration(item: &Duration) -> Result<Duration, JsValue>;
 
     /// The `Temporal.Duration.compare()` static method returns -1, 0, or 1 depending
     /// on whether `one` is shorter than, equal to, or longer than `two`.
@@ -2553,7 +3010,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(this: &Duration, duration_like: &Object) -> Result<Duration, JsValue>;
+    pub fn with(this: &Duration, duration_like: &DurationLike) -> Result<Duration, JsValue>;
 
     /// The `add()` method returns a new `Temporal.Duration` object with the
     /// sum of this duration and another duration.
@@ -2762,42 +3219,54 @@ extern "C" {
     #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
     pub fn from_with_str(item: &str) -> Result<PlainTime, JsValue>;
 
-    /// The `Temporal.PlainTime.from()` static method creates a new `Temporal.PlainTime`
-    /// object from another value.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the string is invalid or values are out of range
-    /// (when `overflow` is `'reject'`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/from)
-    #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
-    pub fn from_with_object(item: &Object) -> Result<PlainTime, JsValue>;
-
-    /// The `Temporal.PlainTime.from()` static method creates a new `Temporal.PlainTime`
-    /// object from another value.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the string is invalid or values are out of range
-    /// (when `overflow` is `'reject'`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/from)
+    /// The `Temporal.PlainTime.from()` static method; see [`PlainTime::from_with_str`] for errors.
     #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
     pub fn from_with_str_and_options(
         item: &str,
         options: &AssignmentOptions,
     ) -> Result<PlainTime, JsValue>;
 
-    /// The `Temporal.PlainTime.from()` static method creates a new `Temporal.PlainTime`
-    /// object from another value.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the string is invalid or values are out of range
-    /// (when `overflow` is `'reject'`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/from)
+    /// The `Temporal.PlainTime.from()` static method; see [`PlainTime::from_with_str`] for errors.
     #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
-    pub fn from_with_object_and_options(
-        item: &Object,
+    pub fn from_with_plain_time_like(item: &PlainTimeLike) -> Result<PlainTime, JsValue>;
+
+    /// The `Temporal.PlainTime.from()` static method; see [`PlainTime::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
+    pub fn from_with_plain_time_like_and_options(
+        item: &PlainTimeLike,
+        options: &AssignmentOptions,
+    ) -> Result<PlainTime, JsValue>;
+
+    /// The `Temporal.PlainTime.from()` static method; see [`PlainTime::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
+    pub fn from_with_plain_time(item: &PlainTime) -> Result<PlainTime, JsValue>;
+
+    /// The `Temporal.PlainTime.from()` static method; see [`PlainTime::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
+    pub fn from_with_plain_time_and_options(
+        item: &PlainTime,
+        options: &AssignmentOptions,
+    ) -> Result<PlainTime, JsValue>;
+
+    /// The `Temporal.PlainTime.from()` static method; see [`PlainTime::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
+    pub fn from_with_plain_date_time(item: &PlainDateTime) -> Result<PlainTime, JsValue>;
+
+    /// The `Temporal.PlainTime.from()` static method; see [`PlainTime::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
+    pub fn from_with_plain_date_time_and_options(
+        item: &PlainDateTime,
+        options: &AssignmentOptions,
+    ) -> Result<PlainTime, JsValue>;
+
+    /// The `Temporal.PlainTime.from()` static method; see [`PlainTime::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
+    pub fn from_with_zoned_date_time(item: &ZonedDateTime) -> Result<PlainTime, JsValue>;
+
+    /// The `Temporal.PlainTime.from()` static method; see [`PlainTime::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
+    pub fn from_with_zoned_date_time_and_options(
+        item: &ZonedDateTime,
         options: &AssignmentOptions,
     ) -> Result<PlainTime, JsValue>;
 
@@ -2864,7 +3333,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(this: &PlainTime, time_like: &Object) -> Result<PlainTime, JsValue>;
+    pub fn with(this: &PlainTime, time_like: &PlainTimeLike) -> Result<PlainTime, JsValue>;
 
     /// The `with()` method returns a new `Temporal.PlainTime` object with some
     /// fields replaced by new values.
@@ -2876,7 +3345,7 @@ extern "C" {
     #[wasm_bindgen(js_name = with, method, catch)]
     pub fn with_with_options(
         this: &PlainTime,
-        time_like: &Object,
+        time_like: &PlainTimeLike,
         options: &AssignmentOptions,
     ) -> Result<PlainTime, JsValue>;
 
@@ -3079,42 +3548,34 @@ extern "C" {
     #[wasm_bindgen(js_name = from, static_method_of = PlainYearMonth, js_namespace = Temporal, catch)]
     pub fn from_with_str(item: &str) -> Result<PlainYearMonth, JsValue>;
 
-    /// The `Temporal.PlainYearMonth.from()` static method creates a new `Temporal.PlainYearMonth`
-    /// object from another value.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the string is invalid or values are out of range
-    /// (when `overflow` is `'reject'`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/from)
-    #[wasm_bindgen(js_name = from, static_method_of = PlainYearMonth, js_namespace = Temporal, catch)]
-    pub fn from_with_object(item: &Object) -> Result<PlainYearMonth, JsValue>;
-
-    /// The `Temporal.PlainYearMonth.from()` static method creates a new `Temporal.PlainYearMonth`
-    /// object from another value.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the string is invalid or values are out of range
-    /// (when `overflow` is `'reject'`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/from)
+    /// The `Temporal.PlainYearMonth.from()` static method; see [`PlainYearMonth::from_with_str`] for errors.
     #[wasm_bindgen(js_name = from, static_method_of = PlainYearMonth, js_namespace = Temporal, catch)]
     pub fn from_with_str_and_options(
         item: &str,
         options: &AssignmentOptions,
     ) -> Result<PlainYearMonth, JsValue>;
 
-    /// The `Temporal.PlainYearMonth.from()` static method creates a new `Temporal.PlainYearMonth`
-    /// object from another value.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the string is invalid or values are out of range
-    /// (when `overflow` is `'reject'`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/from)
+    /// The `Temporal.PlainYearMonth.from()` static method; see [`PlainYearMonth::from_with_str`] for errors.
     #[wasm_bindgen(js_name = from, static_method_of = PlainYearMonth, js_namespace = Temporal, catch)]
-    pub fn from_with_object_and_options(
-        item: &Object,
+    pub fn from_with_plain_year_month_like(
+        item: &PlainYearMonthLike,
+    ) -> Result<PlainYearMonth, JsValue>;
+
+    /// The `Temporal.PlainYearMonth.from()` static method; see [`PlainYearMonth::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainYearMonth, js_namespace = Temporal, catch)]
+    pub fn from_with_plain_year_month_like_and_options(
+        item: &PlainYearMonthLike,
+        options: &AssignmentOptions,
+    ) -> Result<PlainYearMonth, JsValue>;
+
+    /// The `Temporal.PlainYearMonth.from()` static method; see [`PlainYearMonth::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainYearMonth, js_namespace = Temporal, catch)]
+    pub fn from_with_plain_year_month(item: &PlainYearMonth) -> Result<PlainYearMonth, JsValue>;
+
+    /// The `Temporal.PlainYearMonth.from()` static method; see [`PlainYearMonth::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainYearMonth, js_namespace = Temporal, catch)]
+    pub fn from_with_plain_year_month_and_options(
+        item: &PlainYearMonth,
         options: &AssignmentOptions,
     ) -> Result<PlainYearMonth, JsValue>;
 
@@ -3209,7 +3670,10 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(this: &PlainYearMonth, info: &Object) -> Result<PlainYearMonth, JsValue>;
+    pub fn with(
+        this: &PlainYearMonth,
+        info: &PlainYearMonthLike,
+    ) -> Result<PlainYearMonth, JsValue>;
 
     /// The `with()` method returns a new `Temporal.PlainYearMonth` object with some
     /// fields replaced by new values.
@@ -3221,7 +3685,7 @@ extern "C" {
     #[wasm_bindgen(js_name = with, method, catch)]
     pub fn with_with_options(
         this: &PlainYearMonth,
-        info: &Object,
+        info: &PlainYearMonthLike,
         options: &AssignmentOptions,
     ) -> Result<PlainYearMonth, JsValue>;
 
@@ -3329,7 +3793,10 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/toPlainDate)
     #[wasm_bindgen(method, js_name = toPlainDate, catch)]
-    pub fn to_plain_date(this: &PlainYearMonth, day: &Object) -> Result<PlainDate, JsValue>;
+    pub fn to_plain_date(
+        this: &PlainYearMonth,
+        fields: &PlainDateLike,
+    ) -> Result<PlainDate, JsValue>;
 
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this year-month.
@@ -3451,42 +3918,34 @@ extern "C" {
     #[wasm_bindgen(js_name = from, static_method_of = PlainMonthDay, js_namespace = Temporal, catch)]
     pub fn from_with_str(item: &str) -> Result<PlainMonthDay, JsValue>;
 
-    /// The `Temporal.PlainMonthDay.from()` static method creates a new `Temporal.PlainMonthDay`
-    /// object from another value.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the string is invalid or values are out of range
-    /// (when `overflow` is `'reject'`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/from)
-    #[wasm_bindgen(js_name = from, static_method_of = PlainMonthDay, js_namespace = Temporal, catch)]
-    pub fn from_with_object(item: &Object) -> Result<PlainMonthDay, JsValue>;
-
-    /// The `Temporal.PlainMonthDay.from()` static method creates a new `Temporal.PlainMonthDay`
-    /// object from another value.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the string is invalid or values are out of range
-    /// (when `overflow` is `'reject'`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/from)
+    /// The `Temporal.PlainMonthDay.from()` static method; see [`PlainMonthDay::from_with_str`] for errors.
     #[wasm_bindgen(js_name = from, static_method_of = PlainMonthDay, js_namespace = Temporal, catch)]
     pub fn from_with_str_and_options(
         item: &str,
         options: &AssignmentOptions,
     ) -> Result<PlainMonthDay, JsValue>;
 
-    /// The `Temporal.PlainMonthDay.from()` static method creates a new `Temporal.PlainMonthDay`
-    /// object from another value.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the string is invalid or values are out of range
-    /// (when `overflow` is `'reject'`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/from)
+    /// The `Temporal.PlainMonthDay.from()` static method; see [`PlainMonthDay::from_with_str`] for errors.
     #[wasm_bindgen(js_name = from, static_method_of = PlainMonthDay, js_namespace = Temporal, catch)]
-    pub fn from_with_object_and_options(
-        item: &Object,
+    pub fn from_with_plain_month_day_like(
+        item: &PlainMonthDayLike,
+    ) -> Result<PlainMonthDay, JsValue>;
+
+    /// The `Temporal.PlainMonthDay.from()` static method; see [`PlainMonthDay::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainMonthDay, js_namespace = Temporal, catch)]
+    pub fn from_with_plain_month_day_like_and_options(
+        item: &PlainMonthDayLike,
+        options: &AssignmentOptions,
+    ) -> Result<PlainMonthDay, JsValue>;
+
+    /// The `Temporal.PlainMonthDay.from()` static method; see [`PlainMonthDay::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainMonthDay, js_namespace = Temporal, catch)]
+    pub fn from_with_plain_month_day(item: &PlainMonthDay) -> Result<PlainMonthDay, JsValue>;
+
+    /// The `Temporal.PlainMonthDay.from()` static method; see [`PlainMonthDay::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainMonthDay, js_namespace = Temporal, catch)]
+    pub fn from_with_plain_month_day_and_options(
+        item: &PlainMonthDay,
         options: &AssignmentOptions,
     ) -> Result<PlainMonthDay, JsValue>;
 
@@ -3525,7 +3984,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(this: &PlainMonthDay, info: &Object) -> Result<PlainMonthDay, JsValue>;
+    pub fn with(this: &PlainMonthDay, info: &PlainMonthDayLike) -> Result<PlainMonthDay, JsValue>;
 
     /// The `with()` method returns a new `Temporal.PlainMonthDay` object with some
     /// fields replaced by new values.
@@ -3537,7 +3996,7 @@ extern "C" {
     #[wasm_bindgen(js_name = with, method, catch)]
     pub fn with_with_options(
         this: &PlainMonthDay,
-        info: &Object,
+        info: &PlainMonthDayLike,
         options: &AssignmentOptions,
     ) -> Result<PlainMonthDay, JsValue>;
 
@@ -3549,7 +4008,10 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/toPlainDate)
     #[wasm_bindgen(method, js_name = toPlainDate, catch)]
-    pub fn to_plain_date(this: &PlainMonthDay, year: &Object) -> Result<PlainDate, JsValue>;
+    pub fn to_plain_date(
+        this: &PlainMonthDay,
+        fields: &PlainDateLike,
+    ) -> Result<PlainDate, JsValue>;
 
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this month-day.
@@ -3668,42 +4130,54 @@ extern "C" {
     #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
     pub fn from_with_str(item: &str) -> Result<PlainDate, JsValue>;
 
-    /// The `Temporal.PlainDate.from()` static method creates a new `Temporal.PlainDate`
-    /// object from another value.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the string is invalid or values are out of range
-    /// (when `overflow` is `'reject'`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/from)
-    #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
-    pub fn from_with_object(item: &Object) -> Result<PlainDate, JsValue>;
-
-    /// The `Temporal.PlainDate.from()` static method creates a new `Temporal.PlainDate`
-    /// object from another value.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the string is invalid or values are out of range
-    /// (when `overflow` is `'reject'`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/from)
+    /// The `Temporal.PlainDate.from()` static method; see [`PlainDate::from_with_str`] for errors.
     #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
     pub fn from_with_str_and_options(
         item: &str,
         options: &AssignmentOptions,
     ) -> Result<PlainDate, JsValue>;
 
-    /// The `Temporal.PlainDate.from()` static method creates a new `Temporal.PlainDate`
-    /// object from another value.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if the string is invalid or values are out of range
-    /// (when `overflow` is `'reject'`).
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/from)
+    /// The `Temporal.PlainDate.from()` static method; see [`PlainDate::from_with_str`] for errors.
     #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
-    pub fn from_with_object_and_options(
-        item: &Object,
+    pub fn from_with_plain_date_like(item: &PlainDateLike) -> Result<PlainDate, JsValue>;
+
+    /// The `Temporal.PlainDate.from()` static method; see [`PlainDate::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
+    pub fn from_with_plain_date_like_and_options(
+        item: &PlainDateLike,
+        options: &AssignmentOptions,
+    ) -> Result<PlainDate, JsValue>;
+
+    /// The `Temporal.PlainDate.from()` static method; see [`PlainDate::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
+    pub fn from_with_plain_date(item: &PlainDate) -> Result<PlainDate, JsValue>;
+
+    /// The `Temporal.PlainDate.from()` static method; see [`PlainDate::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
+    pub fn from_with_plain_date_and_options(
+        item: &PlainDate,
+        options: &AssignmentOptions,
+    ) -> Result<PlainDate, JsValue>;
+
+    /// The `Temporal.PlainDate.from()` static method; see [`PlainDate::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
+    pub fn from_with_plain_date_time(item: &PlainDateTime) -> Result<PlainDate, JsValue>;
+
+    /// The `Temporal.PlainDate.from()` static method; see [`PlainDate::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
+    pub fn from_with_plain_date_time_and_options(
+        item: &PlainDateTime,
+        options: &AssignmentOptions,
+    ) -> Result<PlainDate, JsValue>;
+
+    /// The `Temporal.PlainDate.from()` static method; see [`PlainDate::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
+    pub fn from_with_zoned_date_time(item: &ZonedDateTime) -> Result<PlainDate, JsValue>;
+
+    /// The `Temporal.PlainDate.from()` static method; see [`PlainDate::from_with_str`] for errors.
+    #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
+    pub fn from_with_zoned_date_time_and_options(
+        item: &ZonedDateTime,
         options: &AssignmentOptions,
     ) -> Result<PlainDate, JsValue>;
 
@@ -3842,7 +4316,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(this: &PlainDate, info: &Object) -> Result<PlainDate, JsValue>;
+    pub fn with(this: &PlainDate, info: &PlainDateLike) -> Result<PlainDate, JsValue>;
 
     /// The `with()` method returns a new `Temporal.PlainDate` object with some
     /// fields replaced by new values.
@@ -3854,7 +4328,7 @@ extern "C" {
     #[wasm_bindgen(js_name = with, method, catch)]
     pub fn with_with_options(
         this: &PlainDate,
-        info: &Object,
+        info: &PlainDateLike,
         options: &AssignmentOptions,
     ) -> Result<PlainDate, JsValue>;
 
@@ -3984,9 +4458,6 @@ extern "C" {
     /// The `toZonedDateTime()` method returns a `Temporal.ZonedDateTime` object representing
     /// this date at the given time in the given time zone.
     ///
-    /// `item` is either a time zone identifier string, or an object with a
-    /// `timeZone` property and an optional `plainTime` property.
-    ///
     /// # Errors
     /// Throws a `RangeError` if the time zone identifier is invalid.
     ///
@@ -4000,17 +4471,14 @@ extern "C" {
     /// The `toZonedDateTime()` method returns a `Temporal.ZonedDateTime` object representing
     /// this date at the given time in the given time zone.
     ///
-    /// `item` is either a time zone identifier string, or an object with a
-    /// `timeZone` property and an optional `plainTime` property.
-    ///
     /// # Errors
     /// Throws a `RangeError` if the time zone identifier is invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toZonedDateTime)
     #[wasm_bindgen(method, js_name = toZonedDateTime, catch)]
-    pub fn to_zoned_date_time_with_object(
+    pub fn to_zoned_date_time_with_to_zoned_date_time_item(
         this: &PlainDate,
-        item: &Object,
+        item: &ToZonedDateTimeItem,
     ) -> Result<ZonedDateTime, JsValue>;
 
     /// The `toPlainYearMonth()` method returns a `Temporal.PlainYearMonth` object representing
