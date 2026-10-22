@@ -808,12 +808,21 @@ extern "C" {
     /// object from another `Temporal.Instant` or an RFC 9557 string.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `item` is not a valid Instant or string.
     /// Throws a `RangeError` if the string is not a valid RFC 9557 format.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/from)
-    #[wasm_bindgen(static_method_of = Instant, js_namespace = Temporal, catch)]
-    pub fn from(item: &JsValue) -> Result<Instant, JsValue>;
+    #[wasm_bindgen(js_name = from, static_method_of = Instant, js_namespace = Temporal, catch)]
+    pub fn from_with_str(item: &str) -> Result<Instant, JsValue>;
+
+    /// The `Temporal.Instant.from()` static method creates a new `Temporal.Instant`
+    /// object from another `Temporal.Instant` or an RFC 9557 string.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is not a valid RFC 9557 format.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/from)
+    #[wasm_bindgen(js_name = from, static_method_of = Instant, js_namespace = Temporal, catch)]
+    pub fn from_with_object(item: &Object) -> Result<Instant, JsValue>;
 
     /// The `Temporal.Instant.fromEpochMilliseconds()` static method creates a new
     /// `Temporal.Instant` object from the number of milliseconds since the Unix epoch.
@@ -838,12 +847,9 @@ extern "C" {
     /// The `Temporal.Instant.compare()` static method returns -1, 0, or 1 depending
     /// on whether `one` comes before, is equal to, or comes after `two`.
     ///
-    /// # Errors
-    /// Throws a `TypeError` if either argument is not a valid Instant or string.
-    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/compare)
     #[wasm_bindgen(static_method_of = Instant, js_namespace = Temporal, catch)]
-    pub fn compare(one: &JsValue, two: &JsValue) -> Result<i32, JsValue>;
+    pub fn compare(one: &Instant, two: &Instant) -> Result<i32, JsValue>;
 
     /// The `epochMilliseconds` accessor property returns an integer representing the
     /// number of milliseconds since the Unix epoch.
@@ -861,51 +867,55 @@ extern "C" {
 
     /// The `equals()` method returns `true` if this instant is equivalent to `other`.
     ///
-    /// # Errors
-    /// Throws a `TypeError` if `other` is not a valid Instant or string.
-    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/equals)
     #[wasm_bindgen(method, catch)]
-    pub fn equals(this: &Instant, other: &JsValue) -> Result<bool, JsValue>;
+    pub fn equals(this: &Instant, other: &Instant) -> Result<bool, JsValue>;
 
     /// The `add()` method returns a new `Temporal.Instant` object with the duration
     /// added to this instant. The years, months, weeks, and days fields of the
     /// duration must be zero.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `duration` is not a valid Duration or duration-like.
     /// Throws a `RangeError` if the duration has non-zero calendar units (years, months, weeks, days)
     /// or if the result is out of range.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/add)
     #[wasm_bindgen(method, catch)]
-    pub fn add(this: &Instant, duration: &JsValue) -> Result<Instant, JsValue>;
+    pub fn add(this: &Instant, duration: &Duration) -> Result<Instant, JsValue>;
 
     /// The `subtract()` method returns a new `Temporal.Instant` object with the
     /// duration subtracted from this instant. The years, months, weeks, and days
     /// fields of the duration must be zero.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `duration` is not a valid Duration or duration-like.
     /// Throws a `RangeError` if the duration has non-zero calendar units (years, months, weeks, days)
     /// or if the result is out of range.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/subtract)
     #[wasm_bindgen(method, catch)]
-    pub fn subtract(this: &Instant, duration: &JsValue) -> Result<Instant, JsValue>;
+    pub fn subtract(this: &Instant, duration: &Duration) -> Result<Instant, JsValue>;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
     /// from this instant until `other`.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `other` is not a valid Instant or string.
     /// Throws a `RangeError` if options specify invalid units (days and calendar units are not allowed).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/until)
     #[wasm_bindgen(method, catch)]
-    pub fn until(
+    pub fn until(this: &Instant, other: &Instant) -> Result<Duration, JsValue>;
+
+    /// The `until()` method returns a `Temporal.Duration` representing the duration
+    /// from this instant until `other`.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if options specify invalid units (days and calendar units are not allowed).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/until)
+    #[wasm_bindgen(js_name = until, method, catch)]
+    pub fn until_with_options(
         this: &Instant,
-        other: &JsValue,
+        other: &Instant,
         options: &DifferenceOptions,
     ) -> Result<Duration, JsValue>;
 
@@ -913,14 +923,23 @@ extern "C" {
     /// from `other` until this instant.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `other` is not a valid Instant or string.
     /// Throws a `RangeError` if options specify invalid units (days and calendar units are not allowed).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/since)
     #[wasm_bindgen(method, catch)]
-    pub fn since(
+    pub fn since(this: &Instant, other: &Instant) -> Result<Duration, JsValue>;
+
+    /// The `since()` method returns a `Temporal.Duration` representing the duration
+    /// from `other` until this instant.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if options specify invalid units (days and calendar units are not allowed).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/since)
+    #[wasm_bindgen(js_name = since, method, catch)]
+    pub fn since_with_options(
         this: &Instant,
-        other: &JsValue,
+        other: &Instant,
         options: &DifferenceOptions,
     ) -> Result<Duration, JsValue>;
 
@@ -958,7 +977,19 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string(
+    pub fn to_locale_string(this: &Instant, locales: &[JsString]) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method returns a language-sensitive string representation
+    /// of this instant.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
+    /// not match this value's calendar, and a `TypeError` for options that do not
+    /// apply to this type.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/toLocaleString)
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_options(
         this: &Instant,
         locales: &[JsString],
         options: &super::Intl::DateTimeFormatOptions,
@@ -1047,23 +1078,58 @@ extern "C" {
     /// object from another value.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `item` is not a valid PlainDateTime, datetime-like object, or string.
     /// Throws a `RangeError` if the string is invalid or values are out of range
     /// (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/from)
-    #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
-    pub fn from(item: &JsValue, options: &AssignmentOptions) -> Result<PlainDateTime, JsValue>;
+    #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
+    pub fn from_with_str(item: &str) -> Result<PlainDateTime, JsValue>;
+
+    /// The `Temporal.PlainDateTime.from()` static method creates a new `Temporal.PlainDateTime`
+    /// object from another value.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is invalid or values are out of range
+    /// (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/from)
+    #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
+    pub fn from_with_object(item: &Object) -> Result<PlainDateTime, JsValue>;
+
+    /// The `Temporal.PlainDateTime.from()` static method creates a new `Temporal.PlainDateTime`
+    /// object from another value.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is invalid or values are out of range
+    /// (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/from)
+    #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
+    pub fn from_with_str_and_options(
+        item: &str,
+        options: &AssignmentOptions,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `Temporal.PlainDateTime.from()` static method creates a new `Temporal.PlainDateTime`
+    /// object from another value.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is invalid or values are out of range
+    /// (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/from)
+    #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
+    pub fn from_with_object_and_options(
+        item: &Object,
+        options: &AssignmentOptions,
+    ) -> Result<PlainDateTime, JsValue>;
 
     /// The `Temporal.PlainDateTime.compare()` static method returns -1, 0, or 1 depending
     /// on whether `one` comes before, is equal to, or comes after `two`.
     ///
-    /// # Errors
-    /// Throws a `TypeError` if either argument is not a valid PlainDateTime or string.
-    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/compare)
     #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
-    pub fn compare(one: &JsValue, two: &JsValue) -> Result<i32, JsValue>;
+    pub fn compare(one: &PlainDateTime, two: &PlainDateTime) -> Result<i32, JsValue>;
 
     /// The `era` accessor property returns a calendar-specific lowercase string
     /// representing the era of this date, or `None` if the calendar does not use eras.
@@ -1223,39 +1289,49 @@ extern "C" {
 
     /// The `equals()` method returns `true` if this date-time is equivalent to `other`.
     ///
-    /// # Errors
-    /// Throws a `TypeError` if `other` is not a valid PlainDateTime or string.
-    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/equals)
     #[wasm_bindgen(method, catch)]
-    pub fn equals(this: &PlainDateTime, other: &JsValue) -> Result<bool, JsValue>;
+    pub fn equals(this: &PlainDateTime, other: &PlainDateTime) -> Result<bool, JsValue>;
 
     /// The `with()` method returns a new `Temporal.PlainDateTime` object with some
     /// fields replaced by new values.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `info` is not a valid datetime-like object.
     /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(
+    pub fn with(this: &PlainDateTime, info: &Object) -> Result<PlainDateTime, JsValue>;
+
+    /// The `with()` method returns a new `Temporal.PlainDateTime` object with some
+    /// fields replaced by new values.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/with)
+    #[wasm_bindgen(js_name = with, method, catch)]
+    pub fn with_with_options(
         this: &PlainDateTime,
-        info: &JsValue,
+        info: &Object,
         options: &AssignmentOptions,
     ) -> Result<PlainDateTime, JsValue>;
 
     /// The `withPlainTime()` method returns a new `Temporal.PlainDateTime` object with
     /// the time part replaced by the given time (or midnight if not provided).
     ///
-    /// # Errors
-    /// Throws a `TypeError` if `plain_time` is provided but is not a valid PlainTime or time-like.
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/withPlainTime)
+    #[wasm_bindgen(method, js_name = withPlainTime, catch)]
+    pub fn with_plain_time(this: &PlainDateTime) -> Result<PlainDateTime, JsValue>;
+
+    /// The `withPlainTime()` method returns a new `Temporal.PlainDateTime` object with
+    /// the time part replaced by the given time (or midnight if not provided).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/withPlainTime)
     #[wasm_bindgen(method, js_name = withPlainTime, catch)]
-    pub fn with_plain_time(
+    pub fn with_plain_time_with_plain_time(
         this: &PlainDateTime,
-        plain_time: &JsValue,
+        plain_time: &PlainTime,
     ) -> Result<PlainDateTime, JsValue>;
 
     /// The `withCalendar()` method returns a new `Temporal.PlainDateTime` object with
@@ -1272,14 +1348,23 @@ extern "C" {
     /// duration added to this date-time.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `duration` is not a valid Duration or duration-like.
     /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/add)
     #[wasm_bindgen(method, catch)]
-    pub fn add(
+    pub fn add(this: &PlainDateTime, duration: &Duration) -> Result<PlainDateTime, JsValue>;
+
+    /// The `add()` method returns a new `Temporal.PlainDateTime` object with the
+    /// duration added to this date-time.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/add)
+    #[wasm_bindgen(js_name = add, method, catch)]
+    pub fn add_with_options(
         this: &PlainDateTime,
-        duration: &JsValue,
+        duration: &Duration,
         options: &ArithmeticOptions,
     ) -> Result<PlainDateTime, JsValue>;
 
@@ -1287,14 +1372,23 @@ extern "C" {
     /// duration subtracted from this date-time.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `duration` is not a valid Duration or duration-like.
     /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/subtract)
     #[wasm_bindgen(method, catch)]
-    pub fn subtract(
+    pub fn subtract(this: &PlainDateTime, duration: &Duration) -> Result<PlainDateTime, JsValue>;
+
+    /// The `subtract()` method returns a new `Temporal.PlainDateTime` object with the
+    /// duration subtracted from this date-time.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/subtract)
+    #[wasm_bindgen(js_name = subtract, method, catch)]
+    pub fn subtract_with_options(
         this: &PlainDateTime,
-        duration: &JsValue,
+        duration: &Duration,
         options: &ArithmeticOptions,
     ) -> Result<PlainDateTime, JsValue>;
 
@@ -1302,14 +1396,23 @@ extern "C" {
     /// from this date-time until `other`.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `other` is not a valid PlainDateTime or string.
     /// Throws a `RangeError` if datetimes have different calendars or options are invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/until)
     #[wasm_bindgen(method, catch)]
-    pub fn until(
+    pub fn until(this: &PlainDateTime, other: &PlainDateTime) -> Result<Duration, JsValue>;
+
+    /// The `until()` method returns a `Temporal.Duration` representing the duration
+    /// from this date-time until `other`.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if datetimes have different calendars or options are invalid.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/until)
+    #[wasm_bindgen(js_name = until, method, catch)]
+    pub fn until_with_options(
         this: &PlainDateTime,
-        other: &JsValue,
+        other: &PlainDateTime,
         options: &DifferenceOptions,
     ) -> Result<Duration, JsValue>;
 
@@ -1317,14 +1420,23 @@ extern "C" {
     /// from `other` until this date-time.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `other` is not a valid PlainDateTime or string.
     /// Throws a `RangeError` if datetimes have different calendars or options are invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/since)
     #[wasm_bindgen(method, catch)]
-    pub fn since(
+    pub fn since(this: &PlainDateTime, other: &PlainDateTime) -> Result<Duration, JsValue>;
+
+    /// The `since()` method returns a `Temporal.Duration` representing the duration
+    /// from `other` until this date-time.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if datetimes have different calendars or options are invalid.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/since)
+    #[wasm_bindgen(js_name = since, method, catch)]
+    pub fn since_with_options(
         this: &PlainDateTime,
-        other: &JsValue,
+        other: &PlainDateTime,
         options: &DifferenceOptions,
     ) -> Result<Duration, JsValue>;
 
@@ -1351,6 +1463,21 @@ extern "C" {
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/toZonedDateTime)
     #[wasm_bindgen(method, js_name = toZonedDateTime, catch)]
     pub fn to_zoned_date_time(
+        this: &PlainDateTime,
+        time_zone: &str,
+    ) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `toZonedDateTime()` method returns a `Temporal.ZonedDateTime` with the
+    /// same calendar date and wall-clock time in the given time zone.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if `time_zone` is not a valid time zone identifier,
+    /// or if `disambiguation` is `'reject'` and the wall-clock time is ambiguous
+    /// or does not exist in that time zone.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/toZonedDateTime)
+    #[wasm_bindgen(method, js_name = toZonedDateTime, catch)]
+    pub fn to_zoned_date_time_with_options(
         this: &PlainDateTime,
         time_zone: &str,
         options: &ToZonedDateTimeOptions,
@@ -1381,6 +1508,21 @@ extern "C" {
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string(
+        this: &PlainDateTime,
+        locales: &[JsString],
+    ) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method returns a language-sensitive string representation
+    /// of this date-time.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
+    /// not match this value's calendar, and a `TypeError` for options that do not
+    /// apply to this type.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/toLocaleString)
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_options(
         this: &PlainDateTime,
         locales: &[JsString],
         options: &super::Intl::DateTimeFormatOptions,
@@ -1455,26 +1597,58 @@ extern "C" {
     /// object from another value.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `item` is not a valid ZonedDateTime, datetime-like object, or string.
     /// Throws a `RangeError` if the string is invalid, values are out of range
     /// (when `overflow` is `'reject'`), or the offset is invalid (when `offset` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/from)
-    #[wasm_bindgen(static_method_of = ZonedDateTime, js_namespace = Temporal, catch)]
-    pub fn from(
-        item: &JsValue,
+    #[wasm_bindgen(js_name = from, static_method_of = ZonedDateTime, js_namespace = Temporal, catch)]
+    pub fn from_with_str(item: &str) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `Temporal.ZonedDateTime.from()` static method creates a new `Temporal.ZonedDateTime`
+    /// object from another value.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is invalid, values are out of range
+    /// (when `overflow` is `'reject'`), or the offset is invalid (when `offset` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/from)
+    #[wasm_bindgen(js_name = from, static_method_of = ZonedDateTime, js_namespace = Temporal, catch)]
+    pub fn from_with_object(item: &Object) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `Temporal.ZonedDateTime.from()` static method creates a new `Temporal.ZonedDateTime`
+    /// object from another value.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is invalid, values are out of range
+    /// (when `overflow` is `'reject'`), or the offset is invalid (when `offset` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/from)
+    #[wasm_bindgen(js_name = from, static_method_of = ZonedDateTime, js_namespace = Temporal, catch)]
+    pub fn from_with_str_and_options(
+        item: &str,
+        options: &ZonedDateTimeAssignmentOptions,
+    ) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `Temporal.ZonedDateTime.from()` static method creates a new `Temporal.ZonedDateTime`
+    /// object from another value.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is invalid, values are out of range
+    /// (when `overflow` is `'reject'`), or the offset is invalid (when `offset` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/from)
+    #[wasm_bindgen(js_name = from, static_method_of = ZonedDateTime, js_namespace = Temporal, catch)]
+    pub fn from_with_object_and_options(
+        item: &Object,
         options: &ZonedDateTimeAssignmentOptions,
     ) -> Result<ZonedDateTime, JsValue>;
 
     /// The `Temporal.ZonedDateTime.compare()` static method returns -1, 0, or 1 depending
     /// on whether `one` comes before, is equal to, or comes after `two`.
     ///
-    /// # Errors
-    /// Throws a `TypeError` if either argument is not a valid ZonedDateTime or string.
-    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/compare)
     #[wasm_bindgen(static_method_of = ZonedDateTime, js_namespace = Temporal, catch)]
-    pub fn compare(one: &JsValue, two: &JsValue) -> Result<i32, JsValue>;
+    pub fn compare(one: &ZonedDateTime, two: &ZonedDateTime) -> Result<i32, JsValue>;
 
     /// The `era` accessor property returns a calendar-specific lowercase string
     /// representing the era of this date, or `None` if the calendar does not use eras.
@@ -1676,40 +1850,51 @@ extern "C" {
 
     /// The `equals()` method returns `true` if this zoned date-time is equivalent to `other`.
     ///
-    /// # Errors
-    /// Throws a `TypeError` if `other` is not a valid ZonedDateTime or string.
-    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/equals)
     #[wasm_bindgen(method, catch)]
-    pub fn equals(this: &ZonedDateTime, other: &JsValue) -> Result<bool, JsValue>;
+    pub fn equals(this: &ZonedDateTime, other: &ZonedDateTime) -> Result<bool, JsValue>;
 
     /// The `with()` method returns a new `Temporal.ZonedDateTime` object with some fields
     /// replaced by new values.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `info` is not a valid datetime-like object.
     /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`),
     /// or if the offset is invalid (when `offset` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(
+    pub fn with(this: &ZonedDateTime, info: &Object) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `with()` method returns a new `Temporal.ZonedDateTime` object with some fields
+    /// replaced by new values.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`),
+    /// or if the offset is invalid (when `offset` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/with)
+    #[wasm_bindgen(js_name = with, method, catch)]
+    pub fn with_with_options(
         this: &ZonedDateTime,
-        info: &JsValue,
+        info: &Object,
         options: &ZonedDateTimeAssignmentOptions,
     ) -> Result<ZonedDateTime, JsValue>;
 
     /// The `withPlainTime()` method returns a new `Temporal.ZonedDateTime` object with
     /// the time part replaced by the given time (or midnight if not provided).
     ///
-    /// # Errors
-    /// Throws a `TypeError` if `plain_time` is provided but is not a valid PlainTime or time-like.
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/withPlainTime)
+    #[wasm_bindgen(method, js_name = withPlainTime, catch)]
+    pub fn with_plain_time(this: &ZonedDateTime) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `withPlainTime()` method returns a new `Temporal.ZonedDateTime` object with
+    /// the time part replaced by the given time (or midnight if not provided).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/withPlainTime)
     #[wasm_bindgen(method, js_name = withPlainTime, catch)]
-    pub fn with_plain_time(
+    pub fn with_plain_time_with_plain_time(
         this: &ZonedDateTime,
-        plain_time: &JsValue,
+        plain_time: &PlainTime,
     ) -> Result<ZonedDateTime, JsValue>;
 
     /// The `withCalendar()` method returns a new `Temporal.ZonedDateTime` object with
@@ -1736,14 +1921,23 @@ extern "C" {
     /// duration added to this zoned date-time.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `duration` is not a valid Duration or duration-like.
     /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/add)
     #[wasm_bindgen(method, catch)]
-    pub fn add(
+    pub fn add(this: &ZonedDateTime, duration: &Duration) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `add()` method returns a new `Temporal.ZonedDateTime` object with the
+    /// duration added to this zoned date-time.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/add)
+    #[wasm_bindgen(js_name = add, method, catch)]
+    pub fn add_with_options(
         this: &ZonedDateTime,
-        duration: &JsValue,
+        duration: &Duration,
         options: &ArithmeticOptions,
     ) -> Result<ZonedDateTime, JsValue>;
 
@@ -1751,14 +1945,23 @@ extern "C" {
     /// duration subtracted from this zoned date-time.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `duration` is not a valid Duration or duration-like.
     /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/subtract)
     #[wasm_bindgen(method, catch)]
-    pub fn subtract(
+    pub fn subtract(this: &ZonedDateTime, duration: &Duration) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `subtract()` method returns a new `Temporal.ZonedDateTime` object with the
+    /// duration subtracted from this zoned date-time.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/subtract)
+    #[wasm_bindgen(js_name = subtract, method, catch)]
+    pub fn subtract_with_options(
         this: &ZonedDateTime,
-        duration: &JsValue,
+        duration: &Duration,
         options: &ArithmeticOptions,
     ) -> Result<ZonedDateTime, JsValue>;
 
@@ -1766,14 +1969,23 @@ extern "C" {
     /// from this zoned date-time until `other`.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `other` is not a valid ZonedDateTime or string.
     /// Throws a `RangeError` if dates have different time zones or calendars, or options are invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/until)
     #[wasm_bindgen(method, catch)]
-    pub fn until(
+    pub fn until(this: &ZonedDateTime, other: &ZonedDateTime) -> Result<Duration, JsValue>;
+
+    /// The `until()` method returns a `Temporal.Duration` representing the duration
+    /// from this zoned date-time until `other`.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if dates have different time zones or calendars, or options are invalid.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/until)
+    #[wasm_bindgen(js_name = until, method, catch)]
+    pub fn until_with_options(
         this: &ZonedDateTime,
-        other: &JsValue,
+        other: &ZonedDateTime,
         options: &DifferenceOptions,
     ) -> Result<Duration, JsValue>;
 
@@ -1781,14 +1993,23 @@ extern "C" {
     /// from `other` until this zoned date-time.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `other` is not a valid ZonedDateTime or string.
     /// Throws a `RangeError` if dates have different time zones or calendars, or options are invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/since)
     #[wasm_bindgen(method, catch)]
-    pub fn since(
+    pub fn since(this: &ZonedDateTime, other: &ZonedDateTime) -> Result<Duration, JsValue>;
+
+    /// The `since()` method returns a `Temporal.Duration` representing the duration
+    /// from `other` until this zoned date-time.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if dates have different time zones or calendars, or options are invalid.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/since)
+    #[wasm_bindgen(js_name = since, method, catch)]
+    pub fn since_with_options(
         this: &ZonedDateTime,
-        other: &JsValue,
+        other: &ZonedDateTime,
         options: &DifferenceOptions,
     ) -> Result<Duration, JsValue>;
 
@@ -1867,6 +2088,21 @@ extern "C" {
     pub fn to_locale_string(
         this: &ZonedDateTime,
         locales: &[JsString],
+    ) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method returns a language-sensitive string representation
+    /// of this zoned date-time.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
+    /// not match this value's calendar, and a `TypeError` for options that do not
+    /// apply to this type.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/toLocaleString)
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_options(
+        this: &ZonedDateTime,
+        locales: &[JsString],
         options: &super::Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
@@ -1932,27 +2168,47 @@ extern "C" {
     /// object from another Duration, an object with duration properties, or an ISO 8601 string.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `item` is not a valid Duration, duration-like object, or string.
     /// Throws a `RangeError` if the string is not a valid ISO 8601 duration format,
     /// or if any numeric values are invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/from)
-    #[wasm_bindgen(static_method_of = Duration, js_namespace = Temporal, catch)]
-    pub fn from(item: &JsValue) -> Result<Duration, JsValue>;
+    #[wasm_bindgen(js_name = from, static_method_of = Duration, js_namespace = Temporal, catch)]
+    pub fn from_with_str(item: &str) -> Result<Duration, JsValue>;
+
+    /// The `Temporal.Duration.from()` static method creates a new `Temporal.Duration`
+    /// object from another Duration, an object with duration properties, or an ISO 8601 string.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is not a valid ISO 8601 duration format,
+    /// or if any numeric values are invalid.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/from)
+    #[wasm_bindgen(js_name = from, static_method_of = Duration, js_namespace = Temporal, catch)]
+    pub fn from_with_object(item: &Object) -> Result<Duration, JsValue>;
 
     /// The `Temporal.Duration.compare()` static method returns -1, 0, or 1 depending
     /// on whether `one` is shorter than, equal to, or longer than `two`.
     ///
     /// # Errors
-    /// Throws a `TypeError` if either argument is not a valid Duration or string.
     /// Throws a `RangeError` if `relativeTo` is required (when either duration has
     /// calendar units like years, months, or weeks) but not provided.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/compare)
     #[wasm_bindgen(static_method_of = Duration, js_namespace = Temporal, catch)]
-    pub fn compare(
-        one: &JsValue,
-        two: &JsValue,
+    pub fn compare(one: &Duration, two: &Duration) -> Result<i32, JsValue>;
+
+    /// The `Temporal.Duration.compare()` static method returns -1, 0, or 1 depending
+    /// on whether `one` is shorter than, equal to, or longer than `two`.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if `relativeTo` is required (when either duration has
+    /// calendar units like years, months, or weeks) but not provided.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/compare)
+    #[wasm_bindgen(js_name = compare, static_method_of = Duration, js_namespace = Temporal, catch)]
+    pub fn compare_with_options(
+        one: &Duration,
+        two: &Duration,
         options: &DurationCompareOptions,
     ) -> Result<i32, JsValue>;
 
@@ -2048,36 +2304,33 @@ extern "C" {
     /// fields replaced by new values.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `duration_like` is not a valid duration-like object.
     /// Throws a `RangeError` if any numeric values are invalid or result in mixed signs.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(this: &Duration, duration_like: &JsValue) -> Result<Duration, JsValue>;
+    pub fn with(this: &Duration, duration_like: &Object) -> Result<Duration, JsValue>;
 
     /// The `add()` method returns a new `Temporal.Duration` object with the
     /// sum of this duration and another duration.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `other` is not a valid Duration or duration-like.
     /// Throws a `RangeError` if either duration has nonzero years, months or weeks,
     /// or if the result would exceed the valid range.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/add)
     #[wasm_bindgen(method, catch)]
-    pub fn add(this: &Duration, other: &JsValue) -> Result<Duration, JsValue>;
+    pub fn add(this: &Duration, other: &Duration) -> Result<Duration, JsValue>;
 
     /// The `subtract()` method returns a new `Temporal.Duration` object with the
     /// difference of this duration and another duration.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `other` is not a valid Duration or duration-like.
     /// Throws a `RangeError` if either duration has nonzero years, months or weeks,
     /// or if the result would exceed the valid range.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/subtract)
     #[wasm_bindgen(method, catch)]
-    pub fn subtract(this: &Duration, other: &JsValue) -> Result<Duration, JsValue>;
+    pub fn subtract(this: &Duration, other: &Duration) -> Result<Duration, JsValue>;
 
     /// The `round()` method returns a new `Temporal.Duration` object with the
     /// duration rounded and/or balanced to the given options.
@@ -2114,7 +2367,21 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string(
+    pub fn to_locale_string(this: &Duration, locales: &[JsString]) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method returns a language-sensitive string representation
+    /// of this duration.
+    ///
+    /// `options` are `Intl.DurationFormat` options.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
+    /// not match this value's calendar, and a `TypeError` for options that do not
+    /// apply to this type.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/toLocaleString)
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_options(
         this: &Duration,
         locales: &[JsString],
         options: &super::Intl::DurationFormatOptions,
@@ -2178,23 +2445,58 @@ extern "C" {
     /// object from another value.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `item` is not a valid PlainTime, time-like object, or string.
     /// Throws a `RangeError` if the string is invalid or values are out of range
     /// (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/from)
-    #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, catch)]
-    pub fn from(item: &JsValue, options: &AssignmentOptions) -> Result<PlainTime, JsValue>;
+    #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
+    pub fn from_with_str(item: &str) -> Result<PlainTime, JsValue>;
+
+    /// The `Temporal.PlainTime.from()` static method creates a new `Temporal.PlainTime`
+    /// object from another value.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is invalid or values are out of range
+    /// (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/from)
+    #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
+    pub fn from_with_object(item: &Object) -> Result<PlainTime, JsValue>;
+
+    /// The `Temporal.PlainTime.from()` static method creates a new `Temporal.PlainTime`
+    /// object from another value.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is invalid or values are out of range
+    /// (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/from)
+    #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
+    pub fn from_with_str_and_options(
+        item: &str,
+        options: &AssignmentOptions,
+    ) -> Result<PlainTime, JsValue>;
+
+    /// The `Temporal.PlainTime.from()` static method creates a new `Temporal.PlainTime`
+    /// object from another value.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is invalid or values are out of range
+    /// (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/from)
+    #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
+    pub fn from_with_object_and_options(
+        item: &Object,
+        options: &AssignmentOptions,
+    ) -> Result<PlainTime, JsValue>;
 
     /// The `Temporal.PlainTime.compare()` static method returns -1, 0, or 1 depending
     /// on whether `one` comes before, is equal to, or comes after `two`.
     ///
-    /// # Errors
-    /// Throws a `TypeError` if either argument is not a valid PlainTime or string.
-    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/compare)
     #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, catch)]
-    pub fn compare(one: &JsValue, two: &JsValue) -> Result<i32, JsValue>;
+    pub fn compare(one: &PlainTime, two: &PlainTime) -> Result<i32, JsValue>;
 
     /// The `hour` accessor property returns an integer from 0 to 23 representing
     /// the hour component of this time.
@@ -2240,25 +2542,31 @@ extern "C" {
 
     /// The `equals()` method returns `true` if this time is equal to `other`.
     ///
-    /// # Errors
-    /// Throws a `TypeError` if `other` is not a valid PlainTime or string.
-    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/equals)
     #[wasm_bindgen(method, catch)]
-    pub fn equals(this: &PlainTime, other: &JsValue) -> Result<bool, JsValue>;
+    pub fn equals(this: &PlainTime, other: &PlainTime) -> Result<bool, JsValue>;
 
     /// The `with()` method returns a new `Temporal.PlainTime` object with some
     /// fields replaced by new values.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `time_like` is not a valid time-like object.
     /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(
+    pub fn with(this: &PlainTime, time_like: &Object) -> Result<PlainTime, JsValue>;
+
+    /// The `with()` method returns a new `Temporal.PlainTime` object with some
+    /// fields replaced by new values.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/with)
+    #[wasm_bindgen(js_name = with, method, catch)]
+    pub fn with_with_options(
         this: &PlainTime,
-        time_like: &JsValue,
+        time_like: &Object,
         options: &AssignmentOptions,
     ) -> Result<PlainTime, JsValue>;
 
@@ -2266,36 +2574,43 @@ extern "C" {
     /// duration added to this time (wrapping around midnight if necessary).
     ///
     /// # Errors
-    /// Throws a `TypeError` if `duration` is not a valid Duration or duration-like.
     /// Throws a `RangeError` if the duration has non-zero calendar units (years, months, weeks, days).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/add)
     #[wasm_bindgen(method, catch)]
-    pub fn add(this: &PlainTime, duration: &JsValue) -> Result<PlainTime, JsValue>;
+    pub fn add(this: &PlainTime, duration: &Duration) -> Result<PlainTime, JsValue>;
 
     /// The `subtract()` method returns a new `Temporal.PlainTime` object with the
     /// duration subtracted from this time (wrapping around midnight if necessary).
     ///
     /// # Errors
-    /// Throws a `TypeError` if `duration` is not a valid Duration or duration-like.
     /// Throws a `RangeError` if the duration has non-zero calendar units (years, months, weeks, days).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/subtract)
     #[wasm_bindgen(method, catch)]
-    pub fn subtract(this: &PlainTime, duration: &JsValue) -> Result<PlainTime, JsValue>;
+    pub fn subtract(this: &PlainTime, duration: &Duration) -> Result<PlainTime, JsValue>;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
     /// from this time until `other`.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `other` is not a valid PlainTime or string.
     /// Throws a `RangeError` if options specify calendar units or are otherwise invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/until)
     #[wasm_bindgen(method, catch)]
-    pub fn until(
+    pub fn until(this: &PlainTime, other: &PlainTime) -> Result<Duration, JsValue>;
+
+    /// The `until()` method returns a `Temporal.Duration` representing the duration
+    /// from this time until `other`.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if options specify calendar units or are otherwise invalid.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/until)
+    #[wasm_bindgen(js_name = until, method, catch)]
+    pub fn until_with_options(
         this: &PlainTime,
-        other: &JsValue,
+        other: &PlainTime,
         options: &DifferenceOptions,
     ) -> Result<Duration, JsValue>;
 
@@ -2303,14 +2618,23 @@ extern "C" {
     /// from `other` until this time.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `other` is not a valid PlainTime or string.
     /// Throws a `RangeError` if options specify calendar units or are otherwise invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/since)
     #[wasm_bindgen(method, catch)]
-    pub fn since(
+    pub fn since(this: &PlainTime, other: &PlainTime) -> Result<Duration, JsValue>;
+
+    /// The `since()` method returns a `Temporal.Duration` representing the duration
+    /// from `other` until this time.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if options specify calendar units or are otherwise invalid.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/since)
+    #[wasm_bindgen(js_name = since, method, catch)]
+    pub fn since_with_options(
         this: &PlainTime,
-        other: &JsValue,
+        other: &PlainTime,
         options: &DifferenceOptions,
     ) -> Result<Duration, JsValue>;
 
@@ -2335,7 +2659,19 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string(
+    pub fn to_locale_string(this: &PlainTime, locales: &[JsString]) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method returns a language-sensitive string representation
+    /// of this time.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
+    /// not match this value's calendar, and a `TypeError` for options that do not
+    /// apply to this type.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/toLocaleString)
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_options(
         this: &PlainTime,
         locales: &[JsString],
         options: &super::Intl::DateTimeFormatOptions,
@@ -2412,23 +2748,58 @@ extern "C" {
     /// object from another value.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `item` is not a valid PlainYearMonth, year-month-like object, or string.
     /// Throws a `RangeError` if the string is invalid or values are out of range
     /// (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/from)
-    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, catch)]
-    pub fn from(item: &JsValue, options: &AssignmentOptions) -> Result<PlainYearMonth, JsValue>;
+    #[wasm_bindgen(js_name = from, static_method_of = PlainYearMonth, js_namespace = Temporal, catch)]
+    pub fn from_with_str(item: &str) -> Result<PlainYearMonth, JsValue>;
+
+    /// The `Temporal.PlainYearMonth.from()` static method creates a new `Temporal.PlainYearMonth`
+    /// object from another value.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is invalid or values are out of range
+    /// (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/from)
+    #[wasm_bindgen(js_name = from, static_method_of = PlainYearMonth, js_namespace = Temporal, catch)]
+    pub fn from_with_object(item: &Object) -> Result<PlainYearMonth, JsValue>;
+
+    /// The `Temporal.PlainYearMonth.from()` static method creates a new `Temporal.PlainYearMonth`
+    /// object from another value.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is invalid or values are out of range
+    /// (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/from)
+    #[wasm_bindgen(js_name = from, static_method_of = PlainYearMonth, js_namespace = Temporal, catch)]
+    pub fn from_with_str_and_options(
+        item: &str,
+        options: &AssignmentOptions,
+    ) -> Result<PlainYearMonth, JsValue>;
+
+    /// The `Temporal.PlainYearMonth.from()` static method creates a new `Temporal.PlainYearMonth`
+    /// object from another value.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is invalid or values are out of range
+    /// (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/from)
+    #[wasm_bindgen(js_name = from, static_method_of = PlainYearMonth, js_namespace = Temporal, catch)]
+    pub fn from_with_object_and_options(
+        item: &Object,
+        options: &AssignmentOptions,
+    ) -> Result<PlainYearMonth, JsValue>;
 
     /// The `Temporal.PlainYearMonth.compare()` static method returns -1, 0, or 1 depending
     /// on whether `one` comes before, is equal to, or comes after `two`.
     ///
-    /// # Errors
-    /// Throws a `TypeError` if either argument is not a valid PlainYearMonth or string.
-    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/compare)
     #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, catch)]
-    pub fn compare(one: &JsValue, two: &JsValue) -> Result<i32, JsValue>;
+    pub fn compare(one: &PlainYearMonth, two: &PlainYearMonth) -> Result<i32, JsValue>;
 
     /// The `era` accessor property returns a calendar-specific lowercase string
     /// representing the era of this year-month, or `None` if the calendar does not use eras.
@@ -2502,25 +2873,31 @@ extern "C" {
 
     /// The `equals()` method returns `true` if this year-month is equivalent to `other`.
     ///
-    /// # Errors
-    /// Throws a `TypeError` if `other` is not a valid PlainYearMonth or string.
-    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/equals)
     #[wasm_bindgen(method, catch)]
-    pub fn equals(this: &PlainYearMonth, other: &JsValue) -> Result<bool, JsValue>;
+    pub fn equals(this: &PlainYearMonth, other: &PlainYearMonth) -> Result<bool, JsValue>;
 
     /// The `with()` method returns a new `Temporal.PlainYearMonth` object with some
     /// fields replaced by new values.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `info` is not a valid year-month-like object.
     /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(
+    pub fn with(this: &PlainYearMonth, info: &Object) -> Result<PlainYearMonth, JsValue>;
+
+    /// The `with()` method returns a new `Temporal.PlainYearMonth` object with some
+    /// fields replaced by new values.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/with)
+    #[wasm_bindgen(js_name = with, method, catch)]
+    pub fn with_with_options(
         this: &PlainYearMonth,
-        info: &JsValue,
+        info: &Object,
         options: &AssignmentOptions,
     ) -> Result<PlainYearMonth, JsValue>;
 
@@ -2528,14 +2905,23 @@ extern "C" {
     /// duration added to this year-month.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `duration` is not a valid Duration or duration-like.
     /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/add)
     #[wasm_bindgen(method, catch)]
-    pub fn add(
+    pub fn add(this: &PlainYearMonth, duration: &Duration) -> Result<PlainYearMonth, JsValue>;
+
+    /// The `add()` method returns a new `Temporal.PlainYearMonth` object with the
+    /// duration added to this year-month.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/add)
+    #[wasm_bindgen(js_name = add, method, catch)]
+    pub fn add_with_options(
         this: &PlainYearMonth,
-        duration: &JsValue,
+        duration: &Duration,
         options: &ArithmeticOptions,
     ) -> Result<PlainYearMonth, JsValue>;
 
@@ -2543,14 +2929,23 @@ extern "C" {
     /// duration subtracted from this year-month.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `duration` is not a valid Duration or duration-like.
     /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/subtract)
     #[wasm_bindgen(method, catch)]
-    pub fn subtract(
+    pub fn subtract(this: &PlainYearMonth, duration: &Duration) -> Result<PlainYearMonth, JsValue>;
+
+    /// The `subtract()` method returns a new `Temporal.PlainYearMonth` object with the
+    /// duration subtracted from this year-month.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/subtract)
+    #[wasm_bindgen(js_name = subtract, method, catch)]
+    pub fn subtract_with_options(
         this: &PlainYearMonth,
-        duration: &JsValue,
+        duration: &Duration,
         options: &ArithmeticOptions,
     ) -> Result<PlainYearMonth, JsValue>;
 
@@ -2558,14 +2953,23 @@ extern "C" {
     /// from this year-month until `other`.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `other` is not a valid PlainYearMonth or string.
     /// Throws a `RangeError` if dates have different calendars or options are invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/until)
     #[wasm_bindgen(method, catch)]
-    pub fn until(
+    pub fn until(this: &PlainYearMonth, other: &PlainYearMonth) -> Result<Duration, JsValue>;
+
+    /// The `until()` method returns a `Temporal.Duration` representing the duration
+    /// from this year-month until `other`.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if dates have different calendars or options are invalid.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/until)
+    #[wasm_bindgen(js_name = until, method, catch)]
+    pub fn until_with_options(
         this: &PlainYearMonth,
-        other: &JsValue,
+        other: &PlainYearMonth,
         options: &DifferenceOptions,
     ) -> Result<Duration, JsValue>;
 
@@ -2573,14 +2977,23 @@ extern "C" {
     /// from `other` until this year-month.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `other` is not a valid PlainYearMonth or string.
     /// Throws a `RangeError` if dates have different calendars or options are invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/since)
     #[wasm_bindgen(method, catch)]
-    pub fn since(
+    pub fn since(this: &PlainYearMonth, other: &PlainYearMonth) -> Result<Duration, JsValue>;
+
+    /// The `since()` method returns a `Temporal.Duration` representing the duration
+    /// from `other` until this year-month.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if dates have different calendars or options are invalid.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/since)
+    #[wasm_bindgen(js_name = since, method, catch)]
+    pub fn since_with_options(
         this: &PlainYearMonth,
-        other: &JsValue,
+        other: &PlainYearMonth,
         options: &DifferenceOptions,
     ) -> Result<Duration, JsValue>;
 
@@ -2588,12 +3001,11 @@ extern "C" {
     /// this year-month with the given day.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `day` is not a valid object with a `day` property.
     /// Throws a `RangeError` if the day doesn't exist in this year-month.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/toPlainDate)
     #[wasm_bindgen(method, js_name = toPlainDate, catch)]
-    pub fn to_plain_date(this: &PlainYearMonth, day: &JsValue) -> Result<PlainDate, JsValue>;
+    pub fn to_plain_date(this: &PlainYearMonth, day: &Object) -> Result<PlainDate, JsValue>;
 
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this year-month.
@@ -2606,6 +3018,21 @@ extern "C" {
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string(
+        this: &PlainYearMonth,
+        locales: &[JsString],
+    ) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method returns a language-sensitive string representation
+    /// of this year-month.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
+    /// not match this value's calendar, and a `TypeError` for options that do not
+    /// apply to this type.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/toLocaleString)
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_options(
         this: &PlainYearMonth,
         locales: &[JsString],
         options: &super::Intl::DateTimeFormatOptions,
@@ -2681,13 +3108,51 @@ extern "C" {
     /// object from another value.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `item` is not a valid PlainMonthDay, month-day-like object, or string.
     /// Throws a `RangeError` if the string is invalid or values are out of range
     /// (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/from)
-    #[wasm_bindgen(static_method_of = PlainMonthDay, js_namespace = Temporal, catch)]
-    pub fn from(item: &JsValue, options: &AssignmentOptions) -> Result<PlainMonthDay, JsValue>;
+    #[wasm_bindgen(js_name = from, static_method_of = PlainMonthDay, js_namespace = Temporal, catch)]
+    pub fn from_with_str(item: &str) -> Result<PlainMonthDay, JsValue>;
+
+    /// The `Temporal.PlainMonthDay.from()` static method creates a new `Temporal.PlainMonthDay`
+    /// object from another value.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is invalid or values are out of range
+    /// (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/from)
+    #[wasm_bindgen(js_name = from, static_method_of = PlainMonthDay, js_namespace = Temporal, catch)]
+    pub fn from_with_object(item: &Object) -> Result<PlainMonthDay, JsValue>;
+
+    /// The `Temporal.PlainMonthDay.from()` static method creates a new `Temporal.PlainMonthDay`
+    /// object from another value.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is invalid or values are out of range
+    /// (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/from)
+    #[wasm_bindgen(js_name = from, static_method_of = PlainMonthDay, js_namespace = Temporal, catch)]
+    pub fn from_with_str_and_options(
+        item: &str,
+        options: &AssignmentOptions,
+    ) -> Result<PlainMonthDay, JsValue>;
+
+    /// The `Temporal.PlainMonthDay.from()` static method creates a new `Temporal.PlainMonthDay`
+    /// object from another value.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is invalid or values are out of range
+    /// (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/from)
+    #[wasm_bindgen(js_name = from, static_method_of = PlainMonthDay, js_namespace = Temporal, catch)]
+    pub fn from_with_object_and_options(
+        item: &Object,
+        options: &AssignmentOptions,
+    ) -> Result<PlainMonthDay, JsValue>;
 
     /// The `monthCode` accessor property returns a calendar-specific string representing
     /// the month of this month-day.
@@ -2712,25 +3177,31 @@ extern "C" {
 
     /// The `equals()` method returns `true` if this month-day is equivalent to `other`.
     ///
-    /// # Errors
-    /// Throws a `TypeError` if `other` is not a valid PlainMonthDay or string.
-    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/equals)
     #[wasm_bindgen(method, catch)]
-    pub fn equals(this: &PlainMonthDay, other: &JsValue) -> Result<bool, JsValue>;
+    pub fn equals(this: &PlainMonthDay, other: &PlainMonthDay) -> Result<bool, JsValue>;
 
     /// The `with()` method returns a new `Temporal.PlainMonthDay` object with some
     /// fields replaced by new values.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `info` is not a valid month-day-like object.
     /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(
+    pub fn with(this: &PlainMonthDay, info: &Object) -> Result<PlainMonthDay, JsValue>;
+
+    /// The `with()` method returns a new `Temporal.PlainMonthDay` object with some
+    /// fields replaced by new values.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/with)
+    #[wasm_bindgen(js_name = with, method, catch)]
+    pub fn with_with_options(
         this: &PlainMonthDay,
-        info: &JsValue,
+        info: &Object,
         options: &AssignmentOptions,
     ) -> Result<PlainMonthDay, JsValue>;
 
@@ -2738,12 +3209,11 @@ extern "C" {
     /// this month-day in the given year.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `year` is not a valid object with a `year` property.
     /// Throws a `RangeError` if the date doesn't exist in the given year (e.g., Feb 29 in non-leap year).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/toPlainDate)
     #[wasm_bindgen(method, js_name = toPlainDate, catch)]
-    pub fn to_plain_date(this: &PlainMonthDay, year: &JsValue) -> Result<PlainDate, JsValue>;
+    pub fn to_plain_date(this: &PlainMonthDay, year: &Object) -> Result<PlainDate, JsValue>;
 
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this month-day.
@@ -2756,6 +3226,21 @@ extern "C" {
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string(
+        this: &PlainMonthDay,
+        locales: &[JsString],
+    ) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method returns a language-sensitive string representation
+    /// of this month-day.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
+    /// not match this value's calendar, and a `TypeError` for options that do not
+    /// apply to this type.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/toLocaleString)
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_options(
         this: &PlainMonthDay,
         locales: &[JsString],
         options: &super::Intl::DateTimeFormatOptions,
@@ -2829,23 +3314,58 @@ extern "C" {
     /// object from another value.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `item` is not a valid PlainDate, date-like object, or string.
     /// Throws a `RangeError` if the string is invalid or values are out of range
     /// (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/from)
-    #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, catch)]
-    pub fn from(item: &JsValue, options: &AssignmentOptions) -> Result<PlainDate, JsValue>;
+    #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
+    pub fn from_with_str(item: &str) -> Result<PlainDate, JsValue>;
+
+    /// The `Temporal.PlainDate.from()` static method creates a new `Temporal.PlainDate`
+    /// object from another value.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is invalid or values are out of range
+    /// (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/from)
+    #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
+    pub fn from_with_object(item: &Object) -> Result<PlainDate, JsValue>;
+
+    /// The `Temporal.PlainDate.from()` static method creates a new `Temporal.PlainDate`
+    /// object from another value.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is invalid or values are out of range
+    /// (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/from)
+    #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
+    pub fn from_with_str_and_options(
+        item: &str,
+        options: &AssignmentOptions,
+    ) -> Result<PlainDate, JsValue>;
+
+    /// The `Temporal.PlainDate.from()` static method creates a new `Temporal.PlainDate`
+    /// object from another value.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is invalid or values are out of range
+    /// (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/from)
+    #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
+    pub fn from_with_object_and_options(
+        item: &Object,
+        options: &AssignmentOptions,
+    ) -> Result<PlainDate, JsValue>;
 
     /// The `Temporal.PlainDate.compare()` static method returns -1, 0, or 1 depending
     /// on whether `one` comes before, is equal to, or comes after `two`.
     ///
-    /// # Errors
-    /// Throws a `TypeError` if either argument is not a valid PlainDate or string.
-    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/compare)
     #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, catch)]
-    pub fn compare(one: &JsValue, two: &JsValue) -> Result<i32, JsValue>;
+    pub fn compare(one: &PlainDate, two: &PlainDate) -> Result<i32, JsValue>;
 
     /// The `era` accessor property returns a calendar-specific lowercase string
     /// representing the era of this date, or `None` if the calendar does not use eras.
@@ -2963,25 +3483,31 @@ extern "C" {
 
     /// The `equals()` method returns `true` if this date is equivalent to `other`.
     ///
-    /// # Errors
-    /// Throws a `TypeError` if `other` is not a valid PlainDate or string.
-    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/equals)
     #[wasm_bindgen(method, catch)]
-    pub fn equals(this: &PlainDate, other: &JsValue) -> Result<bool, JsValue>;
+    pub fn equals(this: &PlainDate, other: &PlainDate) -> Result<bool, JsValue>;
 
     /// The `with()` method returns a new `Temporal.PlainDate` object with some
     /// fields replaced by new values.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `info` is not a valid date-like object.
     /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(
+    pub fn with(this: &PlainDate, info: &Object) -> Result<PlainDate, JsValue>;
+
+    /// The `with()` method returns a new `Temporal.PlainDate` object with some
+    /// fields replaced by new values.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/with)
+    #[wasm_bindgen(js_name = with, method, catch)]
+    pub fn with_with_options(
         this: &PlainDate,
-        info: &JsValue,
+        info: &Object,
         options: &AssignmentOptions,
     ) -> Result<PlainDate, JsValue>;
 
@@ -2999,14 +3525,23 @@ extern "C" {
     /// duration added to this date.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `duration` is not a valid Duration or duration-like.
     /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/add)
     #[wasm_bindgen(method, catch)]
-    pub fn add(
+    pub fn add(this: &PlainDate, duration: &Duration) -> Result<PlainDate, JsValue>;
+
+    /// The `add()` method returns a new `Temporal.PlainDate` object with the
+    /// duration added to this date.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/add)
+    #[wasm_bindgen(js_name = add, method, catch)]
+    pub fn add_with_options(
         this: &PlainDate,
-        duration: &JsValue,
+        duration: &Duration,
         options: &ArithmeticOptions,
     ) -> Result<PlainDate, JsValue>;
 
@@ -3014,14 +3549,23 @@ extern "C" {
     /// duration subtracted from this date.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `duration` is not a valid Duration or duration-like.
     /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/subtract)
     #[wasm_bindgen(method, catch)]
-    pub fn subtract(
+    pub fn subtract(this: &PlainDate, duration: &Duration) -> Result<PlainDate, JsValue>;
+
+    /// The `subtract()` method returns a new `Temporal.PlainDate` object with the
+    /// duration subtracted from this date.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/subtract)
+    #[wasm_bindgen(js_name = subtract, method, catch)]
+    pub fn subtract_with_options(
         this: &PlainDate,
-        duration: &JsValue,
+        duration: &Duration,
         options: &ArithmeticOptions,
     ) -> Result<PlainDate, JsValue>;
 
@@ -3029,14 +3573,23 @@ extern "C" {
     /// from this date until `other`.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `other` is not a valid PlainDate or string.
     /// Throws a `RangeError` if dates have different calendars or options are invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/until)
     #[wasm_bindgen(method, catch)]
-    pub fn until(
+    pub fn until(this: &PlainDate, other: &PlainDate) -> Result<Duration, JsValue>;
+
+    /// The `until()` method returns a `Temporal.Duration` representing the duration
+    /// from this date until `other`.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if dates have different calendars or options are invalid.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/until)
+    #[wasm_bindgen(js_name = until, method, catch)]
+    pub fn until_with_options(
         this: &PlainDate,
-        other: &JsValue,
+        other: &PlainDate,
         options: &DifferenceOptions,
     ) -> Result<Duration, JsValue>;
 
@@ -3044,26 +3597,42 @@ extern "C" {
     /// from `other` until this date.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `other` is not a valid PlainDate or string.
     /// Throws a `RangeError` if dates have different calendars or options are invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/since)
     #[wasm_bindgen(method, catch)]
-    pub fn since(
+    pub fn since(this: &PlainDate, other: &PlainDate) -> Result<Duration, JsValue>;
+
+    /// The `since()` method returns a `Temporal.Duration` representing the duration
+    /// from `other` until this date.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if dates have different calendars or options are invalid.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/since)
+    #[wasm_bindgen(js_name = since, method, catch)]
+    pub fn since_with_options(
         this: &PlainDate,
-        other: &JsValue,
+        other: &PlainDate,
         options: &DifferenceOptions,
     ) -> Result<Duration, JsValue>;
 
     /// The `toPlainDateTime()` method returns a `Temporal.PlainDateTime` object representing
     /// this date at the given time (or midnight if not provided).
     ///
-    /// # Errors
-    /// Throws a `TypeError` if `time` is provided but is not a valid PlainTime or time-like.
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toPlainDateTime)
+    #[wasm_bindgen(method, js_name = toPlainDateTime, catch)]
+    pub fn to_plain_date_time(this: &PlainDate) -> Result<PlainDateTime, JsValue>;
+
+    /// The `toPlainDateTime()` method returns a `Temporal.PlainDateTime` object representing
+    /// this date at the given time (or midnight if not provided).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toPlainDateTime)
     #[wasm_bindgen(method, js_name = toPlainDateTime, catch)]
-    pub fn to_plain_date_time(this: &PlainDate, time: &JsValue) -> Result<PlainDateTime, JsValue>;
+    pub fn to_plain_date_time_with_plain_time(
+        this: &PlainDate,
+        plain_time: &PlainTime,
+    ) -> Result<PlainDateTime, JsValue>;
 
     /// The `toZonedDateTime()` method returns a `Temporal.ZonedDateTime` object representing
     /// this date at the given time in the given time zone.
@@ -3072,12 +3641,30 @@ extern "C" {
     /// `timeZone` property and an optional `plainTime` property.
     ///
     /// # Errors
-    /// Throws a `TypeError` if `item` is not a string or an object with a `timeZone`.
     /// Throws a `RangeError` if the time zone identifier is invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toZonedDateTime)
     #[wasm_bindgen(method, js_name = toZonedDateTime, catch)]
-    pub fn to_zoned_date_time(this: &PlainDate, item: &JsValue) -> Result<ZonedDateTime, JsValue>;
+    pub fn to_zoned_date_time_with_str(
+        this: &PlainDate,
+        time_zone: &str,
+    ) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `toZonedDateTime()` method returns a `Temporal.ZonedDateTime` object representing
+    /// this date at the given time in the given time zone.
+    ///
+    /// `item` is either a time zone identifier string, or an object with a
+    /// `timeZone` property and an optional `plainTime` property.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the time zone identifier is invalid.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toZonedDateTime)
+    #[wasm_bindgen(method, js_name = toZonedDateTime, catch)]
+    pub fn to_zoned_date_time_with_object(
+        this: &PlainDate,
+        item: &Object,
+    ) -> Result<ZonedDateTime, JsValue>;
 
     /// The `toPlainYearMonth()` method returns a `Temporal.PlainYearMonth` object representing
     /// the year and month of this date.
@@ -3103,7 +3690,19 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string(
+    pub fn to_locale_string(this: &PlainDate, locales: &[JsString]) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method returns a language-sensitive string representation
+    /// of this date.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
+    /// not match this value's calendar, and a `TypeError` for options that do not
+    /// apply to this type.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toLocaleString)
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_options(
         this: &PlainDate,
         locales: &[JsString],
         options: &super::Intl::DateTimeFormatOptions,

@@ -15,17 +15,21 @@
 
 * Stabilized the `js_sys::Temporal` bindings and `Date::to_temporal_instant`,
   previously behind `js_sys_unstable_apis`, now that Temporal is Stage 4. The
-  bindings were reviewed against the final specification: bindings for the
-  removed `toPlainYearMonth`/`toPlainMonthDay` on `PlainDateTime` and
-  `ZonedDateTime`, `ZonedDateTime::with_plain_date` and
-  `PlainTime::to_plain_date_time` are gone, `offset_nanoseconds` returns `f64`,
-  `era`, `era_year`, `week_of_year` and `year_of_week` return `Option`s,
-  `fractionalSecondDigits` is a `u8`, `get_time_zone_transition` returns
-  `Result<Option<ZonedDateTime>, JsValue>`, `toString` has a plain
-  `to_js_string()` and a fallible `to_js_string_with_options()`,
-  `to_locale_string` is fallible, time zones are
-  passed as `&str`, constructors take the calendar through `new_with_calendar`
-  overloads, and the unit enums are `TemporalUnit` and `LargestUnit`.
+  bindings were reviewed against the final specification and reshaped to the
+  web-sys conventions: inputs are typed (`&Duration`, `&PlainTime`, `&Object`,
+  `&str` time zones and calendars, `&Self` for `until`/`since`/`equals`/
+  `compare`), unions expand to `from_with_str`/`from_with_object` and
+  `to_zoned_date_time_with_str`/`_with_object`, and optional arguments expand
+  to a plain method plus `_with_options`/`_and_options` or
+  `with_plain_time`/`with_plain_time_with_plain_time`. Bindings for the removed
+  `toPlainYearMonth`/`toPlainMonthDay` on `PlainDateTime` and `ZonedDateTime`,
+  `ZonedDateTime::with_plain_date` and `PlainTime::to_plain_date_time` are gone,
+  `offset_nanoseconds` returns `f64`, `era`, `era_year`, `week_of_year` and
+  `year_of_week` return `Option`s, `fractionalSecondDigits` is a `u8`,
+  `get_time_zone_transition` returns `Result<Option<ZonedDateTime>, JsValue>`,
+  `to_js_string_with_options` and `to_locale_string` are fallible, constructors
+  take the calendar through `new_with_calendar` overloads, and the unit enums
+  are `TemporalUnit` and `LargestUnit`.
   [#5402](https://github.com/wasm-bindgen/wasm-bindgen/pull/5402)
 
 * Added `--cfg wasm_bindgen_unstable_strict_option`, under which a JS to Rust
