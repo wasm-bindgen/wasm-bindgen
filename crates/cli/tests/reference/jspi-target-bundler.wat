@@ -17,7 +17,7 @@
   (import "./reference_test_bg.js" "__wbindgen_generic_0000000000000000" (func (;5;) (type 1)))
   (import "./reference_test_bg.js" "__wbindgen_generic_0000000000000001" (func (;6;) (type 0)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;7;) (type 9)))
-  (table $__wbindgen_externrefs (;0;) 1024 externref)
+  (table $__wbindgen_externrefs (;0;) 1028 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "compute" (func $"compute jspi wrapper"))

@@ -19,7 +19,7 @@
   (import "./reference_test_bg.js" "__wbg___wbindgen_throw_41e9ee4f547fc59a" (func (;2;) (type 11)))
   (import "./reference_test_bg.js" "__wbg_point_unwrap" (func (;3;) (type 0)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;4;) (type 14)))
-  (table $__wbindgen_externrefs (;0;) 1024 externref)
+  (table $__wbindgen_externrefs (;0;) 1028 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "__wbg_get_samples_values" (func $"__wbg_get_samples_values multivalue shim"))

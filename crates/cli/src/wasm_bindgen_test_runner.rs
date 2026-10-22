@@ -346,6 +346,9 @@ fn rmain(cli: Cli) -> anyhow::Result<()> {
     if std::env::var("WASM_BINDGEN_SPLIT_LINKED_MODULES").is_ok() {
         b.split_linked_modules(true);
     }
+    if std::env::var("WASM_BINDGEN_JS_STRING_BUILTINS").is_ok() {
+        b.js_string_builtins(true);
+    }
     if std::env::var("WASM_BINDGEN_KEEP_LLD_EXPORTS").is_ok() {
         b.keep_lld_exports(true);
     }

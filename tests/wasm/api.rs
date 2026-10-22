@@ -310,3 +310,23 @@ fn from_utf8_lossy_uses_intern_cache() {
         s
     );
 }
+
+#[wasm_bindgen(module = "tests/wasm/api.js")]
+extern "C" {
+    fn clone_borrowed_roundtrip();
+}
+
+#[wasm_bindgen]
+pub fn clone_borrowed(v: &JsValue) -> JsValue {
+    let a = v.clone();
+    let b = a.clone();
+    drop(a);
+    b
+}
+
+#[wasm_bindgen_test]
+fn clone_borrowed_allocates() {
+    let before = wasm_bindgen::externref_heap_live_count();
+    clone_borrowed_roundtrip();
+    assert_eq!(wasm_bindgen::externref_heap_live_count(), before);
+}

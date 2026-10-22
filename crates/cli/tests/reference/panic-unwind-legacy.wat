@@ -11,7 +11,7 @@
   (import "./reference_test_bg.js" "__wbindgen_generic_0000000000000000" (func (;3;) (type 2)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;4;) (type 5)))
   (table (;0;) 0 funcref)
-  (table $__wbindgen_externrefs (;1;) 1024 externref)
+  (table $__wbindgen_externrefs (;1;) 1028 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "maybe_panic" (func $"maybe_panic sp wrapper"))

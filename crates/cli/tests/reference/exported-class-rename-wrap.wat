@@ -11,7 +11,7 @@
   (import "./reference_test_bg.js" "__wbg_renamed_new" (func (;1;) (type 4)))
   (import "./reference_test_bg.js" "__wbg_renamed_unwrap" (func (;2;) (type 0)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;3;) (type 7)))
-  (table $__wbindgen_externrefs (;0;) 1024 externref)
+  (table $__wbindgen_externrefs (;0;) 1028 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "__wbg_renamed_free" (func $__wbg_renamed_free))

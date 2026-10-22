@@ -103,6 +103,13 @@ struct Args {
     split_linked_modules: bool,
     #[arg(
         long,
+        help = "Import `static_string` constants as JS String Builtins string constants\n\
+                from `wasm:js/string-constants`. Requires a host with the\n\
+                `importedStringConstants` compile option or the ESM integration."
+    )]
+    js_string_builtins: bool,
+    #[arg(
+        long,
         help = "Emit `Uint8Array<ArrayBuffer>`-style generic typed array return types\n\
                 in generated TypeScript. Requires TypeScript 5.7 or later."
     )]
@@ -187,6 +194,7 @@ fn rmain(args: &Args) -> Result<(), Error> {
         .omit_imports(args.omit_imports)
         .omit_default_module_path(args.omit_default_module_path)
         .split_linked_modules(args.split_linked_modules)
+        .js_string_builtins(args.js_string_builtins)
         .ts_typed_array_buffers(args.ts_typed_array_buffers)
         .reference_types(args.reference_types)
         .reset_state_function(args.generate_reset_state)

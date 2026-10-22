@@ -6,7 +6,7 @@
   (import "./reference_test_bg.js" "__wbg___wbindgen_throw_41e9ee4f547fc59a" (func (;0;) (type 1)))
   (import "./reference_test_bg.js" "__wbg_random_a5a0d0660264cf8c" (func (;1;) (type 2)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;2;) (type 3)))
-  (table $__wbindgen_externrefs (;0;) 1024 externref)
+  (table $__wbindgen_externrefs (;0;) 1028 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "add_that_might_fail" (func $add_that_might_fail))

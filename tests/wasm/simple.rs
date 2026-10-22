@@ -300,8 +300,10 @@ pub fn do_string_roundtrip(s: String) -> String {
 #[allow(clippy::redundant_clone)] // clone to increase heap live count
 fn externref_heap_live_count() {
     let x = wasm_bindgen::externref_heap_live_count();
-    let y = JsValue::null().clone();
-    assert!(wasm_bindgen::externref_heap_live_count() > x);
+    let y = JsValue::from_str("heap");
+    let z = y.clone();
+    assert_eq!(wasm_bindgen::externref_heap_live_count(), x + 2);
+    drop(z);
     drop(y);
     assert_eq!(x, wasm_bindgen::externref_heap_live_count());
 }

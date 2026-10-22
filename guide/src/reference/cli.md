@@ -127,6 +127,25 @@ On the no-modules target, `link_to!` won't work if used outside of a document,
 e.g. inside a worker. This is because it's impossible to figure out what the
 URL of the linked module is without a reference point like `import.meta.url`.
 
+### `--js-string-builtins`
+
+Imports `static_string` constants as [JS String Builtins] string constants from
+the `wasm:js/string-constants` module, named by the string itself, instead of
+defining them in the JS glue. The engine then creates the strings as it
+compiles the module.
+
+The generated JS passes the `importedStringConstants` compile option wherever
+it compiles the module itself, and provides a fallback import object for
+engines that don't support the builtins yet. Targets that leave compiling the
+module to the host, such as `bundler`, need the host to resolve the
+`wasm:js/string-constants` import as the WebAssembly ESM integration does;
+bundlers such as webpack currently fail on it. This option is disabled by
+default for that reason. It has no effect without reference types, where
+strings are defined in the JS glue as before, and isn't supported for the
+Emscripten target, which compiles the module itself.
+
+[JS String Builtins]: https://github.com/WebAssembly/js-string-builtins
+
 ### `--ts-typed-array-buffers`
 
 Since TypeScript 5.7, typed arrays are generic over their backing buffer, and a

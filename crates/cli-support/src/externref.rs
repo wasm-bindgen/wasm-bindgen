@@ -3,14 +3,21 @@ use crate::transforms::externref::Context;
 use crate::wit::{
     visit_instructions_mut, AdapterType, InstructionData, StackChange, WasmBindgenAux,
 };
-use crate::wit::{AdapterKind, Instruction, NonstandardWitSection};
+use crate::wit::{AdapterKind, Instruction, NonstandardWitSection, StaticSlot};
+use crate::{INITIAL_HEAP_OFFSET, INITIAL_HEAP_VALUES};
 use anyhow::Result;
 use std::collections::HashMap;
 use walrus::ElementItems;
-use walrus::{ir::Value, ConstExpr, ElementKind, Module};
+use walrus::{ir::Value, ConstExpr, ElementKind, Module, RefType};
 
 pub fn process(module: &mut Module) -> Result<()> {
     let mut cfg = Context::new(module)?;
+    cfg.static_slots = module
+        .customs
+        .get_typed::<WasmBindgenAux>()
+        .expect("wit custom section should exist")
+        .static_slots
+        .len();
     let section = module
         .customs
         .get_typed_mut::<NonstandardWitSection>()
@@ -49,6 +56,32 @@ pub fn process(module: &mut Module) -> Result<()> {
         .customs
         .delete_typed::<WasmBindgenAux>()
         .expect("wit custom section should exist");
+
+    // The initial heap values and the `static_string` constants live at
+    // fixed slots the Rust side relies on, so the table statically includes
+    // them and the first `table.grow` lands right after. Imported constants
+    // are initialized by element segments, one per run of them.
+    let reserved = INITIAL_HEAP_OFFSET + INITIAL_HEAP_VALUES.len();
+    module.tables.get_mut(meta.table).initial = (reserved + aux.static_slots.len()) as u64;
+    let mut slots = aux.static_slots.iter().enumerate().peekable();
+    while let Some((start, slot)) = slots.next() {
+        let StaticSlot::Global(global) = slot else {
+            continue;
+        };
+        let mut globals = vec![ConstExpr::Global(*global)];
+        while let Some((_, StaticSlot::Global(global))) = slots.peek() {
+            globals.push(ConstExpr::Global(*global));
+            slots.next();
+        }
+        let elem = module.elements.add(
+            ElementKind::Active {
+                table: meta.table,
+                offset: ConstExpr::Value(Value::I32((reserved + start) as i32)),
+            },
+            ElementItems::Expressions(RefType::EXTERNREF, globals),
+        );
+        module.tables.get_mut(meta.table).elem_segments.insert(elem);
+    }
     let section = module
         .customs
         .get_typed_mut::<NonstandardWitSection>()

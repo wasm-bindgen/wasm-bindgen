@@ -16,7 +16,7 @@
   (import "./reference_test_bg.js" "__wbindgen_generic_0000000000000000" (func (;3;) (type 1)))
   (import "./reference_test_bg.js" "__wbindgen_generic_0000000000000001" (func (;4;) (type 6)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;5;) (type 10)))
-  (table $__wbindgen_externrefs (;0;) 1024 externref)
+  (table $__wbindgen_externrefs (;0;) 1028 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "a_level" (func $a_level))

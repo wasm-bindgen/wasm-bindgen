@@ -9,7 +9,7 @@
   (type (;7;) (func))
   (import "./reference_test_bg.js" "__wbg___wbindgen_throw_41e9ee4f547fc59a" (func (;0;) (type 4)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;1;) (type 7)))
-  (table $__wbindgen_externrefs (;0;) 1024 externref)
+  (table $__wbindgen_externrefs (;0;) 1028 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "__wbg_inheritancechild_free" (func $__wbg_inheritancechild_free))

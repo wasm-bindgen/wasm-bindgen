@@ -10,8 +10,10 @@ use crate::wit::{
 };
 use crate::wit::{AdapterKind, Instruction, InstructionData};
 use crate::wit::{AuxEnum, AuxExport, AuxExportKind, AuxImport, AuxStruct};
-use crate::wit::{JsImport, JsImportName, NonstandardWitSection, WasmBindgenAux};
-use crate::{Bindgen, EncodeInto, OutputMode, PLACEHOLDER_MODULE};
+use crate::wit::{JsImport, JsImportName, NonstandardWitSection, StaticSlot, WasmBindgenAux};
+use crate::{
+    Bindgen, EncodeInto, OutputMode, INITIAL_HEAP_OFFSET, INITIAL_HEAP_VALUES, PLACEHOLDER_MODULE,
+};
 use anyhow::{anyhow, bail, Context as _, Error};
 use binding::TsReference;
 use std::borrow::Cow;
@@ -332,10 +334,6 @@ struct FieldAccessor {
     docs: String,
     is_optional: bool,
 }
-
-const INITIAL_HEAP_VALUES: &[&str] = &["undefined", "null", "true", "false"];
-// Must be kept in sync with `src/lib.rs` of the `wasm-bindgen` crate
-const INITIAL_HEAP_OFFSET: usize = 1024;
 
 impl<'a> Context<'a> {
     pub fn new(
@@ -1044,7 +1042,10 @@ impl<'a> Context<'a> {
             .imports
             .iter()
             .map(|import| &import.module)
-            .filter(|module| module.as_str() != PLACEHOLDER_MODULE);
+            .filter(|module| {
+                module.as_str() != PLACEHOLDER_MODULE
+                    && module.as_str() != crate::STRING_CONSTANTS_MODULE
+            });
         for (i, module) in import_modules.enumerate() {
             let i = i + 1;
             if self.config.mode.uses_es_modules() {
@@ -1056,6 +1057,16 @@ impl<'a> Context<'a> {
             }
 
             return_stmt.push_str(&format!(r#""{module}": import{i},"#));
+            return_stmt.push('\n');
+        }
+        if self.has_string_constants() {
+            // Engines that compiled the module with `importedStringConstants`
+            // never look this up. Elsewhere, each string constant is imported
+            // under its own value as the name.
+            return_stmt.push_str(&format!(
+                r#""{}": new Proxy({{}}, {{ get: (_, name) => name }}),"#,
+                crate::STRING_CONSTANTS_MODULE
+            ));
             return_stmt.push('\n');
         }
         return_stmt.push_str("};\n");
@@ -1433,6 +1444,29 @@ export const __wbg_memory: WebAssembly.Memory;
         )
     }
 
+    /// The compile options argument to append to the `WebAssembly` call that
+    /// compiles the module, if it needs any. Targets that leave compiling the
+    /// module to the host get ESM integration semantics instead.
+    fn compile_options_arg(&self) -> String {
+        if !self.has_string_constants() {
+            String::new()
+        } else {
+            format!(
+                ", {{ importedStringConstants: '{}' }}",
+                crate::STRING_CONSTANTS_MODULE
+            )
+        }
+    }
+
+    /// Whether any `static_string` constant is imported as a JS String
+    /// Builtins string constant, under `--js-string-builtins`.
+    fn has_string_constants(&self) -> bool {
+        self.module
+            .imports
+            .iter()
+            .any(|import| import.module == crate::STRING_CONSTANTS_MODULE)
+    }
+
     fn generate_bundler_wasm_loading(&self) -> String {
         r#"
         let wasm;
@@ -1509,6 +1543,7 @@ export const __wbg_memory: WebAssembly.Memory;
                 .unwrap()
             }
         }
+        let compile_options = self.compile_options_arg();
         format!(
             "let wasmModule, wasmInstance, wasm;
             function __wbg_finalize_init(instance, module{init_stack_size_arg}) {{
@@ -1526,7 +1561,7 @@ export const __wbg_memory: WebAssembly.Memory;
 
                     if (typeof WebAssembly.instantiateStreaming === 'function') {{
                         try {{
-                            return await WebAssembly.instantiateStreaming(module, imports);
+                            return await WebAssembly.instantiateStreaming(module, imports{compile_options});
                         }} catch (e) {{
                             const validResponse = expectedResponseType(module.type);
 
@@ -1542,9 +1577,9 @@ export const __wbg_memory: WebAssembly.Memory;
                     }}
 
                     const bytes = await module.arrayBuffer();
-                    return await WebAssembly.instantiate(bytes, imports);
+                    return await WebAssembly.instantiate(bytes, imports{compile_options});
                 }} else {{
-                    const instance = await WebAssembly.instantiate(module, imports);
+                    const instance = await WebAssembly.instantiate(module, imports{compile_options});
 
                     if (instance instanceof WebAssembly.Instance) {{
                         return {{ instance, module }};
@@ -1575,7 +1610,7 @@ export const __wbg_memory: WebAssembly.Memory;
 
                 const imports = __wbg_get_imports({init_memory_arg_alone});
                 if (!(module instanceof WebAssembly.Module)) {{
-                    module = new WebAssembly.Module(module);
+                    module = new WebAssembly.Module(module{compile_options});
                 }}
                 const instance = new WebAssembly.Instance(module, imports);
                 return __wbg_finalize_init(instance, module{init_stack_size_arg});
@@ -1646,11 +1681,12 @@ export const __wbg_memory: WebAssembly.Memory;
     }
 
     fn generate_deno_wasm_loading(&self, module_name: &str, needs_manual_start: bool) -> String {
+        let compile_options = self.compile_options_arg();
         // Deno added support for .wasm imports in 2024 in https://github.com/denoland/deno/issues/2552.
         // It's fairly recent, so use old-school Wasm loading for broader compat for now.
         format!(
             "const wasmUrl = new URL('{module_name}_bg.wasm', import.meta.url);
-            const wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports());
+            const wasmInstantiated = await WebAssembly.instantiateStreaming(fetch(wasmUrl), __wbg_get_imports(){compile_options});
             const wasmInstance = wasmInstantiated.instance;
             const wasm = wasmInstance.exports;
             {start}",
@@ -1669,6 +1705,7 @@ export const __wbg_memory: WebAssembly.Memory;
     ) -> String {
         self.es_module_imports
             .push_str("import { readFileSync } from 'node:fs';\n");
+        let compile_options = self.compile_options_arg();
 
         if self.threads_enabled {
             self.es_module_imports
@@ -1703,7 +1740,7 @@ export function initSync(opts = {{}}) {{
     }}
 
     if (!(module instanceof WebAssembly.Module)) {{
-        wasmModule = new WebAssembly.Module(module);
+        wasmModule = new WebAssembly.Module(module{compile_options});
     }} else {{
         wasmModule = module;
     }}
@@ -1731,7 +1768,7 @@ export {{ wasm as __wasm, wasmModule as __wbg_wasm_module, memory as __wbg_memor
                 "\
                 const wasmUrl = new URL('{module_name}_bg.wasm', import.meta.url);\n\
                 const wasmBytes = readFileSync(wasmUrl);\n\
-                const wasmModule = new WebAssembly.Module(wasmBytes);\n\
+                const wasmModule = new WebAssembly.Module(wasmBytes{compile_options});\n\
                 let wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());\n\
                 let wasm = wasmInstance.exports;\n\
                 {start}",
@@ -1749,6 +1786,7 @@ export {{ wasm as __wasm, wasmModule as __wbg_wasm_module, memory as __wbg_memor
         module_name: &str,
         needs_manual_start: bool,
     ) -> String {
+        let compile_options = self.compile_options_arg();
         if self.threads_enabled {
             // For threads: generate initSync that accepts custom memory
             let start_call = if needs_manual_start {
@@ -1786,7 +1824,7 @@ exports.initSync = function(opts) {{
     }}
 
     if (!(module instanceof WebAssembly.Module)) {{
-        wasmModule = new WebAssembly.Module(module);
+        wasmModule = new WebAssembly.Module(module{compile_options});
     }} else {{
         wasmModule = module;
     }}
@@ -1814,7 +1852,7 @@ if (require('worker_threads').isMainThread) {{
             format!(
                 r#"const wasmPath = `${{__dirname}}/{module_name}_bg.wasm`;
             const wasmBytes = require('fs').readFileSync(wasmPath);
-            const wasmModule = new WebAssembly.Module(wasmBytes);
+            const wasmModule = new WebAssembly.Module(wasmBytes{compile_options});
             let wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
             let wasm = wasmInstance.exports;
             {start}"#,
@@ -4863,6 +4901,12 @@ if (require('worker_threads').isMainThread) {{
     }
 
     pub fn generate(&mut self) -> Result<(), Error> {
+        // Emscripten compiles the module itself, without the compile options
+        // that string constants need.
+        if matches!(self.config.mode, OutputMode::Emscripten) && self.has_string_constants() {
+            bail!("`--js-string-builtins` isn't supported for Emscripten");
+        }
+
         self.prestore_global_import_identifiers()?;
 
         // Set up qualified-name mappings before processing adapters, so that
@@ -6077,12 +6121,7 @@ addToLibrary({
                 assert!(!variadic);
                 assert_eq!(args.len(), 0);
 
-                let mut escaped = String::with_capacity(string.len());
-                string.chars().for_each(|c| match c {
-                    '`' | '\\' | '$' => escaped.extend(['\\', c]),
-                    _ => escaped.extend([c]),
-                });
-                Ok(format!("`{escaped}`"))
+                Ok(js_string_literal(string))
             }
 
             AuxImport::Cast { sig_comment } => {
@@ -6631,23 +6670,35 @@ addToLibrary({
                 let name = self.export_name_of(table);
                 let table_ref = self.wasm_export_ref(&name);
 
-                // Grow the table to insert our initial values, and then also
-                // set the 0th slot to `undefined` since that's what we've
-                // historically used for our ABI which is that the index of 0
-                // returns `undefined` for types like `None` going out.
+                // The table is sized to hold the initial values at their
+                // fixed slots, so just fill them in, and also set the 0th
+                // slot to `undefined` since that's what we've historically
+                // used for our ABI which is that the index of 0 returns
+                // `undefined` for types like `None` going out.
                 let mut base = format!(
                     "
                       const table = {table_ref};
-                      const offset = table.grow({});
                       table.set(0, undefined);
-                    ",
-                    INITIAL_HEAP_VALUES.len(),
+                    "
                 );
                 for (i, value) in INITIAL_HEAP_VALUES.iter().enumerate() {
                     base.push_str(&format!(
-                        "{}table.set(offset + {i}, {value})",
-                        if i > 0 { ";\n" } else { "" }
+                        "{}table.set({}, {value})",
+                        if i > 0 { ";\n" } else { "" },
+                        INITIAL_HEAP_OFFSET + i,
                     ));
+                }
+                // String constants not imported as globals are filled in
+                // here too, at the fixed slots after the initial values.
+                let first_slot = INITIAL_HEAP_OFFSET + INITIAL_HEAP_VALUES.len();
+                for (i, slot) in self.aux.static_slots.iter().enumerate() {
+                    if let StaticSlot::String(string) = slot {
+                        base.push_str(&format!(
+                            ";\ntable.set({}, {})",
+                            first_slot + i,
+                            js_string_literal(string)
+                        ));
+                    }
                 }
                 base
             }
@@ -7799,6 +7850,30 @@ fn emscripten_mangle(name: &str) -> String {
         _ if name.starts_with("dynCall_") => name.to_string(),
         _ => format!("_{name}"),
     }
+}
+
+/// A JS string literal evaluating to `string`, for any string.
+fn js_string_literal(string: &str) -> String {
+    let mut out = String::with_capacity(string.len() + 2);
+    out.push('"');
+    for c in string.chars() {
+        match c {
+            '"' | '\\' => {
+                out.push('\\');
+                out.push(c);
+            }
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\u{2028}' => out.push_str("\\u2028"),
+            '\u{2029}' => out.push_str("\\u2029"),
+            c if (c as u32) < 0x20 || c == '\u{7f}' => {
+                out.push_str(&format!("\\x{:02x}", c as u32));
+            }
+            c => out.push(c),
+        }
+    }
+    out.push('"');
+    out
 }
 
 /// Returns a string to tack on to the end of an expression to access a

@@ -19,6 +19,7 @@ use anyhow::{anyhow, bail, Context as _, Error};
 use std::collections::{HashMap, HashSet};
 
 use crate::wasm_conventions;
+use crate::{INITIAL_HEAP_OFFSET, INITIAL_HEAP_VALUES};
 use walrus::{ir::*, RefType};
 use walrus::{ConstExpr, FunctionId, GlobalId, Module, TableId, ValType};
 use walrus::{ExportId, ImportId, InstrLocId, TypeId};
@@ -40,6 +41,11 @@ pub struct Context {
 
     // If the bulk memory proposal is enabled.
     bulk_memory: bool,
+
+    // How many `static_string` constants follow the initial heap values at
+    // fixed table slots. `__wbindgen_externref_statics_end` lowers to the
+    // slot after them.
+    pub static_slots: usize,
 }
 
 pub struct Meta {
@@ -79,6 +85,7 @@ struct Function {
 enum Intrinsic {
     TableGrow,
     TableSetNull,
+    StaticsEnd,
     DropRef,
     CloneRef,
 }
@@ -105,6 +112,7 @@ impl Context {
             // Add in an externref table to the module, which we'll be using for
             // our transform below.
             table,
+            static_slots: 0,
         })
     }
 
@@ -263,6 +271,9 @@ impl Transform<'_> {
                     }
                     "__wbindgen_externref_table_set_null" => {
                         self.intrinsic_map.insert(f, Intrinsic::TableSetNull);
+                    }
+                    "__wbindgen_externref_statics_end" => {
+                        self.intrinsic_map.insert(f, Intrinsic::StaticsEnd);
                     }
                     n => bail!("unknown intrinsic: {n}"),
                 }
@@ -618,6 +629,7 @@ impl Transform<'_> {
         impl VisitorMut for Rewrite<'_, '_> {
             fn start_instr_seq_mut(&mut self, seq: &mut InstrSeq) {
                 for i in (0..seq.instrs.len()).rev() {
+                    let is_return_call = matches!(seq.instrs[i].0, Instr::ReturnCall(_));
                     let func = match &mut seq.instrs[i].0 {
                         Instr::Call(Call { func }) => func,
                         Instr::ReturnCall(ReturnCall { func }) => func,
@@ -672,6 +684,19 @@ impl Transform<'_> {
                             // preceding instruction
                             seq.instrs
                                 .insert(i, (RefNull { ty }.into(), InstrLocId::default()));
+                        }
+                        Intrinsic::StaticsEnd => {
+                            let end = INITIAL_HEAP_OFFSET
+                                + INITIAL_HEAP_VALUES.len()
+                                + self.xform.cx.static_slots;
+                            seq.instrs[i].0 = Const {
+                                value: Value::I32(end as i32),
+                            }
+                            .into();
+                            if is_return_call {
+                                seq.instrs
+                                    .insert(i + 1, (Return {}.into(), InstrLocId::default()));
+                            }
                         }
                         Intrinsic::DropRef => *func = self.heap_dealloc,
                         Intrinsic::CloneRef => *func = self.clone_ref,

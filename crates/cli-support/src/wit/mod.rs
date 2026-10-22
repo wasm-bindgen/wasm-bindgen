@@ -3,7 +3,9 @@ use crate::descriptor::{Descriptor, Function, GenericImportKey, ItemKind, ItemOr
 use crate::descriptors::WasmBindgenDescriptorsSection;
 use crate::intrinsic::Intrinsic;
 use crate::transforms::threads::ThreadCount;
-use crate::{decode, wasm_conventions, Bindgen, PLACEHOLDER_MODULE};
+use crate::{
+    decode, wasm_conventions, Bindgen, INITIAL_HEAP_OFFSET, INITIAL_HEAP_VALUES, PLACEHOLDER_MODULE,
+};
 use anyhow::{anyhow, bail, ensure, Context as _, Error};
 use std::collections::hash_map::Entry;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -56,6 +58,7 @@ struct Context<'a> {
     module_path: &'a str,
     descriptors: HashMap<String, Descriptor>,
     externref_enabled: bool,
+    js_string_builtins: bool,
     thread_count: Option<ThreadCount>,
     support_start: bool,
     linked_modules: bool,
@@ -181,6 +184,7 @@ pub fn process(
         module,
         start_found: false,
         externref_enabled: bindgen.externref,
+        js_string_builtins: bindgen.js_string_builtins,
         thread_count,
         support_start: bindgen.emit_start,
         linked_modules: bindgen.split_linked_modules,
@@ -1855,29 +1859,83 @@ impl<'a> Context<'a> {
     }
 
     fn import_string(&mut self, string: &decode::ImportString<'_>) -> Result<(), Error> {
-        let (import_id, _id) = match self.function_imports.get(string.shim) {
+        let (import_id, func_id) = match self.function_imports.get(string.shim) {
             Some(pair) => *pair,
             None => return Ok(()),
         };
 
-        // Register the signature of this imported shim
-        let id = self.import_adapter(
-            import_id,
-            Function {
-                arguments: Vec::new(),
-                shim_idx: 0,
-                ret: Descriptor::Externref,
-                inner_ret: None,
-            },
-            AdapterJsImportKind::Normal,
-        )?;
+        // Without an `externref` table of our own the shim is a JS function
+        // returning the literal.
+        if !self.externref_enabled {
+            let id = self.import_adapter(
+                import_id,
+                Function {
+                    arguments: Vec::new(),
+                    shim_idx: 0,
+                    ret: Descriptor::Externref,
+                    inner_ret: None,
+                },
+                AdapterJsImportKind::Normal,
+            )?;
+            self.aux
+                .import_map
+                .insert(id, AuxImport::String(string.string.to_owned()));
+            return Ok(());
+        }
 
-        // And then save off that this function is is an instanceof shim for an
-        // imported item.
-        self.aux
-            .import_map
-            .insert(id, AuxImport::String(string.string.to_owned()));
+        // Otherwise the string sits at a fixed table slot and the shim is a
+        // local function returning that slot's index, which Rust treats as
+        // unfreeable.
+        let index = self.static_slot(string.string)?;
+        self.function_imports.remove(string.shim);
+        self.module.replace_imported_func(func_id, |(body, _)| {
+            body.i32_const(index as i32);
+        })?;
         Ok(())
+    }
+
+    /// The fixed `externref` table slot of a `static_string` constant (see
+    /// `externref::process`), shared by identical strings. Under
+    /// `--js-string-builtins` the slot is filled from a JS String Builtins
+    /// string constant, imported from `wasm:js/string-constants` under the
+    /// string itself, and otherwise by the JS glue.
+    fn static_slot(&mut self, string: &str) -> Result<u32, Error> {
+        let slot = if self.js_string_builtins {
+            let existing = self
+                .module
+                .imports
+                .find(crate::STRING_CONSTANTS_MODULE, string)
+                .and_then(|id| match self.module.imports.get(id).kind {
+                    walrus::ImportKind::Global(global) => Some(global),
+                    _ => None,
+                });
+            let global = match existing {
+                Some(global) => global,
+                None => {
+                    self.module
+                        .add_import_global(
+                            crate::STRING_CONSTANTS_MODULE,
+                            string,
+                            walrus::ValType::Ref(walrus::RefType::EXTERNREF),
+                            false,
+                            false,
+                        )
+                        .0
+                }
+            };
+            StaticSlot::Global(global)
+        } else {
+            StaticSlot::String(string.to_owned())
+        };
+        let position = match self.aux.static_slots.iter().position(|s| *s == slot) {
+            Some(position) => position,
+            None => {
+                self.aux.static_slots.push(slot);
+                self.aux.static_slots.len() - 1
+            }
+        };
+        u32::try_from(INITIAL_HEAP_OFFSET + INITIAL_HEAP_VALUES.len() + position)
+            .context("too many `static_string` constants")
     }
 
     fn import_type(&mut self, import: decode::Import<'_>) -> Result<(), Error> {
@@ -3134,6 +3192,7 @@ mod tests {
             module_path: "",
             descriptors: Default::default(),
             externref_enabled: false,
+            js_string_builtins: false,
             thread_count: None,
             support_start: true,
             linked_modules: false,

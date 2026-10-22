@@ -10,7 +10,7 @@
   (import "./reference_test_bg.js" "__wbg_status2_new" (func (;1;) (type 2)))
   (import "./reference_test_bg.js" "__wbg_status_new" (func (;2;) (type 2)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;3;) (type 6)))
-  (table $__wbindgen_externrefs (;0;) 1024 externref)
+  (table $__wbindgen_externrefs (;0;) 1028 externref)
   (memory (;0;) 17)
   (export "memory" (memory 0))
   (export "__wbg_get_status2_code" (func $__wbg_get_status2_code))

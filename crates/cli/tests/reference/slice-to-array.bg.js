@@ -37,12 +37,11 @@ export function __wbg_js_slice_u16_as_array_78e736a5d5adf04b(arg0, arg1) {
 }
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;
-    const offset = table.grow(4);
     table.set(0, undefined);
-    table.set(offset + 0, undefined);
-    table.set(offset + 1, null);
-    table.set(offset + 2, true);
-    table.set(offset + 3, false);
+    table.set(1024, undefined);
+    table.set(1025, null);
+    table.set(1026, true);
+    table.set(1027, false);
 }
 function getArrayU16FromWasm0(ptr, len) {
     ptr = ptr >>> 0;
