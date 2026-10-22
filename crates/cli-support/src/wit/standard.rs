@@ -98,6 +98,38 @@ pub enum AdapterJsImportKind {
     Normal,
 }
 
+/// Which JS values an option treats as empty, and how they cross the ABI.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum OptionKind {
+    /// `Option<T>`: `null` and `undefined` are both `None`.
+    Lenient,
+    /// `Option<T>` under `wasm_bindgen_unstable_strict_option`: only
+    /// `undefined` is `None`, so `null` goes to the inner type's conversion.
+    Strict,
+    /// `Nullable<T>`: `undefined` and `null` cross as distinct empty values.
+    Nullable,
+}
+
+impl OptionKind {
+    /// The kind of an `Option<T>` descriptor.
+    pub fn option(strict: bool) -> OptionKind {
+        if strict {
+            OptionKind::Strict
+        } else {
+            OptionKind::Lenient
+        }
+    }
+
+    pub fn nullable(self) -> bool {
+        matches!(self, OptionKind::Nullable)
+    }
+
+    /// Whether `null` is an accepted argument value, so part of its TS type.
+    pub fn accepts_null(self) -> bool {
+        !matches!(self, OptionKind::Strict)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AdapterType {
     S8,
@@ -124,11 +156,9 @@ pub enum AdapterType {
     /// into the buffer of the passed typed array after the call, so it can't
     /// be a plain array.
     MutableSlice(VectorKind),
-    /// `strict` when the JS → Rust glue treats only `undefined` as `None`,
-    /// which leaves `null` out of the TypeScript argument type.
     Option {
         ty: Box<AdapterType>,
-        strict: bool,
+        kind: OptionKind,
     },
     Struct(String),
     Enum(String),
@@ -210,10 +240,11 @@ pub enum Instruction {
     },
 
     OptionInt128ToWasm {
-        strict: bool,
+        kind: OptionKind,
     },
     OptionWasmToInt128 {
         signed: bool,
+        nullable: bool,
     },
 
     /// Pops a Wasm `i32` and pushes the enum variant as a string
@@ -221,8 +252,12 @@ pub enum Instruction {
         name: String,
     },
 
+    /// Pops a Wasm `i32`, pushes the variant as a string, `undefined` for
+    /// `hole` and, when `nullable`, `null` for the index above it.
     OptionWasmToStringEnum {
         name: String,
+        hole: u32,
+        nullable: bool,
     },
 
     /// pops a string and pushes the enum variant as an `i32`
@@ -235,7 +270,7 @@ pub enum Instruction {
         name: String,
         invalid: u32,
         hole: u32,
-        strict: bool,
+        kind: OptionKind,
     },
 
     /// Pops a `bool` from the stack and pushes an `i32` equivalent
@@ -263,7 +298,7 @@ pub enum Instruction {
     /// consumed pointer value if it's "some".
     I32FromOptionRust {
         class: String,
-        strict: bool,
+        kind: OptionKind,
     },
     /// Pops an `externref` from the stack, pushes either 0 if it's "none" or and
     /// index into the owned Wasm table it was stored at if it's "some"
@@ -271,22 +306,22 @@ pub enum Instruction {
         /// Set to `Some` by the externref pass of where to put it in the wasm
         /// module, otherwise it's shoved into the JS shim.
         table_and_alloc: Option<(walrus::TableId, walrus::FunctionId)>,
-        strict: bool,
+        kind: OptionKind,
     },
     /// Pops an `externref` from the stack, pushes either a sentinel value if it's
     /// "none" or the integer value of it if it's "some"
     I32FromOptionU32Sentinel {
-        strict: bool,
+        kind: OptionKind,
     },
     /// Pops an `externref` from the stack, pushes 0 for "none", 1 for
     /// "some(false)', and 2 for "some(true)"
     I32FromOptionBool {
-        strict: bool,
+        kind: OptionKind,
     },
     /// Pops an `externref` from the stack, pushes a sentinel for "none" or the
     /// value if it's "some"
     I32FromOptionChar {
-        strict: bool,
+        kind: OptionKind,
     },
     /// Pops a numeric enum's number and pushes it unchanged as an `f64`.
     F64FromEnum,
@@ -294,30 +329,30 @@ pub enum Instruction {
     /// value if it's "some"
     F64FromOptionEnum {
         hole: u32,
-        strict: bool,
+        kind: OptionKind,
     },
     /// Pops an `externref` from the stack, pushes either a sentinel value if it's
     /// "none" or the integer value of it if it's "some"
     F64FromOptionSentinelInt {
         signed: bool,
-        strict: bool,
+        kind: OptionKind,
     },
     /// Pops an optional JS number, preserving its numeric value while reserving
     /// `Number.MAX_SAFE_INTEGER` as the ABI sentinel for pointer-sized options.
     F64FromOptionSentinelNumber {
-        strict: bool,
+        kind: OptionKind,
     },
     /// Pops an `externref` from the stack, pushes either a sentinel value if it's
     /// "none" or the f32 value of it if it's "some"
     F64FromOptionSentinelF32 {
-        strict: bool,
+        kind: OptionKind,
     },
     /// Pops any externref from the stack and then pushes two values. First is a
     /// 0/1 if it's none/some and second is `ty` value if it was there or 0 if
     /// it wasn't there.
     FromOptionNative {
         ty: walrus::ValType,
-        strict: bool,
+        kind: OptionKind,
     },
 
     /// Pops a vector value of `kind` from the stack, allocates memory with
@@ -345,7 +380,7 @@ pub enum Instruction {
         free: walrus::FunctionId,
         mem: walrus::MemoryId,
         realloc: Option<walrus::FunctionId>,
-        strict: bool,
+        kind: OptionKind,
     },
     /// Pops a string, pushes pointer/length
     StringToMemory {
@@ -363,7 +398,7 @@ pub enum Instruction {
         malloc: walrus::FunctionId,
         free: walrus::FunctionId,
         mem: walrus::MemoryId,
-        strict: bool,
+        option_kind: OptionKind,
     },
 
     /// Pops a nullable externref; if it is non-zero, throws it.
@@ -391,8 +426,11 @@ pub enum Instruction {
     RustFromI32 {
         class: String,
     },
+    /// Pops a class pointer, pushes `undefined` for `0`, `null` for `1` when
+    /// `nullable`, else the wrapped instance.
     OptionRustFromI32 {
         class: String,
+        nullable: bool,
     },
     /// pops ptr/length i32, loads string from cache
     CachedStringLoad {
@@ -416,6 +454,7 @@ pub enum Instruction {
         mem: walrus::MemoryId,
         free: walrus::FunctionId,
         mode: SeqValue,
+        nullable: bool,
     },
     /// pops ptr/length of a buffer holding `length` element ABIs, each laid
     /// out as `words`, pushes the array `elem` decodes them into (or
@@ -426,6 +465,7 @@ pub enum Instruction {
         mem: walrus::MemoryId,
         free: walrus::FunctionId,
         optional: bool,
+        nullable: bool,
     },
     /// pops an array (or, `optional`, `undefined`), encodes each element with
     /// `elem` into the `words` of its ABI in a buffer allocated with `malloc`
@@ -438,7 +478,7 @@ pub enum Instruction {
         free: walrus::FunctionId,
         mem: walrus::MemoryId,
         optional: bool,
-        strict: bool,
+        option_kind: OptionKind,
     },
     /// pops i32, loads externref from externref table
     TableGet,
@@ -462,23 +502,34 @@ pub enum Instruction {
         kind: VectorKind,
         mem: walrus::MemoryId,
         mode: SeqValue,
+        nullable: bool,
     },
     /// pops f64, pushes it viewed as an optional value with a known sentinel
-    OptionF64Sentinel,
+    OptionF64Sentinel {
+        nullable: bool,
+    },
     /// pops i32, pushes it viewed as an optional value with a known sentinel
-    OptionU32Sentinel,
+    OptionU32Sentinel {
+        nullable: bool,
+    },
     /// pops an i32, then `ty`, then pushes externref
     ToOptionNative {
         ty: walrus::ValType,
         signed: bool,
+        nullable: bool,
     },
-    OptionBoolFromI32,
-    OptionCharFromI32,
+    OptionBoolFromI32 {
+        nullable: bool,
+    },
+    OptionCharFromI32 {
+        nullable: bool,
+    },
     OptionEnumFromF64 {
         hole: u32,
+        nullable: bool,
     },
     I32FromOptionNonNull {
-        strict: bool,
+        kind: OptionKind,
     },
     OptionNonNullFromI32,
     I32FromNonNull,
@@ -510,14 +561,10 @@ impl AdapterType {
         })
     }
 
-    pub fn option(self) -> AdapterType {
-        self.option_strict(false)
-    }
-
-    pub fn option_strict(self, strict: bool) -> AdapterType {
+    pub fn option_kind(self, kind: OptionKind) -> AdapterType {
         AdapterType::Option {
             ty: Box::new(self),
-            strict,
+            kind,
         }
     }
 }

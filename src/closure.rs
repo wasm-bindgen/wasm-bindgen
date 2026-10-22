@@ -848,6 +848,15 @@ where
     }
 }
 
+impl<T> NullableIntoWasmAbi for &ScopedClosure<'_, T>
+where
+    T: WasmClosure + ?Sized,
+{
+    fn null() -> Self::Abi {
+        <&JsValue as NullableIntoWasmAbi>::null()
+    }
+}
+
 /// `'static` closures can be passed by value to JS, transferring ownership.
 ///
 /// This is useful for one-shot callbacks where you want JS to own the closure.
@@ -885,6 +894,15 @@ where
 {
     fn none() -> Self::Abi {
         0
+    }
+}
+
+impl<T> NullableIntoWasmAbi for ScopedClosure<'static, T>
+where
+    T: WasmClosure + ?Sized,
+{
+    fn null() -> Self::Abi {
+        <JsValue as NullableIntoWasmAbi>::null()
     }
 }
 

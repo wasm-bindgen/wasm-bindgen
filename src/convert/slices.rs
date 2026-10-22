@@ -10,8 +10,9 @@ use crate::__rt::{marker::ErasableGeneric, WasmWord};
 use crate::__wbindgen_copy_to_typed_array;
 use crate::convert::{
     js_value_vector_from_abi, js_value_vector_into_abi, try_js_value_vector_from_abi, FromWasmAbi,
-    IntoWasmAbi, LongRefFromWasmAbi, OptionFromWasmAbi, OptionIntoWasmAbi, RefFromWasmAbi,
-    RefMutFromWasmAbi, UpcastFrom, VectorFromWasmAbi, VectorIntoWasmAbi, WasmAbi,
+    IntoWasmAbi, LongRefFromWasmAbi, NullableFromWasmAbi, NullableIntoWasmAbi, OptionFromWasmAbi,
+    OptionIntoWasmAbi, RefFromWasmAbi, RefMutFromWasmAbi, UpcastFrom, VectorFromWasmAbi,
+    VectorIntoWasmAbi, WasmAbi,
 };
 use crate::describe::*;
 use crate::{JsError, JsValue};
@@ -68,6 +69,18 @@ impl WasmAbi for WasmSlice {
 #[inline]
 fn null_slice() -> WasmSlice {
     WasmSlice::from_usize(0, 0)
+}
+
+/// A slice with a null pointer carries a JS handle in `len`, as an interned
+/// string does, and `0` is `undefined`; this is the handle of `null`.
+#[inline]
+fn js_null_slice() -> WasmSlice {
+    WasmSlice::from_usize(0, crate::__rt::JSIDX_NULL as usize)
+}
+
+#[inline]
+fn is_js_null_slice(slice: &WasmSlice) -> bool {
+    slice.ptr.is_zero() && slice.len.into_usize() == crate::__rt::JSIDX_NULL as usize
 }
 
 pub struct WasmMutSlice {
@@ -198,6 +211,13 @@ macro_rules! vectors_internal {
             }
         }
 
+        impl<'a> NullableIntoWasmAbi for &'a mut [$t] {
+            #[inline]
+            fn null() -> WasmSlice {
+                js_null_slice()
+            }
+        }
+
         impl RefFromWasmAbi for [$t] {
             type Abi = WasmSlice;
             type Anchor = Box<[$t]>;
@@ -310,6 +330,16 @@ where
     }
 }
 
+impl<T> NullableIntoWasmAbi for Vec<T>
+where
+    Box<[T]>: IntoWasmAbi<Abi = WasmSlice>,
+{
+    #[inline]
+    fn null() -> WasmSlice {
+        js_null_slice()
+    }
+}
+
 /// How a borrowed `&[Self]` crosses to JS.
 ///
 /// A sequence crosses as a [`WasmSlice`] of `len` cells. In place, the cell is
@@ -339,6 +369,13 @@ impl<T: VectorRefIntoWasmAbi> OptionIntoWasmAbi for &[T] {
     #[inline]
     fn none() -> WasmSlice {
         null_slice()
+    }
+}
+
+impl<T: VectorRefIntoWasmAbi> NullableIntoWasmAbi for &[T] {
+    #[inline]
+    fn null() -> WasmSlice {
+        js_null_slice()
     }
 }
 
@@ -537,6 +574,16 @@ where
     }
 }
 
+impl<T> NullableFromWasmAbi for Vec<T>
+where
+    Box<[T]>: FromWasmAbi<Abi = WasmSlice>,
+{
+    #[inline]
+    fn is_null(abi: &WasmSlice) -> bool {
+        is_js_null_slice(abi)
+    }
+}
+
 impl IntoWasmAbi for String {
     type Abi = <Vec<u8> as IntoWasmAbi>::Abi;
 
@@ -555,6 +602,13 @@ impl OptionIntoWasmAbi for String {
     }
 }
 
+impl NullableIntoWasmAbi for String {
+    #[inline]
+    fn null() -> Self::Abi {
+        js_null_slice()
+    }
+}
+
 impl FromWasmAbi for String {
     type Abi = <Vec<u8> as FromWasmAbi>::Abi;
 
@@ -568,6 +622,13 @@ impl OptionFromWasmAbi for String {
     #[inline]
     fn is_none(slice: &WasmSlice) -> bool {
         slice.ptr.is_zero()
+    }
+}
+
+impl NullableFromWasmAbi for String {
+    #[inline]
+    fn is_null(slice: &WasmSlice) -> bool {
+        is_js_null_slice(slice)
     }
 }
 
@@ -589,6 +650,13 @@ impl OptionIntoWasmAbi for &str {
     }
 }
 
+impl NullableIntoWasmAbi for &str {
+    #[inline]
+    fn null() -> Self::Abi {
+        js_null_slice()
+    }
+}
+
 // Borrowed shapes that deref to `str` cross exactly like `&str`. `&&str` is
 // omitted: the blanket `&T` describe gives `REF REF STRING`, which the CLI
 // can't bind.
@@ -607,6 +675,13 @@ macro_rules! str_ref_into_wasm_abi {
             #[inline]
             fn none() -> Self::Abi {
                 <&str as OptionIntoWasmAbi>::none()
+            }
+        }
+
+        impl NullableIntoWasmAbi for &$t {
+            #[inline]
+            fn null() -> Self::Abi {
+                <&str as NullableIntoWasmAbi>::null()
             }
         }
     )*)
@@ -669,6 +744,15 @@ where
     }
 }
 
+impl<T> NullableIntoWasmAbi for Box<[T]>
+where
+    Self: IntoWasmAbi<Abi = WasmSlice>,
+{
+    fn null() -> WasmSlice {
+        js_null_slice()
+    }
+}
+
 impl<T: VectorFromWasmAbi> FromWasmAbi for Box<[T]> {
     type Abi = <T as VectorFromWasmAbi>::Abi;
 
@@ -688,6 +772,15 @@ where
 {
     fn is_none(slice: &WasmSlice) -> bool {
         slice.ptr.is_zero()
+    }
+}
+
+impl<T> NullableFromWasmAbi for Box<[T]>
+where
+    Self: FromWasmAbi<Abi = WasmSlice>,
+{
+    fn is_null(slice: &WasmSlice) -> bool {
+        is_js_null_slice(slice)
     }
 }
 

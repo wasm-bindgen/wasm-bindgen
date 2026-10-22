@@ -1828,7 +1828,10 @@ impl<'a> Context<'a> {
             Some(d) => d,
         };
         self.resolve_descriptor(&mut descriptor)?;
-        let optional = matches!(descriptor, Descriptor::Option { .. });
+        let optional = matches!(
+            descriptor,
+            Descriptor::Option { .. } | Descriptor::Nullable(_)
+        );
 
         // Register the signature of this imported shim
         let id = self.import_adapter(
@@ -2772,7 +2775,7 @@ impl<'a> Context<'a> {
             return;
         }
 
-        if let Descriptor::Option { inner, .. } = descriptor {
+        if let Descriptor::Option { inner, .. } | Descriptor::Nullable(inner) = descriptor {
             match inner.as_mut() {
                 Descriptor::I64 => **inner = Descriptor::I64AsF64,
                 Descriptor::U64 => **inner = Descriptor::U64AsF64,
@@ -2905,6 +2908,7 @@ fn verify_constructor_return(class: &str, ret: &Descriptor) -> Result<(), Error>
         | Descriptor::CachedString
         | Descriptor::String
         | Descriptor::Option { .. }
+        | Descriptor::Nullable(_)
         | Descriptor::Enum { .. }
         | Descriptor::Unit
         | Descriptor::RawPointer => {

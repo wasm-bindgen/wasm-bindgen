@@ -10,7 +10,7 @@ use alloc::vec::Vec;
 use core::panic::AssertUnwindSafe;
 use core::{mem::MaybeUninit, ptr::NonNull};
 
-use crate::{__rt::marker::ErasableGeneric, Clamped, JsError, JsValue};
+use crate::{__rt::marker::ErasableGeneric, Clamped, JsError, JsValue, Nullable};
 use cfg_if::cfg_if;
 
 pub use wasm_bindgen_shared::tys::*;
@@ -233,6 +233,14 @@ impl<T: WasmDescribe> WasmDescribe for Option<T> {
         } else {
             inform(OPTIONAL);
         }
+        T::describe();
+    }
+}
+
+impl<T: WasmDescribe> WasmDescribe for Nullable<T> {
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe() {
+        inform(NULLABLE);
         T::describe();
     }
 }

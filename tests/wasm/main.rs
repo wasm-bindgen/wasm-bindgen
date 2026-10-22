@@ -66,6 +66,7 @@ pub mod memory_growth;
 pub mod no_shims;
 pub mod node;
 pub mod nullable;
+pub mod nullable_type;
 pub mod option;
 pub mod optional_primitives;
 pub mod primitive_union_traits;

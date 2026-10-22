@@ -56,7 +56,7 @@ use wasm_bindgen::JsError;
 
 // Re-export sys types as js-sys types
 pub use wasm_bindgen::sys::{JsNullable, JsOption, Null, Promising, Undefined};
-pub use wasm_bindgen::{IntoJsGeneric, JsGeneric};
+pub use wasm_bindgen::{IntoJsGeneric, JsGeneric, Nullable};
 
 // When adding new imports:
 //

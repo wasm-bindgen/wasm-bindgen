@@ -268,6 +268,44 @@ pub trait OptionFromWasmAbi: FromWasmAbi {
     fn is_none(abi: &Self::Abi) -> bool;
 }
 
+/// Indicates that this type can be passed to JS as `Nullable<Self>`.
+///
+/// This trait is used when implementing `IntoWasmAbi for Nullable<T>`.
+/// `Nullable::Undefined` crosses as [`OptionIntoWasmAbi::none`]; this adds
+/// the ABI value for `Nullable::Null`.
+///
+/// # ⚠️ Unstable
+///
+/// This is part of the internal [`convert`](crate::convert) module, **no
+/// stability guarantees** are provided. Use at your own risk. See its
+/// documentation for more details.
+pub trait NullableIntoWasmAbi: OptionIntoWasmAbi {
+    /// Returns an ABI instance indicating `null`, which JS will interpret as
+    /// the `Null` branch of the nullable.
+    ///
+    /// It should be guaranteed that neither `IntoWasmAbi` nor
+    /// [`OptionIntoWasmAbi::none`] can produce the ABI value returned here.
+    fn null() -> Self::Abi;
+}
+
+/// Indicates that this type can be received from JS as `Nullable<Self>`.
+///
+/// This trait is used when implementing `FromWasmAbi for Nullable<T>`.
+/// [`OptionFromWasmAbi::is_none`] recognises `Undefined`; this adds the test
+/// for `Null`.
+///
+/// # ⚠️ Unstable
+///
+/// This is part of the internal [`convert`](crate::convert) module, **no
+/// stability guarantees** are provided. Use at your own risk. See its
+/// documentation for more details.
+pub trait NullableFromWasmAbi: OptionFromWasmAbi {
+    /// Tests whether the argument is the `null` instance. If so it will be
+    /// deserialized as `Null`, otherwise it is tested with `is_none` and
+    /// finally passed to `FromWasmAbi`.
+    fn is_null(abi: &Self::Abi) -> bool;
+}
+
 /// A trait for any type which maps to a Wasm primitive type when used in FFI
 /// (`i32`, `i64`, `f32`, or `f64`).
 ///

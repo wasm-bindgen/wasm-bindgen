@@ -51,5 +51,5 @@ With the cfg set, an exported function's optional argument is typed
 struct field is `field?: T`. Without it they include `null`.
 
 This behaviour becomes the default in the next breaking release. Code that
-relies on `null` becoming `None` should move to `Nullable<T>`, which keeps
-`null` and `undefined` apart.
+relies on `null` becoming `None` should move to
+[`Nullable<T>`](./nullable.md), which keeps `null` and `undefined` apart.

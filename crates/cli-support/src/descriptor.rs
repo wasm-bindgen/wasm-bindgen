@@ -88,6 +88,8 @@ pub enum Descriptor {
         inner: Box<Descriptor>,
         strict: bool,
     },
+    /// `Nullable<T>`: `null` and `undefined` cross as distinct empty values.
+    Nullable(Box<Descriptor>),
     Result(Box<Descriptor>),
     Unit,
     NonNull,
@@ -261,6 +263,7 @@ impl Descriptor {
                 inner: Box::new(Descriptor::_decode(data, clamped)),
                 strict: true,
             },
+            NULLABLE => Descriptor::Nullable(Box::new(Descriptor::_decode(data, clamped))),
             RESULT => Descriptor::Result(Box::new(Descriptor::_decode(data, clamped))),
             CACHED_STRING => Descriptor::CachedString,
             STRING => Descriptor::String,
@@ -368,7 +371,9 @@ impl Descriptor {
             | Descriptor::Slice(d)
             | Descriptor::Vector(d)
             | Descriptor::Result(d) => d.visit_named_types_mut(f),
-            Descriptor::Option { inner, .. } => inner.visit_named_types_mut(f),
+            Descriptor::Option { inner, .. } | Descriptor::Nullable(inner) => {
+                inner.visit_named_types_mut(f)
+            }
             // An externref has no defining crate, so a JS type whose name
             // matches an ambiguous all-`private` struct/enum name still hits
             // the ambiguity check even though it never refers to the Rust
@@ -453,7 +458,7 @@ impl Descriptor {
             d = inner;
         }
         let d = match d {
-            Descriptor::Option { inner, .. } => inner,
+            Descriptor::Option { inner, .. } | Descriptor::Nullable(inner) => inner,
             d => d,
         };
         let (borrowed, mutable) = match d {

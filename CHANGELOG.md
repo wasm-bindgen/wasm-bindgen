@@ -22,6 +22,15 @@
   `Nullable<T>`.
   [#5410](https://github.com/wasm-bindgen/wasm-bindgen/pull/5410)
 
+* Added `Nullable<T>`, re-exported as `js_sys::Nullable`, for a
+  `T | null | undefined` value at the JS boundary. It is accepted wherever
+  `Option<T>` is, for every `T` and in every position, and keeps `null` and
+  `undefined` apart in both directions: JS `null` is `Nullable::Null`,
+  `undefined` is `Nullable::Undefined`, and each is sent back as itself.
+  `Option<T>` converts from and into it, and so does `JsNullable<T>` for
+  `T: JsGeneric`.
+  [#5410](https://github.com/wasm-bindgen/wasm-bindgen/pull/5410)
+
 * Added the `slice = view | copy | array` and `vec = copy | array`
   attributes for imported JS functions, choosing what JS receives for a
   sequence argument with numeric elements: a live typed array over wasm

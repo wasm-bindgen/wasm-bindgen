@@ -8,4 +8,6 @@ Many core JavaScript types support [generic type parameters](./types/js-sys.md) 
 
 Each page's table says whether the type is accepted inside `Option`. How
 `None`, `undefined` and `null` then map across the boundary is described on
-the [`Option<T>`](./types/option.md) page.
+the [`Option<T>`](./types/option.md) page, and
+[`Nullable<T>`](./types/nullable.md) is accepted wherever `Option<T>` is for
+code that needs to tell `null` and `undefined` apart.
