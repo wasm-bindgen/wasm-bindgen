@@ -3,6 +3,7 @@
 //! side checks with `=== null` and `=== undefined`.
 
 use std::cell::Cell;
+use std::panic::AssertUnwindSafe;
 use std::ptr::NonNull;
 use std::rc::Rc;
 
@@ -179,7 +180,7 @@ fn exports() {
 fn closure_args_and_return() {
     let calls = Rc::new(Cell::new(0));
     let f = {
-        let calls = calls.clone();
+        let calls = AssertUnwindSafe(calls.clone());
         Closure::new(move |n: Nullable<u32>, s: Nullable<String>| {
             calls.set(calls.get() + 1);
             n.map(|n| format!("{n} {s:?}"))

@@ -4,6 +4,7 @@
 //! ways, with `strict_option_enabled` telling the JS side which to expect.
 
 use std::cell::Cell;
+use std::panic::AssertUnwindSafe;
 use std::ptr::NonNull;
 use std::rc::Rc;
 
@@ -249,7 +250,7 @@ fn exports() {
 fn closure_args() {
     let calls = Rc::new(Cell::new(0));
     let f = {
-        let calls = calls.clone();
+        let calls = AssertUnwindSafe(calls.clone());
         Closure::new(move |n: Option<u32>, s: Option<String>| {
             calls.set(calls.get() + 1);
             format!("{n:?} {s:?}")
