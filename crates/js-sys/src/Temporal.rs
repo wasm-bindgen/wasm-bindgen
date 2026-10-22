@@ -2696,11 +2696,10 @@ extern "C" {
     pub type PlainTime;
 
     /// The `Temporal.PlainTime()` constructor creates `Temporal.PlainTime` objects.
-    /// Omitted fields default to zero, or to the ISO 8601 calendar.
+    /// Omitted fields default to zero.
     ///
     /// # Errors
-    /// Throws a `RangeError` if any field is out of range or `calendar` is not a
-    /// supported calendar identifier.
+    /// Throws a `RangeError` if any field is out of range.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/PlainTime)
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
