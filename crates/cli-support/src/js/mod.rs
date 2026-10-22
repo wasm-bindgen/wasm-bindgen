@@ -4675,20 +4675,38 @@ if (require('worker_threads').isMainThread) {{
 
     /// Gets the JS identifier for a class, which may be aliased if the original
     /// name conflicts with a JS builtin (e.g., `Array` -> `Array2`).
+    ///
+    /// This doesn't record a dependency on the class. Use
+    /// [`Self::require_class_reference`] when the generated code references
+    /// the class by name.
     pub fn require_class_identifier(&mut self, name: &str) -> String {
         self.require_class(name).identifier.clone()
     }
 
+    /// Like [`Self::require_class_identifier`], for generated code that
+    /// references the class by name (`X.__wrap(..)`, `_assertClass(.., X)`).
+    ///
+    /// On emscripten, every class is a hoisted `$<identifier>` library symbol,
+    /// and only public ones carry `__force`, so the class is also recorded as
+    /// a dependency of the adapter being generated. Otherwise emcc drops a
+    /// private class that is only created from Rust, and the reference throws
+    /// a `ReferenceError` at runtime.
+    fn require_class_reference(&mut self, name: &str) -> String {
+        let identifier = self.require_class_identifier(name);
+        if matches!(self.config.mode, OutputMode::Emscripten) {
+            self.adapter_deps.insert(identifier.clone());
+        }
+        identifier
+    }
+
     fn require_class_wrap(&mut self, name: &str) -> String {
-        let cls = self.require_class(name);
-        cls.wrap_needed = true;
-        cls.identifier.clone()
+        self.require_class(name).wrap_needed = true;
+        self.require_class_reference(name)
     }
 
     fn require_class_unwrap(&mut self, name: &str) -> String {
-        let cls = self.require_class(name);
-        cls.unwrap_needed = true;
-        cls.identifier.clone()
+        self.require_class(name).unwrap_needed = true;
+        self.require_class_reference(name)
     }
 
     fn add_module_import(&mut self, module: String, name: &str, actual: &str) {

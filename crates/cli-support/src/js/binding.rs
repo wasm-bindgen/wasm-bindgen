@@ -1356,7 +1356,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
 
     fn assert_class(&mut self, arg: &str, class: &str) {
         self.cx.expose_assert_class();
-        let identifier = self.cx.require_class_identifier(class);
+        let identifier = self.cx.require_class_reference(class);
         self.prelude(&format!("_assertClass({arg}, {identifier});"));
     }
 
