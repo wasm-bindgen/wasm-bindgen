@@ -166,6 +166,13 @@
 
 ### Fixed
 
+* Emscripten output now keeps a `private` class that is only created from
+  Rust, such as one converted into a `JsValue` and passed to JS. Every
+  generated function that references a class by name now lists it in its
+  `__deps`. Previously emcc dropped the class, and calling into it failed with
+  `ReferenceError: <Class> is not defined`.
+  [#5415](https://github.com/wasm-bindgen/wasm-bindgen/pull/5415)
+
 * Imported methods, static methods and constructors without a `js_class` now
   bind to the `js_name` and `js_namespace` of the type they belong to when that
   type is declared in the same `extern "C"` block. Previously they used the

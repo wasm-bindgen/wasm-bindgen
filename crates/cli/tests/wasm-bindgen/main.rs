@@ -3257,6 +3257,158 @@ fn emscripten_exports_hoisted_to_library_symbols() {
 }
 
 #[test]
+fn emscripten_private_class_references_are_deps() {
+    // A private class carries no `__force`, so emcc keeps it only if a kept
+    // symbol lists it in `__deps`. Every adapter that names the class
+    // (`__wrap`, `__unwrap`, `_assertClass`) must record that edge, or a
+    // private class that is only created from Rust is dropped and the
+    // reference throws a `ReferenceError` at runtime. Each case is its own
+    // crate so that it is the only reference to the class.
+    const CLASSES: &str = r#"
+        use wasm_bindgen::prelude::*;
+
+        #[wasm_bindgen(private)]
+        pub struct Secret {
+            value: u32,
+        }
+
+        #[wasm_bindgen]
+        impl Secret {
+            pub fn value(&self) -> u32 {
+                self.value
+            }
+        }
+
+        // Only referenced from its own class body.
+        #[wasm_bindgen(private)]
+        pub struct Unused {
+            value: u32,
+        }
+
+        #[wasm_bindgen]
+        impl Unused {
+            #[wasm_bindgen(constructor)]
+            pub fn new() -> Unused {
+                Unused { value: 0 }
+            }
+        }
+    "#;
+    let cases = [
+        // `JsValue::from(Secret)` goes through an import shim that calls
+        // `Secret.__wrap`.
+        (
+            "import_wrap",
+            "#[wasm_bindgen]
+             pub fn secret_as_value(value: u32) -> JsValue {
+                 Secret { value }.into()
+             }",
+        ),
+        // `Vec<Secret>` from JS goes through an import shim that calls
+        // `Secret.__unwrap`.
+        (
+            "import_unwrap",
+            "#[wasm_bindgen]
+             pub fn sum_secrets(secrets: Vec<Secret>) -> u32 {
+                 secrets.iter().map(|s| s.value).sum()
+             }",
+        ),
+        // An export returning the class calls `Secret.__wrap`.
+        (
+            "export_wrap",
+            "#[wasm_bindgen]
+             pub fn make_secret(value: u32) -> Secret {
+                 Secret { value }
+             }",
+        ),
+        // An export taking the class calls `_assertClass(secret, Secret)`.
+        (
+            "export_assert_class",
+            "#[wasm_bindgen]
+             pub fn read_secret(secret: &Secret) -> u32 {
+                 secret.value
+             }",
+        ),
+    ];
+
+    for (case, src) in cases {
+        let name = format!("emscripten_private_class_references_are_deps_{case}");
+        let mut project = Project::new(name.as_str());
+        project.file("src/lib.rs", &format!("{CLASSES}\n{src}\n"));
+
+        let built = project.build();
+        let mut module = ModuleConfig::new().parse_file(&built).unwrap();
+        module.customs.add(RawCustomSection {
+            name: "__wasm_bindgen_emscripten_marker".into(),
+            data: vec![1],
+        });
+        let emscripten_wasm = project.root.join("emscripten_input.wasm");
+        module.emit_wasm_file(&emscripten_wasm).unwrap();
+
+        let out_dir = project.root.join("pkg-emscripten");
+        fs::create_dir_all(&out_dir).unwrap();
+        wasm_bindgen_cli::wasm_bindgen::run_cli_with_args([
+            "wasm-bindgen".as_ref(),
+            "--out-dir".as_ref(),
+            out_dir.as_os_str(),
+            emscripten_wasm.as_os_str(),
+        ])
+        .unwrap();
+
+        let lib = fs::read_to_string(out_dir.join("library_bindgen.js")).unwrap();
+
+        // Both classes stay private.
+        for class in ["Secret", "Unused"] {
+            assert!(
+                lib.contains(&format!(r#"${class}: "=class {class}"#)),
+                "{case}: {class} should be a hoisted library class:\n{lib}"
+            );
+            assert!(
+                !lib.contains(&format!("${class}__export"))
+                    && !lib.contains(&format!("${class}__force")),
+                "{case}: {class} must not carry __export/__force:\n{lib}"
+            );
+        }
+
+        // An import shim is its own library symbol and must list the class
+        // in its `__deps`.
+        let call = match case {
+            "import_wrap" => Some("Secret.__wrap("),
+            "import_unwrap" => Some("Secret.__unwrap("),
+            _ => None,
+        };
+        if let Some(call) = call {
+            let shim = lib
+                .split("addToLibrary({")
+                .find(|b| b.trim_start().starts_with("__wbg_") && b.contains(call))
+                .unwrap_or_else(|| panic!("{case}: no import shim calls `{call}`:\n{lib}"));
+            assert!(
+                shim.lines()
+                    .any(|l| l.contains("__deps: [") && l.contains("'$Secret'")),
+                "{case}: import shim calling `{call}` must depend on $Secret:\n{shim}"
+            );
+        }
+
+        // `$initBindgen` is forced and lists every symbol an adapter
+        // references, which is what keeps the class in export bodies alive.
+        let init_deps = lib
+            .lines()
+            .find(|l| l.contains("$initBindgen__deps: ["))
+            .expect("$initBindgen__deps present");
+        assert!(
+            init_deps.contains("'$Secret'"),
+            "{case}: $initBindgen must depend on $Secret:\n{init_deps}"
+        );
+
+        // A private class referenced only from its own body stays droppable.
+        assert!(
+            !lib.lines()
+                .any(|l| l.contains("__deps: [") && l.contains("'$Unused'")),
+            "{case}: nothing may depend on Unused:\n{lib}"
+        );
+    }
+}
+
+#[test]
 fn emscripten_jspi_codegen() {
     // On the emscripten target under `--cfg wasm_bindgen_unstable_jspi` (the
     // runtime then emits the `__wasm_bindgen_emscripten_jspi_marker` section)
@@ -3610,6 +3762,26 @@ fn emscripten_end_to_end() {
                     .as_secs_f64()
             }
 
+            // Private and only ever created from Rust, so only `__deps`
+            // edges keep it in emcc's output (the wasm-streams
+            // `IntoUnderlyingSource` pattern).
+            #[wasm_bindgen(private)]
+            pub struct Token {
+                n: u32,
+            }
+
+            #[wasm_bindgen]
+            impl Token {
+                pub fn get(&self) -> u32 {
+                    self.n
+                }
+            }
+
+            #[wasm_bindgen]
+            pub fn call_with_token(f: &js_sys::Function, n: u32) -> JsValue {
+                f.call1(&JsValue::NULL, &Token { n }.into()).unwrap()
+            }
+
             #[wasm_bindgen(experimental_tokio)]
             pub async fn tokio_sleep_spawn(ms: u32) -> u32 {
                 tokio::time::sleep(std::time::Duration::from_millis(ms as u64)).await;
@@ -3666,6 +3838,7 @@ fn emscripten_end_to_end() {
         c.free();
         assert(await m.delayed(9) === 10, 'async export');
         assert(Math.abs(m.now_secs() - Date.now() / 1000) < 60, 'SystemTime::now');
+        assert(m.call_with_token((t) => t.get() + 1, 41) === 42, 'private class created from Rust');
 
         // Only the clean API is surfaced: no raw wasm exports or glue.
         for (const name of ['_main', 'main', '__wbindgen_malloc', '___wbindgen_malloc']) {
