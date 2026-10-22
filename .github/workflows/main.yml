@@ -21,8 +21,39 @@ permissions:
   contents: read #  to fetch code (actions/checkout)
 
 jobs:
+  # Whether a pull request changed anything beyond documentation and the
+  # workflows that don't build the code, so the jobs below can skip when it
+  # didn't. Pushes and manual runs always run everything.
+  changes:
+    name: Detect code changes
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      code: ${{ github.event_name != 'pull_request' || steps.filter.outputs.code == 'true' }}
+    steps:
+    - uses: dorny/paths-filter@v4
+      id: filter
+      if: github.event_name == 'pull_request'
+      with:
+        predicate-quantifier: some-with-excludes
+        filters: |
+          code:
+            - '**'
+            - '!**/*.md'
+            - '!LICENSE-*'
+            - '!guide/**'
+            - '!releases/**'
+            - '!.github/release/**'
+            - '!.github/workflows/bot.yml'
+            - '!.github/workflows/release-*.yml'
+            - '!.github/dependabot.yaml'
+            - '!.github/FUNDING.yaml'
+
   # Check Code style quickly by running `rustfmt` over all code
   rustfmt:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
@@ -34,6 +65,8 @@ jobs:
 
   # Check TOML style by using Taplo.
   taplo:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     name: Taplo
 
     runs-on: ubuntu-latest
@@ -47,6 +80,8 @@ jobs:
 
   # Run `cargo clippy` over everything
   clippy:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     name: Clippy (native)
     runs-on: ubuntu-latest
     steps:
@@ -58,6 +93,8 @@ jobs:
 
   # Run `cargo clippy` over all Wasm crates
   clippy_wasm:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     name: Clippy (Wasm)
     runs-on: ubuntu-latest
     steps:
@@ -76,6 +113,8 @@ jobs:
 
   # Run `cargo clippy` over crates that support `no_std`
   clippy_wasm_no_std:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     strategy:
       matrix:
         include:
@@ -101,6 +140,8 @@ jobs:
         -- -D warnings
 
   test_wasm_bindgen:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     strategy:
       matrix:
         runs:
@@ -129,6 +170,8 @@ jobs:
     - run: ${{ matrix.runs.run }}
 
   test_wasm_bindgen_custom:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     strategy:
       matrix:
         envs:
@@ -153,6 +196,8 @@ jobs:
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std=std,panic_abort --config="target.wasm32-unknown-unknown.rustflags='${{ matrix.envs.RUSTFLAGS }}'"
 
   test_wasm64:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     name: "Run wasm-bindgen crate tests (wasm64)"
     runs-on: ubuntu-latest
     env:
@@ -168,6 +213,8 @@ jobs:
     - run: cargo test --target wasm64-unknown-unknown -Zbuild-std=std,panic_abort
 
   test_wasm_bindgen_unwind_legacy_eh:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     name: "Run wasm-bindgen crate tests with panic=unwind with legacy eh"
     runs-on: ubuntu-latest
     env:
@@ -194,6 +241,8 @@ jobs:
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --lib --bins --tests
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --test wasm --features std,wasm-bindgen-futures/std
   test_wasm_bindgen_unwind_exnref_eh:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     name: "Run wasm-bindgen crate tests with panic=unwind with exnref eh"
     runs-on: ubuntu-latest
     env:
@@ -217,6 +266,8 @@ jobs:
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --test wasm --features std,wasm-bindgen-futures/std
   
   test_emscripten:
+      needs: changes
+      if: needs.changes.outputs.code == 'true'
       name: Run Emscripten tests
       runs-on: ubuntu-latest
       steps:
@@ -279,6 +330,8 @@ jobs:
 
   # This checks that the output of the CLI is actually valid JavaScript and TypeScript
   test_cli_reference_typescript:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     name: Run CLI reference TypeScript check
     runs-on: ubuntu-latest
     steps:
@@ -294,6 +347,8 @@ jobs:
       run: tsc --noEmit --skipLibCheck --lib esnext,dom --module esnext --allowJs $(find crates/cli/tests/reference -maxdepth 1 -name '*.js' ! -name '*target-module*.js')
 
   test_native:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     name: Run native tests
     runs-on: ubuntu-latest
     steps:
@@ -325,6 +380,8 @@ jobs:
     - run: cargo test -p wasm-bindgen-test-shared
 
   test_with_geckodriver:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     strategy:
       matrix:
         runs:
@@ -386,6 +443,8 @@ jobs:
     - run: ${{ matrix.runs.run }}
 
   test_ui:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     name: Run UI compile-fail tests
     runs-on: ubuntu-latest
     steps:
@@ -395,6 +454,8 @@ jobs:
     - run: cargo test -p wasm-bindgen-test-macro
 
   build_webidl:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     name: "Verify that web-sys is compiled correctly"
     runs-on: ubuntu-latest
     steps:
@@ -406,6 +467,8 @@ jobs:
     - run: git diff --exit-code
 
   build_examples:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
@@ -457,6 +520,8 @@ jobs:
         PREBUILT_EXAMPLES: 1
 
   build_benchmarks:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v7
@@ -627,6 +692,8 @@ jobs:
         path: docs.tar.gz
 
   msrv-resolver:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     name: Check feature resolver version 1 compatibility
     runs-on: ubuntu-latest
     strategy:
@@ -653,6 +720,8 @@ jobs:
     - run: cargo build --target ${{ matrix.target }} ${{ matrix.features }}
 
   msrv-lib:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     name: Check MSRV for libraries
     runs-on: ubuntu-latest
     strategy:
@@ -679,6 +748,8 @@ jobs:
     - run: cargo build --target ${{ matrix.target }} ${{ matrix.features }}
 
   msrv-cli:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     name: Check MSRV for CLI tools
     runs-on: ubuntu-latest
     defaults:
@@ -689,6 +760,41 @@ jobs:
     - uses: dtolnay/rust-toolchain@1.86
     - run: cargo build
 
+
+  # The single required status check. A skipped matrix job reports under its
+  # unexpanded name, so the ruleset can't require the matrix entries directly;
+  # it requires this instead, and it passes when every job passed or was skipped.
+  ci:
+    name: CI
+    needs:
+      - changes
+      - rustfmt
+      - taplo
+      - clippy
+      - clippy_wasm
+      - clippy_wasm_no_std
+      - test_wasm_bindgen
+      - test_wasm_bindgen_custom
+      - test_wasm64
+      - test_wasm_bindgen_unwind_legacy_eh
+      - test_wasm_bindgen_unwind_exnref_eh
+      - test_emscripten
+      - test_cli_reference_typescript
+      - test_native
+      - test_with_geckodriver
+      - test_ui
+      - build_webidl
+      - build_examples
+      - test_examples
+      - build_benchmarks
+      - msrv-resolver
+      - msrv-lib
+      - msrv-cli
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+      run: exit 1
 
   deploy:
     permissions:

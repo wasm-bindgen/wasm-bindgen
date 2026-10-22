@@ -10,8 +10,36 @@ permissions:
   id-token: write
 
 jobs:
+  # Same filter as the `changes` job in main.yml.
+  changes:
+    name: Detect code changes
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      code: ${{ github.event_name != 'pull_request' || steps.filter.outputs.code == 'true' }}
+    steps:
+      - uses: dorny/paths-filter@v4
+        id: filter
+        if: github.event_name == 'pull_request'
+        with:
+          predicate-quantifier: some-with-excludes
+          filters: |
+            code:
+              - '**'
+              - '!**/*.md'
+              - '!LICENSE-*'
+              - '!guide/**'
+              - '!releases/**'
+              - '!.github/release/**'
+              - '!.github/workflows/bot.yml'
+              - '!.github/workflows/release-*.yml'
+              - '!.github/dependabot.yaml'
+              - '!.github/FUNDING.yaml'
+
   coverage:
-    if: github.event_name == 'pull_request' || github.repository == 'wasm-bindgen/wasm-bindgen'
+    needs: changes
+    if: needs.changes.outputs.code == 'true' && (github.event_name == 'pull_request' || github.repository == 'wasm-bindgen/wasm-bindgen')
     runs-on: ubuntu-latest
     env:
       CARGO_TERM_COLOR: always
