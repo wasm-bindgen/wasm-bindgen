@@ -513,4 +513,91 @@ fn api() {
     assert_eq!(Nullable::<u32>::Null.unwrap_or_else(|| 3), 3);
     assert_eq!(Nullable::<u32>::Null.unwrap_or_default(), 0);
     assert_eq!(Nullable::Value(1).expect("a value"), 1);
+
+    assert!(Nullable::Value(3).is_value_and(|n| n > 2));
+    assert!(!Nullable::Value(1).is_value_and(|n| n > 2));
+    assert!(!Nullable::<u32>::Null.is_value_and(|n| n > 2));
+    assert!(Nullable::<u32>::Null.is_null_or(|n| n > 2));
+    assert!(Nullable::Value(3).is_null_or(|n| n > 2));
+    assert!(!Nullable::Value(1).is_null_or(|n| n > 2));
+
+    assert_eq!(Nullable::Value(3).ok_or("null"), Ok(3));
+    assert_eq!(Nullable::<u32>::Null.ok_or("null"), Err("null"));
+    assert_eq!(Nullable::<u32>::Null.ok_or_else(|| "null"), Err("null"));
+    assert_eq!(
+        Nullable::Value(3).and_then(|n| Nullable::Value(n + 1)),
+        Nullable::Value(4)
+    );
+    assert_eq!(
+        Nullable::Value(3).and_then(|_| Nullable::<u32>::Null),
+        Nullable::Null
+    );
+    assert_eq!(
+        Nullable::<u32>::Null.and_then(|n| Nullable::Value(n + 1)),
+        Nullable::Null
+    );
+    assert_eq!(Nullable::Value(3).filter(|n| *n > 2), Nullable::Value(3));
+    assert_eq!(Nullable::Value(1).filter(|n| *n > 2), Nullable::Null);
+
+    let mut v = Nullable::Value(3);
+    assert_eq!(v.take(), Nullable::Value(3));
+    assert_eq!(v, Nullable::Null);
+    assert_eq!(v.replace(5), Nullable::Null);
+    assert_eq!(v.replace(6), Nullable::Value(5));
+    for n in &mut v {
+        *n += 1;
+    }
+    assert_eq!(v.iter().copied().collect::<Vec<_>>(), vec![7]);
+    assert_eq!(Nullable::<u32>::Null.iter().count(), 0);
+    assert_eq!(v.into_iter().collect::<Vec<_>>(), vec![7]);
+    assert_eq!(
+        vec![Nullable::Value(1), Nullable::Null, Nullable::Value(2)]
+            .into_iter()
+            .flatten()
+            .collect::<Vec<_>>(),
+        vec![1, 2]
+    );
+
+    let s = Nullable::Value(String::from("x"));
+    assert_eq!(s.as_deref(), Nullable::Value("x"));
+    assert_eq!(Nullable::<String>::Null.as_deref(), Nullable::Null);
+    assert_eq!(s.as_ref().cloned(), s);
+    assert_eq!(Nullable::Value(3).as_ref().copied(), Nullable::Value(3));
+    let mut n = Nullable::Value(3);
+    *n.as_mut().unwrap() = 4;
+    assert_eq!(n.as_mut().copied(), Nullable::Value(4));
+    let mut b = Nullable::Value(Box::new(3));
+    *b.as_deref_mut().unwrap() = 4;
+    assert_eq!(b.as_deref(), Nullable::Value(&4));
+    assert_eq!(
+        Nullable::Value(String::from("y"))
+            .as_mut()
+            .cloned()
+            .as_deref(),
+        Nullable::Value("y")
+    );
+}
+
+// Also written without `?` so the module compiles on stable without the cfg.
+#[cfg(wasm_bindgen_unstable_try_trait)]
+#[wasm_bindgen_test]
+fn try_trait() {
+    fn nullable_from_nullable(n: Nullable<u32>) -> Nullable<u32> {
+        Nullable::Value(n? + 1)
+    }
+    fn option_from_nullable(n: Nullable<u32>) -> Option<u32> {
+        Some(n? + 1)
+    }
+    fn nullable_from_option(n: Option<u32>) -> Nullable<u32> {
+        Nullable::Value(n? + 1)
+    }
+    assert_eq!(
+        nullable_from_nullable(Nullable::Value(1)),
+        Nullable::Value(2)
+    );
+    assert_eq!(nullable_from_nullable(Nullable::Null), Nullable::Null);
+    assert_eq!(option_from_nullable(Nullable::Value(1)), Some(2));
+    assert_eq!(option_from_nullable(Nullable::Null), None);
+    assert_eq!(nullable_from_option(Some(1)), Nullable::Value(2));
+    assert_eq!(nullable_from_option(None), Nullable::Null);
 }

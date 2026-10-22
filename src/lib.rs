@@ -40,6 +40,10 @@
 
 #![no_std]
 #![cfg_attr(wasm_bindgen_unstable_test_coverage, feature(coverage_attribute))]
+#![cfg_attr(
+    wasm_bindgen_unstable_try_trait,
+    feature(try_trait_v2, try_trait_v2_residual)
+)]
 #![cfg_attr(target_feature = "atomics", feature(thread_local))]
 #![cfg_attr(
     any(target_feature = "atomics", wasm_bindgen_unstable_test_coverage),

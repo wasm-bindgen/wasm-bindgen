@@ -60,13 +60,23 @@ A `Nullable<T>` argument is never omittable in TypeScript, since `undefined`
 is not one of its states; an `Option<Nullable<T>>` one is `arg?: T | null`
 when trailing, and such a struct field is `field?: T | null`.
 
-The API follows `Option`'s names: `is_null`, `is_value`, `as_ref`, `as_mut`,
-`map`, `value()` / `into_option()`, `unwrap`, `expect`, `unwrap_or`,
-`unwrap_or_else` and `unwrap_or_default`. `From<T>` gives `Value`; as lossy
-conveniences, `From<Option<T>>` maps `None` to `Null` and `Option<T>` can be
-built from a `Nullable<T>` with `Null` becoming `None`.
-`opt.and_then(Nullable::value)` collapses an `Option<Nullable<T>>` to an
-`Option<T>`.
+The API follows `Option`'s names: `is_null`, `is_value`, `is_value_and`,
+`is_null_or`, `as_ref`, `as_mut`, `as_deref`, `as_deref_mut`, `copied`,
+`cloned`, `map`, `and_then`, `filter`, `ok_or`, `ok_or_else`, `take`,
+`replace`, `iter`, `iter_mut`, `value()` / `into_option()`, `unwrap`,
+`expect`, `unwrap_or`, `unwrap_or_else` and `unwrap_or_default`, and
+`Nullable<T>` and its references are `IntoIterator` over the value, so
+`into_iter().flatten()` folds nullables into an iterator pipeline. `From<T>`
+gives `Value`; as lossy conveniences, `From<Option<T>>` maps `None` to `Null`
+and `Option<T>` can be built from a `Nullable<T>` with `Null` becoming
+`None`. `opt.and_then(Nullable::value)` collapses an `Option<Nullable<T>>` to
+an `Option<T>`.
+
+On stable, `?` goes through `ok_or` or `.value()?`. On nightly,
+`--cfg wasm_bindgen_unstable_try_trait` enables `try_trait_v2` so `?` works
+on a `Nullable<T>` directly: `Null` short-circuits a function returning
+`Nullable<U>` to `Null` and one returning `Option<U>` to `None`, and `None`
+from an `Option<T>` short-circuits a `Nullable<U>` function to `Null`.
 
 ## `Nullable<NonNull<T>>`
 

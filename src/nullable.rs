@@ -1,3 +1,5 @@
+use core::ops::{Deref, DerefMut};
+
 use crate::convert::JsGeneric;
 use crate::sys::JsNullable;
 use crate::{JsCast, JsValue};
@@ -148,6 +150,221 @@ impl<T> Nullable<T> {
         T: Default,
     {
         self.value().unwrap_or_default()
+    }
+
+    /// Returns `true` if this is a `Value` and `f` holds for it.
+    #[inline]
+    pub fn is_value_and(self, f: impl FnOnce(T) -> bool) -> bool {
+        match self {
+            Nullable::Value(v) => f(v),
+            Nullable::Null => false,
+        }
+    }
+
+    /// Returns `true` if this is `Null`, or a `Value` for which `f` holds.
+    #[inline]
+    pub fn is_null_or(self, f: impl FnOnce(T) -> bool) -> bool {
+        match self {
+            Nullable::Value(v) => f(v),
+            Nullable::Null => true,
+        }
+    }
+
+    /// Returns the contained value as `Ok`, or `Err(err)` for `Null`.
+    #[inline]
+    pub fn ok_or<E>(self, err: E) -> Result<T, E> {
+        match self {
+            Nullable::Value(v) => Ok(v),
+            Nullable::Null => Err(err),
+        }
+    }
+
+    /// Returns the contained value as `Ok`, or `Err(err())` for `Null`.
+    #[inline]
+    pub fn ok_or_else<E, F: FnOnce() -> E>(self, err: F) -> Result<T, E> {
+        match self {
+            Nullable::Value(v) => Ok(v),
+            Nullable::Null => Err(err()),
+        }
+    }
+
+    /// Returns `Null` for `Null`, otherwise calls `f` on the contained value.
+    #[inline]
+    pub fn and_then<U, F: FnOnce(T) -> Nullable<U>>(self, f: F) -> Nullable<U> {
+        match self {
+            Nullable::Value(v) => f(v),
+            Nullable::Null => Nullable::Null,
+        }
+    }
+
+    /// Returns the contained value if `predicate` holds for it, otherwise
+    /// `Null`.
+    #[inline]
+    pub fn filter<P: FnOnce(&T) -> bool>(self, predicate: P) -> Nullable<T> {
+        match self {
+            Nullable::Value(v) if predicate(&v) => Nullable::Value(v),
+            _ => Nullable::Null,
+        }
+    }
+
+    /// Takes the value out, leaving `Null` in its place.
+    #[inline]
+    pub fn take(&mut self) -> Nullable<T> {
+        core::mem::replace(self, Nullable::Null)
+    }
+
+    /// Replaces the contents with `Value(value)`, returning the old contents.
+    #[inline]
+    pub fn replace(&mut self, value: T) -> Nullable<T> {
+        core::mem::replace(self, Nullable::Value(value))
+    }
+
+    /// Returns an iterator over the contained value, if any.
+    #[inline]
+    pub fn iter(&self) -> core::option::IntoIter<&T> {
+        self.as_ref().value().into_iter()
+    }
+
+    /// Returns a mutable iterator over the contained value, if any.
+    #[inline]
+    pub fn iter_mut(&mut self) -> core::option::IntoIter<&mut T> {
+        self.as_mut().value().into_iter()
+    }
+}
+
+impl<T: Deref> Nullable<T> {
+    /// Converts from `Nullable<T>` (or `&Nullable<T>`) to
+    /// `Nullable<&T::Target>`.
+    #[inline]
+    pub fn as_deref(&self) -> Nullable<&T::Target> {
+        self.as_ref().map(|v| v.deref())
+    }
+}
+
+impl<T: DerefMut> Nullable<T> {
+    /// Converts from `Nullable<T>` (or `&mut Nullable<T>`) to
+    /// `Nullable<&mut T::Target>`.
+    #[inline]
+    pub fn as_deref_mut(&mut self) -> Nullable<&mut T::Target> {
+        self.as_mut().map(|v| v.deref_mut())
+    }
+}
+
+impl<T: Copy> Nullable<&T> {
+    /// Maps a `Nullable<&T>` to a `Nullable<T>` by copying the referent.
+    #[inline]
+    pub fn copied(self) -> Nullable<T> {
+        self.map(|&v| v)
+    }
+}
+
+impl<T: Clone> Nullable<&T> {
+    /// Maps a `Nullable<&T>` to a `Nullable<T>` by cloning the referent.
+    #[inline]
+    pub fn cloned(self) -> Nullable<T> {
+        self.map(|v| v.clone())
+    }
+}
+
+impl<T: Copy> Nullable<&mut T> {
+    /// Maps a `Nullable<&mut T>` to a `Nullable<T>` by copying the referent.
+    #[inline]
+    pub fn copied(self) -> Nullable<T> {
+        self.map(|&mut v| v)
+    }
+}
+
+impl<T: Clone> Nullable<&mut T> {
+    /// Maps a `Nullable<&mut T>` to a `Nullable<T>` by cloning the referent.
+    #[inline]
+    pub fn cloned(self) -> Nullable<T> {
+        self.map(|v| v.clone())
+    }
+}
+
+impl<T> IntoIterator for Nullable<T> {
+    type Item = T;
+    type IntoIter = core::option::IntoIter<T>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.value().into_iter()
+    }
+}
+
+impl<'a, T> IntoIterator for &'a Nullable<T> {
+    type Item = &'a T;
+    type IntoIter = core::option::IntoIter<&'a T>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+impl<'a, T> IntoIterator for &'a mut Nullable<T> {
+    type Item = &'a mut T;
+    type IntoIter = core::option::IntoIter<&'a mut T>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter_mut()
+    }
+}
+
+/// `?` on a `Nullable<T>` under `--cfg wasm_bindgen_unstable_try_trait`,
+/// which needs nightly for `try_trait_v2`. `Null` short-circuits a function
+/// returning `Nullable<U>` to `Null` and one returning `Option<U>` to `None`,
+/// and `None` from an `Option<T>` short-circuits a `Nullable<U>` function to
+/// `Null`.
+#[cfg(wasm_bindgen_unstable_try_trait)]
+mod try_trait {
+    use core::convert::Infallible;
+    use core::ops::{ControlFlow, FromResidual, Residual, Try};
+
+    use super::Nullable;
+
+    impl<T> Residual<T> for Nullable<Infallible> {
+        type TryType = Nullable<T>;
+    }
+
+    impl<T> Try for Nullable<T> {
+        type Output = T;
+        type Residual = Nullable<Infallible>;
+
+        #[inline]
+        fn from_output(output: T) -> Self {
+            Nullable::Value(output)
+        }
+
+        #[inline]
+        fn branch(self) -> ControlFlow<Self::Residual, T> {
+            match self {
+                Nullable::Value(v) => ControlFlow::Continue(v),
+                Nullable::Null => ControlFlow::Break(Nullable::Null),
+            }
+        }
+    }
+
+    impl<T> FromResidual<Nullable<Infallible>> for Nullable<T> {
+        #[inline]
+        fn from_residual(_: Nullable<Infallible>) -> Self {
+            Nullable::Null
+        }
+    }
+
+    impl<T> FromResidual<Option<Infallible>> for Nullable<T> {
+        #[inline]
+        fn from_residual(_: Option<Infallible>) -> Self {
+            Nullable::Null
+        }
+    }
+
+    impl<T> FromResidual<Nullable<Infallible>> for Option<T> {
+        #[inline]
+        fn from_residual(_: Nullable<Infallible>) -> Self {
+            None
+        }
     }
 }
 

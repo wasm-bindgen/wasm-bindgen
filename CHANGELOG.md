@@ -32,6 +32,9 @@
   strict cfg. `Option<T>` converts from and into `Nullable<T>`, and
   `JsNullable<T>` converts from both and into `Option<Nullable<T>>` for
   `T: JsGeneric`.
+  The API follows `Option`'s, including `ok_or`, `and_then`, `filter`,
+  `as_deref`, `take`, `replace` and `IntoIterator`, and
+  `--cfg wasm_bindgen_unstable_try_trait` enables `?` on nightly.
   [#5410](https://github.com/wasm-bindgen/wasm-bindgen/pull/5410)
 
 * Under `js_sys_unstable_apis`, `RegExp::exec` and `JsString::match_` return
