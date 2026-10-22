@@ -1014,19 +1014,30 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string(this: &Instant, locales: &[JsString]) -> Result<JsString, JsValue>;
+    pub fn to_locale_string(this: &Instant) -> Result<JsString, JsValue>;
 
-    /// The `toLocaleString()` method returns a language-sensitive string representation
-    /// of this instant.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
-    /// not match this value's calendar, and a `TypeError` for options that do not
-    /// apply to this type.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/toLocaleString)
+    /// The `toLocaleString()` method; see [`Instant::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string_with_options(
+    pub fn to_locale_string_with_str(this: &Instant, locales: &str) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`Instant::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str_sequence(
+        this: &Instant,
+        locales: &[JsString],
+    ) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`Instant::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str_and_options(
+        this: &Instant,
+        locales: &str,
+        options: &super::Intl::DateTimeFormatOptions,
+    ) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`Instant::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str_sequence_and_options(
         this: &Instant,
         locales: &[JsString],
         options: &super::Intl::DateTimeFormatOptions,
@@ -1069,15 +1080,75 @@ extern "C" {
     #[derive(Clone, Debug)]
     pub type PlainDateTime;
 
-    /// The `Temporal.PlainDateTime()` constructor creates `Temporal.PlainDateTime` objects
-    /// in the ISO 8601 calendar.
+    /// The `Temporal.PlainDateTime()` constructor creates `Temporal.PlainDateTime` objects.
+    /// Omitted fields default to zero, or to the ISO 8601 calendar.
     ///
     /// # Errors
-    /// Throws a `RangeError` if any field is out of range.
+    /// Throws a `RangeError` if any field is out of range or `calendar` is not a
+    /// supported calendar identifier.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/PlainDateTime)
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
-    pub fn new(
+    pub fn new(iso_year: i32, iso_month: u32, iso_day: u32) -> Result<PlainDateTime, JsValue>;
+
+    /// The `Temporal.PlainDateTime()` constructor; see [`PlainDateTime::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_hour(
+        iso_year: i32,
+        iso_month: u32,
+        iso_day: u32,
+        hour: u32,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `Temporal.PlainDateTime()` constructor; see [`PlainDateTime::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_hour_and_minute(
+        iso_year: i32,
+        iso_month: u32,
+        iso_day: u32,
+        hour: u32,
+        minute: u32,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `Temporal.PlainDateTime()` constructor; see [`PlainDateTime::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_hour_and_minute_and_second(
+        iso_year: i32,
+        iso_month: u32,
+        iso_day: u32,
+        hour: u32,
+        minute: u32,
+        second: u32,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `Temporal.PlainDateTime()` constructor; see [`PlainDateTime::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_hour_and_minute_and_second_and_millisecond(
+        iso_year: i32,
+        iso_month: u32,
+        iso_day: u32,
+        hour: u32,
+        minute: u32,
+        second: u32,
+        millisecond: u32,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `Temporal.PlainDateTime()` constructor; see [`PlainDateTime::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_hour_and_minute_and_second_and_millisecond_and_microsecond(
+        iso_year: i32,
+        iso_month: u32,
+        iso_day: u32,
+        hour: u32,
+        minute: u32,
+        second: u32,
+        millisecond: u32,
+        microsecond: u32,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `Temporal.PlainDateTime()` constructor; see [`PlainDateTime::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_hour_and_minute_and_second_and_millisecond_and_microsecond_and_nanosecond(
         iso_year: i32,
         iso_month: u32,
         iso_day: u32,
@@ -1089,16 +1160,9 @@ extern "C" {
         nanosecond: u32,
     ) -> Result<PlainDateTime, JsValue>;
 
-    /// The `Temporal.PlainDateTime()` constructor creates `Temporal.PlainDateTime` objects
-    /// in the given calendar.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if any field is out of range.
-    /// Throws a `RangeError` if `calendar` is not a supported calendar identifier.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/PlainDateTime)
+    /// The `Temporal.PlainDateTime()` constructor; see [`PlainDateTime::new`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
-    pub fn new_with_calendar(
+    pub fn new_with_hour_and_minute_and_second_and_millisecond_and_microsecond_and_nanosecond_and_calendar(
         iso_year: i32,
         iso_month: u32,
         iso_day: u32,
@@ -1553,22 +1617,33 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string(
+    pub fn to_locale_string(this: &PlainDateTime) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`PlainDateTime::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str(
+        this: &PlainDateTime,
+        locales: &str,
+    ) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`PlainDateTime::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str_sequence(
         this: &PlainDateTime,
         locales: &[JsString],
     ) -> Result<JsString, JsValue>;
 
-    /// The `toLocaleString()` method returns a language-sensitive string representation
-    /// of this date-time.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
-    /// not match this value's calendar, and a `TypeError` for options that do not
-    /// apply to this type.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/toLocaleString)
+    /// The `toLocaleString()` method; see [`PlainDateTime::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string_with_options(
+    pub fn to_locale_string_with_str_and_options(
+        this: &PlainDateTime,
+        locales: &str,
+        options: &super::Intl::DateTimeFormatOptions,
+    ) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`PlainDateTime::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str_sequence_and_options(
         this: &PlainDateTime,
         locales: &[JsString],
         options: &super::Intl::DateTimeFormatOptions,
@@ -2154,22 +2229,33 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string(
+    pub fn to_locale_string(this: &ZonedDateTime) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`ZonedDateTime::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str(
+        this: &ZonedDateTime,
+        locales: &str,
+    ) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`ZonedDateTime::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str_sequence(
         this: &ZonedDateTime,
         locales: &[JsString],
     ) -> Result<JsString, JsValue>;
 
-    /// The `toLocaleString()` method returns a language-sensitive string representation
-    /// of this zoned date-time.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
-    /// not match this value's calendar, and a `TypeError` for options that do not
-    /// apply to this type.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/toLocaleString)
+    /// The `toLocaleString()` method; see [`ZonedDateTime::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string_with_options(
+    pub fn to_locale_string_with_str_and_options(
+        this: &ZonedDateTime,
+        locales: &str,
+        options: &super::Intl::DateTimeFormatOptions,
+    ) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`ZonedDateTime::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str_sequence_and_options(
         this: &ZonedDateTime,
         locales: &[JsString],
         options: &super::Intl::DateTimeFormatOptions,
@@ -2213,14 +2299,104 @@ extern "C" {
     pub type Duration;
 
     /// The `Temporal.Duration()` constructor creates `Temporal.Duration` objects.
+    /// Omitted fields default to zero.
     ///
     /// # Errors
-    /// Throws a `RangeError` if any component is non-integer, infinite, exceeds
-    /// safe integer range, or if components have mixed signs.
+    /// Throws a `RangeError` if any field is non-integer, infinite, exceeds the
+    /// safe integer range, or if fields have mixed signs.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/Duration)
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
-    pub fn new(
+    pub fn new() -> Result<Duration, JsValue>;
+
+    /// The `Temporal.Duration()` constructor; see [`Duration::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_years(years: f64) -> Result<Duration, JsValue>;
+
+    /// The `Temporal.Duration()` constructor; see [`Duration::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_years_and_months(years: f64, months: f64) -> Result<Duration, JsValue>;
+
+    /// The `Temporal.Duration()` constructor; see [`Duration::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_years_and_months_and_weeks(
+        years: f64,
+        months: f64,
+        weeks: f64,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `Temporal.Duration()` constructor; see [`Duration::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_years_and_months_and_weeks_and_days(
+        years: f64,
+        months: f64,
+        weeks: f64,
+        days: f64,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `Temporal.Duration()` constructor; see [`Duration::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_years_and_months_and_weeks_and_days_and_hours(
+        years: f64,
+        months: f64,
+        weeks: f64,
+        days: f64,
+        hours: f64,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `Temporal.Duration()` constructor; see [`Duration::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_years_and_months_and_weeks_and_days_and_hours_and_minutes(
+        years: f64,
+        months: f64,
+        weeks: f64,
+        days: f64,
+        hours: f64,
+        minutes: f64,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `Temporal.Duration()` constructor; see [`Duration::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_years_and_months_and_weeks_and_days_and_hours_and_minutes_and_seconds(
+        years: f64,
+        months: f64,
+        weeks: f64,
+        days: f64,
+        hours: f64,
+        minutes: f64,
+        seconds: f64,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `Temporal.Duration()` constructor; see [`Duration::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_years_and_months_and_weeks_and_days_and_hours_and_minutes_and_seconds_and_milliseconds(
+        years: f64,
+        months: f64,
+        weeks: f64,
+        days: f64,
+        hours: f64,
+        minutes: f64,
+        seconds: f64,
+        milliseconds: f64,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `Temporal.Duration()` constructor; see [`Duration::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_years_and_months_and_weeks_and_days_and_hours_and_minutes_and_seconds_and_milliseconds_and_microseconds(
+        years: f64,
+        months: f64,
+        weeks: f64,
+        days: f64,
+        hours: f64,
+        minutes: f64,
+        seconds: f64,
+        milliseconds: f64,
+        microseconds: f64,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `Temporal.Duration()` constructor; see [`Duration::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_years_and_months_and_weeks_and_days_and_hours_and_minutes_and_seconds_and_milliseconds_and_microseconds_and_nanoseconds(
         years: f64,
         months: f64,
         weeks: f64,
@@ -2453,21 +2629,30 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string(this: &Duration, locales: &[JsString]) -> Result<JsString, JsValue>;
+    pub fn to_locale_string(this: &Duration) -> Result<JsString, JsValue>;
 
-    /// The `toLocaleString()` method returns a language-sensitive string representation
-    /// of this duration.
-    ///
-    /// `options` are `Intl.DurationFormat` options.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
-    /// not match this value's calendar, and a `TypeError` for options that do not
-    /// apply to this type.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/toLocaleString)
+    /// The `toLocaleString()` method; see [`Duration::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string_with_options(
+    pub fn to_locale_string_with_str(this: &Duration, locales: &str) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`Duration::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str_sequence(
+        this: &Duration,
+        locales: &[JsString],
+    ) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`Duration::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str_and_options(
+        this: &Duration,
+        locales: &str,
+        options: &super::Intl::DurationFormatOptions,
+    ) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`Duration::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str_sequence_and_options(
         this: &Duration,
         locales: &[JsString],
         options: &super::Intl::DurationFormatOptions,
@@ -2511,14 +2696,54 @@ extern "C" {
     pub type PlainTime;
 
     /// The `Temporal.PlainTime()` constructor creates `Temporal.PlainTime` objects.
+    /// Omitted fields default to zero, or to the ISO 8601 calendar.
     ///
     /// # Errors
-    /// Throws a `RangeError` if any component is out of range (hour: 0-23, minute/second: 0-59,
-    /// millisecond/microsecond/nanosecond: 0-999).
+    /// Throws a `RangeError` if any field is out of range or `calendar` is not a
+    /// supported calendar identifier.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/PlainTime)
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
-    pub fn new(
+    pub fn new() -> Result<PlainTime, JsValue>;
+
+    /// The `Temporal.PlainTime()` constructor; see [`PlainTime::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_hour(hour: u32) -> Result<PlainTime, JsValue>;
+
+    /// The `Temporal.PlainTime()` constructor; see [`PlainTime::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_hour_and_minute(hour: u32, minute: u32) -> Result<PlainTime, JsValue>;
+
+    /// The `Temporal.PlainTime()` constructor; see [`PlainTime::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_hour_and_minute_and_second(
+        hour: u32,
+        minute: u32,
+        second: u32,
+    ) -> Result<PlainTime, JsValue>;
+
+    /// The `Temporal.PlainTime()` constructor; see [`PlainTime::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_hour_and_minute_and_second_and_millisecond(
+        hour: u32,
+        minute: u32,
+        second: u32,
+        millisecond: u32,
+    ) -> Result<PlainTime, JsValue>;
+
+    /// The `Temporal.PlainTime()` constructor; see [`PlainTime::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_hour_and_minute_and_second_and_millisecond_and_microsecond(
+        hour: u32,
+        minute: u32,
+        second: u32,
+        millisecond: u32,
+        microsecond: u32,
+    ) -> Result<PlainTime, JsValue>;
+
+    /// The `Temporal.PlainTime()` constructor; see [`PlainTime::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_hour_and_minute_and_second_and_millisecond_and_microsecond_and_nanosecond(
         hour: u32,
         minute: u32,
         second: u32,
@@ -2747,19 +2972,30 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string(this: &PlainTime, locales: &[JsString]) -> Result<JsString, JsValue>;
+    pub fn to_locale_string(this: &PlainTime) -> Result<JsString, JsValue>;
 
-    /// The `toLocaleString()` method returns a language-sensitive string representation
-    /// of this time.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
-    /// not match this value's calendar, and a `TypeError` for options that do not
-    /// apply to this type.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/toLocaleString)
+    /// The `toLocaleString()` method; see [`PlainTime::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string_with_options(
+    pub fn to_locale_string_with_str(this: &PlainTime, locales: &str) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`PlainTime::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str_sequence(
+        this: &PlainTime,
+        locales: &[JsString],
+    ) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`PlainTime::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str_and_options(
+        this: &PlainTime,
+        locales: &str,
+        options: &super::Intl::DateTimeFormatOptions,
+    ) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`PlainTime::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str_sequence_and_options(
         this: &PlainTime,
         locales: &[JsString],
         options: &super::Intl::DateTimeFormatOptions,
@@ -2804,28 +3040,29 @@ extern "C" {
     #[derive(Clone, Debug)]
     pub type PlainYearMonth;
 
-    /// The `Temporal.PlainYearMonth()` constructor creates `Temporal.PlainYearMonth` objects
-    /// in the ISO 8601 calendar.
+    /// The `Temporal.PlainYearMonth()` constructor creates `Temporal.PlainYearMonth` objects.
+    /// `calendar` defaults to ISO 8601; `reference_iso_day` selects the ISO day
+    /// used to represent the month in non-ISO calendars.
     ///
     /// # Errors
-    /// Throws a `RangeError` if any field is out of range.
+    /// Throws a `RangeError` if any field is out of range or `calendar` is not a
+    /// supported calendar identifier.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/PlainYearMonth)
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
     pub fn new(iso_year: i32, iso_month: u32) -> Result<PlainYearMonth, JsValue>;
 
-    /// The `Temporal.PlainYearMonth()` constructor creates `Temporal.PlainYearMonth` objects
-    /// in the given calendar.
-    /// `reference_iso_day` selects the ISO day used to represent the month in
-    /// non-ISO calendars.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if any field is out of range.
-    /// Throws a `RangeError` if `calendar` is not a supported calendar identifier.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/PlainYearMonth)
+    /// The `Temporal.PlainYearMonth()` constructor; see [`PlainYearMonth::new`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
     pub fn new_with_calendar(
+        iso_year: i32,
+        iso_month: u32,
+        calendar: &str,
+    ) -> Result<PlainYearMonth, JsValue>;
+
+    /// The `Temporal.PlainYearMonth()` constructor; see [`PlainYearMonth::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_calendar_and_reference_iso_day(
         iso_year: i32,
         iso_month: u32,
         calendar: &str,
@@ -3105,22 +3342,33 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string(
+    pub fn to_locale_string(this: &PlainYearMonth) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`PlainYearMonth::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str(
+        this: &PlainYearMonth,
+        locales: &str,
+    ) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`PlainYearMonth::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str_sequence(
         this: &PlainYearMonth,
         locales: &[JsString],
     ) -> Result<JsString, JsValue>;
 
-    /// The `toLocaleString()` method returns a language-sensitive string representation
-    /// of this year-month.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
-    /// not match this value's calendar, and a `TypeError` for options that do not
-    /// apply to this type.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/toLocaleString)
+    /// The `toLocaleString()` method; see [`PlainYearMonth::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string_with_options(
+    pub fn to_locale_string_with_str_and_options(
+        this: &PlainYearMonth,
+        locales: &str,
+        options: &super::Intl::DateTimeFormatOptions,
+    ) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`PlainYearMonth::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str_sequence_and_options(
         this: &PlainYearMonth,
         locales: &[JsString],
         options: &super::Intl::DateTimeFormatOptions,
@@ -3164,28 +3412,29 @@ extern "C" {
     #[derive(Clone, Debug)]
     pub type PlainMonthDay;
 
-    /// The `Temporal.PlainMonthDay()` constructor creates `Temporal.PlainMonthDay` objects
-    /// in the ISO 8601 calendar.
+    /// The `Temporal.PlainMonthDay()` constructor creates `Temporal.PlainMonthDay` objects.
+    /// `calendar` defaults to ISO 8601; `reference_iso_year` selects the ISO year
+    /// used to represent the month-day in non-ISO calendars.
     ///
     /// # Errors
-    /// Throws a `RangeError` if any field is out of range.
+    /// Throws a `RangeError` if any field is out of range or `calendar` is not a
+    /// supported calendar identifier.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/PlainMonthDay)
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
     pub fn new(iso_month: u32, iso_day: u32) -> Result<PlainMonthDay, JsValue>;
 
-    /// The `Temporal.PlainMonthDay()` constructor creates `Temporal.PlainMonthDay` objects
-    /// in the given calendar.
-    /// `reference_iso_year` selects the ISO year used to represent the month-day
-    /// in non-ISO calendars.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if any field is out of range.
-    /// Throws a `RangeError` if `calendar` is not a supported calendar identifier.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/PlainMonthDay)
+    /// The `Temporal.PlainMonthDay()` constructor; see [`PlainMonthDay::new`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
     pub fn new_with_calendar(
+        iso_month: u32,
+        iso_day: u32,
+        calendar: &str,
+    ) -> Result<PlainMonthDay, JsValue>;
+
+    /// The `Temporal.PlainMonthDay()` constructor; see [`PlainMonthDay::new`] for errors.
+    #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
+    pub fn new_with_calendar_and_reference_iso_year(
         iso_month: u32,
         iso_day: u32,
         calendar: &str,
@@ -3313,22 +3562,33 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string(
+    pub fn to_locale_string(this: &PlainMonthDay) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`PlainMonthDay::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str(
+        this: &PlainMonthDay,
+        locales: &str,
+    ) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`PlainMonthDay::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str_sequence(
         this: &PlainMonthDay,
         locales: &[JsString],
     ) -> Result<JsString, JsValue>;
 
-    /// The `toLocaleString()` method returns a language-sensitive string representation
-    /// of this month-day.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
-    /// not match this value's calendar, and a `TypeError` for options that do not
-    /// apply to this type.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/toLocaleString)
+    /// The `toLocaleString()` method; see [`PlainMonthDay::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string_with_options(
+    pub fn to_locale_string_with_str_and_options(
+        this: &PlainMonthDay,
+        locales: &str,
+        options: &super::Intl::DateTimeFormatOptions,
+    ) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`PlainMonthDay::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str_sequence_and_options(
         this: &PlainMonthDay,
         locales: &[JsString],
         options: &super::Intl::DateTimeFormatOptions,
@@ -3783,19 +4043,30 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string(this: &PlainDate, locales: &[JsString]) -> Result<JsString, JsValue>;
+    pub fn to_locale_string(this: &PlainDate) -> Result<JsString, JsValue>;
 
-    /// The `toLocaleString()` method returns a language-sensitive string representation
-    /// of this date.
-    ///
-    /// # Errors
-    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
-    /// not match this value's calendar, and a `TypeError` for options that do not
-    /// apply to this type.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toLocaleString)
+    /// The `toLocaleString()` method; see [`PlainDate::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string_with_options(
+    pub fn to_locale_string_with_str(this: &PlainDate, locales: &str) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`PlainDate::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str_sequence(
+        this: &PlainDate,
+        locales: &[JsString],
+    ) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`PlainDate::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str_and_options(
+        this: &PlainDate,
+        locales: &str,
+        options: &super::Intl::DateTimeFormatOptions,
+    ) -> Result<JsString, JsValue>;
+
+    /// The `toLocaleString()` method; see [`PlainDate::to_locale_string`] for errors.
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn to_locale_string_with_str_sequence_and_options(
         this: &PlainDate,
         locales: &[JsString],
         options: &super::Intl::DateTimeFormatOptions,

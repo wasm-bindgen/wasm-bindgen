@@ -31,32 +31,35 @@ fn to_locale_string() {
     if !is_temporal_supported() {
         return;
     }
-    let en_us = [JsString::from("en-US")];
     let pd = get_test_plain_date();
+    assert!(pd.to_locale_string().unwrap().length() > 0);
     let opts = Intl::DateTimeFormatOptions::new();
     assert_eq!(
-        pd.to_locale_string_with_options(&en_us, &opts).unwrap(),
+        pd.to_locale_string_with_str_and_options("en-US", &opts)
+            .unwrap(),
         "6/15/2022"
     );
 
     opts.set_time_zone("UTC");
     assert_eq!(
         get_test_instant()
-            .to_locale_string_with_options(&en_us, &opts)
+            .to_locale_string_with_str_and_options("en-US", &opts)
             .unwrap(),
         "6/15/2022, 12:30:45 PM"
     );
     assert_eq!(
-        get_test_plain_time().to_locale_string(&en_us).unwrap(),
+        get_test_plain_time()
+            .to_locale_string_with_str("en-US")
+            .unwrap(),
         "12:30:45 PM"
     );
 
     // An ISO year-month cannot be formatted in the locale's Gregorian calendar
     let pym = get_test_plain_year_month();
-    let err = pym.to_locale_string(&en_us).unwrap_err();
+    let err = pym.to_locale_string_with_str("en-US").unwrap_err();
     assert!(err.is_instance_of::<RangeError>());
     assert!(
-        pym.to_locale_string(&[JsString::from("en-US-u-ca-iso8601")])
+        pym.to_locale_string_with_str_sequence(&[JsString::from("en-US-u-ca-iso8601")])
             .unwrap()
             .length()
             > 0
@@ -64,16 +67,16 @@ fn to_locale_string() {
 
     // A `timeZone` option conflicts with a ZonedDateTime's own time zone
     let err = get_test_zoned_date_time()
-        .to_locale_string_with_options(&en_us, &opts)
+        .to_locale_string_with_str_and_options("en-US", &opts)
         .unwrap_err();
     assert!(err.is_instance_of::<TypeError>());
 
     // Invalid language tag
-    let err = pd.to_locale_string(&[JsString::from("en_US")]).unwrap_err();
+    let err = pd.to_locale_string_with_str("en_US").unwrap_err();
     assert!(err.is_instance_of::<RangeError>());
 
     let dur = get_test_duration();
-    let s = dur.to_locale_string(&en_us).unwrap();
+    let s = dur.to_locale_string_with_str("en-US").unwrap();
     assert!(s.length() > 0);
 }
 
@@ -577,7 +580,7 @@ fn plain_date_time_methods() {
     assert_eq!(zdt.time_zone_id(), "UTC");
 
     // 2022-03-13T02:30 does not exist in Los Angeles (spring forward)
-    let skipped = Temporal::PlainDateTime::new(2022, 3, 13, 2, 30, 0, 0, 0, 0).unwrap();
+    let skipped = Temporal::PlainDateTime::new_with_hour_and_minute(2022, 3, 13, 2, 30).unwrap();
     let opts = Temporal::ToZonedDateTimeOptions::new();
     opts.set_disambiguation(Temporal::TemporalDisambiguation::Reject);
     assert!(skipped
@@ -607,7 +610,10 @@ fn plain_date_time_constructor() {
     if !is_temporal_supported() {
         return;
     }
-    let pdt = Temporal::PlainDateTime::new(2022, 6, 15, 12, 30, 45, 123, 456, 789).unwrap();
+    let pdt = Temporal::PlainDateTime::new_with_hour_and_minute_and_second_and_millisecond_and_microsecond_and_nanosecond(2022, 6, 15, 12, 30, 45, 123, 456, 789).unwrap();
+    let midnight = Temporal::PlainDateTime::new(2022, 6, 15).unwrap();
+    assert_eq!(midnight.hour(), 0);
+    assert_eq!(midnight.nanosecond(), 0);
     assert!(pdt.equals(&get_test_plain_date_time()));
     assert_eq!(pdt.era(), None);
     assert_eq!(pdt.era_year(), None);
@@ -615,12 +621,12 @@ fn plain_date_time_constructor() {
     assert_eq!(pdt.year_of_week(), Some(2022));
 
     let pdt =
-        Temporal::PlainDateTime::new_with_calendar(2022, 6, 15, 12, 30, 45, 0, 0, 0, "gregory")
+        Temporal::PlainDateTime::new_with_hour_and_minute_and_second_and_millisecond_and_microsecond_and_nanosecond_and_calendar(2022, 6, 15, 12, 30, 45, 0, 0, 0, "gregory")
             .unwrap();
     assert_eq!(pdt.calendar_id(), "gregory");
     assert_eq!(pdt.era(), Some(JsString::from("ce")));
 
-    assert!(Temporal::PlainDateTime::new(2022, 13, 1, 0, 0, 0, 0, 0, 0).is_err());
+    assert!(Temporal::PlainDateTime::new(2022, 13, 1).is_err());
 }
 
 // ============================================================================
@@ -831,9 +837,14 @@ fn plain_time_methods() {
     opts.set_rounding_mode(Intl::RoundingMode::Ceil);
     assert_eq!(pt.to_js_string_with_options(&opts).unwrap(), "12:30:46");
 
-    let new_pt = Temporal::PlainTime::new(12, 30, 45, 123, 456, 789).unwrap();
+    let new_pt = Temporal::PlainTime::new_with_hour_and_minute_and_second_and_millisecond_and_microsecond_and_nanosecond(12, 30, 45, 123, 456, 789).unwrap();
+    assert_eq!(
+        Temporal::PlainTime::new().unwrap().to_js_string(),
+        "00:00:00"
+    );
+    assert_eq!(Temporal::PlainTime::new_with_hour(7).unwrap().hour(), 7);
     assert!(new_pt.equals(&pt));
-    assert!(Temporal::PlainTime::new(24, 0, 0, 0, 0, 0).is_err());
+    assert!(Temporal::PlainTime::new_with_hour(24).is_err());
 }
 
 #[wasm_bindgen_test]
@@ -915,7 +926,11 @@ fn plain_year_month_methods() {
     assert_eq!(new_pym.era(), None);
     assert_eq!(new_pym.era_year(), None);
 
-    let gregory = Temporal::PlainYearMonth::new_with_calendar(2022, 6, "gregory", 1).unwrap();
+    let gregory = Temporal::PlainYearMonth::new_with_calendar(2022, 6, "gregory").unwrap();
+    assert!(gregory.equals(
+        &Temporal::PlainYearMonth::new_with_calendar_and_reference_iso_day(2022, 6, "gregory", 1)
+            .unwrap()
+    ));
     assert_eq!(gregory.calendar_id(), "gregory");
     assert_eq!(gregory.era_year(), Some(2022));
 
@@ -981,7 +996,14 @@ fn plain_month_day_methods() {
     let new_pmd = Temporal::PlainMonthDay::new(6, 15).unwrap();
     assert!(new_pmd.equals(&pmd));
 
-    let gregory = Temporal::PlainMonthDay::new_with_calendar(6, 15, "gregory", 2022).unwrap();
+    let gregory = Temporal::PlainMonthDay::new_with_calendar(6, 15, "gregory").unwrap();
+    // The reference year is part of the value, so an explicit one other than the
+    // default 1972 is a different month-day
+    let explicit =
+        Temporal::PlainMonthDay::new_with_calendar_and_reference_iso_year(6, 15, "gregory", 2022)
+            .unwrap();
+    assert!(!gregory.equals(&explicit));
+    assert_eq!(explicit.to_js_string(), "2022-06-15[u-ca=gregory]");
     assert_eq!(gregory.calendar_id(), "gregory");
     assert_eq!(gregory.month_code(), "M06");
 
@@ -1122,9 +1144,18 @@ fn duration_methods() {
 
     // Test constructor
     let new_dur =
-        Temporal::Duration::new(0.0, 0.0, 0.0, 0.0, 1.0, 30.0, 0.0, 0.0, 0.0, 0.0).unwrap();
+        Temporal::Duration::new_with_years_and_months_and_weeks_and_days_and_hours_and_minutes(
+            0.0, 0.0, 0.0, 0.0, 1.0, 30.0,
+        )
+        .unwrap();
+    assert!(Temporal::Duration::new().unwrap().blank());
     assert_eq!(new_dur.to_js_string(), "PT1H30M");
-    assert!(Temporal::Duration::new(1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0).is_err());
+    assert!(
+        Temporal::Duration::new_with_years_and_months_and_weeks_and_days_and_hours(
+            1.0, 0.0, 0.0, 0.0, -1.0
+        )
+        .is_err()
+    );
 }
 
 #[wasm_bindgen_test]
