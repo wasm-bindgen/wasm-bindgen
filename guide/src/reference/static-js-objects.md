@@ -98,3 +98,12 @@ extern "C" {
     static STRING: JsString = "a string literal";
 }
 ```
+
+When reference types are enabled, each distinct string literal is stored once
+at a fixed slot of the module's `externref` table as the module is
+instantiated, so cloning or dropping the `JsString` never calls into JS. By
+default the JS glue fills those slots in; with the
+[`--js-string-builtins`](cli.md#--js-string-builtins) CLI flag the strings are
+instead imported as [JS String Builtins] string constants.
+
+[JS String Builtins]: https://github.com/WebAssembly/js-string-builtins

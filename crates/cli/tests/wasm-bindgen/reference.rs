@@ -669,8 +669,26 @@ fn sanitize_wasm(wasm: PathBuf) -> Result<String> {
                 .collect(),
         ),
     );
+    // Imported globals, such as `--js-string-builtins` string constants, are
+    // only used by the removed element segments, so restore them after the GC.
+    let global_imports = module
+        .imports
+        .iter()
+        .filter_map(|i| match i.kind {
+            ImportKind::Global(g) => {
+                let g = module.globals.get(g);
+                Some((i.module.clone(), i.name.clone(), g.ty, g.mutable, g.shared))
+            }
+            _ => None,
+        })
+        .collect::<Vec<_>>();
     walrus::passes::gc::run(&mut module);
     module.elements.delete(temp_element_id);
+    for (module_name, name, ty, mutable, shared) in global_imports {
+        if module.imports.find(&module_name, &name).is_none() {
+            module.add_import_global(&module_name, &name, ty, mutable, shared);
+        }
+    }
     // Sort imports for deterministic snapshot.
     std::mem::take(&mut module.imports)
         .iter()

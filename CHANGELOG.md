@@ -5,6 +5,14 @@
 
 ### Added
 
+* Added the `--js-string-builtins` CLI flag, importing `static_string`
+  constants as [JS String Builtins](https://github.com/WebAssembly/js-string-builtins)
+  string constants from `wasm:js/string-constants` instead of defining them in
+  the JS glue. With reference types, `static_string` constants now occupy
+  fixed `externref` table slots filled in when the module is instantiated, so
+  cloning and dropping them is free and never calls into JS.
+  [#5401](https://github.com/wasm-bindgen/wasm-bindgen/pull/5401)
+
 * Added the `slice = view | copy | array` and `vec = copy | array`
   attributes for imported JS functions, choosing what JS receives for a
   sequence argument with numeric elements: a live typed array over wasm
@@ -75,6 +83,13 @@
   [#5378](https://github.com/wasm-bindgen/wasm-bindgen/pull/5378)
 
 ### Changed
+
+* With reference types, `static_string` constants and the reserved
+  `undefined`, `null`, `true` and `false` values are stored at fixed slots of
+  the `externref` table, which is now sized to include them, and cloning or
+  dropping them no longer allocates or calls into JS. The per-string JS import
+  function is no longer emitted.
+  [#5401](https://github.com/wasm-bindgen/wasm-bindgen/pull/5401)
 
 * **Breaking (experimental):** `experimental_generic_mono` imports no longer add
   hidden ABI bounds to the generated wrapper. The conversion bounds each

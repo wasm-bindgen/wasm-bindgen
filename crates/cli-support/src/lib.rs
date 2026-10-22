@@ -8,6 +8,10 @@ use std::str;
 use walrus::Module;
 
 pub(crate) const PLACEHOLDER_MODULE: &str = "__wbindgen_placeholder__";
+/// The module that JS String Builtins string constants are imported from, as
+/// named by the WebAssembly ESM integration and passed as
+/// `importedStringConstants` when wasm-bindgen compiles the module itself.
+pub(crate) const STRING_CONSTANTS_MODULE: &str = "wasm:js/string-constants";
 
 /// The fixed layout of the `externref` table and JS heap: slots below
 /// `INITIAL_HEAP_OFFSET` are the stack, followed by `INITIAL_HEAP_VALUES`.
@@ -53,6 +57,7 @@ pub struct Bindgen {
     split_linked_modules: bool,
     generate_reset_state: bool,
     force_enable_abort_handler: bool,
+    js_string_builtins: bool,
 }
 
 pub struct Output {
@@ -134,6 +139,7 @@ impl Bindgen {
             split_linked_modules: false,
             generate_reset_state: false,
             force_enable_abort_handler: false,
+            js_string_builtins: false,
         }
     }
 
@@ -337,6 +343,14 @@ impl Bindgen {
 
     pub fn split_linked_modules(&mut self, split_linked_modules: bool) -> &mut Bindgen {
         self.split_linked_modules = split_linked_modules;
+        self
+    }
+
+    /// Imports `static_string` constants as JS String Builtins string
+    /// constants from `wasm:js/string-constants` instead of defining them in
+    /// the JS glue.
+    pub fn js_string_builtins(&mut self, js_string_builtins: bool) -> &mut Bindgen {
+        self.js_string_builtins = js_string_builtins;
         self
     }
 

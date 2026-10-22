@@ -5,6 +5,16 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::PathBuf;
 use walrus::TypedCustomSectionId;
 
+/// What fills a fixed `externref` table slot.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum StaticSlot {
+    /// An imported `externref` global, a `wasm:js/string-constants` string
+    /// constant under `--js-string-builtins`.
+    Global(walrus::GlobalId),
+    /// A string literal the JS glue stores when initializing the table.
+    String(String),
+}
+
 /// A synthetic custom section which is not standardized, never will be, and
 /// cannot be serialized or parsed. This is synthesized from all of the
 /// compiler-emitted wasm-bindgen sections and then immediately removed to be
@@ -75,6 +85,13 @@ pub struct WasmBindgenAux {
     pub externref_alloc: Option<walrus::FunctionId>,
     pub externref_drop: Option<walrus::FunctionId>,
     pub externref_drop_slice: Option<walrus::FunctionId>,
+
+    /// The `static_string` constants, in the order of the fixed `externref`
+    /// table slots they occupy right after the initial heap values, which
+    /// their shims return. `externref::process` sizes the table for them
+    /// and initializes the imported ones with an element segment; the JS
+    /// glue fills in the rest.
+    pub static_slots: Vec<StaticSlot>,
 
     /// Various intrinsics used for JS glue generation
     pub exn_store: Option<walrus::FunctionId>,

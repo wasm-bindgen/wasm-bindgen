@@ -10,6 +10,9 @@ Node.js or a headless browser via the WebDriver protocol.
 WASM_BINDGEN_SPLIT_LINKED_MODULES=1 cargo test --target wasm32-unknown-unknown
 ```
 
+Setting `WASM_BINDGEN_JS_STRING_BUILTINS=1` as well runs them with
+`--js-string-builtins`.
+
 See [the `wasm-bindgen-test` crate's
 `README.md`](https://github.com/wasm-bindgen/wasm-bindgen/blob/master/crates/test/README.md)
 for details and configuring which headless browser is used.
