@@ -651,13 +651,21 @@ extern "C" {
     #[wasm_bindgen(method, getter = relativeTo)]
     pub fn get_relative_to(this: &DurationRoundToOptions) -> JsValue;
 
-    /// Set the relativeTo option.
-    ///
-    /// Required when using variable-length units (years, months, weeks).
-    /// Can be a `PlainDate`, `ZonedDateTime`, or a string/object that
-    /// can be converted to one of those types.
+    /// Set the relativeTo option, required for rounding calendar units
+    /// (years, months, weeks). Accepts a `PlainDate`, `PlainDateTime`,
+    /// `ZonedDateTime`, or a string or property bag convertible to one.
     #[wasm_bindgen(method, setter = relativeTo)]
     pub fn set_relative_to(this: &DurationRoundToOptions, value: &JsValue);
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_str(this: &DurationRoundToOptions, value: &str);
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_object(this: &DurationRoundToOptions, value: &Object);
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_plain_date(this: &DurationRoundToOptions, value: &PlainDate);
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_plain_date_time(this: &DurationRoundToOptions, value: &PlainDateTime);
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_zoned_date_time(this: &DurationRoundToOptions, value: &ZonedDateTime);
 }
 
 impl DurationRoundToOptions {
@@ -695,11 +703,21 @@ extern "C" {
     #[wasm_bindgen(method, getter = relativeTo)]
     pub fn get_relative_to(this: &DurationTotalOptions) -> JsValue;
 
-    /// Set the relativeTo option.
-    ///
-    /// Required when using variable-length units (years, months, weeks).
+    /// Set the relativeTo option, required for rounding calendar units
+    /// (years, months, weeks). Accepts a `PlainDate`, `PlainDateTime`,
+    /// `ZonedDateTime`, or a string or property bag convertible to one.
     #[wasm_bindgen(method, setter = relativeTo)]
     pub fn set_relative_to(this: &DurationTotalOptions, value: &JsValue);
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_str(this: &DurationTotalOptions, value: &str);
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_object(this: &DurationTotalOptions, value: &Object);
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_plain_date(this: &DurationTotalOptions, value: &PlainDate);
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_plain_date_time(this: &DurationTotalOptions, value: &PlainDateTime);
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_zoned_date_time(this: &DurationTotalOptions, value: &ZonedDateTime);
 }
 
 impl DurationTotalOptions {
@@ -729,11 +747,21 @@ extern "C" {
     #[wasm_bindgen(method, getter = relativeTo)]
     pub fn get_relative_to(this: &DurationCompareOptions) -> JsValue;
 
-    /// Set the relativeTo option.
-    ///
-    /// Required when either duration has nonzero weeks or larger units.
+    /// Set the relativeTo option, required for rounding calendar units
+    /// (years, months, weeks). Accepts a `PlainDate`, `PlainDateTime`,
+    /// `ZonedDateTime`, or a string or property bag convertible to one.
     #[wasm_bindgen(method, setter = relativeTo)]
     pub fn set_relative_to(this: &DurationCompareOptions, value: &JsValue);
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_str(this: &DurationCompareOptions, value: &str);
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_object(this: &DurationCompareOptions, value: &Object);
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_plain_date(this: &DurationCompareOptions, value: &PlainDate);
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_plain_date_time(this: &DurationCompareOptions, value: &PlainDateTime);
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_zoned_date_time(this: &DurationCompareOptions, value: &ZonedDateTime);
 }
 
 impl DurationCompareOptions {
@@ -947,8 +975,18 @@ extern "C" {
     /// or if `roundingIncrement` is invalid for the unit.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/round)
-    #[wasm_bindgen(method, catch)]
-    pub fn round(this: &Instant, round_to: &RoundToOptions) -> Result<Instant, JsValue>;
+    #[wasm_bindgen(method, js_name = round, catch)]
+    pub fn round_with_round_to_options(
+        this: &Instant,
+        round_to: &RoundToOptions,
+    ) -> Result<Instant, JsValue>;
+
+    /// Shorthand for `round()` with only `smallestUnit` set.
+    #[wasm_bindgen(method, js_name = round, catch)]
+    pub fn round_with_temporal_unit(
+        this: &Instant,
+        smallest_unit: TemporalUnit,
+    ) -> Result<Instant, JsValue>;
 
     /// The `toZonedDateTimeISO()` method returns a `Temporal.ZonedDateTime`
     /// representing this instant in the ISO 8601 calendar and the given time zone.
@@ -1444,9 +1482,18 @@ extern "C" {
     /// or if `roundingIncrement` is invalid for the unit.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/round)
-    #[wasm_bindgen(method, catch)]
-    pub fn round(this: &PlainDateTime, round_to: &RoundToOptions)
-        -> Result<PlainDateTime, JsValue>;
+    #[wasm_bindgen(method, js_name = round, catch)]
+    pub fn round_with_round_to_options(
+        this: &PlainDateTime,
+        round_to: &RoundToOptions,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// Shorthand for `round()` with only `smallestUnit` set.
+    #[wasm_bindgen(method, js_name = round, catch)]
+    pub fn round_with_temporal_unit(
+        this: &PlainDateTime,
+        smallest_unit: TemporalUnit,
+    ) -> Result<PlainDateTime, JsValue>;
 
     /// The `toZonedDateTime()` method returns a `Temporal.ZonedDateTime` with the
     /// same calendar date and wall-clock time in the given time zone.
@@ -2021,9 +2068,18 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/round)
     ///
-    #[wasm_bindgen(method, catch)]
-    pub fn round(this: &ZonedDateTime, round_to: &RoundToOptions)
-        -> Result<ZonedDateTime, JsValue>;
+    #[wasm_bindgen(method, js_name = round, catch)]
+    pub fn round_with_round_to_options(
+        this: &ZonedDateTime,
+        round_to: &RoundToOptions,
+    ) -> Result<ZonedDateTime, JsValue>;
+
+    /// Shorthand for `round()` with only `smallestUnit` set.
+    #[wasm_bindgen(method, js_name = round, catch)]
+    pub fn round_with_temporal_unit(
+        this: &ZonedDateTime,
+        smallest_unit: TemporalUnit,
+    ) -> Result<ZonedDateTime, JsValue>;
 
     /// The `startOfDay()` method returns a `Temporal.ZonedDateTime` object representing
     /// the start of the day (usually midnight) of this zoned date-time.
@@ -2045,9 +2101,16 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/getTimeZoneTransition)
     #[wasm_bindgen(method, js_name = getTimeZoneTransition, catch)]
-    pub fn get_time_zone_transition(
+    pub fn get_time_zone_transition_with_time_zone_transition_options(
         this: &ZonedDateTime,
         options: &TimeZoneTransitionOptions,
+    ) -> Result<Option<ZonedDateTime>, JsValue>;
+
+    /// Shorthand for `getTimeZoneTransition()` with only `direction` set.
+    #[wasm_bindgen(method, js_name = getTimeZoneTransition, catch)]
+    pub fn get_time_zone_transition_with_transition_direction(
+        this: &ZonedDateTime,
+        direction: TransitionDirection,
     ) -> Result<Option<ZonedDateTime>, JsValue>;
 
     /// The `toInstant()` method returns a `Temporal.Instant` object representing the
@@ -2344,8 +2407,18 @@ extern "C" {
     /// are invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/round)
-    #[wasm_bindgen(method, catch)]
-    pub fn round(this: &Duration, round_to: &DurationRoundToOptions) -> Result<Duration, JsValue>;
+    #[wasm_bindgen(method, js_name = round, catch)]
+    pub fn round_with_duration_round_to_options(
+        this: &Duration,
+        round_to: &DurationRoundToOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// Shorthand for `round()` with only `smallestUnit` set.
+    #[wasm_bindgen(method, js_name = round, catch)]
+    pub fn round_with_temporal_unit(
+        this: &Duration,
+        smallest_unit: TemporalUnit,
+    ) -> Result<Duration, JsValue>;
 
     /// The `total()` method returns the total number of the specified unit that
     /// fits in the duration as a floating point number.
@@ -2355,8 +2428,15 @@ extern "C" {
     /// for calendar units (years, months, weeks) but not provided.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/total)
-    #[wasm_bindgen(method, catch)]
-    pub fn total(this: &Duration, total_of: &DurationTotalOptions) -> Result<f64, JsValue>;
+    #[wasm_bindgen(method, js_name = total, catch)]
+    pub fn total_with_duration_total_options(
+        this: &Duration,
+        total_of: &DurationTotalOptions,
+    ) -> Result<f64, JsValue>;
+
+    /// Shorthand for `total()` with only `unit` set.
+    #[wasm_bindgen(method, js_name = total, catch)]
+    pub fn total_with_temporal_unit(this: &Duration, unit: TemporalUnit) -> Result<f64, JsValue>;
 
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this duration.
@@ -2641,8 +2721,18 @@ extern "C" {
     /// or if `roundingIncrement` is invalid for the unit.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/round)
-    #[wasm_bindgen(method, catch)]
-    pub fn round(this: &PlainTime, round_to: &RoundToOptions) -> Result<PlainTime, JsValue>;
+    #[wasm_bindgen(method, js_name = round, catch)]
+    pub fn round_with_round_to_options(
+        this: &PlainTime,
+        round_to: &RoundToOptions,
+    ) -> Result<PlainTime, JsValue>;
+
+    /// Shorthand for `round()` with only `smallestUnit` set.
+    #[wasm_bindgen(method, js_name = round, catch)]
+    pub fn round_with_temporal_unit(
+        this: &PlainTime,
+        smallest_unit: TemporalUnit,
+    ) -> Result<PlainTime, JsValue>;
 
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this time.

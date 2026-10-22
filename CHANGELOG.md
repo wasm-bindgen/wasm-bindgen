@@ -21,7 +21,9 @@
   `compare`), unions expand to `from_with_str`/`from_with_object` and
   `to_zoned_date_time_with_str`/`_with_object`, and optional arguments expand
   to a plain method plus `_with_options`/`_and_options` or
-  `with_plain_time`/`with_plain_time_with_plain_time`. Bindings for the removed
+  `with_plain_time`/`with_plain_time_with_plain_time`. `round`, `total` and
+  `get_time_zone_transition` take the unit or direction directly or an options
+  object, and `relativeTo` has typed setters per accepted type. Bindings for the removed
   `toPlainYearMonth`/`toPlainMonthDay` on `PlainDateTime` and `ZonedDateTime`,
   `ZonedDateTime::with_plain_date` and `PlainTime::to_plain_date_time` are gone,
   `offset_nanoseconds` returns `f64`, `era`, `era_year`, `week_of_year` and
