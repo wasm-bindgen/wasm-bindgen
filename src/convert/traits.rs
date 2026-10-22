@@ -270,9 +270,9 @@ pub trait OptionFromWasmAbi: FromWasmAbi {
 
 /// Indicates that this type can be passed to JS as `Nullable<Self>`.
 ///
-/// This trait is used when implementing `IntoWasmAbi for Nullable<T>`.
-/// `Nullable::Undefined` crosses as [`OptionIntoWasmAbi::none`]; this adds
-/// the ABI value for `Nullable::Null`.
+/// This trait is used when implementing `IntoWasmAbi for Nullable<T>`, which
+/// adds the ABI value for `Nullable::Null` beside [`OptionIntoWasmAbi::none`],
+/// so that `Option<Nullable<T>>` can cross as well.
 ///
 /// # ⚠️ Unstable
 ///
@@ -290,9 +290,9 @@ pub trait NullableIntoWasmAbi: OptionIntoWasmAbi {
 
 /// Indicates that this type can be received from JS as `Nullable<Self>`.
 ///
-/// This trait is used when implementing `FromWasmAbi for Nullable<T>`.
-/// [`OptionFromWasmAbi::is_none`] recognises `Undefined`; this adds the test
-/// for `Null`.
+/// This trait is used when implementing `FromWasmAbi for Nullable<T>`, which
+/// adds the test for `Nullable::Null` beside [`OptionFromWasmAbi::is_none`],
+/// so that `Option<Nullable<T>>` can cross as well.
 ///
 /// # ⚠️ Unstable
 ///
@@ -301,8 +301,7 @@ pub trait NullableIntoWasmAbi: OptionIntoWasmAbi {
 /// documentation for more details.
 pub trait NullableFromWasmAbi: OptionFromWasmAbi {
     /// Tests whether the argument is the `null` instance. If so it will be
-    /// deserialized as `Null`, otherwise it is tested with `is_none` and
-    /// finally passed to `FromWasmAbi`.
+    /// deserialized as `Null`, otherwise it is passed to `FromWasmAbi`.
     fn is_null(abi: &Self::Abi) -> bool;
 }
 

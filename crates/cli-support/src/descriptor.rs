@@ -88,7 +88,8 @@ pub enum Descriptor {
         inner: Box<Descriptor>,
         strict: bool,
     },
-    /// `Nullable<T>`: `null` and `undefined` cross as distinct empty values.
+    /// `Nullable<T>`: `null` crosses as its own empty value. Inside an
+    /// `Option`, it is the `T | null | undefined` union.
     Nullable(Box<Descriptor>),
     Result(Box<Descriptor>),
     Unit,
@@ -459,6 +460,10 @@ impl Descriptor {
         }
         let d = match d {
             Descriptor::Option { inner, .. } | Descriptor::Nullable(inner) => inner,
+            d => d,
+        };
+        let d = match d {
+            Descriptor::Nullable(inner) => inner,
             d => d,
         };
         let (borrowed, mutable) = match d {

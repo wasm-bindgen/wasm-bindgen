@@ -106,8 +106,12 @@ pub enum OptionKind {
     /// `Option<T>` under `wasm_bindgen_unstable_strict_option`: only
     /// `undefined` is `None`, so `null` goes to the inner type's conversion.
     Strict,
-    /// `Nullable<T>`: `undefined` and `null` cross as distinct empty values.
+    /// `Nullable<T>`: only `null` is empty, crossing as its own sentinel, so
+    /// `undefined` goes to the inner type's conversion.
     Nullable,
+    /// `Option<Nullable<T>>`: `undefined` and `null` cross as distinct empty
+    /// values, `undefined` as `Option`'s and `null` as `Nullable`'s.
+    OptionNullable,
 }
 
 impl OptionKind {
@@ -120,8 +124,14 @@ impl OptionKind {
         }
     }
 
+    /// Whether `null` crosses as the `Nullable` sentinel.
     pub fn nullable(self) -> bool {
-        matches!(self, OptionKind::Nullable)
+        matches!(self, OptionKind::Nullable | OptionKind::OptionNullable)
+    }
+
+    /// Whether `undefined` is an empty value, so the argument is omittable.
+    pub fn accepts_undefined(self) -> bool {
+        !matches!(self, OptionKind::Nullable)
     }
 
     /// Whether `null` is an accepted argument value, so part of its TS type.
@@ -244,7 +254,7 @@ pub enum Instruction {
     },
     OptionWasmToInt128 {
         signed: bool,
-        nullable: bool,
+        kind: OptionKind,
     },
 
     /// Pops a Wasm `i32` and pushes the enum variant as a string
@@ -253,11 +263,11 @@ pub enum Instruction {
     },
 
     /// Pops a Wasm `i32`, pushes the variant as a string, `undefined` for
-    /// `hole` and, when `nullable`, `null` for the index above it.
+    /// `hole` and, when `kind` is nullable, `null` for the index above it.
     OptionWasmToStringEnum {
         name: String,
         hole: u32,
-        nullable: bool,
+        kind: OptionKind,
     },
 
     /// pops a string and pushes the enum variant as an `i32`
@@ -427,10 +437,10 @@ pub enum Instruction {
         class: String,
     },
     /// Pops a class pointer, pushes `undefined` for `0`, `null` for `1` when
-    /// `nullable`, else the wrapped instance.
+    /// `kind` is nullable, else the wrapped instance.
     OptionRustFromI32 {
         class: String,
-        nullable: bool,
+        kind: OptionKind,
     },
     /// pops ptr/length i32, loads string from cache
     CachedStringLoad {
@@ -454,7 +464,7 @@ pub enum Instruction {
         mem: walrus::MemoryId,
         free: walrus::FunctionId,
         mode: SeqValue,
-        nullable: bool,
+        option_kind: OptionKind,
     },
     /// pops ptr/length of a buffer holding `length` element ABIs, each laid
     /// out as `words`, pushes the array `elem` decodes them into (or
@@ -464,8 +474,7 @@ pub enum Instruction {
         elem: Vec<InstructionData>,
         mem: walrus::MemoryId,
         free: walrus::FunctionId,
-        optional: bool,
-        nullable: bool,
+        optional: Option<OptionKind>,
     },
     /// pops an array (or, `optional`, `undefined`), encodes each element with
     /// `elem` into the `words` of its ABI in a buffer allocated with `malloc`
@@ -502,31 +511,31 @@ pub enum Instruction {
         kind: VectorKind,
         mem: walrus::MemoryId,
         mode: SeqValue,
-        nullable: bool,
+        option_kind: OptionKind,
     },
     /// pops f64, pushes it viewed as an optional value with a known sentinel
     OptionF64Sentinel {
-        nullable: bool,
+        kind: OptionKind,
     },
     /// pops i32, pushes it viewed as an optional value with a known sentinel
     OptionU32Sentinel {
-        nullable: bool,
+        kind: OptionKind,
     },
     /// pops an i32, then `ty`, then pushes externref
     ToOptionNative {
         ty: walrus::ValType,
         signed: bool,
-        nullable: bool,
+        kind: OptionKind,
     },
     OptionBoolFromI32 {
-        nullable: bool,
+        kind: OptionKind,
     },
     OptionCharFromI32 {
-        nullable: bool,
+        kind: OptionKind,
     },
     OptionEnumFromF64 {
         hole: u32,
-        nullable: bool,
+        kind: OptionKind,
     },
     I32FromOptionNonNull {
         kind: OptionKind,

@@ -151,9 +151,12 @@ impl InstructionBuilder<'_, '_> {
             },
             Descriptor::Ref(d) => self.incoming_ref(false, d)?,
             Descriptor::RefMut(d) => self.incoming_ref(true, d)?,
-            Descriptor::Option { inner, strict } => {
-                self.incoming_option(inner, OptionKind::option(*strict))?
-            }
+            Descriptor::Option { inner, strict } => match &**inner {
+                Descriptor::Nullable(inner) => {
+                    self.incoming_option(inner, OptionKind::OptionNullable)?
+                }
+                inner => self.incoming_option(inner, OptionKind::option(*strict))?,
+            },
             Descriptor::Nullable(inner) => self.incoming_option(inner, OptionKind::Nullable)?,
 
             Descriptor::String | Descriptor::CachedString => {
@@ -494,6 +497,10 @@ impl InstructionBuilder<'_, '_> {
                 self.in_option_sentinel64_number(option_kind);
             }
 
+            Descriptor::Option { .. } | Descriptor::Nullable(_) => bail!(
+                "unsupported nested optional argument type for calling Rust function from JS: \
+                 {arg:?}; only `Option<Nullable<T>>` nests"
+            ),
             _ => bail!(
                 "unsupported optional argument type for calling Rust function from JS: {arg:?}"
             ),

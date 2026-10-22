@@ -188,7 +188,12 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
 
-            Descriptor::Option { inner, .. } => self.outgoing_option(inner, OptionKind::Lenient)?,
+            Descriptor::Option { inner, .. } => match &**inner {
+                Descriptor::Nullable(inner) => {
+                    self.outgoing_option(inner, OptionKind::OptionNullable)?
+                }
+                inner => self.outgoing_option(inner, OptionKind::Lenient)?,
+            },
             Descriptor::Nullable(inner) => self.outgoing_option(inner, OptionKind::Nullable)?,
             Descriptor::Result(d) => self.outgoing_result(d)?,
 
@@ -355,7 +360,6 @@ impl InstructionBuilder<'_, '_> {
     }
 
     fn outgoing_option(&mut self, arg: &Descriptor, option_kind: OptionKind) -> Result<(), Error> {
-        let nullable = option_kind.nullable();
         match arg {
             Descriptor::Externref => {
                 // This is set to `undefined` in the `None` case and otherwise
@@ -405,7 +409,7 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::I32, AdapterType::I64, AdapterType::I64],
                     Instruction::OptionWasmToInt128 {
                         signed: true,
-                        nullable,
+                        kind: option_kind,
                     },
                     &[AdapterType::S128.option_kind(option_kind)],
                 );
@@ -415,7 +419,7 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::I32, AdapterType::I64, AdapterType::I64],
                     Instruction::OptionWasmToInt128 {
                         signed: false,
-                        nullable,
+                        kind: option_kind,
                     },
                     &[AdapterType::U128.option_kind(option_kind)],
                 );
@@ -423,14 +427,14 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Boolean => {
                 self.instruction(
                     &[AdapterType::I32],
-                    Instruction::OptionBoolFromI32 { nullable },
+                    Instruction::OptionBoolFromI32 { kind: option_kind },
                     &[AdapterType::Bool.option_kind(option_kind)],
                 );
             }
             Descriptor::Char => {
                 self.instruction(
                     &[AdapterType::I32],
-                    Instruction::OptionCharFromI32 { nullable },
+                    Instruction::OptionCharFromI32 { kind: option_kind },
                     &[AdapterType::String.option_kind(option_kind)],
                 );
             }
@@ -439,7 +443,7 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::F64],
                     Instruction::OptionEnumFromF64 {
                         hole: *hole,
-                        nullable,
+                        kind: option_kind,
                     },
                     &[AdapterType::Enum(name.clone()).option_kind(option_kind)],
                 );
@@ -450,7 +454,7 @@ impl InstructionBuilder<'_, '_> {
                     Instruction::OptionWasmToStringEnum {
                         name: name.clone(),
                         hole: *hole,
-                        nullable,
+                        kind: option_kind,
                     },
                     &[AdapterType::StringEnum(name.clone()).option_kind(option_kind)],
                 );
@@ -465,7 +469,7 @@ impl InstructionBuilder<'_, '_> {
                     &[ptr_ty],
                     Instruction::OptionRustFromI32 {
                         class: name.to_string(),
-                        nullable,
+                        kind: option_kind,
                     },
                     &[AdapterType::Struct(name.clone()).option_kind(option_kind)],
                 );
@@ -495,13 +499,13 @@ impl InstructionBuilder<'_, '_> {
                         mem,
                         free,
                         mode: self.seq_value,
-                        nullable,
+                        option_kind,
                     },
                     &[AdapterType::Vector(kind).option_kind(option_kind)],
                 );
             }
 
-            Descriptor::NonNull if nullable => {
+            Descriptor::NonNull if option_kind.nullable() => {
                 self.out_option_sentinel64(AdapterType::U32, option_kind)
             }
             Descriptor::NonNull => {
@@ -520,6 +524,10 @@ impl InstructionBuilder<'_, '_> {
                 self.out_option_sentinel64(AdapterType::U32, option_kind);
             }
 
+            Descriptor::Option { .. } | Descriptor::Nullable(_) => bail!(
+                "unsupported nested optional return type for calling Rust function from JS: \
+                 {arg:?}; only `Option<Nullable<T>>` nests"
+            ),
             _ => bail!(
                 "unsupported optional argument type for calling JS function from Rust: {arg:?}"
             ),
@@ -711,7 +719,7 @@ impl InstructionBuilder<'_, '_> {
                         kind: kind.clone(),
                         mem,
                         mode: self.seq_value,
-                        nullable: option_kind.nullable(),
+                        option_kind,
                     },
                     &[AdapterType::Vector(kind).option_kind(option_kind)],
                 );
@@ -786,8 +794,7 @@ impl InstructionBuilder<'_, '_> {
                 elem,
                 mem,
                 free,
-                optional: optional.is_some(),
-                nullable: optional.is_some_and(OptionKind::nullable),
+                optional,
             },
             &[match optional {
                 Some(kind) => array.option_kind(kind),
@@ -857,11 +864,7 @@ impl InstructionBuilder<'_, '_> {
         let adapter_ty = AdapterType::from_wasm(ty).unwrap();
         self.instruction(
             &[AdapterType::I32, adapter_ty.clone()],
-            Instruction::ToOptionNative {
-                signed,
-                ty,
-                nullable: kind.nullable(),
-            },
+            Instruction::ToOptionNative { signed, ty, kind },
             &[adapter_ty.option_kind(kind)],
         );
     }
@@ -869,9 +872,7 @@ impl InstructionBuilder<'_, '_> {
     fn out_option_sentinel32(&mut self, ty: AdapterType, kind: OptionKind) {
         self.instruction(
             &[AdapterType::I32],
-            Instruction::OptionU32Sentinel {
-                nullable: kind.nullable(),
-            },
+            Instruction::OptionU32Sentinel { kind },
             &[ty.option_kind(kind)],
         );
     }
@@ -879,9 +880,7 @@ impl InstructionBuilder<'_, '_> {
     fn out_option_sentinel64(&mut self, ty: AdapterType, kind: OptionKind) {
         self.instruction(
             &[AdapterType::F64],
-            Instruction::OptionF64Sentinel {
-                nullable: kind.nullable(),
-            },
+            Instruction::OptionF64Sentinel { kind },
             &[ty.option_kind(kind)],
         );
     }

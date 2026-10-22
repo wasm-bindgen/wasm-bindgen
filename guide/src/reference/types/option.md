@@ -19,8 +19,8 @@ The cfg applies to `js-sys` and `web-sys` as well, which still use `Option<T>`
 for JS APIs that return `null`: under it, `RegExp::exec` with no match and
 `Document::get_element_by_id` with a missing id return `Some(null)`, and
 `Storage::get_item` on a missing key returns `Err` rather than `Ok(None)`.
-Those bindings move to `Nullable<T>` before the default flips, so the cfg is
-only suitable for testing a crate's own boundary today.
+Those bindings move to [`Nullable<T>`](./nullable.md) before the default
+flips, so the cfg is only suitable for testing a crate's own boundary today.
 
 The cfg must be set for the whole build, since the `wasm-bindgen` crate itself
 records the choice when it describes the type, so it goes in `RUSTFLAGS` or in
@@ -58,5 +58,7 @@ With the cfg set, an exported function's optional argument is typed
 struct field is `field?: T`. Without it they include `null`.
 
 This behaviour becomes the default in the next breaking release. Code that
-relies on `null` becoming `None` should move to
-[`Nullable<T>`](./nullable.md), which keeps `null` and `undefined` apart.
+relies on `null` becoming `None` should move to [`Nullable<T>`](./nullable.md)
+for a `T | null` value, or `Option<Nullable<T>>` for `T | null | undefined`.
+The `Option` layer of `Option<Nullable<T>>` is strict with or without the cfg,
+since `null` has to reach the `Nullable` layer.

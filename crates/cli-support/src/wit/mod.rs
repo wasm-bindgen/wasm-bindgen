@@ -2775,12 +2775,18 @@ impl<'a> Context<'a> {
             return;
         }
 
-        if let Descriptor::Option { inner, .. } | Descriptor::Nullable(inner) = descriptor {
-            match inner.as_mut() {
-                Descriptor::I64 => **inner = Descriptor::I64AsF64,
-                Descriptor::U64 => **inner = Descriptor::U64AsF64,
-                _ => {}
-            }
+        let inner = match descriptor {
+            Descriptor::Option { inner, .. } | Descriptor::Nullable(inner) => inner.as_mut(),
+            _ => return,
+        };
+        let inner = match inner {
+            Descriptor::Nullable(nested) => nested.as_mut(),
+            inner => inner,
+        };
+        match inner {
+            Descriptor::I64 => *inner = Descriptor::I64AsF64,
+            Descriptor::U64 => *inner = Descriptor::U64AsF64,
+            _ => {}
         }
     }
 

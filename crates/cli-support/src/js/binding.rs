@@ -283,7 +283,7 @@ pub fn maybe_wrap_export_call(call: &str, guard: ExportGuard) -> String {
 const F64_OPTION_SENTINEL: &str = "Number.MAX_SAFE_INTEGER";
 /// `Nullable::Null` over the `f64` ABI, below the `undefined` sentinel.
 const F64_NULL_SENTINEL: &str = "Number.MAX_SAFE_INTEGER - 1";
-/// `None`/`Undefined` and `Nullable::Null` over the small-integer ABI.
+/// `None` and `Nullable::Null` over the small-integer ABI.
 const U32_OPTION_SENTINEL: &str = "0xFFFFFF";
 const U32_NULL_SENTINEL: &str = "0xFFFFFE";
 /// The handle of `null`. A slice with a null pointer carries a JS handle in
@@ -666,7 +666,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                 ts.push_str(v);
             } else {
                 match ty {
-                    AdapterType::Option { ty, kind } if omittable => {
+                    AdapterType::Option { ty, kind } if omittable && kind.accepts_undefined() => {
                         // e.g. `foo?: string | null`
                         arg.push_str("?: ");
                         adapter2ts(
@@ -796,7 +796,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                 }
             } else {
                 match ty {
-                    AdapterType::Option { ty, kind } if omittable => {
+                    AdapterType::Option { ty, kind } if omittable && kind.accepts_undefined() => {
                         adapter2ts(
                             ty,
                             TypePosition::Argument,
@@ -1429,12 +1429,13 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         self.prelude(&format!("_assertBoolean({arg});"));
     }
 
-    /// The test for an incoming option being empty: only `undefined` when
-    /// `Strict`, otherwise `undefined` or `null`.
+    /// The test for an incoming option holding no value: only `undefined`
+    /// when `Strict`, only `null` for a plain `Nullable`, otherwise either.
     fn is_none(&mut self, val: &str, kind: OptionKind) -> String {
         match kind {
             OptionKind::Strict => format!("{val} === undefined"),
-            OptionKind::Lenient | OptionKind::Nullable => {
+            OptionKind::Nullable => format!("{val} === null"),
+            OptionKind::Lenient | OptionKind::OptionNullable => {
                 self.cx.expose_is_like_none();
                 format!("isLikeNone({val})")
             }
@@ -1444,7 +1445,8 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     fn is_some(&mut self, val: &str, kind: OptionKind) -> String {
         match kind {
             OptionKind::Strict => format!("{val} !== undefined"),
-            OptionKind::Lenient | OptionKind::Nullable => {
+            OptionKind::Nullable => format!("{val} !== null"),
+            OptionKind::Lenient | OptionKind::OptionNullable => {
                 self.cx.expose_is_like_none();
                 format!("!isLikeNone({val})")
             }
@@ -1463,9 +1465,10 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         value: &str,
     ) -> String {
         match kind {
-            OptionKind::Nullable => format!(
+            OptionKind::OptionNullable => format!(
                 "{val} === undefined ? {undefined_abi} : {val} === null ? {null_abi} : {value}"
             ),
+            OptionKind::Nullable => format!("{val} === null ? {null_abi} : {value}"),
             kind => {
                 let none = self.is_none(val, kind);
                 format!("{none} ? {undefined_abi} : {value}")
@@ -1486,9 +1489,9 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     /// The length word of an incoming slice just passed to wasm. A nullable
     /// one must tell its empty states apart: `0` for `undefined`, the `null`
     /// handle for `null`.
-    fn vector_len(&self, val: &str, kind: OptionKind) -> String {
+    fn vector_len(&mut self, val: &str, kind: OptionKind) -> String {
         if kind.nullable() {
-            format!("{val} === null ? {NULL_HANDLE} : {val} === undefined ? 0 : WASM_VECTOR_LEN")
+            self.option_abi(val, kind, "0", &NULL_HANDLE.to_string(), "WASM_VECTOR_LEN")
         } else {
             "WASM_VECTOR_LEN".to_string()
         }
@@ -1673,26 +1676,41 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
 }
 
 /// `value` unless `val` is an ABI empty state: `undefined` for
-/// `undefined_abi` and, when `nullable`, `null` for `null_abi`.
+/// `undefined_abi` and, when `kind` is nullable, `null` for `null_abi`. A
+/// plain `Nullable` has no `undefined` state.
 fn abi_option(
     val: &str,
-    nullable: bool,
+    kind: OptionKind,
     undefined_abi: &str,
     null_abi: &str,
     value: &str,
 ) -> String {
-    if nullable {
-        format!("{val} === {undefined_abi} ? undefined : {val} === {null_abi} ? null : {value}")
-    } else {
-        format!("{val} === {undefined_abi} ? undefined : {value}")
+    match kind {
+        OptionKind::OptionNullable => {
+            format!("{val} === {undefined_abi} ? undefined : {val} === {null_abi} ? null : {value}")
+        }
+        OptionKind::Nullable => format!("{val} === {null_abi} ? null : {value}"),
+        OptionKind::Lenient | OptionKind::Strict => {
+            format!("{val} === {undefined_abi} ? undefined : {value}")
+        }
     }
 }
 
-/// The initialiser of an outgoing optional slice's result: `null` when
-/// `nullable` and the null pointer's length is the `null` handle.
-fn empty_vector_init(len: &str, nullable: bool) -> String {
-    if nullable {
-        format!(" = {len} === {NULL_HANDLE} ? null : undefined")
+/// The empty value of an outgoing optional slice whose pointer is null: when
+/// `kind` is nullable, `null` for a length of the `null` handle.
+fn empty_vector_value(len: &str, kind: OptionKind) -> String {
+    match kind {
+        OptionKind::OptionNullable => format!("({len} === {NULL_HANDLE} ? null : undefined)"),
+        OptionKind::Nullable => "null".to_string(),
+        OptionKind::Lenient | OptionKind::Strict => "undefined".to_string(),
+    }
+}
+
+/// The initialiser of an outgoing optional slice's result, which is
+/// `undefined` by default.
+fn empty_vector_init(len: &str, kind: OptionKind) -> String {
+    if kind.nullable() {
+        format!(" = {}", empty_vector_value(len, kind))
     } else {
         String::new()
     }
@@ -1916,12 +1934,12 @@ fn instruction(
             js.push(format!("{none} ? BigInt(0) : {low}"));
             js.push(format!("{none} ? BigInt(0) : {high}"));
         }
-        Instruction::OptionWasmToInt128 { signed, nullable } => {
+        Instruction::OptionWasmToInt128 { signed, kind } => {
             let high = js.pop();
             let low = js.pop();
             let present = js.pop();
             let val = int64x2_to_int128(low, high, *signed);
-            js.push(abi_option(&present, *nullable, "0", "2", &val));
+            js.push(abi_option(&present, *kind, "0", "2", &val));
         }
 
         Instruction::WasmToStringEnum { name } => {
@@ -1930,18 +1948,14 @@ fn instruction(
             js.push(wasm_to_string_enum(name, &index))
         }
 
-        Instruction::OptionWasmToStringEnum {
-            name,
-            hole,
-            nullable,
-        } => {
+        Instruction::OptionWasmToStringEnum { name, hole, kind } => {
             // Since hole is currently variant_count+1 and the lookup is
             // ["a","b","c"][index], the lookup will implicitly return map
             // the hole to undefined, because OOB indexes will return undefined.
             let index = js.pop();
             js.cx.expose_string_enum(name);
             let lookup = wasm_to_string_enum(name, &index);
-            if *nullable {
+            if kind.nullable() {
                 js.push(format!("{index} === {} ? null : {lookup}", hole + 1))
             } else {
                 js.push(lookup)
@@ -2134,10 +2148,10 @@ fn instruction(
             let val = js.pop();
             let i = js.tmp();
             // `Nullable::Null` is the pointer `1`, which no instance can have.
-            let empty = if kind.nullable() {
-                format!("{val} === null ? 1 : 0")
+            let (empty, owned) = if kind.nullable() {
+                (format!("{val} === null ? 1 : 0"), "> 1")
             } else {
-                "0".into()
+                ("0".into(), "")
             };
             let ptr = js.declare("let", format!("ptr{i}"), empty);
             let some = js.is_some(&val, *kind);
@@ -2147,7 +2161,7 @@ fn instruction(
             js.prelude(&format!("{ptr} = {val}.__destroy_into_raw();"));
             js.prelude("}");
             let free = js.class_free(class);
-            js.release(format!("if ({ptr}) {free}({ptr}, 1);"));
+            js.release(format!("if ({ptr}{owned}) {free}({ptr}, 1);"));
             js.push(ptr);
         }
 
@@ -2168,15 +2182,13 @@ fn instruction(
             };
             // A nullable `null` is the fixed handle, which Rust reads as
             // `Null` without owning a slot.
-            let abi = match kind {
-                OptionKind::Nullable => format!(
-                    "{val} === undefined ? 0 : {val} === null ? {NULL_HANDLE} : {alloc}({val})"
-                ),
-                kind => {
-                    let none = js.is_none(&val, *kind);
-                    format!("{none} ? 0 : {alloc}({val})")
-                }
-            };
+            let abi = js.option_abi(
+                &val,
+                *kind,
+                "0",
+                &NULL_HANDLE.to_string(),
+                &format!("{alloc}({val})"),
+            );
             js.push_alloc(abi);
         }
 
@@ -2212,11 +2224,14 @@ fn instruction(
             );
             let val = js.declare("const", format!("char{i}"), abi);
             js.cx.expose_assert_char();
-            let value = if kind.nullable() {
-                format!("{val} !== {U32_OPTION_SENTINEL} && {val} !== {U32_NULL_SENTINEL}")
-            } else {
-                format!("{val} !== {U32_OPTION_SENTINEL}")
-            };
+            let mut value = Vec::new();
+            if kind.accepts_undefined() {
+                value.push(format!("{val} !== {U32_OPTION_SENTINEL}"));
+            }
+            if kind.nullable() {
+                value.push(format!("{val} !== {U32_NULL_SENTINEL}"));
+            }
+            let value = value.join(" && ");
             js.prelude(&format!("if ({value}) {{ _assertChar({val}); }}"));
             js.push(val);
         }
@@ -2603,13 +2618,13 @@ fn instruction(
             }
         }
 
-        Instruction::OptionRustFromI32 { class, nullable } => {
+        Instruction::OptionRustFromI32 { class, kind } => {
             assert!(constructor.is_none());
             let val = js.pop();
             let identifier = js.cx.require_class_wrap(class);
             js.push(abi_option(
                 &val,
-                *nullable,
+                *kind,
                 "0",
                 "1",
                 &format!("{identifier}.__wrap({val})"),
@@ -2772,7 +2787,7 @@ fn instruction(
             mem,
             free,
             mode,
-            nullable,
+            option_kind,
         } => {
             let len = js.pop();
             let ptr = js.pop();
@@ -2784,7 +2799,7 @@ fn instruction(
             let load = seq_value_expr(format!("{f}({ptr}, {len})"), kind, mode);
             let i = js.tmp();
             let free = js.cx.wasm_export_of(*free);
-            let init = empty_vector_init(&len, *nullable);
+            let init = empty_vector_init(&len, *option_kind);
             js.prelude(&format!("let v{i}{init};"));
             js.prelude(&format!("if ({ptr} !== 0) {{"));
             js.prelude(&format!("v{i} = {load};"));
@@ -2803,7 +2818,6 @@ fn instruction(
             mem,
             free,
             optional,
-            nullable,
         } => {
             let len = js.pop();
             let ptr = js.pop();
@@ -2841,8 +2855,8 @@ fn instruction(
             let v = js.local(format!("v{i}"));
             let free = js.cx.wasm_export_of(*free);
             let coerce = js.cx.coerce_ptr_assign(&p);
-            if *optional {
-                let init = empty_vector_init(&len, *nullable);
+            if let Some(kind) = optional {
+                let init = empty_vector_init(&len, *kind);
                 js.prelude(&format!("let {v}{init};\nif ({ptr} !== 0) {{\n{v} = [];"));
             } else {
                 js.prelude(&format!("const {v} = [];"));
@@ -2858,7 +2872,7 @@ fn instruction(
                 {free}({ptr}, {len} * {stride}, {align});
                 "
             ));
-            if *optional {
+            if optional.is_some() {
                 js.prelude("}");
             }
             js.push(v);
@@ -2961,47 +2975,39 @@ fn instruction(
             kind,
             mem,
             mode,
-            nullable,
+            option_kind,
         } => {
             let len = js.pop();
             let ptr = js.pop();
             let f = view_from_wasm(js, kind, *mem);
             let view = seq_value_expr(format!("{f}({ptr}, {len})"), kind, *mode);
-            let empty = if *nullable {
-                format!("({len} === {NULL_HANDLE} ? null : undefined)")
-            } else {
-                "undefined".to_string()
-            };
+            let empty = empty_vector_value(&len, *option_kind);
             js.push(format!("{ptr} === 0 ? {empty} : {view}"));
         }
 
-        Instruction::OptionF64Sentinel { nullable } => {
+        Instruction::OptionF64Sentinel { kind } => {
             let val = js.pop();
             js.push(abi_option(
                 &val,
-                *nullable,
+                *kind,
                 F64_OPTION_SENTINEL,
                 F64_NULL_SENTINEL,
                 &val,
             ));
         }
 
-        Instruction::OptionU32Sentinel { nullable } => {
+        Instruction::OptionU32Sentinel { kind } => {
             let val = js.pop();
             js.push(abi_option(
                 &val,
-                *nullable,
+                *kind,
                 U32_OPTION_SENTINEL,
                 U32_NULL_SENTINEL,
                 &val,
             ));
         }
 
-        Instruction::ToOptionNative {
-            ty,
-            signed,
-            nullable,
-        } => {
+        Instruction::ToOptionNative { ty, signed, kind } => {
             let val = js.pop();
             let present = js.pop();
             let value = if *signed {
@@ -3013,36 +3019,36 @@ fn instruction(
                     _ => unreachable!("unsigned non-integer"),
                 }
             };
-            js.push(abi_option(&present, *nullable, "0", "2", &value));
+            js.push(abi_option(&present, *kind, "0", "2", &value));
         }
 
-        Instruction::OptionBoolFromI32 { nullable } => {
+        Instruction::OptionBoolFromI32 { kind } => {
             let val = js.pop();
             js.push(abi_option(
                 &val,
-                *nullable,
+                *kind,
                 U32_OPTION_SENTINEL,
                 U32_NULL_SENTINEL,
                 &format!("{val} !== 0"),
             ));
         }
 
-        Instruction::OptionCharFromI32 { nullable } => {
+        Instruction::OptionCharFromI32 { kind } => {
             let val = js.pop();
             js.push(abi_option(
                 &val,
-                *nullable,
+                *kind,
                 U32_OPTION_SENTINEL,
                 U32_NULL_SENTINEL,
                 &format!("String.fromCodePoint({val})"),
             ));
         }
 
-        Instruction::OptionEnumFromF64 { hole, nullable } => {
+        Instruction::OptionEnumFromF64 { hole, kind } => {
             let val = js.pop();
             js.push(abi_option(
                 &val,
-                *nullable,
+                *kind,
                 &hole.to_string(),
                 F64_NULL_SENTINEL,
                 &val,
@@ -3331,9 +3337,10 @@ pub(crate) fn adapter2ts(
         AdapterType::Option { ty, kind } => {
             adapter2ts(ty, position, dst, refs, name_map, typed_array_buffers);
             dst.push_str(match (position, kind) {
-                (TypePosition::Argument, OptionKind::Lenient) | (_, OptionKind::Nullable) => {
+                (TypePosition::Argument, OptionKind::Lenient) | (_, OptionKind::OptionNullable) => {
                     " | null | undefined"
                 }
+                (_, OptionKind::Nullable) => " | null",
                 _ => " | undefined",
             });
         }

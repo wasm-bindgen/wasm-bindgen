@@ -1,7 +1,8 @@
 # `Nullable<T>`
 
-`Nullable<T>` is the Rust-side type for a JS value of type
-`T | null | undefined`. It is accepted everywhere `Option<T>` is: as an
+`Nullable<T>` is the Rust-side type for a JS value of type `T | null`, as
+`Option<T>` is for `T | undefined`. The union `T | null | undefined` is
+`Option<Nullable<T>>`. All three are accepted in the same positions: as an
 argument or return value of exported and imported functions, as a public field
 of an exported struct, and as a closure argument or return value, including
 the reference forms (`Nullable<&str>`, `Nullable<&[T]>`, `Nullable<&JsValue>`)
@@ -11,22 +12,25 @@ that `Option` supports in imports.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Nullable<T> {
     Null, // also the `Default`
-    Undefined,
     Value(T),
 }
 ```
 
-Where `Option<T>` folds the empty JS states into `None` and always sends
-`undefined` back, `Nullable<T>` keeps them apart in both directions:
-
 | Type | JS type | JS to Rust | Rust to JS |
 |---|---|---|---|
 | `Option<T>` | `T \| undefined` | `undefined` is `None`; anything else, including `null` under the [strict cfg](./option.md#strict-optiont-unstable), goes to `T`'s conversion | `None` is `undefined` |
-| `Nullable<T>` | `T \| null \| undefined` | `null` is `Null`, `undefined` is `Undefined`, anything else goes to `T`'s conversion | `Null` is `null`, `Undefined` is `undefined`, `Value(v)` is `v` |
+| `Nullable<T>` | `T \| null` | `null` is `Null`; anything else, including `undefined`, goes to `T`'s conversion | `Null` is `null` |
+| `Option<Nullable<T>>` | `T \| null \| undefined` | `undefined` is `None`, `null` is `Some(Null)`, anything else is `Some(Value(..))` | `None` is `undefined`, `Some(Null)` is `null`, `Some(Value(v))` is `v` |
 
-Three variants, because the type admits all three JS states and the value
-sent to JS is the one held: a `T | null` API gets `Null`, and an optional
-`T | null` setter can still send `Undefined`.
+The `Option` layer of `Option<Nullable<T>>` is always strict, with or without
+the cfg: only `undefined` is `None`, since `null` has to reach the `Nullable`
+layer. What `undefined` does when it reaches a plain `Nullable<T>` is what the
+[strict `Option<T>` table](./option.md#strict-optiont-unstable) says `null`
+does for the same `T`: the debug glue throws its type assertion, and the
+release glue coerces or throws as `T` itself would.
+
+No other nesting is supported. `Nullable<Nullable<T>>`, `Nullable<Option<T>>`
+and `Option<Option<T>>` do not cross the boundary.
 
 ```rust
 #[wasm_bindgen]
@@ -38,26 +42,39 @@ pub fn find(key: &str) -> Nullable<String> {
 }
 
 #[wasm_bindgen]
-pub fn describe(value: Nullable<u32>) -> String {
+pub fn describe(value: Option<Nullable<u32>>) -> String {
     match value {
-        Nullable::Null => "null".into(),
-        Nullable::Undefined => "undefined".into(),
-        Nullable::Value(n) => n.to_string(),
+        None => "undefined".into(),
+        Some(Nullable::Null) => "null".into(),
+        Some(Nullable::Value(n)) => n.to_string(),
     }
 }
 ```
 
 ```ts
-find(key: string): string | null | undefined;
+find(key: string): string | null;
 describe(value?: number | null): string;
 ```
 
-The API follows `Option`'s names: `is_null`, `is_undefined`, `is_empty`,
-`is_value`, `as_ref`, `as_mut`, `map`, `value()` / `into_option()`, `unwrap`,
-`expect`, `unwrap_or`, `unwrap_or_else` and `unwrap_or_default`. `From<T>`
-gives `Value`, `From<Option<T>>` maps `None` to `Null` (the canonical empty
-value of a nullable type, as `JsNullable::new()` is), and `Option<T>` can be
-built from a `Nullable<T>` with both empties becoming `None`.
+A `Nullable<T>` argument is never omittable in TypeScript, since `undefined`
+is not one of its states; an `Option<Nullable<T>>` one is `arg?: T | null`
+when trailing, and such a struct field is `field?: T | null`.
+
+The API follows `Option`'s names: `is_null`, `is_value`, `as_ref`, `as_mut`,
+`map`, `value()` / `into_option()`, `unwrap`, `expect`, `unwrap_or`,
+`unwrap_or_else` and `unwrap_or_default`. `From<T>` gives `Value`; as lossy
+conveniences, `From<Option<T>>` maps `None` to `Null` and `Option<T>` can be
+built from a `Nullable<T>` with `Null` becoming `None`.
+`opt.and_then(Nullable::value)` collapses an `Option<Nullable<T>>` to an
+`Option<T>`.
+
+## `Nullable<NonNull<T>>`
+
+Every non-null address is a `NonNull<T>`, so a `Nullable<NonNull<T>>` crosses
+as a JS number with the pointer sentinels, as `Nullable<*const T>` does, and
+the null pointer itself is `Null`. A JS `0` passed for either a
+`Nullable<NonNull<T>>` or an `Option<Nullable<NonNull<T>>>` reaches Rust as
+`Null`, as it is `None` for `Option<NonNull<T>>`.
 
 ## `Nullable<T>` and `JsNullable<T>`
 
@@ -65,7 +82,9 @@ built from a `Nullable<T>` with both empties becoming `None`.
 boundary. [`JsNullable<T>`](./js-sys.md) and `JsOption<T>` are JS-side
 handles: the value stays a JS value, and they are what to use inside another
 JS type, such as `Array<JsNullable<T>>` or `Promise<JsOption<T>>`, and in
-generic positions. For `T: JsGeneric` the two convert into each other with
-`From`, preserving `null` versus `undefined`.
+generic positions. For `T: JsGeneric`, a `Nullable<T>` and an
+`Option<Nullable<T>>` convert into a `JsNullable<T>` with `From`, `None`
+becoming `undefined`, and a `JsNullable<T>` converts into an
+`Option<Nullable<T>>`, keeping all three states.
 
 The type is also re-exported as `js_sys::Nullable`.

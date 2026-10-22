@@ -22,12 +22,15 @@
   `Nullable<T>`.
   [#5410](https://github.com/wasm-bindgen/wasm-bindgen/pull/5410)
 
-* Added `Nullable<T>`, re-exported as `js_sys::Nullable`, for a
-  `T | null | undefined` value at the JS boundary. It is accepted wherever
-  `Option<T>` is, for every `T` and in every position, and keeps `null` and
-  `undefined` apart in both directions: JS `null` is `Nullable::Null`,
-  `undefined` is `Nullable::Undefined`, and each is sent back as itself.
-  `Option<T>` converts from and into it, and so does `JsNullable<T>` for
+* Added `Nullable<T>`, re-exported as `js_sys::Nullable`, for a `T | null`
+  value at the JS boundary, as `Option<T>` is for `T | undefined`, with
+  `Option<Nullable<T>>` for `T | null | undefined`. Both are accepted wherever
+  `Option<T>` is, for every `T` and in every position: JS `null` is
+  `Nullable::Null` and is sent back as `null`, while `undefined` into a plain
+  `Nullable<T>` goes to `T`'s own conversion. The `Option` layer of
+  `Option<Nullable<T>>` treats only `undefined` as `None` with or without the
+  strict cfg. `Option<T>` converts from and into `Nullable<T>`, and
+  `JsNullable<T>` converts from both and into `Option<Nullable<T>>` for
   `T: JsGeneric`.
   [#5410](https://github.com/wasm-bindgen/wasm-bindgen/pull/5410)
 

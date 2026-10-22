@@ -16,28 +16,111 @@ export class Opt {
         wasm.__wbg_opt_free(ptr, 0);
     }
     /**
-     * @returns {number | null | undefined}
+     * @returns {number | null}
      */
     get n() {
         const ret = wasm.__wbg_get_opt_n(this.__wbg_ptr);
+        return ret === Number.MAX_SAFE_INTEGER - 1 ? null : ret;
+    }
+    /**
+     * @returns {number | null | undefined}
+     */
+    get o() {
+        const ret = wasm.__wbg_get_opt_o(this.__wbg_ptr);
         return ret === Number.MAX_SAFE_INTEGER ? undefined : ret === Number.MAX_SAFE_INTEGER - 1 ? null : ret;
+    }
+    /**
+     * @param {number | null} arg0
+     */
+    set n(arg0) {
+        wasm.__wbg_set_opt_n(this.__wbg_ptr, arg0 === null ? Number.MAX_SAFE_INTEGER - 1 : (arg0) >>> 0);
     }
     /**
      * @param {number | null} [arg0]
      */
-    set n(arg0) {
-        wasm.__wbg_set_opt_n(this.__wbg_ptr, arg0 === undefined ? Number.MAX_SAFE_INTEGER : arg0 === null ? Number.MAX_SAFE_INTEGER - 1 : (arg0) >>> 0);
+    set o(arg0) {
+        wasm.__wbg_set_opt_o(this.__wbg_ptr, arg0 === undefined ? Number.MAX_SAFE_INTEGER : arg0 === null ? Number.MAX_SAFE_INTEGER - 1 : (arg0) >>> 0);
     }
 }
 if (Symbol.dispose) Opt.prototype[Symbol.dispose] = Opt.prototype.free;
 
 /**
- * @param {number | null} [a]
+ * @param {number | null} a
  * @param {number | null} [b]
  * @param {number | null} [c]
  */
 export function all_nullable(a, b, c) {
-    wasm.all_nullable(a === undefined ? Number.MAX_SAFE_INTEGER : a === null ? Number.MAX_SAFE_INTEGER - 1 : (a) >>> 0, b === undefined ? Number.MAX_SAFE_INTEGER : b === null ? Number.MAX_SAFE_INTEGER - 1 : (b) >>> 0, c === undefined ? Number.MAX_SAFE_INTEGER : c === null ? Number.MAX_SAFE_INTEGER - 1 : (c) >>> 0);
+    wasm.all_nullable(a === null ? Number.MAX_SAFE_INTEGER - 1 : (a) >>> 0, b === undefined ? Number.MAX_SAFE_INTEGER : b === null ? Number.MAX_SAFE_INTEGER - 1 : (b) >>> 0, c === undefined ? Number.MAX_SAFE_INTEGER : c === null ? Number.MAX_SAFE_INTEGER - 1 : (c) >>> 0);
+}
+
+/**
+ * @param {Uint8Array | number[] | null} b
+ * @param {boolean | null} c
+ * @param {string | null} d
+ * @returns {Uint8Array | null}
+ */
+export function nullable_bytes(b, c, d) {
+    const char1 = d === null ? 0xFFFFFE : d.codePointAt(0);
+    if (char1 !== 0xFFFFFE) { _assertChar(char1); }
+    var ptr0 = b === null ? 0 : passArray8ToWasm0(b, wasm.__wbindgen_malloc);
+    var len0 = b === null ? 1025 : WASM_VECTOR_LEN;
+    const ret = wasm.nullable_bytes(ptr0, len0, c === null ? 0xFFFFFE : c ? 1 : 0, char1);
+    let v3 = null;
+    if (ret[0] !== 0) {
+        v3 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+        wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    }
+    return v3;
+}
+
+/**
+ * @param {bigint | null} a
+ * @param {bigint | null} [b]
+ * @returns {bigint | null | undefined}
+ */
+export function nullable_i64(a, b) {
+    const ret = wasm.nullable_i64(a === null ? 2 : 1, a === null ? BigInt(0) : a, b === undefined ? 0 : b === null ? 2 : 1, isLikeNone(b) ? BigInt(0) : b);
+    return ret[0] === 0 ? undefined : ret[0] === 2 ? null : ret[1];
+}
+
+/**
+ * @param {string | null} s
+ * @returns {string | null}
+ */
+export function nullable_string(s) {
+    var ptr0 = s === null ? 0 : passStringToWasm0(s, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    var len0 = s === null ? 1025 : WASM_VECTOR_LEN;
+    const ret = wasm.nullable_string(ptr0, len0);
+    let v2 = null;
+    if (ret[0] !== 0) {
+        v2 = getStringFromWasm0(ret[0], ret[1]);
+        wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    }
+    return v2;
+}
+
+/**
+ * @param {Flag | null} f
+ * @returns {Flag | null}
+ */
+export function nullable_string_enum(f) {
+    const ret = wasm.nullable_string_enum(f === null ? 4 : ((__wbindgen_enum_Flag.indexOf(f) + 1 || 3) - 1));
+    return ret === 4 ? null : __wbindgen_enum_Flag[ret];
+}
+
+/**
+ * @param {Opt | null} o
+ * @param {any | null} v
+ * @returns {Opt | null}
+ */
+export function nullable_struct(o, v) {
+    let ptr0 = o === null ? 1 : 0;
+    if (o !== null) {
+        _assertClass(o, Opt);
+        ptr0 = o.__destroy_into_raw();
+    }
+    const ret = wasm.nullable_struct(ptr0, v === null ? 1025 : addToExternrefTable0(v));
+    return ret === 1 ? null : Opt.__wrap(ret);
 }
 
 /**
@@ -46,13 +129,13 @@ export function all_nullable(a, b, c) {
  * @param {string | null} [d]
  * @returns {Uint8Array | null | undefined}
  */
-export function nullable_bytes(b, c, d) {
+export function optional_nullable_bytes(b, c, d) {
     const char1 = d === undefined ? 0xFFFFFF : d === null ? 0xFFFFFE : d.codePointAt(0);
     if (char1 !== 0xFFFFFF && char1 !== 0xFFFFFE) { _assertChar(char1); }
     var ptr0 = isLikeNone(b) ? 0 : passArray8ToWasm0(b, wasm.__wbindgen_malloc);
-    var len0 = b === null ? 1025 : b === undefined ? 0 : WASM_VECTOR_LEN;
-    const ret = wasm.nullable_bytes(ptr0, len0, c === undefined ? 0xFFFFFF : c === null ? 0xFFFFFE : c ? 1 : 0, char1);
-    let v3 = ret[1] === 1025 ? null : undefined;
+    var len0 = b === undefined ? 0 : b === null ? 1025 : WASM_VECTOR_LEN;
+    const ret = wasm.optional_nullable_bytes(ptr0, len0, c === undefined ? 0xFFFFFF : c === null ? 0xFFFFFE : c ? 1 : 0, char1);
+    let v3 = (ret[1] === 1025 ? null : undefined);
     if (ret[0] !== 0) {
         v3 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
         wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
@@ -64,11 +147,11 @@ export function nullable_bytes(b, c, d) {
  * @param {string | null} [s]
  * @returns {string | null | undefined}
  */
-export function nullable_string(s) {
+export function optional_nullable_string(s) {
     var ptr0 = isLikeNone(s) ? 0 : passStringToWasm0(s, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    var len0 = s === null ? 1025 : s === undefined ? 0 : WASM_VECTOR_LEN;
-    const ret = wasm.nullable_string(ptr0, len0);
-    let v2 = ret[1] === 1025 ? null : undefined;
+    var len0 = s === undefined ? 0 : s === null ? 1025 : WASM_VECTOR_LEN;
+    const ret = wasm.optional_nullable_string(ptr0, len0);
+    let v2 = (ret[1] === 1025 ? null : undefined);
     if (ret[0] !== 0) {
         v2 = getStringFromWasm0(ret[0], ret[1]);
         wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
@@ -80,8 +163,8 @@ export function nullable_string(s) {
  * @param {Flag | null} [f]
  * @returns {Flag | null | undefined}
  */
-export function nullable_string_enum(f) {
-    const ret = wasm.nullable_string_enum(f === undefined ? 3 : f === null ? 4 : ((__wbindgen_enum_Flag.indexOf(f) + 1 || 3) - 1));
+export function optional_nullable_string_enum(f) {
+    const ret = wasm.optional_nullable_string_enum(f === undefined ? 3 : f === null ? 4 : ((__wbindgen_enum_Flag.indexOf(f) + 1 || 3) - 1));
     return ret === 4 ? null : __wbindgen_enum_Flag[ret];
 }
 
@@ -90,23 +173,23 @@ export function nullable_string_enum(f) {
  * @param {any | null} [v]
  * @returns {Opt | null | undefined}
  */
-export function nullable_struct(o, v) {
+export function optional_nullable_struct(o, v) {
     let ptr0 = o === null ? 1 : 0;
     if (!isLikeNone(o)) {
         _assertClass(o, Opt);
         ptr0 = o.__destroy_into_raw();
     }
-    const ret = wasm.nullable_struct(ptr0, v === undefined ? 0 : v === null ? 1025 : addToExternrefTable0(v));
+    const ret = wasm.optional_nullable_struct(ptr0, v === undefined ? 0 : v === null ? 1025 : addToExternrefTable0(v));
     return ret === 0 ? undefined : ret === 1 ? null : Opt.__wrap(ret);
 }
 
 /**
  * @param {number | null | undefined} a
- * @param {number} b
+ * @param {number | null} b
  * @param {number | null} [c]
  */
 export function some_nullable(a, b, c) {
-    wasm.some_nullable(a === undefined ? Number.MAX_SAFE_INTEGER : a === null ? Number.MAX_SAFE_INTEGER - 1 : (a) >>> 0, b, c === undefined ? Number.MAX_SAFE_INTEGER : c === null ? Number.MAX_SAFE_INTEGER - 1 : (c) >>> 0);
+    wasm.some_nullable(a === undefined ? Number.MAX_SAFE_INTEGER : a === null ? Number.MAX_SAFE_INTEGER - 1 : (a) >>> 0, b === null ? Number.MAX_SAFE_INTEGER - 1 : (b) >>> 0, c === undefined ? Number.MAX_SAFE_INTEGER : c === null ? Number.MAX_SAFE_INTEGER - 1 : (c) >>> 0);
 }
 export function __wbg___wbindgen_is_null_e343b7d08827ba72(arg0) {
     const ret = arg0 === null;

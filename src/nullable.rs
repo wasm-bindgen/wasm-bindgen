@@ -2,28 +2,31 @@ use crate::convert::JsGeneric;
 use crate::sys::JsNullable;
 use crate::{JsCast, JsValue};
 
-/// A `T`, `null` or `undefined` at the JS boundary.
+/// A `T` or `null` at the JS boundary.
 ///
-/// `Nullable<T>` is the Rust-side type for a JS value of type
-/// `T | null | undefined`. It is accepted everywhere `Option<T>` is: as an
+/// `Nullable<T>` is the Rust-side type for a JS value of type `T | null`, as
+/// `Option<T>` is for `T | undefined`, and `Option<Nullable<T>>` is the union
+/// `T | null | undefined`. All three are accepted in the same positions: as an
 /// argument or return value of exported and imported functions, as a public
 /// field of an exported struct, and as a closure argument or return value,
-/// including the `&`/`&mut` reference forms `Option<T>` supports. Unlike
-/// `Option<T>`, it keeps `null` and `undefined` apart in both directions:
+/// including the `&`/`&mut` reference forms `Option<T>` supports.
 ///
 /// | Type | JS type | JS → Rust | Rust → JS |
 /// |---|---|---|---|
 /// | `Option<T>` | `T \| undefined` | `undefined` → `None`; anything else, `null` included under `wasm_bindgen_unstable_strict_option`, goes to `T`'s conversion | `None` → `undefined` |
-/// | `Nullable<T>` | `T \| null \| undefined` | `null` → `Null`, `undefined` → `Undefined`, else `T`'s conversion | `Null` → `null`, `Undefined` → `undefined`, `Value(v)` → `v` |
+/// | `Nullable<T>` | `T \| null` | `null` → `Null`; anything else, `undefined` included, goes to `T`'s conversion | `Null` → `null` |
+/// | `Option<Nullable<T>>` | `T \| null \| undefined` | `undefined` → `None`, `null` → `Some(Null)`, else `Some(Value(..))` | `None` → `undefined`, `Some(Null)` → `null` |
 ///
-/// Without the cfg, `Option<T>` still receives `null` as `None` for
-/// primitives, strings, slices, enums and exported structs. Code relying on
-/// that should move to `Nullable<T>`.
+/// The `Option` layer of `Option<Nullable<T>>` always treats only `undefined`
+/// as `None`, with or without the cfg, since `null` has to reach the
+/// `Nullable` layer. `opt.and_then(Nullable::value)` collapses the union to an
+/// `Option<T>`. No other nesting is supported: `Nullable<Nullable<T>>`,
+/// `Nullable<Option<T>>` and `Option<Option<T>>` do not cross the boundary.
 ///
-/// Use `Option<T>` or `Nullable<T>` for a value crossing the boundary
-/// directly. Inside a JS type, such as `Array<T>` or `Promise<T>`, and in
-/// generic positions, use the JS-side handles [`JsOption<T>`] and
-/// [`JsNullable<T>`] instead, which stay JS values rather than converting.
+/// Use these for a value crossing the boundary directly. Inside a JS type,
+/// such as `Array<T>` or `Promise<T>`, and in generic positions, use the
+/// JS-side handles [`JsOption<T>`] and [`JsNullable<T>`] instead, which stay
+/// JS values rather than converting.
 ///
 /// [`JsOption<T>`]: crate::sys::JsOption
 /// [`JsNullable<T>`]: crate::sys::JsNullable
@@ -31,8 +34,6 @@ use crate::{JsCast, JsValue};
 pub enum Nullable<T> {
     /// JS `null`.
     Null,
-    /// JS `undefined`.
-    Undefined,
     /// A value.
     Value(T),
 }
@@ -51,18 +52,6 @@ impl<T> Nullable<T> {
         matches!(self, Nullable::Null)
     }
 
-    /// Returns `true` if this is `Undefined`.
-    #[inline]
-    pub const fn is_undefined(&self) -> bool {
-        matches!(self, Nullable::Undefined)
-    }
-
-    /// Returns `true` if this is `Null` or `Undefined`.
-    #[inline]
-    pub const fn is_empty(&self) -> bool {
-        !self.is_value()
-    }
-
     /// Returns `true` if this is a `Value`.
     #[inline]
     pub const fn is_value(&self) -> bool {
@@ -74,7 +63,6 @@ impl<T> Nullable<T> {
     pub const fn as_ref(&self) -> Nullable<&T> {
         match self {
             Nullable::Null => Nullable::Null,
-            Nullable::Undefined => Nullable::Undefined,
             Nullable::Value(v) => Nullable::Value(v),
         }
     }
@@ -84,34 +72,30 @@ impl<T> Nullable<T> {
     pub fn as_mut(&mut self) -> Nullable<&mut T> {
         match self {
             Nullable::Null => Nullable::Null,
-            Nullable::Undefined => Nullable::Undefined,
             Nullable::Value(v) => Nullable::Value(v),
         }
     }
 
     /// Maps a `Nullable<T>` to `Nullable<U>` by applying a function to a
-    /// contained value, leaving `Null` and `Undefined` as they are.
+    /// contained value, leaving `Null` as it is.
     #[inline]
     pub fn map<U, F: FnOnce(T) -> U>(self, f: F) -> Nullable<U> {
         match self {
             Nullable::Null => Nullable::Null,
-            Nullable::Undefined => Nullable::Undefined,
             Nullable::Value(v) => Nullable::Value(f(v)),
         }
     }
 
-    /// Returns the contained value as `Some`, or `None` for `Null` and
-    /// `Undefined`.
+    /// Returns the contained value as `Some`, or `None` for `Null`.
     #[inline]
     pub fn value(self) -> Option<T> {
         match self {
             Nullable::Value(v) => Some(v),
-            Nullable::Null | Nullable::Undefined => None,
+            Nullable::Null => None,
         }
     }
 
-    /// Returns the contained value as `Some`, or `None` for `Null` and
-    /// `Undefined`.
+    /// Returns the contained value as `Some`, or `None` for `Null`.
     #[inline]
     pub fn into_option(self) -> Option<T> {
         self.value()
@@ -121,14 +105,13 @@ impl<T> Nullable<T> {
     ///
     /// # Panics
     ///
-    /// Panics if this is `Null` or `Undefined`.
+    /// Panics if this is `Null`.
     #[inline]
     #[track_caller]
     pub fn unwrap(self) -> T {
         match self {
             Nullable::Value(v) => v,
             Nullable::Null => panic!("called `Nullable::unwrap()` on a `Null` value"),
-            Nullable::Undefined => panic!("called `Nullable::unwrap()` on an `Undefined` value"),
         }
     }
 
@@ -136,13 +119,13 @@ impl<T> Nullable<T> {
     ///
     /// # Panics
     ///
-    /// Panics with `msg` if this is `Null` or `Undefined`.
+    /// Panics with `msg` if this is `Null`.
     #[inline]
     #[track_caller]
     pub fn expect(self, msg: &str) -> T {
         match self {
             Nullable::Value(v) => v,
-            Nullable::Null | Nullable::Undefined => panic!("{}", msg),
+            Nullable::Null => panic!("{}", msg),
         }
     }
 
@@ -175,8 +158,6 @@ impl<T> From<T> for Nullable<T> {
     }
 }
 
-/// `None` becomes `Null`, the canonical empty value of a nullable type,
-/// matching [`JsNullable::new`].
 impl<T> From<Option<T>> for Nullable<T> {
     #[inline]
     fn from(option: Option<T>) -> Self {
@@ -199,21 +180,31 @@ impl<T: JsGeneric> From<Nullable<T>> for JsNullable<T> {
     fn from(nullable: Nullable<T>) -> Self {
         match nullable {
             Nullable::Null => JsNullable::new(),
-            Nullable::Undefined => JsValue::UNDEFINED.unchecked_into(),
             Nullable::Value(v) => JsNullable::wrap(v),
         }
     }
 }
 
-impl<T: JsGeneric> From<JsNullable<T>> for Nullable<T> {
+/// `None` is `undefined`, which `JsNullable` admits as its other empty state.
+impl<T: JsGeneric> From<Option<Nullable<T>>> for JsNullable<T> {
+    #[inline]
+    fn from(option: Option<Nullable<T>>) -> Self {
+        match option {
+            Some(nullable) => nullable.into(),
+            None => JsValue::UNDEFINED.unchecked_into(),
+        }
+    }
+}
+
+impl<T: JsGeneric> From<JsNullable<T>> for Option<Nullable<T>> {
     #[inline]
     fn from(nullable: JsNullable<T>) -> Self {
-        if JsValue::is_null(&nullable) {
-            Nullable::Null
-        } else if JsValue::is_undefined(&nullable) {
-            Nullable::Undefined
+        if JsValue::is_undefined(&nullable) {
+            None
+        } else if JsValue::is_null(&nullable) {
+            Some(Nullable::Null)
         } else {
-            Nullable::Value(nullable.unchecked_into())
+            Some(Nullable::Value(nullable.unchecked_into()))
         }
     }
 }
