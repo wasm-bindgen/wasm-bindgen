@@ -1520,9 +1520,7 @@ extern "C" {
     /// of this instant.
     ///
     /// # Errors
-    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
-    /// not match this value's calendar, and a `TypeError` for options that do not
-    /// apply to this type.
+    /// Throws a `RangeError` if `locales` or an option value is invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
@@ -3138,9 +3136,7 @@ extern "C" {
     /// `options` are `Intl.DurationFormat` options.
     ///
     /// # Errors
-    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
-    /// not match this value's calendar, and a `TypeError` for options that do not
-    /// apply to this type.
+    /// Throws a `RangeError` if `locales` or an option value is invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
@@ -3492,9 +3488,8 @@ extern "C" {
     /// of this time.
     ///
     /// # Errors
-    /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
-    /// not match this value's calendar, and a `TypeError` for options that do not
-    /// apply to this type.
+    /// Throws a `RangeError` if `locales` is invalid, and a `TypeError` for options
+    /// that do not apply to a time, such as `dateStyle`.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
