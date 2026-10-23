@@ -817,7 +817,6 @@ fn locale_first_day_of_week() {
     assert_eq!(Intl::Locale::new("en").unwrap().first_day_of_week(), None);
 }
 
-#[cfg(js_sys_unstable_apis)]
 #[wasm_bindgen_test]
 fn locale_variants() {
     let locale = Intl::Locale::new("de-1996-fonipa").unwrap();

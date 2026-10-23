@@ -3658,7 +3658,11 @@ extern "C" {
     ///
     /// Callbacks registered with `adopt()` and `defer()` run later, at
     /// disposal time, so they are taken as [`ScopedClosure`]s which must
-    /// outlive the stack's disposal.
+    /// outlive the stack's disposal. A stack disposed within the scope its
+    /// closures live in needs nothing more. One that outlives that scope,
+    /// through `move()` or by being stored, needs `'static` [`Closure`]s
+    /// handed to JS with [`Closure::forget`]; a disposer runs once, so
+    /// [`Closure::once`] frees its captures as soon as it has run.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DisposableStack)
     #[wasm_bindgen(extends = Object, typescript_type = "DisposableStack")]
@@ -3738,7 +3742,11 @@ extern "C" {
     ///
     /// Callbacks registered with `adopt()` and `defer()` run later, at
     /// disposal time, so they are taken as [`ScopedClosure`]s which must
-    /// outlive the stack's disposal.
+    /// outlive the stack's disposal. A stack disposed within the scope its
+    /// closures live in needs nothing more. One that outlives that scope,
+    /// through `move()` or by being stored, needs `'static` [`Closure`]s
+    /// handed to JS with [`Closure::forget`]; a disposer runs once, so
+    /// [`Closure::once`] frees its captures as soon as it has run.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncDisposableStack)
     #[wasm_bindgen(extends = Object, typescript_type = "AsyncDisposableStack")]
@@ -13616,11 +13624,7 @@ pub mod Intl {
         /// The `variants` accessor property returns the variant subtags of
         /// this locale, joined by `-`, if any.
         ///
-        /// This is a stage 3 proposal, so it is only available with
-        /// `--cfg=js_sys_unstable_apis`.
-        ///
         /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Locale/variants)
-        #[cfg(js_sys_unstable_apis)]
         #[wasm_bindgen(method, getter, js_namespace = Intl)]
         pub fn variants(this: &Locale) -> Option<JsString>;
 
