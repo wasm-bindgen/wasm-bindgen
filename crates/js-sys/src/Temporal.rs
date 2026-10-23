@@ -1271,6 +1271,64 @@ impl ToZonedDateTimeItem {
     }
 }
 
+// Value equality through the spec-defined `equals()`, which is infallible for
+// typed arguments. `Duration` has no `equals()`, so it stays identity-only.
+impl PartialEq for Instant {
+    fn eq(&self, other: &Self) -> bool {
+        self.equals(other)
+    }
+}
+
+impl Eq for Instant {}
+
+impl PartialEq for PlainDateTime {
+    fn eq(&self, other: &Self) -> bool {
+        self.equals(other)
+    }
+}
+
+impl Eq for PlainDateTime {}
+
+impl PartialEq for ZonedDateTime {
+    fn eq(&self, other: &Self) -> bool {
+        self.equals(other)
+    }
+}
+
+impl Eq for ZonedDateTime {}
+
+impl PartialEq for PlainTime {
+    fn eq(&self, other: &Self) -> bool {
+        self.equals(other)
+    }
+}
+
+impl Eq for PlainTime {}
+
+impl PartialEq for PlainYearMonth {
+    fn eq(&self, other: &Self) -> bool {
+        self.equals(other)
+    }
+}
+
+impl Eq for PlainYearMonth {}
+
+impl PartialEq for PlainMonthDay {
+    fn eq(&self, other: &Self) -> bool {
+        self.equals(other)
+    }
+}
+
+impl Eq for PlainMonthDay {}
+
+impl PartialEq for PlainDate {
+    fn eq(&self, other: &Self) -> bool {
+        self.equals(other)
+    }
+}
+
+impl Eq for PlainDate {}
+
 #[wasm_bindgen]
 extern "C" {
     /// A `Temporal.Instant` is an exact point in time, with a precision in

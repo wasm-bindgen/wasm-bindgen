@@ -38,7 +38,8 @@
   `equals`, `compare` and
   the option-less `Instant`/`PlainTime` arithmetic are infallible, while
   `ZonedDateTime::start_of_day`, `hours_in_day` and
-  `PlainDate::to_plain_year_month` are fallible.
+  `PlainDate::to_plain_year_month` are fallible. `PartialEq`/`Eq` on the
+  date-time types compare by the spec `equals()`.
   [#5402](https://github.com/wasm-bindgen/wasm-bindgen/pull/5402)
 
 * Added `--cfg wasm_bindgen_unstable_strict_option`, under which a JS to Rust
