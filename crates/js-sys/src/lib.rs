@@ -4901,19 +4901,46 @@ extern "C" {
     /// not `null`, `undefined` or disposable.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DisposableStack/use)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = use)]
     pub fn use_<T>(this: &DisposableStack, value: &T) -> Result<T, JsValue>;
+
+    /// The `use()` method registers a value implementing `Symbol.dispose`
+    /// for disposal and returns it. Throws a `TypeError` if the value is
+    /// not `null`, `undefined` or disposable.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DisposableStack/use)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, catch, js_name = use, experimental_generic_mono)]
+    pub fn use_<T>(this: &DisposableStack, value: &T) -> Result<T, JsValue>
+    where
+        T: RefIntoWasmAbi + FromWasmAbi;
 
     /// The `adopt()` method registers a non-disposable value together with
     /// a callback to dispose it, and returns the value.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DisposableStack/adopt)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch)]
     pub fn adopt<'a, T>(
         this: &DisposableStack,
         value: &T,
         on_dispose: &ScopedClosure<'a, dyn FnMut(T)>,
     ) -> Result<T, JsValue>;
+
+    /// The `adopt()` method registers a non-disposable value together with
+    /// a callback to dispose it, and returns the value.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DisposableStack/adopt)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, catch, experimental_generic_mono)]
+    pub fn adopt<'a, T>(
+        this: &DisposableStack,
+        value: &T,
+        on_dispose: &ScopedClosure<'a, dyn FnMut(T)>,
+    ) -> Result<T, JsValue>
+    where
+        T: RefIntoWasmAbi + FromWasmAbi;
 
     /// The `defer()` method registers a callback to run when the stack is
     /// disposed.
@@ -4984,13 +5011,25 @@ extern "C" {
     /// or `Symbol.dispose` for disposal and returns it.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncDisposableStack/use)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = use)]
     pub fn use_<T>(this: &AsyncDisposableStack, value: &T) -> Result<T, JsValue>;
+
+    /// The `use()` method registers a value implementing `Symbol.asyncDispose`
+    /// or `Symbol.dispose` for disposal and returns it.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncDisposableStack/use)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, catch, js_name = use, experimental_generic_mono)]
+    pub fn use_<T>(this: &AsyncDisposableStack, value: &T) -> Result<T, JsValue>
+    where
+        T: RefIntoWasmAbi + FromWasmAbi;
 
     /// The `adopt()` method registers a non-disposable value together with
     /// an async callback to dispose it, and returns the value.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncDisposableStack/adopt)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch)]
     pub fn adopt<'a, T, R: Promising>(
         this: &AsyncDisposableStack,
@@ -4998,15 +5037,44 @@ extern "C" {
         on_dispose_async: &ScopedClosure<'a, dyn FnMut(T) -> R>,
     ) -> Result<T, JsValue>;
 
+    /// The `adopt()` method registers a non-disposable value together with
+    /// an async callback to dispose it, and returns the value.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncDisposableStack/adopt)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, catch, experimental_generic_mono)]
+    pub fn adopt<'a, T, R: Promising>(
+        this: &AsyncDisposableStack,
+        value: &T,
+        on_dispose_async: &ScopedClosure<'a, dyn FnMut(T) -> R>,
+    ) -> Result<T, JsValue>
+    where
+        T: RefIntoWasmAbi + FromWasmAbi,
+        R: IntoWasmAbi;
+
     /// The `defer()` method registers an async callback to run when the
     /// stack is disposed.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncDisposableStack/defer)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch)]
     pub fn defer<'a, R: Promising>(
         this: &AsyncDisposableStack,
         on_dispose_async: &ScopedClosure<'a, dyn FnMut() -> R>,
     ) -> Result<(), JsValue>;
+
+    /// The `defer()` method registers an async callback to run when the
+    /// stack is disposed.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AsyncDisposableStack/defer)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, catch, experimental_generic_mono)]
+    pub fn defer<'a, R: Promising>(
+        this: &AsyncDisposableStack,
+        on_dispose_async: &ScopedClosure<'a, dyn FnMut() -> R>,
+    ) -> Result<(), JsValue>
+    where
+        R: IntoWasmAbi;
 
     /// The `move()` method transfers every resource into a new
     /// `AsyncDisposableStack`, marking this one as disposed.
@@ -7443,14 +7511,27 @@ extern "C" {
     /// inserting `default_value` under it if the key is absent.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/getOrInsert)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = getOrInsert)]
     pub fn get_or_insert<K, V>(this: &Map<K, V>, key: &K, default_value: &V) -> V;
+
+    /// The `getOrInsert()` method returns the value for `key`, first
+    /// inserting `default_value` under it if the key is absent.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/getOrInsert)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = getOrInsert, experimental_generic_mono)]
+    pub fn get_or_insert<K, V>(this: &Map<K, V>, key: &K, default_value: &V) -> V
+    where
+        K: RefIntoWasmAbi,
+        V: RefIntoWasmAbi + FromWasmAbi;
 
     /// The `getOrInsertComputed()` method returns the value for `key`,
     /// first inserting the result of `callback(key)` under it if the key
     /// is absent.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/getOrInsertComputed)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_name = getOrInsertComputed)]
     pub fn get_or_insert_computed<K, V>(
         this: &Map<K, V>,
@@ -7458,16 +7539,48 @@ extern "C" {
         callback: &mut dyn FnMut(K) -> V,
     ) -> V;
 
+    /// The `getOrInsertComputed()` method returns the value for `key`,
+    /// first inserting the result of `callback(key)` under it if the key
+    /// is absent.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/getOrInsertComputed)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_name = getOrInsertComputed, experimental_generic_mono)]
+    pub fn get_or_insert_computed<K, V>(
+        this: &Map<K, V>,
+        key: &K,
+        callback: &mut dyn FnMut(K) -> V,
+    ) -> V
+    where
+        K: RefIntoWasmAbi + FromWasmAbi,
+        V: IntoWasmAbi + FromWasmAbi;
+
     /// The `Map.groupBy()` static method groups the values of an iterable
     /// into a `Map` keyed by the result of `callback`, which may be any
     /// value, compared with SameValueZero.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/groupBy)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(static_method_of = Map, catch, js_name = groupBy)]
     pub fn group_by<T, K, I: Iterable<Item = T>>(
         items: &I,
         callback: &mut dyn FnMut(T, u32) -> K,
     ) -> Result<Map<K, Array<T>>, JsValue>;
+
+    /// The `Map.groupBy()` static method groups the values of an iterable
+    /// into a `Map` keyed by the result of `callback`, which may be any
+    /// value, compared with SameValueZero.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/groupBy)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(static_method_of = Map, catch, js_name = groupBy, experimental_generic_mono)]
+    pub fn group_by<T, K, I: Iterable<Item = T> + RefIntoWasmAbi>(
+        items: &I,
+        callback: &mut dyn FnMut(T, u32) -> K,
+    ) -> Result<Map<K, Array<T>>, JsValue>
+    where
+        T: FromWasmAbi,
+        K: IntoWasmAbi;
 }
 
 impl Default for Map<JsValue, JsValue> {
@@ -7580,11 +7693,29 @@ extern "C" {
     /// is taken as a [`ScopedClosure`] which must outlive that consumption.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/map)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, final)]
     pub fn map<'a, T, U>(
         this: &Iterator<T>,
         mapper: &ScopedClosure<'a, dyn FnMut(T, u32) -> U>,
     ) -> Iterator<U>;
+
+    /// The `map()` method returns a new iterator helper that yields each
+    /// value of this iterator transformed by `mapper`.
+    ///
+    /// The mapper runs lazily, as the returned iterator is consumed, so it
+    /// is taken as a [`ScopedClosure`] which must outlive that consumption.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/map)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, final, experimental_generic_mono)]
+    pub fn map<'a, T, U>(
+        this: &Iterator<T>,
+        mapper: &ScopedClosure<'a, dyn FnMut(T, u32) -> U>,
+    ) -> Iterator<U>
+    where
+        T: FromWasmAbi,
+        U: IntoWasmAbi;
 
     /// The `filter()` method returns a new iterator helper that yields only
     /// the values of this iterator for which `predicate` returns `true`.
@@ -7594,11 +7725,29 @@ extern "C" {
     /// consumption.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/filter)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, final)]
     pub fn filter<'a, T>(
         this: &Iterator<T>,
         predicate: &ScopedClosure<'a, dyn FnMut(T, u32) -> bool>,
     ) -> Iterator<T>;
+
+    /// The `filter()` method returns a new iterator helper that yields only
+    /// the values of this iterator for which `predicate` returns `true`.
+    ///
+    /// The predicate runs lazily, as the returned iterator is consumed, so
+    /// it is taken as a [`ScopedClosure`] which must outlive that
+    /// consumption.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/filter)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, final, experimental_generic_mono)]
+    pub fn filter<'a, T>(
+        this: &Iterator<T>,
+        predicate: &ScopedClosure<'a, dyn FnMut(T, u32) -> bool>,
+    ) -> Iterator<T>
+    where
+        T: FromWasmAbi;
 
     /// The `take()` method returns a new iterator helper that yields at
     /// most `limit` values of this iterator.
@@ -7621,22 +7770,56 @@ extern "C" {
     /// is taken as a [`ScopedClosure`] which must outlive that consumption.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/flatMap)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, final, js_name = flatMap)]
     pub fn flat_map<'a, T, I: Iterable>(
         this: &Iterator<T>,
         mapper: &ScopedClosure<'a, dyn FnMut(T, u32) -> I>,
     ) -> Iterator<I::Item>;
 
+    /// The `flatMap()` method returns a new iterator helper that yields the
+    /// values of each iterable or iterator returned by `mapper`.
+    ///
+    /// The mapper runs lazily, as the returned iterator is consumed, so it
+    /// is taken as a [`ScopedClosure`] which must outlive that consumption.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/flatMap)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, final, js_name = flatMap, experimental_generic_mono)]
+    pub fn flat_map<'a, T, I: Iterable>(
+        this: &Iterator<T>,
+        mapper: &ScopedClosure<'a, dyn FnMut(T, u32) -> I>,
+    ) -> Iterator<I::Item>
+    where
+        T: FromWasmAbi,
+        I: IntoWasmAbi;
+
     /// The `reduce()` method consumes this iterator, folding every value
     /// into an accumulator starting from `initial_value`.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/reduce)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, final, catch)]
     pub fn reduce<T, A>(
         this: &Iterator<T>,
         reducer: &mut dyn FnMut(A, T, u32) -> A,
         initial_value: &A,
     ) -> Result<A, JsValue>;
+
+    /// The `reduce()` method consumes this iterator, folding every value
+    /// into an accumulator starting from `initial_value`.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/reduce)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, final, catch, experimental_generic_mono)]
+    pub fn reduce<T, A>(
+        this: &Iterator<T>,
+        reducer: &mut dyn FnMut(A, T, u32) -> A,
+        initial_value: &A,
+    ) -> Result<A, JsValue>
+    where
+        T: FromWasmAbi,
+        A: FromWasmAbi + IntoWasmAbi + RefIntoWasmAbi;
 
     /// The `toArray()` method consumes this iterator, collecting its values
     /// into an `Array`.
@@ -7649,16 +7832,52 @@ extern "C" {
     /// with each value and its index.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/forEach)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, final, catch, js_name = forEach)]
     pub fn for_each<T>(this: &Iterator<T>, callback: &mut dyn FnMut(T, u32))
         -> Result<(), JsValue>;
+
+    /// The `forEach()` method consumes this iterator, calling `callback`
+    /// with each value and its index.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/forEach)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, final, catch, js_name = forEach, experimental_generic_mono)]
+    pub fn for_each<T>(this: &Iterator<T>, callback: &mut dyn FnMut(T, u32)) -> Result<(), JsValue>
+    where
+        T: FromWasmAbi;
 
     /// The `some()` method consumes this iterator until `predicate` returns
     /// `true` for a value, returning whether it did.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/some)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, final, catch)]
     pub fn some<T>(
+        this: &Iterator<T>,
+        predicate: &mut dyn FnMut(T, u32) -> bool,
+    ) -> Result<bool, JsValue>;
+
+    /// The `some()` method consumes this iterator until `predicate` returns
+    /// `true` for a value, returning whether it did.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/some)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, final, catch, experimental_generic_mono)]
+    pub fn some<T>(
+        this: &Iterator<T>,
+        predicate: &mut dyn FnMut(T, u32) -> bool,
+    ) -> Result<bool, JsValue>
+    where
+        T: FromWasmAbi;
+
+    /// The `every()` method consumes this iterator until `predicate` returns
+    /// `false` for a value, returning whether it never did.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/every)
+    #[cfg(not(js_sys_unstable_apis))]
+    #[wasm_bindgen(method, final, catch)]
+    pub fn every<T>(
         this: &Iterator<T>,
         predicate: &mut dyn FnMut(T, u32) -> bool,
     ) -> Result<bool, JsValue>;
@@ -7667,21 +7886,39 @@ extern "C" {
     /// `false` for a value, returning whether it never did.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/every)
-    #[wasm_bindgen(method, final, catch)]
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, final, catch, experimental_generic_mono)]
     pub fn every<T>(
         this: &Iterator<T>,
         predicate: &mut dyn FnMut(T, u32) -> bool,
-    ) -> Result<bool, JsValue>;
+    ) -> Result<bool, JsValue>
+    where
+        T: FromWasmAbi;
 
     /// The `find()` method consumes this iterator until `predicate` returns
     /// `true` for a value, returning that value if any.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/find)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, final, catch)]
     pub fn find<T>(
         this: &Iterator<T>,
         predicate: &mut dyn FnMut(T, u32) -> bool,
     ) -> Result<Option<T>, JsValue>;
+
+    /// The `find()` method consumes this iterator until `predicate` returns
+    /// `true` for a value, returning that value if any.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/find)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, final, catch, experimental_generic_mono)]
+    pub fn find<T>(
+        this: &Iterator<T>,
+        predicate: &mut dyn FnMut(T, u32) -> bool,
+    ) -> Result<Option<T>, JsValue>
+    where
+        T: FromWasmAbi,
+        Option<T>: FromWasmAbi;
 }
 
 impl<T> UpcastFrom<Iterator<T>> for Object {}
@@ -9446,11 +9683,27 @@ extern "C" {
     /// returned by `callback`.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/groupBy)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(static_method_of = Object, catch, js_name = groupBy)]
     pub fn group_by<T, K, I: Iterable<Item = T>>(
         items: &I,
         callback: &mut dyn FnMut(T, u32) -> K,
     ) -> Result<Object<Array<T>>, JsValue>;
+
+    /// The `Object.groupBy()` static method groups the values of an
+    /// iterable into a null-prototype object keyed by the property key
+    /// returned by `callback`.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/groupBy)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(static_method_of = Object, catch, js_name = groupBy, experimental_generic_mono)]
+    pub fn group_by<T, K, I: Iterable<Item = T> + RefIntoWasmAbi>(
+        items: &I,
+        callback: &mut dyn FnMut(T, u32) -> K,
+    ) -> Result<Object<Array<T>>, JsValue>
+    where
+        T: FromWasmAbi,
+        K: IntoWasmAbi;
 
     /// The `Object.entries()` method returns an array of a given
     /// object's own enumerable property [key, value] pairs, in the
@@ -11225,6 +11478,7 @@ extern "C" {
     /// inserting `default_value` under it if the key is absent.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap/getOrInsert)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = getOrInsert)]
     pub fn get_or_insert<K, V>(
         this: &WeakMap<K, V>,
@@ -11232,17 +11486,49 @@ extern "C" {
         default_value: &V,
     ) -> Result<V, JsValue>;
 
+    /// The `getOrInsert()` method returns the value for `key`, first
+    /// inserting `default_value` under it if the key is absent.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap/getOrInsert)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, catch, js_name = getOrInsert, experimental_generic_mono)]
+    pub fn get_or_insert<K, V>(
+        this: &WeakMap<K, V>,
+        key: &K,
+        default_value: &V,
+    ) -> Result<V, JsValue>
+    where
+        K: JsGeneric,
+        V: RefIntoWasmAbi + FromWasmAbi;
+
     /// The `getOrInsertComputed()` method returns the value for `key`,
     /// first inserting the result of `callback(key)` under it if the key
     /// is absent.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap/getOrInsertComputed)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, catch, js_name = getOrInsertComputed)]
     pub fn get_or_insert_computed<K, V>(
         this: &WeakMap<K, V>,
         key: &K,
         callback: &mut dyn FnMut(K) -> V,
     ) -> Result<V, JsValue>;
+
+    /// The `getOrInsertComputed()` method returns the value for `key`,
+    /// first inserting the result of `callback(key)` under it if the key
+    /// is absent.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap/getOrInsertComputed)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, catch, js_name = getOrInsertComputed, experimental_generic_mono)]
+    pub fn get_or_insert_computed<K, V>(
+        this: &WeakMap<K, V>,
+        key: &K,
+        callback: &mut dyn FnMut(K) -> V,
+    ) -> Result<V, JsValue>
+    where
+        K: JsGeneric,
+        V: IntoWasmAbi + FromWasmAbi;
 }
 
 impl Default for WeakMap {
@@ -16400,8 +16686,14 @@ extern "C" {
     pub fn promise<T, E>(this: &PromiseWithResolvers<T, E>) -> Promise<T, E>;
 
     /// The function that fulfills the promise with a value.
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, getter)]
     pub fn resolve<T, E>(this: &PromiseWithResolvers<T, E>) -> Function<fn(T) -> Undefined>;
+
+    /// The function that fulfills the promise with a value.
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, getter)]
+    pub fn resolve<T: MonoGeneric>(this: &PromiseWithResolvers<T>) -> Function<fn(T) -> Undefined>;
 
     /// The function that rejects the promise with a reason.
     #[wasm_bindgen(method, getter)]
@@ -16879,9 +17171,21 @@ extern "C" {
     /// adopted, and a thrown error becomes a rejection.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/try)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(static_method_of = Promise, js_name = try)]
     pub fn try_<R: Promising>(cb: &mut dyn FnMut() -> Result<R, JsError>)
         -> Promise<R::Resolution>;
+
+    /// The `Promise.try()` static method calls `cb` synchronously and
+    /// wraps its outcome in a promise: a returned value or promise is
+    /// adopted, and a thrown error becomes a rejection.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/try)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(static_method_of = Promise, js_name = try, experimental_generic_mono)]
+    pub fn try_<R: Promising>(cb: &mut dyn FnMut() -> Result<R, JsError>) -> Promise<R::Resolution>
+    where
+        Result<R, JsError>: ReturnWasmAbi;
 
     /// The `Promise.withResolvers()` static method returns a new promise
     /// together with its `resolve` and `reject` functions.
