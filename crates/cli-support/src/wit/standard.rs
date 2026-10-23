@@ -537,6 +537,10 @@ pub enum Instruction {
         hole: u32,
         kind: OptionKind,
     },
+    I32FromOptionNonNull {
+        kind: OptionKind,
+    },
+    OptionNonNullFromI32,
     I32FromNonNull,
 }
 

@@ -476,10 +476,24 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
 
-            // Every non-null address is a `NonNull`, so an optional one
-            // crosses as a pointer with the `f64` sentinels, like a raw
-            // pointer, and the null address is its empty value.
-            Descriptor::NonNull | Descriptor::RawPointer => {
+            // Every non-null address is a `NonNull`, so a nullable one crosses
+            // as a pointer with the `f64` sentinels instead of the null word.
+            Descriptor::NonNull if option_kind.nullable() => {
+                self.in_option_sentinel64_number(option_kind)
+            }
+            Descriptor::NonNull => {
+                let ptr_ty = if self.cx.memory64() {
+                    AdapterType::F64
+                } else {
+                    self.ptr_ty()
+                };
+                self.instruction(
+                    &[AdapterType::NonNull.option_kind(option_kind)],
+                    Instruction::I32FromOptionNonNull { kind: option_kind },
+                    &[ptr_ty],
+                )
+            }
+            Descriptor::RawPointer => {
                 self.in_option_sentinel64_number(option_kind);
             }
 

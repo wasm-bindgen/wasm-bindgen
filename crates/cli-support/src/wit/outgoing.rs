@@ -505,7 +505,22 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
 
-            Descriptor::NonNull | Descriptor::RawPointer => {
+            Descriptor::NonNull if option_kind.nullable() => {
+                self.out_option_sentinel64(AdapterType::U32, option_kind)
+            }
+            Descriptor::NonNull => {
+                let ptr_ty = if self.cx.memory64() {
+                    AdapterType::F64
+                } else {
+                    self.ptr_ty()
+                };
+                self.instruction(
+                    &[ptr_ty],
+                    Instruction::OptionNonNullFromI32,
+                    &[AdapterType::NonNull.option_kind(option_kind)],
+                );
+            }
+            Descriptor::RawPointer => {
                 self.out_option_sentinel64(AdapterType::U32, option_kind);
             }
 

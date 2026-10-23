@@ -3060,6 +3060,18 @@ fn instruction(
             js.assert_non_null(&val);
             js.push(val);
         }
+
+        Instruction::I32FromOptionNonNull { kind } => {
+            let val = js.pop();
+            js.assert_optional_number(&val, *kind);
+            let none = js.is_none(&val, *kind);
+            js.push(format!("{none} ? 0 : {val}"));
+        }
+
+        Instruction::OptionNonNullFromI32 => {
+            let val = js.pop();
+            js.push(format!("{val} === 0 ? undefined : {val}"));
+        }
     }
     Ok(())
 }

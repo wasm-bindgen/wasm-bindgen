@@ -625,48 +625,45 @@ impl<T> FromWasmAbi for NonNull<T> {
     }
 }
 
-/// Any non-null address is a `NonNull<T>`, so the pointer word has one spare
-/// value where `Option` and `Nullable` together need two. Both cross as a JS
-/// number with the pointer sentinels, as raw pointers do, and the null
-/// address is the empty value of either.
-impl<T> MaybeIntoWasmAbi for NonNull<T> {
-    type MaybeAbi = f64;
-
+impl<T> OptionIntoWasmAbi for NonNull<T> {
     #[inline]
-    fn into_maybe_abi(self) -> f64 {
-        self.as_ptr() as usize as f64
-    }
-
-    #[inline]
-    fn null() -> f64 {
-        F64_ABI_NULL_SENTINEL
-    }
-
-    #[inline]
-    fn none() -> f64 {
-        F64_ABI_OPTION_SENTINEL
+    fn none() -> Self::Abi {
+        0 as WasmWordRepr
     }
 }
 
-impl<T> MaybeFromWasmAbi for NonNull<T> {
-    type MaybeAbi = f64;
-
+impl<T> OptionFromWasmAbi for NonNull<T> {
     #[inline]
-    unsafe fn from_maybe_abi(js: f64) -> Self {
-        NonNull::new_unchecked(js as usize as *mut T)
+    fn is_none(js: &Self::Abi) -> bool {
+        *js == 0 as WasmWordRepr
     }
+}
 
-    /// Anything that lands on the null address, including `NaN` from an
-    /// `undefined` that unchecked glue let through, is `Null`.
+/// Any non-null address is a `NonNull<T>`, so the pointer word has exactly
+/// one spare value: enough for `Option`, which keeps it, but not for
+/// `Nullable` as well, so `NonNull<T>` stays outside `MaybeIntoWasmAbi`.
+impl<T> IntoWasmAbi for Option<NonNull<T>> {
+    type Abi = WasmWordRepr;
+
     #[inline]
-    fn is_null(js: &f64) -> bool {
-        *js == F64_ABI_NULL_SENTINEL || *js as usize == 0
+    fn into_abi(self) -> Self::Abi {
+        match self {
+            None => 0 as WasmWordRepr,
+            Some(ptr) => ptr.into_abi(),
+        }
     }
+}
 
-    /// The null address is `None` too; `Nullable` rules `Null` out first.
+impl<T> FromWasmAbi for Option<NonNull<T>> {
+    type Abi = WasmWordRepr;
+
     #[inline]
-    fn is_none(js: &f64) -> bool {
-        *js == F64_ABI_OPTION_SENTINEL || *js as usize == 0
+    unsafe fn from_abi(js: Self::Abi) -> Self {
+        if js == 0 as WasmWordRepr {
+            None
+        } else {
+            Some(NonNull::from_abi(js))
+        }
     }
 }
 

@@ -149,9 +149,9 @@
   whose associated `MaybeAbi` lets a type pick a wider optional ABI, so the
   concrete `Option<i32>`-style conversions are gone and `Option<T>` works
   under any bound carrying the trait. `OptionIntoWasmAbi` /
-  `OptionFromWasmAbi` are kept and derived from it. `Option<NonNull<T>>`
-  crosses as a JS number with the pointer sentinels, as `Option<*const T>`
-  and `Nullable<NonNull<T>>` do.
+  `OptionFromWasmAbi` are kept and derived from it. `NonNull<T>`, whose
+  pointer word has a single spare value, keeps its own `Option` conversion
+  and is not `Nullable`.
   [#5423](https://github.com/wasm-bindgen/wasm-bindgen/pull/5423)
 
 * With reference types, `static_string` constants and the reserved
