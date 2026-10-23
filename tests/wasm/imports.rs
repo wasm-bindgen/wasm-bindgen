@@ -110,6 +110,15 @@ extern "C" {
 
     #[wasm_bindgen(thread_local_v2, js_namespace = ["test1", "test2"])]
     static UNDECLARED_NESTED_NAMESPACE: Option<u32>;
+
+    #[wasm_bindgen(thread_local_v2, js_name = NULLABLE_NULL)]
+    static NULLABLE_NULL: Nullable<JsValue>;
+    #[wasm_bindgen(thread_local_v2, js_name = NULLABLE_VALUE)]
+    static NULLABLE_VALUE: Nullable<JsValue>;
+    #[wasm_bindgen(thread_local_v2, js_name = NULLABLE_NULL)]
+    static OPTION_NULLABLE_NULL: Option<Nullable<JsValue>>;
+    #[wasm_bindgen(thread_local_v2)]
+    static UNDECLARED_NULLABLE: Option<Nullable<u32>>;
 }
 
 #[wasm_bindgen(module = "tests/wasm/imports_2.js")]
@@ -374,4 +383,18 @@ fn undeclared() {
     assert_eq!(UNDECLARED.with(Option::clone), None);
     assert_eq!(UNDECLARED_NAMESPACE.with(Option::clone), None);
     assert_eq!(UNDECLARED_NESTED_NAMESPACE.with(Option::clone), None);
+    assert_eq!(UNDECLARED_NULLABLE.with(Option::clone), None);
+}
+
+#[wasm_bindgen_test]
+fn nullable_statics() {
+    assert!(NULLABLE_NULL.with(Nullable::is_null));
+    assert_eq!(
+        NULLABLE_VALUE.with(|v| v.as_ref().unwrap().as_f64()),
+        Some(7.0)
+    );
+    assert_eq!(
+        OPTION_NULLABLE_NULL.with(Option::clone),
+        Some(Nullable::Null)
+    );
 }

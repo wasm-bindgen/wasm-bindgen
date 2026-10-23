@@ -9,6 +9,10 @@ extern "C" {
     static PLAIN: JsValue;
     #[wasm_bindgen(thread_local_v2)]
     static OPTIONAL: Option<Number>;
+    #[wasm_bindgen(thread_local_v2)]
+    static NULLABLE: Nullable<Number>;
+    #[wasm_bindgen(thread_local_v2)]
+    static OPTIONAL_NULLABLE: Option<Nullable<Number>>;
     #[wasm_bindgen(thread_local_v2, js_namespace = test)]
     static NAMESPACE_PLAIN: JsValue;
     #[wasm_bindgen(thread_local_v2, js_namespace = test)]
@@ -23,6 +27,8 @@ extern "C" {
 pub fn exported() {
     let _ = PLAIN.with(JsValue::clone);
     let _ = OPTIONAL.with(Option::clone);
+    let _ = NULLABLE.with(Nullable::clone);
+    let _ = OPTIONAL_NULLABLE.with(Option::clone);
     let _ = NAMESPACE_PLAIN.with(JsValue::clone);
     let _ = NAMESPACE_OPTIONAL.with(Option::clone);
     let _ = NESTED_NAMESPACE_PLAIN.with(JsValue::clone);

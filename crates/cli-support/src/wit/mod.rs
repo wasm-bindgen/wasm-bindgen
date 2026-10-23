@@ -1828,10 +1828,9 @@ impl<'a> Context<'a> {
             Some(d) => d,
         };
         self.resolve_descriptor(&mut descriptor)?;
-        let optional = matches!(
-            descriptor,
-            Descriptor::Option { .. } | Descriptor::Nullable(_)
-        );
+        // A missing global is `undefined`, which only `Option` has a state
+        // for: a plain `Nullable<T>` static reads the global like `T` does.
+        let optional = matches!(descriptor, Descriptor::Option { .. });
 
         // Register the signature of this imported shim
         let id = self.import_adapter(

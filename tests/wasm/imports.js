@@ -107,6 +107,8 @@ exports.import_inside_private_module = function() {};
 exports.should_call_undefined_functions = () => false;
 
 exports.STATIC_STRING = 'x';
+exports.NULLABLE_NULL = null;
+exports.NULLABLE_VALUE = 7;
 
 class StaticMethodCheck {
   static static_method_of_right_this() {
