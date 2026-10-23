@@ -141,7 +141,7 @@
   `Memory` `toResizableBuffer` and `toFixedLengthBuffer`, `Global.valueOf`
   and `Exception.stack`.
   [#5403](https://github.com/wasm-bindgen/wasm-bindgen/pull/5403)
-  [#5420](https://github.com/wasm-bindgen/wasm-bindgen/pull/5420)
+  [#5421](https://github.com/wasm-bindgen/wasm-bindgen/pull/5421)
 
 ### Changed
 
