@@ -8,7 +8,7 @@ use crate::__rt::marker::ErasableGeneric;
 use crate::__rt::{WasmSignedWordRepr, WasmWordRepr};
 use crate::convert::traits::{WasmAbi, WasmPrimitive};
 use crate::convert::{
-    FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, NullableFromWasmAbi, NullableIntoWasmAbi,
+    FromWasmAbi, IntoWasmAbi, LongRefFromWasmAbi, MaybeFromWasmAbi, MaybeIntoWasmAbi,
     OptionFromWasmAbi, OptionIntoWasmAbi, RefFromWasmAbi, ReturnWasmAbi, TryFromJsValue,
     UpcastFrom,
 };
@@ -71,50 +71,17 @@ impl WasmAbi for u128 {
     }
 }
 
-impl<T: WasmAbi<Prim4 = ()>> WasmAbi for Option<T> {
-    /// Whether this `Option` is a `Some` value.
-    type Prim1 = u32;
-    type Prim2 = T::Prim1;
-    type Prim3 = T::Prim2;
-    type Prim4 = T::Prim3;
-
-    #[inline]
-    fn split(self) -> (u32, T::Prim1, T::Prim2, T::Prim3) {
-        match self {
-            None => (
-                0,
-                Default::default(),
-                Default::default(),
-                Default::default(),
-            ),
-            Some(value) => {
-                let (prim1, prim2, prim3, ()) = value.split();
-                (1, prim1, prim2, prim3)
-            }
-        }
-    }
-
-    #[inline]
-    fn join(is_some: u32, prim1: T::Prim1, prim2: T::Prim2, prim3: T::Prim3) -> Self {
-        if is_some == 0 {
-            None
-        } else {
-            Some(T::join(prim1, prim2, prim3, ()))
-        }
-    }
-}
-
-/// The ABI of `Nullable<T>` and `Option<Nullable<T>>` for a `T` whose own ABI
-/// has no spare value: `tag` is `0` for `None`, `1` for a value and `2` for
-/// `Null`, so a value has the same shape as `Option<T>`'s `Some`.
+/// The ABI of `Option<T>`, `Nullable<T>` and `Option<Nullable<T>>` for a `T`
+/// whose own ABI has no spare value: `tag` is `0` for `None`, `1` for a value
+/// and `2` for `Null`.
 #[doc(hidden)]
 #[derive(Clone, Copy)]
-pub struct NullableAbi<T> {
+pub struct MaybeAbi<T> {
     pub tag: u32,
     pub value: T,
 }
 
-impl<T: WasmAbi<Prim4 = ()>> WasmAbi for NullableAbi<T> {
+impl<T: WasmAbi<Prim4 = ()>> WasmAbi for MaybeAbi<T> {
     type Prim1 = u32;
     type Prim2 = T::Prim1;
     type Prim3 = T::Prim2;
@@ -128,7 +95,7 @@ impl<T: WasmAbi<Prim4 = ()>> WasmAbi for NullableAbi<T> {
 
     #[inline]
     fn join(tag: u32, prim1: T::Prim1, prim2: T::Prim2, prim3: T::Prim3) -> Self {
-        NullableAbi {
+        MaybeAbi {
             tag,
             value: T::join(prim1, prim2, prim3, ()),
         }
@@ -151,58 +118,40 @@ macro_rules! type_wasm_native {
             unsafe fn from_abi(js: $c) -> Self { js as $t }
         }
 
-        impl IntoWasmAbi for Option<$t> {
-            type Abi = Option<$c>;
+        impl MaybeIntoWasmAbi for $t {
+            type MaybeAbi = MaybeAbi<$c>;
 
             #[inline]
-            fn into_abi(self) -> Self::Abi {
-                self.map(|v| v as $c)
+            fn into_maybe_abi(self) -> Self::MaybeAbi {
+                MaybeAbi { tag: 1, value: self as $c }
+            }
+
+            #[inline]
+            fn null() -> Self::MaybeAbi {
+                MaybeAbi { tag: 2, value: 0 as $c }
+            }
+
+            #[inline]
+            fn none() -> Self::MaybeAbi {
+                MaybeAbi { tag: 0, value: 0 as $c }
             }
         }
 
-        impl FromWasmAbi for Option<$t> {
-            type Abi = Option<$c>;
+        impl MaybeFromWasmAbi for $t {
+            type MaybeAbi = MaybeAbi<$c>;
 
             #[inline]
-            unsafe fn from_abi(js: Self::Abi) -> Self {
-                js.map(|v: $c| v as $t)
-            }
-        }
-
-        impl NullableIntoWasmAbi for $t {
-            type NullableAbi = NullableAbi<$c>;
-
-            #[inline]
-            fn into_nullable_abi(self) -> Self::NullableAbi {
-                NullableAbi { tag: 1, value: self as $c }
-            }
-
-            #[inline]
-            fn null() -> Self::NullableAbi {
-                NullableAbi { tag: 2, value: 0 as $c }
-            }
-
-            #[inline]
-            fn nullable_none() -> Self::NullableAbi {
-                NullableAbi { tag: 0, value: 0 as $c }
-            }
-        }
-
-        impl NullableFromWasmAbi for $t {
-            type NullableAbi = NullableAbi<$c>;
-
-            #[inline]
-            unsafe fn from_nullable_abi(js: Self::NullableAbi) -> Self {
+            unsafe fn from_maybe_abi(js: Self::MaybeAbi) -> Self {
                 js.value as $t
             }
 
             #[inline]
-            fn is_null(js: &Self::NullableAbi) -> bool {
+            fn is_null(js: &Self::MaybeAbi) -> bool {
                 js.tag == 2
             }
 
             #[inline]
-            fn nullable_is_none(js: &Self::NullableAbi) -> bool {
+            fn is_none(js: &Self::MaybeAbi) -> bool {
                 js.tag == 0
             }
         }
@@ -270,33 +219,11 @@ macro_rules! type_wasm_native_f64_option {
             type Resolution = $t;
         }
 
-        impl IntoWasmAbi for Option<$t> {
-            type Abi = f64;
+        impl MaybeIntoWasmAbi for $t {
+            type MaybeAbi = f64;
 
             #[inline]
-            fn into_abi(self) -> Self::Abi {
-                self.map(|v| v as $c as f64).unwrap_or(F64_ABI_OPTION_SENTINEL)
-            }
-        }
-
-        impl FromWasmAbi for Option<$t> {
-            type Abi = f64;
-
-            #[inline]
-            unsafe fn from_abi(js: Self::Abi) -> Self {
-                if js == F64_ABI_OPTION_SENTINEL {
-                    None
-                } else {
-                    Some(js as $c as $t)
-                }
-            }
-        }
-
-        impl NullableIntoWasmAbi for $t {
-            type NullableAbi = f64;
-
-            #[inline]
-            fn into_nullable_abi(self) -> f64 {
+            fn into_maybe_abi(self) -> f64 {
                 self as $c as f64
             }
 
@@ -306,16 +233,16 @@ macro_rules! type_wasm_native_f64_option {
             }
 
             #[inline]
-            fn nullable_none() -> f64 {
+            fn none() -> f64 {
                 F64_ABI_OPTION_SENTINEL
             }
         }
 
-        impl NullableFromWasmAbi for $t {
-            type NullableAbi = f64;
+        impl MaybeFromWasmAbi for $t {
+            type MaybeAbi = f64;
 
             #[inline]
-            unsafe fn from_nullable_abi(js: f64) -> Self {
+            unsafe fn from_maybe_abi(js: f64) -> Self {
                 js as $c as $t
             }
 
@@ -325,7 +252,7 @@ macro_rules! type_wasm_native_f64_option {
             }
 
             #[inline]
-            fn nullable_is_none(js: &f64) -> bool {
+            fn is_none(js: &f64) -> bool {
                 *js == F64_ABI_OPTION_SENTINEL
             }
         }
@@ -422,18 +349,16 @@ macro_rules! type_abi_as_u32 {
             unsafe fn from_abi(js: u32) -> Self { js as $t }
         }
 
-        impl OptionIntoWasmAbi for $t {
-            #[inline]
-            fn none() -> u32 { U32_ABI_OPTION_SENTINEL }
-        }
-
-        impl OptionFromWasmAbi for $t {
-            #[inline]
-            fn is_none(js: &u32) -> bool { *js == U32_ABI_OPTION_SENTINEL }
-        }
-
-        impl_nullable_into_shared_abi!(null = U32_ABI_NULL_SENTINEL; [] $t);
-        impl_nullable_from_shared_abi!(is_null = |js| *js == U32_ABI_NULL_SENTINEL; [] $t);
+        impl_maybe_into_shared_abi!(
+            none = U32_ABI_OPTION_SENTINEL;
+            null = U32_ABI_NULL_SENTINEL;
+            [] $t
+        );
+        impl_maybe_from_shared_abi!(
+            is_none = |js| *js == U32_ABI_OPTION_SENTINEL;
+            is_null = |js| *js == U32_ABI_NULL_SENTINEL;
+            [] $t
+        );
 
         unsafe impl ErasableGeneric for $t {
             type Repr = $t;
@@ -516,22 +441,16 @@ impl FromWasmAbi for bool {
     }
 }
 
-impl OptionIntoWasmAbi for bool {
-    #[inline]
-    fn none() -> u32 {
-        U32_ABI_OPTION_SENTINEL
-    }
-}
-
-impl OptionFromWasmAbi for bool {
-    #[inline]
-    fn is_none(js: &u32) -> bool {
-        *js == U32_ABI_OPTION_SENTINEL
-    }
-}
-
-impl_nullable_into_shared_abi!(null = U32_ABI_NULL_SENTINEL; [] bool);
-impl_nullable_from_shared_abi!(is_null = |js| *js == U32_ABI_NULL_SENTINEL; [] bool);
+impl_maybe_into_shared_abi!(
+    none = U32_ABI_OPTION_SENTINEL;
+    null = U32_ABI_NULL_SENTINEL;
+    [] bool
+);
+impl_maybe_from_shared_abi!(
+    is_none = |js| *js == U32_ABI_OPTION_SENTINEL;
+    is_null = |js| *js == U32_ABI_NULL_SENTINEL;
+    [] bool
+);
 
 unsafe impl ErasableGeneric for bool {
     type Repr = bool;
@@ -565,22 +484,16 @@ impl FromWasmAbi for char {
     }
 }
 
-impl OptionIntoWasmAbi for char {
-    #[inline]
-    fn none() -> u32 {
-        U32_ABI_OPTION_SENTINEL
-    }
-}
-
-impl OptionFromWasmAbi for char {
-    #[inline]
-    fn is_none(js: &u32) -> bool {
-        *js == U32_ABI_OPTION_SENTINEL
-    }
-}
-
-impl_nullable_into_shared_abi!(null = U32_ABI_NULL_SENTINEL; [] char);
-impl_nullable_from_shared_abi!(is_null = |js| *js == U32_ABI_NULL_SENTINEL; [] char);
+impl_maybe_into_shared_abi!(
+    none = U32_ABI_OPTION_SENTINEL;
+    null = U32_ABI_NULL_SENTINEL;
+    [] char
+);
+impl_maybe_from_shared_abi!(
+    is_none = |js| *js == U32_ABI_OPTION_SENTINEL;
+    is_null = |js| *js == U32_ABI_NULL_SENTINEL;
+    [] char
+);
 
 unsafe impl ErasableGeneric for char {
     type Repr = char;
@@ -621,16 +534,6 @@ impl<T, Target> UpcastFrom<*const T> for *const Target where Target: UpcastFrom<
 impl<T, Target> UpcastFrom<*const T> for JsOption<*const Target> where Target: UpcastFrom<T> {}
 impl<T, Target> UpcastFrom<*const T> for JsNullable<*const Target> where Target: UpcastFrom<T> {}
 
-impl<T> IntoWasmAbi for Option<*const T> {
-    type Abi = f64;
-
-    #[inline]
-    fn into_abi(self) -> Self::Abi {
-        self.map(|ptr| ptr as usize as f64)
-            .unwrap_or(F64_ABI_OPTION_SENTINEL)
-    }
-}
-
 unsafe impl<T: ErasableGeneric> ErasableGeneric for Option<T> {
     type Repr = Option<<T as ErasableGeneric>::Repr>;
 }
@@ -639,28 +542,15 @@ impl<T, Target> UpcastFrom<Option<T>> for Option<Target> where Target: UpcastFro
 impl<T, Target> UpcastFrom<Option<T>> for JsOption<Option<Target>> where Target: UpcastFrom<T> {}
 impl<T, Target> UpcastFrom<Option<T>> for JsNullable<Option<Target>> where Target: UpcastFrom<T> {}
 
-impl<T> FromWasmAbi for Option<*const T> {
-    type Abi = f64;
-
-    #[inline]
-    unsafe fn from_abi(js: Self::Abi) -> Option<*const T> {
-        if js == F64_ABI_OPTION_SENTINEL {
-            None
-        } else {
-            Some(js as usize as *const T)
-        }
-    }
-}
-
 /// Pointers in a `Nullable` cross as JS numbers with the `f64` sentinels, as
 /// they do in an `Option`.
-macro_rules! nullable_ptr_abi {
+macro_rules! maybe_ptr_abi {
     ($($t:ty),*) => ($(
-        impl<T> NullableIntoWasmAbi for $t {
-            type NullableAbi = f64;
+        impl<T> MaybeIntoWasmAbi for $t {
+            type MaybeAbi = f64;
 
             #[inline]
-            fn into_nullable_abi(self) -> f64 {
+            fn into_maybe_abi(self) -> f64 {
                 self as usize as f64
             }
 
@@ -670,16 +560,16 @@ macro_rules! nullable_ptr_abi {
             }
 
             #[inline]
-            fn nullable_none() -> f64 {
+            fn none() -> f64 {
                 F64_ABI_OPTION_SENTINEL
             }
         }
 
-        impl<T> NullableFromWasmAbi for $t {
-            type NullableAbi = f64;
+        impl<T> MaybeFromWasmAbi for $t {
+            type MaybeAbi = f64;
 
             #[inline]
-            unsafe fn from_nullable_abi(js: f64) -> Self {
+            unsafe fn from_maybe_abi(js: f64) -> Self {
                 js as usize as $t
             }
 
@@ -689,14 +579,14 @@ macro_rules! nullable_ptr_abi {
             }
 
             #[inline]
-            fn nullable_is_none(js: &f64) -> bool {
+            fn is_none(js: &f64) -> bool {
                 *js == F64_ABI_OPTION_SENTINEL
             }
         }
     )*)
 }
 
-nullable_ptr_abi!(*const T, *mut T);
+maybe_ptr_abi!(*const T, *mut T);
 
 impl<T> IntoWasmAbi for *mut T {
     type Abi = WasmWordRepr;
@@ -716,42 +606,12 @@ impl<T> FromWasmAbi for *mut T {
     }
 }
 
-impl<T> IntoWasmAbi for Option<*mut T> {
-    type Abi = f64;
-
-    #[inline]
-    fn into_abi(self) -> Self::Abi {
-        self.map(|ptr| ptr as usize as f64)
-            .unwrap_or(F64_ABI_OPTION_SENTINEL)
-    }
-}
-
-impl<T> FromWasmAbi for Option<*mut T> {
-    type Abi = f64;
-
-    #[inline]
-    unsafe fn from_abi(js: Self::Abi) -> Option<*mut T> {
-        if js == F64_ABI_OPTION_SENTINEL {
-            None
-        } else {
-            Some(js as usize as *mut T)
-        }
-    }
-}
-
 impl<T> IntoWasmAbi for NonNull<T> {
     type Abi = WasmWordRepr;
 
     #[inline]
     fn into_abi(self) -> Self::Abi {
         self.as_ptr() as usize as WasmWordRepr
-    }
-}
-
-impl<T> OptionIntoWasmAbi for NonNull<T> {
-    #[inline]
-    fn none() -> Self::Abi {
-        0 as WasmWordRepr
     }
 }
 
@@ -765,22 +625,15 @@ impl<T> FromWasmAbi for NonNull<T> {
     }
 }
 
-impl<T> OptionFromWasmAbi for NonNull<T> {
-    #[inline]
-    fn is_none(js: &Self::Abi) -> bool {
-        *js == 0 as WasmWordRepr
-    }
-}
-
-/// Any non-null address is a `NonNull<T>`, so unlike `Option<NonNull<T>>`
-/// there is no spare word value for `Null`; a `Nullable<NonNull<T>>` crosses
-/// as a JS number with the pointer sentinels instead, and the null pointer
-/// itself is `Null`.
-impl<T> NullableIntoWasmAbi for NonNull<T> {
-    type NullableAbi = f64;
+/// Any non-null address is a `NonNull<T>`, so the pointer word has one spare
+/// value where `Option` and `Nullable` together need two. Both cross as a JS
+/// number with the pointer sentinels, as raw pointers do, and the null
+/// address is the empty value of either.
+impl<T> MaybeIntoWasmAbi for NonNull<T> {
+    type MaybeAbi = f64;
 
     #[inline]
-    fn into_nullable_abi(self) -> f64 {
+    fn into_maybe_abi(self) -> f64 {
         self.as_ptr() as usize as f64
     }
 
@@ -790,16 +643,16 @@ impl<T> NullableIntoWasmAbi for NonNull<T> {
     }
 
     #[inline]
-    fn nullable_none() -> f64 {
+    fn none() -> f64 {
         F64_ABI_OPTION_SENTINEL
     }
 }
 
-impl<T> NullableFromWasmAbi for NonNull<T> {
-    type NullableAbi = f64;
+impl<T> MaybeFromWasmAbi for NonNull<T> {
+    type MaybeAbi = f64;
 
     #[inline]
-    unsafe fn from_nullable_abi(js: f64) -> Self {
+    unsafe fn from_maybe_abi(js: f64) -> Self {
         NonNull::new_unchecked(js as usize as *mut T)
     }
 
@@ -810,9 +663,10 @@ impl<T> NullableFromWasmAbi for NonNull<T> {
         *js == F64_ABI_NULL_SENTINEL || *js as usize == 0
     }
 
+    /// The null address is `None` too; `Nullable` rules `Null` out first.
     #[inline]
-    fn nullable_is_none(js: &f64) -> bool {
-        *js == F64_ABI_OPTION_SENTINEL
+    fn is_none(js: &f64) -> bool {
+        *js == F64_ABI_OPTION_SENTINEL || *js as usize == 0
     }
 }
 
@@ -865,116 +719,150 @@ impl LongRefFromWasmAbi for JsValue {
     }
 }
 
-impl OptionIntoWasmAbi for JsValue {
-    #[inline]
-    fn none() -> u32 {
-        crate::__rt::JSIDX_UNDEFINED
-    }
-}
-
-impl OptionIntoWasmAbi for &JsValue {
-    #[inline]
-    fn none() -> u32 {
-        crate::__rt::JSIDX_UNDEFINED
-    }
-}
-
-impl OptionFromWasmAbi for JsValue {
-    #[inline]
-    fn is_none(js: &u32) -> bool {
-        unsafe { Self::ref_from_abi(*js) }.is_undefined()
-    }
-}
-
-impl_nullable_into_shared_abi!(null = crate::__rt::JSIDX_NULL; [] JsValue);
-impl_nullable_into_shared_abi!(null = crate::__rt::JSIDX_NULL; [] &JsValue);
+impl_maybe_into_shared_abi!(
+    none = crate::__rt::JSIDX_UNDEFINED;
+    null = crate::__rt::JSIDX_NULL;
+    [] JsValue
+);
+impl_maybe_into_shared_abi!(
+    none = crate::__rt::JSIDX_UNDEFINED;
+    null = crate::__rt::JSIDX_NULL;
+    [] &JsValue
+);
 // The glue hands `null` over as the fixed handle, so this is an index test
 // rather than a call into JS; a `null` that did arrive in its own slot is an
 // owned `Value` and is dropped as one.
-impl_nullable_from_shared_abi!(is_null = |js| *js == crate::__rt::JSIDX_NULL; [] JsValue);
+impl_maybe_from_shared_abi!(
+    is_none = |js| unsafe { Self::ref_from_abi(*js) }.is_undefined();
+    is_null = |js| *js == crate::__rt::JSIDX_NULL;
+    [] JsValue
+);
 
-impl<T: OptionIntoWasmAbi> IntoWasmAbi for Option<T> {
-    type Abi = T::Abi;
+impl<T: MaybeIntoWasmAbi> IntoWasmAbi for Option<T> {
+    type Abi = T::MaybeAbi;
 
     #[inline]
-    fn into_abi(self) -> T::Abi {
+    fn into_abi(self) -> T::MaybeAbi {
         match self {
             None => T::none(),
-            Some(me) => me.into_abi(),
+            Some(me) => me.into_maybe_abi(),
         }
     }
 }
 
-impl<T: OptionFromWasmAbi> FromWasmAbi for Option<T> {
-    type Abi = T::Abi;
+impl<T: MaybeFromWasmAbi> FromWasmAbi for Option<T> {
+    type Abi = T::MaybeAbi;
 
     #[inline]
-    unsafe fn from_abi(js: T::Abi) -> Self {
+    unsafe fn from_abi(js: T::MaybeAbi) -> Self {
         if T::is_none(&js) {
             None
         } else {
-            Some(T::from_abi(js))
+            Some(T::from_maybe_abi(js))
         }
     }
 
     #[inline]
-    unsafe fn try_from_abi(js: T::Abi) -> Result<Self, &'static str> {
+    unsafe fn try_from_abi(js: T::MaybeAbi) -> Result<Self, &'static str> {
         if T::is_none(&js) {
             Ok(None)
         } else {
-            T::try_from_abi(js).map(Some)
+            T::try_from_maybe_abi(js).map(Some)
         }
     }
 }
 
-impl<T: NullableIntoWasmAbi> IntoWasmAbi for Nullable<T> {
-    type Abi = T::NullableAbi;
+impl<T: MaybeIntoWasmAbi> IntoWasmAbi for Nullable<T> {
+    type Abi = T::MaybeAbi;
 
     #[inline]
-    fn into_abi(self) -> T::NullableAbi {
+    fn into_abi(self) -> T::MaybeAbi {
         match self {
             Nullable::Null => T::null(),
-            Nullable::Value(me) => me.into_nullable_abi(),
+            Nullable::Value(me) => me.into_maybe_abi(),
         }
     }
 }
 
 /// `Option<Nullable<T>>` is `None` for `T`'s `undefined` ABI value.
-impl<T: NullableIntoWasmAbi> OptionIntoWasmAbi for Nullable<T> {
+impl<T: MaybeIntoWasmAbi> MaybeIntoWasmAbi for Nullable<T> {
+    type MaybeAbi = T::MaybeAbi;
+
     #[inline]
-    fn none() -> T::NullableAbi {
-        T::nullable_none()
+    fn into_maybe_abi(self) -> T::MaybeAbi {
+        self.into_abi()
+    }
+
+    #[inline]
+    fn none() -> T::MaybeAbi {
+        T::none()
+    }
+
+    #[inline]
+    fn null() -> T::MaybeAbi {
+        T::null()
     }
 }
 
-impl<T: NullableFromWasmAbi> FromWasmAbi for Nullable<T> {
-    type Abi = T::NullableAbi;
+impl<T: MaybeIntoWasmAbi> OptionIntoWasmAbi for Nullable<T> {
+    #[inline]
+    fn none() -> T::MaybeAbi {
+        <Self as MaybeIntoWasmAbi>::none()
+    }
+}
+
+impl<T: MaybeFromWasmAbi> FromWasmAbi for Nullable<T> {
+    type Abi = T::MaybeAbi;
 
     #[inline]
-    unsafe fn from_abi(js: T::NullableAbi) -> Self {
+    unsafe fn from_abi(js: T::MaybeAbi) -> Self {
         if T::is_null(&js) {
             Nullable::Null
         } else {
-            Nullable::Value(T::from_nullable_abi(js))
+            Nullable::Value(T::from_maybe_abi(js))
         }
     }
 
     #[inline]
-    unsafe fn try_from_abi(js: T::NullableAbi) -> Result<Self, &'static str> {
+    unsafe fn try_from_abi(js: T::MaybeAbi) -> Result<Self, &'static str> {
         if T::is_null(&js) {
             Ok(Nullable::Null)
         } else {
-            T::try_from_nullable_abi(js).map(Nullable::Value)
+            T::try_from_maybe_abi(js).map(Nullable::Value)
         }
     }
 }
 
 /// `T`'s `undefined` test may cover its `null` sentinel too, as a slice's
 /// does with the null pointer, so `Null` is ruled out first.
-impl<T: NullableFromWasmAbi> OptionFromWasmAbi for Nullable<T> {
+impl<T: MaybeFromWasmAbi> MaybeFromWasmAbi for Nullable<T> {
+    type MaybeAbi = T::MaybeAbi;
+
     #[inline]
-    fn is_none(js: &T::NullableAbi) -> bool {
-        !T::is_null(js) && T::nullable_is_none(js)
+    unsafe fn from_maybe_abi(js: T::MaybeAbi) -> Self {
+        Self::from_abi(js)
+    }
+
+    #[inline]
+    unsafe fn try_from_maybe_abi(js: T::MaybeAbi) -> Result<Self, &'static str> {
+        Self::try_from_abi(js)
+    }
+
+    #[inline]
+    fn is_none(js: &T::MaybeAbi) -> bool {
+        !T::is_null(js) && T::is_none(js)
+    }
+
+    #[inline]
+    fn is_null(js: &T::MaybeAbi) -> bool {
+        T::is_null(js)
+    }
+}
+
+impl<T: MaybeFromWasmAbi> OptionFromWasmAbi for Nullable<T> {
+    #[inline]
+    fn is_none(js: &T::MaybeAbi) -> bool {
+        <Self as MaybeFromWasmAbi>::is_none(js)
     }
 }
 
@@ -986,7 +874,7 @@ impl<T, Target> UpcastFrom<Nullable<T>> for Nullable<Target> where Target: Upcas
 impl<T, Target> UpcastFrom<Nullable<T>> for JsOption<Nullable<Target>> where Target: UpcastFrom<T> {}
 impl<T, Target> UpcastFrom<Nullable<T>> for JsNullable<Nullable<Target>> where Target: UpcastFrom<T> {}
 
-impl<T: OptionIntoWasmAbi + ErasableGeneric<Repr = JsValue> + Promising> Promising for Option<T> {
+impl<T: MaybeIntoWasmAbi + ErasableGeneric<Repr = JsValue> + Promising> Promising for Option<T> {
     type Resolution = Option<<T as Promising>::Resolution>;
 }
 

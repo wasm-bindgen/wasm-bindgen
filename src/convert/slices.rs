@@ -10,8 +10,8 @@ use crate::__rt::{marker::ErasableGeneric, WasmWord};
 use crate::__wbindgen_copy_to_typed_array;
 use crate::convert::{
     js_value_vector_from_abi, js_value_vector_into_abi, try_js_value_vector_from_abi, FromWasmAbi,
-    IntoWasmAbi, LongRefFromWasmAbi, NullableIntoWasmAbi, OptionFromWasmAbi, OptionIntoWasmAbi,
-    RefFromWasmAbi, RefMutFromWasmAbi, UpcastFrom, VectorFromWasmAbi, VectorIntoWasmAbi, WasmAbi,
+    IntoWasmAbi, LongRefFromWasmAbi, MaybeIntoWasmAbi, RefFromWasmAbi, RefMutFromWasmAbi,
+    UpcastFrom, VectorFromWasmAbi, VectorIntoWasmAbi, WasmAbi,
 };
 use crate::describe::*;
 use crate::{JsError, JsValue};
@@ -203,14 +203,7 @@ macro_rules! vectors_internal {
             }
         }
 
-        impl<'a> OptionIntoWasmAbi for &'a mut [$t] {
-            #[inline]
-            fn none() -> WasmSlice {
-                null_slice()
-            }
-        }
-
-        impl_nullable_into_shared_abi!(null = js_null_slice(); ['a] &'a mut [$t]);
+        impl_maybe_into_shared_abi!(none = null_slice(); null = js_null_slice(); ['a] &'a mut [$t]);
 
         impl RefFromWasmAbi for [$t] {
             type Abi = WasmSlice;
@@ -314,17 +307,8 @@ where
     }
 }
 
-impl<T> OptionIntoWasmAbi for Vec<T>
-where
-    Box<[T]>: IntoWasmAbi<Abi = WasmSlice>,
-{
-    #[inline]
-    fn none() -> WasmSlice {
-        null_slice()
-    }
-}
-
-impl_nullable_into_shared_abi!(
+impl_maybe_into_shared_abi!(
+    none = null_slice();
     null = js_null_slice();
     [T] Vec<T> where Box<[T]>: IntoWasmAbi<Abi = WasmSlice>
 );
@@ -354,14 +338,11 @@ impl<T: VectorRefIntoWasmAbi> IntoWasmAbi for &[T] {
     }
 }
 
-impl<T: VectorRefIntoWasmAbi> OptionIntoWasmAbi for &[T] {
-    #[inline]
-    fn none() -> WasmSlice {
-        null_slice()
-    }
-}
-
-impl_nullable_into_shared_abi!(null = js_null_slice(); [T: VectorRefIntoWasmAbi] &[T]);
+impl_maybe_into_shared_abi!(
+    none = null_slice();
+    null = js_null_slice();
+    [T: VectorRefIntoWasmAbi] &[T]
+);
 
 /// An encoded sequence's cell: the `#[repr(C)]` record of a scalar ABI's
 /// primitives, with unused ones `()`. That is the same split as the wasm
@@ -548,17 +529,8 @@ where
     }
 }
 
-impl<T> OptionFromWasmAbi for Vec<T>
-where
-    Box<[T]>: FromWasmAbi<Abi = WasmSlice>,
-{
-    #[inline]
-    fn is_none(abi: &WasmSlice) -> bool {
-        abi.ptr.is_zero()
-    }
-}
-
-impl_nullable_from_shared_abi!(
+impl_maybe_from_shared_abi!(
+    is_none = |abi| abi.ptr.is_zero();
     is_null = |abi| is_js_null_slice(abi);
     [T] Vec<T> where Box<[T]>: FromWasmAbi<Abi = WasmSlice>
 );
@@ -574,14 +546,7 @@ impl IntoWasmAbi for String {
     }
 }
 
-impl OptionIntoWasmAbi for String {
-    #[inline]
-    fn none() -> Self::Abi {
-        null_slice()
-    }
-}
-
-impl_nullable_into_shared_abi!(null = js_null_slice(); [] String);
+impl_maybe_into_shared_abi!(none = null_slice(); null = js_null_slice(); [] String);
 
 impl FromWasmAbi for String {
     type Abi = <Vec<u8> as FromWasmAbi>::Abi;
@@ -592,14 +557,11 @@ impl FromWasmAbi for String {
     }
 }
 
-impl OptionFromWasmAbi for String {
-    #[inline]
-    fn is_none(slice: &WasmSlice) -> bool {
-        slice.ptr.is_zero()
-    }
-}
-
-impl_nullable_from_shared_abi!(is_null = |slice| is_js_null_slice(slice); [] String);
+impl_maybe_from_shared_abi!(
+    is_none = |slice| slice.ptr.is_zero();
+    is_null = |slice| is_js_null_slice(slice);
+    [] String
+);
 
 impl<'a> IntoWasmAbi for &'a str {
     type Abi = <&'a [u8] as IntoWasmAbi>::Abi;
@@ -612,14 +574,7 @@ impl<'a> IntoWasmAbi for &'a str {
     }
 }
 
-impl OptionIntoWasmAbi for &str {
-    #[inline]
-    fn none() -> Self::Abi {
-        null_slice()
-    }
-}
-
-impl_nullable_into_shared_abi!(null = js_null_slice(); [] &str);
+impl_maybe_into_shared_abi!(none = null_slice(); null = js_null_slice(); [] &str);
 
 // Borrowed shapes that deref to `str` cross exactly like `&str`. `&&str` is
 // omitted: the blanket `&T` describe gives `REF REF STRING`, which the CLI
@@ -635,14 +590,11 @@ macro_rules! str_ref_into_wasm_abi {
             }
         }
 
-        impl OptionIntoWasmAbi for &$t {
-            #[inline]
-            fn none() -> Self::Abi {
-                <&str as OptionIntoWasmAbi>::none()
-            }
-        }
-
-        impl_nullable_into_shared_abi!(null = <&str as NullableIntoWasmAbi>::null(); [] &$t);
+        impl_maybe_into_shared_abi!(
+            none = <&str as MaybeIntoWasmAbi>::none();
+            null = <&str as MaybeIntoWasmAbi>::null();
+            [] &$t
+        );
     )*)
 }
 
@@ -694,16 +646,8 @@ impl<T: VectorIntoWasmAbi> IntoWasmAbi for Box<[T]> {
     }
 }
 
-impl<T> OptionIntoWasmAbi for Box<[T]>
-where
-    Self: IntoWasmAbi<Abi = WasmSlice>,
-{
-    fn none() -> WasmSlice {
-        null_slice()
-    }
-}
-
-impl_nullable_into_shared_abi!(
+impl_maybe_into_shared_abi!(
+    none = null_slice();
     null = js_null_slice();
     [T] Box<[T]> where Self: IntoWasmAbi<Abi = WasmSlice>
 );
@@ -721,16 +665,8 @@ impl<T: VectorFromWasmAbi> FromWasmAbi for Box<[T]> {
     }
 }
 
-impl<T> OptionFromWasmAbi for Box<[T]>
-where
-    Self: FromWasmAbi<Abi = WasmSlice>,
-{
-    fn is_none(slice: &WasmSlice) -> bool {
-        slice.ptr.is_zero()
-    }
-}
-
-impl_nullable_from_shared_abi!(
+impl_maybe_from_shared_abi!(
+    is_none = |slice| slice.ptr.is_zero();
     is_null = |slice| is_js_null_slice(slice);
     [T] Box<[T]> where Self: FromWasmAbi<Abi = WasmSlice>
 );

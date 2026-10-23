@@ -236,13 +236,16 @@ pub trait RefMutFromWasmAbi: WasmDescribe {
 
 /// Indicates that this type can be passed to JS as `Option<Self>`.
 ///
-/// This trait is used when implementing `IntoWasmAbi for Option<T>`.
+/// Superseded by [`MaybeIntoWasmAbi`], which `Option<T>` converts through
+/// and which every implementor derives this from; kept so existing bounds
+/// keep resolving.
 ///
 /// # ⚠️ Unstable
 ///
 /// This is part of the internal [`convert`](crate::convert) module, **no
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
+// Next major: deprecate.
 pub trait OptionIntoWasmAbi: IntoWasmAbi {
     /// Returns an ABI instance indicating "none", which JS will interpret as
     /// the `None` branch of this option.
@@ -254,13 +257,16 @@ pub trait OptionIntoWasmAbi: IntoWasmAbi {
 
 /// Indicates that this type can be received from JS as `Option<Self>`.
 ///
-/// This trait is used when implementing `FromWasmAbi for Option<T>`.
+/// Superseded by [`MaybeFromWasmAbi`], which `Option<T>` converts through
+/// and which every implementor derives this from; kept so existing bounds
+/// keep resolving.
 ///
 /// # ⚠️ Unstable
 ///
 /// This is part of the internal [`convert`](crate::convert) module, **no
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
+// Next major: deprecate.
 pub trait OptionFromWasmAbi: FromWasmAbi {
     /// Tests whether the argument is a "none" instance. If so it will be
     /// deserialized as `None`, and otherwise it will be passed to
@@ -268,75 +274,73 @@ pub trait OptionFromWasmAbi: FromWasmAbi {
     fn is_none(abi: &Self::Abi) -> bool;
 }
 
-/// The ABI of `Nullable<Self>` and `Option<Nullable<Self>>`.
+/// The ABI of `Option<Self>`, `Nullable<Self>` and `Option<Nullable<Self>>`.
 ///
-/// `Nullable<T>` and `Option<Nullable<T>>` take their conversions from this
-/// trait, so every `T` implementing it can be wrapped, including under a
-/// generic bound such as `Nullable<impl JsStringLike>`. For most types
-/// `NullableAbi` is `Self`'s own ABI with a spare value for `Null` beside
-/// [`OptionIntoWasmAbi::none`]; a type whose ABI has no spare value, such as
-/// `i32` or `f64`, uses a wider one, as its `Option<Self>` does.
+/// All three wrappers take their conversions from this trait, so every `T`
+/// implementing it can be wrapped, including under a generic bound such as
+/// `Option<impl JsNumberOrStringLike>`. For most types `MaybeAbi` is `Self`'s
+/// own ABI with spare values for `None` and `Null`; a type whose ABI has no
+/// spare value, such as `i32` or `f64`, uses a wider one.
 ///
 /// # ⚠️ Unstable
 ///
 /// This is part of the internal [`convert`](crate::convert) module, **no
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
-pub trait NullableIntoWasmAbi: IntoWasmAbi {
-    /// The ABI of `Nullable<Self>`.
-    type NullableAbi: WasmAbi;
+pub trait MaybeIntoWasmAbi: IntoWasmAbi {
+    /// The ABI of the wrappers.
+    type MaybeAbi: WasmAbi;
 
-    /// Converts a value into the `Nullable<Self>` ABI.
-    fn into_nullable_abi(self) -> Self::NullableAbi;
+    /// Converts a value into the wrapper ABI.
+    fn into_maybe_abi(self) -> Self::MaybeAbi;
 
     /// Returns the ABI value for `Nullable::Null`, which JS reads as `null`.
     ///
     /// It should be guaranteed that neither
-    /// [`into_nullable_abi`](Self::into_nullable_abi) nor
-    /// [`nullable_none`](Self::nullable_none) can produce this value.
-    fn null() -> Self::NullableAbi;
+    /// [`into_maybe_abi`](Self::into_maybe_abi) nor
+    /// [`none`](Self::none) can produce this value.
+    fn null() -> Self::MaybeAbi;
 
-    /// Returns the ABI value for `None` in `Option<Nullable<Self>>`, which JS
-    /// reads as `undefined`.
-    fn nullable_none() -> Self::NullableAbi;
+    /// Returns the ABI value for `None`, which JS reads as `undefined`.
+    fn none() -> Self::MaybeAbi;
 }
 
-/// The ABI of `Nullable<Self>` and `Option<Nullable<Self>>` received from JS.
-/// See [`NullableIntoWasmAbi`].
+/// The ABI of `Option<Self>`, `Nullable<Self>` and `Option<Nullable<Self>>`
+/// received from JS. See [`MaybeIntoWasmAbi`].
 ///
 /// # ⚠️ Unstable
 ///
 /// This is part of the internal [`convert`](crate::convert) module, **no
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
-pub trait NullableFromWasmAbi: FromWasmAbi {
-    /// The ABI of `Nullable<Self>`.
-    type NullableAbi: WasmAbi;
+pub trait MaybeFromWasmAbi: FromWasmAbi {
+    /// The ABI of the wrappers.
+    type MaybeAbi: WasmAbi;
 
-    /// Recovers a value from the `Nullable<Self>` ABI, once
+    /// Recovers a value from the wrapper ABI, once
     /// [`is_null`](Self::is_null) and
-    /// [`nullable_is_none`](Self::nullable_is_none) have ruled the empty
+    /// [`is_none`](Self::is_none) have ruled the empty
     /// states out.
     ///
     /// # Safety
     ///
     /// As for [`FromWasmAbi::from_abi`].
-    unsafe fn from_nullable_abi(abi: Self::NullableAbi) -> Self;
+    unsafe fn from_maybe_abi(abi: Self::MaybeAbi) -> Self;
 
     #[doc(hidden)]
     #[inline]
-    unsafe fn try_from_nullable_abi(abi: Self::NullableAbi) -> Result<Self, &'static str>
+    unsafe fn try_from_maybe_abi(abi: Self::MaybeAbi) -> Result<Self, &'static str>
     where
         Self: Sized,
     {
-        Ok(Self::from_nullable_abi(abi))
+        Ok(Self::from_maybe_abi(abi))
     }
 
     /// Tests the ABI value for `Nullable::Null`.
-    fn is_null(abi: &Self::NullableAbi) -> bool;
+    fn is_null(abi: &Self::MaybeAbi) -> bool;
 
-    /// Tests the ABI value for `None` in `Option<Nullable<Self>>`.
-    fn nullable_is_none(abi: &Self::NullableAbi) -> bool;
+    /// Tests the ABI value for `None`.
+    fn is_none(abi: &Self::MaybeAbi) -> bool;
 }
 
 /// A trait for any type which maps to a Wasm primitive type when used in FFI
@@ -848,7 +852,7 @@ impl<T: IntoJsGeneric + Clone> IntoJsGeneric for &T {
 /// This trait is sealed: it is implemented only for the string shapes above,
 /// each of which is guaranteed to produce a JS string on the other side.
 ///
-/// `OptionIntoWasmAbi`, `NullableIntoWasmAbi` and `VectorRefIntoWasmAbi` are
+/// `OptionIntoWasmAbi`, `MaybeIntoWasmAbi` and `VectorRefIntoWasmAbi` are
 /// supertraits so that optional and nullable string positions (`Option<T>`,
 /// `Nullable<T>`) and string slices (`&[T]`) work under the same bound. A slice arrives in JS as an `Array` of strings.
 ///
@@ -857,7 +861,7 @@ impl<T: IntoJsGeneric + Clone> IntoJsGeneric for &T {
 pub trait JsStringLike:
     IntoWasmAbi
     + OptionIntoWasmAbi
-    + NullableIntoWasmAbi
+    + MaybeIntoWasmAbi
     + crate::convert::VectorRefIntoWasmAbi
     + crate::__rt::marker::JsStringLikeSealed
 {

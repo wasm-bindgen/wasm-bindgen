@@ -145,6 +145,15 @@
 
 ### Changed
 
+* `Option<T>` now converts through `MaybeIntoWasmAbi` / `MaybeFromWasmAbi`,
+  whose associated `MaybeAbi` lets a type pick a wider optional ABI, so the
+  concrete `Option<i32>`-style conversions are gone and `Option<T>` works
+  under any bound carrying the trait. `OptionIntoWasmAbi` /
+  `OptionFromWasmAbi` are kept and derived from it. `Option<NonNull<T>>`
+  crosses as a JS number with the pointer sentinels, as `Option<*const T>`
+  and `Nullable<NonNull<T>>` do.
+  [#5422](https://github.com/wasm-bindgen/wasm-bindgen/pull/5422)
+
 * With reference types, `static_string` constants and the reserved
   `undefined`, `null`, `true` and `false` values are stored at fixed slots of
   the `externref` table, which is now sized to include them, and cloning or

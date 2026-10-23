@@ -11080,7 +11080,7 @@ macro_rules! define_primitive_union_traits {
                 "\nThis trait is experimental and may change or be removed as ",
                 "`experimental_generic_mono` evolves."
             )]
-            pub trait $name: IntoWasmAbi + wasm_bindgen::convert::NullableIntoWasmAbi + primitive_union_sealed::Sealed $(+ $supertrait)* {}
+            pub trait $name: IntoWasmAbi + wasm_bindgen::convert::MaybeIntoWasmAbi + primitive_union_sealed::Sealed $(+ $supertrait)* {}
 
             $(impl_primitive_union_category!($name, $category);)+
         )*

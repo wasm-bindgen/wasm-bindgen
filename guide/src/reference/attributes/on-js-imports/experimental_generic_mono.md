@@ -148,10 +148,10 @@ extern "C" {
 `&Cow<str>`, `js_sys::JsString` and `&js_sys::JsString`, so a caller can pass
 whichever it already holds and each monomorphisation crosses at that shape's
 native wire format — UTF-8 buffers for the Rust strings, a handle for
-`JsString` — all arriving in JS as a string value. Nullable positions
-(`Option<T>`) and slices (`&[T]`, arriving as an `Array` of strings) work under
-the same bound, since the trait carries `OptionIntoWasmAbi` and
-`VectorRefIntoWasmAbi` as supertraits. So a plain Rust function bounded by
+`JsString` — all arriving in JS as a string value. Optional positions
+(`Option<T>`, `Nullable<T>`) and slices (`&[T]`, arriving as an `Array` of
+strings) work under the same bound, since the trait carries `MaybeIntoWasmAbi`
+and `VectorRefIntoWasmAbi` as supertraits. So a plain Rust function bounded by
 `JsStringLike` alone can forward a `&[T]` to such an import. The trait is
 sealed to exactly these string shapes. Like
 `experimental_generic_mono` itself, the trait is experimental and may change
@@ -202,10 +202,9 @@ by `JsBooleanOrNumberOrStringLike`, just as `number | string` is assignable to
 `boolean | number | string` in TypeScript. `JsNumberOrStringLike` also widens
 to `PropertyKey`.
 
-All supported concrete members work in nullable `Option<T>` import positions.
-The union traits do not themselves require `OptionIntoWasmAbi`, because some
-numeric types use specialized concrete `Option<T>` ABI implementations, so an
-`Option<T>` position needs its own `Option<T>: IntoWasmAbi` bound.
+The union traits carry `MaybeIntoWasmAbi` as a supertrait, so `Option<T>`,
+`Nullable<T>` and `Option<Nullable<T>>` positions work under the union bound
+alone, each member crossing at its own optional ABI.
 
 There are 12 traits in total: the 11 combinations of at least two of the four
 categories with a Rust-native ABI representation, plus `PropertyKey`. `symbol`
@@ -247,14 +246,14 @@ synthesized parameter:
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(experimental_generic_mono)]
-    fn mix<T: IntoWasmAbi>(label: T, value: Option<impl Clone + OptionIntoWasmAbi>);
+    fn mix<T: IntoWasmAbi>(label: T, value: Option<impl Clone + MaybeIntoWasmAbi>);
 }
 ```
 
 A synthesized parameter has no name to bound its containing type by, so a
 nested `impl Trait` carries whatever bound makes the container marshal:
-`OptionIntoWasmAbi` for `Option`, or `VectorIntoWasmAbi<Abi = WasmSlice>` for
-`Vec`.
+`MaybeIntoWasmAbi` for `Option` and `Nullable`, or
+`VectorIntoWasmAbi<Abi = WasmSlice>` for `Vec`.
 
 Bounds on a synthesized parameter are enforced exactly as if you had written
 them out by hand: a caller that violates one gets a diagnostic pointing at the

@@ -72,6 +72,23 @@ macro_rules! assert_widens {
 }
 
 #[wasm_bindgen_test]
+fn every_primitive_union_admits_option_and_nullable_positions() {
+    fn assert_wrappers<T: js_sys::JsBigIntOrBooleanOrNumberOrStringLike>() {
+        fn into_abi<U: wasm_bindgen::convert::IntoWasmAbi>() {}
+        into_abi::<Option<T>>();
+        into_abi::<js_sys::Nullable<T>>();
+        into_abi::<Option<js_sys::Nullable<T>>>();
+    }
+    assert_wrappers::<i32>();
+    assert_wrappers::<f64>();
+    assert_wrappers::<i64>();
+    assert_wrappers::<u128>();
+    assert_wrappers::<bool>();
+    assert_wrappers::<&str>();
+    assert_wrappers::<JsString>();
+}
+
+#[wasm_bindgen_test]
 fn every_primitive_union_accepts_its_member_categories() {
     macro_rules! assert_union {
         ($trait:path: $($category:ident),+ $(,)?) => {
@@ -108,11 +125,11 @@ fn every_primitive_union_accepts_its_member_categories() {
 
 #[wasm_bindgen_test]
 fn every_primitive_union_member_is_nullable() {
-    assert_bigint_members!(wasm_bindgen::convert::NullableIntoWasmAbi);
-    assert_boolean_members!(wasm_bindgen::convert::NullableIntoWasmAbi);
-    assert_number_members!(wasm_bindgen::convert::NullableIntoWasmAbi);
-    assert_string_members!(wasm_bindgen::convert::NullableIntoWasmAbi);
-    assert_symbol_members!(wasm_bindgen::convert::NullableIntoWasmAbi);
+    assert_bigint_members!(wasm_bindgen::convert::MaybeIntoWasmAbi);
+    assert_boolean_members!(wasm_bindgen::convert::MaybeIntoWasmAbi);
+    assert_number_members!(wasm_bindgen::convert::MaybeIntoWasmAbi);
+    assert_string_members!(wasm_bindgen::convert::MaybeIntoWasmAbi);
+    assert_symbol_members!(wasm_bindgen::convert::MaybeIntoWasmAbi);
 }
 
 #[wasm_bindgen_test]

@@ -839,17 +839,9 @@ where
     }
 }
 
-impl<T> OptionIntoWasmAbi for &ScopedClosure<'_, T>
-where
-    T: WasmClosure + ?Sized,
-{
-    fn none() -> Self::Abi {
-        0
-    }
-}
-
-impl_nullable_into_shared_abi!(
-    null = <&JsValue as NullableIntoWasmAbi>::null();
+impl_maybe_into_shared_abi!(
+    none = 0;
+    null = <&JsValue as MaybeIntoWasmAbi>::null();
     [T] &ScopedClosure<'_, T> where T: WasmClosure + ?Sized
 );
 
@@ -884,17 +876,9 @@ where
     }
 }
 
-impl<T> OptionIntoWasmAbi for ScopedClosure<'static, T>
-where
-    T: WasmClosure + ?Sized,
-{
-    fn none() -> Self::Abi {
-        0
-    }
-}
-
-impl_nullable_into_shared_abi!(
-    null = <JsValue as NullableIntoWasmAbi>::null();
+impl_maybe_into_shared_abi!(
+    none = 0;
+    null = <JsValue as MaybeIntoWasmAbi>::null();
     [T] ScopedClosure<'static, T> where T: WasmClosure + ?Sized
 );
 

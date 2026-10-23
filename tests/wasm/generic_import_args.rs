@@ -19,8 +19,8 @@
 //!   argument.
 
 use js_sys::{
-    BigInt, Boolean, JsBigIntOrBooleanOrNumberOrStringLike, JsNumberOrStringLike, JsString, Number,
-    PropertyKey, Symbol,
+    BigInt, Boolean, JsBigIntOrBooleanOrNumberOrStringLike, JsBigIntOrNumberLike,
+    JsNumberOrStringLike, JsString, Number, PropertyKey, Symbol,
 };
 use std::borrow::Cow;
 use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi, VectorRefIntoWasmAbi};
@@ -88,9 +88,7 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono, js_name = optDescribe)]
     fn describe_optional_primitive<T: JsBigIntOrBooleanOrNumberOrStringLike>(
         x: Option<T>,
-    ) -> String
-    where
-        Option<T>: IntoWasmAbi;
+    ) -> String;
 
     // A shared slice with a *generic* element type, bounded by
     // `T: VectorRefIntoWasmAbi`: each element type gets its own typed-array
@@ -111,14 +109,52 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono, js_name = optDescribe)]
     fn describe_optional_str<T: JsStringLike>(s: Option<T>) -> String;
 
-    // `Nullable<impl Bound>` goes through `NullableIntoWasmAbi`, a supertrait
-    // of `JsStringLike` and of the primitive-union markers, so `i32` and `f64`
-    // qualify although their `Nullable` ABI is wider than their own.
+    // `Option<impl Bound>` and `Nullable<impl Bound>` go through
+    // `MaybeIntoWasmAbi`, a supertrait of `JsStringLike` and of the
+    // primitive-union markers, so `i32` and `f64` qualify although their
+    // wrapper ABI is wider than their own.
     #[wasm_bindgen(experimental_generic_mono, js_name = optDescribe)]
     fn describe_nullable_str(s: Nullable<impl JsStringLike>) -> String;
 
     #[wasm_bindgen(experimental_generic_mono, js_name = optDescribe)]
     fn describe_nullable_primitive(x: Nullable<impl JsNumberOrStringLike>) -> String;
+
+    #[wasm_bindgen(experimental_generic_mono, js_name = optDescribe)]
+    fn describe_optional_primitive_impl(x: Option<impl JsNumberOrStringLike>) -> String;
+
+    #[wasm_bindgen(experimental_generic_mono, js_name = optDescribe)]
+    fn describe_optional_bigint(x: Option<impl JsBigIntOrNumberLike>) -> String;
+}
+
+#[wasm_bindgen_test]
+fn experimental_generic_mono_optional_primitive_union_args() {
+    assert_eq!(describe_optional_primitive_impl(Some(3i32)), "some:3");
+    assert_eq!(describe_optional_primitive_impl(Some("s")), "some:s");
+    assert_eq!(describe_optional_primitive_impl(None::<f64>), "none");
+    assert_eq!(describe_optional_primitive(Some(3i32)), "some:3");
+    assert_eq!(describe_optional_primitive(Some(2.5f64)), "some:2.5");
+    assert_eq!(describe_optional_primitive(Some(7u8)), "some:7");
+    assert_eq!(
+        describe_optional_primitive(Some(usize::MAX)),
+        "some:4294967295"
+    );
+    assert_eq!(describe_optional_primitive(Some("s")), "some:s");
+    assert_eq!(
+        describe_optional_primitive(Some(String::from("owned"))),
+        "some:owned"
+    );
+    assert_eq!(describe_optional_primitive(None::<i32>), "none");
+    assert_eq!(describe_optional_primitive(None::<f64>), "none");
+    assert_eq!(describe_optional_primitive(None::<&str>), "none");
+    assert_eq!(
+        describe_optional_bigint(Some(i64::MIN)),
+        "some:-9223372036854775808"
+    );
+    assert_eq!(
+        describe_optional_bigint(Some(u128::MAX)),
+        "some:340282366920938463463374607431768211455"
+    );
+    assert_eq!(describe_optional_bigint(None::<i64>), "none");
 }
 
 #[wasm_bindgen_test]
