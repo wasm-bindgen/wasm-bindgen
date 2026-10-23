@@ -2,7 +2,7 @@
   (type (;0;) (func (param i32 i32)))
   (type (;1;) (func (result externref)))
   (type (;2;) (func))
-  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_41e9ee4f547fc59a" (func (;0;) (type 0)))
+  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_4c88d8bf264fd984" (func (;0;) (type 0)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;1;) (type 2)))
   (import "wasm:js/string-constants" "Hello, World!" (global (;0;) externref))
   (import "wasm:js/string-constants" "\u{1f600}" (global (;1;) externref))
