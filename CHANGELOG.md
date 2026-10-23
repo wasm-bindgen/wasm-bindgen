@@ -35,12 +35,24 @@
   The API follows `Option`'s, including `ok_or`, `and_then`, `filter`,
   `as_deref`, `take`, `replace` and `IntoIterator`, and
   `--cfg wasm_bindgen_unstable_try_trait` enables `?` on nightly.
-  `NullableIntoWasmAbi` / `NullableFromWasmAbi` carry `Nullable<T>`'s ABI
+  `NullableIntoWasmAbi` / `NullableFromWasmAbi` carry `Nullable<T>`'s `null`
   for every `T`, and are supertraits of `JsStringLike` and the js-sys
   primitive-union markers, so `Nullable<impl JsStringLike>` and
   `Nullable<impl JsNumberOrStringLike>` work under `experimental_generic_mono`,
   and `Nullable<T>` erases like `Option<T>` on a generic import.
   [#5410](https://github.com/wasm-bindgen/wasm-bindgen/pull/5410)
+  [#5423](https://github.com/wasm-bindgen/wasm-bindgen/pull/5423)
+
+* Added `MaybeIntoWasmAbi` / `MaybeFromWasmAbi`, the ABI of `Option<T>` for
+  every `T`, with an associated `MaybeAbi` that lets a type without a spare
+  value in its own ABI, such as `i32` or `f64`, pick a wider one. `Option<T>`
+  converts through it, and a blanket impl provides it for every
+  `OptionIntoWasmAbi` / `OptionFromWasmAbi` type, so existing impls and bounds
+  are unaffected. `NullableIntoWasmAbi` / `NullableFromWasmAbi` extend it with
+  `null`. As a result, `Option<impl JsNumberOrStringLike>` and the other
+  primitive-union bounds now work in `experimental_generic_mono` imports
+  without a `where Option<T>: IntoWasmAbi` clause.
+  [#5423](https://github.com/wasm-bindgen/wasm-bindgen/pull/5423)
 
 * Under `js_sys_unstable_apis`, `RegExp::exec` and `JsString::match_` return
   `Nullable<T>` rather than `Option<T>`, as the JS APIs return `null` on no
@@ -144,15 +156,6 @@
   [#5421](https://github.com/wasm-bindgen/wasm-bindgen/pull/5421)
 
 ### Changed
-
-* `Option<T>` now converts through `MaybeIntoWasmAbi` / `MaybeFromWasmAbi`,
-  whose associated `MaybeAbi` lets a type pick a wider optional ABI, so the
-  concrete `Option<i32>`-style conversions are gone and `Option<T>` works
-  under any bound carrying the trait. `OptionIntoWasmAbi` /
-  `OptionFromWasmAbi` are kept and derived from it. `NonNull<T>`, whose
-  pointer word has a single spare value, keeps its own `Option` conversion
-  and is not `Nullable`.
-  [#5423](https://github.com/wasm-bindgen/wasm-bindgen/pull/5423)
 
 * With reference types, `static_string` constants and the reserved
   `undefined`, `null`, `true` and `false` values are stored at fixed slots of

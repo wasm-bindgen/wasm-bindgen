@@ -70,7 +70,7 @@ error[E0277]: the trait bound `T: VectorRefIntoWasmAbi` is not satisfied
 27 |     fn option_slice_argument<T>(xs: Option<&[T]>);
    |                                     ^^^^^^ the trait `VectorRefIntoWasmAbi` is not implemented for `T`
    |
-   = note: required for `&[T]` to implement `MaybeIntoWasmAbi`
+   = note: required for `&[T]` to implement `OptionIntoWasmAbi`
    = note: required for `Option<&[T]>` to implement `IntoWasmAbi`
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 help: consider restricting type parameter `T` with trait `VectorRefIntoWasmAbi`

@@ -110,9 +110,9 @@ extern "C" {
     fn describe_optional_str<T: JsStringLike>(s: Option<T>) -> String;
 
     // `Option<impl Bound>` and `Nullable<impl Bound>` go through
-    // `MaybeIntoWasmAbi`, a supertrait of `JsStringLike` and of the
-    // primitive-union markers, so `i32` and `f64` qualify although their
-    // wrapper ABI is wider than their own.
+    // `MaybeIntoWasmAbi`, implied by the `NullableIntoWasmAbi` supertrait of
+    // `JsStringLike` and of the primitive-union markers, so `i32` and `f64`
+    // qualify although their wrapper ABI is wider than their own.
     #[wasm_bindgen(experimental_generic_mono, js_name = optDescribe)]
     fn describe_nullable_str(s: Nullable<impl JsStringLike>) -> String;
 

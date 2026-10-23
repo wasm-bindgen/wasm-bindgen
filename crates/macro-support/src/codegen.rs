@@ -604,46 +604,25 @@ impl ToTokens for ast::Struct {
             #[automatically_derived]
             impl #wasm_bindgen::convert::OptionIntoWasmAbi for #name {
                 #[inline]
-                fn none() -> Self::Abi { <Self as #wasm_bindgen::convert::MaybeIntoWasmAbi>::none() }
+                fn none() -> Self::Abi { <#class_abi>::null() }
             }
 
             #[automatically_derived]
             impl #wasm_bindgen::convert::OptionFromWasmAbi for #name {
                 #[inline]
-                fn is_none(abi: &Self::Abi) -> bool { <Self as #wasm_bindgen::convert::MaybeFromWasmAbi>::is_none(abi) }
-            }
-
-            #[automatically_derived]
-            impl #wasm_bindgen::convert::MaybeIntoWasmAbi for #name {
-                type MaybeAbi = Self::Abi;
-
-                #[inline]
-                fn into_maybe_abi(self) -> Self::Abi { #wasm_bindgen::convert::IntoWasmAbi::into_abi(self) }
-
-                #[inline]
-                fn null() -> Self::Abi { <#class_abi>::js_null() }
-
-                #[inline]
-                fn none() -> Self::Abi { <#class_abi>::null() }
-            }
-
-            #[automatically_derived]
-            impl #wasm_bindgen::convert::MaybeFromWasmAbi for #name {
-                type MaybeAbi = Self::Abi;
-
-                #[inline]
-                unsafe fn from_maybe_abi(abi: Self::Abi) -> Self { <Self as #wasm_bindgen::convert::FromWasmAbi>::from_abi(abi) }
-
-                #[inline]
-                unsafe fn try_from_maybe_abi(abi: Self::Abi) -> #wasm_bindgen::__rt::core::result::Result<Self, &'static str> {
-                    <Self as #wasm_bindgen::convert::FromWasmAbi>::try_from_abi(abi)
-                }
-
-                #[inline]
-                fn is_null(abi: &Self::Abi) -> bool { abi.is_js_null() }
-
-                #[inline]
                 fn is_none(abi: &Self::Abi) -> bool { abi.is_null() }
+            }
+
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::NullableIntoWasmAbi for #name {
+                #[inline]
+                fn null() -> Self::MaybeAbi { <#class_abi>::js_null() }
+            }
+
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::NullableFromWasmAbi for #name {
+                #[inline]
+                fn is_null(abi: &Self::MaybeAbi) -> bool { abi.is_js_null() }
             }
 
             const _: () = {
@@ -1878,7 +1857,7 @@ impl TryToTokens for ast::ImportType {
                 use #wasm_bindgen::convert::TryFromJsValue;
                 use #wasm_bindgen::convert::{IntoWasmAbi, FromWasmAbi};
                 use #wasm_bindgen::convert::{OptionIntoWasmAbi, OptionFromWasmAbi};
-                use #wasm_bindgen::convert::{MaybeIntoWasmAbi, MaybeFromWasmAbi};
+                use #wasm_bindgen::convert::{NullableIntoWasmAbi, NullableFromWasmAbi};
                 use #wasm_bindgen::convert::{RefFromWasmAbi, LongRefFromWasmAbi};
                 use #wasm_bindgen::describe::WasmDescribe;
                 use #wasm_bindgen::{JsValue, JsCast};
@@ -1905,7 +1884,7 @@ impl TryToTokens for ast::ImportType {
                 impl #impl_generics OptionIntoWasmAbi for #rust_name #ty_generics #where_clause {
                     #[inline]
                     fn none() -> Self::Abi {
-                        <Self as MaybeIntoWasmAbi>::none()
+                        0
                     }
                 }
 
@@ -1913,36 +1892,20 @@ impl TryToTokens for ast::ImportType {
                 impl #reference_impl_generics OptionIntoWasmAbi for &#reference_lifetime #rust_name #ty_generics #where_clause {
                     #[inline]
                     fn none() -> Self::Abi {
-                        <Self as MaybeIntoWasmAbi>::none()
+                        0
                     }
                 }
 
                 #[automatically_derived]
-                impl #impl_generics MaybeIntoWasmAbi for #rust_name #ty_generics #where_clause {
-                    type MaybeAbi = Self::Abi;
-
+                impl #impl_generics NullableIntoWasmAbi for #rust_name #ty_generics #where_clause {
                     #[inline]
-                    fn into_maybe_abi(self) -> Self::Abi { IntoWasmAbi::into_abi(self) }
-
-                    #[inline]
-                    fn null() -> Self::Abi { <JsValue as MaybeIntoWasmAbi>::null() }
-
-                    #[inline]
-                    fn none() -> Self::Abi { 0 }
+                    fn null() -> Self::MaybeAbi { <JsValue as NullableIntoWasmAbi>::null() }
                 }
 
                 #[automatically_derived]
-                impl #reference_impl_generics MaybeIntoWasmAbi for &#reference_lifetime #rust_name #ty_generics #where_clause {
-                    type MaybeAbi = Self::Abi;
-
+                impl #reference_impl_generics NullableIntoWasmAbi for &#reference_lifetime #rust_name #ty_generics #where_clause {
                     #[inline]
-                    fn into_maybe_abi(self) -> Self::Abi { IntoWasmAbi::into_abi(self) }
-
-                    #[inline]
-                    fn null() -> Self::Abi { <&#reference_lifetime JsValue as MaybeIntoWasmAbi>::null() }
-
-                    #[inline]
-                    fn none() -> Self::Abi { 0 }
+                    fn null() -> Self::MaybeAbi { <&#reference_lifetime JsValue as NullableIntoWasmAbi>::null() }
                 }
 
                 #[automatically_derived]
@@ -1961,26 +1924,13 @@ impl TryToTokens for ast::ImportType {
                 #[automatically_derived]
                 impl #impl_generics OptionFromWasmAbi for #rust_name #ty_generics #where_clause {
                     #[inline]
-                    fn is_none(abi: &Self::Abi) -> bool { <Self as MaybeFromWasmAbi>::is_none(abi) }
+                    fn is_none(abi: &Self::Abi) -> bool { *abi == 0 }
                 }
 
                 #[automatically_derived]
-                impl #impl_generics MaybeFromWasmAbi for #rust_name #ty_generics #where_clause {
-                    type MaybeAbi = Self::Abi;
-
+                impl #impl_generics NullableFromWasmAbi for #rust_name #ty_generics #where_clause {
                     #[inline]
-                    unsafe fn from_maybe_abi(abi: Self::Abi) -> Self { <Self as FromWasmAbi>::from_abi(abi) }
-
-                    #[inline]
-                    unsafe fn try_from_maybe_abi(abi: Self::Abi) -> #wasm_bindgen::__rt::core::result::Result<Self, &'static str> {
-                        <Self as FromWasmAbi>::try_from_abi(abi)
-                    }
-
-                    #[inline]
-                    fn is_null(abi: &Self::Abi) -> bool { <JsValue as MaybeFromWasmAbi>::is_null(abi) }
-
-                    #[inline]
-                    fn is_none(abi: &Self::Abi) -> bool { *abi == 0 }
+                    fn is_null(abi: &Self::MaybeAbi) -> bool { <JsValue as NullableFromWasmAbi>::is_null(abi) }
                 }
 
                 #[automatically_derived]
@@ -2444,46 +2394,25 @@ impl ToTokens for ast::StringEnum {
             #[automatically_derived]
             impl #wasm_bindgen::convert::OptionFromWasmAbi for #enum_name {
                 #[inline]
-                fn is_none(abi: &u32) -> bool { <Self as #wasm_bindgen::convert::MaybeFromWasmAbi>::is_none(abi) }
+                fn is_none(val: &u32) -> bool { *val == #hole }
             }
 
             #[automatically_derived]
             impl #wasm_bindgen::convert::OptionIntoWasmAbi for #enum_name {
                 #[inline]
-                fn none() -> Self::Abi { <Self as #wasm_bindgen::convert::MaybeIntoWasmAbi>::none() }
-            }
-
-            #[automatically_derived]
-            impl #wasm_bindgen::convert::MaybeFromWasmAbi for #enum_name {
-                type MaybeAbi = u32;
-
-                #[inline]
-                unsafe fn from_maybe_abi(abi: u32) -> Self { <Self as #wasm_bindgen::convert::FromWasmAbi>::from_abi(abi) }
-
-                #[inline]
-                unsafe fn try_from_maybe_abi(abi: u32) -> #wasm_bindgen::__rt::core::result::Result<Self, &'static str> {
-                    <Self as #wasm_bindgen::convert::FromWasmAbi>::try_from_abi(abi)
-                }
-
-                #[inline]
-                fn is_null(val: &u32) -> bool { *val == #null_hole }
-
-                #[inline]
-                fn is_none(val: &u32) -> bool { *val == #hole }
-            }
-
-            #[automatically_derived]
-            impl #wasm_bindgen::convert::MaybeIntoWasmAbi for #enum_name {
-                type MaybeAbi = Self::Abi;
-
-                #[inline]
-                fn into_maybe_abi(self) -> Self::Abi { #wasm_bindgen::convert::IntoWasmAbi::into_abi(self) }
-
-                #[inline]
-                fn null() -> Self::Abi { #null_hole }
-
-                #[inline]
                 fn none() -> Self::Abi { #hole }
+            }
+
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::NullableFromWasmAbi for #enum_name {
+                #[inline]
+                fn is_null(val: &Self::MaybeAbi) -> bool { *val == #null_hole }
+            }
+
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::NullableIntoWasmAbi for #enum_name {
+                #[inline]
+                fn null() -> Self::MaybeAbi { #null_hole }
             }
 
             #[automatically_derived]
@@ -2762,50 +2691,29 @@ impl ToTokens for ast::DynamicUnion {
             #[automatically_derived]
             impl #wasm_bindgen::convert::OptionIntoWasmAbi for #enum_name {
                 #[inline]
-                fn none() -> u32 { <Self as #wasm_bindgen::convert::MaybeIntoWasmAbi>::none() }
+                fn none() -> u32 {
+                    <#wasm_bindgen::JsValue as #wasm_bindgen::convert::OptionIntoWasmAbi>::none()
+                }
             }
 
             #[automatically_derived]
             impl #wasm_bindgen::convert::OptionFromWasmAbi for #enum_name {
                 #[inline]
-                fn is_none(abi: &u32) -> bool { <Self as #wasm_bindgen::convert::MaybeFromWasmAbi>::is_none(abi) }
-            }
-
-            #[automatically_derived]
-            impl #wasm_bindgen::convert::MaybeIntoWasmAbi for #enum_name {
-                type MaybeAbi = u32;
-
-                #[inline]
-                fn into_maybe_abi(self) -> u32 { #wasm_bindgen::convert::IntoWasmAbi::into_abi(self) }
-
-                #[inline]
-                fn null() -> u32 { <#wasm_bindgen::JsValue as #wasm_bindgen::convert::MaybeIntoWasmAbi>::null() }
-
-                #[inline]
-                fn none() -> u32 {
-                    <#wasm_bindgen::JsValue as #wasm_bindgen::convert::MaybeIntoWasmAbi>::none()
-                }
-            }
-
-            #[automatically_derived]
-            impl #wasm_bindgen::convert::MaybeFromWasmAbi for #enum_name {
-                type MaybeAbi = u32;
-
-                #[inline]
-                unsafe fn from_maybe_abi(abi: u32) -> Self { <Self as #wasm_bindgen::convert::FromWasmAbi>::from_abi(abi) }
-
-                #[inline]
-                unsafe fn try_from_maybe_abi(abi: u32) -> #wasm_bindgen::__rt::core::result::Result<Self, &'static str> {
-                    <Self as #wasm_bindgen::convert::FromWasmAbi>::try_from_abi(abi)
-                }
-
-                #[inline]
-                fn is_null(js: &u32) -> bool { <#wasm_bindgen::JsValue as #wasm_bindgen::convert::MaybeFromWasmAbi>::is_null(js) }
-
-                #[inline]
                 fn is_none(js: &u32) -> bool {
-                    <#wasm_bindgen::JsValue as #wasm_bindgen::convert::MaybeFromWasmAbi>::is_none(js)
+                    <#wasm_bindgen::JsValue as #wasm_bindgen::convert::OptionFromWasmAbi>::is_none(js)
                 }
+            }
+
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::NullableIntoWasmAbi for #enum_name {
+                #[inline]
+                fn null() -> Self::MaybeAbi { <#wasm_bindgen::JsValue as #wasm_bindgen::convert::NullableIntoWasmAbi>::null() }
+            }
+
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::NullableFromWasmAbi for #enum_name {
+                #[inline]
+                fn is_null(js: &Self::MaybeAbi) -> bool { <#wasm_bindgen::JsValue as #wasm_bindgen::convert::NullableFromWasmAbi>::is_null(js) }
             }
 
             // Allows this union to appear as a variant payload of another
@@ -5589,46 +5497,25 @@ impl ToTokens for ast::Enum {
             #[automatically_derived]
             impl #wasm_bindgen::convert::OptionFromWasmAbi for #enum_name {
                 #[inline]
-                fn is_none(abi: &Self::Abi) -> bool { <Self as #wasm_bindgen::convert::MaybeFromWasmAbi>::is_none(abi) }
+                fn is_none(val: &Self::Abi) -> bool { *val == #hole as f64 }
             }
 
             #[automatically_derived]
             impl #wasm_bindgen::convert::OptionIntoWasmAbi for #enum_name {
                 #[inline]
-                fn none() -> Self::Abi { <Self as #wasm_bindgen::convert::MaybeIntoWasmAbi>::none() }
-            }
-
-            #[automatically_derived]
-            impl #wasm_bindgen::convert::MaybeFromWasmAbi for #enum_name {
-                type MaybeAbi = Self::Abi;
-
-                #[inline]
-                unsafe fn from_maybe_abi(abi: Self::Abi) -> Self { <Self as #wasm_bindgen::convert::FromWasmAbi>::from_abi(abi) }
-
-                #[inline]
-                unsafe fn try_from_maybe_abi(abi: Self::Abi) -> #wasm_bindgen::__rt::core::result::Result<Self, &'static str> {
-                    <Self as #wasm_bindgen::convert::FromWasmAbi>::try_from_abi(abi)
-                }
-
-                #[inline]
-                fn is_null(val: &Self::Abi) -> bool { *val == #wasm_bindgen::convert::F64_ABI_NULL_SENTINEL }
-
-                #[inline]
-                fn is_none(val: &Self::Abi) -> bool { *val == #hole as f64 }
-            }
-
-            #[automatically_derived]
-            impl #wasm_bindgen::convert::MaybeIntoWasmAbi for #enum_name {
-                type MaybeAbi = Self::Abi;
-
-                #[inline]
-                fn into_maybe_abi(self) -> Self::Abi { #wasm_bindgen::convert::IntoWasmAbi::into_abi(self) }
-
-                #[inline]
-                fn null() -> Self::Abi { #wasm_bindgen::convert::F64_ABI_NULL_SENTINEL }
-
-                #[inline]
                 fn none() -> Self::Abi { #hole as f64 }
+            }
+
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::NullableFromWasmAbi for #enum_name {
+                #[inline]
+                fn is_null(val: &Self::MaybeAbi) -> bool { *val == #wasm_bindgen::convert::F64_ABI_NULL_SENTINEL }
+            }
+
+            #[automatically_derived]
+            impl #wasm_bindgen::convert::NullableIntoWasmAbi for #enum_name {
+                #[inline]
+                fn null() -> Self::MaybeAbi { #wasm_bindgen::convert::F64_ABI_NULL_SENTINEL }
             }
 
             #[automatically_derived]
