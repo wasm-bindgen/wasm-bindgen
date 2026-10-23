@@ -7143,6 +7143,7 @@ extern "C" {
     /// Throws a `RangeError` if this is an invalid date.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toTemporalInstant)
+    #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, js_name = toTemporalInstant, catch)]
     pub fn to_temporal_instant(this: &Date) -> Result<Temporal::Instant, JsValue>;
 }
@@ -9140,6 +9141,7 @@ extern "C" {
     pub fn deref<T>(this: &WeakRef<T>) -> Option<T>;
 }
 
+#[cfg(js_sys_unstable_apis)]
 #[allow(non_snake_case)]
 pub mod Temporal;
 
