@@ -842,6 +842,35 @@ fn plain_date_constructor() {
 }
 
 #[wasm_bindgen_test]
+fn value_equality() {
+    if !is_temporal_supported() {
+        return;
+    }
+    assert_eq!(
+        Temporal::PlainDate::new(2022, 6, 15).unwrap(),
+        Temporal::PlainDate::new(2022, 6, 15).unwrap()
+    );
+    assert_ne!(
+        Temporal::PlainDate::new(2022, 6, 15).unwrap(),
+        Temporal::PlainDate::new(2022, 6, 15)
+            .unwrap()
+            .with_calendar("hebrew")
+            .unwrap()
+    );
+    assert_eq!(
+        Temporal::PlainTime::new_with_hour(7).unwrap(),
+        Temporal::PlainTime::from_with_str("07:00").unwrap()
+    );
+    assert_eq!(get_test_instant(), get_test_instant());
+    assert_eq!(get_test_plain_date_time(), get_test_plain_date_time());
+    assert_eq!(get_test_plain_year_month(), get_test_plain_year_month());
+    assert_eq!(get_test_plain_month_day(), get_test_plain_month_day());
+    let zdt = get_test_zoned_date_time();
+    assert_eq!(zdt, zdt.clone());
+    assert_ne!(zdt, zdt.with_time_zone("UTC").unwrap());
+}
+
+#[wasm_bindgen_test]
 fn plain_date_compare() {
     if !is_temporal_supported() {
         return;
