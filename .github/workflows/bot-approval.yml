@@ -1,0 +1,16 @@
+name: wasm-bindgen-bot approval
+
+# GitHub gives review runs on fork PRs no secrets, so an approval only runs
+# this, and its completion runs wasm-bindgen-bot with them.
+on:
+  pull_request_review:
+    types: [submitted]
+
+permissions: {}
+
+jobs:
+  approved:
+    if: github.event.review.state == 'approved' && github.event.review.user.type != 'Bot'
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'true'

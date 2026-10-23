@@ -11,12 +11,13 @@ on:
   issue_comment:
     types: [created]
   # Only same-repo PRs, since GitHub gives fork PRs' review comment runs no
-  # secrets. Like approvals, these don't run on PRs with merge conflicts.
+  # secrets. These don't run on PRs with merge conflicts.
   pull_request_review_comment:
     types: [created]
-  # Likewise same-repo only: a collaborator's approval enables auto-merge.
-  pull_request_review:
-    types: [submitted]
+  # A collaborator's approval enables auto-merge.
+  workflow_run:
+    workflows: [wasm-bindgen-bot approval]
+    types: [completed]
   # After merges, flags auto-merge PRs they left conflicting for a rebase.
   push:
     branches: [main, master]
@@ -58,17 +59,14 @@ jobs:
           github.event.pull_request.head.repo.full_name == github.repository)) &&
         (contains(github.event.comment.body, '@wasm-bindgen-bot') ||
           contains(github.event.comment.body, '@wbg-bot'))) ||
-      (github.event_name == 'pull_request_review' &&
-        github.event.review.state == 'approved' &&
-        github.event.review.user.type != 'Bot' &&
-        github.event.pull_request.head.repo.full_name == github.repository) ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
       github.event_name == 'workflow_dispatch' || github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 100
     concurrency:
-      # Comment, approval and merge-ready runs get their own group rather than
-      # cancelling reviews in progress.
-      group: wasm-bindgen-bot-${{ github.event.pull_request.number || github.event.issue.number || github.run_id }}${{ github.event.comment && format('-{0}', github.event.comment.id) || github.event.review && format('-review-{0}', github.event.review.id) || github.event.label.name == 'merge-ready' && '-merge-ready' || '' }}
+      # Comment and merge-ready runs get their own group rather than cancelling
+      # reviews in progress.
+      group: wasm-bindgen-bot-${{ github.event.pull_request.number || github.event.issue.number || github.run_id }}${{ github.event.comment && format('-{0}', github.event.comment.id) || github.event.label.name == 'merge-ready' && '-merge-ready' || '' }}
       cancel-in-progress: true
     permissions:
       contents: read
