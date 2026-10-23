@@ -65,8 +65,8 @@ JS shim. Generic code over Rust and JS element types alike can bound
 can use the element APIs as before.
 
 The same holds for `Function` signatures, `ArrayTuple` elements, `WeakMap`
-values and element callbacks, such as those of `Array::map` and
-`Promise::then`:
+and `DisposableStack` values and element callbacks, such as those of
+`Array::map`, `Iterator::map`, `Map::group_by` and `Promise::then`:
 
 ```rust
 use js_sys::{Array, ArrayTuple, Function};
