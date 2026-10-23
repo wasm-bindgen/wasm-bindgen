@@ -13,6 +13,40 @@
   cloning and dropping them is free and never calls into JS.
   [#5401](https://github.com/wasm-bindgen/wasm-bindgen/pull/5401)
 
+* Added `--cfg wasm_bindgen_unstable_strict_option`, under which a JS to Rust
+  `Option<T>` treats only `undefined` as `None`: `null` goes to `T`'s own
+  conversion, as any other non-`T` value does, and an exported optional
+  argument or field is typed `T | undefined` rather than `T | null | undefined`.
+  `None` is still `undefined` going out. This becomes the default in the next
+  breaking release; code relying on `null` becoming `None` should move to
+  `Nullable<T>`.
+  [#5410](https://github.com/wasm-bindgen/wasm-bindgen/pull/5410)
+
+* Added `Nullable<T>`, re-exported as `js_sys::Nullable`, for a `T | null`
+  value at the JS boundary, as `Option<T>` is for `T | undefined`, with
+  `Option<Nullable<T>>` for `T | null | undefined`. Both are accepted wherever
+  `Option<T>` is, for every `T` and in every position: JS `null` is
+  `Nullable::Null` and is sent back as `null`, while `undefined` into a plain
+  `Nullable<T>` goes to `T`'s own conversion. The `Option` layer of
+  `Option<Nullable<T>>` treats only `undefined` as `None` with or without the
+  strict cfg. `Option<T>` converts from and into `Nullable<T>`, and
+  `JsNullable<T>` converts from both and into `Option<Nullable<T>>` for
+  `T: JsGeneric`.
+  The API follows `Option`'s, including `ok_or`, `and_then`, `filter`,
+  `as_deref`, `take`, `replace` and `IntoIterator`, and
+  `--cfg wasm_bindgen_unstable_try_trait` enables `?` on nightly.
+  `NullableIntoWasmAbi` / `NullableFromWasmAbi` carry `Nullable<T>`'s ABI
+  for every `T`, and are supertraits of `JsStringLike` and the js-sys
+  primitive-union markers, so `Nullable<impl JsStringLike>` and
+  `Nullable<impl JsNumberOrStringLike>` work under `experimental_generic_mono`,
+  and `Nullable<T>` erases like `Option<T>` on a generic import.
+  [#5410](https://github.com/wasm-bindgen/wasm-bindgen/pull/5410)
+
+* Under `js_sys_unstable_apis`, `RegExp::exec` and `JsString::match_` return
+  `Nullable<T>` rather than `Option<T>`, as the JS APIs return `null` on no
+  match.
+  [#5410](https://github.com/wasm-bindgen/wasm-bindgen/pull/5410)
+
 * Added the `slice = view | copy | array` and `vec = copy | array`
   attributes for imported JS functions, choosing what JS receives for a
   sequence argument with numeric elements: a live typed array over wasm

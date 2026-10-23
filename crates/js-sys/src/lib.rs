@@ -56,7 +56,7 @@ use wasm_bindgen::JsError;
 
 // Re-export sys types as js-sys types
 pub use wasm_bindgen::sys::{JsNullable, JsOption, Null, Promising, Undefined};
-pub use wasm_bindgen::{IntoJsGeneric, JsGeneric};
+pub use wasm_bindgen::{IntoJsGeneric, JsGeneric, Nullable};
 
 // When adding new imports:
 //
@@ -7280,6 +7280,7 @@ extern "C" {
     #[wasm_bindgen(method, getter)]
     pub fn constructor<T>(this: &Object<T>) -> Function;
 
+    // Next major: `prototype: Nullable<&Object<T>>`
     /// The `Object.create()` method creates a new object, using an existing
     /// object to provide the newly created object's prototype.
     ///
@@ -7569,6 +7570,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = Object, js_name = getOwnPropertySymbols, catch)]
     pub fn get_own_property_symbols<T>(obj: &Object<T>) -> Result<Array<Symbol>, JsValue>;
 
+    // Next major: `-> Nullable<Object>`
     /// The `Object.getPrototypeOf()` method returns the prototype
     /// (i.e. the value of the internal [[Prototype]] property) of the
     /// specified object.
@@ -7733,6 +7735,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = Object)]
     pub fn seal<T>(value: &Object<T>) -> Object<T>;
 
+    // Next major: `prototype: Nullable<&Object>`
     /// The `Object.setPrototypeOf()` method sets the prototype (i.e., the
     /// internal `[[Prototype]]` property) of a specified object to another
     /// object or `null`.
@@ -8146,6 +8149,7 @@ pub mod Reflect {
             property_key: &JsString,
         ) -> Result<PropertyDescriptor<T>, JsValue>;
 
+        // Next major: `-> Result<Nullable<Object>, JsValue>`
         /// The static `Reflect.getPrototypeOf()` method is almost the same
         /// method as `Object.getPrototypeOf()`. It returns the prototype
         /// (i.e. the value of the internal `[[Prototype]]` property) of
@@ -8156,6 +8160,7 @@ pub mod Reflect {
         #[wasm_bindgen(js_namespace = Reflect, js_name = getPrototypeOf, catch)]
         pub fn get_prototype_of(target: &JsValue) -> Result<Object, JsValue>;
 
+        // Next major: `-> Result<Nullable<Object>, JsValue>`
         /// The static `Reflect.getPrototypeOf()` method is almost the same
         /// method as `Object.getPrototypeOf()`. It returns the prototype
         /// (i.e. the value of the internal `[[Prototype]]` property) of
@@ -8308,6 +8313,7 @@ pub mod Reflect {
             receiver: &JsValue,
         ) -> Result<bool, JsValue>;
 
+        // Next major: `prototype: Nullable<&Object>`
         /// The static `Reflect.setPrototypeOf()` method is the same
         /// method as `Object.setPrototypeOf()`. It sets the prototype
         /// (i.e., the internal `[[Prototype]]` property) of a specified
@@ -8343,7 +8349,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method)]
-    pub fn exec(this: &RegExp, text: &str) -> Option<RegExpMatchArray>;
+    pub fn exec(this: &RegExp, text: &str) -> Nullable<RegExpMatchArray>;
 
     /// The flags property returns a string consisting of the flags of
     /// the current regular expression object.
@@ -10202,10 +10208,19 @@ extern "C" {
     ) -> i32;
 
     /// The `match()` method retrieves the matches when matching a string against a regular expression.
+    /// Returns a result array, or null.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/match)
+    #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method, js_class = "String", js_name = match)]
     pub fn match_(this: &JsString, pattern: &RegExp) -> Option<Object>;
+    /// The `match()` method retrieves the matches when matching a string against a regular expression.
+    /// Returns a result array, or null.
+    ///
+    /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/match)
+    #[cfg(js_sys_unstable_apis)]
+    #[wasm_bindgen(method, js_class = "String", js_name = match)]
+    pub fn match_(this: &JsString, pattern: &RegExp) -> Nullable<Object>;
 
     /// The `match_all()` method is similar to `match()`, but gives an iterator of `exec()` arrays, which preserve capture groups.
     ///
@@ -11057,7 +11072,7 @@ macro_rules! define_primitive_union_traits {
                 "\nThis trait is experimental and may change or be removed as ",
                 "`experimental_generic_mono` evolves."
             )]
-            pub trait $name: IntoWasmAbi + primitive_union_sealed::Sealed $(+ $supertrait)* {}
+            pub trait $name: IntoWasmAbi + wasm_bindgen::convert::NullableIntoWasmAbi + primitive_union_sealed::Sealed $(+ $supertrait)* {}
 
             $(impl_primitive_union_category!($name, $category);)+
         )*

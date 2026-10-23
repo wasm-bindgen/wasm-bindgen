@@ -279,7 +279,10 @@ fn match_() {
     );
 
     let result = JsString::from("foo").match_(&re);
+    #[cfg(not(js_sys_unstable_apis))]
     assert!(result.is_none());
+    #[cfg(js_sys_unstable_apis)]
+    assert!(result.is_null());
 
     let s = "For more information, see Chapter 3.4.5.1";
     let re = RegExp::new("see (chapter \\d+(\\.\\d)*)", "i");

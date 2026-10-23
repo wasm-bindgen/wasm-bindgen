@@ -49,7 +49,7 @@ fn exec() {
         assert_eq!(m.input(), "The Quick Brown Fox Jumps Over The Lazy Dog");
 
         let result = re.exec("foo");
-        assert!(result.is_none());
+        assert!(result.is_null());
     }
 }
 

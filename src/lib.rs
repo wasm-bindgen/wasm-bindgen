@@ -40,6 +40,10 @@
 
 #![no_std]
 #![cfg_attr(wasm_bindgen_unstable_test_coverage, feature(coverage_attribute))]
+#![cfg_attr(
+    wasm_bindgen_unstable_try_trait,
+    feature(try_trait_v2, try_trait_v2_residual)
+)]
 #![cfg_attr(target_feature = "atomics", feature(thread_local))]
 #![cfg_attr(
     any(target_feature = "atomics", wasm_bindgen_unstable_test_coverage),
@@ -130,6 +134,7 @@ pub mod prelude {
     pub use crate::convert::Upcast; // provides upcast() and upcast_ref()
     pub use crate::JsCast;
     pub use crate::JsValue;
+    pub use crate::Nullable;
     pub use crate::UnwrapThrowExt;
     #[doc(hidden)]
     pub use wasm_bindgen_macro::__wasm_bindgen_class_marker;
@@ -144,7 +149,10 @@ pub mod closure;
 pub mod convert;
 pub mod describe;
 mod link;
+mod nullable;
 pub mod sys;
+
+pub use crate::nullable::Nullable;
 
 #[cfg(wbg_reference_types)]
 mod externref;

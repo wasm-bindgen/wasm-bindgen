@@ -82,7 +82,15 @@ pub enum Descriptor {
         unique_crate_identifier: String,
     },
     Char,
-    Option(Box<Descriptor>),
+    /// `strict` when JS → Rust treats only `undefined` as `None`, so `null`
+    /// reaches the inner type's conversion (`wasm_bindgen_unstable_strict_option`).
+    Option {
+        inner: Box<Descriptor>,
+        strict: bool,
+    },
+    /// `Nullable<T>`: `null` crosses as its own empty value. Inside an
+    /// `Option`, it is the `T | null | undefined` union.
+    Nullable(Box<Descriptor>),
     Result(Box<Descriptor>),
     Unit,
     NonNull,
@@ -248,7 +256,15 @@ impl Descriptor {
             }
             SLICE => Descriptor::Slice(Box::new(Descriptor::_decode(data, clamped))),
             VECTOR => Descriptor::Vector(Box::new(Descriptor::_decode(data, clamped))),
-            OPTIONAL => Descriptor::Option(Box::new(Descriptor::_decode(data, clamped))),
+            OPTIONAL => Descriptor::Option {
+                inner: Box::new(Descriptor::_decode(data, clamped)),
+                strict: false,
+            },
+            OPTIONAL_STRICT => Descriptor::Option {
+                inner: Box::new(Descriptor::_decode(data, clamped)),
+                strict: true,
+            },
+            NULLABLE => Descriptor::Nullable(Box::new(Descriptor::_decode(data, clamped))),
             RESULT => Descriptor::Result(Box::new(Descriptor::_decode(data, clamped))),
             CACHED_STRING => Descriptor::CachedString,
             STRING => Descriptor::String,
@@ -355,8 +371,10 @@ impl Descriptor {
             | Descriptor::RefMut(d)
             | Descriptor::Slice(d)
             | Descriptor::Vector(d)
-            | Descriptor::Option(d)
             | Descriptor::Result(d) => d.visit_named_types_mut(f),
+            Descriptor::Option { inner, .. } | Descriptor::Nullable(inner) => {
+                inner.visit_named_types_mut(f)
+            }
             // An externref has no defining crate, so a JS type whose name
             // matches an ambiguous all-`private` struct/enum name still hits
             // the ambiguity check even though it never refers to the Rust
@@ -441,7 +459,11 @@ impl Descriptor {
             d = inner;
         }
         let d = match d {
-            Descriptor::Option(d) => d,
+            Descriptor::Option { inner, .. } | Descriptor::Nullable(inner) => inner,
+            d => d,
+        };
+        let d = match d {
+            Descriptor::Nullable(inner) => inner,
             d => d,
         };
         let (borrowed, mutable) = match d {

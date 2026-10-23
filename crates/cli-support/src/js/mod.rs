@@ -4826,7 +4826,7 @@ if (require('worker_threads').isMainThread) {{
 
         // After we've got an actual name handle field projections
         if optional {
-            name = format!("typeof {name} === 'undefined' ? null : {name}");
+            name = format!("typeof {name} === 'undefined' ? undefined : {name}");
 
             for field in import.fields.iter() {
                 let access = property_accessor(field);

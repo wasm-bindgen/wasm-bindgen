@@ -107,6 +107,15 @@ fn every_primitive_union_accepts_its_member_categories() {
 }
 
 #[wasm_bindgen_test]
+fn every_primitive_union_member_is_nullable() {
+    assert_bigint_members!(wasm_bindgen::convert::NullableIntoWasmAbi);
+    assert_boolean_members!(wasm_bindgen::convert::NullableIntoWasmAbi);
+    assert_number_members!(wasm_bindgen::convert::NullableIntoWasmAbi);
+    assert_string_members!(wasm_bindgen::convert::NullableIntoWasmAbi);
+    assert_symbol_members!(wasm_bindgen::convert::NullableIntoWasmAbi);
+}
+
+#[wasm_bindgen_test]
 fn narrower_primitive_unions_widen_to_each_immediate_superset() {
     assert_widens!(js_sys::JsBigIntOrBooleanLike, i64 =>
         js_sys::JsBigIntOrBooleanOrNumberLike,

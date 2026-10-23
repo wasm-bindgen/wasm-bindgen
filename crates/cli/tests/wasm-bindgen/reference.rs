@@ -261,6 +261,19 @@ fn runtest_panic_unwind_legacy() -> Result<()> {
     })
 }
 
+/// `optional-args.rs` again, with `Option<T>` strict about `null`.
+#[test]
+fn runtest_optional_args_strict() -> Result<()> {
+    let mut test = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    test.push("tests");
+    test.push("reference");
+    test.push("optional-args.rs");
+
+    runtest_with_opts(test, Some("strict"), |command| {
+        command.env("RUSTFLAGS", "--cfg=wasm_bindgen_unstable_strict_option");
+    })
+}
+
 #[test]
 fn runtest_targets_atomics() -> Result<()> {
     let mut test = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -572,7 +585,7 @@ fn compare_reference_output(
         .unwrap();
 
         // suffix the file name with the sanitized flags
-        let test = if all_flags.len() > 1 {
+        let test = if all_flags.len() > 1 || suffix.is_some() {
             let mut base_file_name = stem.to_owned();
 
             for chunk in flags.split(|c: char| !c.is_ascii_alphanumeric()) {

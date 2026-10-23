@@ -30,7 +30,11 @@ extern "C" {
 fn import_by_value() {
     take_none_byval(None);
     take_some_byval(Some(MyType::new()));
-    assert!(return_null_byval().is_none());
+    if cfg!(wasm_bindgen_unstable_strict_option) {
+        assert!(return_null_byval().unwrap().is_null());
+    } else {
+        assert!(return_null_byval().is_none());
+    }
     assert!(return_undef_byval().is_none());
     assert!(return_some_byval().is_some());
 }

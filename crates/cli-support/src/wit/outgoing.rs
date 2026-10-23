@@ -1,6 +1,6 @@
 use crate::descriptor::{Descriptor, Function, SeqValue, SequenceCell, VectorKind};
 use crate::wasm_conventions::get_function_table_entry;
-use crate::wit::{AdapterType, ClosureDtor, Instruction, InstructionBuilder};
+use crate::wit::{AdapterType, ClosureDtor, Instruction, InstructionBuilder, OptionKind};
 use crate::wit::{InstructionData, StackChange};
 use anyhow::{bail, Error};
 use walrus::{ExportId, ValType};
@@ -171,7 +171,7 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Vector(cell) => {
                 let kind = match cell.sequence_cell() {
                     SequenceCell::InPlace(kind) => kind,
-                    SequenceCell::Encoded(elem) => return self.outgoing_encoded_slice(elem, false),
+                    SequenceCell::Encoded(elem) => return self.outgoing_encoded_slice(elem, None),
                 };
                 let mem = self.cx.memory()?;
                 let free = self.cx.free()?;
@@ -188,7 +188,13 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
 
-            Descriptor::Option(d) => self.outgoing_option(d)?,
+            Descriptor::Option { inner, .. } => match &**inner {
+                Descriptor::Nullable(inner) => {
+                    self.outgoing_option(inner, OptionKind::OptionNullable)?
+                }
+                inner => self.outgoing_option(inner, OptionKind::Lenient)?,
+            },
+            Descriptor::Nullable(inner) => self.outgoing_option(inner, OptionKind::Nullable)?,
             Descriptor::Result(d) => self.outgoing_result(d)?,
 
             Descriptor::Function(descriptor) => {
@@ -261,7 +267,7 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Slice(cell) => {
                 let kind = match cell.sequence_cell() {
                     SequenceCell::InPlace(kind) => kind,
-                    SequenceCell::Encoded(elem) => return self.outgoing_encoded_slice(elem, false),
+                    SequenceCell::Encoded(elem) => return self.outgoing_encoded_slice(elem, None),
                 };
                 let mem = self.cx.memory()?;
                 let ptr_ty = self.outgoing_internal_word_ty();
@@ -353,7 +359,7 @@ impl InstructionBuilder<'_, '_> {
         Ok(())
     }
 
-    fn outgoing_option(&mut self, arg: &Descriptor) -> Result<(), Error> {
+    fn outgoing_option(&mut self, arg: &Descriptor, option_kind: OptionKind) -> Result<(), Error> {
         match arg {
             Descriptor::Externref => {
                 // This is set to `undefined` in the `None` case and otherwise
@@ -363,7 +369,7 @@ impl InstructionBuilder<'_, '_> {
                     Instruction::ExternrefLoadOwned {
                         table_and_drop: None,
                     },
-                    &[AdapterType::Externref.option()],
+                    &[AdapterType::Externref.option_kind(option_kind)],
                 );
             }
             Descriptor::NamedExternref(name) => {
@@ -372,7 +378,7 @@ impl InstructionBuilder<'_, '_> {
                     Instruction::ExternrefLoadOwned {
                         table_and_drop: None,
                     },
-                    &[AdapterType::NamedExternref(name.clone()).option()],
+                    &[AdapterType::NamedExternref(name.clone()).option_kind(option_kind)],
                 );
             }
             Descriptor::DynamicUnion { name, .. } => {
@@ -383,61 +389,74 @@ impl InstructionBuilder<'_, '_> {
                     Instruction::ExternrefLoadOwned {
                         table_and_drop: None,
                     },
-                    &[AdapterType::DynamicUnion(name.clone()).option()],
+                    &[AdapterType::DynamicUnion(name.clone()).option_kind(option_kind)],
                 );
             }
-            Descriptor::I8 => self.out_option_sentinel32(AdapterType::S8),
-            Descriptor::U8 => self.out_option_sentinel32(AdapterType::U8),
-            Descriptor::I16 => self.out_option_sentinel32(AdapterType::S16),
-            Descriptor::U16 => self.out_option_sentinel32(AdapterType::U16),
-            Descriptor::I32 => self.out_option_sentinel64(AdapterType::S32),
-            Descriptor::U32 => self.out_option_sentinel64(AdapterType::U32),
-            Descriptor::I64AsF64 => self.out_option_sentinel64(AdapterType::I64),
-            Descriptor::U64AsF64 => self.out_option_sentinel64(AdapterType::U64),
-            Descriptor::I64 => self.option_native(true, ValType::I64),
-            Descriptor::U64 => self.option_native(false, ValType::I64),
-            Descriptor::F32 => self.out_option_sentinel64(AdapterType::F32),
-            Descriptor::F64 => self.option_native(true, ValType::F64),
+            Descriptor::I8 => self.out_option_sentinel32(AdapterType::S8, option_kind),
+            Descriptor::U8 => self.out_option_sentinel32(AdapterType::U8, option_kind),
+            Descriptor::I16 => self.out_option_sentinel32(AdapterType::S16, option_kind),
+            Descriptor::U16 => self.out_option_sentinel32(AdapterType::U16, option_kind),
+            Descriptor::I32 => self.out_option_sentinel64(AdapterType::S32, option_kind),
+            Descriptor::U32 => self.out_option_sentinel64(AdapterType::U32, option_kind),
+            Descriptor::I64AsF64 => self.out_option_sentinel64(AdapterType::I64, option_kind),
+            Descriptor::U64AsF64 => self.out_option_sentinel64(AdapterType::U64, option_kind),
+            Descriptor::I64 => self.option_native(true, ValType::I64, option_kind),
+            Descriptor::U64 => self.option_native(false, ValType::I64, option_kind),
+            Descriptor::F32 => self.out_option_sentinel64(AdapterType::F32, option_kind),
+            Descriptor::F64 => self.option_native(true, ValType::F64, option_kind),
             Descriptor::I128 => {
                 self.instruction(
                     &[AdapterType::I32, AdapterType::I64, AdapterType::I64],
-                    Instruction::OptionWasmToInt128 { signed: true },
-                    &[AdapterType::S128.option()],
+                    Instruction::OptionWasmToInt128 {
+                        signed: true,
+                        kind: option_kind,
+                    },
+                    &[AdapterType::S128.option_kind(option_kind)],
                 );
             }
             Descriptor::U128 => {
                 self.instruction(
                     &[AdapterType::I32, AdapterType::I64, AdapterType::I64],
-                    Instruction::OptionWasmToInt128 { signed: false },
-                    &[AdapterType::U128.option()],
+                    Instruction::OptionWasmToInt128 {
+                        signed: false,
+                        kind: option_kind,
+                    },
+                    &[AdapterType::U128.option_kind(option_kind)],
                 );
             }
             Descriptor::Boolean => {
                 self.instruction(
                     &[AdapterType::I32],
-                    Instruction::OptionBoolFromI32,
-                    &[AdapterType::Bool.option()],
+                    Instruction::OptionBoolFromI32 { kind: option_kind },
+                    &[AdapterType::Bool.option_kind(option_kind)],
                 );
             }
             Descriptor::Char => {
                 self.instruction(
                     &[AdapterType::I32],
-                    Instruction::OptionCharFromI32,
-                    &[AdapterType::String.option()],
+                    Instruction::OptionCharFromI32 { kind: option_kind },
+                    &[AdapterType::String.option_kind(option_kind)],
                 );
             }
             Descriptor::Enum { name, hole, .. } => {
                 self.instruction(
                     &[AdapterType::F64],
-                    Instruction::OptionEnumFromF64 { hole: *hole },
-                    &[AdapterType::Enum(name.clone()).option()],
+                    Instruction::OptionEnumFromF64 {
+                        hole: *hole,
+                        kind: option_kind,
+                    },
+                    &[AdapterType::Enum(name.clone()).option_kind(option_kind)],
                 );
             }
-            Descriptor::StringEnum { name, .. } => {
+            Descriptor::StringEnum { name, hole, .. } => {
                 self.instruction(
                     &[AdapterType::I32],
-                    Instruction::OptionWasmToStringEnum { name: name.clone() },
-                    &[AdapterType::StringEnum(name.clone()).option()],
+                    Instruction::OptionWasmToStringEnum {
+                        name: name.clone(),
+                        hole: *hole,
+                        kind: option_kind,
+                    },
+                    &[AdapterType::StringEnum(name.clone()).option_kind(option_kind)],
                 );
             }
             Descriptor::RustStruct { name, .. } => {
@@ -450,12 +469,13 @@ impl InstructionBuilder<'_, '_> {
                     &[ptr_ty],
                     Instruction::OptionRustFromI32 {
                         class: name.to_string(),
+                        kind: option_kind,
                     },
-                    &[AdapterType::Struct(name.clone()).option()],
+                    &[AdapterType::Struct(name.clone()).option_kind(option_kind)],
                 );
             }
-            Descriptor::Ref(d) => self.outgoing_option_ref(false, d)?,
-            Descriptor::RefMut(d) => self.outgoing_option_ref(true, d)?,
+            Descriptor::Ref(d) => self.outgoing_option_ref(false, d, option_kind)?,
+            Descriptor::RefMut(d) => self.outgoing_option_ref(true, d, option_kind)?,
 
             Descriptor::CachedString => self.cached_string(true)?,
 
@@ -464,7 +484,7 @@ impl InstructionBuilder<'_, '_> {
                     Descriptor::Vector(cell) => match cell.sequence_cell() {
                         SequenceCell::InPlace(kind) => kind,
                         SequenceCell::Encoded(elem) => {
-                            return self.outgoing_encoded_slice(elem, true)
+                            return self.outgoing_encoded_slice(elem, Some(option_kind))
                         }
                     },
                     _ => VectorKind::String,
@@ -479,11 +499,15 @@ impl InstructionBuilder<'_, '_> {
                         mem,
                         free,
                         mode: self.seq_value,
+                        option_kind,
                     },
-                    &[AdapterType::Vector(kind).option()],
+                    &[AdapterType::Vector(kind).option_kind(option_kind)],
                 );
             }
 
+            Descriptor::NonNull if option_kind.nullable() => {
+                self.out_option_sentinel64(AdapterType::U32, option_kind)
+            }
             Descriptor::NonNull => {
                 let ptr_ty = if self.cx.memory64() {
                     AdapterType::F64
@@ -493,13 +517,17 @@ impl InstructionBuilder<'_, '_> {
                 self.instruction(
                     &[ptr_ty],
                     Instruction::OptionNonNullFromI32,
-                    &[AdapterType::NonNull.option()],
+                    &[AdapterType::NonNull.option_kind(option_kind)],
                 );
             }
             Descriptor::RawPointer => {
-                self.out_option_sentinel64(AdapterType::U32);
+                self.out_option_sentinel64(AdapterType::U32, option_kind);
             }
 
+            Descriptor::Option { .. } | Descriptor::Nullable(_) => bail!(
+                "unsupported nested optional return type for calling Rust function from JS: \
+                 {arg:?}; only `Option<Nullable<T>>` nests"
+            ),
             _ => bail!(
                 "unsupported optional argument type for calling JS function from Rust: {arg:?}"
             ),
@@ -534,7 +562,8 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Ref(_)
             | Descriptor::RefMut(_)
             | Descriptor::CachedString
-            | Descriptor::Option(_)
+            | Descriptor::Option { .. }
+            | Descriptor::Nullable(_)
             | Descriptor::Vector(_)
             | Descriptor::Unit
             | Descriptor::NonNull
@@ -648,7 +677,12 @@ impl InstructionBuilder<'_, '_> {
         Ok(())
     }
 
-    fn outgoing_option_ref(&mut self, _mutable: bool, arg: &Descriptor) -> Result<(), Error> {
+    fn outgoing_option_ref(
+        &mut self,
+        _mutable: bool,
+        arg: &Descriptor,
+        option_kind: OptionKind,
+    ) -> Result<(), Error> {
         match arg {
             Descriptor::Externref => {
                 // If this is `Some` then it's the index, otherwise if it's
@@ -656,14 +690,14 @@ impl InstructionBuilder<'_, '_> {
                 self.instruction(
                     &[AdapterType::I32],
                     Instruction::TableGet,
-                    &[AdapterType::Externref.option()],
+                    &[AdapterType::Externref.option_kind(option_kind)],
                 );
             }
             Descriptor::NamedExternref(name) => {
                 self.instruction(
                     &[AdapterType::I32],
                     Instruction::TableGet,
-                    &[AdapterType::NamedExternref(name.clone()).option()],
+                    &[AdapterType::NamedExternref(name.clone()).option_kind(option_kind)],
                 );
             }
             Descriptor::CachedString => self.cached_string(false)?,
@@ -672,7 +706,7 @@ impl InstructionBuilder<'_, '_> {
                     Descriptor::Slice(cell) => match cell.sequence_cell() {
                         SequenceCell::InPlace(kind) => kind,
                         SequenceCell::Encoded(elem) => {
-                            return self.outgoing_encoded_slice(elem, true)
+                            return self.outgoing_encoded_slice(elem, Some(option_kind))
                         }
                     },
                     _ => VectorKind::String,
@@ -685,8 +719,9 @@ impl InstructionBuilder<'_, '_> {
                         kind: kind.clone(),
                         mem,
                         mode: self.seq_value,
+                        option_kind,
                     },
-                    &[AdapterType::Vector(kind).option()],
+                    &[AdapterType::Vector(kind).option_kind(option_kind)],
                 );
             }
             _ => bail!(
@@ -700,7 +735,11 @@ impl InstructionBuilder<'_, '_> {
     /// elements' scalar ABIs. JS reads each element's ABI words from the
     /// buffer and decodes them with the element's own instructions, as for an
     /// argument of the element type.
-    fn outgoing_encoded_slice(&mut self, elem: &Descriptor, optional: bool) -> Result<(), Error> {
+    fn outgoing_encoded_slice(
+        &mut self,
+        elem: &Descriptor,
+        optional: Option<OptionKind>,
+    ) -> Result<(), Error> {
         // `&[&str]` / `Vec<&str>`: the element is a reference, decoded as
         // borrowed anyway.
         let elem = match elem {
@@ -757,7 +796,10 @@ impl InstructionBuilder<'_, '_> {
                 free,
                 optional,
             },
-            &[if optional { array.option() } else { array }],
+            &[match optional {
+                Some(kind) => array.option_kind(kind),
+                None => array,
+            }],
         );
         Ok(())
     }
@@ -818,28 +860,28 @@ impl InstructionBuilder<'_, '_> {
         Ok(())
     }
 
-    fn option_native(&mut self, signed: bool, ty: ValType) {
+    fn option_native(&mut self, signed: bool, ty: ValType, kind: OptionKind) {
         let adapter_ty = AdapterType::from_wasm(ty).unwrap();
         self.instruction(
             &[AdapterType::I32, adapter_ty.clone()],
-            Instruction::ToOptionNative { signed, ty },
-            &[adapter_ty.option()],
+            Instruction::ToOptionNative { signed, ty, kind },
+            &[adapter_ty.option_kind(kind)],
         );
     }
 
-    fn out_option_sentinel32(&mut self, ty: AdapterType) {
+    fn out_option_sentinel32(&mut self, ty: AdapterType, kind: OptionKind) {
         self.instruction(
             &[AdapterType::I32],
-            Instruction::OptionU32Sentinel,
-            &[ty.option()],
+            Instruction::OptionU32Sentinel { kind },
+            &[ty.option_kind(kind)],
         );
     }
 
-    fn out_option_sentinel64(&mut self, ty: AdapterType) {
+    fn out_option_sentinel64(&mut self, ty: AdapterType, kind: OptionKind) {
         self.instruction(
             &[AdapterType::F64],
-            Instruction::OptionF64Sentinel,
-            &[ty.option()],
+            Instruction::OptionF64Sentinel { kind },
+            &[ty.option_kind(kind)],
         );
     }
 

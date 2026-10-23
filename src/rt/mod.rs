@@ -427,6 +427,18 @@ impl<T> WasmPtr<T> {
     pub fn is_null(&self) -> bool {
         self.word.is_zero()
     }
+
+    /// The pointer `Nullable::Null` crosses as: address `1`, which no
+    /// aligned allocation can have, where the null pointer is `None`.
+    #[inline]
+    pub fn js_null() -> Self {
+        Self::from_usize(1)
+    }
+
+    #[inline]
+    pub fn is_js_null(&self) -> bool {
+        self.word.into_usize() == 1
+    }
 }
 
 impl<T> WasmAbi for WasmPtr<T> {

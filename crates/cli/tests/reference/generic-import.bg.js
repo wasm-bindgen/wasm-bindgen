@@ -87,23 +87,23 @@ export function __wbg_run_6e1f787af721bfe6(arg0, arg1, arg2) {
     }
 }
 export function __wbg_static_accessor_CREATE_TASK_7e310091636beacc() {
-    const ret = typeof console === 'undefined' ? null : console?.createTask;
+    const ret = typeof console === 'undefined' ? undefined : console?.createTask;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 }
 export function __wbg_static_accessor_GLOBAL_266715b9d96ba635() {
-    const ret = typeof global === 'undefined' ? null : global;
+    const ret = typeof global === 'undefined' ? undefined : global;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 }
 export function __wbg_static_accessor_GLOBAL_THIS_10fb7dc1ae063179() {
-    const ret = typeof globalThis === 'undefined' ? null : globalThis;
+    const ret = typeof globalThis === 'undefined' ? undefined : globalThis;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 }
 export function __wbg_static_accessor_SELF_0b583911f537483a() {
-    const ret = typeof self === 'undefined' ? null : self;
+    const ret = typeof self === 'undefined' ? undefined : self;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 }
 export function __wbg_static_accessor_WINDOW_d7f903d1508cbdc4() {
-    const ret = typeof window === 'undefined' ? null : window;
+    const ret = typeof window === 'undefined' ? undefined : window;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 }
 export function __wbg_takeScalars_beca431d0c81162b(arg0, arg1, arg2, arg3, arg4, arg5, arg6) {
@@ -292,7 +292,7 @@ export function __wbindgen_generic_0000000000000021(arg0, arg1) {
     logNestedImplTrait(v0);
 }
 export function __wbindgen_generic_0000000000000022(arg0, arg1, arg2) {
-    // generic import `logOptSlice`: [SeqMode(slice = array, Option(Ref(Slice(U16)))), U32] -> Unit
+    // generic import `logOptSlice`: [SeqMode(slice = array, Option { inner: Ref(Slice(U16)), strict: false }), U32] -> Unit
     logOptSlice(arg0 === 0 ? undefined : Array.from(getArrayU16FromWasm0(arg0, arg1)), arg2 >>> 0);
 }
 export function __wbindgen_generic_0000000000000023(arg0, arg1, arg2) {
@@ -307,7 +307,7 @@ export function __wbindgen_generic_0000000000000023(arg0, arg1, arg2) {
         }
         wasm.__wbindgen_free(arg0, arg1 * 8, 4);
     }
-    // generic import `logOptStrSlice`: [Option(Ref(Slice(String))), U32] -> Unit
+    // generic import `logOptStrSlice`: [Option { inner: Ref(Slice(String)), strict: false }, U32] -> Unit
     logOptStrSlice(v0, arg2 >>> 0);
 }
 export function __wbindgen_generic_0000000000000024(arg0) {

@@ -71,6 +71,8 @@
     - [`String`](./reference/types/string.md)
     - [Number Slices](./reference/types/number-slices.md)
     - [Boxed Number Slices](./reference/types/boxed-number-slices.md)
+    - [`Option<T>`](./reference/types/option.md)
+    - [`Nullable<T>`](./reference/types/nullable.md)
     - [`Result<T, E>`](./reference/types/result.md)
   - [`#[wasm_bindgen]` Attributes](./reference/attributes/index.md)
     - [On JavaScript Imports](./reference/attributes/on-js-imports/index.md)

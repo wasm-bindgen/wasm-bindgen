@@ -1238,6 +1238,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
     pub fn compare(one: &JsValue, two: &JsValue) -> Result<i32, JsValue>;
 
+    // Next major: `-> Option<JsString>`
     /// The `era` accessor property returns a calendar-specific lowercase string
     /// representing the era of this date, or `undefined` if the calendar does not use eras.
     ///
@@ -1245,6 +1246,7 @@ extern "C" {
     #[wasm_bindgen(method, getter, structural)]
     pub fn era(this: &PlainDateTime) -> JsValue;
 
+    // Next major: `-> Option<f64>`
     /// The `eraYear` accessor property returns a non-negative integer representing the
     /// year of this date within the era, or `undefined` if the calendar does not use eras.
     ///
@@ -1659,6 +1661,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = ZonedDateTime, js_namespace = Temporal, catch)]
     pub fn compare(one: &JsValue, two: &JsValue) -> Result<i32, JsValue>;
 
+    // Next major: `-> Option<JsString>`
     /// The `era` accessor property returns a calendar-specific lowercase string
     /// representing the era of this date, or `undefined` if the calendar does not use eras.
     ///
@@ -1666,6 +1669,7 @@ extern "C" {
     #[wasm_bindgen(method, getter, structural)]
     pub fn era(this: &ZonedDateTime) -> JsValue;
 
+    // Next major: `-> Option<f64>`
     /// The `eraYear` accessor property returns a non-negative integer representing the
     /// year of this date within the era, or `undefined` if the calendar does not use eras.
     ///
@@ -2003,6 +2007,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = startOfDay)]
     pub fn start_of_day(this: &ZonedDateTime) -> ZonedDateTime;
 
+    // Next major: `-> Nullable<ZonedDateTime>`
     /// The `getTimeZoneTransition()` method returns the next or previous time zone
     /// transition from this zoned date-time.
     ///
@@ -2589,6 +2594,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, catch)]
     pub fn compare(one: &JsValue, two: &JsValue) -> Result<i32, JsValue>;
 
+    // Next major: `-> Option<JsString>`
     /// The `era` accessor property returns a calendar-specific lowercase string
     /// representing the era of this year-month, or `undefined` if the calendar does not use eras.
     ///
@@ -2596,6 +2602,7 @@ extern "C" {
     #[wasm_bindgen(method, getter, structural)]
     pub fn era(this: &PlainYearMonth) -> JsValue;
 
+    // Next major: `-> Option<f64>`
     /// The `eraYear` accessor property returns a non-negative integer representing the
     /// year of this year-month within the era, or `undefined` if the calendar does not use eras.
     ///
@@ -2946,6 +2953,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, catch)]
     pub fn compare(one: &JsValue, two: &JsValue) -> Result<i32, JsValue>;
 
+    // Next major: `-> Option<JsString>`
     /// The `era` accessor property returns a calendar-specific lowercase string
     /// representing the era of this date, or `undefined` if the calendar does not use eras.
     ///
@@ -2953,6 +2961,7 @@ extern "C" {
     #[wasm_bindgen(method, getter, structural)]
     pub fn era(this: &PlainDate) -> JsValue;
 
+    // Next major: `-> Option<f64>`
     /// The `eraYear` accessor property returns a non-negative integer representing the
     /// year of this date within the era, or `undefined` if the calendar does not use eras.
     ///

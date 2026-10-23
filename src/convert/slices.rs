@@ -10,8 +10,8 @@ use crate::__rt::{marker::ErasableGeneric, WasmWord};
 use crate::__wbindgen_copy_to_typed_array;
 use crate::convert::{
     js_value_vector_from_abi, js_value_vector_into_abi, try_js_value_vector_from_abi, FromWasmAbi,
-    IntoWasmAbi, LongRefFromWasmAbi, OptionFromWasmAbi, OptionIntoWasmAbi, RefFromWasmAbi,
-    RefMutFromWasmAbi, UpcastFrom, VectorFromWasmAbi, VectorIntoWasmAbi, WasmAbi,
+    IntoWasmAbi, LongRefFromWasmAbi, NullableIntoWasmAbi, OptionFromWasmAbi, OptionIntoWasmAbi,
+    RefFromWasmAbi, RefMutFromWasmAbi, UpcastFrom, VectorFromWasmAbi, VectorIntoWasmAbi, WasmAbi,
 };
 use crate::describe::*;
 use crate::{JsError, JsValue};
@@ -68,6 +68,18 @@ impl WasmAbi for WasmSlice {
 #[inline]
 fn null_slice() -> WasmSlice {
     WasmSlice::from_usize(0, 0)
+}
+
+/// A slice with a null pointer carries a JS handle in `len`, as an interned
+/// string does, and `0` is `undefined`; this is the handle of `null`.
+#[inline]
+fn js_null_slice() -> WasmSlice {
+    WasmSlice::from_usize(0, crate::__rt::JSIDX_NULL as usize)
+}
+
+#[inline]
+fn is_js_null_slice(slice: &WasmSlice) -> bool {
+    slice.ptr.is_zero() && slice.len.into_usize() == crate::__rt::JSIDX_NULL as usize
 }
 
 pub struct WasmMutSlice {
@@ -198,6 +210,8 @@ macro_rules! vectors_internal {
             }
         }
 
+        impl_nullable_into_shared_abi!(null = js_null_slice(); ['a] &'a mut [$t]);
+
         impl RefFromWasmAbi for [$t] {
             type Abi = WasmSlice;
             type Anchor = Box<[$t]>;
@@ -310,6 +324,11 @@ where
     }
 }
 
+impl_nullable_into_shared_abi!(
+    null = js_null_slice();
+    [T] Vec<T> where Box<[T]>: IntoWasmAbi<Abi = WasmSlice>
+);
+
 /// How a borrowed `&[Self]` crosses to JS.
 ///
 /// A sequence crosses as a [`WasmSlice`] of `len` cells. In place, the cell is
@@ -341,6 +360,8 @@ impl<T: VectorRefIntoWasmAbi> OptionIntoWasmAbi for &[T] {
         null_slice()
     }
 }
+
+impl_nullable_into_shared_abi!(null = js_null_slice(); [T: VectorRefIntoWasmAbi] &[T]);
 
 /// An encoded sequence's cell: the `#[repr(C)]` record of a scalar ABI's
 /// primitives, with unused ones `()`. That is the same split as the wasm
@@ -537,6 +558,11 @@ where
     }
 }
 
+impl_nullable_from_shared_abi!(
+    is_null = |abi| is_js_null_slice(abi);
+    [T] Vec<T> where Box<[T]>: FromWasmAbi<Abi = WasmSlice>
+);
+
 impl IntoWasmAbi for String {
     type Abi = <Vec<u8> as IntoWasmAbi>::Abi;
 
@@ -555,6 +581,8 @@ impl OptionIntoWasmAbi for String {
     }
 }
 
+impl_nullable_into_shared_abi!(null = js_null_slice(); [] String);
+
 impl FromWasmAbi for String {
     type Abi = <Vec<u8> as FromWasmAbi>::Abi;
 
@@ -570,6 +598,8 @@ impl OptionFromWasmAbi for String {
         slice.ptr.is_zero()
     }
 }
+
+impl_nullable_from_shared_abi!(is_null = |slice| is_js_null_slice(slice); [] String);
 
 impl<'a> IntoWasmAbi for &'a str {
     type Abi = <&'a [u8] as IntoWasmAbi>::Abi;
@@ -588,6 +618,8 @@ impl OptionIntoWasmAbi for &str {
         null_slice()
     }
 }
+
+impl_nullable_into_shared_abi!(null = js_null_slice(); [] &str);
 
 // Borrowed shapes that deref to `str` cross exactly like `&str`. `&&str` is
 // omitted: the blanket `&T` describe gives `REF REF STRING`, which the CLI
@@ -609,6 +641,8 @@ macro_rules! str_ref_into_wasm_abi {
                 <&str as OptionIntoWasmAbi>::none()
             }
         }
+
+        impl_nullable_into_shared_abi!(null = <&str as NullableIntoWasmAbi>::null(); [] &$t);
     )*)
 }
 
@@ -669,6 +703,11 @@ where
     }
 }
 
+impl_nullable_into_shared_abi!(
+    null = js_null_slice();
+    [T] Box<[T]> where Self: IntoWasmAbi<Abi = WasmSlice>
+);
+
 impl<T: VectorFromWasmAbi> FromWasmAbi for Box<[T]> {
     type Abi = <T as VectorFromWasmAbi>::Abi;
 
@@ -690,6 +729,11 @@ where
         slice.ptr.is_zero()
     }
 }
+
+impl_nullable_from_shared_abi!(
+    is_null = |slice| is_js_null_slice(slice);
+    [T] Box<[T]> where Self: FromWasmAbi<Abi = WasmSlice>
+);
 
 impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> VectorFromWasmAbi for T {
     type Abi = WasmSlice;

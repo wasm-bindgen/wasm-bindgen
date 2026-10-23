@@ -114,6 +114,8 @@ jobs:
             run: cargo test --target wasm32-unknown-unknown --features enable-interning
           - name: no-debug
             run: WASM_BINDGEN_NO_DEBUG=1 cargo test --target wasm32-unknown-unknown
+          - name: strict-option
+            run: RUSTFLAGS=--cfg=wasm_bindgen_unstable_strict_option cargo test --target wasm32-unknown-unknown
     name: "Run wasm-bindgen crate tests (${{ matrix.runs.name }})"
     runs-on: ubuntu-latest
     env:
@@ -134,6 +136,8 @@ jobs:
         envs:
           - name: mvp
             rustflags: -Ctarget-cpu=mvp
+          - name: try-trait
+            rustflags: --cfg=wasm_bindgen_unstable_try_trait
           - name: atomics
             rustflags: -Ctarget-feature=+atomics -Clink-args=--shared-memory -Clink-args=--max-memory=1073741824 -Clink-args=--import-memory -Clink-args=--export=__heap_base -Clink-args=--export=__wasm_init_tls -Clink-args=--export=__tls_size -Clink-args=--export=__tls_align -Clink-args=--export=__tls_base
     name: "Run wasm-bindgen crate tests (${{ matrix.envs.name }})"

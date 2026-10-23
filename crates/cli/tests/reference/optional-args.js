@@ -5,5 +5,5 @@ import { __wbg_set_wasm } from "./reference_test_bg.js";
 __wbg_set_wasm(wasm);
 wasm.__wbindgen_start();
 export {
-    all_optional, some_optional
+    Opt, all_optional, optional_bytes, optional_string, optional_string_enum, optional_struct, some_optional
 } from "./reference_test_bg.js";
