@@ -249,3 +249,91 @@ fn get_option() {
     // Non-existent key - should return None
     assert_eq!(map.get_checked(&JsString::from("missing")), None);
 }
+
+fn map_supports(name: &str) -> bool {
+    let ctor: Object = Reflect::get_str(&global(), &"Map".into())
+        .unwrap()
+        .unwrap()
+        .unchecked_into();
+    let proto: Object = Reflect::get_str(&ctor, &"prototype".into())
+        .unwrap()
+        .unwrap()
+        .unchecked_into();
+    Reflect::has_str(&ctor, &name.into()).unwrap()
+        || Reflect::has_str(&proto, &name.into()).unwrap()
+}
+
+#[wasm_bindgen_test]
+fn get_or_insert() {
+    if !map_supports("getOrInsert") {
+        return;
+    }
+    let map: Map<JsString, JsString> = Map::new_typed();
+    let key = JsString::from("k");
+    assert_eq!(map.get_or_insert(&key, &"first".into()), "first");
+    assert_eq!(map.size(), 1);
+    assert_eq!(map.get_or_insert(&key, &"second".into()), "first");
+    assert_eq!(map.size(), 1);
+    assert_eq!(map.get_checked(&key), Some(JsString::from("first")));
+}
+
+#[wasm_bindgen_test]
+fn get_or_insert_computed() {
+    if !map_supports("getOrInsertComputed") {
+        return;
+    }
+    let map: Map<JsString, JsString> = Map::new_typed();
+    let key = JsString::from("k");
+    let mut calls = 0;
+    let mut compute = |k: JsString| {
+        calls += 1;
+        JsString::from(format!("computed:{}", String::from(k)))
+    };
+    assert_eq!(map.get_or_insert_computed(&key, &mut compute), "computed:k");
+    assert_eq!(map.get_or_insert_computed(&key, &mut compute), "computed:k");
+    assert_eq!(calls, 1);
+    assert_eq!(map.size(), 1);
+
+    map.set(&JsString::from("present"), &JsString::from("value"));
+    assert_eq!(
+        map.get_or_insert_computed(&JsString::from("present"), &mut |_| {
+            panic!("callback must not run for a present key")
+        }),
+        "value"
+    );
+}
+
+#[wasm_bindgen_test]
+fn group_by() {
+    if !map_supports("groupBy") {
+        return;
+    }
+    let items = Array::<JsString>::of(&[
+        "apple".into(),
+        "avocado".into(),
+        "banana".into(),
+        "cherry".into(),
+    ]);
+    let groups = Map::group_by(&items, &mut |item: JsString, i: u32| {
+        if i == 3 {
+            Number::from(-1)
+        } else {
+            Number::from(item.length())
+        }
+    })
+    .unwrap();
+    assert_eq!(groups.size(), 4);
+
+    let five = groups.get_checked(&Number::from(5)).unwrap();
+    assert_eq!(five.length(), 1);
+    assert_eq!(five.get_checked(0).unwrap(), "apple");
+    let seven = groups.get_checked(&Number::from(7)).unwrap();
+    assert_eq!(seven.length(), 1);
+    assert_eq!(seven.get_checked(0).unwrap(), "avocado");
+    assert_eq!(groups.get_checked(&Number::from(6)).unwrap().length(), 1);
+    assert_eq!(groups.get_checked(&Number::from(-1)).unwrap().length(), 1);
+    assert_eq!(groups.get_checked(&Number::from(0)), None);
+
+    let empty = Map::group_by(&Array::<JsString>::new_typed(), &mut |x: JsString, _| x).unwrap();
+    assert_eq!(empty.size(), 0);
+}

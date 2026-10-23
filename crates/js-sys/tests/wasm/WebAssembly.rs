@@ -242,3 +242,141 @@ fn new_and_grow_with_value() {
     let value = tbl.get_raw(1).unwrap();
     assert_eq!(value, JsValue::from(43));
 }
+
+fn wasm_has(name: &str) -> bool {
+    let ns = Reflect::get_str(global().as_ref(), &"WebAssembly".into())
+        .unwrap()
+        .unwrap();
+    Reflect::has_str(ns.unchecked_ref::<Object>(), &name.into()).unwrap_or(false)
+}
+
+fn compile_options() -> WebAssembly::CompileOptions {
+    let options = WebAssembly::CompileOptions::new();
+    assert!(options.get_builtins().is_none());
+    options.set_builtins(&[JsString::from("js-string")]);
+    options.set_imported_string_constants("strings");
+    assert_eq!(options.get_builtins().unwrap().length(), 1);
+    assert_eq!(options.get_imported_string_constants().unwrap(), "strings");
+    options
+}
+
+#[wasm_bindgen_test]
+fn js_tag() {
+    if !wasm_has("JSTag") {
+        return;
+    }
+    let tag = WebAssembly::JS_TAG.with(|t| t.clone());
+    assert!(tag.is_instance_of::<WebAssembly::Tag>());
+    let other = WebAssembly::JS_TAG.with(|t| t.clone());
+    assert_eq!(JsValue::from(tag), JsValue::from(other));
+}
+
+#[wasm_bindgen_test]
+fn exception_stack() {
+    if !wasm_has("Exception") {
+        return;
+    }
+    let desc = Object::new();
+    Reflect::set(
+        desc.as_ref(),
+        &JsString::from("parameters"),
+        &Array::<JsValue>::new(),
+    )
+    .unwrap();
+    let tag = WebAssembly::Tag::new(&desc).unwrap();
+    assert!(WebAssembly::Exception::new(&tag, &Array::<JsValue>::new())
+        .unwrap()
+        .stack()
+        .is_none());
+
+    let options = Object::new();
+    Reflect::set(
+        options.as_ref(),
+        &JsString::from("traceStack"),
+        &true.into(),
+    )
+    .unwrap();
+    let traced =
+        WebAssembly::Exception::new_with_options(&tag, &Array::<JsValue>::new(), &options).unwrap();
+    assert!(traced.stack().is_some());
+}
+
+#[wasm_bindgen_test]
+fn global_value_of() {
+    let desc = Object::new();
+    Reflect::set(desc.as_ref(), &JsString::from("value"), &"i32".into()).unwrap();
+    Reflect::set(desc.as_ref(), &JsString::from("mutable"), &true.into()).unwrap();
+    let global = WebAssembly::Global::new(&desc, &7.into()).unwrap();
+    assert_eq!(global.value_of(), 7);
+    global.set_value(&9.into());
+    assert_eq!(global.value_of(), 9);
+}
+
+#[wasm_bindgen_test]
+fn memory_resizable_and_fixed_length_buffers() {
+    let desc = Object::new();
+    Reflect::set(desc.as_ref(), &JsString::from("initial"), &1.into()).unwrap();
+    Reflect::set(desc.as_ref(), &JsString::from("maximum"), &2.into()).unwrap();
+    let mem = WebAssembly::Memory::new(&desc).unwrap();
+    if !Reflect::has_str(mem.as_ref(), &"toResizableBuffer".into()).unwrap() {
+        return;
+    }
+
+    let resizable: ArrayBuffer = mem.to_resizable_buffer().unwrap().unchecked_into();
+    assert!(resizable.resizable());
+    assert_eq!(resizable.max_byte_length(), 2 * 64 * 1024);
+    assert_eq!(mem.buffer(), JsValue::from(&resizable));
+    assert_eq!(mem.grow(1), 1);
+    assert_eq!(resizable.byte_length(), 2 * 64 * 1024);
+
+    let fixed: ArrayBuffer = mem.to_fixed_length_buffer().unwrap().unchecked_into();
+    assert!(!fixed.resizable());
+    assert!(resizable.detached());
+    assert_eq!(mem.buffer(), JsValue::from(&fixed));
+
+    let unbounded = Object::new();
+    Reflect::set(unbounded.as_ref(), &JsString::from("initial"), &1.into()).unwrap();
+    assert!(WebAssembly::Memory::new(&unbounded)
+        .unwrap()
+        .to_resizable_buffer()
+        .is_err());
+}
+
+#[wasm_bindgen_test]
+async fn compile_options_variants() {
+    if !WebAssembly::validate_with_options(&get_valid_wasm(), &compile_options()).unwrap_or(false) {
+        return;
+    }
+    let module =
+        WebAssembly::Module::new_with_options(&get_valid_wasm(), &compile_options()).unwrap();
+    assert!(module.is_instance_of::<WebAssembly::Module>());
+
+    let compiled = JsFuture::from(WebAssembly::compile_with_options(
+        &get_valid_wasm(),
+        &compile_options(),
+    ))
+    .await
+    .unwrap();
+    assert!(compiled.is_instance_of::<WebAssembly::Module>());
+
+    let source: WebAssembly::InstantiatedSource =
+        JsFuture::from(WebAssembly::instantiate_buffer_with_options(
+            &get_wasm_array().to_vec(),
+            &get_imports(),
+            &compile_options(),
+        ))
+        .await
+        .unwrap()
+        .unchecked_into();
+    assert!(source.module().is_instance_of::<WebAssembly::Module>());
+    assert!(source.instance().is_instance_of::<WebAssembly::Instance>());
+    assert!(Reflect::has_str(
+        source.instance().exports().as_ref(),
+        &"exported_func".into()
+    )
+    .unwrap());
+
+    assert!(
+        WebAssembly::Module::new_with_options(&get_invalid_wasm(), &compile_options()).is_err()
+    );
+}

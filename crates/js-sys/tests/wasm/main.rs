@@ -13,6 +13,7 @@ pub mod BigInt;
 pub mod Boolean;
 pub mod DataView;
 pub mod Date;
+pub mod DisposableStack;
 pub mod Error;
 pub mod EvalError;
 pub mod FinalizationRegistry;

@@ -1,7 +1,16 @@
 use std::f64::consts::{FRAC_PI_3, LN_2, LOG10_2, PI};
 
 use js_sys::*;
+use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
+
+fn math_has(name: &str) -> bool {
+    let math: Object = Reflect::get_str(global().as_ref(), &"Math".into())
+        .unwrap()
+        .unwrap()
+        .unchecked_into();
+    Reflect::has_str(&math, &name.into()).unwrap_or(false)
+}
 
 macro_rules! assert_eq {
     ($a:expr, $b:expr) => {{
@@ -274,4 +283,44 @@ fn pi() {
     Math::PI.with(|pi| {
         assert_eq!(*pi, std::f64::consts::PI);
     });
+}
+
+#[wasm_bindgen_test]
+fn f16round() {
+    if !math_has("f16round") {
+        return;
+    }
+
+    assert!(Math::f16round(5.5) == 5.5);
+    assert!(Math::f16round(5.05) == 5.05078125);
+    assert!(Math::f16round(0.) == 0.);
+    assert!(Math::f16round(-1.5) == -1.5);
+    assert!(Math::f16round(65520.).is_infinite());
+    assert!(Math::f16round(f64::NAN).is_nan());
+}
+
+#[wasm_bindgen_test]
+fn sum_precise() {
+    if !math_has("sumPrecise") {
+        return;
+    }
+
+    let values = Array::from_iter(&[
+        JsValue::from(1e20),
+        JsValue::from(0.1),
+        JsValue::from(-1e20),
+    ]);
+    assert!(Math::sum_precise(&values).unwrap() == 0.1);
+
+    let values = Array::from_iter(&[JsValue::from(1), JsValue::from(2), JsValue::from(3)]);
+    assert!(Math::sum_precise(&values).unwrap() == 6.);
+
+    let empty = Array::from_iter(std::iter::empty::<JsValue>());
+    let sum = Math::sum_precise(&empty).unwrap();
+    assert!(sum == 0. && sum.is_sign_negative());
+
+    let invalid = Array::from_iter(&[JsValue::from(1), JsValue::from("a")]);
+    assert!(Math::sum_precise(&invalid)
+        .unwrap_err()
+        .is_instance_of::<TypeError>());
 }

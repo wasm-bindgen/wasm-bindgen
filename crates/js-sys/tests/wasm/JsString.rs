@@ -771,3 +771,50 @@ fn as_char() {
     assert_eq!(JsString::from_char_code1(0xdc00).as_char(), None);
     assert_eq!(JsString::from_char_code1(0xdfff).as_char(), None);
 }
+
+#[wasm_bindgen_test]
+fn is_well_formed() {
+    assert!(JsString::from("").is_well_formed());
+    assert!(JsString::from("abc").is_well_formed());
+    assert!(JsString::from("☃★♲你").is_well_formed());
+    assert!(JsString::from_code_point1(0x1F600)
+        .unwrap()
+        .is_well_formed());
+
+    assert!(!JsString::from_code_point1(0xD800).unwrap().is_well_formed());
+    assert!(!JsString::from_code_point1(0xDFFF).unwrap().is_well_formed());
+    assert!(!JsString::from_code_point3(0x61, 0xD800, 0x62)
+        .unwrap()
+        .is_well_formed());
+}
+
+#[wasm_bindgen_test]
+fn to_well_formed() {
+    assert_eq!(JsString::from("abc").to_well_formed(), "abc");
+    assert_eq!(
+        JsString::from_code_point1(0x1F600)
+            .unwrap()
+            .to_well_formed(),
+        "\u{1F600}"
+    );
+
+    let lone = JsString::from_code_point3(0x61, 0xD800, 0x62).unwrap();
+    let fixed = lone.to_well_formed();
+    assert!(fixed.is_well_formed());
+    assert_eq!(fixed, "a\u{FFFD}b");
+    assert_eq!(fixed.length(), 3);
+    assert!(!lone.is_well_formed());
+
+    assert_eq!(
+        JsString::from_code_point2(0xD800, 0xDFFF)
+            .unwrap()
+            .to_well_formed(),
+        "\u{103FF}"
+    );
+    assert_eq!(
+        JsString::from_code_point2(0xDFFF, 0xD800)
+            .unwrap()
+            .to_well_formed(),
+        "\u{FFFD}\u{FFFD}"
+    );
+}

@@ -539,3 +539,88 @@ async fn test_promise_all_with_upcast() {
     assert_eq!(second.value(), "second");
     assert_eq!(third.value(), "third");
 }
+
+fn promise_has(name: &str) -> bool {
+    Reflect::get_str(global().as_ref(), &"Promise".into())
+        .ok()
+        .flatten()
+        .map(|p| Reflect::has_str(p.unchecked_ref::<Object>(), &name.into()).unwrap_or(false))
+        .unwrap_or(false)
+}
+
+#[wasm_bindgen_test]
+async fn try_resolves() {
+    if !promise_has("try") {
+        return;
+    }
+    let mut calls = 0;
+    let promise: Promise<Number> = Promise::try_(&mut || {
+        calls += 1;
+        Ok::<_, JsError>(Number::from(42))
+    });
+    assert_eq!(calls, 1);
+    let result = JsFuture::from(promise).await.unwrap();
+    assert_eq!(result.value_of(), 42.0);
+
+    let promise: Promise<JsString> = Promise::try_(&mut || Ok::<_, JsError>(JsString::from("s")));
+    assert_eq!(JsFuture::from(promise).await.unwrap(), "s");
+}
+
+#[wasm_bindgen_test]
+async fn try_rejects() {
+    if !promise_has("try") {
+        return;
+    }
+    let promise: Promise<Number> = Promise::try_(&mut || Err::<Number, _>(JsError::new("boom")));
+    let err = JsFuture::from(promise).await.unwrap_err();
+    assert!(err.is_instance_of::<Error>());
+    assert_eq!(err.unchecked_into::<Error>().message(), "boom");
+}
+
+#[wasm_bindgen_test]
+async fn try_adopts_promise() {
+    if !promise_has("try") {
+        return;
+    }
+    let promise: Promise<Number> =
+        Promise::try_(&mut || Ok::<_, JsError>(Promise::resolve(&Number::from(7))));
+    let result = JsFuture::from(promise).await.unwrap();
+    assert_eq!(result.value_of(), 7.0);
+
+    let promise: Promise<Number> = Promise::try_(&mut || {
+        Ok::<_, JsError>(Promise::<Number>::reject_typed(&JsValue::from("inner")))
+    });
+    let err = JsFuture::from(promise).await.unwrap_err();
+    assert_eq!(err.as_string(), Some("inner".to_string()));
+}
+
+#[wasm_bindgen_test]
+async fn with_resolvers_resolve() {
+    if !promise_has("withResolvers") {
+        return;
+    }
+    let resolvers = Promise::with_resolvers::<Number>();
+    assert!(resolvers.is_instance_of::<Object>());
+    let promise: Promise<Number> = resolvers.promise();
+    assert!(promise.is_instance_of::<Promise>());
+
+    let resolve: Function<fn(Number) -> Undefined> = resolvers.resolve();
+    let ret = resolve.call(&JsValue::NULL, (&Number::from(7),)).unwrap();
+    assert!(JsValue::from(ret).is_undefined());
+
+    let result = JsFuture::from(promise).await.unwrap();
+    assert_eq!(result.value_of(), 7.0);
+}
+
+#[wasm_bindgen_test]
+async fn with_resolvers_reject() {
+    if !promise_has("withResolvers") {
+        return;
+    }
+    let resolvers = Promise::with_resolvers::<JsString>();
+    let reject: Function<fn(JsValue) -> Undefined> = resolvers.reject();
+    reject.call1(&JsValue::NULL, &JsValue::from("bad")).unwrap();
+
+    let err = JsFuture::from(resolvers.promise()).await.unwrap_err();
+    assert_eq!(err.as_string(), Some("bad".to_string()));
+}

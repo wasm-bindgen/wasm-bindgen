@@ -82,6 +82,33 @@
   `+atomics`). On memory64, `__wbindgen_thread_destroy` takes JS numbers.
   [#5378](https://github.com/wasm-bindgen/wasm-bindgen/pull/5378)
 
+* Added `js-sys` bindings for the modern ECMAScript builtins that were still
+  missing: the `Iterator` helpers (`Iterator.from` as `from_iterable`,
+  `Iterator.concat`, `map`,
+  `filter`, `take`, `drop`, `flatMap`, `reduce`, `toArray`, `forEach`, `some`,
+  `every`, `find`), `Map` / `WeakMap` `getOrInsert` and `getOrInsertComputed`,
+  `Object.groupBy` and `Map.groupBy`, `Promise.try` and
+  `Promise.withResolvers` (with a `PromiseWithResolvers<T>` type), explicit
+  resource management (`DisposableStack`, `AsyncDisposableStack`,
+  `SuppressedError`, `Symbol.dispose`, `Symbol.asyncDispose`), `Uint8Array`
+  base64 and hex conversion (`fromBase64`, `fromHex`, `toBase64`, `toHex`,
+  `setFromBase64`, `setFromHex`, with `Base64Options`, its `Base64Alphabet`
+  and `Base64LastChunkHandling` enums and a `SetFromResult` type), `Error.isError`, `Math.sumPrecise`, `Math.f16round`,
+  `RegExp.escape` and the `dotAll`, `hasIndices` and `unicodeSets` flag
+  getters, `String.prototype.isWellFormed` and `toWellFormed`,
+  `Symbol.prototype.description`, `JSON.rawJSON` and `JSON.isRawJSON`, and
+  the typed array `toReversed`, `toSorted`, `with`, `findLast`,
+  `findLastIndex`, `includes` and `indexOf` methods. From ECMA-402, the
+  `Intl.Locale` `firstDayOfWeek` getter, and under `js_sys_unstable_apis`
+  the stage 3 `variants` getter. From the WebAssembly
+  JS API, `WebAssembly.JSTag`, the compile-options variants of `validate`,
+  `compile`, `compileStreaming`, `instantiate`, `instantiateStreaming` and
+  the `Module` constructor (taking a `CompileOptions` dictionary, with an
+  `InstantiatedSource` result type),
+  `Memory` `toResizableBuffer` and `toFixedLengthBuffer`, `Global.valueOf`
+  and `Exception.stack`.
+  [#5403](https://github.com/wasm-bindgen/wasm-bindgen/pull/5403)
+
 ### Changed
 
 * With reference types, `static_string` constants and the reserved
