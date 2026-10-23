@@ -110,6 +110,43 @@ extern "C" {
 
     #[wasm_bindgen(experimental_generic_mono, js_name = optDescribe)]
     fn describe_optional_str<T: JsStringLike>(s: Option<T>) -> String;
+
+    // `Nullable<impl Bound>` goes through `NullableIntoWasmAbi`, a supertrait
+    // of `JsStringLike` and of the primitive-union markers, so `i32` and `f64`
+    // qualify although their `Nullable` ABI is wider than their own.
+    #[wasm_bindgen(experimental_generic_mono, js_name = optDescribe)]
+    fn describe_nullable_str(s: Nullable<impl JsStringLike>) -> String;
+
+    #[wasm_bindgen(experimental_generic_mono, js_name = optDescribe)]
+    fn describe_nullable_primitive(x: Nullable<impl JsNumberOrStringLike>) -> String;
+}
+
+#[wasm_bindgen_test]
+fn experimental_generic_mono_nullable_impl_trait_args() {
+    assert_eq!(
+        describe_nullable_str(Nullable::Value("borrowed")),
+        "some:borrowed"
+    );
+    assert_eq!(
+        describe_nullable_str(Nullable::Value(String::from("owned"))),
+        "some:owned"
+    );
+    assert_eq!(
+        describe_nullable_str(Nullable::Value(JsString::from("handle"))),
+        "some:handle"
+    );
+    assert_eq!(describe_nullable_str(Nullable::<&str>::Null), "none");
+    assert_eq!(describe_nullable_str(Nullable::<JsString>::Null), "none");
+
+    assert_eq!(describe_nullable_primitive(Nullable::Value(3i32)), "some:3");
+    assert_eq!(
+        describe_nullable_primitive(Nullable::Value(2.5f64)),
+        "some:2.5"
+    );
+    assert_eq!(describe_nullable_primitive(Nullable::Value(7u8)), "some:7");
+    assert_eq!(describe_nullable_primitive(Nullable::Value("s")), "some:s");
+    assert_eq!(describe_nullable_primitive(Nullable::<i32>::Null), "none");
+    assert_eq!(describe_nullable_primitive(Nullable::<f64>::Null), "none");
 }
 
 #[wasm_bindgen_test]

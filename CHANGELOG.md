@@ -35,6 +35,11 @@
   The API follows `Option`'s, including `ok_or`, `and_then`, `filter`,
   `as_deref`, `take`, `replace` and `IntoIterator`, and
   `--cfg wasm_bindgen_unstable_try_trait` enables `?` on nightly.
+  `NullableIntoWasmAbi` / `NullableFromWasmAbi` carry `Nullable<T>`'s ABI
+  for every `T`, and are supertraits of `JsStringLike` and the js-sys
+  primitive-union markers, so `Nullable<impl JsStringLike>` and
+  `Nullable<impl JsNumberOrStringLike>` work under `experimental_generic_mono`,
+  and `Nullable<T>` erases like `Option<T>` on a generic import.
   [#5410](https://github.com/wasm-bindgen/wasm-bindgen/pull/5410)
 
 * Under `js_sys_unstable_apis`, `RegExp::exec` and `JsString::match_` return

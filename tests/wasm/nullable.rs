@@ -6,11 +6,16 @@ use wasm_bindgen_test::*;
 
 #[wasm_bindgen(inline_js = "
 export const js_optional_default = (value = 42) => value;
+export const js_nullable_echo = (value) => value;
 ")]
 extern "C" {
     // Imported with an erasable generic param.
     #[wasm_bindgen(js_name = js_optional_default)]
     fn js_optional_default_generic<T>(value: JsOption<T>) -> T;
+
+    // `Nullable<T>` erases to `Nullable<JsValue>` as `Option<T>` does.
+    #[wasm_bindgen(js_name = js_nullable_echo)]
+    fn js_nullable_echo_generic<T>(value: Nullable<T>) -> Nullable<T>;
 
     // Same JS function but with a concrete Option<i32> param.
     // Both should have the same observable behaviour.
@@ -623,4 +628,13 @@ mod nullable_closure_variance {
         // The raw JsValue view distinguishes null from undefined.
         assert_eq!(calls.get(), (1, 1, 1));
     }
+}
+
+#[wasm_bindgen_test]
+fn erased_generic_nullable() {
+    let v: Nullable<Number> = js_nullable_echo_generic(Nullable::Value(Number::from(3)));
+    assert_eq!(v.unwrap().value_of(), 3.0);
+    assert!(js_nullable_echo_generic(Nullable::<Number>::Null).is_null());
+    let s: Nullable<JsString> = js_nullable_echo_generic(Nullable::Value(JsString::from("x")));
+    assert_eq!(s.unwrap(), "x");
 }
