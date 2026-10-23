@@ -20,9 +20,17 @@ export function __wbg_static_accessor_NESTED_NAMESPACE_PLAIN_96275dd6d61a36d2() 
     const ret = test1.test2.NESTED_NAMESPACE_PLAIN;
     return ret;
 }
+export function __wbg_static_accessor_NULLABLE_d9f5621bb87ec6bc() {
+    const ret = NULLABLE;
+    return ret === null ? 1025 : addToExternrefTable0(ret);
+}
 export function __wbg_static_accessor_OPTIONAL_8c4485fd717985fd() {
     const ret = typeof OPTIONAL === 'undefined' ? undefined : OPTIONAL;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
+}
+export function __wbg_static_accessor_OPTIONAL_NULLABLE_49d06ca9b65c376f() {
+    const ret = typeof OPTIONAL_NULLABLE === 'undefined' ? undefined : OPTIONAL_NULLABLE;
+    return ret === undefined ? 0 : ret === null ? 1025 : addToExternrefTable0(ret);
 }
 export function __wbg_static_accessor_PLAIN_c0ea7240f2fd9157() {
     const ret = PLAIN;

@@ -888,10 +888,10 @@ impl OptionFromWasmAbi for JsValue {
 
 impl_nullable_into_shared_abi!(null = crate::__rt::JSIDX_NULL; [] JsValue);
 impl_nullable_into_shared_abi!(null = crate::__rt::JSIDX_NULL; [] &JsValue);
-impl_nullable_from_shared_abi!(
-    is_null = |js| unsafe { JsValue::ref_from_abi(*js) }.is_null();
-    [] JsValue
-);
+// The glue hands `null` over as the fixed handle, so this is an index test
+// rather than a call into JS; a `null` that did arrive in its own slot is an
+// owned `Value` and is dropped as one.
+impl_nullable_from_shared_abi!(is_null = |js| *js == crate::__rt::JSIDX_NULL; [] JsValue);
 
 impl<T: OptionIntoWasmAbi> IntoWasmAbi for Option<T> {
     type Abi = T::Abi;
