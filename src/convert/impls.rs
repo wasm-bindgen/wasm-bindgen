@@ -803,9 +803,11 @@ impl<T> NullableFromWasmAbi for NonNull<T> {
         NonNull::new_unchecked(js as usize as *mut T)
     }
 
+    /// Anything that lands on the null address, including `NaN` from an
+    /// `undefined` that unchecked glue let through, is `Null`.
     #[inline]
     fn is_null(js: &f64) -> bool {
-        *js == F64_ABI_NULL_SENTINEL || *js == 0.0
+        *js == F64_ABI_NULL_SENTINEL || *js as usize == 0
     }
 
     #[inline]

@@ -635,7 +635,7 @@ impl ToTokens for ast::Struct {
                 unsafe fn from_nullable_abi(abi: Self::Abi) -> Self { <Self as #wasm_bindgen::convert::FromWasmAbi>::from_abi(abi) }
 
                 #[inline]
-                unsafe fn try_from_nullable_abi(abi: Self::Abi) -> Result<Self, &'static str> {
+                unsafe fn try_from_nullable_abi(abi: Self::Abi) -> #wasm_bindgen::__rt::core::result::Result<Self, &'static str> {
                     <Self as #wasm_bindgen::convert::FromWasmAbi>::try_from_abi(abi)
                 }
 
@@ -1972,7 +1972,7 @@ impl TryToTokens for ast::ImportType {
                     unsafe fn from_nullable_abi(abi: Self::Abi) -> Self { <Self as FromWasmAbi>::from_abi(abi) }
 
                     #[inline]
-                    unsafe fn try_from_nullable_abi(abi: Self::Abi) -> Result<Self, &'static str> {
+                    unsafe fn try_from_nullable_abi(abi: Self::Abi) -> #wasm_bindgen::__rt::core::result::Result<Self, &'static str> {
                         <Self as FromWasmAbi>::try_from_abi(abi)
                     }
 
@@ -2461,7 +2461,7 @@ impl ToTokens for ast::StringEnum {
                 unsafe fn from_nullable_abi(abi: u32) -> Self { <Self as #wasm_bindgen::convert::FromWasmAbi>::from_abi(abi) }
 
                 #[inline]
-                unsafe fn try_from_nullable_abi(abi: u32) -> Result<Self, &'static str> {
+                unsafe fn try_from_nullable_abi(abi: u32) -> #wasm_bindgen::__rt::core::result::Result<Self, &'static str> {
                     <Self as #wasm_bindgen::convert::FromWasmAbi>::try_from_abi(abi)
                 }
 
@@ -2797,7 +2797,7 @@ impl ToTokens for ast::DynamicUnion {
                 unsafe fn from_nullable_abi(abi: u32) -> Self { <Self as #wasm_bindgen::convert::FromWasmAbi>::from_abi(abi) }
 
                 #[inline]
-                unsafe fn try_from_nullable_abi(abi: u32) -> Result<Self, &'static str> {
+                unsafe fn try_from_nullable_abi(abi: u32) -> #wasm_bindgen::__rt::core::result::Result<Self, &'static str> {
                     <Self as #wasm_bindgen::convert::FromWasmAbi>::try_from_abi(abi)
                 }
 
@@ -5606,7 +5606,7 @@ impl ToTokens for ast::Enum {
                 unsafe fn from_nullable_abi(abi: Self::Abi) -> Self { <Self as #wasm_bindgen::convert::FromWasmAbi>::from_abi(abi) }
 
                 #[inline]
-                unsafe fn try_from_nullable_abi(abi: Self::Abi) -> Result<Self, &'static str> {
+                unsafe fn try_from_nullable_abi(abi: Self::Abi) -> #wasm_bindgen::__rt::core::result::Result<Self, &'static str> {
                     <Self as #wasm_bindgen::convert::FromWasmAbi>::try_from_abi(abi)
                 }
 
