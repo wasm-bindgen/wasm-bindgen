@@ -125,9 +125,21 @@ fn from_iter_owned_wasm_bindgen_type_infers() {
     }
 
     // Stable: erased `Array<JsValue>` (= `Array`).
-    let obj = Object::new();
-    let arr = Array::from_iter([obj]);
-    take_value_array(&arr);
+    #[cfg(not(js_sys_unstable_apis))]
+    {
+        let obj = Object::new();
+        let arr = Array::from_iter([obj]);
+        take_value_array(&arr);
+    }
+    // Unstable: the element type is the item's.
+    #[cfg(js_sys_unstable_apis)]
+    {
+        let obj = Object::new();
+        let arr = Array::from_iter([obj]);
+        take_object_array(&arr);
+        let arr = Array::from_iter([JsValue::from(Object::new())]);
+        take_value_array(&arr);
+    }
 
     // Typed: `Array<Object>` via `IntoJsGeneric` inference.
     let obj = Object::new();
@@ -2172,6 +2184,11 @@ fn test_array_try_reduce_error() {
     assert!(result.is_err());
 }
 
+#[cfg(not(js_sys_unstable_apis))]
+type ReduceRightAcc = JsValue;
+#[cfg(js_sys_unstable_apis)]
+type ReduceRightAcc = Number;
+
 #[wasm_bindgen_test]
 fn test_array_try_reduce_right() {
     let arr: Array<Number> = Array::new_typed();
@@ -2181,7 +2198,7 @@ fn test_array_try_reduce_right() {
 
     let initial = Number::from(0);
     let result = arr.try_reduce_right(
-        &mut |acc: JsValue, val: Number, _| {
+        &mut |acc: ReduceRightAcc, val: Number, _| {
             let acc_num: Number = acc.unchecked_into();
             Ok(Number::from(acc_num.value_of() + val.value_of()))
         },
@@ -2199,7 +2216,7 @@ fn test_array_try_reduce_right_error() {
 
     let initial = Number::from(0);
     let result = arr.try_reduce_right(
-        &mut |_acc: JsValue, val: Number, _| {
+        &mut |_acc: ReduceRightAcc, val: Number, _| {
             if val.value_of() == 1.0 {
                 Err(JsError::new("reduce_right error"))
             } else {

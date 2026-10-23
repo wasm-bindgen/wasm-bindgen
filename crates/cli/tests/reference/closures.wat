@@ -14,7 +14,7 @@
   (import "./reference_test_bg.js" "__wbg___wbindgen_throw_41e9ee4f547fc59a" (func (;1;) (type 6)))
   (import "./reference_test_bg.js" "__wbg__wbg_cb_unref_dcc1a90847f04c41" (func (;2;) (type 3)))
   (import "./reference_test_bg.js" "__wbg_call_scoped_343c79dd3d3f172b" (func (;3;) (type 3)))
-  (import "./reference_test_bg.js" "__wbg_forEach_63624cb19d529054" (func (;4;) (type 1)))
+  (import "./reference_test_bg.js" "__wbg_forEach_4976d16e90369075" (func (;4;) (type 1)))
   (import "./reference_test_bg.js" "__wbg_instanceof_Window_6cde849ec69a0219" (func (;5;) (type 2)))
   (import "./reference_test_bg.js" "__wbg_log_17c30ef363c61cf4" (func (;6;) (type 3)))
   (import "./reference_test_bg.js" "__wbg_setTimeout_5e125a59db298258" (func (;7;) (type 0)))

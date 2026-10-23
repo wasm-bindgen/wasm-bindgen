@@ -23,7 +23,7 @@ use js_sys::{
     PropertyKey, Symbol,
 };
 use std::borrow::Cow;
-use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi, VectorRefIntoWasmAbi};
+use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, VectorRefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsStringLike;
 use wasm_bindgen_test::*;

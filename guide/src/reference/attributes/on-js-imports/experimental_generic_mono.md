@@ -75,8 +75,9 @@ everything a caller has to satisfy:
 
 These traits live in `wasm_bindgen::convert`. `WasmDescribe` is a supertrait of
 `IntoWasmAbi` and `FromWasmAbi`, so it never needs stating. `RefIntoWasmAbi`
-holds for every `T` with `for<'a> &'a T: IntoWasmAbi`, and stands in for that
-higher-ranked bound, which generic callers could not otherwise rely on. A trait
+holds for every type whose shared references cross the ABI, and is the bound
+generic callers forward for a `&T` argument. `MonoGeneric` bundles the
+argument, `&T` and return bounds into one for generic code. A trait
 whose supertraits include the right ABI trait satisfies the bound too, as with
 [`JsStringLike`](#string-bounds).
 
@@ -119,9 +120,10 @@ extern "C" {
 Note that a bound only constrains which types the import can be *called* with; it
 cannot make a type marshallable. Combining a higher-ranked bound with a `&T`
 argument is a common way to write a declaration that compiles but can never be
-called: `&T` additionally requires `T: RefIntoWasmAbi`, which holds only for
-`JsValue` and imported JS types, so a bound such as
-`for<'a> &'a T: IntoIterator<Item = &'a u32>` leaves no type that satisfies both.
+called: `&T` additionally requires `T: RefIntoWasmAbi`, which holds for JS
+types, strings and primitives but not for collections such as `Vec<u32>`, so a
+bound such as `for<'a> &'a T: IntoIterator<Item = &'a u32>` leaves no type that
+satisfies both.
 See [Note on `&T` arguments](#note-on-t-arguments).
 
 Relaxed bounds are the exception: `T: ?Sized` is not supported on any
@@ -561,7 +563,9 @@ different signatures.
 ## Note on `&T` arguments
 
 A bare `&T` argument is supported, declared with the bound
-`T: RefIntoWasmAbi`, which holds for `JsValue` and JS handle types. Passing
-`&SomeStruct` for a plain Rust struct, or `&u32` for a scalar, is rejected,
-since there is no `&T` ABI representation for them; take the value by value, or
-pass a JS type.
+`T: RefIntoWasmAbi`. It holds for `JsValue` and JS handle types, which cross as
+the handle, for `bool`, `char` and every number, which cross as the value, and
+for `String`, `Box<str>` and `Cow<str>`, which cross as a string. Passing
+`&SomeStruct` for a plain Rust struct, or `&Vec<T>` for a collection, is
+rejected, since there is no `&T` ABI representation for them; take the value by
+value, or pass a JS type.

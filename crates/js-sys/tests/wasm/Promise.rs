@@ -141,12 +141,12 @@ async fn test_promise_catch_with_closure() {
         assert_eq!(msg.as_string(), Some("error occurred".to_string()));
     });
     #[cfg(js_sys_unstable_apis)]
-    let closure = Closure::new(|error: TestValue| {
-        let msg = js_sys::Reflect::get_str(&error, &"message".into())
-            .unwrap()
-            .unwrap();
+    let closure = Closure::new(|error: JsValue| {
+        let msg: JsValue =
+            js_sys::Reflect::get_str(error.unchecked_ref::<Object>(), &"message".into())
+                .unwrap()
+                .unwrap();
         assert_eq!(msg.as_string(), Some("error occurred".to_string()));
-        // Need to return TestValue to match the Promise<TestValue> type
         Ok::<TestValue, JsError>(TestValue::new(&JsString::from("recovered")))
     });
 

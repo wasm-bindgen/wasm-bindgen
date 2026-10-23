@@ -67,6 +67,35 @@
   arriving as a fresh `Array`.
   [#5384](https://github.com/wasm-bindgen/wasm-bindgen/pull/5384)
 
+* Under `js_sys_unstable_apis`, the element APIs of `Array<T>`, `Map<K, V>`,
+  `Set<T>`, `Iterator<T>`, `AsyncIterator<T>` and `Promise<T>` are
+  `experimental_generic_mono` imports, so element types can be Rust types
+  such as `String`, `bool` and `f64`, each crossing as itself. Writes take
+  `&T`, so borrows still deref-coerce to the element type. `Array<T>`
+  implements `From<Vec<T>>` and `From<&[T]>`, and `FromIterator` / `Extend`
+  collect `T` or `&T` items into a typed `Array<T>`. Writes are bounded by
+  `T: RefIntoWasmAbi` and reads by `FromWasmAbi`.
+  [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
+
+* Under `js_sys_unstable_apis`, `Function` signatures, `ArrayTuple` elements
+  and element callbacks also take Rust types: `Function<fn(String) -> u32>`
+  calls, binds and converts closures with each argument crossing as itself,
+  `ArrayTuple<(String, f64)>` gets and sets its elements, and the callbacks of
+  the `Array` methods, `Promise::then` / `catch`, generators and `Map` / `Set`
+  iteration receive and return Rust element types. `WeakMap` values can be
+  Rust types, while its keys stay JS objects.
+  [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
+
+* Added the experimental `wasm_bindgen::MonoGeneric` trait, which bundles the
+  argument, `&T` and return ABI traits of `experimental_generic_mono` imports
+  so generic code over Rust and JS element types can state one bound. It holds
+  for JS types, `String`, `bool`, `char` and every number.
+  [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
+
+* Shared references to primitives (`&bool`, `&char`, `&f64`, `&i64`, ...)
+  can be passed to imported JS functions, arriving as the value.
+  [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
+
 * Slices of every `JsStringLike` shape, including `&String`, `&Box<str>`,
   `&Cow<str>` and `&JsString`, can be passed to imported JS functions, and
   `JsStringLike` alone bounds a `&[T]` argument of an
@@ -151,6 +180,43 @@
   dropping them no longer allocates or calls into JS. The per-string JS import
   function is no longer emitted.
   [#5401](https://github.com/wasm-bindgen/wasm-bindgen/pull/5401)
+
+* **Breaking (experimental):** under `js_sys_unstable_apis`, `FromIterator`
+  and `Extend` for `Array` keep the items' type rather than erasing any
+  `AsRef<JsValue>` items into an `Array<JsValue>`: `Array::from_iter([obj])`
+  is an `Array<Object>`, and collecting `JsString` or `&Object` items into an
+  `Array<JsValue>` needs them converted to `JsValue` first. `Array::of1` to
+  `Array::of5` are generic, taking all arguments as `&T` of one type and
+  returning `Array<T>`, so mixed arguments need converting to a common type
+  such as `JsValue`. `Promise::resolve` takes its value by value rather than
+  by reference, though references still work as the value.
+  [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
+
+* **Breaking (experimental):** under `js_sys_unstable_apis`, the `JsFunction`
+  traits bound their `Ret` and `ArgN` types by `MonoGeneric` rather than
+  `JsGeneric`, so generic code relying on `F::Ret: JsGeneric` needs that bound
+  stated. `Function::call0` to `call9`, `bind1` to `bind9` and
+  `ArrayTuple::get0` to `get7` / `set0` to `set7` no longer have type
+  parameter defaults. A generic callback return in a `Result`, as in
+  `Promise::then`, `Array::try_map` and `Array::try_reduce`, needs
+  `Result<R, JsError>: ReturnWasmAbi` stated by generic callers bounding `R`
+  by `MonoGeneric`, which `R: JsGeneric` implies. `Array::from_iterable_map`
+  and `from_async_map` bound their input by `RefIntoWasmAbi` and its items by
+  `FromWasmAbi`, `Generator::next` and `return_` bound `T` by `RefIntoWasmAbi`,
+  and `Promise::catch` / `catch_map` pass the rejection reason as `JsValue`.
+  [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
+
+* `JsGeneric` now has `MonoGeneric`, `OptionFromWasmAbi` and
+  `VectorRefIntoWasmAbi` as supertraits, and bounds its `IntoWasmAbi::Abi` to
+  fit a `Result` return, so generic code bounded only by `T: JsGeneric` can
+  call the `experimental_generic_mono` element APIs. This applies without
+  `js_sys_unstable_apis`. As `IntoWasmAbi`, `FromWasmAbi` and
+  `RefIntoWasmAbi` each declare an `Abi` type, `T::Abi` under a `JsGeneric`
+  bound is now ambiguous and needs writing as `<T as IntoWasmAbi>::Abi`.
+  `Promising` is now implemented for `&T` where `T: Promising`, and for
+  `String`, `str` and every number type, so a downstream `Promising` impl for a
+  reference to its own type now conflicts.
+  [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
 
 * **Breaking (experimental):** `experimental_generic_mono` imports no longer add
   hidden ABI bounds to the generated wrapper. The conversion bounds each
@@ -242,6 +308,14 @@
   `__deps`. Previously emcc dropped the class, and calling into it failed with
   `ReferenceError: <Class> is not defined`.
   [#5415](https://github.com/wasm-bindgen/wasm-bindgen/pull/5415)
+
+* Under `js_sys_unstable_apis`, iterating an `Array` by value no longer stops
+  at the first `undefined` element.
+  [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
+
+* `Generator::next_iterator` calls the generator's `next` method rather than a
+  nonexistent `next_iterator`.
+  [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
 
 * Imported methods, static methods and constructors without a `js_class` now
   bind to the `js_name` and `js_namespace` of the type they belong to when that
