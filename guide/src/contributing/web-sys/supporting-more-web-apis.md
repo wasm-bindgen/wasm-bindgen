@@ -35,5 +35,8 @@
    cd crates/web-sys
    cargo run --release --package wasm-bindgen-webidl -- webidls src/features ./Cargo.toml
    ```
+   
+   If you are on Windows, you need to use the following command:
+   ```cargo run --release --package wasm-bindgen-webidl -- webidls src/features```
 
    You can then use `git diff` to ensure the bindings look correct.
