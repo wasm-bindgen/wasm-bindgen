@@ -131,11 +131,8 @@ fn from() {
     assert_eq!(to_vec(iter), ["one", "two"]);
 
     // The helpers dispatch through `Iterator.prototype`, so a bare `{ next }`
-    // object works without wrapping, but it is not iterable for `concat`.
+    // object works without wrapping.
     assert_eq!(to_vec(get_iterator_like().take(1)), ["one"]);
-    assert!(Iterator::concat(&[get_iterator_like()])
-        .unwrap_err()
-        .is_instance_of::<TypeError>());
 }
 
 #[wasm_bindgen_test]
@@ -153,6 +150,12 @@ fn concat() {
             .length(),
         0
     );
+
+    // A bare `{ next }` object has no `Symbol.iterator`, so it is not
+    // iterable for `concat`.
+    assert!(Iterator::concat(&[get_iterator_like()])
+        .unwrap_err()
+        .is_instance_of::<TypeError>());
 }
 
 #[wasm_bindgen_test]
