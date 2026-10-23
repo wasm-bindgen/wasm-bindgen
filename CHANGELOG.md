@@ -152,7 +152,7 @@
   `OptionFromWasmAbi` are kept and derived from it. `Option<NonNull<T>>`
   crosses as a JS number with the pointer sentinels, as `Option<*const T>`
   and `Nullable<NonNull<T>>` do.
-  [#5422](https://github.com/wasm-bindgen/wasm-bindgen/pull/5422)
+  [#5423](https://github.com/wasm-bindgen/wasm-bindgen/pull/5423)
 
 * With reference types, `static_string` constants and the reserved
   `undefined`, `null`, `true` and `false` values are stored at fixed slots of
