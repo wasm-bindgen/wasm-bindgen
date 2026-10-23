@@ -135,7 +135,7 @@ fn experimental_generic_mono_optional_primitive_union_args() {
     assert_eq!(describe_optional_primitive(Some(2.5f64)), "some:2.5");
     assert_eq!(describe_optional_primitive(Some(7u8)), "some:7");
     assert_eq!(
-        describe_optional_primitive(Some(usize::MAX)),
+        describe_optional_primitive(Some(u32::MAX as usize)),
         "some:4294967295"
     );
     assert_eq!(describe_optional_primitive(Some("s")), "some:s");
