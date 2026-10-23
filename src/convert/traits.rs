@@ -339,6 +339,22 @@ pub trait NullableFromWasmAbi: FromWasmAbi {
     fn nullable_is_none(abi: &Self::NullableAbi) -> bool;
 }
 
+/// A trait for any type which maps to a Wasm primitive type when used in FFI
+/// (`i32`, `i64`, `f32`, or `f64`).
+///
+/// This is with the exception of `()` (and other zero-sized types), which are
+/// also allowed because they're ignored: no arguments actually get added.
+///
+/// # Safety
+///
+/// This is an unsafe trait to implement as there's no guarantee the type
+/// actually maps to a primitive type.
+///
+/// # ⚠️ Unstable
+///
+/// This is part of the internal [`convert`](crate::convert) module, **no
+/// stability guarantees** are provided. Use at your own risk. See its
+/// documentation for more details.
 pub unsafe trait WasmPrimitive: Default {}
 
 unsafe impl WasmPrimitive for u32 {}
