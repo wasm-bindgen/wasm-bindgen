@@ -124,6 +124,17 @@ fn round_trip<T: JsGeneric + Clone + PartialEq + core::fmt::Debug>(x: T, y: T) {
     m.set(&x, &y);
     assert_eq!(m.get(&x), Some(y.clone()));
     assert!(m.delete(&x));
+    if builtin_has("Map", "getOrInsert") {
+        assert_eq!(m.get_or_insert(&x, &x), x.clone());
+        assert_eq!(m.get_or_insert(&x, &y), x.clone());
+    }
+    if builtin_has("Iterator", "from") {
+        assert_eq!(
+            a.values().find(&mut |v, _| v == y).unwrap(),
+            Some(y.clone())
+        );
+        assert!(a.values().some(&mut |v, _| v == x).unwrap());
+    }
 
     let s: Set<T> = Set::new_typed();
     s.add(&x).add(&x);
@@ -155,6 +166,17 @@ where
     let m: Map<T, T> = Map::new_typed();
     m.set(&x, &y);
     assert_eq!(m.get(&x), Some(y.clone()));
+    if builtin_has("Map", "getOrInsert") {
+        assert_eq!(m.get_or_insert(&y, &x), x.clone());
+        assert_eq!(m.get_or_insert(&y, &y), x.clone());
+    }
+    if builtin_has("Iterator", "from") {
+        assert_eq!(
+            a.values().find(&mut |v, _| v == y).unwrap(),
+            Some(y.clone())
+        );
+        assert!(a.values().every(&mut |v, _| v == x || v == y).unwrap());
+    }
 
     let s: Set<T> = Set::new_typed();
     s.add(&x).add(&y).add(&x);
@@ -765,6 +787,10 @@ where
         resolve.call1(&JsValue::NULL, &x).unwrap();
     });
     assert_eq!(p.then(&identity).await.unwrap(), x);
+    if builtin_has("Promise", "try") {
+        let p: Promise<T> = Promise::try_(&mut || Ok(x.clone()));
+        assert_eq!(p.await.unwrap(), x);
+    }
     let wm: WeakMap<Object, T> = WeakMap::new_typed();
     let key = Object::new();
     wm.set(&key, &x);
@@ -782,6 +808,15 @@ where
     let identity = Closure::new(|v: T| Ok(v));
     let p: Promise<T> = Promise::resolve(x.clone()).then(&identity);
     assert_eq!(p.await.unwrap(), x);
+    if builtin_has("Promise", "try") {
+        let p: Promise<T> = Promise::try_(&mut || Ok(x.clone()));
+        assert_eq!(p.await.unwrap(), x);
+    }
+    if builtin_has("Promise", "withResolvers") {
+        let resolvers = Promise::with_resolvers::<T>();
+        resolvers.resolve().call1(&JsValue::NULL, &x).unwrap();
+        assert_eq!(resolvers.promise().await.unwrap(), x);
+    }
     let m: Map<T, T> = Map::new_typed();
     m.set(&x, &x);
     assert_eq!(m.get_checked(&x), Some(x.clone()));
@@ -797,4 +832,215 @@ async fn generic_bounds_cover_promise_and_keyed_apis() {
     promise_mono(String::from("a")).await;
     promise_mono(1u32).await;
     promise_mono(JsString::from("b")).await;
+}
+
+// Whether `globalThis[ctor]` or its prototype has `name`, as CI's Node
+// predates some of these builtins.
+fn builtin_has(ctor: &str, name: &str) -> bool {
+    let Some(ctor) = Reflect::get_str(&global(), &ctor.into()).unwrap() else {
+        return false;
+    };
+    let ctor: Object = ctor.unchecked_into();
+    if Reflect::get_str(&ctor, &name.into()).unwrap().is_some() {
+        return true;
+    }
+    Reflect::get_str(&ctor, &"prototype".into())
+        .unwrap()
+        .is_some_and(|proto| {
+            Reflect::get_str(proto.unchecked_ref::<Object>(), &name.into())
+                .unwrap()
+                .is_some()
+        })
+}
+
+#[wasm_bindgen_test]
+fn get_or_insert_of_rust_types() {
+    if builtin_has("Map", "getOrInsert") {
+        let m: Map<String, u32> = Map::new_typed();
+        assert_eq!(m.get_or_insert(&"a".into(), &1), 1);
+        assert_eq!(m.get_or_insert(&"a".into(), &2), 1);
+        let flags: Map<u32, bool> = Map::new_typed();
+        assert!(flags.get_or_insert(&1, &true));
+        assert!(flags.get_or_insert(&1, &false));
+    }
+    if builtin_has("Map", "getOrInsertComputed") {
+        let m: Map<String, u32> = Map::new_typed();
+        let mut calls = 0;
+        let mut compute = |k: String| {
+            calls += 1;
+            k.len() as u32
+        };
+        assert_eq!(m.get_or_insert_computed(&"abc".into(), &mut compute), 3);
+        assert_eq!(m.get_or_insert_computed(&"abc".into(), &mut compute), 3);
+        assert_eq!(calls, 1);
+    }
+    if builtin_has("WeakMap", "getOrInsert") {
+        let wm: WeakMap<Object, String> = WeakMap::new_typed();
+        let key = Object::new();
+        assert_eq!(wm.get_or_insert(&key, &"v".into()).unwrap(), "v");
+        assert_eq!(wm.get_or_insert(&key, &"w".into()).unwrap(), "v");
+    }
+    if builtin_has("WeakMap", "getOrInsertComputed") {
+        let wm: WeakMap<Object, u32> = WeakMap::new_typed();
+        let key = Object::new();
+        assert_eq!(wm.get_or_insert_computed(&key, &mut |_| 7).unwrap(), 7);
+        assert_eq!(wm.get_or_insert_computed(&key, &mut |_| 8).unwrap(), 7);
+        assert_eq!(wm.get_checked(&key), Some(7));
+    }
+}
+
+#[wasm_bindgen_test]
+fn group_by_of_rust_types() {
+    let words = string_array(&["a", "bb", "cc", "d"]);
+    if builtin_has("Map", "groupBy") {
+        let groups: Map<u32, Array<String>> =
+            Map::group_by(&words, &mut |s: String, _| s.len() as u32).unwrap();
+        assert_eq!(groups.get_checked(&1).unwrap().to_vec(), ["a", "d"]);
+        assert_eq!(groups.get_checked(&2).unwrap().to_vec(), ["bb", "cc"]);
+        let parity: Map<bool, Array<u32>> =
+            Map::group_by(&Array::of(&[1u32, 2, 3]), &mut |n: u32, _| n % 2 == 0).unwrap();
+        assert_eq!(parity.get_checked(&false).unwrap().to_vec(), [1, 3]);
+        assert_eq!(parity.get_checked(&true).unwrap().to_vec(), [2]);
+    }
+    if builtin_has("Object", "groupBy") {
+        let groups: Object<Array<String>> = Object::group_by(&words, &mut |s: String, i| {
+            if i == 0 {
+                "first".to_string()
+            } else {
+                s.len().to_string()
+            }
+        })
+        .unwrap();
+        let get = |key: &str| Reflect::get_str(&groups, &key.into()).unwrap().unwrap();
+        assert_eq!(get("first").to_vec(), ["a"]);
+        assert_eq!(get("1").to_vec(), ["d"]);
+        assert_eq!(get("2").to_vec(), ["bb", "cc"]);
+    }
+}
+
+#[wasm_bindgen_test]
+fn iterator_helpers_of_rust_types() {
+    if !builtin_has("Iterator", "from") {
+        return;
+    }
+    let words = || string_array(&["a", "bb", "ccc"]).values();
+
+    let len: Closure<dyn FnMut(String, u32) -> u32> = Closure::new(|s: String, _| s.len() as u32);
+    let lengths: Iterator<u32> = words().map(&len);
+    assert_eq!(lengths.to_array().unwrap().to_vec(), [1, 2, 3]);
+
+    let short: Closure<dyn FnMut(String, u32) -> bool> = Closure::new(|s: String, _| s.len() != 2);
+    assert_eq!(
+        words().filter(&short).to_array().unwrap().to_vec(),
+        ["a", "ccc"]
+    );
+
+    let split: Closure<dyn FnMut(String, u32) -> Array<String>> =
+        Closure::new(|s: String, _| s.chars().map(String::from).collect());
+    let chars: Iterator<String> = words().flat_map(&split);
+    assert_eq!(
+        chars.to_array().unwrap().to_vec(),
+        ["a", "b", "b", "c", "c", "c"]
+    );
+
+    assert_eq!(
+        words()
+            .reduce(&mut |acc: String, s, _| acc + &s, &String::new())
+            .unwrap(),
+        "abbccc"
+    );
+    let numbers = || Array::of(&[1u32, 2, 3]).values();
+    assert_eq!(numbers().reduce(&mut |acc, n, _| acc + n, &10).unwrap(), 16);
+
+    let mut seen = Vec::new();
+    words().for_each(&mut |s, i| seen.push((i, s))).unwrap();
+    assert_eq!(seen[1], (1, "bb".to_string()));
+
+    assert!(words().some(&mut |s, _| s == "bb").unwrap());
+    assert!(!numbers().some(&mut |n, _| n > 3).unwrap());
+    assert!(words().every(&mut |s, _| !s.is_empty()).unwrap());
+    let flags: Iterator<bool> = Array::of(&[true, false]).values();
+    assert!(!flags.every(&mut |b, _| b).unwrap());
+    assert_eq!(
+        words().find(&mut |s, _| s.len() > 1).unwrap().as_deref(),
+        Some("bb")
+    );
+    assert_eq!(words().find(&mut |s, _| s.len() > 9).unwrap(), None);
+    assert_eq!(numbers().find(&mut |n, _| n > 1).unwrap(), Some(2));
+
+    // Handle passthroughs stay erased and work for any element type.
+    assert_eq!(words().drop(1).take(1).to_array().unwrap().to_vec(), ["bb"]);
+    let from: Iterator<String> = Iterator::from_iterable(&string_array(&["z"]));
+    assert_eq!(from.to_array().unwrap().to_vec(), ["z"]);
+}
+
+#[wasm_bindgen_test]
+async fn promise_statics_of_rust_types() {
+    if builtin_has("Promise", "try") {
+        let p: Promise<String> = Promise::try_(&mut || Ok("x".to_string()));
+        assert_eq!(p.await.unwrap(), "x");
+        let p: Promise<u32> = Promise::try_(&mut || Ok(Promise::resolve(3u32)));
+        assert_eq!(p.await.unwrap(), 3);
+        let p: Promise<bool> = Promise::try_(&mut || Err::<bool, _>(JsError::new("no")));
+        assert!(p.await.is_err());
+    }
+    if builtin_has("Promise", "withResolvers") {
+        let resolvers = Promise::with_resolvers::<String>();
+        let resolve: Function<fn(String) -> Undefined> = resolvers.resolve();
+        resolve.call1(&JsValue::NULL, &"done".into()).unwrap();
+        assert_eq!(resolvers.promise().await.unwrap(), "done");
+
+        let resolvers = Promise::with_resolvers::<u32>();
+        resolvers.resolve().call1(&JsValue::NULL, &5).unwrap();
+        assert_eq!(resolvers.promise().await.unwrap(), 5);
+
+        let resolvers = Promise::with_resolvers::<u32>();
+        resolvers
+            .reject()
+            .call1(&JsValue::NULL, &"bad".into())
+            .unwrap();
+        assert!(resolvers.promise().await.is_err());
+    }
+}
+
+#[wasm_bindgen_test]
+async fn disposable_stacks_of_rust_types() {
+    if !builtin_has("DisposableStack", "use") {
+        return;
+    }
+    let disposed = std::rc::Rc::new(std::cell::RefCell::new(Vec::new()));
+
+    let stack = DisposableStack::new();
+    // `use` takes disposables, such as another stack, while `adopt` takes
+    // any value.
+    let inner = DisposableStack::new();
+    assert_eq!(stack.use_(&inner).unwrap(), inner);
+    let log = disposed.clone();
+    let mut on_dispose = move |s: String| log.borrow_mut().push(s);
+    let on_dispose = ScopedClosure::borrow_mut(&mut on_dispose);
+    assert_eq!(stack.adopt(&"a".to_string(), &on_dispose).unwrap(), "a");
+    stack.dispose().unwrap();
+    drop(on_dispose);
+    assert_eq!(*disposed.borrow(), ["a"]);
+
+    if !builtin_has("AsyncDisposableStack", "use") {
+        return;
+    }
+    let stack = AsyncDisposableStack::new();
+    let inner = AsyncDisposableStack::new();
+    assert_eq!(stack.use_(&inner).unwrap(), inner);
+    let log = disposed.clone();
+    let on_dispose = Closure::new(move |n: u32| {
+        log.borrow_mut().push(n.to_string());
+        n
+    });
+    assert_eq!(stack.adopt(&7u32, &on_dispose).unwrap(), 7);
+    let log = disposed.clone();
+    let deferred = Closure::new(move || {
+        log.borrow_mut().push("deferred".to_string());
+        "ok".to_string()
+    });
+    stack.defer(&deferred).unwrap();
+    JsFuture::from(stack.dispose_async()).await.unwrap();
+    assert_eq!(*disposed.borrow(), ["a", "deferred", "7"]);
 }
