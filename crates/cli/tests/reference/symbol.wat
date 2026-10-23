@@ -10,7 +10,7 @@
   (type (;8;) (func))
   (import "./reference_test_bg.js" "__wbg_Symboliterator_a7475564acbe8497" (func (;0;) (type 0)))
   (import "./reference_test_bg.js" "__wbg_SymboltoPrimitive_64e6192264e6e25c" (func (;1;) (type 5)))
-  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_41e9ee4f547fc59a" (func (;2;) (type 5)))
+  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_4c88d8bf264fd984" (func (;2;) (type 5)))
   (import "./reference_test_bg.js" "__wbg_import_static_symbol_getter_81f53842c69f201c" (func (;3;) (type 8)))
   (import "./reference_test_bg.js" "__wbg_new_fc662d07311c7d03" (func (;4;) (type 7)))
   (import "./reference_test_bg.js" "__wbg_string_getter_27db002d52b3baca" (func (;5;) (type 1)))

@@ -5,7 +5,7 @@
   (type (;3;) (func (param i32)))
   (type (;4;) (func (result f64)))
   (type (;5;) (func))
-  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_41e9ee4f547fc59a" (func (;0;) (type 2)))
+  (import "./reference_test_bg.js" "__wbg___wbindgen_throw_4c88d8bf264fd984" (func (;0;) (type 2)))
   (import "./reference_test_bg.js" "__wbg_random_e615c3eb33f6b875" (func (;1;) (type 4)))
   (import "./reference_test_bg.js" "__wbindgen_init_externref_table" (func (;2;) (type 5)))
   (import "./reference_test_bg.js" "memory" (memory (;0;) 18 16384 shared))
