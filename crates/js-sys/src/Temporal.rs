@@ -2685,10 +2685,9 @@ extern "C" {
     #[wasm_bindgen(method, js_name = startOfDay, catch)]
     pub fn start_of_day(this: &ZonedDateTime) -> Result<ZonedDateTime, JsValue>;
 
-    // Next major: `-> Result<Nullable<ZonedDateTime>, JsValue>`
     /// The `getTimeZoneTransition()` method returns a `Temporal.ZonedDateTime`
     /// representing the closest UTC offset transition in this time zone in the
-    /// given direction, or `None` if there is none.
+    /// given direction, or `Nullable::Null` if there is none.
     ///
     /// # Errors
     /// Throws a `RangeError` if `direction` is not set or is invalid.
@@ -2698,14 +2697,14 @@ extern "C" {
     pub fn get_time_zone_transition_with_time_zone_transition_options(
         this: &ZonedDateTime,
         options: &TimeZoneTransitionOptions,
-    ) -> Result<Option<ZonedDateTime>, JsValue>;
+    ) -> Result<Nullable<ZonedDateTime>, JsValue>;
 
     /// Shorthand for `getTimeZoneTransition()` with only `direction` set.
     #[wasm_bindgen(method, js_name = getTimeZoneTransition, catch)]
     pub fn get_time_zone_transition_with_transition_direction(
         this: &ZonedDateTime,
         direction: TransitionDirection,
-    ) -> Result<Option<ZonedDateTime>, JsValue>;
+    ) -> Result<Nullable<ZonedDateTime>, JsValue>;
 
     /// The `toInstant()` method returns a `Temporal.Instant` object representing the
     /// same instant as this zoned date-time.

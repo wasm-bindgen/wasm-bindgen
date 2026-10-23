@@ -534,10 +534,11 @@ fn zoned_date_time_offset_and_transitions() {
     assert_eq!(previous.day(), 13);
 
     let utc = zdt.with_time_zone("UTC").unwrap();
-    assert!(utc
-        .get_time_zone_transition_with_time_zone_transition_options(&opts)
-        .unwrap()
-        .is_none());
+    assert!(matches!(
+        utc.get_time_zone_transition_with_time_zone_transition_options(&opts)
+            .unwrap(),
+        Nullable::Null
+    ));
 
     // `direction` is required
     let err = zdt

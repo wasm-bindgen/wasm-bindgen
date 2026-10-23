@@ -29,7 +29,7 @@
   `ZonedDateTime::with_plain_date` and `PlainTime::to_plain_date_time` are gone,
   `offset_nanoseconds` returns `f64`, `era`, `era_year`, `week_of_year` and
   `year_of_week` return `Option`s, `fractionalSecondDigits` is a `u8`,
-  `get_time_zone_transition` returns `Result<Option<ZonedDateTime>, JsValue>`,
+  `get_time_zone_transition` returns `Result<Nullable<ZonedDateTime>, JsValue>`,
   `to_js_string_with_options` and `to_locale_string` are fallible, `to_locale_string`
   takes no locale or a `_with_str`/`_with_str_sequence` one, constructors expand
   their optional trailing fields (`PlainTime::new()`, `new_with_hour`, …,
