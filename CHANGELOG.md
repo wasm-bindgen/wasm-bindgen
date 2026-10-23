@@ -133,8 +133,7 @@
   `Symbol.prototype.description`, `JSON.rawJSON` and `JSON.isRawJSON`, and
   the typed array `toReversed`, `toSorted`, `with`, `findLast`,
   `findLastIndex`, `includes` and `indexOf` methods. From ECMA-402, the
-  `Intl.Locale` `firstDayOfWeek` getter, and under `js_sys_unstable_apis`
-  the stage 3 `variants` getter. From the WebAssembly
+  `Intl.Locale` `firstDayOfWeek` and `variants` getters. From the WebAssembly
   JS API, `WebAssembly.JSTag`, the compile-options variants of `validate`,
   `compile`, `compileStreaming`, `instantiate`, `instantiateStreaming` and
   the `Module` constructor (taking a `CompileOptions` dictionary, with an
@@ -142,6 +141,7 @@
   `Memory` `toResizableBuffer` and `toFixedLengthBuffer`, `Global.valueOf`
   and `Exception.stack`.
   [#5403](https://github.com/wasm-bindgen/wasm-bindgen/pull/5403)
+  [#5420](https://github.com/wasm-bindgen/wasm-bindgen/pull/5420)
 
 ### Changed
 
