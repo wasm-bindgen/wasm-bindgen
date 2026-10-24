@@ -13,8 +13,13 @@
   cloning and dropping them is free and never calls into JS.
   [#5401](https://github.com/wasm-bindgen/wasm-bindgen/pull/5401)
 
-* Reworked the `js_sys::Temporal` bindings and `Date::to_temporal_instant`,
-  which stay behind `js_sys_unstable_apis`, against the final Stage 4
+* Stabilized the `js_sys::Temporal` bindings and `Date::to_temporal_instant`,
+  previously behind `js_sys_unstable_apis`, now that Temporal is Stage 4 and
+  ships unflagged in Firefox 139, Chrome 144 and Node 26.
+  [#5417](https://github.com/wasm-bindgen/wasm-bindgen/pull/5417)
+
+* Reworked the `js_sys::Temporal` bindings and `Date::to_temporal_instant`
+  against the final Stage 4
   specification and reshaped them to the web-sys conventions. Inputs are
   typed: `*Like` dictionaries such as `PlainDateLike` for `from`, calendar-free
   `*Fields` dictionaries for `with`, and the bare form of a method takes the
