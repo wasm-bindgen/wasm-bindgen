@@ -442,6 +442,9 @@ extern "C" {
     /// with its offset, instead of just 'Z'.
     #[wasm_bindgen(method, setter = timeZone)]
     pub fn set_time_zone(this: &InstantToStringOptions, value: &str);
+    /// Sets `timeZone` to the time zone of the given `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, setter = timeZone)]
+    pub fn set_time_zone_with_zoned_date_time(this: &InstantToStringOptions, value: &ZonedDateTime);
 }
 
 impl InstantToStringOptions {
@@ -788,6 +791,21 @@ extern "C" {
     pub fn get_calendar(this: &PlainDateLike) -> Option<JsString>;
     #[wasm_bindgen(method, setter = calendar)]
     pub fn set_calendar(this: &PlainDateLike, value: &str);
+    /// Sets `calendar` to the calendar of the given `Temporal.PlainDate`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_plain_date(this: &PlainDateLike, value: &PlainDate);
+    /// Sets `calendar` to the calendar of the given `Temporal.PlainDateTime`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_plain_date_time(this: &PlainDateLike, value: &PlainDateTime);
+    /// Sets `calendar` to the calendar of the given `Temporal.PlainYearMonth`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_plain_year_month(this: &PlainDateLike, value: &PlainYearMonth);
+    /// Sets `calendar` to the calendar of the given `Temporal.PlainMonthDay`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_plain_month_day(this: &PlainDateLike, value: &PlainMonthDay);
+    /// Sets `calendar` to the calendar of the given `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_zoned_date_time(this: &PlainDateLike, value: &ZonedDateTime);
 }
 
 impl PlainDateLike {
@@ -930,6 +948,21 @@ extern "C" {
     pub fn get_calendar(this: &PlainDateTimeLike) -> Option<JsString>;
     #[wasm_bindgen(method, setter = calendar)]
     pub fn set_calendar(this: &PlainDateTimeLike, value: &str);
+    /// Sets `calendar` to the calendar of the given `Temporal.PlainDate`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_plain_date(this: &PlainDateTimeLike, value: &PlainDate);
+    /// Sets `calendar` to the calendar of the given `Temporal.PlainDateTime`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_plain_date_time(this: &PlainDateTimeLike, value: &PlainDateTime);
+    /// Sets `calendar` to the calendar of the given `Temporal.PlainYearMonth`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_plain_year_month(this: &PlainDateTimeLike, value: &PlainYearMonth);
+    /// Sets `calendar` to the calendar of the given `Temporal.PlainMonthDay`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_plain_month_day(this: &PlainDateTimeLike, value: &PlainMonthDay);
+    /// Sets `calendar` to the calendar of the given `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_zoned_date_time(this: &PlainDateTimeLike, value: &ZonedDateTime);
 }
 
 impl PlainDateTimeLike {
@@ -1031,10 +1064,28 @@ extern "C" {
     pub fn get_calendar(this: &ZonedDateTimeLike) -> Option<JsString>;
     #[wasm_bindgen(method, setter = calendar)]
     pub fn set_calendar(this: &ZonedDateTimeLike, value: &str);
+    /// Sets `calendar` to the calendar of the given `Temporal.PlainDate`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_plain_date(this: &ZonedDateTimeLike, value: &PlainDate);
+    /// Sets `calendar` to the calendar of the given `Temporal.PlainDateTime`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_plain_date_time(this: &ZonedDateTimeLike, value: &PlainDateTime);
+    /// Sets `calendar` to the calendar of the given `Temporal.PlainYearMonth`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_plain_year_month(this: &ZonedDateTimeLike, value: &PlainYearMonth);
+    /// Sets `calendar` to the calendar of the given `Temporal.PlainMonthDay`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_plain_month_day(this: &ZonedDateTimeLike, value: &PlainMonthDay);
+    /// Sets `calendar` to the calendar of the given `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_zoned_date_time(this: &ZonedDateTimeLike, value: &ZonedDateTime);
     #[wasm_bindgen(method, getter = timeZone)]
     pub fn get_time_zone(this: &ZonedDateTimeLike) -> Option<JsString>;
     #[wasm_bindgen(method, setter = timeZone)]
     pub fn set_time_zone(this: &ZonedDateTimeLike, value: &str);
+    /// Sets `timeZone` to the time zone of the given `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, setter = timeZone)]
+    pub fn set_time_zone_with_zoned_date_time(this: &ZonedDateTimeLike, value: &ZonedDateTime);
 }
 
 impl ZonedDateTimeLike {
@@ -1104,6 +1155,21 @@ extern "C" {
     pub fn get_calendar(this: &PlainYearMonthLike) -> Option<JsString>;
     #[wasm_bindgen(method, setter = calendar)]
     pub fn set_calendar(this: &PlainYearMonthLike, value: &str);
+    /// Sets `calendar` to the calendar of the given `Temporal.PlainDate`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_plain_date(this: &PlainYearMonthLike, value: &PlainDate);
+    /// Sets `calendar` to the calendar of the given `Temporal.PlainDateTime`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_plain_date_time(this: &PlainYearMonthLike, value: &PlainDateTime);
+    /// Sets `calendar` to the calendar of the given `Temporal.PlainYearMonth`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_plain_year_month(this: &PlainYearMonthLike, value: &PlainYearMonth);
+    /// Sets `calendar` to the calendar of the given `Temporal.PlainMonthDay`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_plain_month_day(this: &PlainYearMonthLike, value: &PlainMonthDay);
+    /// Sets `calendar` to the calendar of the given `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_zoned_date_time(this: &PlainYearMonthLike, value: &ZonedDateTime);
 }
 
 impl PlainYearMonthLike {
@@ -1131,6 +1197,21 @@ extern "C" {
     pub fn get_calendar(this: &PlainMonthDayLike) -> Option<JsString>;
     #[wasm_bindgen(method, setter = calendar)]
     pub fn set_calendar(this: &PlainMonthDayLike, value: &str);
+    /// Sets `calendar` to the calendar of the given `Temporal.PlainDate`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_plain_date(this: &PlainMonthDayLike, value: &PlainDate);
+    /// Sets `calendar` to the calendar of the given `Temporal.PlainDateTime`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_plain_date_time(this: &PlainMonthDayLike, value: &PlainDateTime);
+    /// Sets `calendar` to the calendar of the given `Temporal.PlainYearMonth`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_plain_year_month(this: &PlainMonthDayLike, value: &PlainYearMonth);
+    /// Sets `calendar` to the calendar of the given `Temporal.PlainMonthDay`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_plain_month_day(this: &PlainMonthDayLike, value: &PlainMonthDay);
+    /// Sets `calendar` to the calendar of the given `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, setter = calendar)]
+    pub fn set_calendar_with_zoned_date_time(this: &PlainMonthDayLike, value: &ZonedDateTime);
 }
 
 impl PlainMonthDayLike {
@@ -1220,6 +1301,9 @@ extern "C" {
     pub fn get_time_zone(this: &ToZonedDateTimeItem) -> Option<JsString>;
     #[wasm_bindgen(method, setter = timeZone)]
     pub fn set_time_zone(this: &ToZonedDateTimeItem, value: &str);
+    /// Sets `timeZone` to the time zone of the given `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, setter = timeZone)]
+    pub fn set_time_zone_with_zoned_date_time(this: &ToZonedDateTimeItem, value: &ZonedDateTime);
     #[wasm_bindgen(method, getter = plainTime)]
     pub fn get_plain_time(this: &ToZonedDateTimeItem) -> Option<JsValue>;
     #[wasm_bindgen(method, setter = plainTime)]
@@ -1235,6 +1319,13 @@ impl ToZonedDateTimeItem {
     pub fn new(time_zone: &str) -> ToZonedDateTimeItem {
         let item: ToZonedDateTimeItem = JsCast::unchecked_into(Object::new());
         item.set_time_zone(time_zone);
+        item
+    }
+
+    /// Creates a `ToZonedDateTimeItem` for the time zone of the given `Temporal.ZonedDateTime`.
+    pub fn new_with_zoned_date_time(time_zone: &ZonedDateTime) -> ToZonedDateTimeItem {
+        let item: ToZonedDateTimeItem = JsCast::unchecked_into(Object::new());
+        item.set_time_zone_with_zoned_date_time(time_zone);
         item
     }
 }
@@ -1478,6 +1569,13 @@ extern "C" {
         this: &Instant,
         time_zone: &str,
     ) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `toZonedDateTimeISO()` method in the time zone of the given `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, js_name = toZonedDateTimeISO)]
+    pub fn to_zoned_date_time_iso_with_zoned_date_time(
+        this: &Instant,
+        time_zone: &ZonedDateTime,
+    ) -> ZonedDateTime;
 
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this instant.
@@ -1946,6 +2044,41 @@ extern "C" {
     #[wasm_bindgen(method, js_name = withCalendar, catch)]
     pub fn with_calendar(this: &PlainDateTime, calendar: &str) -> Result<PlainDateTime, JsValue>;
 
+    /// The `withCalendar()` method taking the calendar of the given `Temporal.PlainDate`.
+    #[wasm_bindgen(method, js_name = withCalendar)]
+    pub fn with_calendar_with_plain_date(
+        this: &PlainDateTime,
+        calendar: &PlainDate,
+    ) -> PlainDateTime;
+
+    /// The `withCalendar()` method taking the calendar of the given `Temporal.PlainDateTime`.
+    #[wasm_bindgen(method, js_name = withCalendar)]
+    pub fn with_calendar_with_plain_date_time(
+        this: &PlainDateTime,
+        calendar: &PlainDateTime,
+    ) -> PlainDateTime;
+
+    /// The `withCalendar()` method taking the calendar of the given `Temporal.PlainYearMonth`.
+    #[wasm_bindgen(method, js_name = withCalendar)]
+    pub fn with_calendar_with_plain_year_month(
+        this: &PlainDateTime,
+        calendar: &PlainYearMonth,
+    ) -> PlainDateTime;
+
+    /// The `withCalendar()` method taking the calendar of the given `Temporal.PlainMonthDay`.
+    #[wasm_bindgen(method, js_name = withCalendar)]
+    pub fn with_calendar_with_plain_month_day(
+        this: &PlainDateTime,
+        calendar: &PlainMonthDay,
+    ) -> PlainDateTime;
+
+    /// The `withCalendar()` method taking the calendar of the given `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, js_name = withCalendar)]
+    pub fn with_calendar_with_zoned_date_time(
+        this: &PlainDateTime,
+        calendar: &ZonedDateTime,
+    ) -> PlainDateTime;
+
     /// The `add()` method returns a new `Temporal.PlainDateTime` object with the
     /// duration added to this date-time.
     ///
@@ -2095,6 +2228,23 @@ extern "C" {
     pub fn to_zoned_date_time_with_options(
         this: &PlainDateTime,
         time_zone: &str,
+        options: &DisambiguationOptions,
+    ) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `toZonedDateTime()` method in the time zone of the given
+    /// `Temporal.ZonedDateTime`; see [`PlainDateTime::to_zoned_date_time`] for errors.
+    #[wasm_bindgen(method, js_name = toZonedDateTime, catch)]
+    pub fn to_zoned_date_time_with_zoned_date_time(
+        this: &PlainDateTime,
+        time_zone: &ZonedDateTime,
+    ) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `toZonedDateTime()` method in the time zone of the given
+    /// `Temporal.ZonedDateTime`; see [`PlainDateTime::to_zoned_date_time`] for errors.
+    #[wasm_bindgen(method, js_name = toZonedDateTime, catch)]
+    pub fn to_zoned_date_time_with_zoned_date_time_and_options(
+        this: &PlainDateTime,
+        time_zone: &ZonedDateTime,
         options: &DisambiguationOptions,
     ) -> Result<ZonedDateTime, JsValue>;
 
@@ -2539,6 +2689,41 @@ extern "C" {
     #[wasm_bindgen(method, js_name = withCalendar, catch)]
     pub fn with_calendar(this: &ZonedDateTime, calendar: &str) -> Result<ZonedDateTime, JsValue>;
 
+    /// The `withCalendar()` method taking the calendar of the given `Temporal.PlainDate`.
+    #[wasm_bindgen(method, js_name = withCalendar)]
+    pub fn with_calendar_with_plain_date(
+        this: &ZonedDateTime,
+        calendar: &PlainDate,
+    ) -> ZonedDateTime;
+
+    /// The `withCalendar()` method taking the calendar of the given `Temporal.PlainDateTime`.
+    #[wasm_bindgen(method, js_name = withCalendar)]
+    pub fn with_calendar_with_plain_date_time(
+        this: &ZonedDateTime,
+        calendar: &PlainDateTime,
+    ) -> ZonedDateTime;
+
+    /// The `withCalendar()` method taking the calendar of the given `Temporal.PlainYearMonth`.
+    #[wasm_bindgen(method, js_name = withCalendar)]
+    pub fn with_calendar_with_plain_year_month(
+        this: &ZonedDateTime,
+        calendar: &PlainYearMonth,
+    ) -> ZonedDateTime;
+
+    /// The `withCalendar()` method taking the calendar of the given `Temporal.PlainMonthDay`.
+    #[wasm_bindgen(method, js_name = withCalendar)]
+    pub fn with_calendar_with_plain_month_day(
+        this: &ZonedDateTime,
+        calendar: &PlainMonthDay,
+    ) -> ZonedDateTime;
+
+    /// The `withCalendar()` method taking the calendar of the given `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, js_name = withCalendar)]
+    pub fn with_calendar_with_zoned_date_time(
+        this: &ZonedDateTime,
+        calendar: &ZonedDateTime,
+    ) -> ZonedDateTime;
+
     /// The `withTimeZone()` method returns a new `Temporal.ZonedDateTime` object
     /// representing the same instant in the given time zone.
     ///
@@ -2548,6 +2733,13 @@ extern "C" {
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/withTimeZone)
     #[wasm_bindgen(method, js_name = withTimeZone, catch)]
     pub fn with_time_zone(this: &ZonedDateTime, time_zone: &str) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `withTimeZone()` method taking the time zone of the given `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, js_name = withTimeZone)]
+    pub fn with_time_zone_with_zoned_date_time(
+        this: &ZonedDateTime,
+        time_zone: &ZonedDateTime,
+    ) -> ZonedDateTime;
 
     /// The `add()` method returns a new `Temporal.ZonedDateTime` object with the
     /// duration added to this zoned date-time.
@@ -4413,6 +4605,38 @@ extern "C" {
     #[wasm_bindgen(method, js_name = withCalendar, catch)]
     pub fn with_calendar(this: &PlainDate, calendar: &str) -> Result<PlainDate, JsValue>;
 
+    /// The `withCalendar()` method taking the calendar of the given `Temporal.PlainDate`.
+    #[wasm_bindgen(method, js_name = withCalendar)]
+    pub fn with_calendar_with_plain_date(this: &PlainDate, calendar: &PlainDate) -> PlainDate;
+
+    /// The `withCalendar()` method taking the calendar of the given `Temporal.PlainDateTime`.
+    #[wasm_bindgen(method, js_name = withCalendar)]
+    pub fn with_calendar_with_plain_date_time(
+        this: &PlainDate,
+        calendar: &PlainDateTime,
+    ) -> PlainDate;
+
+    /// The `withCalendar()` method taking the calendar of the given `Temporal.PlainYearMonth`.
+    #[wasm_bindgen(method, js_name = withCalendar)]
+    pub fn with_calendar_with_plain_year_month(
+        this: &PlainDate,
+        calendar: &PlainYearMonth,
+    ) -> PlainDate;
+
+    /// The `withCalendar()` method taking the calendar of the given `Temporal.PlainMonthDay`.
+    #[wasm_bindgen(method, js_name = withCalendar)]
+    pub fn with_calendar_with_plain_month_day(
+        this: &PlainDate,
+        calendar: &PlainMonthDay,
+    ) -> PlainDate;
+
+    /// The `withCalendar()` method taking the calendar of the given `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, js_name = withCalendar)]
+    pub fn with_calendar_with_zoned_date_time(
+        this: &PlainDate,
+        calendar: &ZonedDateTime,
+    ) -> PlainDate;
+
     /// The `add()` method returns a new `Temporal.PlainDate` object with the
     /// duration added to this date.
     ///
@@ -4547,6 +4771,14 @@ extern "C" {
     pub fn to_zoned_date_time_with_str(
         this: &PlainDate,
         time_zone: &str,
+    ) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `toZonedDateTime()` method in the time zone of the given
+    /// `Temporal.ZonedDateTime`; see [`PlainDate::to_zoned_date_time_with_str`] for errors.
+    #[wasm_bindgen(method, js_name = toZonedDateTime, catch)]
+    pub fn to_zoned_date_time_with_zoned_date_time(
+        this: &PlainDate,
+        time_zone: &ZonedDateTime,
     ) -> Result<ZonedDateTime, JsValue>;
 
     /// The `toZonedDateTime()` method returns a `Temporal.ZonedDateTime` object representing
@@ -4691,6 +4923,11 @@ pub mod Now {
             time_zone: &str,
         ) -> Result<ZonedDateTime, JsValue>;
 
+        /// `Temporal.Now.zonedDateTimeISO()` in the time zone of the given `Temporal.ZonedDateTime`.
+        #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = zonedDateTimeISO)]
+        pub fn zoned_date_time_iso_with_zoned_date_time(time_zone: &ZonedDateTime)
+            -> ZonedDateTime;
+
         /// The `Temporal.Now.plainDateTimeISO()` static method returns the current date and wall-clock time
         /// as a `Temporal.PlainDateTime` in the ISO 8601 calendar and
         /// the system's current time zone.
@@ -4712,6 +4949,11 @@ pub mod Now {
             time_zone: &str,
         ) -> Result<PlainDateTime, JsValue>;
 
+        /// `Temporal.Now.plainDateTimeISO()` in the time zone of the given `Temporal.ZonedDateTime`.
+        #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = plainDateTimeISO)]
+        pub fn plain_date_time_iso_with_zoned_date_time(time_zone: &ZonedDateTime)
+            -> PlainDateTime;
+
         /// The `Temporal.Now.plainDateISO()` static method returns the current date as a `Temporal.PlainDate`
         /// in the ISO 8601 calendar and
         /// the system's current time zone.
@@ -4731,6 +4973,10 @@ pub mod Now {
         #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = plainDateISO, catch)]
         pub fn plain_date_iso_with_time_zone(time_zone: &str) -> Result<PlainDate, JsValue>;
 
+        /// `Temporal.Now.plainDateISO()` in the time zone of the given `Temporal.ZonedDateTime`.
+        #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = plainDateISO)]
+        pub fn plain_date_iso_with_zoned_date_time(time_zone: &ZonedDateTime) -> PlainDate;
+
         /// The `Temporal.Now.plainTimeISO()` static method returns the current wall-clock time as a
         /// `Temporal.PlainTime`
         /// in the system's current time zone.
@@ -4749,5 +4995,9 @@ pub mod Now {
         /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/plainTimeISO)
         #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = plainTimeISO, catch)]
         pub fn plain_time_iso_with_time_zone(time_zone: &str) -> Result<PlainTime, JsValue>;
+
+        /// `Temporal.Now.plainTimeISO()` in the time zone of the given `Temporal.ZonedDateTime`.
+        #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = plainTimeISO)]
+        pub fn plain_time_iso_with_zoned_date_time(time_zone: &ZonedDateTime) -> PlainTime;
     }
 }

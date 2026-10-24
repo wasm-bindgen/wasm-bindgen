@@ -816,6 +816,78 @@ fn plain_date_constructor() {
 }
 
 #[wasm_bindgen_test]
+fn calendar_and_time_zone_objects() {
+    if !is_temporal_supported() {
+        return;
+    }
+    let pd = get_test_plain_date();
+    let hebrew = Temporal::PlainDate::from_with_str("2024-03-15[u-ca=hebrew]").unwrap();
+    assert_eq!(
+        pd.with_calendar_with_plain_date(&hebrew).calendar_id(),
+        "hebrew"
+    );
+    assert_eq!(
+        get_test_plain_date_time()
+            .with_calendar_with_plain_year_month(&hebrew.to_plain_year_month().unwrap())
+            .calendar_id(),
+        "hebrew"
+    );
+    let fields = Temporal::PlainDateLike::new();
+    fields.set_year(5784);
+    fields.set_month_code("M06");
+    fields.set_day(1);
+    fields.set_calendar_with_plain_date(&hebrew);
+    assert_eq!(
+        Temporal::PlainDate::from_with_plain_date_like(&fields)
+            .unwrap()
+            .calendar_id(),
+        "hebrew"
+    );
+
+    let zdt = get_test_zoned_date_time();
+    let tokyo = Temporal::ZonedDateTime::from_with_str("2024-01-01T00:00[Asia/Tokyo]").unwrap();
+    assert_eq!(
+        zdt.with_time_zone_with_zoned_date_time(&tokyo)
+            .time_zone_id(),
+        "Asia/Tokyo"
+    );
+    assert_eq!(
+        pd.to_zoned_date_time_with_zoned_date_time(&tokyo)
+            .unwrap()
+            .time_zone_id(),
+        "Asia/Tokyo"
+    );
+    assert_eq!(
+        get_test_instant()
+            .to_zoned_date_time_iso_with_zoned_date_time(&tokyo)
+            .time_zone_id(),
+        "Asia/Tokyo"
+    );
+    assert_eq!(
+        Temporal::Now::zoned_date_time_iso_with_zoned_date_time(&tokyo).time_zone_id(),
+        "Asia/Tokyo"
+    );
+    let item = Temporal::ToZonedDateTimeItem::new_with_zoned_date_time(&tokyo);
+    assert_eq!(
+        pd.to_zoned_date_time_with_to_zoned_date_time_item(&item)
+            .unwrap()
+            .time_zone_id(),
+        "Asia/Tokyo"
+    );
+    let like = Temporal::ZonedDateTimeLike::new();
+    like.set_year(2024);
+    like.set_month(1);
+    like.set_day(1);
+    like.set_time_zone_with_zoned_date_time(&tokyo);
+    assert_eq!(
+        Temporal::ZonedDateTime::from_with_zoned_date_time_like(&like)
+            .unwrap()
+            .time_zone_id(),
+        "Asia/Tokyo"
+    );
+}
+
+#[wasm_bindgen_test]
 fn value_equality() {
     if !is_temporal_supported() {
         return;
