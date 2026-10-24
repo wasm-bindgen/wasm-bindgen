@@ -188,11 +188,11 @@ impl InstructionBuilder<'_, '_> {
                 );
             }
 
-            Descriptor::Option { inner, .. } => match &**inner {
+            Descriptor::Option(inner) => match &**inner {
                 Descriptor::Nullable(inner) => {
                     self.outgoing_option(inner, OptionKind::OptionNullable)?
                 }
-                inner => self.outgoing_option(inner, OptionKind::Lenient)?,
+                inner => self.outgoing_option(inner, OptionKind::Option)?,
             },
             Descriptor::Nullable(inner) => self.outgoing_option(inner, OptionKind::Nullable)?,
             Descriptor::Result(d) => self.outgoing_result(d)?,
@@ -524,7 +524,7 @@ impl InstructionBuilder<'_, '_> {
                 self.out_option_sentinel64(AdapterType::U32, option_kind);
             }
 
-            Descriptor::Option { .. } | Descriptor::Nullable(_) => bail!(
+            Descriptor::Option(_) | Descriptor::Nullable(_) => bail!(
                 "unsupported nested optional return type for calling Rust function from JS: \
                  {arg:?}; only `Option<Nullable<T>>` nests"
             ),
@@ -562,7 +562,7 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Ref(_)
             | Descriptor::RefMut(_)
             | Descriptor::CachedString
-            | Descriptor::Option { .. }
+            | Descriptor::Option(_)
             | Descriptor::Nullable(_)
             | Descriptor::Vector(_)
             | Descriptor::Unit

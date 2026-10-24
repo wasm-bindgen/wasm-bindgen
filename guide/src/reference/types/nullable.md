@@ -18,16 +18,15 @@ pub enum Nullable<T> {
 
 | Type | JS type | JS to Rust | Rust to JS |
 |---|---|---|---|
-| `Option<T>` | `T \| undefined` | `undefined` is `None`; anything else, including `null` under the [strict cfg](./option.md#strict-optiont-unstable), goes to `T`'s conversion | `None` is `undefined` |
+| `Option<T>` | `T \| undefined` | `undefined` and `null` are `None`; anything else goes to `T`'s conversion | `None` is `undefined` |
 | `Nullable<T>` | `T \| null` | `null` is `Null`; anything else, including `undefined`, goes to `T`'s conversion | `Null` is `null` |
 | `Option<Nullable<T>>` | `T \| null \| undefined` | `undefined` is `None`, `null` is `Some(Null)`, anything else is `Some(Value(..))` | `None` is `undefined`, `Some(Null)` is `null`, `Some(Value(v))` is `v` |
 
-The `Option` layer of `Option<Nullable<T>>` is always strict, with or without
-the cfg: only `undefined` is `None`, since `null` has to reach the `Nullable`
-layer. What `undefined` does when it reaches a plain `Nullable<T>` is what the
-[strict `Option<T>` table](./option.md#strict-optiont-unstable) says `null`
-does for the same `T`: the debug glue throws its type assertion, and the
-release glue coerces or throws as `T` itself would.
+The `Option` layer of `Option<Nullable<T>>` treats only `undefined` as `None`,
+since `null` has to reach the `Nullable` layer. A plain `Nullable<T>` passes
+`undefined` to `T`'s own conversion, exactly as any other value that isn't a
+`T`: the debug glue throws its type assertion, and the release glue coerces or
+throws as `T` itself would.
 
 No other nesting is supported. `Nullable<Nullable<T>>`, `Nullable<Option<T>>`
 and `Option<Option<T>>` do not cross the boundary.

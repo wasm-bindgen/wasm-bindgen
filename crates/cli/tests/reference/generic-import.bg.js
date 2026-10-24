@@ -292,7 +292,7 @@ export function __wbindgen_generic_0000000000000021(arg0, arg1) {
     logNestedImplTrait(v0);
 }
 export function __wbindgen_generic_0000000000000022(arg0, arg1, arg2) {
-    // generic import `logOptSlice`: [SeqMode(slice = array, Option { inner: Ref(Slice(U16)), strict: false }), U32] -> Unit
+    // generic import `logOptSlice`: [SeqMode(slice = array, Option(Ref(Slice(U16)))), U32] -> Unit
     logOptSlice(arg0 === 0 ? undefined : Array.from(getArrayU16FromWasm0(arg0, arg1)), arg2 >>> 0);
 }
 export function __wbindgen_generic_0000000000000023(arg0, arg1, arg2) {
@@ -307,7 +307,7 @@ export function __wbindgen_generic_0000000000000023(arg0, arg1, arg2) {
         }
         wasm.__wbindgen_free(arg0, arg1 * 8, 4);
     }
-    // generic import `logOptStrSlice`: [Option { inner: Ref(Slice(String)), strict: false }, U32] -> Unit
+    // generic import `logOptStrSlice`: [Option(Ref(Slice(String))), U32] -> Unit
     logOptStrSlice(v0, arg2 >>> 0);
 }
 export function __wbindgen_generic_0000000000000024(arg0) {
