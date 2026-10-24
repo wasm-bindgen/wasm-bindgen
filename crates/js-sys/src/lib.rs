@@ -58,6 +58,9 @@ use wasm_bindgen::JsError;
 pub use wasm_bindgen::sys::{JsNullable, JsOption, Null, Promising, Undefined};
 pub use wasm_bindgen::{IntoJsGeneric, JsGeneric, Nullable};
 
+mod canon;
+pub use canon::JsCanon;
+
 // When adding new imports:
 //
 // * Keep imports in alphabetical order.

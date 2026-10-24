@@ -155,6 +155,19 @@
   [#5403](https://github.com/wasm-bindgen/wasm-bindgen/pull/5403)
   [#5421](https://github.com/wasm-bindgen/wasm-bindgen/pull/5421)
 
+* Added `js_sys::JsCanon`, mapping a type to the JS handle type that stands
+  for it in a generic position: `String`, `&str` and `char` to `JsString`,
+  numbers to `Number`, `bool` to `Boolean`, `()` to `Undefined`, every
+  `js-sys` handle type to itself, and containers structurally through their
+  elements
+  (`Promise<T>` to `Promise<T::Canon>`, `Array<T>`, `Map<K, V>`, `Option<T>`,
+  `Nullable<T>`, `JsOption<T>`, `JsNullable<T>`, nested). `to_js_canon()`
+  relabels a handle container at zero cost through `Upcast`, so a
+  `Promise<String>` from an `experimental_generic_mono` import converts to
+  the `Promise<JsString>` the non-mono APIs use without naming the target.
+  `String` and `&str` now also upcast directly to `JsValue`.
+  [#5425](https://github.com/wasm-bindgen/wasm-bindgen/pull/5425)
+
 ### Changed
 
 * With reference types, `static_string` constants and the reserved
