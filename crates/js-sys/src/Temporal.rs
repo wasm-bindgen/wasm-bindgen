@@ -5,7 +5,7 @@ use super::*;
 /// Used by `from()` and `with()` methods on date/time types.
 #[wasm_bindgen]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum TemporalOverflow {
+pub enum Overflow {
     /// Out-of-range values are clamped to the nearest in-range value.
     Constrain = "constrain",
     /// Out-of-range values will cause the function to throw a RangeError.
@@ -17,7 +17,7 @@ pub enum TemporalOverflow {
 /// Used when converting `PlainDateTime` to `Instant` or `ZonedDateTime`.
 #[wasm_bindgen]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum TemporalDisambiguation {
+pub enum Disambiguation {
     /// Equivalent to `'earlier'` for backward transitions and `'later'` for forward transitions.
     /// This matches the behavior of legacy `Date` and libraries like moment.js.
     Compatible = "compatible",
@@ -34,7 +34,7 @@ pub enum TemporalDisambiguation {
 /// Controls how to handle time zone offset changes when parsing or converting dates.
 #[wasm_bindgen]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum TemporalOffsetOption {
+pub enum OffsetOption {
     /// Always use the offset to calculate the instant.
     Use = "use",
     /// Use the offset if it's valid for the date/time, otherwise use the time zone.
@@ -52,7 +52,7 @@ pub enum TemporalOffsetOption {
 /// Out-of-range units are reported as a `RangeError` by the engine.
 #[wasm_bindgen]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum TemporalUnit {
+pub enum Unit {
     Year = "year",
     Month = "month",
     Week = "week",
@@ -128,54 +128,54 @@ pub enum TransitionDirection {
     Previous = "previous",
 }
 
-// AssignmentOptions - for from() and with() methods
+// OverflowOptions - for from(), with(), add() and subtract()
 #[wasm_bindgen]
 extern "C" {
-    /// Options for assigning fields using `with()` or entire objects with `from()`.
+    /// The `overflow` option accepted by `from()`, `with()`, `add()` and `subtract()`.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/from#options)
     #[wasm_bindgen(extends = Object)]
     #[derive(Clone, Debug)]
-    pub type AssignmentOptions;
+    pub type OverflowOptions;
 
     /// Get the overflow handling mode.
     #[wasm_bindgen(method, getter = overflow)]
-    pub fn get_overflow(this: &AssignmentOptions) -> Option<TemporalOverflow>;
+    pub fn get_overflow(this: &OverflowOptions) -> Option<Overflow>;
 
     /// Set the overflow handling mode.
     ///
     /// - `'constrain'` (default): Out-of-range values are clamped to the nearest in-range value.
     /// - `'reject'`: Out-of-range values will cause the function to throw a RangeError.
     #[wasm_bindgen(method, setter = overflow)]
-    pub fn set_overflow(this: &AssignmentOptions, value: TemporalOverflow);
+    pub fn set_overflow(this: &OverflowOptions, value: Overflow);
 }
 
-impl AssignmentOptions {
-    /// Creates a new `AssignmentOptions` object.
-    pub fn new() -> AssignmentOptions {
+impl OverflowOptions {
+    /// Creates a new `OverflowOptions` object.
+    pub fn new() -> OverflowOptions {
         JsCast::unchecked_into(Object::new())
     }
 }
 
-impl Default for AssignmentOptions {
+impl Default for OverflowOptions {
     fn default() -> Self {
         Self::new()
     }
 }
 
-// ToZonedDateTimeOptions - for PlainDateTime.toZonedDateTime()
+// DisambiguationOptions - for PlainDateTime.toZonedDateTime()
 #[wasm_bindgen]
 extern "C" {
-    /// Options for `PlainDateTime.toZonedDateTime()`.
+    /// The `disambiguation` option accepted by `PlainDateTime.toZonedDateTime()`.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/toZonedDateTime#options)
     #[wasm_bindgen(extends = Object)]
     #[derive(Clone, Debug)]
-    pub type ToZonedDateTimeOptions;
+    pub type DisambiguationOptions;
 
     /// Get the disambiguation mode.
     #[wasm_bindgen(method, getter = disambiguation)]
-    pub fn get_disambiguation(this: &ToZonedDateTimeOptions) -> Option<TemporalDisambiguation>;
+    pub fn get_disambiguation(this: &DisambiguationOptions) -> Option<Disambiguation>;
 
     /// Set the disambiguation mode for handling ambiguous times.
     ///
@@ -185,17 +185,17 @@ extern "C" {
     /// - `'later'`: The later of two possible times.
     /// - `'reject'`: Throw a RangeError instead.
     #[wasm_bindgen(method, setter = disambiguation)]
-    pub fn set_disambiguation(this: &ToZonedDateTimeOptions, value: TemporalDisambiguation);
+    pub fn set_disambiguation(this: &DisambiguationOptions, value: Disambiguation);
 }
 
-impl ToZonedDateTimeOptions {
-    /// Creates a new `ToZonedDateTimeOptions` object.
-    pub fn new() -> ToZonedDateTimeOptions {
+impl DisambiguationOptions {
+    /// Creates a new `DisambiguationOptions` object.
+    pub fn new() -> DisambiguationOptions {
         JsCast::unchecked_into(Object::new())
     }
 }
 
-impl Default for ToZonedDateTimeOptions {
+impl Default for DisambiguationOptions {
     fn default() -> Self {
         Self::new()
     }
@@ -216,29 +216,27 @@ extern "C" {
 
     /// Get the overflow handling mode.
     #[wasm_bindgen(method, getter = overflow)]
-    pub fn get_overflow(this: &ZonedDateTimeAssignmentOptions) -> Option<TemporalOverflow>;
+    pub fn get_overflow(this: &ZonedDateTimeAssignmentOptions) -> Option<Overflow>;
 
     /// Set the overflow handling mode.
     #[wasm_bindgen(method, setter = overflow)]
-    pub fn set_overflow(this: &ZonedDateTimeAssignmentOptions, value: TemporalOverflow);
+    pub fn set_overflow(this: &ZonedDateTimeAssignmentOptions, value: Overflow);
 
     /// Get the disambiguation mode.
     #[wasm_bindgen(method, getter = disambiguation)]
-    pub fn get_disambiguation(
-        this: &ZonedDateTimeAssignmentOptions,
-    ) -> Option<TemporalDisambiguation>;
+    pub fn get_disambiguation(this: &ZonedDateTimeAssignmentOptions) -> Option<Disambiguation>;
 
     /// Set the disambiguation mode.
     #[wasm_bindgen(method, setter = disambiguation)]
-    pub fn set_disambiguation(this: &ZonedDateTimeAssignmentOptions, value: TemporalDisambiguation);
+    pub fn set_disambiguation(this: &ZonedDateTimeAssignmentOptions, value: Disambiguation);
 
     /// Get the offset option.
     #[wasm_bindgen(method, getter = offset)]
-    pub fn get_offset(this: &ZonedDateTimeAssignmentOptions) -> Option<TemporalOffsetOption>;
+    pub fn get_offset(this: &ZonedDateTimeAssignmentOptions) -> Option<OffsetOption>;
 
     /// Set the offset option.
     #[wasm_bindgen(method, setter = offset)]
-    pub fn set_offset(this: &ZonedDateTimeAssignmentOptions, value: TemporalOffsetOption);
+    pub fn set_offset(this: &ZonedDateTimeAssignmentOptions, value: OffsetOption);
 }
 
 impl ZonedDateTimeAssignmentOptions {
@@ -249,41 +247,6 @@ impl ZonedDateTimeAssignmentOptions {
 }
 
 impl Default for ZonedDateTimeAssignmentOptions {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-// ArithmeticOptions - for add() and subtract()
-#[wasm_bindgen]
-extern "C" {
-    /// Options for arithmetic operations like `add()` and `subtract()`.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/add#options)
-    #[wasm_bindgen(extends = Object)]
-    #[derive(Clone, Debug)]
-    pub type ArithmeticOptions;
-
-    /// Get the overflow handling mode.
-    #[wasm_bindgen(method, getter = overflow)]
-    pub fn get_overflow(this: &ArithmeticOptions) -> Option<TemporalOverflow>;
-
-    /// Set the overflow handling mode.
-    ///
-    /// - `'constrain'` (default): Clamp the result to the allowed range.
-    /// - `'reject'`: Throw a RangeError if the result is out of range.
-    #[wasm_bindgen(method, setter = overflow)]
-    pub fn set_overflow(this: &ArithmeticOptions, value: TemporalOverflow);
-}
-
-impl ArithmeticOptions {
-    /// Creates a new `ArithmeticOptions` object.
-    pub fn new() -> ArithmeticOptions {
-        JsCast::unchecked_into(Object::new())
-    }
-}
-
-impl Default for ArithmeticOptions {
     fn default() -> Self {
         Self::new()
     }
@@ -311,11 +274,11 @@ extern "C" {
 
     /// Get the smallest unit option.
     #[wasm_bindgen(method, getter = smallestUnit)]
-    pub fn get_smallest_unit(this: &ToStringPrecisionOptions) -> Option<TemporalUnit>;
+    pub fn get_smallest_unit(this: &ToStringPrecisionOptions) -> Option<Unit>;
 
     /// Set the smallest unit to display.
     #[wasm_bindgen(method, setter = smallestUnit)]
-    pub fn set_smallest_unit(this: &ToStringPrecisionOptions, value: TemporalUnit);
+    pub fn set_smallest_unit(this: &ToStringPrecisionOptions, value: Unit);
 
     /// Get the rounding mode.
     #[wasm_bindgen(method, getter = roundingMode)]
@@ -506,11 +469,11 @@ extern "C" {
 
     /// Get the smallest unit option.
     #[wasm_bindgen(method, getter = smallestUnit)]
-    pub fn get_smallest_unit(this: &DifferenceOptions) -> Option<TemporalUnit>;
+    pub fn get_smallest_unit(this: &DifferenceOptions) -> Option<Unit>;
 
     /// Set the smallest unit to round to.
     #[wasm_bindgen(method, setter = smallestUnit)]
-    pub fn set_smallest_unit(this: &DifferenceOptions, value: TemporalUnit);
+    pub fn set_smallest_unit(this: &DifferenceOptions, value: Unit);
 
     /// Get the largest unit option.
     #[wasm_bindgen(method, getter = largestUnit)]
@@ -566,11 +529,11 @@ extern "C" {
 
     /// Get the smallest unit option.
     #[wasm_bindgen(method, getter = smallestUnit)]
-    pub fn get_smallest_unit(this: &RoundToOptions) -> Option<TemporalUnit>;
+    pub fn get_smallest_unit(this: &RoundToOptions) -> Unit;
 
     /// Set the unit to round to. This option is required.
     #[wasm_bindgen(method, setter = smallestUnit)]
-    pub fn set_smallest_unit(this: &RoundToOptions, value: TemporalUnit);
+    pub fn set_smallest_unit(this: &RoundToOptions, value: Unit);
 
     /// Get the rounding increment.
     #[wasm_bindgen(method, getter = roundingIncrement)]
@@ -590,13 +553,59 @@ extern "C" {
 }
 
 impl RoundToOptions {
-    /// Creates a new `RoundToOptions` object.
-    pub fn new() -> RoundToOptions {
+    /// Creates `round()` options with the required `smallestUnit`.
+    pub fn new(smallest_unit: Unit) -> RoundToOptions {
+        let options: RoundToOptions = JsCast::unchecked_into(Object::new());
+        options.set_smallest_unit(smallest_unit);
+        options
+    }
+}
+
+// RelativeToOptions - for Duration.compare(), extended by the round() and total() options
+#[wasm_bindgen]
+extern "C" {
+    /// The `relativeTo` option, accepted by `Duration.compare()` directly and
+    /// through the `round()` and `total()` options which extend this type.
+    ///
+    /// It is required when the operation involves weeks or larger units, whose
+    /// lengths depend on the calendar date. It accepts a `PlainDate`,
+    /// `PlainDateTime` or `ZonedDateTime`, or a string or property bag
+    /// convertible to one.
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/compare#options)
+    #[wasm_bindgen(extends = Object)]
+    #[derive(Clone, Debug)]
+    pub type RelativeToOptions;
+
+    /// Get the relativeTo option.
+    #[wasm_bindgen(method, getter = relativeTo)]
+    pub fn get_relative_to(this: &RelativeToOptions) -> Option<JsValue>;
+
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_with_str(this: &RelativeToOptions, value: &str);
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_with_plain_date_like(this: &RelativeToOptions, value: &PlainDateLike);
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_with_zoned_date_time_like(
+        this: &RelativeToOptions,
+        value: &ZonedDateTimeLike,
+    );
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_with_plain_date(this: &RelativeToOptions, value: &PlainDate);
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_with_plain_date_time(this: &RelativeToOptions, value: &PlainDateTime);
+    #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_with_zoned_date_time(this: &RelativeToOptions, value: &ZonedDateTime);
+}
+
+impl RelativeToOptions {
+    /// Creates a new `RelativeToOptions` object.
+    pub fn new() -> RelativeToOptions {
         JsCast::unchecked_into(Object::new())
     }
 }
 
-impl Default for RoundToOptions {
+impl Default for RelativeToOptions {
     fn default() -> Self {
         Self::new()
     }
@@ -610,17 +619,17 @@ extern "C" {
     /// Either `smallestUnit` or `largestUnit` must be provided.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/round#options)
-    #[wasm_bindgen(extends = Object)]
+    #[wasm_bindgen(extends = RelativeToOptions)]
     #[derive(Clone, Debug)]
     pub type DurationRoundToOptions;
 
     /// Get the smallest unit option.
     #[wasm_bindgen(method, getter = smallestUnit)]
-    pub fn get_smallest_unit(this: &DurationRoundToOptions) -> Option<TemporalUnit>;
+    pub fn get_smallest_unit(this: &DurationRoundToOptions) -> Option<Unit>;
 
     /// Set the unit to round to.
     #[wasm_bindgen(method, setter = smallestUnit)]
-    pub fn set_smallest_unit(this: &DurationRoundToOptions, value: TemporalUnit);
+    pub fn set_smallest_unit(this: &DurationRoundToOptions, value: Unit);
 
     /// Get the largest unit option.
     #[wasm_bindgen(method, getter = largestUnit)]
@@ -646,31 +655,6 @@ extern "C" {
     #[wasm_bindgen(method, setter = roundingMode)]
     pub fn set_rounding_mode(this: &DurationRoundToOptions, value: Intl::RoundingMode);
 
-    /// Get the relativeTo option (returns JsValue as it can be various types).
-    #[wasm_bindgen(method, getter = relativeTo)]
-    pub fn get_relative_to(this: &DurationRoundToOptions) -> JsValue;
-
-    /// Set the relativeTo option, required when rounding to or from weeks or
-    /// larger units, whose lengths depend on the calendar date.
-    /// Accepts a `PlainDate`, `PlainDateTime`, `ZonedDateTime`, or a string or
-    /// property bag convertible to one.
-    #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to(this: &DurationRoundToOptions, value: &JsValue);
-    #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to_str(this: &DurationRoundToOptions, value: &str);
-    #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to_plain_date_like(this: &DurationRoundToOptions, value: &PlainDateLike);
-    #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to_zoned_date_time_like(
-        this: &DurationRoundToOptions,
-        value: &ZonedDateTimeLike,
-    );
-    #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to_plain_date(this: &DurationRoundToOptions, value: &PlainDate);
-    #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to_plain_date_time(this: &DurationRoundToOptions, value: &PlainDateTime);
-    #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to_zoned_date_time(this: &DurationRoundToOptions, value: &ZonedDateTime);
 }
 
 impl DurationRoundToOptions {
@@ -692,105 +676,26 @@ extern "C" {
     /// Options for `Duration.total()`.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/total#options)
-    #[wasm_bindgen(extends = Object)]
+    #[wasm_bindgen(extends = RelativeToOptions)]
     #[derive(Clone, Debug)]
     pub type DurationTotalOptions;
 
     /// Get the unit option.
     #[wasm_bindgen(method, getter = unit)]
-    pub fn get_unit(this: &DurationTotalOptions) -> Option<TemporalUnit>;
+    pub fn get_unit(this: &DurationTotalOptions) -> Unit;
 
     /// Set the unit to convert the duration to. This option is required.
     #[wasm_bindgen(method, setter = unit)]
-    pub fn set_unit(this: &DurationTotalOptions, value: TemporalUnit);
+    pub fn set_unit(this: &DurationTotalOptions, value: Unit);
 
-    /// Get the relativeTo option.
-    #[wasm_bindgen(method, getter = relativeTo)]
-    pub fn get_relative_to(this: &DurationTotalOptions) -> JsValue;
-
-    /// Set the relativeTo option, required when the duration has nonzero weeks
-    /// or larger units, or when totalling in such a unit.
-    /// Accepts a `PlainDate`, `PlainDateTime`, `ZonedDateTime`, or a string or
-    /// property bag convertible to one.
-    #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to(this: &DurationTotalOptions, value: &JsValue);
-    #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to_str(this: &DurationTotalOptions, value: &str);
-    #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to_plain_date_like(this: &DurationTotalOptions, value: &PlainDateLike);
-    #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to_zoned_date_time_like(
-        this: &DurationTotalOptions,
-        value: &ZonedDateTimeLike,
-    );
-    #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to_plain_date(this: &DurationTotalOptions, value: &PlainDate);
-    #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to_plain_date_time(this: &DurationTotalOptions, value: &PlainDateTime);
-    #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to_zoned_date_time(this: &DurationTotalOptions, value: &ZonedDateTime);
 }
 
 impl DurationTotalOptions {
-    /// Creates a new `DurationTotalOptions` object.
-    pub fn new() -> DurationTotalOptions {
-        JsCast::unchecked_into(Object::new())
-    }
-}
-
-impl Default for DurationTotalOptions {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-// DurationCompareOptions - for Duration.compare()
-#[wasm_bindgen]
-extern "C" {
-    /// Options for `Duration.compare()`.
-    ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/compare#options)
-    #[wasm_bindgen(extends = Object)]
-    #[derive(Clone, Debug)]
-    pub type DurationCompareOptions;
-
-    /// Get the relativeTo option.
-    #[wasm_bindgen(method, getter = relativeTo)]
-    pub fn get_relative_to(this: &DurationCompareOptions) -> JsValue;
-
-    /// Set the relativeTo option, required when either duration has nonzero
-    /// weeks or larger units.
-    /// Accepts a `PlainDate`, `PlainDateTime`, `ZonedDateTime`, or a string or
-    /// property bag convertible to one.
-    #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to(this: &DurationCompareOptions, value: &JsValue);
-    #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to_str(this: &DurationCompareOptions, value: &str);
-    #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to_plain_date_like(this: &DurationCompareOptions, value: &PlainDateLike);
-    #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to_zoned_date_time_like(
-        this: &DurationCompareOptions,
-        value: &ZonedDateTimeLike,
-    );
-    #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to_plain_date(this: &DurationCompareOptions, value: &PlainDate);
-    #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to_plain_date_time(this: &DurationCompareOptions, value: &PlainDateTime);
-    #[wasm_bindgen(method, setter = relativeTo)]
-    pub fn set_relative_to_zoned_date_time(this: &DurationCompareOptions, value: &ZonedDateTime);
-}
-
-impl DurationCompareOptions {
-    /// Creates a new `DurationCompareOptions` object.
-    pub fn new() -> DurationCompareOptions {
-        JsCast::unchecked_into(Object::new())
-    }
-}
-
-impl Default for DurationCompareOptions {
-    fn default() -> Self {
-        Self::new()
+    /// Creates `total()` options with the required `unit`.
+    pub fn new(unit: Unit) -> DurationTotalOptions {
+        let options: DurationTotalOptions = JsCast::unchecked_into(Object::new());
+        options.set_unit(unit);
+        options
     }
 }
 
@@ -806,7 +711,7 @@ extern "C" {
 
     /// Get the direction option.
     #[wasm_bindgen(method, getter = direction)]
-    pub fn get_direction(this: &TimeZoneTransitionOptions) -> Option<TransitionDirection>;
+    pub fn get_direction(this: &TimeZoneTransitionOptions) -> TransitionDirection;
 
     /// Set the direction to search for transitions.
     ///
@@ -817,15 +722,11 @@ extern "C" {
 }
 
 impl TimeZoneTransitionOptions {
-    /// Creates a new `TimeZoneTransitionOptions` object.
-    pub fn new() -> TimeZoneTransitionOptions {
-        JsCast::unchecked_into(Object::new())
-    }
-}
-
-impl Default for TimeZoneTransitionOptions {
-    fn default() -> Self {
-        Self::new()
+    /// Creates `getTimeZoneTransition()` options with the required `direction`.
+    pub fn new(direction: TransitionDirection) -> TimeZoneTransitionOptions {
+        let options: TimeZoneTransitionOptions = JsCast::unchecked_into(Object::new());
+        options.set_direction(direction);
+        options
     }
 }
 
@@ -1252,13 +1153,13 @@ extern "C" {
     #[wasm_bindgen(method, setter = timeZone)]
     pub fn set_time_zone(this: &ToZonedDateTimeItem, value: &str);
     #[wasm_bindgen(method, getter = plainTime)]
-    pub fn get_plain_time(this: &ToZonedDateTimeItem) -> JsValue;
+    pub fn get_plain_time(this: &ToZonedDateTimeItem) -> Option<JsValue>;
     #[wasm_bindgen(method, setter = plainTime)]
     pub fn set_plain_time(this: &ToZonedDateTimeItem, value: &PlainTime);
     #[wasm_bindgen(method, setter = plainTime)]
-    pub fn set_plain_time_str(this: &ToZonedDateTimeItem, value: &str);
+    pub fn set_plain_time_with_str(this: &ToZonedDateTimeItem, value: &str);
     #[wasm_bindgen(method, setter = plainTime)]
-    pub fn set_plain_time_plain_time_like(this: &ToZonedDateTimeItem, value: &PlainTimeLike);
+    pub fn set_plain_time_with_plain_time_like(this: &ToZonedDateTimeItem, value: &PlainTimeLike);
 }
 
 impl ToZonedDateTimeItem {
@@ -1495,10 +1396,7 @@ extern "C" {
 
     /// Shorthand for `round()` with only `smallestUnit` set.
     #[wasm_bindgen(method, js_name = round, catch)]
-    pub fn round_with_temporal_unit(
-        this: &Instant,
-        smallest_unit: TemporalUnit,
-    ) -> Result<Instant, JsValue>;
+    pub fn round_with_unit(this: &Instant, smallest_unit: Unit) -> Result<Instant, JsValue>;
 
     /// The `toZonedDateTimeISO()` method returns a `Temporal.ZonedDateTime`
     /// representing this instant in the ISO 8601 calendar and the given time zone.
@@ -1697,7 +1595,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str_and_options(
         item: &str,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> Result<PlainDateTime, JsValue>;
 
     /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_str`] for errors.
@@ -1710,7 +1608,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_date_time_like_and_options(
         item: &PlainDateTimeLike,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> Result<PlainDateTime, JsValue>;
 
     /// The `Temporal.PlainDateTime.from()` static method.
@@ -1721,7 +1619,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from)]
     pub fn from_with_plain_date_time_and_options(
         item: &PlainDateTime,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> PlainDateTime;
 
     /// The `Temporal.PlainDateTime.from()` static method.
@@ -1735,7 +1633,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_date_and_options(
         item: &PlainDate,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> Result<PlainDateTime, JsValue>;
 
     /// The `Temporal.PlainDateTime.from()` static method.
@@ -1746,7 +1644,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from)]
     pub fn from_with_zoned_date_time_and_options(
         item: &ZonedDateTime,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> PlainDateTime;
 
     /// The `Temporal.PlainDateTime.compare()` static method returns -1, 0, or 1 depending
@@ -1941,7 +1839,7 @@ extern "C" {
     pub fn with_with_options(
         this: &PlainDateTime,
         info: &PlainDateTimeLike,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> Result<PlainDateTime, JsValue>;
 
     /// The `withPlainTime()` method returns a new `Temporal.PlainDateTime` object with
@@ -2000,7 +1898,7 @@ extern "C" {
     pub fn add_with_options(
         this: &PlainDateTime,
         duration: &Duration,
-        options: &ArithmeticOptions,
+        options: &OverflowOptions,
     ) -> Result<PlainDateTime, JsValue>;
 
     /// The `subtract()` method returns a new `Temporal.PlainDateTime` object with the
@@ -2026,7 +1924,7 @@ extern "C" {
     pub fn subtract_with_options(
         this: &PlainDateTime,
         duration: &Duration,
-        options: &ArithmeticOptions,
+        options: &OverflowOptions,
     ) -> Result<PlainDateTime, JsValue>;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
@@ -2093,9 +1991,9 @@ extern "C" {
 
     /// Shorthand for `round()` with only `smallestUnit` set.
     #[wasm_bindgen(method, js_name = round, catch)]
-    pub fn round_with_temporal_unit(
+    pub fn round_with_unit(
         this: &PlainDateTime,
-        smallest_unit: TemporalUnit,
+        smallest_unit: Unit,
     ) -> Result<PlainDateTime, JsValue>;
 
     /// The `toZonedDateTime()` method returns a `Temporal.ZonedDateTime` with the
@@ -2126,7 +2024,7 @@ extern "C" {
     pub fn to_zoned_date_time_with_options(
         this: &PlainDateTime,
         time_zone: &str,
-        options: &ToZonedDateTimeOptions,
+        options: &DisambiguationOptions,
     ) -> Result<ZonedDateTime, JsValue>;
 
     /// The `toPlainDate()` method returns a `Temporal.PlainDate` object representing
@@ -2600,7 +2498,7 @@ extern "C" {
     pub fn add_with_options(
         this: &ZonedDateTime,
         duration: &Duration,
-        options: &ArithmeticOptions,
+        options: &OverflowOptions,
     ) -> Result<ZonedDateTime, JsValue>;
 
     /// The `subtract()` method returns a new `Temporal.ZonedDateTime` object with the
@@ -2626,7 +2524,7 @@ extern "C" {
     pub fn subtract_with_options(
         this: &ZonedDateTime,
         duration: &Duration,
-        options: &ArithmeticOptions,
+        options: &OverflowOptions,
     ) -> Result<ZonedDateTime, JsValue>;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
@@ -2694,9 +2592,9 @@ extern "C" {
 
     /// Shorthand for `round()` with only `smallestUnit` set.
     #[wasm_bindgen(method, js_name = round, catch)]
-    pub fn round_with_temporal_unit(
+    pub fn round_with_unit(
         this: &ZonedDateTime,
-        smallest_unit: TemporalUnit,
+        smallest_unit: Unit,
     ) -> Result<ZonedDateTime, JsValue>;
 
     /// The `startOfDay()` method returns a `Temporal.ZonedDateTime` object representing
@@ -2713,22 +2611,19 @@ extern "C" {
     /// representing the closest UTC offset transition in this time zone in the
     /// given direction, or `Nullable::Null` if there is none.
     ///
-    /// # Errors
-    /// Throws a `RangeError` if `direction` is not set or is invalid.
-    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/getTimeZoneTransition)
-    #[wasm_bindgen(method, js_name = getTimeZoneTransition, catch)]
+    #[wasm_bindgen(method, js_name = getTimeZoneTransition)]
     pub fn get_time_zone_transition_with_time_zone_transition_options(
         this: &ZonedDateTime,
         options: &TimeZoneTransitionOptions,
-    ) -> Result<Nullable<ZonedDateTime>, JsValue>;
+    ) -> Nullable<ZonedDateTime>;
 
     /// Shorthand for `getTimeZoneTransition()` with only `direction` set.
-    #[wasm_bindgen(method, js_name = getTimeZoneTransition, catch)]
+    #[wasm_bindgen(method, js_name = getTimeZoneTransition)]
     pub fn get_time_zone_transition_with_transition_direction(
         this: &ZonedDateTime,
         direction: TransitionDirection,
-    ) -> Result<Nullable<ZonedDateTime>, JsValue>;
+    ) -> Nullable<ZonedDateTime>;
 
     /// The `toInstant()` method returns a `Temporal.Instant` object representing the
     /// same instant as this zoned date-time.
@@ -2990,7 +2885,7 @@ extern "C" {
     pub fn compare_with_options(
         one: &Duration,
         two: &Duration,
-        options: &DurationCompareOptions,
+        options: &RelativeToOptions,
     ) -> Result<i32, JsValue>;
 
     /// The `sign` accessor property returns -1, 0, or 1 depending on whether
@@ -3131,10 +3026,7 @@ extern "C" {
 
     /// Shorthand for `round()` with only `smallestUnit` set.
     #[wasm_bindgen(method, js_name = round, catch)]
-    pub fn round_with_temporal_unit(
-        this: &Duration,
-        smallest_unit: TemporalUnit,
-    ) -> Result<Duration, JsValue>;
+    pub fn round_with_unit(this: &Duration, smallest_unit: Unit) -> Result<Duration, JsValue>;
 
     /// The `total()` method returns the total number of the specified unit that
     /// fits in the duration as a floating point number.
@@ -3152,7 +3044,7 @@ extern "C" {
 
     /// Shorthand for `total()` with only `unit` set.
     #[wasm_bindgen(method, js_name = total, catch)]
-    pub fn total_with_temporal_unit(this: &Duration, unit: TemporalUnit) -> Result<f64, JsValue>;
+    pub fn total_with_unit(this: &Duration, unit: Unit) -> Result<f64, JsValue>;
 
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this duration.
@@ -3301,7 +3193,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str_and_options(
         item: &str,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> Result<PlainTime, JsValue>;
 
     /// The `Temporal.PlainTime.from()` static method; see [`PlainTime::from_with_str`] for errors.
@@ -3312,7 +3204,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_time_like_and_options(
         item: &PlainTimeLike,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> Result<PlainTime, JsValue>;
 
     /// The `Temporal.PlainTime.from()` static method.
@@ -3323,7 +3215,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, js_name = from)]
     pub fn from_with_plain_time_and_options(
         item: &PlainTime,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> PlainTime;
 
     /// The `Temporal.PlainTime.from()` static method.
@@ -3334,7 +3226,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, js_name = from)]
     pub fn from_with_plain_date_time_and_options(
         item: &PlainDateTime,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> PlainTime;
 
     /// The `Temporal.PlainTime.from()` static method.
@@ -3345,7 +3237,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, js_name = from)]
     pub fn from_with_zoned_date_time_and_options(
         item: &ZonedDateTime,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> PlainTime;
 
     /// The `Temporal.PlainTime.compare()` static method returns -1, 0, or 1 depending
@@ -3426,7 +3318,7 @@ extern "C" {
     pub fn with_with_options(
         this: &PlainTime,
         time_like: &PlainTimeLike,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> Result<PlainTime, JsValue>;
 
     /// The `add()` method returns a new `Temporal.PlainTime` object with the
@@ -3501,10 +3393,7 @@ extern "C" {
 
     /// Shorthand for `round()` with only `smallestUnit` set.
     #[wasm_bindgen(method, js_name = round, catch)]
-    pub fn round_with_temporal_unit(
-        this: &PlainTime,
-        smallest_unit: TemporalUnit,
-    ) -> Result<PlainTime, JsValue>;
+    pub fn round_with_unit(this: &PlainTime, smallest_unit: Unit) -> Result<PlainTime, JsValue>;
 
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this time.
@@ -3627,7 +3516,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str_and_options(
         item: &str,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> Result<PlainYearMonth, JsValue>;
 
     /// The `Temporal.PlainYearMonth.from()` static method; see [`PlainYearMonth::from_with_str`] for errors.
@@ -3640,7 +3529,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_year_month_like_and_options(
         item: &PlainYearMonthLike,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> Result<PlainYearMonth, JsValue>;
 
     /// The `Temporal.PlainYearMonth.from()` static method.
@@ -3651,7 +3540,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from)]
     pub fn from_with_plain_year_month_and_options(
         item: &PlainYearMonth,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> PlainYearMonth;
 
     /// The `Temporal.PlainYearMonth.compare()` static method returns -1, 0, or 1 depending
@@ -3763,7 +3652,7 @@ extern "C" {
     pub fn with_with_options(
         this: &PlainYearMonth,
         info: &PlainYearMonthLike,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> Result<PlainYearMonth, JsValue>;
 
     /// The `add()` method returns a new `Temporal.PlainYearMonth` object with the
@@ -3789,7 +3678,7 @@ extern "C" {
     pub fn add_with_options(
         this: &PlainYearMonth,
         duration: &Duration,
-        options: &ArithmeticOptions,
+        options: &OverflowOptions,
     ) -> Result<PlainYearMonth, JsValue>;
 
     /// The `subtract()` method returns a new `Temporal.PlainYearMonth` object with the
@@ -3815,7 +3704,7 @@ extern "C" {
     pub fn subtract_with_options(
         this: &PlainYearMonth,
         duration: &Duration,
-        options: &ArithmeticOptions,
+        options: &OverflowOptions,
     ) -> Result<PlainYearMonth, JsValue>;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
@@ -4004,7 +3893,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainMonthDay, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str_and_options(
         item: &str,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> Result<PlainMonthDay, JsValue>;
 
     /// The `Temporal.PlainMonthDay.from()` static method; see [`PlainMonthDay::from_with_str`] for errors.
@@ -4017,7 +3906,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainMonthDay, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_month_day_like_and_options(
         item: &PlainMonthDayLike,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> Result<PlainMonthDay, JsValue>;
 
     /// The `Temporal.PlainMonthDay.from()` static method.
@@ -4028,7 +3917,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainMonthDay, js_namespace = Temporal, js_name = from)]
     pub fn from_with_plain_month_day_and_options(
         item: &PlainMonthDay,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> PlainMonthDay;
 
     /// The `monthCode` accessor property returns a calendar-specific string representing
@@ -4081,7 +3970,7 @@ extern "C" {
     pub fn with_with_options(
         this: &PlainMonthDay,
         info: &PlainMonthDayLike,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> Result<PlainMonthDay, JsValue>;
 
     /// The `toPlainDate()` method returns a `Temporal.PlainDate` object representing
@@ -4220,7 +4109,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str_and_options(
         item: &str,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> Result<PlainDate, JsValue>;
 
     /// The `Temporal.PlainDate.from()` static method; see [`PlainDate::from_with_str`] for errors.
@@ -4231,7 +4120,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_date_like_and_options(
         item: &PlainDateLike,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> Result<PlainDate, JsValue>;
 
     /// The `Temporal.PlainDate.from()` static method.
@@ -4242,7 +4131,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, js_name = from)]
     pub fn from_with_plain_date_and_options(
         item: &PlainDate,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> PlainDate;
 
     /// The `Temporal.PlainDate.from()` static method.
@@ -4253,7 +4142,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, js_name = from)]
     pub fn from_with_plain_date_time_and_options(
         item: &PlainDateTime,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> PlainDate;
 
     /// The `Temporal.PlainDate.from()` static method.
@@ -4264,7 +4153,7 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, js_name = from)]
     pub fn from_with_zoned_date_time_and_options(
         item: &ZonedDateTime,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> PlainDate;
 
     /// The `Temporal.PlainDate.compare()` static method returns -1, 0, or 1 depending
@@ -4417,7 +4306,7 @@ extern "C" {
     pub fn with_with_options(
         this: &PlainDate,
         info: &PlainDateLike,
-        options: &AssignmentOptions,
+        options: &OverflowOptions,
     ) -> Result<PlainDate, JsValue>;
 
     /// The `withCalendar()` method returns a new `Temporal.PlainDate` object with
@@ -4453,7 +4342,7 @@ extern "C" {
     pub fn add_with_options(
         this: &PlainDate,
         duration: &Duration,
-        options: &ArithmeticOptions,
+        options: &OverflowOptions,
     ) -> Result<PlainDate, JsValue>;
 
     /// The `subtract()` method returns a new `Temporal.PlainDate` object with the
@@ -4479,7 +4368,7 @@ extern "C" {
     pub fn subtract_with_options(
         this: &PlainDate,
         duration: &Duration,
-        options: &ArithmeticOptions,
+        options: &OverflowOptions,
     ) -> Result<PlainDate, JsValue>;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
