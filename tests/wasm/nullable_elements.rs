@@ -5,6 +5,7 @@
 //! where exact nullability carriers are wanted everywhere.
 
 use std::cell::RefCell;
+use std::panic::AssertUnwindSafe;
 use std::rc::Rc;
 
 use js_sys::{Array, Function, JsString, Map, Number, Promise, Undefined};
@@ -173,7 +174,7 @@ fn vecs() {
 fn functions() {
     let seen = Rc::new(RefCell::new(Vec::new()));
     let cb = {
-        let seen = seen.clone();
+        let seen = AssertUnwindSafe(seen.clone());
         Closure::<dyn FnMut(Nullable<JsString>)>::new(move |v: Nullable<JsString>| {
             seen.borrow_mut().push(v.map(String::from));
         })
