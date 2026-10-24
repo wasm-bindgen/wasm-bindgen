@@ -68,7 +68,7 @@
   (import "./reference_test_bg.js" "__wbg_static_accessor_SELF_0b583911f537483a" (func (;38;) (type 26)))
   (import "./reference_test_bg.js" "__wbg_static_accessor_WINDOW_d7f903d1508cbdc4" (func (;39;) (type 26)))
   (import "./reference_test_bg.js" "__wbg_text_content_bfa8a939ca1ec889" (func (;40;) (type 10)))
-  (import "./reference_test_bg.js" "__wbg_then_e71170d78fcf8954" (func (;41;) (type 1)))
+  (import "./reference_test_bg.js" "__wbg_then_ce2a321a994ccb81" (func (;41;) (type 1)))
   (import "./reference_test_bg.js" "__wbg_toString_7ebc7bff8ac2aca2" (func (;42;) (type 10)))
   (import "./reference_test_bg.js" "__wbindgen_generic_0000000000000000" (func (;43;) (type 18)))
   (import "./reference_test_bg.js" "__wbindgen_generic_0000000000000001" (func (;44;) (type 9)))

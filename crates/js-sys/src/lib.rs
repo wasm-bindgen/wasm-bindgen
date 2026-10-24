@@ -14120,26 +14120,29 @@ extern "C" {
     /// The `PromiseState` object represents the the status of the promise,
     /// as used in `allSettled`.
     ///
+    /// `T` is the fulfilled value type and `E` the rejection reason type,
+    /// both defaulting to `JsValue`.
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled)
     #[must_use]
     #[wasm_bindgen(extends = Object, typescript_type = "any")]
     #[derive(Clone, Debug)]
-    pub type PromiseState<T = JsValue>;
+    pub type PromiseState<T = JsValue, E = JsValue>;
 
     /// A string, either "fulfilled" or "rejected", indicating the eventual state of the promise.
     #[wasm_bindgen(method, getter = status)]
-    pub fn get_status<T>(this: &PromiseState<T>) -> String;
+    pub fn get_status<T, E>(this: &PromiseState<T, E>) -> String;
 
     /// Only present if status is "fulfilled". The value that the promise was fulfilled with.
     #[wasm_bindgen(method, getter = value)]
-    pub fn get_value<T>(this: &PromiseState<T>) -> Option<T>;
+    pub fn get_value<T, E>(this: &PromiseState<T, E>) -> Option<T>;
 
     /// Only present if status is "rejected". The reason that the promise was rejected with.
     #[wasm_bindgen(method, getter = reason)]
-    pub fn get_reason<T>(this: &PromiseState<T>) -> Option<JsValue>;
+    pub fn get_reason<T, E>(this: &PromiseState<T, E>) -> Option<E>;
 }
 
-impl<T> PromiseState<T> {
+impl<T, E> PromiseState<T, E> {
     pub fn is_fulfilled(&self) -> bool {
         self.get_status() == "fulfilled"
     }
@@ -14149,11 +14152,13 @@ impl<T> PromiseState<T> {
     }
 }
 
-/// Converts a `PromiseState<T>` into a `Result<T, JsValue>`, matching the
+/// Converts a `PromiseState<T, E>` into a `Result<T, E>`, matching the
 /// spec invariant that exactly one of the fulfilled value or the rejection
 /// reason is populated per slot.
-impl<T: JsGeneric + FromWasmAbi> From<PromiseState<T>> for Result<T, JsValue> {
-    fn from(state: PromiseState<T>) -> Result<T, JsValue> {
+impl<T: JsGeneric + FromWasmAbi, E: JsGeneric + FromWasmAbi> From<PromiseState<T, E>>
+    for Result<T, E>
+{
+    fn from(state: PromiseState<T, E>) -> Result<T, E> {
         if state.is_fulfilled() {
             Ok(state.get_value().unwrap())
         } else {
@@ -14168,22 +14173,29 @@ extern "C" {
     /// The object returned by [`Promise::with_resolvers`], bundling a
     /// pending promise with the functions that settle it.
     ///
+    /// `T` is the fulfilled value type and `E` the rejection reason type,
+    /// both defaulting to `JsValue`.
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/withResolvers)
     #[wasm_bindgen(extends = Object, typescript_type = "PromiseWithResolvers<any>")]
     #[derive(Clone, Debug, PartialEq, Eq)]
-    pub type PromiseWithResolvers<T = JsValue>;
+    pub type PromiseWithResolvers<T = JsValue, E = JsValue>;
 
     /// The pending promise.
     #[wasm_bindgen(method, getter)]
-    pub fn promise<T>(this: &PromiseWithResolvers<T>) -> Promise<T>;
+    pub fn promise<T, E>(this: &PromiseWithResolvers<T, E>) -> Promise<T, E>;
 
     /// The function that fulfills the promise with a value.
     #[wasm_bindgen(method, getter)]
-    pub fn resolve<T: JsGeneric>(this: &PromiseWithResolvers<T>) -> Function<fn(T) -> Undefined>;
+    pub fn resolve<T: JsGeneric, E>(
+        this: &PromiseWithResolvers<T, E>,
+    ) -> Function<fn(T) -> Undefined>;
 
     /// The function that rejects the promise with a reason.
     #[wasm_bindgen(method, getter)]
-    pub fn reject<T>(this: &PromiseWithResolvers<T>) -> Function<fn(JsValue) -> Undefined>;
+    pub fn reject<T, E: JsGeneric>(
+        this: &PromiseWithResolvers<T, E>,
+    ) -> Function<fn(E) -> Undefined>;
 }
 
 // Promise
@@ -14192,11 +14204,19 @@ extern "C" {
     /// The `Promise` object represents the eventual completion (or failure) of
     /// an asynchronous operation, and its resulting value.
     ///
+    /// `T` is the type the promise fulfills with and `E` the type it rejects
+    /// with, both defaulting to `JsValue`. Awaiting a `Promise<T, E>` yields a
+    /// `Result<T, E>`. JS can reject with any value, so `E` is the same kind
+    /// of unchecked assertion about the JS side as `T` is. A `Promise<T, E>`
+    /// upcasts to `Promise<T2, E2>` whenever `T` upcasts to `T2` and `E` to
+    /// `E2`, so a `Promise<T, TypeError>` can be passed where a
+    /// `Promise<T, Error>` or `Promise<T>` is expected.
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
     #[must_use]
     #[wasm_bindgen(extends = Object, typescript_type = "Promise<any>", no_promising)]
     #[derive(Clone, Debug)]
-    pub type Promise<T = JsValue>;
+    pub type Promise<T = JsValue, E = JsValue>;
 
     /// Creates a new `Promise` with the provided executor `cb`
     ///
@@ -14236,9 +14256,9 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(constructor)]
-    pub fn new<T: JsGeneric>(
-        cb: &mut dyn FnMut(Function<fn(T) -> Undefined>, Function<fn(JsValue) -> Undefined>),
-    ) -> Promise<T>;
+    pub fn new<T: JsGeneric, E: JsGeneric>(
+        cb: &mut dyn FnMut(Function<fn(T) -> Undefined>, Function<fn(E) -> Undefined>),
+    ) -> Promise<T, E>;
 
     // Next major: deprecate
     /// Creates a new `Promise` with the provided executor `cb`
@@ -14336,11 +14356,11 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/any)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(static_method_of = Promise, js_name = any)]
-    pub fn any<I: Iterable>(obj: &I) -> Promise<<I::Item as Promising>::Resolution>
+    pub fn any<I: Iterable>(obj: &I) -> Promise<<I::Item as Promising>::Resolution, AggregateError>
     where
         I::Item: Promising;
 
-    // Next major: deprecate
+    // Next major: deprecate, and type the rejection as `AggregateError`
     /// The `Promise.any(iterable)` method returns a single `Promise` that
     /// resolves when any of the promises in the iterable argument have resolved
     /// or when the iterable argument contains no promises. It rejects with an
@@ -14397,7 +14417,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/reject)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(static_method_of = Promise, js_name = reject)]
-    pub fn reject<T>(obj: &JsValue) -> Promise<T>;
+    pub fn reject<T, E: JsGeneric>(obj: &E) -> Promise<T, E>;
 
     // Next major: deprecate
     /// The `Promise.reject(reason)` method returns a `Promise` object that is
@@ -14425,7 +14445,10 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/catch)
     #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method)]
-    pub fn catch<T>(this: &Promise<T>, cb: &ScopedClosure<dyn FnMut(JsValue)>) -> Promise<JsValue>;
+    pub fn catch<'a, T, E>(
+        this: &Promise<T, E>,
+        cb: &ScopedClosure<'a, dyn FnMut(E)>,
+    ) -> Promise<JsValue>;
 
     /// The `catch()` method returns a `Promise` and deals with rejected cases
     /// only.  It behaves the same as calling `Promise.prototype.then(undefined,
@@ -14435,17 +14458,17 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/catch)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, js_name = catch)]
-    pub fn catch<'a, T, R: Promising>(
-        this: &Promise<T>,
-        cb: &ScopedClosure<'a, dyn FnMut(T) -> Result<R, JsError>>,
+    pub fn catch<'a, T, E, R: Promising>(
+        this: &Promise<T, E>,
+        cb: &ScopedClosure<'a, dyn FnMut(E) -> Result<R, JsError>>,
     ) -> Promise<R::Resolution>;
 
     // Next major: deprecate
     /// Same as `catch`, but returning a result to become the new Promise value.
     #[wasm_bindgen(method, js_name = catch)]
-    pub fn catch_map<'a, T, R: Promising>(
-        this: &Promise<T>,
-        cb: &ScopedClosure<'a, dyn FnMut(T) -> Result<R, JsError>>,
+    pub fn catch_map<'a, T, E, R: Promising>(
+        this: &Promise<T, E>,
+        cb: &ScopedClosure<'a, dyn FnMut(E) -> Result<R, JsError>>,
     ) -> Promise<R::Resolution>;
 
     /// The `then()` method returns a `Promise`. It takes up to two arguments:
@@ -14454,8 +14477,10 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then)
     #[cfg(not(js_sys_unstable_apis))]
     #[wasm_bindgen(method)]
-    pub fn then<'a, T>(this: &Promise<T>, cb: &ScopedClosure<'a, dyn FnMut(T)>)
-        -> Promise<JsValue>;
+    pub fn then<'a, T, E>(
+        this: &Promise<T, E>,
+        cb: &ScopedClosure<'a, dyn FnMut(T)>,
+    ) -> Promise<JsValue, E>;
 
     /// The `then()` method returns a `Promise`. It takes up to two arguments:
     /// callback functions for the success and failure cases of the `Promise`.
@@ -14463,8 +14488,8 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, js_name = then)]
-    pub fn then<'a, T, R: Promising>(
-        this: &Promise<T>,
+    pub fn then<'a, T, E, R: Promising>(
+        this: &Promise<T, E>,
         cb: &ScopedClosure<'a, dyn FnMut(T) -> Result<R, JsError>>,
     ) -> Promise<R::Resolution>;
 
@@ -14473,10 +14498,10 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then)
     #[wasm_bindgen(method, js_name = then)]
-    pub fn then_with_reject<'a, T, R: Promising>(
-        this: &Promise<T>,
+    pub fn then_with_reject<'a, T, E, R: Promising>(
+        this: &Promise<T, E>,
         resolve: &ScopedClosure<'a, dyn FnMut(T) -> Result<R, JsError>>,
-        reject: &ScopedClosure<'a, dyn FnMut(JsValue) -> Result<R, JsError>>,
+        reject: &ScopedClosure<'a, dyn FnMut(E) -> Result<R, JsError>>,
     ) -> Promise<R::Resolution>;
 
     // Next major: deprecate
@@ -14486,8 +14511,8 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then)
     #[wasm_bindgen(method, js_name = then)]
-    pub fn then_map<'a, T, R: Promising>(
-        this: &Promise<T>,
+    pub fn then_map<'a, T, E, R: Promising>(
+        this: &Promise<T, E>,
         cb: &ScopedClosure<'a, dyn FnMut(T) -> Result<R, JsError>>,
     ) -> Promise<R::Resolution>;
 
@@ -14512,7 +14537,10 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/finally)
     #[wasm_bindgen(method)]
-    pub fn finally<T>(this: &Promise<T>, cb: &ScopedClosure<dyn FnMut()>) -> Promise<JsValue>;
+    pub fn finally<T, E>(
+        this: &Promise<T, E>,
+        cb: &ScopedClosure<dyn FnMut()>,
+    ) -> Promise<JsValue, E>;
 
     /// The `Promise.try()` static method calls `cb` synchronously and
     /// wraps its outcome in a promise: a returned value or promise is
@@ -14528,22 +14556,25 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/withResolvers)
     #[wasm_bindgen(static_method_of = Promise, js_name = withResolvers)]
-    pub fn with_resolvers<T>() -> PromiseWithResolvers<T>;
+    pub fn with_resolvers<T, E>() -> PromiseWithResolvers<T, E>;
 }
 
-impl<T: JsGeneric> Promising for Promise<T> {
+impl<T: JsGeneric, E> Promising for Promise<T, E> {
     type Resolution = T;
 }
 
-/// Internal: maps a tuple of `Promise<T_i>` to the result shapes of
+/// Internal: maps a tuple of `Promise<T_i, E>` to the result shapes of
 /// [`Promise::all_tuple`] and [`Promise::all_settled_tuple`].
 ///
-/// Implemented for every tuple arity 1..=8 of `Promise<T: JsGeneric>`. The
-/// associated `Joined` / `Settled` types pin down the [`ArrayTuple`] shape
-/// of the result so the one [`JsCast::unchecked_into`] needed to reinterpret
-/// the [`Array<JsValue>`] returned by `Promise.all` / `Promise.allSettled`
-/// is encapsulated inside each impl — the caller sees a fully-typed
-/// `Promise<ArrayTuple<...>>`.
+/// Implemented for every tuple arity 1..=8 of `Promise<T, E>` with `T` and
+/// `E` both `JsGeneric`,
+/// with one rejection type `E` shared across the tuple (upcast mixed
+/// rejection types to a common one first). The associated `Joined` /
+/// `Settled` types pin down the [`ArrayTuple`] shape of the result so the
+/// one [`JsCast::unchecked_into`] needed to reinterpret the
+/// [`Array<JsValue>`] returned by `Promise.all` / `Promise.allSettled` is
+/// encapsulated inside each impl — the caller sees a fully-typed
+/// `Promise<ArrayTuple<...>, E>`.
 ///
 /// The soundness of the `unchecked_into`s here rests on `Promise.all` and
 /// `Promise.allSettled` preserving input order and arity, which they do by
@@ -14555,18 +14586,22 @@ impl<T: JsGeneric> Promising for Promise<T> {
 pub trait PromiseTuple {
     /// The typed `ArrayTuple` shape the joined promise resolves to.
     ///
-    /// For a tuple `(Promise<T1>, Promise<T2>, ...)` this is
+    /// For a tuple `(Promise<T1, E>, Promise<T2, E>, ...)` this is
     /// `ArrayTuple<(T1, T2, ...)>`.
     type Joined: JsGeneric;
 
     /// The typed `ArrayTuple` shape the all-settled promise resolves to.
     ///
-    /// For a tuple `(Promise<T1>, Promise<T2>, ...)` this is
-    /// `ArrayTuple<(PromiseState<T1>, PromiseState<T2>, ...)>`.
+    /// For a tuple `(Promise<T1, E>, Promise<T2, E>, ...)` this is
+    /// `ArrayTuple<(PromiseState<T1, E>, PromiseState<T2, E>, ...)>`.
     type Settled: JsGeneric;
 
+    /// The rejection type shared by every promise in the tuple, which the
+    /// joined promise rejects with.
+    type Rejection;
+
     /// Join via `Promise.all`, returning a typed `Promise`.
-    fn all(self) -> Promise<Self::Joined>;
+    fn all(self) -> Promise<Self::Joined, Self::Rejection>;
 
     /// Settle via `Promise.allSettled`, returning a typed `Promise`.
     fn all_settled(self) -> Promise<Self::Settled>;
@@ -14574,26 +14609,27 @@ pub trait PromiseTuple {
 
 macro_rules! impl_promise_tuple {
     ([$($T:ident)+] [$($idx:tt)+]) => {
-        // Rust tuple of `Promise<T_i>`. Builds the heterogeneous
+        // Rust tuple of `Promise<T_i, E>`. Builds the heterogeneous
         // `ArrayTuple` of promises via the existing `From<(...)>` impl
         // (each element upcasts through `JsGeneric`), then delegates to
         // the `ArrayTuple` impl below.
-        impl<$($T: JsGeneric),+> PromiseTuple for ($(Promise<$T>,)+) {
+        impl<$($T: JsGeneric,)+ E: JsGeneric> PromiseTuple for ($(Promise<$T, E>,)+) {
             type Joined = ArrayTuple<($($T,)+)>;
-            type Settled = ArrayTuple<($(PromiseState<$T>,)+)>;
+            type Settled = ArrayTuple<($(PromiseState<$T, E>,)+)>;
+            type Rejection = E;
 
-            fn all(self) -> Promise<Self::Joined> {
-                let tuple: ArrayTuple<($(Promise<$T>,)+)> = ($(self.$idx,)+).into();
+            fn all(self) -> Promise<Self::Joined, E> {
+                let tuple: ArrayTuple<($(Promise<$T, E>,)+)> = ($(self.$idx,)+).into();
                 tuple.all()
             }
 
             fn all_settled(self) -> Promise<Self::Settled> {
-                let tuple: ArrayTuple<($(Promise<$T>,)+)> = ($(self.$idx,)+).into();
+                let tuple: ArrayTuple<($(Promise<$T, E>,)+)> = ($(self.$idx,)+).into();
                 tuple.all_settled()
             }
         }
 
-        // `ArrayTuple<(Promise<T_1>, ..., Promise<T_n>)>` — callers who
+        // `ArrayTuple<(Promise<T_1, E>, ..., Promise<T_n, E>)>` — callers who
         // already have an `ArrayTuple` (e.g. from a binding that returns
         // one, or built via `.into()` earlier in a pipeline) can pass it
         // directly without unpacking into a Rust tuple.
@@ -14602,12 +14638,14 @@ macro_rules! impl_promise_tuple {
         // `Promise.allSettled_iterable` and reinterprets the result
         // `Array<JsValue>` as the intended typed `ArrayTuple`. Safe because
         // `Promise.all` / `Promise.allSettled` preserve input order and
-        // arity by spec.
-        impl<$($T: JsGeneric),+> PromiseTuple for ArrayTuple<($(Promise<$T>,)+)> {
+        // arity by spec, and `Promise.all` rejects with one of the inputs'
+        // rejection reasons.
+        impl<$($T: JsGeneric,)+ E: JsGeneric> PromiseTuple for ArrayTuple<($(Promise<$T, E>,)+)> {
             type Joined = ArrayTuple<($($T,)+)>;
-            type Settled = ArrayTuple<($(PromiseState<$T>,)+)>;
+            type Settled = ArrayTuple<($(PromiseState<$T, E>,)+)>;
+            type Rejection = E;
 
-            fn all(self) -> Promise<Self::Joined> {
+            fn all(self) -> Promise<Self::Joined, E> {
                 use wasm_bindgen::JsCast;
                 Promise::all_iterable(&self).unchecked_into()
             }
@@ -14631,8 +14669,9 @@ impl_promise_tuple!([T1 T2 T3 T4 T5 T6 T7 T8] [0 1 2 3 4 5 6 7]);
 
 impl Promise {
     /// Heterogeneous counterpart to [`Promise::all_iterable`]: accepts a Rust
-    /// tuple of `Promise<T_i>` and returns a single [`Promise`] resolving to a
-    /// typed [`ArrayTuple<(T_1, T_2, ..., T_n)>`].
+    /// tuple of `Promise<T_i, E>` and returns a single [`Promise`] resolving
+    /// to a typed [`ArrayTuple<(T_1, T_2, ..., T_n)>`] and rejecting with the
+    /// tuple's shared rejection type `E`.
     ///
     /// Destructure the awaited result via [`ArrayTuple::into_tuple`] to get
     /// the individual values back as a native Rust tuple. Implemented for
@@ -14650,14 +14689,14 @@ impl Promise {
     ///     .into_tuple();
     /// ```
     #[inline]
-    pub fn all_tuple<T: PromiseTuple>(promises: T) -> Promise<T::Joined> {
+    pub fn all_tuple<T: PromiseTuple>(promises: T) -> Promise<T::Joined, T::Rejection> {
         promises.all()
     }
 
     /// Heterogeneous counterpart to [`Promise::all_settled_iterable`]: accepts
-    /// a Rust tuple of `Promise<T_i>` and returns a single [`Promise`]
+    /// a Rust tuple of `Promise<T_i, E>` and returns a single [`Promise`]
     /// resolving to a typed
-    /// `ArrayTuple<(PromiseState<T_1>, ..., PromiseState<T_n>)>`.
+    /// `ArrayTuple<(PromiseState<T_1, E>, ..., PromiseState<T_n, E>)>`.
     ///
     /// Unlike [`Promise::all_tuple`], this never rejects early: every input
     /// settles (fulfills or rejects) and is reflected by its [`PromiseState`]

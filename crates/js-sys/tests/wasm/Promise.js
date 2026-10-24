@@ -98,3 +98,13 @@ export async function testRustDoubleNumberPromise(rustModule) {
   }
   return true;
 }
+
+export async function stringOrTypeError(value, fail) {
+  await null;
+  if (fail) throw new TypeError(String(value));
+  return value;
+}
+
+export function rejectTypeError(message) {
+  return Promise.reject(new TypeError(message));
+}

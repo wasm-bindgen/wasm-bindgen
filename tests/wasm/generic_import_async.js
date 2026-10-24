@@ -39,3 +39,9 @@ exports.joinOf = function(v) {
   if (v === undefined) return 'undefined';
   return `${v.constructor.name}:${v.join('|')}`;
 };
+
+exports.settleWith = async function(value, fail) {
+  await null;
+  if (fail) throw new TypeError(String(value));
+  return value;
+};

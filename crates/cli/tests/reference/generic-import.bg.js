@@ -112,11 +112,11 @@ export function __wbg_takeScalars_beca431d0c81162b(arg0, arg1, arg2, arg3, arg4,
 export function __wbg_takeWideScalars_ad60f980ecf3c417(arg0, arg1, arg2, arg3, arg4) {
     takeWideScalars((BigInt.asUintN(64, arg0) | (arg1 << BigInt(64))), (BigInt.asUintN(64, arg2) | (BigInt.asUintN(64, arg3) << BigInt(64))), arg4);
 }
-export function __wbg_then_c949d5a25a4e78f8(arg0, arg1, arg2) {
+export function __wbg_then_230c9d737bc3c90b(arg0, arg1, arg2) {
     const ret = arg0.then(arg1, arg2);
     return ret;
 }
-export function __wbg_then_e71170d78fcf8954(arg0, arg1) {
+export function __wbg_then_ce2a321a994ccb81(arg0, arg1) {
     const ret = arg0.then(arg1);
     return ret;
 }
