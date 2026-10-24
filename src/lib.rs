@@ -1181,6 +1181,16 @@ impl<T: TryFromJsValue> TryFromJsValue for Option<T> {
     }
 }
 
+impl<T: TryFromJsValue> TryFromJsValue for Nullable<T> {
+    fn try_from_js_value_ref(value: &JsValue) -> Option<Self> {
+        if value.is_null() {
+            Some(Nullable::Null)
+        } else {
+            T::try_from_js_value_ref(value).map(Nullable::Value)
+        }
+    }
+}
+
 // Converts a JS `Array` whose elements all convert via `T::try_from_js_value`.
 // Rejects non-array values and arrays containing any element that fails to
 // convert. Mirrors the `Array`-shaped representation used by the static ABI

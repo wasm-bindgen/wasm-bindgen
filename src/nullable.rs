@@ -25,10 +25,13 @@ use crate::{JsCast, JsValue};
 /// `Option<T>`. No other nesting is supported: `Nullable<Nullable<T>>`,
 /// `Nullable<Option<T>>` and `Option<Option<T>>` do not cross the boundary.
 ///
-/// Use these for a value crossing the boundary directly. Inside a JS type,
-/// such as `Array<T>` or `Promise<T>`, and in generic positions, use the
-/// JS-side handles [`JsOption<T>`] and [`JsNullable<T>`] instead, which stay
-/// JS values rather than converting.
+/// Both are also sequence elements, `&[Nullable<T>]` and `Vec<Nullable<T>>`,
+/// for the `T` a sequence of `T` takes, and may name a slot of a js-sys
+/// `Function<fn(..)>` signature or a `Promise<T>` resolution. Where a js-sys
+/// container's type-erased methods marshal the element itself, as
+/// `Array::get` and `Map::get` do, the element must be a handle: use the
+/// JS-side [`JsOption<T>`] and [`JsNullable<T>`] there, which stay JS values
+/// rather than converting.
 ///
 /// [`JsOption<T>`]: crate::sys::JsOption
 /// [`JsNullable<T>`]: crate::sys::JsNullable
@@ -389,6 +392,16 @@ impl<T> From<Nullable<T>> for Option<T> {
     #[inline]
     fn from(nullable: Nullable<T>) -> Self {
         nullable.value()
+    }
+}
+
+impl<T: Into<JsValue>> From<Nullable<T>> for JsValue {
+    #[inline]
+    fn from(nullable: Nullable<T>) -> Self {
+        match nullable {
+            Nullable::Null => JsValue::NULL,
+            Nullable::Value(v) => v.into(),
+        }
     }
 }
 

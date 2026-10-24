@@ -36,6 +36,21 @@
   [#5410](https://github.com/wasm-bindgen/wasm-bindgen/pull/5410)
   [#5423](https://github.com/wasm-bindgen/wasm-bindgen/pull/5423)
 
+* `Option<T>` and `Nullable<T>` are now sequence elements: `&[Option<T>]`,
+  `&[Nullable<T>]` and `&[Option<Nullable<T>>]` cross as encoded slices for
+  every `T` a `&[T]` takes, and `Vec<Option<T>>`, `Vec<Nullable<T>>` and
+  `Vec<Option<Nullable<T>>>` cross in both directions, encoded for a number,
+  `bool` or `char` and as an array of JS values for a `String` or a JS type,
+  typed `(T | null)[]` and the like. The new `MaybeRefIntoWasmAbi` gives
+  `Option<Self>`'s ABI from a borrowed `Self` for the encoded cells.
+  `Nullable<T>` converts into `JsValue` with `From` and from one with
+  `TryFromJsValue`, and implements `Promising`. A js-sys `Function<fn(..)>`
+  signature slot no longer has to be a `JsGeneric` handle, so
+  `Function<fn(Nullable<JsString>) -> Option<Number>>` is a type and
+  `Function::from_closure` accepts a closure with converted arguments; the
+  `call*` and `bind*` methods keep the handle bound.
+  [#5427](https://github.com/wasm-bindgen/wasm-bindgen/pull/5427)
+
 * Added `MaybeIntoWasmAbi` / `MaybeFromWasmAbi`, the ABI of `Option<T>` for
   every `T`, with an associated `MaybeAbi` that lets a type without a spare
   value in its own ABI, such as `i32` or `f64`, pick a wider one. `Option<T>`

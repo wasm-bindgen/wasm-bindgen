@@ -4784,47 +4784,54 @@ impl<T: JsFunction> Function<T> {
     }
 }
 
-// Base traits for function signature types.
+/// The signature a `Function<T>` is typed with: a `fn(Args..) -> Ret` whose
+/// slots name the JS types the function takes and returns.
+///
+/// A slot may be any Rust carrier of a JS type, a handle such as `JsString`
+/// or a converted value such as `Nullable<JsString>` or `Option<Number>`, as
+/// a `Promise<T>` or `Array<T>` type argument may. The `call*` and `bind*`
+/// methods marshal through the erased `JsValue` representation and so bound
+/// their slots to [`JsGeneric`] handles themselves.
 pub trait JsFunction {
-    type Ret: JsGeneric;
+    type Ret;
     const ARITY: usize;
 }
 
 pub trait JsFunction1: JsFunction {
-    type Arg1: JsGeneric;
+    type Arg1;
     type Bind1: JsFunction;
 }
 pub trait JsFunction2: JsFunction1 {
-    type Arg2: JsGeneric;
+    type Arg2;
     type Bind2: JsFunction;
 }
 pub trait JsFunction3: JsFunction2 {
-    type Arg3: JsGeneric;
+    type Arg3;
     type Bind3: JsFunction;
 }
 pub trait JsFunction4: JsFunction3 {
-    type Arg4: JsGeneric;
+    type Arg4;
     type Bind4: JsFunction;
 }
 pub trait JsFunction5: JsFunction4 {
-    type Arg5: JsGeneric;
+    type Arg5;
     type Bind5: JsFunction;
 }
 pub trait JsFunction6: JsFunction5 {
-    type Arg6: JsGeneric;
+    type Arg6;
     type Bind6: JsFunction;
 }
 pub trait JsFunction7: JsFunction6 {
-    type Arg7: JsGeneric;
+    type Arg7;
     type Bind7: JsFunction;
 }
 pub trait JsFunction8: JsFunction7 {
-    type Arg8: JsGeneric;
+    type Arg8;
     type Bind8: JsFunction;
 }
 
 // Manual impl for fn() -> R
-impl<Ret: JsGeneric> JsFunction for fn() -> Ret {
+impl<Ret> JsFunction for fn() -> Ret {
     type Ret = Ret;
     const ARITY: usize = 0;
 }
@@ -4886,7 +4893,7 @@ macro_rules! impl_fn {
     };
 
     (@impl $arity:literal [$($A:ident)+] [$($trait:ident $arg:ident $bind:ident {$bind_ty:ty})+]) => {
-        impl<Ret: JsGeneric $(, $A: JsGeneric)+> JsFunction for fn($($A),+) -> Ret {
+        impl<Ret $(, $A)+> JsFunction for fn($($A),+) -> Ret {
             type Ret = Ret;
             const ARITY: usize = $arity;
         }
@@ -4897,7 +4904,7 @@ macro_rules! impl_fn {
     (@traits [$($A:ident)+] []) => {};
 
     (@traits [$($A:ident)+] [$trait:ident $arg:ident $bind:ident {$bind_ty:ty} $($rest:tt)*]) => {
-        impl<Ret: JsGeneric $(, $A: JsGeneric)+> $trait for fn($($A),+) -> Ret {
+        impl<Ret $(, $A)+> $trait for fn($($A),+) -> Ret {
             type $arg = $arg;
             type $bind = $bind_ty;
         }
@@ -5049,7 +5056,7 @@ pub trait FunctionIntoClosure: JsFunction {
 
 macro_rules! impl_function_into_closure {
     ( $(($($var:ident)*))* ) => {$(
-        impl<$($var: FromWasmAbi + JsGeneric,)* R: IntoWasmAbi + JsGeneric> FunctionIntoClosure for fn($($var),*) -> R {
+        impl<$($var: FromWasmAbi,)* R: IntoWasmAbi> FunctionIntoClosure for fn($($var),*) -> R {
             type ClosureTypeMut = dyn FnMut($($var),*) -> R;
         }
     )*};
