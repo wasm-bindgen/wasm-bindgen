@@ -85,15 +85,44 @@ the null pointer itself is `Null`. A JS `0` passed for either a
 `Nullable<NonNull<T>>` or an `Option<Nullable<NonNull<T>>>` reaches Rust as
 `Null`, as it is `None` for `Option<NonNull<T>>`.
 
+## As an element
+
+`Option<T>` and `Nullable<T>` are also accepted as the element of a sequence,
+for the same `T` a sequence of `T` accepts:
+
+| Shape | How it crosses | TypeScript |
+|---|---|---|
+| `&[Option<T>]`, `&[Nullable<T>]`, `&[Option<Nullable<T>>]` | encoded per element from the borrowed slice, numbers copied and strings and JS handles borrowed, into a fresh `Array` | `(T \| undefined)[]`, `(T \| null)[]` |
+| `Vec<Option<T>>` and friends, `T` a number, `bool` or `char` | encoded the same way in both directions | as above |
+| `Vec<Option<T>>` and friends, `T` a `String` or a JS type | an array of JS values, converted in Rust as `Vec<String>` is | `(string \| null)[]` |
+
+```rust
+#[wasm_bindgen]
+extern "C" {
+    fn plot(points: &[Option<f64>]);
+    fn names(ids: Vec<Nullable<String>>) -> Vec<Nullable<String>>;
+}
+```
+
+A `Function` signature may name them too, since its slots are JS types
+rather than handles: a `Closure<dyn FnMut(Nullable<JsString>)>` makes a
+`Function<fn(Nullable<JsString>) -> Undefined>` with `Function::from_closure`,
+and a `Promise<Nullable<JsString>>` awaits to a `Nullable<JsString>`.
+
 ## `Nullable<T>` and `JsNullable<T>`
 
 `Nullable<T>` and `Option<T>` are Rust-side types that convert at the
-boundary. [`JsNullable<T>`](./js-sys.md) and `JsOption<T>` are JS-side
-handles: the value stays a JS value, and they are what to use inside another
-JS type, such as `Array<JsNullable<T>>` or `Promise<JsOption<T>>`, and in
-generic positions. For `T: JsGeneric`, a `Nullable<T>` and an
-`Option<Nullable<T>>` convert into a `JsNullable<T>` with `From`, `None`
-becoming `undefined`, and a `JsNullable<T>` converts into an
-`Option<Nullable<T>>`, keeping all three states.
+boundary, so they fit wherever the value, or the sequence or promise holding
+it, is converted on crossing. [`JsNullable<T>`](./js-sys.md) and
+`JsOption<T>` are JS-side handles: the value stays a JS value, and they are
+what the type-erased generic methods of js-sys's containers work on. An
+`Array<Nullable<JsString>>` or `Map<JsString, Nullable<JsString>>` is a valid
+type, and crosses whole, but `Array::get` or `Map::get` on it does not
+resolve: those marshal the element as a `JsValue` handle, which a Rust enum
+cannot be, as `Promise::resolve(&Nullable::Null)` cannot borrow one. Name the
+element `JsNullable<T>` to use them, converting with `From` at the use site:
+for `T: JsGeneric`, a `Nullable<T>` and an `Option<Nullable<T>>` convert into
+a `JsNullable<T>`, `None` becoming `undefined`, and a `JsNullable<T>`
+converts into an `Option<Nullable<T>>`, keeping all three states.
 
 The type is also re-exported as `js_sys::Nullable`.

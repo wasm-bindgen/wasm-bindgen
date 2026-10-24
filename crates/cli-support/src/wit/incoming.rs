@@ -174,7 +174,7 @@ impl InstructionBuilder<'_, '_> {
             }
 
             Descriptor::Vector(cell) => {
-                let kind = match cell.sequence_cell() {
+                let kind = match cell.vector_cell() {
                     SequenceCell::InPlace(kind) => kind,
                     SequenceCell::Encoded(elem) => {
                         return self.incoming_encoded_vector(elem, false, OptionKind::Option)
@@ -453,7 +453,7 @@ impl InstructionBuilder<'_, '_> {
             }
 
             Descriptor::Vector(cell) => {
-                let kind = match cell.sequence_cell() {
+                let kind = match cell.vector_cell() {
                     SequenceCell::InPlace(kind) => kind,
                     SequenceCell::Encoded(elem) => {
                         return self.incoming_encoded_vector(elem, true, option_kind)
@@ -661,6 +661,42 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Char
             | Descriptor::Enum { .. }
             | Descriptor::StringEnum { .. } => encode._incoming(elem)?,
+            // `Option<T>` / `Nullable<T>` of a scalar: the cell is `Option<T>`'s
+            // ABI. An optional string or handle is an in-place vector instead
+            // (`Descriptor::vector_cell`).
+            Descriptor::Option { .. } | Descriptor::Nullable(_) => {
+                let (inner, kind) = match elem {
+                    Descriptor::Option { inner, strict } => match &**inner {
+                        Descriptor::Nullable(inner) => (&**inner, OptionKind::OptionNullable),
+                        inner => (inner, OptionKind::option(*strict)),
+                    },
+                    Descriptor::Nullable(inner) => (&**inner, OptionKind::Nullable),
+                    _ => unreachable!(),
+                };
+                match inner {
+                    Descriptor::I8
+                    | Descriptor::U8
+                    | Descriptor::I16
+                    | Descriptor::U16
+                    | Descriptor::I32
+                    | Descriptor::U32
+                    | Descriptor::I64
+                    | Descriptor::U64
+                    | Descriptor::I64AsF64
+                    | Descriptor::U64AsF64
+                    | Descriptor::I128
+                    | Descriptor::U128
+                    | Descriptor::F32
+                    | Descriptor::F64
+                    | Descriptor::Boolean
+                    | Descriptor::Char
+                    | Descriptor::Enum { .. }
+                    | Descriptor::StringEnum { .. } => encode.incoming_option(inner, kind)?,
+                    _ => bail!(
+                        "unsupported vector element type for calling Rust function from JS: {elem:?}"
+                    ),
+                }
+            }
             _ => {
                 bail!("unsupported vector element type for calling Rust function from JS: {elem:?}")
             }
