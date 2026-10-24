@@ -589,6 +589,11 @@ extern "C" {
     #[wasm_bindgen(method, setter = relativeTo)]
     pub fn set_relative_to_with_plain_date_like(this: &RelativeToOptions, value: &PlainDateLike);
     #[wasm_bindgen(method, setter = relativeTo)]
+    pub fn set_relative_to_with_plain_date_time_like(
+        this: &RelativeToOptions,
+        value: &PlainDateTimeLike,
+    );
+    #[wasm_bindgen(method, setter = relativeTo)]
     pub fn set_relative_to_with_zoned_date_time_like(
         this: &RelativeToOptions,
         value: &ZonedDateTimeLike,
@@ -1312,6 +1317,10 @@ extern "C" {
     pub fn set_plain_time_with_str(this: &ToZonedDateTimeItem, value: &str);
     #[wasm_bindgen(method, setter = plainTime)]
     pub fn set_plain_time_with_plain_time_like(this: &ToZonedDateTimeItem, value: &PlainTimeLike);
+    #[wasm_bindgen(method, setter = plainTime)]
+    pub fn set_plain_time_with_plain_date_time(this: &ToZonedDateTimeItem, value: &PlainDateTime);
+    #[wasm_bindgen(method, setter = plainTime)]
+    pub fn set_plain_time_with_zoned_date_time(this: &ToZonedDateTimeItem, value: &ZonedDateTime);
 }
 
 impl ToZonedDateTimeItem {
@@ -2157,6 +2166,34 @@ extern "C" {
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/withCalendar)
     #[wasm_bindgen(method, js_name = withCalendar, catch)]
     pub fn with_calendar(this: &PlainDateTime, calendar: &str) -> Result<PlainDateTime, JsValue>;
+
+    /// The `withPlainTime()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`PlainDateTime::with_plain_time`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = withPlainTime, catch)]
+    pub fn with_plain_time_with_str(
+        this: &PlainDateTime,
+        plain_time: &str,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `withPlainTime()` method taking a property bag; throws a `TypeError` if no time field is present; see [`PlainDateTime::with_plain_time`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = withPlainTime, catch)]
+    pub fn with_plain_time_with_plain_time_like(
+        this: &PlainDateTime,
+        plain_time: &PlainTimeLike,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `withPlainTime()` method taking a `Temporal.PlainDateTime`; see [`PlainDateTime::with_plain_time`] for errors.
+    #[wasm_bindgen(method, js_name = withPlainTime, catch)]
+    pub fn with_plain_time_with_plain_date_time(
+        this: &PlainDateTime,
+        plain_time: &PlainDateTime,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `withPlainTime()` method taking a `Temporal.ZonedDateTime`; see [`PlainDateTime::with_plain_time`] for errors.
+    #[wasm_bindgen(method, js_name = withPlainTime, catch)]
+    pub fn with_plain_time_with_zoned_date_time(
+        this: &PlainDateTime,
+        plain_time: &ZonedDateTime,
+    ) -> Result<PlainDateTime, JsValue>;
 
     /// The `withCalendar()` method taking the calendar of the given `Temporal.PlainDate`.
     #[wasm_bindgen(method, js_name = withCalendar)]
@@ -3008,6 +3045,34 @@ extern "C" {
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/withCalendar)
     #[wasm_bindgen(method, js_name = withCalendar, catch)]
     pub fn with_calendar(this: &ZonedDateTime, calendar: &str) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `withPlainTime()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`ZonedDateTime::with_plain_time`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = withPlainTime, catch)]
+    pub fn with_plain_time_with_str(
+        this: &ZonedDateTime,
+        plain_time: &str,
+    ) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `withPlainTime()` method taking a property bag; throws a `TypeError` if no time field is present; see [`ZonedDateTime::with_plain_time`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = withPlainTime, catch)]
+    pub fn with_plain_time_with_plain_time_like(
+        this: &ZonedDateTime,
+        plain_time: &PlainTimeLike,
+    ) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `withPlainTime()` method taking a `Temporal.PlainDateTime`; see [`ZonedDateTime::with_plain_time`] for errors.
+    #[wasm_bindgen(method, js_name = withPlainTime, catch)]
+    pub fn with_plain_time_with_plain_date_time(
+        this: &ZonedDateTime,
+        plain_time: &PlainDateTime,
+    ) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `withPlainTime()` method taking a `Temporal.ZonedDateTime`; see [`ZonedDateTime::with_plain_time`] for errors.
+    #[wasm_bindgen(method, js_name = withPlainTime, catch)]
+    pub fn with_plain_time_with_zoned_date_time(
+        this: &ZonedDateTime,
+        plain_time: &ZonedDateTime,
+    ) -> Result<ZonedDateTime, JsValue>;
 
     /// The `withCalendar()` method taking the calendar of the given `Temporal.PlainDate`.
     #[wasm_bindgen(method, js_name = withCalendar)]
@@ -5970,6 +6035,34 @@ extern "C" {
         this: &PlainDate,
         time_zone: &str,
     ) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `toPlainDateTime()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`PlainDate::to_plain_date_time`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = toPlainDateTime, catch)]
+    pub fn to_plain_date_time_with_str(
+        this: &PlainDate,
+        plain_time: &str,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `toPlainDateTime()` method taking a property bag; throws a `TypeError` if no time field is present; see [`PlainDate::to_plain_date_time`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = toPlainDateTime, catch)]
+    pub fn to_plain_date_time_with_plain_time_like(
+        this: &PlainDate,
+        plain_time: &PlainTimeLike,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `toPlainDateTime()` method taking a `Temporal.PlainDateTime`; see [`PlainDate::to_plain_date_time`] for errors.
+    #[wasm_bindgen(method, js_name = toPlainDateTime, catch)]
+    pub fn to_plain_date_time_with_plain_date_time(
+        this: &PlainDate,
+        plain_time: &PlainDateTime,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `toPlainDateTime()` method taking a `Temporal.ZonedDateTime`; see [`PlainDate::to_plain_date_time`] for errors.
+    #[wasm_bindgen(method, js_name = toPlainDateTime, catch)]
+    pub fn to_plain_date_time_with_zoned_date_time(
+        this: &PlainDate,
+        plain_time: &ZonedDateTime,
+    ) -> Result<PlainDateTime, JsValue>;
 
     /// The `toZonedDateTime()` method in the time zone of the given
     /// `Temporal.ZonedDateTime`; see [`PlainDate::to_zoned_date_time_with_str`] for errors.
