@@ -1038,7 +1038,7 @@ fn ordering_and_locale_options() {
     assert!(a < b);
     assert!(b > a);
     assert_eq!(a.cmp(&a.clone()), core::cmp::Ordering::Equal);
-    let mut times = vec![
+    let mut times = [
         Temporal::PlainTime::from_with_str("12:00").unwrap(),
         Temporal::PlainTime::from_with_str("09:30").unwrap(),
         Temporal::PlainTime::from_with_str("23:59").unwrap(),
