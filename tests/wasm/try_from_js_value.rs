@@ -127,18 +127,12 @@ fn option_try_from_js_value() {
         Option::<i64>::try_from_js_value(JsValue::UNDEFINED),
         Ok(None)
     );
-    assert_eq!(
-        Option::<i64>::try_from_js_value(JsValue::NULL),
-        Err(JsValue::NULL)
-    );
+    assert_eq!(Option::<i64>::try_from_js_value(JsValue::NULL), Ok(None));
     assert_eq!(
         Option::<String>::try_from_js_value(JsValue::UNDEFINED),
         Ok(None)
     );
-    assert_eq!(
-        Option::<String>::try_from_js_value(JsValue::NULL),
-        Err(JsValue::NULL)
-    );
+    assert_eq!(Option::<String>::try_from_js_value(JsValue::NULL), Ok(None));
 
     assert_eq!(
         Option::<i64>::try_from_js_value(JsValue::from(42_i64)),
@@ -161,7 +155,7 @@ fn option_try_from_js_value() {
 
     assert_eq!(
         Option::<JsValue>::try_from_js_value(JsValue::NULL),
-        Ok(Some(JsValue::NULL))
+        Ok(None)
     );
     assert_eq!(
         Option::<JsValue>::try_from_js_value(JsValue::from_str("test")),
@@ -426,6 +420,23 @@ fn vec_nested_try_from_js_value() {
             vec!["c".to_string()],
             vec![],
         ]
+    );
+}
+
+// `null` is `None` for every `T` but a `Nullable<T>`, which keeps it.
+#[wasm_bindgen_test]
+fn option_null_try_from_js_value() {
+    assert_eq!(
+        Option::<Nullable<String>>::try_from_js_value(JsValue::NULL),
+        Ok(Some(Nullable::Null))
+    );
+    assert_eq!(
+        Option::<Nullable<String>>::try_from_js_value(JsValue::UNDEFINED),
+        Ok(None)
+    );
+    assert_eq!(
+        Nullable::<String>::try_from_js_value(JsValue::UNDEFINED).map_err(|_| ()),
+        Err(())
     );
 }
 

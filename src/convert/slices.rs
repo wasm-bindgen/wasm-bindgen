@@ -10,11 +10,12 @@ use crate::__rt::{marker::ErasableGeneric, WasmWord};
 use crate::__wbindgen_copy_to_typed_array;
 use crate::convert::{
     js_value_vector_from_abi, js_value_vector_into_abi, try_js_value_vector_from_abi, FromWasmAbi,
-    IntoWasmAbi, LongRefFromWasmAbi, NullableIntoWasmAbi, OptionFromWasmAbi, OptionIntoWasmAbi,
-    RefFromWasmAbi, RefMutFromWasmAbi, UpcastFrom, VectorFromWasmAbi, VectorIntoWasmAbi, WasmAbi,
+    IntoWasmAbi, LongRefFromWasmAbi, MaybeIntoWasmAbi, MaybeRefIntoWasmAbi, NullableIntoWasmAbi,
+    OptionFromWasmAbi, OptionIntoWasmAbi, RefFromWasmAbi, RefMutFromWasmAbi, TryFromJsValue,
+    UpcastFrom, VectorFromWasmAbi, VectorIntoWasmAbi, WasmAbi,
 };
 use crate::describe::*;
-use crate::{JsError, JsValue};
+use crate::{JsError, JsValue, Nullable};
 
 use cfg_if::cfg_if;
 
@@ -250,10 +251,13 @@ vectors! {
     u8 i8 u16 i16 u32 i32 u64 i64 usize isize f32 f64
 }
 
-impl WasmDescribeVector for String {
+/// The element of a `Vec<String>`: a JS string handle, which is how an owned
+/// vector of strings crosses, typed `string[]`.
+struct StringHandle;
+
+impl WasmDescribe for StringHandle {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe_vector() {
-        inform(VECTOR);
+    fn describe() {
         inform(NAMED_EXTERNREF);
         // Trying to use an actual loop for this breaks the Wasm interpreter.
         inform(6);
@@ -263,6 +267,14 @@ impl WasmDescribeVector for String {
         inform('i' as u32);
         inform('n' as u32);
         inform('g' as u32);
+    }
+}
+
+impl WasmDescribeVector for String {
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe_vector() {
+        inform(VECTOR);
+        StringHandle::describe();
     }
 }
 
@@ -763,3 +775,170 @@ unsafe impl<T: ErasableGeneric> ErasableGeneric for &[T] {
 }
 
 impl<'a, T, Target> UpcastFrom<&'a [T]> for &'a [Target] where Target: UpcastFrom<T> {}
+
+/// `Option<T>` and `Nullable<T>` as a sequence element.
+///
+/// Borrowed, `&[Option<T>]` is an encoded sequence whose cell is
+/// `Option<T>`'s own ABI, taken from each borrowed element through
+/// [`MaybeRefIntoWasmAbi`]. Owned, a `Vec<Option<T>>` follows `Vec<T>`: a
+/// scalar `T` encodes the same cells, and a string or JS handle `T` crosses
+/// in the compat form, an in-place vector of handles converted in Rust.
+/// `Option<Nullable<T>>` nests as it does for a single value.
+macro_rules! maybe_ref_copies {
+    ($($t:ty)*) => ($(
+        impl MaybeRefIntoWasmAbi for $t {
+            #[inline]
+            fn ref_into_maybe_abi(&self) -> Self::MaybeAbi {
+                (*self).into_maybe_abi()
+            }
+        }
+    )*)
+}
+
+maybe_ref_copies! {
+    u8 i8 u16 i16 u32 i32 u64 i64 u128 i128 usize isize f32 f64 bool char
+    &str &String &Box<str> &Cow<'_, str>
+}
+
+impl MaybeRefIntoWasmAbi for String {
+    #[inline]
+    fn ref_into_maybe_abi(&self) -> WasmSlice {
+        self.as_str().into_maybe_abi()
+    }
+}
+
+impl<T> MaybeRefIntoWasmAbi for T
+where
+    T: ErasableGeneric<Repr = JsValue> + AsRef<JsValue> + OptionIntoWasmAbi<Abi = u32>,
+{
+    #[inline]
+    fn ref_into_maybe_abi(&self) -> u32 {
+        <&JsValue as IntoWasmAbi>::into_abi(self.as_ref())
+    }
+}
+
+impl<T: MaybeRefIntoWasmAbi + NullableIntoWasmAbi> MaybeRefIntoWasmAbi for Nullable<T> {
+    #[inline]
+    fn ref_into_maybe_abi(&self) -> T::MaybeAbi {
+        match self {
+            Nullable::Null => T::null(),
+            Nullable::Value(v) => v.ref_into_maybe_abi(),
+        }
+    }
+}
+
+impl<T: MaybeRefIntoWasmAbi> IntoWasmAbi for &Option<T> {
+    type Abi = T::MaybeAbi;
+
+    #[inline]
+    fn into_abi(self) -> T::MaybeAbi {
+        match self {
+            None => T::none(),
+            Some(v) => v.ref_into_maybe_abi(),
+        }
+    }
+}
+
+impl<T: MaybeRefIntoWasmAbi + NullableIntoWasmAbi> IntoWasmAbi for &Nullable<T> {
+    type Abi = T::MaybeAbi;
+
+    #[inline]
+    fn into_abi(self) -> T::MaybeAbi {
+        self.ref_into_maybe_abi()
+    }
+}
+
+impl<T: MaybeRefIntoWasmAbi + NullableIntoWasmAbi> OptionIntoWasmAbi for &Nullable<T> {
+    #[inline]
+    fn none() -> T::MaybeAbi {
+        T::none()
+    }
+}
+
+impl<T: MaybeRefIntoWasmAbi> crate::__rt::marker::VectorRefIntoWasmAbiSealed for Option<T> {}
+
+impl<T: MaybeRefIntoWasmAbi> VectorRefIntoWasmAbi for Option<T> {
+    #[inline]
+    fn slice_into_abi(slice: &[Self]) -> WasmSlice {
+        WasmSlice::encode(slice, |e| match e {
+            Some(v) => v.ref_into_maybe_abi(),
+            None => T::none(),
+        })
+    }
+}
+
+impl<T: MaybeRefIntoWasmAbi + NullableIntoWasmAbi> crate::__rt::marker::VectorRefIntoWasmAbiSealed
+    for Nullable<T>
+{
+}
+
+impl<T: MaybeRefIntoWasmAbi + NullableIntoWasmAbi> VectorRefIntoWasmAbi for Nullable<T> {
+    #[inline]
+    fn slice_into_abi(slice: &[Self]) -> WasmSlice {
+        WasmSlice::encode(slice, |e| match e {
+            Nullable::Value(v) => v.ref_into_maybe_abi(),
+            Nullable::Null => T::null(),
+        })
+    }
+}
+
+macro_rules! optional_scalar_vectors {
+    ($($t:ty)*) => ($(
+        crate::__wbindgen_encoded_sequence!(Option<$t>, |e| (*e).into_abi(), [into, from]);
+        crate::__wbindgen_encoded_sequence!(Nullable<$t>, |e| (*e).into_abi(), [into, from]);
+        crate::__wbindgen_encoded_sequence!(Option<Nullable<$t>>, |e| (*e).into_abi(), [into, from]);
+    )*)
+}
+
+optional_scalar_vectors! {
+    u8 i8 u16 i16 u32 i32 u64 i64 u128 i128 usize isize f32 f64 bool char
+}
+
+/// The compat vector of `$t`, an optional string or JS handle, describing
+/// its element as `$handle`.
+macro_rules! optional_handle_vectors {
+    ($([$($g:tt)*] $t:ty => $handle:ty;)*) => ($(
+        impl<$($g)*> WasmDescribeVector for $t {
+            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+            fn describe_vector() {
+                inform(VECTOR);
+                <$handle>::describe();
+            }
+        }
+
+        impl<$($g)*> VectorIntoWasmAbi for $t
+        where
+            JsValue: From<$t>,
+        {
+            type Abi = <Box<[JsValue]> as IntoWasmAbi>::Abi;
+
+            fn vector_into_abi(vector: Box<[Self]>) -> Self::Abi {
+                js_value_vector_into_abi(vector)
+            }
+        }
+
+        impl<$($g)*> VectorFromWasmAbi for $t
+        where
+            Self: TryFromJsValue,
+        {
+            type Abi = <Box<[JsValue]> as FromWasmAbi>::Abi;
+
+            unsafe fn vector_from_abi(js: Self::Abi) -> Box<[Self]> {
+                js_value_vector_from_abi(js)
+            }
+
+            unsafe fn try_vector_from_abi(js: Self::Abi) -> Result<Box<[Self]>, &'static str> {
+                try_js_value_vector_from_abi(js)
+            }
+        }
+    )*)
+}
+
+optional_handle_vectors! {
+    [] Option<String> => Option<StringHandle>;
+    [] Nullable<String> => Nullable<StringHandle>;
+    [] Option<Nullable<String>> => Option<Nullable<StringHandle>>;
+    [T: ErasableGeneric<Repr = JsValue> + WasmDescribe] Option<T> => Self;
+    [T: ErasableGeneric<Repr = JsValue> + WasmDescribe] Nullable<T> => Self;
+    [T: ErasableGeneric<Repr = JsValue> + WasmDescribe] Option<Nullable<T>> => Self;
+}

@@ -352,6 +352,20 @@ pub trait NullableIntoWasmAbi: MaybeIntoWasmAbi {
     fn null() -> Self::MaybeAbi;
 }
 
+/// The ABI of `Option<Self>` from a borrowed `Self`: the cell of a borrowed
+/// `&[Option<Self>]` or `&[Nullable<Self>]`, which is encoded element by
+/// element. Numbers copy; strings and JS handles borrow, as `&[Self]` does.
+///
+/// # ⚠️ Unstable
+///
+/// This is part of the internal [`convert`](crate::convert) module, **no
+/// stability guarantees** are provided. Use at your own risk. See its
+/// documentation for more details.
+pub trait MaybeRefIntoWasmAbi: MaybeIntoWasmAbi {
+    /// Converts a borrowed value into the `Option<Self>` ABI.
+    fn ref_into_maybe_abi(&self) -> Self::MaybeAbi;
+}
+
 /// The `Null` test of `Nullable<Self>` received from JS. See
 /// [`NullableIntoWasmAbi`].
 ///
@@ -563,6 +577,10 @@ impl<T: WasmAbi> WasmRet<T> {
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
 pub trait TryFromJsValue: Sized {
+    /// Whether `null` converts to a value of `Self`. An `Option<Self>` reads
+    /// `null` as `None` unless this is set, as `Nullable<T>` does.
+    const ACCEPTS_NULL: bool = false;
+
     /// Performs the conversion.
     fn try_from_js_value(value: JsValue) -> Result<Self, JsValue> {
         Self::try_from_js_value_ref(&value).ok_or(value)
@@ -789,12 +807,26 @@ pub trait JsGeneric:
     + Upcast<Self>
     + Upcast<JsValue>
     + JsCast
+    + IntoWasmAbi
+    + FromWasmAbi
+    + OptionIntoWasmAbi
+    + OptionFromWasmAbi
+    + RefIntoWasmAbi
     + 'static
 {
 }
 
-impl<T: ErasableGeneric<Repr = JsValue> + UpcastFrom<T> + Upcast<JsValue> + JsCast + 'static>
-    JsGeneric for T
+impl<T> JsGeneric for T where
+    T: ErasableGeneric<Repr = JsValue>
+        + UpcastFrom<T>
+        + Upcast<JsValue>
+        + JsCast
+        + IntoWasmAbi
+        + FromWasmAbi
+        + OptionIntoWasmAbi
+        + OptionFromWasmAbi
+        + RefIntoWasmAbi
+        + 'static
 {
 }
 

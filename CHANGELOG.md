@@ -36,6 +36,29 @@
   [#5410](https://github.com/wasm-bindgen/wasm-bindgen/pull/5410)
   [#5423](https://github.com/wasm-bindgen/wasm-bindgen/pull/5423)
 
+* `Option<T>` and `Nullable<T>` are now sequence elements: `&[Option<T>]`,
+  `&[Nullable<T>]` and `&[Option<Nullable<T>>]` cross as encoded slices for
+  every `T` a `&[T]` takes, and `Vec<Option<T>>`, `Vec<Nullable<T>>` and
+  `Vec<Option<Nullable<T>>>` cross in both directions, encoded for a number,
+  `bool` or `char` and as an array of JS values for a `String` or a JS type,
+  typed `(T | null)[]` and the like. The new `MaybeRefIntoWasmAbi` gives
+  `Option<Self>`'s ABI from a borrowed `Self` for the encoded cells.
+  `Nullable<T>` converts into `JsValue` with `From` and from one with
+  `TryFromJsValue`, and implements `Promising`. A js-sys `Function<fn(..)>`
+  signature slot no longer has to be a `JsGeneric` handle, so
+  `Function<fn(Nullable<JsString>) -> Option<Number>>` is a type and
+  `Function::from_closure` accepts a closure with converted arguments. A
+  borrowed `&Option<T>` or `&Nullable<T>` is `IntoWasmAbi`, crossing as
+  `Option<T>` with its payload borrowed. Under `--cfg js_sys_unstable_apis`
+  the generic element methods of js-sys's `Array`, `Map`, `Set`, `Function`
+  (`apply`, `call*`, `bind*`) and `Promise::resolve` are
+  `experimental_generic_mono`, bounded by `FromWasmAbi` / `RefIntoWasmAbi`
+  rather than `JsGeneric`, so a `Nullable<T>`, `Option<T>` or `String` element
+  converts directly; `call*` and `bind*` drop their `fn(..) -> JsValue`
+  defaults there. `JsGeneric` now implies the owned, optional and borrowed ABI
+  traits, so generic code over a handle satisfies both forms.
+  [#5427](https://github.com/wasm-bindgen/wasm-bindgen/pull/5427)
+
 * Added `MaybeIntoWasmAbi` / `MaybeFromWasmAbi`, the ABI of `Option<T>` for
   every `T`, with an associated `MaybeAbi` that lets a type without a spare
   value in its own ABI, such as `i32` or `f64`, pick a wider one. `Option<T>`
@@ -149,6 +172,15 @@
   [#5421](https://github.com/wasm-bindgen/wasm-bindgen/pull/5421)
 
 ### Changed
+
+* The js-sys `JsFunction*` traits' associated types (`Ret`, `ArgN`, `BindN`)
+  no longer carry a `JsGeneric` bound, so a `Function<fn(..)>` signature may
+  name a converted carrier such as `Nullable<JsString>`. Generic code over
+  these traits that calls `call*` or `bind*` now needs the bound itself, as
+  `where F::Ret: JsGeneric, F::Arg1: JsGeneric`. `Option<T>: TryFromJsValue`
+  now reads `null` as `None`, as the `Option<T>` ABI does; an
+  `Option<Nullable<T>>` still reads it as `Some(Nullable::Null)`.
+  [#5427](https://github.com/wasm-bindgen/wasm-bindgen/pull/5427)
 
 * With reference types, `static_string` constants and the reserved
   `undefined`, `null`, `true` and `false` values are stored at fixed slots of

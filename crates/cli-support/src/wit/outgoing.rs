@@ -169,7 +169,7 @@ impl InstructionBuilder<'_, '_> {
             }
 
             Descriptor::Vector(cell) => {
-                let kind = match cell.sequence_cell() {
+                let kind = match cell.vector_cell(false) {
                     SequenceCell::InPlace(kind) => kind,
                     SequenceCell::Encoded(elem) => return self.outgoing_encoded_slice(elem, None),
                 };
@@ -284,6 +284,10 @@ impl InstructionBuilder<'_, '_> {
 
             Descriptor::Function(descriptor) => {
                 self.outgoing_function(mutable, descriptor, None)?;
+            }
+
+            Descriptor::Option { .. } | Descriptor::Nullable(_) => {
+                self.outgoing_borrowed_option(arg)?
             }
 
             // &mut dyn FnMut(...) emits RefMut(Function(...)) to signal that
@@ -481,7 +485,7 @@ impl InstructionBuilder<'_, '_> {
 
             Descriptor::String | Descriptor::Vector(_) => {
                 let kind = match arg {
-                    Descriptor::Vector(cell) => match cell.sequence_cell() {
+                    Descriptor::Vector(cell) => match cell.vector_cell(false) {
                         SequenceCell::InPlace(kind) => kind,
                         SequenceCell::Encoded(elem) => {
                             return self.outgoing_encoded_slice(elem, Some(option_kind))
@@ -677,6 +681,51 @@ impl InstructionBuilder<'_, '_> {
         Ok(())
     }
 
+    /// `&Option<T>` / `&Nullable<T>`, and the cells of a slice of them: the
+    /// `Option<T>` ABI with a string or handle payload borrowed rather than
+    /// owned.
+    fn outgoing_borrowed_option(&mut self, arg: &Descriptor) -> Result<(), Error> {
+        let (inner, kind) = match arg {
+            Descriptor::Option(inner) => match &**inner {
+                Descriptor::Nullable(inner) => (&**inner, OptionKind::OptionNullable),
+                inner => (inner, OptionKind::Option),
+            },
+            Descriptor::Nullable(inner) => (&**inner, OptionKind::Nullable),
+            _ => unreachable!(),
+        };
+        let inner = match inner {
+            Descriptor::Ref(d) => &**d,
+            d => d,
+        };
+        match inner {
+            Descriptor::String
+            | Descriptor::CachedString
+            | Descriptor::Externref
+            | Descriptor::NamedExternref(_) => self.outgoing_option_ref(false, inner, kind),
+            Descriptor::I8
+            | Descriptor::U8
+            | Descriptor::I16
+            | Descriptor::U16
+            | Descriptor::I32
+            | Descriptor::U32
+            | Descriptor::I64
+            | Descriptor::U64
+            | Descriptor::I64AsF64
+            | Descriptor::U64AsF64
+            | Descriptor::I128
+            | Descriptor::U128
+            | Descriptor::F32
+            | Descriptor::F64
+            | Descriptor::Boolean
+            | Descriptor::Char
+            | Descriptor::Enum { .. }
+            | Descriptor::StringEnum { .. } => self.outgoing_option(inner, kind),
+            _ => bail!(
+                "unsupported borrowed optional type for calling JS function from Rust: {arg:?}"
+            ),
+        }
+    }
+
     fn outgoing_option_ref(
         &mut self,
         _mutable: bool,
@@ -773,6 +822,11 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Char
             | Descriptor::Enum { .. }
             | Descriptor::StringEnum { .. } => decode._outgoing(elem)?,
+            // `Option<T>` / `Nullable<T>`: the cell is `Option<T>`'s ABI, with
+            // strings and handles borrowed as above.
+            Descriptor::Option { .. } | Descriptor::Nullable(_) => {
+                decode.outgoing_borrowed_option(elem)?
+            }
             _ => {
                 bail!("unsupported slice element type for calling JS function from Rust: {elem:?}")
             }

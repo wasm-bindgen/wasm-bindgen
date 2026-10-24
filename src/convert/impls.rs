@@ -875,6 +875,12 @@ impl<T: MaybeIntoWasmAbi + ErasableGeneric<Repr = JsValue> + Promising> Promisin
     type Resolution = Option<<T as Promising>::Resolution>;
 }
 
+impl<T: NullableIntoWasmAbi + ErasableGeneric<Repr = JsValue> + Promising> Promising
+    for Nullable<T>
+{
+    type Resolution = Nullable<<T as Promising>::Resolution>;
+}
+
 impl<T: IntoWasmAbi> IntoWasmAbi for Clamped<T> {
     type Abi = T::Abi;
 

@@ -839,3 +839,19 @@ fn for_each_with_closure_conversion() {
     assert_eq!(results[1], ("banana".to_string(), 1));
     assert_eq!(results[2], ("cherry".to_string(), 2));
 }
+
+// A signature slot may be a converted carrier such as `Nullable<T>`, not
+// only a handle, so a `Closure` over one makes a typed `Function`.
+#[wasm_bindgen_test]
+fn nullable_signature() {
+    let closure: Closure<dyn FnMut(Nullable<JsString>) -> Option<Number>> =
+        Closure::new(|s: Nullable<JsString>| s.value().map(|s| Number::from(s.length())));
+    let f: Function<fn(Nullable<JsString>) -> Option<Number>> = Function::from_closure(closure);
+    assert_eq!(f.len(), 1);
+    let f: Function = f.unchecked_into();
+    assert_eq!(
+        f.call1(&JsValue::NULL, &JsValue::NULL).unwrap(),
+        JsValue::UNDEFINED
+    );
+    assert_eq!(f.call1(&JsValue::NULL, &"ab".into()).unwrap(), 2);
+}
