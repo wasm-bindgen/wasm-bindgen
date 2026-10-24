@@ -7,7 +7,6 @@
 use std::cell::Cell;
 use std::fmt::Debug;
 use std::panic::AssertUnwindSafe;
-use std::ptr::NonNull;
 use std::rc::Rc;
 
 use js_sys::{JsNullable, Number};
@@ -92,7 +91,6 @@ imports! {
     n_f64: f64 => nullable_type_js_float,
     n_i64: i64 => nullable_type_js_bigint,
     n_u128: u128 => nullable_type_js_bigint,
-    n_nonnull: NonNull<u32> => nullable_type_js_number,
     n_ptr: *const u8 => nullable_type_js_number,
     n_bool: bool => nullable_type_js_true,
     n_char: char => nullable_type_js_string,
@@ -182,7 +180,6 @@ exports! {
     nullable_type_f64 / nullable_type_opt_f64: f64,
     nullable_type_i64 / nullable_type_opt_i64: i64,
     nullable_type_u128 / nullable_type_opt_u128: u128,
-    nullable_type_nonnull / nullable_type_opt_nonnull: NonNull<u32>,
     nullable_type_ptr / nullable_type_opt_ptr: *const u8,
     nullable_type_bool / nullable_type_opt_bool: bool,
     nullable_type_char / nullable_type_opt_char: char,
@@ -341,16 +338,6 @@ fn import_args_and_returns() {
     assert_eq!(n_u128::js_value(), Nullable::Value(7));
     undefined_throws(n_u128::js_undefined());
 
-    states!(n_nonnull, NonNull::new(8 as *mut u32).unwrap());
-    assert_eq!(
-        n_nonnull::js_value().unwrap(),
-        NonNull::new(7 as *mut u32).unwrap()
-    );
-    // Coerced to the null pointer, which is `Null`.
-    match n_nonnull::js_undefined() {
-        Ok(v) => assert!(!nullable_type_js_debug() && v.is_null()),
-        Err(_) => assert!(nullable_type_js_debug()),
-    }
     states!(n_ptr, 8 as *const u8);
     assert_eq!(n_ptr::js_value().unwrap(), 7 as *const u8);
     undefined_coerces(n_ptr::js_undefined(), std::ptr::null());

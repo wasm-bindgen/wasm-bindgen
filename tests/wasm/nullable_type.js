@@ -69,12 +69,6 @@ exports.nullable_type_js_exports = () => {
         checkUndefined(f, { value: 0 });
     }
 
-    roundtripBoth(wasm.nullable_type_nonnull, wasm.nullable_type_opt_nonnull, 8);
-    // The null pointer is `Null`: a `Nullable<NonNull<T>>` has no other empty
-    // state for it.
-    assert.strictEqual(wasm.nullable_type_nonnull(0), null);
-    assert.strictEqual(wasm.nullable_type_opt_nonnull(0), null);
-    checkUndefined(wasm.nullable_type_nonnull, { value: null });
     roundtripBoth(wasm.nullable_type_ptr, wasm.nullable_type_opt_ptr, 8);
     assert.strictEqual(wasm.nullable_type_ptr(0), 0);
     checkUndefined(wasm.nullable_type_ptr, { value: 0 });

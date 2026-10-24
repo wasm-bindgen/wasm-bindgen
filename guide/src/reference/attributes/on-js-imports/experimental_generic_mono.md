@@ -148,10 +148,10 @@ extern "C" {
 `&Cow<str>`, `js_sys::JsString` and `&js_sys::JsString`, so a caller can pass
 whichever it already holds and each monomorphisation crosses at that shape's
 native wire format — UTF-8 buffers for the Rust strings, a handle for
-`JsString` — all arriving in JS as a string value. Nullable positions
-(`Option<T>`) and slices (`&[T]`, arriving as an `Array` of strings) work under
-the same bound, since the trait carries `OptionIntoWasmAbi` and
-`VectorRefIntoWasmAbi` as supertraits. So a plain Rust function bounded by
+`JsString` — all arriving in JS as a string value. Optional positions
+(`Option<T>`, `Nullable<T>`) and slices (`&[T]`, arriving as an `Array` of
+strings) work under the same bound, since the trait carries
+`NullableIntoWasmAbi` and `VectorRefIntoWasmAbi` as supertraits. So a plain Rust function bounded by
 `JsStringLike` alone can forward a `&[T]` to such an import. The trait is
 sealed to exactly these string shapes. Like
 `experimental_generic_mono` itself, the trait is experimental and may change
@@ -202,10 +202,10 @@ by `JsBooleanOrNumberOrStringLike`, just as `number | string` is assignable to
 `boolean | number | string` in TypeScript. `JsNumberOrStringLike` also widens
 to `PropertyKey`.
 
-All supported concrete members work in nullable `Option<T>` import positions.
-The union traits do not themselves require `OptionIntoWasmAbi`, because some
-numeric types use specialized concrete `Option<T>` ABI implementations, so an
-`Option<T>` position needs its own `Option<T>: IntoWasmAbi` bound.
+`Option<T>`, `Nullable<T>` and `Option<Nullable<T>>` positions work under the
+union bound alone: the traits carry `NullableIntoWasmAbi`, whose
+`MaybeIntoWasmAbi` supertrait is what `Option<T>` converts through, so each
+member crosses at its own optional ABI.
 
 There are 12 traits in total: the 11 combinations of at least two of the four
 categories with a Rust-native ABI representation, plus `PropertyKey`. `symbol`
