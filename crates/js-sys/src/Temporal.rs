@@ -1727,14 +1727,6 @@ extern "C" {
 
     /// The `toLocaleString()` method; see [`Instant::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string_with_str_and_options(
-        this: &Instant,
-        locales: &str,
-        options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue>;
-
-    /// The `toLocaleString()` method; see [`Instant::to_locale_string`] for errors.
-    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str_sequence_and_options(
         this: &Instant,
         locales: &[JsString],
@@ -2668,14 +2660,6 @@ extern "C" {
 
     /// The `toLocaleString()` method; see [`PlainDateTime::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string_with_str_and_options(
-        this: &PlainDateTime,
-        locales: &str,
-        options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue>;
-
-    /// The `toLocaleString()` method; see [`PlainDateTime::to_locale_string`] for errors.
-    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str_sequence_and_options(
         this: &PlainDateTime,
         locales: &[JsString],
@@ -3502,14 +3486,6 @@ extern "C" {
 
     /// The `toLocaleString()` method; see [`ZonedDateTime::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string_with_str_and_options(
-        this: &ZonedDateTime,
-        locales: &str,
-        options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue>;
-
-    /// The `toLocaleString()` method; see [`ZonedDateTime::to_locale_string`] for errors.
-    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str_sequence_and_options(
         this: &ZonedDateTime,
         locales: &[JsString],
@@ -3925,14 +3901,6 @@ extern "C" {
     pub fn to_locale_string_with_str_sequence(
         this: &Duration,
         locales: &[JsString],
-    ) -> Result<JsString, JsValue>;
-
-    /// The `toLocaleString()` method; see [`Duration::to_locale_string`] for errors.
-    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string_with_str_and_options(
-        this: &Duration,
-        locales: &str,
-        options: &Intl::DurationFormatOptions,
     ) -> Result<JsString, JsValue>;
 
     /// The `toLocaleString()` method; see [`Duration::to_locale_string`] for errors.
@@ -4442,14 +4410,6 @@ extern "C" {
     pub fn to_locale_string_with_str_sequence(
         this: &PlainTime,
         locales: &[JsString],
-    ) -> Result<JsString, JsValue>;
-
-    /// The `toLocaleString()` method; see [`PlainTime::to_locale_string`] for errors.
-    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string_with_str_and_options(
-        this: &PlainTime,
-        locales: &str,
-        options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
     /// The `toLocaleString()` method; see [`PlainTime::to_locale_string`] for errors.
@@ -5140,14 +5100,6 @@ extern "C" {
 
     /// The `toLocaleString()` method; see [`PlainYearMonth::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string_with_str_and_options(
-        this: &PlainYearMonth,
-        locales: &str,
-        options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue>;
-
-    /// The `toLocaleString()` method; see [`PlainYearMonth::to_locale_string`] for errors.
-    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str_sequence_and_options(
         this: &PlainYearMonth,
         locales: &[JsString],
@@ -5430,14 +5382,6 @@ extern "C" {
     pub fn to_locale_string_with_str_sequence(
         this: &PlainMonthDay,
         locales: &[JsString],
-    ) -> Result<JsString, JsValue>;
-
-    /// The `toLocaleString()` method; see [`PlainMonthDay::to_locale_string`] for errors.
-    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string_with_str_and_options(
-        this: &PlainMonthDay,
-        locales: &str,
-        options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
     /// The `toLocaleString()` method; see [`PlainMonthDay::to_locale_string`] for errors.
@@ -6221,14 +6165,6 @@ extern "C" {
     pub fn to_locale_string_with_str_sequence(
         this: &PlainDate,
         locales: &[JsString],
-    ) -> Result<JsString, JsValue>;
-
-    /// The `toLocaleString()` method; see [`PlainDate::to_locale_string`] for errors.
-    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string_with_str_and_options(
-        this: &PlainDate,
-        locales: &str,
-        options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
     /// The `toLocaleString()` method; see [`PlainDate::to_locale_string`] for errors.

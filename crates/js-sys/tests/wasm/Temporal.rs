@@ -122,7 +122,7 @@ fn to_locale_string() {
     assert!(pd.to_locale_string().unwrap().length() > 0);
     let opts = Intl::DateTimeFormatOptions::new();
     assert_eq!(
-        pd.to_locale_string_with_str_and_options("en-US", &opts)
+        pd.to_locale_string_with_options(Some("en-US"), &opts)
             .unwrap(),
         "6/15/2022"
     );
@@ -130,7 +130,7 @@ fn to_locale_string() {
     opts.set_time_zone("UTC");
     assert_eq!(
         get_test_instant()
-            .to_locale_string_with_str_and_options("en-US", &opts)
+            .to_locale_string_with_options(Some("en-US"), &opts)
             .unwrap(),
         "6/15/2022, 12:30:45 PM"
     );
@@ -154,7 +154,7 @@ fn to_locale_string() {
 
     // A `timeZone` option conflicts with a ZonedDateTime's own time zone
     let err = get_test_zoned_date_time()
-        .to_locale_string_with_str_and_options("en-US", &opts)
+        .to_locale_string_with_options(Some("en-US"), &opts)
         .unwrap_err();
     assert!(err.is_instance_of::<TypeError>());
 
