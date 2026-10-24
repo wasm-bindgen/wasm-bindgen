@@ -1021,6 +1021,7 @@ fn plain_time_argument_forms() {
         30
     );
     assert_eq!(pd.to_plain_date_time_with_str("23:00").unwrap().hour(), 23);
+    assert_eq!(pd.to_zoned_date_time("UTC").unwrap().hour(), 0);
     let item = Temporal::ToZonedDateTimeItem::new("UTC");
     item.set_plain_time_with_zoned_date_time(&zdt);
     assert_eq!(
