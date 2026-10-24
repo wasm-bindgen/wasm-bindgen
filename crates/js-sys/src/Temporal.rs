@@ -1497,6 +1497,40 @@ extern "C" {
     #[wasm_bindgen(method, catch)]
     pub fn subtract(this: &Instant, duration: &Duration) -> Result<Instant, JsValue>;
 
+    /// The `add()` method taking a duration property bag.
+    ///
+    /// # Errors
+    /// Throws a `TypeError` if no duration field is set; see [`Instant::add`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = add, catch)]
+    pub fn add_with_duration_like(
+        this: &Instant,
+        duration: &DurationLike,
+    ) -> Result<Instant, JsValue>;
+
+    /// The `subtract()` method taking a duration property bag.
+    ///
+    /// # Errors
+    /// Throws a `TypeError` if no duration field is set; see [`Instant::subtract`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = subtract, catch)]
+    pub fn subtract_with_duration_like(
+        this: &Instant,
+        duration: &DurationLike,
+    ) -> Result<Instant, JsValue>;
+
+    /// The `subtract()` method taking an ISO 8601 duration string.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is not a valid duration; see [`Instant::subtract`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = subtract, catch)]
+    pub fn subtract_with_str(this: &Instant, duration: &str) -> Result<Instant, JsValue>;
+
+    /// The `add()` method taking an ISO 8601 duration string.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is not a valid duration; see [`Instant::add`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = add, catch)]
+    pub fn add_with_str(this: &Instant, duration: &str) -> Result<Instant, JsValue>;
+
     /// The `until()` method returns a `Temporal.Duration` representing the duration
     /// from this instant until `other`.
     ///
@@ -2105,6 +2139,41 @@ extern "C" {
         options: &OverflowOptions,
     ) -> Result<PlainDateTime, JsValue>;
 
+    /// The `add()` method taking a duration property bag.
+    ///
+    /// # Errors
+    /// Throws a `TypeError` if no duration field is set; see [`PlainDateTime::add`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = add, catch)]
+    pub fn add_with_duration_like(
+        this: &PlainDateTime,
+        duration: &DurationLike,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `add()` method taking a duration property bag and options; see
+    /// [`PlainDateTime::add_with_duration_like`] for errors.
+    #[wasm_bindgen(method, js_name = add, catch)]
+    pub fn add_with_duration_like_and_options(
+        this: &PlainDateTime,
+        duration: &DurationLike,
+        options: &OverflowOptions,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `add()` method taking an ISO 8601 duration string and options; see
+    /// [`PlainDateTime::add_with_str`] for errors.
+    #[wasm_bindgen(method, js_name = add, catch)]
+    pub fn add_with_str_and_options(
+        this: &PlainDateTime,
+        duration: &str,
+        options: &OverflowOptions,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `add()` method taking an ISO 8601 duration string.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is not a valid duration; see [`PlainDateTime::add`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = add, catch)]
+    pub fn add_with_str(this: &PlainDateTime, duration: &str) -> Result<PlainDateTime, JsValue>;
+
     /// The `subtract()` method returns a new `Temporal.PlainDateTime` object with the
     /// duration subtracted from this date-time.
     ///
@@ -2129,6 +2198,44 @@ extern "C" {
         this: &PlainDateTime,
         duration: &Duration,
         options: &OverflowOptions,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `subtract()` method taking a duration property bag.
+    ///
+    /// # Errors
+    /// Throws a `TypeError` if no duration field is set; see [`PlainDateTime::subtract`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = subtract, catch)]
+    pub fn subtract_with_duration_like(
+        this: &PlainDateTime,
+        duration: &DurationLike,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `subtract()` method taking a duration property bag and options; see
+    /// [`PlainDateTime::subtract_with_duration_like`] for errors.
+    #[wasm_bindgen(method, js_name = subtract, catch)]
+    pub fn subtract_with_duration_like_and_options(
+        this: &PlainDateTime,
+        duration: &DurationLike,
+        options: &OverflowOptions,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `subtract()` method taking an ISO 8601 duration string and options; see
+    /// [`PlainDateTime::subtract_with_str`] for errors.
+    #[wasm_bindgen(method, js_name = subtract, catch)]
+    pub fn subtract_with_str_and_options(
+        this: &PlainDateTime,
+        duration: &str,
+        options: &OverflowOptions,
+    ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `subtract()` method taking an ISO 8601 duration string.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is not a valid duration; see [`PlainDateTime::subtract`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = subtract, catch)]
+    pub fn subtract_with_str(
+        this: &PlainDateTime,
+        duration: &str,
     ) -> Result<PlainDateTime, JsValue>;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
@@ -2767,6 +2874,41 @@ extern "C" {
         options: &OverflowOptions,
     ) -> Result<ZonedDateTime, JsValue>;
 
+    /// The `add()` method taking a duration property bag.
+    ///
+    /// # Errors
+    /// Throws a `TypeError` if no duration field is set; see [`ZonedDateTime::add`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = add, catch)]
+    pub fn add_with_duration_like(
+        this: &ZonedDateTime,
+        duration: &DurationLike,
+    ) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `add()` method taking a duration property bag and options; see
+    /// [`ZonedDateTime::add_with_duration_like`] for errors.
+    #[wasm_bindgen(method, js_name = add, catch)]
+    pub fn add_with_duration_like_and_options(
+        this: &ZonedDateTime,
+        duration: &DurationLike,
+        options: &OverflowOptions,
+    ) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `add()` method taking an ISO 8601 duration string and options; see
+    /// [`ZonedDateTime::add_with_str`] for errors.
+    #[wasm_bindgen(method, js_name = add, catch)]
+    pub fn add_with_str_and_options(
+        this: &ZonedDateTime,
+        duration: &str,
+        options: &OverflowOptions,
+    ) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `add()` method taking an ISO 8601 duration string.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is not a valid duration; see [`ZonedDateTime::add`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = add, catch)]
+    pub fn add_with_str(this: &ZonedDateTime, duration: &str) -> Result<ZonedDateTime, JsValue>;
+
     /// The `subtract()` method returns a new `Temporal.ZonedDateTime` object with the
     /// duration subtracted from this zoned date-time.
     ///
@@ -2791,6 +2933,44 @@ extern "C" {
         this: &ZonedDateTime,
         duration: &Duration,
         options: &OverflowOptions,
+    ) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `subtract()` method taking a duration property bag.
+    ///
+    /// # Errors
+    /// Throws a `TypeError` if no duration field is set; see [`ZonedDateTime::subtract`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = subtract, catch)]
+    pub fn subtract_with_duration_like(
+        this: &ZonedDateTime,
+        duration: &DurationLike,
+    ) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `subtract()` method taking a duration property bag and options; see
+    /// [`ZonedDateTime::subtract_with_duration_like`] for errors.
+    #[wasm_bindgen(method, js_name = subtract, catch)]
+    pub fn subtract_with_duration_like_and_options(
+        this: &ZonedDateTime,
+        duration: &DurationLike,
+        options: &OverflowOptions,
+    ) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `subtract()` method taking an ISO 8601 duration string and options; see
+    /// [`ZonedDateTime::subtract_with_str`] for errors.
+    #[wasm_bindgen(method, js_name = subtract, catch)]
+    pub fn subtract_with_str_and_options(
+        this: &ZonedDateTime,
+        duration: &str,
+        options: &OverflowOptions,
+    ) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `subtract()` method taking an ISO 8601 duration string.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is not a valid duration; see [`ZonedDateTime::subtract`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = subtract, catch)]
+    pub fn subtract_with_str(
+        this: &ZonedDateTime,
+        duration: &str,
     ) -> Result<ZonedDateTime, JsValue>;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
@@ -3275,6 +3455,40 @@ extern "C" {
     #[wasm_bindgen(method, catch)]
     pub fn subtract(this: &Duration, other: &Duration) -> Result<Duration, JsValue>;
 
+    /// The `add()` method taking a duration property bag.
+    ///
+    /// # Errors
+    /// Throws a `TypeError` if no duration field is set; see [`Duration::add`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = add, catch)]
+    pub fn add_with_duration_like(
+        this: &Duration,
+        other: &DurationLike,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `subtract()` method taking a duration property bag.
+    ///
+    /// # Errors
+    /// Throws a `TypeError` if no duration field is set; see [`Duration::subtract`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = subtract, catch)]
+    pub fn subtract_with_duration_like(
+        this: &Duration,
+        other: &DurationLike,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `subtract()` method taking an ISO 8601 duration string.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is not a valid duration; see [`Duration::subtract`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = subtract, catch)]
+    pub fn subtract_with_str(this: &Duration, other: &str) -> Result<Duration, JsValue>;
+
+    /// The `add()` method taking an ISO 8601 duration string.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is not a valid duration; see [`Duration::add`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = add, catch)]
+    pub fn add_with_str(this: &Duration, other: &str) -> Result<Duration, JsValue>;
+
     /// The `round()` method returns a new `Temporal.Duration` object with the
     /// duration rounded and/or balanced to the given options.
     ///
@@ -3600,6 +3814,40 @@ extern "C" {
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/subtract)
     #[wasm_bindgen(method)]
     pub fn subtract(this: &PlainTime, duration: &Duration) -> PlainTime;
+
+    /// The `add()` method taking a duration property bag.
+    ///
+    /// # Errors
+    /// Throws a `TypeError` if no duration field is set; otherwise infallible.
+    #[wasm_bindgen(method, js_name = add, catch)]
+    pub fn add_with_duration_like(
+        this: &PlainTime,
+        duration: &DurationLike,
+    ) -> Result<PlainTime, JsValue>;
+
+    /// The `subtract()` method taking a duration property bag.
+    ///
+    /// # Errors
+    /// Throws a `TypeError` if no duration field is set; otherwise infallible.
+    #[wasm_bindgen(method, js_name = subtract, catch)]
+    pub fn subtract_with_duration_like(
+        this: &PlainTime,
+        duration: &DurationLike,
+    ) -> Result<PlainTime, JsValue>;
+
+    /// The `subtract()` method taking an ISO 8601 duration string.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is not a valid duration; otherwise infallible.
+    #[wasm_bindgen(method, js_name = subtract, catch)]
+    pub fn subtract_with_str(this: &PlainTime, duration: &str) -> Result<PlainTime, JsValue>;
+
+    /// The `add()` method taking an ISO 8601 duration string.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is not a valid duration; otherwise infallible.
+    #[wasm_bindgen(method, js_name = add, catch)]
+    pub fn add_with_str(this: &PlainTime, duration: &str) -> Result<PlainTime, JsValue>;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
     /// from this time until `other`.
@@ -3947,6 +4195,41 @@ extern "C" {
         options: &OverflowOptions,
     ) -> Result<PlainYearMonth, JsValue>;
 
+    /// The `add()` method taking a duration property bag.
+    ///
+    /// # Errors
+    /// Throws a `TypeError` if no duration field is set; see [`PlainYearMonth::add`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = add, catch)]
+    pub fn add_with_duration_like(
+        this: &PlainYearMonth,
+        duration: &DurationLike,
+    ) -> Result<PlainYearMonth, JsValue>;
+
+    /// The `add()` method taking a duration property bag and options; see
+    /// [`PlainYearMonth::add_with_duration_like`] for errors.
+    #[wasm_bindgen(method, js_name = add, catch)]
+    pub fn add_with_duration_like_and_options(
+        this: &PlainYearMonth,
+        duration: &DurationLike,
+        options: &OverflowOptions,
+    ) -> Result<PlainYearMonth, JsValue>;
+
+    /// The `add()` method taking an ISO 8601 duration string and options; see
+    /// [`PlainYearMonth::add_with_str`] for errors.
+    #[wasm_bindgen(method, js_name = add, catch)]
+    pub fn add_with_str_and_options(
+        this: &PlainYearMonth,
+        duration: &str,
+        options: &OverflowOptions,
+    ) -> Result<PlainYearMonth, JsValue>;
+
+    /// The `add()` method taking an ISO 8601 duration string.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is not a valid duration; see [`PlainYearMonth::add`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = add, catch)]
+    pub fn add_with_str(this: &PlainYearMonth, duration: &str) -> Result<PlainYearMonth, JsValue>;
+
     /// The `subtract()` method returns a new `Temporal.PlainYearMonth` object with the
     /// duration subtracted from this year-month.
     ///
@@ -3971,6 +4254,44 @@ extern "C" {
         this: &PlainYearMonth,
         duration: &Duration,
         options: &OverflowOptions,
+    ) -> Result<PlainYearMonth, JsValue>;
+
+    /// The `subtract()` method taking a duration property bag.
+    ///
+    /// # Errors
+    /// Throws a `TypeError` if no duration field is set; see [`PlainYearMonth::subtract`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = subtract, catch)]
+    pub fn subtract_with_duration_like(
+        this: &PlainYearMonth,
+        duration: &DurationLike,
+    ) -> Result<PlainYearMonth, JsValue>;
+
+    /// The `subtract()` method taking a duration property bag and options; see
+    /// [`PlainYearMonth::subtract_with_duration_like`] for errors.
+    #[wasm_bindgen(method, js_name = subtract, catch)]
+    pub fn subtract_with_duration_like_and_options(
+        this: &PlainYearMonth,
+        duration: &DurationLike,
+        options: &OverflowOptions,
+    ) -> Result<PlainYearMonth, JsValue>;
+
+    /// The `subtract()` method taking an ISO 8601 duration string and options; see
+    /// [`PlainYearMonth::subtract_with_str`] for errors.
+    #[wasm_bindgen(method, js_name = subtract, catch)]
+    pub fn subtract_with_str_and_options(
+        this: &PlainYearMonth,
+        duration: &str,
+        options: &OverflowOptions,
+    ) -> Result<PlainYearMonth, JsValue>;
+
+    /// The `subtract()` method taking an ISO 8601 duration string.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is not a valid duration; see [`PlainYearMonth::subtract`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = subtract, catch)]
+    pub fn subtract_with_str(
+        this: &PlainYearMonth,
+        duration: &str,
     ) -> Result<PlainYearMonth, JsValue>;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
@@ -4663,6 +4984,41 @@ extern "C" {
         options: &OverflowOptions,
     ) -> Result<PlainDate, JsValue>;
 
+    /// The `add()` method taking a duration property bag.
+    ///
+    /// # Errors
+    /// Throws a `TypeError` if no duration field is set; see [`PlainDate::add`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = add, catch)]
+    pub fn add_with_duration_like(
+        this: &PlainDate,
+        duration: &DurationLike,
+    ) -> Result<PlainDate, JsValue>;
+
+    /// The `add()` method taking a duration property bag and options; see
+    /// [`PlainDate::add_with_duration_like`] for errors.
+    #[wasm_bindgen(method, js_name = add, catch)]
+    pub fn add_with_duration_like_and_options(
+        this: &PlainDate,
+        duration: &DurationLike,
+        options: &OverflowOptions,
+    ) -> Result<PlainDate, JsValue>;
+
+    /// The `add()` method taking an ISO 8601 duration string and options; see
+    /// [`PlainDate::add_with_str`] for errors.
+    #[wasm_bindgen(method, js_name = add, catch)]
+    pub fn add_with_str_and_options(
+        this: &PlainDate,
+        duration: &str,
+        options: &OverflowOptions,
+    ) -> Result<PlainDate, JsValue>;
+
+    /// The `add()` method taking an ISO 8601 duration string.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is not a valid duration; see [`PlainDate::add`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = add, catch)]
+    pub fn add_with_str(this: &PlainDate, duration: &str) -> Result<PlainDate, JsValue>;
+
     /// The `subtract()` method returns a new `Temporal.PlainDate` object with the
     /// duration subtracted from this date.
     ///
@@ -4688,6 +5044,41 @@ extern "C" {
         duration: &Duration,
         options: &OverflowOptions,
     ) -> Result<PlainDate, JsValue>;
+
+    /// The `subtract()` method taking a duration property bag.
+    ///
+    /// # Errors
+    /// Throws a `TypeError` if no duration field is set; see [`PlainDate::subtract`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = subtract, catch)]
+    pub fn subtract_with_duration_like(
+        this: &PlainDate,
+        duration: &DurationLike,
+    ) -> Result<PlainDate, JsValue>;
+
+    /// The `subtract()` method taking a duration property bag and options; see
+    /// [`PlainDate::subtract_with_duration_like`] for errors.
+    #[wasm_bindgen(method, js_name = subtract, catch)]
+    pub fn subtract_with_duration_like_and_options(
+        this: &PlainDate,
+        duration: &DurationLike,
+        options: &OverflowOptions,
+    ) -> Result<PlainDate, JsValue>;
+
+    /// The `subtract()` method taking an ISO 8601 duration string and options; see
+    /// [`PlainDate::subtract_with_str`] for errors.
+    #[wasm_bindgen(method, js_name = subtract, catch)]
+    pub fn subtract_with_str_and_options(
+        this: &PlainDate,
+        duration: &str,
+        options: &OverflowOptions,
+    ) -> Result<PlainDate, JsValue>;
+
+    /// The `subtract()` method taking an ISO 8601 duration string.
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the string is not a valid duration; see [`PlainDate::subtract`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = subtract, catch)]
+    pub fn subtract_with_str(this: &PlainDate, duration: &str) -> Result<PlainDate, JsValue>;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
     /// from this date until `other`.
