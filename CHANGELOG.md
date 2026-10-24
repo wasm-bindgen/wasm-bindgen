@@ -251,6 +251,12 @@
 
 ### Fixed
 
+* `js_sys::Promise::catch_map`'s handler now receives the rejection reason,
+  typed as the promise's `E`, instead of the reason mislabelled as the
+  fulfilled type `T`. A handler on a `Promise<Foo>` written as `|v: Foo|` must
+  take `JsValue`; it was never a `Foo`.
+  [#5426](https://github.com/wasm-bindgen/wasm-bindgen/pull/5426)
+
 * Large JS snippets (`module = "..."`, `inline_js`) and
   `typescript_custom_section` expressions such as `include_str!` no longer make
   compilation slow or print "constant evaluation is taking a long time"
