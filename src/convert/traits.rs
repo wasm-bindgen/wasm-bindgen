@@ -803,12 +803,26 @@ pub trait JsGeneric:
     + Upcast<Self>
     + Upcast<JsValue>
     + JsCast
+    + IntoWasmAbi
+    + FromWasmAbi
+    + OptionIntoWasmAbi
+    + OptionFromWasmAbi
+    + RefIntoWasmAbi
     + 'static
 {
 }
 
-impl<T: ErasableGeneric<Repr = JsValue> + UpcastFrom<T> + Upcast<JsValue> + JsCast + 'static>
-    JsGeneric for T
+impl<T> JsGeneric for T where
+    T: ErasableGeneric<Repr = JsValue>
+        + UpcastFrom<T>
+        + Upcast<JsValue>
+        + JsCast
+        + IntoWasmAbi
+        + FromWasmAbi
+        + OptionIntoWasmAbi
+        + OptionFromWasmAbi
+        + RefIntoWasmAbi
+        + 'static
 {
 }
 
