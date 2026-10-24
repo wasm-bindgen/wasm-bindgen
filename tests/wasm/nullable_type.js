@@ -29,9 +29,9 @@ const debug = () => {
 };
 exports.nullable_type_js_debug = debug;
 
-// `undefined` into a plain `Nullable<T>` goes to `T`'s conversion, as `null`
-// does into a strict `Option<T>`: debug glue throws its type assertion;
-// release glue throws `throws` or hands Rust `value`.
+// `undefined` into a plain `Nullable<T>` goes to `T`'s conversion, as any
+// other non-`T` value does: debug glue throws its type assertion; release
+// glue throws `throws` or hands Rust `value`.
 const checkUndefined = (f, { throws, value }) => {
     if (debug()) {
         assert.throws(() => f(undefined), Error);

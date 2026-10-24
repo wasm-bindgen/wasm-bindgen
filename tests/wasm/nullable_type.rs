@@ -1,8 +1,8 @@
 //! `Nullable<T>` is `T | null` and `Option<Nullable<T>>` is
 //! `T | null | undefined`: every state crosses the boundary intact in both
 //! directions, for every `T` category and in every position. `undefined` into
-//! a plain `Nullable<T>` goes to `T`'s own conversion, as `null` does into a
-//! strict `Option<T>`. The JS side checks with `=== null` and `=== undefined`.
+//! a plain `Nullable<T>` goes to `T`'s own conversion, as any other non-`T`
+//! value does. The JS side checks with `=== null` and `=== undefined`.
 
 use std::cell::Cell;
 use std::fmt::Debug;

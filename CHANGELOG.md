@@ -13,23 +13,16 @@
   cloning and dropping them is free and never calls into JS.
   [#5401](https://github.com/wasm-bindgen/wasm-bindgen/pull/5401)
 
-* Added `--cfg wasm_bindgen_unstable_strict_option`, under which a JS to Rust
-  `Option<T>` treats only `undefined` as `None`: `null` goes to `T`'s own
-  conversion, as any other non-`T` value does, and an exported optional
-  argument or field is typed `T | undefined` rather than `T | null | undefined`.
-  `None` is still `undefined` going out. This becomes the default in the next
-  breaking release; code relying on `null` becoming `None` should move to
-  `Nullable<T>`.
-  [#5410](https://github.com/wasm-bindgen/wasm-bindgen/pull/5410)
-
 * Added `Nullable<T>`, re-exported as `js_sys::Nullable`, for a `T | null`
   value at the JS boundary, as `Option<T>` is for `T | undefined`, with
   `Option<Nullable<T>>` for `T | null | undefined`. Both are accepted wherever
   `Option<T>` is, for every `T` and in every position: JS `null` is
   `Nullable::Null` and is sent back as `null`, while `undefined` into a plain
-  `Nullable<T>` goes to `T`'s own conversion. The `Option` layer of
-  `Option<Nullable<T>>` treats only `undefined` as `None` with or without the
-  strict cfg. `Option<T>` converts from and into `Nullable<T>`, and
+  `Nullable<T>` goes to `T`'s own conversion. A plain `Option<T>` still reads
+  both `undefined` and `null` as `None` and writes `None` as `undefined`; the
+  `Option` layer of `Option<Nullable<T>>` treats only `undefined` as `None`,
+  since `null` has to reach the `Nullable` layer. `Option<T>` converts from
+  and into `Nullable<T>`, and
   `JsNullable<T>` converts from both and into `Option<Nullable<T>>` for
   `T: JsGeneric`.
   The API follows `Option`'s, including `ok_or`, `and_then`, `filter`,
