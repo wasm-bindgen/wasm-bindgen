@@ -1625,10 +1625,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/round)
     #[wasm_bindgen(method, js_name = round, catch)]
-    pub fn round_with_round_to_options(
-        this: &Instant,
-        round_to: &RoundToOptions,
-    ) -> Result<Instant, JsValue>;
+    pub fn round(this: &Instant, round_to: &RoundToOptions) -> Result<Instant, JsValue>;
 
     /// The `since()` method taking a `Temporal.ZonedDateTime`.
     #[wasm_bindgen(method, js_name = since)]
@@ -1717,6 +1714,14 @@ extern "C" {
         options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
+    #[doc(hidden)]
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn __to_locale_string_with_options(
+        this: &Instant,
+        locales: Option<&str>,
+        options: &Intl::DateTimeFormatOptions,
+    ) -> Result<JsString, JsValue>;
+
     /// The `toJSON()` method returns a string representation of this instant suitable
     /// for JSON serialization.
     ///
@@ -1742,6 +1747,17 @@ extern "C" {
         this: &Instant,
         options: &InstantToStringOptions,
     ) -> Result<JsString, JsValue>;
+}
+
+impl Instant {
+    /// The `toLocaleString()` method with the default locale; see
+    /// [`Instant::to_locale_string`] for errors.
+    pub fn to_locale_string_with_options(
+        &self,
+        options: &Intl::DateTimeFormatOptions,
+    ) -> Result<JsString, JsValue> {
+        self.__to_locale_string_with_options(None, options)
+    }
 }
 
 #[wasm_bindgen]
@@ -2473,10 +2489,8 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/round)
     #[wasm_bindgen(method, js_name = round, catch)]
-    pub fn round_with_round_to_options(
-        this: &PlainDateTime,
-        round_to: &RoundToOptions,
-    ) -> Result<PlainDateTime, JsValue>;
+    pub fn round(this: &PlainDateTime, round_to: &RoundToOptions)
+        -> Result<PlainDateTime, JsValue>;
 
     /// The `since()` method taking a `Temporal.PlainDate`; see [`PlainDateTime::since`] for errors.
     #[wasm_bindgen(method, js_name = since, catch)]
@@ -2650,6 +2664,14 @@ extern "C" {
         options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
+    #[doc(hidden)]
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn __to_locale_string_with_options(
+        this: &PlainDateTime,
+        locales: Option<&str>,
+        options: &Intl::DateTimeFormatOptions,
+    ) -> Result<JsString, JsValue>;
+
     /// The `toJSON()` method returns a string representation of this date-time suitable
     /// for JSON serialization.
     ///
@@ -2675,6 +2697,17 @@ extern "C" {
         this: &PlainDateTime,
         options: &CalendarTypeToStringOptions,
     ) -> Result<JsString, JsValue>;
+}
+
+impl PlainDateTime {
+    /// The `toLocaleString()` method with the default locale; see
+    /// [`PlainDateTime::to_locale_string`] for errors.
+    pub fn to_locale_string_with_options(
+        &self,
+        options: &Intl::DateTimeFormatOptions,
+    ) -> Result<JsString, JsValue> {
+        self.__to_locale_string_with_options(None, options)
+    }
 }
 
 #[wasm_bindgen]
@@ -3338,10 +3371,8 @@ extern "C" {
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/round)
     ///
     #[wasm_bindgen(method, js_name = round, catch)]
-    pub fn round_with_round_to_options(
-        this: &ZonedDateTime,
-        round_to: &RoundToOptions,
-    ) -> Result<ZonedDateTime, JsValue>;
+    pub fn round(this: &ZonedDateTime, round_to: &RoundToOptions)
+        -> Result<ZonedDateTime, JsValue>;
 
     /// The `since()` method taking a property bag; throws a `TypeError` if required fields are missing; see [`ZonedDateTime::since`] for the remaining errors.
     #[wasm_bindgen(method, js_name = since, catch)]
@@ -3395,14 +3426,14 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/getTimeZoneTransition)
     #[wasm_bindgen(method, js_name = getTimeZoneTransition)]
-    pub fn get_time_zone_transition_with_time_zone_transition_options(
+    pub fn get_time_zone_transition(
         this: &ZonedDateTime,
         options: &TimeZoneTransitionOptions,
     ) -> Nullable<ZonedDateTime>;
 
     /// Shorthand for `getTimeZoneTransition()` with only `direction` set.
     #[wasm_bindgen(method, js_name = getTimeZoneTransition)]
-    pub fn get_time_zone_transition_with_transition_direction(
+    pub fn get_time_zone_transition_with_direction(
         this: &ZonedDateTime,
         direction: TransitionDirection,
     ) -> Nullable<ZonedDateTime>;
@@ -3477,6 +3508,14 @@ extern "C" {
         options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
+    #[doc(hidden)]
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn __to_locale_string_with_options(
+        this: &ZonedDateTime,
+        locales: Option<&str>,
+        options: &Intl::DateTimeFormatOptions,
+    ) -> Result<JsString, JsValue>;
+
     /// The `toJSON()` method returns a string representation of this zoned date-time
     /// suitable for JSON serialization.
     ///
@@ -3502,6 +3541,17 @@ extern "C" {
         this: &ZonedDateTime,
         options: &ZonedDateTimeToStringOptions,
     ) -> Result<JsString, JsValue>;
+}
+
+impl ZonedDateTime {
+    /// The `toLocaleString()` method with the default locale; see
+    /// [`ZonedDateTime::to_locale_string`] for errors.
+    pub fn to_locale_string_with_options(
+        &self,
+        options: &Intl::DateTimeFormatOptions,
+    ) -> Result<JsString, JsValue> {
+        self.__to_locale_string_with_options(None, options)
+    }
 }
 
 #[wasm_bindgen]
@@ -3835,10 +3885,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/round)
     #[wasm_bindgen(method, js_name = round, catch)]
-    pub fn round_with_duration_round_to_options(
-        this: &Duration,
-        round_to: &DurationRoundToOptions,
-    ) -> Result<Duration, JsValue>;
+    pub fn round(this: &Duration, round_to: &DurationRoundToOptions) -> Result<Duration, JsValue>;
 
     /// Shorthand for `round()` with only `smallestUnit` set.
     #[wasm_bindgen(method, js_name = round, catch)]
@@ -3853,10 +3900,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/total)
     #[wasm_bindgen(method, js_name = total, catch)]
-    pub fn total_with_duration_total_options(
-        this: &Duration,
-        total_of: &DurationTotalOptions,
-    ) -> Result<f64, JsValue>;
+    pub fn total(this: &Duration, total_of: &DurationTotalOptions) -> Result<f64, JsValue>;
 
     /// Shorthand for `total()` with only `unit` set.
     #[wasm_bindgen(method, js_name = total, catch)]
@@ -3901,6 +3945,14 @@ extern "C" {
         options: &Intl::DurationFormatOptions,
     ) -> Result<JsString, JsValue>;
 
+    #[doc(hidden)]
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn __to_locale_string_with_options(
+        this: &Duration,
+        locales: Option<&str>,
+        options: &Intl::DurationFormatOptions,
+    ) -> Result<JsString, JsValue>;
+
     /// The `toJSON()` method returns a string representation of this duration
     /// suitable for JSON serialization (same as `toString()`).
     ///
@@ -3926,6 +3978,17 @@ extern "C" {
         this: &Duration,
         options: &ToStringPrecisionOptions,
     ) -> Result<JsString, JsValue>;
+}
+
+impl Duration {
+    /// The `toLocaleString()` method with the default locale; see
+    /// [`Duration::to_locale_string`] for errors.
+    pub fn to_locale_string_with_options(
+        &self,
+        options: &Intl::DurationFormatOptions,
+    ) -> Result<JsString, JsValue> {
+        self.__to_locale_string_with_options(None, options)
+    }
 }
 
 #[wasm_bindgen]
@@ -4310,10 +4373,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/round)
     #[wasm_bindgen(method, js_name = round, catch)]
-    pub fn round_with_round_to_options(
-        this: &PlainTime,
-        round_to: &RoundToOptions,
-    ) -> Result<PlainTime, JsValue>;
+    pub fn round(this: &PlainTime, round_to: &RoundToOptions) -> Result<PlainTime, JsValue>;
 
     /// The `since()` method taking a `Temporal.PlainDateTime`.
     #[wasm_bindgen(method, js_name = since)]
@@ -4412,6 +4472,14 @@ extern "C" {
         options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
+    #[doc(hidden)]
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn __to_locale_string_with_options(
+        this: &PlainTime,
+        locales: Option<&str>,
+        options: &Intl::DateTimeFormatOptions,
+    ) -> Result<JsString, JsValue>;
+
     /// The `toJSON()` method returns a string representation of this time
     /// suitable for JSON serialization.
     ///
@@ -4438,6 +4506,17 @@ extern "C" {
         options: &ToStringPrecisionOptions,
     ) -> Result<JsString, JsValue>;
 
+}
+
+impl PlainTime {
+    /// The `toLocaleString()` method with the default locale; see
+    /// [`PlainTime::to_locale_string`] for errors.
+    pub fn to_locale_string_with_options(
+        &self,
+        options: &Intl::DateTimeFormatOptions,
+    ) -> Result<JsString, JsValue> {
+        self.__to_locale_string_with_options(None, options)
+    }
 }
 
 #[wasm_bindgen]
@@ -5073,6 +5152,14 @@ extern "C" {
         options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
+    #[doc(hidden)]
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn __to_locale_string_with_options(
+        this: &PlainYearMonth,
+        locales: Option<&str>,
+        options: &Intl::DateTimeFormatOptions,
+    ) -> Result<JsString, JsValue>;
+
     /// The `toJSON()` method returns a string representation of this year-month
     /// suitable for JSON serialization.
     ///
@@ -5101,6 +5188,15 @@ extern "C" {
 }
 
 impl PlainYearMonth {
+    /// The `toLocaleString()` method with the default locale; see
+    /// [`PlainYearMonth::to_locale_string`] for errors.
+    pub fn to_locale_string_with_options(
+        &self,
+        options: &Intl::DateTimeFormatOptions,
+    ) -> Result<JsString, JsValue> {
+        self.__to_locale_string_with_options(None, options)
+    }
+
     /// The `toPlainDate()` method returns a `Temporal.PlainDate` object representing
     /// this year-month on the given day of the month; see [`PlainYearMonth::to_plain_date_with_fields`] for errors.
     pub fn to_plain_date(&self, day: u32) -> Result<PlainDate, JsValue> {
@@ -5358,6 +5454,14 @@ extern "C" {
         options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
+    #[doc(hidden)]
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn __to_locale_string_with_options(
+        this: &PlainMonthDay,
+        locales: Option<&str>,
+        options: &Intl::DateTimeFormatOptions,
+    ) -> Result<JsString, JsValue>;
+
     /// The `toJSON()` method returns a string representation of this month-day
     /// suitable for JSON serialization.
     ///
@@ -5386,6 +5490,15 @@ extern "C" {
 }
 
 impl PlainMonthDay {
+    /// The `toLocaleString()` method with the default locale; see
+    /// [`PlainMonthDay::to_locale_string`] for errors.
+    pub fn to_locale_string_with_options(
+        &self,
+        options: &Intl::DateTimeFormatOptions,
+    ) -> Result<JsString, JsValue> {
+        self.__to_locale_string_with_options(None, options)
+    }
+
     /// The `toPlainDate()` method returns a `Temporal.PlainDate` object representing
     /// this month-day in the given year; see [`PlainMonthDay::to_plain_date_with_fields`] for errors.
     pub fn to_plain_date(&self, year: i32) -> Result<PlainDate, JsValue> {
@@ -6143,6 +6256,14 @@ extern "C" {
         options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
+    #[doc(hidden)]
+    #[wasm_bindgen(method, js_name = toLocaleString, catch)]
+    pub fn __to_locale_string_with_options(
+        this: &PlainDate,
+        locales: Option<&str>,
+        options: &Intl::DateTimeFormatOptions,
+    ) -> Result<JsString, JsValue>;
+
     /// The `toJSON()` method returns a string representation of this date
     /// suitable for JSON serialization.
     ///
@@ -6168,6 +6289,17 @@ extern "C" {
         this: &PlainDate,
         options: &ShowCalendarOptions,
     ) -> Result<JsString, JsValue>;
+}
+
+impl PlainDate {
+    /// The `toLocaleString()` method with the default locale; see
+    /// [`PlainDate::to_locale_string`] for errors.
+    pub fn to_locale_string_with_options(
+        &self,
+        options: &Intl::DateTimeFormatOptions,
+    ) -> Result<JsString, JsValue> {
+        self.__to_locale_string_with_options(None, options)
+    }
 }
 
 /// The `Temporal.Now` object has several methods which give information about
