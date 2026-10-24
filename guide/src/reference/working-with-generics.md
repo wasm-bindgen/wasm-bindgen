@@ -285,7 +285,7 @@ let names: Option<JsString> = Some(String::from("a")).to_js_canon();
 
 - **Scalars**: `String`, `&str` and `char` → `JsString`, numbers → `Number`,
   `bool` → `Boolean`, `()` → `Undefined`, converted by value
-- **Identity**: every JS handle type → itself
+- **Identity**: every `js-sys` handle type → itself
 - **Structural**: `Promise<T>` → `Promise<T::Canon>`, `Array<T>` →
   `Array<T::Canon>`, `Map<K, V>` → `Map<K::Canon, V::Canon>`, and likewise
   `Option<T>`, `Nullable<T>`, `JsOption<T>` and `JsNullable<T>`, through any
@@ -294,6 +294,19 @@ let names: Option<JsString> = Some(String::from("a")).to_js_canon();
 `Canon` is always an `UpcastFrom` of the type, so handle containers convert at
 zero cost through `upcast_into()`, and `Promise<String>` also upcasts directly
 to `Promise<JsValue>`.
+
+A handle type imported outside `js-sys`, in `web-sys` or in your own
+`#[wasm_bindgen]` block, is already canonical but has no impl, so a container of
+it canonicalises once the owning crate adds the identity:
+
+```rust
+impl JsCanon for MyImport {
+    type Canon = Self;
+    fn to_js_canon(self) -> Self {
+        self
+    }
+}
+```
 
 ## Exporting Functions with Generic Types
 

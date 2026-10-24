@@ -18,11 +18,25 @@ use crate::*;
 ///
 /// Rust scalars map to their JS handle: `String`, `&str` and `char` to
 /// [`JsString`], numbers to [`Number`], `bool` to [`Boolean`] and `()` to
-/// [`Undefined`]. Every JS handle type maps to itself. Containers map
+/// [`Undefined`]. Every `js-sys` handle type maps to itself. Containers map
 /// structurally through their elements: `Promise<T>` to `Promise<T::Canon>`,
 /// `Array<T>` to `Array<T::Canon>`, `Map<K, V>` to `Map<K::Canon, V::Canon>`,
 /// and the same for `Option<T>`, `Nullable<T>`, `JsOption<T>` and
 /// `JsNullable<T>`, so nested types canonicalise all the way down.
+///
+/// A handle type imported elsewhere, in `web-sys` or by a `#[wasm_bindgen]`
+/// block of your own, is already its canonical form, but is not known here,
+/// so a container of it canonicalises only once the crate that owns the type
+/// gives it the identity impl:
+///
+/// ```ignore
+/// impl JsCanon for MyImport {
+///     type Canon = Self;
+///     fn to_js_canon(self) -> Self {
+///         self
+///     }
+/// }
+/// ```
 ///
 /// Canonicalisation is a relabelling, so `Canon` is always an [`UpcastFrom`]
 /// of `Self`. A handle container converts through `upcast_into` at zero

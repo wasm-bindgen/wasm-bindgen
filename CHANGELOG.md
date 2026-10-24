@@ -157,8 +157,9 @@
 
 * Added `js_sys::JsCanon`, mapping a type to the JS handle type that stands
   for it in a generic position: `String`, `&str` and `char` to `JsString`,
-  numbers to `Number`, `bool` to `Boolean`, `()` to `Undefined`, every JS
-  handle type to itself, and containers structurally through their elements
+  numbers to `Number`, `bool` to `Boolean`, `()` to `Undefined`, every
+  `js-sys` handle type to itself, and containers structurally through their
+  elements
   (`Promise<T>` to `Promise<T::Canon>`, `Array<T>`, `Map<K, V>`, `Option<T>`,
   `Nullable<T>`, `JsOption<T>`, `JsNullable<T>`, nested). `to_js_canon()`
   relabels a handle container at zero cost through `Upcast`, so a
