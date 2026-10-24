@@ -1065,17 +1065,22 @@ fn ordering_and_locale_options() {
     assert_eq!(times[2].hour(), 23);
     let opts = Intl::DateTimeFormatOptions::new();
     opts.set_time_zone("UTC");
-    assert!(a.to_locale_string_with_options(&opts).unwrap().length() > 0);
+    assert!(
+        a.to_locale_string_with_options(None, &opts)
+            .unwrap()
+            .length()
+            > 0
+    );
     assert!(
         get_test_plain_date()
-            .to_locale_string_with_options(&Intl::DateTimeFormatOptions::new())
+            .to_locale_string_with_options(Some("en-US"), &Intl::DateTimeFormatOptions::new())
             .unwrap()
             .length()
             > 0
     );
     assert!(
         get_test_duration()
-            .to_locale_string_with_options(&Intl::DurationFormatOptions::new())
+            .to_locale_string_with_options(None, &Intl::DurationFormatOptions::new())
             .unwrap()
             .length()
             > 0
