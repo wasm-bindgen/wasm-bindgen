@@ -22,6 +22,7 @@ pub mod Generator;
 pub mod Intl;
 pub mod Iterator;
 pub mod JSON;
+pub mod JsCanon;
 pub mod JsString;
 pub mod Map;
 pub mod MapIterator;

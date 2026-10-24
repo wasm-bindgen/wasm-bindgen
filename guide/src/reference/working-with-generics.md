@@ -16,6 +16,7 @@ For a complete reference of all generic types and traits, see [js-sys](./types/j
 - [Upcasting Types](#upcasting-types)
   - [Automatic Upcast Generation](#automatic-upcast-generation)
   - [Upcast Rules](#upcast-rules)
+  - [Canonical JS Types](#canonical-js-types)
 - [Exporting Functions with Generic Types](#exporting-functions-with-generic-types)
 
 ---
@@ -260,6 +261,39 @@ extern "C" {
 3. **Inheritance upcast**: Types upcast to their `extends` targets (e.g., Object)
 4. **Structural upcast**: Generic types like `Array<T>` → `Array<U>` when `T` → `U`
 5. **Nested upcast**: `Promise<Array<Number>>` → `Promise<Array<JsValue>>`
+
+### Canonical JS Types
+
+A container can also hold a Rust element type: an
+[`experimental_generic_mono`](attributes/on-js-imports/experimental_generic_mono.md)
+import returns `Promise<String>` where a non-mono API returns
+`Promise<JsString>`. Both wrap the same JS value, and `upcast_into()` relabels
+one to the other, but the caller has to spell out the target type. The
+`js_sys::JsCanon` trait names it: `Canon` is the JS handle type that stands for
+a type in a generic position, and `to_js_canon()` converts to it.
+
+```rust
+use js_sys::{JsCanon, JsString, Promise};
+
+fn takes_js(promise: Promise<JsString>) { /* ... */ }
+
+let promise: Promise<String> = make_string_promise();
+takes_js(promise.to_js_canon());
+
+let names: Option<JsString> = Some(String::from("a")).to_js_canon();
+```
+
+- **Scalars**: `String`, `&str` and `char` → `JsString`, numbers → `Number`,
+  `bool` → `Boolean`, `()` → `Undefined`, converted by value
+- **Identity**: every JS handle type → itself
+- **Structural**: `Promise<T>` → `Promise<T::Canon>`, `Array<T>` →
+  `Array<T::Canon>`, `Map<K, V>` → `Map<K::Canon, V::Canon>`, and likewise
+  `Option<T>`, `Nullable<T>`, `JsOption<T>` and `JsNullable<T>`, through any
+  nesting
+
+`Canon` is always an `UpcastFrom` of the type, so handle containers convert at
+zero cost through `upcast_into()`, and `Promise<String>` also upcasts directly
+to `Promise<JsValue>`.
 
 ## Exporting Functions with Generic Types
 

@@ -397,6 +397,17 @@ A constructor or inferred self-returning static method whose return is
 so the method remains on the imported class's default specialization instead
 of being hoisted.
 
+### Canonical element types
+
+A class-level generic filled by a Rust type gives a container of that type:
+`Holder<u32>` above, or `Promise<String>` from an async import. The non-mono
+`js-sys` APIs for the same JS value use the JS handle type instead, such as
+`Promise<JsString>`. The two relabel to each other with `upcast_into()`, and
+`js_sys::JsCanon` names the handle form so the target need not be spelled out:
+`promise.to_js_canon()` turns a `Promise<String>` into a `Promise<JsString>`,
+through any nesting of containers, `Option` and `Nullable`. See
+[Canonical JS Types](../../working-with-generics.md#canonical-js-types).
+
 ## Callback arguments
 
 A top-level raw `&dyn Fn(...)` or `&mut dyn FnMut(...)` callback may use type
