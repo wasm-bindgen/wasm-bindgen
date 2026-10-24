@@ -27,7 +27,7 @@
   `timeZone` and `plainTime` dictionary setters all exist; `compare` keeps
   taking `&Self` only. Optional arguments expand to the plain method plus
   `_with_options`/`_and_options`, `to_locale_string` takes no locale, a
-  `_with_str`/`_with_str_sequence` one or `_with_options` alone, and `round`,
+  `_with_str`/`_with_str_sequence` one or an `Option<&str>` with options, and `round`,
   `total` and `get_time_zone_transition` take their options dictionary, with
   `round_with_unit`, `total_with_unit` and
   `get_time_zone_transition_with_direction` shortcuts. The option dictionaries

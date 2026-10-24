@@ -1741,9 +1741,10 @@ extern "C" {
         options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
-    #[doc(hidden)]
+    /// The `toLocaleString()` method; `None` for `locales` uses the default locale. See
+    /// [`Instant::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn __to_locale_string_with_options(
+    pub fn to_locale_string_with_options(
         this: &Instant,
         locales: Option<&str>,
         options: &Intl::DateTimeFormatOptions,
@@ -1774,17 +1775,6 @@ extern "C" {
         this: &Instant,
         options: &InstantToStringOptions,
     ) -> Result<JsString, JsValue>;
-}
-
-impl Instant {
-    /// The `toLocaleString()` method with the default locale; see
-    /// [`Instant::to_locale_string`] for errors.
-    pub fn to_locale_string_with_options(
-        &self,
-        options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue> {
-        self.__to_locale_string_with_options(None, options)
-    }
 }
 
 #[wasm_bindgen]
@@ -2692,9 +2682,10 @@ extern "C" {
         options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
-    #[doc(hidden)]
+    /// The `toLocaleString()` method; `None` for `locales` uses the default locale. See
+    /// [`PlainDateTime::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn __to_locale_string_with_options(
+    pub fn to_locale_string_with_options(
         this: &PlainDateTime,
         locales: Option<&str>,
         options: &Intl::DateTimeFormatOptions,
@@ -2725,17 +2716,6 @@ extern "C" {
         this: &PlainDateTime,
         options: &CalendarTypeToStringOptions,
     ) -> Result<JsString, JsValue>;
-}
-
-impl PlainDateTime {
-    /// The `toLocaleString()` method with the default locale; see
-    /// [`PlainDateTime::to_locale_string`] for errors.
-    pub fn to_locale_string_with_options(
-        &self,
-        options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue> {
-        self.__to_locale_string_with_options(None, options)
-    }
 }
 
 #[wasm_bindgen]
@@ -3536,9 +3516,10 @@ extern "C" {
         options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
-    #[doc(hidden)]
+    /// The `toLocaleString()` method; `None` for `locales` uses the default locale. See
+    /// [`ZonedDateTime::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn __to_locale_string_with_options(
+    pub fn to_locale_string_with_options(
         this: &ZonedDateTime,
         locales: Option<&str>,
         options: &Intl::DateTimeFormatOptions,
@@ -3569,17 +3550,6 @@ extern "C" {
         this: &ZonedDateTime,
         options: &ZonedDateTimeToStringOptions,
     ) -> Result<JsString, JsValue>;
-}
-
-impl ZonedDateTime {
-    /// The `toLocaleString()` method with the default locale; see
-    /// [`ZonedDateTime::to_locale_string`] for errors.
-    pub fn to_locale_string_with_options(
-        &self,
-        options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue> {
-        self.__to_locale_string_with_options(None, options)
-    }
 }
 
 #[wasm_bindgen]
@@ -3973,9 +3943,10 @@ extern "C" {
         options: &Intl::DurationFormatOptions,
     ) -> Result<JsString, JsValue>;
 
-    #[doc(hidden)]
+    /// The `toLocaleString()` method; `None` for `locales` uses the default locale. See
+    /// [`Duration::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn __to_locale_string_with_options(
+    pub fn to_locale_string_with_options(
         this: &Duration,
         locales: Option<&str>,
         options: &Intl::DurationFormatOptions,
@@ -4006,17 +3977,6 @@ extern "C" {
         this: &Duration,
         options: &ToStringPrecisionOptions,
     ) -> Result<JsString, JsValue>;
-}
-
-impl Duration {
-    /// The `toLocaleString()` method with the default locale; see
-    /// [`Duration::to_locale_string`] for errors.
-    pub fn to_locale_string_with_options(
-        &self,
-        options: &Intl::DurationFormatOptions,
-    ) -> Result<JsString, JsValue> {
-        self.__to_locale_string_with_options(None, options)
-    }
 }
 
 #[wasm_bindgen]
@@ -4500,9 +4460,10 @@ extern "C" {
         options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
-    #[doc(hidden)]
+    /// The `toLocaleString()` method; `None` for `locales` uses the default locale. See
+    /// [`PlainTime::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn __to_locale_string_with_options(
+    pub fn to_locale_string_with_options(
         this: &PlainTime,
         locales: Option<&str>,
         options: &Intl::DateTimeFormatOptions,
@@ -4534,17 +4495,6 @@ extern "C" {
         options: &ToStringPrecisionOptions,
     ) -> Result<JsString, JsValue>;
 
-}
-
-impl PlainTime {
-    /// The `toLocaleString()` method with the default locale; see
-    /// [`PlainTime::to_locale_string`] for errors.
-    pub fn to_locale_string_with_options(
-        &self,
-        options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue> {
-        self.__to_locale_string_with_options(None, options)
-    }
 }
 
 #[wasm_bindgen]
@@ -5204,9 +5154,10 @@ extern "C" {
         options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
-    #[doc(hidden)]
+    /// The `toLocaleString()` method; `None` for `locales` uses the default locale. See
+    /// [`PlainYearMonth::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn __to_locale_string_with_options(
+    pub fn to_locale_string_with_options(
         this: &PlainYearMonth,
         locales: Option<&str>,
         options: &Intl::DateTimeFormatOptions,
@@ -5240,15 +5191,6 @@ extern "C" {
 }
 
 impl PlainYearMonth {
-    /// The `toLocaleString()` method with the default locale; see
-    /// [`PlainYearMonth::to_locale_string`] for errors.
-    pub fn to_locale_string_with_options(
-        &self,
-        options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue> {
-        self.__to_locale_string_with_options(None, options)
-    }
-
     /// The `toPlainDate()` method returns a `Temporal.PlainDate` object representing
     /// this year-month on the given day of the month; see [`PlainYearMonth::to_plain_date_with_fields`] for errors.
     pub fn to_plain_date(&self, day: u32) -> Result<PlainDate, JsValue> {
@@ -5506,9 +5448,10 @@ extern "C" {
         options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
-    #[doc(hidden)]
+    /// The `toLocaleString()` method; `None` for `locales` uses the default locale. See
+    /// [`PlainMonthDay::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn __to_locale_string_with_options(
+    pub fn to_locale_string_with_options(
         this: &PlainMonthDay,
         locales: Option<&str>,
         options: &Intl::DateTimeFormatOptions,
@@ -5542,15 +5485,6 @@ extern "C" {
 }
 
 impl PlainMonthDay {
-    /// The `toLocaleString()` method with the default locale; see
-    /// [`PlainMonthDay::to_locale_string`] for errors.
-    pub fn to_locale_string_with_options(
-        &self,
-        options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue> {
-        self.__to_locale_string_with_options(None, options)
-    }
-
     /// The `toPlainDate()` method returns a `Temporal.PlainDate` object representing
     /// this month-day in the given year; see [`PlainMonthDay::to_plain_date_with_fields`] for errors.
     pub fn to_plain_date(&self, year: i32) -> Result<PlainDate, JsValue> {
@@ -6305,9 +6239,10 @@ extern "C" {
         options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
-    #[doc(hidden)]
+    /// The `toLocaleString()` method; `None` for `locales` uses the default locale. See
+    /// [`PlainDate::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn __to_locale_string_with_options(
+    pub fn to_locale_string_with_options(
         this: &PlainDate,
         locales: Option<&str>,
         options: &Intl::DateTimeFormatOptions,
@@ -6338,17 +6273,6 @@ extern "C" {
         this: &PlainDate,
         options: &ShowCalendarOptions,
     ) -> Result<JsString, JsValue>;
-}
-
-impl PlainDate {
-    /// The `toLocaleString()` method with the default locale; see
-    /// [`PlainDate::to_locale_string`] for errors.
-    pub fn to_locale_string_with_options(
-        &self,
-        options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue> {
-        self.__to_locale_string_with_options(None, options)
-    }
 }
 
 /// The `Temporal.Now` object has several methods which give information about
