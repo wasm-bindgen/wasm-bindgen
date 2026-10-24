@@ -169,7 +169,7 @@ impl InstructionBuilder<'_, '_> {
             }
 
             Descriptor::Vector(cell) => {
-                let kind = match cell.vector_cell() {
+                let kind = match cell.vector_cell(false) {
                     SequenceCell::InPlace(kind) => kind,
                     SequenceCell::Encoded(elem) => return self.outgoing_encoded_slice(elem, None),
                 };
@@ -485,7 +485,7 @@ impl InstructionBuilder<'_, '_> {
 
             Descriptor::String | Descriptor::Vector(_) => {
                 let kind = match arg {
-                    Descriptor::Vector(cell) => match cell.vector_cell() {
+                    Descriptor::Vector(cell) => match cell.vector_cell(false) {
                         SequenceCell::InPlace(kind) => kind,
                         SequenceCell::Encoded(elem) => {
                             return self.outgoing_encoded_slice(elem, Some(option_kind))
@@ -686,9 +686,9 @@ impl InstructionBuilder<'_, '_> {
     /// owned.
     fn outgoing_borrowed_option(&mut self, arg: &Descriptor) -> Result<(), Error> {
         let (inner, kind) = match arg {
-            Descriptor::Option { inner, .. } => match &**inner {
+            Descriptor::Option(inner) => match &**inner {
                 Descriptor::Nullable(inner) => (&**inner, OptionKind::OptionNullable),
-                inner => (inner, OptionKind::Lenient),
+                inner => (inner, OptionKind::Option),
             },
             Descriptor::Nullable(inner) => (&**inner, OptionKind::Nullable),
             _ => unreachable!(),

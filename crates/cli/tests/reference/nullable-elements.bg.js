@@ -12,6 +12,19 @@ export function export_nullable_strings(v) {
 }
 
 /**
+ * @param {(string | null | undefined)[]} v
+ * @returns {(string | undefined)[]}
+ */
+export function export_opt_strings(v) {
+    const ptr0 = passArrayJsValueToWasm0(v, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.export_opt_strings(ptr0, len0);
+    var v2 = getArrayJsValueFromWasm0(ret[0], ret[1]);
+    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    return v2;
+}
+
+/**
  * @param {(number | null | undefined)[]} v
  * @returns {(number | undefined)[]}
  */
@@ -50,6 +63,10 @@ export function use_imports(f) {
 }
 export function __wbg___wbindgen_is_null_e343b7d08827ba72(arg0) {
     const ret = arg0 === null;
+    return ret;
+}
+export function __wbg___wbindgen_is_undefined_8865fb403f8fe9d8(arg0) {
+    const ret = arg0 === undefined;
     return ret;
 }
 export function __wbg___wbindgen_string_get_0380ccaa2f57f0d9(arg0, arg1) {

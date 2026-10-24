@@ -29,6 +29,11 @@ pub fn export_opt_u8s(v: Vec<Option<u8>>) -> Vec<Option<u8>> {
 }
 
 #[wasm_bindgen]
+pub fn export_opt_strings(v: Vec<Option<String>>) -> Vec<Option<String>> {
+    v
+}
+
+#[wasm_bindgen]
 pub fn use_imports(f: &Function<fn(Nullable<JsString>) -> Undefined>) {
     opt_f64s(&[Some(1.0), None]);
     nullable_strings(&[Nullable::Null]);
