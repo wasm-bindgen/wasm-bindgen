@@ -1493,14 +1493,14 @@ extern "C" {
     /// number of milliseconds since the Unix epoch.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/epochMilliseconds)
-    #[wasm_bindgen(method, getter, js_name = epochMilliseconds)]
+    #[wasm_bindgen(method, getter = epochMilliseconds)]
     pub fn epoch_milliseconds(this: &Instant) -> f64;
 
     /// The `epochNanoseconds` accessor property returns a BigInt representing the
     /// number of nanoseconds since the Unix epoch.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/epochNanoseconds)
-    #[wasm_bindgen(method, getter, js_name = epochNanoseconds)]
+    #[wasm_bindgen(method, getter = epochNanoseconds)]
     pub fn epoch_nanoseconds(this: &Instant) -> BigInt;
 
     /// The `equals()` method returns `true` if this instant is equivalent to `other`.
@@ -1977,7 +1977,7 @@ extern "C" {
     /// year of this date within the era, or `None` if the calendar does not use eras.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/eraYear)
-    #[wasm_bindgen(method, getter, js_name = eraYear)]
+    #[wasm_bindgen(method, getter = eraYear)]
     pub fn era_year(this: &PlainDateTime) -> Option<i32>;
 
     /// The `year` accessor property returns an integer representing the number of years
@@ -1998,7 +1998,7 @@ extern "C" {
     /// the month of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/monthCode)
-    #[wasm_bindgen(method, getter, js_name = monthCode)]
+    #[wasm_bindgen(method, getter = monthCode)]
     pub fn month_code(this: &PlainDateTime) -> JsString;
 
     /// The `day` accessor property returns a positive integer representing the
@@ -2054,21 +2054,21 @@ extern "C" {
     /// used to interpret the internal ISO 8601 date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/calendarId)
-    #[wasm_bindgen(method, getter, js_name = calendarId)]
+    #[wasm_bindgen(method, getter = calendarId)]
     pub fn calendar_id(this: &PlainDateTime) -> JsString;
 
     /// The `dayOfWeek` accessor property returns a positive integer representing the
     /// day of the week of this date (1 = Monday through 7 = Sunday for ISO 8601).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/dayOfWeek)
-    #[wasm_bindgen(method, getter, js_name = dayOfWeek)]
+    #[wasm_bindgen(method, getter = dayOfWeek)]
     pub fn day_of_week(this: &PlainDateTime) -> u32;
 
     /// The `dayOfYear` accessor property returns a positive integer representing the
     /// 1-based day index of this date in the year.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/dayOfYear)
-    #[wasm_bindgen(method, getter, js_name = dayOfYear)]
+    #[wasm_bindgen(method, getter = dayOfYear)]
     pub fn day_of_year(this: &PlainDateTime) -> u32;
 
     /// The `weekOfYear` accessor property returns a positive integer representing the
@@ -2076,7 +2076,7 @@ extern "C" {
     /// calendar does not have a well-defined week system.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/weekOfYear)
-    #[wasm_bindgen(method, getter, js_name = weekOfYear)]
+    #[wasm_bindgen(method, getter = weekOfYear)]
     pub fn week_of_year(this: &PlainDateTime) -> Option<u32>;
 
     /// The `yearOfWeek` accessor property returns an integer representing the year
@@ -2084,42 +2084,42 @@ extern "C" {
     /// a well-defined week system.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/yearOfWeek)
-    #[wasm_bindgen(method, getter, js_name = yearOfWeek)]
+    #[wasm_bindgen(method, getter = yearOfWeek)]
     pub fn year_of_week(this: &PlainDateTime) -> Option<i32>;
 
     /// The `daysInWeek` accessor property returns a positive integer representing the
     /// number of days in the week of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/daysInWeek)
-    #[wasm_bindgen(method, getter, js_name = daysInWeek)]
+    #[wasm_bindgen(method, getter = daysInWeek)]
     pub fn days_in_week(this: &PlainDateTime) -> u32;
 
     /// The `daysInMonth` accessor property returns a positive integer representing the
     /// number of days in the month of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/daysInMonth)
-    #[wasm_bindgen(method, getter, js_name = daysInMonth)]
+    #[wasm_bindgen(method, getter = daysInMonth)]
     pub fn days_in_month(this: &PlainDateTime) -> u32;
 
     /// The `daysInYear` accessor property returns a positive integer representing the
     /// number of days in the year of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/daysInYear)
-    #[wasm_bindgen(method, getter, js_name = daysInYear)]
+    #[wasm_bindgen(method, getter = daysInYear)]
     pub fn days_in_year(this: &PlainDateTime) -> u32;
 
     /// The `monthsInYear` accessor property returns a positive integer representing the
     /// number of months in the year of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/monthsInYear)
-    #[wasm_bindgen(method, getter, js_name = monthsInYear)]
+    #[wasm_bindgen(method, getter = monthsInYear)]
     pub fn months_in_year(this: &PlainDateTime) -> u32;
 
     /// The `inLeapYear` accessor property returns `true` if this date is in a leap year,
     /// and `false` otherwise.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/inLeapYear)
-    #[wasm_bindgen(method, getter, js_name = inLeapYear)]
+    #[wasm_bindgen(method, getter = inLeapYear)]
     pub fn in_leap_year(this: &PlainDateTime) -> bool;
 
     /// The `equals()` method returns `true` if this date-time is equivalent to `other`.
@@ -2835,7 +2835,7 @@ extern "C" {
     /// year of this date within the era, or `None` if the calendar does not use eras.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/eraYear)
-    #[wasm_bindgen(method, getter, js_name = eraYear)]
+    #[wasm_bindgen(method, getter = eraYear)]
     pub fn era_year(this: &ZonedDateTime) -> Option<i32>;
 
     /// The `year` accessor property returns an integer representing the number of years
@@ -2856,7 +2856,7 @@ extern "C" {
     /// the month of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/monthCode)
-    #[wasm_bindgen(method, getter, js_name = monthCode)]
+    #[wasm_bindgen(method, getter = monthCode)]
     pub fn month_code(this: &ZonedDateTime) -> JsString;
 
     /// The `day` accessor property returns a positive integer representing the
@@ -2912,28 +2912,28 @@ extern "C" {
     /// identifier used to interpret the internal instant.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/timeZoneId)
-    #[wasm_bindgen(method, getter, js_name = timeZoneId)]
+    #[wasm_bindgen(method, getter = timeZoneId)]
     pub fn time_zone_id(this: &ZonedDateTime) -> JsString;
 
     /// The `calendarId` accessor property returns a string representing the calendar
     /// used to interpret the internal ISO 8601 date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/calendarId)
-    #[wasm_bindgen(method, getter, js_name = calendarId)]
+    #[wasm_bindgen(method, getter = calendarId)]
     pub fn calendar_id(this: &ZonedDateTime) -> JsString;
 
     /// The `dayOfWeek` accessor property returns a positive integer representing the
     /// day of the week of this date (1 = Monday through 7 = Sunday for ISO 8601).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/dayOfWeek)
-    #[wasm_bindgen(method, getter, js_name = dayOfWeek)]
+    #[wasm_bindgen(method, getter = dayOfWeek)]
     pub fn day_of_week(this: &ZonedDateTime) -> u32;
 
     /// The `dayOfYear` accessor property returns a positive integer representing the
     /// 1-based day index of this date in the year.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/dayOfYear)
-    #[wasm_bindgen(method, getter, js_name = dayOfYear)]
+    #[wasm_bindgen(method, getter = dayOfYear)]
     pub fn day_of_year(this: &ZonedDateTime) -> u32;
 
     /// The `weekOfYear` accessor property returns a positive integer representing the
@@ -2941,7 +2941,7 @@ extern "C" {
     /// calendar does not have a well-defined week system.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/weekOfYear)
-    #[wasm_bindgen(method, getter, js_name = weekOfYear)]
+    #[wasm_bindgen(method, getter = weekOfYear)]
     pub fn week_of_year(this: &ZonedDateTime) -> Option<u32>;
 
     /// The `yearOfWeek` accessor property returns an integer representing the year
@@ -2949,7 +2949,7 @@ extern "C" {
     /// a well-defined week system.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/yearOfWeek)
-    #[wasm_bindgen(method, getter, js_name = yearOfWeek)]
+    #[wasm_bindgen(method, getter = yearOfWeek)]
     pub fn year_of_week(this: &ZonedDateTime) -> Option<i32>;
 
     /// The `hoursInDay` accessor property returns a positive number representing the
@@ -2959,49 +2959,49 @@ extern "C" {
     /// Throws a `RangeError` if the start of this or the following day falls outside the representable instant range.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/hoursInDay)
-    #[wasm_bindgen(method, getter, js_name = hoursInDay, catch)]
+    #[wasm_bindgen(method, getter = hoursInDay, catch)]
     pub fn hours_in_day(this: &ZonedDateTime) -> Result<f64, JsValue>;
 
     /// The `daysInWeek` accessor property returns a positive integer representing the
     /// number of days in the week of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/daysInWeek)
-    #[wasm_bindgen(method, getter, js_name = daysInWeek)]
+    #[wasm_bindgen(method, getter = daysInWeek)]
     pub fn days_in_week(this: &ZonedDateTime) -> u32;
 
     /// The `daysInMonth` accessor property returns a positive integer representing the
     /// number of days in the month of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/daysInMonth)
-    #[wasm_bindgen(method, getter, js_name = daysInMonth)]
+    #[wasm_bindgen(method, getter = daysInMonth)]
     pub fn days_in_month(this: &ZonedDateTime) -> u32;
 
     /// The `daysInYear` accessor property returns a positive integer representing the
     /// number of days in the year of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/daysInYear)
-    #[wasm_bindgen(method, getter, js_name = daysInYear)]
+    #[wasm_bindgen(method, getter = daysInYear)]
     pub fn days_in_year(this: &ZonedDateTime) -> u32;
 
     /// The `monthsInYear` accessor property returns a positive integer representing the
     /// number of months in the year of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/monthsInYear)
-    #[wasm_bindgen(method, getter, js_name = monthsInYear)]
+    #[wasm_bindgen(method, getter = monthsInYear)]
     pub fn months_in_year(this: &ZonedDateTime) -> u32;
 
     /// The `inLeapYear` accessor property returns `true` if this date is in a leap year,
     /// and `false` otherwise.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/inLeapYear)
-    #[wasm_bindgen(method, getter, js_name = inLeapYear)]
+    #[wasm_bindgen(method, getter = inLeapYear)]
     pub fn in_leap_year(this: &ZonedDateTime) -> bool;
 
     /// The `offsetNanoseconds` accessor property returns an integer representing the
     /// offset from UTC in nanoseconds.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/offsetNanoseconds)
-    #[wasm_bindgen(method, getter, js_name = offsetNanoseconds)]
+    #[wasm_bindgen(method, getter = offsetNanoseconds)]
     pub fn offset_nanoseconds(this: &ZonedDateTime) -> f64;
 
     /// The `offset` accessor property returns a string representing the offset from UTC
@@ -3015,14 +3015,14 @@ extern "C" {
     /// number of milliseconds since the Unix epoch.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/epochMilliseconds)
-    #[wasm_bindgen(method, getter, js_name = epochMilliseconds)]
+    #[wasm_bindgen(method, getter = epochMilliseconds)]
     pub fn epoch_milliseconds(this: &ZonedDateTime) -> f64;
 
     /// The `epochNanoseconds` accessor property returns a BigInt representing the
     /// number of nanoseconds since the Unix epoch.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/epochNanoseconds)
-    #[wasm_bindgen(method, getter, js_name = epochNanoseconds)]
+    #[wasm_bindgen(method, getter = epochNanoseconds)]
     pub fn epoch_nanoseconds(this: &ZonedDateTime) -> BigInt;
 
     /// The `equals()` method returns `true` if this zoned date-time is equivalent to `other`.
@@ -4679,7 +4679,7 @@ extern "C" {
     /// year of this year-month within the era, or `None` if the calendar does not use eras.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/eraYear)
-    #[wasm_bindgen(method, getter, js_name = eraYear)]
+    #[wasm_bindgen(method, getter = eraYear)]
     pub fn era_year(this: &PlainYearMonth) -> Option<i32>;
 
     /// The `year` accessor property returns an integer representing the number of years
@@ -4700,42 +4700,42 @@ extern "C" {
     /// the month of this year-month.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/monthCode)
-    #[wasm_bindgen(method, getter, js_name = monthCode)]
+    #[wasm_bindgen(method, getter = monthCode)]
     pub fn month_code(this: &PlainYearMonth) -> JsString;
 
     /// The `calendarId` accessor property returns a string representing the calendar
     /// used to interpret the internal ISO 8601 date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/calendarId)
-    #[wasm_bindgen(method, getter, js_name = calendarId)]
+    #[wasm_bindgen(method, getter = calendarId)]
     pub fn calendar_id(this: &PlainYearMonth) -> JsString;
 
     /// The `daysInMonth` accessor property returns a positive integer representing the
     /// number of days in the month of this year-month.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/daysInMonth)
-    #[wasm_bindgen(method, getter, js_name = daysInMonth)]
+    #[wasm_bindgen(method, getter = daysInMonth)]
     pub fn days_in_month(this: &PlainYearMonth) -> u32;
 
     /// The `daysInYear` accessor property returns a positive integer representing the
     /// number of days in the year of this year-month.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/daysInYear)
-    #[wasm_bindgen(method, getter, js_name = daysInYear)]
+    #[wasm_bindgen(method, getter = daysInYear)]
     pub fn days_in_year(this: &PlainYearMonth) -> u32;
 
     /// The `monthsInYear` accessor property returns a positive integer representing the
     /// number of months in the year of this year-month.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/monthsInYear)
-    #[wasm_bindgen(method, getter, js_name = monthsInYear)]
+    #[wasm_bindgen(method, getter = monthsInYear)]
     pub fn months_in_year(this: &PlainYearMonth) -> u32;
 
     /// The `inLeapYear` accessor property returns `true` if this year-month is in a leap year,
     /// and `false` otherwise.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/inLeapYear)
-    #[wasm_bindgen(method, getter, js_name = inLeapYear)]
+    #[wasm_bindgen(method, getter = inLeapYear)]
     pub fn in_leap_year(this: &PlainYearMonth) -> bool;
 
     /// The `equals()` method returns `true` if this year-month is equivalent to `other`.
@@ -5319,7 +5319,7 @@ extern "C" {
     /// the month of this month-day.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/monthCode)
-    #[wasm_bindgen(method, getter, js_name = monthCode)]
+    #[wasm_bindgen(method, getter = monthCode)]
     pub fn month_code(this: &PlainMonthDay) -> JsString;
 
     /// The `Temporal.PlainMonthDay.from()` static method.
@@ -5366,7 +5366,7 @@ extern "C" {
     /// used to interpret the internal ISO 8601 date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/calendarId)
-    #[wasm_bindgen(method, getter, js_name = calendarId)]
+    #[wasm_bindgen(method, getter = calendarId)]
     pub fn calendar_id(this: &PlainMonthDay) -> JsString;
 
     /// The `equals()` method returns `true` if this month-day is equivalent to `other`.
@@ -5652,7 +5652,7 @@ extern "C" {
     /// year of this date within the era, or `None` if the calendar does not use eras.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/eraYear)
-    #[wasm_bindgen(method, getter, js_name = eraYear)]
+    #[wasm_bindgen(method, getter = eraYear)]
     pub fn era_year(this: &PlainDate) -> Option<i32>;
 
     /// The `year` accessor property returns an integer representing the number of years
@@ -5673,7 +5673,7 @@ extern "C" {
     /// the month of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/monthCode)
-    #[wasm_bindgen(method, getter, js_name = monthCode)]
+    #[wasm_bindgen(method, getter = monthCode)]
     pub fn month_code(this: &PlainDate) -> JsString;
 
     /// The `day` accessor property returns a positive integer representing the
@@ -5687,21 +5687,21 @@ extern "C" {
     /// used to interpret the internal ISO 8601 date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/calendarId)
-    #[wasm_bindgen(method, getter, js_name = calendarId)]
+    #[wasm_bindgen(method, getter = calendarId)]
     pub fn calendar_id(this: &PlainDate) -> JsString;
 
     /// The `dayOfWeek` accessor property returns a positive integer representing the
     /// day of the week of this date (1 = Monday through 7 = Sunday for ISO 8601).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/dayOfWeek)
-    #[wasm_bindgen(method, getter, js_name = dayOfWeek)]
+    #[wasm_bindgen(method, getter = dayOfWeek)]
     pub fn day_of_week(this: &PlainDate) -> u32;
 
     /// The `dayOfYear` accessor property returns a positive integer representing the
     /// 1-based day index of this date in the year.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/dayOfYear)
-    #[wasm_bindgen(method, getter, js_name = dayOfYear)]
+    #[wasm_bindgen(method, getter = dayOfYear)]
     pub fn day_of_year(this: &PlainDate) -> u32;
 
     /// The `weekOfYear` accessor property returns a positive integer representing the
@@ -5709,7 +5709,7 @@ extern "C" {
     /// calendar does not have a well-defined week system.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/weekOfYear)
-    #[wasm_bindgen(method, getter, js_name = weekOfYear)]
+    #[wasm_bindgen(method, getter = weekOfYear)]
     pub fn week_of_year(this: &PlainDate) -> Option<u32>;
 
     /// The `yearOfWeek` accessor property returns an integer representing the year
@@ -5717,42 +5717,42 @@ extern "C" {
     /// a well-defined week system.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/yearOfWeek)
-    #[wasm_bindgen(method, getter, js_name = yearOfWeek)]
+    #[wasm_bindgen(method, getter = yearOfWeek)]
     pub fn year_of_week(this: &PlainDate) -> Option<i32>;
 
     /// The `daysInWeek` accessor property returns a positive integer representing the
     /// number of days in the week of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/daysInWeek)
-    #[wasm_bindgen(method, getter, js_name = daysInWeek)]
+    #[wasm_bindgen(method, getter = daysInWeek)]
     pub fn days_in_week(this: &PlainDate) -> u32;
 
     /// The `daysInMonth` accessor property returns a positive integer representing the
     /// number of days in the month of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/daysInMonth)
-    #[wasm_bindgen(method, getter, js_name = daysInMonth)]
+    #[wasm_bindgen(method, getter = daysInMonth)]
     pub fn days_in_month(this: &PlainDate) -> u32;
 
     /// The `daysInYear` accessor property returns a positive integer representing the
     /// number of days in the year of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/daysInYear)
-    #[wasm_bindgen(method, getter, js_name = daysInYear)]
+    #[wasm_bindgen(method, getter = daysInYear)]
     pub fn days_in_year(this: &PlainDate) -> u32;
 
     /// The `monthsInYear` accessor property returns a positive integer representing the
     /// number of months in the year of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/monthsInYear)
-    #[wasm_bindgen(method, getter, js_name = monthsInYear)]
+    #[wasm_bindgen(method, getter = monthsInYear)]
     pub fn months_in_year(this: &PlainDate) -> u32;
 
     /// The `inLeapYear` accessor property returns `true` if this date is in a leap year,
     /// and `false` otherwise.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/inLeapYear)
-    #[wasm_bindgen(method, getter, js_name = inLeapYear)]
+    #[wasm_bindgen(method, getter = inLeapYear)]
     pub fn in_leap_year(this: &PlainDate) -> bool;
 
     /// The `equals()` method returns `true` if this date is equivalent to `other`.
