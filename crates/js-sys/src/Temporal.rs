@@ -318,13 +318,12 @@ extern "C" {
     pub fn set_smallest_unit(this: &ToStringPrecisionOptions, value: TemporalUnit);
 
     /// Get the rounding mode.
-    /// Note: Reuses `Intl::RoundingMode` which has identical values.
     #[wasm_bindgen(method, getter = roundingMode)]
-    pub fn get_rounding_mode(this: &ToStringPrecisionOptions) -> Option<super::Intl::RoundingMode>;
+    pub fn get_rounding_mode(this: &ToStringPrecisionOptions) -> Option<Intl::RoundingMode>;
 
     /// Set the rounding mode.
     #[wasm_bindgen(method, setter = roundingMode)]
-    pub fn set_rounding_mode(this: &ToStringPrecisionOptions, value: super::Intl::RoundingMode);
+    pub fn set_rounding_mode(this: &ToStringPrecisionOptions, value: Intl::RoundingMode);
 }
 
 impl ToStringPrecisionOptions {
@@ -535,11 +534,11 @@ extern "C" {
 
     /// Get the rounding mode.
     #[wasm_bindgen(method, getter = roundingMode)]
-    pub fn get_rounding_mode(this: &DifferenceOptions) -> Option<super::Intl::RoundingMode>;
+    pub fn get_rounding_mode(this: &DifferenceOptions) -> Option<Intl::RoundingMode>;
 
     /// Set the rounding mode.
     #[wasm_bindgen(method, setter = roundingMode)]
-    pub fn set_rounding_mode(this: &DifferenceOptions, value: super::Intl::RoundingMode);
+    pub fn set_rounding_mode(this: &DifferenceOptions, value: Intl::RoundingMode);
 }
 
 impl DifferenceOptions {
@@ -583,11 +582,11 @@ extern "C" {
 
     /// Get the rounding mode.
     #[wasm_bindgen(method, getter = roundingMode)]
-    pub fn get_rounding_mode(this: &RoundToOptions) -> Option<super::Intl::RoundingMode>;
+    pub fn get_rounding_mode(this: &RoundToOptions) -> Option<Intl::RoundingMode>;
 
     /// Set the rounding mode. Default is `'halfExpand'`.
     #[wasm_bindgen(method, setter = roundingMode)]
-    pub fn set_rounding_mode(this: &RoundToOptions, value: super::Intl::RoundingMode);
+    pub fn set_rounding_mode(this: &RoundToOptions, value: Intl::RoundingMode);
 }
 
 impl RoundToOptions {
@@ -641,11 +640,11 @@ extern "C" {
 
     /// Get the rounding mode.
     #[wasm_bindgen(method, getter = roundingMode)]
-    pub fn get_rounding_mode(this: &DurationRoundToOptions) -> Option<super::Intl::RoundingMode>;
+    pub fn get_rounding_mode(this: &DurationRoundToOptions) -> Option<Intl::RoundingMode>;
 
     /// Set the rounding mode.
     #[wasm_bindgen(method, setter = roundingMode)]
-    pub fn set_rounding_mode(this: &DurationRoundToOptions, value: super::Intl::RoundingMode);
+    pub fn set_rounding_mode(this: &DurationRoundToOptions, value: Intl::RoundingMode);
 
     /// Get the relativeTo option (returns JsValue as it can be various types).
     #[wasm_bindgen(method, getter = relativeTo)]
@@ -1350,21 +1349,21 @@ extern "C" {
     pub fn new(epoch_nanoseconds: &BigInt) -> Result<Instant, JsValue>;
 
     /// The `Temporal.Instant.from()` static method creates a new `Temporal.Instant`
-    /// object from another `Temporal.Instant` or an RFC 9557 string.
+    /// object from another `Temporal.Instant`, a `Temporal.ZonedDateTime` or an RFC 9557 string.
     ///
     /// # Errors
     /// Throws a `RangeError` if the string is not a valid RFC 9557 format.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/from)
-    #[wasm_bindgen(js_name = from, static_method_of = Instant, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = Instant, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str(item: &str) -> Result<Instant, JsValue>;
 
     /// The `Temporal.Instant.from()` static method; see [`Instant::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = Instant, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = Instant, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_instant(item: &Instant) -> Result<Instant, JsValue>;
 
     /// The `Temporal.Instant.from()` static method; see [`Instant::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = Instant, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = Instant, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_zoned_date_time(item: &ZonedDateTime) -> Result<Instant, JsValue>;
 
     /// The `Temporal.Instant.fromEpochMilliseconds()` static method creates a new
@@ -1398,14 +1397,14 @@ extern "C" {
     /// number of milliseconds since the Unix epoch.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/epochMilliseconds)
-    #[wasm_bindgen(method, getter, structural, js_name = epochMilliseconds)]
+    #[wasm_bindgen(method, getter, js_name = epochMilliseconds)]
     pub fn epoch_milliseconds(this: &Instant) -> f64;
 
     /// The `epochNanoseconds` accessor property returns a BigInt representing the
     /// number of nanoseconds since the Unix epoch.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/epochNanoseconds)
-    #[wasm_bindgen(method, getter, structural, js_name = epochNanoseconds)]
+    #[wasm_bindgen(method, getter, js_name = epochNanoseconds)]
     pub fn epoch_nanoseconds(this: &Instant) -> BigInt;
 
     /// The `equals()` method returns `true` if this instant is equivalent to `other`.
@@ -1441,7 +1440,6 @@ extern "C" {
     /// The `until()` method returns a `Temporal.Duration` representing the duration
     /// from this instant until `other`.
     ///
-    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/until)
     #[wasm_bindgen(method)]
     pub fn until(this: &Instant, other: &Instant) -> Duration;
@@ -1453,7 +1451,7 @@ extern "C" {
     /// Throws a `RangeError` if options specify invalid units (days and calendar units are not allowed).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/until)
-    #[wasm_bindgen(js_name = until, method, catch)]
+    #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_options(
         this: &Instant,
         other: &Instant,
@@ -1462,7 +1460,6 @@ extern "C" {
 
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this instant.
-    ///
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/since)
     #[wasm_bindgen(method)]
@@ -1475,7 +1472,7 @@ extern "C" {
     /// Throws a `RangeError` if options specify invalid units (days and calendar units are not allowed).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/since)
-    #[wasm_bindgen(js_name = since, method, catch)]
+    #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_options(
         this: &Instant,
         other: &Instant,
@@ -1542,7 +1539,7 @@ extern "C" {
     pub fn to_locale_string_with_str_and_options(
         this: &Instant,
         locales: &str,
-        options: &super::Intl::DateTimeFormatOptions,
+        options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
     /// The `toLocaleString()` method; see [`Instant::to_locale_string`] for errors.
@@ -1550,7 +1547,7 @@ extern "C" {
     pub fn to_locale_string_with_str_sequence_and_options(
         this: &Instant,
         locales: &[JsString],
-        options: &super::Intl::DateTimeFormatOptions,
+        options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
     /// The `toJSON()` method returns a string representation of this instant suitable
@@ -1693,57 +1690,57 @@ extern "C" {
     /// (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/from)
-    #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str(item: &str) -> Result<PlainDateTime, JsValue>;
 
     /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str_and_options(
         item: &str,
         options: &AssignmentOptions,
     ) -> Result<PlainDateTime, JsValue>;
 
     /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_date_time_like(
         item: &PlainDateTimeLike,
     ) -> Result<PlainDateTime, JsValue>;
 
     /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_date_time_like_and_options(
         item: &PlainDateTimeLike,
         options: &AssignmentOptions,
     ) -> Result<PlainDateTime, JsValue>;
 
     /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_date_time(item: &PlainDateTime) -> Result<PlainDateTime, JsValue>;
 
     /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_date_time_and_options(
         item: &PlainDateTime,
         options: &AssignmentOptions,
     ) -> Result<PlainDateTime, JsValue>;
 
     /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_date(item: &PlainDate) -> Result<PlainDateTime, JsValue>;
 
     /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_date_and_options(
         item: &PlainDate,
         options: &AssignmentOptions,
     ) -> Result<PlainDateTime, JsValue>;
 
     /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_zoned_date_time(item: &ZonedDateTime) -> Result<PlainDateTime, JsValue>;
 
     /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainDateTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_zoned_date_time_and_options(
         item: &ZonedDateTime,
         options: &AssignmentOptions,
@@ -1760,105 +1757,105 @@ extern "C" {
     /// representing the era of this date, or `None` if the calendar does not use eras.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/era)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn era(this: &PlainDateTime) -> Option<JsString>;
 
     /// The `eraYear` accessor property returns a non-negative integer representing the
     /// year of this date within the era, or `None` if the calendar does not use eras.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/eraYear)
-    #[wasm_bindgen(method, getter, structural, js_name = eraYear)]
+    #[wasm_bindgen(method, getter, js_name = eraYear)]
     pub fn era_year(this: &PlainDateTime) -> Option<i32>;
 
     /// The `year` accessor property returns an integer representing the number of years
     /// of this date relative to the start of a calendar-specific epoch year.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/year)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn year(this: &PlainDateTime) -> i32;
 
     /// The `month` accessor property returns a positive integer representing the
     /// 1-based month index in the year of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/month)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn month(this: &PlainDateTime) -> u32;
 
     /// The `monthCode` accessor property returns a calendar-specific string representing
     /// the month of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/monthCode)
-    #[wasm_bindgen(method, getter, structural, js_name = monthCode)]
+    #[wasm_bindgen(method, getter, js_name = monthCode)]
     pub fn month_code(this: &PlainDateTime) -> JsString;
 
     /// The `day` accessor property returns a positive integer representing the
     /// 1-based day index in the month of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/day)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn day(this: &PlainDateTime) -> u32;
 
     /// The `hour` accessor property returns an integer from 0 to 23 representing
     /// the hour component of this time.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/hour)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn hour(this: &PlainDateTime) -> u32;
 
     /// The `minute` accessor property returns an integer from 0 to 59 representing
     /// the minute component of this time.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/minute)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn minute(this: &PlainDateTime) -> u32;
 
     /// The `second` accessor property returns an integer from 0 to 59 representing
     /// the second component of this time.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/second)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn second(this: &PlainDateTime) -> u32;
 
     /// The `millisecond` accessor property returns an integer from 0 to 999 representing
     /// the millisecond component of this time.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/millisecond)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn millisecond(this: &PlainDateTime) -> u32;
 
     /// The `microsecond` accessor property returns an integer from 0 to 999 representing
     /// the microsecond component of this time.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/microsecond)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn microsecond(this: &PlainDateTime) -> u32;
 
     /// The `nanosecond` accessor property returns an integer from 0 to 999 representing
     /// the nanosecond component of this time.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/nanosecond)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn nanosecond(this: &PlainDateTime) -> u32;
 
     /// The `calendarId` accessor property returns a string representing the calendar
     /// used to interpret the internal ISO 8601 date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/calendarId)
-    #[wasm_bindgen(method, getter, structural, js_name = calendarId)]
+    #[wasm_bindgen(method, getter, js_name = calendarId)]
     pub fn calendar_id(this: &PlainDateTime) -> JsString;
 
     /// The `dayOfWeek` accessor property returns a positive integer representing the
     /// day of the week of this date (1 = Monday through 7 = Sunday for ISO 8601).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/dayOfWeek)
-    #[wasm_bindgen(method, getter, structural, js_name = dayOfWeek)]
+    #[wasm_bindgen(method, getter, js_name = dayOfWeek)]
     pub fn day_of_week(this: &PlainDateTime) -> u32;
 
     /// The `dayOfYear` accessor property returns a positive integer representing the
     /// 1-based day index of this date in the year.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/dayOfYear)
-    #[wasm_bindgen(method, getter, structural, js_name = dayOfYear)]
+    #[wasm_bindgen(method, getter, js_name = dayOfYear)]
     pub fn day_of_year(this: &PlainDateTime) -> u32;
 
     /// The `weekOfYear` accessor property returns a positive integer representing the
@@ -1866,7 +1863,7 @@ extern "C" {
     /// calendar does not have a well-defined week system.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/weekOfYear)
-    #[wasm_bindgen(method, getter, structural, js_name = weekOfYear)]
+    #[wasm_bindgen(method, getter, js_name = weekOfYear)]
     pub fn week_of_year(this: &PlainDateTime) -> Option<u32>;
 
     /// The `yearOfWeek` accessor property returns an integer representing the year
@@ -1874,42 +1871,42 @@ extern "C" {
     /// a well-defined week system.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/yearOfWeek)
-    #[wasm_bindgen(method, getter, structural, js_name = yearOfWeek)]
+    #[wasm_bindgen(method, getter, js_name = yearOfWeek)]
     pub fn year_of_week(this: &PlainDateTime) -> Option<i32>;
 
     /// The `daysInWeek` accessor property returns a positive integer representing the
     /// number of days in the week of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/daysInWeek)
-    #[wasm_bindgen(method, getter, structural, js_name = daysInWeek)]
+    #[wasm_bindgen(method, getter, js_name = daysInWeek)]
     pub fn days_in_week(this: &PlainDateTime) -> u32;
 
     /// The `daysInMonth` accessor property returns a positive integer representing the
     /// number of days in the month of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/daysInMonth)
-    #[wasm_bindgen(method, getter, structural, js_name = daysInMonth)]
+    #[wasm_bindgen(method, getter, js_name = daysInMonth)]
     pub fn days_in_month(this: &PlainDateTime) -> u32;
 
     /// The `daysInYear` accessor property returns a positive integer representing the
     /// number of days in the year of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/daysInYear)
-    #[wasm_bindgen(method, getter, structural, js_name = daysInYear)]
+    #[wasm_bindgen(method, getter, js_name = daysInYear)]
     pub fn days_in_year(this: &PlainDateTime) -> u32;
 
     /// The `monthsInYear` accessor property returns a positive integer representing the
     /// number of months in the year of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/monthsInYear)
-    #[wasm_bindgen(method, getter, structural, js_name = monthsInYear)]
+    #[wasm_bindgen(method, getter, js_name = monthsInYear)]
     pub fn months_in_year(this: &PlainDateTime) -> u32;
 
     /// The `inLeapYear` accessor property returns `true` if this date is in a leap year,
     /// and `false` otherwise.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/inLeapYear)
-    #[wasm_bindgen(method, getter, structural, js_name = inLeapYear)]
+    #[wasm_bindgen(method, getter, js_name = inLeapYear)]
     pub fn in_leap_year(this: &PlainDateTime) -> bool;
 
     /// The `equals()` method returns `true` if this date-time is equivalent to `other`.
@@ -1922,7 +1919,8 @@ extern "C" {
     /// fields replaced by new values.
     ///
     /// # Errors
-    /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`).
+    /// Throws a `TypeError` if no recognised field is set, and a `RangeError` if values are out
+    /// of range or `overflow` is `'reject'` and a field would need constraining.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/with)
     #[wasm_bindgen(method, catch)]
@@ -1932,10 +1930,11 @@ extern "C" {
     /// fields replaced by new values.
     ///
     /// # Errors
-    /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`).
+    /// Throws a `TypeError` if no recognised field is set, and a `RangeError` if values are out
+    /// of range or `overflow` is `'reject'` and a field would need constraining.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/with)
-    #[wasm_bindgen(js_name = with, method, catch)]
+    #[wasm_bindgen(method, js_name = with, catch)]
     pub fn with_with_options(
         this: &PlainDateTime,
         info: &PlainDateTimeLike,
@@ -1945,12 +1944,18 @@ extern "C" {
     /// The `withPlainTime()` method returns a new `Temporal.PlainDateTime` object with
     /// the time part replaced by the given time (or midnight if not provided).
     ///
+    /// # Errors
+    /// Throws a `RangeError` if the result falls outside the representable range.
+    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/withPlainTime)
     #[wasm_bindgen(method, js_name = withPlainTime, catch)]
     pub fn with_plain_time(this: &PlainDateTime) -> Result<PlainDateTime, JsValue>;
 
     /// The `withPlainTime()` method returns a new `Temporal.PlainDateTime` object with
     /// the time part replaced by the given time (or midnight if not provided).
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the result falls outside the representable range.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/withPlainTime)
     #[wasm_bindgen(method, js_name = withPlainTime, catch)]
@@ -1973,7 +1978,8 @@ extern "C" {
     /// duration added to this date-time.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    /// Throws a `RangeError` if the result is out of range, or if `overflow` is `'reject'` and a
+    /// field would need constraining.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/add)
     #[wasm_bindgen(method, catch)]
@@ -1983,10 +1989,11 @@ extern "C" {
     /// duration added to this date-time.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    /// Throws a `RangeError` if the result is out of range, or if `overflow` is `'reject'` and a
+    /// field would need constraining.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/add)
-    #[wasm_bindgen(js_name = add, method, catch)]
+    #[wasm_bindgen(method, js_name = add, catch)]
     pub fn add_with_options(
         this: &PlainDateTime,
         duration: &Duration,
@@ -1997,7 +2004,8 @@ extern "C" {
     /// duration subtracted from this date-time.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    /// Throws a `RangeError` if the result is out of range, or if `overflow` is `'reject'` and a
+    /// field would need constraining.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/subtract)
     #[wasm_bindgen(method, catch)]
@@ -2007,10 +2015,11 @@ extern "C" {
     /// duration subtracted from this date-time.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    /// Throws a `RangeError` if the result is out of range, or if `overflow` is `'reject'` and a
+    /// field would need constraining.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/subtract)
-    #[wasm_bindgen(js_name = subtract, method, catch)]
+    #[wasm_bindgen(method, js_name = subtract, catch)]
     pub fn subtract_with_options(
         this: &PlainDateTime,
         duration: &Duration,
@@ -2034,7 +2043,7 @@ extern "C" {
     /// Throws a `RangeError` if datetimes have different calendars or options are invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/until)
-    #[wasm_bindgen(js_name = until, method, catch)]
+    #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_options(
         this: &PlainDateTime,
         other: &PlainDateTime,
@@ -2058,7 +2067,7 @@ extern "C" {
     /// Throws a `RangeError` if datetimes have different calendars or options are invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/since)
-    #[wasm_bindgen(js_name = since, method, catch)]
+    #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_options(
         this: &PlainDateTime,
         other: &PlainDateTime,
@@ -2162,7 +2171,7 @@ extern "C" {
     pub fn to_locale_string_with_str_and_options(
         this: &PlainDateTime,
         locales: &str,
-        options: &super::Intl::DateTimeFormatOptions,
+        options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
     /// The `toLocaleString()` method; see [`PlainDateTime::to_locale_string`] for errors.
@@ -2170,7 +2179,7 @@ extern "C" {
     pub fn to_locale_string_with_str_sequence_and_options(
         this: &PlainDateTime,
         locales: &[JsString],
-        options: &super::Intl::DateTimeFormatOptions,
+        options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
     /// The `toJSON()` method returns a string representation of this date-time suitable
@@ -2246,35 +2255,35 @@ extern "C" {
     /// (when `overflow` is `'reject'`), or the offset is invalid (when `offset` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/from)
-    #[wasm_bindgen(js_name = from, static_method_of = ZonedDateTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = ZonedDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str(item: &str) -> Result<ZonedDateTime, JsValue>;
 
     /// The `Temporal.ZonedDateTime.from()` static method; see [`ZonedDateTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = ZonedDateTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = ZonedDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str_and_options(
         item: &str,
         options: &ZonedDateTimeAssignmentOptions,
     ) -> Result<ZonedDateTime, JsValue>;
 
     /// The `Temporal.ZonedDateTime.from()` static method; see [`ZonedDateTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = ZonedDateTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = ZonedDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_zoned_date_time_like(
         item: &ZonedDateTimeLike,
     ) -> Result<ZonedDateTime, JsValue>;
 
     /// The `Temporal.ZonedDateTime.from()` static method; see [`ZonedDateTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = ZonedDateTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = ZonedDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_zoned_date_time_like_and_options(
         item: &ZonedDateTimeLike,
         options: &ZonedDateTimeAssignmentOptions,
     ) -> Result<ZonedDateTime, JsValue>;
 
     /// The `Temporal.ZonedDateTime.from()` static method; see [`ZonedDateTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = ZonedDateTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = ZonedDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_zoned_date_time(item: &ZonedDateTime) -> Result<ZonedDateTime, JsValue>;
 
     /// The `Temporal.ZonedDateTime.from()` static method; see [`ZonedDateTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = ZonedDateTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = ZonedDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_zoned_date_time_and_options(
         item: &ZonedDateTime,
         options: &ZonedDateTimeAssignmentOptions,
@@ -2291,112 +2300,112 @@ extern "C" {
     /// representing the era of this date, or `None` if the calendar does not use eras.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/era)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn era(this: &ZonedDateTime) -> Option<JsString>;
 
     /// The `eraYear` accessor property returns a non-negative integer representing the
     /// year of this date within the era, or `None` if the calendar does not use eras.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/eraYear)
-    #[wasm_bindgen(method, getter, structural, js_name = eraYear)]
+    #[wasm_bindgen(method, getter, js_name = eraYear)]
     pub fn era_year(this: &ZonedDateTime) -> Option<i32>;
 
     /// The `year` accessor property returns an integer representing the number of years
     /// of this date relative to the start of a calendar-specific epoch year.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/year)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn year(this: &ZonedDateTime) -> i32;
 
     /// The `month` accessor property returns a positive integer representing the
     /// 1-based month index in the year of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/month)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn month(this: &ZonedDateTime) -> u32;
 
     /// The `monthCode` accessor property returns a calendar-specific string representing
     /// the month of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/monthCode)
-    #[wasm_bindgen(method, getter, structural, js_name = monthCode)]
+    #[wasm_bindgen(method, getter, js_name = monthCode)]
     pub fn month_code(this: &ZonedDateTime) -> JsString;
 
     /// The `day` accessor property returns a positive integer representing the
     /// 1-based day index in the month of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/day)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn day(this: &ZonedDateTime) -> u32;
 
     /// The `hour` accessor property returns an integer from 0 to 23 representing
     /// the hour component of this time.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/hour)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn hour(this: &ZonedDateTime) -> u32;
 
     /// The `minute` accessor property returns an integer from 0 to 59 representing
     /// the minute component of this time.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/minute)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn minute(this: &ZonedDateTime) -> u32;
 
     /// The `second` accessor property returns an integer from 0 to 59 representing
     /// the second component of this time.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/second)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn second(this: &ZonedDateTime) -> u32;
 
     /// The `millisecond` accessor property returns an integer from 0 to 999 representing
     /// the millisecond component of this time.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/millisecond)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn millisecond(this: &ZonedDateTime) -> u32;
 
     /// The `microsecond` accessor property returns an integer from 0 to 999 representing
     /// the microsecond component of this time.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/microsecond)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn microsecond(this: &ZonedDateTime) -> u32;
 
     /// The `nanosecond` accessor property returns an integer from 0 to 999 representing
     /// the nanosecond component of this time.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/nanosecond)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn nanosecond(this: &ZonedDateTime) -> u32;
 
     /// The `timeZoneId` accessor property returns a string representing the time zone
     /// identifier used to interpret the internal instant.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/timeZoneId)
-    #[wasm_bindgen(method, getter, structural, js_name = timeZoneId)]
+    #[wasm_bindgen(method, getter, js_name = timeZoneId)]
     pub fn time_zone_id(this: &ZonedDateTime) -> JsString;
 
     /// The `calendarId` accessor property returns a string representing the calendar
     /// used to interpret the internal ISO 8601 date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/calendarId)
-    #[wasm_bindgen(method, getter, structural, js_name = calendarId)]
+    #[wasm_bindgen(method, getter, js_name = calendarId)]
     pub fn calendar_id(this: &ZonedDateTime) -> JsString;
 
     /// The `dayOfWeek` accessor property returns a positive integer representing the
     /// day of the week of this date (1 = Monday through 7 = Sunday for ISO 8601).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/dayOfWeek)
-    #[wasm_bindgen(method, getter, structural, js_name = dayOfWeek)]
+    #[wasm_bindgen(method, getter, js_name = dayOfWeek)]
     pub fn day_of_week(this: &ZonedDateTime) -> u32;
 
     /// The `dayOfYear` accessor property returns a positive integer representing the
     /// 1-based day index of this date in the year.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/dayOfYear)
-    #[wasm_bindgen(method, getter, structural, js_name = dayOfYear)]
+    #[wasm_bindgen(method, getter, js_name = dayOfYear)]
     pub fn day_of_year(this: &ZonedDateTime) -> u32;
 
     /// The `weekOfYear` accessor property returns a positive integer representing the
@@ -2404,7 +2413,7 @@ extern "C" {
     /// calendar does not have a well-defined week system.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/weekOfYear)
-    #[wasm_bindgen(method, getter, structural, js_name = weekOfYear)]
+    #[wasm_bindgen(method, getter, js_name = weekOfYear)]
     pub fn week_of_year(this: &ZonedDateTime) -> Option<u32>;
 
     /// The `yearOfWeek` accessor property returns an integer representing the year
@@ -2412,80 +2421,80 @@ extern "C" {
     /// a well-defined week system.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/yearOfWeek)
-    #[wasm_bindgen(method, getter, structural, js_name = yearOfWeek)]
+    #[wasm_bindgen(method, getter, js_name = yearOfWeek)]
     pub fn year_of_week(this: &ZonedDateTime) -> Option<i32>;
 
     /// The `hoursInDay` accessor property returns a positive number representing the
     /// number of hours in the current day. Usually 24, but may differ due to DST.
     ///
-    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/hoursInDay)
-    ///
     /// # Errors
     /// Throws a `RangeError` if the start of this or the following day falls outside the representable instant range.
-    #[wasm_bindgen(method, getter, structural, js_name = hoursInDay, catch)]
+    ///
+    /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/hoursInDay)
+    #[wasm_bindgen(method, getter, js_name = hoursInDay, catch)]
     pub fn hours_in_day(this: &ZonedDateTime) -> Result<f64, JsValue>;
 
     /// The `daysInWeek` accessor property returns a positive integer representing the
     /// number of days in the week of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/daysInWeek)
-    #[wasm_bindgen(method, getter, structural, js_name = daysInWeek)]
+    #[wasm_bindgen(method, getter, js_name = daysInWeek)]
     pub fn days_in_week(this: &ZonedDateTime) -> u32;
 
     /// The `daysInMonth` accessor property returns a positive integer representing the
     /// number of days in the month of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/daysInMonth)
-    #[wasm_bindgen(method, getter, structural, js_name = daysInMonth)]
+    #[wasm_bindgen(method, getter, js_name = daysInMonth)]
     pub fn days_in_month(this: &ZonedDateTime) -> u32;
 
     /// The `daysInYear` accessor property returns a positive integer representing the
     /// number of days in the year of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/daysInYear)
-    #[wasm_bindgen(method, getter, structural, js_name = daysInYear)]
+    #[wasm_bindgen(method, getter, js_name = daysInYear)]
     pub fn days_in_year(this: &ZonedDateTime) -> u32;
 
     /// The `monthsInYear` accessor property returns a positive integer representing the
     /// number of months in the year of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/monthsInYear)
-    #[wasm_bindgen(method, getter, structural, js_name = monthsInYear)]
+    #[wasm_bindgen(method, getter, js_name = monthsInYear)]
     pub fn months_in_year(this: &ZonedDateTime) -> u32;
 
     /// The `inLeapYear` accessor property returns `true` if this date is in a leap year,
     /// and `false` otherwise.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/inLeapYear)
-    #[wasm_bindgen(method, getter, structural, js_name = inLeapYear)]
+    #[wasm_bindgen(method, getter, js_name = inLeapYear)]
     pub fn in_leap_year(this: &ZonedDateTime) -> bool;
 
     /// The `offsetNanoseconds` accessor property returns an integer representing the
     /// offset from UTC in nanoseconds.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/offsetNanoseconds)
-    #[wasm_bindgen(method, getter, structural, js_name = offsetNanoseconds)]
+    #[wasm_bindgen(method, getter, js_name = offsetNanoseconds)]
     pub fn offset_nanoseconds(this: &ZonedDateTime) -> f64;
 
     /// The `offset` accessor property returns a string representing the offset from UTC
     /// (e.g., '-08:00' or '+05:30').
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/offset)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn offset(this: &ZonedDateTime) -> JsString;
 
     /// The `epochMilliseconds` accessor property returns an integer representing the
     /// number of milliseconds since the Unix epoch.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/epochMilliseconds)
-    #[wasm_bindgen(method, getter, structural, js_name = epochMilliseconds)]
+    #[wasm_bindgen(method, getter, js_name = epochMilliseconds)]
     pub fn epoch_milliseconds(this: &ZonedDateTime) -> f64;
 
     /// The `epochNanoseconds` accessor property returns a BigInt representing the
     /// number of nanoseconds since the Unix epoch.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/epochNanoseconds)
-    #[wasm_bindgen(method, getter, structural, js_name = epochNanoseconds)]
+    #[wasm_bindgen(method, getter, js_name = epochNanoseconds)]
     pub fn epoch_nanoseconds(this: &ZonedDateTime) -> BigInt;
 
     /// The `equals()` method returns `true` if this zoned date-time is equivalent to `other`.
@@ -2498,8 +2507,9 @@ extern "C" {
     /// replaced by new values.
     ///
     /// # Errors
-    /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`),
-    /// or if the offset is invalid (when `offset` is `'reject'`).
+    /// Throws a `TypeError` if no recognised field is set, and a `RangeError` if values are out
+    /// of range, `overflow` is `'reject'` and a field would need constraining, or the offset is
+    /// invalid and `offset` is `'reject'`.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/with)
     #[wasm_bindgen(method, catch)]
@@ -2509,11 +2519,12 @@ extern "C" {
     /// replaced by new values.
     ///
     /// # Errors
-    /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`),
-    /// or if the offset is invalid (when `offset` is `'reject'`).
+    /// Throws a `TypeError` if no recognised field is set, and a `RangeError` if values are out
+    /// of range, `overflow` is `'reject'` and a field would need constraining, or the offset is
+    /// invalid and `offset` is `'reject'`.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/with)
-    #[wasm_bindgen(js_name = with, method, catch)]
+    #[wasm_bindgen(method, js_name = with, catch)]
     pub fn with_with_options(
         this: &ZonedDateTime,
         info: &ZonedDateTimeLike,
@@ -2521,14 +2532,20 @@ extern "C" {
     ) -> Result<ZonedDateTime, JsValue>;
 
     /// The `withPlainTime()` method returns a new `Temporal.ZonedDateTime` object with
-    /// the time part replaced by the given time (or midnight if not provided).
+    /// the time part replaced by the given time (or the start of the day if not provided).
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the result falls outside the representable range.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/withPlainTime)
     #[wasm_bindgen(method, js_name = withPlainTime, catch)]
     pub fn with_plain_time(this: &ZonedDateTime) -> Result<ZonedDateTime, JsValue>;
 
     /// The `withPlainTime()` method returns a new `Temporal.ZonedDateTime` object with
-    /// the time part replaced by the given time (or midnight if not provided).
+    /// the time part replaced by the given time (or the start of the day if not provided).
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the result falls outside the representable range.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/withPlainTime)
     #[wasm_bindgen(method, js_name = withPlainTime, catch)]
@@ -2561,7 +2578,8 @@ extern "C" {
     /// duration added to this zoned date-time.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    /// Throws a `RangeError` if the result is out of range, or if `overflow` is `'reject'` and a
+    /// field would need constraining.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/add)
     #[wasm_bindgen(method, catch)]
@@ -2571,10 +2589,11 @@ extern "C" {
     /// duration added to this zoned date-time.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    /// Throws a `RangeError` if the result is out of range, or if `overflow` is `'reject'` and a
+    /// field would need constraining.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/add)
-    #[wasm_bindgen(js_name = add, method, catch)]
+    #[wasm_bindgen(method, js_name = add, catch)]
     pub fn add_with_options(
         this: &ZonedDateTime,
         duration: &Duration,
@@ -2585,7 +2604,8 @@ extern "C" {
     /// duration subtracted from this zoned date-time.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    /// Throws a `RangeError` if the result is out of range, or if `overflow` is `'reject'` and a
+    /// field would need constraining.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/subtract)
     #[wasm_bindgen(method, catch)]
@@ -2595,10 +2615,11 @@ extern "C" {
     /// duration subtracted from this zoned date-time.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    /// Throws a `RangeError` if the result is out of range, or if `overflow` is `'reject'` and a
+    /// field would need constraining.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/subtract)
-    #[wasm_bindgen(js_name = subtract, method, catch)]
+    #[wasm_bindgen(method, js_name = subtract, catch)]
     pub fn subtract_with_options(
         this: &ZonedDateTime,
         duration: &Duration,
@@ -2622,7 +2643,7 @@ extern "C" {
     /// Throws a `RangeError` if dates have different time zones or calendars, or options are invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/until)
-    #[wasm_bindgen(js_name = until, method, catch)]
+    #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_options(
         this: &ZonedDateTime,
         other: &ZonedDateTime,
@@ -2646,7 +2667,7 @@ extern "C" {
     /// Throws a `RangeError` if dates have different time zones or calendars, or options are invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/since)
-    #[wasm_bindgen(js_name = since, method, catch)]
+    #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_options(
         this: &ZonedDateTime,
         other: &ZonedDateTime,
@@ -2765,7 +2786,7 @@ extern "C" {
     pub fn to_locale_string_with_str_and_options(
         this: &ZonedDateTime,
         locales: &str,
-        options: &super::Intl::DateTimeFormatOptions,
+        options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
     /// The `toLocaleString()` method; see [`ZonedDateTime::to_locale_string`] for errors.
@@ -2773,7 +2794,7 @@ extern "C" {
     pub fn to_locale_string_with_str_sequence_and_options(
         this: &ZonedDateTime,
         locales: &[JsString],
-        options: &super::Intl::DateTimeFormatOptions,
+        options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
     /// The `toJSON()` method returns a string representation of this zoned date-time
@@ -2932,15 +2953,15 @@ extern "C" {
     /// or if any numeric values are invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/from)
-    #[wasm_bindgen(js_name = from, static_method_of = Duration, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = Duration, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str(item: &str) -> Result<Duration, JsValue>;
 
     /// The `Temporal.Duration.from()` static method; see [`Duration::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = Duration, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = Duration, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_duration_like(item: &DurationLike) -> Result<Duration, JsValue>;
 
     /// The `Temporal.Duration.from()` static method; see [`Duration::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = Duration, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = Duration, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_duration(item: &Duration) -> Result<Duration, JsValue>;
 
     /// The `Temporal.Duration.compare()` static method returns -1, 0, or 1 depending
@@ -2962,7 +2983,7 @@ extern "C" {
     /// calendar units like years, months, or weeks) but not provided.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/compare)
-    #[wasm_bindgen(js_name = compare, static_method_of = Duration, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = Duration, js_namespace = Temporal, js_name = compare, catch)]
     pub fn compare_with_options(
         one: &Duration,
         two: &Duration,
@@ -2973,74 +2994,74 @@ extern "C" {
     /// the duration is negative, zero, or positive.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/sign)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn sign(this: &Duration) -> i32;
 
     /// The `blank` accessor property returns `true` if the duration represents
     /// zero length of time, and `false` otherwise.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/blank)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn blank(this: &Duration) -> bool;
 
     /// The `years` accessor property returns the number of years in the duration.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/years)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn years(this: &Duration) -> f64;
 
     /// The `months` accessor property returns the number of months in the duration.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/months)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn months(this: &Duration) -> f64;
 
     /// The `weeks` accessor property returns the number of weeks in the duration.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/weeks)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn weeks(this: &Duration) -> f64;
 
     /// The `days` accessor property returns the number of days in the duration.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/days)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn days(this: &Duration) -> f64;
 
     /// The `hours` accessor property returns the number of hours in the duration.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/hours)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn hours(this: &Duration) -> f64;
 
     /// The `minutes` accessor property returns the number of minutes in the duration.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/minutes)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn minutes(this: &Duration) -> f64;
 
     /// The `seconds` accessor property returns the number of seconds in the duration.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/seconds)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn seconds(this: &Duration) -> f64;
 
     /// The `milliseconds` accessor property returns the number of milliseconds in the duration.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/milliseconds)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn milliseconds(this: &Duration) -> f64;
 
     /// The `microseconds` accessor property returns the number of microseconds in the duration.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/microseconds)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn microseconds(this: &Duration) -> f64;
 
     /// The `nanoseconds` accessor property returns the number of nanoseconds in the duration.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/nanoseconds)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn nanoseconds(this: &Duration) -> f64;
 
     /// The `negated()` method returns a new `Temporal.Duration` object with the
@@ -3061,7 +3082,8 @@ extern "C" {
     /// fields replaced by new values.
     ///
     /// # Errors
-    /// Throws a `RangeError` if any numeric values are invalid or result in mixed signs.
+    /// Throws a `TypeError` if no duration field is set, and a `RangeError` if any value is
+    /// invalid or the result has mixed signs.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/with)
     #[wasm_bindgen(method, catch)]
@@ -3157,7 +3179,7 @@ extern "C" {
     pub fn to_locale_string_with_str_and_options(
         this: &Duration,
         locales: &str,
-        options: &super::Intl::DurationFormatOptions,
+        options: &Intl::DurationFormatOptions,
     ) -> Result<JsString, JsValue>;
 
     /// The `toLocaleString()` method; see [`Duration::to_locale_string`] for errors.
@@ -3165,7 +3187,7 @@ extern "C" {
     pub fn to_locale_string_with_str_sequence_and_options(
         this: &Duration,
         locales: &[JsString],
-        options: &super::Intl::DurationFormatOptions,
+        options: &Intl::DurationFormatOptions,
     ) -> Result<JsString, JsValue>;
 
     /// The `toJSON()` method returns a string representation of this duration
@@ -3175,13 +3197,13 @@ extern "C" {
     #[wasm_bindgen(method, js_name = toJSON)]
     pub fn to_json(this: &Duration) -> JsString;
 
-    /// The `toString()` method returns an RFC 9557 string representation of this duration.
+    /// The `toString()` method returns an ISO 8601 duration string representation of this duration.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/toString)
     #[wasm_bindgen(method, js_name = toString)]
     pub fn to_js_string(this: &Duration) -> JsString;
 
-    /// The `toString()` method returns an RFC 9557 string representation of this duration,
+    /// The `toString()` method returns an ISO 8601 duration string representation of this duration,
     /// formatted according to `options`.
     ///
     /// # Errors
@@ -3269,55 +3291,55 @@ extern "C" {
     /// (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/from)
-    #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str(item: &str) -> Result<PlainTime, JsValue>;
 
     /// The `Temporal.PlainTime.from()` static method; see [`PlainTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str_and_options(
         item: &str,
         options: &AssignmentOptions,
     ) -> Result<PlainTime, JsValue>;
 
     /// The `Temporal.PlainTime.from()` static method; see [`PlainTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_time_like(item: &PlainTimeLike) -> Result<PlainTime, JsValue>;
 
     /// The `Temporal.PlainTime.from()` static method; see [`PlainTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_time_like_and_options(
         item: &PlainTimeLike,
         options: &AssignmentOptions,
     ) -> Result<PlainTime, JsValue>;
 
     /// The `Temporal.PlainTime.from()` static method; see [`PlainTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_time(item: &PlainTime) -> Result<PlainTime, JsValue>;
 
     /// The `Temporal.PlainTime.from()` static method; see [`PlainTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_time_and_options(
         item: &PlainTime,
         options: &AssignmentOptions,
     ) -> Result<PlainTime, JsValue>;
 
     /// The `Temporal.PlainTime.from()` static method; see [`PlainTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_date_time(item: &PlainDateTime) -> Result<PlainTime, JsValue>;
 
     /// The `Temporal.PlainTime.from()` static method; see [`PlainTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_date_time_and_options(
         item: &PlainDateTime,
         options: &AssignmentOptions,
     ) -> Result<PlainTime, JsValue>;
 
     /// The `Temporal.PlainTime.from()` static method; see [`PlainTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_zoned_date_time(item: &ZonedDateTime) -> Result<PlainTime, JsValue>;
 
     /// The `Temporal.PlainTime.from()` static method; see [`PlainTime::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainTime, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_zoned_date_time_and_options(
         item: &ZonedDateTime,
         options: &AssignmentOptions,
@@ -3334,42 +3356,42 @@ extern "C" {
     /// the hour component of this time.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/hour)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn hour(this: &PlainTime) -> u32;
 
     /// The `minute` accessor property returns an integer from 0 to 59 representing
     /// the minute component of this time.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/minute)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn minute(this: &PlainTime) -> u32;
 
     /// The `second` accessor property returns an integer from 0 to 59 representing
     /// the second component of this time.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/second)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn second(this: &PlainTime) -> u32;
 
     /// The `millisecond` accessor property returns an integer from 0 to 999 representing
     /// the millisecond component of this time.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/millisecond)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn millisecond(this: &PlainTime) -> u32;
 
     /// The `microsecond` accessor property returns an integer from 0 to 999 representing
     /// the microsecond component of this time.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/microsecond)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn microsecond(this: &PlainTime) -> u32;
 
     /// The `nanosecond` accessor property returns an integer from 0 to 999 representing
     /// the nanosecond component of this time.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/nanosecond)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn nanosecond(this: &PlainTime) -> u32;
 
     /// The `equals()` method returns `true` if this time is equal to `other`.
@@ -3382,7 +3404,8 @@ extern "C" {
     /// fields replaced by new values.
     ///
     /// # Errors
-    /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`).
+    /// Throws a `TypeError` if no recognised field is set, and a `RangeError` if values are out
+    /// of range or `overflow` is `'reject'` and a field would need constraining.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/with)
     #[wasm_bindgen(method, catch)]
@@ -3392,10 +3415,11 @@ extern "C" {
     /// fields replaced by new values.
     ///
     /// # Errors
-    /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`).
+    /// Throws a `TypeError` if no recognised field is set, and a `RangeError` if values are out
+    /// of range or `overflow` is `'reject'` and a field would need constraining.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/with)
-    #[wasm_bindgen(js_name = with, method, catch)]
+    #[wasm_bindgen(method, js_name = with, catch)]
     pub fn with_with_options(
         this: &PlainTime,
         time_like: &PlainTimeLike,
@@ -3405,7 +3429,6 @@ extern "C" {
     /// The `add()` method returns a new `Temporal.PlainTime` object with the
     /// duration added to this time (wrapping around midnight if necessary).
     ///
-    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/add)
     #[wasm_bindgen(method)]
     pub fn add(this: &PlainTime, duration: &Duration) -> PlainTime;
@@ -3413,14 +3436,12 @@ extern "C" {
     /// The `subtract()` method returns a new `Temporal.PlainTime` object with the
     /// duration subtracted from this time (wrapping around midnight if necessary).
     ///
-    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/subtract)
     #[wasm_bindgen(method)]
     pub fn subtract(this: &PlainTime, duration: &Duration) -> PlainTime;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
     /// from this time until `other`.
-    ///
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/until)
     #[wasm_bindgen(method)]
@@ -3433,7 +3454,7 @@ extern "C" {
     /// Throws a `RangeError` if options specify calendar units or are otherwise invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/until)
-    #[wasm_bindgen(js_name = until, method, catch)]
+    #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_options(
         this: &PlainTime,
         other: &PlainTime,
@@ -3442,7 +3463,6 @@ extern "C" {
 
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this time.
-    ///
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/since)
     #[wasm_bindgen(method)]
@@ -3455,7 +3475,7 @@ extern "C" {
     /// Throws a `RangeError` if options specify calendar units or are otherwise invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/since)
-    #[wasm_bindgen(js_name = since, method, catch)]
+    #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_options(
         this: &PlainTime,
         other: &PlainTime,
@@ -3510,7 +3530,7 @@ extern "C" {
     pub fn to_locale_string_with_str_and_options(
         this: &PlainTime,
         locales: &str,
-        options: &super::Intl::DateTimeFormatOptions,
+        options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
     /// The `toLocaleString()` method; see [`PlainTime::to_locale_string`] for errors.
@@ -3518,7 +3538,7 @@ extern "C" {
     pub fn to_locale_string_with_str_sequence_and_options(
         this: &PlainTime,
         locales: &[JsString],
-        options: &super::Intl::DateTimeFormatOptions,
+        options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
     /// The `toJSON()` method returns a string representation of this time
@@ -3597,35 +3617,35 @@ extern "C" {
     /// (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/from)
-    #[wasm_bindgen(js_name = from, static_method_of = PlainYearMonth, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str(item: &str) -> Result<PlainYearMonth, JsValue>;
 
     /// The `Temporal.PlainYearMonth.from()` static method; see [`PlainYearMonth::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainYearMonth, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str_and_options(
         item: &str,
         options: &AssignmentOptions,
     ) -> Result<PlainYearMonth, JsValue>;
 
     /// The `Temporal.PlainYearMonth.from()` static method; see [`PlainYearMonth::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainYearMonth, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_year_month_like(
         item: &PlainYearMonthLike,
     ) -> Result<PlainYearMonth, JsValue>;
 
     /// The `Temporal.PlainYearMonth.from()` static method; see [`PlainYearMonth::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainYearMonth, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_year_month_like_and_options(
         item: &PlainYearMonthLike,
         options: &AssignmentOptions,
     ) -> Result<PlainYearMonth, JsValue>;
 
     /// The `Temporal.PlainYearMonth.from()` static method; see [`PlainYearMonth::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainYearMonth, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_year_month(item: &PlainYearMonth) -> Result<PlainYearMonth, JsValue>;
 
     /// The `Temporal.PlainYearMonth.from()` static method; see [`PlainYearMonth::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainYearMonth, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_year_month_and_options(
         item: &PlainYearMonth,
         options: &AssignmentOptions,
@@ -3642,70 +3662,70 @@ extern "C" {
     /// representing the era of this year-month, or `None` if the calendar does not use eras.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/era)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn era(this: &PlainYearMonth) -> Option<JsString>;
 
     /// The `eraYear` accessor property returns a non-negative integer representing the
     /// year of this year-month within the era, or `None` if the calendar does not use eras.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/eraYear)
-    #[wasm_bindgen(method, getter, structural, js_name = eraYear)]
+    #[wasm_bindgen(method, getter, js_name = eraYear)]
     pub fn era_year(this: &PlainYearMonth) -> Option<i32>;
 
     /// The `year` accessor property returns an integer representing the number of years
     /// of this year-month relative to the start of a calendar-specific epoch year.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/year)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn year(this: &PlainYearMonth) -> i32;
 
     /// The `month` accessor property returns a positive integer representing the
     /// 1-based month index in the year of this year-month.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/month)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn month(this: &PlainYearMonth) -> u32;
 
     /// The `monthCode` accessor property returns a calendar-specific string representing
     /// the month of this year-month.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/monthCode)
-    #[wasm_bindgen(method, getter, structural, js_name = monthCode)]
+    #[wasm_bindgen(method, getter, js_name = monthCode)]
     pub fn month_code(this: &PlainYearMonth) -> JsString;
 
     /// The `calendarId` accessor property returns a string representing the calendar
     /// used to interpret the internal ISO 8601 date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/calendarId)
-    #[wasm_bindgen(method, getter, structural, js_name = calendarId)]
+    #[wasm_bindgen(method, getter, js_name = calendarId)]
     pub fn calendar_id(this: &PlainYearMonth) -> JsString;
 
     /// The `daysInMonth` accessor property returns a positive integer representing the
     /// number of days in the month of this year-month.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/daysInMonth)
-    #[wasm_bindgen(method, getter, structural, js_name = daysInMonth)]
+    #[wasm_bindgen(method, getter, js_name = daysInMonth)]
     pub fn days_in_month(this: &PlainYearMonth) -> u32;
 
     /// The `daysInYear` accessor property returns a positive integer representing the
     /// number of days in the year of this year-month.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/daysInYear)
-    #[wasm_bindgen(method, getter, structural, js_name = daysInYear)]
+    #[wasm_bindgen(method, getter, js_name = daysInYear)]
     pub fn days_in_year(this: &PlainYearMonth) -> u32;
 
     /// The `monthsInYear` accessor property returns a positive integer representing the
     /// number of months in the year of this year-month.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/monthsInYear)
-    #[wasm_bindgen(method, getter, structural, js_name = monthsInYear)]
+    #[wasm_bindgen(method, getter, js_name = monthsInYear)]
     pub fn months_in_year(this: &PlainYearMonth) -> u32;
 
     /// The `inLeapYear` accessor property returns `true` if this year-month is in a leap year,
     /// and `false` otherwise.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/inLeapYear)
-    #[wasm_bindgen(method, getter, structural, js_name = inLeapYear)]
+    #[wasm_bindgen(method, getter, js_name = inLeapYear)]
     pub fn in_leap_year(this: &PlainYearMonth) -> bool;
 
     /// The `equals()` method returns `true` if this year-month is equivalent to `other`.
@@ -3718,7 +3738,8 @@ extern "C" {
     /// fields replaced by new values.
     ///
     /// # Errors
-    /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`).
+    /// Throws a `TypeError` if no recognised field is set, and a `RangeError` if values are out
+    /// of range or `overflow` is `'reject'` and a field would need constraining.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/with)
     #[wasm_bindgen(method, catch)]
@@ -3731,10 +3752,11 @@ extern "C" {
     /// fields replaced by new values.
     ///
     /// # Errors
-    /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`).
+    /// Throws a `TypeError` if no recognised field is set, and a `RangeError` if values are out
+    /// of range or `overflow` is `'reject'` and a field would need constraining.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/with)
-    #[wasm_bindgen(js_name = with, method, catch)]
+    #[wasm_bindgen(method, js_name = with, catch)]
     pub fn with_with_options(
         this: &PlainYearMonth,
         info: &PlainYearMonthLike,
@@ -3745,7 +3767,8 @@ extern "C" {
     /// duration added to this year-month.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    /// Throws a `RangeError` if the result is out of range, if `overflow` is `'reject'` and a
+    /// field would need constraining, or if the duration has units smaller than a month.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/add)
     #[wasm_bindgen(method, catch)]
@@ -3755,10 +3778,11 @@ extern "C" {
     /// duration added to this year-month.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    /// Throws a `RangeError` if the result is out of range, if `overflow` is `'reject'` and a
+    /// field would need constraining, or if the duration has units smaller than a month.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/add)
-    #[wasm_bindgen(js_name = add, method, catch)]
+    #[wasm_bindgen(method, js_name = add, catch)]
     pub fn add_with_options(
         this: &PlainYearMonth,
         duration: &Duration,
@@ -3769,7 +3793,8 @@ extern "C" {
     /// duration subtracted from this year-month.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    /// Throws a `RangeError` if the result is out of range, if `overflow` is `'reject'` and a
+    /// field would need constraining, or if the duration has units smaller than a month.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/subtract)
     #[wasm_bindgen(method, catch)]
@@ -3779,10 +3804,11 @@ extern "C" {
     /// duration subtracted from this year-month.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    /// Throws a `RangeError` if the result is out of range, if `overflow` is `'reject'` and a
+    /// field would need constraining, or if the duration has units smaller than a month.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/subtract)
-    #[wasm_bindgen(js_name = subtract, method, catch)]
+    #[wasm_bindgen(method, js_name = subtract, catch)]
     pub fn subtract_with_options(
         this: &PlainYearMonth,
         duration: &Duration,
@@ -3806,7 +3832,7 @@ extern "C" {
     /// Throws a `RangeError` if dates have different calendars or options are invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/until)
-    #[wasm_bindgen(js_name = until, method, catch)]
+    #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_options(
         this: &PlainYearMonth,
         other: &PlainYearMonth,
@@ -3830,7 +3856,7 @@ extern "C" {
     /// Throws a `RangeError` if dates have different calendars or options are invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/since)
-    #[wasm_bindgen(js_name = since, method, catch)]
+    #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_options(
         this: &PlainYearMonth,
         other: &PlainYearMonth,
@@ -3841,7 +3867,8 @@ extern "C" {
     /// this year-month with the given day.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the day doesn't exist in this year-month.
+    /// Throws a `TypeError` if `day` is not set and a `RangeError` if it is not a positive
+    /// integer. A day past the end of the month is constrained to the last day.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/toPlainDate)
     #[wasm_bindgen(method, js_name = toPlainDate, catch)]
@@ -3881,7 +3908,7 @@ extern "C" {
     pub fn to_locale_string_with_str_and_options(
         this: &PlainYearMonth,
         locales: &str,
-        options: &super::Intl::DateTimeFormatOptions,
+        options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
     /// The `toLocaleString()` method; see [`PlainYearMonth::to_locale_string`] for errors.
@@ -3889,7 +3916,7 @@ extern "C" {
     pub fn to_locale_string_with_str_sequence_and_options(
         this: &PlainYearMonth,
         locales: &[JsString],
-        options: &super::Intl::DateTimeFormatOptions,
+        options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
     /// The `toJSON()` method returns a string representation of this year-month
@@ -3967,35 +3994,35 @@ extern "C" {
     /// (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/from)
-    #[wasm_bindgen(js_name = from, static_method_of = PlainMonthDay, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainMonthDay, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str(item: &str) -> Result<PlainMonthDay, JsValue>;
 
     /// The `Temporal.PlainMonthDay.from()` static method; see [`PlainMonthDay::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainMonthDay, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainMonthDay, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str_and_options(
         item: &str,
         options: &AssignmentOptions,
     ) -> Result<PlainMonthDay, JsValue>;
 
     /// The `Temporal.PlainMonthDay.from()` static method; see [`PlainMonthDay::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainMonthDay, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainMonthDay, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_month_day_like(
         item: &PlainMonthDayLike,
     ) -> Result<PlainMonthDay, JsValue>;
 
     /// The `Temporal.PlainMonthDay.from()` static method; see [`PlainMonthDay::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainMonthDay, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainMonthDay, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_month_day_like_and_options(
         item: &PlainMonthDayLike,
         options: &AssignmentOptions,
     ) -> Result<PlainMonthDay, JsValue>;
 
     /// The `Temporal.PlainMonthDay.from()` static method; see [`PlainMonthDay::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainMonthDay, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainMonthDay, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_month_day(item: &PlainMonthDay) -> Result<PlainMonthDay, JsValue>;
 
     /// The `Temporal.PlainMonthDay.from()` static method; see [`PlainMonthDay::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainMonthDay, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainMonthDay, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_month_day_and_options(
         item: &PlainMonthDay,
         options: &AssignmentOptions,
@@ -4005,21 +4032,21 @@ extern "C" {
     /// the month of this month-day.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/monthCode)
-    #[wasm_bindgen(method, getter, structural, js_name = monthCode)]
+    #[wasm_bindgen(method, getter, js_name = monthCode)]
     pub fn month_code(this: &PlainMonthDay) -> JsString;
 
     /// The `day` accessor property returns a positive integer representing the
     /// day of the month.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/day)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn day(this: &PlainMonthDay) -> u32;
 
     /// The `calendarId` accessor property returns a string representing the calendar
     /// used to interpret the internal ISO 8601 date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/calendarId)
-    #[wasm_bindgen(method, getter, structural, js_name = calendarId)]
+    #[wasm_bindgen(method, getter, js_name = calendarId)]
     pub fn calendar_id(this: &PlainMonthDay) -> JsString;
 
     /// The `equals()` method returns `true` if this month-day is equivalent to `other`.
@@ -4032,7 +4059,8 @@ extern "C" {
     /// fields replaced by new values.
     ///
     /// # Errors
-    /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`).
+    /// Throws a `TypeError` if no recognised field is set, and a `RangeError` if values are out
+    /// of range or `overflow` is `'reject'` and a field would need constraining.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/with)
     #[wasm_bindgen(method, catch)]
@@ -4042,10 +4070,11 @@ extern "C" {
     /// fields replaced by new values.
     ///
     /// # Errors
-    /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`).
+    /// Throws a `TypeError` if no recognised field is set, and a `RangeError` if values are out
+    /// of range or `overflow` is `'reject'` and a field would need constraining.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/with)
-    #[wasm_bindgen(js_name = with, method, catch)]
+    #[wasm_bindgen(method, js_name = with, catch)]
     pub fn with_with_options(
         this: &PlainMonthDay,
         info: &PlainMonthDayLike,
@@ -4056,7 +4085,9 @@ extern "C" {
     /// this month-day in the given year.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the date doesn't exist in the given year (e.g., Feb 29 in non-leap year).
+    /// Throws a `TypeError` if neither `year` nor both `era` and `era_year` are set, and a
+    /// `RangeError` if the result falls outside the representable range. A day that does not
+    /// exist in the given year is constrained to the last day of the month.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/toPlainDate)
     #[wasm_bindgen(method, js_name = toPlainDate, catch)]
@@ -4096,7 +4127,7 @@ extern "C" {
     pub fn to_locale_string_with_str_and_options(
         this: &PlainMonthDay,
         locales: &str,
-        options: &super::Intl::DateTimeFormatOptions,
+        options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
     /// The `toLocaleString()` method; see [`PlainMonthDay::to_locale_string`] for errors.
@@ -4104,7 +4135,7 @@ extern "C" {
     pub fn to_locale_string_with_str_sequence_and_options(
         this: &PlainMonthDay,
         locales: &[JsString],
-        options: &super::Intl::DateTimeFormatOptions,
+        options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
     /// The `toJSON()` method returns a string representation of this month-day
@@ -4179,55 +4210,55 @@ extern "C" {
     /// (when `overflow` is `'reject'`).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/from)
-    #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str(item: &str) -> Result<PlainDate, JsValue>;
 
     /// The `Temporal.PlainDate.from()` static method; see [`PlainDate::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str_and_options(
         item: &str,
         options: &AssignmentOptions,
     ) -> Result<PlainDate, JsValue>;
 
     /// The `Temporal.PlainDate.from()` static method; see [`PlainDate::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_date_like(item: &PlainDateLike) -> Result<PlainDate, JsValue>;
 
     /// The `Temporal.PlainDate.from()` static method; see [`PlainDate::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_date_like_and_options(
         item: &PlainDateLike,
         options: &AssignmentOptions,
     ) -> Result<PlainDate, JsValue>;
 
     /// The `Temporal.PlainDate.from()` static method; see [`PlainDate::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_date(item: &PlainDate) -> Result<PlainDate, JsValue>;
 
     /// The `Temporal.PlainDate.from()` static method; see [`PlainDate::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_date_and_options(
         item: &PlainDate,
         options: &AssignmentOptions,
     ) -> Result<PlainDate, JsValue>;
 
     /// The `Temporal.PlainDate.from()` static method; see [`PlainDate::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_date_time(item: &PlainDateTime) -> Result<PlainDate, JsValue>;
 
     /// The `Temporal.PlainDate.from()` static method; see [`PlainDate::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_date_time_and_options(
         item: &PlainDateTime,
         options: &AssignmentOptions,
     ) -> Result<PlainDate, JsValue>;
 
     /// The `Temporal.PlainDate.from()` static method; see [`PlainDate::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_zoned_date_time(item: &ZonedDateTime) -> Result<PlainDate, JsValue>;
 
     /// The `Temporal.PlainDate.from()` static method; see [`PlainDate::from_with_str`] for errors.
-    #[wasm_bindgen(js_name = from, static_method_of = PlainDate, js_namespace = Temporal, catch)]
+    #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_zoned_date_time_and_options(
         item: &ZonedDateTime,
         options: &AssignmentOptions,
@@ -4244,63 +4275,63 @@ extern "C" {
     /// representing the era of this date, or `None` if the calendar does not use eras.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/era)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn era(this: &PlainDate) -> Option<JsString>;
 
     /// The `eraYear` accessor property returns a non-negative integer representing the
     /// year of this date within the era, or `None` if the calendar does not use eras.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/eraYear)
-    #[wasm_bindgen(method, getter, structural, js_name = eraYear)]
+    #[wasm_bindgen(method, getter, js_name = eraYear)]
     pub fn era_year(this: &PlainDate) -> Option<i32>;
 
     /// The `year` accessor property returns an integer representing the number of years
     /// of this date relative to the start of a calendar-specific epoch year.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/year)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn year(this: &PlainDate) -> i32;
 
     /// The `month` accessor property returns a positive integer representing the
     /// 1-based month index in the year of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/month)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn month(this: &PlainDate) -> u32;
 
     /// The `monthCode` accessor property returns a calendar-specific string representing
     /// the month of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/monthCode)
-    #[wasm_bindgen(method, getter, structural, js_name = monthCode)]
+    #[wasm_bindgen(method, getter, js_name = monthCode)]
     pub fn month_code(this: &PlainDate) -> JsString;
 
     /// The `day` accessor property returns a positive integer representing the
     /// 1-based day index in the month of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/day)
-    #[wasm_bindgen(method, getter, structural)]
+    #[wasm_bindgen(method, getter)]
     pub fn day(this: &PlainDate) -> u32;
 
     /// The `calendarId` accessor property returns a string representing the calendar
     /// used to interpret the internal ISO 8601 date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/calendarId)
-    #[wasm_bindgen(method, getter, structural, js_name = calendarId)]
+    #[wasm_bindgen(method, getter, js_name = calendarId)]
     pub fn calendar_id(this: &PlainDate) -> JsString;
 
     /// The `dayOfWeek` accessor property returns a positive integer representing the
     /// day of the week of this date (1 = Monday through 7 = Sunday for ISO 8601).
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/dayOfWeek)
-    #[wasm_bindgen(method, getter, structural, js_name = dayOfWeek)]
+    #[wasm_bindgen(method, getter, js_name = dayOfWeek)]
     pub fn day_of_week(this: &PlainDate) -> u32;
 
     /// The `dayOfYear` accessor property returns a positive integer representing the
     /// 1-based day index of this date in the year.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/dayOfYear)
-    #[wasm_bindgen(method, getter, structural, js_name = dayOfYear)]
+    #[wasm_bindgen(method, getter, js_name = dayOfYear)]
     pub fn day_of_year(this: &PlainDate) -> u32;
 
     /// The `weekOfYear` accessor property returns a positive integer representing the
@@ -4308,7 +4339,7 @@ extern "C" {
     /// calendar does not have a well-defined week system.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/weekOfYear)
-    #[wasm_bindgen(method, getter, structural, js_name = weekOfYear)]
+    #[wasm_bindgen(method, getter, js_name = weekOfYear)]
     pub fn week_of_year(this: &PlainDate) -> Option<u32>;
 
     /// The `yearOfWeek` accessor property returns an integer representing the year
@@ -4316,42 +4347,42 @@ extern "C" {
     /// a well-defined week system.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/yearOfWeek)
-    #[wasm_bindgen(method, getter, structural, js_name = yearOfWeek)]
+    #[wasm_bindgen(method, getter, js_name = yearOfWeek)]
     pub fn year_of_week(this: &PlainDate) -> Option<i32>;
 
     /// The `daysInWeek` accessor property returns a positive integer representing the
     /// number of days in the week of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/daysInWeek)
-    #[wasm_bindgen(method, getter, structural, js_name = daysInWeek)]
+    #[wasm_bindgen(method, getter, js_name = daysInWeek)]
     pub fn days_in_week(this: &PlainDate) -> u32;
 
     /// The `daysInMonth` accessor property returns a positive integer representing the
     /// number of days in the month of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/daysInMonth)
-    #[wasm_bindgen(method, getter, structural, js_name = daysInMonth)]
+    #[wasm_bindgen(method, getter, js_name = daysInMonth)]
     pub fn days_in_month(this: &PlainDate) -> u32;
 
     /// The `daysInYear` accessor property returns a positive integer representing the
     /// number of days in the year of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/daysInYear)
-    #[wasm_bindgen(method, getter, structural, js_name = daysInYear)]
+    #[wasm_bindgen(method, getter, js_name = daysInYear)]
     pub fn days_in_year(this: &PlainDate) -> u32;
 
     /// The `monthsInYear` accessor property returns a positive integer representing the
     /// number of months in the year of this date.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/monthsInYear)
-    #[wasm_bindgen(method, getter, structural, js_name = monthsInYear)]
+    #[wasm_bindgen(method, getter, js_name = monthsInYear)]
     pub fn months_in_year(this: &PlainDate) -> u32;
 
     /// The `inLeapYear` accessor property returns `true` if this date is in a leap year,
     /// and `false` otherwise.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/inLeapYear)
-    #[wasm_bindgen(method, getter, structural, js_name = inLeapYear)]
+    #[wasm_bindgen(method, getter, js_name = inLeapYear)]
     pub fn in_leap_year(this: &PlainDate) -> bool;
 
     /// The `equals()` method returns `true` if this date is equivalent to `other`.
@@ -4364,7 +4395,8 @@ extern "C" {
     /// fields replaced by new values.
     ///
     /// # Errors
-    /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`).
+    /// Throws a `TypeError` if no recognised field is set, and a `RangeError` if values are out
+    /// of range or `overflow` is `'reject'` and a field would need constraining.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/with)
     #[wasm_bindgen(method, catch)]
@@ -4374,10 +4406,11 @@ extern "C" {
     /// fields replaced by new values.
     ///
     /// # Errors
-    /// Throws a `RangeError` if values are out of range (when `overflow` is `'reject'`).
+    /// Throws a `TypeError` if no recognised field is set, and a `RangeError` if values are out
+    /// of range or `overflow` is `'reject'` and a field would need constraining.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/with)
-    #[wasm_bindgen(js_name = with, method, catch)]
+    #[wasm_bindgen(method, js_name = with, catch)]
     pub fn with_with_options(
         this: &PlainDate,
         info: &PlainDateLike,
@@ -4398,7 +4431,8 @@ extern "C" {
     /// duration added to this date.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    /// Throws a `RangeError` if the result is out of range, or if `overflow` is `'reject'` and a
+    /// field would need constraining.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/add)
     #[wasm_bindgen(method, catch)]
@@ -4408,10 +4442,11 @@ extern "C" {
     /// duration added to this date.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    /// Throws a `RangeError` if the result is out of range, or if `overflow` is `'reject'` and a
+    /// field would need constraining.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/add)
-    #[wasm_bindgen(js_name = add, method, catch)]
+    #[wasm_bindgen(method, js_name = add, catch)]
     pub fn add_with_options(
         this: &PlainDate,
         duration: &Duration,
@@ -4422,7 +4457,8 @@ extern "C" {
     /// duration subtracted from this date.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    /// Throws a `RangeError` if the result is out of range, or if `overflow` is `'reject'` and a
+    /// field would need constraining.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/subtract)
     #[wasm_bindgen(method, catch)]
@@ -4432,10 +4468,11 @@ extern "C" {
     /// duration subtracted from this date.
     ///
     /// # Errors
-    /// Throws a `RangeError` if the result is out of range (when `overflow` is `'reject'`).
+    /// Throws a `RangeError` if the result is out of range, or if `overflow` is `'reject'` and a
+    /// field would need constraining.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/subtract)
-    #[wasm_bindgen(js_name = subtract, method, catch)]
+    #[wasm_bindgen(method, js_name = subtract, catch)]
     pub fn subtract_with_options(
         this: &PlainDate,
         duration: &Duration,
@@ -4459,7 +4496,7 @@ extern "C" {
     /// Throws a `RangeError` if dates have different calendars or options are invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/until)
-    #[wasm_bindgen(js_name = until, method, catch)]
+    #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_options(
         this: &PlainDate,
         other: &PlainDate,
@@ -4483,7 +4520,7 @@ extern "C" {
     /// Throws a `RangeError` if dates have different calendars or options are invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/since)
-    #[wasm_bindgen(js_name = since, method, catch)]
+    #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_options(
         this: &PlainDate,
         other: &PlainDate,
@@ -4493,12 +4530,18 @@ extern "C" {
     /// The `toPlainDateTime()` method returns a `Temporal.PlainDateTime` object representing
     /// this date at the given time (or midnight if not provided).
     ///
+    /// # Errors
+    /// Throws a `RangeError` if the result falls outside the representable range.
+    ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toPlainDateTime)
     #[wasm_bindgen(method, js_name = toPlainDateTime, catch)]
     pub fn to_plain_date_time(this: &PlainDate) -> Result<PlainDateTime, JsValue>;
 
     /// The `toPlainDateTime()` method returns a `Temporal.PlainDateTime` object representing
     /// this date at the given time (or midnight if not provided).
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the result falls outside the representable range.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toPlainDateTime)
     #[wasm_bindgen(method, js_name = toPlainDateTime, catch)]
@@ -4580,7 +4623,7 @@ extern "C" {
     pub fn to_locale_string_with_str_and_options(
         this: &PlainDate,
         locales: &str,
-        options: &super::Intl::DateTimeFormatOptions,
+        options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
     /// The `toLocaleString()` method; see [`PlainDate::to_locale_string`] for errors.
@@ -4588,7 +4631,7 @@ extern "C" {
     pub fn to_locale_string_with_str_sequence_and_options(
         this: &PlainDate,
         locales: &[JsString],
-        options: &super::Intl::DateTimeFormatOptions,
+        options: &Intl::DateTimeFormatOptions,
     ) -> Result<JsString, JsValue>;
 
     /// The `toJSON()` method returns a string representation of this date
