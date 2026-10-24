@@ -6196,10 +6196,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toZonedDateTime)
     #[wasm_bindgen(method, js_name = toZonedDateTime, catch)]
-    pub fn to_zoned_date_time_with_str(
-        this: &PlainDate,
-        time_zone: &str,
-    ) -> Result<ZonedDateTime, JsValue>;
+    pub fn to_zoned_date_time(this: &PlainDate, time_zone: &str) -> Result<ZonedDateTime, JsValue>;
 
     /// The `toPlainDateTime()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`PlainDate::to_plain_date_time`] for the remaining errors.
     #[wasm_bindgen(method, js_name = toPlainDateTime, catch)]
@@ -6230,7 +6227,7 @@ extern "C" {
     ) -> Result<PlainDateTime, JsValue>;
 
     /// The `toZonedDateTime()` method in the time zone of the given
-    /// `Temporal.ZonedDateTime`; see [`PlainDate::to_zoned_date_time_with_str`] for errors.
+    /// `Temporal.ZonedDateTime`; see [`PlainDate::to_zoned_date_time`] for errors.
     #[wasm_bindgen(method, js_name = toZonedDateTime, catch)]
     pub fn to_zoned_date_time_with_zoned_date_time(
         this: &PlainDate,
