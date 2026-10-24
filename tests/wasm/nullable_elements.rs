@@ -92,6 +92,11 @@ pub fn export_echo_opt_vec(v: Vec<Option<String>>) -> Vec<Option<String>> {
 }
 
 #[wasm_bindgen]
+pub fn export_echo_opt_js_vec(v: Vec<Option<JsString>>) -> Vec<Option<JsString>> {
+    v
+}
+
+#[wasm_bindgen]
 pub fn export_null_count(v: Vec<Nullable<JsString>>) -> u32 {
     v.iter().filter(|e| e.is_null()).count() as u32
 }

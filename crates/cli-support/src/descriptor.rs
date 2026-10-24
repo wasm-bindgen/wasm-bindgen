@@ -524,10 +524,13 @@ impl Descriptor {
     /// the one element that differs from a borrowed slice's: owned, the
     /// elements are converted to handles in Rust and cross in place, typed
     /// as the optional element; borrowed, they are encoded.
-    pub fn vector_cell(&self) -> SequenceCell<'_> {
+    pub fn vector_cell(&self, incoming: bool) -> SequenceCell<'_> {
         let (inner, empty) = match self {
-            Descriptor::Option { inner, .. } => match &**inner {
+            Descriptor::Option(inner) => match &**inner {
                 Descriptor::Nullable(inner) => (&**inner, " | null | undefined"),
+                // `Option<T>` reads `null` as `None` but writes `None` as
+                // `undefined`.
+                inner if incoming => (inner, " | null | undefined"),
                 inner => (inner, " | undefined"),
             },
             Descriptor::Nullable(inner) => (&**inner, " | null"),

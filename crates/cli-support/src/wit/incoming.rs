@@ -174,7 +174,7 @@ impl InstructionBuilder<'_, '_> {
             }
 
             Descriptor::Vector(cell) => {
-                let kind = match cell.vector_cell() {
+                let kind = match cell.vector_cell(true) {
                     SequenceCell::InPlace(kind) => kind,
                     SequenceCell::Encoded(elem) => {
                         return self.incoming_encoded_vector(elem, false, OptionKind::Option)
@@ -453,7 +453,7 @@ impl InstructionBuilder<'_, '_> {
             }
 
             Descriptor::Vector(cell) => {
-                let kind = match cell.vector_cell() {
+                let kind = match cell.vector_cell(true) {
                     SequenceCell::InPlace(kind) => kind,
                     SequenceCell::Encoded(elem) => {
                         return self.incoming_encoded_vector(elem, true, option_kind)
@@ -666,9 +666,9 @@ impl InstructionBuilder<'_, '_> {
             // (`Descriptor::vector_cell`).
             Descriptor::Option { .. } | Descriptor::Nullable(_) => {
                 let (inner, kind) = match elem {
-                    Descriptor::Option { inner, strict } => match &**inner {
+                    Descriptor::Option(inner) => match &**inner {
                         Descriptor::Nullable(inner) => (&**inner, OptionKind::OptionNullable),
-                        inner => (inner, OptionKind::option(*strict)),
+                        inner => (inner, OptionKind::Option),
                     },
                     Descriptor::Nullable(inner) => (&**inner, OptionKind::Nullable),
                     _ => unreachable!(),

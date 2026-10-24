@@ -188,6 +188,15 @@
 
 ### Changed
 
+* The js-sys `JsFunction*` traits' associated types (`Ret`, `ArgN`, `BindN`)
+  no longer carry a `JsGeneric` bound, so a `Function<fn(..)>` signature may
+  name a converted carrier such as `Nullable<JsString>`. Generic code over
+  these traits that calls `call*` or `bind*` now needs the bound itself, as
+  `where F::Ret: JsGeneric, F::Arg1: JsGeneric`. `Option<T>: TryFromJsValue`
+  now reads `null` as `None`, as the `Option<T>` ABI does; an
+  `Option<Nullable<T>>` still reads it as `Some(Nullable::Null)`.
+  [#5427](https://github.com/wasm-bindgen/wasm-bindgen/pull/5427)
+
 * With reference types, `static_string` constants and the reserved
   `undefined`, `null`, `true` and `false` values are stored at fixed slots of
   the `externref` table, which is now sized to include them, and cloning or
