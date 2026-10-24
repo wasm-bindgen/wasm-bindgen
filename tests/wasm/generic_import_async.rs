@@ -7,6 +7,7 @@
 //! the `Promise` as if it were a `u32`) or that silently ignored
 //! `slice_to_array` (handing JS a typed-array view instead of an `Array`).
 
+use js_sys::{Promise, TypeError};
 use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
@@ -35,6 +36,20 @@ extern "C" {
 
     #[wasm_bindgen(js_name = takeLog)]
     fn take_log() -> String;
+
+    // A `Promise<T, E>` return is a handle whatever `T` and `E` are; both only
+    // matter once awaited, where the rejection converts as an `E`.
+    #[wasm_bindgen(experimental_generic_mono, js_name = settleWith)]
+    fn settle_with<T: IntoWasmAbi + FromWasmAbi + 'static, E: FromWasmAbi + 'static>(
+        value: T,
+        fail: bool,
+    ) -> Promise<T, E>;
+
+    #[wasm_bindgen(experimental_generic_mono, js_name = settleWith)]
+    fn settle_string<T: IntoWasmAbi>(value: T, fail: bool) -> Promise<String, TypeError>;
+
+    #[wasm_bindgen(js_name = settleWith)]
+    fn settle_string_plain(value: &str, fail: bool) -> Promise<String, TypeError>;
 
     // `slice_to_array` hands JS an owned `Array`, not a view into wasm memory.
     // A primitive element type borrows the caller's slice; a `String` element
@@ -102,6 +117,29 @@ async fn async_catch_return() {
     assert_eq!(async_try_echo(9u32, false).await.unwrap(), 9);
     assert_eq!(async_try_echo(String::from("k"), false).await.unwrap(), "k");
     assert!(async_try_echo(9u32, true).await.is_err());
+}
+
+#[wasm_bindgen_test]
+async fn typed_rejection_return() {
+    assert_eq!(settle_with::<u32, TypeError>(7, false).await.unwrap(), 7);
+    let err: TypeError = settle_with::<u32, TypeError>(7, true).await.unwrap_err();
+    assert_eq!(err.message(), "7");
+    let err = settle_with::<String, TypeError>(String::from("s"), true)
+        .await
+        .unwrap_err();
+    assert_eq!(err.message(), "s");
+
+    assert_eq!(settle_string(String::from("m"), false).await.unwrap(), "m");
+    assert_eq!(
+        settle_string(2.5f64, true).await.unwrap_err().message(),
+        "2.5"
+    );
+
+    assert_eq!(settle_string_plain("p", false).await.unwrap(), "p");
+    assert_eq!(
+        settle_string_plain("p", true).await.unwrap_err().message(),
+        "p"
+    );
 }
 
 #[wasm_bindgen_test]

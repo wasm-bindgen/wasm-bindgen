@@ -185,6 +185,25 @@ use js_sys::futures::JsFuture;
 let future: JsFuture<Number> = JsFuture::from(fetchCount());
 ```
 
+A second parameter types the rejection: `Promise<T, E>` awaits to
+`Result<T, E>`. It defaults to `JsValue`, so `Promise<T>` is
+`Promise<T, JsValue>`. Both parameters are covariant through `Upcast`, so a
+`Promise<T, TypeError>` can be passed where a `Promise<T, Error>` or a
+`Promise<T>` is expected.
+
+```rust
+use js_sys::{Promise, TypeError};
+
+#[wasm_bindgen]
+extern "C" {
+    fn fetchCount() -> Promise<Number, TypeError>;
+}
+
+async fn example() -> Result<Number, TypeError> {
+    fetchCount().await
+}
+```
+
 [`IntoFuture`]: https://doc.rust-lang.org/std/future/trait.IntoFuture.html
 [`JsFuture`]: https://docs.rs/js-sys/*/js_sys/futures/struct.JsFuture.html
 

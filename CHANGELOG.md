@@ -5,6 +5,18 @@
 
 ### Added
 
+* Added a rejection type parameter to `js_sys::Promise<T, E = JsValue>`,
+  mirrored on `JsFuture<T, E>`, `PromiseState<T, E>` and
+  `PromiseWithResolvers<T, E>`. Awaiting a `Promise<T, E>` yields
+  `Result<T, E>`, converting the rejection reason as an `E` the same unchecked
+  way the fulfilled value is converted as a `T`. Both parameters are covariant
+  under `Upcast`; `catch`, `then_with_reject` and the `withResolvers` reject
+  function receive an `E`; `all_tuple` / `all_settled_tuple` carry a shared `E`
+  through; and under `js_sys_unstable_apis`, `Promise::new`, `Promise::reject`
+  and `Promise::any` are typed on the rejection too, `any` as
+  `AggregateError`. The default keeps existing `Promise<T>` code unchanged.
+  [#5426](https://github.com/wasm-bindgen/wasm-bindgen/pull/5426)
+
 * Added the `--js-string-builtins` CLI flag, importing `static_string`
   constants as [JS String Builtins](https://github.com/WebAssembly/js-string-builtins)
   string constants from `wasm:js/string-constants` instead of defining them in
