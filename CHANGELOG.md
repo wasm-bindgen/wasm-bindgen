@@ -62,8 +62,16 @@
   `TryFromJsValue`, and implements `Promising`. A js-sys `Function<fn(..)>`
   signature slot no longer has to be a `JsGeneric` handle, so
   `Function<fn(Nullable<JsString>) -> Option<Number>>` is a type and
-  `Function::from_closure` accepts a closure with converted arguments; the
-  `call*` and `bind*` methods keep the handle bound.
+  `Function::from_closure` accepts a closure with converted arguments. A
+  borrowed `&Option<T>` or `&Nullable<T>` is `IntoWasmAbi`, crossing as
+  `Option<T>` with its payload borrowed. Under `--cfg js_sys_unstable_apis`
+  the generic element methods of js-sys's `Array`, `Map`, `Set`, `Function`
+  (`apply`, `call*`, `bind*`) and `Promise::resolve` are
+  `experimental_generic_mono`, bounded by `FromWasmAbi` / `RefIntoWasmAbi`
+  rather than `JsGeneric`, so a `Nullable<T>`, `Option<T>` or `String` element
+  converts directly; `call*` and `bind*` drop their `fn(..) -> JsValue`
+  defaults there. `JsGeneric` now implies the owned, optional and borrowed ABI
+  traits, so generic code over a handle satisfies both forms.
   [#5427](https://github.com/wasm-bindgen/wasm-bindgen/pull/5427)
 
 * Added `MaybeIntoWasmAbi` / `MaybeFromWasmAbi`, the ABI of `Option<T>` for

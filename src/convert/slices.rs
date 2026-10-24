@@ -827,6 +827,34 @@ impl<T: MaybeRefIntoWasmAbi + NullableIntoWasmAbi> MaybeRefIntoWasmAbi for Nulla
     }
 }
 
+impl<T: MaybeRefIntoWasmAbi> IntoWasmAbi for &Option<T> {
+    type Abi = T::MaybeAbi;
+
+    #[inline]
+    fn into_abi(self) -> T::MaybeAbi {
+        match self {
+            None => T::none(),
+            Some(v) => v.ref_into_maybe_abi(),
+        }
+    }
+}
+
+impl<T: MaybeRefIntoWasmAbi + NullableIntoWasmAbi> IntoWasmAbi for &Nullable<T> {
+    type Abi = T::MaybeAbi;
+
+    #[inline]
+    fn into_abi(self) -> T::MaybeAbi {
+        self.ref_into_maybe_abi()
+    }
+}
+
+impl<T: MaybeRefIntoWasmAbi + NullableIntoWasmAbi> OptionIntoWasmAbi for &Nullable<T> {
+    #[inline]
+    fn none() -> T::MaybeAbi {
+        T::none()
+    }
+}
+
 impl<T: MaybeRefIntoWasmAbi> crate::__rt::marker::VectorRefIntoWasmAbiSealed for Option<T> {}
 
 impl<T: MaybeRefIntoWasmAbi> VectorRefIntoWasmAbi for Option<T> {
