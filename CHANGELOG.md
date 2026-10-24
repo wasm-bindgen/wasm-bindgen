@@ -196,32 +196,40 @@
 
 * Reworked the `js_sys::Temporal` bindings and `Date::to_temporal_instant`,
   which stay behind `js_sys_unstable_apis`, against the final Stage 4
-  specification and reshaped them to the web-sys conventions: inputs are typed (`&Duration`, `&PlainTime`, `*Like`
-  dictionaries such as `PlainDateLike` for `from` and calendar-free `*Fields`
-  dictionaries for `with`, `&str` time zones
-  and calendars, `&Self` for `until`/`since`/`equals`/`compare`), unions expand
-  to `from_with_str`/`from_with_plain_date_like`/`from_with_plain_date_time` and
-  `to_zoned_date_time_with_str`/`_with_to_zoned_date_time_item`, and optional
-  arguments expand
-  to a plain method plus `_with_options`/`_and_options` or
-  `with_plain_time`/`with_plain_time_with_plain_time`. `round`, `total` and
-  `get_time_zone_transition` take the unit or direction directly or an options
-  object, and `relativeTo` has typed setters per accepted type. Bindings for the removed
+  specification and reshaped them to the web-sys conventions. Inputs are
+  typed: `*Like` dictionaries such as `PlainDateLike` for `from`, calendar-free
+  `*Fields` dictionaries for `with`, and the bare form of a method takes the
+  type its argument converts to (`&str` time zones and calendars, `&PlainTime`,
+  `&Duration`, `&Self` for `until`/`since`/`equals`), while every other member
+  of a specification union gets a `_with_<type>` variant, so
+  `with_calendar_with_plain_date`, `add_with_duration_like`, `add_with_str`,
+  `equals_with_zoned_date_time`, `with_plain_time_with_str`,
+  `PlainYearMonth::from_with_plain_date` and the typed `relativeTo`, `calendar`,
+  `timeZone` and `plainTime` dictionary setters all exist; `compare` keeps
+  taking `&Self` only. Optional arguments expand to the plain method plus
+  `_with_options`/`_and_options`, `to_locale_string` takes no locale, a
+  `_with_str`/`_with_str_sequence` one or `_with_options` alone, and `round`,
+  `total` and `get_time_zone_transition` take their options dictionary, with
+  `round_with_unit`, `total_with_unit` and
+  `get_time_zone_transition_with_direction` shortcuts. The option dictionaries
+  are `OverflowOptions`, `DifferenceOptions`, `RoundToOptions::new(unit)`,
+  `DurationTotalOptions::new(unit)`, `TimeZoneTransitionOptions::new(direction)`
+  and friends, the enums drop their `Temporal` prefix (`Overflow`, `Unit`,
+  `LargestUnit`, `TransitionDirection`, …). Bindings for the removed
   `toPlainYearMonth`/`toPlainMonthDay` on `PlainDateTime` and `ZonedDateTime`,
   `ZonedDateTime::with_plain_date` and `PlainTime::to_plain_date_time` are gone,
   `offset_nanoseconds` returns `f64`, `era`, `era_year`, `week_of_year` and
   `year_of_week` return `Option`s, `fractionalSecondDigits` is a `u8`,
   `get_time_zone_transition` returns `Nullable<ZonedDateTime>`,
-  `to_js_string_with_options` and `to_locale_string` are fallible, `to_locale_string`
-  takes no locale or a `_with_str`/`_with_str_sequence` one, constructors expand
-  their optional trailing fields (`PlainTime::new()`, `new_with_hour`, …,
-  `PlainDate::new_with_calendar`), the unit enums
-  are `Unit` and `LargestUnit`, and `catch` follows the specification:
-  `equals`, `compare` and
-  the option-less `Instant`/`PlainTime` arithmetic are infallible, while
+  `to_js_string_with_options` and `to_locale_string` are fallible, constructors
+  expand their optional trailing fields (`PlainTime::new()`, `new_with_hour`, …,
+  `PlainDate::new_with_calendar`), and `catch` follows the specification:
+  `equals`, `compare`, the typed `from` forms and the option-less
+  `Instant`/`PlainTime` arithmetic are infallible, while
   `ZonedDateTime::start_of_day`, `hours_in_day` and
   `PlainDate::to_plain_year_month` are fallible. `PartialEq`/`Eq` on the
-  date-time types compare by the spec `equals()`.
+  date-time types compare by the spec `equals()`, and `Instant` and `PlainTime`
+  are `Ord` through `compare()`.
   [#5402](https://github.com/wasm-bindgen/wasm-bindgen/pull/5402)
 
 * The js-sys `JsFunction*` traits' associated types (`Ret`, `ArgN`, `BindN`)
