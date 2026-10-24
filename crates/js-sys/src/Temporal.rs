@@ -1397,6 +1397,33 @@ impl PartialEq for PlainDate {
 
 impl Eq for PlainDate {}
 
+// `compare()` orders Instant and PlainTime consistently with `equals()`; the
+// calendar-bearing types compare their ISO fields only, so `equals()` can be
+// false where `compare()` is zero and they get no `Ord`.
+impl PartialOrd for Instant {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Instant {
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+        Instant::compare(self, other).cmp(&0)
+    }
+}
+
+impl PartialOrd for PlainTime {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for PlainTime {
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+        PlainTime::compare(self, other).cmp(&0)
+    }
+}
+
 #[wasm_bindgen]
 extern "C" {
     /// A `Temporal.Instant` is an exact point in time, with a precision in

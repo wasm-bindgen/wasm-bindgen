@@ -1029,11 +1029,23 @@ fn plain_time_argument_forms() {
 }
 
 #[wasm_bindgen_test]
-fn locale_options() {
+fn ordering_and_locale_options() {
     if !is_temporal_supported() {
         return;
     }
     let a = get_test_instant();
+    let b = a.add_with_str("PT1S").unwrap();
+    assert!(a < b);
+    assert!(b > a);
+    assert_eq!(a.cmp(&a.clone()), core::cmp::Ordering::Equal);
+    let mut times = vec![
+        Temporal::PlainTime::from_with_str("12:00").unwrap(),
+        Temporal::PlainTime::from_with_str("09:30").unwrap(),
+        Temporal::PlainTime::from_with_str("23:59").unwrap(),
+    ];
+    times.sort();
+    assert_eq!(times[0].hour(), 9);
+    assert_eq!(times[2].hour(), 23);
     let opts = Intl::DateTimeFormatOptions::new();
     opts.set_time_zone("UTC");
     assert!(a.to_locale_string_with_options(&opts).unwrap().length() > 0);
