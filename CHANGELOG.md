@@ -224,7 +224,8 @@
   `to_js_string_with_options` and `to_locale_string` are fallible, constructors
   expand their optional trailing fields (`PlainTime::new()`, `new_with_hour`, …,
   `PlainDate::new_with_calendar`), and `catch` follows the specification:
-  `equals`, `compare`, the typed `from` forms and the option-less
+  `equals`, `compare`, the typed `from` forms (except `PlainYearMonth`'s date
+  conversions, which can leave the range) and the option-less
   `Instant`/`PlainTime` arithmetic are infallible, while
   `ZonedDateTime::start_of_day`, `hours_in_day` and
   `PlainDate::to_plain_year_month` are fallible. `PartialEq`/`Eq` on the
