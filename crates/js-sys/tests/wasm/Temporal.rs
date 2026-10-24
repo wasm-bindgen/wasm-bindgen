@@ -888,6 +888,52 @@ fn calendar_and_time_zone_objects() {
 }
 
 #[wasm_bindgen_test]
+fn duration_argument_forms() {
+    if !is_temporal_supported() {
+        return;
+    }
+    let pd = get_test_plain_date();
+    let one_day = Temporal::DurationLike::new();
+    one_day.set_days(1.0);
+    assert_eq!(pd.add_with_duration_like(&one_day).unwrap().day(), 16);
+    assert_eq!(pd.add_with_str("P1D").unwrap().day(), 16);
+    assert_eq!(pd.subtract_with_str("P1M").unwrap().month(), 5);
+    let reject = Temporal::OverflowOptions::new();
+    reject.set_overflow(Temporal::Overflow::Reject);
+    assert_eq!(
+        pd.add_with_str_and_options("P1D", &reject).unwrap().day(),
+        16
+    );
+    assert_eq!(
+        pd.subtract_with_duration_like_and_options(&one_day, &reject)
+            .unwrap()
+            .day(),
+        14
+    );
+    assert!(pd
+        .add_with_duration_like(&Temporal::DurationLike::new())
+        .unwrap_err()
+        .is_instance_of::<TypeError>());
+    assert!(pd
+        .add_with_str("1 day")
+        .unwrap_err()
+        .is_instance_of::<RangeError>());
+    assert_eq!(
+        get_test_plain_time().add_with_str("PT1H").unwrap().hour(),
+        13
+    );
+    assert_eq!(
+        get_test_instant()
+            .subtract_with_str("PT1S")
+            .unwrap()
+            .epoch_milliseconds(),
+        get_test_instant().epoch_milliseconds() - 1000.0
+    );
+    let hour = Temporal::Duration::from_with_str("PT1H").unwrap();
+    assert_eq!(hour.add_with_str("PT30M").unwrap().minutes(), 30.0);
+}
+
+#[wasm_bindgen_test]
 fn value_equality() {
     if !is_temporal_supported() {
         return;
