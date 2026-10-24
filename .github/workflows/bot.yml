@@ -81,6 +81,26 @@ jobs:
           cf-account-id: ${{ vars.CF_ACCOUNT_ID }}
           cf-gateway-id: ${{ vars.CF_GATEWAY_ID }}
 
+  # Removes merge-ready while a review runs.
+  start:
+    if: >-
+      github.event_name == 'pull_request_target' && !github.event.pull_request.draft &&
+      (github.event.action == 'opened' || github.event.action == 'ready_for_review' ||
+        github.event.action == 'synchronize' ||
+        (github.event.action == 'labeled' && github.event.label.name == 'bot-review')) &&
+      (github.event.pull_request.user.type != 'Bot' ||
+        github.event.pull_request.user.login == 'wasm-bindgen-bot[bot]')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+    steps:
+      - uses: wasm-bindgen/wasm-bindgen-bot/start@main
+        with:
+          app-id: ${{ vars.WASM_BINDGEN_BOT_APP_ID }}
+          private-key: ${{ secrets.WASM_BINDGEN_BOT_PRIVATE_KEY }}
+
   post:
     needs: analyze
     runs-on: ubuntu-latest
