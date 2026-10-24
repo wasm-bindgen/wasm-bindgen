@@ -42,8 +42,8 @@ fn like_dictionaries() {
     let pd = Temporal::PlainDate::from_with_plain_date_like(&fields).unwrap();
     assert!(pd.equals(&get_test_plain_date()));
     assert!(pd.with(&day_fields(31)).is_ok());
-    let reject = Temporal::AssignmentOptions::new();
-    reject.set_overflow(Temporal::TemporalOverflow::Reject);
+    let reject = Temporal::OverflowOptions::new();
+    reject.set_overflow(Temporal::Overflow::Reject);
     assert!(pd.with_with_options(&day_fields(31), &reject).is_err());
 
     // from() also accepts the richer Temporal instances
@@ -78,7 +78,7 @@ fn like_dictionaries() {
     assert_eq!(zdt.with(&shifted).unwrap().hour(), 18);
 
     let item = Temporal::ToZonedDateTimeItem::new("Asia/Tokyo");
-    item.set_plain_time_str("09:00");
+    item.set_plain_time_with_str("09:00");
     let tokyo = pd
         .to_zoned_date_time_with_to_zoned_date_time_item(&item)
         .unwrap();
@@ -92,8 +92,8 @@ fn like_dictionaries() {
         30
     );
 
-    let opts = Temporal::DurationCompareOptions::new();
-    opts.set_relative_to_plain_date_like(&fields);
+    let opts = Temporal::RelativeToOptions::new();
+    opts.set_relative_to_with_plain_date_like(&fields);
     assert_eq!(
         Temporal::Duration::compare_with_options(
             &Temporal::Duration::from_with_str("P1M").unwrap(),
@@ -302,17 +302,14 @@ fn instant_methods() {
     assert_eq!(duration2.hours(), 1.0);
 
     // Test round with typed options
-    let round_opts = Temporal::RoundToOptions::new();
-    round_opts.set_smallest_unit(Temporal::TemporalUnit::Hour);
+    let round_opts = Temporal::RoundToOptions::new(Temporal::Unit::Hour);
     let rounded = instant.round_with_round_to_options(&round_opts).unwrap();
     // Instant rounded to hour should have milliseconds as 0
     assert_eq!(rounded.epoch_milliseconds() % 3600000.0, 0.0);
-    let by_unit = instant
-        .round_with_temporal_unit(Temporal::TemporalUnit::Hour)
-        .unwrap();
+    let by_unit = instant.round_with_unit(Temporal::Unit::Hour).unwrap();
     assert_eq!(by_unit.epoch_nanoseconds(), rounded.epoch_nanoseconds());
     assert!(instant
-        .round_with_temporal_unit(Temporal::TemporalUnit::Day)
+        .round_with_unit(Temporal::Unit::Day)
         .unwrap_err()
         .is_instance_of::<RangeError>());
 
@@ -334,7 +331,7 @@ fn instant_methods() {
     );
 
     let opts = Temporal::InstantToStringOptions::new();
-    opts.set_smallest_unit(Temporal::TemporalUnit::Minute);
+    opts.set_smallest_unit(Temporal::Unit::Minute);
     opts.set_time_zone("America/Los_Angeles");
     assert_eq!(
         opts.get_time_zone(),
@@ -347,7 +344,7 @@ fn instant_methods() {
 
     // Calendar units are rejected by Instant.toString
     let opts = Temporal::InstantToStringOptions::new();
-    opts.set_smallest_unit(Temporal::TemporalUnit::Day);
+    opts.set_smallest_unit(Temporal::Unit::Day);
     assert!(instant.to_js_string_with_options(&opts).is_err());
 }
 
@@ -500,29 +497,22 @@ fn zoned_date_time_offset_and_transitions() {
     assert_eq!(zdt.week_of_year(), Some(24));
     assert_eq!(zdt.year_of_week(), Some(2022));
 
-    let opts = Temporal::TimeZoneTransitionOptions::new();
-    opts.set_direction(Temporal::TransitionDirection::Next);
-    assert_eq!(
-        opts.get_direction(),
-        Some(Temporal::TransitionDirection::Next)
-    );
+    let opts = Temporal::TimeZoneTransitionOptions::new(Temporal::TransitionDirection::Next);
+    assert_eq!(opts.get_direction(), Temporal::TransitionDirection::Next);
     let next = zdt
         .get_time_zone_transition_with_time_zone_transition_options(&opts)
-        .unwrap()
         .unwrap();
     assert_eq!(next.month(), 11);
     assert_eq!(next.day(), 6);
     assert_eq!(next.offset(), "-08:00");
     let by_direction = zdt
         .get_time_zone_transition_with_transition_direction(Temporal::TransitionDirection::Next)
-        .unwrap()
         .unwrap();
     assert!(by_direction.equals(&next));
 
     opts.set_direction(Temporal::TransitionDirection::Previous);
     let previous = zdt
         .get_time_zone_transition_with_time_zone_transition_options(&opts)
-        .unwrap()
         .unwrap();
     assert_eq!(previous.month(), 3);
     assert_eq!(previous.day(), 13);
@@ -530,16 +520,7 @@ fn zoned_date_time_offset_and_transitions() {
     let utc = zdt.with_time_zone("UTC").unwrap();
     assert!(utc
         .get_time_zone_transition_with_time_zone_transition_options(&opts)
-        .unwrap()
         .is_null());
-
-    // `direction` is required
-    let err = zdt
-        .get_time_zone_transition_with_time_zone_transition_options(
-            &Temporal::TimeZoneTransitionOptions::new(),
-        )
-        .unwrap_err();
-    assert!(err.is_instance_of::<RangeError>());
 }
 
 #[wasm_bindgen_test]
@@ -643,8 +624,7 @@ fn plain_date_time_methods() {
     assert!(later.day() != earlier.day() || later.month() != earlier.month());
 
     // Test round with typed options
-    let round_opts = Temporal::RoundToOptions::new();
-    round_opts.set_smallest_unit(Temporal::TemporalUnit::Hour);
+    let round_opts = Temporal::RoundToOptions::new(Temporal::Unit::Hour);
     let rounded = pdt.round_with_round_to_options(&round_opts).unwrap();
     assert_eq!(rounded.minute(), 0);
     assert_eq!(rounded.second(), 0);
@@ -668,12 +648,12 @@ fn plain_date_time_methods() {
 
     // 2022-03-13T02:30 does not exist in Los Angeles (spring forward)
     let skipped = Temporal::PlainDateTime::new_with_hour_and_minute(2022, 3, 13, 2, 30).unwrap();
-    let opts = Temporal::ToZonedDateTimeOptions::new();
-    opts.set_disambiguation(Temporal::TemporalDisambiguation::Reject);
+    let opts = Temporal::DisambiguationOptions::new();
+    opts.set_disambiguation(Temporal::Disambiguation::Reject);
     assert!(skipped
         .to_zoned_date_time_with_options("America/Los_Angeles", &opts)
         .is_err());
-    opts.set_disambiguation(Temporal::TemporalDisambiguation::Later);
+    opts.set_disambiguation(Temporal::Disambiguation::Later);
     let later = skipped
         .to_zoned_date_time_with_options("America/Los_Angeles", &opts)
         .unwrap();
@@ -684,7 +664,7 @@ fn plain_date_time_methods() {
     assert_eq!(pdt.to_json(), pdt.to_js_string());
 
     let opts = Temporal::CalendarTypeToStringOptions::new();
-    opts.set_smallest_unit(Temporal::TemporalUnit::Minute);
+    opts.set_smallest_unit(Temporal::Unit::Minute);
     opts.set_calendar_name(Temporal::CalendarDisplay::Always);
     assert_eq!(
         pdt.to_js_string_with_options(&opts).unwrap(),
@@ -926,8 +906,7 @@ fn plain_time_methods() {
     assert_eq!(duration.minutes(), 30.0);
 
     // Test round with typed options
-    let round_opts = Temporal::RoundToOptions::new();
-    round_opts.set_smallest_unit(Temporal::TemporalUnit::Hour);
+    let round_opts = Temporal::RoundToOptions::new(Temporal::Unit::Hour);
     let rounded = pt.round_with_round_to_options(&round_opts).unwrap();
     assert_eq!(rounded.minute(), 0);
     assert_eq!(rounded.second(), 0);
@@ -1199,12 +1178,10 @@ fn duration_methods() {
     assert_eq!(diff.minutes(), 0.0);
 
     // Test total with typed options
-    let total_opts = Temporal::DurationTotalOptions::new();
-    total_opts.set_unit(Temporal::TemporalUnit::Minute);
+    let total_opts = Temporal::DurationTotalOptions::new(Temporal::Unit::Minute);
     let total_minutes = dur.total_with_duration_total_options(&total_opts).unwrap();
     assert_eq!(
-        dur.total_with_temporal_unit(Temporal::TemporalUnit::Minute)
-            .unwrap(),
+        dur.total_with_unit(Temporal::Unit::Minute).unwrap(),
         total_minutes
     );
     assert_eq!(total_minutes, 90.0);
@@ -1220,7 +1197,7 @@ fn duration_methods() {
     );
 
     round_opts.set_largest_unit(Temporal::LargestUnit::Auto);
-    round_opts.set_smallest_unit(Temporal::TemporalUnit::Hour);
+    round_opts.set_smallest_unit(Temporal::Unit::Hour);
     round_opts.set_rounding_mode(Intl::RoundingMode::Floor);
     assert_eq!(
         dur.round_with_duration_round_to_options(&round_opts)
@@ -1253,7 +1230,7 @@ fn duration_methods() {
     assert_eq!(precise.to_js_string_with_options(&opts).unwrap(), "PT1.12S");
 
     // Duration.toString only accepts seconds and smaller
-    opts.set_smallest_unit(Temporal::TemporalUnit::Minute);
+    opts.set_smallest_unit(Temporal::Unit::Minute);
     assert!(precise.to_js_string_with_options(&opts).is_err());
 
     // Test constructor
@@ -1309,25 +1286,25 @@ fn duration_compare_relative_to() {
     // Calendar units need a reference date
     assert!(Temporal::Duration::compare(&one_month, &thirty_days).is_err());
 
-    let opts = Temporal::DurationCompareOptions::new();
-    opts.set_relative_to_str("2022-02-01");
+    let opts = Temporal::RelativeToOptions::new();
+    opts.set_relative_to_with_str("2022-02-01");
     assert_eq!(
         Temporal::Duration::compare_with_options(&one_month, &thirty_days, &opts).unwrap(),
         -1
     );
-    opts.set_relative_to_plain_date(&Temporal::PlainDate::new(2022, 3, 1).unwrap());
+    opts.set_relative_to_with_plain_date(&Temporal::PlainDate::new(2022, 3, 1).unwrap());
     assert_eq!(
         Temporal::Duration::compare_with_options(&one_month, &thirty_days, &opts).unwrap(),
         1
     );
-    opts.set_relative_to_plain_date_time(
+    opts.set_relative_to_with_plain_date_time(
         &Temporal::PlainDateTime::from_with_str("2022-02-01T12:00").unwrap(),
     );
     assert_eq!(
         Temporal::Duration::compare_with_options(&one_month, &thirty_days, &opts).unwrap(),
         -1
     );
-    opts.set_relative_to_zoned_date_time(
+    opts.set_relative_to_with_zoned_date_time(
         &Temporal::ZonedDateTime::from_with_str("2022-03-01T00:00[UTC]").unwrap(),
     );
     assert_eq!(
@@ -1336,12 +1313,13 @@ fn duration_compare_relative_to() {
     );
     assert!(opts
         .get_relative_to()
+        .unwrap()
         .is_instance_of::<Temporal::ZonedDateTime>());
 
     // Rounding calendar units also takes the reference date
     let round_opts = Temporal::DurationRoundToOptions::new();
     round_opts.set_largest_unit(Temporal::LargestUnit::Month);
-    round_opts.set_relative_to_str("2022-02-01");
+    round_opts.set_relative_to_with_str("2022-02-01");
     assert_eq!(
         thirty_days
             .round_with_duration_round_to_options(&round_opts)
@@ -1350,7 +1328,7 @@ fn duration_compare_relative_to() {
         1.0
     );
     assert!(one_month
-        .round_with_temporal_unit(Temporal::TemporalUnit::Month)
+        .round_with_unit(Temporal::Unit::Month)
         .unwrap_err()
         .is_instance_of::<RangeError>());
 }
@@ -1364,20 +1342,14 @@ fn test_assignment_options() {
     if !is_temporal_supported() {
         return;
     }
-    let opts = Temporal::AssignmentOptions::new();
+    let opts = Temporal::OverflowOptions::new();
     assert!(opts.get_overflow().is_none());
 
-    opts.set_overflow(Temporal::TemporalOverflow::Constrain);
-    assert_eq!(
-        opts.get_overflow(),
-        Some(Temporal::TemporalOverflow::Constrain)
-    );
+    opts.set_overflow(Temporal::Overflow::Constrain);
+    assert_eq!(opts.get_overflow(), Some(Temporal::Overflow::Constrain));
 
-    opts.set_overflow(Temporal::TemporalOverflow::Reject);
-    assert_eq!(
-        opts.get_overflow(),
-        Some(Temporal::TemporalOverflow::Reject)
-    );
+    opts.set_overflow(Temporal::Overflow::Reject);
+    assert_eq!(opts.get_overflow(), Some(Temporal::Overflow::Reject));
 }
 
 #[wasm_bindgen_test]
@@ -1387,8 +1359,8 @@ fn test_difference_options() {
     }
     let opts = Temporal::DifferenceOptions::new();
 
-    opts.set_smallest_unit(Temporal::TemporalUnit::Day);
-    assert_eq!(opts.get_smallest_unit(), Some(Temporal::TemporalUnit::Day));
+    opts.set_smallest_unit(Temporal::Unit::Day);
+    assert_eq!(opts.get_smallest_unit(), Some(Temporal::Unit::Day));
 
     opts.set_largest_unit(Temporal::LargestUnit::Year);
     assert_eq!(opts.get_largest_unit(), Some(Temporal::LargestUnit::Year));
@@ -1415,11 +1387,8 @@ fn test_to_string_options() {
     opts.set_fractional_second_digits(3);
     assert_eq!(opts.get_fractional_second_digits(), Some(3));
 
-    opts.set_smallest_unit(Temporal::TemporalUnit::Millisecond);
-    assert_eq!(
-        opts.get_smallest_unit(),
-        Some(Temporal::TemporalUnit::Millisecond)
-    );
+    opts.set_smallest_unit(Temporal::Unit::Millisecond);
+    assert_eq!(opts.get_smallest_unit(), Some(Temporal::Unit::Millisecond));
 
     // Test ShowCalendarOptions
     let cal_opts = Temporal::ShowCalendarOptions::new();
@@ -1448,23 +1417,17 @@ fn test_zoned_date_time_assignment_options() {
     }
     let opts = Temporal::ZonedDateTimeAssignmentOptions::new();
 
-    opts.set_overflow(Temporal::TemporalOverflow::Reject);
-    assert_eq!(
-        opts.get_overflow(),
-        Some(Temporal::TemporalOverflow::Reject)
-    );
+    opts.set_overflow(Temporal::Overflow::Reject);
+    assert_eq!(opts.get_overflow(), Some(Temporal::Overflow::Reject));
 
-    opts.set_disambiguation(Temporal::TemporalDisambiguation::Earlier);
+    opts.set_disambiguation(Temporal::Disambiguation::Earlier);
     assert_eq!(
         opts.get_disambiguation(),
-        Some(Temporal::TemporalDisambiguation::Earlier)
+        Some(Temporal::Disambiguation::Earlier)
     );
 
-    opts.set_offset(Temporal::TemporalOffsetOption::Prefer);
-    assert_eq!(
-        opts.get_offset(),
-        Some(Temporal::TemporalOffsetOption::Prefer)
-    );
+    opts.set_offset(Temporal::OffsetOption::Prefer);
+    assert_eq!(opts.get_offset(), Some(Temporal::OffsetOption::Prefer));
 }
 
 #[wasm_bindgen_test]
@@ -1474,8 +1437,8 @@ fn test_duration_round_options() {
     }
     let opts = Temporal::DurationRoundToOptions::new();
 
-    opts.set_smallest_unit(Temporal::TemporalUnit::Hour);
-    assert_eq!(opts.get_smallest_unit(), Some(Temporal::TemporalUnit::Hour));
+    opts.set_smallest_unit(Temporal::Unit::Hour);
+    assert_eq!(opts.get_smallest_unit(), Some(Temporal::Unit::Hour));
 
     opts.set_largest_unit(Temporal::LargestUnit::Day);
     assert_eq!(opts.get_largest_unit(), Some(Temporal::LargestUnit::Day));
@@ -1492,8 +1455,8 @@ fn test_duration_total_options() {
     if !is_temporal_supported() {
         return;
     }
-    let opts = Temporal::DurationTotalOptions::new();
-
-    opts.set_unit(Temporal::TemporalUnit::Hour);
-    assert_eq!(opts.get_unit(), Some(Temporal::TemporalUnit::Hour));
+    let opts = Temporal::DurationTotalOptions::new(Temporal::Unit::Minute);
+    assert_eq!(opts.get_unit(), Temporal::Unit::Minute);
+    opts.set_unit(Temporal::Unit::Hour);
+    assert_eq!(opts.get_unit(), Temporal::Unit::Hour);
 }
