@@ -979,6 +979,62 @@ fn comparison_argument_forms() {
 }
 
 #[wasm_bindgen_test]
+fn plain_time_argument_forms() {
+    if !is_temporal_supported() {
+        return;
+    }
+    let pd = get_test_plain_date();
+    let pdt = get_test_plain_date_time();
+    let zdt = get_test_zoned_date_time();
+    assert_eq!(pdt.with_plain_time_with_str("08:15").unwrap().hour(), 8);
+    let bag = Temporal::PlainTimeLike::new();
+    bag.set_hour(9);
+    assert_eq!(
+        pdt.with_plain_time_with_plain_time_like(&bag)
+            .unwrap()
+            .hour(),
+        9
+    );
+    assert!(pdt
+        .with_plain_time_with_plain_time_like(&Temporal::PlainTimeLike::new())
+        .unwrap_err()
+        .is_instance_of::<TypeError>());
+    assert!(zdt
+        .with_plain_time_with_plain_date_time(&pdt)
+        .unwrap()
+        .to_plain_time()
+        .equals(&get_test_plain_time()));
+    assert_eq!(
+        pd.to_plain_date_time_with_zoned_date_time(&zdt)
+            .unwrap()
+            .minute(),
+        30
+    );
+    assert_eq!(pd.to_plain_date_time_with_str("23:00").unwrap().hour(), 23);
+    let item = Temporal::ToZonedDateTimeItem::new("UTC");
+    item.set_plain_time_with_zoned_date_time(&zdt);
+    assert_eq!(
+        pd.to_zoned_date_time_with_to_zoned_date_time_item(&item)
+            .unwrap()
+            .hour(),
+        12
+    );
+    let opts = Temporal::DurationTotalOptions::new(Temporal::Unit::Day);
+    let rel = Temporal::PlainDateTimeLike::new();
+    rel.set_year(2024);
+    rel.set_month(2);
+    rel.set_day(1);
+    opts.set_relative_to_with_plain_date_time_like(&rel);
+    assert_eq!(
+        Temporal::Duration::from_with_str("P1M")
+            .unwrap()
+            .total_with_duration_total_options(&opts)
+            .unwrap(),
+        29.0
+    );
+}
+
+#[wasm_bindgen_test]
 fn value_equality() {
     if !is_temporal_supported() {
         return;
