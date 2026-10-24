@@ -48,13 +48,9 @@ fn like_dictionaries() {
 
     // from() also accepts the richer Temporal instances
     let pdt = get_test_plain_date_time();
-    assert!(Temporal::PlainDate::from_with_plain_date_time(&pdt)
-        .unwrap()
-        .equals(&pd));
+    assert!(Temporal::PlainDate::from_with_plain_date_time(&pdt).equals(&pd));
     assert_eq!(
-        Temporal::PlainTime::from_with_zoned_date_time(&get_test_zoned_date_time())
-            .unwrap()
-            .hour(),
+        Temporal::PlainTime::from_with_zoned_date_time(&get_test_zoned_date_time()).hour(),
         12
     );
     assert_eq!(
@@ -65,9 +61,7 @@ fn like_dictionaries() {
     );
     let zdt = get_test_zoned_date_time();
     assert_eq!(
-        Temporal::Instant::from_with_zoned_date_time(&zdt)
-            .unwrap()
-            .epoch_nanoseconds(),
+        Temporal::Instant::from_with_zoned_date_time(&zdt).epoch_nanoseconds(),
         zdt.epoch_nanoseconds()
     );
 
@@ -960,10 +954,7 @@ fn plain_time_methods() {
     assert_eq!(pt.to_js_string_with_options(&opts).unwrap(), "12:30:46");
 
     let new_pt = Temporal::PlainTime::new_with_hour_and_minute_and_second_and_millisecond_and_microsecond_and_nanosecond(12, 30, 45, 123, 456, 789).unwrap();
-    assert_eq!(
-        Temporal::PlainTime::new().unwrap().to_js_string(),
-        "00:00:00"
-    );
+    assert_eq!(Temporal::PlainTime::new().to_js_string(), "00:00:00");
     assert_eq!(Temporal::PlainTime::new_with_hour(7).unwrap().hour(), 7);
     assert!(new_pt.equals(&pt));
     assert!(Temporal::PlainTime::new_with_hour(24).is_err());
@@ -1271,7 +1262,7 @@ fn duration_methods() {
             0.0, 0.0, 0.0, 0.0, 1.0, 30.0,
         )
         .unwrap();
-    assert!(Temporal::Duration::new().unwrap().blank());
+    assert!(Temporal::Duration::new().blank());
     assert_eq!(new_dur.to_js_string(), "PT1H30M");
     assert!(
         Temporal::Duration::new_with_years_and_months_and_weeks_and_days_and_hours(
