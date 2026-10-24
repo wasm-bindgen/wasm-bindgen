@@ -2142,7 +2142,8 @@ extern "C" {
         fields: &PlainDateTimeFields,
     ) -> Result<PlainDateTime, JsValue>;
 
-    /// The `equals()` method taking a `Temporal.PlainDate`; None.
+    /// The `equals()` method taking a `Temporal.PlainDate`; throws a `RangeError` if midnight on
+    /// the date falls outside the representable range.
     #[wasm_bindgen(method, js_name = equals, catch)]
     pub fn equals_with_plain_date(this: &PlainDateTime, other: &PlainDate)
         -> Result<bool, JsValue>;
@@ -4636,37 +4637,49 @@ extern "C" {
     pub fn compare(one: &PlainYearMonth, two: &PlainYearMonth) -> i32;
 
     /// The `Temporal.PlainYearMonth.from()` static method.
-    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from)]
-    pub fn from_with_plain_date(item: &PlainDate) -> PlainYearMonth;
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the first day of the month falls outside the representable range.
+    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from, catch)]
+    pub fn from_with_plain_date(item: &PlainDate) -> Result<PlainYearMonth, JsValue>;
 
-    /// The `Temporal.PlainYearMonth.from()` static method.
-    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from)]
+    /// The `Temporal.PlainYearMonth.from()` static method; see
+    /// [`PlainYearMonth::from_with_plain_date`] for errors.
+    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_date_and_options(
         item: &PlainDate,
         options: &OverflowOptions,
-    ) -> PlainYearMonth;
+    ) -> Result<PlainYearMonth, JsValue>;
 
     /// The `Temporal.PlainYearMonth.from()` static method.
-    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from)]
-    pub fn from_with_plain_date_time(item: &PlainDateTime) -> PlainYearMonth;
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the first day of the month falls outside the representable range.
+    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from, catch)]
+    pub fn from_with_plain_date_time(item: &PlainDateTime) -> Result<PlainYearMonth, JsValue>;
 
-    /// The `Temporal.PlainYearMonth.from()` static method.
-    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from)]
+    /// The `Temporal.PlainYearMonth.from()` static method; see
+    /// [`PlainYearMonth::from_with_plain_date_time`] for errors.
+    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_date_time_and_options(
         item: &PlainDateTime,
         options: &OverflowOptions,
-    ) -> PlainYearMonth;
+    ) -> Result<PlainYearMonth, JsValue>;
 
     /// The `Temporal.PlainYearMonth.from()` static method.
-    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from)]
-    pub fn from_with_zoned_date_time(item: &ZonedDateTime) -> PlainYearMonth;
+    ///
+    /// # Errors
+    /// Throws a `RangeError` if the first day of the month falls outside the representable range.
+    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from, catch)]
+    pub fn from_with_zoned_date_time(item: &ZonedDateTime) -> Result<PlainYearMonth, JsValue>;
 
-    /// The `Temporal.PlainYearMonth.from()` static method.
-    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from)]
+    /// The `Temporal.PlainYearMonth.from()` static method; see
+    /// [`PlainYearMonth::from_with_zoned_date_time`] for errors.
+    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_zoned_date_time_and_options(
         item: &ZonedDateTime,
         options: &OverflowOptions,
-    ) -> PlainYearMonth;
+    ) -> Result<PlainYearMonth, JsValue>;
 
     /// The `era` accessor property returns a calendar-specific lowercase string
     /// representing the era of this year-month, or `None` if the calendar does not use eras.
@@ -4758,17 +4771,29 @@ extern "C" {
         fields: &PlainYearMonthFields,
     ) -> Result<PlainYearMonth, JsValue>;
 
-    /// The `equals()` method taking a `Temporal.PlainDate`.
-    #[wasm_bindgen(method, js_name = equals)]
-    pub fn equals_with_plain_date(this: &PlainYearMonth, other: &PlainDate) -> bool;
+    /// The `equals()` method taking a `Temporal.PlainDate`; throws a `RangeError` if the first day
+    /// of its month falls outside the representable range.
+    #[wasm_bindgen(method, js_name = equals, catch)]
+    pub fn equals_with_plain_date(
+        this: &PlainYearMonth,
+        other: &PlainDate,
+    ) -> Result<bool, JsValue>;
 
-    /// The `equals()` method taking a `Temporal.PlainDateTime`.
-    #[wasm_bindgen(method, js_name = equals)]
-    pub fn equals_with_plain_date_time(this: &PlainYearMonth, other: &PlainDateTime) -> bool;
+    /// The `equals()` method taking a `Temporal.PlainDateTime`; throws a `RangeError` if the first day
+    /// of its month falls outside the representable range.
+    #[wasm_bindgen(method, js_name = equals, catch)]
+    pub fn equals_with_plain_date_time(
+        this: &PlainYearMonth,
+        other: &PlainDateTime,
+    ) -> Result<bool, JsValue>;
 
-    /// The `equals()` method taking a `Temporal.ZonedDateTime`.
-    #[wasm_bindgen(method, js_name = equals)]
-    pub fn equals_with_zoned_date_time(this: &PlainYearMonth, other: &ZonedDateTime) -> bool;
+    /// The `equals()` method taking a `Temporal.ZonedDateTime`; throws a `RangeError` if the first day
+    /// of its month falls outside the representable range.
+    #[wasm_bindgen(method, js_name = equals, catch)]
+    pub fn equals_with_zoned_date_time(
+        this: &PlainYearMonth,
+        other: &ZonedDateTime,
+    ) -> Result<bool, JsValue>;
 
     /// The `equals()` method taking a property bag; throws a `TypeError` if required fields are missing.
     #[wasm_bindgen(method, js_name = equals, catch)]

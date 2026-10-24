@@ -964,9 +964,25 @@ fn comparison_argument_forms() {
     );
     assert!(get_test_plain_time().equals_with_plain_date_time(&pdt));
     let ym = get_test_plain_year_month();
-    assert!(ym.equals_with_plain_date(&pd));
+    assert!(ym.equals_with_plain_date(&pd).unwrap());
     assert_eq!(ym.until_with_zoned_date_time(&zdt).unwrap().months(), 0.0);
-    assert!(Temporal::PlainYearMonth::from_with_plain_date(&pd).equals(&ym));
+    assert!(Temporal::PlainYearMonth::from_with_plain_date(&pd)
+        .unwrap()
+        .equals(&ym));
+    let coptic_min = Temporal::PlainDate::new(-271821, 4, 19)
+        .unwrap()
+        .with_calendar("coptic")
+        .unwrap();
+    assert!(Temporal::PlainYearMonth::from_with_plain_date(&coptic_min)
+        .unwrap_err()
+        .is_instance_of::<RangeError>());
+    assert!(ym
+        .equals_with_plain_date(&coptic_min)
+        .unwrap_err()
+        .is_instance_of::<RangeError>());
+    assert!(!Temporal::PlainMonthDay::from_with_plain_date(&coptic_min)
+        .equals_with_str("04-19")
+        .unwrap());
     assert!(Temporal::PlainMonthDay::from_with_zoned_date_time(&zdt)
         .equals_with_str("06-15")
         .unwrap());
