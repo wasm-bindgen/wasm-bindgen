@@ -7,7 +7,7 @@ on:
   pull_request_target:
     types: [opened, ready_for_review, synchronize, labeled, unlabeled]
   issues:
-    types: [opened, labeled]
+    types: [opened, labeled, unlabeled]
   issue_comment:
     types: [created]
   # Only same-repo PRs, since GitHub gives fork PRs' review comment runs no
@@ -44,6 +44,8 @@ jobs:
     if: >-
       (github.event_name == 'pull_request_target' && (
         (github.event.action == 'labeled' && startsWith(github.event.label.name, 'bot-')) ||
+        (github.event.action == 'unlabeled' && startsWith(github.event.label.name, 'bot-') &&
+          github.event.label.name != 'bot-review' && github.event.sender.type != 'Bot') ||
         (github.event.label.name == 'merge-ready' &&
           (github.event.action == 'labeled' || github.event.action == 'unlabeled')) ||
         (github.event.action != 'labeled' && github.event.action != 'unlabeled' &&
@@ -52,7 +54,9 @@ jobs:
             github.event.pull_request.user.login == 'wasm-bindgen-bot[bot]')))) ||
       (github.event_name == 'issues' && (
         (github.event.action == 'opened' && github.event.issue.user.type != 'Bot') ||
-        (github.event.action == 'labeled' && startsWith(github.event.label.name, 'bot-')))) ||
+        (github.event.action == 'labeled' && startsWith(github.event.label.name, 'bot-')) ||
+        (github.event.action == 'unlabeled' && startsWith(github.event.label.name, 'bot-') &&
+          github.event.label.name != 'bot-review' && github.event.sender.type != 'Bot'))) ||
       ((github.event_name == 'issue_comment' ||
         (github.event_name == 'pull_request_review_comment' &&
           github.event.pull_request.head.repo.full_name == github.repository)) &&
@@ -66,9 +70,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 100
     concurrency:
-      # Comment, approval and merge-ready runs get their own group rather than
-      # cancelling reviews in progress.
-      group: wasm-bindgen-bot-${{ github.event.pull_request.number || github.event.issue.number || github.run_id }}${{ github.event.comment && format('-{0}', github.event.comment.id) || github.event.review && format('-review-{0}', github.event.review.id) || github.event.label.name == 'merge-ready' && '-merge-ready' || '' }}
+      # Comment, approval and label runs get their own group rather than
+      # cancelling reviews in progress, so removing a command's label cancels
+      # only its own run. bot-review is a review, so it shares their group, and
+      # removing it only drops its result.
+      group: wasm-bindgen-bot-${{ github.event.pull_request.number || github.event.issue.number || github.run_id }}${{ github.event.comment && format('-{0}', github.event.comment.id) || github.event.review && format('-review-{0}', github.event.review.id) || github.event.label && github.event.label.name != 'bot-review' && format('-{0}', github.event.label.name) || '' }}
       cancel-in-progress: true
     permissions:
       contents: read
@@ -80,6 +86,26 @@ jobs:
           cf-aig-token: ${{ secrets.CF_AIG_TOKEN }}
           cf-account-id: ${{ vars.CF_ACCOUNT_ID }}
           cf-gateway-id: ${{ vars.CF_GATEWAY_ID }}
+
+  # Removes merge-ready while a review runs.
+  start:
+    if: >-
+      github.event_name == 'pull_request_target' && !github.event.pull_request.draft &&
+      (github.event.action == 'opened' || github.event.action == 'ready_for_review' ||
+        github.event.action == 'synchronize' ||
+        (github.event.action == 'labeled' && github.event.label.name == 'bot-review')) &&
+      (github.event.pull_request.user.type != 'Bot' ||
+        github.event.pull_request.user.login == 'wasm-bindgen-bot[bot]')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+    steps:
+      - uses: wasm-bindgen/wasm-bindgen-bot/start@main
+        with:
+          app-id: ${{ vars.WASM_BINDGEN_BOT_APP_ID }}
+          private-key: ${{ secrets.WASM_BINDGEN_BOT_PRIVATE_KEY }}
 
   post:
     needs: analyze
