@@ -732,35 +732,58 @@ impl TimeZoneTransitionOptions {
 
 #[wasm_bindgen]
 extern "C" {
-    /// Fields of a `Temporal.PlainDate`, as accepted by `PlainDate.from()` and `with()`. Every field is optional.
+    /// The date fields accepted by `PlainDate.with()`, `PlainMonthDay.with()` and the
+    /// `toPlainDate()` methods: `era`/`era_year`, `year`, `month`/`month_code` and `day`,
+    /// each optional.
     #[wasm_bindgen(extends = Object)]
     #[derive(Clone, Debug)]
-    pub type PlainDateLike;
-
+    pub type PlainDateFields;
     #[wasm_bindgen(method, getter = era)]
-    pub fn get_era(this: &PlainDateLike) -> Option<JsString>;
+    pub fn get_era(this: &PlainDateFields) -> Option<JsString>;
     #[wasm_bindgen(method, setter = era)]
-    pub fn set_era(this: &PlainDateLike, value: &str);
+    pub fn set_era(this: &PlainDateFields, value: &str);
     #[wasm_bindgen(method, getter = eraYear)]
-    pub fn get_era_year(this: &PlainDateLike) -> Option<i32>;
+    pub fn get_era_year(this: &PlainDateFields) -> Option<i32>;
     #[wasm_bindgen(method, setter = eraYear)]
-    pub fn set_era_year(this: &PlainDateLike, value: i32);
+    pub fn set_era_year(this: &PlainDateFields, value: i32);
     #[wasm_bindgen(method, getter = year)]
-    pub fn get_year(this: &PlainDateLike) -> Option<i32>;
+    pub fn get_year(this: &PlainDateFields) -> Option<i32>;
     #[wasm_bindgen(method, setter = year)]
-    pub fn set_year(this: &PlainDateLike, value: i32);
+    pub fn set_year(this: &PlainDateFields, value: i32);
     #[wasm_bindgen(method, getter = month)]
-    pub fn get_month(this: &PlainDateLike) -> Option<u32>;
+    pub fn get_month(this: &PlainDateFields) -> Option<u32>;
     #[wasm_bindgen(method, setter = month)]
-    pub fn set_month(this: &PlainDateLike, value: u32);
+    pub fn set_month(this: &PlainDateFields, value: u32);
     #[wasm_bindgen(method, getter = monthCode)]
-    pub fn get_month_code(this: &PlainDateLike) -> Option<JsString>;
+    pub fn get_month_code(this: &PlainDateFields) -> Option<JsString>;
     #[wasm_bindgen(method, setter = monthCode)]
-    pub fn set_month_code(this: &PlainDateLike, value: &str);
+    pub fn set_month_code(this: &PlainDateFields, value: &str);
     #[wasm_bindgen(method, getter = day)]
-    pub fn get_day(this: &PlainDateLike) -> Option<u32>;
+    pub fn get_day(this: &PlainDateFields) -> Option<u32>;
     #[wasm_bindgen(method, setter = day)]
-    pub fn set_day(this: &PlainDateLike, value: u32);
+    pub fn set_day(this: &PlainDateFields, value: u32);
+}
+
+impl PlainDateFields {
+    /// Creates an empty `PlainDateFields`.
+    pub fn new() -> PlainDateFields {
+        JsCast::unchecked_into(Object::new())
+    }
+}
+
+impl Default for PlainDateFields {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[wasm_bindgen]
+extern "C" {
+    /// The property bag accepted by `PlainDate.from()`: the `PlainDateFields` plus
+    /// `calendar`. `from()` requires `year` (or `era` and `era_year`), `month` (or `month_code`) and `day`.
+    #[wasm_bindgen(extends = PlainDateFields)]
+    #[derive(Clone, Debug)]
+    pub type PlainDateLike;
     #[wasm_bindgen(method, getter = calendar)]
     pub fn get_calendar(this: &PlainDateLike) -> Option<JsString>;
     #[wasm_bindgen(method, setter = calendar)]
@@ -782,11 +805,11 @@ impl Default for PlainDateLike {
 
 #[wasm_bindgen]
 extern "C" {
-    /// Fields of a `Temporal.PlainTime`, as accepted by `PlainTime.from()` and `with()`. Every field is optional.
+    /// The time fields accepted by `PlainTime.from()` and `with()`, each optional.
+    /// `from()` requires at least one of them.
     #[wasm_bindgen(extends = Object)]
     #[derive(Clone, Debug)]
     pub type PlainTimeLike;
-
     #[wasm_bindgen(method, getter = hour)]
     pub fn get_hour(this: &PlainTimeLike) -> Option<u32>;
     #[wasm_bindgen(method, setter = hour)]
@@ -828,63 +851,85 @@ impl Default for PlainTimeLike {
 
 #[wasm_bindgen]
 extern "C" {
-    /// Fields of a `Temporal.PlainDateTime`, as accepted by `PlainDateTime.from()` and `with()`. Every field is optional.
+    /// The date and time fields accepted by `PlainDateTime.with()`, each optional.
     #[wasm_bindgen(extends = Object)]
     #[derive(Clone, Debug)]
-    pub type PlainDateTimeLike;
-
+    pub type PlainDateTimeFields;
     #[wasm_bindgen(method, getter = era)]
-    pub fn get_era(this: &PlainDateTimeLike) -> Option<JsString>;
+    pub fn get_era(this: &PlainDateTimeFields) -> Option<JsString>;
     #[wasm_bindgen(method, setter = era)]
-    pub fn set_era(this: &PlainDateTimeLike, value: &str);
+    pub fn set_era(this: &PlainDateTimeFields, value: &str);
     #[wasm_bindgen(method, getter = eraYear)]
-    pub fn get_era_year(this: &PlainDateTimeLike) -> Option<i32>;
+    pub fn get_era_year(this: &PlainDateTimeFields) -> Option<i32>;
     #[wasm_bindgen(method, setter = eraYear)]
-    pub fn set_era_year(this: &PlainDateTimeLike, value: i32);
+    pub fn set_era_year(this: &PlainDateTimeFields, value: i32);
     #[wasm_bindgen(method, getter = year)]
-    pub fn get_year(this: &PlainDateTimeLike) -> Option<i32>;
+    pub fn get_year(this: &PlainDateTimeFields) -> Option<i32>;
     #[wasm_bindgen(method, setter = year)]
-    pub fn set_year(this: &PlainDateTimeLike, value: i32);
+    pub fn set_year(this: &PlainDateTimeFields, value: i32);
     #[wasm_bindgen(method, getter = month)]
-    pub fn get_month(this: &PlainDateTimeLike) -> Option<u32>;
+    pub fn get_month(this: &PlainDateTimeFields) -> Option<u32>;
     #[wasm_bindgen(method, setter = month)]
-    pub fn set_month(this: &PlainDateTimeLike, value: u32);
+    pub fn set_month(this: &PlainDateTimeFields, value: u32);
     #[wasm_bindgen(method, getter = monthCode)]
-    pub fn get_month_code(this: &PlainDateTimeLike) -> Option<JsString>;
+    pub fn get_month_code(this: &PlainDateTimeFields) -> Option<JsString>;
     #[wasm_bindgen(method, setter = monthCode)]
-    pub fn set_month_code(this: &PlainDateTimeLike, value: &str);
+    pub fn set_month_code(this: &PlainDateTimeFields, value: &str);
     #[wasm_bindgen(method, getter = day)]
-    pub fn get_day(this: &PlainDateTimeLike) -> Option<u32>;
+    pub fn get_day(this: &PlainDateTimeFields) -> Option<u32>;
     #[wasm_bindgen(method, setter = day)]
-    pub fn set_day(this: &PlainDateTimeLike, value: u32);
+    pub fn set_day(this: &PlainDateTimeFields, value: u32);
+    #[wasm_bindgen(method, getter = hour)]
+    pub fn get_hour(this: &PlainDateTimeFields) -> Option<u32>;
+    #[wasm_bindgen(method, setter = hour)]
+    pub fn set_hour(this: &PlainDateTimeFields, value: u32);
+    #[wasm_bindgen(method, getter = minute)]
+    pub fn get_minute(this: &PlainDateTimeFields) -> Option<u32>;
+    #[wasm_bindgen(method, setter = minute)]
+    pub fn set_minute(this: &PlainDateTimeFields, value: u32);
+    #[wasm_bindgen(method, getter = second)]
+    pub fn get_second(this: &PlainDateTimeFields) -> Option<u32>;
+    #[wasm_bindgen(method, setter = second)]
+    pub fn set_second(this: &PlainDateTimeFields, value: u32);
+    #[wasm_bindgen(method, getter = millisecond)]
+    pub fn get_millisecond(this: &PlainDateTimeFields) -> Option<u32>;
+    #[wasm_bindgen(method, setter = millisecond)]
+    pub fn set_millisecond(this: &PlainDateTimeFields, value: u32);
+    #[wasm_bindgen(method, getter = microsecond)]
+    pub fn get_microsecond(this: &PlainDateTimeFields) -> Option<u32>;
+    #[wasm_bindgen(method, setter = microsecond)]
+    pub fn set_microsecond(this: &PlainDateTimeFields, value: u32);
+    #[wasm_bindgen(method, getter = nanosecond)]
+    pub fn get_nanosecond(this: &PlainDateTimeFields) -> Option<u32>;
+    #[wasm_bindgen(method, setter = nanosecond)]
+    pub fn set_nanosecond(this: &PlainDateTimeFields, value: u32);
+}
+
+impl PlainDateTimeFields {
+    /// Creates an empty `PlainDateTimeFields`.
+    pub fn new() -> PlainDateTimeFields {
+        JsCast::unchecked_into(Object::new())
+    }
+}
+
+impl Default for PlainDateTimeFields {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[wasm_bindgen]
+extern "C" {
+    /// The property bag accepted by `PlainDateTime.from()`: the `PlainDateTimeFields`
+    /// plus `calendar`. `from()` requires `year` (or `era` and `era_year`), `month` (or `month_code`) and `day`.
+    /// Omitted time fields default to zero.
+    #[wasm_bindgen(extends = PlainDateTimeFields)]
+    #[derive(Clone, Debug)]
+    pub type PlainDateTimeLike;
     #[wasm_bindgen(method, getter = calendar)]
     pub fn get_calendar(this: &PlainDateTimeLike) -> Option<JsString>;
     #[wasm_bindgen(method, setter = calendar)]
     pub fn set_calendar(this: &PlainDateTimeLike, value: &str);
-    #[wasm_bindgen(method, getter = hour)]
-    pub fn get_hour(this: &PlainDateTimeLike) -> Option<u32>;
-    #[wasm_bindgen(method, setter = hour)]
-    pub fn set_hour(this: &PlainDateTimeLike, value: u32);
-    #[wasm_bindgen(method, getter = minute)]
-    pub fn get_minute(this: &PlainDateTimeLike) -> Option<u32>;
-    #[wasm_bindgen(method, setter = minute)]
-    pub fn set_minute(this: &PlainDateTimeLike, value: u32);
-    #[wasm_bindgen(method, getter = second)]
-    pub fn get_second(this: &PlainDateTimeLike) -> Option<u32>;
-    #[wasm_bindgen(method, setter = second)]
-    pub fn set_second(this: &PlainDateTimeLike, value: u32);
-    #[wasm_bindgen(method, getter = millisecond)]
-    pub fn get_millisecond(this: &PlainDateTimeLike) -> Option<u32>;
-    #[wasm_bindgen(method, setter = millisecond)]
-    pub fn set_millisecond(this: &PlainDateTimeLike, value: u32);
-    #[wasm_bindgen(method, getter = microsecond)]
-    pub fn get_microsecond(this: &PlainDateTimeLike) -> Option<u32>;
-    #[wasm_bindgen(method, setter = microsecond)]
-    pub fn set_microsecond(this: &PlainDateTimeLike, value: u32);
-    #[wasm_bindgen(method, getter = nanosecond)]
-    pub fn get_nanosecond(this: &PlainDateTimeLike) -> Option<u32>;
-    #[wasm_bindgen(method, setter = nanosecond)]
-    pub fn set_nanosecond(this: &PlainDateTimeLike, value: u32);
 }
 
 impl PlainDateTimeLike {
@@ -902,71 +947,94 @@ impl Default for PlainDateTimeLike {
 
 #[wasm_bindgen]
 extern "C" {
-    /// Fields of a `Temporal.ZonedDateTime`, as accepted by `ZonedDateTime.from()` and `with()`. Every field is optional.
+    /// The date, time and `offset` fields accepted by `ZonedDateTime.with()`, each
+    /// optional.
     #[wasm_bindgen(extends = Object)]
     #[derive(Clone, Debug)]
-    pub type ZonedDateTimeLike;
-
+    pub type ZonedDateTimeFields;
     #[wasm_bindgen(method, getter = era)]
-    pub fn get_era(this: &ZonedDateTimeLike) -> Option<JsString>;
+    pub fn get_era(this: &ZonedDateTimeFields) -> Option<JsString>;
     #[wasm_bindgen(method, setter = era)]
-    pub fn set_era(this: &ZonedDateTimeLike, value: &str);
+    pub fn set_era(this: &ZonedDateTimeFields, value: &str);
     #[wasm_bindgen(method, getter = eraYear)]
-    pub fn get_era_year(this: &ZonedDateTimeLike) -> Option<i32>;
+    pub fn get_era_year(this: &ZonedDateTimeFields) -> Option<i32>;
     #[wasm_bindgen(method, setter = eraYear)]
-    pub fn set_era_year(this: &ZonedDateTimeLike, value: i32);
+    pub fn set_era_year(this: &ZonedDateTimeFields, value: i32);
     #[wasm_bindgen(method, getter = year)]
-    pub fn get_year(this: &ZonedDateTimeLike) -> Option<i32>;
+    pub fn get_year(this: &ZonedDateTimeFields) -> Option<i32>;
     #[wasm_bindgen(method, setter = year)]
-    pub fn set_year(this: &ZonedDateTimeLike, value: i32);
+    pub fn set_year(this: &ZonedDateTimeFields, value: i32);
     #[wasm_bindgen(method, getter = month)]
-    pub fn get_month(this: &ZonedDateTimeLike) -> Option<u32>;
+    pub fn get_month(this: &ZonedDateTimeFields) -> Option<u32>;
     #[wasm_bindgen(method, setter = month)]
-    pub fn set_month(this: &ZonedDateTimeLike, value: u32);
+    pub fn set_month(this: &ZonedDateTimeFields, value: u32);
     #[wasm_bindgen(method, getter = monthCode)]
-    pub fn get_month_code(this: &ZonedDateTimeLike) -> Option<JsString>;
+    pub fn get_month_code(this: &ZonedDateTimeFields) -> Option<JsString>;
     #[wasm_bindgen(method, setter = monthCode)]
-    pub fn set_month_code(this: &ZonedDateTimeLike, value: &str);
+    pub fn set_month_code(this: &ZonedDateTimeFields, value: &str);
     #[wasm_bindgen(method, getter = day)]
-    pub fn get_day(this: &ZonedDateTimeLike) -> Option<u32>;
+    pub fn get_day(this: &ZonedDateTimeFields) -> Option<u32>;
     #[wasm_bindgen(method, setter = day)]
-    pub fn set_day(this: &ZonedDateTimeLike, value: u32);
+    pub fn set_day(this: &ZonedDateTimeFields, value: u32);
+    #[wasm_bindgen(method, getter = hour)]
+    pub fn get_hour(this: &ZonedDateTimeFields) -> Option<u32>;
+    #[wasm_bindgen(method, setter = hour)]
+    pub fn set_hour(this: &ZonedDateTimeFields, value: u32);
+    #[wasm_bindgen(method, getter = minute)]
+    pub fn get_minute(this: &ZonedDateTimeFields) -> Option<u32>;
+    #[wasm_bindgen(method, setter = minute)]
+    pub fn set_minute(this: &ZonedDateTimeFields, value: u32);
+    #[wasm_bindgen(method, getter = second)]
+    pub fn get_second(this: &ZonedDateTimeFields) -> Option<u32>;
+    #[wasm_bindgen(method, setter = second)]
+    pub fn set_second(this: &ZonedDateTimeFields, value: u32);
+    #[wasm_bindgen(method, getter = millisecond)]
+    pub fn get_millisecond(this: &ZonedDateTimeFields) -> Option<u32>;
+    #[wasm_bindgen(method, setter = millisecond)]
+    pub fn set_millisecond(this: &ZonedDateTimeFields, value: u32);
+    #[wasm_bindgen(method, getter = microsecond)]
+    pub fn get_microsecond(this: &ZonedDateTimeFields) -> Option<u32>;
+    #[wasm_bindgen(method, setter = microsecond)]
+    pub fn set_microsecond(this: &ZonedDateTimeFields, value: u32);
+    #[wasm_bindgen(method, getter = nanosecond)]
+    pub fn get_nanosecond(this: &ZonedDateTimeFields) -> Option<u32>;
+    #[wasm_bindgen(method, setter = nanosecond)]
+    pub fn set_nanosecond(this: &ZonedDateTimeFields, value: u32);
+    #[wasm_bindgen(method, getter = offset)]
+    pub fn get_offset(this: &ZonedDateTimeFields) -> Option<JsString>;
+    #[wasm_bindgen(method, setter = offset)]
+    pub fn set_offset(this: &ZonedDateTimeFields, value: &str);
+}
+
+impl ZonedDateTimeFields {
+    /// Creates an empty `ZonedDateTimeFields`.
+    pub fn new() -> ZonedDateTimeFields {
+        JsCast::unchecked_into(Object::new())
+    }
+}
+
+impl Default for ZonedDateTimeFields {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[wasm_bindgen]
+extern "C" {
+    /// The property bag accepted by `ZonedDateTime.from()`: the `ZonedDateTimeFields`
+    /// plus `calendar` and `time_zone`. `from()` requires `time_zone`, `year` (or `era`
+    /// and `era_year`), `month` (or `month_code`) and `day`.
+    #[wasm_bindgen(extends = ZonedDateTimeFields)]
+    #[derive(Clone, Debug)]
+    pub type ZonedDateTimeLike;
     #[wasm_bindgen(method, getter = calendar)]
     pub fn get_calendar(this: &ZonedDateTimeLike) -> Option<JsString>;
     #[wasm_bindgen(method, setter = calendar)]
     pub fn set_calendar(this: &ZonedDateTimeLike, value: &str);
-    #[wasm_bindgen(method, getter = hour)]
-    pub fn get_hour(this: &ZonedDateTimeLike) -> Option<u32>;
-    #[wasm_bindgen(method, setter = hour)]
-    pub fn set_hour(this: &ZonedDateTimeLike, value: u32);
-    #[wasm_bindgen(method, getter = minute)]
-    pub fn get_minute(this: &ZonedDateTimeLike) -> Option<u32>;
-    #[wasm_bindgen(method, setter = minute)]
-    pub fn set_minute(this: &ZonedDateTimeLike, value: u32);
-    #[wasm_bindgen(method, getter = second)]
-    pub fn get_second(this: &ZonedDateTimeLike) -> Option<u32>;
-    #[wasm_bindgen(method, setter = second)]
-    pub fn set_second(this: &ZonedDateTimeLike, value: u32);
-    #[wasm_bindgen(method, getter = millisecond)]
-    pub fn get_millisecond(this: &ZonedDateTimeLike) -> Option<u32>;
-    #[wasm_bindgen(method, setter = millisecond)]
-    pub fn set_millisecond(this: &ZonedDateTimeLike, value: u32);
-    #[wasm_bindgen(method, getter = microsecond)]
-    pub fn get_microsecond(this: &ZonedDateTimeLike) -> Option<u32>;
-    #[wasm_bindgen(method, setter = microsecond)]
-    pub fn set_microsecond(this: &ZonedDateTimeLike, value: u32);
-    #[wasm_bindgen(method, getter = nanosecond)]
-    pub fn get_nanosecond(this: &ZonedDateTimeLike) -> Option<u32>;
-    #[wasm_bindgen(method, setter = nanosecond)]
-    pub fn set_nanosecond(this: &ZonedDateTimeLike, value: u32);
     #[wasm_bindgen(method, getter = timeZone)]
     pub fn get_time_zone(this: &ZonedDateTimeLike) -> Option<JsString>;
     #[wasm_bindgen(method, setter = timeZone)]
     pub fn set_time_zone(this: &ZonedDateTimeLike, value: &str);
-    #[wasm_bindgen(method, getter = offset)]
-    pub fn get_offset(this: &ZonedDateTimeLike) -> Option<JsString>;
-    #[wasm_bindgen(method, setter = offset)]
-    pub fn set_offset(this: &ZonedDateTimeLike, value: &str);
 }
 
 impl ZonedDateTimeLike {
@@ -984,31 +1052,54 @@ impl Default for ZonedDateTimeLike {
 
 #[wasm_bindgen]
 extern "C" {
-    /// Fields of a `Temporal.PlainYearMonth`, as accepted by `PlainYearMonth.from()` and `with()`. Every field is optional.
+    /// The fields accepted by `PlainYearMonth.with()`: `era`/`era_year`, `year` and
+    /// `month`/`month_code`, each optional.
     #[wasm_bindgen(extends = Object)]
     #[derive(Clone, Debug)]
-    pub type PlainYearMonthLike;
-
+    pub type PlainYearMonthFields;
     #[wasm_bindgen(method, getter = era)]
-    pub fn get_era(this: &PlainYearMonthLike) -> Option<JsString>;
+    pub fn get_era(this: &PlainYearMonthFields) -> Option<JsString>;
     #[wasm_bindgen(method, setter = era)]
-    pub fn set_era(this: &PlainYearMonthLike, value: &str);
+    pub fn set_era(this: &PlainYearMonthFields, value: &str);
     #[wasm_bindgen(method, getter = eraYear)]
-    pub fn get_era_year(this: &PlainYearMonthLike) -> Option<i32>;
+    pub fn get_era_year(this: &PlainYearMonthFields) -> Option<i32>;
     #[wasm_bindgen(method, setter = eraYear)]
-    pub fn set_era_year(this: &PlainYearMonthLike, value: i32);
+    pub fn set_era_year(this: &PlainYearMonthFields, value: i32);
     #[wasm_bindgen(method, getter = year)]
-    pub fn get_year(this: &PlainYearMonthLike) -> Option<i32>;
+    pub fn get_year(this: &PlainYearMonthFields) -> Option<i32>;
     #[wasm_bindgen(method, setter = year)]
-    pub fn set_year(this: &PlainYearMonthLike, value: i32);
+    pub fn set_year(this: &PlainYearMonthFields, value: i32);
     #[wasm_bindgen(method, getter = month)]
-    pub fn get_month(this: &PlainYearMonthLike) -> Option<u32>;
+    pub fn get_month(this: &PlainYearMonthFields) -> Option<u32>;
     #[wasm_bindgen(method, setter = month)]
-    pub fn set_month(this: &PlainYearMonthLike, value: u32);
+    pub fn set_month(this: &PlainYearMonthFields, value: u32);
     #[wasm_bindgen(method, getter = monthCode)]
-    pub fn get_month_code(this: &PlainYearMonthLike) -> Option<JsString>;
+    pub fn get_month_code(this: &PlainYearMonthFields) -> Option<JsString>;
     #[wasm_bindgen(method, setter = monthCode)]
-    pub fn set_month_code(this: &PlainYearMonthLike, value: &str);
+    pub fn set_month_code(this: &PlainYearMonthFields, value: &str);
+}
+
+impl PlainYearMonthFields {
+    /// Creates an empty `PlainYearMonthFields`.
+    pub fn new() -> PlainYearMonthFields {
+        JsCast::unchecked_into(Object::new())
+    }
+}
+
+impl Default for PlainYearMonthFields {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[wasm_bindgen]
+extern "C" {
+    /// The property bag accepted by `PlainYearMonth.from()`: the `PlainYearMonthFields`
+    /// plus `calendar`. `from()` requires `year` (or `era` and `era_year`) and `month`
+    /// (or `month_code`).
+    #[wasm_bindgen(extends = PlainYearMonthFields)]
+    #[derive(Clone, Debug)]
+    pub type PlainYearMonthLike;
     #[wasm_bindgen(method, getter = calendar)]
     pub fn get_calendar(this: &PlainYearMonthLike) -> Option<JsString>;
     #[wasm_bindgen(method, setter = calendar)]
@@ -1030,35 +1121,12 @@ impl Default for PlainYearMonthLike {
 
 #[wasm_bindgen]
 extern "C" {
-    /// Fields of a `Temporal.PlainMonthDay`, as accepted by `PlainMonthDay.from()` and `with()`. Every field is optional.
-    #[wasm_bindgen(extends = Object)]
+    /// The property bag accepted by `PlainMonthDay.from()`: the `PlainDateFields` plus
+    /// `calendar`. `from()` requires `day` and either `month_code`, or `month` together
+    /// with `year` in calendars other than ISO 8601.
+    #[wasm_bindgen(extends = PlainDateFields)]
     #[derive(Clone, Debug)]
     pub type PlainMonthDayLike;
-
-    #[wasm_bindgen(method, getter = era)]
-    pub fn get_era(this: &PlainMonthDayLike) -> Option<JsString>;
-    #[wasm_bindgen(method, setter = era)]
-    pub fn set_era(this: &PlainMonthDayLike, value: &str);
-    #[wasm_bindgen(method, getter = eraYear)]
-    pub fn get_era_year(this: &PlainMonthDayLike) -> Option<i32>;
-    #[wasm_bindgen(method, setter = eraYear)]
-    pub fn set_era_year(this: &PlainMonthDayLike, value: i32);
-    #[wasm_bindgen(method, getter = year)]
-    pub fn get_year(this: &PlainMonthDayLike) -> Option<i32>;
-    #[wasm_bindgen(method, setter = year)]
-    pub fn set_year(this: &PlainMonthDayLike, value: i32);
-    #[wasm_bindgen(method, getter = month)]
-    pub fn get_month(this: &PlainMonthDayLike) -> Option<u32>;
-    #[wasm_bindgen(method, setter = month)]
-    pub fn set_month(this: &PlainMonthDayLike, value: u32);
-    #[wasm_bindgen(method, getter = monthCode)]
-    pub fn get_month_code(this: &PlainMonthDayLike) -> Option<JsString>;
-    #[wasm_bindgen(method, setter = monthCode)]
-    pub fn set_month_code(this: &PlainMonthDayLike, value: &str);
-    #[wasm_bindgen(method, getter = day)]
-    pub fn get_day(this: &PlainMonthDayLike) -> Option<u32>;
-    #[wasm_bindgen(method, setter = day)]
-    pub fn set_day(this: &PlainMonthDayLike, value: u32);
     #[wasm_bindgen(method, getter = calendar)]
     pub fn get_calendar(this: &PlainMonthDayLike) -> Option<JsString>;
     #[wasm_bindgen(method, setter = calendar)]
@@ -1080,11 +1148,11 @@ impl Default for PlainMonthDayLike {
 
 #[wasm_bindgen]
 extern "C" {
-    /// Fields of a `Temporal.Duration`, as accepted by `Duration.from()` and `with()`. Every field is optional.
+    /// The duration fields accepted by `Duration.from()` and `with()`, each optional.
+    /// At least one of them must be set.
     #[wasm_bindgen(extends = Object)]
     #[derive(Clone, Debug)]
     pub type DurationLike;
-
     #[wasm_bindgen(method, getter = years)]
     pub fn get_years(this: &DurationLike) -> Option<f64>;
     #[wasm_bindgen(method, setter = years)]
@@ -1825,7 +1893,10 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(this: &PlainDateTime, info: &PlainDateTimeLike) -> Result<PlainDateTime, JsValue>;
+    pub fn with(
+        this: &PlainDateTime,
+        fields: &PlainDateTimeFields,
+    ) -> Result<PlainDateTime, JsValue>;
 
     /// The `with()` method returns a new `Temporal.PlainDateTime` object with some
     /// fields replaced by new values.
@@ -1838,7 +1909,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = with, catch)]
     pub fn with_with_options(
         this: &PlainDateTime,
-        info: &PlainDateTimeLike,
+        fields: &PlainDateTimeFields,
         options: &OverflowOptions,
     ) -> Result<PlainDateTime, JsValue>;
 
@@ -2414,7 +2485,10 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(this: &ZonedDateTime, info: &ZonedDateTimeLike) -> Result<ZonedDateTime, JsValue>;
+    pub fn with(
+        this: &ZonedDateTime,
+        fields: &ZonedDateTimeFields,
+    ) -> Result<ZonedDateTime, JsValue>;
 
     /// The `with()` method returns a new `Temporal.ZonedDateTime` object with some fields
     /// replaced by new values.
@@ -2428,7 +2502,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = with, catch)]
     pub fn with_with_options(
         this: &ZonedDateTime,
-        info: &ZonedDateTimeLike,
+        fields: &ZonedDateTimeFields,
         options: &ZonedDateTimeAssignmentOptions,
     ) -> Result<ZonedDateTime, JsValue>;
 
@@ -2985,7 +3059,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(this: &Duration, duration_like: &DurationLike) -> Result<Duration, JsValue>;
+    pub fn with(this: &Duration, fields: &DurationLike) -> Result<Duration, JsValue>;
 
     /// The `add()` method returns a new `Temporal.Duration` object with the
     /// sum of this duration and another duration.
@@ -3304,7 +3378,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(this: &PlainTime, time_like: &PlainTimeLike) -> Result<PlainTime, JsValue>;
+    pub fn with(this: &PlainTime, fields: &PlainTimeLike) -> Result<PlainTime, JsValue>;
 
     /// The `with()` method returns a new `Temporal.PlainTime` object with some
     /// fields replaced by new values.
@@ -3317,7 +3391,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = with, catch)]
     pub fn with_with_options(
         this: &PlainTime,
-        time_like: &PlainTimeLike,
+        fields: &PlainTimeLike,
         options: &OverflowOptions,
     ) -> Result<PlainTime, JsValue>;
 
@@ -3637,7 +3711,7 @@ extern "C" {
     #[wasm_bindgen(method, catch)]
     pub fn with(
         this: &PlainYearMonth,
-        info: &PlainYearMonthLike,
+        fields: &PlainYearMonthFields,
     ) -> Result<PlainYearMonth, JsValue>;
 
     /// The `with()` method returns a new `Temporal.PlainYearMonth` object with some
@@ -3651,7 +3725,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = with, catch)]
     pub fn with_with_options(
         this: &PlainYearMonth,
-        info: &PlainYearMonthLike,
+        fields: &PlainYearMonthFields,
         options: &OverflowOptions,
     ) -> Result<PlainYearMonth, JsValue>;
 
@@ -3764,9 +3838,9 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/toPlainDate)
     #[wasm_bindgen(method, js_name = toPlainDate, catch)]
-    pub fn to_plain_date(
+    pub fn to_plain_date_with_fields(
         this: &PlainYearMonth,
-        fields: &PlainDateLike,
+        fields: &PlainDateFields,
     ) -> Result<PlainDate, JsValue>;
 
     /// The `toLocaleString()` method returns a language-sensitive string representation
@@ -3836,6 +3910,16 @@ extern "C" {
         this: &PlainYearMonth,
         options: &ShowCalendarOptions,
     ) -> Result<JsString, JsValue>;
+}
+
+impl PlainYearMonth {
+    /// The `toPlainDate()` method returns a `Temporal.PlainDate` object representing
+    /// this year-month on the given day of the month; see [`PlainYearMonth::to_plain_date_with_fields`] for errors.
+    pub fn to_plain_date(&self, day: u32) -> Result<PlainDate, JsValue> {
+        let fields = PlainDateFields::new();
+        fields.set_day(day);
+        self.to_plain_date_with_fields(&fields)
+    }
 }
 
 #[wasm_bindgen]
@@ -3956,7 +4040,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(this: &PlainMonthDay, info: &PlainMonthDayLike) -> Result<PlainMonthDay, JsValue>;
+    pub fn with(this: &PlainMonthDay, fields: &PlainDateFields) -> Result<PlainMonthDay, JsValue>;
 
     /// The `with()` method returns a new `Temporal.PlainMonthDay` object with some
     /// fields replaced by new values.
@@ -3969,7 +4053,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = with, catch)]
     pub fn with_with_options(
         this: &PlainMonthDay,
-        info: &PlainMonthDayLike,
+        fields: &PlainDateFields,
         options: &OverflowOptions,
     ) -> Result<PlainMonthDay, JsValue>;
 
@@ -3983,9 +4067,9 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/toPlainDate)
     #[wasm_bindgen(method, js_name = toPlainDate, catch)]
-    pub fn to_plain_date(
+    pub fn to_plain_date_with_fields(
         this: &PlainMonthDay,
-        fields: &PlainDateLike,
+        fields: &PlainDateFields,
     ) -> Result<PlainDate, JsValue>;
 
     /// The `toLocaleString()` method returns a language-sensitive string representation
@@ -4055,6 +4139,16 @@ extern "C" {
         this: &PlainMonthDay,
         options: &ShowCalendarOptions,
     ) -> Result<JsString, JsValue>;
+}
+
+impl PlainMonthDay {
+    /// The `toPlainDate()` method returns a `Temporal.PlainDate` object representing
+    /// this month-day in the given year; see [`PlainMonthDay::to_plain_date_with_fields`] for errors.
+    pub fn to_plain_date(&self, year: i32) -> Result<PlainDate, JsValue> {
+        let fields = PlainDateFields::new();
+        fields.set_year(year);
+        self.to_plain_date_with_fields(&fields)
+    }
 }
 
 #[wasm_bindgen]
@@ -4292,7 +4386,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(this: &PlainDate, info: &PlainDateLike) -> Result<PlainDate, JsValue>;
+    pub fn with(this: &PlainDate, fields: &PlainDateFields) -> Result<PlainDate, JsValue>;
 
     /// The `with()` method returns a new `Temporal.PlainDate` object with some
     /// fields replaced by new values.
@@ -4305,7 +4399,7 @@ extern "C" {
     #[wasm_bindgen(method, js_name = with, catch)]
     pub fn with_with_options(
         this: &PlainDate,
-        info: &PlainDateLike,
+        fields: &PlainDateFields,
         options: &OverflowOptions,
     ) -> Result<PlainDate, JsValue>;
 

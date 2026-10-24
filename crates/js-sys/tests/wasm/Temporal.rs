@@ -16,14 +16,14 @@ extern "C" {
     fn get_test_duration() -> Temporal::Duration;
 }
 
-fn day_fields(day: u32) -> Temporal::PlainDateLike {
-    let fields = Temporal::PlainDateLike::new();
+fn day_fields(day: u32) -> Temporal::PlainDateFields {
+    let fields = Temporal::PlainDateFields::new();
     fields.set_day(day);
     fields
 }
 
-fn year_fields(year: i32) -> Temporal::PlainDateLike {
-    let fields = Temporal::PlainDateLike::new();
+fn year_fields(year: i32) -> Temporal::PlainDateFields {
+    let fields = Temporal::PlainDateFields::new();
     fields.set_year(year);
     fields
 }
@@ -73,7 +73,7 @@ fn like_dictionaries() {
     zdt_fields.set_time_zone("UTC");
     let zdt = Temporal::ZonedDateTime::from_with_zoned_date_time_like(&zdt_fields).unwrap();
     assert_eq!(zdt.time_zone_id(), "UTC");
-    let shifted = Temporal::ZonedDateTimeLike::new();
+    let shifted = Temporal::ZonedDateTimeFields::new();
     shifted.set_hour(18);
     assert_eq!(zdt.with(&shifted).unwrap().hour(), 18);
 
@@ -997,7 +997,11 @@ fn plain_year_month_methods() {
     assert_eq!(duration.months(), 3.0);
 
     // Test toPlainDate
-    let pd = pym.to_plain_date(&day_fields(15)).unwrap();
+    let pd = pym.to_plain_date(15).unwrap();
+    assert!(pym
+        .to_plain_date_with_fields(&day_fields(15))
+        .unwrap()
+        .equals(&pd));
     assert_eq!(pd.year(), pym.year());
     assert_eq!(pd.month(), pym.month());
 
@@ -1070,7 +1074,11 @@ fn plain_month_day_methods() {
     assert!(pmd.equals(&pmd2));
 
     // Test toPlainDate
-    let pd = pmd.to_plain_date(&year_fields(2022)).unwrap();
+    let pd = pmd.to_plain_date(2022).unwrap();
+    assert!(pmd
+        .to_plain_date_with_fields(&year_fields(2022))
+        .unwrap()
+        .equals(&pd));
     assert_eq!(pd.day(), pmd.day());
 
     // Test toString/toJSON

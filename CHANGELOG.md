@@ -16,7 +16,8 @@
 * Reworked the `js_sys::Temporal` bindings and `Date::to_temporal_instant`,
   which stay behind `js_sys_unstable_apis`, against the final Stage 4
   specification and reshaped them to the web-sys conventions: inputs are typed (`&Duration`, `&PlainTime`, `*Like`
-  dictionaries such as `PlainDateLike` for `from` and `with`, `&str` time zones
+  dictionaries such as `PlainDateLike` for `from` and calendar-free `*Fields`
+  dictionaries for `with`, `&str` time zones
   and calendars, `&Self` for `until`/`since`/`equals`/`compare`), unions expand
   to `from_with_str`/`from_with_plain_date_like`/`from_with_plain_date_time` and
   `to_zoned_date_time_with_str`/`_with_to_zoned_date_time_item`, and optional
