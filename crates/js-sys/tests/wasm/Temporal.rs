@@ -934,6 +934,51 @@ fn duration_argument_forms() {
 }
 
 #[wasm_bindgen_test]
+fn comparison_argument_forms() {
+    if !is_temporal_supported() {
+        return;
+    }
+    let pd = get_test_plain_date();
+    let pdt = get_test_plain_date_time();
+    let zdt = get_test_zoned_date_time();
+    assert!(pd.equals_with_str("2022-06-15").unwrap());
+    assert!(pd.equals_with_plain_date_time(&pdt));
+    assert!(pd.equals_with_zoned_date_time(&zdt));
+    assert!(pd
+        .equals_with_plain_date_like(&Temporal::PlainDateLike::new())
+        .unwrap_err()
+        .is_instance_of::<TypeError>());
+    assert_eq!(pd.until_with_str("2022-06-20").unwrap().days(), 5.0);
+    assert_eq!(pd.since_with_plain_date_time(&pdt).unwrap().days(), 0.0);
+    let opts = Temporal::DifferenceOptions::new();
+    opts.set_largest_unit(Temporal::LargestUnit::Hour);
+    assert_eq!(
+        pdt.until_with_str_and_options("2022-06-16T12:30:45.123456789", &opts)
+            .unwrap()
+            .hours(),
+        24.0
+    );
+    assert!(!pdt.equals_with_plain_date(&pd).unwrap());
+    assert!(zdt
+        .equals_with_str("2022-06-15T12:30:45.123456789-07:00[America/Los_Angeles]")
+        .unwrap());
+    assert_eq!(
+        get_test_instant()
+            .until_with_zoned_date_time(&zdt)
+            .seconds(),
+        7.0 * 3600.0
+    );
+    assert!(get_test_plain_time().equals_with_plain_date_time(&pdt));
+    let ym = get_test_plain_year_month();
+    assert!(ym.equals_with_plain_date(&pd));
+    assert_eq!(ym.until_with_zoned_date_time(&zdt).unwrap().months(), 0.0);
+    assert!(Temporal::PlainYearMonth::from_with_plain_date(&pd).equals(&ym));
+    assert!(Temporal::PlainMonthDay::from_with_zoned_date_time(&zdt)
+        .equals_with_str("06-15")
+        .unwrap());
+}
+
+#[wasm_bindgen_test]
 fn value_equality() {
     if !is_temporal_supported() {
         return;

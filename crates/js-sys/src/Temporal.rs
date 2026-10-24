@@ -1485,6 +1485,14 @@ extern "C" {
     #[wasm_bindgen(method, catch)]
     pub fn add(this: &Instant, duration: &Duration) -> Result<Instant, JsValue>;
 
+    /// The `equals()` method taking a `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, js_name = equals)]
+    pub fn equals_with_zoned_date_time(this: &Instant, other: &ZonedDateTime) -> bool;
+
+    /// The `equals()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid.
+    #[wasm_bindgen(method, js_name = equals, catch)]
+    pub fn equals_with_str(this: &Instant, other: &str) -> Result<bool, JsValue>;
+
     /// The `subtract()` method returns a new `Temporal.Instant` object with the
     /// duration subtracted from this instant. The years, months, weeks, and days
     /// fields of the duration must be zero.
@@ -1559,6 +1567,32 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn since(this: &Instant, other: &Instant) -> Duration;
 
+    /// The `until()` method taking a `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, js_name = until)]
+    pub fn until_with_zoned_date_time(this: &Instant, other: &ZonedDateTime) -> Duration;
+
+    /// The `until()` method taking a `Temporal.ZonedDateTime` and options; see [`Instant::until_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_zoned_date_time_and_options(
+        this: &Instant,
+        other: &ZonedDateTime,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_str(this: &Instant, other: &str) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking an ISO 8601 string and options; see [`Instant::until_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_str_and_options(
+        this: &Instant,
+        other: &str,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this instant.
     ///
@@ -1586,6 +1620,32 @@ extern "C" {
         this: &Instant,
         round_to: &RoundToOptions,
     ) -> Result<Instant, JsValue>;
+
+    /// The `since()` method taking a `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, js_name = since)]
+    pub fn since_with_zoned_date_time(this: &Instant, other: &ZonedDateTime) -> Duration;
+
+    /// The `since()` method taking a `Temporal.ZonedDateTime` and options; see [`Instant::since_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_zoned_date_time_and_options(
+        this: &Instant,
+        other: &ZonedDateTime,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_str(this: &Instant, other: &str) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking an ISO 8601 string and options; see [`Instant::since_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_str_and_options(
+        this: &Instant,
+        other: &str,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
 
     /// Shorthand for `round()` with only `smallestUnit` set.
     #[wasm_bindgen(method, js_name = round, catch)]
@@ -2030,6 +2090,26 @@ extern "C" {
         fields: &PlainDateTimeFields,
     ) -> Result<PlainDateTime, JsValue>;
 
+    /// The `equals()` method taking a `Temporal.PlainDate`; None.
+    #[wasm_bindgen(method, js_name = equals, catch)]
+    pub fn equals_with_plain_date(this: &PlainDateTime, other: &PlainDate)
+        -> Result<bool, JsValue>;
+
+    /// The `equals()` method taking a `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, js_name = equals)]
+    pub fn equals_with_zoned_date_time(this: &PlainDateTime, other: &ZonedDateTime) -> bool;
+
+    /// The `equals()` method taking a property bag; throws a `TypeError` if required fields are missing.
+    #[wasm_bindgen(method, js_name = equals, catch)]
+    pub fn equals_with_plain_date_time_like(
+        this: &PlainDateTime,
+        other: &PlainDateTimeLike,
+    ) -> Result<bool, JsValue>;
+
+    /// The `equals()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid.
+    #[wasm_bindgen(method, js_name = equals, catch)]
+    pub fn equals_with_str(this: &PlainDateTime, other: &str) -> Result<bool, JsValue>;
+
     /// The `with()` method returns a new `Temporal.PlainDateTime` object with some
     /// fields replaced by new values.
     ///
@@ -2272,6 +2352,67 @@ extern "C" {
     #[wasm_bindgen(method, catch)]
     pub fn since(this: &PlainDateTime, other: &PlainDateTime) -> Result<Duration, JsValue>;
 
+    /// The `until()` method taking a `Temporal.PlainDate`; see [`PlainDateTime::until`] for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_plain_date(
+        this: &PlainDateTime,
+        other: &PlainDate,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking a `Temporal.PlainDate` and options; see [`PlainDateTime::until_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_plain_date_and_options(
+        this: &PlainDateTime,
+        other: &PlainDate,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking a `Temporal.ZonedDateTime`; see [`PlainDateTime::until`] for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_zoned_date_time(
+        this: &PlainDateTime,
+        other: &ZonedDateTime,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking a `Temporal.ZonedDateTime` and options; see [`PlainDateTime::until_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_zoned_date_time_and_options(
+        this: &PlainDateTime,
+        other: &ZonedDateTime,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking a property bag; throws a `TypeError` if required fields are missing; see [`PlainDateTime::until`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_plain_date_time_like(
+        this: &PlainDateTime,
+        other: &PlainDateTimeLike,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking a property bag and options; see [`PlainDateTime::until_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_plain_date_time_like_and_options(
+        this: &PlainDateTime,
+        other: &PlainDateTimeLike,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`PlainDateTime::until`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_str(this: &PlainDateTime, other: &str) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking an ISO 8601 string and options; see [`PlainDateTime::until_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_str_and_options(
+        this: &PlainDateTime,
+        other: &str,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this date-time.
     ///
@@ -2299,6 +2440,67 @@ extern "C" {
         this: &PlainDateTime,
         round_to: &RoundToOptions,
     ) -> Result<PlainDateTime, JsValue>;
+
+    /// The `since()` method taking a `Temporal.PlainDate`; see [`PlainDateTime::since`] for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_plain_date(
+        this: &PlainDateTime,
+        other: &PlainDate,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking a `Temporal.PlainDate` and options; see [`PlainDateTime::since_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_plain_date_and_options(
+        this: &PlainDateTime,
+        other: &PlainDate,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking a `Temporal.ZonedDateTime`; see [`PlainDateTime::since`] for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_zoned_date_time(
+        this: &PlainDateTime,
+        other: &ZonedDateTime,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking a `Temporal.ZonedDateTime` and options; see [`PlainDateTime::since_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_zoned_date_time_and_options(
+        this: &PlainDateTime,
+        other: &ZonedDateTime,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking a property bag; throws a `TypeError` if required fields are missing; see [`PlainDateTime::since`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_plain_date_time_like(
+        this: &PlainDateTime,
+        other: &PlainDateTimeLike,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking a property bag and options; see [`PlainDateTime::since_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_plain_date_time_like_and_options(
+        this: &PlainDateTime,
+        other: &PlainDateTimeLike,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`PlainDateTime::since`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_str(this: &PlainDateTime, other: &str) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking an ISO 8601 string and options; see [`PlainDateTime::since_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_str_and_options(
+        this: &PlainDateTime,
+        other: &str,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
 
     /// Shorthand for `round()` with only `smallestUnit` set.
     #[wasm_bindgen(method, js_name = round, catch)]
@@ -2747,6 +2949,17 @@ extern "C" {
         fields: &ZonedDateTimeFields,
     ) -> Result<ZonedDateTime, JsValue>;
 
+    /// The `equals()` method taking a property bag; throws a `TypeError` if required fields are missing.
+    #[wasm_bindgen(method, js_name = equals, catch)]
+    pub fn equals_with_zoned_date_time_like(
+        this: &ZonedDateTime,
+        other: &ZonedDateTimeLike,
+    ) -> Result<bool, JsValue>;
+
+    /// The `equals()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid.
+    #[wasm_bindgen(method, js_name = equals, catch)]
+    pub fn equals_with_str(this: &ZonedDateTime, other: &str) -> Result<bool, JsValue>;
+
     /// The `with()` method returns a new `Temporal.ZonedDateTime` object with some fields
     /// replaced by new values.
     ///
@@ -3007,6 +3220,35 @@ extern "C" {
     #[wasm_bindgen(method, catch)]
     pub fn since(this: &ZonedDateTime, other: &ZonedDateTime) -> Result<Duration, JsValue>;
 
+    /// The `until()` method taking a property bag; throws a `TypeError` if required fields are missing; see [`ZonedDateTime::until`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_zoned_date_time_like(
+        this: &ZonedDateTime,
+        other: &ZonedDateTimeLike,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking a property bag and options; see [`ZonedDateTime::until_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_zoned_date_time_like_and_options(
+        this: &ZonedDateTime,
+        other: &ZonedDateTimeLike,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`ZonedDateTime::until`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_str(this: &ZonedDateTime, other: &str) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking an ISO 8601 string and options; see [`ZonedDateTime::until_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_str_and_options(
+        this: &ZonedDateTime,
+        other: &str,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this zoned date-time.
     ///
@@ -3035,6 +3277,35 @@ extern "C" {
         this: &ZonedDateTime,
         round_to: &RoundToOptions,
     ) -> Result<ZonedDateTime, JsValue>;
+
+    /// The `since()` method taking a property bag; throws a `TypeError` if required fields are missing; see [`ZonedDateTime::since`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_zoned_date_time_like(
+        this: &ZonedDateTime,
+        other: &ZonedDateTimeLike,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking a property bag and options; see [`ZonedDateTime::since_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_zoned_date_time_like_and_options(
+        this: &ZonedDateTime,
+        other: &ZonedDateTimeLike,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`ZonedDateTime::since`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_str(this: &ZonedDateTime, other: &str) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking an ISO 8601 string and options; see [`ZonedDateTime::since_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_str_and_options(
+        this: &ZonedDateTime,
+        other: &str,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
 
     /// Shorthand for `round()` with only `smallestUnit` set.
     #[wasm_bindgen(method, js_name = round, catch)]
@@ -3786,6 +4057,25 @@ extern "C" {
     #[wasm_bindgen(method, catch)]
     pub fn with(this: &PlainTime, fields: &PlainTimeLike) -> Result<PlainTime, JsValue>;
 
+    /// The `equals()` method taking a `Temporal.PlainDateTime`.
+    #[wasm_bindgen(method, js_name = equals)]
+    pub fn equals_with_plain_date_time(this: &PlainTime, other: &PlainDateTime) -> bool;
+
+    /// The `equals()` method taking a `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, js_name = equals)]
+    pub fn equals_with_zoned_date_time(this: &PlainTime, other: &ZonedDateTime) -> bool;
+
+    /// The `equals()` method taking a property bag; throws a `TypeError` if required fields are missing.
+    #[wasm_bindgen(method, js_name = equals, catch)]
+    pub fn equals_with_plain_time_like(
+        this: &PlainTime,
+        other: &PlainTimeLike,
+    ) -> Result<bool, JsValue>;
+
+    /// The `equals()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid.
+    #[wasm_bindgen(method, js_name = equals, catch)]
+    pub fn equals_with_str(this: &PlainTime, other: &str) -> Result<bool, JsValue>;
+
     /// The `with()` method returns a new `Temporal.PlainTime` object with some
     /// fields replaced by new values.
     ///
@@ -3877,6 +4167,61 @@ extern "C" {
     #[wasm_bindgen(method)]
     pub fn since(this: &PlainTime, other: &PlainTime) -> Duration;
 
+    /// The `until()` method taking a `Temporal.PlainDateTime`.
+    #[wasm_bindgen(method, js_name = until)]
+    pub fn until_with_plain_date_time(this: &PlainTime, other: &PlainDateTime) -> Duration;
+
+    /// The `until()` method taking a `Temporal.PlainDateTime` and options; see [`PlainTime::until_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_plain_date_time_and_options(
+        this: &PlainTime,
+        other: &PlainDateTime,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking a `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, js_name = until)]
+    pub fn until_with_zoned_date_time(this: &PlainTime, other: &ZonedDateTime) -> Duration;
+
+    /// The `until()` method taking a `Temporal.ZonedDateTime` and options; see [`PlainTime::until_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_zoned_date_time_and_options(
+        this: &PlainTime,
+        other: &ZonedDateTime,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking a property bag; throws a `TypeError` if required fields are missing.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_plain_time_like(
+        this: &PlainTime,
+        other: &PlainTimeLike,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking a property bag and options; see [`PlainTime::until_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_plain_time_like_and_options(
+        this: &PlainTime,
+        other: &PlainTimeLike,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_str(this: &PlainTime, other: &str) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking an ISO 8601 string and options; see [`PlainTime::until_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_str_and_options(
+        this: &PlainTime,
+        other: &str,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this time.
     ///
@@ -3904,6 +4249,61 @@ extern "C" {
         this: &PlainTime,
         round_to: &RoundToOptions,
     ) -> Result<PlainTime, JsValue>;
+
+    /// The `since()` method taking a `Temporal.PlainDateTime`.
+    #[wasm_bindgen(method, js_name = since)]
+    pub fn since_with_plain_date_time(this: &PlainTime, other: &PlainDateTime) -> Duration;
+
+    /// The `since()` method taking a `Temporal.PlainDateTime` and options; see [`PlainTime::since_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_plain_date_time_and_options(
+        this: &PlainTime,
+        other: &PlainDateTime,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking a `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, js_name = since)]
+    pub fn since_with_zoned_date_time(this: &PlainTime, other: &ZonedDateTime) -> Duration;
+
+    /// The `since()` method taking a `Temporal.ZonedDateTime` and options; see [`PlainTime::since_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_zoned_date_time_and_options(
+        this: &PlainTime,
+        other: &ZonedDateTime,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking a property bag; throws a `TypeError` if required fields are missing.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_plain_time_like(
+        this: &PlainTime,
+        other: &PlainTimeLike,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking a property bag and options; see [`PlainTime::since_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_plain_time_like_and_options(
+        this: &PlainTime,
+        other: &PlainTimeLike,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_str(this: &PlainTime, other: &str) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking an ISO 8601 string and options; see [`PlainTime::since_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_str_and_options(
+        this: &PlainTime,
+        other: &str,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
 
     /// Shorthand for `round()` with only `smallestUnit` set.
     #[wasm_bindgen(method, js_name = round, catch)]
@@ -4064,6 +4464,39 @@ extern "C" {
     #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal)]
     pub fn compare(one: &PlainYearMonth, two: &PlainYearMonth) -> i32;
 
+    /// The `Temporal.PlainYearMonth.from()` static method.
+    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from)]
+    pub fn from_with_plain_date(item: &PlainDate) -> PlainYearMonth;
+
+    /// The `Temporal.PlainYearMonth.from()` static method.
+    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from)]
+    pub fn from_with_plain_date_and_options(
+        item: &PlainDate,
+        options: &OverflowOptions,
+    ) -> PlainYearMonth;
+
+    /// The `Temporal.PlainYearMonth.from()` static method.
+    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from)]
+    pub fn from_with_plain_date_time(item: &PlainDateTime) -> PlainYearMonth;
+
+    /// The `Temporal.PlainYearMonth.from()` static method.
+    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from)]
+    pub fn from_with_plain_date_time_and_options(
+        item: &PlainDateTime,
+        options: &OverflowOptions,
+    ) -> PlainYearMonth;
+
+    /// The `Temporal.PlainYearMonth.from()` static method.
+    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from)]
+    pub fn from_with_zoned_date_time(item: &ZonedDateTime) -> PlainYearMonth;
+
+    /// The `Temporal.PlainYearMonth.from()` static method.
+    #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from)]
+    pub fn from_with_zoned_date_time_and_options(
+        item: &ZonedDateTime,
+        options: &OverflowOptions,
+    ) -> PlainYearMonth;
+
     /// The `era` accessor property returns a calendar-specific lowercase string
     /// representing the era of this year-month, or `None` if the calendar does not use eras.
     ///
@@ -4153,6 +4586,29 @@ extern "C" {
         this: &PlainYearMonth,
         fields: &PlainYearMonthFields,
     ) -> Result<PlainYearMonth, JsValue>;
+
+    /// The `equals()` method taking a `Temporal.PlainDate`.
+    #[wasm_bindgen(method, js_name = equals)]
+    pub fn equals_with_plain_date(this: &PlainYearMonth, other: &PlainDate) -> bool;
+
+    /// The `equals()` method taking a `Temporal.PlainDateTime`.
+    #[wasm_bindgen(method, js_name = equals)]
+    pub fn equals_with_plain_date_time(this: &PlainYearMonth, other: &PlainDateTime) -> bool;
+
+    /// The `equals()` method taking a `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, js_name = equals)]
+    pub fn equals_with_zoned_date_time(this: &PlainYearMonth, other: &ZonedDateTime) -> bool;
+
+    /// The `equals()` method taking a property bag; throws a `TypeError` if required fields are missing.
+    #[wasm_bindgen(method, js_name = equals, catch)]
+    pub fn equals_with_plain_year_month_like(
+        this: &PlainYearMonth,
+        other: &PlainYearMonthLike,
+    ) -> Result<bool, JsValue>;
+
+    /// The `equals()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid.
+    #[wasm_bindgen(method, js_name = equals, catch)]
+    pub fn equals_with_str(this: &PlainYearMonth, other: &str) -> Result<bool, JsValue>;
 
     /// The `with()` method returns a new `Temporal.PlainYearMonth` object with some
     /// fields replaced by new values.
@@ -4328,6 +4784,83 @@ extern "C" {
     #[wasm_bindgen(method, catch)]
     pub fn since(this: &PlainYearMonth, other: &PlainYearMonth) -> Result<Duration, JsValue>;
 
+    /// The `until()` method taking a `Temporal.PlainDate`; see [`PlainYearMonth::until`] for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_plain_date(
+        this: &PlainYearMonth,
+        other: &PlainDate,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking a `Temporal.PlainDate` and options; see [`PlainYearMonth::until_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_plain_date_and_options(
+        this: &PlainYearMonth,
+        other: &PlainDate,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking a `Temporal.PlainDateTime`; see [`PlainYearMonth::until`] for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_plain_date_time(
+        this: &PlainYearMonth,
+        other: &PlainDateTime,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking a `Temporal.PlainDateTime` and options; see [`PlainYearMonth::until_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_plain_date_time_and_options(
+        this: &PlainYearMonth,
+        other: &PlainDateTime,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking a `Temporal.ZonedDateTime`; see [`PlainYearMonth::until`] for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_zoned_date_time(
+        this: &PlainYearMonth,
+        other: &ZonedDateTime,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking a `Temporal.ZonedDateTime` and options; see [`PlainYearMonth::until_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_zoned_date_time_and_options(
+        this: &PlainYearMonth,
+        other: &ZonedDateTime,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking a property bag; throws a `TypeError` if required fields are missing; see [`PlainYearMonth::until`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_plain_year_month_like(
+        this: &PlainYearMonth,
+        other: &PlainYearMonthLike,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking a property bag and options; see [`PlainYearMonth::until_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_plain_year_month_like_and_options(
+        this: &PlainYearMonth,
+        other: &PlainYearMonthLike,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`PlainYearMonth::until`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_str(this: &PlainYearMonth, other: &str) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking an ISO 8601 string and options; see [`PlainYearMonth::until_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_str_and_options(
+        this: &PlainYearMonth,
+        other: &str,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this year-month.
     ///
@@ -4355,6 +4888,83 @@ extern "C" {
         this: &PlainYearMonth,
         fields: &PlainDateFields,
     ) -> Result<PlainDate, JsValue>;
+
+    /// The `since()` method taking a `Temporal.PlainDate`; see [`PlainYearMonth::since`] for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_plain_date(
+        this: &PlainYearMonth,
+        other: &PlainDate,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking a `Temporal.PlainDate` and options; see [`PlainYearMonth::since_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_plain_date_and_options(
+        this: &PlainYearMonth,
+        other: &PlainDate,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking a `Temporal.PlainDateTime`; see [`PlainYearMonth::since`] for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_plain_date_time(
+        this: &PlainYearMonth,
+        other: &PlainDateTime,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking a `Temporal.PlainDateTime` and options; see [`PlainYearMonth::since_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_plain_date_time_and_options(
+        this: &PlainYearMonth,
+        other: &PlainDateTime,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking a `Temporal.ZonedDateTime`; see [`PlainYearMonth::since`] for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_zoned_date_time(
+        this: &PlainYearMonth,
+        other: &ZonedDateTime,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking a `Temporal.ZonedDateTime` and options; see [`PlainYearMonth::since_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_zoned_date_time_and_options(
+        this: &PlainYearMonth,
+        other: &ZonedDateTime,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking a property bag; throws a `TypeError` if required fields are missing; see [`PlainYearMonth::since`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_plain_year_month_like(
+        this: &PlainYearMonth,
+        other: &PlainYearMonthLike,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking a property bag and options; see [`PlainYearMonth::since_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_plain_year_month_like_and_options(
+        this: &PlainYearMonth,
+        other: &PlainYearMonthLike,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`PlainYearMonth::since`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_str(this: &PlainYearMonth, other: &str) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking an ISO 8601 string and options; see [`PlainYearMonth::since_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_str_and_options(
+        this: &PlainYearMonth,
+        other: &str,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
 
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this year-month.
@@ -4524,6 +5134,39 @@ extern "C" {
     #[wasm_bindgen(method, getter, js_name = monthCode)]
     pub fn month_code(this: &PlainMonthDay) -> JsString;
 
+    /// The `Temporal.PlainMonthDay.from()` static method.
+    #[wasm_bindgen(static_method_of = PlainMonthDay, js_namespace = Temporal, js_name = from)]
+    pub fn from_with_plain_date(item: &PlainDate) -> PlainMonthDay;
+
+    /// The `Temporal.PlainMonthDay.from()` static method.
+    #[wasm_bindgen(static_method_of = PlainMonthDay, js_namespace = Temporal, js_name = from)]
+    pub fn from_with_plain_date_and_options(
+        item: &PlainDate,
+        options: &OverflowOptions,
+    ) -> PlainMonthDay;
+
+    /// The `Temporal.PlainMonthDay.from()` static method.
+    #[wasm_bindgen(static_method_of = PlainMonthDay, js_namespace = Temporal, js_name = from)]
+    pub fn from_with_plain_date_time(item: &PlainDateTime) -> PlainMonthDay;
+
+    /// The `Temporal.PlainMonthDay.from()` static method.
+    #[wasm_bindgen(static_method_of = PlainMonthDay, js_namespace = Temporal, js_name = from)]
+    pub fn from_with_plain_date_time_and_options(
+        item: &PlainDateTime,
+        options: &OverflowOptions,
+    ) -> PlainMonthDay;
+
+    /// The `Temporal.PlainMonthDay.from()` static method.
+    #[wasm_bindgen(static_method_of = PlainMonthDay, js_namespace = Temporal, js_name = from)]
+    pub fn from_with_zoned_date_time(item: &ZonedDateTime) -> PlainMonthDay;
+
+    /// The `Temporal.PlainMonthDay.from()` static method.
+    #[wasm_bindgen(static_method_of = PlainMonthDay, js_namespace = Temporal, js_name = from)]
+    pub fn from_with_zoned_date_time_and_options(
+        item: &ZonedDateTime,
+        options: &OverflowOptions,
+    ) -> PlainMonthDay;
+
     /// The `day` accessor property returns a positive integer representing the
     /// day of the month.
     ///
@@ -4554,6 +5197,29 @@ extern "C" {
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/with)
     #[wasm_bindgen(method, catch)]
     pub fn with(this: &PlainMonthDay, fields: &PlainDateFields) -> Result<PlainMonthDay, JsValue>;
+
+    /// The `equals()` method taking a `Temporal.PlainDate`.
+    #[wasm_bindgen(method, js_name = equals)]
+    pub fn equals_with_plain_date(this: &PlainMonthDay, other: &PlainDate) -> bool;
+
+    /// The `equals()` method taking a `Temporal.PlainDateTime`.
+    #[wasm_bindgen(method, js_name = equals)]
+    pub fn equals_with_plain_date_time(this: &PlainMonthDay, other: &PlainDateTime) -> bool;
+
+    /// The `equals()` method taking a `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, js_name = equals)]
+    pub fn equals_with_zoned_date_time(this: &PlainMonthDay, other: &ZonedDateTime) -> bool;
+
+    /// The `equals()` method taking a property bag; throws a `TypeError` if required fields are missing.
+    #[wasm_bindgen(method, js_name = equals, catch)]
+    pub fn equals_with_plain_month_day_like(
+        this: &PlainMonthDay,
+        other: &PlainMonthDayLike,
+    ) -> Result<bool, JsValue>;
+
+    /// The `equals()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid.
+    #[wasm_bindgen(method, js_name = equals, catch)]
+    pub fn equals_with_str(this: &PlainMonthDay, other: &str) -> Result<bool, JsValue>;
 
     /// The `with()` method returns a new `Temporal.PlainMonthDay` object with some
     /// fields replaced by new values.
@@ -4901,6 +5567,25 @@ extern "C" {
     #[wasm_bindgen(method, catch)]
     pub fn with(this: &PlainDate, fields: &PlainDateFields) -> Result<PlainDate, JsValue>;
 
+    /// The `equals()` method taking a `Temporal.PlainDateTime`.
+    #[wasm_bindgen(method, js_name = equals)]
+    pub fn equals_with_plain_date_time(this: &PlainDate, other: &PlainDateTime) -> bool;
+
+    /// The `equals()` method taking a `Temporal.ZonedDateTime`.
+    #[wasm_bindgen(method, js_name = equals)]
+    pub fn equals_with_zoned_date_time(this: &PlainDate, other: &ZonedDateTime) -> bool;
+
+    /// The `equals()` method taking a property bag; throws a `TypeError` if required fields are missing.
+    #[wasm_bindgen(method, js_name = equals, catch)]
+    pub fn equals_with_plain_date_like(
+        this: &PlainDate,
+        other: &PlainDateLike,
+    ) -> Result<bool, JsValue>;
+
+    /// The `equals()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid.
+    #[wasm_bindgen(method, js_name = equals, catch)]
+    pub fn equals_with_str(this: &PlainDate, other: &str) -> Result<bool, JsValue>;
+
     /// The `with()` method returns a new `Temporal.PlainDate` object with some
     /// fields replaced by new values.
     ///
@@ -5114,6 +5799,67 @@ extern "C" {
     #[wasm_bindgen(method, catch)]
     pub fn since(this: &PlainDate, other: &PlainDate) -> Result<Duration, JsValue>;
 
+    /// The `until()` method taking a `Temporal.PlainDateTime`; see [`PlainDate::until`] for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_plain_date_time(
+        this: &PlainDate,
+        other: &PlainDateTime,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking a `Temporal.PlainDateTime` and options; see [`PlainDate::until_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_plain_date_time_and_options(
+        this: &PlainDate,
+        other: &PlainDateTime,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking a `Temporal.ZonedDateTime`; see [`PlainDate::until`] for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_zoned_date_time(
+        this: &PlainDate,
+        other: &ZonedDateTime,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking a `Temporal.ZonedDateTime` and options; see [`PlainDate::until_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_zoned_date_time_and_options(
+        this: &PlainDate,
+        other: &ZonedDateTime,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking a property bag; throws a `TypeError` if required fields are missing; see [`PlainDate::until`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_plain_date_like(
+        this: &PlainDate,
+        other: &PlainDateLike,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking a property bag and options; see [`PlainDate::until_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_plain_date_like_and_options(
+        this: &PlainDate,
+        other: &PlainDateLike,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`PlainDate::until`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_str(this: &PlainDate, other: &str) -> Result<Duration, JsValue>;
+
+    /// The `until()` method taking an ISO 8601 string and options; see [`PlainDate::until_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = until, catch)]
+    pub fn until_with_str_and_options(
+        this: &PlainDate,
+        other: &str,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this date.
     ///
@@ -5137,6 +5883,67 @@ extern "C" {
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toPlainDateTime)
     #[wasm_bindgen(method, js_name = toPlainDateTime, catch)]
     pub fn to_plain_date_time(this: &PlainDate) -> Result<PlainDateTime, JsValue>;
+
+    /// The `since()` method taking a `Temporal.PlainDateTime`; see [`PlainDate::since`] for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_plain_date_time(
+        this: &PlainDate,
+        other: &PlainDateTime,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking a `Temporal.PlainDateTime` and options; see [`PlainDate::since_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_plain_date_time_and_options(
+        this: &PlainDate,
+        other: &PlainDateTime,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking a `Temporal.ZonedDateTime`; see [`PlainDate::since`] for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_zoned_date_time(
+        this: &PlainDate,
+        other: &ZonedDateTime,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking a `Temporal.ZonedDateTime` and options; see [`PlainDate::since_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_zoned_date_time_and_options(
+        this: &PlainDate,
+        other: &ZonedDateTime,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking a property bag; throws a `TypeError` if required fields are missing; see [`PlainDate::since`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_plain_date_like(
+        this: &PlainDate,
+        other: &PlainDateLike,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking a property bag and options; see [`PlainDate::since_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_plain_date_like_and_options(
+        this: &PlainDate,
+        other: &PlainDateLike,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`PlainDate::since`] for the remaining errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_str(this: &PlainDate, other: &str) -> Result<Duration, JsValue>;
+
+    /// The `since()` method taking an ISO 8601 string and options; see [`PlainDate::since_with_options`]
+    /// for errors.
+    #[wasm_bindgen(method, js_name = since, catch)]
+    pub fn since_with_str_and_options(
+        this: &PlainDate,
+        other: &str,
+        options: &DifferenceOptions,
+    ) -> Result<Duration, JsValue>;
 
     /// The `toPlainDateTime()` method returns a `Temporal.PlainDateTime` object representing
     /// this date at the given time (or midnight if not provided).
