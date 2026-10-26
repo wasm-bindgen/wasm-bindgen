@@ -239,6 +239,10 @@
 
 ### Fixed
 
+* Using `__wbg_init` for asynchronous WASM backend initialization may lead to
+  race conditions; now, this is mitigated by locking at each initialization time.
+  [#](https://github.com/wasm-bindgen/wasm-bindgen/pull/)
+
 * Large JS snippets (`module = "..."`, `inline_js`) and
   `typescript_custom_section` expressions such as `include_str!` no longer make
   compilation slow or print "constant evaluation is taking a long time"
