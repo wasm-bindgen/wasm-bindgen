@@ -80,6 +80,14 @@ extern "C" {
 
     #[wasm_bindgen(js_name = nullableArray)]
     fn nullable_array() -> Array<Nullable<JsString>>;
+
+    pub type Opaque;
+    #[wasm_bindgen(js_name = opaqueOpt)]
+    fn opaque_opt() -> Vec<Option<Opaque>>;
+    #[wasm_bindgen(js_name = opaqueNullable)]
+    fn opaque_nullable() -> Vec<Nullable<Opaque>>;
+    #[wasm_bindgen(js_name = opaqueOptNullable)]
+    fn opaque_opt_nullable() -> Vec<Option<Nullable<Opaque>>>;
     #[wasm_bindgen(js_name = nullableMap)]
     fn nullable_map() -> Map<JsString, Nullable<JsString>>;
     #[wasm_bindgen(js_name = describe)]
@@ -243,6 +251,21 @@ async fn promises() {
         mono_await_nullable(&p, 1u32).await,
         Nullable::Value("a".to_string())
     );
+}
+
+// An imported type with no JS class converts as a `Vec<T>` element does,
+// without an `instanceof` test.
+#[wasm_bindgen_test]
+fn opaque_elements() {
+    let v = opaque_opt();
+    assert!(matches!(v.as_slice(), [Some(_), None, None]));
+    let v = opaque_nullable();
+    assert!(matches!(v.as_slice(), [Nullable::Value(_), Nullable::Null]));
+    let v = opaque_opt_nullable();
+    assert!(matches!(
+        v.as_slice(),
+        [Some(Nullable::Value(_)), Some(Nullable::Null), None]
+    ));
 }
 
 #[wasm_bindgen_test]

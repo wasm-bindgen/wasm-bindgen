@@ -909,10 +909,22 @@ optional_scalar_vectors! {
     u8 i8 u16 i16 u32 i32 u64 i64 u128 i128 usize isize f32 f64 bool char
 }
 
+/// Reinterprets a handle as the `T` it erases to, as the `Vec<T>` buffer
+/// reinterpretation does for every element at once.
+#[inline]
+unsafe fn unerase<T: ErasableGeneric<Repr = JsValue>>(value: JsValue) -> T {
+    let erased = core::ptr::read(&value as *const JsValue as *const T);
+    mem::forget(value);
+    erased
+}
+
 /// The compat vector of `$t`, an optional string or JS handle, describing
-/// its element as `$handle`.
+/// its element as `$handle` and converting each received element with
+/// `$from`. A string element is checked as `Vec<String>` checks it; a JS
+/// handle element is reinterpreted as `Vec<T>` reinterprets it, so an
+/// imported type with no JS class to test `instanceof` against converts.
 macro_rules! optional_handle_vectors {
-    ($([$($g:tt)*] $t:ty => $handle:ty;)*) => ($(
+    ($([$($g:tt)*] $t:ty => $handle:ty, $from:expr;)*) => ($(
         impl<$($g)*> WasmDescribeVector for $t {
             #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
             fn describe_vector() {
@@ -932,28 +944,59 @@ macro_rules! optional_handle_vectors {
             }
         }
 
-        impl<$($g)*> VectorFromWasmAbi for $t
-        where
-            Self: TryFromJsValue,
-        {
+        impl<$($g)*> VectorFromWasmAbi for $t {
             type Abi = <Box<[JsValue]> as FromWasmAbi>::Abi;
 
             unsafe fn vector_from_abi(js: Self::Abi) -> Box<[Self]> {
-                js_value_vector_from_abi(js)
+                // Thrown here rather than in the closure, to keep the
+                // function that took the `Vec` within the debug-mode error
+                // stack's frame limit.
+                match Self::try_vector_from_abi(js) {
+                    Ok(vector) => vector,
+                    Err(msg) => crate::throw_str(msg),
+                }
             }
 
             unsafe fn try_vector_from_abi(js: Self::Abi) -> Result<Box<[Self]>, &'static str> {
-                try_js_value_vector_from_abi(js)
+                let from: fn(JsValue) -> Result<Self, &'static str> = $from;
+                <Vec<JsValue> as FromWasmAbi>::from_abi(js)
+                    .into_iter()
+                    .map(from)
+                    .collect()
             }
         }
     )*)
 }
 
+fn checked<T: TryFromJsValue>(value: JsValue) -> Result<T, &'static str> {
+    T::try_from_js_value(value).map_err(|_| crate::__rt::WRONG_TYPE_ERROR)
+}
+
 optional_handle_vectors! {
-    [] Option<String> => Option<StringHandle>;
-    [] Nullable<String> => Nullable<StringHandle>;
-    [] Option<Nullable<String>> => Option<Nullable<StringHandle>>;
-    [T: ErasableGeneric<Repr = JsValue> + WasmDescribe] Option<T> => Self;
-    [T: ErasableGeneric<Repr = JsValue> + WasmDescribe] Nullable<T> => Self;
-    [T: ErasableGeneric<Repr = JsValue> + WasmDescribe] Option<Nullable<T>> => Self;
+    [] Option<String> => Option<StringHandle>, checked;
+    [] Nullable<String> => Nullable<StringHandle>, checked;
+    [] Option<Nullable<String>> => Option<Nullable<StringHandle>>, checked;
+    [T: ErasableGeneric<Repr = JsValue> + WasmDescribe] Option<T> => Self, |v| {
+        Ok(if v.is_null() || v.is_undefined() {
+            None
+        } else {
+            Some(unsafe { unerase(v) })
+        })
+    };
+    [T: ErasableGeneric<Repr = JsValue> + WasmDescribe] Nullable<T> => Self, |v| {
+        Ok(if v.is_null() {
+            Nullable::Null
+        } else {
+            Nullable::Value(unsafe { unerase(v) })
+        })
+    };
+    [T: ErasableGeneric<Repr = JsValue> + WasmDescribe] Option<Nullable<T>> => Self, |v| {
+        Ok(if v.is_undefined() {
+            None
+        } else if v.is_null() {
+            Some(Nullable::Null)
+        } else {
+            Some(Nullable::Value(unsafe { unerase(v) }))
+        })
+    };
 }

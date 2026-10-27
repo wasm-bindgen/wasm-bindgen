@@ -18,6 +18,10 @@ exports.callNullable = (f) => {
     f('a');
 };
 exports.nullableArray = () => ['a', null];
+// `Opaque` has no JS class, so there is nothing to test `instanceof` against.
+exports.opaqueOpt = () => [{ a: 1 }, null, undefined];
+exports.opaqueNullable = () => [{ a: 1 }, null];
+exports.opaqueOptNullable = () => [{ a: 1 }, null, undefined];
 exports.nullableMap = () => new Map([['a', 'b'], ['c', null]]);
 
 exports.test_exports = () => {
