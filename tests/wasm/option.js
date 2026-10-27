@@ -18,7 +18,7 @@ exports.return_null_byval = () => null;
 exports.return_some_byval = () => new MyType();
 
 exports.test_option_values = () => {
-    if (!wasm.strict_option_enabled()) wasm.rust_take_none_byval(null);
+    wasm.rust_take_none_byval(null);
     wasm.rust_take_none_byval(undefined);
     wasm.rust_take_some_byval(new MyType());
     assert.strictEqual(wasm.rust_return_none_byval(), undefined);
@@ -40,7 +40,7 @@ exports.return_option_jsvalue_none = () => undefined;
 exports.return_option_jsvalue_some = () => "js value";
 
 exports.test_option_jsvalue_values = () => {
-    if (!wasm.strict_option_enabled()) wasm.rust_take_option_jsvalue_none(null);
+    wasm.rust_take_option_jsvalue_none(null);
     wasm.rust_take_option_jsvalue_none(undefined);
     wasm.rust_take_option_jsvalue_some("test");
     wasm.rust_take_option_jsvalue_some(42);

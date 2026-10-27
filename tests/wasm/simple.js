@@ -93,9 +93,7 @@ exports.return_string_some = function() {
 
 exports.test_rust_optional = function() {
   wasm.take_optional_str_none();
-  if (!wasm.strict_option_enabled()) {
-    wasm.take_optional_str_none(null);
-  }
+  wasm.take_optional_str_none(null);
   wasm.take_optional_str_none(undefined);
   wasm.take_optional_str_some('hello');
   assert.strictEqual(wasm.return_optional_str_none(), undefined);
@@ -137,15 +135,11 @@ exports.test_raw_pointers = function() {
   assert.strictEqual(memory32[pointerIndex(ptr3, 4)], 42);
 
   assert.strictEqual(wasm.simple_option_raw_pointers_work(0, ptr2), undefined);
-  if (!wasm.strict_option_enabled()) {
-    assert.strictEqual(wasm.simple_option_raw_pointers_work(null, ptr2), undefined);
-  }
+  assert.strictEqual(wasm.simple_option_raw_pointers_work(null, ptr2), undefined);
   assert.strictEqual(wasm.simple_option_raw_pointers_work(undefined, ptr2), undefined);
 
   assert.strictEqual(wasm.simple_option_raw_pointers_work(ptr1, 0), undefined);
-  if (!wasm.strict_option_enabled()) {
-    assert.strictEqual(wasm.simple_option_raw_pointers_work(ptr1, null), undefined);
-  }
+  assert.strictEqual(wasm.simple_option_raw_pointers_work(ptr1, null), undefined);
   assert.strictEqual(wasm.simple_option_raw_pointers_work(ptr1, undefined), undefined);
 
   assert.strictEqual(wasm.simple_return_option_null_pointer(), 0)
@@ -156,9 +150,7 @@ exports.test_non_null = function() {
   assert.throws(() => wasm.simple_nonnull_work(nonNullZero()), nonNullTypeError());
 
   assert.strictEqual(wasm.simple_option_nonnull_work(nonNullZero()), undefined);
-  if (!wasm.strict_option_enabled()) {
-    assert.strictEqual(wasm.simple_option_nonnull_work(null), undefined);
-  }
+  assert.strictEqual(wasm.simple_option_nonnull_work(null), undefined);
   assert.strictEqual(wasm.simple_option_nonnull_work(undefined), undefined);
 
   assert.strictEqual(wasm.simple_option_nonnull_work(wasm.simple_return_non_null()), 42);

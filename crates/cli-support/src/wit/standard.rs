@@ -101,11 +101,9 @@ pub enum AdapterJsImportKind {
 /// Which JS values an option treats as empty, and how they cross the ABI.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum OptionKind {
-    /// `Option<T>`: `null` and `undefined` are both `None`.
-    Lenient,
-    /// `Option<T>` under `wasm_bindgen_unstable_strict_option`: only
-    /// `undefined` is `None`, so `null` goes to the inner type's conversion.
-    Strict,
+    /// `Option<T>`: `null` and `undefined` both read as `None`, and `None`
+    /// is written as `undefined`.
+    Option,
     /// `Nullable<T>`: only `null` is empty, crossing as its own sentinel, so
     /// `undefined` goes to the inner type's conversion.
     Nullable,
@@ -115,15 +113,6 @@ pub enum OptionKind {
 }
 
 impl OptionKind {
-    /// The kind of an `Option<T>` descriptor.
-    pub fn option(strict: bool) -> OptionKind {
-        if strict {
-            OptionKind::Strict
-        } else {
-            OptionKind::Lenient
-        }
-    }
-
     /// Whether `null` crosses as the `Nullable` sentinel.
     pub fn nullable(self) -> bool {
         matches!(self, OptionKind::Nullable | OptionKind::OptionNullable)
@@ -132,11 +121,6 @@ impl OptionKind {
     /// Whether `undefined` is an empty value, so the argument is omittable.
     pub fn accepts_undefined(self) -> bool {
         !matches!(self, OptionKind::Nullable)
-    }
-
-    /// Whether `null` is an accepted argument value, so part of its TS type.
-    pub fn accepts_null(self) -> bool {
-        !matches!(self, OptionKind::Strict)
     }
 }
 

@@ -261,19 +261,6 @@ fn runtest_panic_unwind_legacy() -> Result<()> {
     })
 }
 
-/// `optional-args.rs` again, with `Option<T>` strict about `null`.
-#[test]
-fn runtest_optional_args_strict() -> Result<()> {
-    let mut test = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    test.push("tests");
-    test.push("reference");
-    test.push("optional-args.rs");
-
-    runtest_with_opts(test, Some("strict"), |command| {
-        command.env("RUSTFLAGS", "--cfg=wasm_bindgen_unstable_strict_option");
-    })
-}
-
 #[test]
 fn runtest_targets_atomics() -> Result<()> {
     let mut test = PathBuf::from(env!("CARGO_MANIFEST_DIR"));

@@ -46,7 +46,6 @@ tys! {
     NONNULL
     RAW_POINTER
     SEQ_MODE
-    OPTIONAL_STRICT
     NULLABLE
 }
 

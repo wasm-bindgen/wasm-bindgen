@@ -677,9 +677,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                             &self.cx.qualified_to_identifier,
                             self.cx.config.ts_typed_array_buffers,
                         );
-                        if kind.accepts_null() {
-                            ts.push_str(" | null");
-                        }
+                        ts.push_str(" | null");
                     }
                     ty => {
                         adapter2ts(
@@ -805,9 +803,7 @@ impl<'a, 'b> Builder<'a, 'b> {
                             &self.cx.qualified_to_identifier,
                             self.cx.config.ts_typed_array_buffers,
                         );
-                        if kind.accepts_null() {
-                            arg.push_str(" | null");
-                        }
+                        arg.push_str(" | null");
                         arg.push_str("} ");
                         arg.push('[');
                         arg.push_str(name);
@@ -1429,13 +1425,12 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
         self.prelude(&format!("_assertBoolean({arg});"));
     }
 
-    /// The test for an incoming option holding no value: only `undefined`
-    /// when `Strict`, only `null` for a plain `Nullable`, otherwise either.
+    /// The test for an incoming option holding no value: only `null` for a
+    /// plain `Nullable`, otherwise either empty.
     fn is_none(&mut self, val: &str, kind: OptionKind) -> String {
         match kind {
-            OptionKind::Strict => format!("{val} === undefined"),
             OptionKind::Nullable => format!("{val} === null"),
-            OptionKind::Lenient | OptionKind::OptionNullable => {
+            OptionKind::Option | OptionKind::OptionNullable => {
                 self.cx.expose_is_like_none();
                 format!("isLikeNone({val})")
             }
@@ -1444,9 +1439,8 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
 
     fn is_some(&mut self, val: &str, kind: OptionKind) -> String {
         match kind {
-            OptionKind::Strict => format!("{val} !== undefined"),
             OptionKind::Nullable => format!("{val} !== null"),
-            OptionKind::Lenient | OptionKind::OptionNullable => {
+            OptionKind::Option | OptionKind::OptionNullable => {
                 self.cx.expose_is_like_none();
                 format!("!isLikeNone({val})")
             }
@@ -1454,7 +1448,7 @@ impl<'a, 'b> JsBuilder<'a, 'b> {
     }
 
     /// `value` when `val` holds one, else the ABI word of the empty state it
-    /// is: `undefined_abi` for `undefined` (and for `null` when lenient),
+    /// is: `undefined_abi` for `undefined` (and for a plain option's `null`),
     /// and when nullable `null_abi` for `null`.
     fn option_abi(
         &mut self,
@@ -1690,9 +1684,7 @@ fn abi_option(
             format!("{val} === {undefined_abi} ? undefined : {val} === {null_abi} ? null : {value}")
         }
         OptionKind::Nullable => format!("{val} === {null_abi} ? null : {value}"),
-        OptionKind::Lenient | OptionKind::Strict => {
-            format!("{val} === {undefined_abi} ? undefined : {value}")
-        }
+        OptionKind::Option => format!("{val} === {undefined_abi} ? undefined : {value}"),
     }
 }
 
@@ -1702,7 +1694,7 @@ fn empty_vector_value(len: &str, kind: OptionKind) -> String {
     match kind {
         OptionKind::OptionNullable => format!("({len} === {NULL_HANDLE} ? null : undefined)"),
         OptionKind::Nullable => "null".to_string(),
-        OptionKind::Lenient | OptionKind::Strict => "undefined".to_string(),
+        OptionKind::Option => "undefined".to_string(),
     }
 }
 
@@ -3337,7 +3329,7 @@ pub(crate) fn adapter2ts(
         AdapterType::Option { ty, kind } => {
             adapter2ts(ty, position, dst, refs, name_map, typed_array_buffers);
             dst.push_str(match (position, kind) {
-                (TypePosition::Argument, OptionKind::Lenient) | (_, OptionKind::OptionNullable) => {
+                (TypePosition::Argument, OptionKind::Option) | (_, OptionKind::OptionNullable) => {
                     " | null | undefined"
                 }
                 (_, OptionKind::Nullable) => " | null",
