@@ -137,12 +137,12 @@ pub fn jspi_block_on_promise(promise: &Promise) -> Result<JsValue, JsValue> {
     jspi::suspend(promise)
 }
 
-struct Inner<T = JsValue> {
-    result: Option<Result<T, JsValue>>,
+struct Inner<T = JsValue, E = JsValue> {
+    result: Option<Result<T, E>>,
     task: Option<Waker>,
     callbacks: Option<(
         Closure<dyn FnMut(T) -> Result<(), JsError>>,
-        Closure<dyn FnMut(JsValue) -> Result<(), JsError>>,
+        Closure<dyn FnMut(E) -> Result<(), JsError>>,
     )>,
 }
 
@@ -153,22 +153,34 @@ struct Inner<T = JsValue> {
 /// `futures` crate and will either succeed or fail depending on what happens
 /// with the JavaScript `Promise`.
 ///
+/// A `JsFuture<T, E>` built from a `Promise<T, E>` resolves to
+/// `Result<T, E>`: the fulfilled value is converted as a `T` and the
+/// rejection reason as an `E`, both unchecked, just as JS could have
+/// settled the promise with anything.
+///
 /// Currently this type is constructed with `JsFuture::from`.
-pub struct JsFuture<T = JsValue> {
-    inner: Rc<RefCell<Inner<T>>>,
+pub struct JsFuture<T = JsValue, E = JsValue> {
+    inner: Rc<RefCell<Inner<T, E>>>,
 }
 
-impl core::panic::UnwindSafe for JsFuture {}
-
-unsafe impl<T> ErasableGeneric for JsFuture<T> {
-    type Repr = JsFuture<JsValue>;
+impl<T: core::panic::UnwindSafe, E: core::panic::UnwindSafe> core::panic::UnwindSafe
+    for JsFuture<T, E>
+{
 }
 
-// Upcast for JsFuture is covariant in T (the success type)
-// JsFuture<T> can upcast to JsFuture<Target> if T: Upcast<Target>
-impl<T, Target> Upcast<JsFuture<Target>> for JsFuture<T> where T: Upcast<Target> {}
+unsafe impl<T, E> ErasableGeneric for JsFuture<T, E> {
+    type Repr = JsFuture<JsValue, JsValue>;
+}
 
-impl<T> fmt::Debug for JsFuture<T> {
+// Covariant in both the success and the rejection type, like `Promise<T, E>`.
+impl<T, E, Target, ErrTarget> Upcast<JsFuture<Target, ErrTarget>> for JsFuture<T, E>
+where
+    T: Upcast<Target>,
+    E: Upcast<ErrTarget>,
+{
+}
+
+impl<T, E> fmt::Debug for JsFuture<T, E> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "JsFuture {{ ... }}")
     }
@@ -178,8 +190,8 @@ impl<T> fmt::Debug for JsFuture<T> {
 // no layout equivalence with `JsValue` is required at this seam — the
 // per-type `from_abi` does the conversion (e.g. for dynamic unions it
 // runs the variant dispatcher).
-impl<T: FromWasmAbi + 'static> From<Promise<T>> for JsFuture<T> {
-    fn from(js: Promise<T>) -> JsFuture<T> {
+impl<T: FromWasmAbi + 'static, E: FromWasmAbi + 'static> From<Promise<T, E>> for JsFuture<T, E> {
+    fn from(js: Promise<T, E>) -> JsFuture<T, E> {
         // Use the `then` method to schedule two callbacks, one for the
         // resolved value and one for the rejected value. We're currently
         // assuming that JS engines will unconditionally invoke precisely one of
@@ -195,13 +207,13 @@ impl<T: FromWasmAbi + 'static> From<Promise<T>> for JsFuture<T> {
         // have to be self-contained. Through the `Closure::once` and some
         // `Rc`-trickery we can arrange for both instances of `Closure`, and the
         // `Rc`, to all be destroyed once the first one is called.
-        let state = Rc::new(RefCell::new(Inner::<T> {
+        let state = Rc::new(RefCell::new(Inner::<T, E> {
             result: None,
             task: None,
             callbacks: None,
         }));
 
-        fn finish<T>(state: &RefCell<Inner<T>>, val: Result<T, JsValue>) {
+        fn finish<T, E>(state: &RefCell<Inner<T, E>>, val: Result<T, E>) {
             let task = {
                 let mut state = state.borrow_mut();
                 assert!(
@@ -236,7 +248,7 @@ impl<T: FromWasmAbi + 'static> From<Promise<T>> for JsFuture<T> {
 
         let reject = {
             let state = AssertUnwindSafe(state.clone());
-            Closure::once(move |val| {
+            Closure::once(move |val: E| {
                 finish(&*state, Err(val));
                 Ok(())
             })
@@ -250,8 +262,8 @@ impl<T: FromWasmAbi + 'static> From<Promise<T>> for JsFuture<T> {
     }
 }
 
-impl<T> Future for JsFuture<T> {
-    type Output = Result<T, JsValue>;
+impl<T, E> Future for JsFuture<T, E> {
+    type Output = Result<T, E>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
         let mut inner = self.inner.borrow_mut();
@@ -268,11 +280,11 @@ impl<T> Future for JsFuture<T> {
     }
 }
 
-impl<T: FromWasmAbi + 'static> IntoFuture for Promise<T> {
-    type Output = Result<T, JsValue>;
-    type IntoFuture = JsFuture<T>;
+impl<T: FromWasmAbi + 'static, E: FromWasmAbi + 'static> IntoFuture for Promise<T, E> {
+    type Output = Result<T, E>;
+    type IntoFuture = JsFuture<T, E>;
 
-    fn into_future(self) -> JsFuture<T> {
+    fn into_future(self) -> JsFuture<T, E> {
         JsFuture::from(self)
     }
 }

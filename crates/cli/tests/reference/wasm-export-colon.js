@@ -425,7 +425,7 @@ function __wbg_get_imports() {
             getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 1, len1, true);
             getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr1, true);
         },
-        __wbg_then_e71170d78fcf8954: function(arg0, arg1) {
+        __wbg_then_ce2a321a994ccb81: function(arg0, arg1) {
             const ret = arg0.then(arg1);
             return ret;
         },

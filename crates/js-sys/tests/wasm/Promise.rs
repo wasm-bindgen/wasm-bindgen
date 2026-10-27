@@ -141,12 +141,12 @@ async fn test_promise_catch_with_closure() {
         assert_eq!(msg.as_string(), Some("error occurred".to_string()));
     });
     #[cfg(js_sys_unstable_apis)]
-    let closure = Closure::new(|error: TestValue| {
+    let closure = Closure::new(|error: JsValue| {
+        let error: Object = error.unchecked_into();
         let msg = js_sys::Reflect::get_str(&error, &"message".into())
             .unwrap()
             .unwrap();
         assert_eq!(msg.as_string(), Some("error occurred".to_string()));
-        // Need to return TestValue to match the Promise<TestValue> type
         Ok::<TestValue, JsError>(TestValue::new(&JsString::from("recovered")))
     });
 
@@ -599,7 +599,7 @@ async fn with_resolvers_resolve() {
     if !promise_has("withResolvers") {
         return;
     }
-    let resolvers = Promise::with_resolvers::<Number>();
+    let resolvers = Promise::with_resolvers::<Number, JsValue>();
     assert!(resolvers.is_instance_of::<Object>());
     let promise: Promise<Number> = resolvers.promise();
     assert!(promise.is_instance_of::<Promise>());
@@ -617,10 +617,186 @@ async fn with_resolvers_reject() {
     if !promise_has("withResolvers") {
         return;
     }
-    let resolvers = Promise::with_resolvers::<JsString>();
+    let resolvers = Promise::with_resolvers::<JsString, JsValue>();
     let reject: Function<fn(JsValue) -> Undefined> = resolvers.reject();
     reject.call1(&JsValue::NULL, &JsValue::from("bad")).unwrap();
 
     let err = JsFuture::from(resolvers.promise()).await.unwrap_err();
     assert_eq!(err.as_string(), Some("bad".to_string()));
+}
+
+// Typed rejections: `Promise<T, E>`.
+#[wasm_bindgen(module = "tests/wasm/Promise.js")]
+extern "C" {
+    #[wasm_bindgen(js_name = stringOrTypeError)]
+    fn string_or_type_error(value: &str, fail: bool) -> Promise<String, TypeError>;
+
+    // The same binding through erased generics in both parameters.
+    #[wasm_bindgen(js_name = stringOrTypeError)]
+    fn generic_or_type_error<T, E>(value: T, fail: bool) -> Promise<T, E>;
+
+    #[wasm_bindgen(js_name = rejectTypeError)]
+    fn reject_type_error(message: &str) -> Promise<Number, TypeError>;
+}
+
+#[wasm_bindgen_test]
+async fn typed_rejection_awaits_err() {
+    assert_eq!(string_or_type_error("v", false).await.unwrap(), "v");
+
+    let err: TypeError = string_or_type_error("bad", true).await.unwrap_err();
+    assert!(err.is_instance_of::<TypeError>());
+    assert_eq!(err.message(), "bad");
+
+    let fut: JsFuture<String, TypeError> = JsFuture::from(string_or_type_error("f", true));
+    assert_eq!(fut.await.unwrap_err().message(), "f");
+}
+
+#[wasm_bindgen_test]
+async fn typed_rejection_generic_import() {
+    let promise: Promise<JsString, TypeError> = generic_or_type_error(JsString::from("v"), false);
+    assert_eq!(promise.await.unwrap(), "v");
+
+    let promise: Promise<JsString, TypeError> = generic_or_type_error(JsString::from("g"), true);
+    assert_eq!(promise.await.unwrap_err().message(), "g");
+}
+
+#[wasm_bindgen_test]
+async fn typed_rejection_round_trip() {
+    if !promise_has("withResolvers") {
+        return;
+    }
+    let resolvers = Promise::with_resolvers::<Number, TypeError>();
+    let promise: Promise<Number, TypeError> = resolvers.promise();
+    let resolve: Function<fn(Number) -> Undefined> = resolvers.resolve();
+    resolve.call(&JsValue::NULL, (&Number::from(7),)).unwrap();
+    assert_eq!(promise.await.unwrap().value_of(), 7.0);
+
+    let resolvers = Promise::with_resolvers::<Number, TypeError>();
+    let reject: Function<fn(TypeError) -> Undefined> = resolvers.reject();
+    reject
+        .call(&JsValue::NULL, (&TypeError::new("nope"),))
+        .unwrap();
+    let err: TypeError = resolvers.promise().await.unwrap_err();
+    assert_eq!(err.message(), "nope");
+}
+
+// `PromiseWithResolvers` is invariant in `T` and `E`, but still upcasts to its
+// JS supertypes.
+#[wasm_bindgen_test]
+fn resolvers_upcast_to_supertypes() {
+    use wasm_bindgen::prelude::Upcast;
+
+    if !promise_has("withResolvers") {
+        return;
+    }
+    let resolvers = Promise::with_resolvers::<Number, TypeError>();
+    let same: PromiseWithResolvers<Number, TypeError> = resolvers.clone().upcast_into();
+    let object: Object = resolvers.clone().upcast_into();
+    let value: JsValue = resolvers.upcast_into();
+    assert!(same.is_instance_of::<Object>());
+    assert!(object.is_instance_of::<Object>());
+    assert!(value.is_object());
+}
+
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen_test]
+async fn typed_rejection_constructors() {
+    let promise: Promise<Number, TypeError> =
+        Promise::new(
+            &mut |_: Function<fn(Number) -> Undefined>,
+                  reject: Function<fn(TypeError) -> Undefined>| {
+                reject
+                    .call(&JsValue::NULL, (&TypeError::new("exec"),))
+                    .unwrap();
+            },
+        );
+    assert_eq!(promise.await.unwrap_err().message(), "exec");
+
+    let promise: Promise<Number, TypeError> = Promise::reject(&TypeError::new("r"));
+    assert_eq!(promise.await.unwrap_err().message(), "r");
+}
+
+#[wasm_bindgen_test]
+async fn typed_rejection_upcasts() {
+    use wasm_bindgen::prelude::Upcast;
+
+    let promise = reject_type_error("up");
+
+    let as_error: Promise<Number, Error> = promise.clone().upcast_into();
+    assert_eq!(as_error.await.unwrap_err().message(), "up");
+
+    let as_default: Promise<Number> = promise.clone().upcast_into();
+    assert!(as_default.await.unwrap_err().is_instance_of::<TypeError>());
+
+    let as_js: Promise<JsValue, JsValue> = promise.clone().upcast_into();
+    assert!(as_js.await.unwrap_err().is_instance_of::<TypeError>());
+
+    let future: JsFuture<JsValue, Error> = JsFuture::from(promise).upcast_into();
+    assert_eq!(future.await.unwrap_err().message(), "up");
+}
+
+#[wasm_bindgen_test]
+async fn typed_rejection_handlers() {
+    #[cfg(not(js_sys_unstable_apis))]
+    let closure = Closure::new(|err: TypeError| assert_eq!(err.message(), "c"));
+    #[cfg(js_sys_unstable_apis)]
+    let closure = Closure::new(|err: TypeError| {
+        assert_eq!(err.message(), "c");
+        Ok::<Number, JsError>(Number::from(0))
+    });
+    reject_type_error("c").catch(&closure).await.unwrap();
+
+    let resolve = Closure::new(|_: Number| Ok::<_, JsError>(Number::from(0)));
+    let reject =
+        Closure::new(|err: TypeError| Ok::<_, JsError>(Number::from(err.message().length())));
+    let recovered: Promise<Number> = reject_type_error("abc").then_with_reject(&resolve, &reject);
+    assert_eq!(recovered.await.unwrap().value_of(), 3.0);
+
+    // `then` and `finally` without a rejection handler pass the rejection
+    // through as `E`.
+    #[cfg(not(js_sys_unstable_apis))]
+    let on_resolve = Closure::new(|_: Number| panic!("should not resolve"));
+    #[cfg(not(js_sys_unstable_apis))]
+    let chained: Promise<JsValue, TypeError> = reject_type_error("t").then(&on_resolve);
+    #[cfg(not(js_sys_unstable_apis))]
+    assert_eq!(chained.await.unwrap_err().message(), "t");
+
+    let on_finally = Closure::new(|| ());
+    let chained: Promise<JsValue, TypeError> = reject_type_error("f").finally(&on_finally);
+    assert_eq!(chained.await.unwrap_err().message(), "f");
+}
+
+#[wasm_bindgen_test]
+async fn typed_rejection_combinators() {
+    let joined = Promise::all_tuple((reject_type_error("a"), reject_type_error("b")));
+    let err: TypeError = joined.await.unwrap_err();
+    assert_eq!(err.message(), "a");
+
+    let settled = Promise::all_settled_tuple((reject_type_error("s"),))
+        .await
+        .unwrap();
+    let (state,) = settled.into_tuple();
+    assert!(state.is_rejected());
+    let reason: TypeError = state.get_reason().unwrap();
+    assert_eq!(reason.message(), "s");
+    let result: Result<Number, TypeError> = state.into();
+    assert_eq!(result.unwrap_err().message(), "s");
+
+    let arr: Array<Promise<Number, TypeError>> = Array::new_typed();
+    arr.push(&reject_type_error("x"));
+    arr.push(&reject_type_error("y"));
+
+    #[cfg(js_sys_unstable_apis)]
+    {
+        let err: AggregateError = Promise::any(&arr).await.unwrap_err();
+        assert_eq!(err.errors().length(), 2);
+    }
+
+    // The stable iterable combinators widen the rejection type to `JsValue`.
+    let err: JsValue = Promise::any_iterable(&arr).await.unwrap_err();
+    assert!(err.is_instance_of::<AggregateError>());
+    let err: JsValue = Promise::all_iterable(&arr).await.unwrap_err();
+    assert!(err.is_instance_of::<TypeError>());
+    let err: JsValue = Promise::race_iterable(&arr).await.unwrap_err();
+    assert!(err.is_instance_of::<TypeError>());
 }

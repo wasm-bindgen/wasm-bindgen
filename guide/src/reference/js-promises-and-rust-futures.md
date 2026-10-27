@@ -35,6 +35,29 @@ async fn get_number() -> Result<Number, JsValue> {
 }
 ```
 
+A promise can type what it rejects with as well. `Promise<T, E>` awaits to
+`Result<T, E>`, and `E` defaults to `JsValue`, so `Promise<T>` is
+`Promise<T, JsValue>` and existing code is unaffected:
+
+```rust
+use js_sys::{Object, Promise, TypeError};
+
+#[wasm_bindgen]
+extern "C" {
+    fn parse_config(src: &str) -> Promise<Object, TypeError>;
+}
+
+async fn load_config() -> Result<Object, TypeError> {
+    parse_config("...").await
+}
+```
+
+Like `T`, `E` is an unchecked assertion about the JS side: JS can reject
+with any value, and the rejection reason is converted as an `E` without a
+check. Both parameters are covariant, so a `Promise<T, TypeError>` upcasts
+to `Promise<T, Error>` or to `Promise<T>`, and a `JsFuture<T, E>` does the
+same.
+
 [`IntoFuture`]: https://doc.rust-lang.org/std/future/trait.IntoFuture.html
 
 ## Using `JsFuture` explicitly
