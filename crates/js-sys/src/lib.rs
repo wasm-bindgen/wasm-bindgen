@@ -14212,6 +14212,10 @@ extern "C" {
     /// `E2`, so a `Promise<T, TypeError>` can be passed where a
     /// `Promise<T, Error>` or `Promise<T>` is expected.
     ///
+    /// `then` and `finally` with a plain handler keep `E` on the returned
+    /// promise. Variants whose handler returns a `Result`, and so can reject
+    /// on its own, widen the returned rejection to `JsValue`.
+    ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
     #[must_use]
     #[wasm_bindgen(extends = Object, typescript_type = "Promise<any>", no_promising)]
@@ -14536,6 +14540,7 @@ extern "C" {
     /// `catch()` handlers.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/finally)
+    // Next major: return `Promise<T, E>`, since `finally` passes the value through
     #[wasm_bindgen(method)]
     pub fn finally<T, E>(
         this: &Promise<T, E>,
@@ -14567,11 +14572,10 @@ impl<T: JsGeneric, E> Promising for Promise<T, E> {
 /// [`Promise::all_tuple`] and [`Promise::all_settled_tuple`].
 ///
 /// Implemented for every tuple arity 1..=8 of `Promise<T, E>` with `T` and
-/// `E` both `JsGeneric`,
-/// with one rejection type `E` shared across the tuple (upcast mixed
-/// rejection types to a common one first). The associated `Joined` /
-/// `Settled` types pin down the [`ArrayTuple`] shape of the result so the
-/// one [`JsCast::unchecked_into`] needed to reinterpret the
+/// `E` both `JsGeneric`. One rejection type `E` is shared across the tuple,
+/// so upcast mixed rejection types to a common one first. The associated
+/// `Joined` / `Settled` types pin down the [`ArrayTuple`] shape of the
+/// result so the one [`JsCast::unchecked_into`] needed to reinterpret the
 /// [`Array<JsValue>`] returned by `Promise.all` / `Promise.allSettled` is
 /// encapsulated inside each impl — the caller sees a fully-typed
 /// `Promise<ArrayTuple<...>, E>`.

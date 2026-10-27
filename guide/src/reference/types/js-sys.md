@@ -192,7 +192,7 @@ A second parameter types the rejection: `Promise<T, E>` awaits to
 `Promise<T>` is expected.
 
 ```rust
-use js_sys::{Promise, TypeError};
+use js_sys::{Number, Promise, TypeError};
 
 #[wasm_bindgen]
 extern "C" {
