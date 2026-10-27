@@ -112,7 +112,7 @@ pub fn export_null_count(v: Vec<Nullable<JsString>>) -> u32 {
 fn slices() {
     assert_eq!(
         opt_f64s(&[Some(1.5), None, Some(-2.0)]),
-        "Array:[1.5,null,-2]"
+        "Array:[1.5,\"undefined\",-2]"
     );
     assert_eq!(
         nullable_f64s(&[Nullable::Value(1.5), Nullable::Null]),
@@ -120,11 +120,11 @@ fn slices() {
     );
     assert_eq!(
         opt_nullable_u8s(&[Some(Nullable::Value(7)), Some(Nullable::Null), None]),
-        "Array:[7,null,null]"
+        "Array:[7,null,\"undefined\"]"
     );
     assert_eq!(
         opt_js_strings(&[Some(JsString::from("a")), None]),
-        "Array:[\"a\",null]"
+        "Array:[\"a\",\"undefined\"]"
     );
     assert_eq!(
         nullable_js_strings(&[Nullable::Value(JsString::from("a")), Nullable::Null]),
@@ -132,7 +132,7 @@ fn slices() {
     );
     assert_eq!(
         opt_strings(&[Some("a".to_string()), None]),
-        "Array:[\"a\",null]"
+        "Array:[\"a\",\"undefined\"]"
     );
     assert_eq!(
         nullable_strings(&[Nullable::Value("a".to_string()), Nullable::Null]),
@@ -152,7 +152,7 @@ fn slices() {
 
 #[wasm_bindgen_test]
 fn mono_slices() {
-    assert_eq!(mono_slice(&[Some(1.5), None]), "Array:[1.5,null]");
+    assert_eq!(mono_slice(&[Some(1.5), None]), "Array:[1.5,\"undefined\"]");
     assert_eq!(
         mono_slice(&[Nullable::Value(JsString::from("a")), Nullable::Null]),
         "Array:[\"a\",null]"
@@ -170,7 +170,7 @@ fn vecs() {
     assert_eq!(echo_vec_nullable_strings(v.clone()), v);
     assert_eq!(
         vec_opt_strings(vec![Some("a".to_string()), None]),
-        "Array:[\"a\",null]"
+        "Array:[\"a\",\"undefined\"]"
     );
     let js = vec![Nullable::Value(JsString::from("a")), Nullable::Null];
     assert_eq!(echo_vec_nullable_js_strings(js.clone()), js);
