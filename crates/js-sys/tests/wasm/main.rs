@@ -51,5 +51,3 @@ pub mod WeakSet;
 pub mod WebAssembly;
 pub mod futures;
 pub mod global_fns;
-#[cfg(js_sys_unstable_apis)]
-pub mod nullable_elements;

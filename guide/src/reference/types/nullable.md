@@ -114,29 +114,15 @@ and a `Promise<Nullable<JsString>>` awaits to a `Nullable<JsString>`.
 `Nullable<T>` and `Option<T>` are Rust-side types that convert at the
 boundary, so they fit wherever the value, or the sequence or promise holding
 it, is converted on crossing. [`JsNullable<T>`](./js-sys.md) and
-`JsOption<T>` are JS-side handles: the value stays a JS value. An
+`JsOption<T>` are JS-side handles: the value stays a JS value, and they are
+what the type-erased generic methods of js-sys's containers work on. An
 `Array<Nullable<JsString>>` or `Map<JsString, Nullable<JsString>>` is a valid
-type and crosses whole; what differs is its element methods.
-
-By default the generic element methods of js-sys's containers, `Array::get`,
-`Map::get`, `Function::call1`, `Promise::resolve(&x)` and the like, are
-type-erased: one shim marshals the element as a `JsValue` handle, which a Rust
-enum cannot be, so they do not resolve on a `Nullable<T>` element. Name the
-element `JsNullable<T>` there, converting with `From` at the use site: for
-`T: JsGeneric`, a `Nullable<T>` and an `Option<Nullable<T>>` convert into a
-`JsNullable<T>`, `None` becoming `undefined`, and a `JsNullable<T>` converts
-into an `Option<Nullable<T>>`, keeping all three states.
-
-Under `--cfg js_sys_unstable_apis` those methods are instead
-`experimental_generic_mono`: each instantiation gets its own shim and converts
-the element directly, bounded by `FromWasmAbi` for a returned element and
-`RefIntoWasmAbi` for a borrowed one rather than `JsGeneric`. There
-`Array<Nullable<String>>::get` returns an `Option<Nullable<String>>`,
-`Map<String, Nullable<String>>::get(&key)` resolves,
-`Promise::resolve(&Nullable::Null)` is a `Promise<Nullable<T>>` and
-`f.call1(&this, &Nullable::Null)` converts the argument, since a borrowed
-`&Option<T>` or `&Nullable<T>` crosses as `Option<T>` with its payload
-borrowed. The `call*` and `bind*` methods have no `fn(..) -> JsValue` default
-in this form.
+type, and crosses whole, but `Array::get` or `Map::get` on it does not
+resolve: those marshal the element as a `JsValue` handle, which a Rust enum
+cannot be, as `Promise::resolve(&Nullable::Null)` cannot borrow one. Name the
+element `JsNullable<T>` to use them, converting with `From` at the use site:
+for `T: JsGeneric`, a `Nullable<T>` and an `Option<Nullable<T>>` convert into
+a `JsNullable<T>`, `None` becoming `undefined`, and a `JsNullable<T>`
+converts into an `Option<Nullable<T>>`, keeping all three states.
 
 The type is also re-exported as `js_sys::Nullable`.

@@ -256,7 +256,7 @@ function __wbg_get_imports() {
         __wbg__wbg_cb_unref_dcc1a90847f04c41: function(arg0) {
             arg0._wbg_cb_unref();
         },
-        __wbg_call_b254e041513f2aac: function() { return handleError(function (arg0, arg1, arg2) {
+        __wbg_call_a48f35d3fb7572a8: function() { return handleError(function (arg0, arg1, arg2) {
             const ret = arg0.call(arg1, arg2);
             return ret;
         }, arguments); },
@@ -343,7 +343,7 @@ function __wbg_get_imports() {
         __wbg_queueMicrotask_a72f977e97f23c5f: function(arg0) {
             queueMicrotask(arg0);
         },
-        __wbg_resolve_05cca9f78fd16401: function(arg0) {
+        __wbg_resolve_5556851ee5625d79: function(arg0) {
             const ret = Promise.resolve(arg0);
             return ret;
         },
