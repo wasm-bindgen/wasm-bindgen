@@ -11,8 +11,8 @@ use crate::__wbindgen_copy_to_typed_array;
 use crate::convert::{
     js_value_vector_from_abi, js_value_vector_into_abi, try_js_value_vector_from_abi, FromWasmAbi,
     IntoWasmAbi, LongRefFromWasmAbi, MaybeIntoWasmAbi, NullableIntoWasmAbi, OptionFromWasmAbi,
-    OptionIntoWasmAbi, RefFromWasmAbi, RefMutFromWasmAbi, TryFromJsValue, UpcastFrom,
-    VectorFromWasmAbi, VectorIntoWasmAbi, WasmAbi,
+    OptionIntoWasmAbi, RefFromWasmAbi, RefMutFromWasmAbi, UpcastFrom, VectorFromWasmAbi,
+    VectorIntoWasmAbi, WasmAbi,
 };
 use crate::describe::*;
 use crate::{JsError, JsValue, Nullable};
@@ -251,13 +251,10 @@ vectors! {
     u8 i8 u16 i16 u32 i32 u64 i64 usize isize f32 f64
 }
 
-/// The element of a `Vec<String>`: a JS string handle, which is how an owned
-/// vector of strings crosses, typed `string[]`.
-struct StringHandle;
-
-impl WasmDescribe for StringHandle {
+impl WasmDescribeVector for String {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe() {
+    fn describe_vector() {
+        inform(VECTOR);
         inform(NAMED_EXTERNREF);
         // Trying to use an actual loop for this breaks the Wasm interpreter.
         inform(6);
@@ -267,14 +264,6 @@ impl WasmDescribe for StringHandle {
         inform('i' as u32);
         inform('n' as u32);
         inform('g' as u32);
-    }
-}
-
-impl WasmDescribeVector for String {
-    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-    fn describe_vector() {
-        inform(VECTOR);
-        StringHandle::describe();
     }
 }
 
@@ -774,14 +763,10 @@ unsafe impl<T: ErasableGeneric> ErasableGeneric for &[T] {
 
 impl<'a, T, Target> UpcastFrom<&'a [T]> for &'a [Target] where Target: UpcastFrom<T> {}
 
-/// `Option<T>` and `Nullable<T>` as a sequence element.
-///
-/// Borrowed, `&[Option<T>]` is an encoded sequence whose cell is
-/// `Option<&T>`'s ABI, which is `Option<T>`'s: numbers copy, strings and
-/// handles borrow, as `&[T]` does. Owned, a `Vec<Option<T>>` follows
-/// `Vec<T>`: a scalar `T` encodes the same cells, and a string or JS handle
-/// `T` crosses in the compat form, an in-place vector of handles converted
-/// in Rust. `Option<Nullable<T>>` nests as it does for a single value.
+/// `Option<T>` and `Nullable<T>` as a borrowed sequence element: `&[Option<T>]`
+/// is an encoded sequence whose cell is `Option<&T>`'s ABI, which is
+/// `Option<T>`'s, so numbers copy and strings and handles borrow, as `&[T]`
+/// does. `Option<Nullable<T>>` nests as it does for a single value.
 ///
 /// A borrowed number, `bool`, `char` or borrowed string crosses by copy, so
 /// `&T`, `Option<&T>` and `Nullable<&T>` have `T`'s ABIs.
@@ -895,108 +880,4 @@ where
     fn slice_into_abi(slice: &[Self]) -> WasmSlice {
         WasmSlice::encode(slice, |e| e.into_abi())
     }
-}
-
-macro_rules! optional_scalar_vectors {
-    ($($t:ty)*) => ($(
-        crate::__wbindgen_encoded_sequence!(Option<$t>, |e| (*e).into_abi(), [into, from]);
-        crate::__wbindgen_encoded_sequence!(Nullable<$t>, |e| (*e).into_abi(), [into, from]);
-        crate::__wbindgen_encoded_sequence!(Option<Nullable<$t>>, |e| (*e).into_abi(), [into, from]);
-    )*)
-}
-
-optional_scalar_vectors! {
-    u8 i8 u16 i16 u32 i32 u64 i64 u128 i128 usize isize f32 f64 bool char
-}
-
-/// Reinterprets a handle as the `T` it erases to, as the `Vec<T>` buffer
-/// reinterpretation does for every element at once.
-#[inline]
-unsafe fn unerase<T: ErasableGeneric<Repr = JsValue>>(value: JsValue) -> T {
-    let erased = core::ptr::read(&value as *const JsValue as *const T);
-    mem::forget(value);
-    erased
-}
-
-/// The compat vector of `$t`, an optional string or JS handle, describing
-/// its element as `$handle` and converting each received element with
-/// `$from`. A string element is checked as `Vec<String>` checks it; a JS
-/// handle element is reinterpreted as `Vec<T>` reinterprets it, so an
-/// imported type with no JS class to test `instanceof` against converts.
-macro_rules! optional_handle_vectors {
-    ($([$($g:tt)*] $t:ty => $handle:ty, $from:expr;)*) => ($(
-        impl<$($g)*> WasmDescribeVector for $t {
-            #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
-            fn describe_vector() {
-                inform(VECTOR);
-                <$handle>::describe();
-            }
-        }
-
-        impl<$($g)*> VectorIntoWasmAbi for $t
-        where
-            JsValue: From<$t>,
-        {
-            type Abi = <Box<[JsValue]> as IntoWasmAbi>::Abi;
-
-            fn vector_into_abi(vector: Box<[Self]>) -> Self::Abi {
-                js_value_vector_into_abi(vector)
-            }
-        }
-
-        impl<$($g)*> VectorFromWasmAbi for $t {
-            type Abi = <Box<[JsValue]> as FromWasmAbi>::Abi;
-
-            unsafe fn vector_from_abi(js: Self::Abi) -> Box<[Self]> {
-                // Thrown here rather than in the closure, to keep the
-                // function that took the `Vec` within the debug-mode error
-                // stack's frame limit.
-                match Self::try_vector_from_abi(js) {
-                    Ok(vector) => vector,
-                    Err(msg) => crate::throw_str(msg),
-                }
-            }
-
-            unsafe fn try_vector_from_abi(js: Self::Abi) -> Result<Box<[Self]>, &'static str> {
-                let from: fn(JsValue) -> Result<Self, &'static str> = $from;
-                <Vec<JsValue> as FromWasmAbi>::from_abi(js)
-                    .into_iter()
-                    .map(from)
-                    .collect()
-            }
-        }
-    )*)
-}
-
-fn checked<T: TryFromJsValue>(value: JsValue) -> Result<T, &'static str> {
-    T::try_from_js_value(value).map_err(|_| crate::__rt::WRONG_TYPE_ERROR)
-}
-
-optional_handle_vectors! {
-    [] Option<String> => Option<StringHandle>, checked;
-    [] Nullable<String> => Nullable<StringHandle>, checked;
-    [] Option<Nullable<String>> => Option<Nullable<StringHandle>>, checked;
-    [T: ErasableGeneric<Repr = JsValue> + WasmDescribe] Option<T> => Self, |v| {
-        Ok(if v.is_null() || v.is_undefined() {
-            None
-        } else {
-            Some(unsafe { unerase(v) })
-        })
-    };
-    [T: ErasableGeneric<Repr = JsValue> + WasmDescribe] Nullable<T> => Self, |v| {
-        Ok(if v.is_null() {
-            Nullable::Null
-        } else {
-            Nullable::Value(unsafe { unerase(v) })
-        })
-    };
-    [T: ErasableGeneric<Repr = JsValue> + WasmDescribe] Option<Nullable<T>> => Self, |v| {
-        Ok(if v.is_undefined() {
-            None
-        } else if v.is_null() {
-            Some(Nullable::Null)
-        } else {
-            Some(Nullable::Value(unsafe { unerase(v) }))
-        })
-    };
 }

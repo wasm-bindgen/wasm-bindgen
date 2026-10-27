@@ -51,12 +51,10 @@
   [#5410](https://github.com/wasm-bindgen/wasm-bindgen/pull/5410)
   [#5423](https://github.com/wasm-bindgen/wasm-bindgen/pull/5423)
 
-* `Option<T>` and `Nullable<T>` are now sequence elements: `&[Option<T>]`,
-  `&[Nullable<T>]` and `&[Option<Nullable<T>>]` cross as encoded slices for
-  every `T` a `&[T]` takes, and `Vec<Option<T>>`, `Vec<Nullable<T>>` and
-  `Vec<Option<Nullable<T>>>` cross in both directions, encoded for a number,
-  `bool` or `char` and as an array of JS values for a `String` or a JS type,
-  typed `(T | null)[]` and the like. A borrowed number, `bool`, `char` or
+* `Option<T>` and `Nullable<T>` are now borrowed sequence elements:
+  `&[Option<T>]`, `&[Nullable<T>]` and `&[Option<Nullable<T>>]` cross as
+  encoded slices for every `T` a `&[T]` takes, typed `(T | null)[]` and the
+  like. A borrowed number, `bool`, `char` or
   borrowed string now crosses by copy, so `&f64`, `&Option<T>`,
   `&Nullable<T>`, `Option<&f64>` and `Option<&Nullable<T>>` are argument
   types and give the encoded cells.

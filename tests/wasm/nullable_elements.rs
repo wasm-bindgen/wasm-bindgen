@@ -1,6 +1,6 @@
 //! `Option<T>` and `Nullable<T>` as the element of a shape, rather than a
-//! bare argument or return: a borrowed slice, an owned vector, a `Function`
-//! signature, a `Promise` and a js-sys container's type arguments. Each is
+//! bare argument or return: a borrowed slice, a `Function` signature, a
+//! `Promise` and a js-sys container's type arguments. Each is
 //! covered as a plain import and under `experimental_generic_mono`, which is
 //! where exact nullability carriers are wanted everywhere.
 
@@ -9,7 +9,7 @@ use std::panic::AssertUnwindSafe;
 use std::rc::Rc;
 
 use js_sys::{Array, Function, JsString, Map, Number, Promise, Undefined};
-use wasm_bindgen::convert::{FromWasmAbi, IntoWasmAbi, VectorRefIntoWasmAbi};
+use wasm_bindgen::convert::{IntoWasmAbi, VectorRefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
@@ -35,21 +35,6 @@ extern "C" {
     fn opt_nullable_strings_slice(v: Option<&[Nullable<String>]>) -> String;
     #[wasm_bindgen(experimental_generic_mono, js_name = describe)]
     fn mono_slice<T: VectorRefIntoWasmAbi>(v: &[T]) -> String;
-
-    #[wasm_bindgen(js_name = describe)]
-    fn vec_nullable_strings(v: Vec<Nullable<String>>) -> String;
-    #[wasm_bindgen(js_name = describe)]
-    fn vec_opt_strings(v: Vec<Option<String>>) -> String;
-    #[wasm_bindgen(js_name = echo)]
-    fn echo_vec_nullable_strings(v: Vec<Nullable<String>>) -> Vec<Nullable<String>>;
-    #[wasm_bindgen(js_name = echo)]
-    fn echo_vec_nullable_js_strings(v: Vec<Nullable<JsString>>) -> Vec<Nullable<JsString>>;
-    #[wasm_bindgen(js_name = echo)]
-    fn echo_vec_opt_f64s(v: Vec<Option<f64>>) -> Vec<Option<f64>>;
-    #[wasm_bindgen(experimental_generic_mono, js_name = echo)]
-    fn mono_vec<T>(v: Vec<T>) -> Vec<T>
-    where
-        Vec<T>: IntoWasmAbi + FromWasmAbi;
 
     #[wasm_bindgen(js_name = echo)]
     fn echo_opt_ref_nullable_string(v: Option<&Nullable<String>>) -> JsValue;
@@ -81,39 +66,10 @@ extern "C" {
     #[wasm_bindgen(js_name = nullableArray)]
     fn nullable_array() -> Array<Nullable<JsString>>;
 
-    pub type Opaque;
-    #[wasm_bindgen(js_name = opaqueOpt)]
-    fn opaque_opt() -> Vec<Option<Opaque>>;
-    #[wasm_bindgen(js_name = opaqueNullable)]
-    fn opaque_nullable() -> Vec<Nullable<Opaque>>;
-    #[wasm_bindgen(js_name = opaqueOptNullable)]
-    fn opaque_opt_nullable() -> Vec<Option<Nullable<Opaque>>>;
     #[wasm_bindgen(js_name = nullableMap)]
     fn nullable_map() -> Map<JsString, Nullable<JsString>>;
     #[wasm_bindgen(js_name = describe)]
     fn describe_array(v: &Array<Nullable<JsString>>) -> String;
-
-    fn test_exports();
-}
-
-#[wasm_bindgen]
-pub fn export_echo_vec(v: Vec<Nullable<String>>) -> Vec<Nullable<String>> {
-    v
-}
-
-#[wasm_bindgen]
-pub fn export_echo_opt_vec(v: Vec<Option<String>>) -> Vec<Option<String>> {
-    v
-}
-
-#[wasm_bindgen]
-pub fn export_echo_opt_js_vec(v: Vec<Option<JsString>>) -> Vec<Option<JsString>> {
-    v
-}
-
-#[wasm_bindgen]
-pub fn export_null_count(v: Vec<Nullable<JsString>>) -> u32 {
-    v.iter().filter(|e| e.is_null()).count() as u32
 }
 
 #[wasm_bindgen_test]
@@ -169,25 +125,6 @@ fn mono_slices() {
         mono_slice(&[Nullable::Value("a".to_string()), Nullable::Null]),
         "Array:[\"a\",null]"
     );
-}
-
-#[wasm_bindgen_test]
-fn vecs() {
-    let v = vec![Nullable::Value("a".to_string()), Nullable::Null];
-    assert_eq!(vec_nullable_strings(v.clone()), "Array:[\"a\",null]");
-    assert_eq!(echo_vec_nullable_strings(v.clone()), v);
-    assert_eq!(
-        vec_opt_strings(vec![Some("a".to_string()), None]),
-        "Array:[\"a\",\"undefined\"]"
-    );
-    let js = vec![Nullable::Value(JsString::from("a")), Nullable::Null];
-    assert_eq!(echo_vec_nullable_js_strings(js.clone()), js);
-    assert_eq!(
-        echo_vec_opt_f64s(vec![Some(1.5), None]),
-        vec![Some(1.5), None]
-    );
-    assert_eq!(mono_vec(v.clone()), v);
-    test_exports();
 }
 
 // A borrowed scalar crosses by copy, so `&T` and `Option<&T>` have `T`'s
@@ -251,21 +188,6 @@ async fn promises() {
         mono_await_nullable(&p, 1u32).await,
         Nullable::Value("a".to_string())
     );
-}
-
-// An imported type with no JS class converts as a `Vec<T>` element does,
-// without an `instanceof` test.
-#[wasm_bindgen_test]
-fn opaque_elements() {
-    let v = opaque_opt();
-    assert!(matches!(v.as_slice(), [Some(_), None, None]));
-    let v = opaque_nullable();
-    assert!(matches!(v.as_slice(), [Nullable::Value(_), Nullable::Null]));
-    let v = opaque_opt_nullable();
-    assert!(matches!(
-        v.as_slice(),
-        [Some(Nullable::Value(_)), Some(Nullable::Null), None]
-    ));
 }
 
 #[wasm_bindgen_test]

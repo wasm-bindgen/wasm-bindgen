@@ -1,4 +1,4 @@
-use crate::descriptor::{Descriptor, SeqValue, VectorKind};
+use crate::descriptor::{SeqValue, VectorKind};
 use std::borrow::Cow;
 use std::collections::{BTreeMap, HashSet};
 use walrus::{ExportId, FunctionId, ImportId, RefType, TypedCustomSectionId};
@@ -113,19 +113,6 @@ pub enum OptionKind {
 }
 
 impl OptionKind {
-    /// The kind and payload of an `Option<T>`, `Nullable<T>` or
-    /// `Option<Nullable<T>>` descriptor.
-    pub fn of(desc: &Descriptor) -> Option<(OptionKind, &Descriptor)> {
-        match desc {
-            Descriptor::Option(inner) => match &**inner {
-                Descriptor::Nullable(inner) => Some((OptionKind::OptionNullable, inner)),
-                inner => Some((OptionKind::Option, inner)),
-            },
-            Descriptor::Nullable(inner) => Some((OptionKind::Nullable, inner)),
-            _ => None,
-        }
-    }
-
     /// Whether `null` crosses as the `Nullable` sentinel.
     pub fn nullable(self) -> bool {
         matches!(self, OptionKind::Nullable | OptionKind::OptionNullable)
@@ -565,18 +552,6 @@ impl AdapterType {
             }
             _ => return None,
         })
-    }
-
-    /// An in-place vector whose element descriptor is `cell`. An optional
-    /// named handle element is typed per element, so the argument and return
-    /// nuance of `Option<T>` applies to it as to a bare one.
-    pub fn vector(kind: VectorKind, cell: &Descriptor) -> AdapterType {
-        match (kind, OptionKind::of(cell)) {
-            (VectorKind::NamedExternref(name), Some((option_kind, _))) => AdapterType::Array(
-                Box::new(AdapterType::NamedExternref(name).option_kind(option_kind)),
-            ),
-            (kind, _) => AdapterType::Vector(kind),
-        }
     }
 
     pub fn option_kind(self, kind: OptionKind) -> AdapterType {

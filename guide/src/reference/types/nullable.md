@@ -87,27 +87,23 @@ the null pointer itself is `Null`. A JS `0` passed for either a
 
 ## As an element
 
-`Option<T>` and `Nullable<T>` are also accepted as the element of a sequence,
-for the same `T` a sequence of `T` accepts:
-
-| Shape | How it crosses | TypeScript |
-|---|---|---|
-| `&[Option<T>]`, `&[Nullable<T>]`, `&[Option<Nullable<T>>]` | encoded per element from the borrowed slice, numbers copied and strings and JS handles borrowed, into a fresh `Array` | `(T \| undefined)[]`, `(T \| null)[]` |
-| `Vec<Option<T>>` and friends, `T` a number, `bool` or `char` | encoded the same way in both directions | as above |
-| `Vec<Option<T>>` and friends, `T` a `String` or a JS type | an array of JS values, converted in Rust as `Vec<String>` is | `(string \| null)[]` |
+`Option<T>` and `Nullable<T>` are also accepted as the element of a borrowed
+slice, for the same `T` a `&[T]` accepts. `&[Option<T>]`, `&[Nullable<T>]`
+and `&[Option<Nullable<T>>]` are encoded per element, numbers copied and
+strings and JS handles borrowed, into a fresh `Array`, typed
+`(T | undefined)[]` or `(T | null)[]`.
 
 ```rust
 #[wasm_bindgen]
 extern "C" {
     fn plot(points: &[Option<f64>]);
-    fn names(ids: Vec<Nullable<String>>) -> Vec<Nullable<String>>;
+    fn names(ids: &[Nullable<String>]);
 }
 ```
 
 Under [`experimental_generic_mono`](../attributes/on-js-imports/experimental_generic_mono.md)
 they satisfy the bounds a generic import names for these positions:
-`VectorRefIntoWasmAbi` for a `&[T]` argument, `Vec<T>: IntoWasmAbi` and
-`Vec<T>: FromWasmAbi` for an owned vector, and `RefIntoWasmAbi` for a `&T`
+`VectorRefIntoWasmAbi` for a `&[T]` argument and `RefIntoWasmAbi` for a `&T`
 argument, so `log_items(&[Some(1.0), None])` instantiates over `Option<f64>`
 as over any element.
 
