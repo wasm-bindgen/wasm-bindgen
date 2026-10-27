@@ -985,7 +985,7 @@ unsafe impl<T: ErasableGeneric, E: ErasableGeneric> ErasableGeneric for Result<T
     type Repr = Result<<T as ErasableGeneric>::Repr, <E as ErasableGeneric>::Repr>;
 }
 
-impl<T: ErasableGeneric + Promising, E: ErasableGeneric> Promising for Result<T, E> {
+impl<T: Promising, E> Promising for Result<T, E> {
     type Resolution = Result<<T as Promising>::Resolution, E>;
 }
 
