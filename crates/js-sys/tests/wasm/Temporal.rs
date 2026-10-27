@@ -333,10 +333,21 @@ fn instant_methods() {
     let opts = Temporal::InstantToStringOptions::new();
     opts.set_smallest_unit(Temporal::Unit::Minute);
     opts.set_time_zone("America/Los_Angeles");
-    assert_eq!(
-        opts.get_time_zone(),
-        Some(JsString::from("America/Los_Angeles"))
-    );
+    assert_eq!(opts.get_time_zone().unwrap(), "America/Los_Angeles");
+    let from_zdt = Temporal::InstantToStringOptions::new();
+    from_zdt.set_time_zone_with_zoned_date_time(&get_test_zoned_date_time());
+    assert!(from_zdt
+        .get_time_zone()
+        .unwrap()
+        .is_instance_of::<Temporal::ZonedDateTime>());
+    let bag = Temporal::PlainDateLike::new();
+    bag.set_calendar("gregory");
+    assert_eq!(bag.get_calendar().unwrap(), "gregory");
+    bag.set_calendar_with_plain_date(&get_test_plain_date());
+    assert!(bag
+        .get_calendar()
+        .unwrap()
+        .is_instance_of::<Temporal::PlainDate>());
     assert_eq!(
         instant.to_js_string_with_options(&opts).unwrap(),
         "2022-06-15T05:30-07:00"

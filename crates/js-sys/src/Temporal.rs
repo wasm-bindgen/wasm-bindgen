@@ -432,9 +432,9 @@ extern "C" {
     #[derive(Clone, Debug)]
     pub type InstantToStringOptions;
 
-    /// Get the time zone for display.
+    /// The `timeZone` for display as set: a string or the `Temporal.ZonedDateTime` it was taken from.
     #[wasm_bindgen(method, getter = timeZone)]
-    pub fn get_time_zone(this: &InstantToStringOptions) -> Option<JsString>;
+    pub fn get_time_zone(this: &InstantToStringOptions) -> Option<JsValue>;
 
     /// Set the time zone for display.
     ///
@@ -792,8 +792,9 @@ extern "C" {
     #[wasm_bindgen(extends = PlainDateFields)]
     #[derive(Clone, Debug)]
     pub type PlainDateLike;
+    /// The `calendar` as set: a string or the Temporal object it was taken from.
     #[wasm_bindgen(method, getter = calendar)]
-    pub fn get_calendar(this: &PlainDateLike) -> Option<JsString>;
+    pub fn get_calendar(this: &PlainDateLike) -> Option<JsValue>;
     #[wasm_bindgen(method, setter = calendar)]
     pub fn set_calendar(this: &PlainDateLike, value: &str);
     /// Sets `calendar` to the calendar of the given `Temporal.PlainDate`.
@@ -949,8 +950,9 @@ extern "C" {
     #[wasm_bindgen(extends = PlainDateTimeFields)]
     #[derive(Clone, Debug)]
     pub type PlainDateTimeLike;
+    /// The `calendar` as set: a string or the Temporal object it was taken from.
     #[wasm_bindgen(method, getter = calendar)]
-    pub fn get_calendar(this: &PlainDateTimeLike) -> Option<JsString>;
+    pub fn get_calendar(this: &PlainDateTimeLike) -> Option<JsValue>;
     #[wasm_bindgen(method, setter = calendar)]
     pub fn set_calendar(this: &PlainDateTimeLike, value: &str);
     /// Sets `calendar` to the calendar of the given `Temporal.PlainDate`.
@@ -1065,8 +1067,9 @@ extern "C" {
     #[wasm_bindgen(extends = ZonedDateTimeFields)]
     #[derive(Clone, Debug)]
     pub type ZonedDateTimeLike;
+    /// The `calendar` as set: a string or the Temporal object it was taken from.
     #[wasm_bindgen(method, getter = calendar)]
-    pub fn get_calendar(this: &ZonedDateTimeLike) -> Option<JsString>;
+    pub fn get_calendar(this: &ZonedDateTimeLike) -> Option<JsValue>;
     #[wasm_bindgen(method, setter = calendar)]
     pub fn set_calendar(this: &ZonedDateTimeLike, value: &str);
     /// Sets `calendar` to the calendar of the given `Temporal.PlainDate`.
@@ -1084,8 +1087,9 @@ extern "C" {
     /// Sets `calendar` to the calendar of the given `Temporal.ZonedDateTime`.
     #[wasm_bindgen(method, setter = calendar)]
     pub fn set_calendar_with_zoned_date_time(this: &ZonedDateTimeLike, value: &ZonedDateTime);
+    /// The `timeZone` as set: a string or the `Temporal.ZonedDateTime` it was taken from.
     #[wasm_bindgen(method, getter = timeZone)]
-    pub fn get_time_zone(this: &ZonedDateTimeLike) -> Option<JsString>;
+    pub fn get_time_zone(this: &ZonedDateTimeLike) -> Option<JsValue>;
     #[wasm_bindgen(method, setter = timeZone)]
     pub fn set_time_zone(this: &ZonedDateTimeLike, value: &str);
     /// Sets `timeZone` to the time zone of the given `Temporal.ZonedDateTime`.
@@ -1156,8 +1160,9 @@ extern "C" {
     #[wasm_bindgen(extends = PlainYearMonthFields)]
     #[derive(Clone, Debug)]
     pub type PlainYearMonthLike;
+    /// The `calendar` as set: a string or the Temporal object it was taken from.
     #[wasm_bindgen(method, getter = calendar)]
-    pub fn get_calendar(this: &PlainYearMonthLike) -> Option<JsString>;
+    pub fn get_calendar(this: &PlainYearMonthLike) -> Option<JsValue>;
     #[wasm_bindgen(method, setter = calendar)]
     pub fn set_calendar(this: &PlainYearMonthLike, value: &str);
     /// Sets `calendar` to the calendar of the given `Temporal.PlainDate`.
@@ -1198,8 +1203,9 @@ extern "C" {
     #[wasm_bindgen(extends = PlainDateFields)]
     #[derive(Clone, Debug)]
     pub type PlainMonthDayLike;
+    /// The `calendar` as set: a string or the Temporal object it was taken from.
     #[wasm_bindgen(method, getter = calendar)]
-    pub fn get_calendar(this: &PlainMonthDayLike) -> Option<JsString>;
+    pub fn get_calendar(this: &PlainMonthDayLike) -> Option<JsValue>;
     #[wasm_bindgen(method, setter = calendar)]
     pub fn set_calendar(this: &PlainMonthDayLike, value: &str);
     /// Sets `calendar` to the calendar of the given `Temporal.PlainDate`.
@@ -1302,8 +1308,9 @@ extern "C" {
     #[derive(Clone, Debug)]
     pub type ToZonedDateTimeItem;
 
+    /// The `timeZone` as set: a string or the `Temporal.ZonedDateTime` it was taken from.
     #[wasm_bindgen(method, getter = timeZone)]
-    pub fn get_time_zone(this: &ToZonedDateTimeItem) -> Option<JsString>;
+    pub fn get_time_zone(this: &ToZonedDateTimeItem) -> Option<JsValue>;
     #[wasm_bindgen(method, setter = timeZone)]
     pub fn set_time_zone(this: &ToZonedDateTimeItem, value: &str);
     /// Sets `timeZone` to the time zone of the given `Temporal.ZonedDateTime`.
