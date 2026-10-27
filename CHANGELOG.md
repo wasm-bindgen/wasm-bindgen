@@ -61,7 +61,8 @@
   `&Nullable<T>`, `Option<&f64>` and `Option<&Nullable<T>>` are argument
   types and give the encoded cells.
   `Nullable<T>` converts into `JsValue` with `From` and from one with
-  `TryFromJsValue`, and implements `Promising`. A js-sys `Function<fn(..)>`
+  `TryFromJsValue`, and `Option<T>` and `Nullable<T>` are `Promising` for
+  any `T: Promising`. A js-sys `Function<fn(..)>`
   signature slot no longer has to be a `JsGeneric` handle, so
   `Function<fn(Nullable<JsString>) -> Option<Number>>` is a type and
   `Function::from_closure` accepts a closure with converted arguments.
