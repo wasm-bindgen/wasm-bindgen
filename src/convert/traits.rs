@@ -564,7 +564,9 @@ impl<T: WasmAbi> WasmRet<T> {
 /// documentation for more details.
 pub trait TryFromJsValue: Sized {
     /// Whether `null` converts to a value of `Self`. An `Option<Self>` reads
-    /// `null` as `None` unless this is set, as `Nullable<T>` does.
+    /// `null` as `None` unless this is set, as `Nullable<T>` does. This is
+    /// the JS-value side of [`NullableFromWasmAbi`], which claims `null` at
+    /// the ABI.
     const ACCEPTS_NULL: bool = false;
 
     /// Performs the conversion.

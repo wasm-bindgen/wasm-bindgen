@@ -104,6 +104,13 @@ extern "C" {
 }
 ```
 
+Under [`experimental_generic_mono`](../attributes/on-js-imports/experimental_generic_mono.md)
+they satisfy the bounds a generic import names for these positions:
+`VectorRefIntoWasmAbi` for a `&[T]` argument, `Vec<T>: IntoWasmAbi` and
+`Vec<T>: FromWasmAbi` for an owned vector, and `RefIntoWasmAbi` for a `&T`
+argument, so `log_items(&[Some(1.0), None])` instantiates over `Option<f64>`
+as over any element.
+
 A `Function` signature may name them too, since its slots are JS types
 rather than handles: a `Closure<dyn FnMut(Nullable<JsString>)>` makes a
 `Function<fn(Nullable<JsString>) -> Undefined>` with `Function::from_closure`,

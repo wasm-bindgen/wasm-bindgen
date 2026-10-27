@@ -174,7 +174,7 @@ impl InstructionBuilder<'_, '_> {
             }
 
             Descriptor::Vector(cell) => {
-                let kind = match cell.vector_cell(true) {
+                let kind = match cell.vector_cell() {
                     SequenceCell::InPlace(kind) => kind,
                     SequenceCell::Encoded(elem) => {
                         return self.incoming_encoded_vector(elem, false, OptionKind::Option)
@@ -182,7 +182,7 @@ impl InstructionBuilder<'_, '_> {
                 };
                 let ptr_ty = self.incoming_internal_word_ty();
                 self.instruction(
-                    &[AdapterType::Vector(kind.clone())],
+                    &[AdapterType::vector(kind.clone(), cell)],
                     Instruction::VectorToMemory {
                         kind,
                         malloc: self.cx.malloc()?,
@@ -453,7 +453,7 @@ impl InstructionBuilder<'_, '_> {
             }
 
             Descriptor::Vector(cell) => {
-                let kind = match cell.vector_cell(true) {
+                let kind = match cell.vector_cell() {
                     SequenceCell::InPlace(kind) => kind,
                     SequenceCell::Encoded(elem) => {
                         return self.incoming_encoded_vector(elem, true, option_kind)
@@ -464,7 +464,7 @@ impl InstructionBuilder<'_, '_> {
                 let mem = self.cx.memory()?;
                 let ptr_ty = self.incoming_internal_word_ty();
                 self.instruction(
-                    &[AdapterType::Vector(kind.clone()).option_kind(option_kind)],
+                    &[AdapterType::vector(kind.clone(), cell).option_kind(option_kind)],
                     Instruction::OptionVector {
                         kind,
                         malloc,
@@ -665,14 +665,7 @@ impl InstructionBuilder<'_, '_> {
             // ABI. An optional string or handle is an in-place vector instead
             // (`Descriptor::vector_cell`).
             Descriptor::Option(_) | Descriptor::Nullable(_) => {
-                let (inner, kind) = match elem {
-                    Descriptor::Option(inner) => match &**inner {
-                        Descriptor::Nullable(inner) => (&**inner, OptionKind::OptionNullable),
-                        inner => (inner, OptionKind::Option),
-                    },
-                    Descriptor::Nullable(inner) => (&**inner, OptionKind::Nullable),
-                    _ => unreachable!(),
-                };
+                let (kind, inner) = OptionKind::of(elem).unwrap();
                 match inner {
                     Descriptor::I8
                     | Descriptor::U8

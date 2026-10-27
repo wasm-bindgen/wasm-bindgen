@@ -522,24 +522,21 @@ impl Descriptor {
     /// The cell of an owned vector whose element is `self`. An optional JS
     /// handle, `Option<T>` or `Nullable<T>` of a string or imported type, is
     /// the one element that differs from a borrowed slice's: owned, the
-    /// elements are converted to handles in Rust and cross in place, typed
-    /// as the optional element; borrowed, they are encoded.
-    pub fn vector_cell(&self, incoming: bool) -> SequenceCell<'_> {
-        let (inner, empty) = match self {
+    /// elements are converted to handles in Rust and cross in place;
+    /// borrowed, they are encoded.
+    pub fn vector_cell(&self) -> SequenceCell<'_> {
+        let inner = match self {
             Descriptor::Option(inner) => match &**inner {
-                Descriptor::Nullable(inner) => (&**inner, " | null | undefined"),
-                // `Option<T>` reads `null` as `None` but writes `None` as
-                // `undefined`.
-                inner if incoming => (inner, " | null | undefined"),
-                inner => (inner, " | undefined"),
+                Descriptor::Nullable(inner) => &**inner,
+                inner => inner,
             },
-            Descriptor::Nullable(inner) => (&**inner, " | null"),
+            Descriptor::Nullable(inner) => &**inner,
             _ => return self.sequence_cell(),
         };
         match inner {
             Descriptor::Externref => SequenceCell::InPlace(VectorKind::Externref),
             Descriptor::NamedExternref(name) => {
-                SequenceCell::InPlace(VectorKind::NamedExternref(format!("{name}{empty}")))
+                SequenceCell::InPlace(VectorKind::NamedExternref(name.clone()))
             }
             _ => self.sequence_cell(),
         }

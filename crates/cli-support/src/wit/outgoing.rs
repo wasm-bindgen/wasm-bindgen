@@ -169,7 +169,7 @@ impl InstructionBuilder<'_, '_> {
             }
 
             Descriptor::Vector(cell) => {
-                let kind = match cell.vector_cell(false) {
+                let kind = match cell.vector_cell() {
                     SequenceCell::InPlace(kind) => kind,
                     SequenceCell::Encoded(elem) => return self.outgoing_encoded_slice(elem, None),
                 };
@@ -184,7 +184,7 @@ impl InstructionBuilder<'_, '_> {
                         free,
                         mode: self.seq_value,
                     },
-                    &[AdapterType::Vector(kind)],
+                    &[AdapterType::vector(kind, cell)],
                 );
             }
 
@@ -509,7 +509,7 @@ impl InstructionBuilder<'_, '_> {
 
             Descriptor::String | Descriptor::Vector(_) => {
                 let kind = match arg {
-                    Descriptor::Vector(cell) => match cell.vector_cell(false) {
+                    Descriptor::Vector(cell) => match cell.vector_cell() {
                         SequenceCell::InPlace(kind) => kind,
                         SequenceCell::Encoded(elem) => {
                             return self.outgoing_encoded_slice(elem, Some(option_kind))
@@ -517,19 +517,23 @@ impl InstructionBuilder<'_, '_> {
                     },
                     _ => VectorKind::String,
                 };
+                let ty = match arg {
+                    Descriptor::Vector(cell) => AdapterType::vector(kind.clone(), cell),
+                    _ => AdapterType::Vector(kind.clone()),
+                };
                 let mem = self.cx.memory()?;
                 let free = self.cx.free()?;
                 let ptr_ty = self.outgoing_internal_word_ty();
                 self.instruction(
                     &[ptr_ty.clone(), ptr_ty],
                     Instruction::OptionVectorLoad {
-                        kind: kind.clone(),
+                        kind,
                         mem,
                         free,
                         mode: self.seq_value,
                         option_kind,
                     },
-                    &[AdapterType::Vector(kind).option_kind(option_kind)],
+                    &[ty.option_kind(option_kind)],
                 );
             }
 
