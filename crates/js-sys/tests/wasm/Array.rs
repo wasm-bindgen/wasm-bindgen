@@ -90,6 +90,7 @@ fn from_iter() {
 // the erased `Array<JsValue>`. To preserve the element type, use
 // `Array::<T>::from_iter_typed`, which is typed via `IntoJsGeneric`.
 #[wasm_bindgen_test]
+#[cfg_attr(js_sys_unstable_apis, allow(deprecated))]
 fn from_iter_wasm_bindgen_type() {
     // Stable form: erased `Array<JsValue>`, no turbofish needed.
     let arr = Array::from_iter([JsString::from("a"), JsString::from("b")]);
@@ -116,6 +117,7 @@ fn from_iter_wasm_bindgen_type() {
 // erased `Array<JsValue>`; `Array::<T>::from_iter_typed` infers the typed
 // `Array<T>` for callers who want it.
 #[wasm_bindgen_test]
+#[cfg_attr(js_sys_unstable_apis, allow(deprecated))]
 fn from_iter_owned_wasm_bindgen_type_infers() {
     fn take_object_array(arr: &Array<Object>) {
         assert_eq!(arr.length(), 1);
@@ -148,6 +150,7 @@ fn from_iter_owned_wasm_bindgen_type_infers() {
 }
 
 #[wasm_bindgen_test]
+#[cfg_attr(js_sys_unstable_apis, allow(deprecated))]
 fn extend() {
     // Stable `Extend` on `Array` (= `Array<JsValue>`) is bound by
     // `AsRef<JsValue>`, so typed items extend an erased array directly.
@@ -1530,6 +1533,7 @@ fn test_array_to_vec() {
 }
 
 #[wasm_bindgen_test]
+#[cfg_attr(js_sys_unstable_apis, allow(deprecated))]
 fn test_array_from_iter_typed() {
     let items = vec![
         TestItem::new(1, &JsString::from("a")),
@@ -1545,6 +1549,7 @@ fn test_array_from_iter_typed() {
 }
 
 #[wasm_bindgen_test]
+#[cfg_attr(js_sys_unstable_apis, allow(deprecated))]
 fn test_array_extend_typed() {
     let mut arr: Array<TestItem> = Array::new_typed();
     arr.push(&TestItem::new(1, &JsString::from("a")));

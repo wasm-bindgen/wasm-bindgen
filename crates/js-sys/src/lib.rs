@@ -3167,10 +3167,14 @@ impl<T> Array<T> {
 // (since `JsValue: IntoJsGeneric` with `JsCanon = JsValue`), so the two
 // cannot coexist as `FromIterator` impls without coherence violations.
 //
-// TODO(next major): deprecate this `FromIterator`/`Extend` pair in favour
-// of a single `IntoJsGeneric`-based impl, and rename `from_iter_typed` to
-// take its place. That migration is source-breaking for callers relying on
-// `.collect::<Array>()` implicit erasure of typed items, so it is deferred.
+// Under `js_sys_unstable_apis`, `FromIterator` / `Extend` collect `T` and
+// `&T` items into `Array<T>` directly, so `from_iter_typed` / `extend_typed`
+// are deprecated there and `IntoJsGeneric` is unused by js-sys.
+//
+// TODO(next major): make the unstable impls the default and remove
+// `from_iter_typed`, `extend_typed` and `IntoJsGeneric`. That is
+// source-breaking for callers relying on `.collect::<Array>()` implicit
+// erasure of typed items, so it is deferred.
 
 #[cfg(not(js_sys_unstable_apis))]
 impl<A> core::iter::FromIterator<A> for Array
@@ -3296,24 +3300,30 @@ impl<T: JsGeneric> Array<T> {
     ///
     /// Reference iteration (`Item = &U`) is supported transparently via the
     /// `&U: IntoJsGeneric` blanket in `wasm-bindgen` core.
-    //
-    // TODO(next major): replace the stable `FromIterator` impl above with
-    // this behaviour and remove `from_iter_typed`.
+    ///
+    /// Under `js_sys_unstable_apis`, `collect()` gives the typed array
+    /// directly, so this is deprecated there.
+    #[cfg_attr(
+        js_sys_unstable_apis,
+        deprecated(note = "`collect()` gives a typed `Array<T>` under `js_sys_unstable_apis`")
+    )]
     pub fn from_iter_typed<A, I>(iter: I) -> Array<T>
     where
         A: IntoJsGeneric<JsCanon = T>,
         I: IntoIterator<Item = A>,
     {
         let mut out = Array::<T>::new_typed();
+        #[allow(deprecated)]
         out.extend_typed(iter);
         out
     }
 
     /// Extend a typed `Array<T>` with an iterator of items convertible to
     /// `T` via [`IntoJsGeneric`]. Companion to [`Array::from_iter_typed`].
-    //
-    // TODO(next major): replace the stable `Extend` impl above with this
-    // behaviour and remove `extend_typed`.
+    #[cfg_attr(
+        js_sys_unstable_apis,
+        deprecated(note = "`extend()` takes `T` and `&T` items under `js_sys_unstable_apis`")
+    )]
     pub fn extend_typed<A, I>(&mut self, iter: I)
     where
         A: IntoJsGeneric<JsCanon = T>,

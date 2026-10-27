@@ -270,6 +270,8 @@
   returning `Array<T>`, so mixed arguments need converting to a common type
   such as `JsValue`. `Promise::resolve` takes its value by value rather than
   by reference, though references still work as the value.
+  `Array::from_iter_typed` and `extend_typed` are deprecated under the cfg, as
+  `collect()` and `extend()` give the typed array directly.
   [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
 
 * **Breaking (experimental):** under `js_sys_unstable_apis`, the `JsFunction`
