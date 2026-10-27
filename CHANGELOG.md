@@ -169,6 +169,11 @@
   [#5403](https://github.com/wasm-bindgen/wasm-bindgen/pull/5403)
   [#5421](https://github.com/wasm-bindgen/wasm-bindgen/pull/5421)
 
+* `String` and `&str` now upcast to `JsValue`, and `String` to itself, so a
+  `Promise<String>` from an `experimental_generic_mono` import is `JsGeneric`
+  and upcasts to `Promise<JsValue>` as `Promise<bool>` does.
+  [#5427](https://github.com/wasm-bindgen/wasm-bindgen/pull/5427)
+
 ### Changed
 
 * The js-sys `JsFunction*` traits' associated types (`Ret`, `ArgN`, `BindN`)

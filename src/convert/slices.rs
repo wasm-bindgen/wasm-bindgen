@@ -14,6 +14,7 @@ use crate::convert::{
     RefFromWasmAbi, RefMutFromWasmAbi, UpcastFrom, VectorFromWasmAbi, VectorIntoWasmAbi, WasmAbi,
 };
 use crate::describe::*;
+use crate::sys::{JsNullable, JsOption};
 use crate::{JsError, JsValue};
 
 use cfg_if::cfg_if;
@@ -677,6 +678,16 @@ unsafe impl<T: ErasableGeneric> ErasableGeneric for Box<[T]> {
 }
 
 impl UpcastFrom<&str> for &str {}
+impl UpcastFrom<String> for String {}
+
+// A Rust string stands for a JS string in a generic position, as `bool` does
+// for a JS boolean, so `Promise<String>` relabels straight to `Promise<JsValue>`.
+impl UpcastFrom<String> for JsValue {}
+impl UpcastFrom<String> for JsOption<JsValue> {}
+impl UpcastFrom<String> for JsNullable<JsValue> {}
+impl UpcastFrom<&str> for JsValue {}
+impl UpcastFrom<&str> for JsOption<JsValue> {}
+impl UpcastFrom<&str> for JsNullable<JsValue> {}
 
 impl<T, Target> UpcastFrom<Box<[T]>> for Box<[Target]> where Target: UpcastFrom<T> {}
 

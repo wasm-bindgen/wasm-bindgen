@@ -512,6 +512,32 @@ async fn covariance() {
 }
 
 #[wasm_bindgen_test]
+async fn rust_string_element_upcasts() {
+    use wasm_bindgen::prelude::Upcast;
+    use wasm_bindgen::JsGeneric;
+
+    fn is_js_generic<T: JsGeneric>(_: &T) {}
+
+    async fn accepts_jsvalue_promise(promise: Promise<JsValue>) -> JsValue {
+        JsFuture::from(promise).await.unwrap()
+    }
+    async fn accepts_js_string_promise(promise: Promise<JsString>) -> JsString {
+        JsFuture::from(promise).await.unwrap().unchecked_into()
+    }
+
+    let promise: Promise<String> = Promise::resolve(&JsString::from("owned")).unchecked_into();
+    is_js_generic(&promise);
+    let s = accepts_js_string_promise(promise.clone().upcast_into()).await;
+    assert_eq!(s, JsString::from("owned"));
+    let value = accepts_jsvalue_promise(promise.upcast_into()).await;
+    assert_eq!(value.as_string().as_deref(), Some("owned"));
+
+    let promise: Promise<&str> = Promise::resolve(&JsString::from("borrowed")).unchecked_into();
+    let value = accepts_jsvalue_promise(promise.upcast_into()).await;
+    assert_eq!(value.as_string().as_deref(), Some("borrowed"));
+}
+
+#[wasm_bindgen_test]
 #[cfg(js_sys_unstable_apis)]
 async fn test_promise_all_with_upcast() {
     // Create an array of Promise<TestValue> where TestValue extends Object
