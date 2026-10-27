@@ -14174,10 +14174,12 @@ extern "C" {
     /// pending promise with the functions that settle it.
     ///
     /// `T` is the fulfilled value type and `E` the rejection reason type,
-    /// both defaulting to `JsValue`.
+    /// both defaulting to `JsValue`. Unlike `Promise<T, E>` it is invariant
+    /// in both: `resolve` and `reject` take a `T` and an `E`, so widening
+    /// either would let the promise settle with a value its type rules out.
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/withResolvers)
-    #[wasm_bindgen(extends = Object, typescript_type = "PromiseWithResolvers<any>")]
+    #[wasm_bindgen(extends = Object, no_upcast, typescript_type = "PromiseWithResolvers<any>")]
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub type PromiseWithResolvers<T = JsValue, E = JsValue>;
 
@@ -14197,6 +14199,17 @@ extern "C" {
         this: &PromiseWithResolvers<T, E>,
     ) -> Function<fn(E) -> Undefined>;
 }
+
+// Invariant in `T` and `E`: only identity and the `Object` / `JsValue` supertypes.
+impl<T, E> UpcastFrom<PromiseWithResolvers<T, E>> for PromiseWithResolvers<T, E> {}
+impl<T, E> UpcastFrom<PromiseWithResolvers<T, E>> for JsOption<PromiseWithResolvers<T, E>> {}
+impl<T, E> UpcastFrom<PromiseWithResolvers<T, E>> for JsNullable<PromiseWithResolvers<T, E>> {}
+impl<T, E> UpcastFrom<PromiseWithResolvers<T, E>> for JsValue {}
+impl<T, E> UpcastFrom<PromiseWithResolvers<T, E>> for JsOption<JsValue> {}
+impl<T, E> UpcastFrom<PromiseWithResolvers<T, E>> for JsNullable<JsValue> {}
+impl<T, E> UpcastFrom<PromiseWithResolvers<T, E>> for Object {}
+impl<T, E> UpcastFrom<PromiseWithResolvers<T, E>> for JsOption<Object> {}
+impl<T, E> UpcastFrom<PromiseWithResolvers<T, E>> for JsNullable<Object> {}
 
 // Promise
 #[wasm_bindgen]

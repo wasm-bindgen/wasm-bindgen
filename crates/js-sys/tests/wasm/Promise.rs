@@ -680,6 +680,24 @@ async fn typed_rejection_round_trip() {
     assert_eq!(err.message(), "nope");
 }
 
+// `PromiseWithResolvers` is invariant in `T` and `E`, but still upcasts to its
+// JS supertypes.
+#[wasm_bindgen_test]
+fn resolvers_upcast_to_supertypes() {
+    use wasm_bindgen::prelude::Upcast;
+
+    if !promise_has("withResolvers") {
+        return;
+    }
+    let resolvers = Promise::with_resolvers::<Number, TypeError>();
+    let same: PromiseWithResolvers<Number, TypeError> = resolvers.clone().upcast_into();
+    let object: Object = resolvers.clone().upcast_into();
+    let value: JsValue = resolvers.upcast_into();
+    assert!(same.is_instance_of::<Object>());
+    assert!(object.is_instance_of::<Object>());
+    assert!(value.is_object());
+}
+
 #[cfg(js_sys_unstable_apis)]
 #[wasm_bindgen_test]
 async fn typed_rejection_constructors() {

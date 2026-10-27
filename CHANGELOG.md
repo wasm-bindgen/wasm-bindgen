@@ -15,6 +15,9 @@
   through; and under `js_sys_unstable_apis`, `Promise::new`, `Promise::reject`
   and `Promise::any` are typed on the rejection too, `any` as
   `AggregateError`. The default keeps existing `Promise<T>` code unchanged.
+  `PromiseWithResolvers<T, E>` is invariant in both, since its `resolve` and
+  `reject` functions take them, and `JsFuture<T, E>` is `UnwindSafe` for
+  every `T` and `E`.
   [#5426](https://github.com/wasm-bindgen/wasm-bindgen/pull/5426)
 
 * Added the `--js-string-builtins` CLI flag, importing `static_string`
