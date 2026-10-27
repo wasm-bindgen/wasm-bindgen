@@ -1098,6 +1098,1076 @@ fn ordering_and_locale_options() {
     );
 }
 
+// Generated over every public Temporal binding: an infallible import that throws
+// or a mistyped return surfaces here as a test failure.
+#[wasm_bindgen_test]
+fn every_binding_is_callable() {
+    if !is_temporal_supported() {
+        return;
+    }
+    fn pd_like() -> Temporal::PlainDateLike {
+        let b = Temporal::PlainDateLike::new();
+        b.set_year(2022);
+        b.set_month(6);
+        b.set_day(15);
+        b
+    }
+    fn pdt_like() -> Temporal::PlainDateTimeLike {
+        let b = Temporal::PlainDateTimeLike::new();
+        b.set_year(2022);
+        b.set_month(6);
+        b.set_day(15);
+        b
+    }
+    fn zdt_like() -> Temporal::ZonedDateTimeLike {
+        let b = Temporal::ZonedDateTimeLike::new();
+        b.set_year(2022);
+        b.set_month(6);
+        b.set_day(15);
+        b.set_time_zone("UTC");
+        b
+    }
+    fn pt_like() -> Temporal::PlainTimeLike {
+        let b = Temporal::PlainTimeLike::new();
+        b.set_hour(12);
+        b
+    }
+    fn ym_like() -> Temporal::PlainYearMonthLike {
+        let b = Temporal::PlainYearMonthLike::new();
+        b.set_year(2022);
+        b.set_month(6);
+        b
+    }
+    fn md_like() -> Temporal::PlainMonthDayLike {
+        let b = Temporal::PlainMonthDayLike::new();
+        b.set_month_code("M06");
+        b.set_day(15);
+        b
+    }
+    fn dur_like() -> Temporal::DurationLike {
+        let b = Temporal::DurationLike::new();
+        b.set_hours(1.0);
+        b
+    }
+    fn pd_fields() -> Temporal::PlainDateFields {
+        let b = Temporal::PlainDateFields::new();
+        b.set_day(1);
+        b
+    }
+    fn pdt_fields() -> Temporal::PlainDateTimeFields {
+        let b = Temporal::PlainDateTimeFields::new();
+        b.set_hour(1);
+        b
+    }
+    fn zdt_fields() -> Temporal::ZonedDateTimeFields {
+        let b = Temporal::ZonedDateTimeFields::new();
+        b.set_hour(1);
+        b
+    }
+    fn ym_fields() -> Temporal::PlainYearMonthFields {
+        let b = Temporal::PlainYearMonthFields::new();
+        b.set_month(1);
+        b
+    }
+    let pd = get_test_plain_date();
+    let pdt = get_test_plain_date_time();
+    let zdt = get_test_zoned_date_time();
+    let inst = get_test_instant();
+    let pt = get_test_plain_time();
+    let ym = get_test_plain_year_month();
+    let md = get_test_plain_month_day();
+    let dur = Temporal::Duration::from_with_str("PT1H30M").unwrap();
+    let _ = Temporal::OverflowOptions::new().get_overflow();
+    Temporal::OverflowOptions::new().set_overflow(Temporal::Overflow::Constrain);
+    let _ = Temporal::DisambiguationOptions::new().get_disambiguation();
+    Temporal::DisambiguationOptions::new().set_disambiguation(Temporal::Disambiguation::Compatible);
+    let _ = Temporal::ZonedDateTimeAssignmentOptions::new().get_overflow();
+    Temporal::ZonedDateTimeAssignmentOptions::new().set_overflow(Temporal::Overflow::Constrain);
+    let _ = Temporal::ZonedDateTimeAssignmentOptions::new().get_disambiguation();
+    Temporal::ZonedDateTimeAssignmentOptions::new()
+        .set_disambiguation(Temporal::Disambiguation::Compatible);
+    let _ = Temporal::ZonedDateTimeAssignmentOptions::new().get_offset();
+    Temporal::ZonedDateTimeAssignmentOptions::new().set_offset(Temporal::OffsetOption::Reject);
+    let _ = Temporal::ToStringPrecisionOptions::new().get_fractional_second_digits();
+    Temporal::ToStringPrecisionOptions::new().set_fractional_second_digits(3);
+    let _ = Temporal::ToStringPrecisionOptions::new().get_smallest_unit();
+    Temporal::ToStringPrecisionOptions::new().set_smallest_unit(Temporal::Unit::Minute);
+    let _ = Temporal::ToStringPrecisionOptions::new().get_rounding_mode();
+    Temporal::ToStringPrecisionOptions::new().set_rounding_mode(Intl::RoundingMode::HalfExpand);
+    let _ = Temporal::ShowCalendarOptions::new().get_calendar_name();
+    Temporal::ShowCalendarOptions::new().set_calendar_name(Temporal::CalendarDisplay::Auto);
+    let _ = Temporal::CalendarTypeToStringOptions::new().get_calendar_name();
+    Temporal::CalendarTypeToStringOptions::new().set_calendar_name(Temporal::CalendarDisplay::Auto);
+    let _ = Temporal::ZonedDateTimeToStringOptions::new().get_time_zone_name();
+    Temporal::ZonedDateTimeToStringOptions::new()
+        .set_time_zone_name(Temporal::TimeZoneDisplay::Auto);
+    let _ = Temporal::ZonedDateTimeToStringOptions::new().get_offset();
+    Temporal::ZonedDateTimeToStringOptions::new().set_offset(Temporal::OffsetDisplay::Auto);
+    let _ = Temporal::InstantToStringOptions::new().get_time_zone();
+    Temporal::InstantToStringOptions::new().set_time_zone("UTC");
+    Temporal::InstantToStringOptions::new().set_time_zone_with_zoned_date_time(&zdt);
+    let _ = Temporal::DifferenceOptions::new().get_smallest_unit();
+    Temporal::DifferenceOptions::new().set_smallest_unit(Temporal::Unit::Minute);
+    let _ = Temporal::DifferenceOptions::new().get_largest_unit();
+    Temporal::DifferenceOptions::new().set_largest_unit(Temporal::LargestUnit::Hour);
+    let _ = Temporal::DifferenceOptions::new().get_rounding_increment();
+    Temporal::DifferenceOptions::new().set_rounding_increment(1);
+    let _ = Temporal::DifferenceOptions::new().get_rounding_mode();
+    Temporal::DifferenceOptions::new().set_rounding_mode(Intl::RoundingMode::HalfExpand);
+    let _ = Temporal::RoundToOptions::new(Temporal::Unit::Minute).get_smallest_unit();
+    Temporal::RoundToOptions::new(Temporal::Unit::Minute).set_smallest_unit(Temporal::Unit::Minute);
+    let _ = Temporal::RoundToOptions::new(Temporal::Unit::Minute).get_rounding_increment();
+    Temporal::RoundToOptions::new(Temporal::Unit::Minute).set_rounding_increment(1);
+    let _ = Temporal::RoundToOptions::new(Temporal::Unit::Minute).get_rounding_mode();
+    Temporal::RoundToOptions::new(Temporal::Unit::Minute)
+        .set_rounding_mode(Intl::RoundingMode::HalfExpand);
+    let _ = Temporal::RelativeToOptions::new().get_relative_to();
+    Temporal::RelativeToOptions::new().set_relative_to_with_str("2022-06-15");
+    Temporal::RelativeToOptions::new().set_relative_to_with_plain_date_like(&pd_like());
+    Temporal::RelativeToOptions::new().set_relative_to_with_plain_date_time_like(&pdt_like());
+    Temporal::RelativeToOptions::new().set_relative_to_with_zoned_date_time_like(&zdt_like());
+    Temporal::RelativeToOptions::new().set_relative_to_with_plain_date(&pd);
+    Temporal::RelativeToOptions::new().set_relative_to_with_plain_date_time(&pdt);
+    Temporal::RelativeToOptions::new().set_relative_to_with_zoned_date_time(&zdt);
+    let _ = Temporal::DurationRoundToOptions::new().get_smallest_unit();
+    Temporal::DurationRoundToOptions::new().set_smallest_unit(Temporal::Unit::Minute);
+    let _ = Temporal::DurationRoundToOptions::new().get_largest_unit();
+    Temporal::DurationRoundToOptions::new().set_largest_unit(Temporal::LargestUnit::Hour);
+    let _ = Temporal::DurationRoundToOptions::new().get_rounding_increment();
+    Temporal::DurationRoundToOptions::new().set_rounding_increment(1);
+    let _ = Temporal::DurationRoundToOptions::new().get_rounding_mode();
+    Temporal::DurationRoundToOptions::new().set_rounding_mode(Intl::RoundingMode::HalfExpand);
+    let _ = Temporal::DurationTotalOptions::new(Temporal::Unit::Hour).get_unit();
+    Temporal::DurationTotalOptions::new(Temporal::Unit::Hour).set_unit(Temporal::Unit::Minute);
+    let _ = Temporal::TimeZoneTransitionOptions::new(Temporal::TransitionDirection::Next)
+        .get_direction();
+    Temporal::TimeZoneTransitionOptions::new(Temporal::TransitionDirection::Next)
+        .set_direction(Temporal::TransitionDirection::Next);
+    let _ = Temporal::PlainDateFields::new().get_era();
+    Temporal::PlainDateFields::new().set_era("2022-06-15");
+    let _ = Temporal::PlainDateFields::new().get_era_year();
+    Temporal::PlainDateFields::new().set_era_year(1);
+    let _ = Temporal::PlainDateFields::new().get_year();
+    Temporal::PlainDateFields::new().set_year(1);
+    let _ = Temporal::PlainDateFields::new().get_month();
+    Temporal::PlainDateFields::new().set_month(1);
+    let _ = Temporal::PlainDateFields::new().get_month_code();
+    Temporal::PlainDateFields::new().set_month_code("2022-06-15");
+    let _ = Temporal::PlainDateFields::new().get_day();
+    Temporal::PlainDateFields::new().set_day(1);
+    let _ = Temporal::PlainDateLike::new().get_calendar();
+    Temporal::PlainDateLike::new().set_calendar("iso8601");
+    Temporal::PlainDateLike::new().set_calendar_with_plain_date(&pd);
+    Temporal::PlainDateLike::new().set_calendar_with_plain_date_time(&pdt);
+    Temporal::PlainDateLike::new().set_calendar_with_plain_year_month(&ym);
+    Temporal::PlainDateLike::new().set_calendar_with_plain_month_day(&md);
+    Temporal::PlainDateLike::new().set_calendar_with_zoned_date_time(&zdt);
+    let _ = Temporal::PlainTimeLike::new().get_hour();
+    Temporal::PlainTimeLike::new().set_hour(1);
+    let _ = Temporal::PlainTimeLike::new().get_minute();
+    Temporal::PlainTimeLike::new().set_minute(1);
+    let _ = Temporal::PlainTimeLike::new().get_second();
+    Temporal::PlainTimeLike::new().set_second(1);
+    let _ = Temporal::PlainTimeLike::new().get_millisecond();
+    Temporal::PlainTimeLike::new().set_millisecond(1);
+    let _ = Temporal::PlainTimeLike::new().get_microsecond();
+    Temporal::PlainTimeLike::new().set_microsecond(1);
+    let _ = Temporal::PlainTimeLike::new().get_nanosecond();
+    Temporal::PlainTimeLike::new().set_nanosecond(1);
+    let _ = Temporal::PlainDateTimeFields::new().get_era();
+    Temporal::PlainDateTimeFields::new().set_era("2022-06-15");
+    let _ = Temporal::PlainDateTimeFields::new().get_era_year();
+    Temporal::PlainDateTimeFields::new().set_era_year(1);
+    let _ = Temporal::PlainDateTimeFields::new().get_year();
+    Temporal::PlainDateTimeFields::new().set_year(1);
+    let _ = Temporal::PlainDateTimeFields::new().get_month();
+    Temporal::PlainDateTimeFields::new().set_month(1);
+    let _ = Temporal::PlainDateTimeFields::new().get_month_code();
+    Temporal::PlainDateTimeFields::new().set_month_code("2022-06-15");
+    let _ = Temporal::PlainDateTimeFields::new().get_day();
+    Temporal::PlainDateTimeFields::new().set_day(1);
+    let _ = Temporal::PlainDateTimeFields::new().get_hour();
+    Temporal::PlainDateTimeFields::new().set_hour(1);
+    let _ = Temporal::PlainDateTimeFields::new().get_minute();
+    Temporal::PlainDateTimeFields::new().set_minute(1);
+    let _ = Temporal::PlainDateTimeFields::new().get_second();
+    Temporal::PlainDateTimeFields::new().set_second(1);
+    let _ = Temporal::PlainDateTimeFields::new().get_millisecond();
+    Temporal::PlainDateTimeFields::new().set_millisecond(1);
+    let _ = Temporal::PlainDateTimeFields::new().get_microsecond();
+    Temporal::PlainDateTimeFields::new().set_microsecond(1);
+    let _ = Temporal::PlainDateTimeFields::new().get_nanosecond();
+    Temporal::PlainDateTimeFields::new().set_nanosecond(1);
+    let _ = Temporal::PlainDateTimeLike::new().get_calendar();
+    Temporal::PlainDateTimeLike::new().set_calendar("iso8601");
+    Temporal::PlainDateTimeLike::new().set_calendar_with_plain_date(&pd);
+    Temporal::PlainDateTimeLike::new().set_calendar_with_plain_date_time(&pdt);
+    Temporal::PlainDateTimeLike::new().set_calendar_with_plain_year_month(&ym);
+    Temporal::PlainDateTimeLike::new().set_calendar_with_plain_month_day(&md);
+    Temporal::PlainDateTimeLike::new().set_calendar_with_zoned_date_time(&zdt);
+    let _ = Temporal::ZonedDateTimeFields::new().get_era();
+    Temporal::ZonedDateTimeFields::new().set_era("2022-06-15");
+    let _ = Temporal::ZonedDateTimeFields::new().get_era_year();
+    Temporal::ZonedDateTimeFields::new().set_era_year(1);
+    let _ = Temporal::ZonedDateTimeFields::new().get_year();
+    Temporal::ZonedDateTimeFields::new().set_year(1);
+    let _ = Temporal::ZonedDateTimeFields::new().get_month();
+    Temporal::ZonedDateTimeFields::new().set_month(1);
+    let _ = Temporal::ZonedDateTimeFields::new().get_month_code();
+    Temporal::ZonedDateTimeFields::new().set_month_code("2022-06-15");
+    let _ = Temporal::ZonedDateTimeFields::new().get_day();
+    Temporal::ZonedDateTimeFields::new().set_day(1);
+    let _ = Temporal::ZonedDateTimeFields::new().get_hour();
+    Temporal::ZonedDateTimeFields::new().set_hour(1);
+    let _ = Temporal::ZonedDateTimeFields::new().get_minute();
+    Temporal::ZonedDateTimeFields::new().set_minute(1);
+    let _ = Temporal::ZonedDateTimeFields::new().get_second();
+    Temporal::ZonedDateTimeFields::new().set_second(1);
+    let _ = Temporal::ZonedDateTimeFields::new().get_millisecond();
+    Temporal::ZonedDateTimeFields::new().set_millisecond(1);
+    let _ = Temporal::ZonedDateTimeFields::new().get_microsecond();
+    Temporal::ZonedDateTimeFields::new().set_microsecond(1);
+    let _ = Temporal::ZonedDateTimeFields::new().get_nanosecond();
+    Temporal::ZonedDateTimeFields::new().set_nanosecond(1);
+    let _ = Temporal::ZonedDateTimeFields::new().get_offset();
+    Temporal::ZonedDateTimeFields::new().set_offset("2022-06-15");
+    let _ = Temporal::ZonedDateTimeLike::new().get_calendar();
+    Temporal::ZonedDateTimeLike::new().set_calendar("iso8601");
+    Temporal::ZonedDateTimeLike::new().set_calendar_with_plain_date(&pd);
+    Temporal::ZonedDateTimeLike::new().set_calendar_with_plain_date_time(&pdt);
+    Temporal::ZonedDateTimeLike::new().set_calendar_with_plain_year_month(&ym);
+    Temporal::ZonedDateTimeLike::new().set_calendar_with_plain_month_day(&md);
+    Temporal::ZonedDateTimeLike::new().set_calendar_with_zoned_date_time(&zdt);
+    let _ = Temporal::ZonedDateTimeLike::new().get_time_zone();
+    Temporal::ZonedDateTimeLike::new().set_time_zone("UTC");
+    Temporal::ZonedDateTimeLike::new().set_time_zone_with_zoned_date_time(&zdt);
+    let _ = Temporal::PlainYearMonthFields::new().get_era();
+    Temporal::PlainYearMonthFields::new().set_era("2022-06-15");
+    let _ = Temporal::PlainYearMonthFields::new().get_era_year();
+    Temporal::PlainYearMonthFields::new().set_era_year(1);
+    let _ = Temporal::PlainYearMonthFields::new().get_year();
+    Temporal::PlainYearMonthFields::new().set_year(1);
+    let _ = Temporal::PlainYearMonthFields::new().get_month();
+    Temporal::PlainYearMonthFields::new().set_month(1);
+    let _ = Temporal::PlainYearMonthFields::new().get_month_code();
+    Temporal::PlainYearMonthFields::new().set_month_code("2022-06-15");
+    let _ = Temporal::PlainYearMonthLike::new().get_calendar();
+    Temporal::PlainYearMonthLike::new().set_calendar("iso8601");
+    Temporal::PlainYearMonthLike::new().set_calendar_with_plain_date(&pd);
+    Temporal::PlainYearMonthLike::new().set_calendar_with_plain_date_time(&pdt);
+    Temporal::PlainYearMonthLike::new().set_calendar_with_plain_year_month(&ym);
+    Temporal::PlainYearMonthLike::new().set_calendar_with_plain_month_day(&md);
+    Temporal::PlainYearMonthLike::new().set_calendar_with_zoned_date_time(&zdt);
+    let _ = Temporal::PlainMonthDayLike::new().get_calendar();
+    Temporal::PlainMonthDayLike::new().set_calendar("iso8601");
+    Temporal::PlainMonthDayLike::new().set_calendar_with_plain_date(&pd);
+    Temporal::PlainMonthDayLike::new().set_calendar_with_plain_date_time(&pdt);
+    Temporal::PlainMonthDayLike::new().set_calendar_with_plain_year_month(&ym);
+    Temporal::PlainMonthDayLike::new().set_calendar_with_plain_month_day(&md);
+    Temporal::PlainMonthDayLike::new().set_calendar_with_zoned_date_time(&zdt);
+    let _ = Temporal::DurationLike::new().get_years();
+    Temporal::DurationLike::new().set_years(1.0);
+    let _ = Temporal::DurationLike::new().get_months();
+    Temporal::DurationLike::new().set_months(1.0);
+    let _ = Temporal::DurationLike::new().get_weeks();
+    Temporal::DurationLike::new().set_weeks(1.0);
+    let _ = Temporal::DurationLike::new().get_days();
+    Temporal::DurationLike::new().set_days(1.0);
+    let _ = Temporal::DurationLike::new().get_hours();
+    Temporal::DurationLike::new().set_hours(1.0);
+    let _ = Temporal::DurationLike::new().get_minutes();
+    Temporal::DurationLike::new().set_minutes(1.0);
+    let _ = Temporal::DurationLike::new().get_seconds();
+    Temporal::DurationLike::new().set_seconds(1.0);
+    let _ = Temporal::DurationLike::new().get_milliseconds();
+    Temporal::DurationLike::new().set_milliseconds(1.0);
+    let _ = Temporal::DurationLike::new().get_microseconds();
+    Temporal::DurationLike::new().set_microseconds(1.0);
+    let _ = Temporal::DurationLike::new().get_nanoseconds();
+    Temporal::DurationLike::new().set_nanoseconds(1.0);
+    let _ = Temporal::ToZonedDateTimeItem::new("UTC").get_time_zone();
+    Temporal::ToZonedDateTimeItem::new("UTC").set_time_zone("UTC");
+    Temporal::ToZonedDateTimeItem::new("UTC").set_time_zone_with_zoned_date_time(&zdt);
+    let _ = Temporal::ToZonedDateTimeItem::new("UTC").get_plain_time();
+    Temporal::ToZonedDateTimeItem::new("UTC").set_plain_time(&pt);
+    Temporal::ToZonedDateTimeItem::new("UTC").set_plain_time_with_str("12:00");
+    Temporal::ToZonedDateTimeItem::new("UTC").set_plain_time_with_plain_time_like(&pt_like());
+    Temporal::ToZonedDateTimeItem::new("UTC").set_plain_time_with_plain_date_time(&pdt);
+    Temporal::ToZonedDateTimeItem::new("UTC").set_plain_time_with_zoned_date_time(&zdt);
+    let _ = Temporal::Instant::new(&BigInt::from(0i64));
+    let _ = Temporal::Instant::from_with_str("2022-06-15T12:30:45Z");
+    let _ = Temporal::Instant::from_with_instant(&inst);
+    let _ = Temporal::Instant::from_with_zoned_date_time(&zdt);
+    let _ = Temporal::Instant::from_epoch_milliseconds(1.0);
+    let _ = Temporal::Instant::from_epoch_nanoseconds(&BigInt::from(0i64));
+    let _ = Temporal::Instant::compare(&inst, &inst);
+    let _ = inst.epoch_milliseconds();
+    let _ = inst.epoch_nanoseconds();
+    let _ = inst.equals(&inst);
+    let _ = inst.add(&dur);
+    let _ = inst.equals_with_zoned_date_time(&zdt);
+    let _ = inst.equals_with_str("2022-06-15T12:30:45Z");
+    let _ = inst.subtract(&dur);
+    let _ = inst.add_with_duration_like(&dur_like());
+    let _ = inst.subtract_with_duration_like(&dur_like());
+    let _ = inst.subtract_with_str("PT1H");
+    let _ = inst.add_with_str("PT1H");
+    let _ = inst.until(&inst);
+    let _ = inst.until_with_options(&inst, &Temporal::DifferenceOptions::new());
+    let _ = inst.since(&inst);
+    let _ = inst.until_with_zoned_date_time(&zdt);
+    let _ = inst.until_with_zoned_date_time_and_options(&zdt, &Temporal::DifferenceOptions::new());
+    let _ = inst.until_with_str("2022-06-15T12:30:45Z");
+    let _ = inst
+        .until_with_str_and_options("2022-06-15T12:30:45Z", &Temporal::DifferenceOptions::new());
+    let _ = inst.since_with_options(&inst, &Temporal::DifferenceOptions::new());
+    let _ = inst.round(&Temporal::RoundToOptions::new(Temporal::Unit::Minute));
+    let _ = inst.since_with_zoned_date_time(&zdt);
+    let _ = inst.since_with_zoned_date_time_and_options(&zdt, &Temporal::DifferenceOptions::new());
+    let _ = inst.since_with_str("2022-06-15T12:30:45Z");
+    let _ = inst
+        .since_with_str_and_options("2022-06-15T12:30:45Z", &Temporal::DifferenceOptions::new());
+    let _ = inst.round_with_unit(Temporal::Unit::Minute);
+    let _ = inst.to_zoned_date_time_iso("UTC");
+    let _ = inst.to_zoned_date_time_iso_with_zoned_date_time(&zdt);
+    let _ = inst.to_locale_string();
+    let _ = inst.to_locale_string_with_str("en-US");
+    let _ = inst.to_locale_string_with_str_sequence(&[JsString::from("en-US")]);
+    let _ = inst.to_locale_string_with_str_sequence_and_options(
+        &[JsString::from("en-US")],
+        &Intl::DateTimeFormatOptions::new(),
+    );
+    let _ = inst.to_locale_string_with_options(None, &Intl::DateTimeFormatOptions::new());
+    let _ = inst.to_json();
+    let _ = inst.to_js_string();
+    let _ = inst.to_js_string_with_options(&Temporal::InstantToStringOptions::new());
+    let _ = Temporal::PlainDateTime::new(2022, 6, 15);
+    let _ = Temporal::PlainDateTime::new_with_hour(2022, 6, 15, 1);
+    let _ = Temporal::PlainDateTime::new_with_hour_and_minute(2022, 6, 15, 1, 1);
+    let _ = Temporal::PlainDateTime::new_with_hour_and_minute_and_second(2022, 6, 15, 1, 1, 1);
+    let _ = Temporal::PlainDateTime::new_with_hour_and_minute_and_second_and_millisecond(
+        2022, 6, 15, 1, 1, 1, 1,
+    );
+    let _ = Temporal::PlainDateTime::new_with_hour_and_minute_and_second_and_millisecond_and_microsecond(2022, 6, 15, 1, 1, 1, 1, 1);
+    let _ = Temporal::PlainDateTime::new_with_hour_and_minute_and_second_and_millisecond_and_microsecond_and_nanosecond(2022, 6, 15, 1, 1, 1, 1, 1, 1);
+    let _ = Temporal::PlainDateTime::new_with_hour_and_minute_and_second_and_millisecond_and_microsecond_and_nanosecond_and_calendar(2022, 6, 15, 1, 1, 1, 1, 1, 1, "iso8601");
+    let _ = Temporal::PlainDateTime::from_with_str("2022-06-15T12:30:45");
+    let _ = Temporal::PlainDateTime::from_with_str_and_options(
+        "2022-06-15T12:30:45",
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainDateTime::from_with_plain_date_time_like(&pdt_like());
+    let _ = Temporal::PlainDateTime::from_with_plain_date_time_like_and_options(
+        &pdt_like(),
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainDateTime::from_with_plain_date_time(&pdt);
+    let _ = Temporal::PlainDateTime::from_with_plain_date_time_and_options(
+        &pdt,
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainDateTime::from_with_plain_date(&pd);
+    let _ = Temporal::PlainDateTime::from_with_plain_date_and_options(
+        &pd,
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainDateTime::from_with_zoned_date_time(&zdt);
+    let _ = Temporal::PlainDateTime::from_with_zoned_date_time_and_options(
+        &zdt,
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainDateTime::compare(&pdt, &pdt);
+    let _ = pdt.era();
+    let _ = pdt.era_year();
+    let _ = pdt.year();
+    let _ = pdt.month();
+    let _ = pdt.month_code();
+    let _ = pdt.day();
+    let _ = pdt.hour();
+    let _ = pdt.minute();
+    let _ = pdt.second();
+    let _ = pdt.millisecond();
+    let _ = pdt.microsecond();
+    let _ = pdt.nanosecond();
+    let _ = pdt.calendar_id();
+    let _ = pdt.day_of_week();
+    let _ = pdt.day_of_year();
+    let _ = pdt.week_of_year();
+    let _ = pdt.year_of_week();
+    let _ = pdt.days_in_week();
+    let _ = pdt.days_in_month();
+    let _ = pdt.days_in_year();
+    let _ = pdt.months_in_year();
+    let _ = pdt.in_leap_year();
+    let _ = pdt.equals(&pdt);
+    let _ = pdt.with(&pdt_fields());
+    let _ = pdt.equals_with_plain_date(&pd);
+    let _ = pdt.equals_with_zoned_date_time(&zdt);
+    let _ = pdt.equals_with_plain_date_time_like(&pdt_like());
+    let _ = pdt.equals_with_str("2022-06-15T12:30:45");
+    let _ = pdt.with_with_options(&pdt_fields(), &Temporal::OverflowOptions::new());
+    let _ = pdt.with_plain_time();
+    let _ = pdt.with_plain_time_with_plain_time(&pt);
+    let _ = pdt.with_calendar("iso8601");
+    let _ = pdt.with_plain_time_with_str("12:00");
+    let _ = pdt.with_plain_time_with_plain_time_like(&pt_like());
+    let _ = pdt.with_plain_time_with_plain_date_time(&pdt);
+    let _ = pdt.with_plain_time_with_zoned_date_time(&zdt);
+    let _ = pdt.with_calendar_with_plain_date(&pd);
+    let _ = pdt.with_calendar_with_plain_date_time(&pdt);
+    let _ = pdt.with_calendar_with_plain_year_month(&ym);
+    let _ = pdt.with_calendar_with_plain_month_day(&md);
+    let _ = pdt.with_calendar_with_zoned_date_time(&zdt);
+    let _ = pdt.add(&dur);
+    let _ = pdt.add_with_options(&dur, &Temporal::OverflowOptions::new());
+    let _ = pdt.add_with_duration_like(&dur_like());
+    let _ = pdt.add_with_duration_like_and_options(&dur_like(), &Temporal::OverflowOptions::new());
+    let _ = pdt.add_with_str_and_options("PT1H", &Temporal::OverflowOptions::new());
+    let _ = pdt.add_with_str("PT1H");
+    let _ = pdt.subtract(&dur);
+    let _ = pdt.subtract_with_options(&dur, &Temporal::OverflowOptions::new());
+    let _ = pdt.subtract_with_duration_like(&dur_like());
+    let _ =
+        pdt.subtract_with_duration_like_and_options(&dur_like(), &Temporal::OverflowOptions::new());
+    let _ = pdt.subtract_with_str_and_options("PT1H", &Temporal::OverflowOptions::new());
+    let _ = pdt.subtract_with_str("PT1H");
+    let _ = pdt.until(&pdt);
+    let _ = pdt.until_with_options(&pdt, &Temporal::DifferenceOptions::new());
+    let _ = pdt.since(&pdt);
+    let _ = pdt.until_with_plain_date(&pd);
+    let _ = pdt.until_with_plain_date_and_options(&pd, &Temporal::DifferenceOptions::new());
+    let _ = pdt.until_with_zoned_date_time(&zdt);
+    let _ = pdt.until_with_zoned_date_time_and_options(&zdt, &Temporal::DifferenceOptions::new());
+    let _ = pdt.until_with_plain_date_time_like(&pdt_like());
+    let _ = pdt.until_with_plain_date_time_like_and_options(
+        &pdt_like(),
+        &Temporal::DifferenceOptions::new(),
+    );
+    let _ = pdt.until_with_str("2022-06-15T12:30:45");
+    let _ =
+        pdt.until_with_str_and_options("2022-06-15T12:30:45", &Temporal::DifferenceOptions::new());
+    let _ = pdt.since_with_options(&pdt, &Temporal::DifferenceOptions::new());
+    let _ = pdt.round(&Temporal::RoundToOptions::new(Temporal::Unit::Minute));
+    let _ = pdt.since_with_plain_date(&pd);
+    let _ = pdt.since_with_plain_date_and_options(&pd, &Temporal::DifferenceOptions::new());
+    let _ = pdt.since_with_zoned_date_time(&zdt);
+    let _ = pdt.since_with_zoned_date_time_and_options(&zdt, &Temporal::DifferenceOptions::new());
+    let _ = pdt.since_with_plain_date_time_like(&pdt_like());
+    let _ = pdt.since_with_plain_date_time_like_and_options(
+        &pdt_like(),
+        &Temporal::DifferenceOptions::new(),
+    );
+    let _ = pdt.since_with_str("2022-06-15T12:30:45");
+    let _ =
+        pdt.since_with_str_and_options("2022-06-15T12:30:45", &Temporal::DifferenceOptions::new());
+    let _ = pdt.round_with_unit(Temporal::Unit::Minute);
+    let _ = pdt.to_zoned_date_time("UTC");
+    let _ = pdt.to_zoned_date_time_with_options("UTC", &Temporal::DisambiguationOptions::new());
+    let _ = pdt.to_zoned_date_time_with_zoned_date_time(&zdt);
+    let _ = pdt.to_zoned_date_time_with_zoned_date_time_and_options(
+        &zdt,
+        &Temporal::DisambiguationOptions::new(),
+    );
+    let _ = pdt.to_plain_date();
+    let _ = pdt.to_plain_time();
+    let _ = pdt.to_locale_string();
+    let _ = pdt.to_locale_string_with_str("en-US");
+    let _ = pdt.to_locale_string_with_str_sequence(&[JsString::from("en-US")]);
+    let _ = pdt.to_locale_string_with_str_sequence_and_options(
+        &[JsString::from("en-US")],
+        &Intl::DateTimeFormatOptions::new(),
+    );
+    let _ = pdt.to_locale_string_with_options(None, &Intl::DateTimeFormatOptions::new());
+    let _ = pdt.to_json();
+    let _ = pdt.to_js_string();
+    let _ = pdt.to_js_string_with_options(&Temporal::CalendarTypeToStringOptions::new());
+    let _ = Temporal::ZonedDateTime::new(&BigInt::from(0i64), "UTC");
+    let _ = Temporal::ZonedDateTime::new_with_calendar(&BigInt::from(0i64), "UTC", "iso8601");
+    let _ =
+        Temporal::ZonedDateTime::from_with_str("2022-06-15T12:30:45-07:00[America/Los_Angeles]");
+    let _ = Temporal::ZonedDateTime::from_with_str_and_options(
+        "2022-06-15T12:30:45-07:00[America/Los_Angeles]",
+        &Temporal::ZonedDateTimeAssignmentOptions::new(),
+    );
+    let _ = Temporal::ZonedDateTime::from_with_zoned_date_time_like(&zdt_like());
+    let _ = Temporal::ZonedDateTime::from_with_zoned_date_time_like_and_options(
+        &zdt_like(),
+        &Temporal::ZonedDateTimeAssignmentOptions::new(),
+    );
+    let _ = Temporal::ZonedDateTime::from_with_zoned_date_time(&zdt);
+    let _ = Temporal::ZonedDateTime::from_with_zoned_date_time_and_options(
+        &zdt,
+        &Temporal::ZonedDateTimeAssignmentOptions::new(),
+    );
+    let _ = Temporal::ZonedDateTime::compare(&zdt, &zdt);
+    let _ = zdt.era();
+    let _ = zdt.era_year();
+    let _ = zdt.year();
+    let _ = zdt.month();
+    let _ = zdt.month_code();
+    let _ = zdt.day();
+    let _ = zdt.hour();
+    let _ = zdt.minute();
+    let _ = zdt.second();
+    let _ = zdt.millisecond();
+    let _ = zdt.microsecond();
+    let _ = zdt.nanosecond();
+    let _ = zdt.time_zone_id();
+    let _ = zdt.calendar_id();
+    let _ = zdt.day_of_week();
+    let _ = zdt.day_of_year();
+    let _ = zdt.week_of_year();
+    let _ = zdt.year_of_week();
+    let _ = zdt.hours_in_day();
+    let _ = zdt.days_in_week();
+    let _ = zdt.days_in_month();
+    let _ = zdt.days_in_year();
+    let _ = zdt.months_in_year();
+    let _ = zdt.in_leap_year();
+    let _ = zdt.offset_nanoseconds();
+    let _ = zdt.offset();
+    let _ = zdt.epoch_milliseconds();
+    let _ = zdt.epoch_nanoseconds();
+    let _ = zdt.equals(&zdt);
+    let _ = zdt.with(&zdt_fields());
+    let _ = zdt.equals_with_zoned_date_time_like(&zdt_like());
+    let _ = zdt.equals_with_str("2022-06-15T12:30:45-07:00[America/Los_Angeles]");
+    let _ = zdt.with_with_options(
+        &zdt_fields(),
+        &Temporal::ZonedDateTimeAssignmentOptions::new(),
+    );
+    let _ = zdt.with_plain_time();
+    let _ = zdt.with_plain_time_with_plain_time(&pt);
+    let _ = zdt.with_calendar("iso8601");
+    let _ = zdt.with_plain_time_with_str("12:00");
+    let _ = zdt.with_plain_time_with_plain_time_like(&pt_like());
+    let _ = zdt.with_plain_time_with_plain_date_time(&pdt);
+    let _ = zdt.with_plain_time_with_zoned_date_time(&zdt);
+    let _ = zdt.with_calendar_with_plain_date(&pd);
+    let _ = zdt.with_calendar_with_plain_date_time(&pdt);
+    let _ = zdt.with_calendar_with_plain_year_month(&ym);
+    let _ = zdt.with_calendar_with_plain_month_day(&md);
+    let _ = zdt.with_calendar_with_zoned_date_time(&zdt);
+    let _ = zdt.with_time_zone("UTC");
+    let _ = zdt.with_time_zone_with_zoned_date_time(&zdt);
+    let _ = zdt.add(&dur);
+    let _ = zdt.add_with_options(&dur, &Temporal::OverflowOptions::new());
+    let _ = zdt.add_with_duration_like(&dur_like());
+    let _ = zdt.add_with_duration_like_and_options(&dur_like(), &Temporal::OverflowOptions::new());
+    let _ = zdt.add_with_str_and_options("PT1H", &Temporal::OverflowOptions::new());
+    let _ = zdt.add_with_str("PT1H");
+    let _ = zdt.subtract(&dur);
+    let _ = zdt.subtract_with_options(&dur, &Temporal::OverflowOptions::new());
+    let _ = zdt.subtract_with_duration_like(&dur_like());
+    let _ =
+        zdt.subtract_with_duration_like_and_options(&dur_like(), &Temporal::OverflowOptions::new());
+    let _ = zdt.subtract_with_str_and_options("PT1H", &Temporal::OverflowOptions::new());
+    let _ = zdt.subtract_with_str("PT1H");
+    let _ = zdt.until(&zdt);
+    let _ = zdt.until_with_options(&zdt, &Temporal::DifferenceOptions::new());
+    let _ = zdt.since(&zdt);
+    let _ = zdt.until_with_zoned_date_time_like(&zdt_like());
+    let _ = zdt.until_with_zoned_date_time_like_and_options(
+        &zdt_like(),
+        &Temporal::DifferenceOptions::new(),
+    );
+    let _ = zdt.until_with_str("2022-06-15T12:30:45-07:00[America/Los_Angeles]");
+    let _ = zdt.until_with_str_and_options(
+        "2022-06-15T12:30:45-07:00[America/Los_Angeles]",
+        &Temporal::DifferenceOptions::new(),
+    );
+    let _ = zdt.since_with_options(&zdt, &Temporal::DifferenceOptions::new());
+    let _ = zdt.round(&Temporal::RoundToOptions::new(Temporal::Unit::Minute));
+    let _ = zdt.since_with_zoned_date_time_like(&zdt_like());
+    let _ = zdt.since_with_zoned_date_time_like_and_options(
+        &zdt_like(),
+        &Temporal::DifferenceOptions::new(),
+    );
+    let _ = zdt.since_with_str("2022-06-15T12:30:45-07:00[America/Los_Angeles]");
+    let _ = zdt.since_with_str_and_options(
+        "2022-06-15T12:30:45-07:00[America/Los_Angeles]",
+        &Temporal::DifferenceOptions::new(),
+    );
+    let _ = zdt.round_with_unit(Temporal::Unit::Minute);
+    let _ = zdt.start_of_day();
+    let _ = zdt.get_time_zone_transition(&Temporal::TimeZoneTransitionOptions::new(
+        Temporal::TransitionDirection::Next,
+    ));
+    let _ = zdt.get_time_zone_transition_with_direction(Temporal::TransitionDirection::Next);
+    let _ = zdt.to_instant();
+    let _ = zdt.to_plain_date_time();
+    let _ = zdt.to_plain_date();
+    let _ = zdt.to_plain_time();
+    let _ = zdt.to_locale_string();
+    let _ = zdt.to_locale_string_with_str("en-US");
+    let _ = zdt.to_locale_string_with_str_sequence(&[JsString::from("en-US")]);
+    let _ = zdt.to_locale_string_with_str_sequence_and_options(
+        &[JsString::from("en-US")],
+        &Intl::DateTimeFormatOptions::new(),
+    );
+    let _ = zdt.to_locale_string_with_options(None, &Intl::DateTimeFormatOptions::new());
+    let _ = zdt.to_json();
+    let _ = zdt.to_js_string();
+    let _ = zdt.to_js_string_with_options(&Temporal::ZonedDateTimeToStringOptions::new());
+    let _ = Temporal::Duration::new();
+    let _ = Temporal::Duration::new_with_years(1.0);
+    let _ = Temporal::Duration::new_with_years_and_months(1.0, 1.0);
+    let _ = Temporal::Duration::new_with_years_and_months_and_weeks(1.0, 1.0, 1.0);
+    let _ = Temporal::Duration::new_with_years_and_months_and_weeks_and_days(1.0, 1.0, 1.0, 1.0);
+    let _ = Temporal::Duration::new_with_years_and_months_and_weeks_and_days_and_hours(
+        1.0, 1.0, 1.0, 1.0, 1.0,
+    );
+    let _ = Temporal::Duration::new_with_years_and_months_and_weeks_and_days_and_hours_and_minutes(
+        1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+    );
+    let _ = Temporal::Duration::new_with_years_and_months_and_weeks_and_days_and_hours_and_minutes_and_seconds(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    let _ = Temporal::Duration::new_with_years_and_months_and_weeks_and_days_and_hours_and_minutes_and_seconds_and_milliseconds(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    let _ = Temporal::Duration::new_with_years_and_months_and_weeks_and_days_and_hours_and_minutes_and_seconds_and_milliseconds_and_microseconds(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    let _ = Temporal::Duration::new_with_years_and_months_and_weeks_and_days_and_hours_and_minutes_and_seconds_and_milliseconds_and_microseconds_and_nanoseconds(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    let _ = Temporal::Duration::from_with_str("PT1H");
+    let _ = Temporal::Duration::from_with_duration_like(&dur_like());
+    let _ = Temporal::Duration::from_with_duration(&dur);
+    let _ = Temporal::Duration::compare(&dur, &dur);
+    let _ =
+        Temporal::Duration::compare_with_options(&dur, &dur, &Temporal::RelativeToOptions::new());
+    let _ = dur.sign();
+    let _ = dur.blank();
+    let _ = dur.years();
+    let _ = dur.months();
+    let _ = dur.weeks();
+    let _ = dur.days();
+    let _ = dur.hours();
+    let _ = dur.minutes();
+    let _ = dur.seconds();
+    let _ = dur.milliseconds();
+    let _ = dur.microseconds();
+    let _ = dur.nanoseconds();
+    let _ = dur.negated();
+    let _ = dur.abs();
+    let _ = dur.with(&dur_like());
+    let _ = dur.add(&dur);
+    let _ = dur.subtract(&dur);
+    let _ = dur.add_with_duration_like(&dur_like());
+    let _ = dur.subtract_with_duration_like(&dur_like());
+    let _ = dur.subtract_with_str("PT1H");
+    let _ = dur.add_with_str("PT1H");
+    let _ = dur.round(&Temporal::DurationRoundToOptions::new());
+    let _ = dur.round_with_unit(Temporal::Unit::Minute);
+    let _ = dur.total(&Temporal::DurationTotalOptions::new(Temporal::Unit::Hour));
+    let _ = dur.total_with_unit(Temporal::Unit::Minute);
+    let _ = dur.to_locale_string();
+    let _ = dur.to_locale_string_with_str("en-US");
+    let _ = dur.to_locale_string_with_str_sequence(&[JsString::from("en-US")]);
+    let _ = dur.to_locale_string_with_str_sequence_and_options(
+        &[JsString::from("en-US")],
+        &Intl::DurationFormatOptions::new(),
+    );
+    let _ = dur.to_locale_string_with_options(None, &Intl::DurationFormatOptions::new());
+    let _ = dur.to_json();
+    let _ = dur.to_js_string();
+    let _ = dur.to_js_string_with_options(&Temporal::ToStringPrecisionOptions::new());
+    let _ = Temporal::PlainTime::new();
+    let _ = Temporal::PlainTime::new_with_hour(1);
+    let _ = Temporal::PlainTime::new_with_hour_and_minute(1, 1);
+    let _ = Temporal::PlainTime::new_with_hour_and_minute_and_second(1, 1, 1);
+    let _ = Temporal::PlainTime::new_with_hour_and_minute_and_second_and_millisecond(1, 1, 1, 1);
+    let _ =
+        Temporal::PlainTime::new_with_hour_and_minute_and_second_and_millisecond_and_microsecond(
+            1, 1, 1, 1, 1,
+        );
+    let _ = Temporal::PlainTime::new_with_hour_and_minute_and_second_and_millisecond_and_microsecond_and_nanosecond(1, 1, 1, 1, 1, 1);
+    let _ = Temporal::PlainTime::from_with_str("12:30:45");
+    let _ = Temporal::PlainTime::from_with_str_and_options(
+        "12:30:45",
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainTime::from_with_plain_time_like(&pt_like());
+    let _ = Temporal::PlainTime::from_with_plain_time_like_and_options(
+        &pt_like(),
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainTime::from_with_plain_time(&pt);
+    let _ = Temporal::PlainTime::from_with_plain_time_and_options(
+        &pt,
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainTime::from_with_plain_date_time(&pdt);
+    let _ = Temporal::PlainTime::from_with_plain_date_time_and_options(
+        &pdt,
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainTime::from_with_zoned_date_time(&zdt);
+    let _ = Temporal::PlainTime::from_with_zoned_date_time_and_options(
+        &zdt,
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainTime::compare(&pt, &pt);
+    let _ = pt.hour();
+    let _ = pt.minute();
+    let _ = pt.second();
+    let _ = pt.millisecond();
+    let _ = pt.microsecond();
+    let _ = pt.nanosecond();
+    let _ = pt.equals(&pt);
+    let _ = pt.with(&pt_like());
+    let _ = pt.equals_with_plain_date_time(&pdt);
+    let _ = pt.equals_with_zoned_date_time(&zdt);
+    let _ = pt.equals_with_plain_time_like(&pt_like());
+    let _ = pt.equals_with_str("12:30:45");
+    let _ = pt.with_with_options(&pt_like(), &Temporal::OverflowOptions::new());
+    let _ = pt.add(&dur);
+    let _ = pt.subtract(&dur);
+    let _ = pt.add_with_duration_like(&dur_like());
+    let _ = pt.subtract_with_duration_like(&dur_like());
+    let _ = pt.subtract_with_str("PT1H");
+    let _ = pt.add_with_str("PT1H");
+    let _ = pt.until(&pt);
+    let _ = pt.until_with_options(&pt, &Temporal::DifferenceOptions::new());
+    let _ = pt.since(&pt);
+    let _ = pt.until_with_plain_date_time(&pdt);
+    let _ = pt.until_with_plain_date_time_and_options(&pdt, &Temporal::DifferenceOptions::new());
+    let _ = pt.until_with_zoned_date_time(&zdt);
+    let _ = pt.until_with_zoned_date_time_and_options(&zdt, &Temporal::DifferenceOptions::new());
+    let _ = pt.until_with_plain_time_like(&pt_like());
+    let _ =
+        pt.until_with_plain_time_like_and_options(&pt_like(), &Temporal::DifferenceOptions::new());
+    let _ = pt.until_with_str("12:30:45");
+    let _ = pt.until_with_str_and_options("12:30:45", &Temporal::DifferenceOptions::new());
+    let _ = pt.since_with_options(&pt, &Temporal::DifferenceOptions::new());
+    let _ = pt.round(&Temporal::RoundToOptions::new(Temporal::Unit::Minute));
+    let _ = pt.since_with_plain_date_time(&pdt);
+    let _ = pt.since_with_plain_date_time_and_options(&pdt, &Temporal::DifferenceOptions::new());
+    let _ = pt.since_with_zoned_date_time(&zdt);
+    let _ = pt.since_with_zoned_date_time_and_options(&zdt, &Temporal::DifferenceOptions::new());
+    let _ = pt.since_with_plain_time_like(&pt_like());
+    let _ =
+        pt.since_with_plain_time_like_and_options(&pt_like(), &Temporal::DifferenceOptions::new());
+    let _ = pt.since_with_str("12:30:45");
+    let _ = pt.since_with_str_and_options("12:30:45", &Temporal::DifferenceOptions::new());
+    let _ = pt.round_with_unit(Temporal::Unit::Minute);
+    let _ = pt.to_locale_string();
+    let _ = pt.to_locale_string_with_str("en-US");
+    let _ = pt.to_locale_string_with_str_sequence(&[JsString::from("en-US")]);
+    let _ = pt.to_locale_string_with_str_sequence_and_options(
+        &[JsString::from("en-US")],
+        &Intl::DateTimeFormatOptions::new(),
+    );
+    let _ = pt.to_locale_string_with_options(None, &Intl::DateTimeFormatOptions::new());
+    let _ = pt.to_json();
+    let _ = pt.to_js_string();
+    let _ = pt.to_js_string_with_options(&Temporal::ToStringPrecisionOptions::new());
+    let _ = Temporal::PlainYearMonth::new(2022, 6);
+    let _ = Temporal::PlainYearMonth::new_with_calendar(2022, 6, "iso8601");
+    let _ =
+        Temporal::PlainYearMonth::new_with_calendar_and_reference_iso_day(2022, 6, "iso8601", 1);
+    let _ = Temporal::PlainYearMonth::from_with_str("2022-06");
+    let _ = Temporal::PlainYearMonth::from_with_str_and_options(
+        "2022-06",
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainYearMonth::from_with_plain_year_month_like(&ym_like());
+    let _ = Temporal::PlainYearMonth::from_with_plain_year_month_like_and_options(
+        &ym_like(),
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainYearMonth::from_with_plain_year_month(&ym);
+    let _ = Temporal::PlainYearMonth::from_with_plain_year_month_and_options(
+        &ym,
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainYearMonth::compare(&ym, &ym);
+    let _ = Temporal::PlainYearMonth::from_with_plain_date(&pd);
+    let _ = Temporal::PlainYearMonth::from_with_plain_date_and_options(
+        &pd,
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainYearMonth::from_with_plain_date_time(&pdt);
+    let _ = Temporal::PlainYearMonth::from_with_plain_date_time_and_options(
+        &pdt,
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainYearMonth::from_with_zoned_date_time(&zdt);
+    let _ = Temporal::PlainYearMonth::from_with_zoned_date_time_and_options(
+        &zdt,
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = ym.era();
+    let _ = ym.era_year();
+    let _ = ym.year();
+    let _ = ym.month();
+    let _ = ym.month_code();
+    let _ = ym.calendar_id();
+    let _ = ym.days_in_month();
+    let _ = ym.days_in_year();
+    let _ = ym.months_in_year();
+    let _ = ym.in_leap_year();
+    let _ = ym.equals(&ym);
+    let _ = ym.with(&ym_fields());
+    let _ = ym.equals_with_plain_date(&pd);
+    let _ = ym.equals_with_plain_date_time(&pdt);
+    let _ = ym.equals_with_zoned_date_time(&zdt);
+    let _ = ym.equals_with_plain_year_month_like(&ym_like());
+    let _ = ym.equals_with_str("2022-06");
+    let _ = ym.with_with_options(&ym_fields(), &Temporal::OverflowOptions::new());
+    let _ = ym.add(&dur);
+    let _ = ym.add_with_options(&dur, &Temporal::OverflowOptions::new());
+    let _ = ym.add_with_duration_like(&dur_like());
+    let _ = ym.add_with_duration_like_and_options(&dur_like(), &Temporal::OverflowOptions::new());
+    let _ = ym.add_with_str_and_options("P1M", &Temporal::OverflowOptions::new());
+    let _ = ym.add_with_str("P1M");
+    let _ = ym.subtract(&dur);
+    let _ = ym.subtract_with_options(&dur, &Temporal::OverflowOptions::new());
+    let _ = ym.subtract_with_duration_like(&dur_like());
+    let _ =
+        ym.subtract_with_duration_like_and_options(&dur_like(), &Temporal::OverflowOptions::new());
+    let _ = ym.subtract_with_str_and_options("P1M", &Temporal::OverflowOptions::new());
+    let _ = ym.subtract_with_str("P1M");
+    let _ = ym.until(&ym);
+    let _ = ym.until_with_options(&ym, &Temporal::DifferenceOptions::new());
+    let _ = ym.since(&ym);
+    let _ = ym.until_with_plain_date(&pd);
+    let _ = ym.until_with_plain_date_and_options(&pd, &Temporal::DifferenceOptions::new());
+    let _ = ym.until_with_plain_date_time(&pdt);
+    let _ = ym.until_with_plain_date_time_and_options(&pdt, &Temporal::DifferenceOptions::new());
+    let _ = ym.until_with_zoned_date_time(&zdt);
+    let _ = ym.until_with_zoned_date_time_and_options(&zdt, &Temporal::DifferenceOptions::new());
+    let _ = ym.until_with_plain_year_month_like(&ym_like());
+    let _ = ym.until_with_plain_year_month_like_and_options(
+        &ym_like(),
+        &Temporal::DifferenceOptions::new(),
+    );
+    let _ = ym.until_with_str("2022-06");
+    let _ = ym.until_with_str_and_options("2022-06", &Temporal::DifferenceOptions::new());
+    let _ = ym.since_with_options(&ym, &Temporal::DifferenceOptions::new());
+    let _ = ym.to_plain_date_with_fields(&pd_fields());
+    let _ = ym.since_with_plain_date(&pd);
+    let _ = ym.since_with_plain_date_and_options(&pd, &Temporal::DifferenceOptions::new());
+    let _ = ym.since_with_plain_date_time(&pdt);
+    let _ = ym.since_with_plain_date_time_and_options(&pdt, &Temporal::DifferenceOptions::new());
+    let _ = ym.since_with_zoned_date_time(&zdt);
+    let _ = ym.since_with_zoned_date_time_and_options(&zdt, &Temporal::DifferenceOptions::new());
+    let _ = ym.since_with_plain_year_month_like(&ym_like());
+    let _ = ym.since_with_plain_year_month_like_and_options(
+        &ym_like(),
+        &Temporal::DifferenceOptions::new(),
+    );
+    let _ = ym.since_with_str("2022-06");
+    let _ = ym.since_with_str_and_options("2022-06", &Temporal::DifferenceOptions::new());
+    let _ = ym.to_locale_string();
+    let _ = ym.to_locale_string_with_str("en-US");
+    let _ = ym.to_locale_string_with_str_sequence(&[JsString::from("en-US")]);
+    let _ = ym.to_locale_string_with_str_sequence_and_options(
+        &[JsString::from("en-US")],
+        &Intl::DateTimeFormatOptions::new(),
+    );
+    let _ = ym.to_locale_string_with_options(None, &Intl::DateTimeFormatOptions::new());
+    let _ = ym.to_json();
+    let _ = ym.to_js_string();
+    let _ = ym.to_js_string_with_options(&Temporal::ShowCalendarOptions::new());
+    let _ = Temporal::PlainMonthDay::new(6, 15);
+    let _ = Temporal::PlainMonthDay::new_with_calendar(6, 15, "iso8601");
+    let _ =
+        Temporal::PlainMonthDay::new_with_calendar_and_reference_iso_year(6, 15, "iso8601", 2022);
+    let _ = Temporal::PlainMonthDay::from_with_str("06-15");
+    let _ = Temporal::PlainMonthDay::from_with_str_and_options(
+        "06-15",
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainMonthDay::from_with_plain_month_day_like(&md_like());
+    let _ = Temporal::PlainMonthDay::from_with_plain_month_day_like_and_options(
+        &md_like(),
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainMonthDay::from_with_plain_month_day(&md);
+    let _ = Temporal::PlainMonthDay::from_with_plain_month_day_and_options(
+        &md,
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = md.month_code();
+    let _ = Temporal::PlainMonthDay::from_with_plain_date(&pd);
+    let _ = Temporal::PlainMonthDay::from_with_plain_date_and_options(
+        &pd,
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainMonthDay::from_with_plain_date_time(&pdt);
+    let _ = Temporal::PlainMonthDay::from_with_plain_date_time_and_options(
+        &pdt,
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainMonthDay::from_with_zoned_date_time(&zdt);
+    let _ = Temporal::PlainMonthDay::from_with_zoned_date_time_and_options(
+        &zdt,
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = md.day();
+    let _ = md.calendar_id();
+    let _ = md.equals(&md);
+    let _ = md.with(&pd_fields());
+    let _ = md.equals_with_plain_date(&pd);
+    let _ = md.equals_with_plain_date_time(&pdt);
+    let _ = md.equals_with_zoned_date_time(&zdt);
+    let _ = md.equals_with_plain_month_day_like(&md_like());
+    let _ = md.equals_with_str("06-15");
+    let _ = md.with_with_options(&pd_fields(), &Temporal::OverflowOptions::new());
+    let _ = md.to_plain_date_with_fields(&pd_fields());
+    let _ = md.to_locale_string();
+    let _ = md.to_locale_string_with_str("en-US");
+    let _ = md.to_locale_string_with_str_sequence(&[JsString::from("en-US")]);
+    let _ = md.to_locale_string_with_str_sequence_and_options(
+        &[JsString::from("en-US")],
+        &Intl::DateTimeFormatOptions::new(),
+    );
+    let _ = md.to_locale_string_with_options(None, &Intl::DateTimeFormatOptions::new());
+    let _ = md.to_json();
+    let _ = md.to_js_string();
+    let _ = md.to_js_string_with_options(&Temporal::ShowCalendarOptions::new());
+    let _ = Temporal::PlainDate::new(2022, 6, 15);
+    let _ = Temporal::PlainDate::new_with_calendar(2022, 6, 15, "iso8601");
+    let _ = Temporal::PlainDate::from_with_str("2022-06-15");
+    let _ = Temporal::PlainDate::from_with_str_and_options(
+        "2022-06-15",
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainDate::from_with_plain_date_like(&pd_like());
+    let _ = Temporal::PlainDate::from_with_plain_date_like_and_options(
+        &pd_like(),
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainDate::from_with_plain_date(&pd);
+    let _ = Temporal::PlainDate::from_with_plain_date_and_options(
+        &pd,
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainDate::from_with_plain_date_time(&pdt);
+    let _ = Temporal::PlainDate::from_with_plain_date_time_and_options(
+        &pdt,
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainDate::from_with_zoned_date_time(&zdt);
+    let _ = Temporal::PlainDate::from_with_zoned_date_time_and_options(
+        &zdt,
+        &Temporal::OverflowOptions::new(),
+    );
+    let _ = Temporal::PlainDate::compare(&pd, &pd);
+    let _ = pd.era();
+    let _ = pd.era_year();
+    let _ = pd.year();
+    let _ = pd.month();
+    let _ = pd.month_code();
+    let _ = pd.day();
+    let _ = pd.calendar_id();
+    let _ = pd.day_of_week();
+    let _ = pd.day_of_year();
+    let _ = pd.week_of_year();
+    let _ = pd.year_of_week();
+    let _ = pd.days_in_week();
+    let _ = pd.days_in_month();
+    let _ = pd.days_in_year();
+    let _ = pd.months_in_year();
+    let _ = pd.in_leap_year();
+    let _ = pd.equals(&pd);
+    let _ = pd.with(&pd_fields());
+    let _ = pd.equals_with_plain_date_time(&pdt);
+    let _ = pd.equals_with_zoned_date_time(&zdt);
+    let _ = pd.equals_with_plain_date_like(&pd_like());
+    let _ = pd.equals_with_str("2022-06-15");
+    let _ = pd.with_with_options(&pd_fields(), &Temporal::OverflowOptions::new());
+    let _ = pd.with_calendar("iso8601");
+    let _ = pd.with_calendar_with_plain_date(&pd);
+    let _ = pd.with_calendar_with_plain_date_time(&pdt);
+    let _ = pd.with_calendar_with_plain_year_month(&ym);
+    let _ = pd.with_calendar_with_plain_month_day(&md);
+    let _ = pd.with_calendar_with_zoned_date_time(&zdt);
+    let _ = pd.add(&dur);
+    let _ = pd.add_with_options(&dur, &Temporal::OverflowOptions::new());
+    let _ = pd.add_with_duration_like(&dur_like());
+    let _ = pd.add_with_duration_like_and_options(&dur_like(), &Temporal::OverflowOptions::new());
+    let _ = pd.add_with_str_and_options("PT1H", &Temporal::OverflowOptions::new());
+    let _ = pd.add_with_str("PT1H");
+    let _ = pd.subtract(&dur);
+    let _ = pd.subtract_with_options(&dur, &Temporal::OverflowOptions::new());
+    let _ = pd.subtract_with_duration_like(&dur_like());
+    let _ =
+        pd.subtract_with_duration_like_and_options(&dur_like(), &Temporal::OverflowOptions::new());
+    let _ = pd.subtract_with_str_and_options("PT1H", &Temporal::OverflowOptions::new());
+    let _ = pd.subtract_with_str("PT1H");
+    let _ = pd.until(&pd);
+    let _ = pd.until_with_options(&pd, &Temporal::DifferenceOptions::new());
+    let _ = pd.since(&pd);
+    let _ = pd.until_with_plain_date_time(&pdt);
+    let _ = pd.until_with_plain_date_time_and_options(&pdt, &Temporal::DifferenceOptions::new());
+    let _ = pd.until_with_zoned_date_time(&zdt);
+    let _ = pd.until_with_zoned_date_time_and_options(&zdt, &Temporal::DifferenceOptions::new());
+    let _ = pd.until_with_plain_date_like(&pd_like());
+    let _ =
+        pd.until_with_plain_date_like_and_options(&pd_like(), &Temporal::DifferenceOptions::new());
+    let _ = pd.until_with_str("2022-06-15");
+    let _ = pd.until_with_str_and_options("2022-06-15", &Temporal::DifferenceOptions::new());
+    let _ = pd.since_with_options(&pd, &Temporal::DifferenceOptions::new());
+    let _ = pd.to_plain_date_time();
+    let _ = pd.since_with_plain_date_time(&pdt);
+    let _ = pd.since_with_plain_date_time_and_options(&pdt, &Temporal::DifferenceOptions::new());
+    let _ = pd.since_with_zoned_date_time(&zdt);
+    let _ = pd.since_with_zoned_date_time_and_options(&zdt, &Temporal::DifferenceOptions::new());
+    let _ = pd.since_with_plain_date_like(&pd_like());
+    let _ =
+        pd.since_with_plain_date_like_and_options(&pd_like(), &Temporal::DifferenceOptions::new());
+    let _ = pd.since_with_str("2022-06-15");
+    let _ = pd.since_with_str_and_options("2022-06-15", &Temporal::DifferenceOptions::new());
+    let _ = pd.to_plain_date_time_with_plain_time(&pt);
+    let _ = pd.to_zoned_date_time("UTC");
+    let _ = pd.to_plain_date_time_with_str("12:00");
+    let _ = pd.to_plain_date_time_with_plain_time_like(&pt_like());
+    let _ = pd.to_plain_date_time_with_plain_date_time(&pdt);
+    let _ = pd.to_plain_date_time_with_zoned_date_time(&zdt);
+    let _ = pd.to_zoned_date_time_with_zoned_date_time(&zdt);
+    let _ = pd.to_zoned_date_time_with_to_zoned_date_time_item(
+        &Temporal::ToZonedDateTimeItem::new("UTC"),
+    );
+    let _ = pd.to_plain_year_month();
+    let _ = pd.to_plain_month_day();
+    let _ = pd.to_locale_string();
+    let _ = pd.to_locale_string_with_str("en-US");
+    let _ = pd.to_locale_string_with_str_sequence(&[JsString::from("en-US")]);
+    let _ = pd.to_locale_string_with_str_sequence_and_options(
+        &[JsString::from("en-US")],
+        &Intl::DateTimeFormatOptions::new(),
+    );
+    let _ = pd.to_locale_string_with_options(None, &Intl::DateTimeFormatOptions::new());
+    let _ = pd.to_json();
+    let _ = pd.to_js_string();
+    let _ = pd.to_js_string_with_options(&Temporal::ShowCalendarOptions::new());
+    let _ = Temporal::OverflowOptions::new();
+    let _ = Temporal::DisambiguationOptions::new();
+    let _ = Temporal::ZonedDateTimeAssignmentOptions::new();
+    let _ = Temporal::ToStringPrecisionOptions::new();
+    let _ = Temporal::ShowCalendarOptions::new();
+    let _ = Temporal::CalendarTypeToStringOptions::new();
+    let _ = Temporal::ZonedDateTimeToStringOptions::new();
+    let _ = Temporal::InstantToStringOptions::new();
+    let _ = Temporal::DifferenceOptions::new();
+    let _ = Temporal::RoundToOptions::new(Temporal::Unit::Minute);
+    let _ = Temporal::RelativeToOptions::new();
+    let _ = Temporal::DurationRoundToOptions::new();
+    let _ = Temporal::DurationTotalOptions::new(Temporal::Unit::Minute);
+    let _ = Temporal::TimeZoneTransitionOptions::new(Temporal::TransitionDirection::Next);
+    let _ = Temporal::PlainDateFields::new();
+    let _ = Temporal::PlainDateLike::new();
+    let _ = Temporal::PlainTimeLike::new();
+    let _ = Temporal::PlainDateTimeFields::new();
+    let _ = Temporal::PlainDateTimeLike::new();
+    let _ = Temporal::ZonedDateTimeFields::new();
+    let _ = Temporal::ZonedDateTimeLike::new();
+    let _ = Temporal::PlainYearMonthFields::new();
+    let _ = Temporal::PlainYearMonthLike::new();
+    let _ = Temporal::PlainMonthDayLike::new();
+    let _ = Temporal::DurationLike::new();
+    let _ = Temporal::ToZonedDateTimeItem::new("UTC");
+    let _ = Temporal::ToZonedDateTimeItem::new_with_zoned_date_time(&zdt);
+    let _ = ym.to_plain_date(15);
+    let _ = md.to_plain_date(2022);
+}
+
 #[wasm_bindgen_test]
 fn value_equality() {
     if !is_temporal_supported() {
