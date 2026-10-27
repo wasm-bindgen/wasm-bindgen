@@ -664,7 +664,7 @@ impl InstructionBuilder<'_, '_> {
             // `Option<T>` / `Nullable<T>` of a scalar: the cell is `Option<T>`'s
             // ABI. An optional string or handle is an in-place vector instead
             // (`Descriptor::vector_cell`).
-            Descriptor::Option { .. } | Descriptor::Nullable(_) => {
+            Descriptor::Option(_) | Descriptor::Nullable(_) => {
                 let (inner, kind) = match elem {
                     Descriptor::Option(inner) => match &**inner {
                         Descriptor::Nullable(inner) => (&**inner, OptionKind::OptionNullable),

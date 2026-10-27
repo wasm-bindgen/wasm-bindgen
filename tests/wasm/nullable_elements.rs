@@ -51,6 +51,13 @@ extern "C" {
     where
         Vec<T>: IntoWasmAbi + FromWasmAbi;
 
+    #[wasm_bindgen(js_name = echo)]
+    fn echo_opt_ref_nullable_string(v: Option<&Nullable<String>>) -> JsValue;
+    #[wasm_bindgen(js_name = echo)]
+    fn echo_ref_f64(v: &f64) -> f64;
+    #[wasm_bindgen(js_name = echo)]
+    fn echo_ref_opt_f64(v: &Option<f64>) -> JsValue;
+
     #[wasm_bindgen(js_name = callNullable)]
     fn call_nullable(f: &Function<fn(Nullable<JsString>) -> Undefined>);
     #[wasm_bindgen(js_name = echo)]
@@ -173,6 +180,21 @@ fn vecs() {
     );
     assert_eq!(mono_vec(v.clone()), v);
     test_exports();
+}
+
+// A borrowed scalar crosses by copy, so `&T` and `Option<&T>` have `T`'s
+// ABIs, and `Option<&Nullable<T>>` is `Option<Nullable<&T>>`'s.
+#[wasm_bindgen_test]
+fn borrowed() {
+    assert!(echo_opt_ref_nullable_string(None).is_undefined());
+    assert!(echo_opt_ref_nullable_string(Some(&Nullable::Null)).is_null());
+    assert_eq!(
+        echo_opt_ref_nullable_string(Some(&Nullable::Value("a".to_string()))),
+        "a"
+    );
+    assert_eq!(echo_ref_f64(&1.5), 1.5);
+    assert_eq!(echo_ref_opt_f64(&Some(1.5)), 1.5);
+    assert!(echo_ref_opt_f64(&None).is_undefined());
 }
 
 #[wasm_bindgen_test]

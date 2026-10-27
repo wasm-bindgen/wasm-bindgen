@@ -286,8 +286,32 @@ impl InstructionBuilder<'_, '_> {
                 self.outgoing_function(mutable, descriptor, None)?;
             }
 
-            Descriptor::Option { .. } | Descriptor::Nullable(_) => {
-                self.outgoing_borrowed_option(arg)?
+            // A borrowed borrow or scalar crosses as the value itself.
+            Descriptor::Ref(d) => self.outgoing_ref(mutable, d)?,
+            Descriptor::I8
+            | Descriptor::U8
+            | Descriptor::I16
+            | Descriptor::U16
+            | Descriptor::I32
+            | Descriptor::U32
+            | Descriptor::I64
+            | Descriptor::U64
+            | Descriptor::I64AsF64
+            | Descriptor::U64AsF64
+            | Descriptor::I128
+            | Descriptor::U128
+            | Descriptor::F32
+            | Descriptor::F64
+            | Descriptor::Boolean
+            | Descriptor::Char
+            | Descriptor::Enum { .. }
+            | Descriptor::StringEnum { .. } => self._outgoing(arg)?,
+
+            Descriptor::Option(inner) => {
+                self.outgoing_option_ref(mutable, inner, OptionKind::Option)?
+            }
+            Descriptor::Nullable(inner) => {
+                self.outgoing_option_ref(mutable, inner, OptionKind::Nullable)?
             }
 
             // &mut dyn FnMut(...) emits RefMut(Function(...)) to signal that
@@ -681,51 +705,6 @@ impl InstructionBuilder<'_, '_> {
         Ok(())
     }
 
-    /// `&Option<T>` / `&Nullable<T>`, and the cells of a slice of them: the
-    /// `Option<T>` ABI with a string or handle payload borrowed rather than
-    /// owned.
-    fn outgoing_borrowed_option(&mut self, arg: &Descriptor) -> Result<(), Error> {
-        let (inner, kind) = match arg {
-            Descriptor::Option(inner) => match &**inner {
-                Descriptor::Nullable(inner) => (&**inner, OptionKind::OptionNullable),
-                inner => (inner, OptionKind::Option),
-            },
-            Descriptor::Nullable(inner) => (&**inner, OptionKind::Nullable),
-            _ => unreachable!(),
-        };
-        let inner = match inner {
-            Descriptor::Ref(d) => &**d,
-            d => d,
-        };
-        match inner {
-            Descriptor::String
-            | Descriptor::CachedString
-            | Descriptor::Externref
-            | Descriptor::NamedExternref(_) => self.outgoing_option_ref(false, inner, kind),
-            Descriptor::I8
-            | Descriptor::U8
-            | Descriptor::I16
-            | Descriptor::U16
-            | Descriptor::I32
-            | Descriptor::U32
-            | Descriptor::I64
-            | Descriptor::U64
-            | Descriptor::I64AsF64
-            | Descriptor::U64AsF64
-            | Descriptor::I128
-            | Descriptor::U128
-            | Descriptor::F32
-            | Descriptor::F64
-            | Descriptor::Boolean
-            | Descriptor::Char
-            | Descriptor::Enum { .. }
-            | Descriptor::StringEnum { .. } => self.outgoing_option(inner, kind),
-            _ => bail!(
-                "unsupported borrowed optional type for calling JS function from Rust: {arg:?}"
-            ),
-        }
-    }
-
     fn outgoing_option_ref(
         &mut self,
         _mutable: bool,
@@ -773,6 +752,31 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::Vector(kind).option_kind(option_kind)],
                 );
             }
+            Descriptor::Ref(d) => self.outgoing_option_ref(_mutable, d, option_kind)?,
+            Descriptor::Nullable(d) => {
+                if option_kind != OptionKind::Option {
+                    bail!("unsupported nested optional type for calling JS function from Rust: {arg:?}");
+                }
+                self.outgoing_option_ref(_mutable, d, OptionKind::OptionNullable)?
+            }
+            Descriptor::I8
+            | Descriptor::U8
+            | Descriptor::I16
+            | Descriptor::U16
+            | Descriptor::I32
+            | Descriptor::U32
+            | Descriptor::I64
+            | Descriptor::U64
+            | Descriptor::I64AsF64
+            | Descriptor::U64AsF64
+            | Descriptor::I128
+            | Descriptor::U128
+            | Descriptor::F32
+            | Descriptor::F64
+            | Descriptor::Boolean
+            | Descriptor::Char
+            | Descriptor::Enum { .. }
+            | Descriptor::StringEnum { .. } => self.outgoing_option(arg, option_kind)?,
             _ => bail!(
                 "unsupported optional ref argument type for calling JS function from Rust: {arg:?}"
             ),
@@ -822,10 +826,12 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Char
             | Descriptor::Enum { .. }
             | Descriptor::StringEnum { .. } => decode._outgoing(elem)?,
-            // `Option<T>` / `Nullable<T>`: the cell is `Option<T>`'s ABI, with
-            // strings and handles borrowed as above.
-            Descriptor::Option { .. } | Descriptor::Nullable(_) => {
-                decode.outgoing_borrowed_option(elem)?
+            // `Option<T>` / `Nullable<T>`: the cell is `Option<&T>`'s ABI.
+            Descriptor::Option(inner) => {
+                decode.outgoing_option_ref(false, inner, OptionKind::Option)?
+            }
+            Descriptor::Nullable(inner) => {
+                decode.outgoing_option_ref(false, inner, OptionKind::Nullable)?
             }
             _ => {
                 bail!("unsupported slice element type for calling JS function from Rust: {elem:?}")

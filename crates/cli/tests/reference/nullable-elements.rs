@@ -16,6 +16,9 @@ extern "C" {
     fn vec_nullable_strings(v: Vec<Nullable<String>>) -> Vec<Nullable<String>>;
     fn vec_opt_u8s(v: Vec<Option<u8>>) -> Vec<Option<u8>>;
     fn call_nullable(f: &Function<fn(Nullable<JsString>) -> Undefined>);
+    fn opt_ref_nullable_string(v: Option<&Nullable<String>>);
+    fn ref_f64(v: &f64);
+    fn ref_ref_str(v: &&str);
 }
 
 #[wasm_bindgen]
@@ -41,4 +44,7 @@ pub fn use_imports(f: &Function<fn(Nullable<JsString>) -> Undefined>) {
     vec_nullable_strings(Vec::new());
     vec_opt_u8s(Vec::new());
     call_nullable(f);
+    opt_ref_nullable_string(Some(&Nullable::Null));
+    ref_f64(&1.0);
+    ref_ref_str(&"a");
 }

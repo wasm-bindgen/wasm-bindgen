@@ -56,8 +56,9 @@
   every `T` a `&[T]` takes, and `Vec<Option<T>>`, `Vec<Nullable<T>>` and
   `Vec<Option<Nullable<T>>>` cross in both directions, encoded for a number,
   `bool` or `char` and as an array of JS values for a `String` or a JS type,
-  typed `(T | null)[]` and the like. The new `MaybeRefIntoWasmAbi` gives
-  `Option<Self>`'s ABI from a borrowed `Self` for the encoded cells.
+  typed `(T | null)[]` and the like. A borrowed number, `bool`, `char` or
+  borrowed string now crosses by copy, so `&f64`, `Option<&f64>` and
+  `Option<&Nullable<T>>` are argument types and give the encoded cells.
   `Nullable<T>` converts into `JsValue` with `From` and from one with
   `TryFromJsValue`, and implements `Promising`. A js-sys `Function<fn(..)>`
   signature slot no longer has to be a `JsGeneric` handle, so

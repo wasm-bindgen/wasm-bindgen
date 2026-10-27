@@ -352,20 +352,6 @@ pub trait NullableIntoWasmAbi: MaybeIntoWasmAbi {
     fn null() -> Self::MaybeAbi;
 }
 
-/// The ABI of `Option<Self>` from a borrowed `Self`: the cell of a borrowed
-/// `&[Option<Self>]` or `&[Nullable<Self>]`, which is encoded element by
-/// element. Numbers copy; strings and JS handles borrow, as `&[Self]` does.
-///
-/// # ⚠️ Unstable
-///
-/// This is part of the internal [`convert`](crate::convert) module, **no
-/// stability guarantees** are provided. Use at your own risk. See its
-/// documentation for more details.
-pub trait MaybeRefIntoWasmAbi: MaybeIntoWasmAbi {
-    /// Converts a borrowed value into the `Option<Self>` ABI.
-    fn ref_into_maybe_abi(&self) -> Self::MaybeAbi;
-}
-
 /// The `Null` test of `Nullable<Self>` received from JS. See
 /// [`NullableIntoWasmAbi`].
 ///

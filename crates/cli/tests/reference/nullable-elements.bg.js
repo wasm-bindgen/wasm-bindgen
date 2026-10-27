@@ -116,6 +116,15 @@ export function __wbg_opt_f64s_95d8affd5b395def(arg0, arg1) {
     wasm.__wbindgen_free(arg0, arg1 * 16, 8);
     opt_f64s(v0);
 }
+export function __wbg_opt_ref_nullable_string_6d266382e66f94b3(arg0, arg1) {
+    opt_ref_nullable_string(arg0 === 0 ? (arg1 === 1025 ? null : undefined) : getStringFromWasm0(arg0, arg1));
+}
+export function __wbg_ref_f64_4483fcdd9da682a2(arg0) {
+    ref_f64(arg0);
+}
+export function __wbg_ref_ref_str_08905e79d5436aa5(arg0, arg1) {
+    ref_ref_str(getStringFromWasm0(arg0, arg1));
+}
 export function __wbg_vec_nullable_strings_04a528785a3528d2(arg0, arg1, arg2) {
     var v0 = getArrayJsValueFromWasm0(arg1, arg2);
     wasm.__wbindgen_free(arg1, arg2 * 4, 4);
