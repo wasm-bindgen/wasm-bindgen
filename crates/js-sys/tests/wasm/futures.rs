@@ -371,3 +371,11 @@ async fn typed_promise_await_reject() {
     let e: TypeError = p.await.unwrap_err();
     assert_eq!(e.message(), "t");
 }
+
+// A typed `JsFuture` is `UnwindSafe`, as `future_to_promise` requires under
+// panic=unwind.
+#[allow(dead_code)]
+fn typed_js_future_is_unwind_safe() {
+    fn assert_unwind_safe<F: std::panic::UnwindSafe>() {}
+    assert_unwind_safe::<JsFuture<js_sys::Number, js_sys::TypeError>>();
+}
