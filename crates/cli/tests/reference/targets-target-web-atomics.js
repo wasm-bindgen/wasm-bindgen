@@ -162,11 +162,11 @@ async function __wbg_init_locked(module_or_path, memory) {
         return __wbg_finalize_init(instance, module, thread_stack_size);
 }
 let __wbg_init_pending = Promise.resolve();
-function __wbg_init(module_or_path) {
+function __wbg_init(module_or_path, memory) {
     if (wasm !== undefined) return wasm;
     __wbg_init_pending = __wbg_init_pending
         .catch(() => {})
-        .then(() => __wbg_init_locked(module_or_path));
+        .then(() => __wbg_init_locked(module_or_path, memory));
     return __wbg_init_pending;
 }
 

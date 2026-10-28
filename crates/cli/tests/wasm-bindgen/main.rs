@@ -922,21 +922,19 @@ fn omit_default_module_path_target_no_modules() {
     assert!(contents.contains(
         "\
     async function __wbg_init_locked(module_or_path) {
-        await __wbg_async_init_lock.acquire();
-        try {
-            if (wasm !== undefined) return wasm;
+        if (wasm !== undefined) return wasm;
 
 
-            if (module_or_path !== undefined) {
-                if (Object.getPrototypeOf(module_or_path) === Object.prototype) {
-                    ({module_or_path} = module_or_path)
-                } else {
-                    console.warn('using deprecated parameters for the initialization function; pass a single object instead')
-                }
+        if (module_or_path !== undefined) {
+            if (Object.getPrototypeOf(module_or_path) === Object.prototype) {
+                ({module_or_path} = module_or_path)
+            } else {
+                console.warn('using deprecated parameters for the initialization function; pass a single object instead')
             }
+        }
 
 
-            const imports = __wbg_get_imports();",
+        const imports = __wbg_get_imports();",
     ));
 }
 
