@@ -92,3 +92,13 @@ pub fn nested(v: Vec<Vec<u8>>) -> Vec<Vec<u8>> {
 pub fn give_nested_strings() -> Vec<Vec<String>> {
     vec![vec!["a".to_string()]]
 }
+
+#[wasm_bindgen]
+pub fn flags(v: Vec<bool>) -> Vec<bool> {
+    v
+}
+
+#[wasm_bindgen]
+pub fn narrow(a: u8, b: Option<i16>, c: bool, d: Option<bool>) -> Option<u8> {
+    (c && d.is_some()).then_some(a.wrapping_add(b.unwrap_or(0) as u8))
+}
