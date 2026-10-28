@@ -16703,7 +16703,9 @@ extern "C" {
     /// The function that fulfills the promise with a value.
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, getter)]
-    pub fn resolve<T: MonoGeneric>(this: &PromiseWithResolvers<T>) -> Function<fn(T) -> Undefined>;
+    pub fn resolve<T: MonoGeneric, E>(
+        this: &PromiseWithResolvers<T, E>,
+    ) -> Function<fn(T) -> Undefined>;
 
     /// The function that rejects the promise with a reason.
     #[wasm_bindgen(method, getter)]

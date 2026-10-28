@@ -147,10 +147,6 @@
   for JS types, `String`, `bool`, `char` and every number.
   [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
 
-* Shared references to primitives (`&bool`, `&char`, `&f64`, `&i64`, ...)
-  can be passed to imported JS functions, arriving as the value.
-  [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
-
 * Slices of every `JsStringLike` shape, including `&String`, `&Box<str>`,
   `&Cow<str>` and `&JsString`, can be passed to imported JS functions, and
   `JsStringLike` alone bounds a `&[T]` argument of an
@@ -284,8 +280,8 @@
   `Result<R, JsError>: ReturnWasmAbi` stated by generic callers bounding `R`
   by `MonoGeneric`, which `R: JsGeneric` implies. `Array::from_iterable_map`
   and `from_async_map` bound their input by `RefIntoWasmAbi` and its items by
-  `FromWasmAbi`, `Generator::next` and `return_` bound `T` by `RefIntoWasmAbi`,
-  and `Promise::catch` / `catch_map` pass the rejection reason as `JsValue`.
+  `FromWasmAbi`, and `Generator::next` and `return_` bound `T` by
+  `RefIntoWasmAbi`.
   [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
 
 * `JsGeneric` now has `MonoGeneric`, `OptionFromWasmAbi` and
