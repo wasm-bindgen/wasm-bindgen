@@ -60,7 +60,11 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
-use crate::convert::{TryFromJsValue, UpcastFrom, VectorIntoWasmAbi};
+#[cfg(wasm_bindgen_unstable_generic_vec)]
+use crate::convert::IntoWasmAbi;
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
+use crate::convert::VectorIntoWasmAbi;
+use crate::convert::{TryFromJsValue, UpcastFrom};
 use crate::sys::Promising;
 use alloc::boxed::Box;
 use alloc::string::String;
@@ -1936,25 +1940,69 @@ impl From<JsError> for JsValue {
     }
 }
 
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 impl<T: VectorIntoWasmAbi> From<Box<[T]>> for JsValue {
     fn from(vector: Box<[T]>) -> Self {
         wbg_cast(vector)
     }
 }
 
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 impl<T: VectorIntoWasmAbi> From<Clamped<Box<[T]>>> for JsValue {
     fn from(vector: Clamped<Box<[T]>>) -> Self {
         wbg_cast(vector)
     }
 }
 
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 impl<T: VectorIntoWasmAbi> From<Vec<T>> for JsValue {
     fn from(vector: Vec<T>) -> Self {
         JsValue::from(vector.into_boxed_slice())
     }
 }
 
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 impl<T: VectorIntoWasmAbi> From<Clamped<Vec<T>>> for JsValue {
+    fn from(vector: Clamped<Vec<T>>) -> Self {
+        JsValue::from(Clamped(vector.0.into_boxed_slice()))
+    }
+}
+
+#[cfg(wasm_bindgen_unstable_generic_vec)]
+impl<T> From<Box<[T]>> for JsValue
+where
+    Box<[T]>: IntoWasmAbi,
+{
+    fn from(vector: Box<[T]>) -> Self {
+        wbg_cast(vector)
+    }
+}
+
+#[cfg(wasm_bindgen_unstable_generic_vec)]
+impl<T> From<Clamped<Box<[T]>>> for JsValue
+where
+    Box<[T]>: IntoWasmAbi,
+{
+    fn from(vector: Clamped<Box<[T]>>) -> Self {
+        wbg_cast(vector)
+    }
+}
+
+#[cfg(wasm_bindgen_unstable_generic_vec)]
+impl<T> From<Vec<T>> for JsValue
+where
+    Box<[T]>: IntoWasmAbi,
+{
+    fn from(vector: Vec<T>) -> Self {
+        JsValue::from(vector.into_boxed_slice())
+    }
+}
+
+#[cfg(wasm_bindgen_unstable_generic_vec)]
+impl<T> From<Clamped<Vec<T>>> for JsValue
+where
+    Box<[T]>: IntoWasmAbi,
+{
     fn from(vector: Clamped<Vec<T>>) -> Self {
         JsValue::from(Clamped(vector.0.into_boxed_slice()))
     }

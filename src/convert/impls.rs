@@ -103,9 +103,10 @@ impl<T: WasmAbi<Prim4 = ()>> WasmAbi for MaybeAbi<T> {
 }
 
 macro_rules! type_wasm_native {
-    ($($t:tt as $c:tt)*) => ($(
+    ($($t:tt as $c:tt, $in_place:literal;)*) => ($(
         impl IntoWasmAbi for $t {
             type Abi = $c;
+            const ABI_TRANSPARENT: bool = $in_place;
 
             #[inline]
             fn into_abi(self) -> $c { self as $c }
@@ -113,6 +114,7 @@ macro_rules! type_wasm_native {
 
         impl FromWasmAbi for $t {
             type Abi = $c;
+            const ABI_TRANSPARENT: bool = $in_place;
 
             #[inline]
             unsafe fn from_abi(js: $c) -> Self { js as $t }
@@ -174,11 +176,11 @@ macro_rules! type_wasm_native {
 }
 
 type_wasm_native!(
-    i64 as i64
-    u64 as u64
-    i128 as i128
-    u128 as u128
-    f64 as f64
+    i64 as i64, true;
+    u64 as u64, true;
+    i128 as i128, false;
+    u128 as u128, false;
+    f64 as f64, true;
 );
 
 impl UpcastFrom<u64> for u128 {}
@@ -209,6 +211,7 @@ macro_rules! type_wasm_native_f64_option {
     ($($t:tt as $c:tt)*) => ($(
         impl IntoWasmAbi for $t {
             type Abi = $c;
+            const ABI_TRANSPARENT: bool = true;
 
             #[inline]
             fn into_abi(self) -> $c { self as $c }
@@ -216,6 +219,7 @@ macro_rules! type_wasm_native_f64_option {
 
         impl FromWasmAbi for $t {
             type Abi = $c;
+            const ABI_TRANSPARENT: bool = true;
 
             #[inline]
             unsafe fn from_abi(js: $c) -> Self { js as $t }
@@ -353,6 +357,7 @@ macro_rules! type_abi_as_u32 {
     ($($t:tt)*) => ($(
         impl IntoWasmAbi for $t {
             type Abi = u32;
+            const ABI_TRANSPARENT: bool = true;
 
             #[inline]
             fn into_abi(self) -> u32 { self as u32 }
@@ -360,6 +365,7 @@ macro_rules! type_abi_as_u32 {
 
         impl FromWasmAbi for $t {
             type Abi = u32;
+            const ABI_TRANSPARENT: bool = true;
 
             #[inline]
             unsafe fn from_abi(js: u32) -> Self { js as $t }
@@ -684,6 +690,7 @@ impl<T> OptionFromWasmAbi for NonNull<T> {
 
 impl IntoWasmAbi for JsValue {
     type Abi = u32;
+    const ABI_TRANSPARENT: bool = true;
 
     #[inline]
     fn into_abi(self) -> u32 {
@@ -695,6 +702,7 @@ impl IntoWasmAbi for JsValue {
 
 impl FromWasmAbi for JsValue {
     type Abi = u32;
+    const ABI_TRANSPARENT: bool = true;
 
     #[inline]
     unsafe fn from_abi(js: u32) -> JsValue {
@@ -1039,15 +1047,27 @@ unsafe impl ErasableGeneric for JsError {
 
 impl IntoWasmAbi for JsError {
     type Abi = <JsValue as IntoWasmAbi>::Abi;
+    const ABI_TRANSPARENT: bool = true;
 
     fn into_abi(self) -> Self::Abi {
         self.value.into_abi()
     }
 }
 
+#[cfg(wasm_bindgen_unstable_generic_vec)]
+impl IntoWasmAbi for &JsError {
+    type Abi = <&'static JsValue as IntoWasmAbi>::Abi;
+
+    #[inline]
+    fn into_abi(self) -> Self::Abi {
+        (&self.value).into_abi()
+    }
+}
+
 // `JsError` is `#[repr(transparent)]` over `JsValue`
 impl FromWasmAbi for JsError {
     type Abi = <JsValue as FromWasmAbi>::Abi;
+    const ABI_TRANSPARENT: bool = true;
 
     #[inline]
     unsafe fn from_abi(js: Self::Abi) -> Self {

@@ -662,65 +662,73 @@ impl ToTokens for ast::Struct {
                     }
                 }
 
-                #[automatically_derived]
-                impl #wasm_bindgen::convert::VectorFromWasmAbi for #name {
-                    type Abi = <
-                        #wasm_bindgen::__rt::alloc::boxed::Box<[#wasm_bindgen::JsValue]>
-                        as #wasm_bindgen::convert::FromWasmAbi
-                    >::Abi;
+                #wasm_bindgen::__wbindgen_sequence_rows! {
+                    #[automatically_derived]
+                    impl #wasm_bindgen::convert::VectorFromWasmAbi for #name {
+                        type Abi = <
+                            #wasm_bindgen::__rt::alloc::boxed::Box<[#wasm_bindgen::JsValue]>
+                            as #wasm_bindgen::convert::FromWasmAbi
+                        >::Abi;
 
-                    unsafe fn vector_from_abi(
-                        js: Self::Abi
-                    ) -> #wasm_bindgen::__rt::alloc::boxed::Box<[#name]> {
-                        match <Self as #wasm_bindgen::convert::VectorFromWasmAbi>::try_vector_from_abi(js) {
-                            #wasm_bindgen::__rt::core::result::Result::Ok(vector) => vector,
-                            #wasm_bindgen::__rt::core::result::Result::Err(msg) => #wasm_bindgen::throw_str(msg),
+                        unsafe fn vector_from_abi(
+                            js: Self::Abi
+                        ) -> #wasm_bindgen::__rt::alloc::boxed::Box<[#name]> {
+                            match <Self as #wasm_bindgen::convert::VectorFromWasmAbi>::try_vector_from_abi(js) {
+                                #wasm_bindgen::__rt::core::result::Result::Ok(vector) => vector,
+                                #wasm_bindgen::__rt::core::result::Result::Err(msg) => #wasm_bindgen::throw_str(msg),
+                            }
                         }
-                    }
 
-                    unsafe fn try_vector_from_abi(
-                        js: Self::Abi
-                    ) -> #wasm_bindgen::__rt::core::result::Result<
-                        #wasm_bindgen::__rt::alloc::boxed::Box<[#name]>,
-                        &'static str,
-                    > {
-                        <#wasm_bindgen::__rt::alloc::vec::Vec<#wasm_bindgen::JsValue> as #wasm_bindgen::convert::FromWasmAbi>::from_abi(js)
-                            .into_iter()
-                            .map(|value| {
-                                let ptr = unwrap(&value);
-                                if ptr.is_null() {
-                                    #wasm_bindgen::__rt::core::result::Result::Err(#wasm_bindgen::__rt::WRONG_TYPE_ERROR)
-                                } else {
-                                    <Self as #wasm_bindgen::convert::FromWasmAbi>::try_from_abi(ptr)
-                                }
-                            })
-                            .collect()
+                        unsafe fn try_vector_from_abi(
+                            js: Self::Abi
+                        ) -> #wasm_bindgen::__rt::core::result::Result<
+                            #wasm_bindgen::__rt::alloc::boxed::Box<[#name]>,
+                            &'static str,
+                        > {
+                            <#wasm_bindgen::__rt::alloc::vec::Vec<#wasm_bindgen::JsValue> as #wasm_bindgen::convert::FromWasmAbi>::from_abi(js)
+                                .into_iter()
+                                .map(|value| {
+                                    let ptr = unwrap(&value);
+                                    if ptr.is_null() {
+                                        #wasm_bindgen::__rt::core::result::Result::Err(#wasm_bindgen::__rt::WRONG_TYPE_ERROR)
+                                    } else {
+                                        <Self as #wasm_bindgen::convert::FromWasmAbi>::try_from_abi(ptr)
+                                    }
+                                })
+                                .collect()
+                        }
                     }
                 }
             };
 
-            #[automatically_derived]
-            impl #wasm_bindgen::describe::WasmDescribeVector for #name {
-                fn describe_vector() {
-                    use #wasm_bindgen::describe::*;
-                    inform(VECTOR);
-                    <#name as #wasm_bindgen::describe::WasmDescribe>::describe();
+            // Inside a `const`, so that the macro's path resolves after
+            // glob imports of the attribute do.
+            const _: () = {
+            #wasm_bindgen::__wbindgen_sequence_rows! {
+                #[automatically_derived]
+                impl #wasm_bindgen::describe::WasmDescribeVector for #name {
+                    fn describe_vector() {
+                        use #wasm_bindgen::describe::*;
+                        inform(VECTOR);
+                        <#name as #wasm_bindgen::describe::WasmDescribe>::describe();
+                    }
+                }
+
+                #[automatically_derived]
+                impl #wasm_bindgen::convert::VectorIntoWasmAbi for #name {
+                    type Abi = <
+                        #wasm_bindgen::__rt::alloc::boxed::Box<[#wasm_bindgen::JsValue]>
+                        as #wasm_bindgen::convert::IntoWasmAbi
+                    >::Abi;
+
+                    fn vector_into_abi(
+                        vector: #wasm_bindgen::__rt::alloc::boxed::Box<[#name]>
+                    ) -> Self::Abi {
+                        #wasm_bindgen::convert::js_value_vector_into_abi(vector)
+                    }
                 }
             }
-
-            #[automatically_derived]
-            impl #wasm_bindgen::convert::VectorIntoWasmAbi for #name {
-                type Abi = <
-                    #wasm_bindgen::__rt::alloc::boxed::Box<[#wasm_bindgen::JsValue]>
-                    as #wasm_bindgen::convert::IntoWasmAbi
-                >::Abi;
-
-                fn vector_into_abi(
-                    vector: #wasm_bindgen::__rt::alloc::boxed::Box<[#name]>
-                ) -> Self::Abi {
-                    #wasm_bindgen::convert::js_value_vector_into_abi(vector)
-                }
-            }
+            };
 
         })
         .to_tokens(tokens);
@@ -1873,6 +1881,7 @@ impl TryToTokens for ast::ImportType {
                 #[automatically_derived]
                 impl #impl_generics IntoWasmAbi for #rust_name #ty_generics #where_clause {
                     type Abi = <JsValue as IntoWasmAbi>::Abi;
+                    const ABI_TRANSPARENT: bool = <JsValue as IntoWasmAbi>::ABI_TRANSPARENT;
 
                     #[inline]
                     fn into_abi(self) -> Self::Abi {
@@ -1911,6 +1920,7 @@ impl TryToTokens for ast::ImportType {
                 #[automatically_derived]
                 impl #impl_generics FromWasmAbi for #rust_name #ty_generics #where_clause {
                     type Abi = <JsValue as FromWasmAbi>::Abi;
+                    const ABI_TRANSPARENT: bool = <JsValue as FromWasmAbi>::ABI_TRANSPARENT;
 
                     #[inline]
                     unsafe fn from_abi(js: Self::Abi) -> Self {
@@ -1945,16 +1955,18 @@ impl TryToTokens for ast::ImportType {
 
                 // A handle's memory is its table index, so a slice of them is
                 // borrowed as is.
-                #[automatically_derived]
-                impl #impl_generics #wasm_bindgen::convert::VectorRefIntoWasmAbi for #rust_name #ty_generics #where_clause {
-                    #[inline]
-                    fn slice_into_abi(slice: &[Self]) -> #wasm_bindgen::convert::WasmSlice {
-                        #wasm_bindgen::convert::WasmSlice::borrow(slice)
+                #wasm_bindgen::__wbindgen_sequence_rows! {
+                    #[automatically_derived]
+                    impl #impl_generics #wasm_bindgen::convert::VectorRefIntoWasmAbi for #rust_name #ty_generics #where_clause {
+                        #[inline]
+                        fn slice_into_abi(slice: &[Self]) -> #wasm_bindgen::convert::WasmSlice {
+                            #wasm_bindgen::convert::WasmSlice::borrow(slice)
+                        }
                     }
-                }
 
-                #[automatically_derived]
-                impl #impl_generics #wasm_bindgen::__rt::marker::VectorRefIntoWasmAbiSealed for #rust_name #ty_generics #where_clause {}
+                    #[automatically_derived]
+                    impl #impl_generics #wasm_bindgen::__rt::marker::VectorRefIntoWasmAbiSealed for #rust_name #ty_generics #where_clause {}
+                }
 
                 #[automatically_derived]
                 impl #impl_generics RefFromWasmAbi for #rust_name #ty_generics #where_clause {
