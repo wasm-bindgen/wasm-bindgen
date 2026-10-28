@@ -45,6 +45,37 @@ export function bytes(v) {
 }
 
 /**
+ * @param {boolean[]} v
+ * @returns {boolean[]}
+ */
+export function flags(v) {
+    let len0, ptr0;
+    try {
+        len0 = v.length;
+        ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
+        const view0 = getDataViewMemory0();
+        for (let j0 = 0; j0 < len0; j0++) {
+            const e0 = v[j0];
+            const p0 = ptr0 + j0 * 4;
+            view0.setInt32(p0 + 0, e0, true);
+        }
+    } catch (e) {
+        if (ptr0) wasm.__wbindgen_free(ptr0, len0 * 4, 4);
+        throw e;
+    }
+    const ret = wasm.flags(ptr0, len0);
+    const v2 = [];
+    let p2 = ret[0];
+    p2 = p2 >>> 0;
+    const view2 = getDataViewMemory0();
+    for (const end2 = p2 + ret[1] * 4; p2 < end2; p2 += 4) {
+        v2.push(view2.getInt32(p2 + 0, true) !== 0);
+    }
+    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    return v2;
+}
+
+/**
  * @param {Float64Array | number[]} v
  * @returns {Float64Array}
  */
@@ -109,6 +140,18 @@ export function give_nested_strings() {
 
 export function imports() {
     wasm.imports();
+}
+
+/**
+ * @param {number} a
+ * @param {number | null | undefined} b
+ * @param {boolean} c
+ * @param {boolean | null} [d]
+ * @returns {number | undefined}
+ */
+export function narrow(a, b, c, d) {
+    const ret = wasm.narrow(a, isLikeNone(b) ? 0xFFFFFF : b, c, isLikeNone(d) ? 0xFFFFFF : d ? 1 : 0);
+    return ret === 0xFFFFFF ? undefined : ret;
 }
 
 /**

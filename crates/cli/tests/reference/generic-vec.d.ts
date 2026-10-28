@@ -10,6 +10,8 @@ export class Point {
 
 export function bytes(v: Uint8Array | number[]): Uint8Array;
 
+export function flags(v: boolean[]): boolean[];
+
 export function floats(v: Float64Array | number[]): Float64Array;
 
 export function foos(v: any[]): any[];
@@ -17,6 +19,8 @@ export function foos(v: any[]): any[];
 export function give_nested_strings(): (string[])[];
 
 export function imports(): void;
+
+export function narrow(a: number, b: number | null | undefined, c: boolean, d?: boolean | null): number | undefined;
 
 export function nested(v: (Uint8Array | number[])[]): Uint8Array[];
 
