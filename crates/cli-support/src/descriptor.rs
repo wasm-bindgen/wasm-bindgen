@@ -96,6 +96,9 @@ pub enum Descriptor {
     /// that applies to it, or that was written on it, for the binding to
     /// validate (see [`Descriptor::seq_mode_fit`]).
     SeqMode(SeqMode, Box<Descriptor>),
+    /// A sequence element whose memory isn't the cell its descriptor implies,
+    /// so the sequence holds a cell of its ABI instead.
+    Cell(Box<Descriptor>),
 }
 
 /// How a sequence's cells hold its elements, which the element's descriptor
@@ -255,6 +258,7 @@ impl Descriptor {
             VECTOR => Descriptor::Vector(Box::new(Descriptor::_decode(data, clamped))),
             OPTIONAL => Descriptor::Option(Box::new(Descriptor::_decode(data, clamped))),
             NULLABLE => Descriptor::Nullable(Box::new(Descriptor::_decode(data, clamped))),
+            ABI_CELL => Descriptor::Cell(Box::new(Descriptor::_decode(data, clamped))),
             RESULT => Descriptor::Result(Box::new(Descriptor::_decode(data, clamped))),
             CACHED_STRING => Descriptor::CachedString,
             STRING => Descriptor::String,
@@ -361,7 +365,8 @@ impl Descriptor {
             | Descriptor::RefMut(d)
             | Descriptor::Slice(d)
             | Descriptor::Vector(d)
-            | Descriptor::Result(d) => d.visit_named_types_mut(f),
+            | Descriptor::Result(d)
+            | Descriptor::Cell(d) => d.visit_named_types_mut(f),
             Descriptor::Option(inner) | Descriptor::Nullable(inner) => {
                 inner.visit_named_types_mut(f)
             }
@@ -513,6 +518,9 @@ impl Descriptor {
     /// a number or a JS handle, and its scalar ABI for anything else, which
     /// the binding rejects if it has no glue for it.
     pub fn sequence_cell(&self) -> SequenceCell<'_> {
+        if let Descriptor::Cell(d) = self {
+            return SequenceCell::Encoded(d);
+        }
         match self.in_place_kind() {
             Some(kind) => SequenceCell::InPlace(kind),
             None => SequenceCell::Encoded(self),
@@ -526,7 +534,6 @@ impl Descriptor {
         match self {
             Descriptor::I8
             | Descriptor::U8
-            | Descriptor::ClampedU8
             | Descriptor::I16
             | Descriptor::U16
             | Descriptor::I32
@@ -633,6 +640,13 @@ fn sequence_cells() {
         Descriptor::decode(&[REF, SLICE, BOOLEAN]).vector_kind(),
         None
     );
+    // An `ABI_CELL` element is encoded even where its descriptor is in place.
+    let cell = Descriptor::decode(&[VECTOR, ABI_CELL, U8]);
+    assert_eq!(cell.vector_kind(), None);
+    let Descriptor::Vector(elem) = &cell else {
+        unreachable!()
+    };
+    assert_eq!(elem.sequence_cell(), SequenceCell::Encoded(&Descriptor::U8));
 }
 
 #[test]

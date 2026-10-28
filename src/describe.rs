@@ -10,7 +10,9 @@ use alloc::vec::Vec;
 use core::panic::AssertUnwindSafe;
 use core::{mem::MaybeUninit, ptr::NonNull};
 
-use crate::{__rt::marker::ErasableGeneric, Clamped, JsError, JsValue, Nullable};
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
+use crate::__rt::marker::ErasableGeneric;
+use crate::{Clamped, JsError, JsValue, Nullable};
 use cfg_if::cfg_if;
 
 pub use wasm_bindgen_shared::tys::*;
@@ -200,6 +202,7 @@ impl WasmDescribe for Cow<'_, str> {
     }
 }
 
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> WasmDescribeVector for T {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe_vector() {
@@ -208,10 +211,25 @@ impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> WasmDescribeVector for T
     }
 }
 
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 impl<T: WasmDescribeVector> WasmDescribe for Box<[T]> {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
         T::describe_vector();
+    }
+}
+
+/// An element that isn't in place crosses as its ABI, which `ABI_CELL` tells
+/// the CLI, so it never reads an element's memory as its descriptor's.
+#[cfg(wasm_bindgen_unstable_generic_vec)]
+impl<T: crate::convert::IntoWasmAbi> WasmDescribe for Box<[T]> {
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe() {
+        inform(VECTOR);
+        if !T::ABI_TRANSPARENT {
+            inform(ABI_CELL);
+        }
+        T::describe();
     }
 }
 

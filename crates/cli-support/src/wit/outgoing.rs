@@ -204,7 +204,7 @@ impl InstructionBuilder<'_, '_> {
                 self.outgoing_function(false, descriptor, None)?;
             }
 
-            Descriptor::Slice(_) => {
+            Descriptor::Slice(_) | Descriptor::Cell(_) => {
                 bail!("unsupported argument type for calling JS function from Rust: {arg:?}")
             }
 
@@ -703,6 +703,7 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Closure(_)
             | Descriptor::Slice(_)
             | Descriptor::SeqMode(..)
+            | Descriptor::Cell(_)
             | Descriptor::Result(_) => {
                 bail!("unsupported Result type for returning from exported Rust function: {arg:?}")
             }
@@ -822,13 +823,17 @@ impl InstructionBuilder<'_, '_> {
         // rejects one the glue can't decode. An owned element that isn't a
         // scalar may call into Wasm to take what it owns, so its words are
         // all read out of the buffer before any is decoded. An owned Rust
-        // struct or handle is in place on its own, and only reaches here
-        // under an `Option` or `Nullable`.
+        // struct or handle is in place on its own, and reaches here bare only
+        // as an `ABI_CELL` element, whose memory isn't its descriptor's.
         let staged = owned && !elem.scalar_cell();
         match elem {
             _ if owned => match elem {
                 Descriptor::String
                 | Descriptor::CachedString
+                | Descriptor::Externref
+                | Descriptor::NamedExternref(_)
+                | Descriptor::RustStruct { .. }
+                | Descriptor::Vector(_)
                 | Descriptor::Option(_)
                 | Descriptor::Nullable(_) => decode._outgoing(elem)?,
                 _ if elem.scalar_cell() => decode._outgoing(elem)?,
@@ -841,10 +846,6 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::CachedString
             | Descriptor::Externref
             | Descriptor::NamedExternref(_) => decode.outgoing_ref(false, elem)?,
-            Descriptor::Boolean
-            | Descriptor::Char
-            | Descriptor::Enum { .. }
-            | Descriptor::StringEnum { .. } => decode._outgoing(elem)?,
             // `Option<T>` / `Nullable<T>`: the cell is `Option<&T>`'s ABI.
             Descriptor::Option(inner) => {
                 decode.outgoing_option_ref(false, inner, OptionKind::Option)?
@@ -852,6 +853,7 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Nullable(inner) => {
                 decode.outgoing_option_ref(false, inner, OptionKind::Nullable)?
             }
+            _ if elem.scalar_cell() => decode._outgoing(elem)?,
             _ => {
                 bail!("unsupported slice element type for calling JS function from Rust: {elem:?}")
             }
