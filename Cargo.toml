@@ -87,6 +87,7 @@ unexpected_cfgs = { level = "warn", check-cfg = [
   'cfg(wasm_bindgen_unstable_tokio)',
   'cfg(wasm_bindgen_unstable_jspi)',
   'cfg(wasm_bindgen_unstable_try_trait)',
+  'cfg(wasm_bindgen_unstable_generic_vec)',
 ] }
 unused_lifetimes = "warn"
 

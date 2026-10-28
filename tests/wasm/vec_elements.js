@@ -21,20 +21,21 @@ exports.throwingElementFreesBuffer = (memory) => {
 };
 
 // Each attempt converts the valid elements before the rejected one: leaked,
-// with the list itself, memory would grow by tens of MB.
+// with the list itself, memory would grow by tens of MB. The glue rejects a
+// string or struct itself under `wasm_bindgen_unstable_generic_vec`.
 exports.rejectedElementLeaksNothing = (memory) => {
     const levels = Array.from({ length: 100000 }, () => -1);
     const strings = Array.from({ length: 10000 }, () => 'a');
     const cases = [
         [() => wasm.vec_elements_boxed_levels([...levels, NaN]), /invalid enum value passed/],
         [() => wasm.vec_elements_boxed_levels([...levels, 1.5]), /invalid enum value passed/],
-        [() => wasm.vec_elements_count_strings([...strings, 1]), /array contains a value of the wrong type/],
+        [() => wasm.vec_elements_count_strings([...strings, 1]), /array contains a value of the wrong type|expected a string argument/],
         [
             () => wasm.vec_elements_count_items([
                 ...Array.from({ length: 5000 }, () => new wasm.VecItem()),
                 {},
             ]),
-            /array contains a value of the wrong type/,
+            /array contains a value of the wrong type|expected instance of/,
         ],
     ];
     for (const [call, message] of cases) {
