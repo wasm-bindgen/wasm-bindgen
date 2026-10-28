@@ -70,6 +70,12 @@ pub trait WasmDescribe {
 
 /// Trait for element types to implement WasmDescribe for vectors of
 /// themselves.
+#[cfg_attr(
+    wasm_bindgen_unstable_generic_vec,
+    deprecated(
+        note = "under `wasm_bindgen_unstable_generic_vec`, vectors cross by the element's own `IntoWasmAbi` / `FromWasmAbi`, and this trait is unused"
+    )
+)]
 pub trait WasmDescribeVector {
     fn describe_vector();
 }
