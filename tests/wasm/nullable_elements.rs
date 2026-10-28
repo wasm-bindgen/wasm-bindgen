@@ -9,7 +9,7 @@ use std::panic::AssertUnwindSafe;
 use std::rc::Rc;
 
 use js_sys::{Array, Function, JsString, Map, Number, Promise, Undefined};
-use wasm_bindgen::convert::{IntoWasmAbi, VectorRefIntoWasmAbi};
+use wasm_bindgen::convert::{IntoWasmAbi, RefIntoWasmAbi, VectorRefIntoWasmAbi};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
@@ -42,6 +42,8 @@ extern "C" {
     fn echo_ref_f64(v: &f64) -> f64;
     #[wasm_bindgen(js_name = echo)]
     fn echo_ref_opt_f64(v: &Option<f64>) -> JsValue;
+    #[wasm_bindgen(experimental_generic_mono, js_name = echo)]
+    fn mono_ref<T: RefIntoWasmAbi>(v: &T) -> JsValue;
 
     #[wasm_bindgen(js_name = callNullable)]
     fn call_nullable(f: &Function<fn(Nullable<JsString>) -> Undefined>);
@@ -140,6 +142,9 @@ fn borrowed() {
     assert_eq!(echo_ref_f64(&1.5), 1.5);
     assert_eq!(echo_ref_opt_f64(&Some(1.5)), 1.5);
     assert!(echo_ref_opt_f64(&None).is_undefined());
+    assert_eq!(mono_ref(&1.5), 1.5);
+    assert!(mono_ref(&Nullable::<f64>::Null).is_null());
+    assert_eq!(mono_ref(&"a"), "a");
 }
 
 #[wasm_bindgen_test]

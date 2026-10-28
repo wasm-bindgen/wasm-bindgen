@@ -54,10 +54,9 @@
 * `Option<T>` and `Nullable<T>` are now borrowed sequence elements:
   `&[Option<T>]`, `&[Nullable<T>]` and `&[Option<Nullable<T>>]` cross as
   encoded slices for every `T` a `&[T]` takes, typed `(T | null)[]` and the
-  like. A borrowed number, `bool`, `char` or
-  borrowed string now crosses by copy, so `&f64`, `&Option<T>`,
-  `&Nullable<T>`, `Option<&f64>` and `Option<&Nullable<T>>` are argument
-  types and give the encoded cells.
+  like. A borrowed number, `bool`, `char` or borrowed string now crosses by
+  copy, so `&f64`, `&Option<T>`, `&Nullable<T>`, `Option<&f64>` and
+  `Option<&Nullable<T>>` are argument types and give the encoded cells.
   `Nullable<T>` converts into `JsValue` with `From` and from one with
   `TryFromJsValue`, and `Option<T>`, `Nullable<T>` and `Result<T, E>` are
   `Promising` for any `T: Promising`. A js-sys `Function<fn(..)>`
@@ -185,8 +184,10 @@
   name a converted carrier such as `Nullable<JsString>`. Generic code over
   these traits that calls `call*` or `bind*` now needs the bound itself, as
   `where F::Ret: JsGeneric, F::Arg1: JsGeneric`. `Option<T>: TryFromJsValue`
-  now reads `null` as `None`, as the `Option<T>` ABI does; an
-  `Option<Nullable<T>>` still reads it as `Some(Nullable::Null)`.
+  now reads `null` as `None`, as the `Option<T>` ABI does, so
+  `Option::<JsValue>::try_from_js_value(JsValue::NULL)` is `None` where it
+  was `Some(null)`; an `Option<Nullable<T>>` still reads it as
+  `Some(Nullable::Null)`.
   [#5427](https://github.com/wasm-bindgen/wasm-bindgen/pull/5427)
 
 * With reference types, `static_string` constants and the reserved
