@@ -360,3 +360,22 @@ async fn can_use_an_async_iterable_as_stream() {
     assert_eq!(stream.next().await, Some(Ok(JsValue::from(24))));
     assert_eq!(stream.next().await, None);
 }
+
+// The rejection type is an unchecked cast like the fulfilled type.
+#[wasm_bindgen_test]
+async fn typed_promise_await_reject() {
+    use js_sys::{Number, TypeError};
+    use wasm_bindgen::JsCast;
+    let p: Promise<Number, TypeError> =
+        Promise::<JsValue>::reject(&TypeError::new("t").into()).unchecked_into();
+    let e: TypeError = p.await.unwrap_err();
+    assert_eq!(e.message(), "t");
+}
+
+// A typed `JsFuture` is `UnwindSafe`, as `future_to_promise` requires under
+// panic=unwind.
+#[allow(dead_code)]
+fn typed_js_future_is_unwind_safe() {
+    fn assert_unwind_safe<F: std::panic::UnwindSafe>() {}
+    assert_unwind_safe::<JsFuture<js_sys::Number, js_sys::TypeError>>();
+}

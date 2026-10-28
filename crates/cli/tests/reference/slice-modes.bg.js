@@ -44,7 +44,7 @@ export function __wbg_js_view_u8_121c4880f6a160aa(arg0, arg1) {
     js_view_u8(getArrayU8FromWasm0(arg0, arg1));
 }
 export function __wbindgen_generic_0000000000000000(arg0, arg1) {
-    // generic import `js_generic_slice`: [SeqMode(slice = copy, Option { inner: Ref(Slice(U8)), strict: false })] -> Unit
+    // generic import `js_generic_slice`: [SeqMode(slice = copy, Option(Ref(Slice(U8))))] -> Unit
     js_generic_slice(arg0 === 0 ? undefined : getArrayU8FromWasm0(arg0, arg1).slice());
 }
 export function __wbindgen_generic_0000000000000001(arg0, arg1) {

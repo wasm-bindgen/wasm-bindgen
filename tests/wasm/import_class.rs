@@ -272,11 +272,7 @@ pub fn assert_deny_docs_works() {}
 fn options() {
     take_none(None);
     take_some(Some(Options::new()));
-    if cfg!(wasm_bindgen_unstable_strict_option) {
-        assert!(return_null().unwrap().is_null());
-    } else {
-        assert!(return_null().is_none());
-    }
+    assert!(return_null().is_none());
     assert!(return_undefined().is_none());
     assert!(return_some().is_some());
     run_rust_option_tests();

@@ -159,7 +159,7 @@ export function __wbg_static_accessor_WINDOW_d7f903d1508cbdc4() {
     const ret = typeof window === 'undefined' ? undefined : window;
     return isLikeNone(ret) ? 0 : addToExternrefTable0(ret);
 }
-export function __wbg_then_e71170d78fcf8954(arg0, arg1) {
+export function __wbg_then_ce2a321a994ccb81(arg0, arg1) {
     const ret = arg0.then(arg1);
     return ret;
 }

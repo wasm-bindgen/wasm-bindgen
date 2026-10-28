@@ -151,11 +151,11 @@ impl InstructionBuilder<'_, '_> {
             },
             Descriptor::Ref(d) => self.incoming_ref(false, d)?,
             Descriptor::RefMut(d) => self.incoming_ref(true, d)?,
-            Descriptor::Option { inner, strict } => match &**inner {
+            Descriptor::Option(inner) => match &**inner {
                 Descriptor::Nullable(inner) => {
                     self.incoming_option(inner, OptionKind::OptionNullable)?
                 }
-                inner => self.incoming_option(inner, OptionKind::option(*strict))?,
+                inner => self.incoming_option(inner, OptionKind::Option)?,
             },
             Descriptor::Nullable(inner) => self.incoming_option(inner, OptionKind::Nullable)?,
 
@@ -177,7 +177,7 @@ impl InstructionBuilder<'_, '_> {
                 let kind = match cell.sequence_cell() {
                     SequenceCell::InPlace(kind) => kind,
                     SequenceCell::Encoded(elem) => {
-                        return self.incoming_encoded_vector(elem, false, OptionKind::Lenient)
+                        return self.incoming_encoded_vector(elem, false, OptionKind::Option)
                     }
                 };
                 let ptr_ty = self.incoming_internal_word_ty();
@@ -497,7 +497,7 @@ impl InstructionBuilder<'_, '_> {
                 self.in_option_sentinel64_number(option_kind);
             }
 
-            Descriptor::Option { .. } | Descriptor::Nullable(_) => bail!(
+            Descriptor::Option(_) | Descriptor::Nullable(_) => bail!(
                 "unsupported nested optional argument type for calling Rust function from JS: \
                  {arg:?}; only `Option<Nullable<T>>` nests"
             ),

@@ -228,11 +228,7 @@ where
 impl<T: WasmDescribe> WasmDescribe for Option<T> {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
-        if cfg!(wasm_bindgen_unstable_strict_option) {
-            inform(OPTIONAL_STRICT);
-        } else {
-            inform(OPTIONAL);
-        }
+        inform(OPTIONAL);
         T::describe();
     }
 }

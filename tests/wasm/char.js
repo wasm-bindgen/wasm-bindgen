@@ -17,9 +17,7 @@ exports.js_works = () => {
     wasm.rust_face('😀');
 
     assert.strictEqual(wasm.rust_option_identity(undefined), undefined);
-    if (!wasm.strict_option_enabled()) {
-        assert.strictEqual(wasm.rust_option_identity(null), undefined);
-    }
+    assert.strictEqual(wasm.rust_option_identity(null), undefined);
     assert.strictEqual(wasm.rust_option_identity(''), '\u0000');
     assert.strictEqual(wasm.rust_option_identity('\u0000'), '\u0000');
 

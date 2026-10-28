@@ -5,6 +5,21 @@
 
 ### Added
 
+* Added a rejection type parameter to `js_sys::Promise<T, E = JsValue>`,
+  mirrored on `JsFuture<T, E>`, `PromiseState<T, E>` and
+  `PromiseWithResolvers<T, E>`. Awaiting a `Promise<T, E>` yields
+  `Result<T, E>`, converting the rejection reason as an `E` the same unchecked
+  way the fulfilled value is converted as a `T`. Both parameters are covariant
+  under `Upcast`; `catch`, `then_with_reject` and the `withResolvers` reject
+  function receive an `E`; `all_tuple` / `all_settled_tuple` carry a shared `E`
+  through; and under `js_sys_unstable_apis`, `Promise::new`, `Promise::reject`
+  and `Promise::any` are typed on the rejection too, `any` as
+  `AggregateError`. The default keeps existing `Promise<T>` code unchanged.
+  `PromiseWithResolvers<T, E>` is invariant in both, since its `resolve` and
+  `reject` functions take them, and `JsFuture<T, E>` is `UnwindSafe` whenever
+  `T` and `E` are.
+  [#5426](https://github.com/wasm-bindgen/wasm-bindgen/pull/5426)
+
 * Added the `--js-string-builtins` CLI flag, importing `static_string`
   constants as [JS String Builtins](https://github.com/WebAssembly/js-string-builtins)
   string constants from `wasm:js/string-constants` instead of defining them in
@@ -13,23 +28,16 @@
   cloning and dropping them is free and never calls into JS.
   [#5401](https://github.com/wasm-bindgen/wasm-bindgen/pull/5401)
 
-* Added `--cfg wasm_bindgen_unstable_strict_option`, under which a JS to Rust
-  `Option<T>` treats only `undefined` as `None`: `null` goes to `T`'s own
-  conversion, as any other non-`T` value does, and an exported optional
-  argument or field is typed `T | undefined` rather than `T | null | undefined`.
-  `None` is still `undefined` going out. This becomes the default in the next
-  breaking release; code relying on `null` becoming `None` should move to
-  `Nullable<T>`.
-  [#5410](https://github.com/wasm-bindgen/wasm-bindgen/pull/5410)
-
 * Added `Nullable<T>`, re-exported as `js_sys::Nullable`, for a `T | null`
   value at the JS boundary, as `Option<T>` is for `T | undefined`, with
   `Option<Nullable<T>>` for `T | null | undefined`. Both are accepted wherever
   `Option<T>` is, for every `T` and in every position: JS `null` is
   `Nullable::Null` and is sent back as `null`, while `undefined` into a plain
-  `Nullable<T>` goes to `T`'s own conversion. The `Option` layer of
-  `Option<Nullable<T>>` treats only `undefined` as `None` with or without the
-  strict cfg. `Option<T>` converts from and into `Nullable<T>`, and
+  `Nullable<T>` goes to `T`'s own conversion. A plain `Option<T>` still reads
+  both `undefined` and `null` as `None` and writes `None` as `undefined`; the
+  `Option` layer of `Option<Nullable<T>>` treats only `undefined` as `None`,
+  since `null` has to reach the `Nullable` layer. `Option<T>` converts from
+  and into `Nullable<T>`, and
   `JsNullable<T>` converts from both and into `Option<Nullable<T>>` for
   `T: JsGeneric`.
   The API follows `Option`'s, including `ok_or`, `and_then`, `filter`,
@@ -243,6 +251,12 @@
   leading to race conditions and multiple initializations. It always returns
   the background from the first successful initialization.
   [#5429](https://github.com/wasm-bindgen/wasm-bindgen/pull/5429)
+
+* `js_sys::Promise::catch_map`'s handler now receives the rejection reason,
+  typed as the promise's `E`, instead of the reason mislabelled as the
+  fulfilled type `T`. A handler on a `Promise<Foo>` written as `|v: Foo|` must
+  take `JsValue`; it was never a `Foo`.
+  [#5426](https://github.com/wasm-bindgen/wasm-bindgen/pull/5426)
 
 * Large JS snippets (`module = "..."`, `inline_js`) and
   `typescript_custom_section` expressions such as `include_str!` no longer make
