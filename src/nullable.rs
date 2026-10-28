@@ -25,8 +25,8 @@ use crate::{JsCast, JsValue};
 /// `Option<T>`. No other nesting is supported: `Nullable<Nullable<T>>`,
 /// `Nullable<Option<T>>` and `Option<Option<T>>` do not cross the boundary.
 ///
-/// Both are also sequence elements, `&[Nullable<T>]` and `Vec<Nullable<T>>`,
-/// for the `T` a sequence of `T` takes, and may name a slot of a js-sys
+/// Both are also borrowed sequence elements, `&[Nullable<T>]`, for the `T`
+/// a `&[T]` takes, and may name a slot of a js-sys
 /// `Function<fn(..)>` signature or a `Promise<T>` resolution. Where a js-sys
 /// container's type-erased methods marshal the element itself, as
 /// `Array::get` and `Map::get` do, the element must be a handle: use the
