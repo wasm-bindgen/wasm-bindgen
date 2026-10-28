@@ -353,8 +353,85 @@ const U32_ABI_OPTION_SENTINEL: u32 = 0x00FF_FFFFu32;
 /// `Nullable::Null` for the same types, below the `Option` sentinel.
 const U32_ABI_NULL_SENTINEL: u32 = 0x00FF_FFFEu32;
 
+/// Under `wasm_bindgen_unstable_generic_vec`, a type narrower than 32 bits is
+/// its own `Abi`, still crossing as a `u32` word, and `Option<Self>` takes the
+/// word with its spare values.
+#[cfg(wasm_bindgen_unstable_generic_vec)]
+macro_rules! sub_word_abi {
+    ($t:ty, transparent = $transparent:literal, join = |$prim:ident| $join:expr) => {
+        impl WasmAbi for $t {
+            type Prim1 = u32;
+            type Prim2 = ();
+            type Prim3 = ();
+            type Prim4 = ();
+
+            #[inline]
+            fn split(self) -> (u32, (), (), ()) {
+                (self as u32, (), (), ())
+            }
+
+            #[inline]
+            fn join($prim: u32, _: (), _: (), _: ()) -> Self {
+                $join
+            }
+        }
+
+        impl IntoWasmAbi for $t {
+            type Abi = $t;
+            const ABI_TRANSPARENT: bool = $transparent;
+
+            #[inline]
+            fn into_abi(self) -> $t {
+                self
+            }
+        }
+
+        impl FromWasmAbi for $t {
+            type Abi = $t;
+            const ABI_TRANSPARENT: bool = $transparent;
+
+            #[inline]
+            unsafe fn from_abi(js: $t) -> Self {
+                js
+            }
+        }
+
+        impl MaybeIntoWasmAbi for $t {
+            type MaybeAbi = u32;
+
+            #[inline]
+            fn into_maybe_abi(self) -> u32 {
+                self as u32
+            }
+
+            #[inline]
+            fn none() -> u32 {
+                U32_ABI_OPTION_SENTINEL
+            }
+        }
+
+        impl MaybeFromWasmAbi for $t {
+            type MaybeAbi = u32;
+
+            #[inline]
+            unsafe fn from_maybe_abi($prim: u32) -> Self {
+                $join
+            }
+
+            #[inline]
+            fn is_none(js: &u32) -> bool {
+                *js == U32_ABI_OPTION_SENTINEL
+            }
+        }
+    };
+}
+
 macro_rules! type_abi_as_u32 {
     ($($t:tt)*) => ($(
+        #[cfg(wasm_bindgen_unstable_generic_vec)]
+        sub_word_abi!($t, transparent = true, join = |prim| prim as $t);
+
+        #[cfg(not(wasm_bindgen_unstable_generic_vec))]
         impl IntoWasmAbi for $t {
             type Abi = u32;
             const ABI_TRANSPARENT: bool = true;
@@ -363,6 +440,7 @@ macro_rules! type_abi_as_u32 {
             fn into_abi(self) -> u32 { self as u32 }
         }
 
+        #[cfg(not(wasm_bindgen_unstable_generic_vec))]
         impl FromWasmAbi for $t {
             type Abi = u32;
             const ABI_TRANSPARENT: bool = true;
@@ -371,11 +449,13 @@ macro_rules! type_abi_as_u32 {
             unsafe fn from_abi(js: u32) -> Self { js as $t }
         }
 
+        #[cfg(not(wasm_bindgen_unstable_generic_vec))]
         impl OptionIntoWasmAbi for $t {
             #[inline]
             fn none() -> u32 { U32_ABI_OPTION_SENTINEL }
         }
 
+        #[cfg(not(wasm_bindgen_unstable_generic_vec))]
         impl OptionFromWasmAbi for $t {
             #[inline]
             fn is_none(js: &u32) -> bool { *js == U32_ABI_OPTION_SENTINEL }
@@ -449,6 +529,10 @@ impl UpcastFrom<u16> for u128 {}
 impl UpcastFrom<u16> for JsOption<u128> {}
 impl UpcastFrom<u16> for JsNullable<u128> {}
 
+#[cfg(wasm_bindgen_unstable_generic_vec)]
+sub_word_abi!(bool, transparent = false, join = |prim| prim != 0);
+
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 impl IntoWasmAbi for bool {
     type Abi = u32;
 
@@ -458,6 +542,7 @@ impl IntoWasmAbi for bool {
     }
 }
 
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 impl FromWasmAbi for bool {
     type Abi = u32;
 
@@ -467,6 +552,7 @@ impl FromWasmAbi for bool {
     }
 }
 
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 impl OptionIntoWasmAbi for bool {
     #[inline]
     fn none() -> u32 {
@@ -474,6 +560,7 @@ impl OptionIntoWasmAbi for bool {
     }
 }
 
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 impl OptionFromWasmAbi for bool {
     #[inline]
     fn is_none(js: &u32) -> bool {
