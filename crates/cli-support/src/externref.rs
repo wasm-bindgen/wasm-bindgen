@@ -134,6 +134,7 @@ pub fn process(module: &mut Module) -> Result<()> {
                 } => {
                     *table_and_drop = meta.drop.map(|id| (meta.table, id));
                 }
+                Instruction::EncodedSliceStore { ref mut drop, .. } => *drop = meta.drop,
                 Instruction::CachedStringLoad { ref mut table, .. } => *table = Some(meta.table),
                 _ => {}
             };

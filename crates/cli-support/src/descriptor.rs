@@ -519,6 +519,35 @@ impl Descriptor {
         }
     }
 
+    /// Whether an encoded element's cell is a scalar, which converts without
+    /// calling into Wasm or owning anything, so its buffer can be read or
+    /// written in the same pass that converts the elements.
+    pub fn scalar_cell(&self) -> bool {
+        match self {
+            Descriptor::I8
+            | Descriptor::U8
+            | Descriptor::ClampedU8
+            | Descriptor::I16
+            | Descriptor::U16
+            | Descriptor::I32
+            | Descriptor::U32
+            | Descriptor::I64
+            | Descriptor::U64
+            | Descriptor::I64AsF64
+            | Descriptor::U64AsF64
+            | Descriptor::I128
+            | Descriptor::U128
+            | Descriptor::F32
+            | Descriptor::F64
+            | Descriptor::Boolean
+            | Descriptor::Char
+            | Descriptor::Enum { .. }
+            | Descriptor::StringEnum { .. } => true,
+            Descriptor::Option(d) | Descriptor::Nullable(d) => d.scalar_cell(),
+            _ => false,
+        }
+    }
+
     fn in_place_kind(&self) -> Option<VectorKind> {
         match *self {
             Descriptor::I8 => Some(VectorKind::I8),

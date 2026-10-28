@@ -406,6 +406,21 @@ impl WasmSlice {
         Self::from_usize(Box::into_raw(cells) as *mut AbiCell<T::Abi> as usize, len)
     }
 
+    /// An encoded sequence of owned elements: a fresh buffer of each
+    /// element's cell, its scalar ABI by `f`, which takes the element by
+    /// value so what it owns passes to JS.
+    pub fn encode_owned<T: IntoWasmAbi>(vector: Box<[T]>, mut f: impl FnMut(T) -> T::Abi) -> Self {
+        let cells: Box<[AbiCell<T::Abi>]> = Vec::from(vector)
+            .into_iter()
+            .map(|elem| {
+                let (p1, p2, p3, p4) = f(elem).split();
+                AbiCell(p1, p2, p3, p4)
+            })
+            .collect();
+        let len = cells.len();
+        Self::from_usize(Box::into_raw(cells) as *mut AbiCell<T::Abi> as usize, len)
+    }
+
     /// Takes an encoded sequence from JS, converting each element from its
     /// cell's ABI with `FromWasmAbi::try_from_abi`. A rejected element stops
     /// the decode, dropping the buffer and every element converted so far.
