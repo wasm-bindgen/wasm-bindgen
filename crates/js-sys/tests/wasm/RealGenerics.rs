@@ -813,7 +813,7 @@ where
         assert_eq!(p.await.unwrap(), x);
     }
     if builtin_has("Promise", "withResolvers") {
-        let resolvers = Promise::with_resolvers::<T>();
+        let resolvers = Promise::with_resolvers::<T, JsValue>();
         resolvers.resolve().call1(&JsValue::NULL, &x).unwrap();
         assert_eq!(resolvers.promise().await.unwrap(), x);
     }
@@ -985,16 +985,16 @@ async fn promise_statics_of_rust_types() {
         assert!(p.await.is_err());
     }
     if builtin_has("Promise", "withResolvers") {
-        let resolvers = Promise::with_resolvers::<String>();
+        let resolvers = Promise::with_resolvers::<String, JsValue>();
         let resolve: Function<fn(String) -> Undefined> = resolvers.resolve();
         resolve.call1(&JsValue::NULL, &"done".into()).unwrap();
         assert_eq!(resolvers.promise().await.unwrap(), "done");
 
-        let resolvers = Promise::with_resolvers::<u32>();
+        let resolvers = Promise::with_resolvers::<u32, JsValue>();
         resolvers.resolve().call1(&JsValue::NULL, &5).unwrap();
         assert_eq!(resolvers.promise().await.unwrap(), 5);
 
-        let resolvers = Promise::with_resolvers::<u32>();
+        let resolvers = Promise::with_resolvers::<u32, JsValue>();
         resolvers
             .reject()
             .call1(&JsValue::NULL, &"bad".into())
