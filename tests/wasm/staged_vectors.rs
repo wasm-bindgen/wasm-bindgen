@@ -2,6 +2,9 @@
 //! into Wasm for each element. Each wrapper crosses as the type it wraps,
 //! with its vectors encoded.
 
+// The vector traits are deprecated under `wasm_bindgen_unstable_generic_vec`.
+#![allow(deprecated)]
+
 use wasm_bindgen::convert::{
     FromWasmAbi, IntoWasmAbi, VectorFromWasmAbi, VectorIntoWasmAbi, WasmSlice,
 };

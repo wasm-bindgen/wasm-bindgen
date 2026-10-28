@@ -490,6 +490,13 @@ use core::marker::Sized;
 /// This is part of the internal [`convert`](crate::convert) module, **no
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
+#[cfg_attr(
+    wasm_bindgen_unstable_generic_vec,
+    deprecated(
+        note = "under `wasm_bindgen_unstable_generic_vec`, vectors cross by the element's own `IntoWasmAbi` / `FromWasmAbi`, and this trait is unused"
+    )
+)]
+#[allow(deprecated)]
 pub trait VectorIntoWasmAbi: WasmDescribeVector + Sized {
     type Abi: WasmAbi;
 
@@ -504,6 +511,13 @@ pub trait VectorIntoWasmAbi: WasmDescribeVector + Sized {
 /// This is part of the internal [`convert`](crate::convert) module, **no
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
+#[cfg_attr(
+    wasm_bindgen_unstable_generic_vec,
+    deprecated(
+        note = "under `wasm_bindgen_unstable_generic_vec`, vectors cross by the element's own `IntoWasmAbi` / `FromWasmAbi`, and this trait is unused"
+    )
+)]
+#[allow(deprecated)]
 pub trait VectorFromWasmAbi: WasmDescribeVector + Sized {
     type Abi: WasmAbi;
 
