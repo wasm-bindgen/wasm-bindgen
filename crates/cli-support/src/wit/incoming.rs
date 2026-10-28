@@ -200,6 +200,8 @@ impl InstructionBuilder<'_, '_> {
             Descriptor::Result(_) |
             // Only on imported function arguments
             Descriptor::SeqMode(..) |
+            // Only on sequence elements
+            Descriptor::Cell(_) |
             // Always behind a `Ref`
             Descriptor::Slice(_) => bail!(
                 "unsupported argument type for calling Rust function from JS: {arg:?}"
@@ -655,12 +657,14 @@ impl InstructionBuilder<'_, '_> {
         // rejects one the glue can't encode. An element that isn't a scalar
         // may call into Wasm to allocate what it owns, so every element is
         // encoded before the buffer is allocated. A Rust struct or a handle
-        // is in place on its own, and only reaches here under an `Option` or
-        // `Nullable`.
+        // is in place on its own, and reaches here bare only as an
+        // `ABI_CELL` element, whose memory isn't its descriptor's.
         let staged = !elem.scalar_cell();
         match elem {
             Descriptor::String
             | Descriptor::CachedString
+            | Descriptor::RustStruct { .. }
+            | Descriptor::Vector(_)
             | Descriptor::Option(_)
             | Descriptor::Nullable(_) => encode._incoming(elem)?,
             _ if elem.scalar_cell() => encode._incoming(elem)?,

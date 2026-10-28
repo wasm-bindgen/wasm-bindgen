@@ -217,11 +217,11 @@ fn runtest(
     test: PathBuf,
 ) -> Result<()> {
     // panic-unwind.rs and panic-unwind-legacy.rs require nightly +
-    // `-Zbuild-std=std,panic_unwind`, so they are exercised by the dedicated
-    // `runtest_panic_unwind` / `runtest_panic_unwind_legacy` tests below.
+    // `-Zbuild-std=std,panic_unwind`, and generic-vec.rs its own `RUSTFLAGS`,
+    // so they are exercised by the dedicated tests below.
     if matches!(
         test.file_stem().and_then(|s| s.to_str()),
-        Some("panic-unwind") | Some("panic-unwind-legacy")
+        Some("panic-unwind") | Some("panic-unwind-legacy") | Some("generic-vec")
     ) {
         return Ok(());
     }
@@ -258,6 +258,18 @@ fn runtest_panic_unwind_legacy() -> Result<()> {
                 "-C panic=unwind -Cllvm-args=-wasm-use-legacy-eh",
             )
             .arg("-Zbuild-std=std,panic_unwind");
+    })
+}
+
+#[test]
+fn runtest_generic_vec() -> Result<()> {
+    let mut test = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    test.push("tests");
+    test.push("reference");
+    test.push("generic-vec.rs");
+
+    runtest_with_opts(test, None, |command| {
+        command.env("RUSTFLAGS", "--cfg wasm_bindgen_unstable_generic_vec");
     })
 }
 
@@ -441,10 +453,13 @@ fn build_reference_workspace() -> Result<ReferenceWorkspace> {
     for path in entries {
         let stem = path.file_stem().unwrap().to_str().unwrap().to_owned();
 
-        // These require a nightly toolchain + `-Zbuild-std` with their own
-        // unique `RUSTFLAGS`, so they're built individually by
-        // `runtest_with_opts` instead of joining this shared workspace.
-        if matches!(stem.as_str(), "panic-unwind" | "panic-unwind-legacy") {
+        // These require their own unique `RUSTFLAGS`, so they're built
+        // individually by `runtest_with_opts` instead of joining this shared
+        // workspace.
+        if matches!(
+            stem.as_str(),
+            "panic-unwind" | "panic-unwind-legacy" | "generic-vec"
+        ) {
             continue;
         }
 

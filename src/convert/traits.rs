@@ -22,6 +22,22 @@ pub trait IntoWasmAbi: WasmDescribe {
     /// boundary.
     type Abi: WasmAbi;
 
+    /// Whether a `[Self]` crosses in place, as the buffer it already is.
+    ///
+    /// Under `--cfg wasm_bindgen_unstable_generic_vec`, a `Vec<Self>`,
+    /// `Box<[Self]>` or `&[Self]` crosses as a buffer of each element's
+    /// `Abi`, unless this is set, when its own memory is passed instead.
+    ///
+    /// # Safety
+    ///
+    /// Setting it is a layout promise: `Self` is, in memory, the element JS
+    /// reads in place for its descriptor, a number of the descriptor's width
+    /// or a JS handle's index; `&Self` crosses as that same value; and every
+    /// such element JS writes is a valid `Self`. It must agree with
+    /// `FromWasmAbi::ABI_TRANSPARENT`.
+    #[doc(hidden)]
+    const ABI_TRANSPARENT: bool = false;
+
     /// Convert `self` into `Self::Abi` so that it can be sent across the wasm
     /// ABI boundary.
     fn into_abi(self) -> Self::Abi;
@@ -92,6 +108,11 @@ pub trait FromWasmAbi: WasmDescribe {
     /// The Wasm ABI type that this converts from when coming back out from the
     /// ABI boundary.
     type Abi: WasmAbi;
+
+    /// Whether a `[Self]` crosses in place. See
+    /// [`IntoWasmAbi::ABI_TRANSPARENT`], which it must agree with.
+    #[doc(hidden)]
+    const ABI_TRANSPARENT: bool = false;
 
     /// Recover a `Self` from `Self::Abi`.
     ///
