@@ -815,10 +815,8 @@ async function __wbg_init_locked(module_or_path) {
 }
 let __wbg_init_pending = Promise.resolve();
 function __wbg_init(module_or_path) {
-    if (wasm !== undefined) return wasm;
-    __wbg_init_pending = __wbg_init_pending
-        .catch(() => {})
-        .then(() => __wbg_init_locked(module_or_path));
+    if (wasm !== undefined) return Promise.resolve(wasm);
+    __wbg_init_pending = __wbg_init_pending.catch(() => {}).then(() => __wbg_init_locked(module_or_path));
     return __wbg_init_pending;
 }
 

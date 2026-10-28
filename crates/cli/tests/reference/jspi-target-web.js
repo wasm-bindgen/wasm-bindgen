@@ -241,36 +241,34 @@ function initSync(module) {
 }
 
 async function __wbg_init_locked(module_or_path) {
-        if (wasm !== undefined) return wasm;
+    if (wasm !== undefined) return wasm;
 
 
-        if (module_or_path !== undefined) {
-            if (Object.getPrototypeOf(module_or_path) === Object.prototype) {
-                ({module_or_path} = module_or_path)
-            } else {
-                console.warn('using deprecated parameters for the initialization function; pass a single object instead')
-            }
+    if (module_or_path !== undefined) {
+        if (Object.getPrototypeOf(module_or_path) === Object.prototype) {
+            ({module_or_path} = module_or_path)
+        } else {
+            console.warn('using deprecated parameters for the initialization function; pass a single object instead')
         }
+    }
 
-        if (module_or_path === undefined) {
-            module_or_path = new URL('reference_test_bg.wasm', import.meta.url);
-        }
-        const imports = __wbg_get_imports();
+    if (module_or_path === undefined) {
+        module_or_path = new URL('reference_test_bg.wasm', import.meta.url);
+    }
+    const imports = __wbg_get_imports();
 
-        if (typeof module_or_path === 'string' || (typeof Request === 'function' && module_or_path instanceof Request) || (typeof URL === 'function' && module_or_path instanceof URL)) {
-            module_or_path = fetch(module_or_path);
-        }
+    if (typeof module_or_path === 'string' || (typeof Request === 'function' && module_or_path instanceof Request) || (typeof URL === 'function' && module_or_path instanceof URL)) {
+        module_or_path = fetch(module_or_path);
+    }
 
-        const { instance, module } = await __wbg_load(await module_or_path, imports);
+    const { instance, module } = await __wbg_load(await module_or_path, imports);
 
-        return __wbg_finalize_init(instance, module);
+    return __wbg_finalize_init(instance, module);
 }
 let __wbg_init_pending = Promise.resolve();
 function __wbg_init(module_or_path) {
-    if (wasm !== undefined) return wasm;
-    __wbg_init_pending = __wbg_init_pending
-        .catch(() => {})
-        .then(() => __wbg_init_locked(module_or_path));
+    if (wasm !== undefined) return Promise.resolve(wasm);
+    __wbg_init_pending = __wbg_init_pending.catch(() => {}).then(() => __wbg_init_locked(module_or_path));
     return __wbg_init_pending;
 }
 

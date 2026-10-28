@@ -1642,9 +1642,7 @@ export const __wbg_memory: WebAssembly.Memory;
             let __wbg_init_pending = Promise.resolve();
             function __wbg_init(module_or_path{init_memory_arg}) {{
                 if (wasm !== undefined) return Promise.resolve(wasm);
-                __wbg_init_pending = __wbg_init_pending
-                    .catch(() => {{}})
-                    .then(() => __wbg_init_locked(module_or_path{init_memory_arg}));
+                __wbg_init_pending = __wbg_init_pending.catch(() => {{}}).then(() => __wbg_init_locked(module_or_path{init_memory_arg}));
                 return __wbg_init_pending;
             }}
             ",
