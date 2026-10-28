@@ -1616,54 +1616,36 @@ export const __wbg_memory: WebAssembly.Memory;
                 return __wbg_finalize_init(instance, module{init_stack_size_arg});
             }}
 
-            const __wbg_async_init_lock = {{
-                locked: false,
-                queue: [],
-                acquire: function() {{
-                    return new Promise(resolve => {{
-                        if (!this.locked) {{
-                            this.locked = true;
-                            resolve();
-                        }} else {{
-                            this.queue.push(resolve);
-                        }}
-                    }});
-                }},
-                release: function() {{
-                    if (this.queue.length > 0) {{
-                        this.queue.shift()();
+            async function __wbg_init_locked(module_or_path{init_memory_arg}) {{
+                if (wasm !== undefined) return wasm;
+
+                {init_stack_size}
+                if (module_or_path !== undefined) {{
+                    if (Object.getPrototypeOf(module_or_path) === Object.prototype) {{
+                        ({{module_or_path{init_memory_arg}{init_stack_size_arg}}} = module_or_path)
                     }} else {{
-                        this.locked = false;
+                        console.warn('using deprecated parameters for the initialization function; pass a single object instead')
                     }}
-                }},
-            }};
-            async function __wbg_init(module_or_path{init_memory_arg}) {{
-                await __wbg_async_init_lock.acquire();
-                try {{
-                    if (wasm !== undefined) return wasm;
-
-                    {init_stack_size}
-                    if (module_or_path !== undefined) {{
-                        if (Object.getPrototypeOf(module_or_path) === Object.prototype) {{
-                            ({{module_or_path{init_memory_arg}{init_stack_size_arg}}} = module_or_path)
-                        }} else {{
-                            console.warn('using deprecated parameters for the initialization function; pass a single object instead')
-                        }}
-                    }}
-
-                    {default_module_path}
-                    const imports = __wbg_get_imports({init_memory_arg_alone});
-
-                    if (typeof module_or_path === 'string' || (typeof Request === 'function' && module_or_path instanceof Request) || (typeof URL === 'function' && module_or_path instanceof URL)) {{
-                        module_or_path = fetch(module_or_path);
-                    }}
-
-                    const {{ instance, module }} = await __wbg_load(await module_or_path, imports);
-
-                    return __wbg_finalize_init(instance, module{init_stack_size_arg});
-                }} finally {{
-                    __wbg_async_init_lock.release();
                 }}
+
+                {default_module_path}
+                const imports = __wbg_get_imports({init_memory_arg_alone});
+
+                if (typeof module_or_path === 'string' || (typeof Request === 'function' && module_or_path instanceof Request) || (typeof URL === 'function' && module_or_path instanceof URL)) {{
+                    module_or_path = fetch(module_or_path);
+                }}
+
+                const {{ instance, module }} = await __wbg_load(await module_or_path, imports);
+
+                return __wbg_finalize_init(instance, module{init_stack_size_arg});
+            }}
+            let __wbg_init_pending = Promise.resolve();
+            function __wbg_init(module_or_path{init_memory_arg}) {{
+                if (wasm !== undefined) return wasm;
+                __wbg_init_pending = __wbg_init_pending
+                    .catch(() => {{}})
+                    .then(() => __wbg_init_locked(module_or_path{init_memory_arg}));
+                return __wbg_init_pending;
             }}
             ",
             start = if needs_manual_start && self.threads_enabled {

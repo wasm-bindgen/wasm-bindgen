@@ -239,8 +239,9 @@
 
 ### Fixed
 
-* Using `__wbg_init` for asynchronous WASM backend initialization may lead to
-  race conditions; now, this is mitigated by locking at each initialization time.
+* Using `__wbg_init` for asynchronous WASM background initialization is no longer
+  leading to race conditions and multiple initializations. It always returns
+  the background from the first successful initialization.
   [#5429](https://github.com/wasm-bindgen/wasm-bindgen/pull/5429)
 
 * Large JS snippets (`module = "..."`, `inline_js`) and
