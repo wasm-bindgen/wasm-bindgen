@@ -1172,11 +1172,30 @@ impl TryFromJsValue for () {
 }
 
 impl<T: TryFromJsValue> TryFromJsValue for Option<T> {
+    const NULLABLE: bool = !T::NULLABLE;
+
     fn try_from_js_value_ref(value: &JsValue) -> Option<Self> {
-        if value.is_undefined() {
+        let none = if T::NULLABLE {
+            value.is_undefined()
+        } else {
+            value.is_null_or_undefined()
+        };
+        if none {
             Some(None)
         } else {
             T::try_from_js_value_ref(value).map(Some)
+        }
+    }
+}
+
+impl<T: TryFromJsValue> TryFromJsValue for Nullable<T> {
+    const NULLABLE: bool = true;
+
+    fn try_from_js_value_ref(value: &JsValue) -> Option<Self> {
+        if value.is_null() {
+            Some(Nullable::Null)
+        } else {
+            T::try_from_js_value_ref(value).map(Nullable::Value)
         }
     }
 }
