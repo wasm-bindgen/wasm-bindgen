@@ -2919,18 +2919,19 @@ impl ast::ImportFunction {
                     &fn_class_generics.concrete_defaults,
                     &fn_lifetime_param_names,
                 )?;
-                // A borrowed argument is only held by JS for the call, so its
-                // bound keeps the caller's lifetimes and the transmute below
-                // erases them. An owned one moves to JS, so its bound demands
-                // the `'static` the extern block is declared with.
+                // JS holds a borrow only for the call, so the bound keeps the
+                // caller's lifetimes on references and the transmute below
+                // erases them. An owned value's own lifetime parameters can
+                // carry a borrow into JS, so those must be `'static`.
+                let bound_ty = generic_to_concrete(
+                    inner_ty.clone(),
+                    &fn_class_generics.concrete_defaults,
+                    &[],
+                )?;
                 let bound_ty = if ref_mut.is_some() {
-                    generic_to_concrete(
-                        inner_ty.clone(),
-                        &fn_class_generics.concrete_defaults,
-                        &[],
-                    )?
+                    bound_ty
                 } else {
-                    concrete_ty.clone()
+                    generics::staticize_owned_lifetimes(bound_ty, &fn_lifetime_param_names)
                 };
                 if i > 0 || !is_method {
                     fn_class_generics.add_fn_bound(if let Some(mut_) = ref_mut {

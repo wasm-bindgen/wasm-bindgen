@@ -283,6 +283,16 @@
 
 ### Fixed
 
+* `Upcast::upcast` and `upcast_into` no longer let a safe `UpcastFrom` impl
+  extend a borrow's lifetime: `ErasableGeneric::Repr` now keeps the real
+  lifetime of a reference, slice, `&str`, closure reference or
+  `ScopedClosure` instead of `'static`, so the `Repr`-equality bound rejects
+  such an upcast. A generic import likewise no longer accepts an owned
+  `ScopedClosure` that borrows a non-`'static` value, which handed JS a
+  closure over freed data; borrowed arguments, and owned ones that only
+  contain a borrow, still accept any lifetime.
+  [#5178](https://github.com/wasm-bindgen/wasm-bindgen/pull/5178)
+
 * Concurrent calls to the `web` and `no-modules` init function no longer
   instantiate the module more than once; later calls share the in-flight
   initialization and resolve to the same instance.
