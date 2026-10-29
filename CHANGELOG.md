@@ -183,7 +183,13 @@
   no longer carry a `JsGeneric` bound, so a `Function<fn(..)>` signature may
   name a converted carrier such as `Nullable<JsString>`. Generic code over
   these traits that calls `call*` or `bind*` now needs the bound itself, as
-  `where F::Ret: JsGeneric, F::Arg1: JsGeneric`. `Option<T>: TryFromJsValue`
+  `where F::Ret: JsGeneric, F::Arg1: JsGeneric`. The hidden `PromiseTuple`
+  trait's `Joined` and `Settled` likewise drop it, and the `JsGeneric` bounds
+  that only existed to satisfy a `Function<fn(..)>` slot or to tag a type
+  argument are gone: `Promising for Promise<T, E>`, `Promise::new_typed`,
+  the `PromiseWithResolvers` `resolve`/`reject` getters, the
+  `PropertyDescriptor` `get`/`set` accessors, `WeakMap::new` and the
+  `entries`/`from_entries` family of `Array`, `Set`, `Map` and `Object`. `Option<T>: TryFromJsValue`
   now reads `null` as `None`, as the `Option<T>` ABI does, so
   `Option::<JsValue>::try_from_js_value(JsValue::NULL)` is `None` where it
   was `Some(null)`; an `Option<Nullable<T>>` still reads it as
