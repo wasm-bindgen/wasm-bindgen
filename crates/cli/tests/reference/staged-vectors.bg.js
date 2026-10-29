@@ -1,3 +1,23 @@
+export class Point {
+    static __wrap(ptr) {
+        const obj = Object.create(Point.prototype);
+        obj.__wbg_ptr = ptr;
+        PointFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        PointFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_point_free(ptr, 0);
+    }
+}
+if (Symbol.dispose) Point.prototype[Symbol.dispose] = Point.prototype.free;
+
 export function driver() {
     wasm.driver();
 }
@@ -134,6 +154,102 @@ export function maybe_names(v) {
 }
 
 /**
+ * @param {(Point | null | undefined)[]} v
+ * @returns {(Point | null | undefined)[]}
+ */
+export function maybe_nullable_points(v) {
+    let len0, w0, ptr0;
+    try {
+        len0 = v.length;
+        w0 = [];
+        for (let j0 = 0; j0 < len0; j0++) {
+            const e0 = v[j0];
+            let ptr1 = e0 === null ? 1 : 0;
+            if (!isLikeNone(e0)) {
+                _assertClass(e0, Point);
+                ptr1 = e0.__destroy_into_raw();
+            }
+            w0.push(ptr1);
+        }
+        ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
+        const view0 = getDataViewMemory0();
+        for (let j0 = 0, k0 = 0; j0 < len0; j0++) {
+            const p0 = ptr0 + j0 * 4;
+            view0.setInt32(p0 + 0, w0[k0++], true);
+        }
+    } catch (e) {
+        if (w0) for (let k0 = 0; k0 < w0.length; k0 += 1) {
+            const ptr1 = w0[k0];
+            if (ptr1 > 1) wasm.__wbg_point_free(ptr1, 1);
+        }
+        if (ptr0) wasm.__wbindgen_free(ptr0, len0 * 4, 4);
+        throw e;
+    }
+    const ret = wasm.maybe_nullable_points(ptr0, len0);
+    const v3 = [];
+    let p3 = ret[0];
+    p3 = p3 >>> 0;
+    const view3 = getDataViewMemory0();
+    const w3 = [];
+    for (const end3 = p3 + ret[1] * 4; p3 < end3; p3 += 4) {
+        w3.push(view3.getInt32(p3 + 0, true));
+    }
+    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    for (let k3 = 0; k3 < w3.length; k3 += 1) {
+        v3.push(w3[k3] === 0 ? undefined : w3[k3] === 1 ? null : Point.__wrap(w3[k3]));
+    }
+    return v3;
+}
+
+/**
+ * @param {(Point | null | undefined)[]} v
+ * @returns {(Point | undefined)[]}
+ */
+export function maybe_points(v) {
+    let len0, w0, ptr0;
+    try {
+        len0 = v.length;
+        w0 = [];
+        for (let j0 = 0; j0 < len0; j0++) {
+            const e0 = v[j0];
+            let ptr1 = 0;
+            if (!isLikeNone(e0)) {
+                _assertClass(e0, Point);
+                ptr1 = e0.__destroy_into_raw();
+            }
+            w0.push(ptr1);
+        }
+        ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
+        const view0 = getDataViewMemory0();
+        for (let j0 = 0, k0 = 0; j0 < len0; j0++) {
+            const p0 = ptr0 + j0 * 4;
+            view0.setInt32(p0 + 0, w0[k0++], true);
+        }
+    } catch (e) {
+        if (w0) for (let k0 = 0; k0 < w0.length; k0 += 1) {
+            const ptr1 = w0[k0];
+            if (ptr1) wasm.__wbg_point_free(ptr1, 1);
+        }
+        if (ptr0) wasm.__wbindgen_free(ptr0, len0 * 4, 4);
+        throw e;
+    }
+    const ret = wasm.maybe_points(ptr0, len0);
+    const v3 = [];
+    let p3 = ret[0];
+    p3 = p3 >>> 0;
+    const view3 = getDataViewMemory0();
+    const w3 = [];
+    for (const end3 = p3 + ret[1] * 4; p3 < end3; p3 += 4) {
+        w3.push(view3.getInt32(p3 + 0, true));
+    }
+    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    for (let k3 = 0; k3 < w3.length; k3 += 1) {
+        v3.push(w3[k3] === 0 ? undefined : Point.__wrap(w3[k3]));
+    }
+    return v3;
+}
+
+/**
  * @param {string[]} v
  * @returns {string[]}
  */
@@ -227,6 +343,54 @@ export function nullable_foos(v) {
     }
     return v2;
 }
+
+/**
+ * @param {(Point | null)[]} v
+ * @returns {(Point | null)[]}
+ */
+export function nullable_points(v) {
+    let len0, w0, ptr0;
+    try {
+        len0 = v.length;
+        w0 = [];
+        for (let j0 = 0; j0 < len0; j0++) {
+            const e0 = v[j0];
+            let ptr1 = e0 === null ? 1 : 0;
+            if (e0 !== null) {
+                _assertClass(e0, Point);
+                ptr1 = e0.__destroy_into_raw();
+            }
+            w0.push(ptr1);
+        }
+        ptr0 = wasm.__wbindgen_malloc(len0 * 4, 4) >>> 0;
+        const view0 = getDataViewMemory0();
+        for (let j0 = 0, k0 = 0; j0 < len0; j0++) {
+            const p0 = ptr0 + j0 * 4;
+            view0.setInt32(p0 + 0, w0[k0++], true);
+        }
+    } catch (e) {
+        if (w0) for (let k0 = 0; k0 < w0.length; k0 += 1) {
+            const ptr1 = w0[k0];
+            if (ptr1 > 1) wasm.__wbg_point_free(ptr1, 1);
+        }
+        if (ptr0) wasm.__wbindgen_free(ptr0, len0 * 4, 4);
+        throw e;
+    }
+    const ret = wasm.nullable_points(ptr0, len0);
+    const v3 = [];
+    let p3 = ret[0];
+    p3 = p3 >>> 0;
+    const view3 = getDataViewMemory0();
+    const w3 = [];
+    for (const end3 = p3 + ret[1] * 4; p3 < end3; p3 += 4) {
+        w3.push(view3.getInt32(p3 + 0, true));
+    }
+    wasm.__wbindgen_free(ret[0], ret[1] * 4, 4);
+    for (let k3 = 0; k3 < w3.length; k3 += 1) {
+        v3.push(w3[k3] === 1 ? null : Point.__wrap(w3[k3]));
+    }
+    return v3;
+}
 export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
@@ -264,6 +428,50 @@ export function __wbg_js_maybe_foos_0a6988fff2da253a(arg0, arg1, arg2) {
     } catch (e) {
         if (w2) for (let k2 = 0; k2 < w2.length; k2 += 1) {
             wasm.__externref_table_dealloc(w2[k2]);
+        }
+        if (ptr2) wasm.__wbindgen_free(ptr2, len2 * 4, 4);
+        throw e;
+    }
+}
+export function __wbg_js_maybe_points_a502c96988d34bc0(arg0, arg1, arg2) {
+    const v0 = [];
+    let p0 = arg1;
+    p0 = p0 >>> 0;
+    const view0 = getDataViewMemory0();
+    const w0 = [];
+    for (const end0 = p0 + arg2 * 4; p0 < end0; p0 += 4) {
+        w0.push(view0.getInt32(p0 + 0, true));
+    }
+    wasm.__wbindgen_free(arg1, arg2 * 4, 4);
+    for (let k0 = 0; k0 < w0.length; k0 += 1) {
+        v0.push(w0[k0] === 0 ? undefined : Point.__wrap(w0[k0]));
+    }
+    const ret = js_maybe_points(v0);
+    let len2, w2, ptr2;
+    try {
+        len2 = ret.length;
+        w2 = [];
+        for (let j2 = 0; j2 < len2; j2++) {
+            const e2 = ret[j2];
+            let ptr3 = 0;
+            if (!isLikeNone(e2)) {
+                _assertClass(e2, Point);
+                ptr3 = e2.__destroy_into_raw();
+            }
+            w2.push(ptr3);
+        }
+        ptr2 = wasm.__wbindgen_malloc(len2 * 4, 4) >>> 0;
+        const view2 = getDataViewMemory0();
+        for (let j2 = 0, k2 = 0; j2 < len2; j2++) {
+            const p2 = ptr2 + j2 * 4;
+            view2.setInt32(p2 + 0, w2[k2++], true);
+        }
+        getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 1, len2, true);
+        getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr2, true);
+    } catch (e) {
+        if (w2) for (let k2 = 0; k2 < w2.length; k2 += 1) {
+            const ptr3 = w2[k2];
+            if (ptr3) wasm.__wbg_point_free(ptr3, 1);
         }
         if (ptr2) wasm.__wbindgen_free(ptr2, len2 * 4, 4);
         throw e;
@@ -325,10 +533,20 @@ export function __wbindgen_init_externref_table() {
     table.set(1026, true);
     table.set(1027, false);
 }
+const PointFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_point_free(ptr, 1));
+
 function addToExternrefTable0(obj) {
     const idx = wasm.__externref_table_alloc();
     wasm.__wbindgen_externrefs.set(idx, obj);
     return idx;
+}
+
+function _assertClass(instance, klass) {
+    if (!(instance instanceof klass)) {
+        throw new Error(`expected instance of ${klass.name}`);
+    }
 }
 
 let cachedDataViewMemory0 = null;

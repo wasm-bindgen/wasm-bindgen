@@ -2152,7 +2152,7 @@ fn instruction(
             let i = js.tmp();
             // `Nullable::Null` is the pointer `1`, which no instance can have.
             let (empty, owned) = if kind.nullable() {
-                (format!("{val} === null ? 1 : 0"), "> 1")
+                (format!("{val} === null ? 1 : 0"), " > 1")
             } else {
                 ("0".into(), "")
             };
