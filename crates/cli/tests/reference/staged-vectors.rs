@@ -65,8 +65,14 @@ encoded! {
     MaybeName(Option<String>);
     MaybeFoo(Option<Foo>);
     NullableFoo(Nullable<Foo>);
+    MaybePoint(Option<Point>);
+    NullablePoint(Nullable<Point>);
+    MaybeNullablePoint(Option<Nullable<Point>>);
     MaybeByte(Option<u8>);
 }
+
+#[wasm_bindgen]
+pub struct Point;
 
 #[wasm_bindgen]
 extern "C" {
@@ -74,6 +80,7 @@ extern "C" {
 
     fn js_names(v: Vec<Name>) -> Vec<Name>;
     fn js_maybe_foos(v: Vec<MaybeFoo>) -> Vec<MaybeFoo>;
+    fn js_maybe_points(v: Vec<MaybePoint>) -> Vec<MaybePoint>;
 }
 
 #[wasm_bindgen]
@@ -97,6 +104,21 @@ pub fn nullable_foos(v: Vec<NullableFoo>) -> Vec<NullableFoo> {
 }
 
 #[wasm_bindgen]
+pub fn maybe_points(v: Vec<MaybePoint>) -> Vec<MaybePoint> {
+    v
+}
+
+#[wasm_bindgen]
+pub fn nullable_points(v: Vec<NullablePoint>) -> Vec<NullablePoint> {
+    v
+}
+
+#[wasm_bindgen]
+pub fn maybe_nullable_points(v: Vec<MaybeNullablePoint>) -> Vec<MaybeNullablePoint> {
+    v
+}
+
+#[wasm_bindgen]
 pub fn maybe_bytes(v: Vec<MaybeByte>) -> Vec<MaybeByte> {
     v
 }
@@ -105,4 +127,5 @@ pub fn maybe_bytes(v: Vec<MaybeByte>) -> Vec<MaybeByte> {
 pub fn driver() {
     js_names(js_names(Vec::new()));
     js_maybe_foos(js_maybe_foos(Vec::new()));
+    js_maybe_points(js_maybe_points(Vec::new()));
 }
