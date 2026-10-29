@@ -247,9 +247,9 @@
 
 ### Fixed
 
-* Using `__wbg_init` for asynchronous WASM background initialization is no longer
-  leading to race conditions and multiple initializations. It always returns
-  the background from the first successful initialization.
+* Concurrent calls to the `web` and `no-modules` init function no longer
+  instantiate the module more than once; later calls share the in-flight
+  initialization and resolve to the same instance.
   [#5429](https://github.com/wasm-bindgen/wasm-bindgen/pull/5429)
 
 * `js_sys::Promise::catch_map`'s handler now receives the rejection reason,

@@ -160,9 +160,17 @@ function initSync(module, memory) {
     return __wbg_finalize_init(instance, module, thread_stack_size);
 }
 
-async function __wbg_init_locked(module_or_path, memory) {
+let __wbg_init_promise;
+async function __wbg_init(module_or_path, memory) {
     if (wasm !== undefined) return wasm;
+    if (__wbg_init_promise === undefined) {
+        __wbg_init_promise = __wbg_init_once(module_or_path, memory);
+        __wbg_init_promise.catch(() => { __wbg_init_promise = undefined; });
+    }
+    return __wbg_init_promise;
+}
 
+async function __wbg_init_once(module_or_path, memory) {
     let thread_stack_size
     if (module_or_path !== undefined) {
         if (Object.getPrototypeOf(module_or_path) === Object.prototype) {
@@ -184,12 +192,6 @@ async function __wbg_init_locked(module_or_path, memory) {
     const { instance, module } = await __wbg_load(await module_or_path, imports);
 
     return __wbg_finalize_init(instance, module, thread_stack_size);
-}
-let __wbg_init_pending = Promise.resolve();
-function __wbg_init(module_or_path, memory) {
-    if (wasm !== undefined) return Promise.resolve(wasm);
-    __wbg_init_pending = __wbg_init_pending.catch(() => {}).then(() => __wbg_init_locked(module_or_path, memory));
-    return __wbg_init_pending;
 }
 
 export { initSync, __wbg_init as default };
