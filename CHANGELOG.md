@@ -66,8 +66,11 @@
   `Promise<String>` from an `experimental_generic_mono` import is `JsGeneric`
   and upcasts to `Promise<JsValue>` as `Promise<bool>` does. Together these
   make a `Promise<Nullable<JsString>>` or `Promise<String>` from a mono
-  import usable wherever a promise is expected.
+  import usable wherever a promise is expected. `&str` and `String` upcast to
+  each other, so an `Array<&str>` inferred from borrowed arguments settles to
+  `Array<String>`.
   [#5427](https://github.com/wasm-bindgen/wasm-bindgen/pull/5427)
+  [#5437](https://github.com/wasm-bindgen/wasm-bindgen/pull/5437)
 
 * Added `MaybeIntoWasmAbi` / `MaybeFromWasmAbi`, the ABI of `Option<T>` for
   every `T`, with an associated `MaybeAbi` that lets a type without a spare

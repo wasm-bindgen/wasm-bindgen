@@ -678,6 +678,12 @@ unsafe impl<T: ErasableGeneric> ErasableGeneric for Box<[T]> {
 
 impl<'a> UpcastFrom<&'a str> for &'a str {}
 impl UpcastFrom<String> for String {}
+// `String` and `&str` label the same JS string, a `&str` element's lifetime
+// being phantom, so they upcast both ways, as each does with `JsString`. An
+// inferred `Array<&str>` settles to `Array<String>`, and a `Function<fn(&str)>`
+// slot relates to a `Function<fn(String)>` one.
+impl UpcastFrom<&str> for String {}
+impl UpcastFrom<String> for &str {}
 
 // A Rust string stands for a JS string in a generic position, as `bool` does
 // for a JS boolean, so `Promise<String>` relabels straight to `Promise<JsValue>`.

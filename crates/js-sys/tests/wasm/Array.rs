@@ -1018,6 +1018,31 @@ fn covariance() {
     assert_eq!(length, 3);
 }
 
+// `String` and `&str` label the same JS string, so their elements upcast both
+// ways, and on to `JsValue`.
+#[wasm_bindgen_test]
+fn str_and_string_elements_upcast() {
+    use wasm_bindgen::prelude::Upcast;
+
+    fn accepts_string_array(arr: Array<String>) -> Vec<String> {
+        let arr: Array = arr.upcast_into();
+        arr.iter().map(|s| s.as_string().unwrap()).collect()
+    }
+
+    let strs: Array<&str> = Array::of(&[JsValue::from("a"), JsValue::from("b")]).unchecked_into();
+    assert_eq!(accepts_string_array(strs.upcast_into()), ["a", "b"]);
+
+    let opt_strs: Array<Option<&str>> =
+        Array::of(&[JsValue::from("a"), JsValue::NULL]).unchecked_into();
+    let opt_strings: Array<Option<String>> = opt_strs.upcast_into();
+    assert_eq!(opt_strings.length(), 2);
+
+    let strings: Array<String> = Array::of(&[JsValue::from("c")]).unchecked_into();
+    let strs: Array<&str> = strings.upcast_into();
+    let strs: Array = strs.upcast_into();
+    assert_eq!(strs.join(","), "c");
+}
+
 // Helper macros for handling Option returns in js_sys_unstable_apis
 #[cfg(not(js_sys_unstable_apis))]
 macro_rules! unwrap_get {
