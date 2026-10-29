@@ -51,6 +51,12 @@
   [#5410](https://github.com/wasm-bindgen/wasm-bindgen/pull/5410)
   [#5423](https://github.com/wasm-bindgen/wasm-bindgen/pull/5423)
 
+* `Nullable<T>` converts into `JsValue` with `From`, `Null` becoming `null`
+  as `None` becomes `undefined` for `Option<T>`, and `Option<T>`,
+  `Nullable<T>` and `Result<T, E>` are `Promising` for any `T: Promising`,
+  so a `Promise<Nullable<JsString>>` awaits to a `Nullable<JsString>`.
+  [#5427](https://github.com/wasm-bindgen/wasm-bindgen/pull/5427)
+
 * Added `MaybeIntoWasmAbi` / `MaybeFromWasmAbi`, the ABI of `Option<T>` for
   every `T`, with an associated `MaybeAbi` that lets a type without a spare
   value in its own ABI, such as `i32` or `f64`, pick a wider one. `Option<T>`

@@ -393,6 +393,16 @@ impl<T> From<Nullable<T>> for Option<T> {
     }
 }
 
+impl<T: Into<JsValue>> From<Nullable<T>> for JsValue {
+    #[inline]
+    fn from(nullable: Nullable<T>) -> Self {
+        match nullable {
+            Nullable::Null => JsValue::NULL,
+            Nullable::Value(v) => v.into(),
+        }
+    }
+}
+
 impl<T: JsGeneric> From<Nullable<T>> for JsNullable<T> {
     #[inline]
     fn from(nullable: Nullable<T>) -> Self {
