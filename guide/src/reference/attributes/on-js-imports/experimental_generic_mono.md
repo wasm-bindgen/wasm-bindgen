@@ -118,11 +118,12 @@ extern "C" {
 
 Note that a bound only constrains which types the import can be *called* with; it
 cannot make a type marshallable. Combining a higher-ranked bound with a `&T`
-argument is a common way to write a declaration that compiles but can never be
-called: `&T` additionally requires `T: RefIntoWasmAbi`, which holds only for
-`JsValue` and imported JS types, so a bound such as
-`for<'a> &'a T: IntoIterator<Item = &'a u32>` leaves no type that satisfies both.
-See [Note on `&T` arguments](#note-on-t-arguments).
+argument is a common way to write a declaration that does not accept the types
+it was written for: `&T` additionally requires `T: RefIntoWasmAbi`. A bound such
+as `for<'a> &'a T: IntoIterator<Item = &'a u32>`, meant for a collection like
+`Vec<u32>`, rejects it, since a `Vec` has no borrowed ABI; only `Option<u32>` and
+`Nullable<u32>`, which also iterate by reference, satisfy both. Take a `&[u32]`
+argument instead. See [Note on `&T` arguments](#note-on-t-arguments).
 
 Relaxed bounds are the exception: `T: ?Sized` is not supported on any
 `wasm-bindgen` generic — erased or per-monomorphisation — and is reported as
@@ -561,7 +562,8 @@ different signatures.
 ## Note on `&T` arguments
 
 A bare `&T` argument is supported, declared with the bound
-`T: RefIntoWasmAbi`, which holds for `JsValue` and JS handle types. Passing
-`&SomeStruct` for a plain Rust struct, or `&u32` for a scalar, is rejected,
-since there is no `&T` ABI representation for them; take the value by value, or
-pass a JS type.
+`T: RefIntoWasmAbi`, which holds for `JsValue` and JS handle types, `String`,
+`str`, numbers, `bool`, `char`, and `Option<T>` or `Nullable<T>` of any of
+them; a borrowed number crosses by copy. Passing `&SomeStruct` for a plain
+Rust struct is rejected, since there is no `&T` ABI representation for it;
+take the value by value, or pass a JS type.
