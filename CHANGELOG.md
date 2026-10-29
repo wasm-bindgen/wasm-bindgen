@@ -177,7 +177,9 @@
   `Function::from_closure` accepts a closure with converted arguments. Generic
   code over these traits that calls `call*` or `bind*` now needs the bound
   itself, as `where F::Ret: JsGeneric, F::Arg1: JsGeneric`. The hidden
-  `PromiseTuple` trait's `Joined` and `Settled` likewise drop it, and the
+  `PromiseTuple` trait's `Joined` and `Settled` likewise drop it, its
+  Rust-tuple impl packing the promise handles directly rather than upcasting
+  each, and the
   `JsGeneric` bounds that only existed to satisfy a `Function<fn(..)>` slot
   or to tag a type argument are gone: `Promising for Promise<T, E>`,
   `Promise::new_typed`, the `PromiseWithResolvers` `resolve`/`reject`

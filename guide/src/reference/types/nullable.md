@@ -87,8 +87,9 @@ the null pointer itself is `Null`. A JS `0` passed for either a
 
 ## In a `Function` signature
 
-A js-sys `Function` signature may name them, since its slots are JS types
-rather than handles: a `Closure<dyn FnMut(Nullable<JsString>)>` makes a
+A js-sys `Function` signature may name them, since a slot may be any Rust
+carrier of a JS type, a converted value as much as a handle: a
+`Closure<dyn FnMut(Nullable<JsString>)>` makes a
 `Function<fn(Nullable<JsString>) -> Undefined>` with `Function::from_closure`,
 and a `Promise<Nullable<JsString>>` awaits to a `Nullable<JsString>`.
 
