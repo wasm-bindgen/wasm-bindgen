@@ -10,12 +10,13 @@ use crate::__rt::{marker::ErasableGeneric, WasmWord};
 use crate::__wbindgen_copy_to_typed_array;
 use crate::convert::{
     js_value_vector_from_abi, js_value_vector_into_abi, try_js_value_vector_from_abi, FromWasmAbi,
-    IntoWasmAbi, LongRefFromWasmAbi, NullableIntoWasmAbi, OptionFromWasmAbi, OptionIntoWasmAbi,
-    RefFromWasmAbi, RefMutFromWasmAbi, UpcastFrom, VectorFromWasmAbi, VectorIntoWasmAbi, WasmAbi,
+    IntoWasmAbi, LongRefFromWasmAbi, MaybeIntoWasmAbi, NullableIntoWasmAbi, OptionFromWasmAbi,
+    OptionIntoWasmAbi, RefFromWasmAbi, RefMutFromWasmAbi, UpcastFrom, VectorFromWasmAbi,
+    VectorIntoWasmAbi, WasmAbi,
 };
 use crate::describe::*;
 use crate::sys::{JsNullable, JsOption};
-use crate::{JsError, JsValue};
+use crate::{JsError, JsValue, Nullable};
 
 use cfg_if::cfg_if;
 
@@ -622,9 +623,7 @@ impl OptionIntoWasmAbi for &str {
 
 impl_nullable_into_shared_abi!(null = js_null_slice(); [] &str);
 
-// Borrowed shapes that deref to `str` cross exactly like `&str`. `&&str` is
-// omitted: the blanket `&T` describe gives `REF REF STRING`, which the CLI
-// can't bind.
+// Borrowed shapes that deref to `str` cross exactly like `&str`.
 macro_rules! str_ref_into_wasm_abi {
     ($($t:ty),* $(,)?) => ($(
         impl IntoWasmAbi for &$t {
@@ -774,3 +773,82 @@ unsafe impl<T: ErasableGeneric> ErasableGeneric for &[T] {
 }
 
 impl<'a, T, Target> UpcastFrom<&'a [T]> for &'a [Target] where Target: UpcastFrom<T> {}
+
+// A borrowed number, `bool`, `char` or borrowed string crosses by copy, so
+// `&T`, `Option<&T>` and `Nullable<&T>` have `T`'s ABIs, as generic code
+// borrowing an element (`contains(&T)`) needs for every `T`.
+macro_rules! ref_by_copy {
+    ($($t:ty => $base:ty,)*) => ($(
+        impl IntoWasmAbi for &$t {
+            type Abi = <$base as IntoWasmAbi>::Abi;
+
+            #[inline]
+            fn into_abi(self) -> Self::Abi {
+                (*self).into_abi()
+            }
+        }
+
+        impl MaybeIntoWasmAbi for &$t {
+            type MaybeAbi = <$base as MaybeIntoWasmAbi>::MaybeAbi;
+
+            #[inline]
+            fn into_maybe_abi(self) -> Self::MaybeAbi {
+                (*self).into_maybe_abi()
+            }
+
+            #[inline]
+            fn none() -> Self::MaybeAbi {
+                <$base as MaybeIntoWasmAbi>::none()
+            }
+        }
+
+        impl NullableIntoWasmAbi for &$t {
+            #[inline]
+            fn null() -> Self::MaybeAbi {
+                <$base as NullableIntoWasmAbi>::null()
+            }
+        }
+    )*)
+}
+
+ref_by_copy! {
+    u8 => u8, i8 => i8, u16 => u16, i16 => i16, u32 => u32, i32 => i32,
+    u64 => u64, i64 => i64, u128 => u128, i128 => i128, usize => usize,
+    isize => isize, f32 => f32, f64 => f64, bool => bool, char => char,
+    &str => &'static str, &String => &'static String,
+    &Box<str> => &'static Box<str>, &Cow<'_, str> => &'static Cow<'static, str>,
+}
+
+impl<'a, T: WasmDescribe> IntoWasmAbi for &'a Option<T>
+where
+    Option<&'a T>: IntoWasmAbi,
+{
+    type Abi = <Option<&'a T> as IntoWasmAbi>::Abi;
+
+    #[inline]
+    fn into_abi(self) -> Self::Abi {
+        self.as_ref().into_abi()
+    }
+}
+
+impl<'a, T: WasmDescribe> IntoWasmAbi for &'a Nullable<T>
+where
+    Nullable<&'a T>: IntoWasmAbi,
+{
+    type Abi = <Nullable<&'a T> as IntoWasmAbi>::Abi;
+
+    #[inline]
+    fn into_abi(self) -> Self::Abi {
+        self.as_ref().into_abi()
+    }
+}
+
+impl<'a, T: WasmDescribe> OptionIntoWasmAbi for &'a Nullable<T>
+where
+    Nullable<&'a T>: OptionIntoWasmAbi,
+{
+    #[inline]
+    fn none() -> Self::Abi {
+        <Nullable<&'a T> as OptionIntoWasmAbi>::none()
+    }
+}

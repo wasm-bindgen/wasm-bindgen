@@ -5,6 +5,13 @@
 
 ### Added
 
+* A borrowed number, `bool`, `char` or borrowed string crosses by copy, so
+  `&f64`, `&Option<T>`, `&Nullable<T>`, `Option<&f64>` and
+  `Option<&Nullable<T>>` are argument types, and an
+  `experimental_generic_mono` import taking `&T` accepts `T = f64`,
+  `Option<f64>` or `Nullable<String>`, as std's `contains(&T)` does.
+  [#TBD](https://github.com/wasm-bindgen/wasm-bindgen/pull/TBD)
+
 * Added a rejection type parameter to `js_sys::Promise<T, E = JsValue>`,
   mirrored on `JsFuture<T, E>`, `PromiseState<T, E>` and
   `PromiseWithResolvers<T, E>`. Awaiting a `Promise<T, E>` yields

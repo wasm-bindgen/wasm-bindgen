@@ -286,6 +286,32 @@ impl InstructionBuilder<'_, '_> {
                 self.outgoing_function(mutable, descriptor, None)?;
             }
 
+            // A borrowed borrow or scalar crosses as the value itself, by copy.
+            Descriptor::Ref(d) => self.outgoing_ref(mutable, d)?,
+            Descriptor::I8
+            | Descriptor::U8
+            | Descriptor::I16
+            | Descriptor::U16
+            | Descriptor::I32
+            | Descriptor::U32
+            | Descriptor::I64
+            | Descriptor::U64
+            | Descriptor::I64AsF64
+            | Descriptor::U64AsF64
+            | Descriptor::I128
+            | Descriptor::U128
+            | Descriptor::F32
+            | Descriptor::F64
+            | Descriptor::Boolean
+            | Descriptor::Char => self._outgoing(arg)?,
+
+            Descriptor::Option(inner) => {
+                self.outgoing_option_ref(mutable, inner, OptionKind::Option)?
+            }
+            Descriptor::Nullable(inner) => {
+                self.outgoing_option_ref(mutable, inner, OptionKind::Nullable)?
+            }
+
             // &mut dyn FnMut(...) emits RefMut(Function(...)) to signal that
             // a reentrancy guard is needed in the JS wrapper.
             Descriptor::RefMut(inner) => match inner.as_ref() {
@@ -724,6 +750,29 @@ impl InstructionBuilder<'_, '_> {
                     &[AdapterType::Vector(kind).option_kind(option_kind)],
                 );
             }
+            Descriptor::Ref(d) => self.outgoing_option_ref(_mutable, d, option_kind)?,
+            Descriptor::Nullable(d) => {
+                if option_kind != OptionKind::Option {
+                    bail!("unsupported nested optional type for calling JS function from Rust: {arg:?}");
+                }
+                self.outgoing_option_ref(_mutable, d, OptionKind::OptionNullable)?
+            }
+            Descriptor::I8
+            | Descriptor::U8
+            | Descriptor::I16
+            | Descriptor::U16
+            | Descriptor::I32
+            | Descriptor::U32
+            | Descriptor::I64
+            | Descriptor::U64
+            | Descriptor::I64AsF64
+            | Descriptor::U64AsF64
+            | Descriptor::I128
+            | Descriptor::U128
+            | Descriptor::F32
+            | Descriptor::F64
+            | Descriptor::Boolean
+            | Descriptor::Char => self.outgoing_option(arg, option_kind)?,
             _ => bail!(
                 "unsupported optional ref argument type for calling JS function from Rust: {arg:?}"
             ),
