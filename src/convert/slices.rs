@@ -668,15 +668,15 @@ impl LongRefFromWasmAbi for str {
     }
 }
 
-unsafe impl ErasableGeneric for &str {
-    type Repr = &'static str;
+unsafe impl<'a> ErasableGeneric for &'a str {
+    type Repr = &'a str;
 }
 
 unsafe impl<T: ErasableGeneric> ErasableGeneric for Box<[T]> {
     type Repr = Box<[T::Repr]>;
 }
 
-impl UpcastFrom<&str> for &str {}
+impl<'a> UpcastFrom<&'a str> for &'a str {}
 impl UpcastFrom<String> for String {}
 
 // A Rust string stands for a JS string in a generic position, as `bool` does
@@ -768,8 +768,11 @@ impl<T: ErasableGeneric<Repr = JsValue> + WasmDescribe> VectorIntoWasmAbi for T 
     }
 }
 
-unsafe impl<T: ErasableGeneric> ErasableGeneric for &[T] {
-    type Repr = &'static [T::Repr];
+unsafe impl<'a, T: ErasableGeneric> ErasableGeneric for &'a [T]
+where
+    <T as ErasableGeneric>::Repr: 'a,
+{
+    type Repr = &'a [T::Repr];
 }
 
 impl<'a, T, Target> UpcastFrom<&'a [T]> for &'a [Target] where Target: UpcastFrom<T> {}

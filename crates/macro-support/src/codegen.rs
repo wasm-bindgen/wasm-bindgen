@@ -2919,17 +2919,31 @@ impl ast::ImportFunction {
                     &fn_class_generics.concrete_defaults,
                     &fn_lifetime_param_names,
                 )?;
+                // JS holds a borrow only for the call, so the bound keeps the
+                // caller's lifetimes on references and the transmute below
+                // erases them. An owned value's own lifetime parameters can
+                // carry a borrow into JS, so those must be `'static`.
+                let bound_ty = generic_to_concrete(
+                    inner_ty.clone(),
+                    &fn_class_generics.concrete_defaults,
+                    &[],
+                )?;
+                let bound_ty = if ref_mut.is_some() {
+                    bound_ty
+                } else {
+                    generics::staticize_owned_lifetimes(bound_ty, &fn_lifetime_param_names)
+                };
                 if i > 0 || !is_method {
                     fn_class_generics.add_fn_bound(if let Some(mut_) = ref_mut {
                         arguments.push(quote! { #name: & #ref_lifetime #mut_ #inner_ty });
                         if mut_.is_some() {
-                            parse_quote! { #inner_ty: #wasm_bindgen::__rt::marker::ErasableGenericBorrowMut<#concrete_ty> }
+                            parse_quote! { #inner_ty: #wasm_bindgen::__rt::marker::ErasableGenericBorrowMut<#bound_ty> }
                         } else {
-                            parse_quote! { #inner_ty: #wasm_bindgen::__rt::marker::ErasableGenericBorrow<#concrete_ty> }
+                            parse_quote! { #inner_ty: #wasm_bindgen::__rt::marker::ErasableGenericBorrow<#bound_ty> }
                         }
                     } else {
                         arguments.push(quote! { #name: #ty });
-                        parse_quote! { #inner_ty: #wasm_bindgen::__rt::marker::ErasableGenericOwn<#concrete_ty> }
+                        parse_quote! { #inner_ty: #wasm_bindgen::__rt::marker::ErasableGenericOwn<#bound_ty> }
                     });
                 }
                 // abi_ty is fully concrete with 'static lifetimes (used for both extern block and transmute)

@@ -1,0 +1,30 @@
+error[E0373]: closure may outlive the current function, but it borrows `n`, which is owned by the current function
+  --> ui-tests/generic-import-owned-scoped-closure.rs:13:17
+   |
+13 |     let mut f = || n += 1;
+   |                 ^^ - `n` is borrowed here
+   |                 |
+   |                 may outlive borrowed value `n`
+   |
+note: function requires argument type to outlive `'static`
+  --> ui-tests/generic-import-owned-scoped-closure.rs:14:5
+   |
+14 |     take_owned(ScopedClosure::borrow_mut(&mut f));
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: to force the closure to take ownership of `n` (and any other referenced variables), use the `move` keyword
+   |
+13 |     let mut f = move || n += 1;
+   |                 ++++
+
+error[E0597]: `f` does not live long enough
+  --> ui-tests/generic-import-owned-scoped-closure.rs:14:42
+   |
+13 |     let mut f = || n += 1;
+   |         ----- binding `f` declared here
+14 |     take_owned(ScopedClosure::borrow_mut(&mut f));
+   |     -------------------------------------^^^^^^--
+   |     |                                    |
+   |     |                                    borrowed value does not live long enough
+   |     argument requires that `f` is borrowed for `'static`
+15 | }
+   | - `f` dropped here while still borrowed

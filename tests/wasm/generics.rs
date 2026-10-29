@@ -63,3 +63,17 @@ fn lifetime_generic_extern_types() {
     let _: &JsValue = lt.as_ref();
     let _: JsValue = lt.into();
 }
+
+#[wasm_bindgen(inline_js = "export function is_present(v) { return v != null; }")]
+extern "C" {
+    // An owned argument that only contains a borrow is held by JS for the
+    // call alone, so its lifetime need not be `'static`.
+    fn is_present<'a, T>(v: Option<&'a T>) -> bool;
+}
+
+#[wasm_bindgen_test]
+fn generic_owned_arg_containing_borrow() {
+    let local = JsValue::from_str("a");
+    assert!(is_present(Some(&local)));
+    assert!(!is_present::<JsValue>(None));
+}

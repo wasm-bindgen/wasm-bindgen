@@ -316,6 +316,32 @@ pub(crate) fn staticize_lifetimes(
     ty
 }
 
+/// Replace specified lifetime parameters with `'static`, except under a
+/// reference. A borrow only reaches JS for the duration of the call, while a
+/// lifetime parameter of an owned type, such as `ScopedClosure<'a, _>`, can
+/// carry a borrow into a value JS keeps.
+pub(crate) fn staticize_owned_lifetimes(
+    mut ty: syn::Type,
+    lifetimes_to_staticize: &[&syn::Lifetime],
+) -> syn::Type {
+    struct OwnedLifetimeStaticizer<'a> {
+        lifetimes: &'a [&'a syn::Lifetime],
+    }
+    impl VisitMut for OwnedLifetimeStaticizer<'_> {
+        fn visit_type_reference_mut(&mut self, _: &mut syn::TypeReference) {}
+        fn visit_lifetime_mut(&mut self, lifetime: &mut syn::Lifetime) {
+            if self.lifetimes.iter().any(|lt| lt.ident == lifetime.ident) {
+                *lifetime = syn::Lifetime::new("'static", lifetime.span());
+            }
+        }
+    }
+    OwnedLifetimeStaticizer {
+        lifetimes: lifetimes_to_staticize,
+    }
+    .visit_type_mut(&mut ty);
+    ty
+}
+
 /// Obtain the generic type parameter names
 pub(crate) fn generic_param_names(generics: &syn::Generics) -> Vec<&Ident> {
     generics.type_params().map(|tp| &tp.ident).collect()
@@ -796,6 +822,36 @@ pub(crate) fn generic_to_concrete<'a>(
 #[cfg(test)]
 mod tests {
     use quote::ToTokens;
+
+    #[test]
+    fn staticize_owned_lifetimes_keeps_borrows() {
+        let a: syn::Lifetime = syn::parse_quote!('a);
+        let staticize = |ty: syn::Type| {
+            crate::generics::staticize_owned_lifetimes(ty, &[&a])
+                .to_token_stream()
+                .to_string()
+        };
+        let expect = |ty: syn::Type| ty.to_token_stream().to_string();
+
+        assert_eq!(
+            staticize(syn::parse_quote!(Option<&'a T>)),
+            expect(syn::parse_quote!(Option<&'a T>))
+        );
+        assert_eq!(
+            staticize(syn::parse_quote!(ScopedClosure<'a, dyn FnMut() + 'a>)),
+            expect(syn::parse_quote!(
+                ScopedClosure<'static, dyn FnMut() + 'static>
+            ))
+        );
+        assert_eq!(
+            staticize(syn::parse_quote!(
+                Option<&'a ScopedClosure<'a, dyn FnMut() + 'a>>
+            )),
+            expect(syn::parse_quote!(
+                Option<&'a ScopedClosure<'a, dyn FnMut() + 'a>>
+            ))
+        );
+    }
 
     #[test]
     fn test_generic_name_visitor() {
