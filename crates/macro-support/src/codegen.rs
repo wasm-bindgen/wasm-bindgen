@@ -2919,17 +2919,30 @@ impl ast::ImportFunction {
                     &fn_class_generics.concrete_defaults,
                     &fn_lifetime_param_names,
                 )?;
+                // A borrowed argument is only held by JS for the call, so its
+                // bound keeps the caller's lifetimes and the transmute below
+                // erases them. An owned one moves to JS, so its bound demands
+                // the `'static` the extern block is declared with.
+                let bound_ty = if ref_mut.is_some() {
+                    generic_to_concrete(
+                        inner_ty.clone(),
+                        &fn_class_generics.concrete_defaults,
+                        &[],
+                    )?
+                } else {
+                    concrete_ty.clone()
+                };
                 if i > 0 || !is_method {
                     fn_class_generics.add_fn_bound(if let Some(mut_) = ref_mut {
                         arguments.push(quote! { #name: & #ref_lifetime #mut_ #inner_ty });
                         if mut_.is_some() {
-                            parse_quote! { #inner_ty: #wasm_bindgen::__rt::marker::ErasableGenericBorrowMut<#concrete_ty> }
+                            parse_quote! { #inner_ty: #wasm_bindgen::__rt::marker::ErasableGenericBorrowMut<#bound_ty> }
                         } else {
-                            parse_quote! { #inner_ty: #wasm_bindgen::__rt::marker::ErasableGenericBorrow<#concrete_ty> }
+                            parse_quote! { #inner_ty: #wasm_bindgen::__rt::marker::ErasableGenericBorrow<#bound_ty> }
                         }
                     } else {
                         arguments.push(quote! { #name: #ty });
-                        parse_quote! { #inner_ty: #wasm_bindgen::__rt::marker::ErasableGenericOwn<#concrete_ty> }
+                        parse_quote! { #inner_ty: #wasm_bindgen::__rt::marker::ErasableGenericOwn<#bound_ty> }
                     });
                 }
                 // abi_ty is fully concrete with 'static lifetimes (used for both extern block and transmute)
