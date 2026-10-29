@@ -855,3 +855,19 @@ fn nullable_signature() {
     );
     assert_eq!(f.call1(&JsValue::NULL, &"ab".into()).unwrap(), 2);
 }
+
+// `undefined` is a value of `Option<T>`, so a function stands in for one that
+// also takes a trailing optional argument, which it simply ignores.
+#[wasm_bindgen_test]
+fn upcast_extends_with_trailing_option() {
+    use wasm_bindgen::prelude::Upcast;
+
+    let f: Function<fn(JsString) -> Number> = Function::new_with_args_typed("s", "return s.length");
+    let g: Function<fn(JsString, Option<Number>) -> Number> = f.upcast_into();
+    let g: Function = g.unchecked_into();
+    assert_eq!(
+        g.call2(&JsValue::NULL, &"ab".into(), &JsValue::UNDEFINED)
+            .unwrap(),
+        2
+    );
+}

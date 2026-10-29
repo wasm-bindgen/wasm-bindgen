@@ -69,7 +69,9 @@
   import usable wherever a promise is expected. `&str` and `String` upcast to
   each other, so an `Array<&str>` inferred from borrowed arguments settles to
   `Array<String>`. `Option<T>` and `Nullable<T>` upcast to `JsValue` whenever
-  `T` does, so a `Promise<Option<String>>` relabels to `Promise<JsValue>`.
+  `T` does, so a `Promise<Option<String>>` relabels to `Promise<JsValue>`, and
+  `Undefined` and `Null` upcast to `Option<T>` and `Null` to `Nullable<T>`, so a
+  `Function<fn(A) -> R>` stands in for a `Function<fn(A, Option<B>) -> R>`.
   [#5427](https://github.com/wasm-bindgen/wasm-bindgen/pull/5427)
   [#5437](https://github.com/wasm-bindgen/wasm-bindgen/pull/5437)
 

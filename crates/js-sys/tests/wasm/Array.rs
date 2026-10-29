@@ -1064,6 +1064,23 @@ fn optional_elements_upcast_to_js_value() {
     assert_eq!(values.join(","), "1.5");
 }
 
+// `undefined` and `null` are values of an `Option<T>`, and `null` of a
+// `Nullable<T>`, so arrays of them upcast to arrays of the optional carriers.
+#[wasm_bindgen_test]
+fn null_and_undefined_elements_upcast_to_optional() {
+    use wasm_bindgen::prelude::Upcast;
+
+    let undefineds: Array<Undefined> = Array::of(&[JsValue::UNDEFINED]).unchecked_into();
+    let opts: Array<Option<JsString>> = undefineds.upcast_into();
+    assert_eq!(opts.length(), 1);
+
+    let nulls: Array<Null> = Array::of(&[JsValue::NULL]).unchecked_into();
+    let opts: Array<Option<String>> = nulls.clone().upcast_into();
+    assert_eq!(opts.length(), 1);
+    let nullables: Array<Nullable<JsString>> = nulls.upcast_into();
+    assert_eq!(nullables.length(), 1);
+}
+
 // Helper macros for handling Option returns in js_sys_unstable_apis
 #[cfg(not(js_sys_unstable_apis))]
 macro_rules! unwrap_get {

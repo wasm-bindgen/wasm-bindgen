@@ -67,6 +67,10 @@ impl UpcastFrom<Undefined> for Undefined {}
 impl UpcastFrom<()> for Undefined {}
 impl UpcastFrom<Undefined> for () {}
 impl UpcastFrom<Undefined> for JsValue {}
+// An `Option<T>` reads `undefined` as `None`, so `undefined` is one of its
+// values. This also lets a closure taking a trailing `Option<T>` stand in for
+// one without it.
+impl<T> UpcastFrom<Undefined> for Option<T> {}
 
 // Null
 #[wasm_bindgen(wasm_bindgen = crate)]
@@ -107,6 +111,11 @@ impl fmt::Display for Null {
 
 impl UpcastFrom<Null> for Null {}
 impl UpcastFrom<Null> for JsValue {}
+// `null` is `None` for an `Option<T>`, or `Some(Nullable::Null)` when `T` is a
+// `Nullable`, and `Nullable::Null` for a `Nullable<T>`. `undefined` is not a
+// `Nullable<T>`, as it goes to `T`'s own conversion.
+impl<T> UpcastFrom<Null> for Option<T> {}
+impl<T> UpcastFrom<Null> for crate::Nullable<T> {}
 
 // JsOption
 #[wasm_bindgen(wasm_bindgen = crate)]
