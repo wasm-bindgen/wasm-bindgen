@@ -256,7 +256,7 @@ function __wbg_get_imports() {
         __wbg__wbg_cb_unref_dcc1a90847f04c41: function(arg0) {
             arg0._wbg_cb_unref();
         },
-        __wbg_call_a48f35d3fb7572a8: function() { return handleError(function (arg0, arg1, arg2) {
+        __wbg_call_b254e041513f2aac: function() { return handleError(function (arg0, arg1, arg2) {
             const ret = arg0.call(arg1, arg2);
             return ret;
         }, arguments); },
@@ -267,7 +267,7 @@ function __wbg_get_imports() {
         __wbg_error_f66def57fd80a66f: function(arg0, arg1) {
             console.error(getStringFromWasm0(arg0, arg1));
         },
-        __wbg_forEach_63624cb19d529054: function(arg0, arg1, arg2) {
+        __wbg_forEach_4976d16e90369075: function(arg0, arg1, arg2) {
             try {
                 var state0 = {a: arg1, b: arg2};
                 var cb0 = (arg0, arg1, arg2) => {
@@ -310,7 +310,7 @@ function __wbg_get_imports() {
             const ret = new Error();
             return ret;
         },
-        __wbg_new_typed_7923e8c495a7fb41: function(arg0, arg1) {
+        __wbg_new_typed_c827f11b9e98888b: function(arg0, arg1) {
             try {
                 var state0 = {a: arg0, b: arg1};
                 var cb0 = (arg0, arg1) => {
@@ -425,7 +425,7 @@ function __wbg_get_imports() {
             getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 1, len1, true);
             getDataViewMemory0().setInt32((arg0 >>> 0) + 4 * 0, ptr1, true);
         },
-        __wbg_then_ce2a321a994ccb81: function(arg0, arg1) {
+        __wbg_then_53df9d43ca740c27: function(arg0, arg1) {
             const ret = arg0.then(arg1);
             return ret;
         },
