@@ -677,7 +677,7 @@ unsafe impl<T: ErasableGeneric> ErasableGeneric for Box<[T]> {
     type Repr = Box<[T::Repr]>;
 }
 
-impl UpcastFrom<&str> for &str {}
+impl<'a> UpcastFrom<&'a str> for &'a str {}
 impl UpcastFrom<String> for String {}
 
 // A Rust string stands for a JS string in a generic position, as `bool` does
