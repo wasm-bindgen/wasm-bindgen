@@ -563,6 +563,9 @@ unsafe impl<T: ErasableGeneric> ErasableGeneric for Option<T> {
 impl<T, Target> UpcastFrom<Option<T>> for Option<Target> where Target: UpcastFrom<T> {}
 impl<T, Target> UpcastFrom<Option<T>> for JsOption<Option<Target>> where Target: UpcastFrom<T> {}
 impl<T, Target> UpcastFrom<Option<T>> for JsNullable<Option<Target>> where Target: UpcastFrom<T> {}
+// `None` is `undefined`, a JS value, so an optional carrier upcasts to `JsValue`
+// whenever its payload does, as each scalar and string carrier does.
+impl<T> UpcastFrom<Option<T>> for JsValue where JsValue: UpcastFrom<T> {}
 
 /// Pointers in a `Nullable` cross as JS numbers with the `f64` sentinels, as
 /// they do in an `Option`.
@@ -870,6 +873,7 @@ unsafe impl<T: ErasableGeneric> ErasableGeneric for Nullable<T> {
 impl<T, Target> UpcastFrom<Nullable<T>> for Nullable<Target> where Target: UpcastFrom<T> {}
 impl<T, Target> UpcastFrom<Nullable<T>> for JsOption<Nullable<Target>> where Target: UpcastFrom<T> {}
 impl<T, Target> UpcastFrom<Nullable<T>> for JsNullable<Nullable<Target>> where Target: UpcastFrom<T> {}
+impl<T> UpcastFrom<Nullable<T>> for JsValue where JsValue: UpcastFrom<T> {}
 
 impl<T: Promising> Promising for Option<T> {
     type Resolution = Option<<T as Promising>::Resolution>;

@@ -1043,6 +1043,27 @@ fn str_and_string_elements_upcast() {
     assert_eq!(strs.join(","), "c");
 }
 
+// `None` and `Null` are JS values, so an optional element upcasts to `JsValue`
+// whenever its payload does.
+#[wasm_bindgen_test]
+fn optional_elements_upcast_to_js_value() {
+    use wasm_bindgen::prelude::Upcast;
+
+    let opts: Array<Option<String>> =
+        Array::of(&[JsValue::from("a"), JsValue::UNDEFINED]).unchecked_into();
+    let values: Array = opts.upcast_into();
+    assert_eq!(values.length(), 2);
+
+    let nullables: Array<Nullable<JsString>> =
+        Array::of(&[JsValue::NULL, JsValue::from("b")]).unchecked_into();
+    let values: Array = nullables.upcast_into();
+    assert_eq!(values.join(","), ",b");
+
+    let numbers: Array<Option<f64>> = Array::of(&[JsValue::from(1.5)]).unchecked_into();
+    let values: Array = numbers.upcast_into();
+    assert_eq!(values.join(","), "1.5");
+}
+
 // Helper macros for handling Option returns in js_sys_unstable_apis
 #[cfg(not(js_sys_unstable_apis))]
 macro_rules! unwrap_get {

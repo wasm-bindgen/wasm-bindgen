@@ -68,7 +68,8 @@
   make a `Promise<Nullable<JsString>>` or `Promise<String>` from a mono
   import usable wherever a promise is expected. `&str` and `String` upcast to
   each other, so an `Array<&str>` inferred from borrowed arguments settles to
-  `Array<String>`.
+  `Array<String>`. `Option<T>` and `Nullable<T>` upcast to `JsValue` whenever
+  `T` does, so a `Promise<Option<String>>` relabels to `Promise<JsValue>`.
   [#5427](https://github.com/wasm-bindgen/wasm-bindgen/pull/5427)
   [#5437](https://github.com/wasm-bindgen/wasm-bindgen/pull/5437)
 
