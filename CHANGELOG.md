@@ -55,6 +55,11 @@
   as `None` becomes `undefined` for `Option<T>`, and `Option<T>`,
   `Nullable<T>` and `Result<T, E>` are `Promising` for any `T: Promising`,
   so a `Promise<Nullable<JsString>>` awaits to a `Nullable<JsString>`.
+  `String` and `&str` upcast to `JsValue`, and `String` to itself, so a
+  `Promise<String>` from an `experimental_generic_mono` import is `JsGeneric`
+  and upcasts to `Promise<JsValue>` as `Promise<bool>` does. Together these
+  make a `Promise<Nullable<JsString>>` or `Promise<String>` from a mono
+  import usable wherever a promise is expected.
   [#5427](https://github.com/wasm-bindgen/wasm-bindgen/pull/5427)
 
 * Added `MaybeIntoWasmAbi` / `MaybeFromWasmAbi`, the ABI of `Option<T>` for
@@ -168,11 +173,6 @@
   and `Exception.stack`.
   [#5403](https://github.com/wasm-bindgen/wasm-bindgen/pull/5403)
   [#5421](https://github.com/wasm-bindgen/wasm-bindgen/pull/5421)
-
-* `String` and `&str` now upcast to `JsValue`, and `String` to itself, so a
-  `Promise<String>` from an `experimental_generic_mono` import is `JsGeneric`
-  and upcasts to `Promise<JsValue>` as `Promise<bool>` does.
-  [#5427](https://github.com/wasm-bindgen/wasm-bindgen/pull/5427)
 
 ### Changed
 
