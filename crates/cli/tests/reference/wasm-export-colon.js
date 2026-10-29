@@ -310,7 +310,7 @@ function __wbg_get_imports() {
             const ret = new Error();
             return ret;
         },
-        __wbg_new_typed_c827f11b9e98888b: function(arg0, arg1) {
+        __wbg_new_typed_7923e8c495a7fb41: function(arg0, arg1) {
             try {
                 var state0 = {a: arg0, b: arg1};
                 var cb0 = (arg0, arg1) => {

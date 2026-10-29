@@ -2,9 +2,11 @@
 //! crossing as itself at each instantiation.
 
 use js_sys::*;
-use wasm_bindgen::convert::{FromWasmAbi, ReturnWasmAbi, VectorRefIntoWasmAbi};
+use wasm_bindgen::convert::{
+    FromWasmAbi, IntoWasmAbi, RefIntoWasmAbi, ReturnWasmAbi, VectorRefIntoWasmAbi,
+};
 use wasm_bindgen::prelude::*;
-use wasm_bindgen::{JsStringLike, MonoGeneric};
+use wasm_bindgen::JsStringLike;
 use wasm_bindgen_futures::JsFuture;
 use wasm_bindgen_test::*;
 
@@ -150,11 +152,11 @@ fn js_generic_bound_covers_element_apis() {
     round_trip(JsValue::from(1), JsValue::from("b"));
 }
 
-// `MonoGeneric` covers Rust and JS element types alike, with nullable reads
-// stating their `Option` bound.
+// Explicit ABI bounds cover Rust and JS element types alike, with nullable
+// reads stating their `Option` bound.
 fn mono_round_trip<T>(x: T, y: T)
 where
-    T: MonoGeneric + Clone + PartialEq + core::fmt::Debug,
+    T: FromWasmAbi + RefIntoWasmAbi + Clone + PartialEq + core::fmt::Debug,
     Option<T>: FromWasmAbi,
 {
     let a: Array<T> = Array::new_typed();
@@ -349,7 +351,7 @@ fn call_generic<T: JsGeneric + PartialEq + core::fmt::Debug>(x: T) {
     assert_eq!(bound.call0(&JsValue::NULL).unwrap(), x);
 }
 
-fn call_mono<T: MonoGeneric + PartialEq + core::fmt::Debug>(x: T) {
+fn call_mono<T: FromWasmAbi + RefIntoWasmAbi + PartialEq + core::fmt::Debug>(x: T) {
     let identity: Function<fn(T) -> T> = Function::new_with_args_typed("x", "return x");
     assert_eq!(identity.call1(&JsValue::NULL, &x).unwrap(), x);
     assert_eq!(identity.call(&JsValue::NULL, (&x,)).unwrap(), x);
@@ -450,7 +452,7 @@ fn tuple_generic<T: JsGeneric + Clone + PartialEq + core::fmt::Debug>(x: T, y: T
     assert_eq!(t.into_tuple(), (y.clone(), y));
 }
 
-fn tuple_mono<T: MonoGeneric + Clone + PartialEq + core::fmt::Debug>(x: T, y: T) {
+fn tuple_mono<T: FromWasmAbi + RefIntoWasmAbi + Clone + PartialEq + core::fmt::Debug>(x: T, y: T) {
     let t: ArrayTuple<(T, T)> = (x.clone(), y.clone()).into();
     assert_eq!(t.get0(), x);
     t.set1(&x);
@@ -646,7 +648,13 @@ fn callbacks_generic<T: JsGeneric + Clone + PartialEq + core::fmt::Debug>(x: T, 
 
 fn callbacks_mono<T>(x: T, y: T)
 where
-    T: MonoGeneric + VectorRefIntoWasmAbi + Clone + PartialEq + core::fmt::Debug,
+    T: IntoWasmAbi
+        + FromWasmAbi
+        + RefIntoWasmAbi
+        + VectorRefIntoWasmAbi
+        + Clone
+        + PartialEq
+        + core::fmt::Debug,
     Option<T>: FromWasmAbi,
 {
     let a: Array<T> = Array::of2(&x, &y);
@@ -797,11 +805,18 @@ where
     assert_eq!(wm.get_checked(&key), Some(x));
 }
 
-// A `MonoGeneric` callback return states its `Result` ABI bound, as a mono
-// callback's return crosses at its own ABI. `JsGeneric` implies it.
+// A mono callback's return crosses at its own ABI, so a generic callback
+// return states its `Result` ABI bound. `JsGeneric` implies it.
 async fn promise_mono<T>(x: T)
 where
-    T: MonoGeneric + Promising<Resolution = T> + Clone + PartialEq + core::fmt::Debug,
+    T: FromWasmAbi
+        + IntoWasmAbi
+        + RefIntoWasmAbi
+        + Promising<Resolution = T>
+        + Clone
+        + PartialEq
+        + core::fmt::Debug
+        + 'static,
     Option<T>: FromWasmAbi,
     Result<T, JsError>: ReturnWasmAbi,
 {

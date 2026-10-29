@@ -30,7 +30,7 @@
   (import "./reference_test_bg.js" "__wbg_async_string_855eccde48cbaf07" (func (;8;) (type 17)))
   (import "./reference_test_bg.js" "__wbg_async_unit_3b3c57d3af03c991" (func (;9;) (type 17)))
   (import "./reference_test_bg.js" "__wbg_call_b254e041513f2aac" (func (;10;) (type 0)))
-  (import "./reference_test_bg.js" "__wbg_new_typed_c827f11b9e98888b" (func (;11;) (type 13)))
+  (import "./reference_test_bg.js" "__wbg_new_typed_7923e8c495a7fb41" (func (;11;) (type 13)))
   (import "./reference_test_bg.js" "__wbg_queueMicrotask_2030f4836bf1c47b" (func (;12;) (type 3)))
   (import "./reference_test_bg.js" "__wbg_queueMicrotask_a72f977e97f23c5f" (func (;13;) (type 5)))
   (import "./reference_test_bg.js" "__wbg_resolve_05cca9f78fd16401" (func (;14;) (type 3)))
