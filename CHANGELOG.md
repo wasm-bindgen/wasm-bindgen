@@ -10,7 +10,7 @@
   `Option<&Nullable<T>>` are argument types, and an
   `experimental_generic_mono` import taking `&T` accepts `T = f64`,
   `Option<f64>` or `Nullable<String>`, as std's `contains(&T)` does.
-  [#TBD](https://github.com/wasm-bindgen/wasm-bindgen/pull/TBD)
+  [#5436](https://github.com/wasm-bindgen/wasm-bindgen/pull/5436)
 
 * Added a rejection type parameter to `js_sys::Promise<T, E = JsValue>`,
   mirrored on `JsFuture<T, E>`, `PromiseState<T, E>` and
