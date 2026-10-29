@@ -270,10 +270,8 @@
   `collect()` and `extend()` give the typed array directly.
   [#5390](https://github.com/wasm-bindgen/wasm-bindgen/pull/5390)
 
-* **Breaking (experimental):** under `js_sys_unstable_apis`, the `JsFunction`
-  traits bound their `Ret` and `ArgN` types by `MonoGeneric` rather than
-  `JsGeneric`, so generic code relying on `F::Ret: JsGeneric` needs that bound
-  stated. `Function::call0` to `call9`, `bind1` to `bind9` and
+* **Breaking (experimental):** under `js_sys_unstable_apis`,
+  `Function::call0` to `call9`, `bind1` to `bind9` and
   `ArrayTuple::get0` to `get7` / `set0` to `set7` no longer have type
   parameter defaults. A generic callback return in a `Result`, as in
   `Promise::then`, `Array::try_map` and `Array::try_reduce`, needs
