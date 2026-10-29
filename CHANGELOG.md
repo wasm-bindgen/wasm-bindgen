@@ -189,11 +189,15 @@
   argument are gone: `Promising for Promise<T, E>`, `Promise::new_typed`,
   the `PromiseWithResolvers` `resolve`/`reject` getters, the
   `PropertyDescriptor` `get`/`set` accessors, `WeakMap::new` and the
-  `entries`/`from_entries` family of `Array`, `Set`, `Map` and `Object`. `Option<T>: TryFromJsValue`
-  now reads `null` as `None`, as the `Option<T>` ABI does, so
-  `Option::<JsValue>::try_from_js_value(JsValue::NULL)` is `None` where it
-  was `Some(null)`; an `Option<Nullable<T>>` still reads it as
-  `Some(Nullable::Null)`.
+  `entries`/`from_entries` family of `Array`, `Set`, `Map` and `Object`.
+  [#5427](https://github.com/wasm-bindgen/wasm-bindgen/pull/5427)
+
+* `Option<T>: TryFromJsValue` now reads `null` as `None`, as the `Option<T>`
+  ABI does, so `Option::<JsValue>::try_from_js_value(JsValue::NULL)` is
+  `None` where it was `Some(null)`. A `T` that accepts `null` as a distinct
+  value space sets the new `TryFromJsValue::NULLABLE` const, as
+  `Nullable<T>` does, and an `Option` of it passes `null` through, so
+  `Option<Nullable<T>>` still reads it as `Some(Nullable::Null)`.
   [#5427](https://github.com/wasm-bindgen/wasm-bindgen/pull/5427)
 
 * With reference types, `static_string` constants and the reserved
