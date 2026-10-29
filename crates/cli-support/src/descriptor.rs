@@ -647,6 +647,19 @@ fn sequence_cells() {
         unreachable!()
     };
     assert_eq!(elem.sequence_cell(), SequenceCell::Encoded(&Descriptor::U8));
+    // As is a borrowed one: `&[Closure<T>]`'s handles are a fresh buffer.
+    let cell = Descriptor::decode(&[REF, SLICE, ABI_CELL, EXTERNREF]);
+    assert_eq!(cell.vector_kind(), None);
+    let Descriptor::Ref(slice) = &cell else {
+        unreachable!()
+    };
+    let Descriptor::Slice(elem) = &**slice else {
+        unreachable!()
+    };
+    assert_eq!(
+        elem.sequence_cell(),
+        SequenceCell::Encoded(&Descriptor::Externref)
+    );
 }
 
 #[test]

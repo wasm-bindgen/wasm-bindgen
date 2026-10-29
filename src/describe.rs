@@ -156,10 +156,26 @@ impl<T> WasmDescribe for NonNull<T> {
     }
 }
 
+#[cfg(not(wasm_bindgen_unstable_generic_vec))]
 impl<T: WasmDescribe> WasmDescribe for [T] {
     #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
     fn describe() {
         inform(SLICE);
+        T::describe();
+    }
+}
+
+/// A borrowed slice that `&[T]` encodes is a fresh buffer of each `&T`'s ABI,
+/// which `ABI_CELL` tells the CLI, so it decodes and frees the buffer rather
+/// than reading it as a view of elements its descriptor implies.
+#[cfg(wasm_bindgen_unstable_generic_vec)]
+impl<T: crate::convert::VectorRefIntoWasmAbi> WasmDescribe for [T] {
+    #[cfg_attr(wasm_bindgen_unstable_test_coverage, coverage(off))]
+    fn describe() {
+        inform(SLICE);
+        if T::ENCODED {
+            inform(ABI_CELL);
+        }
         T::describe();
     }
 }

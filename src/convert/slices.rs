@@ -405,9 +405,21 @@ impl_nullable_into_shared_abi!(
 /// tells them apart by the element's descriptor alone: numbers and JS handles
 /// are in place, and anything else is encoded. Encoded elements are declared
 /// once, with `__wbindgen_encoded_sequence!`.
+///
+/// Under `wasm_bindgen_unstable_generic_vec`, the slice's descriptor says
+/// instead, with an `ABI_CELL` for an encoded element (see
+/// [`ENCODED`](Self::ENCODED)).
 pub trait VectorRefIntoWasmAbi:
     WasmDescribe + Sized + crate::__rt::marker::VectorRefIntoWasmAbiSealed
 {
+    /// Whether `slice_into_abi` encodes, rather than borrows, the slice, which
+    /// the slice's descriptor tells the CLI with `ABI_CELL`: an element's
+    /// descriptor alone can't say, as a handle's may be in place while its
+    /// `Abi` isn't its memory.
+    #[cfg(wasm_bindgen_unstable_generic_vec)]
+    #[doc(hidden)]
+    const ENCODED: bool = false;
+
     fn slice_into_abi(slice: &[Self]) -> WasmSlice;
 }
 
@@ -690,12 +702,14 @@ where
     T: IntoWasmAbi,
     for<'a> &'a T: IntoWasmAbi,
 {
+    const ENCODED: bool = !T::ABI_TRANSPARENT;
+
     #[inline]
     fn slice_into_abi(slice: &[Self]) -> WasmSlice {
-        if T::ABI_TRANSPARENT {
-            WasmSlice::borrow(slice)
-        } else {
+        if Self::ENCODED {
             WasmSlice::encode(slice, |e| e.into_abi())
+        } else {
+            WasmSlice::borrow(slice)
         }
     }
 }

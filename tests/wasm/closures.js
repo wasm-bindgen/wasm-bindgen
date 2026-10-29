@@ -281,3 +281,9 @@ exports.immediate_closure_fn_reentrant = f => {
 exports.immediate_closure_fn_reentrant_invoke = () => {
   IMMEDIATE_FN_REENTRANT_CB();
 };
+
+exports.call_each = fs => {
+  assert.ok(Array.isArray(fs));
+  fs.forEach(f => f(10));
+  return fs.length;
+};

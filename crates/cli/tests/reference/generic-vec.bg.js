@@ -421,6 +421,9 @@ export function wide(v) {
 export function __wbg___wbindgen_throw_41e9ee4f547fc59a(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 }
+export function __wbg__wbg_cb_unref_dcc1a90847f04c41(arg0) {
+    arg0._wbg_cb_unref();
+}
 export function __wbg_give_bytes_c33f23bab560542b(arg0) {
     const ret = give_bytes();
     const ptr1 = passArray8ToWasm0(ret, wasm.__wbindgen_malloc);
@@ -512,6 +515,23 @@ export function __wbg_give_strings_6da2627b8b5e4e91(arg0) {
         throw e;
     }
 }
+export function __wbg_take_borrowed_bytes_6797222e0fd108d2(arg0, arg1) {
+    take_borrowed_bytes(getArrayU8FromWasm0(arg0, arg1));
+}
+export function __wbg_take_borrowed_closures_ecfd86a190534640(arg0, arg1) {
+    const v0 = [];
+    let p0 = arg0;
+    p0 = p0 >>> 0;
+    const view0 = getDataViewMemory0();
+    for (const end0 = p0 + arg1 * 4; p0 < end0; p0 += 4) {
+        v0.push(wasm.__wbindgen_externrefs.get(view0.getInt32(p0 + 0, true)));
+    }
+    wasm.__wbindgen_free(arg0, arg1 * 4, 4);
+    take_borrowed_closures(v0);
+}
+export function __wbg_take_borrowed_floats_30475c7407955193(arg0, arg1) {
+    take_borrowed_floats(getArrayF64FromWasm0(arg0, arg1));
+}
 export function __wbg_take_borrowed_foos_7e4a629107e7f1a8(arg0, arg1) {
     take_borrowed_foos(getArrayJsValueViewFromWasm0(arg0, arg1));
 }
@@ -525,6 +545,9 @@ export function __wbg_take_borrowed_strings_d2f788fd08c3a59d(arg0, arg1) {
     }
     wasm.__wbindgen_free(arg0, arg1 * 8, 4);
     take_borrowed_strings(v0);
+}
+export function __wbg_take_borrowed_values_32b41a9c5f1b820f(arg0, arg1) {
+    take_borrowed_values(getArrayJsValueViewFromWasm0(arg0, arg1));
 }
 export function __wbg_take_bytes_0be694c4de362f6b(arg0, arg1) {
     var v0 = getArrayU8FromWasm0(arg0, arg1).slice();
@@ -582,6 +605,11 @@ export function __wbg_take_strings_7ffdcb3cae111236(arg0, arg1) {
     }
     take_strings(v0);
 }
+export function __wbindgen_generic_0000000000000000(arg0, arg1) {
+    // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [], shim_idx: 2, ret: Unit, inner_ret: Some(Unit) }, mutable: false }) -> Externref`.
+    const ret = makeClosure(arg0, arg1, wasm_bindgen_0000000000000001___convert__closures_____invoke_______true_);
+    return ret;
+}
 export function __wbindgen_init_externref_table() {
     const table = wasm.__wbindgen_externrefs;
     table.set(0, undefined);
@@ -590,6 +618,10 @@ export function __wbindgen_init_externref_table() {
     table.set(1026, true);
     table.set(1027, false);
 }
+function wasm_bindgen_0000000000000001___convert__closures_____invoke_______true_(arg0, arg1) {
+    wasm.wasm_bindgen_0000000000000001___convert__closures_____invoke_______true_(arg0, arg1);
+}
+
 const PointFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_point_free(ptr, 1));
@@ -605,6 +637,10 @@ function _assertClass(instance, klass) {
         throw new Error(`expected instance of ${klass.name}`);
     }
 }
+
+const CLOSURE_DTORS = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(state => wasm.__wbindgen_destroy_closure(state.a, state.b));
 
 function getArrayF64FromWasm0(ptr, len) {
     ptr = ptr >>> 0;
@@ -668,6 +704,31 @@ function getUint8ArrayMemory0() {
 
 function isLikeNone(x) {
     return x === undefined || x === null;
+}
+
+function makeClosure(arg0, arg1, f) {
+    const state = { a: arg0, b: arg1, cnt: 1 };
+    const real = (...args) => {
+
+        // First up with a closure we increment the internal reference
+        // count. This ensures that the Rust closure environment won't
+        // be deallocated while we're invoking it.
+        state.cnt++;
+        try {
+            return f(state.a, state.b, ...args);
+        } finally {
+            real._wbg_cb_unref();
+        }
+    };
+    real._wbg_cb_unref = () => {
+        if (--state.cnt === 0) {
+            wasm.__wbindgen_destroy_closure(state.a, state.b);
+            state.a = 0;
+            CLOSURE_DTORS.unregister(state);
+        }
+    };
+    CLOSURE_DTORS.register(real, state, state);
+    return real;
 }
 
 function passArray8ToWasm0(arg, malloc) {

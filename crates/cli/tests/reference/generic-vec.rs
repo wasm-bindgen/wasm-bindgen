@@ -20,6 +20,10 @@ extern "C" {
     fn give_bytes() -> Vec<u8>;
     fn take_borrowed_foos(v: &[Foo]);
     fn take_borrowed_strings(v: &[String]);
+    fn take_borrowed_closures(v: &[Closure<dyn Fn()>]);
+    fn take_borrowed_bytes(v: &[u8]);
+    fn take_borrowed_floats(v: &[f64]);
+    fn take_borrowed_values(v: &[JsValue]);
 }
 
 #[wasm_bindgen]
@@ -81,6 +85,12 @@ pub fn imports() {
     take_bytes(give_bytes());
     take_borrowed_foos(&give_foos());
     take_borrowed_strings(&give_strings());
+    // A closure's handle is in place, but `&Closure` crosses as its ABI, so
+    // the slice is a buffer JS decodes and frees.
+    take_borrowed_closures(&[Closure::new(|| {})]);
+    take_borrowed_bytes(&give_bytes());
+    take_borrowed_floats(&[1.0]);
+    take_borrowed_values(&[JsValue::NULL]);
 }
 
 #[wasm_bindgen]
