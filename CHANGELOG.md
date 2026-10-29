@@ -51,6 +51,17 @@
   [#5410](https://github.com/wasm-bindgen/wasm-bindgen/pull/5410)
   [#5423](https://github.com/wasm-bindgen/wasm-bindgen/pull/5423)
 
+* `Nullable<T>` converts into `JsValue` with `From`, `Null` becoming `null`
+  as `None` becomes `undefined` for `Option<T>`, and `Option<T>`,
+  `Nullable<T>` and `Result<T, E>` are `Promising` for any `T: Promising`,
+  so a `Promise<Nullable<JsString>>` awaits to a `Nullable<JsString>`.
+  `String` and `&str` upcast to `JsValue`, and `String` to itself, so a
+  `Promise<String>` from an `experimental_generic_mono` import is `JsGeneric`
+  and upcasts to `Promise<JsValue>` as `Promise<bool>` does. Together these
+  make a `Promise<Nullable<JsString>>` or `Promise<String>` from a mono
+  import usable wherever a promise is expected.
+  [#5427](https://github.com/wasm-bindgen/wasm-bindgen/pull/5427)
+
 * Added `MaybeIntoWasmAbi` / `MaybeFromWasmAbi`, the ABI of `Option<T>` for
   every `T`, with an associated `MaybeAbi` that lets a type without a spare
   value in its own ABI, such as `i32` or `f64`, pick a wider one. `Option<T>`
@@ -164,6 +175,31 @@
   [#5421](https://github.com/wasm-bindgen/wasm-bindgen/pull/5421)
 
 ### Changed
+
+* The js-sys `JsFunction*` traits' associated types (`Ret`, `ArgN`, `BindN`)
+  no longer carry a `JsGeneric` bound, so a `Function<fn(..)>` signature may
+  name a converted carrier such as `Nullable<JsString>`, and
+  `Function::from_closure` accepts a closure with converted arguments. Generic
+  code over these traits that calls `call*` or `bind*` now needs the bound
+  itself, as `where F::Ret: JsGeneric, F::Arg1: JsGeneric`. The hidden
+  `PromiseTuple` trait's `Joined` and `Settled` likewise drop it, its
+  Rust-tuple impl packing the promise handles directly rather than upcasting
+  each, and the
+  `JsGeneric` bounds that only existed to satisfy a `Function<fn(..)>` slot
+  or to tag a type argument are gone: `Promising for Promise<T, E>`,
+  `Promise::new_typed`, the `PromiseWithResolvers` `resolve`/`reject`
+  getters, the `PropertyDescriptor` `get`/`set` accessors, `WeakMap::new` and
+  the `entries`/`from_entries` family of `Array`, `Set`, `Map` and `Object`.
+  [#5427](https://github.com/wasm-bindgen/wasm-bindgen/pull/5427)
+
+* `Option<T>: TryFromJsValue` now reads `null` as `None`, as the `Option<T>`
+  ABI does, so `Option::<JsValue>::try_from_js_value(JsValue::NULL)` is
+  `None` where it was `Some(null)`. A `T` that accepts `null` as a distinct
+  value space sets the new `TryFromJsValue::NULLABLE` const, as
+  `Nullable<T>` does, and an `Option` of it passes `null` through, so
+  `Option<Nullable<T>>` reads it as `Some(Nullable::Null)`. `Nullable<T>`
+  itself converts from a `JsValue` with `TryFromJsValue`.
+  [#5427](https://github.com/wasm-bindgen/wasm-bindgen/pull/5427)
 
 * With reference types, `static_string` constants and the reserved
   `undefined`, `null`, `true` and `false` values are stored at fixed slots of

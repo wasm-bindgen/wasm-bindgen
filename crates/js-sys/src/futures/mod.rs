@@ -407,7 +407,6 @@ pub fn future_to_promise_typed<T, F>(future: F) -> Promise<<T as Promising>::Res
 where
     F: Future<Output = Result<T, JsValue>> + 'static,
     T: Promising + FromWasmAbi + JsGeneric,
-    <T as Promising>::Resolution: JsGeneric,
 {
     let mut future = Some(future);
 

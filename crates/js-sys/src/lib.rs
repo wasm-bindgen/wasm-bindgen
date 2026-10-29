@@ -2501,7 +2501,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/entries)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method)]
-    pub fn entries<T: JsGeneric>(this: &Array<T>) -> Iterator<ArrayTuple<(Number, T)>>;
+    pub fn entries<T>(this: &Array<T>) -> Iterator<ArrayTuple<(Number, T)>>;
 
     // Next major: deprecate
     /// The `entries()` method returns a new Array Iterator object that contains
@@ -2509,7 +2509,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/entries)
     #[wasm_bindgen(method, js_name = entries)]
-    pub fn entries_typed<T: JsGeneric>(this: &Array<T>) -> Iterator<ArrayTuple<(Number, T)>>;
+    pub fn entries_typed<T>(this: &Array<T>) -> Iterator<ArrayTuple<(Number, T)>>;
 
     /// The `values()` method returns a new Array Iterator object that
     /// contains the values for each index in the array.
@@ -4784,47 +4784,54 @@ impl<T: JsFunction> Function<T> {
     }
 }
 
-// Base traits for function signature types.
+/// The signature a `Function<T>` is typed with: a `fn(Args..) -> Ret` whose
+/// slots name the JS types the function takes and returns.
+///
+/// A slot may be any Rust carrier of a JS type, a handle such as `JsString`
+/// or a converted value such as `Nullable<JsString>` or `Option<Number>`, as
+/// a `Promise<T>` or `Array<T>` type argument may. The `call*` and `bind*`
+/// methods marshal through the erased `JsValue` representation and so bound
+/// their slots to [`JsGeneric`] handles themselves.
 pub trait JsFunction {
-    type Ret: JsGeneric;
+    type Ret;
     const ARITY: usize;
 }
 
 pub trait JsFunction1: JsFunction {
-    type Arg1: JsGeneric;
+    type Arg1;
     type Bind1: JsFunction;
 }
 pub trait JsFunction2: JsFunction1 {
-    type Arg2: JsGeneric;
+    type Arg2;
     type Bind2: JsFunction;
 }
 pub trait JsFunction3: JsFunction2 {
-    type Arg3: JsGeneric;
+    type Arg3;
     type Bind3: JsFunction;
 }
 pub trait JsFunction4: JsFunction3 {
-    type Arg4: JsGeneric;
+    type Arg4;
     type Bind4: JsFunction;
 }
 pub trait JsFunction5: JsFunction4 {
-    type Arg5: JsGeneric;
+    type Arg5;
     type Bind5: JsFunction;
 }
 pub trait JsFunction6: JsFunction5 {
-    type Arg6: JsGeneric;
+    type Arg6;
     type Bind6: JsFunction;
 }
 pub trait JsFunction7: JsFunction6 {
-    type Arg7: JsGeneric;
+    type Arg7;
     type Bind7: JsFunction;
 }
 pub trait JsFunction8: JsFunction7 {
-    type Arg8: JsGeneric;
+    type Arg8;
     type Bind8: JsFunction;
 }
 
 // Manual impl for fn() -> R
-impl<Ret: JsGeneric> JsFunction for fn() -> Ret {
+impl<Ret> JsFunction for fn() -> Ret {
     type Ret = Ret;
     const ARITY: usize = 0;
 }
@@ -4886,7 +4893,7 @@ macro_rules! impl_fn {
     };
 
     (@impl $arity:literal [$($A:ident)+] [$($trait:ident $arg:ident $bind:ident {$bind_ty:ty})+]) => {
-        impl<Ret: JsGeneric $(, $A: JsGeneric)+> JsFunction for fn($($A),+) -> Ret {
+        impl<Ret $(, $A)+> JsFunction for fn($($A),+) -> Ret {
             type Ret = Ret;
             const ARITY: usize = $arity;
         }
@@ -4897,7 +4904,7 @@ macro_rules! impl_fn {
     (@traits [$($A:ident)+] []) => {};
 
     (@traits [$($A:ident)+] [$trait:ident $arg:ident $bind:ident {$bind_ty:ty} $($rest:tt)*]) => {
-        impl<Ret: JsGeneric $(, $A: JsGeneric)+> $trait for fn($($A),+) -> Ret {
+        impl<Ret $(, $A)+> $trait for fn($($A),+) -> Ret {
             type $arg = $arg;
             type $bind = $bind_ty;
         }
@@ -5049,7 +5056,7 @@ pub trait FunctionIntoClosure: JsFunction {
 
 macro_rules! impl_function_into_closure {
     ( $(($($var:ident)*))* ) => {$(
-        impl<$($var: FromWasmAbi + JsGeneric,)* R: IntoWasmAbi + JsGeneric> FunctionIntoClosure for fn($($var),*) -> R {
+        impl<$($var: FromWasmAbi,)* R: IntoWasmAbi> FunctionIntoClosure for fn($($var),*) -> R {
             type ClosureTypeMut = dyn FnMut($($var),*) -> R;
         }
     )*};
@@ -5526,9 +5533,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/entries)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, js_name = entries)]
-    pub fn entries<K: JsGeneric, V: FromWasmAbi + JsGeneric>(
-        this: &Map<K, V>,
-    ) -> Iterator<ArrayTuple<(K, V)>>;
+    pub fn entries<K, V>(this: &Map<K, V>) -> Iterator<ArrayTuple<(K, V)>>;
 
     // Next major: deprecate
     /// The `entries()` method returns a new Iterator object that contains
@@ -5537,9 +5542,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/entries)
     #[wasm_bindgen(method, js_name = entries)]
-    pub fn entries_typed<K: JsGeneric, V: FromWasmAbi + JsGeneric>(
-        this: &Map<K, V>,
-    ) -> Iterator<ArrayTuple<(K, V)>>;
+    pub fn entries_typed<K, V>(this: &Map<K, V>) -> Iterator<ArrayTuple<(K, V)>>;
 
     /// The `keys()` method returns a new Iterator object that contains the
     /// keys for each element in the Map object in insertion order.
@@ -7165,18 +7168,16 @@ extern "C" {
     pub fn set_configurable<T>(this: &PropertyDescriptor<T>, configurable: bool);
 
     #[wasm_bindgen(method, getter = get)]
-    pub fn get_get<T: JsGeneric>(this: &PropertyDescriptor<T>) -> Option<Function<fn() -> T>>;
+    pub fn get_get<T>(this: &PropertyDescriptor<T>) -> Option<Function<fn() -> T>>;
 
     #[wasm_bindgen(method, setter = get)]
-    pub fn set_get<T: JsGeneric>(this: &PropertyDescriptor<T>, get: Function<fn() -> T>);
+    pub fn set_get<T>(this: &PropertyDescriptor<T>, get: Function<fn() -> T>);
 
     #[wasm_bindgen(method, getter = set)]
-    pub fn get_set<T: JsGeneric>(
-        this: &PropertyDescriptor<T>,
-    ) -> Option<Function<fn(T) -> JsValue>>;
+    pub fn get_set<T>(this: &PropertyDescriptor<T>) -> Option<Function<fn(T) -> JsValue>>;
 
     #[wasm_bindgen(method, setter = set)]
-    pub fn set_set<T: JsGeneric>(this: &PropertyDescriptor<T>, set: Function<fn(T) -> JsValue>);
+    pub fn set_set<T>(this: &PropertyDescriptor<T>, set: Function<fn(T) -> JsValue>);
 
     #[wasm_bindgen(method, getter = value)]
     pub fn get_value<T>(this: &PropertyDescriptor<T>) -> Option<T>;
@@ -7399,9 +7400,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(static_method_of = Object, js_name = entries, catch)]
-    pub fn entries<T: JsGeneric>(
-        object: &Object<T>,
-    ) -> Result<Array<ArrayTuple<(JsString, T)>>, JsValue>;
+    pub fn entries<T>(object: &Object<T>) -> Result<Array<ArrayTuple<(JsString, T)>>, JsValue>;
 
     // Next major: deprecate
     /// The `Object.entries()` method returns an array of a given
@@ -7412,7 +7411,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries)
     #[wasm_bindgen(static_method_of = Object, js_name = entries, catch)]
-    pub fn entries_typed<T: JsGeneric>(
+    pub fn entries_typed<T>(
         object: &Object<T>,
     ) -> Result<Array<ArrayTuple<(JsString, T)>>, JsValue>;
 
@@ -7456,7 +7455,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/fromEntries)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(static_method_of = Object, catch, js_name = fromEntries)]
-    pub fn from_entries<K: PropertyKey, T: JsGeneric, I: Iterable<Item = ArrayTuple<(K, T)>>>(
+    pub fn from_entries<K: PropertyKey, T, I: Iterable<Item = ArrayTuple<(K, T)>>>(
         entries: &I,
     ) -> Result<Object<T>, JsValue>;
 
@@ -7466,7 +7465,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/fromEntries)
     #[wasm_bindgen(static_method_of = Object, catch, js_name = fromEntries)]
-    pub fn from_entries_typed<T: JsGeneric, I: Iterable<Item = ArrayTuple<(JsString, T)>>>(
+    pub fn from_entries_typed<T, I: Iterable<Item = ArrayTuple<(JsString, T)>>>(
         entries: &I,
     ) -> Result<Object<T>, JsValue>;
 
@@ -8784,7 +8783,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/entries)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, js_name = entries)]
-    pub fn entries<T: JsGeneric>(set: &Set<T>) -> Iterator<ArrayTuple<(T, T)>>;
+    pub fn entries<T>(set: &Set<T>) -> Iterator<ArrayTuple<(T, T)>>;
 
     // Next major: deprecate
     /// The `entries()` method returns a new Iterator object that contains an
@@ -8795,7 +8794,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set/entries)
     #[wasm_bindgen(method, js_name = entries)]
-    pub fn entries_typed<T: JsGeneric>(set: &Set<T>) -> Iterator<ArrayTuple<(T, T)>>;
+    pub fn entries_typed<T>(set: &Set<T>) -> Iterator<ArrayTuple<(T, T)>>;
 
     /// The `keys()` method is an alias for this method (for similarity with
     /// Map objects); it behaves exactly the same and returns values
@@ -8969,7 +8968,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(constructor)]
-    pub fn new<K: JsGeneric = Object, V: JsGeneric = Object>() -> WeakMap<K, V>;
+    pub fn new<K = Object, V = Object>() -> WeakMap<K, V>;
 
     // Next major: deprecate
     /// The [`WeakMap`] object is a collection of key/value pairs in which the
@@ -8978,7 +8977,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap)
     #[wasm_bindgen(constructor)]
-    pub fn new_typed<K: JsGeneric = Object, V: JsGeneric = Object>() -> WeakMap<K, V>;
+    pub fn new_typed<K = Object, V = Object>() -> WeakMap<K, V>;
 
     /// The `set()` method sets the value for the key in the [`WeakMap`] object.
     /// Returns the [`WeakMap`] object.
@@ -14189,15 +14188,11 @@ extern "C" {
 
     /// The function that fulfills the promise with a value.
     #[wasm_bindgen(method, getter)]
-    pub fn resolve<T: JsGeneric, E>(
-        this: &PromiseWithResolvers<T, E>,
-    ) -> Function<fn(T) -> Undefined>;
+    pub fn resolve<T, E>(this: &PromiseWithResolvers<T, E>) -> Function<fn(T) -> Undefined>;
 
     /// The function that rejects the promise with a reason.
     #[wasm_bindgen(method, getter)]
-    pub fn reject<T, E: JsGeneric>(
-        this: &PromiseWithResolvers<T, E>,
-    ) -> Function<fn(E) -> Undefined>;
+    pub fn reject<T, E>(this: &PromiseWithResolvers<T, E>) -> Function<fn(E) -> Undefined>;
 }
 
 // Invariant in `T` and `E`: only identity and the `Object` / `JsValue` supertypes.
@@ -14273,7 +14268,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(constructor)]
-    pub fn new<T: JsGeneric, E: JsGeneric>(
+    pub fn new<T, E>(
         cb: &mut dyn FnMut(Function<fn(T) -> Undefined>, Function<fn(E) -> Undefined>),
     ) -> Promise<T, E>;
 
@@ -14282,7 +14277,7 @@ extern "C" {
     ///
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
     #[wasm_bindgen(constructor)]
-    pub fn new_typed<T: Promising + JsGeneric>(
+    pub fn new_typed<T: Promising>(
         cb: &mut dyn FnMut(Function<fn(T) -> Undefined>, Function<fn(JsValue) -> Undefined>),
     ) -> Promise<<T as Promising>::Resolution>;
 
@@ -14577,15 +14572,15 @@ extern "C" {
     pub fn with_resolvers<T, E>() -> PromiseWithResolvers<T, E>;
 }
 
-impl<T: JsGeneric, E> Promising for Promise<T, E> {
+impl<T, E> Promising for Promise<T, E> {
     type Resolution = T;
 }
 
 /// Internal: maps a tuple of `Promise<T_i, E>` to the result shapes of
 /// [`Promise::all_tuple`] and [`Promise::all_settled_tuple`].
 ///
-/// Implemented for every tuple arity 1..=8 of `Promise<T, E>` with `T` and
-/// `E` both `JsGeneric`. One rejection type `E` is shared across the tuple,
+/// Implemented for every tuple arity 1..=8 of `Promise<T, E>`, for any `T`
+/// and `E`. One rejection type `E` is shared across the tuple,
 /// so upcast mixed rejection types to a common one first. The associated
 /// `Joined` / `Settled` types pin down the [`ArrayTuple`] shape of the
 /// result so the one [`JsCast::unchecked_into`] needed to reinterpret the
@@ -14605,13 +14600,13 @@ pub trait PromiseTuple {
     ///
     /// For a tuple `(Promise<T1, E>, Promise<T2, E>, ...)` this is
     /// `ArrayTuple<(T1, T2, ...)>`.
-    type Joined: JsGeneric;
+    type Joined;
 
     /// The typed `ArrayTuple` shape the all-settled promise resolves to.
     ///
     /// For a tuple `(Promise<T1, E>, Promise<T2, E>, ...)` this is
     /// `ArrayTuple<(PromiseState<T1, E>, PromiseState<T2, E>, ...)>`.
-    type Settled: JsGeneric;
+    type Settled;
 
     /// The rejection type shared by every promise in the tuple, which the
     /// joined promise rejects with.
@@ -14626,22 +14621,26 @@ pub trait PromiseTuple {
 
 macro_rules! impl_promise_tuple {
     ([$($T:ident)+] [$($idx:tt)+]) => {
-        // Rust tuple of `Promise<T_i, E>`. Builds the heterogeneous
-        // `ArrayTuple` of promises via the existing `From<(...)>` impl
-        // (each element upcasts through `JsGeneric`), then delegates to
-        // the `ArrayTuple` impl below.
-        impl<$($T: JsGeneric,)+ E: JsGeneric> PromiseTuple for ($(Promise<$T, E>,)+) {
+        // Rust tuple of `Promise<T_i, E>`. Each element is a promise handle
+        // whatever `T_i` is, so the `ArrayTuple` of promises is packed
+        // directly rather than through `From<(..)>`, which would upcast
+        // each `T_i`. Delegates to the `ArrayTuple` impl below.
+        impl<$($T,)+ E> PromiseTuple for ($(Promise<$T, E>,)+) {
             type Joined = ArrayTuple<($($T,)+)>;
             type Settled = ArrayTuple<($(PromiseState<$T, E>,)+)>;
             type Rejection = E;
 
             fn all(self) -> Promise<Self::Joined, E> {
-                let tuple: ArrayTuple<($(Promise<$T, E>,)+)> = ($(self.$idx,)+).into();
+                use wasm_bindgen::JsCast;
+                let tuple: ArrayTuple<($(Promise<$T, E>,)+)> =
+                    Array::of(&[$(JsValue::from(self.$idx)),+]).unchecked_into();
                 tuple.all()
             }
 
             fn all_settled(self) -> Promise<Self::Settled> {
-                let tuple: ArrayTuple<($(Promise<$T, E>,)+)> = ($(self.$idx,)+).into();
+                use wasm_bindgen::JsCast;
+                let tuple: ArrayTuple<($(Promise<$T, E>,)+)> =
+                    Array::of(&[$(JsValue::from(self.$idx)),+]).unchecked_into();
                 tuple.all_settled()
             }
         }
@@ -14657,7 +14656,7 @@ macro_rules! impl_promise_tuple {
         // `Promise.all` / `Promise.allSettled` preserve input order and
         // arity by spec, and `Promise.all` rejects with one of the inputs'
         // rejection reasons.
-        impl<$($T: JsGeneric,)+ E: JsGeneric> PromiseTuple for ArrayTuple<($(Promise<$T, E>,)+)> {
+        impl<$($T,)+ E> PromiseTuple for ArrayTuple<($(Promise<$T, E>,)+)> {
             type Joined = ArrayTuple<($($T,)+)>;
             type Settled = ArrayTuple<($(PromiseState<$T, E>,)+)>;
             type Rejection = E;

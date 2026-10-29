@@ -871,8 +871,12 @@ impl<T, Target> UpcastFrom<Nullable<T>> for Nullable<Target> where Target: Upcas
 impl<T, Target> UpcastFrom<Nullable<T>> for JsOption<Nullable<Target>> where Target: UpcastFrom<T> {}
 impl<T, Target> UpcastFrom<Nullable<T>> for JsNullable<Nullable<Target>> where Target: UpcastFrom<T> {}
 
-impl<T: MaybeIntoWasmAbi + ErasableGeneric<Repr = JsValue> + Promising> Promising for Option<T> {
+impl<T: Promising> Promising for Option<T> {
     type Resolution = Option<<T as Promising>::Resolution>;
+}
+
+impl<T: Promising> Promising for Nullable<T> {
+    type Resolution = Nullable<<T as Promising>::Resolution>;
 }
 
 impl<T: IntoWasmAbi> IntoWasmAbi for Clamped<T> {
@@ -981,7 +985,7 @@ unsafe impl<T: ErasableGeneric, E: ErasableGeneric> ErasableGeneric for Result<T
     type Repr = Result<<T as ErasableGeneric>::Repr, <E as ErasableGeneric>::Repr>;
 }
 
-impl<T: ErasableGeneric + Promising, E: ErasableGeneric> Promising for Result<T, E> {
+impl<T: Promising, E> Promising for Result<T, E> {
     type Resolution = Result<<T as Promising>::Resolution, E>;
 }
 

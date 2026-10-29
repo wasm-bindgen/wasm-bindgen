@@ -1,5 +1,5 @@
 use js_sys::{JsNullable, JsOption, Null, Undefined};
-use js_sys::{JsString, Number, Object};
+use js_sys::{JsString, Number, Object, Promise};
 use wasm_bindgen::convert::Upcast;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
@@ -7,8 +7,13 @@ use wasm_bindgen_test::*;
 #[wasm_bindgen(inline_js = "
 export const js_optional_default = (value = 42) => value;
 export const js_nullable_echo = (value) => value;
+export const js_nullable_await = (p) => p;
 ")]
 extern "C" {
+    // `Nullable<T>` is `Promising`, so a `Promise<Nullable<T>>` awaits to it.
+    #[wasm_bindgen(js_name = js_nullable_await)]
+    async fn js_nullable_await(p: &Promise<Nullable<JsString>>) -> Nullable<JsString>;
+
     // Imported with an erasable generic param.
     #[wasm_bindgen(js_name = js_optional_default)]
     fn js_optional_default_generic<T>(value: JsOption<T>) -> T;
@@ -637,4 +642,15 @@ fn erased_generic_nullable() {
     assert!(js_nullable_echo_generic(Nullable::<Number>::Null).is_null());
     let s: Nullable<JsString> = js_nullable_echo_generic(Nullable::Value(JsString::from("x")));
     assert_eq!(s.unwrap(), "x");
+}
+
+#[wasm_bindgen_test]
+async fn await_nullable_promise() {
+    let p: Promise<Nullable<JsString>> = Promise::resolve(&JsValue::NULL).unchecked_into();
+    assert_eq!(js_nullable_await(&p).await, Nullable::Null);
+    let p: Promise<Nullable<JsString>> = Promise::resolve(&JsString::from("a")).unchecked_into();
+    assert_eq!(
+        js_nullable_await(&p).await,
+        Nullable::Value(JsString::from("a"))
+    );
 }
