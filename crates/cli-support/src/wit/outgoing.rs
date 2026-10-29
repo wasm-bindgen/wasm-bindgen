@@ -841,7 +841,8 @@ impl InstructionBuilder<'_, '_> {
                     "unsupported vector element type for calling JS function from Rust: {elem:?}"
                 ),
             },
-            // `&[&JsString]`: the cell is the borrowed handle.
+            // `&[&JsString]`, or an `ABI_CELL` element such as `&[Closure<T>]`'s:
+            // the cell is the borrowed handle.
             Descriptor::String
             | Descriptor::CachedString
             | Descriptor::Externref
