@@ -59,8 +59,8 @@ Reads bound the element by `FromWasmAbi`, and writes take `&T` bounded by
 `T: RefIntoWasmAbi`, which holds for JS types, `String` and every primitive.
 Borrows deref-coerce to the element type, so
 `Array<JsValue>::push(&js_string)` still works. Each element type gets its own
-JS shim. Generic code over Rust and JS element types alike can bound
-`T: MonoGeneric`, adding `Option<T>: FromWasmAbi` for nullable reads.
+JS shim. Generic code over Rust and JS element types alike states the bound
+each position needs, adding `Option<T>: FromWasmAbi` for nullable reads.
 `JsGeneric` implies all of these, so generic code bounded by `T: JsGeneric`
 can use the element APIs as before.
 
@@ -82,11 +82,10 @@ assert_eq!(pair.into_tuple(), ("a".to_string(), 1));
 ```
 
 A `Function<fn(..)>` slot may be any type. Calling or binding it needs each
-argument to be `RefIntoWasmAbi` and the return to be `FromWasmAbi`, both
-implied by `MonoGeneric`. A generic callback return in a `Result`, as in
-`Promise::then` or `Array::try_map`, is bounded by
-`Result<R, JsError>: ReturnWasmAbi`. `R: JsGeneric` implies it, while generic
-callers bounding `R` by `MonoGeneric` state it themselves.
+argument to be `RefIntoWasmAbi` and the return to be `FromWasmAbi`. A generic
+callback return in a `Result`, as in `Promise::then` or `Array::try_map`, is
+bounded by `Result<R, JsError>: ReturnWasmAbi`. `R: JsGeneric` implies it,
+while other generic callers state it themselves.
 
 ---
 
