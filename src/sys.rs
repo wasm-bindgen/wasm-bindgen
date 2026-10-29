@@ -67,6 +67,10 @@ impl UpcastFrom<Undefined> for Undefined {}
 impl UpcastFrom<()> for Undefined {}
 impl UpcastFrom<Undefined> for () {}
 impl UpcastFrom<Undefined> for JsValue {}
+// An `Option<T>` reads `undefined` as `None`, so `undefined` is one of its
+// values. This also lets a closure taking a trailing `Option<T>` stand in for
+// one without it.
+impl<T> UpcastFrom<Undefined> for Option<T> {}
 
 // Null
 #[wasm_bindgen(wasm_bindgen = crate)]
@@ -107,6 +111,11 @@ impl fmt::Display for Null {
 
 impl UpcastFrom<Null> for Null {}
 impl UpcastFrom<Null> for JsValue {}
+// `null` is `None` for an `Option<T>`, or `Some(Nullable::Null)` when `T` is a
+// `Nullable`, and `Nullable::Null` for a `Nullable<T>`. `undefined` is not a
+// `Nullable<T>`, as it goes to `T`'s own conversion.
+impl<T> UpcastFrom<Null> for Option<T> {}
+impl<T> UpcastFrom<Null> for crate::Nullable<T> {}
 
 // JsOption
 #[wasm_bindgen(wasm_bindgen = crate)]
@@ -126,6 +135,7 @@ extern "C" {
     /// represented as a `JsValue` (e.g., `JsString`, `Number`, `Object`, etc.).
     /// `JsOption<T>` itself implements `JsGeneric`, so it can be used in all
     /// generic positions that accept JS types.
+    // Next major: deprecate in favour of `Option<T>`.
     #[wasm_bindgen(typescript_type = "any", no_upcast)]
     #[derive(Clone, PartialEq)]
     pub type JsOption<T>;
@@ -294,6 +304,7 @@ extern "C" {
     /// represented as a `JsValue` (e.g., `JsString`, `Number`, `Object`, etc.).
     /// `JsNullable<T>` itself implements `JsGeneric`, so it can be used in all
     /// generic positions that accept JS types.
+    // Next major: deprecate in favour of `Nullable<T>`.
     #[wasm_bindgen(typescript_type = "any", no_upcast)]
     #[derive(Clone, PartialEq)]
     pub type JsNullable<T>;

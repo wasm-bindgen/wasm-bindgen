@@ -2146,6 +2146,40 @@ impl TryToTokens for ast::ImportType {
             })
             .to_tokens(tokens);
 
+            // An `Option<Target>` or `Nullable<Target>` holds any JS value its
+            // payload does, so `Self` wraps into one whenever it upcasts to the
+            // payload: itself, a superclass, `JsValue`, or anything later. A
+            // blanket `T` to `Option<T>` would overlap the structural `Option`
+            // rule, so each type states its own wrap.
+            let mut wrap_generics = declaration_generics.clone();
+            wrap_generics
+                .params
+                .push(syn::parse_quote!(__UpcastWrapTarget));
+            wrap_generics
+                .make_where_clause()
+                .predicates
+                .push(syn::parse_quote!(
+                    __UpcastWrapTarget: #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
+                ));
+            let (wrap_impl_generics, _, wrap_where_clause) = wrap_generics.split_for_impl();
+            (quote! {
+                #(#cfg_attrs)*
+                #[automatically_derived]
+                impl #wrap_impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
+                    for #wasm_bindgen::__rt::core::option::Option<__UpcastWrapTarget>
+                #wrap_where_clause
+                {
+                }
+                #(#cfg_attrs)*
+                #[automatically_derived]
+                impl #wrap_impl_generics #wasm_bindgen::convert::UpcastFrom<#rust_name #ty_generics>
+                    for #wasm_bindgen::Nullable<__UpcastWrapTarget>
+                #wrap_where_clause
+                {
+                }
+            })
+            .to_tokens(tokens);
+
             // 2. For non-generic types: generate identity upcast (UpcastFrom<Self> for Self, UpcastFrom<Self> for JsOption<Self>/JsNullable<Self>)
             // 3. For generic types: generate structural covariance
             let type_params: Vec<_> = declaration_generics.type_params().collect();

@@ -66,8 +66,19 @@
   `Promise<String>` from an `experimental_generic_mono` import is `JsGeneric`
   and upcasts to `Promise<JsValue>` as `Promise<bool>` does. Together these
   make a `Promise<Nullable<JsString>>` or `Promise<String>` from a mono
-  import usable wherever a promise is expected.
+  import usable wherever a promise is expected. `&str` and `String` upcast to
+  each other, so an `Array<&str>` inferred from borrowed arguments settles to
+  `Array<String>`. `Option<T>` and `Nullable<T>` upcast to `JsValue` whenever
+  `T` does, so a `Promise<Option<String>>` relabels to `Promise<JsValue>`, and
+  `Undefined` and `Null` upcast to `Option<T>` and `Null` to `Nullable<T>`, so a
+  `Function<fn(A) -> R>` stands in for a `Function<fn(A, Option<B>) -> R>`.
+  Every Rust and JS carrier wraps into `Option<Target>` and `Nullable<Target>`
+  whenever it upcasts to `Target`, and `Nullable<T>` upcasts to `Option<T>`,
+  so an `Array<JsString>` relabels to `Array<Option<JsString>>` or
+  `Array<Option<Nullable<JsString>>>`, and a `Function<fn(Option<T>) -> R>`
+  stands in for a `Function<fn(T) -> R>`.
   [#5427](https://github.com/wasm-bindgen/wasm-bindgen/pull/5427)
+  [#5437](https://github.com/wasm-bindgen/wasm-bindgen/pull/5437)
 
 * Added `MaybeIntoWasmAbi` / `MaybeFromWasmAbi`, the ABI of `Option<T>` for
   every `T`, with an associated `MaybeAbi` that lets a type without a spare
