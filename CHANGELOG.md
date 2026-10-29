@@ -170,7 +170,13 @@
   name a converted carrier such as `Nullable<JsString>`, and
   `Function::from_closure` accepts a closure with converted arguments. Generic
   code over these traits that calls `call*` or `bind*` now needs the bound
-  itself, as `where F::Ret: JsGeneric, F::Arg1: JsGeneric`.
+  itself, as `where F::Ret: JsGeneric, F::Arg1: JsGeneric`. The hidden
+  `PromiseTuple` trait's `Joined` and `Settled` likewise drop it, and the
+  `JsGeneric` bounds that only existed to satisfy a `Function<fn(..)>` slot
+  or to tag a type argument are gone: `Promising for Promise<T, E>`,
+  `Promise::new_typed`, the `PromiseWithResolvers` `resolve`/`reject`
+  getters, the `PropertyDescriptor` `get`/`set` accessors, `WeakMap::new` and
+  the `entries`/`from_entries` family of `Array`, `Set`, `Map` and `Object`.
   [#5427](https://github.com/wasm-bindgen/wasm-bindgen/pull/5427)
 
 * With reference types, `static_string` constants and the reserved
