@@ -821,15 +821,14 @@ impl InstructionBuilder<'_, '_> {
         // Every element that isn't in place reaches here, so this is what
         // rejects one the glue can't decode. An owned element that isn't a
         // scalar may call into Wasm to take what it owns, so its words are
-        // all read out of the buffer before any is decoded.
+        // all read out of the buffer before any is decoded. An owned Rust
+        // struct or handle is in place on its own, and only reaches here
+        // under an `Option` or `Nullable`.
         let staged = owned && !elem.scalar_cell();
         match elem {
             _ if owned => match elem {
                 Descriptor::String
                 | Descriptor::CachedString
-                | Descriptor::Externref
-                | Descriptor::NamedExternref(_)
-                | Descriptor::RustStruct { .. }
                 | Descriptor::Option(_)
                 | Descriptor::Nullable(_) => decode._outgoing(elem)?,
                 _ if elem.scalar_cell() => decode._outgoing(elem)?,
