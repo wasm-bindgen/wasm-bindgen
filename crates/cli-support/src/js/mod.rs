@@ -1616,9 +1616,17 @@ export const __wbg_memory: WebAssembly.Memory;
                 return __wbg_finalize_init(instance, module{init_stack_size_arg});
             }}
 
+            let __wbg_init_promise;
             async function __wbg_init(module_or_path{init_memory_arg}) {{
                 if (wasm !== undefined) return wasm;
+                if (__wbg_init_promise === undefined) {{
+                    __wbg_init_promise = __wbg_init_once(module_or_path{init_memory_arg});
+                    __wbg_init_promise.catch(() => {{ __wbg_init_promise = undefined; }});
+                }}
+                return __wbg_init_promise;
+            }}
 
+            async function __wbg_init_once(module_or_path{init_memory_arg}) {{
                 {init_stack_size}
                 if (module_or_path !== undefined) {{
                     if (Object.getPrototypeOf(module_or_path) === Object.prototype) {{

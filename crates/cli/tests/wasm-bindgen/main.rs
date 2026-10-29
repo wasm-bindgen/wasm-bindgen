@@ -825,6 +825,46 @@ fn bin_crate_works_without_name_section() {
 }
 
 #[test]
+fn init_target_web_instantiates_once() {
+    let out_dir = Project::new("init_target_web_instantiates_once")
+        .file(
+            "src/lib.rs",
+            r#"
+            "#,
+        )
+        .wasm_bindgen("--target web")
+        .unwrap();
+    fs::write(
+        out_dir.join("main.mjs"),
+        r#"
+            import { readFileSync } from 'node:fs';
+            import init from './init_target_web_instantiates_once.js';
+
+            let instantiations = 0;
+            const instantiate = WebAssembly.instantiate;
+            WebAssembly.instantiate = (bytes, imports) => {
+                if ('./init_target_web_instantiates_once_bg.js' in imports) instantiations++;
+                return instantiate(bytes, imports);
+            };
+
+            const bytes = readFileSync('./init_target_web_instantiates_once_bg.wasm');
+            const failed = await init({ module_or_path: new Uint8Array([0, 1, 2, 3]) }).then(() => false, () => true);
+            const [a, b] = await Promise.all([init({ module_or_path: bytes }), init({ module_or_path: bytes })]);
+            const c = await init();
+            console.log(JSON.stringify({ failed, instantiations, same: a === b && b === c }));
+        "#,
+    )
+    .unwrap();
+
+    Command::new("node")
+        .arg("main.mjs")
+        .current_dir(out_dir)
+        .assert()
+        .success()
+        .stdout("{\"failed\":true,\"instantiations\":2,\"same\":true}\n");
+}
+
+#[test]
 fn default_module_path_target_web() {
     let out_dir = Project::new("default_module_path_target_web")
         .file(
@@ -838,9 +878,7 @@ fn default_module_path_target_web() {
     let contents = fs::read_to_string(out_dir.join("default_module_path_target_web.js")).unwrap();
     assert!(contents.contains(
         "\
-async function __wbg_init(module_or_path) {
-    if (wasm !== undefined) return wasm;
-
+async function __wbg_init_once(module_or_path) {
 
     if (module_or_path !== undefined) {
         if (Object.getPrototypeOf(module_or_path) === Object.prototype) {
@@ -889,9 +927,7 @@ fn omit_default_module_path_target_web() {
         fs::read_to_string(out_dir.join("omit_default_module_path_target_web.js")).unwrap();
     assert!(contents.contains(
         "\
-async function __wbg_init(module_or_path) {
-    if (wasm !== undefined) return wasm;
-
+async function __wbg_init_once(module_or_path) {
 
     if (module_or_path !== undefined) {
         if (Object.getPrototypeOf(module_or_path) === Object.prototype) {
@@ -921,9 +957,7 @@ fn omit_default_module_path_target_no_modules() {
         fs::read_to_string(out_dir.join("omit_default_module_path_target_no_modules.js")).unwrap();
     assert!(contents.contains(
         "\
-    async function __wbg_init(module_or_path) {
-        if (wasm !== undefined) return wasm;
-
+    async function __wbg_init_once(module_or_path) {
 
         if (module_or_path !== undefined) {
             if (Object.getPrototypeOf(module_or_path) === Object.prototype) {
