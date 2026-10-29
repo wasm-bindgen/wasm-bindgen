@@ -1064,6 +1064,14 @@ fn optional_elements_upcast_to_js_value() {
     assert_eq!(values.join(","), "1.5");
 }
 
+#[wasm_bindgen(inline_js = "export function first(a) { return a[0]; }")]
+extern "C" {
+    // Reads an upcast array's element back through the element type's own
+    // conversion, so a test checks the value a relabel promises.
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn first<T: FromWasmAbi>(a: &Array<T>) -> T;
+}
+
 // `undefined` and `null` are values of an `Option<T>`, and `null` of a
 // `Nullable<T>`, so arrays of them upcast to arrays of the optional carriers.
 #[wasm_bindgen_test]
@@ -1071,14 +1079,55 @@ fn null_and_undefined_elements_upcast_to_optional() {
     use wasm_bindgen::prelude::Upcast;
 
     let undefineds: Array<Undefined> = Array::of(&[JsValue::UNDEFINED]).unchecked_into();
-    let opts: Array<Option<JsString>> = undefineds.upcast_into();
-    assert_eq!(opts.length(), 1);
+    let opts: Array<Option<JsString>> = undefineds.clone().upcast_into();
+    assert_eq!(first(&opts), None);
+    let opts: Array<Option<JsValue>> = undefineds.upcast_into();
+    assert_eq!(first(&opts), None);
 
     let nulls: Array<Null> = Array::of(&[JsValue::NULL]).unchecked_into();
+    let opts: Array<Option<JsString>> = nulls.clone().upcast_into();
+    assert_eq!(first(&opts), None);
+    let opts: Array<Option<JsValue>> = nulls.clone().upcast_into();
+    assert_eq!(first(&opts), None);
     let opts: Array<Option<String>> = nulls.clone().upcast_into();
+    assert_eq!(first(&opts), None);
+    let nullables: Array<Nullable<JsString>> = nulls.clone().upcast_into();
+    assert_eq!(first(&nullables), Nullable::Null);
+    let exact: Array<Option<Nullable<JsString>>> = nulls.upcast_into();
+    assert_eq!(first(&exact), Some(Nullable::Null));
+}
+
+// A value wraps into `Option` or `Nullable` whenever it upcasts to the payload,
+// and a `Nullable<T>` is an `Option<T>`, so it reaches `Option<Nullable<T>>`.
+#[wasm_bindgen_test]
+fn elements_wrap_into_optional() {
+    use wasm_bindgen::prelude::Upcast;
+
+    let strs = js_array![JsString; "a"];
+    let opts: Array<Option<JsString>> = strs.clone().upcast_into();
     assert_eq!(opts.length(), 1);
-    let nullables: Array<Nullable<JsString>> = nulls.upcast_into();
+    let nullables: Array<Nullable<JsValue>> = strs.clone().upcast_into();
     assert_eq!(nullables.length(), 1);
+    let arrays: Array<Array> =
+        Array::of(&[JsValue::from(Array::<JsValue>::new())]).unchecked_into();
+    let objects: Array<Option<Object>> = arrays.upcast_into();
+    assert_eq!(objects.length(), 1);
+
+    let strings: Array<String> = strs.clone().unchecked_into();
+    let opt_strings: Array<Option<String>> = strings.upcast_into();
+    assert_eq!(first(&opt_strings), Some("a".to_string()));
+    let numbers: Array<f64> = js_array![Number; 1.5].unchecked_into();
+    let opt_numbers: Array<Nullable<f64>> = numbers.upcast_into();
+    assert_eq!(first(&opt_numbers), Nullable::Value(1.5));
+
+    let nullables: Array<Nullable<JsString>> = strs.upcast_into();
+    let opts: Array<Option<JsString>> = nullables.clone().upcast_into();
+    assert_eq!(first(&opts), Some(JsString::from("a")));
+    let exact: Array<Option<Nullable<JsString>>> = nullables.upcast_into();
+    assert_eq!(first(&exact), Some(Nullable::Value(JsString::from("a"))));
+
+    let p: Promise<Array<JsString>> = Promise::resolve(&js_array![JsString; "b"]).unchecked_into();
+    let _: Promise<Option<Array<JsValue>>> = p.upcast_into();
 }
 
 // Helper macros for handling Option returns in js_sys_unstable_apis

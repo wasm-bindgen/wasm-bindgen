@@ -678,6 +678,10 @@ unsafe impl<T: ErasableGeneric> ErasableGeneric for Box<[T]> {
 
 impl<'a> UpcastFrom<&'a str> for &'a str {}
 impl UpcastFrom<String> for String {}
+impl<'a, Target: UpcastFrom<&'a str>> UpcastFrom<&'a str> for Option<Target> {}
+impl<'a, Target: UpcastFrom<&'a str>> UpcastFrom<&'a str> for Nullable<Target> {}
+impl<Target: UpcastFrom<String>> UpcastFrom<String> for Option<Target> {}
+impl<Target: UpcastFrom<String>> UpcastFrom<String> for Nullable<Target> {}
 // `String` and `&str` label the same JS string, a `&str` element's lifetime
 // being phantom, so they upcast both ways, as each does with `JsString`. An
 // inferred `Array<&str>` settles to `Array<String>`, and a `Function<fn(&str)>`

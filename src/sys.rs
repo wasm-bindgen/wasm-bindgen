@@ -135,6 +135,7 @@ extern "C" {
     /// represented as a `JsValue` (e.g., `JsString`, `Number`, `Object`, etc.).
     /// `JsOption<T>` itself implements `JsGeneric`, so it can be used in all
     /// generic positions that accept JS types.
+    // Next major: deprecate in favour of `Option<T>`.
     #[wasm_bindgen(typescript_type = "any", no_upcast)]
     #[derive(Clone, PartialEq)]
     pub type JsOption<T>;
@@ -303,6 +304,7 @@ extern "C" {
     /// represented as a `JsValue` (e.g., `JsString`, `Number`, `Object`, etc.).
     /// `JsNullable<T>` itself implements `JsGeneric`, so it can be used in all
     /// generic positions that accept JS types.
+    // Next major: deprecate in favour of `Nullable<T>`.
     #[wasm_bindgen(typescript_type = "any", no_upcast)]
     #[derive(Clone, PartialEq)]
     pub type JsNullable<T>;

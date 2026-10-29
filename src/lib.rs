@@ -1002,6 +1002,8 @@ impl AsRef<JsValue> for JsValue {
 }
 
 impl UpcastFrom<JsValue> for JsValue {}
+impl<Target: UpcastFrom<JsValue>> UpcastFrom<JsValue> for Option<Target> {}
+impl<Target: UpcastFrom<JsValue>> UpcastFrom<JsValue> for Nullable<Target> {}
 
 // Loosely based on toInt32 in ecma-272 for abi semantics
 // with restriction that it only applies for numbers

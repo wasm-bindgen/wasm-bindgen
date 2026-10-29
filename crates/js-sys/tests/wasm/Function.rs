@@ -871,3 +871,16 @@ fn upcast_extends_with_trailing_option() {
         2
     );
 }
+
+// A function that handles `None` accepts any value of its payload, so a
+// function taking `Option<T>` stands in for one taking `T`.
+#[wasm_bindgen_test]
+fn upcast_accepts_option_for_payload() {
+    use wasm_bindgen::prelude::Upcast;
+
+    let f: Function<fn(Option<JsString>) -> Number> =
+        Function::new_with_args_typed("s", "return s === undefined ? -1 : s.length");
+    let g: Function<fn(JsString) -> Number> = f.upcast_into();
+    let g: Function = g.unchecked_into();
+    assert_eq!(g.call1(&JsValue::NULL, &"abc".into()).unwrap(), 3);
+}
