@@ -563,11 +563,15 @@ impl<T: WasmAbi> WasmRet<T> {
 /// stability guarantees** are provided. Use at your own risk. See its
 /// documentation for more details.
 pub trait TryFromJsValue: Sized {
-    /// Whether `null` converts to a value of `Self`. An `Option<Self>` reads
-    /// `null` as `None` unless this is set, as `Nullable<T>` does. This is
-    /// the JS-value side of [`NullableFromWasmAbi`], which claims `null` at
-    /// the ABI.
-    const ACCEPTS_NULL: bool = false;
+    /// Whether `Self` accepts `null` as a distinct value space, as
+    /// `Nullable<T>` does. An enclosing `Option` then passes `null` through
+    /// instead of reading it as `None`, so `Option<T>` is itself nullable
+    /// exactly when `T` is not. `JsValue` does not set this: it accepts
+    /// `null` as one value among all of them, not as a distinct space, and
+    /// `Option<JsValue>` reads it as `None` like the ABI does. This is the
+    /// JS-value side of [`NullableFromWasmAbi`], which claims `null` at the
+    /// ABI.
+    const NULLABLE: bool = false;
 
     /// Performs the conversion.
     fn try_from_js_value(value: JsValue) -> Result<Self, JsValue> {
