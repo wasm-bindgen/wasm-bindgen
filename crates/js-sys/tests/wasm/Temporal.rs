@@ -2168,6 +2168,70 @@ fn every_binding_is_callable() {
     let _ = md.to_plain_date(2022);
 }
 
+// A typed `catch` error is an unchecked cast of whatever was thrown, so check that each
+// error type in the bindings matches the class the engine actually throws.
+#[wasm_bindgen_test]
+fn error_kinds() {
+    if !is_temporal_supported() {
+        return;
+    }
+    fn range<T: core::fmt::Debug>(result: Result<T, RangeError>) {
+        assert!(result.unwrap_err().is_instance_of::<RangeError>());
+    }
+    fn error_of<E: JsCast, T: core::fmt::Debug>(result: Result<T, Error>) {
+        assert!(result.unwrap_err().is_instance_of::<E>());
+    }
+    let pd = get_test_plain_date();
+    let zdt = get_test_zoned_date_time();
+    let p1m = Temporal::Duration::from_with_str("P1M").unwrap();
+
+    range(Temporal::PlainDate::new(2022, 13, 1));
+    range(Temporal::Duration::new_with_years_and_months(1.0, -1.0));
+    range(Temporal::Duration::new_with_years(1.5));
+    range(Temporal::Instant::from_epoch_milliseconds(f64::NAN));
+    range(get_test_instant().add(&Temporal::Duration::from_with_str("P1D").unwrap()));
+    range(pd.until(&pd.with_calendar("hebrew").unwrap()));
+    let diff = Temporal::DifferenceOptions::new();
+    diff.set_smallest_unit(Temporal::Unit::Year);
+    diff.set_largest_unit(Temporal::LargestUnit::Day);
+    range(pd.until_with_options(&pd, &diff));
+    range(Temporal::Duration::compare(
+        &p1m,
+        &Temporal::Duration::from_with_str("P30D").unwrap(),
+    ));
+    range(p1m.total_with_unit(Temporal::Unit::Day));
+    range(pd.with_calendar("bogus"));
+    range(pd.to_zoned_date_time("Bad/Zone"));
+    range(zdt.with_time_zone("Bad/Zone"));
+    range(Temporal::Now::plain_date_iso_with_time_zone("Bad/Zone"));
+    range(Date::new(&JsValue::from(f64::NAN)).to_temporal_instant());
+    range(Temporal::PlainDate::from_with_str("not a date"));
+    range(pd.equals_with_str("2022-13-01"));
+    range(pd.to_locale_string_with_str("x-"));
+    range(get_test_plain_year_month().to_plain_date(0));
+
+    error_of::<TypeError, _>(Temporal::PlainDate::from_with_plain_date_like(
+        &Temporal::PlainDateLike::new(),
+    ));
+    error_of::<TypeError, _>(pd.with(&Temporal::PlainDateFields::new()));
+    error_of::<TypeError, _>(pd.add_with_duration_like(&Temporal::DurationLike::new()));
+    error_of::<TypeError, _>(
+        get_test_plain_year_month().to_plain_date_with_fields(&Temporal::PlainDateFields::new()),
+    );
+    let total = Temporal::DurationTotalOptions::new(Temporal::Unit::Day);
+    total.set_relative_to_with_plain_date_like(&Temporal::PlainDateLike::new());
+    error_of::<TypeError, _>(p1m.total(&total));
+    total.set_relative_to_with_str("not a date");
+    error_of::<RangeError, _>(p1m.total(&total));
+    let item = Temporal::ToZonedDateTimeItem::new("UTC");
+    item.set_plain_time_with_plain_time_like(&Temporal::PlainTimeLike::new());
+    error_of::<TypeError, _>(pd.to_zoned_date_time_with_to_zoned_date_time_item(&item));
+    let conflicting = Intl::DateTimeFormatOptions::new();
+    conflicting.set_time_style(Intl::DateTimeStyle::Short);
+    conflicting.set_hour(Intl::NumericFormat::Numeric);
+    error_of::<TypeError, _>(pd.to_locale_string_with_options(None, &conflicting));
+}
+
 #[wasm_bindgen_test]
 fn value_equality() {
     if !is_temporal_supported() {

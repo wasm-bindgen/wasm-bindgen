@@ -7145,7 +7145,7 @@ extern "C" {
     /// [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toTemporalInstant)
     #[cfg(js_sys_unstable_apis)]
     #[wasm_bindgen(method, js_name = toTemporalInstant, catch)]
-    pub fn to_temporal_instant(this: &Date) -> Result<Temporal::Instant, JsValue>;
+    pub fn to_temporal_instant(this: &Date) -> Result<Temporal::Instant, RangeError>;
 }
 
 // Property Descriptor.

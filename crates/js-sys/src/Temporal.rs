@@ -1449,7 +1449,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/Instant)
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
-    pub fn new(epoch_nanoseconds: &BigInt) -> Result<Instant, JsValue>;
+    pub fn new(epoch_nanoseconds: &BigInt) -> Result<Instant, RangeError>;
 
     /// The `Temporal.Instant.from()` static method creates a new `Temporal.Instant`
     /// object from another `Temporal.Instant`, a `Temporal.ZonedDateTime` or an RFC 9557 string.
@@ -1459,7 +1459,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/from)
     #[wasm_bindgen(static_method_of = Instant, js_namespace = Temporal, js_name = from, catch)]
-    pub fn from_with_str(item: &str) -> Result<Instant, JsValue>;
+    pub fn from_with_str(item: &str) -> Result<Instant, RangeError>;
 
     /// The `Temporal.Instant.from()` static method.
     #[wasm_bindgen(static_method_of = Instant, js_namespace = Temporal, js_name = from)]
@@ -1477,7 +1477,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/fromEpochMilliseconds)
     #[wasm_bindgen(static_method_of = Instant, js_namespace = Temporal, js_name = fromEpochMilliseconds, catch)]
-    pub fn from_epoch_milliseconds(epoch_milliseconds: f64) -> Result<Instant, JsValue>;
+    pub fn from_epoch_milliseconds(epoch_milliseconds: f64) -> Result<Instant, RangeError>;
 
     /// The `Temporal.Instant.fromEpochNanoseconds()` static method creates a new
     /// `Temporal.Instant` object from the number of nanoseconds since the Unix epoch.
@@ -1487,7 +1487,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/fromEpochNanoseconds)
     #[wasm_bindgen(static_method_of = Instant, js_namespace = Temporal, js_name = fromEpochNanoseconds, catch)]
-    pub fn from_epoch_nanoseconds(epoch_nanoseconds: &BigInt) -> Result<Instant, JsValue>;
+    pub fn from_epoch_nanoseconds(epoch_nanoseconds: &BigInt) -> Result<Instant, RangeError>;
 
     /// The `Temporal.Instant.compare()` static method returns -1, 0, or 1 depending
     /// on whether `one` comes before, is equal to, or comes after `two`.
@@ -1526,7 +1526,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/add)
     #[wasm_bindgen(method, catch)]
-    pub fn add(this: &Instant, duration: &Duration) -> Result<Instant, JsValue>;
+    pub fn add(this: &Instant, duration: &Duration) -> Result<Instant, RangeError>;
 
     /// The `equals()` method taking a `Temporal.ZonedDateTime`.
     #[wasm_bindgen(method, js_name = equals)]
@@ -1534,7 +1534,7 @@ extern "C" {
 
     /// The `equals()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid.
     #[wasm_bindgen(method, js_name = equals, catch)]
-    pub fn equals_with_str(this: &Instant, other: &str) -> Result<bool, JsValue>;
+    pub fn equals_with_str(this: &Instant, other: &str) -> Result<bool, RangeError>;
 
     /// The `subtract()` method returns a new `Temporal.Instant` object with the
     /// duration subtracted from this instant. The years, months, weeks, and days
@@ -1546,7 +1546,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/subtract)
     #[wasm_bindgen(method, catch)]
-    pub fn subtract(this: &Instant, duration: &Duration) -> Result<Instant, JsValue>;
+    pub fn subtract(this: &Instant, duration: &Duration) -> Result<Instant, RangeError>;
 
     /// The `add()` method taking a duration property bag.
     ///
@@ -1556,7 +1556,7 @@ extern "C" {
     pub fn add_with_duration_like(
         this: &Instant,
         duration: &DurationLike,
-    ) -> Result<Instant, JsValue>;
+    ) -> Result<Instant, Error>;
 
     /// The `subtract()` method taking a duration property bag.
     ///
@@ -1566,21 +1566,21 @@ extern "C" {
     pub fn subtract_with_duration_like(
         this: &Instant,
         duration: &DurationLike,
-    ) -> Result<Instant, JsValue>;
+    ) -> Result<Instant, Error>;
 
     /// The `subtract()` method taking an ISO 8601 duration string.
     ///
     /// # Errors
     /// Throws a `RangeError` if the string is not a valid duration; see [`Instant::subtract`] for the remaining errors.
     #[wasm_bindgen(method, js_name = subtract, catch)]
-    pub fn subtract_with_str(this: &Instant, duration: &str) -> Result<Instant, JsValue>;
+    pub fn subtract_with_str(this: &Instant, duration: &str) -> Result<Instant, RangeError>;
 
     /// The `add()` method taking an ISO 8601 duration string.
     ///
     /// # Errors
     /// Throws a `RangeError` if the string is not a valid duration; see [`Instant::add`] for the remaining errors.
     #[wasm_bindgen(method, js_name = add, catch)]
-    pub fn add_with_str(this: &Instant, duration: &str) -> Result<Instant, JsValue>;
+    pub fn add_with_str(this: &Instant, duration: &str) -> Result<Instant, RangeError>;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
     /// from this instant until `other`.
@@ -1601,7 +1601,7 @@ extern "C" {
         this: &Instant,
         other: &Instant,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this instant.
@@ -1621,11 +1621,11 @@ extern "C" {
         this: &Instant,
         other: &ZonedDateTime,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid.
     #[wasm_bindgen(method, js_name = until, catch)]
-    pub fn until_with_str(this: &Instant, other: &str) -> Result<Duration, JsValue>;
+    pub fn until_with_str(this: &Instant, other: &str) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking an ISO 8601 string and options; see [`Instant::until_with_options`]
     /// for errors.
@@ -1634,7 +1634,7 @@ extern "C" {
         this: &Instant,
         other: &str,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this instant.
@@ -1648,7 +1648,7 @@ extern "C" {
         this: &Instant,
         other: &Instant,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `round()` method returns a new `Temporal.Instant` object with the instant
     /// rounded to the given unit.
@@ -1659,7 +1659,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/round)
     #[wasm_bindgen(method, js_name = round, catch)]
-    pub fn round(this: &Instant, round_to: &RoundToOptions) -> Result<Instant, JsValue>;
+    pub fn round(this: &Instant, round_to: &RoundToOptions) -> Result<Instant, RangeError>;
 
     /// The `since()` method taking a `Temporal.ZonedDateTime`.
     #[wasm_bindgen(method, js_name = since)]
@@ -1672,11 +1672,11 @@ extern "C" {
         this: &Instant,
         other: &ZonedDateTime,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid.
     #[wasm_bindgen(method, js_name = since, catch)]
-    pub fn since_with_str(this: &Instant, other: &str) -> Result<Duration, JsValue>;
+    pub fn since_with_str(this: &Instant, other: &str) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking an ISO 8601 string and options; see [`Instant::since_with_options`]
     /// for errors.
@@ -1685,11 +1685,11 @@ extern "C" {
         this: &Instant,
         other: &str,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// Shorthand for `round()` with only `smallestUnit` set.
     #[wasm_bindgen(method, js_name = round, catch)]
-    pub fn round_with_unit(this: &Instant, smallest_unit: Unit) -> Result<Instant, JsValue>;
+    pub fn round_with_unit(this: &Instant, smallest_unit: Unit) -> Result<Instant, RangeError>;
 
     /// The `toZonedDateTimeISO()` method returns a `Temporal.ZonedDateTime`
     /// representing this instant in the ISO 8601 calendar and the given time zone.
@@ -1702,7 +1702,7 @@ extern "C" {
     pub fn to_zoned_date_time_iso(
         this: &Instant,
         time_zone: &str,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, RangeError>;
 
     /// The `toZonedDateTimeISO()` method in the time zone of the given `Temporal.ZonedDateTime`.
     #[wasm_bindgen(method, js_name = toZonedDateTimeISO)]
@@ -1715,39 +1715,43 @@ extern "C" {
     /// of this instant.
     ///
     /// # Errors
-    /// Throws a `RangeError` if `locales` or an option value is invalid.
+    /// Throws a `RangeError` if `locales` is invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string(this: &Instant) -> Result<JsString, JsValue>;
+    pub fn to_locale_string(this: &Instant) -> Result<JsString, RangeError>;
 
     /// The `toLocaleString()` method; see [`Instant::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string_with_str(this: &Instant, locales: &str) -> Result<JsString, JsValue>;
+    pub fn to_locale_string_with_str(this: &Instant, locales: &str)
+        -> Result<JsString, RangeError>;
 
     /// The `toLocaleString()` method; see [`Instant::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str_sequence(
         this: &Instant,
         locales: &[JsString],
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, RangeError>;
 
-    /// The `toLocaleString()` method; see [`Instant::to_locale_string`] for errors.
+    /// The `toLocaleString()` method with options; throws a `TypeError` if an option does not
+    /// apply to this type or conflicts with another. See [`Instant::to_locale_string`] for the
+    /// remaining errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str_sequence_and_options(
         this: &Instant,
         locales: &[JsString],
         options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, Error>;
 
-    /// The `toLocaleString()` method; `None` for `locales` uses the default locale. See
-    /// [`Instant::to_locale_string`] for errors.
+    /// The `toLocaleString()` method with options; `None` for `locales` uses the default locale.
+    /// Throws a `TypeError` if an option does not apply to this type or conflicts with another.
+    /// See [`Instant::to_locale_string`] for the remaining errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_options(
         this: &Instant,
         locales: Option<&str>,
         options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, Error>;
 
     /// The `toJSON()` method returns a string representation of this instant suitable
     /// for JSON serialization.
@@ -1773,7 +1777,7 @@ extern "C" {
     pub fn to_js_string_with_options(
         this: &Instant,
         options: &InstantToStringOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, RangeError>;
 }
 
 #[wasm_bindgen]
@@ -1795,7 +1799,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/PlainDateTime)
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
-    pub fn new(iso_year: i32, iso_month: u32, iso_day: u32) -> Result<PlainDateTime, JsValue>;
+    pub fn new(iso_year: i32, iso_month: u32, iso_day: u32) -> Result<PlainDateTime, RangeError>;
 
     /// The `Temporal.PlainDateTime()` constructor; see [`PlainDateTime::new`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -1804,7 +1808,7 @@ extern "C" {
         iso_month: u32,
         iso_day: u32,
         hour: u32,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `Temporal.PlainDateTime()` constructor; see [`PlainDateTime::new`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -1814,7 +1818,7 @@ extern "C" {
         iso_day: u32,
         hour: u32,
         minute: u32,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `Temporal.PlainDateTime()` constructor; see [`PlainDateTime::new`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -1825,7 +1829,7 @@ extern "C" {
         hour: u32,
         minute: u32,
         second: u32,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `Temporal.PlainDateTime()` constructor; see [`PlainDateTime::new`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -1837,7 +1841,7 @@ extern "C" {
         minute: u32,
         second: u32,
         millisecond: u32,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `Temporal.PlainDateTime()` constructor; see [`PlainDateTime::new`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -1850,7 +1854,7 @@ extern "C" {
         second: u32,
         millisecond: u32,
         microsecond: u32,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `Temporal.PlainDateTime()` constructor; see [`PlainDateTime::new`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -1864,7 +1868,7 @@ extern "C" {
         millisecond: u32,
         microsecond: u32,
         nanosecond: u32,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `Temporal.PlainDateTime()` constructor; see [`PlainDateTime::new`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -1879,7 +1883,7 @@ extern "C" {
         microsecond: u32,
         nanosecond: u32,
         calendar: &str,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `Temporal.PlainDateTime.from()` static method creates a new `Temporal.PlainDateTime`
     /// object from another value.
@@ -1890,27 +1894,28 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/from)
     #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from, catch)]
-    pub fn from_with_str(item: &str) -> Result<PlainDateTime, JsValue>;
+    pub fn from_with_str(item: &str) -> Result<PlainDateTime, RangeError>;
 
     /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_str`] for errors.
     #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str_and_options(
         item: &str,
         options: &OverflowOptions,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
-    /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_str`] for errors.
+    /// The `Temporal.PlainDateTime.from()` static method taking a property bag; throws a `TypeError` if
+    /// required fields are missing. See [`PlainDateTime::from_with_str`] for the remaining errors.
     #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from, catch)]
-    pub fn from_with_plain_date_time_like(
-        item: &PlainDateTimeLike,
-    ) -> Result<PlainDateTime, JsValue>;
+    pub fn from_with_plain_date_time_like(item: &PlainDateTimeLike)
+        -> Result<PlainDateTime, Error>;
 
-    /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_str`] for errors.
+    /// The `Temporal.PlainDateTime.from()` static method taking a property bag; throws a `TypeError` if
+    /// required fields are missing. See [`PlainDateTime::from_with_str`] for the remaining errors.
     #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_date_time_like_and_options(
         item: &PlainDateTimeLike,
         options: &OverflowOptions,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, Error>;
 
     /// The `Temporal.PlainDateTime.from()` static method.
     #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from)]
@@ -1928,14 +1933,14 @@ extern "C" {
     /// # Errors
     /// Throws a `RangeError` if midnight on the date falls outside the representable range.
     #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from, catch)]
-    pub fn from_with_plain_date(item: &PlainDate) -> Result<PlainDateTime, JsValue>;
+    pub fn from_with_plain_date(item: &PlainDate) -> Result<PlainDateTime, RangeError>;
 
     /// The `Temporal.PlainDateTime.from()` static method; see [`PlainDateTime::from_with_plain_date`] for errors.
     #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_date_and_options(
         item: &PlainDate,
         options: &OverflowOptions,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `Temporal.PlainDateTime.from()` static method.
     #[wasm_bindgen(static_method_of = PlainDateTime, js_namespace = Temporal, js_name = from)]
@@ -2126,16 +2131,16 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(
-        this: &PlainDateTime,
-        fields: &PlainDateTimeFields,
-    ) -> Result<PlainDateTime, JsValue>;
+    pub fn with(this: &PlainDateTime, fields: &PlainDateTimeFields)
+        -> Result<PlainDateTime, Error>;
 
     /// The `equals()` method taking a `Temporal.PlainDate`; throws a `RangeError` if midnight on
     /// the date falls outside the representable range.
     #[wasm_bindgen(method, js_name = equals, catch)]
-    pub fn equals_with_plain_date(this: &PlainDateTime, other: &PlainDate)
-        -> Result<bool, JsValue>;
+    pub fn equals_with_plain_date(
+        this: &PlainDateTime,
+        other: &PlainDate,
+    ) -> Result<bool, RangeError>;
 
     /// The `equals()` method taking a `Temporal.ZonedDateTime`.
     #[wasm_bindgen(method, js_name = equals)]
@@ -2146,11 +2151,11 @@ extern "C" {
     pub fn equals_with_plain_date_time_like(
         this: &PlainDateTime,
         other: &PlainDateTimeLike,
-    ) -> Result<bool, JsValue>;
+    ) -> Result<bool, Error>;
 
     /// The `equals()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid.
     #[wasm_bindgen(method, js_name = equals, catch)]
-    pub fn equals_with_str(this: &PlainDateTime, other: &str) -> Result<bool, JsValue>;
+    pub fn equals_with_str(this: &PlainDateTime, other: &str) -> Result<bool, RangeError>;
 
     /// The `with()` method returns a new `Temporal.PlainDateTime` object with some
     /// fields replaced by new values.
@@ -2165,7 +2170,7 @@ extern "C" {
         this: &PlainDateTime,
         fields: &PlainDateTimeFields,
         options: &OverflowOptions,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, Error>;
 
     /// The `withPlainTime()` method returns a new `Temporal.PlainDateTime` object with
     /// the time part replaced by the given time (or midnight if not provided).
@@ -2175,7 +2180,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/withPlainTime)
     #[wasm_bindgen(method, js_name = withPlainTime, catch)]
-    pub fn with_plain_time(this: &PlainDateTime) -> Result<PlainDateTime, JsValue>;
+    pub fn with_plain_time(this: &PlainDateTime) -> Result<PlainDateTime, RangeError>;
 
     /// The `withPlainTime()` method returns a new `Temporal.PlainDateTime` object with
     /// the time part replaced by the given time (or midnight if not provided).
@@ -2188,7 +2193,7 @@ extern "C" {
     pub fn with_plain_time_with_plain_time(
         this: &PlainDateTime,
         plain_time: &PlainTime,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `withCalendar()` method returns a new `Temporal.PlainDateTime` object with
     /// the calendar replaced.
@@ -2198,35 +2203,36 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/withCalendar)
     #[wasm_bindgen(method, js_name = withCalendar, catch)]
-    pub fn with_calendar(this: &PlainDateTime, calendar: &str) -> Result<PlainDateTime, JsValue>;
+    pub fn with_calendar(this: &PlainDateTime, calendar: &str)
+        -> Result<PlainDateTime, RangeError>;
 
     /// The `withPlainTime()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`PlainDateTime::with_plain_time`] for the remaining errors.
     #[wasm_bindgen(method, js_name = withPlainTime, catch)]
     pub fn with_plain_time_with_str(
         this: &PlainDateTime,
         plain_time: &str,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `withPlainTime()` method taking a property bag; throws a `TypeError` if no time field is present; see [`PlainDateTime::with_plain_time`] for the remaining errors.
     #[wasm_bindgen(method, js_name = withPlainTime, catch)]
     pub fn with_plain_time_with_plain_time_like(
         this: &PlainDateTime,
         plain_time: &PlainTimeLike,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, Error>;
 
     /// The `withPlainTime()` method taking a `Temporal.PlainDateTime`; see [`PlainDateTime::with_plain_time`] for errors.
     #[wasm_bindgen(method, js_name = withPlainTime, catch)]
     pub fn with_plain_time_with_plain_date_time(
         this: &PlainDateTime,
         plain_time: &PlainDateTime,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `withPlainTime()` method taking a `Temporal.ZonedDateTime`; see [`PlainDateTime::with_plain_time`] for errors.
     #[wasm_bindgen(method, js_name = withPlainTime, catch)]
     pub fn with_plain_time_with_zoned_date_time(
         this: &PlainDateTime,
         plain_time: &ZonedDateTime,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `withCalendar()` method taking the calendar of the given `Temporal.PlainDate`.
     #[wasm_bindgen(method, js_name = withCalendar)]
@@ -2272,7 +2278,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/add)
     #[wasm_bindgen(method, catch)]
-    pub fn add(this: &PlainDateTime, duration: &Duration) -> Result<PlainDateTime, JsValue>;
+    pub fn add(this: &PlainDateTime, duration: &Duration) -> Result<PlainDateTime, RangeError>;
 
     /// The `add()` method returns a new `Temporal.PlainDateTime` object with the
     /// duration added to this date-time.
@@ -2287,7 +2293,7 @@ extern "C" {
         this: &PlainDateTime,
         duration: &Duration,
         options: &OverflowOptions,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `add()` method taking a duration property bag.
     ///
@@ -2297,7 +2303,7 @@ extern "C" {
     pub fn add_with_duration_like(
         this: &PlainDateTime,
         duration: &DurationLike,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, Error>;
 
     /// The `add()` method taking a duration property bag and options; see
     /// [`PlainDateTime::add_with_duration_like`] for errors.
@@ -2306,7 +2312,7 @@ extern "C" {
         this: &PlainDateTime,
         duration: &DurationLike,
         options: &OverflowOptions,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, Error>;
 
     /// The `add()` method taking an ISO 8601 duration string and options; see
     /// [`PlainDateTime::add_with_str`] for errors.
@@ -2315,14 +2321,14 @@ extern "C" {
         this: &PlainDateTime,
         duration: &str,
         options: &OverflowOptions,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `add()` method taking an ISO 8601 duration string.
     ///
     /// # Errors
     /// Throws a `RangeError` if the string is not a valid duration; see [`PlainDateTime::add`] for the remaining errors.
     #[wasm_bindgen(method, js_name = add, catch)]
-    pub fn add_with_str(this: &PlainDateTime, duration: &str) -> Result<PlainDateTime, JsValue>;
+    pub fn add_with_str(this: &PlainDateTime, duration: &str) -> Result<PlainDateTime, RangeError>;
 
     /// The `subtract()` method returns a new `Temporal.PlainDateTime` object with the
     /// duration subtracted from this date-time.
@@ -2333,7 +2339,8 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/subtract)
     #[wasm_bindgen(method, catch)]
-    pub fn subtract(this: &PlainDateTime, duration: &Duration) -> Result<PlainDateTime, JsValue>;
+    pub fn subtract(this: &PlainDateTime, duration: &Duration)
+        -> Result<PlainDateTime, RangeError>;
 
     /// The `subtract()` method returns a new `Temporal.PlainDateTime` object with the
     /// duration subtracted from this date-time.
@@ -2348,7 +2355,7 @@ extern "C" {
         this: &PlainDateTime,
         duration: &Duration,
         options: &OverflowOptions,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `subtract()` method taking a duration property bag.
     ///
@@ -2358,7 +2365,7 @@ extern "C" {
     pub fn subtract_with_duration_like(
         this: &PlainDateTime,
         duration: &DurationLike,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, Error>;
 
     /// The `subtract()` method taking a duration property bag and options; see
     /// [`PlainDateTime::subtract_with_duration_like`] for errors.
@@ -2367,7 +2374,7 @@ extern "C" {
         this: &PlainDateTime,
         duration: &DurationLike,
         options: &OverflowOptions,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, Error>;
 
     /// The `subtract()` method taking an ISO 8601 duration string and options; see
     /// [`PlainDateTime::subtract_with_str`] for errors.
@@ -2376,7 +2383,7 @@ extern "C" {
         this: &PlainDateTime,
         duration: &str,
         options: &OverflowOptions,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `subtract()` method taking an ISO 8601 duration string.
     ///
@@ -2386,7 +2393,7 @@ extern "C" {
     pub fn subtract_with_str(
         this: &PlainDateTime,
         duration: &str,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
     /// from this date-time until `other`.
@@ -2396,7 +2403,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/until)
     #[wasm_bindgen(method, catch)]
-    pub fn until(this: &PlainDateTime, other: &PlainDateTime) -> Result<Duration, JsValue>;
+    pub fn until(this: &PlainDateTime, other: &PlainDateTime) -> Result<Duration, RangeError>;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
     /// from this date-time until `other`.
@@ -2410,7 +2417,7 @@ extern "C" {
         this: &PlainDateTime,
         other: &PlainDateTime,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this date-time.
@@ -2420,14 +2427,14 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/since)
     #[wasm_bindgen(method, catch)]
-    pub fn since(this: &PlainDateTime, other: &PlainDateTime) -> Result<Duration, JsValue>;
+    pub fn since(this: &PlainDateTime, other: &PlainDateTime) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking a `Temporal.PlainDate`; see [`PlainDateTime::until`] for errors.
     #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_plain_date(
         this: &PlainDateTime,
         other: &PlainDate,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking a `Temporal.PlainDate` and options; see [`PlainDateTime::until_with_options`]
     /// for errors.
@@ -2436,14 +2443,14 @@ extern "C" {
         this: &PlainDateTime,
         other: &PlainDate,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking a `Temporal.ZonedDateTime`; see [`PlainDateTime::until`] for errors.
     #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_zoned_date_time(
         this: &PlainDateTime,
         other: &ZonedDateTime,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking a `Temporal.ZonedDateTime` and options; see [`PlainDateTime::until_with_options`]
     /// for errors.
@@ -2452,27 +2459,27 @@ extern "C" {
         this: &PlainDateTime,
         other: &ZonedDateTime,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking a property bag; throws a `TypeError` if required fields are missing; see [`PlainDateTime::until`] for the remaining errors.
     #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_plain_date_time_like(
         this: &PlainDateTime,
         other: &PlainDateTimeLike,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, Error>;
 
-    /// The `until()` method taking a property bag and options; see [`PlainDateTime::until_with_options`]
-    /// for errors.
+    /// The `until()` method taking a property bag and options; throws a `TypeError` if required
+    /// fields are missing. See [`PlainDateTime::until_with_options`] for the remaining errors.
     #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_plain_date_time_like_and_options(
         this: &PlainDateTime,
         other: &PlainDateTimeLike,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, Error>;
 
     /// The `until()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`PlainDateTime::until`] for the remaining errors.
     #[wasm_bindgen(method, js_name = until, catch)]
-    pub fn until_with_str(this: &PlainDateTime, other: &str) -> Result<Duration, JsValue>;
+    pub fn until_with_str(this: &PlainDateTime, other: &str) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking an ISO 8601 string and options; see [`PlainDateTime::until_with_options`]
     /// for errors.
@@ -2481,7 +2488,7 @@ extern "C" {
         this: &PlainDateTime,
         other: &str,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this date-time.
@@ -2495,7 +2502,7 @@ extern "C" {
         this: &PlainDateTime,
         other: &PlainDateTime,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `round()` method returns a new `Temporal.PlainDateTime` object with the
     /// date-time rounded to the given unit.
@@ -2506,15 +2513,17 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/round)
     #[wasm_bindgen(method, js_name = round, catch)]
-    pub fn round(this: &PlainDateTime, round_to: &RoundToOptions)
-        -> Result<PlainDateTime, JsValue>;
+    pub fn round(
+        this: &PlainDateTime,
+        round_to: &RoundToOptions,
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `since()` method taking a `Temporal.PlainDate`; see [`PlainDateTime::since`] for errors.
     #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_plain_date(
         this: &PlainDateTime,
         other: &PlainDate,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking a `Temporal.PlainDate` and options; see [`PlainDateTime::since_with_options`]
     /// for errors.
@@ -2523,14 +2532,14 @@ extern "C" {
         this: &PlainDateTime,
         other: &PlainDate,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking a `Temporal.ZonedDateTime`; see [`PlainDateTime::since`] for errors.
     #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_zoned_date_time(
         this: &PlainDateTime,
         other: &ZonedDateTime,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking a `Temporal.ZonedDateTime` and options; see [`PlainDateTime::since_with_options`]
     /// for errors.
@@ -2539,27 +2548,27 @@ extern "C" {
         this: &PlainDateTime,
         other: &ZonedDateTime,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking a property bag; throws a `TypeError` if required fields are missing; see [`PlainDateTime::since`] for the remaining errors.
     #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_plain_date_time_like(
         this: &PlainDateTime,
         other: &PlainDateTimeLike,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, Error>;
 
-    /// The `since()` method taking a property bag and options; see [`PlainDateTime::since_with_options`]
-    /// for errors.
+    /// The `since()` method taking a property bag and options; throws a `TypeError` if required
+    /// fields are missing. See [`PlainDateTime::since_with_options`] for the remaining errors.
     #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_plain_date_time_like_and_options(
         this: &PlainDateTime,
         other: &PlainDateTimeLike,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, Error>;
 
     /// The `since()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`PlainDateTime::since`] for the remaining errors.
     #[wasm_bindgen(method, js_name = since, catch)]
-    pub fn since_with_str(this: &PlainDateTime, other: &str) -> Result<Duration, JsValue>;
+    pub fn since_with_str(this: &PlainDateTime, other: &str) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking an ISO 8601 string and options; see [`PlainDateTime::since_with_options`]
     /// for errors.
@@ -2568,14 +2577,14 @@ extern "C" {
         this: &PlainDateTime,
         other: &str,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// Shorthand for `round()` with only `smallestUnit` set.
     #[wasm_bindgen(method, js_name = round, catch)]
     pub fn round_with_unit(
         this: &PlainDateTime,
         smallest_unit: Unit,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `toZonedDateTime()` method returns a `Temporal.ZonedDateTime` with the
     /// same calendar date and wall-clock time in the given time zone.
@@ -2590,7 +2599,7 @@ extern "C" {
     pub fn to_zoned_date_time(
         this: &PlainDateTime,
         time_zone: &str,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, RangeError>;
 
     /// The `toZonedDateTime()` method returns a `Temporal.ZonedDateTime` with the
     /// same calendar date and wall-clock time in the given time zone.
@@ -2606,7 +2615,7 @@ extern "C" {
         this: &PlainDateTime,
         time_zone: &str,
         options: &DisambiguationOptions,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, RangeError>;
 
     /// The `toZonedDateTime()` method in the time zone of the given
     /// `Temporal.ZonedDateTime`; see [`PlainDateTime::to_zoned_date_time`] for errors.
@@ -2614,7 +2623,7 @@ extern "C" {
     pub fn to_zoned_date_time_with_zoned_date_time(
         this: &PlainDateTime,
         time_zone: &ZonedDateTime,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, RangeError>;
 
     /// The `toZonedDateTime()` method in the time zone of the given
     /// `Temporal.ZonedDateTime`; see [`PlainDateTime::to_zoned_date_time`] for errors.
@@ -2623,7 +2632,7 @@ extern "C" {
         this: &PlainDateTime,
         time_zone: &ZonedDateTime,
         options: &DisambiguationOptions,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, RangeError>;
 
     /// The `toPlainDate()` method returns a `Temporal.PlainDate` object representing
     /// the date part of this date-time.
@@ -2644,43 +2653,45 @@ extern "C" {
     ///
     /// # Errors
     /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
-    /// not match this value's calendar, and a `TypeError` for options that do not
-    /// apply to this type.
+    /// not match this value's calendar.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDateTime/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string(this: &PlainDateTime) -> Result<JsString, JsValue>;
+    pub fn to_locale_string(this: &PlainDateTime) -> Result<JsString, RangeError>;
 
     /// The `toLocaleString()` method; see [`PlainDateTime::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str(
         this: &PlainDateTime,
         locales: &str,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, RangeError>;
 
     /// The `toLocaleString()` method; see [`PlainDateTime::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str_sequence(
         this: &PlainDateTime,
         locales: &[JsString],
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, RangeError>;
 
-    /// The `toLocaleString()` method; see [`PlainDateTime::to_locale_string`] for errors.
+    /// The `toLocaleString()` method with options; throws a `TypeError` if an option does not
+    /// apply to this type or conflicts with another. See [`PlainDateTime::to_locale_string`] for the
+    /// remaining errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str_sequence_and_options(
         this: &PlainDateTime,
         locales: &[JsString],
         options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, Error>;
 
-    /// The `toLocaleString()` method; `None` for `locales` uses the default locale. See
-    /// [`PlainDateTime::to_locale_string`] for errors.
+    /// The `toLocaleString()` method with options; `None` for `locales` uses the default locale.
+    /// Throws a `TypeError` if an option does not apply to this type or conflicts with another.
+    /// See [`PlainDateTime::to_locale_string`] for the remaining errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_options(
         this: &PlainDateTime,
         locales: Option<&str>,
         options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, Error>;
 
     /// The `toJSON()` method returns a string representation of this date-time suitable
     /// for JSON serialization.
@@ -2706,7 +2717,7 @@ extern "C" {
     pub fn to_js_string_with_options(
         this: &PlainDateTime,
         options: &CalendarTypeToStringOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, RangeError>;
 }
 
 #[wasm_bindgen]
@@ -2729,7 +2740,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/ZonedDateTime)
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
-    pub fn new(epoch_nanoseconds: &BigInt, time_zone: &str) -> Result<ZonedDateTime, JsValue>;
+    pub fn new(epoch_nanoseconds: &BigInt, time_zone: &str) -> Result<ZonedDateTime, RangeError>;
 
     /// The `Temporal.ZonedDateTime()` constructor creates `Temporal.ZonedDateTime` objects
     /// in the given calendar.
@@ -2745,7 +2756,7 @@ extern "C" {
         epoch_nanoseconds: &BigInt,
         time_zone: &str,
         calendar: &str,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, RangeError>;
 
     /// The `Temporal.ZonedDateTime.from()` static method creates a new `Temporal.ZonedDateTime`
     /// object from another value.
@@ -2756,27 +2767,28 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/from)
     #[wasm_bindgen(static_method_of = ZonedDateTime, js_namespace = Temporal, js_name = from, catch)]
-    pub fn from_with_str(item: &str) -> Result<ZonedDateTime, JsValue>;
+    pub fn from_with_str(item: &str) -> Result<ZonedDateTime, RangeError>;
 
     /// The `Temporal.ZonedDateTime.from()` static method; see [`ZonedDateTime::from_with_str`] for errors.
     #[wasm_bindgen(static_method_of = ZonedDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str_and_options(
         item: &str,
         options: &ZonedDateTimeAssignmentOptions,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, RangeError>;
 
-    /// The `Temporal.ZonedDateTime.from()` static method; see [`ZonedDateTime::from_with_str`] for errors.
+    /// The `Temporal.ZonedDateTime.from()` static method taking a property bag; throws a `TypeError` if
+    /// required fields are missing. See [`ZonedDateTime::from_with_str`] for the remaining errors.
     #[wasm_bindgen(static_method_of = ZonedDateTime, js_namespace = Temporal, js_name = from, catch)]
-    pub fn from_with_zoned_date_time_like(
-        item: &ZonedDateTimeLike,
-    ) -> Result<ZonedDateTime, JsValue>;
+    pub fn from_with_zoned_date_time_like(item: &ZonedDateTimeLike)
+        -> Result<ZonedDateTime, Error>;
 
-    /// The `Temporal.ZonedDateTime.from()` static method; see [`ZonedDateTime::from_with_str`] for errors.
+    /// The `Temporal.ZonedDateTime.from()` static method taking a property bag; throws a `TypeError` if
+    /// required fields are missing. See [`ZonedDateTime::from_with_str`] for the remaining errors.
     #[wasm_bindgen(static_method_of = ZonedDateTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_zoned_date_time_like_and_options(
         item: &ZonedDateTimeLike,
         options: &ZonedDateTimeAssignmentOptions,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, Error>;
 
     /// The `Temporal.ZonedDateTime.from()` static method.
     #[wasm_bindgen(static_method_of = ZonedDateTime, js_namespace = Temporal, js_name = from)]
@@ -2932,7 +2944,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/hoursInDay)
     #[wasm_bindgen(method, getter = hoursInDay, catch)]
-    pub fn hours_in_day(this: &ZonedDateTime) -> Result<f64, JsValue>;
+    pub fn hours_in_day(this: &ZonedDateTime) -> Result<f64, RangeError>;
 
     /// The `daysInWeek` accessor property returns a positive integer representing the
     /// number of days in the week of this date.
@@ -3013,21 +3025,19 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(
-        this: &ZonedDateTime,
-        fields: &ZonedDateTimeFields,
-    ) -> Result<ZonedDateTime, JsValue>;
+    pub fn with(this: &ZonedDateTime, fields: &ZonedDateTimeFields)
+        -> Result<ZonedDateTime, Error>;
 
     /// The `equals()` method taking a property bag; throws a `TypeError` if required fields are missing.
     #[wasm_bindgen(method, js_name = equals, catch)]
     pub fn equals_with_zoned_date_time_like(
         this: &ZonedDateTime,
         other: &ZonedDateTimeLike,
-    ) -> Result<bool, JsValue>;
+    ) -> Result<bool, Error>;
 
     /// The `equals()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid.
     #[wasm_bindgen(method, js_name = equals, catch)]
-    pub fn equals_with_str(this: &ZonedDateTime, other: &str) -> Result<bool, JsValue>;
+    pub fn equals_with_str(this: &ZonedDateTime, other: &str) -> Result<bool, RangeError>;
 
     /// The `with()` method returns a new `Temporal.ZonedDateTime` object with some fields
     /// replaced by new values.
@@ -3043,7 +3053,7 @@ extern "C" {
         this: &ZonedDateTime,
         fields: &ZonedDateTimeFields,
         options: &ZonedDateTimeAssignmentOptions,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, Error>;
 
     /// The `withPlainTime()` method returns a new `Temporal.ZonedDateTime` object with
     /// the time part replaced by the given time (or the start of the day if not provided).
@@ -3053,7 +3063,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/withPlainTime)
     #[wasm_bindgen(method, js_name = withPlainTime, catch)]
-    pub fn with_plain_time(this: &ZonedDateTime) -> Result<ZonedDateTime, JsValue>;
+    pub fn with_plain_time(this: &ZonedDateTime) -> Result<ZonedDateTime, RangeError>;
 
     /// The `withPlainTime()` method returns a new `Temporal.ZonedDateTime` object with
     /// the time part replaced by the given time (or the start of the day if not provided).
@@ -3066,7 +3076,7 @@ extern "C" {
     pub fn with_plain_time_with_plain_time(
         this: &ZonedDateTime,
         plain_time: &PlainTime,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, RangeError>;
 
     /// The `withCalendar()` method returns a new `Temporal.ZonedDateTime` object with
     /// the calendar replaced.
@@ -3076,35 +3086,36 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/withCalendar)
     #[wasm_bindgen(method, js_name = withCalendar, catch)]
-    pub fn with_calendar(this: &ZonedDateTime, calendar: &str) -> Result<ZonedDateTime, JsValue>;
+    pub fn with_calendar(this: &ZonedDateTime, calendar: &str)
+        -> Result<ZonedDateTime, RangeError>;
 
     /// The `withPlainTime()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`ZonedDateTime::with_plain_time`] for the remaining errors.
     #[wasm_bindgen(method, js_name = withPlainTime, catch)]
     pub fn with_plain_time_with_str(
         this: &ZonedDateTime,
         plain_time: &str,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, RangeError>;
 
     /// The `withPlainTime()` method taking a property bag; throws a `TypeError` if no time field is present; see [`ZonedDateTime::with_plain_time`] for the remaining errors.
     #[wasm_bindgen(method, js_name = withPlainTime, catch)]
     pub fn with_plain_time_with_plain_time_like(
         this: &ZonedDateTime,
         plain_time: &PlainTimeLike,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, Error>;
 
     /// The `withPlainTime()` method taking a `Temporal.PlainDateTime`; see [`ZonedDateTime::with_plain_time`] for errors.
     #[wasm_bindgen(method, js_name = withPlainTime, catch)]
     pub fn with_plain_time_with_plain_date_time(
         this: &ZonedDateTime,
         plain_time: &PlainDateTime,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, RangeError>;
 
     /// The `withPlainTime()` method taking a `Temporal.ZonedDateTime`; see [`ZonedDateTime::with_plain_time`] for errors.
     #[wasm_bindgen(method, js_name = withPlainTime, catch)]
     pub fn with_plain_time_with_zoned_date_time(
         this: &ZonedDateTime,
         plain_time: &ZonedDateTime,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, RangeError>;
 
     /// The `withCalendar()` method taking the calendar of the given `Temporal.PlainDate`.
     #[wasm_bindgen(method, js_name = withCalendar)]
@@ -3149,7 +3160,10 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/withTimeZone)
     #[wasm_bindgen(method, js_name = withTimeZone, catch)]
-    pub fn with_time_zone(this: &ZonedDateTime, time_zone: &str) -> Result<ZonedDateTime, JsValue>;
+    pub fn with_time_zone(
+        this: &ZonedDateTime,
+        time_zone: &str,
+    ) -> Result<ZonedDateTime, RangeError>;
 
     /// The `withTimeZone()` method taking the time zone of the given `Temporal.ZonedDateTime`.
     #[wasm_bindgen(method, js_name = withTimeZone)]
@@ -3167,7 +3181,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/add)
     #[wasm_bindgen(method, catch)]
-    pub fn add(this: &ZonedDateTime, duration: &Duration) -> Result<ZonedDateTime, JsValue>;
+    pub fn add(this: &ZonedDateTime, duration: &Duration) -> Result<ZonedDateTime, RangeError>;
 
     /// The `add()` method returns a new `Temporal.ZonedDateTime` object with the
     /// duration added to this zoned date-time.
@@ -3182,7 +3196,7 @@ extern "C" {
         this: &ZonedDateTime,
         duration: &Duration,
         options: &OverflowOptions,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, RangeError>;
 
     /// The `add()` method taking a duration property bag.
     ///
@@ -3192,7 +3206,7 @@ extern "C" {
     pub fn add_with_duration_like(
         this: &ZonedDateTime,
         duration: &DurationLike,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, Error>;
 
     /// The `add()` method taking a duration property bag and options; see
     /// [`ZonedDateTime::add_with_duration_like`] for errors.
@@ -3201,7 +3215,7 @@ extern "C" {
         this: &ZonedDateTime,
         duration: &DurationLike,
         options: &OverflowOptions,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, Error>;
 
     /// The `add()` method taking an ISO 8601 duration string and options; see
     /// [`ZonedDateTime::add_with_str`] for errors.
@@ -3210,14 +3224,14 @@ extern "C" {
         this: &ZonedDateTime,
         duration: &str,
         options: &OverflowOptions,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, RangeError>;
 
     /// The `add()` method taking an ISO 8601 duration string.
     ///
     /// # Errors
     /// Throws a `RangeError` if the string is not a valid duration; see [`ZonedDateTime::add`] for the remaining errors.
     #[wasm_bindgen(method, js_name = add, catch)]
-    pub fn add_with_str(this: &ZonedDateTime, duration: &str) -> Result<ZonedDateTime, JsValue>;
+    pub fn add_with_str(this: &ZonedDateTime, duration: &str) -> Result<ZonedDateTime, RangeError>;
 
     /// The `subtract()` method returns a new `Temporal.ZonedDateTime` object with the
     /// duration subtracted from this zoned date-time.
@@ -3228,7 +3242,8 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/subtract)
     #[wasm_bindgen(method, catch)]
-    pub fn subtract(this: &ZonedDateTime, duration: &Duration) -> Result<ZonedDateTime, JsValue>;
+    pub fn subtract(this: &ZonedDateTime, duration: &Duration)
+        -> Result<ZonedDateTime, RangeError>;
 
     /// The `subtract()` method returns a new `Temporal.ZonedDateTime` object with the
     /// duration subtracted from this zoned date-time.
@@ -3243,7 +3258,7 @@ extern "C" {
         this: &ZonedDateTime,
         duration: &Duration,
         options: &OverflowOptions,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, RangeError>;
 
     /// The `subtract()` method taking a duration property bag.
     ///
@@ -3253,7 +3268,7 @@ extern "C" {
     pub fn subtract_with_duration_like(
         this: &ZonedDateTime,
         duration: &DurationLike,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, Error>;
 
     /// The `subtract()` method taking a duration property bag and options; see
     /// [`ZonedDateTime::subtract_with_duration_like`] for errors.
@@ -3262,7 +3277,7 @@ extern "C" {
         this: &ZonedDateTime,
         duration: &DurationLike,
         options: &OverflowOptions,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, Error>;
 
     /// The `subtract()` method taking an ISO 8601 duration string and options; see
     /// [`ZonedDateTime::subtract_with_str`] for errors.
@@ -3271,7 +3286,7 @@ extern "C" {
         this: &ZonedDateTime,
         duration: &str,
         options: &OverflowOptions,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, RangeError>;
 
     /// The `subtract()` method taking an ISO 8601 duration string.
     ///
@@ -3281,7 +3296,7 @@ extern "C" {
     pub fn subtract_with_str(
         this: &ZonedDateTime,
         duration: &str,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, RangeError>;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
     /// from this zoned date-time until `other`.
@@ -3291,7 +3306,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/until)
     #[wasm_bindgen(method, catch)]
-    pub fn until(this: &ZonedDateTime, other: &ZonedDateTime) -> Result<Duration, JsValue>;
+    pub fn until(this: &ZonedDateTime, other: &ZonedDateTime) -> Result<Duration, RangeError>;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
     /// from this zoned date-time until `other`.
@@ -3305,7 +3320,7 @@ extern "C" {
         this: &ZonedDateTime,
         other: &ZonedDateTime,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this zoned date-time.
@@ -3315,27 +3330,27 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/since)
     #[wasm_bindgen(method, catch)]
-    pub fn since(this: &ZonedDateTime, other: &ZonedDateTime) -> Result<Duration, JsValue>;
+    pub fn since(this: &ZonedDateTime, other: &ZonedDateTime) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking a property bag; throws a `TypeError` if required fields are missing; see [`ZonedDateTime::until`] for the remaining errors.
     #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_zoned_date_time_like(
         this: &ZonedDateTime,
         other: &ZonedDateTimeLike,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, Error>;
 
-    /// The `until()` method taking a property bag and options; see [`ZonedDateTime::until_with_options`]
-    /// for errors.
+    /// The `until()` method taking a property bag and options; throws a `TypeError` if required
+    /// fields are missing. See [`ZonedDateTime::until_with_options`] for the remaining errors.
     #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_zoned_date_time_like_and_options(
         this: &ZonedDateTime,
         other: &ZonedDateTimeLike,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, Error>;
 
     /// The `until()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`ZonedDateTime::until`] for the remaining errors.
     #[wasm_bindgen(method, js_name = until, catch)]
-    pub fn until_with_str(this: &ZonedDateTime, other: &str) -> Result<Duration, JsValue>;
+    pub fn until_with_str(this: &ZonedDateTime, other: &str) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking an ISO 8601 string and options; see [`ZonedDateTime::until_with_options`]
     /// for errors.
@@ -3344,7 +3359,7 @@ extern "C" {
         this: &ZonedDateTime,
         other: &str,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this zoned date-time.
@@ -3358,7 +3373,7 @@ extern "C" {
         this: &ZonedDateTime,
         other: &ZonedDateTime,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `round()` method returns a new `Temporal.ZonedDateTime` object with the
     /// zoned date-time rounded to the given unit.
@@ -3370,28 +3385,30 @@ extern "C" {
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/round)
     ///
     #[wasm_bindgen(method, js_name = round, catch)]
-    pub fn round(this: &ZonedDateTime, round_to: &RoundToOptions)
-        -> Result<ZonedDateTime, JsValue>;
+    pub fn round(
+        this: &ZonedDateTime,
+        round_to: &RoundToOptions,
+    ) -> Result<ZonedDateTime, RangeError>;
 
     /// The `since()` method taking a property bag; throws a `TypeError` if required fields are missing; see [`ZonedDateTime::since`] for the remaining errors.
     #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_zoned_date_time_like(
         this: &ZonedDateTime,
         other: &ZonedDateTimeLike,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, Error>;
 
-    /// The `since()` method taking a property bag and options; see [`ZonedDateTime::since_with_options`]
-    /// for errors.
+    /// The `since()` method taking a property bag and options; throws a `TypeError` if required
+    /// fields are missing. See [`ZonedDateTime::since_with_options`] for the remaining errors.
     #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_zoned_date_time_like_and_options(
         this: &ZonedDateTime,
         other: &ZonedDateTimeLike,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, Error>;
 
     /// The `since()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`ZonedDateTime::since`] for the remaining errors.
     #[wasm_bindgen(method, js_name = since, catch)]
-    pub fn since_with_str(this: &ZonedDateTime, other: &str) -> Result<Duration, JsValue>;
+    pub fn since_with_str(this: &ZonedDateTime, other: &str) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking an ISO 8601 string and options; see [`ZonedDateTime::since_with_options`]
     /// for errors.
@@ -3400,14 +3417,14 @@ extern "C" {
         this: &ZonedDateTime,
         other: &str,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// Shorthand for `round()` with only `smallestUnit` set.
     #[wasm_bindgen(method, js_name = round, catch)]
     pub fn round_with_unit(
         this: &ZonedDateTime,
         smallest_unit: Unit,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, RangeError>;
 
     /// The `startOfDay()` method returns a `Temporal.ZonedDateTime` object representing
     /// the start of the day (usually midnight) of this zoned date-time.
@@ -3417,7 +3434,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/startOfDay)
     #[wasm_bindgen(method, js_name = startOfDay, catch)]
-    pub fn start_of_day(this: &ZonedDateTime) -> Result<ZonedDateTime, JsValue>;
+    pub fn start_of_day(this: &ZonedDateTime) -> Result<ZonedDateTime, RangeError>;
 
     /// The `getTimeZoneTransition()` method returns a `Temporal.ZonedDateTime`
     /// representing the closest UTC offset transition in this time zone in the
@@ -3470,43 +3487,45 @@ extern "C" {
     ///
     /// # Errors
     /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
-    /// not match this value's calendar, and a `TypeError` for options that do not
-    /// apply to this type.
+    /// not match this value's calendar.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string(this: &ZonedDateTime) -> Result<JsString, JsValue>;
+    pub fn to_locale_string(this: &ZonedDateTime) -> Result<JsString, RangeError>;
 
     /// The `toLocaleString()` method; see [`ZonedDateTime::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str(
         this: &ZonedDateTime,
         locales: &str,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, RangeError>;
 
     /// The `toLocaleString()` method; see [`ZonedDateTime::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str_sequence(
         this: &ZonedDateTime,
         locales: &[JsString],
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, RangeError>;
 
-    /// The `toLocaleString()` method; see [`ZonedDateTime::to_locale_string`] for errors.
+    /// The `toLocaleString()` method with options; throws a `TypeError` if an option does not
+    /// apply to this type or conflicts with another. See [`ZonedDateTime::to_locale_string`] for the
+    /// remaining errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str_sequence_and_options(
         this: &ZonedDateTime,
         locales: &[JsString],
         options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, Error>;
 
-    /// The `toLocaleString()` method; `None` for `locales` uses the default locale. See
-    /// [`ZonedDateTime::to_locale_string`] for errors.
+    /// The `toLocaleString()` method with options; `None` for `locales` uses the default locale.
+    /// Throws a `TypeError` if an option does not apply to this type or conflicts with another.
+    /// See [`ZonedDateTime::to_locale_string`] for the remaining errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_options(
         this: &ZonedDateTime,
         locales: Option<&str>,
         options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, Error>;
 
     /// The `toJSON()` method returns a string representation of this zoned date-time
     /// suitable for JSON serialization.
@@ -3532,7 +3551,7 @@ extern "C" {
     pub fn to_js_string_with_options(
         this: &ZonedDateTime,
         options: &ZonedDateTimeToStringOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, RangeError>;
 }
 
 #[wasm_bindgen]
@@ -3558,11 +3577,11 @@ extern "C" {
     /// Throws a `RangeError` if any field is non-integer, infinite, exceeds the
     /// safe integer range, or if fields have mixed signs.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
-    pub fn new_with_years(years: f64) -> Result<Duration, JsValue>;
+    pub fn new_with_years(years: f64) -> Result<Duration, RangeError>;
 
     /// The `Temporal.Duration()` constructor; see [`Duration::new_with_years`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
-    pub fn new_with_years_and_months(years: f64, months: f64) -> Result<Duration, JsValue>;
+    pub fn new_with_years_and_months(years: f64, months: f64) -> Result<Duration, RangeError>;
 
     /// The `Temporal.Duration()` constructor; see [`Duration::new_with_years`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -3570,7 +3589,7 @@ extern "C" {
         years: f64,
         months: f64,
         weeks: f64,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `Temporal.Duration()` constructor; see [`Duration::new_with_years`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -3579,7 +3598,7 @@ extern "C" {
         months: f64,
         weeks: f64,
         days: f64,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `Temporal.Duration()` constructor; see [`Duration::new_with_years`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -3589,7 +3608,7 @@ extern "C" {
         weeks: f64,
         days: f64,
         hours: f64,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `Temporal.Duration()` constructor; see [`Duration::new_with_years`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -3600,7 +3619,7 @@ extern "C" {
         days: f64,
         hours: f64,
         minutes: f64,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `Temporal.Duration()` constructor; see [`Duration::new_with_years`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -3612,7 +3631,7 @@ extern "C" {
         hours: f64,
         minutes: f64,
         seconds: f64,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `Temporal.Duration()` constructor; see [`Duration::new_with_years`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -3625,7 +3644,7 @@ extern "C" {
         minutes: f64,
         seconds: f64,
         milliseconds: f64,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `Temporal.Duration()` constructor; see [`Duration::new_with_years`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -3639,7 +3658,7 @@ extern "C" {
         seconds: f64,
         milliseconds: f64,
         microseconds: f64,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `Temporal.Duration()` constructor; see [`Duration::new_with_years`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -3654,7 +3673,7 @@ extern "C" {
         milliseconds: f64,
         microseconds: f64,
         nanoseconds: f64,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `Temporal.Duration.from()` static method creates a new `Temporal.Duration`
     /// object from another Duration, an object with duration properties, or an ISO 8601 string.
@@ -3665,11 +3684,12 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/from)
     #[wasm_bindgen(static_method_of = Duration, js_namespace = Temporal, js_name = from, catch)]
-    pub fn from_with_str(item: &str) -> Result<Duration, JsValue>;
+    pub fn from_with_str(item: &str) -> Result<Duration, RangeError>;
 
-    /// The `Temporal.Duration.from()` static method; see [`Duration::from_with_str`] for errors.
+    /// The `Temporal.Duration.from()` static method taking a property bag; throws a `TypeError` if
+    /// required fields are missing. See [`Duration::from_with_str`] for the remaining errors.
     #[wasm_bindgen(static_method_of = Duration, js_namespace = Temporal, js_name = from, catch)]
-    pub fn from_with_duration_like(item: &DurationLike) -> Result<Duration, JsValue>;
+    pub fn from_with_duration_like(item: &DurationLike) -> Result<Duration, Error>;
 
     /// The `Temporal.Duration.from()` static method.
     #[wasm_bindgen(static_method_of = Duration, js_namespace = Temporal, js_name = from)]
@@ -3684,7 +3704,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/compare)
     #[wasm_bindgen(static_method_of = Duration, js_namespace = Temporal, catch)]
-    pub fn compare(one: &Duration, two: &Duration) -> Result<i32, JsValue>;
+    pub fn compare(one: &Duration, two: &Duration) -> Result<i32, RangeError>;
 
     /// The `Temporal.Duration.compare()` static method returns -1, 0, or 1 depending
     /// on whether `one` is shorter than, equal to, or longer than `two`.
@@ -3692,6 +3712,7 @@ extern "C" {
     /// # Errors
     /// Throws a `RangeError` if `relativeTo` is required (when either duration has
     /// calendar units like years, months, or weeks) but not provided.
+    /// Throws a `TypeError` if `relativeTo` is a property bag missing required fields.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/compare)
     #[wasm_bindgen(static_method_of = Duration, js_namespace = Temporal, js_name = compare, catch)]
@@ -3699,7 +3720,7 @@ extern "C" {
         one: &Duration,
         two: &Duration,
         options: &RelativeToOptions,
-    ) -> Result<i32, JsValue>;
+    ) -> Result<i32, Error>;
 
     /// The `sign` accessor property returns -1, 0, or 1 depending on whether
     /// the duration is negative, zero, or positive.
@@ -3798,7 +3819,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(this: &Duration, fields: &DurationLike) -> Result<Duration, JsValue>;
+    pub fn with(this: &Duration, fields: &DurationLike) -> Result<Duration, Error>;
 
     /// The `add()` method returns a new `Temporal.Duration` object with the
     /// sum of this duration and another duration.
@@ -3809,7 +3830,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/add)
     #[wasm_bindgen(method, catch)]
-    pub fn add(this: &Duration, other: &Duration) -> Result<Duration, JsValue>;
+    pub fn add(this: &Duration, other: &Duration) -> Result<Duration, RangeError>;
 
     /// The `subtract()` method returns a new `Temporal.Duration` object with the
     /// difference of this duration and another duration.
@@ -3820,17 +3841,15 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/subtract)
     #[wasm_bindgen(method, catch)]
-    pub fn subtract(this: &Duration, other: &Duration) -> Result<Duration, JsValue>;
+    pub fn subtract(this: &Duration, other: &Duration) -> Result<Duration, RangeError>;
 
     /// The `add()` method taking a duration property bag.
     ///
     /// # Errors
     /// Throws a `TypeError` if no duration field is set; see [`Duration::add`] for the remaining errors.
     #[wasm_bindgen(method, js_name = add, catch)]
-    pub fn add_with_duration_like(
-        this: &Duration,
-        other: &DurationLike,
-    ) -> Result<Duration, JsValue>;
+    pub fn add_with_duration_like(this: &Duration, other: &DurationLike)
+        -> Result<Duration, Error>;
 
     /// The `subtract()` method taking a duration property bag.
     ///
@@ -3840,21 +3859,21 @@ extern "C" {
     pub fn subtract_with_duration_like(
         this: &Duration,
         other: &DurationLike,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, Error>;
 
     /// The `subtract()` method taking an ISO 8601 duration string.
     ///
     /// # Errors
     /// Throws a `RangeError` if the string is not a valid duration; see [`Duration::subtract`] for the remaining errors.
     #[wasm_bindgen(method, js_name = subtract, catch)]
-    pub fn subtract_with_str(this: &Duration, other: &str) -> Result<Duration, JsValue>;
+    pub fn subtract_with_str(this: &Duration, other: &str) -> Result<Duration, RangeError>;
 
     /// The `add()` method taking an ISO 8601 duration string.
     ///
     /// # Errors
     /// Throws a `RangeError` if the string is not a valid duration; see [`Duration::add`] for the remaining errors.
     #[wasm_bindgen(method, js_name = add, catch)]
-    pub fn add_with_str(this: &Duration, other: &str) -> Result<Duration, JsValue>;
+    pub fn add_with_str(this: &Duration, other: &str) -> Result<Duration, RangeError>;
 
     /// The `round()` method returns a new `Temporal.Duration` object with the
     /// duration rounded and/or balanced to the given options.
@@ -3863,14 +3882,15 @@ extern "C" {
     /// Throws a `RangeError` if neither `smallestUnit` nor `largestUnit` is provided,
     /// if `relativeTo` is required for calendar units but not provided, or if options
     /// are invalid.
+    /// Throws a `TypeError` if `relativeTo` is a property bag missing required fields.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/round)
     #[wasm_bindgen(method, js_name = round, catch)]
-    pub fn round(this: &Duration, round_to: &DurationRoundToOptions) -> Result<Duration, JsValue>;
+    pub fn round(this: &Duration, round_to: &DurationRoundToOptions) -> Result<Duration, Error>;
 
     /// Shorthand for `round()` with only `smallestUnit` set.
     #[wasm_bindgen(method, js_name = round, catch)]
-    pub fn round_with_unit(this: &Duration, smallest_unit: Unit) -> Result<Duration, JsValue>;
+    pub fn round_with_unit(this: &Duration, smallest_unit: Unit) -> Result<Duration, RangeError>;
 
     /// The `total()` method returns the total number of the specified unit that
     /// fits in the duration as a floating point number.
@@ -3878,14 +3898,15 @@ extern "C" {
     /// # Errors
     /// Throws a `RangeError` if `unit` is not provided, or if `relativeTo` is required
     /// for calendar units (years, months, weeks) but not provided.
+    /// Throws a `TypeError` if `relativeTo` is a property bag missing required fields.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/total)
     #[wasm_bindgen(method, js_name = total, catch)]
-    pub fn total(this: &Duration, total_of: &DurationTotalOptions) -> Result<f64, JsValue>;
+    pub fn total(this: &Duration, total_of: &DurationTotalOptions) -> Result<f64, Error>;
 
     /// Shorthand for `total()` with only `unit` set.
     #[wasm_bindgen(method, js_name = total, catch)]
-    pub fn total_with_unit(this: &Duration, unit: Unit) -> Result<f64, JsValue>;
+    pub fn total_with_unit(this: &Duration, unit: Unit) -> Result<f64, RangeError>;
 
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this duration.
@@ -3893,39 +3914,45 @@ extern "C" {
     /// `options` are `Intl.DurationFormat` options.
     ///
     /// # Errors
-    /// Throws a `RangeError` if `locales` or an option value is invalid.
+    /// Throws a `RangeError` if `locales` is invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Duration/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string(this: &Duration) -> Result<JsString, JsValue>;
+    pub fn to_locale_string(this: &Duration) -> Result<JsString, RangeError>;
 
     /// The `toLocaleString()` method; see [`Duration::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string_with_str(this: &Duration, locales: &str) -> Result<JsString, JsValue>;
+    pub fn to_locale_string_with_str(
+        this: &Duration,
+        locales: &str,
+    ) -> Result<JsString, RangeError>;
 
     /// The `toLocaleString()` method; see [`Duration::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str_sequence(
         this: &Duration,
         locales: &[JsString],
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, RangeError>;
 
-    /// The `toLocaleString()` method; see [`Duration::to_locale_string`] for errors.
+    /// The `toLocaleString()` method with options; throws a `TypeError` if an option does not
+    /// apply to this type or conflicts with another. See [`Duration::to_locale_string`] for the
+    /// remaining errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str_sequence_and_options(
         this: &Duration,
         locales: &[JsString],
         options: &Intl::DurationFormatOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, Error>;
 
-    /// The `toLocaleString()` method; `None` for `locales` uses the default locale. See
-    /// [`Duration::to_locale_string`] for errors.
+    /// The `toLocaleString()` method with options; `None` for `locales` uses the default locale.
+    /// Throws a `TypeError` if an option does not apply to this type or conflicts with another.
+    /// See [`Duration::to_locale_string`] for the remaining errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_options(
         this: &Duration,
         locales: Option<&str>,
         options: &Intl::DurationFormatOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, Error>;
 
     /// The `toJSON()` method returns a string representation of this duration
     /// suitable for JSON serialization (same as `toString()`).
@@ -3951,7 +3978,7 @@ extern "C" {
     pub fn to_js_string_with_options(
         this: &Duration,
         options: &ToStringPrecisionOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, RangeError>;
 }
 
 #[wasm_bindgen]
@@ -3976,11 +4003,11 @@ extern "C" {
     /// # Errors
     /// Throws a `RangeError` if any field is out of range.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
-    pub fn new_with_hour(hour: u32) -> Result<PlainTime, JsValue>;
+    pub fn new_with_hour(hour: u32) -> Result<PlainTime, RangeError>;
 
     /// The `Temporal.PlainTime()` constructor; see [`PlainTime::new_with_hour`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
-    pub fn new_with_hour_and_minute(hour: u32, minute: u32) -> Result<PlainTime, JsValue>;
+    pub fn new_with_hour_and_minute(hour: u32, minute: u32) -> Result<PlainTime, RangeError>;
 
     /// The `Temporal.PlainTime()` constructor; see [`PlainTime::new_with_hour`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -3988,7 +4015,7 @@ extern "C" {
         hour: u32,
         minute: u32,
         second: u32,
-    ) -> Result<PlainTime, JsValue>;
+    ) -> Result<PlainTime, RangeError>;
 
     /// The `Temporal.PlainTime()` constructor; see [`PlainTime::new_with_hour`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -3997,7 +4024,7 @@ extern "C" {
         minute: u32,
         second: u32,
         millisecond: u32,
-    ) -> Result<PlainTime, JsValue>;
+    ) -> Result<PlainTime, RangeError>;
 
     /// The `Temporal.PlainTime()` constructor; see [`PlainTime::new_with_hour`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -4007,7 +4034,7 @@ extern "C" {
         second: u32,
         millisecond: u32,
         microsecond: u32,
-    ) -> Result<PlainTime, JsValue>;
+    ) -> Result<PlainTime, RangeError>;
 
     /// The `Temporal.PlainTime()` constructor; see [`PlainTime::new_with_hour`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -4018,7 +4045,7 @@ extern "C" {
         millisecond: u32,
         microsecond: u32,
         nanosecond: u32,
-    ) -> Result<PlainTime, JsValue>;
+    ) -> Result<PlainTime, RangeError>;
 
     /// The `Temporal.PlainTime.from()` static method creates a new `Temporal.PlainTime`
     /// object from another value.
@@ -4029,25 +4056,27 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/from)
     #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, js_name = from, catch)]
-    pub fn from_with_str(item: &str) -> Result<PlainTime, JsValue>;
+    pub fn from_with_str(item: &str) -> Result<PlainTime, RangeError>;
 
     /// The `Temporal.PlainTime.from()` static method; see [`PlainTime::from_with_str`] for errors.
     #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str_and_options(
         item: &str,
         options: &OverflowOptions,
-    ) -> Result<PlainTime, JsValue>;
+    ) -> Result<PlainTime, RangeError>;
 
-    /// The `Temporal.PlainTime.from()` static method; see [`PlainTime::from_with_str`] for errors.
+    /// The `Temporal.PlainTime.from()` static method taking a property bag; throws a `TypeError` if
+    /// required fields are missing. See [`PlainTime::from_with_str`] for the remaining errors.
     #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, js_name = from, catch)]
-    pub fn from_with_plain_time_like(item: &PlainTimeLike) -> Result<PlainTime, JsValue>;
+    pub fn from_with_plain_time_like(item: &PlainTimeLike) -> Result<PlainTime, Error>;
 
-    /// The `Temporal.PlainTime.from()` static method; see [`PlainTime::from_with_str`] for errors.
+    /// The `Temporal.PlainTime.from()` static method taking a property bag; throws a `TypeError` if
+    /// required fields are missing. See [`PlainTime::from_with_str`] for the remaining errors.
     #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_time_like_and_options(
         item: &PlainTimeLike,
         options: &OverflowOptions,
-    ) -> Result<PlainTime, JsValue>;
+    ) -> Result<PlainTime, Error>;
 
     /// The `Temporal.PlainTime.from()` static method.
     #[wasm_bindgen(static_method_of = PlainTime, js_namespace = Temporal, js_name = from)]
@@ -4146,7 +4175,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(this: &PlainTime, fields: &PlainTimeLike) -> Result<PlainTime, JsValue>;
+    pub fn with(this: &PlainTime, fields: &PlainTimeLike) -> Result<PlainTime, Error>;
 
     /// The `equals()` method taking a `Temporal.PlainDateTime`.
     #[wasm_bindgen(method, js_name = equals)]
@@ -4161,11 +4190,11 @@ extern "C" {
     pub fn equals_with_plain_time_like(
         this: &PlainTime,
         other: &PlainTimeLike,
-    ) -> Result<bool, JsValue>;
+    ) -> Result<bool, Error>;
 
     /// The `equals()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid.
     #[wasm_bindgen(method, js_name = equals, catch)]
-    pub fn equals_with_str(this: &PlainTime, other: &str) -> Result<bool, JsValue>;
+    pub fn equals_with_str(this: &PlainTime, other: &str) -> Result<bool, RangeError>;
 
     /// The `with()` method returns a new `Temporal.PlainTime` object with some
     /// fields replaced by new values.
@@ -4180,7 +4209,7 @@ extern "C" {
         this: &PlainTime,
         fields: &PlainTimeLike,
         options: &OverflowOptions,
-    ) -> Result<PlainTime, JsValue>;
+    ) -> Result<PlainTime, Error>;
 
     /// The `add()` method returns a new `Temporal.PlainTime` object with the
     /// duration added to this time (wrapping around midnight if necessary).
@@ -4204,7 +4233,7 @@ extern "C" {
     pub fn add_with_duration_like(
         this: &PlainTime,
         duration: &DurationLike,
-    ) -> Result<PlainTime, JsValue>;
+    ) -> Result<PlainTime, Error>;
 
     /// The `subtract()` method taking a duration property bag.
     ///
@@ -4214,21 +4243,21 @@ extern "C" {
     pub fn subtract_with_duration_like(
         this: &PlainTime,
         duration: &DurationLike,
-    ) -> Result<PlainTime, JsValue>;
+    ) -> Result<PlainTime, Error>;
 
     /// The `subtract()` method taking an ISO 8601 duration string.
     ///
     /// # Errors
     /// Throws a `RangeError` if the string is not a valid duration; otherwise infallible.
     #[wasm_bindgen(method, js_name = subtract, catch)]
-    pub fn subtract_with_str(this: &PlainTime, duration: &str) -> Result<PlainTime, JsValue>;
+    pub fn subtract_with_str(this: &PlainTime, duration: &str) -> Result<PlainTime, RangeError>;
 
     /// The `add()` method taking an ISO 8601 duration string.
     ///
     /// # Errors
     /// Throws a `RangeError` if the string is not a valid duration; otherwise infallible.
     #[wasm_bindgen(method, js_name = add, catch)]
-    pub fn add_with_str(this: &PlainTime, duration: &str) -> Result<PlainTime, JsValue>;
+    pub fn add_with_str(this: &PlainTime, duration: &str) -> Result<PlainTime, RangeError>;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
     /// from this time until `other`.
@@ -4249,7 +4278,7 @@ extern "C" {
         this: &PlainTime,
         other: &PlainTime,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this time.
@@ -4269,7 +4298,7 @@ extern "C" {
         this: &PlainTime,
         other: &PlainDateTime,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking a `Temporal.ZonedDateTime`.
     #[wasm_bindgen(method, js_name = until)]
@@ -4282,27 +4311,27 @@ extern "C" {
         this: &PlainTime,
         other: &ZonedDateTime,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking a property bag; throws a `TypeError` if required fields are missing.
     #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_plain_time_like(
         this: &PlainTime,
         other: &PlainTimeLike,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, Error>;
 
-    /// The `until()` method taking a property bag and options; see [`PlainTime::until_with_options`]
-    /// for errors.
+    /// The `until()` method taking a property bag and options; throws a `TypeError` if required
+    /// fields are missing. See [`PlainTime::until_with_options`] for the remaining errors.
     #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_plain_time_like_and_options(
         this: &PlainTime,
         other: &PlainTimeLike,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, Error>;
 
     /// The `until()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid.
     #[wasm_bindgen(method, js_name = until, catch)]
-    pub fn until_with_str(this: &PlainTime, other: &str) -> Result<Duration, JsValue>;
+    pub fn until_with_str(this: &PlainTime, other: &str) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking an ISO 8601 string and options; see [`PlainTime::until_with_options`]
     /// for errors.
@@ -4311,7 +4340,7 @@ extern "C" {
         this: &PlainTime,
         other: &str,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this time.
@@ -4325,7 +4354,7 @@ extern "C" {
         this: &PlainTime,
         other: &PlainTime,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `round()` method returns a new `Temporal.PlainTime` object with the
     /// time rounded to the given unit.
@@ -4336,7 +4365,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/round)
     #[wasm_bindgen(method, js_name = round, catch)]
-    pub fn round(this: &PlainTime, round_to: &RoundToOptions) -> Result<PlainTime, JsValue>;
+    pub fn round(this: &PlainTime, round_to: &RoundToOptions) -> Result<PlainTime, RangeError>;
 
     /// The `since()` method taking a `Temporal.PlainDateTime`.
     #[wasm_bindgen(method, js_name = since)]
@@ -4349,7 +4378,7 @@ extern "C" {
         this: &PlainTime,
         other: &PlainDateTime,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking a `Temporal.ZonedDateTime`.
     #[wasm_bindgen(method, js_name = since)]
@@ -4362,27 +4391,27 @@ extern "C" {
         this: &PlainTime,
         other: &ZonedDateTime,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking a property bag; throws a `TypeError` if required fields are missing.
     #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_plain_time_like(
         this: &PlainTime,
         other: &PlainTimeLike,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, Error>;
 
-    /// The `since()` method taking a property bag and options; see [`PlainTime::since_with_options`]
-    /// for errors.
+    /// The `since()` method taking a property bag and options; throws a `TypeError` if required
+    /// fields are missing. See [`PlainTime::since_with_options`] for the remaining errors.
     #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_plain_time_like_and_options(
         this: &PlainTime,
         other: &PlainTimeLike,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, Error>;
 
     /// The `since()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid.
     #[wasm_bindgen(method, js_name = since, catch)]
-    pub fn since_with_str(this: &PlainTime, other: &str) -> Result<Duration, JsValue>;
+    pub fn since_with_str(this: &PlainTime, other: &str) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking an ISO 8601 string and options; see [`PlainTime::since_with_options`]
     /// for errors.
@@ -4391,50 +4420,55 @@ extern "C" {
         this: &PlainTime,
         other: &str,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// Shorthand for `round()` with only `smallestUnit` set.
     #[wasm_bindgen(method, js_name = round, catch)]
-    pub fn round_with_unit(this: &PlainTime, smallest_unit: Unit) -> Result<PlainTime, JsValue>;
+    pub fn round_with_unit(this: &PlainTime, smallest_unit: Unit) -> Result<PlainTime, RangeError>;
 
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this time.
     ///
     /// # Errors
-    /// Throws a `RangeError` if `locales` is invalid, and a `TypeError` for options
-    /// that do not apply to a time, such as `dateStyle`.
+    /// Throws a `RangeError` if `locales` is invalid.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainTime/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string(this: &PlainTime) -> Result<JsString, JsValue>;
+    pub fn to_locale_string(this: &PlainTime) -> Result<JsString, RangeError>;
 
     /// The `toLocaleString()` method; see [`PlainTime::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string_with_str(this: &PlainTime, locales: &str) -> Result<JsString, JsValue>;
+    pub fn to_locale_string_with_str(
+        this: &PlainTime,
+        locales: &str,
+    ) -> Result<JsString, RangeError>;
 
     /// The `toLocaleString()` method; see [`PlainTime::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str_sequence(
         this: &PlainTime,
         locales: &[JsString],
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, RangeError>;
 
-    /// The `toLocaleString()` method; see [`PlainTime::to_locale_string`] for errors.
+    /// The `toLocaleString()` method with options; throws a `TypeError` if an option does not
+    /// apply to this type or conflicts with another. See [`PlainTime::to_locale_string`] for the
+    /// remaining errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str_sequence_and_options(
         this: &PlainTime,
         locales: &[JsString],
         options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, Error>;
 
-    /// The `toLocaleString()` method; `None` for `locales` uses the default locale. See
-    /// [`PlainTime::to_locale_string`] for errors.
+    /// The `toLocaleString()` method with options; `None` for `locales` uses the default locale.
+    /// Throws a `TypeError` if an option does not apply to this type or conflicts with another.
+    /// See [`PlainTime::to_locale_string`] for the remaining errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_options(
         this: &PlainTime,
         locales: Option<&str>,
         options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, Error>;
 
     /// The `toJSON()` method returns a string representation of this time
     /// suitable for JSON serialization.
@@ -4460,7 +4494,7 @@ extern "C" {
     pub fn to_js_string_with_options(
         this: &PlainTime,
         options: &ToStringPrecisionOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, RangeError>;
 
 }
 
@@ -4485,7 +4519,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/PlainYearMonth)
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
-    pub fn new(iso_year: i32, iso_month: u32) -> Result<PlainYearMonth, JsValue>;
+    pub fn new(iso_year: i32, iso_month: u32) -> Result<PlainYearMonth, RangeError>;
 
     /// The `Temporal.PlainYearMonth()` constructor; see [`PlainYearMonth::new`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -4493,7 +4527,7 @@ extern "C" {
         iso_year: i32,
         iso_month: u32,
         calendar: &str,
-    ) -> Result<PlainYearMonth, JsValue>;
+    ) -> Result<PlainYearMonth, RangeError>;
 
     /// The `Temporal.PlainYearMonth()` constructor; see [`PlainYearMonth::new`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -4502,7 +4536,7 @@ extern "C" {
         iso_month: u32,
         calendar: &str,
         reference_iso_day: u32,
-    ) -> Result<PlainYearMonth, JsValue>;
+    ) -> Result<PlainYearMonth, RangeError>;
 
     /// The `Temporal.PlainYearMonth.from()` static method creates a new `Temporal.PlainYearMonth`
     /// object from another value.
@@ -4513,27 +4547,29 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/from)
     #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from, catch)]
-    pub fn from_with_str(item: &str) -> Result<PlainYearMonth, JsValue>;
+    pub fn from_with_str(item: &str) -> Result<PlainYearMonth, RangeError>;
 
     /// The `Temporal.PlainYearMonth.from()` static method; see [`PlainYearMonth::from_with_str`] for errors.
     #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str_and_options(
         item: &str,
         options: &OverflowOptions,
-    ) -> Result<PlainYearMonth, JsValue>;
+    ) -> Result<PlainYearMonth, RangeError>;
 
-    /// The `Temporal.PlainYearMonth.from()` static method; see [`PlainYearMonth::from_with_str`] for errors.
+    /// The `Temporal.PlainYearMonth.from()` static method taking a property bag; throws a `TypeError` if
+    /// required fields are missing. See [`PlainYearMonth::from_with_str`] for the remaining errors.
     #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_year_month_like(
         item: &PlainYearMonthLike,
-    ) -> Result<PlainYearMonth, JsValue>;
+    ) -> Result<PlainYearMonth, Error>;
 
-    /// The `Temporal.PlainYearMonth.from()` static method; see [`PlainYearMonth::from_with_str`] for errors.
+    /// The `Temporal.PlainYearMonth.from()` static method taking a property bag; throws a `TypeError` if
+    /// required fields are missing. See [`PlainYearMonth::from_with_str`] for the remaining errors.
     #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_year_month_like_and_options(
         item: &PlainYearMonthLike,
         options: &OverflowOptions,
-    ) -> Result<PlainYearMonth, JsValue>;
+    ) -> Result<PlainYearMonth, Error>;
 
     /// The `Temporal.PlainYearMonth.from()` static method.
     #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from)]
@@ -4558,7 +4594,7 @@ extern "C" {
     /// # Errors
     /// Throws a `RangeError` if the first day of the month falls outside the representable range.
     #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from, catch)]
-    pub fn from_with_plain_date(item: &PlainDate) -> Result<PlainYearMonth, JsValue>;
+    pub fn from_with_plain_date(item: &PlainDate) -> Result<PlainYearMonth, RangeError>;
 
     /// The `Temporal.PlainYearMonth.from()` static method; see
     /// [`PlainYearMonth::from_with_plain_date`] for errors.
@@ -4566,14 +4602,14 @@ extern "C" {
     pub fn from_with_plain_date_and_options(
         item: &PlainDate,
         options: &OverflowOptions,
-    ) -> Result<PlainYearMonth, JsValue>;
+    ) -> Result<PlainYearMonth, RangeError>;
 
     /// The `Temporal.PlainYearMonth.from()` static method.
     ///
     /// # Errors
     /// Throws a `RangeError` if the first day of the month falls outside the representable range.
     #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from, catch)]
-    pub fn from_with_plain_date_time(item: &PlainDateTime) -> Result<PlainYearMonth, JsValue>;
+    pub fn from_with_plain_date_time(item: &PlainDateTime) -> Result<PlainYearMonth, RangeError>;
 
     /// The `Temporal.PlainYearMonth.from()` static method; see
     /// [`PlainYearMonth::from_with_plain_date_time`] for errors.
@@ -4581,14 +4617,14 @@ extern "C" {
     pub fn from_with_plain_date_time_and_options(
         item: &PlainDateTime,
         options: &OverflowOptions,
-    ) -> Result<PlainYearMonth, JsValue>;
+    ) -> Result<PlainYearMonth, RangeError>;
 
     /// The `Temporal.PlainYearMonth.from()` static method.
     ///
     /// # Errors
     /// Throws a `RangeError` if the first day of the month falls outside the representable range.
     #[wasm_bindgen(static_method_of = PlainYearMonth, js_namespace = Temporal, js_name = from, catch)]
-    pub fn from_with_zoned_date_time(item: &ZonedDateTime) -> Result<PlainYearMonth, JsValue>;
+    pub fn from_with_zoned_date_time(item: &ZonedDateTime) -> Result<PlainYearMonth, RangeError>;
 
     /// The `Temporal.PlainYearMonth.from()` static method; see
     /// [`PlainYearMonth::from_with_zoned_date_time`] for errors.
@@ -4596,7 +4632,7 @@ extern "C" {
     pub fn from_with_zoned_date_time_and_options(
         item: &ZonedDateTime,
         options: &OverflowOptions,
-    ) -> Result<PlainYearMonth, JsValue>;
+    ) -> Result<PlainYearMonth, RangeError>;
 
     /// The `era` accessor property returns a calendar-specific lowercase string
     /// representing the era of this year-month, or `None` if the calendar does not use eras.
@@ -4686,7 +4722,7 @@ extern "C" {
     pub fn with(
         this: &PlainYearMonth,
         fields: &PlainYearMonthFields,
-    ) -> Result<PlainYearMonth, JsValue>;
+    ) -> Result<PlainYearMonth, Error>;
 
     /// The `equals()` method taking a `Temporal.PlainDate`; throws a `RangeError` if the first day
     /// of its month falls outside the representable range.
@@ -4694,7 +4730,7 @@ extern "C" {
     pub fn equals_with_plain_date(
         this: &PlainYearMonth,
         other: &PlainDate,
-    ) -> Result<bool, JsValue>;
+    ) -> Result<bool, RangeError>;
 
     /// The `equals()` method taking a `Temporal.PlainDateTime`; throws a `RangeError` if the first day
     /// of its month falls outside the representable range.
@@ -4702,7 +4738,7 @@ extern "C" {
     pub fn equals_with_plain_date_time(
         this: &PlainYearMonth,
         other: &PlainDateTime,
-    ) -> Result<bool, JsValue>;
+    ) -> Result<bool, RangeError>;
 
     /// The `equals()` method taking a `Temporal.ZonedDateTime`; throws a `RangeError` if the first day
     /// of its month falls outside the representable range.
@@ -4710,18 +4746,18 @@ extern "C" {
     pub fn equals_with_zoned_date_time(
         this: &PlainYearMonth,
         other: &ZonedDateTime,
-    ) -> Result<bool, JsValue>;
+    ) -> Result<bool, RangeError>;
 
     /// The `equals()` method taking a property bag; throws a `TypeError` if required fields are missing.
     #[wasm_bindgen(method, js_name = equals, catch)]
     pub fn equals_with_plain_year_month_like(
         this: &PlainYearMonth,
         other: &PlainYearMonthLike,
-    ) -> Result<bool, JsValue>;
+    ) -> Result<bool, Error>;
 
     /// The `equals()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid.
     #[wasm_bindgen(method, js_name = equals, catch)]
-    pub fn equals_with_str(this: &PlainYearMonth, other: &str) -> Result<bool, JsValue>;
+    pub fn equals_with_str(this: &PlainYearMonth, other: &str) -> Result<bool, RangeError>;
 
     /// The `with()` method returns a new `Temporal.PlainYearMonth` object with some
     /// fields replaced by new values.
@@ -4736,7 +4772,7 @@ extern "C" {
         this: &PlainYearMonth,
         fields: &PlainYearMonthFields,
         options: &OverflowOptions,
-    ) -> Result<PlainYearMonth, JsValue>;
+    ) -> Result<PlainYearMonth, Error>;
 
     /// The `add()` method returns a new `Temporal.PlainYearMonth` object with the
     /// duration added to this year-month.
@@ -4747,7 +4783,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/add)
     #[wasm_bindgen(method, catch)]
-    pub fn add(this: &PlainYearMonth, duration: &Duration) -> Result<PlainYearMonth, JsValue>;
+    pub fn add(this: &PlainYearMonth, duration: &Duration) -> Result<PlainYearMonth, RangeError>;
 
     /// The `add()` method returns a new `Temporal.PlainYearMonth` object with the
     /// duration added to this year-month.
@@ -4762,7 +4798,7 @@ extern "C" {
         this: &PlainYearMonth,
         duration: &Duration,
         options: &OverflowOptions,
-    ) -> Result<PlainYearMonth, JsValue>;
+    ) -> Result<PlainYearMonth, RangeError>;
 
     /// The `add()` method taking a duration property bag.
     ///
@@ -4772,7 +4808,7 @@ extern "C" {
     pub fn add_with_duration_like(
         this: &PlainYearMonth,
         duration: &DurationLike,
-    ) -> Result<PlainYearMonth, JsValue>;
+    ) -> Result<PlainYearMonth, Error>;
 
     /// The `add()` method taking a duration property bag and options; see
     /// [`PlainYearMonth::add_with_duration_like`] for errors.
@@ -4781,7 +4817,7 @@ extern "C" {
         this: &PlainYearMonth,
         duration: &DurationLike,
         options: &OverflowOptions,
-    ) -> Result<PlainYearMonth, JsValue>;
+    ) -> Result<PlainYearMonth, Error>;
 
     /// The `add()` method taking an ISO 8601 duration string and options; see
     /// [`PlainYearMonth::add_with_str`] for errors.
@@ -4790,14 +4826,17 @@ extern "C" {
         this: &PlainYearMonth,
         duration: &str,
         options: &OverflowOptions,
-    ) -> Result<PlainYearMonth, JsValue>;
+    ) -> Result<PlainYearMonth, RangeError>;
 
     /// The `add()` method taking an ISO 8601 duration string.
     ///
     /// # Errors
     /// Throws a `RangeError` if the string is not a valid duration; see [`PlainYearMonth::add`] for the remaining errors.
     #[wasm_bindgen(method, js_name = add, catch)]
-    pub fn add_with_str(this: &PlainYearMonth, duration: &str) -> Result<PlainYearMonth, JsValue>;
+    pub fn add_with_str(
+        this: &PlainYearMonth,
+        duration: &str,
+    ) -> Result<PlainYearMonth, RangeError>;
 
     /// The `subtract()` method returns a new `Temporal.PlainYearMonth` object with the
     /// duration subtracted from this year-month.
@@ -4808,7 +4847,10 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/subtract)
     #[wasm_bindgen(method, catch)]
-    pub fn subtract(this: &PlainYearMonth, duration: &Duration) -> Result<PlainYearMonth, JsValue>;
+    pub fn subtract(
+        this: &PlainYearMonth,
+        duration: &Duration,
+    ) -> Result<PlainYearMonth, RangeError>;
 
     /// The `subtract()` method returns a new `Temporal.PlainYearMonth` object with the
     /// duration subtracted from this year-month.
@@ -4823,7 +4865,7 @@ extern "C" {
         this: &PlainYearMonth,
         duration: &Duration,
         options: &OverflowOptions,
-    ) -> Result<PlainYearMonth, JsValue>;
+    ) -> Result<PlainYearMonth, RangeError>;
 
     /// The `subtract()` method taking a duration property bag.
     ///
@@ -4833,7 +4875,7 @@ extern "C" {
     pub fn subtract_with_duration_like(
         this: &PlainYearMonth,
         duration: &DurationLike,
-    ) -> Result<PlainYearMonth, JsValue>;
+    ) -> Result<PlainYearMonth, Error>;
 
     /// The `subtract()` method taking a duration property bag and options; see
     /// [`PlainYearMonth::subtract_with_duration_like`] for errors.
@@ -4842,7 +4884,7 @@ extern "C" {
         this: &PlainYearMonth,
         duration: &DurationLike,
         options: &OverflowOptions,
-    ) -> Result<PlainYearMonth, JsValue>;
+    ) -> Result<PlainYearMonth, Error>;
 
     /// The `subtract()` method taking an ISO 8601 duration string and options; see
     /// [`PlainYearMonth::subtract_with_str`] for errors.
@@ -4851,7 +4893,7 @@ extern "C" {
         this: &PlainYearMonth,
         duration: &str,
         options: &OverflowOptions,
-    ) -> Result<PlainYearMonth, JsValue>;
+    ) -> Result<PlainYearMonth, RangeError>;
 
     /// The `subtract()` method taking an ISO 8601 duration string.
     ///
@@ -4861,7 +4903,7 @@ extern "C" {
     pub fn subtract_with_str(
         this: &PlainYearMonth,
         duration: &str,
-    ) -> Result<PlainYearMonth, JsValue>;
+    ) -> Result<PlainYearMonth, RangeError>;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
     /// from this year-month until `other`.
@@ -4871,7 +4913,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/until)
     #[wasm_bindgen(method, catch)]
-    pub fn until(this: &PlainYearMonth, other: &PlainYearMonth) -> Result<Duration, JsValue>;
+    pub fn until(this: &PlainYearMonth, other: &PlainYearMonth) -> Result<Duration, RangeError>;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
     /// from this year-month until `other`.
@@ -4885,7 +4927,7 @@ extern "C" {
         this: &PlainYearMonth,
         other: &PlainYearMonth,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this year-month.
@@ -4895,14 +4937,14 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/since)
     #[wasm_bindgen(method, catch)]
-    pub fn since(this: &PlainYearMonth, other: &PlainYearMonth) -> Result<Duration, JsValue>;
+    pub fn since(this: &PlainYearMonth, other: &PlainYearMonth) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking a `Temporal.PlainDate`; see [`PlainYearMonth::until`] for errors.
     #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_plain_date(
         this: &PlainYearMonth,
         other: &PlainDate,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking a `Temporal.PlainDate` and options; see [`PlainYearMonth::until_with_options`]
     /// for errors.
@@ -4911,14 +4953,14 @@ extern "C" {
         this: &PlainYearMonth,
         other: &PlainDate,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking a `Temporal.PlainDateTime`; see [`PlainYearMonth::until`] for errors.
     #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_plain_date_time(
         this: &PlainYearMonth,
         other: &PlainDateTime,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking a `Temporal.PlainDateTime` and options; see [`PlainYearMonth::until_with_options`]
     /// for errors.
@@ -4927,14 +4969,14 @@ extern "C" {
         this: &PlainYearMonth,
         other: &PlainDateTime,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking a `Temporal.ZonedDateTime`; see [`PlainYearMonth::until`] for errors.
     #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_zoned_date_time(
         this: &PlainYearMonth,
         other: &ZonedDateTime,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking a `Temporal.ZonedDateTime` and options; see [`PlainYearMonth::until_with_options`]
     /// for errors.
@@ -4943,27 +4985,27 @@ extern "C" {
         this: &PlainYearMonth,
         other: &ZonedDateTime,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking a property bag; throws a `TypeError` if required fields are missing; see [`PlainYearMonth::until`] for the remaining errors.
     #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_plain_year_month_like(
         this: &PlainYearMonth,
         other: &PlainYearMonthLike,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, Error>;
 
-    /// The `until()` method taking a property bag and options; see [`PlainYearMonth::until_with_options`]
-    /// for errors.
+    /// The `until()` method taking a property bag and options; throws a `TypeError` if required
+    /// fields are missing. See [`PlainYearMonth::until_with_options`] for the remaining errors.
     #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_plain_year_month_like_and_options(
         this: &PlainYearMonth,
         other: &PlainYearMonthLike,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, Error>;
 
     /// The `until()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`PlainYearMonth::until`] for the remaining errors.
     #[wasm_bindgen(method, js_name = until, catch)]
-    pub fn until_with_str(this: &PlainYearMonth, other: &str) -> Result<Duration, JsValue>;
+    pub fn until_with_str(this: &PlainYearMonth, other: &str) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking an ISO 8601 string and options; see [`PlainYearMonth::until_with_options`]
     /// for errors.
@@ -4972,7 +5014,7 @@ extern "C" {
         this: &PlainYearMonth,
         other: &str,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this year-month.
@@ -4986,7 +5028,7 @@ extern "C" {
         this: &PlainYearMonth,
         other: &PlainYearMonth,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `toPlainDate()` method returns a `Temporal.PlainDate` object representing
     /// this year-month with the given day.
@@ -5000,14 +5042,14 @@ extern "C" {
     pub fn to_plain_date_with_fields(
         this: &PlainYearMonth,
         fields: &PlainDateFields,
-    ) -> Result<PlainDate, JsValue>;
+    ) -> Result<PlainDate, Error>;
 
     /// The `since()` method taking a `Temporal.PlainDate`; see [`PlainYearMonth::since`] for errors.
     #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_plain_date(
         this: &PlainYearMonth,
         other: &PlainDate,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking a `Temporal.PlainDate` and options; see [`PlainYearMonth::since_with_options`]
     /// for errors.
@@ -5016,14 +5058,14 @@ extern "C" {
         this: &PlainYearMonth,
         other: &PlainDate,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking a `Temporal.PlainDateTime`; see [`PlainYearMonth::since`] for errors.
     #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_plain_date_time(
         this: &PlainYearMonth,
         other: &PlainDateTime,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking a `Temporal.PlainDateTime` and options; see [`PlainYearMonth::since_with_options`]
     /// for errors.
@@ -5032,14 +5074,14 @@ extern "C" {
         this: &PlainYearMonth,
         other: &PlainDateTime,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking a `Temporal.ZonedDateTime`; see [`PlainYearMonth::since`] for errors.
     #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_zoned_date_time(
         this: &PlainYearMonth,
         other: &ZonedDateTime,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking a `Temporal.ZonedDateTime` and options; see [`PlainYearMonth::since_with_options`]
     /// for errors.
@@ -5048,27 +5090,27 @@ extern "C" {
         this: &PlainYearMonth,
         other: &ZonedDateTime,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking a property bag; throws a `TypeError` if required fields are missing; see [`PlainYearMonth::since`] for the remaining errors.
     #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_plain_year_month_like(
         this: &PlainYearMonth,
         other: &PlainYearMonthLike,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, Error>;
 
-    /// The `since()` method taking a property bag and options; see [`PlainYearMonth::since_with_options`]
-    /// for errors.
+    /// The `since()` method taking a property bag and options; throws a `TypeError` if required
+    /// fields are missing. See [`PlainYearMonth::since_with_options`] for the remaining errors.
     #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_plain_year_month_like_and_options(
         this: &PlainYearMonth,
         other: &PlainYearMonthLike,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, Error>;
 
     /// The `since()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`PlainYearMonth::since`] for the remaining errors.
     #[wasm_bindgen(method, js_name = since, catch)]
-    pub fn since_with_str(this: &PlainYearMonth, other: &str) -> Result<Duration, JsValue>;
+    pub fn since_with_str(this: &PlainYearMonth, other: &str) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking an ISO 8601 string and options; see [`PlainYearMonth::since_with_options`]
     /// for errors.
@@ -5077,50 +5119,52 @@ extern "C" {
         this: &PlainYearMonth,
         other: &str,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this year-month.
     ///
     /// # Errors
     /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
-    /// not match this value's calendar, and a `TypeError` for options that do not
-    /// apply to this type.
+    /// not match this value's calendar.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainYearMonth/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string(this: &PlainYearMonth) -> Result<JsString, JsValue>;
+    pub fn to_locale_string(this: &PlainYearMonth) -> Result<JsString, RangeError>;
 
     /// The `toLocaleString()` method; see [`PlainYearMonth::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str(
         this: &PlainYearMonth,
         locales: &str,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, RangeError>;
 
     /// The `toLocaleString()` method; see [`PlainYearMonth::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str_sequence(
         this: &PlainYearMonth,
         locales: &[JsString],
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, RangeError>;
 
-    /// The `toLocaleString()` method; see [`PlainYearMonth::to_locale_string`] for errors.
+    /// The `toLocaleString()` method with options; throws a `TypeError` if an option does not
+    /// apply to this type or conflicts with another. See [`PlainYearMonth::to_locale_string`] for the
+    /// remaining errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str_sequence_and_options(
         this: &PlainYearMonth,
         locales: &[JsString],
         options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, Error>;
 
-    /// The `toLocaleString()` method; `None` for `locales` uses the default locale. See
-    /// [`PlainYearMonth::to_locale_string`] for errors.
+    /// The `toLocaleString()` method with options; `None` for `locales` uses the default locale.
+    /// Throws a `TypeError` if an option does not apply to this type or conflicts with another.
+    /// See [`PlainYearMonth::to_locale_string`] for the remaining errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_options(
         this: &PlainYearMonth,
         locales: Option<&str>,
         options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, Error>;
 
     /// The `toJSON()` method returns a string representation of this year-month
     /// suitable for JSON serialization.
@@ -5146,16 +5190,17 @@ extern "C" {
     pub fn to_js_string_with_options(
         this: &PlainYearMonth,
         options: &ShowCalendarOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, RangeError>;
 }
 
 impl PlainYearMonth {
     /// The `toPlainDate()` method returns a `Temporal.PlainDate` object representing
     /// this year-month on the given day of the month; see [`PlainYearMonth::to_plain_date_with_fields`] for errors.
-    pub fn to_plain_date(&self, day: u32) -> Result<PlainDate, JsValue> {
+    pub fn to_plain_date(&self, day: u32) -> Result<PlainDate, RangeError> {
         let fields = PlainDateFields::new();
         fields.set_day(day);
         self.to_plain_date_with_fields(&fields)
+            .map_err(JsCast::unchecked_into)
     }
 }
 
@@ -5180,7 +5225,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/PlainMonthDay)
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
-    pub fn new(iso_month: u32, iso_day: u32) -> Result<PlainMonthDay, JsValue>;
+    pub fn new(iso_month: u32, iso_day: u32) -> Result<PlainMonthDay, RangeError>;
 
     /// The `Temporal.PlainMonthDay()` constructor; see [`PlainMonthDay::new`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -5188,7 +5233,7 @@ extern "C" {
         iso_month: u32,
         iso_day: u32,
         calendar: &str,
-    ) -> Result<PlainMonthDay, JsValue>;
+    ) -> Result<PlainMonthDay, RangeError>;
 
     /// The `Temporal.PlainMonthDay()` constructor; see [`PlainMonthDay::new`] for errors.
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
@@ -5197,7 +5242,7 @@ extern "C" {
         iso_day: u32,
         calendar: &str,
         reference_iso_year: i32,
-    ) -> Result<PlainMonthDay, JsValue>;
+    ) -> Result<PlainMonthDay, RangeError>;
 
     /// The `Temporal.PlainMonthDay.from()` static method creates a new `Temporal.PlainMonthDay`
     /// object from another value.
@@ -5208,27 +5253,28 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/from)
     #[wasm_bindgen(static_method_of = PlainMonthDay, js_namespace = Temporal, js_name = from, catch)]
-    pub fn from_with_str(item: &str) -> Result<PlainMonthDay, JsValue>;
+    pub fn from_with_str(item: &str) -> Result<PlainMonthDay, RangeError>;
 
     /// The `Temporal.PlainMonthDay.from()` static method; see [`PlainMonthDay::from_with_str`] for errors.
     #[wasm_bindgen(static_method_of = PlainMonthDay, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str_and_options(
         item: &str,
         options: &OverflowOptions,
-    ) -> Result<PlainMonthDay, JsValue>;
+    ) -> Result<PlainMonthDay, RangeError>;
 
-    /// The `Temporal.PlainMonthDay.from()` static method; see [`PlainMonthDay::from_with_str`] for errors.
+    /// The `Temporal.PlainMonthDay.from()` static method taking a property bag; throws a `TypeError` if
+    /// required fields are missing. See [`PlainMonthDay::from_with_str`] for the remaining errors.
     #[wasm_bindgen(static_method_of = PlainMonthDay, js_namespace = Temporal, js_name = from, catch)]
-    pub fn from_with_plain_month_day_like(
-        item: &PlainMonthDayLike,
-    ) -> Result<PlainMonthDay, JsValue>;
+    pub fn from_with_plain_month_day_like(item: &PlainMonthDayLike)
+        -> Result<PlainMonthDay, Error>;
 
-    /// The `Temporal.PlainMonthDay.from()` static method; see [`PlainMonthDay::from_with_str`] for errors.
+    /// The `Temporal.PlainMonthDay.from()` static method taking a property bag; throws a `TypeError` if
+    /// required fields are missing. See [`PlainMonthDay::from_with_str`] for the remaining errors.
     #[wasm_bindgen(static_method_of = PlainMonthDay, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_month_day_like_and_options(
         item: &PlainMonthDayLike,
         options: &OverflowOptions,
-    ) -> Result<PlainMonthDay, JsValue>;
+    ) -> Result<PlainMonthDay, Error>;
 
     /// The `Temporal.PlainMonthDay.from()` static method.
     #[wasm_bindgen(static_method_of = PlainMonthDay, js_namespace = Temporal, js_name = from)]
@@ -5310,7 +5356,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(this: &PlainMonthDay, fields: &PlainDateFields) -> Result<PlainMonthDay, JsValue>;
+    pub fn with(this: &PlainMonthDay, fields: &PlainDateFields) -> Result<PlainMonthDay, Error>;
 
     /// The `equals()` method taking a `Temporal.PlainDate`.
     #[wasm_bindgen(method, js_name = equals)]
@@ -5329,11 +5375,11 @@ extern "C" {
     pub fn equals_with_plain_month_day_like(
         this: &PlainMonthDay,
         other: &PlainMonthDayLike,
-    ) -> Result<bool, JsValue>;
+    ) -> Result<bool, Error>;
 
     /// The `equals()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid.
     #[wasm_bindgen(method, js_name = equals, catch)]
-    pub fn equals_with_str(this: &PlainMonthDay, other: &str) -> Result<bool, JsValue>;
+    pub fn equals_with_str(this: &PlainMonthDay, other: &str) -> Result<bool, RangeError>;
 
     /// The `with()` method returns a new `Temporal.PlainMonthDay` object with some
     /// fields replaced by new values.
@@ -5348,7 +5394,7 @@ extern "C" {
         this: &PlainMonthDay,
         fields: &PlainDateFields,
         options: &OverflowOptions,
-    ) -> Result<PlainMonthDay, JsValue>;
+    ) -> Result<PlainMonthDay, Error>;
 
     /// The `toPlainDate()` method returns a `Temporal.PlainDate` object representing
     /// this month-day in the given year.
@@ -5363,50 +5409,52 @@ extern "C" {
     pub fn to_plain_date_with_fields(
         this: &PlainMonthDay,
         fields: &PlainDateFields,
-    ) -> Result<PlainDate, JsValue>;
+    ) -> Result<PlainDate, Error>;
 
     /// The `toLocaleString()` method returns a language-sensitive string representation
     /// of this month-day.
     ///
     /// # Errors
     /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
-    /// not match this value's calendar, and a `TypeError` for options that do not
-    /// apply to this type.
+    /// not match this value's calendar.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainMonthDay/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string(this: &PlainMonthDay) -> Result<JsString, JsValue>;
+    pub fn to_locale_string(this: &PlainMonthDay) -> Result<JsString, RangeError>;
 
     /// The `toLocaleString()` method; see [`PlainMonthDay::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str(
         this: &PlainMonthDay,
         locales: &str,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, RangeError>;
 
     /// The `toLocaleString()` method; see [`PlainMonthDay::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str_sequence(
         this: &PlainMonthDay,
         locales: &[JsString],
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, RangeError>;
 
-    /// The `toLocaleString()` method; see [`PlainMonthDay::to_locale_string`] for errors.
+    /// The `toLocaleString()` method with options; throws a `TypeError` if an option does not
+    /// apply to this type or conflicts with another. See [`PlainMonthDay::to_locale_string`] for the
+    /// remaining errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str_sequence_and_options(
         this: &PlainMonthDay,
         locales: &[JsString],
         options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, Error>;
 
-    /// The `toLocaleString()` method; `None` for `locales` uses the default locale. See
-    /// [`PlainMonthDay::to_locale_string`] for errors.
+    /// The `toLocaleString()` method with options; `None` for `locales` uses the default locale.
+    /// Throws a `TypeError` if an option does not apply to this type or conflicts with another.
+    /// See [`PlainMonthDay::to_locale_string`] for the remaining errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_options(
         this: &PlainMonthDay,
         locales: Option<&str>,
         options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, Error>;
 
     /// The `toJSON()` method returns a string representation of this month-day
     /// suitable for JSON serialization.
@@ -5432,16 +5480,17 @@ extern "C" {
     pub fn to_js_string_with_options(
         this: &PlainMonthDay,
         options: &ShowCalendarOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, RangeError>;
 }
 
 impl PlainMonthDay {
     /// The `toPlainDate()` method returns a `Temporal.PlainDate` object representing
     /// this month-day in the given year; see [`PlainMonthDay::to_plain_date_with_fields`] for errors.
-    pub fn to_plain_date(&self, year: i32) -> Result<PlainDate, JsValue> {
+    pub fn to_plain_date(&self, year: i32) -> Result<PlainDate, RangeError> {
         let fields = PlainDateFields::new();
         fields.set_year(year);
         self.to_plain_date_with_fields(&fields)
+            .map_err(JsCast::unchecked_into)
     }
 }
 
@@ -5464,7 +5513,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/PlainDate)
     #[wasm_bindgen(constructor, js_namespace = Temporal, catch)]
-    pub fn new(iso_year: i32, iso_month: u32, iso_day: u32) -> Result<PlainDate, JsValue>;
+    pub fn new(iso_year: i32, iso_month: u32, iso_day: u32) -> Result<PlainDate, RangeError>;
 
     /// The `Temporal.PlainDate()` constructor creates `Temporal.PlainDate` objects
     /// in the given calendar.
@@ -5480,7 +5529,7 @@ extern "C" {
         iso_month: u32,
         iso_day: u32,
         calendar: &str,
-    ) -> Result<PlainDate, JsValue>;
+    ) -> Result<PlainDate, RangeError>;
 
     /// The `Temporal.PlainDate.from()` static method creates a new `Temporal.PlainDate`
     /// object from another value.
@@ -5491,25 +5540,27 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/from)
     #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, js_name = from, catch)]
-    pub fn from_with_str(item: &str) -> Result<PlainDate, JsValue>;
+    pub fn from_with_str(item: &str) -> Result<PlainDate, RangeError>;
 
     /// The `Temporal.PlainDate.from()` static method; see [`PlainDate::from_with_str`] for errors.
     #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_str_and_options(
         item: &str,
         options: &OverflowOptions,
-    ) -> Result<PlainDate, JsValue>;
+    ) -> Result<PlainDate, RangeError>;
 
-    /// The `Temporal.PlainDate.from()` static method; see [`PlainDate::from_with_str`] for errors.
+    /// The `Temporal.PlainDate.from()` static method taking a property bag; throws a `TypeError` if
+    /// required fields are missing. See [`PlainDate::from_with_str`] for the remaining errors.
     #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, js_name = from, catch)]
-    pub fn from_with_plain_date_like(item: &PlainDateLike) -> Result<PlainDate, JsValue>;
+    pub fn from_with_plain_date_like(item: &PlainDateLike) -> Result<PlainDate, Error>;
 
-    /// The `Temporal.PlainDate.from()` static method; see [`PlainDate::from_with_str`] for errors.
+    /// The `Temporal.PlainDate.from()` static method taking a property bag; throws a `TypeError` if
+    /// required fields are missing. See [`PlainDate::from_with_str`] for the remaining errors.
     #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, js_name = from, catch)]
     pub fn from_with_plain_date_like_and_options(
         item: &PlainDateLike,
         options: &OverflowOptions,
-    ) -> Result<PlainDate, JsValue>;
+    ) -> Result<PlainDate, Error>;
 
     /// The `Temporal.PlainDate.from()` static method.
     #[wasm_bindgen(static_method_of = PlainDate, js_namespace = Temporal, js_name = from)]
@@ -5680,7 +5731,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/with)
     #[wasm_bindgen(method, catch)]
-    pub fn with(this: &PlainDate, fields: &PlainDateFields) -> Result<PlainDate, JsValue>;
+    pub fn with(this: &PlainDate, fields: &PlainDateFields) -> Result<PlainDate, Error>;
 
     /// The `equals()` method taking a `Temporal.PlainDateTime`.
     #[wasm_bindgen(method, js_name = equals)]
@@ -5695,11 +5746,11 @@ extern "C" {
     pub fn equals_with_plain_date_like(
         this: &PlainDate,
         other: &PlainDateLike,
-    ) -> Result<bool, JsValue>;
+    ) -> Result<bool, Error>;
 
     /// The `equals()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid.
     #[wasm_bindgen(method, js_name = equals, catch)]
-    pub fn equals_with_str(this: &PlainDate, other: &str) -> Result<bool, JsValue>;
+    pub fn equals_with_str(this: &PlainDate, other: &str) -> Result<bool, RangeError>;
 
     /// The `with()` method returns a new `Temporal.PlainDate` object with some
     /// fields replaced by new values.
@@ -5714,7 +5765,7 @@ extern "C" {
         this: &PlainDate,
         fields: &PlainDateFields,
         options: &OverflowOptions,
-    ) -> Result<PlainDate, JsValue>;
+    ) -> Result<PlainDate, Error>;
 
     /// The `withCalendar()` method returns a new `Temporal.PlainDate` object with
     /// the calendar replaced.
@@ -5724,7 +5775,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/withCalendar)
     #[wasm_bindgen(method, js_name = withCalendar, catch)]
-    pub fn with_calendar(this: &PlainDate, calendar: &str) -> Result<PlainDate, JsValue>;
+    pub fn with_calendar(this: &PlainDate, calendar: &str) -> Result<PlainDate, RangeError>;
 
     /// The `withCalendar()` method taking the calendar of the given `Temporal.PlainDate`.
     #[wasm_bindgen(method, js_name = withCalendar)]
@@ -5767,7 +5818,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/add)
     #[wasm_bindgen(method, catch)]
-    pub fn add(this: &PlainDate, duration: &Duration) -> Result<PlainDate, JsValue>;
+    pub fn add(this: &PlainDate, duration: &Duration) -> Result<PlainDate, RangeError>;
 
     /// The `add()` method returns a new `Temporal.PlainDate` object with the
     /// duration added to this date.
@@ -5782,7 +5833,7 @@ extern "C" {
         this: &PlainDate,
         duration: &Duration,
         options: &OverflowOptions,
-    ) -> Result<PlainDate, JsValue>;
+    ) -> Result<PlainDate, RangeError>;
 
     /// The `add()` method taking a duration property bag.
     ///
@@ -5792,7 +5843,7 @@ extern "C" {
     pub fn add_with_duration_like(
         this: &PlainDate,
         duration: &DurationLike,
-    ) -> Result<PlainDate, JsValue>;
+    ) -> Result<PlainDate, Error>;
 
     /// The `add()` method taking a duration property bag and options; see
     /// [`PlainDate::add_with_duration_like`] for errors.
@@ -5801,7 +5852,7 @@ extern "C" {
         this: &PlainDate,
         duration: &DurationLike,
         options: &OverflowOptions,
-    ) -> Result<PlainDate, JsValue>;
+    ) -> Result<PlainDate, Error>;
 
     /// The `add()` method taking an ISO 8601 duration string and options; see
     /// [`PlainDate::add_with_str`] for errors.
@@ -5810,14 +5861,14 @@ extern "C" {
         this: &PlainDate,
         duration: &str,
         options: &OverflowOptions,
-    ) -> Result<PlainDate, JsValue>;
+    ) -> Result<PlainDate, RangeError>;
 
     /// The `add()` method taking an ISO 8601 duration string.
     ///
     /// # Errors
     /// Throws a `RangeError` if the string is not a valid duration; see [`PlainDate::add`] for the remaining errors.
     #[wasm_bindgen(method, js_name = add, catch)]
-    pub fn add_with_str(this: &PlainDate, duration: &str) -> Result<PlainDate, JsValue>;
+    pub fn add_with_str(this: &PlainDate, duration: &str) -> Result<PlainDate, RangeError>;
 
     /// The `subtract()` method returns a new `Temporal.PlainDate` object with the
     /// duration subtracted from this date.
@@ -5828,7 +5879,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/subtract)
     #[wasm_bindgen(method, catch)]
-    pub fn subtract(this: &PlainDate, duration: &Duration) -> Result<PlainDate, JsValue>;
+    pub fn subtract(this: &PlainDate, duration: &Duration) -> Result<PlainDate, RangeError>;
 
     /// The `subtract()` method returns a new `Temporal.PlainDate` object with the
     /// duration subtracted from this date.
@@ -5843,7 +5894,7 @@ extern "C" {
         this: &PlainDate,
         duration: &Duration,
         options: &OverflowOptions,
-    ) -> Result<PlainDate, JsValue>;
+    ) -> Result<PlainDate, RangeError>;
 
     /// The `subtract()` method taking a duration property bag.
     ///
@@ -5853,7 +5904,7 @@ extern "C" {
     pub fn subtract_with_duration_like(
         this: &PlainDate,
         duration: &DurationLike,
-    ) -> Result<PlainDate, JsValue>;
+    ) -> Result<PlainDate, Error>;
 
     /// The `subtract()` method taking a duration property bag and options; see
     /// [`PlainDate::subtract_with_duration_like`] for errors.
@@ -5862,7 +5913,7 @@ extern "C" {
         this: &PlainDate,
         duration: &DurationLike,
         options: &OverflowOptions,
-    ) -> Result<PlainDate, JsValue>;
+    ) -> Result<PlainDate, Error>;
 
     /// The `subtract()` method taking an ISO 8601 duration string and options; see
     /// [`PlainDate::subtract_with_str`] for errors.
@@ -5871,14 +5922,14 @@ extern "C" {
         this: &PlainDate,
         duration: &str,
         options: &OverflowOptions,
-    ) -> Result<PlainDate, JsValue>;
+    ) -> Result<PlainDate, RangeError>;
 
     /// The `subtract()` method taking an ISO 8601 duration string.
     ///
     /// # Errors
     /// Throws a `RangeError` if the string is not a valid duration; see [`PlainDate::subtract`] for the remaining errors.
     #[wasm_bindgen(method, js_name = subtract, catch)]
-    pub fn subtract_with_str(this: &PlainDate, duration: &str) -> Result<PlainDate, JsValue>;
+    pub fn subtract_with_str(this: &PlainDate, duration: &str) -> Result<PlainDate, RangeError>;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
     /// from this date until `other`.
@@ -5888,7 +5939,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/until)
     #[wasm_bindgen(method, catch)]
-    pub fn until(this: &PlainDate, other: &PlainDate) -> Result<Duration, JsValue>;
+    pub fn until(this: &PlainDate, other: &PlainDate) -> Result<Duration, RangeError>;
 
     /// The `until()` method returns a `Temporal.Duration` representing the duration
     /// from this date until `other`.
@@ -5902,7 +5953,7 @@ extern "C" {
         this: &PlainDate,
         other: &PlainDate,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this date.
@@ -5912,14 +5963,14 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/since)
     #[wasm_bindgen(method, catch)]
-    pub fn since(this: &PlainDate, other: &PlainDate) -> Result<Duration, JsValue>;
+    pub fn since(this: &PlainDate, other: &PlainDate) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking a `Temporal.PlainDateTime`; see [`PlainDate::until`] for errors.
     #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_plain_date_time(
         this: &PlainDate,
         other: &PlainDateTime,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking a `Temporal.PlainDateTime` and options; see [`PlainDate::until_with_options`]
     /// for errors.
@@ -5928,14 +5979,14 @@ extern "C" {
         this: &PlainDate,
         other: &PlainDateTime,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking a `Temporal.ZonedDateTime`; see [`PlainDate::until`] for errors.
     #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_zoned_date_time(
         this: &PlainDate,
         other: &ZonedDateTime,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking a `Temporal.ZonedDateTime` and options; see [`PlainDate::until_with_options`]
     /// for errors.
@@ -5944,27 +5995,27 @@ extern "C" {
         this: &PlainDate,
         other: &ZonedDateTime,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking a property bag; throws a `TypeError` if required fields are missing; see [`PlainDate::until`] for the remaining errors.
     #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_plain_date_like(
         this: &PlainDate,
         other: &PlainDateLike,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, Error>;
 
-    /// The `until()` method taking a property bag and options; see [`PlainDate::until_with_options`]
-    /// for errors.
+    /// The `until()` method taking a property bag and options; throws a `TypeError` if required
+    /// fields are missing. See [`PlainDate::until_with_options`] for the remaining errors.
     #[wasm_bindgen(method, js_name = until, catch)]
     pub fn until_with_plain_date_like_and_options(
         this: &PlainDate,
         other: &PlainDateLike,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, Error>;
 
     /// The `until()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`PlainDate::until`] for the remaining errors.
     #[wasm_bindgen(method, js_name = until, catch)]
-    pub fn until_with_str(this: &PlainDate, other: &str) -> Result<Duration, JsValue>;
+    pub fn until_with_str(this: &PlainDate, other: &str) -> Result<Duration, RangeError>;
 
     /// The `until()` method taking an ISO 8601 string and options; see [`PlainDate::until_with_options`]
     /// for errors.
@@ -5973,7 +6024,7 @@ extern "C" {
         this: &PlainDate,
         other: &str,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method returns a `Temporal.Duration` representing the duration
     /// from `other` until this date.
@@ -5987,7 +6038,7 @@ extern "C" {
         this: &PlainDate,
         other: &PlainDate,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `toPlainDateTime()` method returns a `Temporal.PlainDateTime` object representing
     /// this date at the given time (or midnight if not provided).
@@ -5997,14 +6048,14 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toPlainDateTime)
     #[wasm_bindgen(method, js_name = toPlainDateTime, catch)]
-    pub fn to_plain_date_time(this: &PlainDate) -> Result<PlainDateTime, JsValue>;
+    pub fn to_plain_date_time(this: &PlainDate) -> Result<PlainDateTime, RangeError>;
 
     /// The `since()` method taking a `Temporal.PlainDateTime`; see [`PlainDate::since`] for errors.
     #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_plain_date_time(
         this: &PlainDate,
         other: &PlainDateTime,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking a `Temporal.PlainDateTime` and options; see [`PlainDate::since_with_options`]
     /// for errors.
@@ -6013,14 +6064,14 @@ extern "C" {
         this: &PlainDate,
         other: &PlainDateTime,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking a `Temporal.ZonedDateTime`; see [`PlainDate::since`] for errors.
     #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_zoned_date_time(
         this: &PlainDate,
         other: &ZonedDateTime,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking a `Temporal.ZonedDateTime` and options; see [`PlainDate::since_with_options`]
     /// for errors.
@@ -6029,27 +6080,27 @@ extern "C" {
         this: &PlainDate,
         other: &ZonedDateTime,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking a property bag; throws a `TypeError` if required fields are missing; see [`PlainDate::since`] for the remaining errors.
     #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_plain_date_like(
         this: &PlainDate,
         other: &PlainDateLike,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, Error>;
 
-    /// The `since()` method taking a property bag and options; see [`PlainDate::since_with_options`]
-    /// for errors.
+    /// The `since()` method taking a property bag and options; throws a `TypeError` if required
+    /// fields are missing. See [`PlainDate::since_with_options`] for the remaining errors.
     #[wasm_bindgen(method, js_name = since, catch)]
     pub fn since_with_plain_date_like_and_options(
         this: &PlainDate,
         other: &PlainDateLike,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, Error>;
 
     /// The `since()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`PlainDate::since`] for the remaining errors.
     #[wasm_bindgen(method, js_name = since, catch)]
-    pub fn since_with_str(this: &PlainDate, other: &str) -> Result<Duration, JsValue>;
+    pub fn since_with_str(this: &PlainDate, other: &str) -> Result<Duration, RangeError>;
 
     /// The `since()` method taking an ISO 8601 string and options; see [`PlainDate::since_with_options`]
     /// for errors.
@@ -6058,7 +6109,7 @@ extern "C" {
         this: &PlainDate,
         other: &str,
         options: &DifferenceOptions,
-    ) -> Result<Duration, JsValue>;
+    ) -> Result<Duration, RangeError>;
 
     /// The `toPlainDateTime()` method returns a `Temporal.PlainDateTime` object representing
     /// this date at the given time (or midnight if not provided).
@@ -6071,7 +6122,7 @@ extern "C" {
     pub fn to_plain_date_time_with_plain_time(
         this: &PlainDate,
         plain_time: &PlainTime,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `toZonedDateTime()` method returns a `Temporal.ZonedDateTime` object representing
     /// this date at the given time in the given time zone.
@@ -6081,35 +6132,38 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toZonedDateTime)
     #[wasm_bindgen(method, js_name = toZonedDateTime, catch)]
-    pub fn to_zoned_date_time(this: &PlainDate, time_zone: &str) -> Result<ZonedDateTime, JsValue>;
+    pub fn to_zoned_date_time(
+        this: &PlainDate,
+        time_zone: &str,
+    ) -> Result<ZonedDateTime, RangeError>;
 
     /// The `toPlainDateTime()` method taking an ISO 8601 string; throws a `RangeError` if the string is invalid; see [`PlainDate::to_plain_date_time`] for the remaining errors.
     #[wasm_bindgen(method, js_name = toPlainDateTime, catch)]
     pub fn to_plain_date_time_with_str(
         this: &PlainDate,
         plain_time: &str,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `toPlainDateTime()` method taking a property bag; throws a `TypeError` if no time field is present; see [`PlainDate::to_plain_date_time`] for the remaining errors.
     #[wasm_bindgen(method, js_name = toPlainDateTime, catch)]
     pub fn to_plain_date_time_with_plain_time_like(
         this: &PlainDate,
         plain_time: &PlainTimeLike,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, Error>;
 
     /// The `toPlainDateTime()` method taking a `Temporal.PlainDateTime`; see [`PlainDate::to_plain_date_time`] for errors.
     #[wasm_bindgen(method, js_name = toPlainDateTime, catch)]
     pub fn to_plain_date_time_with_plain_date_time(
         this: &PlainDate,
         plain_time: &PlainDateTime,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `toPlainDateTime()` method taking a `Temporal.ZonedDateTime`; see [`PlainDate::to_plain_date_time`] for errors.
     #[wasm_bindgen(method, js_name = toPlainDateTime, catch)]
     pub fn to_plain_date_time_with_zoned_date_time(
         this: &PlainDate,
         plain_time: &ZonedDateTime,
-    ) -> Result<PlainDateTime, JsValue>;
+    ) -> Result<PlainDateTime, RangeError>;
 
     /// The `toZonedDateTime()` method in the time zone of the given
     /// `Temporal.ZonedDateTime`; see [`PlainDate::to_zoned_date_time`] for errors.
@@ -6117,20 +6171,21 @@ extern "C" {
     pub fn to_zoned_date_time_with_zoned_date_time(
         this: &PlainDate,
         time_zone: &ZonedDateTime,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, RangeError>;
 
     /// The `toZonedDateTime()` method returns a `Temporal.ZonedDateTime` object representing
     /// this date at the given time in the given time zone.
     ///
     /// # Errors
     /// Throws a `RangeError` if the time zone identifier is invalid.
+    /// Throws a `TypeError` if `plainTime` is a property bag with no time fields.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toZonedDateTime)
     #[wasm_bindgen(method, js_name = toZonedDateTime, catch)]
     pub fn to_zoned_date_time_with_to_zoned_date_time_item(
         this: &PlainDate,
         item: &ToZonedDateTimeItem,
-    ) -> Result<ZonedDateTime, JsValue>;
+    ) -> Result<ZonedDateTime, Error>;
 
     /// The `toPlainYearMonth()` method returns a `Temporal.PlainYearMonth` object representing
     /// the year and month of this date.
@@ -6142,7 +6197,7 @@ extern "C" {
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toPlainYearMonth)
     #[wasm_bindgen(method, js_name = toPlainYearMonth, catch)]
-    pub fn to_plain_year_month(this: &PlainDate) -> Result<PlainYearMonth, JsValue>;
+    pub fn to_plain_year_month(this: &PlainDate) -> Result<PlainYearMonth, RangeError>;
 
     /// The `toPlainMonthDay()` method returns a `Temporal.PlainMonthDay` object representing
     /// the month and day of this date.
@@ -6156,40 +6211,45 @@ extern "C" {
     ///
     /// # Errors
     /// Throws a `RangeError` if `locales` is invalid or the locale's calendar does
-    /// not match this value's calendar, and a `TypeError` for options that do not
-    /// apply to this type.
+    /// not match this value's calendar.
     ///
     /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate/toLocaleString)
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string(this: &PlainDate) -> Result<JsString, JsValue>;
+    pub fn to_locale_string(this: &PlainDate) -> Result<JsString, RangeError>;
 
     /// The `toLocaleString()` method; see [`PlainDate::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
-    pub fn to_locale_string_with_str(this: &PlainDate, locales: &str) -> Result<JsString, JsValue>;
+    pub fn to_locale_string_with_str(
+        this: &PlainDate,
+        locales: &str,
+    ) -> Result<JsString, RangeError>;
 
     /// The `toLocaleString()` method; see [`PlainDate::to_locale_string`] for errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str_sequence(
         this: &PlainDate,
         locales: &[JsString],
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, RangeError>;
 
-    /// The `toLocaleString()` method; see [`PlainDate::to_locale_string`] for errors.
+    /// The `toLocaleString()` method with options; throws a `TypeError` if an option does not
+    /// apply to this type or conflicts with another. See [`PlainDate::to_locale_string`] for the
+    /// remaining errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_str_sequence_and_options(
         this: &PlainDate,
         locales: &[JsString],
         options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, Error>;
 
-    /// The `toLocaleString()` method; `None` for `locales` uses the default locale. See
-    /// [`PlainDate::to_locale_string`] for errors.
+    /// The `toLocaleString()` method with options; `None` for `locales` uses the default locale.
+    /// Throws a `TypeError` if an option does not apply to this type or conflicts with another.
+    /// See [`PlainDate::to_locale_string`] for the remaining errors.
     #[wasm_bindgen(method, js_name = toLocaleString, catch)]
     pub fn to_locale_string_with_options(
         this: &PlainDate,
         locales: Option<&str>,
         options: &Intl::DateTimeFormatOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, Error>;
 
     /// The `toJSON()` method returns a string representation of this date
     /// suitable for JSON serialization.
@@ -6215,7 +6275,7 @@ extern "C" {
     pub fn to_js_string_with_options(
         this: &PlainDate,
         options: &ShowCalendarOptions,
-    ) -> Result<JsString, JsValue>;
+    ) -> Result<JsString, RangeError>;
 }
 
 /// The `Temporal.Now` object has several methods which give information about
@@ -6260,7 +6320,7 @@ pub mod Now {
         #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = zonedDateTimeISO, catch)]
         pub fn zoned_date_time_iso_with_time_zone(
             time_zone: &str,
-        ) -> Result<ZonedDateTime, JsValue>;
+        ) -> Result<ZonedDateTime, RangeError>;
 
         /// `Temporal.Now.zonedDateTimeISO()` in the time zone of the given `Temporal.ZonedDateTime`.
         #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = zonedDateTimeISO)]
@@ -6286,7 +6346,7 @@ pub mod Now {
         #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = plainDateTimeISO, catch)]
         pub fn plain_date_time_iso_with_time_zone(
             time_zone: &str,
-        ) -> Result<PlainDateTime, JsValue>;
+        ) -> Result<PlainDateTime, RangeError>;
 
         /// `Temporal.Now.plainDateTimeISO()` in the time zone of the given `Temporal.ZonedDateTime`.
         #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = plainDateTimeISO)]
@@ -6310,7 +6370,7 @@ pub mod Now {
         ///
         /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/plainDateISO)
         #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = plainDateISO, catch)]
-        pub fn plain_date_iso_with_time_zone(time_zone: &str) -> Result<PlainDate, JsValue>;
+        pub fn plain_date_iso_with_time_zone(time_zone: &str) -> Result<PlainDate, RangeError>;
 
         /// `Temporal.Now.plainDateISO()` in the time zone of the given `Temporal.ZonedDateTime`.
         #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = plainDateISO)]
@@ -6333,7 +6393,7 @@ pub mod Now {
         ///
         /// [MDN Documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Now/plainTimeISO)
         #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = plainTimeISO, catch)]
-        pub fn plain_time_iso_with_time_zone(time_zone: &str) -> Result<PlainTime, JsValue>;
+        pub fn plain_time_iso_with_time_zone(time_zone: &str) -> Result<PlainTime, RangeError>;
 
         /// `Temporal.Now.plainTimeISO()` in the time zone of the given `Temporal.ZonedDateTime`.
         #[wasm_bindgen(js_namespace = ["Temporal", "Now"], js_name = plainTimeISO)]

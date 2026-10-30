@@ -228,7 +228,9 @@
   conversions, which can leave the range) and the option-less
   `Instant`/`PlainTime` arithmetic are infallible, while
   `ZonedDateTime::start_of_day`, `hours_in_day` and
-  `PlainDate::to_plain_year_month` are fallible. `PartialEq`/`Eq` on the
+  `PlainDate::to_plain_year_month` are fallible. Fallible bindings return
+  `Result<T, RangeError>`, or `Result<T, Error>` where a property bag, a
+  `relativeTo`/`plainTime` union or `Intl` options can also throw a `TypeError`. `PartialEq`/`Eq` on the
   date-time types compare by the spec `equals()`, and `Instant` and `PlainTime`
   are `Ord` through `compare()`.
   [#5402](https://github.com/wasm-bindgen/wasm-bindgen/pull/5402)
