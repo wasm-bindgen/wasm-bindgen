@@ -201,6 +201,23 @@ impl Descriptor {
         descriptor
     }
 
+    /// Replaces `NamedExternref` with `Externref`, through references,
+    /// options and sequences.
+    pub fn erase_externref_names(&mut self) {
+        match self {
+            Descriptor::NamedExternref(_) => *self = Descriptor::Externref,
+            Descriptor::Ref(d)
+            | Descriptor::RefMut(d)
+            | Descriptor::Slice(d)
+            | Descriptor::Vector(d)
+            | Descriptor::Option(d)
+            | Descriptor::Nullable(d)
+            | Descriptor::Result(d)
+            | Descriptor::SeqMode(_, d) => d.erase_externref_names(),
+            _ => {}
+        }
+    }
+
     /// Decode a per-monomorphisation generic-import descriptor stream.
     ///
     /// The stream is a length-prefixed `shim` key string (identifying which
