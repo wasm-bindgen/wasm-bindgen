@@ -114,3 +114,13 @@ fn is_error() {
     assert!(!Error::is_error(&JsValue::NULL));
     assert!(!Error::is_error(&JsValue::UNDEFINED));
 }
+
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen_test]
+fn string_returns() {
+    let e = Error::new("boom");
+    let message: String = e.message();
+    assert_eq!(message, "boom");
+    assert_eq!(e.name(), "Error");
+    assert_eq!(e.to_string(), "Error: boom");
+}
