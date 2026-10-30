@@ -12,6 +12,13 @@
   exists at its default type arguments.
   [#5441](https://github.com/wasm-bindgen/wasm-bindgen/pull/5441)
 
+* A `slice` or `vec` mode written on an `experimental_generic_mono` argument
+  whose type is generic applies at each instantiation it fits, as an
+  inherited mode does, and is a no-op on the others, so
+  `#[wasm_bindgen(slice = copy)] chunk: T` copies a `&[u8]` and passes an
+  `ArrayBuffer` through unchanged.
+  [#5445](https://github.com/wasm-bindgen/wasm-bindgen/pull/5445)
+
 * A borrowed number, `bool`, `char` or borrowed string crosses by copy, so
   `&f64`, `&Option<T>`, `&Nullable<T>`, `Option<&f64>` and
   `Option<&Nullable<T>>` are argument types, and an

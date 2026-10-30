@@ -55,3 +55,12 @@ exports.Sink = class Sink {
         return describe(v);
     }
 };
+
+let keptValue;
+exports.keep = (v) => { keptValue = v; };
+exports.kept = () => {
+    const v = keptValue;
+    if (v === undefined || v === null) return 'none';
+    const bytes = v instanceof ArrayBuffer ? new Uint8Array(v) : new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
+    return `${v.constructor.name}:${Array.from(bytes)}`;
+};
