@@ -266,7 +266,7 @@ jobs:
         node-version: '25'
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --lib --bins --tests
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --test wasm --features std,wasm-bindgen-futures/std
-  
+
   test_emscripten:
       needs: changes
       if: needs.changes.outputs.code == 'true'
@@ -896,14 +896,15 @@ jobs:
         files: "gh-release/*.tar.gz*"
 
   # GitHub's own notice of a pending approval is easy to miss, so the release
-  # PR gets a comment mentioning the publishers while the publish job waits.
+  # PR, whose participants are notified, gets a comment while the publish job
+  # waits.
   notify:
     name: Request publish approval
     if: github.repository == 'wasm-bindgen/wasm-bindgen' && startsWith(github.ref, 'refs/tags/')
     needs: deploy
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write #  to see the draft release
       pull-requests: write
     steps:
     - env:
@@ -916,8 +917,12 @@ jobs:
           echo "No PR merged $GITHUB_SHA"
           exit 0
         fi
-        gh pr comment "$pr" --repo "$GITHUB_REPOSITORY" --body \
-          "@wasm-bindgen/wasm-bindgen-publish $GITHUB_REF_NAME is waiting for publish approval: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+        url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$GITHUB_REF_NAME
+        # Drafts have their own URL until they're published.
+        url=$(gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --json url --jq .url 2>/dev/null || echo "$url")
+        gh pr comment "$pr" --repo "$GITHUB_REPOSITORY" --body "🚀 $GITHUB_REF_NAME is ready to publish, pending approval: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+
+        Release: $url"
 
   publish:
     environment:
