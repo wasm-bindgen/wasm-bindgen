@@ -13,15 +13,10 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono)]
     fn without_type_param(x: u32);
 
-    // A bare shared reference to a generic type parameter (`&T`) *is* now
-    // supported, but a mutable reference (`&mut T`) is not.
+    // A bare shared reference to a generic type parameter (`&T`, and
+    // `Option<&T>`) *is* supported, but a mutable reference (`&mut T`) is not.
     #[wasm_bindgen(experimental_generic_mono)]
     fn mut_ref_to_generic<T>(x: &mut T);
-
-    // Nor is a reference to a generic parameter nested inside another type
-    // (e.g. `Option<&T>`).
-    #[wasm_bindgen(experimental_generic_mono)]
-    fn nested_ref_to_generic<T>(x: Option<&T>);
 
     // Slices (`Option<&[T]>` included — not a "nested reference", since only
     // the element's `VectorRefIntoWasmAbi` is needed; see the pass tests) are
@@ -172,13 +167,6 @@ extern "C" {
     // "unsupported in wasm-bindgen generics" error rather than a per-mono one.
     #[wasm_bindgen(experimental_generic_mono)]
     fn const_generic<const N: usize, T>(x: T);
-
-    // A `?Sized` bound relaxes an implicit bound rather than adding one, which
-    // `validate_generics` rejects for *every* wasm-bindgen generic. Like the
-    // const-generic case above this is the shared parse-time error, not a
-    // per-mono one -- the erasure path already covers the same message.
-    #[wasm_bindgen(experimental_generic_mono)]
-    fn unsized_type_param<T: ?Sized>(x: &T);
 }
 
 #[wasm_bindgen]

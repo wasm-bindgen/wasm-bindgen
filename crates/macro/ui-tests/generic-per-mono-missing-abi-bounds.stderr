@@ -13,37 +13,39 @@ help: consider restricting type parameter `T` with trait `IntoWasmAbi`
 12 |     fn argument<T: wasm_bindgen::convert::IntoWasmAbi>(x: T);
    |                  ++++++++++++++++++++++++++++++++++++
 
-error[E0277]: the trait bound `for<'a> &'a T: IntoWasmAbi` is not satisfied
+error[E0277]: the trait bound `for<'a> &'a T: OptionIntoWasmAbi` is not satisfied
   --> ui-tests/generic-per-mono-missing-abi-bounds.rs:16:33
    |
 8  | #[wasm_bindgen]
    | --------------- in this procedural macro expansion
 ...
 16 |     fn reference_argument<T>(x: &T);
-   |                                 ^ the trait `for<'a> IntoWasmAbi` is not implemented for `&'a T`
+   |                                 ^ the trait `for<'a> OptionIntoWasmAbi` is not implemented for `&'a T`
    |
+   = note: required for `&'a T` to implement `for<'a> MaybeIntoWasmAbi`
    = note: required for `T` to implement `RefIntoWasmAbi`
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 help: consider introducing a `where` clause, but there might be an alternative better way to express this requirement
    |
-16 |     fn reference_argument<T>(x: &T) where for<'a> &'a T: IntoWasmAbi;
-   |                                     ++++++++++++++++++++++++++++++++
+16 |     fn reference_argument<T>(x: &T) where for<'a> &'a T: OptionIntoWasmAbi;
+   |                                     ++++++++++++++++++++++++++++++++++++++
 
-error[E0277]: the trait bound `for<'a> &'a T: IntoWasmAbi` is not satisfied
+error[E0277]: the trait bound `for<'a> &'a T: OptionIntoWasmAbi` is not satisfied
   --> ui-tests/generic-per-mono-missing-abi-bounds.rs:20:39
    |
 8  | #[wasm_bindgen]
    | --------------- in this procedural macro expansion
 ...
 20 |     fn reference_argument_catch<T>(x: &T) -> Result<Option<u32>, JsValue>;
-   |                                       ^ the trait `for<'a> IntoWasmAbi` is not implemented for `&'a T`
+   |                                       ^ the trait `for<'a> OptionIntoWasmAbi` is not implemented for `&'a T`
    |
+   = note: required for `&'a T` to implement `for<'a> MaybeIntoWasmAbi`
    = note: required for `T` to implement `RefIntoWasmAbi`
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 help: consider introducing a `where` clause, but there might be an alternative better way to express this requirement
    |
-20 |     fn reference_argument_catch<T>(x: &T) -> Result<Option<u32>, JsValue> where for<'a> &'a T: IntoWasmAbi;
-   |                                                                           ++++++++++++++++++++++++++++++++
+20 |     fn reference_argument_catch<T>(x: &T) -> Result<Option<u32>, JsValue> where for<'a> &'a T: OptionIntoWasmAbi;
+   |                                                                           ++++++++++++++++++++++++++++++++++++++
 
 error[E0277]: the trait bound `T: VectorRefIntoWasmAbi` is not satisfied
   --> ui-tests/generic-per-mono-missing-abi-bounds.rs:24:30
@@ -190,21 +192,22 @@ help: consider restricting type parameter `T` with trait `IntoWasmAbi`
 12 |     fn argument<T: wasm_bindgen::convert::IntoWasmAbi>(x: T);
    |                  ++++++++++++++++++++++++++++++++++++
 
-error[E0277]: the trait bound `for<'a> &'a T: IntoWasmAbi` is not satisfied
+error[E0277]: the trait bound `for<'a> &'a T: OptionIntoWasmAbi` is not satisfied
   --> ui-tests/generic-per-mono-missing-abi-bounds.rs:20:39
    |
 8  | #[wasm_bindgen]
    | --------------- in this procedural macro expansion
 ...
 20 |     fn reference_argument_catch<T>(x: &T) -> Result<Option<u32>, JsValue>;
-   |                                       ^ the trait `for<'a> IntoWasmAbi` is not implemented for `&'a T`
+   |                                       ^ the trait `for<'a> OptionIntoWasmAbi` is not implemented for `&'a T`
    |
+   = note: required for `&'a T` to implement `for<'a> MaybeIntoWasmAbi`
    = note: required for `T` to implement `RefIntoWasmAbi`
    = note: this error originates in the attribute macro `wasm_bindgen` (in Nightly builds, run with -Z macro-backtrace for more info)
 help: consider introducing a `where` clause, but there might be an alternative better way to express this requirement
    |
-20 |     fn reference_argument_catch<T>(x: &T) -> Result<Option<u32>, JsValue> where for<'a> &'a T: IntoWasmAbi;
-   |                                                                           ++++++++++++++++++++++++++++++++
+20 |     fn reference_argument_catch<T>(x: &T) -> Result<Option<u32>, JsValue> where for<'a> &'a T: OptionIntoWasmAbi;
+   |                                                                           ++++++++++++++++++++++++++++++++++++++
 
 error[E0277]: the trait bound `T: VectorRefIntoWasmAbi` is not satisfied
   --> ui-tests/generic-per-mono-missing-abi-bounds.rs:24:8

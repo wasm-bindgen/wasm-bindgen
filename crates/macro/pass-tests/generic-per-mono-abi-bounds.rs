@@ -16,6 +16,16 @@ extern "C" {
     #[wasm_bindgen(experimental_generic_mono)]
     fn reference_argument<T: RefIntoWasmAbi>(x: &T);
 
+    // `Option<&T>` is marshalled through the referent's `RefIntoWasmAbi`, the
+    // same bound as `&T`.
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn option_reference_argument<T: RefIntoWasmAbi>(x: Option<&T>);
+
+    // A `?Sized` parameter is fine when it is only ever named behind a
+    // reference.
+    #[wasm_bindgen(experimental_generic_mono)]
+    fn unsized_reference_argument<T: ?Sized + RefIntoWasmAbi>(x: &T);
+
     #[wasm_bindgen(experimental_generic_mono)]
     fn slice_argument<T: VectorRefIntoWasmAbi>(xs: &[T]);
 
@@ -55,6 +65,11 @@ fn forward<T: IntoWasmAbi + FromWasmAbi>(x: T) -> T {
 
 fn forward_reference<T: RefIntoWasmAbi>(x: &T) {
     reference_argument(x);
+    option_reference_argument(Some(x));
+}
+
+fn forward_unsized_reference<T: ?Sized + RefIntoWasmAbi>(x: &T) {
+    unsized_reference_argument(x);
 }
 
 fn forward_slice<T: VectorRefIntoWasmAbi>(xs: &[T]) {
@@ -69,6 +84,8 @@ async fn forward_async<T: FromWasmAbi + 'static>() -> T {
 fn concrete() {
     argument(1u32);
     reference_argument(&JsValue::NULL);
+    option_reference_argument::<JsValue>(None);
+    unsized_reference_argument("str");
     slice_argument(&[1u32]);
     option_slice_argument::<String>(None);
     let _: String = ret();
