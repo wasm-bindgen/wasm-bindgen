@@ -27,3 +27,11 @@ export async function* echoAsyncGenerator() {
     received = yield received;
   }
 }
+
+export function throwingIterator() {
+  return {
+    next() {
+      throw 'boom';
+    },
+  };
+}

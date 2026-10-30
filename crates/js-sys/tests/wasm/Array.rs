@@ -2017,7 +2017,7 @@ fn test_array_entries_typed() {
 
     let entries = arr.entries_typed();
     let mut count = 0u32;
-    for result in entries.into_iter() {
+    for result in entries.into_try_iter() {
         let tuple: js_sys::ArrayTuple<(Number, TestItem)> = result.unwrap();
         let arr_ref: &js_sys::Array = wasm_bindgen::JsCast::unchecked_ref(&tuple);
         assert_eq!(arr_ref.get_unchecked(0), count);
