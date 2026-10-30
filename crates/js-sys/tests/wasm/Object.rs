@@ -248,8 +248,16 @@ fn entries() {
     #[cfg(not(js_sys_unstable_apis))]
     let entries = Object::entries(&foo_42());
     #[cfg(js_sys_unstable_apis)]
-    let entries = Object::entries(&foo_42()).unwrap();
+    {
+        let entries = Object::entries(&foo_42()).unwrap();
+        assert_eq!(entries.length(), 1);
+        let (key, value) = entries.get(0).unwrap().into_tuple();
+        assert_eq!(key, "foo");
+        assert_eq!(value, 42);
+    }
+    #[cfg(not(js_sys_unstable_apis))]
     assert_eq!(entries.length(), 1);
+    #[cfg(not(js_sys_unstable_apis))]
     entries.for_each(&mut |x, _, _| {
         assert!(x.is_object());
         let array: Array = x.unchecked_into();

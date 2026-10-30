@@ -161,7 +161,7 @@ fn typed_values_iterator() {
     map.set(&JsString::from("b"), &JsString::from("two"));
     map.set(&JsString::from("c"), &JsString::from("three"));
 
-    let values: Vec<JsString> = map.values().into_iter().map(|v| v.unwrap()).collect();
+    let values: Vec<JsString> = map.values().into_try_iter().map(|v| v.unwrap()).collect();
     assert_eq!(values.len(), 3);
     assert!(values.iter().any(|v| *v == "one"));
     assert!(values.iter().any(|v| *v == "two"));
@@ -178,7 +178,7 @@ fn typed_entries_iterator() {
     let entries2: Iterator<ArrayTuple<(JsString, JsValue)>> = entries.unchecked_into();
 
     let mut count = 0;
-    for result in entries2.into_iter() {
+    for result in entries2.into_try_iter() {
         let arr = result.unwrap();
         assert_eq!(arr.len(), 2);
         count += 1;
