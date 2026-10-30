@@ -15571,6 +15571,61 @@ extern "C" {
     pub fn set_from_hex(this: &Uint8Array, text: &str) -> Result<SetFromResult, JsValue>;
 }
 
+mod buffer_source_sealed {
+    pub trait Sealed {}
+}
+
+/// TypeScript's `BufferSource` (`ArrayBuffer | ArrayBufferView`), as the
+/// argument bound of an `experimental_generic_mono` import. Each form crosses
+/// as itself: `&[u8]` as a view of wasm memory, `Vec<u8>` as a copy, and an
+/// `ArrayBuffer`, typed array or `DataView` (owned or borrowed) as that
+/// handle, so all of the handles share one import.
+///
+/// A slice `&[impl BufferSourceLike]` arrives in JS as an `Array` of buffers,
+/// with `&[u8]` and `Vec<u8>` elements as `Uint8Array` copies.
+///
+/// This trait is experimental and may change or be removed as
+/// `experimental_generic_mono` evolves.
+pub trait BufferSourceLike:
+    IntoWasmAbi
+    + wasm_bindgen::convert::OptionIntoWasmAbi
+    + wasm_bindgen::convert::VectorRefIntoWasmAbi
+    + buffer_source_sealed::Sealed
+{
+}
+
+macro_rules! impl_buffer_source_like {
+    ($($t:ty),* $(,)?) => ($(
+        impl buffer_source_sealed::Sealed for $t {}
+        impl BufferSourceLike for $t {}
+        impl buffer_source_sealed::Sealed for &$t {}
+        impl BufferSourceLike for &$t {}
+        wasm_bindgen::__wbindgen_encoded_sequence!(&$t, |b| (*b).into_abi(), [ref_into]);
+    )*)
+}
+
+impl_buffer_source_like!(
+    ArrayBuffer,
+    DataView,
+    Int8Array,
+    Int16Array,
+    Int32Array,
+    Uint8Array,
+    Uint8ClampedArray,
+    Uint16Array,
+    Uint32Array,
+    Float16Array,
+    Float32Array,
+    Float64Array,
+    BigInt64Array,
+    BigUint64Array,
+);
+
+impl buffer_source_sealed::Sealed for &[u8] {}
+impl BufferSourceLike for &[u8] {}
+impl buffer_source_sealed::Sealed for Vec<u8> {}
+impl BufferSourceLike for Vec<u8> {}
+
 /// Bridging between JavaScript `Promise`s and Rust `Future`s.
 ///
 /// Enables `promise.await` directly on any [`Promise`].

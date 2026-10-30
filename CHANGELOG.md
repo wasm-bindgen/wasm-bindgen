@@ -12,6 +12,16 @@
   `Option<f64>` or `Nullable<String>`, as std's `contains(&T)` does.
   [#5436](https://github.com/wasm-bindgen/wasm-bindgen/pull/5436)
 
+* Added the experimental `js_sys::BufferSourceLike` marker trait for
+  TypeScript's `BufferSource` (`ArrayBuffer | ArrayBufferView`) as an
+  `experimental_generic_mono` argument bound, implemented for `&[u8]`,
+  `Vec<u8>`, `ArrayBuffer`, `DataView` and every typed array, owned and
+  borrowed. Each crosses as itself, so the handles share one binding, and
+  `Option<impl BufferSourceLike>` and `&[impl BufferSourceLike]` work under
+  the same bound. `&[&[u8]]` and `&[Vec<u8>]` are now slice arguments, whose
+  elements reach JS as `Uint8Array` copies.
+  [#5444](https://github.com/wasm-bindgen/wasm-bindgen/pull/5444)
+
 * Added a rejection type parameter to `js_sys::Promise<T, E = JsValue>`,
   mirrored on `JsFuture<T, E>`, `PromiseState<T, E>` and
   `PromiseWithResolvers<T, E>`. Awaiting a `Promise<T, E>` yields
