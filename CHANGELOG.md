@@ -194,6 +194,12 @@
 
 ### Changed
 
+* Stabilized the `js_sys::Temporal` bindings and `Date::to_temporal_instant`,
+  previously behind `js_sys_unstable_apis`, now that Temporal is Stage 4 and
+  ships unflagged in Firefox 139, Chrome 144 and Node 26. They stay behind the
+  `temporal` feature.
+  [#5417](https://github.com/wasm-bindgen/wasm-bindgen/pull/5417)
+
 * Reworked the `js_sys::Temporal` bindings and `Date::to_temporal_instant`,
   which stay behind `js_sys_unstable_apis` and now also need the new `temporal`
   feature, against the final Stage 4

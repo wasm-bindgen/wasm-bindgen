@@ -683,7 +683,7 @@ jobs:
     - uses: actions/checkout@v7
     - uses: dtolnay/rust-toolchain@nightly
     - run: cargo doc --no-deps --features 'serde-serialize'
-    - run: cargo doc --no-deps --manifest-path crates/js-sys/Cargo.toml
+    - run: cargo doc --no-deps --manifest-path crates/js-sys/Cargo.toml --features temporal
     - run: cargo doc --no-deps --manifest-path crates/web-sys/Cargo.toml --all-features
       env:
         RUSTDOCFLAGS: --cfg=web_sys_unstable_apis
