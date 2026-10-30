@@ -14590,6 +14590,14 @@ impl<T, E> Promising for Promise<T, E> {
     type Resolution = T;
 }
 
+/// A `catch` import returning `Promise<T, E>` returns a synchronous throw as
+/// a rejected promise.
+impl<T, E> wasm_bindgen::convert::FromCaughtException for Promise<T, E> {
+    fn from_caught_exception(e: JsValue) -> Self {
+        Promise::<T>::reject_typed(&e).unchecked_into()
+    }
+}
+
 /// Internal: maps a tuple of `Promise<T_i, E>` to the result shapes of
 /// [`Promise::all_tuple`] and [`Promise::all_settled_tuple`].
 ///
