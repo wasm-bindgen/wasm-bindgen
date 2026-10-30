@@ -303,7 +303,9 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::F32
             | Descriptor::F64
             | Descriptor::Boolean
-            | Descriptor::Char => self._outgoing(arg)?,
+            | Descriptor::Char
+            | Descriptor::Enum { .. }
+            | Descriptor::StringEnum { .. } => self._outgoing(arg)?,
 
             Descriptor::Option(inner) => {
                 self.outgoing_option_ref(mutable, inner, OptionKind::Option)?
@@ -772,7 +774,9 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::F32
             | Descriptor::F64
             | Descriptor::Boolean
-            | Descriptor::Char => self.outgoing_option(arg, option_kind)?,
+            | Descriptor::Char
+            | Descriptor::Enum { .. }
+            | Descriptor::StringEnum { .. } => self.outgoing_option(arg, option_kind)?,
             _ => bail!(
                 "unsupported optional ref argument type for calling JS function from Rust: {arg:?}"
             ),
@@ -822,6 +826,13 @@ impl InstructionBuilder<'_, '_> {
             | Descriptor::Char
             | Descriptor::Enum { .. }
             | Descriptor::StringEnum { .. } => decode._outgoing(elem)?,
+            // `Option<T>` / `Nullable<T>`: the cell is `Option<&T>`'s ABI.
+            Descriptor::Option(inner) => {
+                decode.outgoing_option_ref(false, inner, OptionKind::Option)?
+            }
+            Descriptor::Nullable(inner) => {
+                decode.outgoing_option_ref(false, inner, OptionKind::Nullable)?
+            }
             _ => {
                 bail!("unsupported slice element type for calling JS function from Rust: {elem:?}")
             }

@@ -865,3 +865,43 @@ where
         <Nullable<&'a T> as OptionIntoWasmAbi>::none()
     }
 }
+
+// `Option<T>` and `Nullable<T>` as a borrowed sequence element: `&[Option<T>]`
+// is an encoded sequence whose cell is `Option<&T>`'s ABI, which is
+// `Option<T>`'s, so numbers copy and strings and handles borrow, as `&[T]`
+// does. `Option<Nullable<T>>` nests as it does for a single value.
+impl<T> crate::__rt::marker::VectorRefIntoWasmAbiSealed for Option<T>
+where
+    Option<T>: IntoWasmAbi,
+    for<'a> &'a Option<T>: IntoWasmAbi<Abi = <Option<T> as IntoWasmAbi>::Abi>,
+{
+}
+
+impl<T> VectorRefIntoWasmAbi for Option<T>
+where
+    Option<T>: IntoWasmAbi,
+    for<'a> &'a Option<T>: IntoWasmAbi<Abi = <Option<T> as IntoWasmAbi>::Abi>,
+{
+    #[inline]
+    fn slice_into_abi(slice: &[Self]) -> WasmSlice {
+        WasmSlice::encode(slice, |e| e.into_abi())
+    }
+}
+
+impl<T> crate::__rt::marker::VectorRefIntoWasmAbiSealed for Nullable<T>
+where
+    Nullable<T>: IntoWasmAbi,
+    for<'a> &'a Nullable<T>: IntoWasmAbi<Abi = <Nullable<T> as IntoWasmAbi>::Abi>,
+{
+}
+
+impl<T> VectorRefIntoWasmAbi for Nullable<T>
+where
+    Nullable<T>: IntoWasmAbi,
+    for<'a> &'a Nullable<T>: IntoWasmAbi<Abi = <Nullable<T> as IntoWasmAbi>::Abi>,
+{
+    #[inline]
+    fn slice_into_abi(slice: &[Self]) -> WasmSlice {
+        WasmSlice::encode(slice, |e| e.into_abi())
+    }
+}
