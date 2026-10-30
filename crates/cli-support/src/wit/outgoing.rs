@@ -860,6 +860,14 @@ impl InstructionBuilder<'_, '_> {
                 decode.outgoing_option_ref(false, inner, OptionKind::Nullable)?
             }
             _ if elem.scalar_cell() => decode._outgoing(elem)?,
+            // `&[&[u8]]` / `&[Vec<u8>]`: each element is borrowed, and
+            // copied because JS may keep it past the call.
+            Descriptor::Slice(cell) | Descriptor::Vector(cell)
+                if matches!(cell.sequence_cell(), SequenceCell::InPlace(_)) =>
+            {
+                decode.seq_value = SeqValue::Copy;
+                decode.outgoing_ref(false, &Descriptor::Slice(cell.clone()))?
+            }
             _ => {
                 bail!("unsupported slice element type for calling JS function from Rust: {elem:?}")
             }
