@@ -37,3 +37,9 @@ exports.invoke_for_each_callback = function(callback, items) {
         callback(item, index);
     });
 };
+exports.callWith = function(f, a, b) {
+  return f(a, b);
+};
+exports.callThunk = function(f) {
+  return f();
+};
