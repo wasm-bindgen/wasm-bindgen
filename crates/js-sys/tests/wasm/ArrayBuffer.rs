@@ -124,3 +124,15 @@ fn transfer_to_fixed_length_with_length() {
     assert_eq!(transferred.byte_length(), 5);
     assert!(!transferred.resizable());
 }
+
+#[cfg(js_sys_unstable_apis)]
+#[wasm_bindgen_test]
+fn bytes() {
+    let buf = ArrayBuffer::from(&b"abc"[..]);
+    assert_eq!(buf.byte_length(), 3);
+    assert_eq!(buf.to_vec(), b"abc");
+    let bytes: Vec<u8> = buf.into();
+    assert_eq!(bytes, b"abc");
+    let buf: ArrayBuffer = vec![1, 2].into();
+    assert_eq!(Vec::from(&buf), [1, 2]);
+}
