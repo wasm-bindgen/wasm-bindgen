@@ -12,7 +12,7 @@
   `Option<f64>` or `Nullable<String>`, as std's `contains(&T)` does.
   [#5436](https://github.com/wasm-bindgen/wasm-bindgen/pull/5436)
 
-* Under `js_sys_unstable_apis`, added `js_sys::ArrayHeadRest<H, T>` for
+* Added `js_sys::ArrayHeadRest<H, T>` for
   TypeScript's `[H, ...T[]]`, an array whose first element is an `H` and
   whose remaining elements are `T`s: `head()` reads the first element,
   `rest()` copies the others into an `Array<T>`, and `into_parts()` /

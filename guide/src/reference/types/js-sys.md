@@ -70,8 +70,8 @@ let b: Boolean = tuple.get2();
 
 ## ArrayHeadRest\<H, T\>
 
-Under `--cfg=js_sys_unstable_apis`, an array whose first element is an `H`
-and whose remaining elements are `T`s, TypeScript's `[H, ...T[]]`:
+An array whose first element is an `H` and whose remaining elements are
+`T`s, TypeScript's `[H, ...T[]]`:
 
 ```rust
 use js_sys::{Array, ArrayHeadRest, JsString};

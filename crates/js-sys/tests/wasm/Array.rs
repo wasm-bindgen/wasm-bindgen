@@ -2501,7 +2501,6 @@ fn rust_export_round_trip_arrays() {
     assert_eq!(sum, 12.0); // (1+2+3) * 2 = 12
 }
 
-#[cfg(js_sys_unstable_apis)]
 #[wasm_bindgen(inline_js = "
 export function headRest() { return [['id', 'name'], [1, 'a'], [2, 'b']]; }
 export function headOnly() { return [['id']]; }
@@ -2518,7 +2517,6 @@ extern "C" {
     fn later_head_rest(v: &JsValue) -> Promise<ArrayHeadRest<Array<JsString>, Array>>;
 }
 
-#[cfg(js_sys_unstable_apis)]
 #[wasm_bindgen_test]
 async fn head_rest_arrays() {
     let (columns, rows) = head_rest().into_parts();
