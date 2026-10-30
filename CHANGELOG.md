@@ -195,7 +195,8 @@
 ### Changed
 
 * Reworked the `js_sys::Temporal` bindings and `Date::to_temporal_instant`,
-  which stay behind `js_sys_unstable_apis`, against the final Stage 4
+  which stay behind `js_sys_unstable_apis` and now also need the new `temporal`
+  feature, against the final Stage 4
   specification and reshaped them to the web-sys conventions. Inputs are
   typed: `*Like` dictionaries such as `PlainDateLike` for `from`, calendar-free
   `*Fields` dictionaries for `with`, and the bare form of a method takes the

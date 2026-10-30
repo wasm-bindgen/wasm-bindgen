@@ -31,6 +31,9 @@ unsafe-eval = []
 # Pulls in `futures-util` directly so this keeps working under
 # `default-features = false`.
 futures-core-03-stream = ["dep:futures-util", "dep:futures-core"]
+# Enables the `Temporal` bindings and `Date::to_temporal_instant`, which also
+# need `--cfg js_sys_unstable_apis` while they are unstable.
+temporal = []
 
 [dependencies]
 cfg-if = "1.0.0"
