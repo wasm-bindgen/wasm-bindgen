@@ -3889,9 +3889,10 @@ impl ast::ImportFunction {
                 // through `RefIntoWasmAbi` on the referent instead, which
                 // carries that bound and is what the user declares.
                 //
-                // Still rejected: `&mut T`, and references nested inside
-                // another type (e.g. `Option<&T>`, `(T, &T)`, `[&T; N]`,
-                // `&&T`), which need the type-erasure path.
+                // `Option<&T>` takes the same route through the referent.
+                // Still rejected: `&mut T`, and references nested deeper
+                // inside another type (e.g. `(T, &T)`, `[&T; N]`, `&&T`),
+                // which need the type-erasure path.
                 let top_level_shared_ref = match ty {
                     syn::Type::Reference(r) if r.mutability.is_none() => {
                         !generics::references_generic_param(&r.elem, &type_params)
@@ -6202,12 +6203,6 @@ fn result_err_ty(ty: &syn::Type) -> Option<&syn::Type> {
     }
 }
 
-/// The type describing an import argument under its `slice` / `vec` modes.
-///
-/// Each mode is a word wrapped around the argument's own describe, which the
-/// CLI resolves against the argument's shape, so nothing here inspects the
-/// argument. The deprecated `slice_to_array` is the exception, keeping its
-/// released reach of `&[T]` and `Option<&[T]>` only.
 /// The shared reference inside an `Option<&T>` argument.
 fn option_shared_ref(ty: &syn::Type) -> Option<&syn::TypeReference> {
     let syn::Type::Path(path) = ty else {
@@ -6230,6 +6225,12 @@ fn option_shared_ref(ty: &syn::Type) -> Option<&syn::TypeReference> {
     }
 }
 
+/// The type describing an import argument under its `slice` / `vec` modes.
+///
+/// Each mode is a word wrapped around the argument's own describe, which the
+/// CLI resolves against the argument's shape, so nothing here inspects the
+/// argument. The deprecated `slice_to_array` is the exception, keeping its
+/// released reach of `&[T]` and `Option<&[T]>` only.
 fn seq_mode_describe_ty(
     wasm_bindgen: &syn::Path,
     ty: &syn::Type,
