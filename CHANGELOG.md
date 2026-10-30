@@ -81,6 +81,13 @@
   protocol's errors as `Err` items, and `&Array<T>` is `IntoIterator`.
   [#5450](https://github.com/wasm-bindgen/wasm-bindgen/pull/5450)
 
+* A typed `js_sys::Function<F>` converts from an owned `Closure` with
+  `From`, and under `js_sys_unstable_apis`, `Function::from_fn` and
+  `Function::once` build one from a Rust closure (`FnOnce` for `once`), with
+  the closure's argument types inferred from `F`:
+  `Function::<fn(String) -> bool>::from_fn(|s| s.is_empty())`.
+  [#5443](https://github.com/wasm-bindgen/wasm-bindgen/pull/5443)
+
 * Added a rejection type parameter to `js_sys::Promise<T, E = JsValue>`,
   mirrored on `JsFuture<T, E>`, `PromiseState<T, E>` and
   `PromiseWithResolvers<T, E>`. Awaiting a `Promise<T, E>` yields
