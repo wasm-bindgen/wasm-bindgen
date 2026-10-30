@@ -1,3 +1,4 @@
+use js_sys::{JsString, Map, Number, Object};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
@@ -84,4 +85,46 @@ fn multiple_layers_of_inheritance() {
     let _: &JsCast3 = a.as_ref();
     let b: &JsCast1 = a.as_ref();
     assert_eq!(b.myval(), 4);
+}
+
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(extends = Map<JsString, Number>, extends = Object, js_name = Map)]
+    type ScoreMap;
+    #[wasm_bindgen(constructor, js_class = Map)]
+    fn new() -> ScoreMap;
+
+    #[wasm_bindgen(extends = Map<JsString, T>, extends = Object, js_name = Map)]
+    type Scores<T = JsValue>;
+    #[wasm_bindgen(constructor, js_class = Map)]
+    fn new_scores<T>() -> Scores<T>;
+
+    #[wasm_bindgen(extends = Map<T, T>, extends = Object, js_name = Map)]
+    type Pairs<T>;
+    #[wasm_bindgen(constructor, js_class = Map)]
+    fn new_pairs<T>() -> Pairs<T>;
+}
+
+#[wasm_bindgen_test]
+fn extends_with_type_arguments() {
+    let key = JsString::from("a");
+
+    let m = ScoreMap::new();
+    m.set(&key, &Number::from(1.5));
+    assert_eq!(m.get_checked(&key).unwrap().value_of(), 1.5);
+    let parent: &Map<JsString, Number> = m.as_ref();
+    assert_eq!(parent.size(), 1);
+    let parent: Map<JsString, Number> = m.into();
+    assert_eq!(parent.get_checked(&key).unwrap().value_of(), 1.5);
+
+    let s: Scores<Number> = Scores::new_scores();
+    s.set(&key, &Number::from(2));
+    let parent: &Map<JsString, Number> = s.as_ref();
+    assert_eq!(parent.get_checked(&key).unwrap().value_of(), 2.0);
+    let _: &Object = s.as_ref();
+
+    let p: Pairs<JsString> = Pairs::new_pairs();
+    p.set(&key, &JsString::from("b"));
+    let parent: Map<JsString, JsString> = p.into();
+    assert_eq!(parent.get_checked(&key).unwrap(), "b");
 }
