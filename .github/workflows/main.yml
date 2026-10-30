@@ -266,7 +266,7 @@ jobs:
         node-version: '25'
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --lib --bins --tests
     - run: cargo test --target wasm32-unknown-unknown -Zbuild-std --test wasm --features std,wasm-bindgen-futures/std
-
+  
   test_emscripten:
       needs: changes
       if: needs.changes.outputs.code == 'true'
